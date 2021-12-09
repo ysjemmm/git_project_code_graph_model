@@ -1,0 +1,6 @@
+/config/
+/logs/
+/deploy/config/
+/deploy/logs/
+**/mandarin/ahas/**
+**/mq_backup_db/**

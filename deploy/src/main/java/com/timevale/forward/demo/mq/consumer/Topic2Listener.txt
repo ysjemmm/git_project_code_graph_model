@@ -1,0 +1,41 @@
+package com.timevale.mq_example.core.service.mq.consumer;
+
+import com.timevale.framework.mq.client.consumer.Listener;
+import com.timevale.framework.mq.client.consumer.ReceiveResult;
+import com.timevale.framework.mq.client.producer.Msg;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
+
+/**
+ * 测试 listener;
+ *
+ * @author gwk_2
+ * @date 2020/1/7 15:46
+ */
+@Component
+@Log4j2
+public class Topic2Listener implements Listener {
+
+
+    /**
+     * @param msgs 只有一条.
+     * @return
+     */
+    @Override
+    public ReceiveResult receive(List<Msg> msgs) {
+        // 先把东西都打印了,方便排查;
+        log.info(msgs);
+        try {
+            // 做点什么好呢?
+        } catch (Exception e) {
+            // 返回失败, 会重试;
+            return ReceiveResult.fail();
+        }
+        // 返回成功;
+        return ReceiveResult.success();
+    }
+}

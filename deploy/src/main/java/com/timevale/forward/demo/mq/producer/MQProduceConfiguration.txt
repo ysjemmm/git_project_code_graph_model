@@ -1,0 +1,98 @@
+package com.timevale.mq_example.core.service.mq.producer;
+
+import com.timevale.framework.mq.client.Group;
+import com.timevale.framework.mq.client.producer.Msg;
+import com.timevale.framework.mq.client.producer.OfferResult;
+import com.timevale.framework.mq.client.producer.Producer;
+import com.timevale.framework.mq.client.producer.ProducerFactory;
+import com.timevale.framework.mq.client.producer.transaction.*;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.lang.reflect.Proxy;
+
+/**
+ * MQ 生产者适配器;
+ *
+ * @author gwk_2
+ * @date 2020/1/7 15:04
+ */
+@Log4j2
+@Configuration
+public class MQProduceConfiguration {
+    private static final String offerMethodName = "offer";
+    private static final String offerInTransaction = "offerInTransaction";
+
+	
+    @Value("${producer.group.name:mq_example_producer_name}")
+    private String producerGroupName;
+
+    @Value("${transaction.group.name:mq_example_transaction_name}")
+    private String transactionProducerGroupName;
+
+    @Autowired
+    private ProducerFactory producerFactory;
+    @Autowired
+    private TransactionProducerFactory transactionProducerFactory;
+
+
+    @Bean
+    public Producer initProducer() throws Exception {
+        Producer producer = producerFactory.createProducer(new Group(producerGroupName));
+        Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{Producer.class}, (proxy, method, args) -> {
+            String mName = method.getName();
+            Object result = method.invoke(producer, args);
+            if (offerMethodName.equals(mName) && result != null) {
+                OfferResult or = (OfferResult) result;
+                log.info("send msg success, msgId = {}, origin = {}", or.getMsgId(), result);
+            }
+            return result;
+        });
+        producer.start();
+        log.info("producer start success. groupName = {}", producerGroupName);
+        return producer;
+    }
+
+
+    @Bean
+    public TransactionProducer initTransactionProducer() throws Exception {
+        TransactionProducer producer = transactionProducerFactory.createTransactionProducer(new Group(transactionProducerGroupName));
+        Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{Producer.class}, (proxy, method, args) -> {
+            String mName = method.getName();
+            Object result = method.invoke(producer, args);
+            if (offerInTransaction.equals(mName) && result != null) {
+                OfferResult or = (OfferResult) result;
+                log.info("send msg success, msgId = {}, origin = {}", or.getMsgId(), result);
+            }
+            return result;
+        });
+        // 事务执行器;
+        producer.setMQLocalTransactionExecutor(new MQLocalTransactionExecutor() {
+            @Override
+            public MQLocalTransactionState execute(Msg msg, Object arg) {
+                // TODO 事务逻辑;
+                return MQLocalTransactionState.COMMIT_MESSAGE;
+                //return MQLocalTransactionState.ROLLBACK_MESSAGE;
+                //return MQLocalTransactionState.UNKNOW;
+            }
+        });
+
+        // 事务回查器;
+        producer.setTransactionChecker(new MQLocalTransactionChecker() {
+            @Override
+            public MQLocalTransactionState check(Msg msg) {
+                // TODO 回查逻辑;
+                return MQLocalTransactionState.COMMIT_MESSAGE;
+                //return MQLocalTransactionState.ROLLBACK_MESSAGE;
+                //return MQLocalTransactionState.UNKNOW;
+            }
+        });
+
+        producer.start();
+        log.info("producer start success. groupName = {}", producerGroupName);
+        return producer;
+    }
+}
