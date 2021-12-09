@@ -4,3 +4,4 @@
 /deploy/logs/
 **/mandarin/ahas/**
 **/mq_backup_db/**
+.idea

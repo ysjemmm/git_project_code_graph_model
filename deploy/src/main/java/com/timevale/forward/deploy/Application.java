@@ -10,6 +10,7 @@
  */
 package com.timevale.forward.deploy;
 
+import com.timevale.billing.log.monitor.interfaces.EnableLogMonitor;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -31,6 +32,7 @@ import com.timevale.mandarin.microservice.NoDBService;
 @MapperScan("com.timevale.forward.dal")
 @SpringBootApplication(scanBasePackages = {"com.timevale.forward.service"})
 @EnablePuppeteerConfig({"application", "JSBZ.SOA_PUBLIC"})
+@EnableLogMonitor
 public class Application {
 
     public static void main(String[] args) {

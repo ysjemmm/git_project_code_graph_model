@@ -20,5 +20,57 @@
             <artifactId>forward-model</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.timevale.filesystem</groupId>
+            <artifactId>filesystem-common-service-facade</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.timevale.spring.boot</groupId>
+            <artifactId>tedis-spring-boot-starter</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>mockito-core</artifactId>
+                    <groupId>org.mockito</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.timevale.framework</groupId>
+            <artifactId>schedulerT-client</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.timevale.spring.boot</groupId>
+            <artifactId>esign-mq-spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.timevale.security</groupId>
+            <artifactId>facade</artifactId>
+        </dependency>
+        <!-- 分布式锁-->
+        <dependency>
+            <groupId>com.timevale.spring.boot</groupId>
+            <artifactId>elock-spring-boot-starter</artifactId>
+        </dependency>
     </dependencies>
 </project>
