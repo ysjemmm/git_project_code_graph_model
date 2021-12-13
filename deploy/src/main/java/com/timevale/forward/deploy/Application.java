@@ -28,7 +28,10 @@ import com.timevale.mandarin.microservice.NoDBService;
  */
 //@UniversalService  需要mysql数据源的话请删除“@NoDBService”注解，打开此注解并在配置中心配置数据源信息
 @NoDBService
-@EnableFeignClients
+@EnableFeignClients(basePackages = {
+        "com.timevale.forward.facade.api",
+        "com.timevale.security.facade.api"
+})
 @MapperScan("com.timevale.forward.dal")
 @SpringBootApplication(scanBasePackages = {"com.timevale.forward.service"})
 @EnablePuppeteerConfig({"application", "JSBZ.SOA_PUBLIC"})
