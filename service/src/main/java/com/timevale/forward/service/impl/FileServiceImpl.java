@@ -1,17 +1,12 @@
 package com.timevale.forward.service.impl;
 
-import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
-import com.timevale.crm.sdk.common.utils.file.FileUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.client.FileService;
-import com.timevale.forward.facade.api.request.FileUploadReq;
-import com.timevale.forward.facade.api.result.FileVO;
-import com.timevale.forward.service.utils.EnvUtils;
+import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -22,20 +17,16 @@ import java.util.List;
 @RestService
 public class FileServiceImpl implements FileService {
 
-    @Resource
-    private EnvUtils envUtils;
-
     @Override
-    public BaseResult<FileVO> upload(FileUploadReq fileUploadReq) {
-//        FileDownloadDTO fileDownloadDTO = FileUtil.uploadFileToOSS(fileUploadReq.getMultipartFile(), envUtils.getEnv());
-        log.info("上传文件接收参数:{}", fileUploadReq);
-        return BaseResult.success(new FileVO());
+    public BaseResult<Integer> add(FileAddReq fileAddReq) {
+        log.info("新增文件接收参数:{}", fileAddReq);
+        return BaseResult.success(1);
     }
 
     @Override
-    public BaseResult<List<FileVO>> list(String attachId) {
+    public BaseResult<List<String>> list(String attachId) {
         log.info("文件列表接收参数:{}", attachId);
-        return BaseResult.success(Lists.newArrayList(new FileVO()));
+        return BaseResult.success(Lists.newArrayList("1"));
     }
 
     @Override
