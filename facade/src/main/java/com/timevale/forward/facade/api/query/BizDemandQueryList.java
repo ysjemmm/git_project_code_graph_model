@@ -2,8 +2,6 @@ package com.timevale.forward.facade.api.query;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.timevale.forward.facade.api.result.FileVO;
-import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.mandarin.common.query.QueryBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -11,7 +9,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
-import java.util.List;
 
 /**
  * @author by YangXu
