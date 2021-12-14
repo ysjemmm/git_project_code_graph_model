@@ -13,6 +13,7 @@
     <artifactId>forward-deploy</artifactId>
     <name>forward/deploy</name>
     <packaging>jar</packaging>
+    <version>${parent.version}</version>
 
     <properties>
         <capuslue.maven.plugin.version>1.5.1</capuslue.maven.plugin.version>
