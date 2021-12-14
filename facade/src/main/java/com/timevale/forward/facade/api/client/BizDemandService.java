@@ -3,11 +3,16 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
+import com.timevale.forward.facade.api.query.BizDemandSubProductDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
+import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
+
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -25,15 +30,15 @@ public interface BizDemandService {
     BaseResult<PageQueryResult<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList);
 
     /**
-     * 通过id获取业务需求
+     * 作废
      *
      * @param bizDemandId 业务需求id
-     * @return 单个业务需求详情
+     * @return 成功与否
      */
-    BaseResult<BizDemandVO> getBizDemandById(Long bizDemandId);
+    BaseResult<Boolean> updateStatus(Long bizDemandId);
 
     /**
-     * 添加业务需求
+     * 新增业务需求
      *
      * @param bizDemandAddReq 业务需求添加请求
      * @return 成功与否
@@ -41,13 +46,20 @@ public interface BizDemandService {
     BaseResult<Boolean> addBizDemand(BizDemandAddReq bizDemandAddReq);
 
     /**
+     * 通过id获取业务需求
+     *
+     * @param bizDemandId 业务需求id
+     * @return 单个业务需求详情
+     */
+    BaseResult<BizDemandDetailVO> getBizDemandById(Long bizDemandId);
+
+    /**
      * 修改业务需求
      *
      * @param bizDemandModifyReq 业务需求修改请求
      * @return 成功与否
      */
-    BaseResult<Boolean> modifyBizDemand(BizDemandModifyReq bizDemandModifyReq);
-
+    BaseResult<Boolean> modify(BizDemandModifyReq bizDemandModifyReq);
 
     /**
      * 同意接收
@@ -63,7 +75,32 @@ public interface BizDemandService {
      *
      * @param bizDemandId 业务需求id
      * @param reason      驳回理由
-     * @return
+     * @return 成功与否
      */
     BaseResult<Boolean> reject(Long bizDemandId, Integer reason);
+
+    /**
+     * 转移
+     *
+     * @param bizDemandId 业务需求id
+     * @param receiveMan  转交接收人
+     * @return 成功与否
+     */
+    BaseResult<Boolean> transfer(Long bizDemandId, String receiveMan);
+
+    /**
+     * 产品需求列表
+     *
+     * @param bizDemandSubProductDemandQueryList 业务需求子产品需求查询列表
+     * @return 列表
+     */
+    BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(BizDemandSubProductDemandQueryList bizDemandSubProductDemandQueryList);
+
+    /**
+     * 关联/取消关联产品需求
+     *
+     * @param productIdList 产品id列表
+     * @return 成功与否
+     */
+    BaseResult<Boolean> linkOrUnLinkProductDemand(List<Long> productIdList);
 }

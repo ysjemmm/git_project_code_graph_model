@@ -14,8 +14,6 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("业务需求新增")
-@AllArgsConstructor
-@NoArgsConstructor
 public class BizDemandAddReq extends BizDemandModifyReq {
 
     @ApiModelProperty("接收人")

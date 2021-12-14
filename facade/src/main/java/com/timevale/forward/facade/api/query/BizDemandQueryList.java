@@ -34,6 +34,12 @@ public class BizDemandQueryList extends QueryBase {
     @ApiModelProperty("产品线id")
     private Long productLineId;
 
+    @ApiModelProperty("创建时间")
+    private Date createDate;
+
+    @ApiModelProperty("预期上线时间")
+    private Integer planReleaseDate;
+
     @ApiModelProperty("需求解决状态")
     private Integer status;
 
@@ -44,12 +50,7 @@ public class BizDemandQueryList extends QueryBase {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long deptId;
 
-    @ApiModelProperty("发布时间")
-    private Date releaseDate;
-
-    @ApiModelProperty("预期上线时间")
-    private Integer planReleaseDate;
-
-    @ApiModelProperty("提交人")
+    @ApiModelProperty("需求提交人")
     private String createMan;
+
 }
