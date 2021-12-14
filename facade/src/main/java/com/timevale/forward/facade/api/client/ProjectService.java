@@ -32,7 +32,7 @@ public interface ProjectService {
      * @param type 操作类型 暂停,作废
      * @return 数量
      */
-    BaseResult<Integer> updateStatus(Long id, Byte type);
+    BaseResult<Integer> modifyStatus(Long id, Byte type);
 
     /**
      * 开启项目

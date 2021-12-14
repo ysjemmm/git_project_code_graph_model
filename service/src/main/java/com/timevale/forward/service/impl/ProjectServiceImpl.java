@@ -30,7 +30,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<Integer> updateStatus(Long id, Byte type) {
+    public BaseResult<Integer> modifyStatus(Long id, Byte type) {
         log.info("项目暂停或作废接收参数:id={},type={}", id, type);
         return BaseResult.success(1);
     }
