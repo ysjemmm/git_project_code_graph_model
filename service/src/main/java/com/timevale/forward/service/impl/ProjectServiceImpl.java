@@ -19,7 +19,7 @@ import org.assertj.core.util.Lists;
 public class ProjectServiceImpl implements ProjectService {
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
-        log.info("列表接收参数:{}", projectQueryList);
+        log.info("项目列表接收参数:{}", projectQueryList);
 //        PageHelper.startPage(projectQueryList.getPageNum(), projectQueryList.getPageSize());
         PageQueryResult<ProjectVO> result = new PageQueryResult<>();
         result.setResultList(Lists.newArrayList(new ProjectVO()));
