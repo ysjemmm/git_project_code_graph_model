@@ -1,13 +1,10 @@
 package com.timevale.forward.facade.api.query;
 
-import com.timevale.mandarin.common.query.QueryBase;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.List;
 
 /**
  * @author: xingyun
