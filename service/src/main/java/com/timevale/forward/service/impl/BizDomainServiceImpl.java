@@ -18,7 +18,7 @@ import java.util.List;
 public class BizDomainServiceImpl implements BizDomainService {
 
     @Override
-    public BaseResult<List<BizDomainVO>> list() {
+    public BaseResult<List<BizDomainVO>> bizDomainList() {
         List<BizDomainVO> result = Lists.newArrayList();
         return BaseResult.success(result);
     }

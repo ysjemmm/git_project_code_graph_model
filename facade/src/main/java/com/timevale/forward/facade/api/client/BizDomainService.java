@@ -19,5 +19,5 @@ public interface BizDomainService {
      *
      * @return 返回业务域列表
      */
-    BaseResult<List<BizDomainVO>> list();
+    BaseResult<List<BizDomainVO>> bizDomainList();
 }

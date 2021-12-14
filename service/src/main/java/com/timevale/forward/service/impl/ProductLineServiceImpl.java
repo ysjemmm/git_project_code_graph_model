@@ -18,7 +18,7 @@ import java.util.List;
 public class ProductLineServiceImpl implements ProductLineService {
 
     @Override
-    public BaseResult<List<ProductLineVO>> list() {
+    public BaseResult<List<ProductLineVO>> productLineList() {
         List<ProductLineVO> result = Lists.newArrayList();
         return BaseResult.success(result);
     }

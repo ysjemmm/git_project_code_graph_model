@@ -19,5 +19,5 @@ public interface ProductLineService {
      *
      * @return 返回产品线列表
      */
-    BaseResult<List<ProductLineVO>> list();
+    BaseResult<List<ProductLineVO>> productLineList();
 }
