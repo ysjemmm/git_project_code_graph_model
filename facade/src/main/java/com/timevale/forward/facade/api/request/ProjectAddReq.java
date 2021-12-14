@@ -1,5 +1,7 @@
 package com.timevale.forward.facade.api.request;
 
+import com.timevale.forward.facade.api.result.PersonVO;
+import com.timevale.forward.facade.api.result.ProjectNodeVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -32,10 +34,10 @@ public class ProjectAddReq extends BaseReq {
     private String pm;
 
     @ApiModelProperty("产品经理")
-    private List<UserInfo> pd;
+    private List<PersonVO> pd;
 
     @ApiModelProperty("团队成员")
-    private List<UserInfo> teamMember;
+    private List<PersonVO> teamMember;
 
     @ApiModelProperty("项目计划开始时间")
     private String planStartDate;
@@ -45,5 +47,8 @@ public class ProjectAddReq extends BaseReq {
 
     @ApiModelProperty("描述")
     private String desc;
+
+    @ApiModelProperty("节点")
+    private ProjectNodeVO projectNodeVO;
 
 }

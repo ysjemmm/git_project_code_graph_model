@@ -8,6 +8,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
+
 /**
  * @author: xingyun
  * @create: 2021-12-13 13:53
@@ -29,9 +31,9 @@ public class ProjectNodeVO extends ToString {
 
 
     @ApiModelProperty("计划完成时间")
-    private String plantDate;
+    private Date plantDate;
 
     @ApiModelProperty("实际完成时间")
-    private String actualDate;
+    private Date actualDate;
     
 }

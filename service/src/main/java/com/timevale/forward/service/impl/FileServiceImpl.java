@@ -25,13 +25,13 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public BaseResult<List<String>> list(String attachId) {
-        log.info("文件列表接收参数:{}", attachId);
+        log.info("文件列表接收参数:attachId={}", attachId);
         return BaseResult.success(Lists.newArrayList("1"));
     }
 
     @Override
     public BaseResult<Integer> delete(String attachId) {
-        log.info("删除文件接收参数:{}", attachId);
+        log.info("删除文件接收参数:attachId={}", attachId);
         return BaseResult.success(1);
     }
 }

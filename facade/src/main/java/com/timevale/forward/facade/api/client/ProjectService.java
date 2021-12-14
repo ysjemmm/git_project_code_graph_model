@@ -5,6 +5,7 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -66,13 +67,22 @@ public interface ProjectService {
      */
     BaseResult<ProjectDetailVO> get(Long id);
 
-//
-//    /**
-//     * 查询满足条件的产品需求列表
-//     *
-//     * @param projectModifyReq 项目信息
-//     * @return 列表
-//     */
-//    BaseResult<PageQueryResult<ProjectDemandVO>> matchProductDemandList(ProjectModifyReq projectModifyReq);
+
+    /**
+     * 查询满足条件的产品需求列表
+     *
+     * @param id 项目信息
+     * @return 列表
+     */
+    BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(Long id);
+
+
+    /**
+     *关联or取消关联
+     * @param productDemandId 产品需求id
+     * @param type 关联or取消关联
+     * @return 数量
+     */
+    BaseResult<Integer> linkOrUnLinkProductDemand(Long id,Long productDemandId, Byte type);
 
 }

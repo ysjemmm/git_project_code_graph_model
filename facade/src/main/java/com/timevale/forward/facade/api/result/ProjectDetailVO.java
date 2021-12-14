@@ -1,6 +1,5 @@
 package com.timevale.forward.facade.api.result;
 
-import com.timevale.forward.facade.api.request.UserInfo;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -34,10 +33,10 @@ public class ProjectDetailVO extends ToString {
     private String pm;
 
     @ApiModelProperty("产品经理")
-    private List<UserInfo> pd;
+    private List<PersonVO> pd;
 
     @ApiModelProperty("团队成员")
-    private List<UserInfo> teamMember;
+    private List<PersonVO> teamMember;
 
     @ApiModelProperty("项目计划开始时间")
     private String planStartDate;
@@ -54,7 +53,12 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("描述")
     private String desc;
 
+    @ApiModelProperty("产品需求")
+    private List<ProductDemandVO> productDemandVO;
+    
     @ApiModelProperty("节点")
     private ProjectNodeVO projectNodeVO;
+    
+    
     
 }

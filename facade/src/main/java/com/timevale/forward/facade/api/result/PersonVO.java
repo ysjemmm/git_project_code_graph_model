@@ -17,17 +17,10 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @ApiOperation("人员信息")
 public class PersonVO extends ToString {
-
-    @ApiModelProperty("id")
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long id;
-
+    
     @ApiModelProperty("人员名字")
     private String userName;
 
     @ApiModelProperty("人员Id")
     private String userId;
-
-    @ApiModelProperty("人员类型")
-    private Integer type;
 }

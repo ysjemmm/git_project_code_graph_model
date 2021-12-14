@@ -1,38 +1,70 @@
 package com.timevale.forward.facade.api.result;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
+
 /**
- * @author by YangXu
- * @Date 2021/12/14 18:21
- */
+ * @author: xingyun
+ * @create: 2021-12-13 13:53
+ **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("产品需求")
+@ApiModel("产品需求列表")
 public class ProductDemandVO extends ToString {
 
-    @ApiModelProperty("产品需求id")
+    @ApiModelProperty("id")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
-    @ApiModelProperty("产品需求主题")
+    @ApiModelProperty("名称")
     private String name;
 
-    @ApiModelProperty("优先级")
-    private Integer priority;
+    @ApiModelProperty("优先级:0(P0),1(P1),2(P2),3(P3)")
+    private Byte priority;
 
     @ApiModelProperty("业务域")
-    private Long bizDomainId;
+    private String bizDomain;
 
-    @ApiModelProperty("需求状态")
-    private Integer status;
+    @ApiModelProperty("产品线")
+    private String productLine;
 
-    @ApiModelProperty("产品线id")
-    private Long productLineId;
+    @ApiModelProperty("类型:0新增功能,1功能迭代,2体验优化,3技术需求,4安全需求")
+    private Byte type;
 
-    @ApiModelProperty("产品需求负责人")
+    @ApiModelProperty("状态:0待排期,10已列入项目,20项目进行中,30已完成上线,40已暂停,50已作废")
+    private Byte status;
+
+    @ApiModelProperty("负责人")
     private String owner;
+
+    @ApiModelProperty("项目描述")
+    private String desc;
+
+    @ApiModelProperty("是否删除:0:否,1:是")
+    private Byte isDeleted;
+
+    @ApiModelProperty("创建人id")
+    private String createManId;
+
+    @ApiModelProperty("创建人")
+    private String createMan;
+
+    @ApiModelProperty("创建时间")
+    private Date createDate;
+
+    @ApiModelProperty("修改人id")
+    private String modifyManId;
+
+    @ApiModelProperty("修改人")
+    private String modifyMan;
+
+    @ApiModelProperty("修改时间")
+    private Date modifyDate;
 }
