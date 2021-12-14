@@ -1,20 +1,25 @@
-package com.timevale.forward.facade.api.request;
+package com.timevale.forward.facade.api.result;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.timevale.forward.facade.api.request.UserInfo;
+import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
 import java.util.List;
 
 /**
  * @author: xingyun
- * @create: 2021-12-13 20:17
+ * @create: 2021-12-13 13:53
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("项目新增")
-public class ProjectAddReq extends BaseReq {
+@ApiModel("项目详情")
+public class ProjectDetailVO extends ToString {
 
     @ApiModelProperty("名称")
     private String name;
@@ -43,7 +48,16 @@ public class ProjectAddReq extends BaseReq {
     @ApiModelProperty("项目计划结束时间")
     private String planEndDate;
 
+    @ApiModelProperty("项目实际开始时间")
+    private String actualStartDate;
+
+    @ApiModelProperty("项目实际结束时间")
+    private String actualEndDate;
+
     @ApiModelProperty("描述")
     private String desc;
 
+    @ApiModelProperty("节点")
+    private ProjectNodeVO projectNodeVO;
+    
 }

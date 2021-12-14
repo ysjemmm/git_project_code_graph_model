@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author: xingyun
@@ -16,7 +17,7 @@ import java.util.Date;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("项目管理")
+@ApiModel("项目列表")
 public class ProjectVO extends ToString {
     
     @ApiModelProperty("id")
@@ -29,6 +30,12 @@ public class ProjectVO extends ToString {
     @ApiModelProperty("优先级:0(P0),1(P1),2(P2)")
     private Byte priority;
 
+    @ApiModelProperty("业务域")
+    private String bizDomain;
+
+    @ApiModelProperty("产品线")
+    private String productLine;
+
     @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
     private Byte type;
 
@@ -37,6 +44,9 @@ public class ProjectVO extends ToString {
 
     @ApiModelProperty("项目经理")
     private String pm;
+
+    @ApiModelProperty("产品经理")
+    private String pd;
 
     @ApiModelProperty("项目计划开始时间")
     private String planStartDate;
@@ -49,9 +59,6 @@ public class ProjectVO extends ToString {
 
     @ApiModelProperty("项目实际结束时间")
     private String actualEndDate;
-
-    @ApiModelProperty("项目描述")
-    private String desc;
 
     @ApiModelProperty("是否删除:0:否,1:是")
     private Byte isDeleted;

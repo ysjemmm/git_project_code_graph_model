@@ -2,12 +2,8 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.query.ProjectQueryList;
-import com.timevale.forward.facade.api.request.FileUploadReq;
-import com.timevale.forward.facade.api.result.FileVO;
-import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.mandarin.common.annotation.RestClient;
-import com.timevale.mandarin.common.result.PageQueryResult;
 
 import java.util.List;
 
@@ -18,12 +14,12 @@ import java.util.List;
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface FileService {
     /**
-     * 上传文件
+     * 新增
      *
-     * @param fileUploadReq
-     * @return 文件信息
+     * @param fileAddReq
+     * @return 数量
      */
-    BaseResult<FileVO> upload(FileUploadReq fileUploadReq);
+    BaseResult<Integer> add(FileAddReq fileAddReq);
 
     /**
      * 查列表
@@ -31,7 +27,7 @@ public interface FileService {
      * @param attachId
      * @return 列表
      */
-    BaseResult<List<FileVO>> list(String attachId);
+    BaseResult<List<String>> list(String attachId);
 
     /**
      * 删除附件
