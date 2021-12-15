@@ -38,10 +38,10 @@ public interface ProductDemandService {
     /**
      * 新增
      *
-     * @param productDemandModifyReq 产品需求信息
+     * @param productDemandAddReq 产品需求信息
      * @return 数量
      */
-    BaseResult<Integer> add(ProductDemandAddReq productDemandModifyReq);
+    BaseResult<Integer> add(ProductDemandAddReq productDemandAddReq);
 
 
     /**
