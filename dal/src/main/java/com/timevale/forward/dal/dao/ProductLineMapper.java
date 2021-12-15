@@ -15,5 +15,5 @@ public interface ProductLineMapper {
      *
      * @return 列表
      */
-    List<ProductLineDO> selectList();
+    List<ProductLineDO> select();
 }

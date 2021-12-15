@@ -26,7 +26,7 @@ public class BizDomainServiceImpl implements BizDomainService {
 
     @Override
     public BaseResult<List<BizDomainVO>> bizDomainList() {
-        List<BizDomainVO> result = BizDomainCopier.INSTANCE.convert(bizDomainMapper.selectList());
+        List<BizDomainVO> result = BizDomainCopier.INSTANCE.convert(bizDomainMapper.select());
         return BaseResult.success(result);
     }
 }

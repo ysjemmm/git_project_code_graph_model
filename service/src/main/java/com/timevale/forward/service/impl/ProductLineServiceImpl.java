@@ -25,7 +25,7 @@ public class ProductLineServiceImpl implements ProductLineService {
 
     @Override
     public BaseResult<List<ProductLineVO>> productLineList() {
-        List<ProductLineVO> result = ProductLineCopier.INSTANCE.convert(productLineMapper.selectList());
+        List<ProductLineVO> result = ProductLineCopier.INSTANCE.convert(productLineMapper.select());
         return BaseResult.success(result);
     }
 }

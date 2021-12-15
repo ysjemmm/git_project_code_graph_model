@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.BizDemandSubProductDemandQueryList;
@@ -9,6 +10,7 @@ import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
+import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,8 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<Boolean> addBizDemand(BizDemandAddReq bizDemandAddReq) {
+        BizDemandDO bizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandAddReq);
+        
 
         return null;
     }
