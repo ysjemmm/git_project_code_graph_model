@@ -29,11 +29,11 @@ public interface ProductDemandService {
     /**
      * 修改状态
      *
-     * @param id   产品需求id
-     * @param type 操作类型 暂停,启用
+     * @param productDemandId 产品需求id
+     * @param type            操作类型 暂停,启用
      * @return 数量
      */
-    BaseResult<Integer> updateStatus(Long id, Byte type);
+    BaseResult<Integer> updateStatus(Long productDemandId, Byte type);
 
     /**
      * 新增
@@ -55,27 +55,27 @@ public interface ProductDemandService {
     /**
      * 查看
      *
-     * @param id 产品需求id
+     * @param productDemandId 产品需求id
      * @return 详情信息
      */
-    BaseResult<ProductDemandDetailVO> get(Long id);
+    BaseResult<ProductDemandDetailVO> get(Long productDemandId);
 
 
     /**
      * 查询满足条件的产品需求列表
      *
-     * @param id 产品需求id
+     * @param productDemandId 产品需求id
      * @return 列表
      */
-    BaseResult<PageQueryResult<ProjectVO>> matchProjectList(Long id);
+    BaseResult<PageQueryResult<ProjectVO>> matchProjectList(Long productDemandId);
 
     /**
      * 查询满足条件的业务需求列表
      *
-     * @param id 产品需求id
+     * @param productDemandId 产品需求id
      * @return 列表
      */
-    BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(Long id);
+    BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(Long productDemandId);
 
 
 }

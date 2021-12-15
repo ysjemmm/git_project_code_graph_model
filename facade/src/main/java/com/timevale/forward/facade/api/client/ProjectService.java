@@ -28,19 +28,19 @@ public interface ProjectService {
     /**
      * 修改状态
      *
-     * @param id   项目id
-     * @param type 操作类型 暂停,作废
+     * @param projectId, 项目id
+     * @param type       操作类型 暂停,作废
      * @return 数量
      */
-    BaseResult<Integer> modifyStatus(Long id, Byte type);
+    BaseResult<Integer> updateStatus(Long projectId, Byte type);
 
     /**
      * 开启项目
      *
-     * @param id 项目id
+     * @param projectId 项目id
      * @return 数量
      */
-    BaseResult<Integer> enable(Long id);
+    BaseResult<Integer> enable(Long projectId);
 
     /**
      * 新增
@@ -62,27 +62,28 @@ public interface ProjectService {
     /**
      * 查看
      *
-     * @param id 项目信息
+     * @param projectId 项目信息
      * @return 详情信息
      */
-    BaseResult<ProjectDetailVO> get(Long id);
+    BaseResult<ProjectDetailVO> get(Long projectId);
 
 
     /**
      * 查询满足条件的产品需求列表
      *
-     * @param id 项目信息
+     * @param projectId 项目信息
      * @return 列表
      */
-    BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(Long id);
+    BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(Long projectId);
 
 
     /**
-     *关联or取消关联
+     * 关联or取消关联
+     *
      * @param productDemandId 产品需求id
-     * @param type 关联or取消关联
+     * @param type            关联or取消关联
      * @return 数量
      */
-    BaseResult<Integer> linkOrUnLinkProductDemand(Long id,Long productDemandId, Byte type);
+    BaseResult<Integer> linkOrUnLinkProductDemand(Long projectId, Long productDemandId, Byte type);
 
 }

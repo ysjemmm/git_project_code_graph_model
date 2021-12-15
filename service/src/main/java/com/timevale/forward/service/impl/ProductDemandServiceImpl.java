@@ -31,8 +31,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
-    public BaseResult<Integer> updateStatus(Long id, Byte type) {
-        log.info("产品需求暂停或开启收参数:id={},type={}", id, type);
+    public BaseResult<Integer> updateStatus(Long productDemandId, Byte type) {
+        log.info("产品需求暂停或开启收参数:productDemandId={},type={}", productDemandId, type);
         return BaseResult.success(1);
     }
 
@@ -49,14 +49,14 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
-    public BaseResult<ProductDemandDetailVO> get(Long id) {
-        log.info("产品需求查看接收参数:id={}", id);
+    public BaseResult<ProductDemandDetailVO> get(Long productDemandId) {
+        log.info("产品需求查看接收参数:productDemandId={}", productDemandId);
         return BaseResult.success(new ProductDemandDetailVO());
     }
 
     @Override
-    public BaseResult<PageQueryResult<ProjectVO>> matchProjectList(Long id) {
-        log.info("产品需求匹配接收参数:id={}", id);
+    public BaseResult<PageQueryResult<ProjectVO>> matchProjectList(Long productDemandId) {
+        log.info("产品需求匹配接收参数:productDemandId={}", productDemandId);
 //        PageHelper.startPage(projectQueryList.getPageNum(), projectQueryList.getPageSize());
         PageQueryResult<ProjectVO> result = new PageQueryResult<>();
         result.setResultList(Lists.newArrayList(new ProjectVO()));
@@ -64,8 +64,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(Long id) {
-        log.info("业务需求匹配接收参数:id={}", id);
+    public BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(Long productDemandId) {
+        log.info("业务需求匹配接收参数:productDemandId={}", productDemandId);
 //        PageHelper.startPage(projectQueryList.getPageNum(), projectQueryList.getPageSize());
         PageQueryResult<BizDemandVO> result = new PageQueryResult<>();
         result.setResultList(Lists.newArrayList(new BizDemandVO()));

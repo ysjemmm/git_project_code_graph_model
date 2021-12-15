@@ -30,14 +30,14 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<Integer> modifyStatus(Long id, Byte type) {
-        log.info("项目暂停或作废接收参数:id={},type={}", id, type);
+    public BaseResult<Integer> updateStatus(Long projectId, Byte type) {
+        log.info("项目暂停或作废接收参数:projectId={},type={}", projectId, type);
         return BaseResult.success(1);
     }
 
     @Override
-    public BaseResult<Integer> enable(Long id) {
-        log.info("项目开启接收参数:id={}", id);
+    public BaseResult<Integer> enable(Long projectId) {
+        log.info("项目开启接收参数:projectId={}", projectId);
         return BaseResult.success(1);
     }
 
@@ -55,14 +55,14 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<ProjectDetailVO> get(Long id) {
-        log.info("项目查看接收参数:id={}", id);
+    public BaseResult<ProjectDetailVO> get(Long projectId) {
+        log.info("项目查看接收参数:projectId={}", projectId);
         return BaseResult.success(new ProjectDetailVO());
     }
 
     @Override
-    public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(Long id) {
-        log.info("产品需求匹配接收参数:id={}", id);
+    public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(Long projectId) {
+        log.info("产品需求匹配接收参数:projectId={}", projectId);
 //        PageHelper.startPage(projectQueryList.getPageNum(), projectQueryList.getPageSize());
         PageQueryResult<ProductDemandVO> result = new PageQueryResult<>();
         result.setResultList(Lists.newArrayList(new ProductDemandVO()));
@@ -70,8 +70,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<Integer> linkOrUnLinkProductDemand(Long id,Long productDemandId, Byte type) {
-        log.info("关联or取消关联接收参数:id={},productDemandId={},type={}", id,productDemandId, type);
+    public BaseResult<Integer> linkOrUnLinkProductDemand(Long projectId, Long productDemandId, Byte type) {
+        log.info("关联or取消关联接收参数:projectId={},productDemandId={},type={}", projectId, productDemandId, type);
         return BaseResult.success(1);
     }
 }
