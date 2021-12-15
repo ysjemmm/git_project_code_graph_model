@@ -14,6 +14,7 @@ import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -82,6 +83,8 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<Boolean> agree(Long bizDemandId, Integer planReleaseDate) {
+        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
         return BaseResult.success(true);
     }
 
