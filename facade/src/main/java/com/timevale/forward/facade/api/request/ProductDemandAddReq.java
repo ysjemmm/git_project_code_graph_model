@@ -1,6 +1,5 @@
 package com.timevale.forward.facade.api.request;
 
-import com.timevale.forward.facade.api.result.PersonVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -36,7 +35,7 @@ public class ProductDemandAddReq extends BaseReq {
     private String desc;
 
     @ApiModelProperty("抄送人")
-    private List<PersonVO> recipients;
+    private List<PersonAddReq> recipients;
 
 
 }

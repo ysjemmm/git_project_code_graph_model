@@ -11,6 +11,8 @@ import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
+import java.util.List;
+
 /**
  * @author: xingyun
  * @create: 2021-12-13 13:44
@@ -80,10 +82,10 @@ public interface ProjectService {
     /**
      * 关联or取消关联
      *
-     * @param productDemandId 产品需求id
+     * @param productDemandIds 产品需求id
      * @param type            关联or取消关联
      * @return 数量
      */
-    BaseResult<Integer> linkOrUnLinkProductDemand(Long projectId, Long productDemandId, Byte type);
+    BaseResult<Integer> linkOrUnLinkProductDemand(Long projectId, List<Long> productDemandIds, Byte type);
 
 }

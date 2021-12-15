@@ -13,6 +13,8 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
 
+import java.util.List;
+
 /**
  * @author: xingyun
  * @create: 2021-12-13 13:44
@@ -70,8 +72,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<Integer> linkOrUnLinkProductDemand(Long projectId, Long productDemandId, Byte type) {
-        log.info("关联or取消关联接收参数:projectId={},productDemandId={},type={}", projectId, productDemandId, type);
+    public BaseResult<Integer> linkOrUnLinkProductDemand(Long projectId, List<Long> productDemandIds, Byte type) {
+        log.info("关联or取消关联接收参数:projectId={},productDemandId={},type={}", projectId, productDemandIds, type);
         return BaseResult.success(1);
     }
 }

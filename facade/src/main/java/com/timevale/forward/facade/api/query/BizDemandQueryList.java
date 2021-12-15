@@ -53,4 +53,6 @@ public class BizDemandQueryList extends QueryBase {
     @ApiModelProperty("需求提交人")
     private String createMan;
 
+    @ApiModelProperty("0:我提出的需求,1:我收到的需求,2:抄送我的需求,3:全部业务需求,4:我团队提出的需求,5:我团队收到的需求")
+    private String owner;
 }
