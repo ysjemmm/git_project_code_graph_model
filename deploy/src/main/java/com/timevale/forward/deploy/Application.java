@@ -32,7 +32,7 @@ import com.timevale.mandarin.microservice.NoDBService;
         "com.timevale.forward.facade.api",
         "com.timevale.security.facade.api"
 })
-@MapperScan("com.timevale.forward.dal")
+// @MapperScan("com.timevale.forward.dal")
 @SpringBootApplication(scanBasePackages = {"com.timevale.forward.service"})
 @EnablePuppeteerConfig({"application", "JSBZ.SOA_PUBLIC"})
 @EnableLogMonitor

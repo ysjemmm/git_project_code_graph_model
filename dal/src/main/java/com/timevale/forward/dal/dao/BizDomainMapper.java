@@ -15,5 +15,5 @@ public interface BizDomainMapper {
      *
      * @return 列表
      */
-    List<BizDomainDO> select();
+    List<BizDomainDO> selectAllBizDomain();
 }

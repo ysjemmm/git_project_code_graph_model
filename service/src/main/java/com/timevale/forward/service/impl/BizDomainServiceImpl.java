@@ -2,13 +2,11 @@ package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.BizDomainMapper;
-import com.timevale.forward.dal.entity.BizDomainDO;
 import com.timevale.forward.facade.api.client.BizDomainService;
 import com.timevale.forward.facade.api.result.BizDomainVO;
 import com.timevale.forward.service.copy.BizDomainCopier;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.Lists;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -21,12 +19,12 @@ import java.util.List;
 @RestService
 public class BizDomainServiceImpl implements BizDomainService {
 
-    @Resource
+    // @Resource
     BizDomainMapper bizDomainMapper;
 
     @Override
     public BaseResult<List<BizDomainVO>> bizDomainList() {
-        List<BizDomainVO> result = BizDomainCopier.INSTANCE.convert(bizDomainMapper.select());
+        List<BizDomainVO> result = BizDomainCopier.INSTANCE.convert(bizDomainMapper.selectAllBizDomain());
         return BaseResult.success(result);
     }
 }

@@ -7,9 +7,7 @@ import com.timevale.forward.facade.api.result.ProductLineVO;
 import com.timevale.forward.service.copy.ProductLineCopier;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.Lists;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -20,12 +18,12 @@ import java.util.List;
 @RestService
 public class ProductLineServiceImpl implements ProductLineService {
 
-    @Resource
+    // @Resource
     ProductLineMapper productLineMapper;
 
     @Override
     public BaseResult<List<ProductLineVO>> productLineList() {
-        List<ProductLineVO> result = ProductLineCopier.INSTANCE.convert(productLineMapper.select());
+        List<ProductLineVO> result = ProductLineCopier.INSTANCE.convert(productLineMapper.selectAllProductLine());
         return BaseResult.success(result);
     }
 }

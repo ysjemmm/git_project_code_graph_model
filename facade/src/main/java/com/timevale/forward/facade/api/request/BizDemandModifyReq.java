@@ -2,8 +2,6 @@ package com.timevale.forward.facade.api.request;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.timevale.forward.facade.api.result.FileVO;
-import com.timevale.forward.facade.api.result.PersonVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -53,7 +51,7 @@ public class BizDemandModifyReq extends BaseReq {
     private String desc;
 
     @ApiModelProperty("抄送人")
-    private List<PersonVO> recipients;
+    private List<PersonAddReq> recipients;
 
     @ApiModelProperty("需求解决状态:0待评估，10已接收，20已列入项目，30项目进行中，40已完成上线，50被驳回，60已作废\n")
     private Integer status;
