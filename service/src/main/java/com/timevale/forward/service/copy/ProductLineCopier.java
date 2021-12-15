@@ -5,6 +5,8 @@ import com.timevale.forward.facade.api.result.ProductLineVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 /**
  * @author by YangXu
  * @Date 2021/12/15 10:30
@@ -21,5 +23,13 @@ public interface ProductLineCopier {
      * @return 产品线VO
      */
     ProductLineVO convert(ProductLineDO productLineDO);
+
+    /**
+     * 批量处理
+     *
+     * @param productLineDOList 产品线do 列表
+     * @return 列表
+     */
+    List<ProductLineVO> convert(List<ProductLineDO> productLineDOList);
 
 }

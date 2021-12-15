@@ -35,6 +35,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<Boolean> addBizDemand(BizDemandAddReq bizDemandAddReq) {
+
         return null;
     }
 
@@ -70,11 +71,6 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<Boolean> linkOrUnLinkProductDemand(List<Long> productIdList) {
-        return null;
-    }
-
-    @Override
-    public BaseResult<List<Long>> getDept() {
         return null;
     }
 }

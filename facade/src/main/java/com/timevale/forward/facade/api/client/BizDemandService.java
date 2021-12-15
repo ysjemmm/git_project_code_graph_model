@@ -103,12 +103,4 @@ public interface BizDemandService {
      * @return 成功与否
      */
     BaseResult<Boolean> linkOrUnLinkProductDemand(List<Long> productIdList);
-
-
-    /**
-     * 获取用户所在的所有部门
-     *
-     * @return 部门id列表
-     */
-    BaseResult<List<Long>> getDept();
 }

@@ -1,0 +1,90 @@
+package com.timevale.forward.dal.entity;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.util.Date;
+
+/**
+ * @author by YangXu
+ * @Date 2021/12/15 10:59
+ */
+@EqualsAndHashCode(callSuper = true)
+@Data
+public class BizDemandDO extends BaseDO {
+
+    /**
+     * 业务需求主题
+     */
+    String name;
+
+    /**
+     * 产品线id
+     */
+    Long productLineId;
+
+    /**
+     * 数据指标
+     */
+    String dataIndicators;
+
+    /**
+     * 目标客户/用户/项目
+     */
+    String targetCustomer;
+
+    /**
+     * 是否共创用户
+     */
+    Boolean createCustomer;
+
+    /**
+     * 部门id
+     */
+    Long deptId;
+
+    /**
+     * 需求描述
+     */
+    String desc;
+
+    /**
+     * 需求解决状态
+     */
+    Integer status;
+
+    /**
+     * 优先级
+     */
+    Integer priority;
+
+    /**
+     * 接收人
+     */
+    String receiveMan;
+
+    /**
+     * 处理器
+     */
+    Integer processor;
+
+    /**
+     * 操作系统
+     */
+    Integer os;
+
+    /**
+     * 发布日期
+     */
+    Date releaseDate;
+
+    /**
+     * 计划发布日期
+     */
+    Date planReleaseDate;
+
+    /**
+     * 驳回理由
+     */
+    Integer reason;
+}

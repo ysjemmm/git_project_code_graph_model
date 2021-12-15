@@ -1,0 +1,40 @@
+package com.timevale.forward.dal.dao;
+
+import com.timevale.forward.dal.entity.FileDO;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+
+/**
+ * @author by YangXu
+ * @Date 2021/12/15 11:28
+ */
+public interface FileMapper {
+
+    /**
+     * 新增单条附件信息
+     *
+     * @param fileDO 附件DO
+     * @return int
+     */
+    int insert(FileDO fileDO);
+
+    /**
+     * 批量新增
+     *
+     * @param list 附件信息列表
+     * @return int
+     */
+    int inserts(List<FileDO> list);
+
+
+    /**
+     * 查询所属附件
+     *
+     * @param attacheId 附件所属id
+     * @param type      附件所属类型
+     * @return 列表
+     */
+    List<FileDO> select(@Param("attacheId") Long attacheId, @Param("type") Integer type);
+
+}
