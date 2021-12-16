@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * @author by YangXu
- * @Date 2021/12/14 14:03
+ * @date 2021/12/14 14:03
  */
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface BizDemandService {
@@ -101,7 +101,7 @@ public interface BizDemandService {
      *
      * @param bizDemandId   业务需求id
      * @param productIdList 产品id列表
-     * @return
+     * @return 成功与否
      */
     BaseResult<Boolean> linkOrUnLinkProductDemand(Long bizDemandId, List<Long> productIdList);
 }

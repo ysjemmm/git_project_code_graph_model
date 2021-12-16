@@ -4,7 +4,7 @@ import lombok.Getter;
 
 /**
  * @author by YangXu
- * @Date 2021/12/15 18:54
+ * @date 2021/12/15 18:54
  */
 @Getter
 public enum BizDemandReasonEnum {

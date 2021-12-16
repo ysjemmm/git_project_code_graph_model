@@ -9,10 +9,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author by YangXu
- * @Date 2021/12/14 15:20
+ * @date 2021/12/14 15:20
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -26,32 +27,31 @@ public class BizDemandQueryList extends QueryBase {
     private Long id;
 
     @ApiModelProperty("优先级： 0-紧急，10-高，20-中，30低")
-    private Byte priority;
+    private List<Byte> priority;
 
     @ApiModelProperty("业务域id")
-    private Long bizDomainId;
+    private List<Long> bizDomainId;
 
     @ApiModelProperty("产品线id")
-    private Long productLineId;
+    private List<Long> productLineId;
 
-    @ApiModelProperty("发布时间")
-    private Date releaseDate;
+    @ApiModelProperty("创建时间")
+    private Date createDate;
 
     @ApiModelProperty("预期上线时间")
     private Integer planReleaseDate;
 
     @ApiModelProperty("需求解决状态")
-    private Byte status;
+    private List<Byte> status;
 
     @ApiModelProperty("需求接收人")
-    private String receiveMan;
+    private List<String> receiveMan;
 
     @ApiModelProperty("需求部门id")
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long deptId;
+    private List<Long> deptId;
 
     @ApiModelProperty("需求提交人")
-    private String createMan;
+    private List<String> createMan;
 
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
     private String owner;

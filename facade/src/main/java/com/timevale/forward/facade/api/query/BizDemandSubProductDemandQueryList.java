@@ -7,10 +7,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author by YangXu
- * @Date 2021/12/14 17:14
+ * @date 2021/12/14 17:14
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -23,14 +24,14 @@ public class BizDemandSubProductDemandQueryList extends QueryBase {
     @ApiModelProperty("产品需求id")
     private Long id;
 
-    @ApiModelProperty("优先级")
-    private Byte priority;
+    @ApiModelProperty("优先级： 0-紧急，10-高，20-中，30低")
+    private List<Byte> priority;
 
-    @ApiModelProperty("业务域")
-    private Long bizDomainId;
+    @ApiModelProperty("业务域id")
+    private List<Long> bizDomainId;
 
-    @ApiModelProperty("产品线")
-    private Long productLineId;
+    @ApiModelProperty("产品线id")
+    private List<Long> productLineId;
 
     @ApiModelProperty("产品需求类型")
     private Byte type;
@@ -39,7 +40,7 @@ public class BizDemandSubProductDemandQueryList extends QueryBase {
     private Long toProject;
 
     @ApiModelProperty("产品需求负责人")
-    private String owner;
+    private List<String> owner;
 
     @ApiModelProperty("创建时间")
     private Date createDate;

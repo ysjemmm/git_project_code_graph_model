@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  * @author by YangXu
- * @Date 2021/12/13 17:02
+ * @date 2021/12/13 17:02
  */
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface ProductLineService {

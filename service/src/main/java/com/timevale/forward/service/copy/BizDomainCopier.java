@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  * @author by YangXu
- * @Date 2021/12/15 10:27
+ * @date 2021/12/15 10:27
  */
 @Mapper
 public interface BizDomainCopier {

@@ -12,7 +12,7 @@ import java.util.Date;
 
 /**
  * @author by YangXu
- * @Date 2021/12/14 15:52
+ * @date 2021/12/14 15:52
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

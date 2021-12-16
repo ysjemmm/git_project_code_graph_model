@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * @author by YangXu
- * @Date 2021/12/15 14:25
+ * @date 2021/12/15 14:25
  */
 @Mapper
 public interface PersonCopier {

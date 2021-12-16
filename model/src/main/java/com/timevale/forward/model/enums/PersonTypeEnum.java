@@ -4,7 +4,7 @@ import lombok.Getter;
 
 /**
  * @author by YangXu
- * @Date 2021/12/16 09:50
+ * @date 2021/12/16 09:50
  */
 @Getter
 public enum PersonTypeEnum {

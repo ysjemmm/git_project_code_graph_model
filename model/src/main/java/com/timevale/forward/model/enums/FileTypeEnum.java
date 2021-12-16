@@ -4,7 +4,7 @@ import lombok.Getter;
 
 /**
  * @author by YangXu
- * @Date 2021/12/16 10:18
+ * @date 2021/12/16 10:18
  */
 @Getter
 public enum FileTypeEnum {
