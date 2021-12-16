@@ -4,10 +4,8 @@ import com.timevale.forward.dal.dao.FileMapper;
 import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.service.component.FileComponent;
-import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
