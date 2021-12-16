@@ -11,15 +11,12 @@
 package com.timevale.forward.deploy;
 
 import com.timevale.billing.log.monitor.interfaces.EnableLogMonitor;
+import com.timevale.framework.puppeteer.spring.annotation.EnablePuppeteerConfig;
 import com.timevale.mandarin.microservice.UniversalService;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-import com.timevale.framework.puppeteer.spring.annotation.EnablePuppeteerConfig;
-import com.timevale.mandarin.microservice.NoDBService;
 
 /**
  * 服务启动入口

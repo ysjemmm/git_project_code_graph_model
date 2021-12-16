@@ -1,16 +1,11 @@
 package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.condition.PersonListCondition;
-import com.timevale.forward.dal.dao.FileMapper;
 import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.model.enums.PersonTypeEnum;
-import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
-import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;

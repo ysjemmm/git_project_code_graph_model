@@ -1,7 +1,6 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.PersonListCondition;
-import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.dal.entity.PersonDO;
 
 import java.util.List;

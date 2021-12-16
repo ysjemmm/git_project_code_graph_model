@@ -1,8 +1,6 @@
 package com.timevale.forward.service.component;
 
-import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 
 import java.util.List;
