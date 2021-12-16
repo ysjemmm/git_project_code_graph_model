@@ -25,6 +25,10 @@ import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
+import com.timevale.forward.service.integration.erp.ErpMessageClient;
+import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
+import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -33,7 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +63,9 @@ public class BizDemandServiceImpl implements BizDemandService {
     // @Resource
     ProductBizDemandMapper productBizDemandMapper;
 
+    // @Resource
+    ErpMessageClient erpMessageClient;
+
     @Override
     public BaseResult<PageQueryResult<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
         // 开始分页
@@ -70,16 +76,9 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<BizDemandDO> bizDemandDOList = bizDemandMapper.select(bizDemandListCondition);
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandDOList);
 
-        // 分页数据封装
-        PageInfo<BizDemandVO> pageInfo = new PageInfo<>(bizDemandVOList);
-        PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
-        pageQueryResult.setResultList(bizDemandVOList);
-        pageQueryResult.setCurrentPage(pageInfo.getPageNum());
-        pageQueryResult.setItemsPerPage(pageInfo.getPageSize());
-        pageQueryResult.setTotalPages(pageInfo.getPages());
-        pageQueryResult.setTotalItems((int) pageInfo.getTotal());
-
-        return BaseResult.success(pageQueryResult);
+        // 转换后返回数据
+        return BaseResult.success(BizDemandCopier.INSTANCE.convert(
+                ResultUtil.pageSuccess(new PageInfo<>(bizDemandVOList))));
     }
 
     @Override
@@ -156,7 +155,8 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
-        // 提交人通知（待实现）
+        // 通知需求提交人（待实现）
+
         return BaseResult.success(true);
     }
 
@@ -199,21 +199,23 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> linkOrUnLinkProductDemand(Long bizDemandId, List<Long> productIdList) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         // 获取当前关联数据
         List<ProductBizDemandDO> list = productBizDemandMapper.select(ProductBizDemandCondition.builder()
                 .bizDemandId(bizDemandId)
                 .build());
 
-        // 数据转换为集合，判断交集
+        // 数据转换为集合，判断交集补集
         Set<Long> newLinkData = new HashSet<>(productIdList);
-        Map<Long, Boolean> oldLinkDate = list.stream().
-                collect(Collectors.toMap(ProductBizDemandDO::getProductDemandId, ProductBizDemandDO::getIsDeleted));
+        Map<Long, Boolean> oldLinkDate = list.stream()
+                .collect(Collectors.toMap(ProductBizDemandDO::getProductDemandId, ProductBizDemandDO::getIsDeleted));
 
-        // 更新数据，新增数据
+        // 更新和新增数据的集合
         List<ProductBizDemandDO> insertLinkDate = Lists.newArrayList();
         List<ProductBizDemandDO> updateLinkDate = Lists.newArrayList();
 
-        // 根据交集、补集，决定新增数据还是更新逻辑删除标识
+        // 判断旧数据是否存在新数据中，更新逻辑删除标识
         for (Map.Entry<Long, Boolean> entry : oldLinkDate.entrySet()) {
             Boolean isDeleted = null;
             if(newLinkData.contains(entry.getKey())){
@@ -226,21 +228,46 @@ public class BizDemandServiceImpl implements BizDemandService {
                 }
             }
             if(isDeleted != null){
-                updateLinkDate.add(ProductBizDemandCopier.
-                        INSTANCE.convert(bizDemandId, entry.getKey(), false));
+                ProductBizDemandDO productBizDemandDO = ProductBizDemandCopier.INSTANCE.convert(bizDemandId, entry.getKey(), isDeleted);
+                productBizDemandDO.setModifyMan(userInfo.getAlias());
+                productBizDemandDO.setModifyManId(userInfo.getId());
+                updateLinkDate.add(productBizDemandDO);
             }
         }
-
+        // 判断新数据是否在旧数据中，添加新增数据
         for (Long productId : newLinkData) {
             if(!oldLinkDate.containsKey(productId)){
-                insertLinkDate.add(ProductBizDemandCopier.
-                        INSTANCE.convert(bizDemandId, productId, false));
+                ProductBizDemandDO productBizDemandDO = ProductBizDemandCopier.INSTANCE.convert(bizDemandId, productId, false);
+                productBizDemandDO.setCreateMan(userInfo.getAlias());
+                productBizDemandDO.setCreateManId(userInfo.getId());
+                insertLinkDate.add(productBizDemandDO);
             }
         }
 
         // 新增和更新数据
         productBizDemandMapper.inserts(insertLinkDate);
         productBizDemandMapper.updates(updateLinkDate);
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> testNotice(Integer type) {
+        if(type.equals(1)){
+            erpMessageClient.sendMarkdownMsg(MarkdownMsg.builder()
+                    .receivers(Lists.newArrayList("yangxu"))
+                    .title("test")
+                    .content("测试内容")
+                    .build());
+        }else{
+            erpMessageClient.sendActionCardMsg(ActionCardMsg.builder()
+                    .receivers(Lists.newArrayList("yangxu"))
+                    .title("test2")
+                    .markdown("测试内容2")
+                    .singleTitle("跳转连接文案")
+                    .singleUrl("https://weibo.com/")
+                    .build());
+        }
 
         return BaseResult.success(true);
     }

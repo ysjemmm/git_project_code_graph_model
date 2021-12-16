@@ -7,6 +7,7 @@ import com.timevale.forward.facade.api.request.BizDemandAddReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.mandarin.common.result.PageQueryResult;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -62,4 +63,13 @@ public interface BizDemandCopier {
      * @return 业务需求列表
      */
     List<BizDemandVO> convert(List<BizDemandDO> list);
+
+
+    /**
+     * 转换
+     *
+     * @param list 分页数据
+     * @return VO
+     */
+    PageQueryResult<BizDemandVO> convert(PageQueryResult<BizDemandVO> list);
 }

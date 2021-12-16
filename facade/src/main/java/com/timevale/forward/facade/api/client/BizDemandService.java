@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.client;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
@@ -104,4 +105,13 @@ public interface BizDemandService {
      * @return 成功与否
      */
     BaseResult<Boolean> linkOrUnLinkProductDemand(Long bizDemandId, List<Long> productIdList);
+
+
+    /**
+     * 测试通知
+     *
+     * @return
+     */
+    BaseResult<Boolean> testNotice(Integer type);
+
 }
