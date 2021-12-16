@@ -6,7 +6,7 @@ import java.util.List;
 
 /**
  * @author by YangXu
- * @Date 2021/12/15 10:36
+ * @date 2021/12/16 16:28
  */
 public interface BizDomainMapper {
 

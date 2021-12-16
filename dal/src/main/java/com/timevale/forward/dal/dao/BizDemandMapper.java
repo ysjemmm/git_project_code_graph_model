@@ -2,13 +2,12 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.entity.BizDemandDO;
-import com.timevale.forward.dal.entity.BizDomainDO;
 
 import java.util.List;
 
 /**
  * @author by YangXu
- * @Date 2021/12/15 10:49
+ * @date 2021/12/16 16:28
  */
 public interface BizDemandMapper {
 

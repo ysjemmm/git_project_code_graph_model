@@ -27,7 +27,7 @@ public class BizDemandVO extends ToString {
     private String name;
 
     @ApiModelProperty("优先级： 0-紧急，10-高，20-中，30低")
-    private Integer priority;
+    private Byte priority;
 
     @ApiModelProperty("产品线id")
     @JsonSerialize(using = ToStringSerializer.class)
@@ -38,5 +38,5 @@ public class BizDemandVO extends ToString {
     private Long bizDomainId;
 
     @ApiModelProperty("需求解决状态:0待评估，10已接收，20已列入项目，30项目进行中，40已完成上线，50被驳回，60已作废")
-    private Integer status;
+    private Byte status;
 }

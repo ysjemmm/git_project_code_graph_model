@@ -5,17 +5,11 @@ import lombok.EqualsAndHashCode;
 
 /**
  * @author by YangXu
- * @Date 2021/12/16 13:42
+ * @date 2021/12/16 13:42
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class ProductBizDemandDO extends BaseDO {
-
-    /**
-     * 主键id
-     */
-    private Long id;
-
     /**
      * 产品需求id
      */

@@ -6,7 +6,7 @@ import java.util.Date;
 
 /**
  * @author by YangXu
- * @Date 2021/12/15 10:03
+ * @date 2021/12/15 10:03
  */
 @Data
 public class BaseDO {

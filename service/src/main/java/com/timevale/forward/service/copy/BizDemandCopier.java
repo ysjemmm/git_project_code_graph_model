@@ -2,13 +2,11 @@ package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.entity.BizDemandDO;
-import com.timevale.forward.dal.entity.BizDomainDO;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.facade.api.result.BizDomainVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -44,7 +42,7 @@ public interface BizDemandCopier {
      * 请求修改转换为DO
      *
      * @param bizDemandModifyReq 业务需求修改要求的事情
-     * @return
+     * @return DO
      */
     BizDemandDO convert(BizDemandModifyReq bizDemandModifyReq);
 

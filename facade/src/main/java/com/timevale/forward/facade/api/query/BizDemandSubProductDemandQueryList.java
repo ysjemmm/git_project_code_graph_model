@@ -24,7 +24,7 @@ public class BizDemandSubProductDemandQueryList extends QueryBase {
     private Long id;
 
     @ApiModelProperty("优先级")
-    private Integer priority;
+    private Byte priority;
 
     @ApiModelProperty("业务域")
     private Long bizDomainId;
@@ -33,7 +33,7 @@ public class BizDemandSubProductDemandQueryList extends QueryBase {
     private Long productLineId;
 
     @ApiModelProperty("产品需求类型")
-    private Integer type;
+    private Byte type;
 
     @ApiModelProperty("所属项目")
     private Long toProject;
@@ -45,5 +45,5 @@ public class BizDemandSubProductDemandQueryList extends QueryBase {
     private Date createDate;
 
     @ApiModelProperty("产品需求状态")
-    private Integer status;
+    private Byte status;
 }

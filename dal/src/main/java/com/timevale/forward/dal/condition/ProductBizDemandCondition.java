@@ -5,16 +5,16 @@ import lombok.Data;
 
 /**
  * @author by YangXu
- * @date 2021/12/15 13:39
+ * @date 2021/12/16 14:07
  */
 @Data
 @Builder
-public class PersonListCondition {
+public class ProductBizDemandCondition {
 
     /**
-     * 项目id
+     * 主键id
      */
-    private Long projectId;
+    private Long id;
 
     /**
      * 产品需求id
@@ -27,7 +27,8 @@ public class PersonListCondition {
     private Long bizDemandId;
 
     /**
-     * 人员类型:0项目-产品经理，1项目-项目成员，20产品需求-抄送人，30业务需求-抄送人
+     * 逻辑删除标识
      */
-    private Integer type;
+    private Boolean isDeleted;
+
 }

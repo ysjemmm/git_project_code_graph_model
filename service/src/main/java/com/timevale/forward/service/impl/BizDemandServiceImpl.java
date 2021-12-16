@@ -4,11 +4,14 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
+import com.timevale.forward.dal.condition.ProductBizDemandCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.FileMapper;
 import com.timevale.forward.dal.dao.PersonMapper;
+import com.timevale.forward.dal.dao.ProductBizDemandMapper;
 import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.dal.entity.ProductBizDemandDO;
 import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.BizDemandSubProductDemandQueryList;
@@ -21,14 +24,21 @@ import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.PersonCopier;
+import com.timevale.forward.service.copy.ProductBizDemandCopier;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author by YangXu
@@ -46,6 +56,9 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     // @Resource
     FileMapper fileMapper;
+
+    // @Resource
+    ProductBizDemandMapper productBizDemandMapper;
 
     @Override
     public BaseResult<PageQueryResult<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
@@ -184,8 +197,51 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> linkOrUnLinkProductDemand(Long bizDemandId, List<Long> productIdList) {
+        // 获取当前关联数据
+        List<ProductBizDemandDO> list = productBizDemandMapper.select(ProductBizDemandCondition.builder()
+                .bizDemandId(bizDemandId)
+                .build());
 
-        return null;
+        // 数据转换为集合，判断交集
+        Set<Long> newLinkData = new HashSet<>(productIdList);
+        Map<Long, Boolean> oldLinkDate = list.stream().
+                collect(Collectors.toMap(ProductBizDemandDO::getProductDemandId, ProductBizDemandDO::getIsDeleted));
+
+        // 更新数据，新增数据
+        List<ProductBizDemandDO> insertLinkDate = Lists.newArrayList();
+        List<ProductBizDemandDO> updateLinkDate = Lists.newArrayList();
+
+        // 根据交集、补集，决定新增数据还是更新逻辑删除标识
+        for (Map.Entry<Long, Boolean> entry : oldLinkDate.entrySet()) {
+            Boolean isDeleted = null;
+            if(newLinkData.contains(entry.getKey())){
+                if(entry.getValue()){
+                    isDeleted = false;
+                }
+            }else{
+                if(!entry.getValue()){
+                   isDeleted = true;
+                }
+            }
+            if(isDeleted != null){
+                updateLinkDate.add(ProductBizDemandCopier.
+                        INSTANCE.convert(bizDemandId, entry.getKey(), false));
+            }
+        }
+
+        for (Long productId : newLinkData) {
+            if(!oldLinkDate.containsKey(productId)){
+                insertLinkDate.add(ProductBizDemandCopier.
+                        INSTANCE.convert(bizDemandId, productId, false));
+            }
+        }
+
+        // 新增和更新数据
+        productBizDemandMapper.inserts(insertLinkDate);
+        productBizDemandMapper.updates(updateLinkDate);
+
+        return BaseResult.success(true);
     }
 }
