@@ -38,5 +38,8 @@ public class ProductDemandQueryList extends QueryBase {
     private Byte status;
 
     @ApiModelProperty("负责人")
-    private List<String> owner;
+    private List<String> owners;
+
+    @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
+    private String owner;
 }

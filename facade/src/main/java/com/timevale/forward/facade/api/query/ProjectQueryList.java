@@ -58,7 +58,7 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("项目实际结束时间")
     private String actualEndDate;
 
-    @ApiModelProperty("0:我参与的项目,1:我团队参与的项目,2:全部项目")
+    @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
     private String owner;
 
 }
