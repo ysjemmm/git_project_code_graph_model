@@ -8,9 +8,6 @@ import lombok.Getter;
  */
 @Getter
 public enum BizDemandStatusEnum {
-
-    // 需求解决状态:0待评估，10已接收，20已列入项目，30项目进行中，40已完成上线，50被驳回，60已作废
-
     // 待评估
     EVALUATE(0),
     // 已接收
@@ -26,7 +23,7 @@ public enum BizDemandStatusEnum {
     // 已作废
     INVALID(60);
 
-    public Integer code;
+    private Byte code;
 
-    BizDemandStatusEnum(int code){this.code = code;}
+    BizDemandStatusEnum(Integer code){this.code = code.byteValue();}
 }

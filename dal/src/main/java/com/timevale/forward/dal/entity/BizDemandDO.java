@@ -51,12 +51,12 @@ public class BizDemandDO extends BaseDO {
     /**
      * 需求解决状态
      */
-    Integer status;
+    Byte status;
 
     /**
      * 优先级
      */
-    Integer priority;
+    Byte priority;
 
     /**
      * 接收人
@@ -66,12 +66,12 @@ public class BizDemandDO extends BaseDO {
     /**
      * 处理器
      */
-    Integer processor;
+    Byte processor;
 
     /**
      * 操作系统
      */
-    Integer os;
+    Byte os;
 
     /**
      * 发布日期
@@ -81,10 +81,10 @@ public class BizDemandDO extends BaseDO {
     /**
      * 计划发布日期
      */
-    Date planReleaseDate;
+    Integer planReleaseDate;
 
     /**
      * 驳回理由
      */
-    Integer reason;
+    Byte reason;
 }

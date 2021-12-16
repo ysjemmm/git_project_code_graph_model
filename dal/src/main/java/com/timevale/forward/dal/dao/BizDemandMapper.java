@@ -43,6 +43,6 @@ public interface BizDemandMapper {
      * @param bizDemandListCondition 查询条件
      * @return 列表
      */
-    List<BizDomainDO> select(BizDemandListCondition bizDemandListCondition);
+    List<BizDemandDO> select(BizDemandListCondition bizDemandListCondition);
 
 }

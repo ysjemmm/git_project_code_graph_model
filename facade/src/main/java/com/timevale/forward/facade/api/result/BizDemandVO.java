@@ -16,7 +16,7 @@ import java.util.Date;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@ApiModel("业务需求详情")
+@ApiModel("业务需求信息")
 public class BizDemandVO extends ToString {
 
     @ApiModelProperty("业务需求id")

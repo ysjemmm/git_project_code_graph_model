@@ -77,7 +77,7 @@ public interface BizDemandService {
      * @param reason      驳回理由
      * @return 成功与否
      */
-    BaseResult<Boolean> reject(Long bizDemandId, Integer reason);
+    BaseResult<Boolean> reject(Long bizDemandId, Byte reason);
 
     /**
      * 转移
@@ -99,8 +99,9 @@ public interface BizDemandService {
     /**
      * 关联/取消关联产品需求
      *
+     * @param bizDemandId   业务需求id
      * @param productIdList 产品id列表
-     * @return 成功与否
+     * @return
      */
-    BaseResult<Boolean> linkOrUnLinkProductDemand(List<Long> productIdList);
+    BaseResult<Boolean> linkOrUnLinkProductDemand(Long bizDemandId, List<Long> productIdList);
 }

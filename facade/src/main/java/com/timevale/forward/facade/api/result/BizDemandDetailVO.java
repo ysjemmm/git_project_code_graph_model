@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@ApiModel("业务需求详情")
+@ApiModel("业务需求详细行信息")
 public class BizDemandDetailVO extends BizDemandVO {
 
     @ApiModelProperty("需求部门id")

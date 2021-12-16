@@ -21,7 +21,7 @@ public enum BizDemandReasonEnum {
     // 线上问题，请提交线上bug
     ISSUER_ONLINE(5);
 
-    public Integer code;
+    private Byte code;
 
-    BizDemandReasonEnum(int code){this.code = code;}
+    BizDemandReasonEnum(Integer code){this.code = code.byteValue();}
 }

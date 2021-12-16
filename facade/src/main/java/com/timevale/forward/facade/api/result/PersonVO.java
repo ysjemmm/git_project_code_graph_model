@@ -18,6 +18,6 @@ public class PersonVO extends ToString {
     @ApiModelProperty("人员名字")
     private String userName;
 
-    @ApiModelProperty("人员Id")
+    @ApiModelProperty("人员id")
     private String userId;
 }
