@@ -106,6 +106,12 @@
                 <artifactId>facade</artifactId>
                 <version>${inuser.security.facade.version}</version>
             </dependency>
+            <!-- erp消息 -->
+            <dependency>
+                <groupId>com.timevale.erp.message</groupId>
+                <artifactId>erp.message-facade</artifactId>
+                <version>1.2.3-SNAPSHOT</version>
+            </dependency>
             <!-- 分布式锁 -->
             <dependency>
                 <groupId>com.timevale.spring.boot</groupId>
