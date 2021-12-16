@@ -26,9 +26,9 @@ public class CommentServiceImpl implements CommentService {
 
 
     @Override
-    public BaseResult<Integer> add(CommentAddReq commentAddReq) {
+    public BaseResult<Boolean> add(CommentAddReq commentAddReq) {
         log.info("项目新增接收参数:{}", commentAddReq);
-        return BaseResult.success(1);
+        return BaseResult.success(true);
     }
 
 }

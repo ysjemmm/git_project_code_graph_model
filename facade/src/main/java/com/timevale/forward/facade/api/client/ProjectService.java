@@ -34,7 +34,7 @@ public interface ProjectService {
      * @param type       操作类型 暂停,作废
      * @return 数量
      */
-    BaseResult<Integer> updateStatus(Long projectId, Byte type);
+    BaseResult<Boolean> updateStatus(Long projectId, Byte type);
 
     /**
      * 开启项目
@@ -42,7 +42,7 @@ public interface ProjectService {
      * @param projectId 项目id
      * @return 数量
      */
-    BaseResult<Integer> enable(Long projectId);
+    BaseResult<Boolean> enable(Long projectId);
 
     /**
      * 新增
@@ -50,7 +50,7 @@ public interface ProjectService {
      * @param projectAddReq 项目信息
      * @return 数量
      */
-    BaseResult<Integer> add(ProjectAddReq projectAddReq);
+    BaseResult<Boolean> add(ProjectAddReq projectAddReq);
 
 
     /**
@@ -59,7 +59,7 @@ public interface ProjectService {
      * @param projectModifyReq 项目信息
      * @return 数量
      */
-    BaseResult<Integer> modify(ProjectModifyReq projectModifyReq);
+    BaseResult<Boolean> modify(ProjectModifyReq projectModifyReq);
 
     /**
      * 查看
@@ -86,6 +86,6 @@ public interface ProjectService {
      * @param type            关联or取消关联
      * @return 数量
      */
-    BaseResult<Integer> linkOrUnLinkProductDemand(Long projectId, List<Long> productDemandIds, Byte type);
+    BaseResult<Boolean> linkOrUnLinkProductDemand(Long projectId, List<Long> productDemandIds, Byte type);
 
 }

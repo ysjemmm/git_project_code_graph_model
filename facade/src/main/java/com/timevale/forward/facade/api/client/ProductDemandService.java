@@ -33,7 +33,7 @@ public interface ProductDemandService {
      * @param type            操作类型 暂停,启用
      * @return 数量
      */
-    BaseResult<Integer> updateStatus(Long productDemandId, Byte type);
+    BaseResult<Boolean> updateStatus(Long productDemandId, Byte type);
 
     /**
      * 新增
@@ -41,7 +41,7 @@ public interface ProductDemandService {
      * @param productDemandAddReq 产品需求信息
      * @return 数量
      */
-    BaseResult<Integer> add(ProductDemandAddReq productDemandAddReq);
+    BaseResult<Boolean> add(ProductDemandAddReq productDemandAddReq);
 
 
     /**
@@ -50,7 +50,7 @@ public interface ProductDemandService {
      * @param productDemandModifyReq 产品需求信息
      * @return 数量
      */
-    BaseResult<Integer> modify(ProductDemandModifyReq productDemandModifyReq);
+    BaseResult<Boolean> modify(ProductDemandModifyReq productDemandModifyReq);
 
     /**
      * 查看

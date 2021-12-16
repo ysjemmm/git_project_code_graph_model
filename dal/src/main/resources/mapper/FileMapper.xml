@@ -13,14 +13,14 @@
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.FileDO">
         insert into file (attache_id, type, name , file_id, create_man_id, create_man)
         values
-        (#{i.attacheId #{i.type}, #{i.name}, #{i.fileId}, #{i.createManId}, #{i.createMan})
+        (#{attacheId}, #{type}, #{name}, #{fileId}, #{createManId}, #{createMan})
     </insert>
 
     <insert id="inserts" parameterType="java.util.List">
         insert into file (attache_id, type, name , file_id, create_man_id, create_man)
         values
         <foreach collection="list" item="i" open="" separator="," close="">
-            (#{i.attacheId #{i.type}, #{i.name}, #{i.fileId}, #{i.createManId}, #{i.createMan})
+            (#{i.attacheId}, #{i.type}, #{i.name}, #{i.fileId}, #{i.createManId}, #{i.createMan})
         </foreach>
     </insert>
 

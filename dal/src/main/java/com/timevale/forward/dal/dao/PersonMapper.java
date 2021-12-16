@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.PersonListCondition;
+import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.dal.entity.PersonDO;
 
 import java.util.List;
@@ -27,5 +28,13 @@ public interface PersonMapper {
      * @return 列表
      */
     List<PersonDO> select(PersonListCondition personListCondition);
+
+    /**
+     * 删除
+     *
+     * @param personDO 人员信息
+     * @return int
+     */
+    int update(PersonDO personDO);
 
 }

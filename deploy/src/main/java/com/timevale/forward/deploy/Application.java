@@ -31,7 +31,8 @@ import com.timevale.mandarin.microservice.NoDBService;
 //@NoDBService
 @EnableFeignClients(basePackages = {
         "com.timevale.forward.facade.api",
-        "com.timevale.security.facade.api"
+        "com.timevale.security.facade.api",
+        "com.timevale.erp.message.service.api"
 })
 @MapperScan("com.timevale.forward.dal")
 @SpringBootApplication(scanBasePackages = {"com.timevale.forward.service"})

@@ -29,6 +29,6 @@ public interface CommentService {
      * @param commentAddReq 评论信息
      * @return 数量
      */
-    BaseResult<Integer> add(CommentAddReq commentAddReq);
+    BaseResult<Boolean> add(CommentAddReq commentAddReq);
 
 }

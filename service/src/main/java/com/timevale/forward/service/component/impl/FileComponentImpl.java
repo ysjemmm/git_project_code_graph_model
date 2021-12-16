@@ -44,7 +44,7 @@ public class FileComponentImpl implements FileComponent {
             }
         });
         fileMapper.inserts(needAddFiles);
-        log.info("新增附件:needAddFiles={}", needAddFiles);
+        log.info("新增附件:needAddFiles={},type={}", needAddFiles,type);
 
         List<String> reqFileIds = fileDO.stream().map(FileDO::getFileId).collect(Collectors.toList());
         existFiles.forEach((f)->{
@@ -58,7 +58,6 @@ public class FileComponentImpl implements FileComponent {
 
     @Override
     public List<FileDO> select(Long attacheId, Byte type) {
-        List<FileDO> fileDO = fileMapper.select(attacheId, type);
-        return fileDO;
+        return fileMapper.select(attacheId, type);
     }
 }

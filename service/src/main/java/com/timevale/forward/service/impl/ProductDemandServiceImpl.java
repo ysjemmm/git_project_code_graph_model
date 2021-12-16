@@ -1,6 +1,8 @@
 package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
@@ -9,7 +11,11 @@ import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.model.enums.FileTypeEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +35,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Resource
     private FileComponent fileComponent;
 
+    @Resource
+    private PersonComponent personComponent;
+
+    @Resource
+    private ProductDemandMapper productDemandMapper;
+
+
     @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
         log.info("产品需求接收参数:{}", productDemandQueryList);
@@ -39,24 +52,29 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
-    public BaseResult<Integer> updateStatus(Long productDemandId, Byte type) {
+    public BaseResult<Boolean> updateStatus(Long productDemandId, Byte type) {
         log.info("产品需求暂停或开启收参数:productDemandId={},type={}", productDemandId, type);
-        return BaseResult.success(1);
+        return BaseResult.success(true);
     }
 
     @Override
-    public BaseResult<Integer> add(ProductDemandAddReq productDemandAddReq) {
+    public BaseResult<Boolean> add(ProductDemandAddReq productDemandAddReq) {
         log.info("产品需求新增接收参数:{}", productDemandAddReq);
+        ProductDemandDO demandDO = ProductDemandCopier.INSTANCE.convert(productDemandAddReq);
+        productDemandMapper.insert(demandDO);
         if(CollectionUtils.isNotEmpty(productDemandAddReq.getFiles())){
-//            fileComponent.add(productDemandAddReq.getFiles(),productDemandAddReq.get);
+            fileComponent.add(productDemandAddReq.getFiles(),demandDO.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
         }
-        return BaseResult.success(1);
+        if(CollectionUtils.isNotEmpty(productDemandAddReq.getRecipients())){
+            personComponent.add(productDemandAddReq.getRecipients(),demandDO.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+        }
+        return BaseResult.success(true);
     }
 
     @Override
-    public BaseResult<Integer> modify(ProductDemandModifyReq productDemandModifyReq) {
+    public BaseResult<Boolean> modify(ProductDemandModifyReq productDemandModifyReq) {
         log.info("产品需求修改接收参数:{}", productDemandModifyReq);
-        return BaseResult.success(1);
+        return BaseResult.success(true);
     }
 
     @Override

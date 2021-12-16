@@ -18,9 +18,9 @@ import java.util.List;
 public class FileServiceImpl implements FileService {
 
     @Override
-    public BaseResult<Integer> add(FileAddReq fileAddReq) {
+    public BaseResult<Boolean> add(FileAddReq fileAddReq) {
         log.info("新增文件接收参数:{}", fileAddReq);
-        return BaseResult.success(1);
+        return BaseResult.success(true);
     }
 
     @Override

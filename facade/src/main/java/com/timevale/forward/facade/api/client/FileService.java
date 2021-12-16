@@ -19,7 +19,7 @@ public interface FileService {
      * @param fileAddReq
      * @return 数量
      */
-    BaseResult<Integer> add(FileAddReq fileAddReq);
+    BaseResult<Boolean> add(FileAddReq fileAddReq);
 
     /**
      * 查列表

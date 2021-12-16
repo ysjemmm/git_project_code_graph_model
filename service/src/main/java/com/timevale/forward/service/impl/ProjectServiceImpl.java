@@ -32,28 +32,28 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<Integer> updateStatus(Long projectId, Byte type) {
+    public BaseResult<Boolean> updateStatus(Long projectId, Byte type) {
         log.info("项目暂停或作废接收参数:projectId={},type={}", projectId, type);
-        return BaseResult.success(1);
+        return BaseResult.success(true);
     }
 
     @Override
-    public BaseResult<Integer> enable(Long projectId) {
+    public BaseResult<Boolean> enable(Long projectId) {
         log.info("项目开启接收参数:projectId={}", projectId);
-        return BaseResult.success(1);
+        return BaseResult.success(true);
     }
 
 
     @Override
-    public BaseResult<Integer> add(ProjectAddReq projectAddReq) {
+    public BaseResult<Boolean> add(ProjectAddReq projectAddReq) {
         log.info("项目新增接收参数:{}", projectAddReq);
-        return BaseResult.success(1);
+        return BaseResult.success(true);
     }
 
     @Override
-    public BaseResult<Integer> modify(ProjectModifyReq projectModifyReq) {
+    public BaseResult<Boolean> modify(ProjectModifyReq projectModifyReq) {
         log.info("项目修改接收参数:{}", projectModifyReq);
-        return BaseResult.success(1);
+        return BaseResult.success(true);
     }
 
     @Override
@@ -72,8 +72,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<Integer> linkOrUnLinkProductDemand(Long projectId, List<Long> productDemandIds, Byte type) {
+    public BaseResult<Boolean> linkOrUnLinkProductDemand(Long projectId, List<Long> productDemandIds, Byte type) {
         log.info("关联or取消关联接收参数:projectId={},productDemandId={},type={}", projectId, productDemandIds, type);
-        return BaseResult.success(1);
+        return BaseResult.success(true);
     }
 }
