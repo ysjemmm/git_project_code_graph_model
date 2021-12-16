@@ -2,6 +2,7 @@ package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.facade.api.request.FileAddReq;
+import com.timevale.forward.facade.api.result.FileVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -19,5 +20,14 @@ public interface FileCopier {
      * @return FileDO列表
      */
     List<FileDO> convert(List<FileAddReq> list);
+
+
+    /**
+     * 批量转换转换DO
+     *
+     * @param list 列表
+     * @return FileDO列表
+     */
+    List<FileVO> transform(List<FileDO> list);
 
 }

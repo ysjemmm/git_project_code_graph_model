@@ -2,6 +2,7 @@ package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
@@ -15,6 +16,7 @@ import com.timevale.forward.model.enums.FileTypeEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -23,6 +25,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author: xingyun
@@ -79,8 +82,11 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Override
     public BaseResult<ProductDemandDetailVO> get(Long productDemandId) {
+        ProductDemandDetailVO productDemandDetailVO = new ProductDemandDetailVO();
         log.info("产品需求查看接收参数:productDemandId={}", productDemandId);
-        return BaseResult.success(new ProductDemandDetailVO());
+        List<FileDO> fileDO = fileComponent.select(productDemandId, FileTypeEnum.PRODUCT_DEMAND.getCode());
+        productDemandDetailVO.setFiles(FileCopier.INSTANCE.transform(fileDO));
+        return BaseResult.success(productDemandDetailVO);
     }
 
     @Override

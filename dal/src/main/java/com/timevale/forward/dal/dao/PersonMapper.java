@@ -19,6 +19,14 @@ public interface PersonMapper {
      */
     int inserts(List<PersonDO> list);
 
+    /**
+     * 插入人员信息
+     *
+     * @param personDO 列表
+     * @return int
+     */
+    int insert(PersonDO personDO);
+
 
     /**
      * 获取人员信息

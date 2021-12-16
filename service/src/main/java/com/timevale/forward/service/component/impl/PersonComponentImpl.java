@@ -30,8 +30,9 @@ public class PersonComponentImpl implements PersonComponent {
     @Override
     public void add(List<PersonAddReq> list, Long mainId, Byte type) {
         log.info("人员新增接收参数:list={},mainId={},type={}", list, mainId, type);
-        List<PersonDO> existPersons = select(mainId, type);
         List<PersonDO> personDO = PersonCopier.INSTANCE.convert(list);
+        fillValue(mainId, type, personDO);
+        List<PersonDO> existPersons = select(mainId, type);
         if (CollectionUtils.isEmpty(existPersons)) {
             // 没找到人员 直接入库
             personMapper.inserts(personDO);
@@ -40,20 +41,20 @@ public class PersonComponentImpl implements PersonComponent {
 
         List<String> existUserIds = existPersons.stream().map(PersonDO::getUserId).collect(Collectors.toList());
         List<PersonDO> needAddPersons = new ArrayList<>();
-        personDO.forEach((f) -> {
-            if (!existUserIds.contains(f.getUserId())) {
-                needAddPersons.add(f);
+        personDO.forEach((p) -> {
+            if (!existUserIds.contains(p.getUserId())) {
+                needAddPersons.add(p);
             }
         });
         personMapper.inserts(needAddPersons);
         log.info("新增人员:needAddPersons={},type={}", needAddPersons, type);
 
         List<String> reqPersonIds = personDO.stream().map(PersonDO::getUserId).collect(Collectors.toList());
-        existPersons.forEach((f) -> {
-            if (!reqPersonIds.contains(f.getUserId())) {
-                f.setIsDeleted(true);
+        existPersons.forEach((p) -> {
+            if (!reqPersonIds.contains(p.getUserId())) {
+                p.setIsDeleted(true);
                 //删除
-                personMapper.update(f);
+                personMapper.update(p);
             }
         });
     }
@@ -71,5 +72,19 @@ public class PersonComponentImpl implements PersonComponent {
             condition.setBizDemandId(mainId);
         }
         return personMapper.select(condition);
+    }
+
+    private void fillValue(Long mainId, Byte type, List<PersonDO> personDO) {
+        personDO.forEach(t -> {
+            t.setType(type);
+            if (PersonTypeEnum.PROJECT_PD.getCode().equals(type)
+                    || PersonTypeEnum.PROJECT_MEMBER.getCode().equals(type)) {
+                t.setProjectId(mainId);
+            } else if (PersonTypeEnum.PRODUCT_DEMAND_CC.getCode().equals(type)) {
+                t.setProductDemandId(mainId);
+            } else if (PersonTypeEnum.BIZ_DEMAND_CC.getCode().equals(type)) {
+                t.setBizDemandId(mainId);
+            }
+        });
     }
 }

@@ -30,6 +30,10 @@ public class FileComponentImpl implements FileComponent {
         log.info("附件新增接收参数:list={},attacheId={},type={}", list,attacheId,type);
         List<FileDO> existFiles = fileMapper.select(attacheId, type);
         List<FileDO> fileDO = FileCopier.INSTANCE.convert(list);
+        fileDO.forEach(f->{
+            f.setAttacheId(attacheId);
+            f.setType(type);
+        });
         if(CollectionUtils.isEmpty(existFiles)){
             // 没找到附件 直接入库
             fileMapper.inserts(fileDO);
