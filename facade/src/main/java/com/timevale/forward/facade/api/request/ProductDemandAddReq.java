@@ -37,5 +37,8 @@ public class ProductDemandAddReq extends BaseReq {
     @ApiModelProperty("抄送人")
     private List<PersonAddReq> recipients;
 
+    @ApiModelProperty("文件信息")
+    private List<FileAddReq> files;
+
 
 }

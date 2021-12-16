@@ -49,11 +49,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.timevale.crm.sdk</groupId>
-            <artifactId>crm-sdk-common-core</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
         </dependency>

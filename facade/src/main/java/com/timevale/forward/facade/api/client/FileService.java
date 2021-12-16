@@ -29,11 +29,4 @@ public interface FileService {
      */
     BaseResult<List<String>> list(String attachId);
 
-    /**
-     * 删除附件
-     *
-     * @param attachId
-     * @return 数量
-     */
-    BaseResult<Integer> delete(String attachId);
 }

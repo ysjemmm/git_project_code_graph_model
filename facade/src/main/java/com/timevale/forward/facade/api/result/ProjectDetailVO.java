@@ -57,7 +57,7 @@ public class ProjectDetailVO extends ToString {
     private List<ProductDemandVO> productDemandVO;
     
     @ApiModelProperty("节点")
-    private ProjectNodeVO projectNodeVO;
+    private List<ProjectNodeVO> projectNodes;
     
     
     

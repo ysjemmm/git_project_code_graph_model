@@ -14,12 +14,6 @@ import lombok.EqualsAndHashCode;
 @ApiModel("文件新增")
 public class FileAddReq extends BaseReq {
 
-    @ApiModelProperty(value = "文件所属id")
-    private Long attachId;
-
-    @ApiModelProperty(value = "文件所属主体")
-    private Byte type;
-
     @ApiModelProperty(value = "文件名称")
     private String name;
 

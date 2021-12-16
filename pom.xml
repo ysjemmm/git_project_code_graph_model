@@ -33,7 +33,6 @@
         <aspectj.version>1.9.4</aspectj.version>
         <swagger-bootstrap-ui.version>1.8.8</swagger-bootstrap-ui.version>
         <springfox-swagger2.version>2.9.2</springfox-swagger2.version>
-        <crm-sdk-common-core-version>1.0.8-SNAPSHOT</crm-sdk-common-core-version>
         <!-- Second Party -->
         <billing-log-monitor.version>1.2.9-SNAPSHOT</billing-log-monitor.version>
         <elock.version>1.2.1</elock.version>
@@ -113,13 +112,6 @@
                 <artifactId>elock-spring-boot-starter</artifactId>
                 <version>${elock.version}</version>
             </dependency>
-
-            <dependency>
-                <groupId>com.timevale.crm.sdk</groupId>
-                <artifactId>crm-sdk-common-core</artifactId>
-                <version>${crm-sdk-common-core-version}</version>
-            </dependency>
-
             <!-- swagger -->
             <dependency>
                 <groupId>io.springfox</groupId>

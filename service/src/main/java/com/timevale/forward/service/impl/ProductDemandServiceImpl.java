@@ -9,10 +9,13 @@ import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.service.component.FileComponent;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
+
+import javax.annotation.Resource;
 
 /**
  * @author: xingyun
@@ -21,6 +24,10 @@ import org.assertj.core.util.Lists;
 @Slf4j
 @RestService
 public class ProductDemandServiceImpl implements ProductDemandService {
+
+    @Resource
+    private FileComponent fileComponent;
+
     @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
         log.info("产品需求接收参数:{}", productDemandQueryList);
@@ -39,6 +46,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     public BaseResult<Integer> add(ProductDemandAddReq productDemandAddReq) {
         log.info("产品需求新增接收参数:{}", productDemandAddReq);
+        fileComponent.add(productDemandAddReq.getFiles());
         return BaseResult.success(1);
     }
 

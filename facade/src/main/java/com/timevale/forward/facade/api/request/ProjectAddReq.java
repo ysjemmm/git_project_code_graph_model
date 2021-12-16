@@ -23,7 +23,7 @@ public class ProjectAddReq extends BaseReq {
     private Byte priority;
 
     @ApiModelProperty("产品线")
-    private List<Long> productLineId;
+    private List<Long> productLineIds;
 
     @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
     private Byte type;
@@ -32,10 +32,10 @@ public class ProjectAddReq extends BaseReq {
     private String pm;
 
     @ApiModelProperty("产品经理")
-    private List<PersonAddReq> pd;
+    private List<PersonAddReq> pds;
 
     @ApiModelProperty("团队成员")
-    private List<PersonAddReq> teamMember;
+    private List<PersonAddReq> teamMembers;
 
     @ApiModelProperty("项目计划开始时间")
     private String planStartDate;
@@ -47,6 +47,6 @@ public class ProjectAddReq extends BaseReq {
     private String desc;
 
     @ApiModelProperty("节点")
-    private List<ProjectNodeAddReq> projectNodeAddReq;
+    private List<ProjectNodeAddReq> projectNodes;
 
 }

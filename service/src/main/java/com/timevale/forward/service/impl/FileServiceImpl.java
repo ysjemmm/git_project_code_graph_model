@@ -29,9 +29,4 @@ public class FileServiceImpl implements FileService {
         return BaseResult.success(Lists.newArrayList("1"));
     }
 
-    @Override
-    public BaseResult<Integer> delete(String attachId) {
-        log.info("删除文件接收参数:attachId={}", attachId);
-        return BaseResult.success(1);
-    }
 }
