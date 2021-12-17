@@ -6,8 +6,8 @@ import lombok.EqualsAndHashCode;
 import java.util.Date;
 
 /**
- * @author: xingyun
- * @create: 2021-12-16 16:01
+ * @author xingyun
+ * @date 2021-12-13 13:58
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -26,7 +26,7 @@ public class ProjectNodeDO extends BaseDO {
     /**
      * 计划完成时间
      */
-    private Date plantDate;
+    private Date planDate;
     /**
      * 实际完成时间
      */

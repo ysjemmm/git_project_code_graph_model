@@ -3,7 +3,7 @@
 <mapper namespace="com.timevale.forward.dal.dao.ProductDemandMapper">
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductDemandDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        insert into product_demand (name, product_line_id, type , desc,status,priority,owner, create_man_id, create_man)
+        insert into product_demand (name, product_line_id, type , `desc`,status,priority,owner, create_man_id, create_man)
         values
         (#{name}, #{productLineId}, #{type}, #{desc},#{status},#{priority},#{owner}, #{createManId}, #{createMan})
     </insert>

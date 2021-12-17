@@ -8,8 +8,8 @@ import lombok.EqualsAndHashCode;
 import java.util.Date;
 
 /**
- * @author: xingyun
- * @create: 2021-12-15 16:23
+ * @author xingyun
+ * @date 2021-12-13 13:58
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -20,7 +20,7 @@ public class ProjectNodeAddReq extends BaseReq{
     private String name;
 
     @ApiModelProperty("计划完成时间")
-    private Date plantDate;
+    private Date planDate;
 
     @ApiModelProperty("实际完成时间")
     private Date actualDate;

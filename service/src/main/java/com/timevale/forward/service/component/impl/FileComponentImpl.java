@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author: xingyun
- * @create: 2021-12-16 11:37
+ * @author xingyun
+ * @date 2021-12-13 13:58
  **/
 @Component
 @Slf4j
@@ -35,11 +35,11 @@ public class FileComponentImpl implements FileComponent {
             f.setType(type);
         });
         if(CollectionUtils.isEmpty(existFiles)){
-            // 没找到附件 直接入库
+            // 新增,没找到附件 直接入库
             fileMapper.inserts(fileDO);
             return;
         }
-        
+        // 编辑
         List<String> existFileIds = existFiles.stream().map(FileDO::getFileId).collect(Collectors.toList());
         List<FileDO> needAddFiles=new ArrayList<>();
         fileDO.forEach((f)->{

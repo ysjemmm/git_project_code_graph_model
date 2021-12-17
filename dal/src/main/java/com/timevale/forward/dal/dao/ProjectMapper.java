@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.entity.ProjectDO;
+import org.apache.ibatis.annotations.Param;
 
 public interface ProjectMapper {
     /**
@@ -10,6 +11,9 @@ public interface ProjectMapper {
      * @return int
      */
     int insert(ProjectDO projectDO);
+
+    ProjectDO get(@Param("id") Long id);
+    
 
 
 }

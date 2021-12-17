@@ -1,0 +1,19 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.ProjectProductLineMapper">
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.FileDO">
+        select id,project_id,product_line_id,create_man_id, create_man
+        from project_product_line
+        where is_deleted = false
+        <if test="projectId!=null">and project_id = #{projectId}</if>
+    </select>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into project_product_line (project_id,product_line_id,create_man_id, create_man)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.projectId}, #{i.productLineId}, #{i.createManId},#{i.createMan})
+        </foreach>
+    </insert>
+</mapper>

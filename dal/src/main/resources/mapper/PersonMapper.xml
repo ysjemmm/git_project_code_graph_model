@@ -19,7 +19,7 @@
     </insert>
 
     <insert id="inserts" parameterType="java.util.List">
-        insert into person (attache_id, type, name , file_id, create_man_id, create_man)
+        insert into person (project_id,product_demand_id,biz_demand_id,user_name,user_id, type, create_man_id, create_man)
         values
         <foreach collection="list" item="i" open="" separator="," close="">
             (#{i.projectId}, #{i.productDemandId}, #{i.bizDemandId}, #{i.userName},#{i.userId},#{i.type}, #{i.createManId}, #{i.createMan})

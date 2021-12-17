@@ -14,6 +14,7 @@ import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
+import com.timevale.forward.service.component.ProjectProductLineComponent;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -28,8 +29,8 @@ import javax.annotation.Resource;
 import java.util.List;
 
 /**
- * @author: xingyun
- * @create: 2021-12-13 13:44
+ * @author xingyun
+ * @date 2021-12-13 13:58
  **/
 @Slf4j
 @RestService
@@ -43,6 +44,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private ProjectNodeComponent projectNodeComponent;
+
+    @Resource
+    private ProjectProductLineComponent projectProductLineComponent;
 
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -76,6 +80,10 @@ public class ProjectServiceImpl implements ProjectService {
         projectDO.setCreateManId(userInfo.getId());
         projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
         projectMapper.insert(projectDO);
+        
+        // 产品线
+        projectProductLineComponent.add(projectDO.getProductLineIds(),projectDO.getId());
+        
         // 产品经理
         if (CollectionUtils.isNotEmpty(projectAddReq.getPds())) {
             personComponent.add(projectAddReq.getPds(), projectDO.getId(), PersonTypeEnum.PROJECT_PD.getCode());
@@ -100,7 +108,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public BaseResult<ProjectDetailVO> get(Long projectId) {
         log.info("项目查看接收参数:projectId={}", projectId);
-        return BaseResult.success(new ProjectDetailVO());
+        ProjectDO projectDO = projectMapper.get(projectId);
+        ProjectDetailVO projectDetailVO = ProjectCopier.INSTANCE.convert(projectDO);
+        return BaseResult.success(projectDetailVO);
     }
 
     @Override

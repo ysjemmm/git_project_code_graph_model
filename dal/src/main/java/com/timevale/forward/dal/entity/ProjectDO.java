@@ -1,14 +1,14 @@
 package com.timevale.forward.dal.entity;
 
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
- * @author: xingyun
- * @create: 2021-12-16 16:01
+ * @author xingyun
+ * @date 2021-12-13 13:58
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -33,6 +33,11 @@ public class ProjectDO extends BaseDO {
     private Byte status;
 
     /**
+     * 产品线
+     */
+    private List<Long> productLineIds;
+    
+    /**
      * pm
      */
     private String pm;
@@ -45,5 +50,10 @@ public class ProjectDO extends BaseDO {
      * 项目计划结束时间
      */
     private Date planEndDate;
+
+    /**
+     * 描述
+     */
+    private String desc;
 
 }

@@ -6,11 +6,12 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
 import java.util.List;
 
 /**
- * @author: xingyun
- * @create: 2021-12-13 13:53
+ * @author xingyun
+ * @date 2021-12-13 13:58
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -39,16 +40,16 @@ public class ProjectDetailVO extends ToString {
     private List<PersonVO> teamMember;
 
     @ApiModelProperty("项目计划开始时间")
-    private String planStartDate;
+    private Date planStartDate;
 
     @ApiModelProperty("项目计划结束时间")
-    private String planEndDate;
+    private Date planEndDate;
 
     @ApiModelProperty("项目实际开始时间")
-    private String actualStartDate;
+    private Date actualStartDate;
 
     @ApiModelProperty("项目实际结束时间")
-    private String actualEndDate;
+    private Date actualEndDate;
 
     @ApiModelProperty("描述")
     private String desc;

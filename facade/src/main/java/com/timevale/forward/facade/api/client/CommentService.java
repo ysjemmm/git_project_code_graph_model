@@ -10,8 +10,8 @@ import com.timevale.mandarin.common.annotation.RestClient;
 import java.util.List;
 
 /**
- * @author: xingyun
- * @create: 2021-12-13 13:44
+ * @author xingyun
+ * @date 2021-12-13 13:58
  **/
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface CommentService {
