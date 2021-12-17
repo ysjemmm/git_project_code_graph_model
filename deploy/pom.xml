@@ -78,6 +78,60 @@
                     <mainClass>com.timevale.forward.deploy.Application</mainClass>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M3</version>
+                <configuration>
+                    <suiteXmlFiles>
+                        <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
+                    </suiteXmlFiles>
+                    <argLine>
+                        -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
+                    </argLine>
+                    <argLine>${surefireArgLine}</argLine>
+                    <parallel>classes</parallel>
+                    <threadCount>4</threadCount>
+                </configuration>
+            </plugin>
+            <!-- 单测覆盖率-->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report-aggregate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <propertyName>surefireArgLine</propertyName>
+                    <excludes>
+                        <exclude>**/model/*</exclude>
+                        <exclude>**/model/**</exclude>
+                        <exclude>**/dto/*</exclude>
+                        <exclude>**/dal/**</exclude>
+                        <exclude>**/copy/*</exclude>
+                        <exclude>**/util/*</exclude>
+                        <exclude>**/utils/**</exclude>
+                        <exclude>**/task/**</exclude>
+                        <exclude>**/constant/*</exclude>
+                        <exclude>**/*Config.class</exclude>
+                        <exclude>**/*Util.class</exclude>
+                        <exclude>**/*Exception.class</exclude>
+                        <exclude>**/*Enum.class</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

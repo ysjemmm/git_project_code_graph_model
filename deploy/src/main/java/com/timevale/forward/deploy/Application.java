@@ -24,8 +24,7 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
  * @author LIU Kunpeng  WeChat:13758206010
  * @version $Id: Application.java, v 0.1 2017年11月13日 下午2:23:03 LIU Kunpeng Exp $
  */
-@UniversalService  //需要mysql数据源的话请删除“@NoDBService”注解，打开此注解并在配置中心配置数据源信息
-//@NoDBService
+@UniversalService
 @EnableFeignClients(basePackages = {
         "com.timevale.forward.facade.api",
         "com.timevale.security.facade.api",
