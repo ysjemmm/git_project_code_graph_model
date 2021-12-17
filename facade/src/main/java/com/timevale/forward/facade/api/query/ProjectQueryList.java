@@ -23,28 +23,28 @@ public class ProjectQueryList extends QueryBase {
     private String name;
 
     @ApiModelProperty("优先级:0(P0),1(P1),2(P2)")
-    private Byte priority;
+    private List<Byte> priorities;
 
     @ApiModelProperty("业务域")
-    private List<Long> bizDomainId;
+    private String bizDomain;
 
     @ApiModelProperty("产品线")
-    private List<Long> productLineId;
+    private String productLine;
 
     @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
-    private Byte type;
+    private List<Byte> types;
 
     @ApiModelProperty("项目状态:0待启动,10规划中,20研发中,30测试中,40已发布,50已暂停,60已作废")
-    private Byte status;
+    private List<Byte> status;
 
     @ApiModelProperty("项目经理")
-    private List<String> pm;
+    private List<String> pms;
 
     @ApiModelProperty("产品经理")
-    private List<String> pd;
+    private List<String> pds;
 
     @ApiModelProperty("团队成员")
-    private List<String> teamMember;
+    private List<String> teamMembers;
 
     @ApiModelProperty("项目计划开始时间")
     private String planStartDate;
@@ -59,6 +59,6 @@ public class ProjectQueryList extends QueryBase {
     private String actualEndDate;
 
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
-    private String owner;
+    private String ascription;
 
 }

@@ -23,16 +23,13 @@ public class ProductDemandQueryList extends QueryBase {
     private String name;
 
     @ApiModelProperty("优先级:0(P0),1(P1),2(P2),3(P3)")
-    private Byte priority;
+    private List<Byte> priorities;
 
     @ApiModelProperty("业务域")
-    private List<Long> bizDomainId;
+    private List<Long> bizDomainIds;
 
     @ApiModelProperty("产品线")
-    private List<Long> productLineId;
-
-    @ApiModelProperty("类型:0新增功能,1功能迭代,2体验优化,3技术需求,4安全需求")
-    private Byte type;
+    private List<Long> productLineIds;
 
     @ApiModelProperty("状态:0待排期,10已列入项目,20项目进行中,30已完成上线,40已暂停,50已作废")
     private Byte status;
@@ -41,5 +38,5 @@ public class ProductDemandQueryList extends QueryBase {
     private List<String> owners;
 
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
-    private String owner;
+    private String ascription;
 }

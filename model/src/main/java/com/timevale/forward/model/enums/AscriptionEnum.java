@@ -1,7 +1,9 @@
 package com.timevale.forward.model.enums;
 
-public enum OwnerEnum {
-    
+public enum AscriptionEnum {
+    /**
+     * 页面权限归属
+     */
     CURRENT_USER("我的"),
     FOLLOWER("我下属的"),
     TEAM("我团队的"),
@@ -11,7 +13,7 @@ public enum OwnerEnum {
     ALL("全部");
 
     private final String text;
-    OwnerEnum(String text){
+    AscriptionEnum(String text){
         this.text = text;
     }
 }
