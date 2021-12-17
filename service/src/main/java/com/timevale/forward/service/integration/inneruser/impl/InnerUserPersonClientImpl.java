@@ -4,6 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.security.facade.api.RpcPersonService;
+import com.timevale.security.facade.request.AccountRequest;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -35,8 +36,14 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
     @Override
     public List<String> getAllMyStaff(String account) {
         try {
-            Set<String> allMyStaff = rpcPersonService.getAllMystaff(account);
-            return new ArrayList<>(allMyStaff);
+            final AccountRequest request = new AccountRequest();
+            request.setAccount(account);
+            final BaseResult<Set<String>> allMyStaffNew = rpcPersonService.getAllMyStaffNew(request);
+            if (allMyStaffNew.ifSuccess()) {
+                return new ArrayList<>(allMyStaffNew.getData());
+            }
+            log.error("[innerUser]调用内部用户中心失败 account: " + account + " error: " + allMyStaffNew.getMessage());
+            return new ArrayList<>();
         } catch (Exception e) {
             log.error("调用内部用户中心失败 account: " + account + " error: " + e.getMessage(), e);
             throw new BaseBizRuntimeException("调用内部用户中心失败! " + account);
