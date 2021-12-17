@@ -7,6 +7,8 @@ import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.copy.PersonCopier;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
@@ -75,8 +77,11 @@ public class PersonComponentImpl implements PersonComponent {
     }
 
     private void fillValue(Long mainId, Byte type, List<PersonDO> personDO) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         personDO.forEach(t -> {
             t.setType(type);
+            t.setCreateMan(userInfo.getAlias());
+            t.setCreateManId(userInfo.getId());
             if (PersonTypeEnum.PROJECT_PD.getCode().equals(type)
                     || PersonTypeEnum.PROJECT_MEMBER.getCode().equals(type)) {
                 t.setProjectId(mainId);

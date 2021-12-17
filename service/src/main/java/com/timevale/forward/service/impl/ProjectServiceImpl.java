@@ -1,6 +1,8 @@
 package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
@@ -8,11 +10,21 @@ import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.ProjectNodeComponent;
+import com.timevale.forward.service.copy.ProjectCopier;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -22,6 +34,16 @@ import java.util.List;
 @Slf4j
 @RestService
 public class ProjectServiceImpl implements ProjectService {
+
+    @Resource
+    private PersonComponent personComponent;
+
+    @Resource
+    private ProjectMapper projectMapper;
+
+    @Resource
+    private ProjectNodeComponent projectNodeComponent;
+
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -45,8 +67,27 @@ public class ProjectServiceImpl implements ProjectService {
 
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(ProjectAddReq projectAddReq) {
         log.info("项目新增接收参数:{}", projectAddReq);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
+        projectDO.setCreateMan(userInfo.getAlias());
+        projectDO.setCreateManId(userInfo.getId());
+        projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
+        projectMapper.insert(projectDO);
+        // 产品经理
+        if (CollectionUtils.isNotEmpty(projectAddReq.getPds())) {
+            personComponent.add(projectAddReq.getPds(), projectDO.getId(), PersonTypeEnum.PROJECT_PD.getCode());
+        }
+        // 团队成员
+        if (CollectionUtils.isNotEmpty(projectAddReq.getTeamMembers())) {
+            personComponent.add(projectAddReq.getTeamMembers(), projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
+        }
+        // 节点信息
+        if (CollectionUtils.isNotEmpty(projectAddReq.getProjectNodes())) {
+            projectNodeComponent.add(projectAddReq.getProjectNodes(), projectDO.getId());
+        }
         return BaseResult.success(true);
     }
 

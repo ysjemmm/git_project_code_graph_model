@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -38,10 +39,10 @@ public class ProjectAddReq extends BaseReq {
     private List<PersonAddReq> teamMembers;
 
     @ApiModelProperty("项目计划开始时间")
-    private String planStartDate;
+    private Date planStartDate;
 
     @ApiModelProperty("项目计划结束时间")
-    private String planEndDate;
+    private Date planEndDate;
 
     @ApiModelProperty("描述")
     private String desc;

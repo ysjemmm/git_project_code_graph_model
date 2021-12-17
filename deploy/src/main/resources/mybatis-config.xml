@@ -48,5 +48,9 @@
 
     <mappers>
         <mapper resource="mapper/FileMapper.xml"/>
+        <mapper resource="mapper/PersonMapper.xml"/>
+        <mapper resource="mapper/ProductDemand.xml"/>
+        <mapper resource="mapper/Project.xml"/>
+        <mapper resource="mapper/ProjectNode.xml"/>
     </mappers>
 </configuration>

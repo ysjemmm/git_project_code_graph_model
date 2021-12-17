@@ -14,10 +14,13 @@ import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.model.enums.FileTypeEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +66,11 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     public BaseResult<Boolean> add(ProductDemandAddReq productDemandAddReq) {
         log.info("产品需求新增接收参数:{}", productDemandAddReq);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandDO demandDO = ProductDemandCopier.INSTANCE.convert(productDemandAddReq);
+        demandDO.setCreateMan(userInfo.getAlias());
+        demandDO.setCreateManId(userInfo.getId());
+        demandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
         productDemandMapper.insert(demandDO);
         if(CollectionUtils.isNotEmpty(productDemandAddReq.getFiles())){
             fileComponent.add(productDemandAddReq.getFiles(),demandDO.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());

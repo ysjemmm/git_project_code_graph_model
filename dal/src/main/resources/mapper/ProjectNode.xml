@@ -1,0 +1,16 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.ProjectNodeMapper">
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into project_node (project_id,name, plan_date, actual_date ,create_man_id, create_man)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.projectId}, #{i.name}, #{i.planDate}, #{i.actualDate},#{i.createManId},#{i.createMan})
+        </foreach>
+    </insert>
+
+    <update id="delete" parameterType="long">
+        delete from project_node where project_id=#{projectId}
+    </update>
+</mapper>
