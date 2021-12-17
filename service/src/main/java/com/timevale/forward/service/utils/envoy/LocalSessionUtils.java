@@ -38,12 +38,9 @@ public class LocalSessionUtils {
         String userInfoHeader = attributes.getRequest().getHeader("x-timevale-jwtcontent");
         if (StringUtils.isEmpty(userInfoHeader)) {
             UserInfo userInfo = new UserInfo();
-//            userInfo.setName(SYSTEM);
-//            userInfo.setAlias(SYSTEM);
-//            userInfo.setId(SYSTEM);
-
-            userInfo.setAlias("星云");
-            userInfo.setId("xingyun");
+            userInfo.setName(SYSTEM);
+            userInfo.setAlias(SYSTEM);
+            userInfo.setId(SYSTEM);
             return userInfo;
         }
         byte[] userInfo = Base64.getUrlDecoder().decode(userInfoHeader);
