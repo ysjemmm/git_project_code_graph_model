@@ -15,6 +15,7 @@ import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.component.ProjectProductLineComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -76,7 +77,7 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("项目新增接收参数:{}", projectAddReq);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
-        projectDO.setCreateMan(userInfo.getAlias());
+        projectDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         projectDO.setCreateManId(userInfo.getId());
         projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
         projectMapper.insert(projectDO);

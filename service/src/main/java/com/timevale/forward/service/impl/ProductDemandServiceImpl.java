@@ -17,6 +17,7 @@ import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -68,7 +69,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         log.info("产品需求新增接收参数:{}", productDemandAddReq);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandDO demandDO = ProductDemandCopier.INSTANCE.convert(productDemandAddReq);
-        demandDO.setCreateMan(userInfo.getAlias());
+        demandDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         demandDO.setCreateManId(userInfo.getId());
         demandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
         productDemandMapper.insert(demandDO);

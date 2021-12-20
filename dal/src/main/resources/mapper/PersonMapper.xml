@@ -32,9 +32,13 @@
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
         </set>
         <where>
-            id = #{id}
+            <if test="id != null">and id = #{id}</if>
+            <if test="projectId != null">and project_id = #{projectId}</if>
+            <if test="productDemandId != null">and product_demand_id = #{productDemandId}</if>
+            <if test="bizDemandId != null">and biz_demand_id = #{bizDemandId}</if>
+            <if test="type != null">and type = #{type}</if>
         </where>
-  </update>
+    </update>
 
 
 </mapper>

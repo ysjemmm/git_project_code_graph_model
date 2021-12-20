@@ -4,6 +4,7 @@ import com.timevale.forward.dal.dao.ProjectNodeMapper;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import com.timevale.forward.facade.api.request.ProjectNodeAddReq;
 import com.timevale.forward.service.component.ProjectNodeComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectNodeCopier;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -36,7 +37,7 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         projectNodeDO.forEach(t -> {
             t.setProjectId(projectId);
-            t.setCreateMan(userInfo.getAlias());
+            t.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
             t.setCreateManId(userInfo.getId());
         });
     }

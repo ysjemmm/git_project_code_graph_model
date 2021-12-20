@@ -30,7 +30,9 @@
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
         </set>
         <where>
-            id = #{id}
+            <if test="id!=null">and id = #{id}</if>
+            <if test="attacheId!=null">and attache_id = #{attacheId}</if>
+            <if test="type!=null">and type = #{type}</if>
         </where>
   </update>
 

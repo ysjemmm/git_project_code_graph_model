@@ -2,7 +2,7 @@
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
 <mapper namespace="com.timevale.forward.dal.dao.ProjectProductLineMapper">
 
-    <select id="get" resultType="com.timevale.forward.dal.entity.FileDO">
+    <select id="get" resultType="com.timevale.forward.dal.entity.ProjectProductLineDO">
         select id,project_id,product_line_id,create_man_id, create_man
         from project_product_line
         where is_deleted = false
@@ -16,4 +16,13 @@
             (#{i.projectId}, #{i.productLineId}, #{i.createManId},#{i.createMan})
         </foreach>
     </insert>
+    <update id="update" parameterType="com.timevale.forward.dal.entity.ProjectProductLineDO">
+        update project_product_line
+        <set>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+        </set>
+        <where>
+            <if test="id != null">and id = #{id}</if>
+        </where>
+    </update>
 </mapper>

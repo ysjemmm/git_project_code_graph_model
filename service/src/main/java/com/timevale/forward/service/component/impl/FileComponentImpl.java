@@ -4,7 +4,10 @@ import com.timevale.forward.dal.dao.FileMapper;
 import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
@@ -27,19 +30,38 @@ public class FileComponentImpl implements FileComponent {
     
     @Override
     public void add(List<FileAddReq> list,Long attacheId,Byte type) {
-        log.info("附件新增接收参数:list={},attacheId={},type={}", list,attacheId,type);
+        log.info("新增时,附件接收参数:list={},attacheId={},type={}", list,attacheId,type);
         List<FileDO> existFiles = fileMapper.select(attacheId, type);
-        List<FileDO> fileDO = FileCopier.INSTANCE.convert(list);
-        fileDO.forEach(f->{
-            f.setAttacheId(attacheId);
-            f.setType(type);
-        });
+        log.info("已存在附件:existPersons={}", existFiles);
         if(CollectionUtils.isEmpty(existFiles)){
-            // 新增,没找到附件 直接入库
+            List<FileDO> fileDO = FileCopier.INSTANCE.convert(list);
+            fileDO.forEach(f->{
+                f.setAttacheId(attacheId);
+                f.setType(type);
+            });
             fileMapper.inserts(fileDO);
+        }
+    }
+
+    @Override
+    public void update(List<FileAddReq> list, Long attacheId, Byte type) {
+        log.info("编辑时,附件接收参数:list={},attacheId={},type={}", list,attacheId,type);
+        if(CollectionUtils.isEmpty(list)){
+            // 删除
+            FileDO fileDO=new FileDO();
+            fileDO.setIsDeleted(true);
+            fileDO.setAttacheId(attacheId);
+            fileDO.setType(type);
+            fileMapper.update(fileDO);
             return;
         }
-        // 编辑
+        // 差异对比
+        List<FileDO> existFiles = fileMapper.select(attacheId, type);
+        log.info("已存在附件:existFiles={}", existFiles);
+        List<FileDO> fileDO = FileCopier.INSTANCE.convert(list);
+        fileDO.forEach(f->{
+            fillValue(f,attacheId,type);
+        });
         List<String> existFileIds = existFiles.stream().map(FileDO::getFileId).collect(Collectors.toList());
         List<FileDO> needAddFiles=new ArrayList<>();
         fileDO.forEach((f)->{
@@ -48,7 +70,7 @@ public class FileComponentImpl implements FileComponent {
             }
         });
         fileMapper.inserts(needAddFiles);
-        log.info("新增附件:needAddFiles={},type={}", needAddFiles,type);
+        log.info("编辑时,新增附件:needAddFiles={},type={}", needAddFiles,type);
 
         List<String> reqFileIds = fileDO.stream().map(FileDO::getFileId).collect(Collectors.toList());
         existFiles.forEach((f)->{
@@ -63,5 +85,13 @@ public class FileComponentImpl implements FileComponent {
     @Override
     public List<FileDO> select(Long attacheId, Byte type) {
         return fileMapper.select(attacheId, type);
+    }
+
+    private void fillValue(FileDO fileDO,Long attacheId, Byte type) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        fileDO.setAttacheId(attacheId);
+        fileDO.setType(type);
+        fileDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        fileDO.setCreateManId(userInfo.getId());
     }
 }

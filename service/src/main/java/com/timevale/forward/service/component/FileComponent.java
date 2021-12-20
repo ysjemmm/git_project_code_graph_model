@@ -16,6 +16,14 @@ public interface FileComponent {
 
     /**
      *
+     * @param list 附件列表
+     * @param attacheId 附属id
+     * @param type 附属类型
+     */
+    void update(List<FileAddReq> list,Long attacheId,Byte type);
+
+    /**
+     *
      * @param attacheId 附属id
      * @param type 附属类型
      * @return 列表

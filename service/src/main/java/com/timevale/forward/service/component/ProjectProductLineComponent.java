@@ -10,4 +10,11 @@ public interface ProjectProductLineComponent {
      */
     void add(List<Long> list,Long projectId);
 
+    /**
+     *
+     * @param list 产品线id
+     * @param projectId 项目id
+     */
+    void update(List<Long> list,Long projectId);
+
 }

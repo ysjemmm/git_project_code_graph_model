@@ -14,10 +14,13 @@ public interface ProjectProductLineMapper {
      */
     List<ProjectProductLineDO> get(@Param("projectId") Long projectI);
     /**
-     * 新增单条项目
+     * 新增项目
      *
      * @param projectProductLineDO 项目
      * @return int
      */
     int batchInsert(List<ProjectProductLineDO> projectProductLineDO);
+
+
+    int update(ProjectProductLineDO projectProductLineDO);
 }

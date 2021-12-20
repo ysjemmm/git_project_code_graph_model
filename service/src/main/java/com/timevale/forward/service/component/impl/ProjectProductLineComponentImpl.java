@@ -3,6 +3,7 @@ package com.timevale.forward.service.component.impl;
 import com.timevale.forward.dal.dao.ProjectProductLineMapper;
 import com.timevale.forward.dal.entity.ProjectProductLineDO;
 import com.timevale.forward.service.component.ProjectProductLineComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -27,16 +28,22 @@ public class ProjectProductLineComponentImpl implements ProjectProductLineCompon
 
     @Override
     public void add(List<Long> list,Long projectId) {
-        List<ProjectProductLineDO> projectProductLineDO = buildDO(list, projectId);
         log.info("项目-产品线新增接收参数:list={},projectId={}", list, projectId);
         List<ProjectProductLineDO> existProductLines = projectProductLineMapper.get(projectId);
+        log.info("已存在项目-产品线:existProductLines={}", existProductLines);
         if(CollectionUtils.isEmpty(existProductLines)){
-            // 新增 没找到 直接入库
+            List<ProjectProductLineDO> projectProductLineDO = buildDO(list, projectId);
             projectProductLineMapper.batchInsert(projectProductLineDO);
-            return;
         }
-        // 编辑
+    }
+
+    @Override
+    public void update(List<Long> list, Long projectId) {
+        List<ProjectProductLineDO> projectProductLineDO = buildDO(list, projectId);
+        log.info("项目-产品线编辑接收参数:list={},projectId={}", list, projectId);
+        List<ProjectProductLineDO> existProductLines = projectProductLineMapper.get(projectId);
         List<Long> existProductLineIds = existProductLines.stream().map(ProjectProductLineDO::getProductLineId).collect(Collectors.toList());
+        log.info("已存在项目-产品线:existProductLines={}", existProductLines);
         List<ProjectProductLineDO> needAddProductLines=new ArrayList<>();
         projectProductLineDO.forEach((f)->{
             if(!existProductLineIds.contains(f.getProductLineId())){
@@ -46,15 +53,14 @@ public class ProjectProductLineComponentImpl implements ProjectProductLineCompon
         projectProductLineMapper.batchInsert(needAddProductLines);
         log.info("新增项目-产品线:needAddProductLines={}", needAddProductLines);
 
-//        List<String> reqFileIds = projectProductLineDO.stream().map(ProjectProductLineDO::getFileId).collect(Collectors.toList());
-//        existFiles.forEach((f)->{
-//            if(!reqFileIds.contains(f.getFileId())){
-//                f.setIsDeleted(true);
-//                //删除
-//                fileMapper.update(f);
-//            }
-//        });
-//        projectProductLineMapper.batchInsert(projectProductLineDOS);
+        List<Long> reqProductIds = projectProductLineDO.stream().map(ProjectProductLineDO::getProductLineId).collect(Collectors.toList());
+        existProductLines.forEach((p)->{
+            if(!reqProductIds.contains(p.getProductLineId())){
+                p.setIsDeleted(true);
+                //删除
+                projectProductLineMapper.update(p);
+            }
+        });
     }
 
     private List<ProjectProductLineDO> buildDO(List<Long> list,Long projectId) {
@@ -63,7 +69,7 @@ public class ProjectProductLineComponentImpl implements ProjectProductLineCompon
             ProjectProductLineDO projectProductLineDO = new ProjectProductLineDO();
             projectProductLineDO.setProductLineId(t);
             projectProductLineDO.setProjectId(projectId);
-            projectProductLineDO.setCreateMan(userInfo.getAlias());
+            projectProductLineDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
             projectProductLineDO.setCreateManId(userInfo.getId());
             return projectProductLineDO;
         }).collect(Collectors.toList());
