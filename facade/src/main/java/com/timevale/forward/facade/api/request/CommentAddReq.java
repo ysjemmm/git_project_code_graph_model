@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 /**
  * @author xingyun
  * @date 2021-12-13 13:58
@@ -23,6 +25,7 @@ public class CommentAddReq extends BaseReq {
     @ApiModelProperty("内容")
     private String content;
 
-
+    @ApiModelProperty("评论接收人")
+    private List<PersonAddReq> receiverInfoList;
 
 }

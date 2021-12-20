@@ -2,6 +2,8 @@ package com.timevale.forward.model.enums;
 
 import lombok.Getter;
 
+import java.util.Objects;
+
 /**
  * @author by YangXu
  * @date 2021/12/15 17:13

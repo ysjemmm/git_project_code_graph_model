@@ -1,0 +1,153 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.BizDemandMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into biz_demand (name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status,
+                                priority, receive_man, receive_man_id, processor, os, create_man_id, create_man)
+        values (#{name}, #{productLineId}, #{dataIndicators}, #{targetCustomer}, #{createCustomer}, #{deptId}, #{desc}, #{status},
+                #{priority}, #{receiveMan}, #{receive_man_id}, #{processor}, #{os}, #{createManId}, #{createMan})
+    </insert>
+
+    <update id="update">
+        update biz_demand
+        set
+        <if test="name">
+            name = #{name},
+        </if>
+        <if test="productLineId">
+            product_line_id = #{productLineId},
+        </if>
+        <if test="dataIndicators">
+            data_indicators = #{dataIndicators},
+        </if>
+        <if test="targetCustomer">
+            target_customer = #{targetCustomer},
+        </if>
+        <if test="createCustomer">
+            create_customer = #{createCustomer},
+        </if>
+        <if test="depId">
+            dept_id = #{depId},
+        </if>
+        <if test="desc">
+            `desc` = #{desc},
+        </if>
+        <if test="status">
+            status = #{status},
+        </if>
+        <if test="priority">
+            priority = #{priority},
+        </if>
+        <if test="receiveMan">
+            receive_man = #{receiveMan},
+        </if>
+        <if test="receiveManId">
+            receive_man = #{receiveManId},
+        </if>
+        <if test="processor">
+            processor = #{processor},
+        </if>
+        <if test="os">
+            os = #{os},
+        </if>
+        <if test="planReleaseDate">
+            plan_release_date = #{planReleaseDate},
+        </if>
+        <if test="reason">
+            reason = #{reason},
+        </if>
+        modify_man_id = #{modifyManId},
+        modify_man = #{modifyMan},
+        where id = #{id}
+    </update>
+
+
+    <select id="selectById" resultType="com.timevale.forward.dal.entity.BizDemandDO">
+        select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status, priority,
+               receive_man, processor, os, plan_release_date, reason, is_deleted, create_man_id, create_man, create_date,
+               modify_man_id, modify_man, modify_date
+        from biz_demand
+        where is_deleted = false
+        and id = #{id}
+    </select>
+
+    <select id="select" resultType="com.timevale.forward.dal.entity.BizDemandDO">
+        select bd.id, bd.name, bd.product_line_id, bd.data_indicators, bd.target_customer, bd.create_customer,bd.dept_id,
+               bd.`desc`,bd. status, bd.priority, bd.receive_man, bd.processor, bd.os, bd.plan_release_date,bd.reason,
+               bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date
+        from biz_demand bd
+        <if test="bizDomainIds!=null and bizDomainIds.size()>0">
+            JOIN product_line pl
+            ON pl.id = bd.product_line_id
+        </if>
+        where bd.is_deleted = false
+        <if test="id">
+            and bd.id = #{id}
+        </if>
+        <if test="name">
+            and bd.name = #{name}
+        </if>
+        <if test="createDate">
+            and #{create_date} > bd.create_date
+        </if>
+        <if test="priorityList!=null and priorityList.size()>0">
+            and bd.priority in
+            <foreach collection="priorityList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="bizDomainIdList!=null and bizDomainIdList.size()>0">
+            and pl.biz_domain_id in
+            <foreach collection="bizDomainIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="productLineIdList!=null and productLineIdList.size()>0">
+            and bd.product_line_id in
+            <foreach collection="productLineIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="planReleaseDateList!=null and planReleaseDateList.size()>0">
+            and bd.plan_release_date in
+            <foreach collection="planReleaseDateList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="statusList!=null and statusList.size()>0">
+            and bd.status in
+            <foreach collection="statusList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="createManIdList!=null and createManIdList.size()>0">
+            and bd.create_man_id in
+            <foreach collection="createManIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="receiveManes!=null and receiveManes.size()>0">
+            and bd.receive_man_id in
+            <foreach collection="receiveManIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="deptIds!=null and deptIds.size()>0">
+            and bd.dept_id in
+            <foreach collection="deptIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="copier">
+            and bd.id IN (
+                SELECT p.biz_demand_id
+                FROM person p
+                WHERE p.user_id = #{copier}
+                AND p.type = 30
+            )
+        </if>
+    </select>
+
+
+</mapper>

@@ -2,6 +2,7 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.entity.BizDemandDO;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -34,7 +35,7 @@ public interface BizDemandMapper {
      * @param id id
      * @return 业务需求DO
      */
-    BizDemandDO selectById(Long id);
+    BizDemandDO selectById(@Param("id") Long id);
 
     /**
      * 根据条件查询对应需求

@@ -1,6 +1,7 @@
 package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import org.mapstruct.Mapper;
@@ -22,7 +23,16 @@ public interface PersonCopier {
      * @param list 列表
      * @return PersonDO列表
      */
-    List<PersonDO> convert(List<PersonAddReq> list);
+    List<PersonDO> convertToDO(List<PersonAddReq> list);
+
+
+    /**
+     * 转换
+     *
+     * @param list 列表
+     * @return list
+     */
+    List<PersonQuery> convertToQuery(List<String> list);
 
     /**
      * DO批量转换转换VO

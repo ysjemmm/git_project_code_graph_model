@@ -35,4 +35,12 @@ public interface ProductBizDemandMapper {
      */
     int updates(List<ProductBizDemandDO> list);
 
+    /**
+     * 批量删除
+     *
+     * @param list 列表
+     * @return int
+     */
+    int delete(List<ProductBizDemandDO> list);
+
 }

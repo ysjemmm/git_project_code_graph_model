@@ -1,7 +1,5 @@
 package com.timevale.forward.facade.api.request;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -17,21 +15,19 @@ import java.util.List;
 @Data
 @ApiModel("业务需求修改")
 public class BizDemandModifyReq extends BaseReq {
-    @ApiModelProperty("业务需求id")
+    @ApiModelProperty("业务需求id,新增时无需填写")
     private Long id;
 
     @ApiModelProperty("需求主题")
     private String name;
 
     @ApiModelProperty("需求部门id")
-    @JsonSerialize(using = ToStringSerializer.class)
     private Long deptId;
 
     @ApiModelProperty("优先级： 0-紧急，10-高，20-中，30低")
     private Byte priority;
 
     @ApiModelProperty("产品线id")
-    @JsonSerialize(using = ToStringSerializer.class)
     private Long productLineId;
 
     @ApiModelProperty("影响数据指标")
@@ -53,5 +49,5 @@ public class BizDemandModifyReq extends BaseReq {
     private String desc;
 
     @ApiModelProperty("抄送人")
-    private List<PersonAddReq> recipients;
+    private List<PersonAddReq> recipientInfoList;
 }

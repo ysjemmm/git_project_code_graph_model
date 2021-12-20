@@ -35,7 +35,7 @@ public class BizDemandDetailVO extends BizDemandVO {
     private Boolean createCustomer;
 
     @ApiModelProperty("接收人")
-    private String receiveMan;
+    private PersonVO receiveManInfo;
 
     @ApiModelProperty("操作系统:0 XP, 1 Win7,2 Win8，3 Win10，4中标麒麟，5银河麒麟，6麒麟V10，7中科方德，8统信UOS")
     private Byte os;
@@ -47,10 +47,10 @@ public class BizDemandDetailVO extends BizDemandVO {
     private String desc;
 
     @ApiModelProperty("附件")
-    private List<FileVO> files;
+    private List<FileVO> fileList;
 
     @ApiModelProperty("抄送人")
-    private List<PersonVO> recipients;
+    private List<PersonVO> recipientInfoList;
 
     @ApiModelProperty("项目发布时间")
     private Date endDate;
