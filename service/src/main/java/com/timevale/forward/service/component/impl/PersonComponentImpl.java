@@ -37,7 +37,7 @@ public class PersonComponentImpl implements PersonComponent {
         log.info("已存在人员:existPersons={}", existPersons);
         if (CollectionUtils.isEmpty(existPersons)) {
             List<PersonDO> personDO = PersonCopier.INSTANCE.convert(list);
-            fillValue(mainId, type, personDO);
+            fillInfo(mainId, type, personDO);
             personMapper.inserts(personDO);
         }
     }
@@ -51,7 +51,7 @@ public class PersonComponentImpl implements PersonComponent {
             return;
         }
         List<PersonDO> personDO = PersonCopier.INSTANCE.convert(list);
-        fillValue(mainId, type, personDO);
+        fillInfo(mainId, type, personDO);
         List<PersonDO> existPersons = select(mainId, type);
         log.info("已存在人员:existPersons={}", existPersons);
         List<String> existUserIds = existPersons.stream().map(PersonDO::getUserId).collect(Collectors.toList());
@@ -61,13 +61,17 @@ public class PersonComponentImpl implements PersonComponent {
                 needAddPersons.add(p);
             }
         });
-        personMapper.inserts(needAddPersons);
-        log.info("编辑时,新增人员:needAddPersons={},type={}", needAddPersons, type);
-
+        if(CollectionUtils.isNotEmpty(needAddPersons)){
+            personMapper.inserts(needAddPersons);
+            log.info("编辑时,新增人员:needAddPersons={},type={}", needAddPersons, type);
+        }
         List<String> reqPersonIds = personDO.stream().map(PersonDO::getUserId).collect(Collectors.toList());
         existPersons.forEach((p) -> {
             if (!reqPersonIds.contains(p.getUserId())) {
+                UserInfo userInfo = LocalSessionUtils.getUserInfo();
                 p.setIsDeleted(true);
+                p.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+                p.setModifyManId(userInfo.getId());
                 //删除
                 personMapper.update(p);
             }
@@ -90,7 +94,7 @@ public class PersonComponentImpl implements PersonComponent {
     }
 
 
-    private void fillValue(Long mainId, Byte type, List<PersonDO> personDO) {
+    private void fillInfo(Long mainId, Byte type, List<PersonDO> personDO) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         personDO.forEach(t -> {
             t.setProjectId(0L);

@@ -33,6 +33,12 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
         projectNodeMapper.delete(projectId);
         projectNodeMapper.batchInsert(projectNodeDO);
     }
+
+    @Override
+    public List<ProjectNodeDO> get(Long projectId) {
+        return projectNodeMapper.get(projectId);
+    }
+
     private void fillValue(Long projectId,List<ProjectNodeDO> projectNodeDO) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         projectNodeDO.forEach(t -> {

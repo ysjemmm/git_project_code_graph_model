@@ -30,7 +30,7 @@ public class ProjectAddReq extends BaseReq {
     private Byte type;
 
     @ApiModelProperty("项目经理")
-    private String pm;
+    private PersonAddReq pm;
 
     @ApiModelProperty("产品经理")
     private List<PersonAddReq> pds;

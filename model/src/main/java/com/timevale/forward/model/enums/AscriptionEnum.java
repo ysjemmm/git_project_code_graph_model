@@ -1,5 +1,12 @@
 package com.timevale.forward.model.enums;
 
+import lombok.Getter;
+
+/**
+ * @author xingyun
+ * @date 2021-12-13 13:58
+ **/
+@Getter
 public enum AscriptionEnum {
     /**
      * 页面权限归属

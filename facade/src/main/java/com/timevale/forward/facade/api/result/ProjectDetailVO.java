@@ -31,7 +31,7 @@ public class ProjectDetailVO extends ToString {
     private Byte type;
 
     @ApiModelProperty("项目经理")
-    private String pm;
+    private String pmId;
 
     @ApiModelProperty("产品经理")
     private List<PersonVO> pd;

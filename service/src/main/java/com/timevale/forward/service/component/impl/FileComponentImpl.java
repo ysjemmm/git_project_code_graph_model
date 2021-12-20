@@ -60,7 +60,7 @@ public class FileComponentImpl implements FileComponent {
         log.info("已存在附件:existFiles={}", existFiles);
         List<FileDO> fileDO = FileCopier.INSTANCE.convert(list);
         fileDO.forEach(f->{
-            fillValue(f,attacheId,type);
+            fillInfo(f,attacheId,type);
         });
         List<String> existFileIds = existFiles.stream().map(FileDO::getFileId).collect(Collectors.toList());
         List<FileDO> needAddFiles=new ArrayList<>();
@@ -69,9 +69,10 @@ public class FileComponentImpl implements FileComponent {
                 needAddFiles.add(f);
             }
         });
-        fileMapper.inserts(needAddFiles);
-        log.info("编辑时,新增附件:needAddFiles={},type={}", needAddFiles,type);
-
+        if(CollectionUtils.isNotEmpty(needAddFiles)){
+            fileMapper.inserts(needAddFiles);
+            log.info("编辑时,新增附件:needAddFiles={},type={}", needAddFiles,type);
+        }
         List<String> reqFileIds = fileDO.stream().map(FileDO::getFileId).collect(Collectors.toList());
         existFiles.forEach((f)->{
             if(!reqFileIds.contains(f.getFileId())){
@@ -87,7 +88,7 @@ public class FileComponentImpl implements FileComponent {
         return fileMapper.select(attacheId, type);
     }
 
-    private void fillValue(FileDO fileDO,Long attacheId, Byte type) {
+    private void fillInfo(FileDO fileDO,Long attacheId, Byte type) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         fileDO.setAttacheId(attacheId);
         fileDO.setType(type);

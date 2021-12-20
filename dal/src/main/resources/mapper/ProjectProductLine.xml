@@ -16,13 +16,18 @@
             (#{i.projectId}, #{i.productLineId}, #{i.createManId},#{i.createMan})
         </foreach>
     </insert>
+
     <update id="update" parameterType="com.timevale.forward.dal.entity.ProjectProductLineDO">
         update project_product_line
         <set>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
         </set>
         <where>
             <if test="id != null">and id = #{id}</if>
         </where>
     </update>
+
+
 </mapper>

@@ -24,4 +24,12 @@ public interface PersonCopier {
      */
     List<PersonDO> convert(List<PersonAddReq> list);
 
+    /**
+     * DO批量转换转换VO
+     *
+     * @param list 列表
+     * @return PersonVO列表
+     */
+    List<PersonVO> transform(List<PersonDO> list);
+
 }

@@ -21,5 +21,12 @@ public interface ProjectNodeMapper {
      */
     int delete(@Param("projectId") Long projectId);
 
+    /**
+     * 删除
+     * @param projectId 项目id
+     * @return int
+     */
+    List<ProjectNodeDO> get(@Param("projectId") Long projectId);
+
 
 }

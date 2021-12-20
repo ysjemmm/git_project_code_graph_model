@@ -30,6 +30,8 @@
         update person
         <set>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
         </set>
         <where>
             <if test="id != null">and id = #{id}</if>

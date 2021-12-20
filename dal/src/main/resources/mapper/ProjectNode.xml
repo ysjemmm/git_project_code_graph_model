@@ -13,4 +13,13 @@
     <update id="delete" parameterType="long">
         delete from project_node where project_id=#{projectId}
     </update>
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.ProjectNodeDO">
+        select id,project_id,name, plan_date, actual_date ,create_man_id, create_man
+        from project_node
+        <where>
+            <if test="projectId!=null">and project_id = #{projectId}</if>
+        </where>
+        order by plan_date asc
+    </select>
 </mapper>

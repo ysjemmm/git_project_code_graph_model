@@ -3,14 +3,40 @@
 <mapper namespace="com.timevale.forward.dal.dao.ProjectMapper">
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        insert into project (name, priority, type ,status,pm,plan_start_date,plan_end_date,`desc`, create_man_id, create_man)
+        insert into project (name, priority, type ,status,pm,pm_id,plan_start_date,plan_end_date,
+        <if test="actualStartDate != null">actual_start_date,</if>
+        <if test="actualEndDate != null">actual_end_date,</if>
+        `desc`, create_man_id, create_man)
         values
-        (#{name}, #{priority}, #{type},#{status}, #{pm},#{planStartDate},#{planEndDate},#{desc}, #{createManId}, #{createMan})
+        (#{name}, #{priority}, #{type},#{status}, #{pmName},#{pmId},#{planStartDate},#{planEndDate},
+        <if test="actualStartDate != null">#{actualStartDate},</if>
+        <if test="actualEndDate != null">#{actualEndDate},</if>
+        #{desc}, #{createManId}, #{createMan})
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select name, priority, type ,status,pm,plan_start_date,plan_end_date,`desc`, create_man_id, create_man,create_date,modify_date
+        select name, priority, type ,status,pm_id,plan_start_date,plan_end_date,
+        actual_start_date,actual_end_date,`desc`, create_man_id, create_man,create_date,modify_date
         from project
-        where id = #{id}
+        where id = #{id} and is_deleted=false
     </select>
+
+    <update id="update" parameterType="com.timevale.forward.dal.entity.ProjectDO">
+        update project
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="priority != null">priority = #{priority},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="pmName != null">pm = #{pmName},</if>
+            <if test="pmId != null">pm_id = #{pmId},</if>
+            <if test="planStartDate != null">plan_start_date = #{planStartDate},</if>
+            <if test="planEndDate != null">plan_end_date = #{planEndDate},</if>
+            <if test="desc != null">`desc` = #{desc},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            <if test="id != null">and id = #{id}</if>
+        </where>
+    </update>
 </mapper>

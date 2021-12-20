@@ -17,4 +17,11 @@ public interface ProjectProductLineComponent {
      */
     void update(List<Long> list,Long projectId);
 
+    /**
+     * 节点信息
+     * @param projectId 项目id
+     * @return ids
+     */
+    List<Long> get(Long projectId);
+
 }

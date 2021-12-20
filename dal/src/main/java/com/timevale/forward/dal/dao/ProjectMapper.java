@@ -12,8 +12,21 @@ public interface ProjectMapper {
      */
     int insert(ProjectDO projectDO);
 
+    /**
+     * 查询
+     * @param id id
+     * @return 项目信息
+     */
     ProjectDO get(@Param("id") Long id);
-    
+
+
+    /**
+     * 新增单条项目
+     *
+     * @param projectDO 项目
+     * @return int
+     */
+    int update(ProjectDO projectDO);
 
 
 }

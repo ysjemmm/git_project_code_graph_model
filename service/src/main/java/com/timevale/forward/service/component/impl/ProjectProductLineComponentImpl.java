@@ -50,17 +50,30 @@ public class ProjectProductLineComponentImpl implements ProjectProductLineCompon
                 needAddProductLines.add(f);
             }
         });
-        projectProductLineMapper.batchInsert(needAddProductLines);
-        log.info("新增项目-产品线:needAddProductLines={}", needAddProductLines);
+        if(CollectionUtils.isNotEmpty(needAddProductLines)){
+            projectProductLineMapper.batchInsert(needAddProductLines);
+            log.info("新增项目-产品线:needAddProductLines={}", needAddProductLines);
+        }
 
         List<Long> reqProductIds = projectProductLineDO.stream().map(ProjectProductLineDO::getProductLineId).collect(Collectors.toList());
         existProductLines.forEach((p)->{
             if(!reqProductIds.contains(p.getProductLineId())){
+                UserInfo userInfo = LocalSessionUtils.getUserInfo();
                 p.setIsDeleted(true);
+                p.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+                p.setModifyManId(userInfo.getId());
                 //删除
                 projectProductLineMapper.update(p);
             }
         });
+    }
+
+    @Override
+    public List<Long> get(Long projectId) {
+        List<Long> productLineIds =  projectProductLineMapper.get(projectId)
+                .stream()
+                .map(ProjectProductLineDO::getProductLineId).collect(Collectors.toList());
+        return productLineIds;
     }
 
     private List<ProjectProductLineDO> buildDO(List<Long> list,Long projectId) {
