@@ -43,6 +43,7 @@
         <!-- RPC Facade -->
         <filesystem.version>2.0.4-RELEASE</filesystem.version>
         <inuser.security.facade.version>1.0.7-SNAPSHOT</inuser.security.facade.version>
+        <erp.message-facade.version>1.2.4-SNAPSHOT</erp.message-facade.version>
     </properties>
 
     <dependencyManagement>
@@ -110,7 +111,7 @@
             <dependency>
                 <groupId>com.timevale.erp.message</groupId>
                 <artifactId>erp.message-facade</artifactId>
-                <version>1.2.3-SNAPSHOT</version>
+                <version>${erp.message-facade.version}</version>
             </dependency>
             <!-- 分布式锁 -->
             <dependency>
