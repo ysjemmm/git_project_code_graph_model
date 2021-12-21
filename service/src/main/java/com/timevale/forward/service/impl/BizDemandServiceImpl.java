@@ -147,7 +147,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 添加抄送人
         long bizDemandId = bizDemandDO.getId();
-        List<PersonDO> personDOList = PersonCopier.INSTANCE.convertToDO(bizDemandAddReq.getRecipientInfoList());
+        List<PersonDO> personDOList = PersonCopier.INSTANCE.convert(bizDemandAddReq.getRecipientInfoList());
         for (PersonDO personDO : personDOList) {
             personDO.setBizDemandId(bizDemandId);
             personDO.setType(PersonTypeEnum.BIZ_DEMAND_CC.getCode());
@@ -191,7 +191,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         Set<PersonDO> oldPersonDOList = new HashSet<>(personMapper.select(PersonListCondition.builder().
                 bizDemandId(bizDemandModifyReq.getId())
                 .build()));
-        List<PersonDO> newPersonDOList = PersonCopier.INSTANCE.convertToDO(bizDemandModifyReq.getRecipientInfoList());
+        List<PersonDO> newPersonDOList = PersonCopier.INSTANCE.convert(bizDemandModifyReq.getRecipientInfoList());
         List<PersonDO> insertPersonDOList = Lists.newArrayList();
         for (PersonDO personDO : newPersonDOList) {
             if(!oldPersonDOList.contains(personDO)){
