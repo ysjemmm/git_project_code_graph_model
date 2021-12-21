@@ -4,11 +4,11 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
-import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.condition.ProductBizDemandCondition;
-import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.ProductBizDemandMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.entity.BizDemandDO;
-import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProductBizDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.facade.api.client.BizDemandService;
@@ -23,8 +23,8 @@ import com.timevale.forward.model.enums.AscriptionEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.copy.BizDemandCopier;
-import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
 import com.timevale.forward.service.integration.erp.ErpMessageClient;
 import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
@@ -41,7 +41,10 @@ import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -52,16 +55,13 @@ import java.util.stream.Collectors;
 @RestService
 public class BizDemandServiceImpl implements BizDemandService {
 
-    // @Resource
+    @Resource
     BizDemandMapper bizDemandMapper;
 
-    // @Resource
-    PersonMapper personMapper;
-
-    // @Resource
+    @Resource
     ProductBizDemandMapper productBizDemandMapper;
 
-    // @Resource
+    @Resource
     ProductDemandMapper productDemandMapper;
 
     @Resource
@@ -69,6 +69,9 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Resource
     InnerUserPersonClient innerUserPersonClient;
+
+    @Resource
+    PersonComponent personComponent;
 
 
     @Override
@@ -146,15 +149,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandMapper.insert(bizDemandDO);
 
         // 添加抄送人
-        long bizDemandId = bizDemandDO.getId();
-        List<PersonDO> personDOList = PersonCopier.INSTANCE.convert(bizDemandAddReq.getRecipientInfoList());
-        for (PersonDO personDO : personDOList) {
-            personDO.setBizDemandId(bizDemandId);
-            personDO.setType(PersonTypeEnum.BIZ_DEMAND_CC.getCode());
-            personDO.setCreateMan(userInfo.getAlias());
-            personDO.setCreateManId(userInfo.getId());
-        }
-        personMapper.inserts(personDOList);
+        personComponent.add(bizDemandAddReq.getRecipientInfoList(), bizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
 
         // 接收人通知（待实现）
 
@@ -187,22 +182,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandMapper.update(newBizDemandDO);
 
         // 筛出新增抄送人，添加抄送人数据
-        long bizDemandId = newBizDemandDO.getId();
-        Set<PersonDO> oldPersonDOList = new HashSet<>(personMapper.select(PersonListCondition.builder().
-                bizDemandId(bizDemandModifyReq.getId())
-                .build()));
-        List<PersonDO> newPersonDOList = PersonCopier.INSTANCE.convert(bizDemandModifyReq.getRecipientInfoList());
-        List<PersonDO> insertPersonDOList = Lists.newArrayList();
-        for (PersonDO personDO : newPersonDOList) {
-            if(!oldPersonDOList.contains(personDO)){
-                personDO.setBizDemandId(bizDemandId);
-                personDO.setType(PersonTypeEnum.BIZ_DEMAND_CC.getCode());
-                personDO.setCreateMan(userInfo.getAlias());
-                personDO.setCreateManId(userInfo.getId());
-                insertPersonDOList.add(personDO);
-            }
-        }
-        personMapper.inserts(insertPersonDOList);
+        personComponent.add(bizDemandModifyReq.getRecipientInfoList(), newBizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
 
         return BaseResult.success(true);
     }

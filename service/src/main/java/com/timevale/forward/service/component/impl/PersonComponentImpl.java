@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -54,7 +55,7 @@ public class PersonComponentImpl implements PersonComponent {
         fillInfo(mainId, type, personDO);
         List<PersonDO> existPersons = select(mainId, type);
         log.info("已存在人员:existPersons={}", existPersons);
-        List<String> existUserIds = existPersons.stream().map(PersonDO::getUserId).collect(Collectors.toList());
+        Set<String> existUserIds = existPersons.stream().map(PersonDO::getUserId).collect(Collectors.toSet());
         List<PersonDO> needAddPersons = new ArrayList<>();
         personDO.forEach((p) -> {
             if (!existUserIds.contains(p.getUserId())) {
@@ -65,7 +66,7 @@ public class PersonComponentImpl implements PersonComponent {
             personMapper.inserts(needAddPersons);
             log.info("编辑时,新增人员:needAddPersons={},type={}", needAddPersons, type);
         }
-        List<String> reqPersonIds = personDO.stream().map(PersonDO::getUserId).collect(Collectors.toList());
+        Set<String> reqPersonIds = personDO.stream().map(PersonDO::getUserId).collect(Collectors.toSet());
         existPersons.forEach((p) -> {
             if (!reqPersonIds.contains(p.getUserId())) {
                 UserInfo userInfo = LocalSessionUtils.getUserInfo();
