@@ -119,6 +119,14 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public BaseResult<Boolean> updateStatus(Long projectId, Byte type) {
         log.info("项目暂停或作废接收参数:projectId={},type={}", projectId, type);
+        ProjectDO projectDO=new ProjectDO();
+        projectDO.setId(projectId);
+        projectMapper.update(projectDO);
+//        if(ProjectStatusEnum.INVALID.getCode().equals(type)){
+//
+//        }
+
+        projectDO.setStatus(type);
         return BaseResult.success(true);
     }
 
@@ -137,9 +145,9 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
         projectDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         projectDO.setCreateManId(userInfo.getId());
+        projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
         projectDO.setPmName(projectAddReq.getPm().getUserName());
         projectDO.setPmId(projectAddReq.getPm().getUserId());
-        fillInfo(projectAddReq, projectDO);
         projectMapper.insert(projectDO);
 
         // 产品线
@@ -152,10 +160,6 @@ public class ProjectServiceImpl implements ProjectService {
         // 团队成员
         if (CollectionUtils.isNotEmpty(projectAddReq.getTeamMembers())) {
             personComponent.add(projectAddReq.getTeamMembers(), projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
-        }
-        // 节点信息
-        if (CollectionUtils.isNotEmpty(projectAddReq.getProjectNodes())) {
-            projectNodeComponent.add(projectAddReq.getProjectNodes(), projectDO.getId());
         }
         return BaseResult.success(true);
     }
@@ -170,6 +174,7 @@ public class ProjectServiceImpl implements ProjectService {
         projectDO.setModifyManId(userInfo.getId());
         projectDO.setPmName(projectModifyReq.getPm().getUserName());
         projectDO.setPmId(projectModifyReq.getPm().getUserId());
+        fillInfo(projectModifyReq, projectDO);
         projectMapper.update(projectDO);
 
         // 产品线
@@ -230,7 +235,7 @@ public class ProjectServiceImpl implements ProjectService {
         return BaseResult.success(true);
     }
 
-    private void fillInfo(ProjectAddReq req, ProjectDO projectDO) {
+    private void fillInfo(ProjectModifyReq req, ProjectDO projectDO) {
         List<ProjectNodeAddReq> projectNodes = req.getProjectNodes();
         for (ProjectNodeAddReq node : projectNodes) {
             if (ProjectStageEnum.TEST_RELEASE.getText().equals(node.getName()) && node.getActualDate() != null) {
