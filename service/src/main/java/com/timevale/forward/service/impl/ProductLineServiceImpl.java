@@ -8,6 +8,7 @@ import com.timevale.forward.service.copy.ProductLineCopier;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -18,7 +19,7 @@ import java.util.List;
 @RestService
 public class ProductLineServiceImpl implements ProductLineService {
 
-    // @Resource
+    @Resource
     ProductLineMapper productLineMapper;
 
     @Override
