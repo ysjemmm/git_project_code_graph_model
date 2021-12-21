@@ -39,4 +39,79 @@
             <if test="id != null">and id = #{id}</if>
         </where>
     </update>
+
+    <sql id="commonSearch">
+        from project a
+        left join project_product_line b on a.id=b.project_id and b.is_deleted =false
+        left join product_line c on b.product_line_id=c.id and c.is_deleted =false
+        left join biz_domain d on c.biz_domain_id=d.id and d.is_deleted =false
+        left join person e on a.id=e.project_id and e.type =0 and e.is_deleted =false
+        left join person f on a.id=f.project_id and f.type =1 and f.is_deleted =false
+        <where>
+            <if test="id != null">and a.id = #{id}</if>
+            <if test="name != null">and a.name like concat('%',#{name},'%')</if>
+            <if test="productLine != null">and c.name = #{productLine}</if>
+            <if test="bizDomain != null">and d.name = #{bizDomain}</if>
+            <if test="planStartDateLeft != null and planStartDateRight != null">
+                and a.plan_start_date &gt;= #{planStartDateLeft} and a.plan_start_date &lt;= #{planStartDateRight}
+            </if>
+            <if test="planEndDateLeft != null and planEndDateRight != null">
+                and a.plan_end_date &gt;= #{planEndDateLeft} and a.plan_end_date &lt;= #{planEndDateRight}
+            </if>
+            <if test="actualStartDateLeft != null and actualStartDateRight != null">
+                and a.actual_start_date &gt;= #{actualStartDateLeft} and a.actual_start_date &lt;= #{actualStartDateRight}
+            </if>
+            <if test="actualEndDateLeft != null and actualEndDateRight != null">
+                and a.actual_end_date &gt;= #{actualEndDateLeft} and a.actual_end_date &lt;= #{actualEndDateRight}
+            </if>
+            <if test="priorities!=null and priorities.size()>0">
+                and a.priority in
+                <foreach collection="priorities" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="status!=null and status.size()>0">
+                and a.status in
+                <foreach collection="status" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="types!=null and types.size()>0">
+                and a.type in
+                <foreach collection="types" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="pms!=null and pms.size()>0">
+                and a.pm_id in
+                <foreach collection="pms" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="pds!=null and pds.size()>0">
+                and e.user_id in
+                <foreach collection="pds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="teamMembers!=null and teamMembers.size()>0">
+                and f.user_id in
+                <foreach collection="teamMembers" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and a.is_deleted =false
+        </where>
+    </sql>
+    <select id="list" resultType="com.timevale.forward.dal.entity.ProjectListDO">
+        select a.id,a.name, a.priority, a.type ,a.status,a.pm pmName,a.plan_start_date,a.plan_end_date,
+        a.actual_start_date,a.actual_end_date,a.create_man,c.name productLineName,d.name bizDomainName,
+        e.user_name pdName,f.user_name teamMember
+        <include refid="commonSearch"/>
+        limit #{offset},#{size}
+    </select>
+    <select id="count" resultType="int">
+        select count(distinct a.id)
+        <include refid="commonSearch"/>
+    </select>
 </mapper>

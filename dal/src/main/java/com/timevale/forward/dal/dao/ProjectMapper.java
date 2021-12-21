@@ -1,7 +1,11 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectListDO;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 public interface ProjectMapper {
     /**
@@ -27,6 +31,22 @@ public interface ProjectMapper {
      * @return int
      */
     int update(ProjectDO projectDO);
+
+    /**
+     * 新增单条项目
+     *
+     * @param condition 项目
+     * @return int
+     */
+    List<ProjectListDO> list(ProjectListCondition condition);
+
+    /**
+     * 查数量
+     *
+     * @param condition 项目
+     * @return int
+     */
+    int count(ProjectListCondition condition);
 
 
 }

@@ -1,9 +1,13 @@
 package com.timevale.forward.service.copy;
 
+import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectListDO;
+import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
+import com.timevale.forward.facade.api.result.ProjectVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -26,6 +30,7 @@ public interface ProjectCopier {
      * @return ProjectDO
      */
     ProjectDO convert(ProjectModifyReq projectModifyReq);
+    
     /**
      * 转换转换DO
      *
@@ -34,4 +39,19 @@ public interface ProjectCopier {
      */
     ProjectDetailVO convert(ProjectDO projectDO);
 
+    /**
+     * 转换转换DO
+     *
+     * @param projectQueryList 对象
+     * @return ProjectListCondition
+     */
+    ProjectListCondition convert(ProjectQueryList projectQueryList);
+
+    /**
+     * 转换转换DO
+     *
+     * @param projectListDO 对象
+     * @return ProjectDetailVO
+     */
+    ProjectVO convert(ProjectListDO projectListDO);
 }

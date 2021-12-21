@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -46,17 +47,29 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("团队成员")
     private List<String> teamMembers;
 
-    @ApiModelProperty("项目计划开始时间")
-    private String planStartDate;
+    @ApiModelProperty("项目计划开始时间左区间")
+    private Date planStartDateLeft;
 
-    @ApiModelProperty("项目计划结束时间")
-    private String planEndDate;
+    @ApiModelProperty("项目计划开始时间右区间")
+    private Date planStartDateRight;
 
-    @ApiModelProperty("项目实际开始时间")
-    private String actualStartDate;
+    @ApiModelProperty("项目计划结束时间左区间")
+    private Date planEndDateLeft;
 
-    @ApiModelProperty("项目实际结束时间")
-    private String actualEndDate;
+    @ApiModelProperty("项目计划结束时间右区间")
+    private Date planEndDateRight;
+
+    @ApiModelProperty("项目实际开始时间左区间")
+    private Date actualStartDateLeft;
+
+    @ApiModelProperty("项目实际开始时间右区间")
+    private Date actualStartDateRight;
+
+    @ApiModelProperty("项目实际结束时间左区间")
+    private Date actualEndDateLeft;
+
+    @ApiModelProperty("项目实际结束时间右区间")
+    private Date actualEndDateRight;
 
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
     private String ascription;

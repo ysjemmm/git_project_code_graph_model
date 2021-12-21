@@ -47,9 +47,6 @@ public class ProductDemandVO extends ToString {
     @ApiModelProperty("项目描述")
     private String desc;
 
-    @ApiModelProperty("是否删除:0:否,1:是")
-    private Byte isDeleted;
-
     @ApiModelProperty("创建人id")
     private String createManId;
 
