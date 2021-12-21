@@ -19,10 +19,7 @@ import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
-import com.timevale.forward.model.enums.AscriptionEnum;
-import com.timevale.forward.model.enums.BizDemandStatusEnum;
-import com.timevale.forward.model.enums.PersonTypeEnum;
-import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
@@ -138,7 +135,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> addBizDemand(BizDemandAddReq bizDemandAddReq) {
+    public BaseResult<Boolean> add(BizDemandAddReq bizDemandAddReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 新增业务需求
@@ -152,6 +149,16 @@ public class BizDemandServiceImpl implements BizDemandService {
         personComponent.add(bizDemandAddReq.getRecipientInfoList(), bizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
 
         // 接收人通知（待实现）
+        String receiver = bizDemandAddReq.getReceiveManInfo().getUserId();
+        String title = bizDemandAddReq.getName();
+
+        ActionCardMsg actionCardMsg = ActionCardMsg.builder()
+                .title(MessageTitleEnum.BIZDEMAND.getText())
+                .markdown("markdown")
+                .singleTitle("跳转连接")
+                .singleUrl("https://www.baidu.com/")
+                .receivers(Lists.newArrayList(bizDemandAddReq.getReceiveManInfo().getUserId()))
+                .build();
 
         return BaseResult.success(true);
     }
@@ -336,7 +343,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                     .title("test")
                     .content("测试内容")
                     .build());
-        }else{
+        }else if(type.equals(2)){
             erpMessageClient.sendActionCardMsg(ActionCardMsg.builder()
                     .receivers(Lists.newArrayList("yangxu"))
                     .title("test2")
@@ -344,6 +351,9 @@ public class BizDemandServiceImpl implements BizDemandService {
                     .singleTitle("跳转连接文案")
                     .singleUrl("https://weibo.com/")
                     .build());
+        }else{
+            String str = "CURRENT_USER";
+            System.out.println(str.equals(AscriptionEnum.COPIER.toString()));
         }
 
         return BaseResult.success(true);

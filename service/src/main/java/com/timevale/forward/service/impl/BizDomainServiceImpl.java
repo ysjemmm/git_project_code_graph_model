@@ -19,7 +19,7 @@ import java.util.List;
 @RestService
 public class BizDomainServiceImpl implements BizDomainService {
 
-    // @Resource
+    @Resource
     BizDomainMapper bizDomainMapper;
 
     @Override

@@ -1,6 +1,5 @@
 package com.timevale.forward.facade.api.client;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
@@ -44,7 +43,7 @@ public interface BizDemandService {
      * @param bizDemandAddReq 业务需求添加请求
      * @return 成功与否
      */
-    BaseResult<Boolean> addBizDemand(BizDemandAddReq bizDemandAddReq);
+    BaseResult<Boolean> add(BizDemandAddReq bizDemandAddReq);
 
     /**
      * 通过id获取业务需求
@@ -110,7 +109,7 @@ public interface BizDemandService {
     /**
      * 测试通知
      *
-     * @return
+     * @return 成功与否
      */
     BaseResult<Boolean> testNotice(Integer type);
 
