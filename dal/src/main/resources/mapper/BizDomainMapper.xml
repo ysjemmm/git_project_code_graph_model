@@ -1,8 +1,8 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
-<mapper namespace="com.timevale.forward.dal.dao.BizDemandMapper">
+<mapper namespace="com.timevale.forward.dal.dao.BizDomainMapper">
 
-    <select id="selectAllBizDomain" resultType="com.timevale.forward.dal.entity.BizDemandDO">
+    <select id="selectAllBizDomain" resultType="com.timevale.forward.dal.entity.BizDomainDO">
         select id, name, owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
         from biz_domain
     </select>

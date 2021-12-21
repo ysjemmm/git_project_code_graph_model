@@ -82,15 +82,15 @@ public class BizDemandServiceImpl implements BizDemandService {
         BizDemandListCondition bizDemandListCondition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
 
         String ascription = bizDemandQueryList.getAscription();
-        if(ascription.equals(AscriptionEnum.CURRENT_USER.getText())){
+        if(ascription.equals(AscriptionEnum.CURRENT_USER.toString())){
             bizDemandListCondition.setCreateManIdList(Lists.newArrayList(userInfo.getId()));
-        }else if(ascription.equals(AscriptionEnum.RECEIVE.getText())){
+        }else if(ascription.equals(AscriptionEnum.RECEIVE.toString())){
             bizDemandListCondition.setReceiveManIdList(Lists.newArrayList(userInfo.getId()));
-        }else if(ascription.equals(AscriptionEnum.COPIER.getText())){
+        }else if(ascription.equals(AscriptionEnum.COPIER.toString())){
             bizDemandListCondition.setCopier(userInfo.getId());
         }else {
             List<String> teamMember = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
-            if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.getText())){
+            if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())){
                 if(bizDemandListCondition.getCreateManIdList().isEmpty()){
                     bizDemandListCondition.setCreateManIdList(teamMember);
                 }
@@ -149,16 +149,18 @@ public class BizDemandServiceImpl implements BizDemandService {
         personComponent.add(bizDemandAddReq.getRecipientInfoList(), bizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
 
         // 接收人通知（待实现）
+        String createMan = userInfo.getAlias();
+        String name = bizDemandAddReq.getName();
         String receiver = bizDemandAddReq.getReceiveManInfo().getUserId();
-        String title = bizDemandAddReq.getName();
-
+        String markdown = String.format("您收到了%s提交的业务需求：%s，可进入产研项目管理系统查看", createMan, name);
         ActionCardMsg actionCardMsg = ActionCardMsg.builder()
-                .title(MessageTitleEnum.BIZDEMAND.getText())
-                .markdown("markdown")
+                .title(name)
+                .markdown(markdown)
                 .singleTitle("跳转连接")
                 .singleUrl("https://www.baidu.com/")
-                .receivers(Lists.newArrayList(bizDemandAddReq.getReceiveManInfo().getUserId()))
+                .receivers(Lists.newArrayList(receiver))
                 .build();
+        erpMessageClient.sendActionCardMsg(actionCardMsg);
 
         return BaseResult.success(true);
     }
@@ -277,7 +279,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 数据转换为集合，判断交集补集
         Set<Long> newLinkData = new HashSet<>(productIdList);
         Map<Long, Boolean> oldLinkDate = list.stream()
-                .collect(Collectors.toMap(ProductBizDemandDO::getProductDemandId, ProductBizDemandDO::getIsDeleted));
+                .collect(Collectors.toMap(ProductBizDemandDO::getProductDemandId, ProductBizDemandDO::getIsDeleted, (a, b) -> a));
 
         // 更新和新增数据的集合
         List<ProductBizDemandDO> insertLinkDate = Lists.newArrayList();
@@ -343,7 +345,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                     .title("test")
                     .content("测试内容")
                     .build());
-        }else if(type.equals(2)){
+        }else{
             erpMessageClient.sendActionCardMsg(ActionCardMsg.builder()
                     .receivers(Lists.newArrayList("yangxu"))
                     .title("test2")
@@ -351,11 +353,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                     .singleTitle("跳转连接文案")
                     .singleUrl("https://weibo.com/")
                     .build());
-        }else{
-            String str = "CURRENT_USER";
-            System.out.println(str.equals(AscriptionEnum.COPIER.toString()));
         }
-
         return BaseResult.success(true);
     }
 

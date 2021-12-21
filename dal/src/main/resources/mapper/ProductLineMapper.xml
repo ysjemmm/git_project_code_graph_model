@@ -6,5 +6,4 @@
         select id, biz_domain_id, name, owner, is_deleted,create_man ,create_date ,modify_man ,modify_date
         from product_line
     </select>
-
 </mapper>

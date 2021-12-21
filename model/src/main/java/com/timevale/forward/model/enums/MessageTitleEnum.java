@@ -9,7 +9,10 @@ import lombok.Getter;
 @Getter
 public enum MessageTitleEnum {
     // 业务需求状态变更通知标题
-    BIZDEMAND("业务需求反馈通知"),
+    BIZDEMAND_FEEDBACK("业务需求反馈通知"),
+    BIZDEMAND_CHANGE(""),
+    BIZDEMAND_RECEIVE(""),
+    BIZDEMAND_INVALID(""),
     // 评论区@通知标题
     COMMENT("有人@你啦");
 

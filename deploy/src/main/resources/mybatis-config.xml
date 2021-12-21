@@ -47,9 +47,13 @@
     </plugins>
 
     <mappers>
+        <mapper resource="mapper/BizDemandMapper.xml"/>
+        <mapper resource="mapper/BizDomainMapper.xml"/>
         <mapper resource="mapper/FileMapper.xml"/>
         <mapper resource="mapper/PersonMapper.xml"/>
+        <mapper resource="mapper/ProductBizDemandMapper.xml"/>
         <mapper resource="mapper/ProductDemand.xml"/>
+        <mapper resource="mapper/ProductLineMapper.xml"/>
         <mapper resource="mapper/Project.xml"/>
         <mapper resource="mapper/ProjectNode.xml"/>
         <mapper resource="mapper/ProjectProductLine.xml"/>
