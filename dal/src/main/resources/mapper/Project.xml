@@ -49,8 +49,6 @@
         <where>
             <if test="id != null">and a.id = #{id}</if>
             <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
-            <if test="productLine != null and productLine != ''">and c.name = #{productLine}</if>
-            <if test="bizDomain != null and bizDomain != ''">and d.name = #{bizDomain}</if>
             <if test="planStartDateLeft != null and planStartDateRight != null">
                 and a.plan_start_date &gt;= #{planStartDateLeft} and a.plan_start_date &lt;= #{planStartDateRight}
             </if>
@@ -62,6 +60,18 @@
             </if>
             <if test="actualEndDateLeft != null and actualEndDateRight != null">
                 and a.actual_end_date &gt;= #{actualEndDateLeft} and a.actual_end_date &lt;= #{actualEndDateRight}
+            </if>
+            <if test="productLineIds!=null and productLineIds.size()>0">
+                and c.id in
+                <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="bizDomainIds!=null and bizDomainIds.size()>0">
+                and d.id in
+                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
             </if>
             <if test="priorities!=null and priorities.size()>0">
                 and a.priority in

@@ -21,6 +21,7 @@ import com.timevale.forward.model.enums.ProjectStageEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
+import com.timevale.forward.service.component.ProjectProductDemandComponent;
 import com.timevale.forward.service.component.ProjectProductLineComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.PersonCopier;
@@ -64,6 +65,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private InnerUserPersonClient innerUserPersonClient;
+
+    @Resource
+    private ProjectProductDemandComponent projectProductDemandComponent;
 
 
     @Override
@@ -122,9 +126,9 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO projectDO=new ProjectDO();
         projectDO.setId(projectId);
         projectMapper.update(projectDO);
-//        if(ProjectStatusEnum.INVALID.getCode().equals(type)){
-//
-//        }
+        if(ProjectStatusEnum.INVALID.getCode().equals(type)){
+//            projectProductDemandComponent.update(projectId);
+        }
 
         projectDO.setStatus(type);
         return BaseResult.success(true);

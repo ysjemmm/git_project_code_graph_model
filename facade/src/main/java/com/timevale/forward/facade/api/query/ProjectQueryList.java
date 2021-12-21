@@ -27,10 +27,10 @@ public class ProjectQueryList extends QueryBase {
     private List<Byte> priorities;
 
     @ApiModelProperty("业务域")
-    private String bizDomain;
+    private List<Long> bizDomainIds;
 
     @ApiModelProperty("产品线")
-    private String productLine;
+    private List<Long> productLineIds;
 
     @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
     private List<Byte> types;

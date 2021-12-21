@@ -34,12 +34,12 @@ public class ProjectListCondition extends QueryBase {
     /**
      * 业务域
      */
-    private String bizDomain;
+    private List<Long> bizDomainIds;
 
     /**
      * 产品线
      */
-    private String productLine;
+    private List<Long> productLineIds;
 
     /**
      * 项目类型:0产品研发项目,1技术优化项目,2日常迭代
