@@ -14,26 +14,59 @@ import java.util.List;
 @Builder
 public class BizDemandListCondition {
 
+    /**
+     * 名称
+     */
     private String name;
 
+    /**
+     * 主键Id
+     */
     private Long id;
 
+    /**
+     * 创建日期
+     */
     private Date createDate;
 
+    /**
+     * 优先级列表
+     */
     private List<Byte> priorityList;
 
+    /**
+     * 业务域id列表
+     */
     private List<Long> bizDomainIdList;
 
+    /**
+     * 产品线id列表
+     */
     private List<Long> productLineIdList;
 
+    /**
+     * 预期上线日期列表
+     */
     private List<Byte> planReleaseDateList;
 
+    /**
+     * 业务状态列表
+     */
     private List<Byte> statusList;
 
+    /**
+     * 提交人id列表
+     */
     private List<String> createManIdList;
 
+    /**
+     * 接收人id列表
+     */
     private List<String> receiveManIdList;
 
+    /**
+     * 部门id列表
+     */
     private List<Long> deptIdList;
 
     /**

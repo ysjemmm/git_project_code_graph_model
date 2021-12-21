@@ -6,13 +6,11 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.condition.ProductBizDemandCondition;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.FileMapper;
-import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.dao.ProductBizDemandMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProductBizDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.BizDemandSubProductDemandQueryList;
@@ -24,6 +22,7 @@ import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.model.enums.AscriptionEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
@@ -42,10 +41,7 @@ import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -64,6 +60,9 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     // @Resource
     ProductBizDemandMapper productBizDemandMapper;
+
+    // @Resource
+    ProductDemandMapper productDemandMapper;
 
     @Resource
     ErpMessageClient erpMessageClient;
@@ -282,8 +281,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         if(bizDemandDO == null){
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
-
-
+        
         // 获取当前关联数据
         List<ProductBizDemandDO> list = productBizDemandMapper.select(ProductBizDemandCondition.builder()
                 .bizDemandId(bizDemandId)
@@ -326,6 +324,22 @@ public class BizDemandServiceImpl implements BizDemandService {
                 insertLinkDate.add(productBizDemandDO);
             }
         }
+
+        // 业务需求根据产品需求状态而变化
+        List<ProductDemandDO> productDemandDOList = productDemandMapper.select(productIdList);
+        Byte status = BizDemandStatusEnum.RECEIVED.getCode();
+        for (ProductDemandDO productDemandDO : productDemandDOList) {
+            // 排除“已暂停”，“作废”
+            if(ProductDemandStatusEnum.INVALID.getCode().equals(productDemandDO.getStatus())
+            || ProductDemandStatusEnum.SUSPEND.getCode().equals(productDemandDO.getStatus())){continue;}
+            status = status > productDemandDO.getStatus() ? status : productDemandDO.getStatus();
+        }
+
+        // 修改业务状态
+        bizDemandDO.setStatus(status);
+        bizDemandDO.setModifyMan(userInfo.getAlias());
+        bizDemandDO.setModifyManId(userInfo.getId());
+        bizDemandMapper.update(bizDemandDO);
 
         // 新增和更新非空数据
         if(!insertLinkDate.isEmpty()){productBizDemandMapper.inserts(insertLinkDate);}
