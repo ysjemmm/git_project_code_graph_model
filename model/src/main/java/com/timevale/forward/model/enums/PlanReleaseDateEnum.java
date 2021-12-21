@@ -1,11 +1,6 @@
 package com.timevale.forward.model.enums;
 
-import io.swagger.models.auth.In;
-import javafx.util.Pair;
 import lombok.Getter;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author by YangXu
