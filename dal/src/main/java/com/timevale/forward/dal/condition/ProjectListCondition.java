@@ -14,7 +14,7 @@ import java.util.List;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("项目查询")
+@ApiModel("项目查询条件")
 public class ProjectListCondition extends QueryBase {
     /**
      * id

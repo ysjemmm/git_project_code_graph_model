@@ -15,7 +15,7 @@ import java.util.List;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("项目查询")
+@ApiModel("项目列表查询")
 public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("id")
     private Long id;
