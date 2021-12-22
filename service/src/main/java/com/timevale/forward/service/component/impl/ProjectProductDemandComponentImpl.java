@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author xingyun
@@ -28,6 +30,20 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
         projectProductDemandDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         projectProductDemandDO.setModifyManId(userInfo.getId());
         projectProductDemandMapper.update(projectProductDemandDO);
+    }
+
+    @Override
+    public void batchInsert(Long projectId,List<Long> productDemandIds) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        List<ProjectProductDemandDO> list = productDemandIds.stream().map(i -> {
+            ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
+            productDemandDO.setProductDemandId(i);
+            productDemandDO.setProjectId(projectId);
+            productDemandDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            productDemandDO.setCreateManId(userInfo.getId());
+            return productDemandDO;
+        }).collect(Collectors.toList());
+        projectProductDemandMapper.batchInsert(list);
     }
 
 

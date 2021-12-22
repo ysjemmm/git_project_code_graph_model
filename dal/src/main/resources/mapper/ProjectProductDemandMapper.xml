@@ -14,5 +14,12 @@
         </where>
   </update>
 
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into project_product_demand (project_id,product_demand_id,create_man_id, create_man)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.projectId}, #{i.productDemandId}, #{i.createManId},#{i.createMan})
+        </foreach>
+    </insert>
 
 </mapper>

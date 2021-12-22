@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * @author xingyun
  * @date 2021-12-13 13:58
@@ -15,5 +17,6 @@ import lombok.EqualsAndHashCode;
 public class ProjectModifyReq extends ProjectAddReq {
     
     @ApiModelProperty("id")
+    @NotNull(message = "项目id不能为空")
     private Long id;
 }
