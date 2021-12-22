@@ -61,8 +61,8 @@ public interface BizDemandCopier {
      * @param bizDemandDO 业务需求DO
      * @return 业务需求详细VO
      */
-    @Mapping(source = "receiveMan",target = "receiveManInfo.userId")
-    @Mapping(source = "receiveManId",target = "receiveManInfo.userName")
+    @Mapping(source = "receiveMan",target = "receiveManInfo.userName")
+    @Mapping(source = "receiveManId",target = "receiveManInfo.userId")
     BizDemandDetailVO convert(BizDemandDO bizDemandDO);
 
 
