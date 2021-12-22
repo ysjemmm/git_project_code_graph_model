@@ -1,6 +1,8 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandListDO;
 
 import java.util.List;
 
@@ -29,4 +31,12 @@ public interface ProductDemandMapper {
      * @return DO
      */
     ProductDemandDO selectById(Long id);
+
+    /**
+     * 查询产品需求
+     *
+     * @param productDemandListCondition 产品需求Id列表
+     * @return list
+     */
+    List<ProductDemandListDO> list(ProductDemandListCondition productDemandListCondition);
 }

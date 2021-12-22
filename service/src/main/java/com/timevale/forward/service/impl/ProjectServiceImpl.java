@@ -1,26 +1,30 @@
 package com.timevale.forward.service.impl;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
+import com.timevale.forward.facade.api.query.ProjectSubProductDemandQueryList;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
+import com.timevale.forward.facade.api.result.ProjectNodeVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.PersonComponent;
-import com.timevale.forward.service.component.ProjectNodeComponent;
-import com.timevale.forward.service.component.ProjectProductDemandComponent;
-import com.timevale.forward.service.component.ProjectProductLineComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.PersonCopier;
+import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.copy.ProjectNodeCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -28,11 +32,11 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -62,6 +66,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private ProjectProductDemandComponent projectProductDemandComponent;
+
+    @Resource
+    private ProductDemandComponent productDemandComponent;
+
 
 
     @Override
@@ -106,7 +114,7 @@ public class ProjectServiceImpl implements ProjectService {
             projectVO.setProductLineName(productLineName);
             projectVO.setBizDomainName(bizDomainName);
             projectVO.setStatusName(ProjectStatusEnum.getTextByCode(projectVO.getStatus()));
-            projectVO.setPriorityName(ProjectPriorityEnum.getTextByCode(projectVO.getPriority()));
+            projectVO.setPriorityName(PriorityEnum.getTextByCode(projectVO.getPriority()));
             projectVO.setTypeName(ProjectTypeEnum.getTextByCode(projectVO.getType()));
             result.add(projectVO);
         });
@@ -218,7 +226,7 @@ public class ProjectServiceImpl implements ProjectService {
         }
         // 节点信息
         if (CollectionUtils.isNotEmpty(projectModifyReq.getProjectNodes())) {
-            projectNodeComponent.add(projectModifyReq.getProjectNodes(), projectDO.getId());
+            projectNodeComponent.add(projectNodeDO, projectDO.getId());
         }
         return BaseResult.success(true);
     }
@@ -242,19 +250,34 @@ public class ProjectServiceImpl implements ProjectService {
 
         //节点
         List<ProjectNodeDO> projectNodeDO = projectNodeComponent.get(projectId);
-        projectDetailVO.setProjectNodes(ProjectNodeCopier.INSTANCE.transform(projectNodeDO));
+        List<ProjectNodeVO> projectNodeVO = ProjectNodeCopier.INSTANCE.transform(projectNodeDO);
+        Date currentDate = new Date();
+        projectNodeVO.forEach(p->p.setCurrentDate(currentDate));
+        projectDetailVO.setProjectNodes(projectNodeVO);
 
         //产品需求
         return BaseResult.success(projectDetailVO);
     }
 
     @Override
-    public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(Long projectId) {
-        log.info("产品需求匹配接收参数:projectId={}", projectId);
-//        PageHelper.startPage(projectQueryList.getPageNum(), projectQueryList.getPageSize());
-        PageQueryResult<ProductDemandVO> result = new PageQueryResult<>();
-        result.setResultList(Lists.newArrayList(new ProductDemandVO()));
-        return BaseResult.success(result);
+    public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(ProjectSubProductDemandQueryList productDemandQueryList) {
+        log.info("项目-产品需求匹配,接收参数:productDemandQueryList={}", productDemandQueryList);
+        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize());
+        ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
+
+        List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
+        List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
+        productDemandVO.forEach(p->{
+            p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
+            p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
+        });
+        PageInfo<ProductDemandVO> pageInfo = new PageInfo<>(productDemandVO);
+
+        PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(productDemandVO);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
+        return BaseResult.success(pageQueryResult);
     }
 
     @Override

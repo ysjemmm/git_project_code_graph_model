@@ -7,7 +7,7 @@ import lombok.Getter;
  * @create: 2021-12-17 11:10
  **/
 @Getter
-public enum ProjectPriorityEnum {
+public enum PriorityEnum {
     /**
      * 优先级:0(P0),1(P1),2(P2)
      */
@@ -15,18 +15,20 @@ public enum ProjectPriorityEnum {
 
     P1(1,"P1"),
 
-    P2(2,"P2");
+    P2(2,"P2"),
+
+    P3(3,"P2");
 
     final private Integer code;
 
     final private String text;
 
-    ProjectPriorityEnum(Integer code, String text){
+    PriorityEnum(Integer code, String text){
         this.code = code;
         this.text = text;
     }
     public static String getTextByCode(Integer code){
-        for (ProjectPriorityEnum e : ProjectPriorityEnum.values()){
+        for (PriorityEnum e : PriorityEnum.values()){
             if(e.getCode().equals(code)){
                 return e.text;
             }

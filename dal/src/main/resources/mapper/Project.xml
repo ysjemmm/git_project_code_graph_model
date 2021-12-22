@@ -117,7 +117,7 @@
         a.actual_start_date,a.actual_end_date,a.create_man,c.name productLineName,d.name bizDomainName,
         e.user_name pdName,f.user_name teamMember
         <include refid="commonSearch"/>
-        limit #{offset},#{size}
+        order by a.create_date desc limit #{offset},#{size}
     </select>
     <select id="count" resultType="int">
         select count(distinct a.id)

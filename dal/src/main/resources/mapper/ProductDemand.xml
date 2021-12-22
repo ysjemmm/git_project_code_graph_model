@@ -7,4 +7,54 @@
         values
         (#{name}, #{productLineId}, #{type}, #{desc},#{status},#{priority},#{owner}, #{createManId}, #{createMan})
     </insert>
+
+    <select id="list" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
+        select  a.id,a.name,a.priority,a.owner,a.status,a.create_man,a.create_man_id,a.create_date,a.modify_date,
+        c.name productLineName ,d.name bizDomainName
+        from product_demand a
+        left join project_product_demand b on a.id=b.product_demand_id and b.is_deleted =false
+        left join product_line c on a.product_line_id=c.id and c.is_deleted =false
+        left join biz_domain d on c.biz_domain_id=d.id and d.is_deleted =false
+        <where>
+            <if test="id != null">and a.id = #{id}</if>
+            <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
+            <if test="createDateStart != null and createDateEnd != null">
+                and a.create_date &gt;= #{createDateStart} and a.create_date &lt;= #{createDateEnd}
+            </if>
+            <if test="modifyDateStart != null and modifyDateEnd != null">
+                and a.modify_date &gt;= #{modifyDateStart} and a.modify_date &lt;= #{modifyDateEnd}
+            </if>
+            <if test="productLineIds!=null and productLineIds.size()>0">
+                and c.id in
+                <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="bizDomainIds!=null and bizDomainIds.size()>0">
+                and d.id in
+                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="ownerIds!=null and ownerIds.size()>0">
+                and a.owner_id in
+                <foreach collection="ownerIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="createManIds!=null and createManIds.size()>0">
+                and a.create_man_id in
+                <foreach collection="createManIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="status!=null and status.size()>0">
+                and a.status in
+                <foreach collection="status" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and b.project_id  is null and  a.is_deleted =false
+        </where>
+    </select>
 </mapper>

@@ -2,10 +2,8 @@ package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dao.ProjectNodeMapper;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
-import com.timevale.forward.facade.api.request.ProjectNodeAddReq;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.ProjectNodeCopier;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -26,12 +24,11 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
     private ProjectNodeMapper projectNodeMapper;
 
     @Override
-    public void add(List<ProjectNodeAddReq> list,Long projectId) {
+    public void add(List<ProjectNodeDO> list,Long projectId) {
         log.info("节点新增接收参数:list={},projectId={}", list, projectId);
-        List<ProjectNodeDO> projectNodeDO = ProjectNodeCopier.INSTANCE.convert(list);
-        fillValue(projectId,projectNodeDO);
+        fillValue(projectId,list);
         projectNodeMapper.delete(projectId);
-        projectNodeMapper.batchInsert(projectNodeDO);
+        projectNodeMapper.batchInsert(list);
     }
 
     @Override

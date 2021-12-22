@@ -17,6 +17,7 @@ import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.ProductDemandComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
@@ -47,6 +48,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private ProductDemandMapper productDemandMapper;
+
+    @Resource
+    private ProductDemandComponent productDemandComponent;
 
 
     @Override
