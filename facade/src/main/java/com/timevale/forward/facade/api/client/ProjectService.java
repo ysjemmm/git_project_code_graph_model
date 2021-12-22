@@ -4,6 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.query.ProjectSubProductDemandQueryList;
+import com.timevale.forward.facade.api.request.ProductDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
@@ -11,8 +12,6 @@ import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
-
-import java.util.List;
 
 /**
  * @author: xingyun
@@ -83,10 +82,8 @@ public interface ProjectService {
     /**
      * 关联or取消关联
      *
-     * @param productDemandIds 产品需求id
-     * @param type            关联or取消关联
-     * @return 数量
+     * @param productDemandLinkReq 产品需求
      */
-    BaseResult<Boolean> linkOrUnLinkProductDemand(Long projectId, List<Long> productDemandIds, Integer type);
+    BaseResult<Boolean> linkOrUnLinkProductDemand(ProductDemandLinkReq productDemandLinkReq);
 
 }

@@ -10,6 +10,7 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.query.ProjectSubProductDemandQueryList;
+import com.timevale.forward.facade.api.request.ProductDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
@@ -69,7 +70,6 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private ProductDemandComponent productDemandComponent;
-
 
 
     @Override
@@ -140,7 +140,7 @@ public class ProjectServiceImpl implements ProjectService {
         projectMapper.update(projectDO);
         if (ProjectStatusEnum.INVALID.getCode().equals(type)) {
             // 作废解除关联
-            ProjectProductDemandDO productDemandDO=new ProjectProductDemandDO();
+            ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
             productDemandDO.setProjectId(projectId);
             productDemandDO.setIsDeleted(true);
             projectProductDemandComponent.update(productDemandDO);
@@ -156,17 +156,17 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO projectDO = projectMapper.get(projectId);
         projectDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         projectDO.setModifyManId(userInfo.getId());
-        if(!ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus())){
+        if (!ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus())) {
             throw new BaseBizRuntimeException("项目状态不是暂停,不能开启");
         }
         List<ProjectNodeDO> projectNode = projectNodeComponent.get(projectId);
         log.info("项目开启,节点信息:projectNode={}", projectNode);
-        if(CollectionUtils.isEmpty(projectNode)){
+        if (CollectionUtils.isEmpty(projectNode)) {
             projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
             projectMapper.update(projectDO);
             return BaseResult.success(true);
         }
-        fillInfo(projectNode,projectDO);
+        fillInfo(projectNode, projectDO);
         projectMapper.update(projectDO);
         return BaseResult.success(true);
     }
@@ -252,7 +252,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProjectNodeDO> projectNodeDO = projectNodeComponent.get(projectId);
         List<ProjectNodeVO> projectNodeVO = ProjectNodeCopier.INSTANCE.transform(projectNodeDO);
         Date currentDate = new Date();
-        projectNodeVO.forEach(p->p.setCurrentDate(currentDate));
+        projectNodeVO.forEach(p -> p.setCurrentDate(currentDate));
         projectDetailVO.setProjectNodes(projectNodeVO);
 
         //产品需求
@@ -267,7 +267,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
         List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
-        productDemandVO.forEach(p->{
+        productDemandVO.forEach(p -> {
             p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
             p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
         });
@@ -281,8 +281,17 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<Boolean> linkOrUnLinkProductDemand(Long projectId, List<Long> productDemandIds, Integer type) {
-        log.info("关联or取消关联接收参数:projectId={},productDemandId={},type={}", projectId, productDemandIds, type);
+    public BaseResult<Boolean> linkOrUnLinkProductDemand(ProductDemandLinkReq productDemandLinkReq) {
+        log.info("关联or取消关联接收参数:productDemandLinkReq={}", productDemandLinkReq);
+        List<Long> productDemandIds = productDemandLinkReq.getProductDemandIds();
+        if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
+            projectProductDemandComponent.batchInsert(productDemandLinkReq.getProjectId(), productDemandIds);
+        } else {
+            ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
+            productDemandDO.setIsDeleted(true);
+            productDemandDO.setProductDemandId(productDemandIds.get(0));
+            projectProductDemandComponent.update(productDemandDO);
+        }
         return BaseResult.success(true);
     }
 
