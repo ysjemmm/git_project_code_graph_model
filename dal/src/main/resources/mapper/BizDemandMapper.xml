@@ -77,10 +77,8 @@
                bd.`desc`,bd. status, bd.priority, bd.receive_man, bd.processor, bd.os, bd.plan_release_date,bd.reason,
                bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date
         from biz_demand bd
-        <if test="bizDomainIdList!=null and bizDomainIdList.size()>0">
-            JOIN product_line pl
-            ON pl.id = bd.product_line_id
-        </if>
+        left join product_line pl
+        on pl.id = bd.product_line_id
         where
         bd.is_deleted = false
         <if test="id">

@@ -385,7 +385,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 业务需求根据产品需求状态而变化
-        List<ProductDemandDO> productDemandDOList = productDemandMapper.select(productIdList);
+        List<ProductDemandDO> productDemandDOList = productDemandMapper.selectByIdList(productIdList);
         Integer status = BizDemandStatusEnum.RECEIVED.getCode();
         for (ProductDemandDO productDemandDO : productDemandDOList) {
             // 排除“已暂停”，“作废”

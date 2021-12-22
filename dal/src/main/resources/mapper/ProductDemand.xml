@@ -57,4 +57,21 @@
             and b.project_id  is null and  a.is_deleted =false
         </where>
     </select>
+    
+    <select id="selectByIdList" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
+        select id, name, product_line_id, type, `desc`, status, priority, owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date, owner_id
+        from product_demand
+        where
+        id in
+        <foreach collection="productDemandIdList" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectById" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
+        select id, name, product_line_id, type, `desc`, status, priority, owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date, owner_id
+        from product_demand
+        where id = #{id}
+    </select>
+    
 </mapper>

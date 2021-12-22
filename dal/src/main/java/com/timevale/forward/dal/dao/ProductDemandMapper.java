@@ -19,10 +19,10 @@ public interface ProductDemandMapper {
     /**
      * 批量查询产品需求
      *
-     * @param list 产品需求Id列表
+     * @param productDemandIdList 产品需求id列表
      * @return list
      */
-    List<ProductDemandDO> select(List<Long> list);
+    List<ProductDemandDO> selectByIdList(List<Long> productDemandIdList);
 
     /**
      * 选择id查询
