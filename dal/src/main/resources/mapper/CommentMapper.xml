@@ -1,0 +1,23 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.CommentMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into comment(to_id, type, content, create_man_id, create_man)
+        values (#{toId}, #{type}, #{content}, #{createManId}, #{createMan});
+    </insert>
+
+    <select id="select" resultType="com.timevale.forward.dal.entity.CommentDO">
+        select id, to_id, type, content, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        from comment
+        <where>
+            <if test="toId">
+                and to_id = #{toId}
+            </if>
+            <if test="type">
+                and type = #{type}
+            </if>
+        </where>
+    </select>
+
+</mapper>

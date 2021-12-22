@@ -24,4 +24,14 @@ public enum BizDemandReasonEnum {
     private Byte code;
 
     BizDemandReasonEnum(Integer code){this.code = code.byteValue();}
+
+    public static String getTextByCode(Byte code){
+        for (BizDemandStatusEnum e : BizDemandStatusEnum.values()){
+            if(e.getCode().equals(code)){
+                return e.toString();
+            }
+        }
+        return "errorCode";
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.request;
 
+import com.timevale.forward.facade.api.query.PersonQuery;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -26,6 +27,6 @@ public class CommentAddReq extends BaseReq {
     private String content;
 
     @ApiModelProperty("评论接收人")
-    private List<PersonAddReq> receiverInfoList;
+    private List<PersonQuery> receiverInfoList;
 
 }

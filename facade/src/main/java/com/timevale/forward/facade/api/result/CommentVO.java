@@ -26,6 +26,4 @@ public class CommentVO extends ToString {
     @ApiModelProperty("创建时间")
     private Date createDate;
 
-
-
 }

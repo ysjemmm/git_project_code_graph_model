@@ -68,7 +68,7 @@ public interface BizDemandService {
      * @param planReleaseDate 预期上线时间
      * @return 成功与否
      */
-    BaseResult<Boolean> agree(Long bizDemandId, Integer planReleaseDate);
+    BaseResult<Boolean> agree(Long bizDemandId, Byte planReleaseDate);
 
     /**
      * 驳回

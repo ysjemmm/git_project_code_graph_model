@@ -79,7 +79,7 @@ public class BizDemandDO extends BaseDO {
     /**
      * 计划发布日期
      */
-    Integer planReleaseDate;
+    Byte planReleaseDate;
 
     /**
      * 驳回理由

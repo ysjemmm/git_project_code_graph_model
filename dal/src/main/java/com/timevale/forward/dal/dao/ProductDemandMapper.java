@@ -21,4 +21,12 @@ public interface ProductDemandMapper {
      * @return list
      */
     List<ProductDemandDO> select(List<Long> list);
+
+    /**
+     * 选择id查询
+     *
+     * @param id id
+     * @return DO
+     */
+    ProductDemandDO selectById(Long id);
 }
