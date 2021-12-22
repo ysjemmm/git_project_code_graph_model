@@ -7,34 +7,26 @@ import lombok.Getter;
  * @create: 2021-12-17 11:10
  **/
 @Getter
-public enum ProjectStatusEnum {
+public enum ProjectTypeEnum {
     /**
-     * 0待启动,10规划中,20研发中,30测试中,40已发布,50已暂停,60已作废
+     * 项目类型:0产品研发项目,1技术优化项目,2日常迭代
      */
-    WAITING(0,"待启动"),
+    DEV(0,"产品研发项目"),
 
-    PLANING(10,"规划中"),
+    OPTIMIZE(1,"技术优化项目"),
 
-    DEVING(20,"研发中"),
-
-    TESTING(30,"测试中"),
-
-    RELEASED(40,"已发布"),
-
-    SUSPEND(50,"已暂停"),
-
-    INVALID(60,"已作废");
+    RENEW(2,"日常迭代");
 
     final private Byte code;
 
     final private String text;
 
-    ProjectStatusEnum(Integer code, String text){
+    ProjectTypeEnum(Integer code, String text){
         this.code = code.byteValue();
         this.text = text;
     }
     public static String getTextByCode(Byte code){
-        for (ProjectStatusEnum e : ProjectStatusEnum.values()){
+        for (ProjectTypeEnum e : ProjectTypeEnum.values()){
             if(e.getCode().equals(code)){
                 return e.text;
             }
