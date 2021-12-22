@@ -32,7 +32,7 @@ public class PersonComponentImpl implements PersonComponent {
     private PersonMapper personMapper;
 
     @Override
-    public void add(List<PersonAddReq> list, Long mainId, Byte type) {
+    public void add(List<PersonAddReq> list, Long mainId, Integer type) {
         log.info("人员新增接收参数:list={},mainId={},type={}", list, mainId, type);
         List<PersonDO> existPersons = select(mainId, type);
         log.info("已存在人员:existPersons={}", existPersons);
@@ -45,7 +45,7 @@ public class PersonComponentImpl implements PersonComponent {
 
 
     @Override
-    public void update(List<PersonAddReq> list, Long mainId, Byte type) {
+    public void update(List<PersonAddReq> list, Long mainId, Integer type) {
         log.info("人员编辑接收参数:list={},mainId={},type={}", list, mainId, type);
         if (CollectionUtils.isEmpty(list)) {
             delete(list, mainId, type);
@@ -80,7 +80,7 @@ public class PersonComponentImpl implements PersonComponent {
     }
 
     @Override
-    public List<PersonDO> select(Long mainId, Byte type) {
+    public List<PersonDO> select(Long mainId, Integer type) {
         PersonListCondition condition = PersonListCondition.builder().build();
         condition.setType(type);
         if (PersonTypeEnum.PROJECT_PD.getCode().equals(type)
@@ -95,7 +95,7 @@ public class PersonComponentImpl implements PersonComponent {
     }
 
 
-    private void fillInfo(Long mainId, Byte type, List<PersonDO> personDO) {
+    private void fillInfo(Long mainId, Integer type, List<PersonDO> personDO) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         personDO.forEach(t -> {
             t.setProjectId(0L);
@@ -115,7 +115,7 @@ public class PersonComponentImpl implements PersonComponent {
         });
     }
 
-    private void delete(List<PersonAddReq> list, Long mainId, Byte type) {
+    private void delete(List<PersonAddReq> list, Long mainId, Integer type) {
         if (CollectionUtils.isEmpty(list)) {
             PersonDO personDO = new PersonDO();
             if (PersonTypeEnum.PROJECT_PD.getCode().equals(type)

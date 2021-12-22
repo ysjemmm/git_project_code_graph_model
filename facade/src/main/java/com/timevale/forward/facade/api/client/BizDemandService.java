@@ -68,7 +68,7 @@ public interface BizDemandService {
      * @param planReleaseDate 预期上线时间
      * @return 成功与否
      */
-    BaseResult<Boolean> agree(Long bizDemandId, Byte planReleaseDate);
+    BaseResult<Boolean> agree(Long bizDemandId, Integer planReleaseDate);
 
     /**
      * 驳回
@@ -77,7 +77,7 @@ public interface BizDemandService {
      * @param reason      驳回理由
      * @return 成功与否
      */
-    BaseResult<Boolean> reject(Long bizDemandId, Byte reason);
+    BaseResult<Boolean> reject(Long bizDemandId, Integer reason);
 
     /**
      * 转移

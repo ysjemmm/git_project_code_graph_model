@@ -21,12 +21,12 @@ public enum BizDemandReasonEnum {
     // 线上问题，请提交线上bug
     ISSUER_ONLINE(5);
 
-    private Byte code;
+    private Integer code;
 
-    BizDemandReasonEnum(Integer code){this.code = code.byteValue();}
+    BizDemandReasonEnum(Integer code){this.code = code;}
 
-    public static String getTextByCode(Byte code){
-        for (BizDemandStatusEnum e : BizDemandStatusEnum.values()){
+    public static String getTextByCode(Integer code){
+        for (BizDemandReasonEnum e : BizDemandReasonEnum.values()){
             if(e.getCode().equals(code)){
                 return e.toString();
             }

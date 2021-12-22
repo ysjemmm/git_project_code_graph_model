@@ -13,7 +13,7 @@ public enum FileTypeEnum {
     // 业务需求
     BIZ_DEMAND(2);
 
-    private Byte code;
+    private Integer code;
 
-    FileTypeEnum(Integer code){this.code = code.byteValue();}
+    FileTypeEnum(Integer code){this.code = code;}
 }

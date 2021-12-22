@@ -25,7 +25,7 @@ public class BizDemandQueryList extends QueryBase {
     private Long id;
 
     @ApiModelProperty("优先级： 0-紧急，10-高，20-中，30低")
-    private List<Byte> priorityList;
+    private List<Integer> priorityList;
 
     @ApiModelProperty("业务域id")
     private List<Long> bizDomainIdList;
@@ -37,10 +37,10 @@ public class BizDemandQueryList extends QueryBase {
     private Date createDate;
 
     @ApiModelProperty("预期上线时间")
-    private List<Byte> planReleaseDateList;
+    private List<Integer> planReleaseDateList;
 
     @ApiModelProperty("需求解决状态")
-    private List<Byte> statusList;
+    private List<Integer> statusList;
 
     @ApiModelProperty("需求提交人")
     private List<PersonQuery> createManInfoList;

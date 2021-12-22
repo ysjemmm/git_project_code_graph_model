@@ -24,7 +24,7 @@ public class ProjectQueryList extends QueryBase {
     private String name;
 
     @ApiModelProperty("优先级:0(P0),1(P1),2(P2)")
-    private List<Byte> priorities;
+    private List<Integer> priorities;
 
     @ApiModelProperty("业务域")
     private List<Long> bizDomainIds;
@@ -33,10 +33,10 @@ public class ProjectQueryList extends QueryBase {
     private List<Long> productLineIds;
 
     @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
-    private List<Byte> types;
+    private List<Integer> types;
 
     @ApiModelProperty("项目状态:0待启动,10规划中,20研发中,30测试中,40已发布,50已暂停,60已作废")
-    private List<Byte> status;
+    private List<Integer> status;
 
     @ApiModelProperty("项目经理")
     private List<String> pms;

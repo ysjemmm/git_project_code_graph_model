@@ -59,7 +59,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
-    public BaseResult<Boolean> updateStatus(Long productDemandId, Byte type) {
+    public BaseResult<Boolean> updateStatus(Long productDemandId, Integer type) {
         log.info("产品需求暂停或开启收参数:productDemandId={},type={}", productDemandId, type);
         return BaseResult.success(true);
     }

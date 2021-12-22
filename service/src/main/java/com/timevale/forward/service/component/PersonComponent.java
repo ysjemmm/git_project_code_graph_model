@@ -12,7 +12,7 @@ public interface PersonComponent {
      * @param mainId 所属主体id
      * @param type 所属主体类型
      */
-    void add(List<PersonAddReq> list, Long mainId, Byte type);
+    void add(List<PersonAddReq> list, Long mainId, Integer type);
 
 
     /**
@@ -21,7 +21,7 @@ public interface PersonComponent {
      * @param mainId 所属主体id
      * @param type 所属主体类型
      */
-    void update(List<PersonAddReq> list, Long mainId, Byte type);
+    void update(List<PersonAddReq> list, Long mainId, Integer type);
 
     /**
      *
@@ -29,6 +29,6 @@ public interface PersonComponent {
      * @param type 所属主体类型
      * @return 列表
      */
-    List<PersonDO> select(Long mainId, Byte type);
+    List<PersonDO> select(Long mainId, Integer type);
 
 }

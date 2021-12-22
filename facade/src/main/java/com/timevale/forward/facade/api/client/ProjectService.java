@@ -34,7 +34,7 @@ public interface ProjectService {
      * @param type       操作类型 暂停,作废
      * @return 数量
      */
-    BaseResult<Boolean> updateStatus(Long projectId, Byte type);
+    BaseResult<Boolean> updateStatus(Long projectId, Integer type);
 
     /**
      * 开启项目
@@ -86,6 +86,6 @@ public interface ProjectService {
      * @param type            关联or取消关联
      * @return 数量
      */
-    BaseResult<Boolean> linkOrUnLinkProductDemand(Long projectId, List<Long> productDemandIds, Byte type);
+    BaseResult<Boolean> linkOrUnLinkProductDemand(Long projectId, List<Long> productDemandIds, Integer type);
 
 }

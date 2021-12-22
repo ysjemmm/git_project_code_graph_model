@@ -23,9 +23,9 @@ public enum ProductDemandStatusEnum {
 
     INVALID(50);
 
-    final private Byte code;
+    final private Integer code;
 
     ProductDemandStatusEnum(Integer code) {
-        this.code = code.byteValue();
+        this.code = code;
     }
 }

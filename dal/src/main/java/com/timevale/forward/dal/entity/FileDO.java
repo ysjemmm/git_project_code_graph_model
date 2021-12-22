@@ -20,7 +20,7 @@ public class FileDO extends BaseDO {
     /**
      * 附件所属类型
      */
-    Byte type;
+    Integer type;
 
     /**
      * 附件名称

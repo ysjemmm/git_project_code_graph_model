@@ -21,16 +21,16 @@ public class ProjectDO extends BaseDO {
     /**
      * 优先级:0(P0),1(P1),2(P2),3(P3)
      */
-    private Byte priority;
+    private Integer priority;
     /**
      * 类型:0新增功能,1功能迭代,2体验优化,3技术需求,4安全需求
      */
-    private Byte type;
+    private Integer type;
 
     /**
      * 0待启动,10规划中,20研发中,30测试中,40已发布,50已暂停,60已作废
      */
-    private Byte status;
+    private Integer status;
 
     /**
      * 产品线

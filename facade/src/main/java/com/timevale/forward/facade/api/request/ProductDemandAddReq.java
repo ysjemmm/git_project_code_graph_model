@@ -20,13 +20,13 @@ public class ProductDemandAddReq extends BaseReq {
     private String name;
 
     @ApiModelProperty("优先级:0(P0),1(P1),2(P2),3(P3)")
-    private Byte priority;
+    private Integer priority;
 
     @ApiModelProperty("产品线")
     private Long productLineId;
 
     @ApiModelProperty("类型:0新增功能,1功能迭代,2体验优化,3技术需求,4安全需求")
-    private Byte type;
+    private Integer type;
 
     @ApiModelProperty("负责人")
     private String owner;

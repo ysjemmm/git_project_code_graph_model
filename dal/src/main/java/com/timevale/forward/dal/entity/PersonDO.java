@@ -39,5 +39,5 @@ public class PersonDO extends BaseDO {
     /**
      * 用户类型
      */
-    private Byte type;
+    private Integer type;
 }

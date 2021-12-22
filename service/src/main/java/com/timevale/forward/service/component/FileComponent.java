@@ -12,7 +12,7 @@ public interface FileComponent {
      * @param attacheId 附属id
      * @param type 附属类型
      */
-    void add(List<FileAddReq> list,Long attacheId,Byte type);
+    void add(List<FileAddReq> list,Long attacheId,Integer type);
 
     /**
      *
@@ -20,7 +20,7 @@ public interface FileComponent {
      * @param attacheId 附属id
      * @param type 附属类型
      */
-    void update(List<FileAddReq> list,Long attacheId,Byte type);
+    void update(List<FileAddReq> list,Long attacheId,Integer type);
 
     /**
      *
@@ -28,5 +28,5 @@ public interface FileComponent {
      * @param type 附属类型
      * @return 列表
      */
-    List<FileDO> select(Long attacheId, Byte type);
+    List<FileDO> select(Long attacheId, Integer type);
 }

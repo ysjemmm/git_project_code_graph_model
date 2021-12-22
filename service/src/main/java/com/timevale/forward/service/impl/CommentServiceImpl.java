@@ -6,31 +6,20 @@ import com.timevale.forward.dal.dao.CommentMapper;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.CommentDO;
-import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.client.CommentService;
-import com.timevale.forward.facade.api.client.ProductDemandService;
-import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.CommentQueryList;
-import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.request.CommentAddReq;
-import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.result.CommentVO;
 import com.timevale.forward.model.enums.CommentTypeEnum;
-import com.timevale.forward.model.enums.MessageTitleEnum;
-import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.copy.CommentCopier;
 import com.timevale.forward.service.integration.erp.ErpMessageClient;
-import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.Lists;
 
 import javax.annotation.Resource;
-import javax.jms.Message;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author xingyun
@@ -60,7 +49,7 @@ public class CommentServiceImpl implements CommentService {
         log.info("项目列表接收参数:{}", commentQueryList);
 
         Long toId = commentQueryList.getToId();
-        Byte type = commentQueryList.getType();
+        Integer type = commentQueryList.getType();
 
         List<CommentDO> commentDOList = commentMapper.select(toId, type);
         List<CommentVO> commentVOList = CommentCopier.INSTANCE.convert(commentDOList);
@@ -81,7 +70,7 @@ public class CommentServiceImpl implements CommentService {
         // 查询对应业务需求/产品需求/项目名称
         String name = "";
         Long toId = commentAddReq.getToId();
-        Byte type = commentAddReq.getType();
+        Integer type = commentAddReq.getType();
         if(type.equals(CommentTypeEnum.PROJECT.getCode())){
             name = projectMapper.get(toId).getName();
         }else if(type.equals(CommentTypeEnum.PRODUCT_DEMAND.getCode())){

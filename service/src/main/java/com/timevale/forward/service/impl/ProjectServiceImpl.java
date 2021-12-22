@@ -121,7 +121,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> updateStatus(Long projectId, Byte type) {
+    public BaseResult<Boolean> updateStatus(Long projectId, Integer type) {
         log.info("项目暂停或作废接收参数:projectId={},type={}", projectId, type);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProjectDO projectDO = new ProjectDO();
@@ -258,7 +258,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<Boolean> linkOrUnLinkProductDemand(Long projectId, List<Long> productDemandIds, Byte type) {
+    public BaseResult<Boolean> linkOrUnLinkProductDemand(Long projectId, List<Long> productDemandIds, Integer type) {
         log.info("关联or取消关联接收参数:projectId={},productDemandId={},type={}", projectId, productDemandIds, type);
         return BaseResult.success(true);
     }

@@ -21,16 +21,16 @@ public class ProductDemandDetailVO extends ToString {
     private String name;
 
     @ApiModelProperty("优先级:0(P0),1(P1),2(P2),3(P3)")
-    private Byte priority;
+    private Integer priority;
 
     @ApiModelProperty("产品线")
     private Long productLineId;
 
     @ApiModelProperty("类型:0新增功能,1功能迭代,2体验优化,3技术需求,4安全需求")
-    private Byte type;
+    private Integer type;
 
     @ApiModelProperty("状态:0待排期,10已列入项目,20项目进行中,30已完成上线,40已暂停,50已作废")
-    private Byte status;
+    private Integer status;
 
     @ApiModelProperty("负责人")
     private String owner;

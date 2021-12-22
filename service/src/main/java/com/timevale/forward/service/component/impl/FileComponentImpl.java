@@ -29,7 +29,7 @@ public class FileComponentImpl implements FileComponent {
     private FileMapper fileMapper;
     
     @Override
-    public void add(List<FileAddReq> list,Long attacheId,Byte type) {
+    public void add(List<FileAddReq> list,Long attacheId,Integer type) {
         log.info("新增时,附件接收参数:list={},attacheId={},type={}", list,attacheId,type);
         List<FileDO> existFiles = fileMapper.select(attacheId, type);
         log.info("已存在附件:existPersons={}", existFiles);
@@ -44,7 +44,7 @@ public class FileComponentImpl implements FileComponent {
     }
 
     @Override
-    public void update(List<FileAddReq> list, Long attacheId, Byte type) {
+    public void update(List<FileAddReq> list, Long attacheId, Integer type) {
         log.info("编辑时,附件接收参数:list={},attacheId={},type={}", list,attacheId,type);
         if(CollectionUtils.isEmpty(list)){
             // 删除
@@ -84,11 +84,11 @@ public class FileComponentImpl implements FileComponent {
     }
 
     @Override
-    public List<FileDO> select(Long attacheId, Byte type) {
+    public List<FileDO> select(Long attacheId, Integer type) {
         return fileMapper.select(attacheId, type);
     }
 
-    private void fillInfo(FileDO fileDO,Long attacheId, Byte type) {
+    private void fillInfo(FileDO fileDO,Long attacheId, Integer type) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         fileDO.setAttacheId(attacheId);
         fileDO.setType(type);

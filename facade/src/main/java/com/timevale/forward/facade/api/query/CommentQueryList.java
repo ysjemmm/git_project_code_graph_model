@@ -19,6 +19,6 @@ public class CommentQueryList extends ToString {
     private Long toId;
 
     @ApiModelProperty("主体类型:0:项目,1产品需求,2业务需求")
-    private Byte type;
+    private Integer type;
 
 }

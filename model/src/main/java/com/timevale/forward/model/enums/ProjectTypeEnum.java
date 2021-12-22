@@ -17,15 +17,15 @@ public enum ProjectTypeEnum {
 
     RENEW(2,"日常迭代");
 
-    final private Byte code;
+    final private Integer code;
 
     final private String text;
 
     ProjectTypeEnum(Integer code, String text){
-        this.code = code.byteValue();
+        this.code = code;
         this.text = text;
     }
-    public static String getTextByCode(Byte code){
+    public static String getTextByCode(Integer code){
         for (ProjectTypeEnum e : ProjectTypeEnum.values()){
             if(e.getCode().equals(code)){
                 return e.text;

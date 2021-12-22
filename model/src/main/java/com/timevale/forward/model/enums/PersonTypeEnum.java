@@ -17,8 +17,8 @@ public enum PersonTypeEnum {
     // 30 业务需求-抄送人
     BIZ_DEMAND_CC(30);
 
-    private Byte code;
+    private Integer code;
 
-    PersonTypeEnum(Integer code){this.code = code.byteValue();}
+    PersonTypeEnum(Integer code){this.code = code;}
 
 }

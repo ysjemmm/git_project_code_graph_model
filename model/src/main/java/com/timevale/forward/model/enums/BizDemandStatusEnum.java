@@ -25,7 +25,7 @@ public enum BizDemandStatusEnum {
     // 已作废
     INVALID(60);
 
-    private Byte code;
+    private Integer code;
 
-    BizDemandStatusEnum(Integer code){this.code = code.byteValue();}
+    BizDemandStatusEnum(Integer code){this.code = code;}
 }

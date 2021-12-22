@@ -21,7 +21,7 @@ public class CommentAddReq extends BaseReq {
     private Long toId;
 
     @ApiModelProperty("主体类型:0:项目,1产品需求,2业务需求")
-    private Byte type;
+    private Integer type;
 
     @ApiModelProperty("内容")
     private String content;

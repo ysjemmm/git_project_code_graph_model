@@ -33,7 +33,7 @@ public interface ProductDemandService {
      * @param type            操作类型 暂停,启用
      * @return 数量
      */
-    BaseResult<Boolean> updateStatus(Long productDemandId, Byte type);
+    BaseResult<Boolean> updateStatus(Long productDemandId, Integer type);
 
     /**
      * 新增

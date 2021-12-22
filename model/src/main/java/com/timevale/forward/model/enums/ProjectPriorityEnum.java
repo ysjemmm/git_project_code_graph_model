@@ -17,15 +17,15 @@ public enum ProjectPriorityEnum {
 
     P2(2,"P2");
 
-    final private Byte code;
+    final private Integer code;
 
     final private String text;
 
     ProjectPriorityEnum(Integer code, String text){
-        this.code = code.byteValue();
+        this.code = code;
         this.text = text;
     }
-    public static String getTextByCode(Byte code){
+    public static String getTextByCode(Integer code){
         for (ProjectPriorityEnum e : ProjectPriorityEnum.values()){
             if(e.getCode().equals(code)){
                 return e.text;

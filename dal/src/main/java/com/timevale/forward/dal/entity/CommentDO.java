@@ -20,7 +20,7 @@ public class CommentDO extends BaseDO {
     /**
      * 主体类型
      */
-    Byte type;
+    Integer type;
 
     /**
      * 评论内容

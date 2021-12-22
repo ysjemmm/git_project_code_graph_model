@@ -32,7 +32,7 @@ public class BizDemandListCondition {
     /**
      * 优先级列表
      */
-    private List<Byte> priorityList;
+    private List<Integer> priorityList;
 
     /**
      * 业务域id列表
@@ -47,12 +47,12 @@ public class BizDemandListCondition {
     /**
      * 预期上线日期列表
      */
-    private List<Byte> planReleaseDateList;
+    private List<Integer> planReleaseDateList;
 
     /**
      * 业务状态列表
      */
-    private List<Byte> statusList;
+    private List<Integer> statusList;
 
     /**
      * 提交人id列表

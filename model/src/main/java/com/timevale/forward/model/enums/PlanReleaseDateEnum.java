@@ -24,15 +24,15 @@ public enum PlanReleaseDateEnum {
     Q4_MIDDLE(10, "Q4中旬"),
     Q4_LATE(11, "Q4下旬");
 
-    Byte code;
+    Integer code;
     String text;
 
     PlanReleaseDateEnum(Integer code, String text){
-        this.code = code.byteValue();
+        this.code = code;
         this.text = text;
     }
 
-    public static String getTextByCode(Byte code){
+    public static String getTextByCode(Integer code){
         for (PlanReleaseDateEnum e : PlanReleaseDateEnum.values()){
             if(e.getCode().equals(code)){
                 return e.text;

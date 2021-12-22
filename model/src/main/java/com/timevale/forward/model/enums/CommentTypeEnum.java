@@ -13,15 +13,15 @@ public enum CommentTypeEnum {
     PRODUCT_DEMAND(1,"产品需求"),
     BIZ_DEMAND(2,"业务需求");
 
-    private Byte code;
+    private Integer code;
     private String text;
 
     CommentTypeEnum(Integer code, String text){
-        this.code = code.byteValue();
+        this.code = code;
         this.text = text;
     }
 
-    public static String getTextByCode(Byte code) {
+    public static String getTextByCode(Integer code) {
         for (CommentTypeEnum e : CommentTypeEnum.values()){
             if(e.getCode().equals(code)){
                 return e.getText();

@@ -27,5 +27,5 @@ public interface CommentMapper {
      * @param type 类型
      * @return
      */
-    List<CommentDO> select(@Param("toId") Long toId, @Param("type") Byte type);
+    List<CommentDO> select(@Param("toId") Long toId, @Param("type") Integer type);
 }

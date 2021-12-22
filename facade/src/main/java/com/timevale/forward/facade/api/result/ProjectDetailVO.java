@@ -22,13 +22,13 @@ public class ProjectDetailVO extends ToString {
     private String name;
 
     @ApiModelProperty("优先级:0(P0),1(P1),2(P2)")
-    private Byte priority;
+    private Integer priority;
 
     @ApiModelProperty("产品线")
     private List<Long> productLineId;
 
     @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
-    private Byte type;
+    private Integer type;
 
     @ApiModelProperty("项目经理")
     private String pmId;

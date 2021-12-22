@@ -38,10 +38,10 @@ public class BizDemandDetailVO extends BizDemandVO {
     private PersonVO receiveManInfo;
 
     @ApiModelProperty("操作系统:0 XP, 1 Win7,2 Win8，3 Win10，4中标麒麟，5银河麒麟，6麒麟V10，7中科方德，8统信UOS")
-    private Byte os;
+    private Integer os;
 
     @ApiModelProperty("处理器: 0X86/X64, 1兆芯，2飞腾，3龙芯，4鲲鹏，5申威")
-    private Byte processor;
+    private Integer processor;
 
     @ApiModelProperty("需求描述")
     private String desc;

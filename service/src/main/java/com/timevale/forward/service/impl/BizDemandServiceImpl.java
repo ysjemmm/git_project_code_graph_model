@@ -215,7 +215,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
-    public BaseResult<Boolean> agree(Long bizDemandId, Byte planReleaseDate) {
+    public BaseResult<Boolean> agree(Long bizDemandId, Integer planReleaseDate) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 修改业务需求状态 —— 接收，添加预期上线时间
@@ -252,7 +252,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
-    public BaseResult<Boolean> reject(Long bizDemandId, Byte reason) {
+    public BaseResult<Boolean> reject(Long bizDemandId, Integer reason) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 修改业务需求状态 —— 驳回，添加驳回原因
@@ -366,12 +366,12 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 业务需求根据产品需求状态而变化
         List<ProductDemandDO> productDemandDOList = productDemandMapper.select(productIdList);
-        Byte status = BizDemandStatusEnum.RECEIVED.getCode();
+        Integer status = BizDemandStatusEnum.RECEIVED.getCode();
         for (ProductDemandDO productDemandDO : productDemandDOList) {
             // 排除“已暂停”，“作废”
             if(ProductDemandStatusEnum.INVALID.getCode().equals(productDemandDO.getStatus())
             || ProductDemandStatusEnum.SUSPEND.getCode().equals(productDemandDO.getStatus())){continue;}
-            status = status > productDemandDO.getStatus() ? status : productDemandDO.getStatus();
+            status = Math.max(status,productDemandDO.getStatus());
         }
 
         // 修改业务状态

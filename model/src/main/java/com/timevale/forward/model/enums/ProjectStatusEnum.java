@@ -25,15 +25,15 @@ public enum ProjectStatusEnum {
 
     INVALID(60,"已作废");
 
-    final private Byte code;
+    final private Integer code;
 
     final private String text;
 
     ProjectStatusEnum(Integer code, String text){
-        this.code = code.byteValue();
+        this.code = code;
         this.text = text;
     }
-    public static String getTextByCode(Byte code){
+    public static String getTextByCode(Integer code){
         for (ProjectStatusEnum e : ProjectStatusEnum.values()){
             if(e.getCode().equals(code)){
                 return e.text;

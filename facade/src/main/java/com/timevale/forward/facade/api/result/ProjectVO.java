@@ -27,13 +27,13 @@ public class ProjectVO extends ToString {
     private String name;
 
     @ApiModelProperty("优先级:0(P0),1(P1),2(P2)")
-    private Byte priority;
+    private Integer priority;
 
     @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
-    private Byte type;
+    private Integer type;
 
     @ApiModelProperty("项目状态:0待启动,10规划中,20研发中,30测试中,40已发布,50已暂停,60已作废")
-    private Byte status;
+    private Integer status;
 
     @ApiModelProperty("项目计划开始时间")
     private Date planStartDate;
