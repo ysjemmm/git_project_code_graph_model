@@ -59,5 +59,6 @@
         <mapper resource="mapper/ProjectNode.xml"/>
         <mapper resource="mapper/ProjectProductDemandMapper.xml"/>
         <mapper resource="mapper/ProjectProductLine.xml"/>
+        <mapper resource="mapper/ProjectProductDemandMapper.xml"/>
     </mappers>
 </configuration>

@@ -70,4 +70,13 @@ public class ProjectVO extends ToString {
 
     @ApiModelProperty("团队成员")
     private String teamMember;
+
+    @ApiModelProperty("优先级")
+    private String priorityName;
+
+    @ApiModelProperty("项目类型")
+    private String typeName;
+
+    @ApiModelProperty("项目状态")
+    private String statusName;
 }

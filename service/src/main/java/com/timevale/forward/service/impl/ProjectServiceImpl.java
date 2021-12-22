@@ -3,22 +3,15 @@ package com.timevale.forward.service.impl;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectListDO;
-import com.timevale.forward.dal.entity.ProjectNodeDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
-import com.timevale.forward.facade.api.request.ProjectNodeAddReq;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
-import com.timevale.forward.model.enums.AscriptionEnum;
-import com.timevale.forward.model.enums.PersonTypeEnum;
-import com.timevale.forward.model.enums.ProjectStageEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.component.ProjectProductDemandComponent;
@@ -30,6 +23,7 @@ import com.timevale.forward.service.copy.ProjectNodeCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -96,10 +90,10 @@ public class ProjectServiceImpl implements ProjectService {
         condition.setSize(condition.getPageSize());
         List<ProjectListDO> projectListDO = projectMapper.list(condition);
         log.info("查询到项目信息:={}", projectListDO);
-        
+
         Map<Long, List<ProjectListDO>> listMap = projectListDO.stream().collect(Collectors.groupingBy(ProjectListDO::getId));
         log.info("分组后项目信息:={}", listMap);
-        
+
         List<ProjectVO> result = new ArrayList<>();
         listMap.forEach((k, v) -> {
             ProjectVO projectVO = ProjectCopier.INSTANCE.convert(v.get(0));
@@ -111,32 +105,61 @@ public class ProjectServiceImpl implements ProjectService {
             projectVO.setTeamMember(teamMember);
             projectVO.setProductLineName(productLineName);
             projectVO.setBizDomainName(bizDomainName);
+            projectVO.setStatusName(ProjectStatusEnum.getTextByCode(projectVO.getStatus()));
+            projectVO.setPriorityName(ProjectPriorityEnum.getTextByCode(projectVO.getPriority()));
+            projectVO.setTypeName(ProjectTypeEnum.getTextByCode(projectVO.getType()));
             result.add(projectVO);
         });
         pageQueryResult.setCurrentPage(condition.getPageNum());
         pageQueryResult.setItemsPerPage(condition.getPageSize());
         pageQueryResult.setTotalItems(count);
         pageQueryResult.setResultList(result);
+        pageQueryResult.setTotalPages(count % condition.getPageSize() == 0
+                ? count / condition.getPageSize() : count / condition.getPageSize() + 1);
         return BaseResult.success(pageQueryResult);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateStatus(Long projectId, Byte type) {
         log.info("项目暂停或作废接收参数:projectId={},type={}", projectId, type);
-        ProjectDO projectDO=new ProjectDO();
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        ProjectDO projectDO = new ProjectDO();
+        projectDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        projectDO.setModifyManId(userInfo.getId());
         projectDO.setId(projectId);
-        projectMapper.update(projectDO);
-        if(ProjectStatusEnum.INVALID.getCode().equals(type)){
-//            projectProductDemandComponent.update(projectId);
-        }
-
         projectDO.setStatus(type);
+        projectMapper.update(projectDO);
+        if (ProjectStatusEnum.INVALID.getCode().equals(type)) {
+            // 作废解除关联
+            ProjectProductDemandDO productDemandDO=new ProjectProductDemandDO();
+            productDemandDO.setProjectId(projectId);
+            productDemandDO.setIsDeleted(true);
+            projectProductDemandComponent.update(productDemandDO);
+        }
         return BaseResult.success(true);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> enable(Long projectId) {
         log.info("项目开启接收参数:projectId={}", projectId);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        ProjectDO projectDO = projectMapper.get(projectId);
+        projectDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        projectDO.setModifyManId(userInfo.getId());
+        if(!ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus())){
+            throw new BaseBizRuntimeException("项目状态不是暂停,不能开启");
+        }
+        List<ProjectNodeDO> projectNode = projectNodeComponent.get(projectId);
+        log.info("项目开启,节点信息:projectNode={}", projectNode);
+        if(CollectionUtils.isEmpty(projectNode)){
+            projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
+            projectMapper.update(projectDO);
+            return BaseResult.success(true);
+        }
+        fillInfo(projectNode,projectDO);
+        projectMapper.update(projectDO);
         return BaseResult.success(true);
     }
 
@@ -178,7 +201,8 @@ public class ProjectServiceImpl implements ProjectService {
         projectDO.setModifyManId(userInfo.getId());
         projectDO.setPmName(projectModifyReq.getPm().getUserName());
         projectDO.setPmId(projectModifyReq.getPm().getUserId());
-        fillInfo(projectModifyReq, projectDO);
+        List<ProjectNodeDO> projectNodeDO = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
+        fillInfo(projectNodeDO, projectDO);
         projectMapper.update(projectDO);
 
         // 产品线
@@ -239,9 +263,9 @@ public class ProjectServiceImpl implements ProjectService {
         return BaseResult.success(true);
     }
 
-    private void fillInfo(ProjectModifyReq req, ProjectDO projectDO) {
-        List<ProjectNodeAddReq> projectNodes = req.getProjectNodes();
-        for (ProjectNodeAddReq node : projectNodes) {
+    private void fillInfo(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
+        for (ProjectNodeDO node : projectNodes) {
+            // 需求规划阶段-研发阶段-测试阶段
             if (ProjectStageEnum.TEST_RELEASE.getText().equals(node.getName()) && node.getActualDate() != null) {
                 projectDO.setStatus(ProjectStatusEnum.RELEASED.getCode());
                 projectDO.setActualEndDate(node.getActualDate());

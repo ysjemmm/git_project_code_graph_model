@@ -11,7 +11,7 @@
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select name, priority, type ,status,pm_id,plan_start_date,plan_end_date,
+        select id,name, priority, type ,status,pm_id,plan_start_date,plan_end_date,
         actual_start_date,actual_end_date,`desc`, create_man_id, create_man,create_date,modify_date
         from project
         where id = #{id} and is_deleted=false
@@ -35,7 +35,7 @@
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
         </set>
         <where>
-            <if test="id != null">and id = #{id}</if>
+            id = #{id}
         </where>
     </update>
 
