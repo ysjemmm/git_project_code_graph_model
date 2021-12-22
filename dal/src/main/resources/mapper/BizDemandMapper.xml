@@ -6,31 +6,31 @@
         insert into biz_demand (name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status,
                                 priority, receive_man, receive_man_id, processor, os, create_man_id, create_man)
         values (#{name}, #{productLineId}, #{dataIndicators}, #{targetCustomer}, #{createCustomer}, #{deptId}, #{desc}, #{status},
-                #{priority}, #{receiveMan}, #{receive_man_id}, #{processor}, #{os}, #{createManId}, #{createMan})
+                #{priority}, #{receiveMan}, #{receiveManId}, #{processor}, #{os}, #{createManId}, #{createMan})
     </insert>
 
     <update id="update">
         update biz_demand
         set
-        <if test="name">
+        <if test="name!=null  and name!='' ">
             name = #{name},
         </if>
         <if test="productLineId">
             product_line_id = #{productLineId},
         </if>
-        <if test="dataIndicators">
+        <if test="dataIndicators!=null and dataIndicators!='' ">
             data_indicators = #{dataIndicators},
         </if>
-        <if test="targetCustomer">
+        <if test="targetCustomer!=null  and  targetCustomer!='' ">
             target_customer = #{targetCustomer},
         </if>
         <if test="createCustomer">
             create_customer = #{createCustomer},
         </if>
-        <if test="depId">
-            dept_id = #{depId},
+        <if test="deptId">
+            dept_id = #{deptId},
         </if>
-        <if test="desc">
+        <if test="desc!=null  and desc!='' ">
             `desc` = #{desc},
         </if>
         <if test="status">
@@ -43,7 +43,7 @@
             receive_man = #{receiveMan},
         </if>
         <if test="receiveManId">
-            receive_man = #{receiveManId},
+            receive_man_id = #{receiveManId},
         </if>
         <if test="processor">
             processor = #{processor},
@@ -58,7 +58,7 @@
             reason = #{reason},
         </if>
         modify_man_id = #{modifyManId},
-        modify_man = #{modifyMan},
+        modify_man = #{modifyMan}
         where id = #{id}
     </update>
 
@@ -77,15 +77,16 @@
                bd.`desc`,bd. status, bd.priority, bd.receive_man, bd.processor, bd.os, bd.plan_release_date,bd.reason,
                bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date
         from biz_demand bd
-        <if test="bizDomainIds!=null and bizDomainIds.size()>0">
+        <if test="bizDomainIdList!=null and bizDomainIdList.size()>0">
             JOIN product_line pl
             ON pl.id = bd.product_line_id
         </if>
-        where bd.is_deleted = false
+        where
+        bd.is_deleted = false
         <if test="id">
             and bd.id = #{id}
         </if>
-        <if test="name">
+        <if test="name!=null and name!='' ">
             and bd.name = #{name}
         </if>
         <if test="createDate">
@@ -127,19 +128,19 @@
                 #{item}
             </foreach>
         </if>
-        <if test="receiveManes!=null and receiveManes.size()>0">
+        <if test="receiveManIdList!=null and receiveManIdList.size()>0">
             and bd.receive_man_id in
             <foreach collection="receiveManIdList" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
         </if>
-        <if test="deptIds!=null and deptIds.size()>0">
+        <if test="deptIdList!=null and deptIdList.size()>0">
             and bd.dept_id in
             <foreach collection="deptIdList" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
         </if>
-        <if test="copier">
+        <if test="copier!=null and copier!='' ">
             and bd.id IN (
                 SELECT p.biz_demand_id
                 FROM person p

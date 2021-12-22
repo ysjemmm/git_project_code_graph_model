@@ -6,13 +6,13 @@ import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.BizDemandSubProductDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
+import com.timevale.forward.facade.api.request.BizDemandTransferReq;
+import com.timevale.forward.facade.api.request.LinkOrUnLinkProductDemandReq;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
-
-import java.util.List;
 
 /**
  * @author by YangXu
@@ -82,11 +82,10 @@ public interface BizDemandService {
     /**
      * 转移
      *
-     * @param bizDemandId 业务需求id
-     * @param receiveMan  转交接收人
+     * @param bizDemandTransferReq 业务需求转交请求
      * @return 成功与否
      */
-    BaseResult<Boolean> transfer(Long bizDemandId, String receiveMan);
+    BaseResult<Boolean> transfer(BizDemandTransferReq bizDemandTransferReq);
 
     /**
      * 产品需求列表
@@ -99,11 +98,10 @@ public interface BizDemandService {
     /**
      * 关联/取消关联产品需求
      *
-     * @param bizDemandId   业务需求id
-     * @param productIdList 产品id列表
+     * @param linkOrUnLinkProductDemandReq 关联产品线需求请求
      * @return 成功与否
      */
-    BaseResult<Boolean> linkOrUnLinkProductDemand(Long bizDemandId, List<Long> productIdList);
+    BaseResult<Boolean> linkOrUnLinkProductDemand(LinkOrUnLinkProductDemandReq linkOrUnLinkProductDemandReq);
 
 
     /**

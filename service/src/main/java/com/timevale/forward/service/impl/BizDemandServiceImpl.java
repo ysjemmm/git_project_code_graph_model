@@ -6,9 +6,11 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.ProductBizDemandCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.FileMapper;
 import com.timevale.forward.dal.dao.ProductBizDemandMapper;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.dal.entity.ProductBizDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.facade.api.client.BizDemandService;
@@ -16,12 +18,17 @@ import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.BizDemandSubProductDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
+import com.timevale.forward.facade.api.request.BizDemandTransferReq;
+import com.timevale.forward.facade.api.request.LinkOrUnLinkProductDemandReq;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.FileVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
+import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
 import com.timevale.forward.service.integration.erp.ErpMessageClient;
 import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
@@ -62,6 +69,9 @@ public class BizDemandServiceImpl implements BizDemandService {
     ProductDemandMapper productDemandMapper;
 
     @Resource
+    FileMapper fileMapper;
+
+    @Resource
     ErpMessageClient erpMessageClient;
 
     @Resource
@@ -87,20 +97,19 @@ public class BizDemandServiceImpl implements BizDemandService {
         }else if(ascription.equals(AscriptionEnum.RECEIVE.toString())){
             bizDemandListCondition.setReceiveManIdList(Lists.newArrayList(userInfo.getId()));
         }else if(ascription.equals(AscriptionEnum.COPIER.toString())){
-            bizDemandListCondition.setCopier(userInfo.getId());
+            bizDemandListCondition.setCopier(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         }else {
             List<String> teamMember = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
             if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())){
                 if(bizDemandListCondition.getCreateManIdList().isEmpty()){
                     bizDemandListCondition.setCreateManIdList(teamMember);
                 }
-            }else{
+            }else if(ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())){
                 if(bizDemandListCondition.getReceiveManIdList().isEmpty()){
                     bizDemandListCondition.setReceiveManIdList(teamMember);
                 }
             }
         }
-
         List<BizDemandDO> bizDemandDOList = bizDemandMapper.select(bizDemandListCondition);
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandDOList);
 
@@ -155,8 +164,8 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 新增业务需求
         BizDemandDO bizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandAddReq);
-        bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
-        bizDemandDO.setCreateMan(userInfo.getAlias() + "-" + userInfo.getName());
+        bizDemandDO.setStatus(BizDemandStatusEnum.EVALUATE.getCode());
+        bizDemandDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         bizDemandDO.setCreateManId(userInfo.getId());
         bizDemandMapper.insert(bizDemandDO);
 
@@ -189,7 +198,14 @@ public class BizDemandServiceImpl implements BizDemandService {
         if(bizDemandDO == null){
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
+
+        // 获取对应附件列表
+        List<FileDO> fileDOList = fileMapper.select(bizDemandId, FileTypeEnum.BIZ_DEMAND.getCode());
+        List<FileVO> fileVOList = FileCopier.INSTANCE.transform(fileDOList);
+
         BizDemandDetailVO bizDemandDetailVO = BizDemandCopier.INSTANCE.convert(bizDemandDO);
+        bizDemandDetailVO.setFileList(fileVOList);
+
         return BaseResult.success(bizDemandDetailVO);
     }
 
@@ -288,16 +304,17 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
-    public BaseResult<Boolean> transfer(Long bizDemandId, String receiveMan) {
+    public BaseResult<Boolean> transfer(BizDemandTransferReq bizDemandTransferReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 转交：修改接收人
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandTransferReq.getId());
         if(bizDemandDO == null){
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
 
-        bizDemandDO.setReceiveMan(receiveMan);
+        bizDemandDO.setReceiveMan(bizDemandTransferReq.getReceiveMan());
+        bizDemandDO.setReceiveManId(bizDemandTransferReq.getReceiveManId());
         bizDemandDO.setModifyMan(userInfo.getAlias());
         bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
@@ -313,14 +330,17 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> linkOrUnLinkProductDemand(Long bizDemandId, List<Long> productIdList) {
+    public BaseResult<Boolean> linkOrUnLinkProductDemand(LinkOrUnLinkProductDemandReq linkOrUnLinkProductDemandReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        Long bizDemandId = linkOrUnLinkProductDemandReq.getId();
+        List<Long> productIdList = linkOrUnLinkProductDemandReq.getProductIdList();
 
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
         if(bizDemandDO == null){
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
-        
+
         // 获取当前关联数据
         List<ProductBizDemandDO> list = productBizDemandMapper.select(ProductBizDemandCondition.builder()
                 .bizDemandId(bizDemandId)
