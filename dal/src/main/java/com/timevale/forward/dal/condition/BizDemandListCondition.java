@@ -25,9 +25,14 @@ public class BizDemandListCondition {
     private Long id;
 
     /**
-     * 创建日期
+     * 起始时间
      */
-    private Date createDate;
+    private Date createDateStart;
+
+    /**
+     * 结束时间
+     */
+    private Date createDateEnd;
 
     /**
      * 优先级列表

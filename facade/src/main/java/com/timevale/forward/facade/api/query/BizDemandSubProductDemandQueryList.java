@@ -36,14 +36,17 @@ public class BizDemandSubProductDemandQueryList extends QueryBase {
     @ApiModelProperty("产品需求类型")
     private Integer type;
 
-    @ApiModelProperty("所属项目")
+    @ApiModelProperty("关联项目")
     private Long toProject;
 
     @ApiModelProperty("产品需求负责人")
     private List<PersonQuery> ownerInfoList;
 
-    @ApiModelProperty("创建时间")
-    private Date createDate;
+    @ApiModelProperty("起始时间")
+    private Date createDateStart;
+
+    @ApiModelProperty("结束时间")
+    private Date createDateEnd;
 
     @ApiModelProperty("产品需求状态")
     private Integer status;

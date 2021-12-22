@@ -15,7 +15,7 @@ import java.util.List;
 @Data
 @ApiModel("业务需求修改")
 public class BizDemandModifyReq extends BaseReq {
-    @ApiModelProperty("业务需求id,新增时无需填写")
+    @ApiModelProperty("业务需求id")
     private Long id;
 
     @ApiModelProperty("需求主题")

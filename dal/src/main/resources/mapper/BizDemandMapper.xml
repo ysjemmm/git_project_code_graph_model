@@ -89,9 +89,6 @@
         <if test="name!=null and name!='' ">
             and bd.name = #{name}
         </if>
-        <if test="createDate">
-            and #{create_date} > bd.create_date
-        </if>
         <if test="priorityList!=null and priorityList.size()>0">
             and bd.priority in
             <foreach collection="priorityList" item="item" separator="," open="(" close=")">
@@ -148,6 +145,22 @@
                 AND p.type = 30
             )
         </if>
+        <choose>
+            <when test="createDateStart!=null and createDateEnd!=null">
+                and bd.create_date &gt;= #{createDateStart}
+                and bd.create_date &lt;= #{createDateEnd}
+            </when>
+            <otherwise>
+                <choose>
+                    <when test="startDate!=null">
+                        and bd.create_date &gt;= #{createDateStart}
+                    </when>
+                    <otherwise>
+                        and bd.create_date &lt;= #{createDateEnd}
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
     </select>
 
 
