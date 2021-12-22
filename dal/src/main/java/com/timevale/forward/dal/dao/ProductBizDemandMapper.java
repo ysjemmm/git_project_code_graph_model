@@ -2,6 +2,7 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.ProductBizDemandCondition;
 import com.timevale.forward.dal.entity.ProductBizDemandDO;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -22,25 +23,25 @@ public interface ProductBizDemandMapper {
     /**
      * 批量插入
      *
-     * @param list 列表
+     * @param productBizDemandDOList 产品业务需求ist
      * @return int
      */
-    int inserts(List<ProductBizDemandDO> list);
+    int inserts(List<ProductBizDemandDO> productBizDemandDOList);
 
     /**
      * 批量更新
      *
-     * @param list 列表
+     * @param productBizDemandDOList 产品业务需求list
      * @return int
      */
-    int updates(List<ProductBizDemandDO> list);
+    int updates(List<ProductBizDemandDO> productBizDemandDOList);
 
     /**
-     * 批量删除
+     * 逻辑删除
      *
-     * @param list 列表
+     * @param bizDemandId 业务需求id
      * @return int
      */
-    int delete(List<ProductBizDemandDO> list);
+    int deleteByBizDemandId(@Param("bizDemandId") Long bizDemandId);
 
 }

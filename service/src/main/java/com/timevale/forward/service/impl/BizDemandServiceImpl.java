@@ -126,8 +126,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandMapper.update(bizDemandDO);
 
         // 取消产品关联
-        List<ProductBizDemandDO> list = productBizDemandMapper.select(ProductBizDemandCondition.builder().bizDemandId(bizDemandId).build());
-        productBizDemandMapper.delete(list);
+        productBizDemandMapper.deleteByBizDemandId(bizDemandId);
 
         // 接收人通知（待实现）
         /*String name = bizDemandDO.getName();
