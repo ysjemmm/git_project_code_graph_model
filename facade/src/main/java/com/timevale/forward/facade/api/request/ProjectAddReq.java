@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -30,6 +31,7 @@ public class ProjectAddReq extends BaseReq {
     private Integer type;
 
     @ApiModelProperty("项目经理")
+    @NotNull(message = "项目经理不能为空")
     private PersonAddReq pm;
 
     @ApiModelProperty("产品经理")
@@ -46,8 +48,5 @@ public class ProjectAddReq extends BaseReq {
 
     @ApiModelProperty("描述")
     private String desc;
-
-    @ApiModelProperty("节点")
-    private List<ProjectNodeAddReq> projectNodes;
 
 }

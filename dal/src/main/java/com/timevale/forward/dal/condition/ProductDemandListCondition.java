@@ -37,6 +37,11 @@ public class ProductDemandListCondition extends QueryBase {
     private List<Long> productLineIds;
 
     /**
+     * 优先级:0(P0),1(P1),2(P2),3(P3)
+     */
+    private List<Integer> priorities;
+
+    /**
      * 需求状态:0待排期,10已列入项目,20项目进行中,30已完成上线,40已暂停,50已作废
      */
     private List<Integer> status;

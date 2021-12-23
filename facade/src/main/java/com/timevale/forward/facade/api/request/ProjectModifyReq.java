@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
  * @author xingyun
@@ -19,4 +20,8 @@ public class ProjectModifyReq extends ProjectAddReq {
     @ApiModelProperty("id")
     @NotNull(message = "项目id不能为空")
     private Long id;
+
+    @ApiModelProperty("节点")
+    @NotNull(message = "项目节点不能为空")
+    private List<ProjectNodeAddReq> projectNodes;
 }

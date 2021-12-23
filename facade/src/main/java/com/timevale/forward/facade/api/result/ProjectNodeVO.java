@@ -30,7 +30,7 @@ public class ProjectNodeVO extends ToString {
     private String name;
 
     @ApiModelProperty("计划完成时间")
-    private Date plantDate;
+    private Date planDate;
 
     @ApiModelProperty("实际完成时间")
     private Date actualDate;

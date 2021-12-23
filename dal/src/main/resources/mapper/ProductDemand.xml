@@ -24,6 +24,12 @@
             <if test="modifyDateStart != null and modifyDateEnd != null">
                 and a.modify_date &gt;= #{modifyDateStart} and a.modify_date &lt;= #{modifyDateEnd}
             </if>
+            <if test="priorities!=null and priorities.size()>0">
+                and a.priority in
+                <foreach collection="priorities" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="productLineIds!=null and productLineIds.size()>0">
                 and c.id in
                 <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
@@ -72,6 +78,14 @@
         select id, name, product_line_id, type, `desc`, status, priority, owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date, owner_id
         from product_demand
         where id = #{id}
+    </select>
+
+    <select id="projectProductList" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
+         SELECT a.id,a.name,a.priority,a.owner,a.status,a.create_man,a.create_date,a.modify_date
+         FROM product_demand a
+         LEFT JOIN project_product_demand b ON a.id = b.product_demand_id AND b.is_deleted = false
+         LEFT JOIN project c ON b.project_id = c.id AND c.is_deleted = false
+         where c.id = #{projectId}
     </select>
     
 </mapper>

@@ -3,6 +3,7 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -39,4 +40,11 @@ public interface ProductDemandMapper {
      * @return list
      */
     List<ProductDemandListDO> list(ProductDemandListCondition productDemandListCondition);
+
+    /**
+     *
+     * @param projectId 查询条件
+     * @return 项目产品需求清单
+     */
+    List<ProductDemandListDO> projectProductList(@Param("projectId") Long projectId);
 }

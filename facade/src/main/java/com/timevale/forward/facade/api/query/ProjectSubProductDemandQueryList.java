@@ -32,6 +32,9 @@ public class ProjectSubProductDemandQueryList extends QueryBase {
     @ApiModelProperty("状态:0待排期,10已列入项目,20项目进行中,30已完成上线,40已暂停,50已作废")
     private List<Integer> status;
 
+    @ApiModelProperty("优先级:0(P0),1(P1),2(P2),3(P3)")
+    private List<Integer> priorities;
+
     @ApiModelProperty("负责人")
     private List<String> ownerIds;
 

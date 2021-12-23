@@ -5,9 +5,11 @@ import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectService;
+import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.query.ProjectSubProductDemandQueryList;
 import com.timevale.forward.facade.api.request.ProductDemandLinkReq;
@@ -33,6 +35,7 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -70,6 +73,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private ProductDemandComponent productDemandComponent;
+
+    @Resource
+    private ProductDemandMapper productDemandMapper;
 
 
     @Override
@@ -255,7 +261,6 @@ public class ProjectServiceImpl implements ProjectService {
         projectNodeVO.forEach(p -> p.setCurrentDate(currentDate));
         projectDetailVO.setProjectNodes(projectNodeVO);
 
-        //产品需求
         return BaseResult.success(projectDetailVO);
     }
 
@@ -264,7 +269,10 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("项目-产品需求匹配,接收参数:productDemandQueryList={}", productDemandQueryList);
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize());
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
-
+        condition.setStatus(Lists.newArrayList(ProductDemandStatusEnum.WAITING.getCode()
+                , ProductDemandStatusEnum.INCLUDED.getCode()
+                , ProductDemandStatusEnum.PROGRESS.getCode()
+                , ProductDemandStatusEnum.ONLINE.getCode()));
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
         List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
         productDemandVO.forEach(p -> {
@@ -295,31 +303,52 @@ public class ProjectServiceImpl implements ProjectService {
         return BaseResult.success(true);
     }
 
-    private void fillInfo(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
-        for (ProjectNodeDO node : projectNodes) {
-            // 需求规划阶段-研发阶段-测试阶段
-            if (ProjectStageEnum.TEST_RELEASE.getText().equals(node.getName()) && node.getActualDate() != null) {
-                projectDO.setStatus(ProjectStatusEnum.RELEASED.getCode());
-                projectDO.setActualEndDate(node.getActualDate());
-            }
-            if (ProjectStageEnum.TEST_START.getText().equals(node.getName()) && node.getActualDate() != null) {
-                projectDO.setStatus(ProjectStatusEnum.TESTING.getCode());
-            }
-            boolean dev = (ProjectStageEnum.DEV_REVIEW.getText().equals(node.getName())
-                    || ProjectStageEnum.DEV_START.getText().equals(node.getName()))
-                    && node.getActualDate() != null;
-            if (dev) {
-                projectDO.setStatus(ProjectStatusEnum.DEVING.getCode());
-            }
-            if (ProjectStageEnum.DEMAND_START.getText().equals(node.getName())) {
-                if (node.getActualDate() != null) {
-                    projectDO.setStatus(ProjectStatusEnum.PLANING.getCode());
-                    projectDO.setActualStartDate(node.getActualDate());
-                } else {
-                    projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
-                }
+    @Override
+    public BaseResult<PageQueryResult<ProductDemandVO>>  projectProductDemandList(ProjectProductDemandQueryList productDemandQueryList) {
+        //产品需求
+        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize());
+        List<ProductDemandListDO> productDemandListDO = productDemandMapper.projectProductList(productDemandQueryList.getProjectId());
+        List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
+        productDemandVO.forEach(p -> {
+            p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
+            p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
+        });
 
-            }
+        PageInfo<ProductDemandVO> pageInfo = new PageInfo<>(productDemandVO);
+
+        PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(productDemandVO);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
+    }
+
+    private void fillInfo(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
+        Map<String, ProjectNodeDO> nodeMap = projectNodes
+                .stream()
+                .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
+        ProjectNodeDO node = null;
+        log.info("填充项目信息:nodeMap={}", nodeMap);
+        if ((node = nodeMap.get(ProjectStageEnum.TEST_RELEASE.getText())) != null && node.getActualDate() != null) {
+            projectDO.setStatus(ProjectStatusEnum.RELEASED.getCode());
+            projectDO.setActualEndDate(node.getActualDate());
+        } else if ((node = nodeMap.get(ProjectStageEnum.TEST_START.getText())) != null && node.getActualDate() != null) {
+            projectDO.setStatus(ProjectStatusEnum.TESTING.getCode());
+        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_REVIEW.getText())) != null && node.getActualDate() != null) {
+            projectDO.setStatus(ProjectStatusEnum.DEVING.getCode());
+        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_START.getText())) != null && node.getActualDate() != null) {
+            projectDO.setStatus(ProjectStatusEnum.DEVING.getCode());
+        } else if ((node = nodeMap.get(ProjectStageEnum.DEMAND_START.getText())) != null && node.getActualDate() != null) {
+            projectDO.setStatus(ProjectStatusEnum.PLANING.getCode());
+        } else {
+            projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
+        }
+        //优先取需求阶段实际时间作为项目实际开始时间,若无,则取开发阶段第一个节点实际时间做为作为项目实际开始时间
+        if ((node = nodeMap.get(ProjectStageEnum.DEMAND_START.getText())) != null && node.getActualDate() != null) {
+            projectDO.setActualStartDate(node.getActualDate());
+        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_REVIEW.getText())) != null && node.getActualDate() != null) {
+            projectDO.setActualStartDate(node.getActualDate());
+        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_START.getText())) != null && node.getActualDate() != null) {
+            projectDO.setActualStartDate(node.getActualDate());
         }
     }
 }
