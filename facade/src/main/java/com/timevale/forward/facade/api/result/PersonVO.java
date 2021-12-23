@@ -1,8 +1,8 @@
 package com.timevale.forward.facade.api.result;
 
 import com.timevale.mandarin.common.result.ToString;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,7 +12,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@ApiOperation("人员信息")
+@ApiModel("人员信息")
 public class PersonVO extends ToString {
     
     @ApiModelProperty("人员名字")
