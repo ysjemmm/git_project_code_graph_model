@@ -1,13 +1,17 @@
 package com.timevale.forward.service.copy;
 
+import com.timevale.forward.dal.condition.BizDemandLinkProductDemandListCondition;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO;
 import com.timevale.forward.dal.entity.BizDemandListDO;
+import com.timevale.forward.facade.api.query.BizDemandLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
+import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import org.assertj.core.util.Lists;
@@ -18,6 +22,7 @@ import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author by YangXu
@@ -88,6 +93,15 @@ public interface BizDemandCopier {
      */
     List<BizDemandVO> convert(List<BizDemandListDO> list);
 
+    /**
+     * 业务需求查询关联产品条件转换
+     *
+     * @param list 列表
+     * @return Condition
+     */
+    @Mapping(source = "ownerInfoList", target = "ownerIdList", qualifiedByName = "getInfoId")
+    BizDemandLinkProductDemandListCondition convert(BizDemandLinkProductDemandQueryList list);
+
 
     /**
      * 转换
@@ -97,6 +111,35 @@ public interface BizDemandCopier {
      */
     PageQueryResult<BizDemandVO> convert(PageQueryResult<BizDemandVO> list);
 
+
+    /**
+     * 变换
+     *
+     * @param bizDemandLinkProductDemandListDO 业务需求链接产品需求列表DO
+     * @return VO
+     */
+    @Mapping(source = "owner", target = "ownerInfo.userName")
+    @Mapping(source = "ownerId", target = "ownerInfo.userId")
+    BizDemandLinkProductDemandVO transform(BizDemandLinkProductDemandListDO bizDemandLinkProductDemandListDO);
+
+    /**
+     * 转换
+     *
+     * @param list 列表
+     * @return list
+     */
+    List<BizDemandLinkProductDemandVO> transform(List<BizDemandLinkProductDemandListDO> list);
+
+    /**
+     * 转换
+     *
+     * @param list 分页数据
+     * @return VO
+     */
+    PageQueryResult<BizDemandLinkProductDemandVO> transform(PageQueryResult<BizDemandLinkProductDemandVO> list);
+
+
+
     /**
      * 信息id
      *
@@ -105,11 +148,7 @@ public interface BizDemandCopier {
      */
     @Named("getInfoId")
     default List<String> getInfoId(List<PersonQuery> list){
-        List<String> result = Lists.newArrayList();
-        for (PersonQuery personQuery : list){
-            result.add(personQuery.getUserId());
-        }
-        return result;
+        return list.stream().map(PersonQuery::getUserId).collect(Collectors.toList());
     }
 
 }

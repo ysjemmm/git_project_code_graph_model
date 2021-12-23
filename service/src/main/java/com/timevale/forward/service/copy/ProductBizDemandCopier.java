@@ -16,11 +16,10 @@ public interface ProductBizDemandCopier {
      * 转换
      *
      * @param bizDemandId 业务需求id
-     * @param productId   产品id
-     * @param isDeleted   被删除
+     * @param productDemandId   产品id
      * @return DO
      */
-    ProductBizDemandDO convert(Long bizDemandId, Long productId, Boolean isDeleted);
+    ProductBizDemandDO convert(Long bizDemandId, Long productDemandId);
 
 
 }

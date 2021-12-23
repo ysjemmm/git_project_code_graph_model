@@ -50,6 +50,7 @@ public class BizDemandVO extends ToString {
     private PersonVO receiveManInfo;
 
     @ApiModelProperty("需求部门")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long deptId;
 
     @ApiModelProperty("创建人信息")

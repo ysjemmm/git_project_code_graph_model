@@ -88,4 +88,66 @@
          where c.id = #{projectId}
     </select>
     
+    <select id="selectListOfBizDemandLink" resultType="com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO">
+        select pd.id, pd.name, pd.product_line_id, pd.type, pd.status, pd.priority, pd.owner, pd.owner_id,
+               pd.is_deleted, pd.create_man_id, pd.create_man, pd.create_date, pd.modify_man_id, pd.modify_man, pd.modify_date,
+               pl.biz_domain_id
+        from product_demand pd
+        left join product_line pl on pd.product_line_id = pl.id
+        <where>
+            <if test="id!=null">
+                and pd.id = #{id}
+            </if>
+            <if test="name!=null and name!=''">
+                and pd.name = #{name}
+            </if>
+            <if test="type!=null">
+                and pd.type = #{type}
+            </if>
+            <if test="status!=null">
+                and pd.status = #{status}
+            </if>
+            <if test="priorityList!=null and priorityList.size()>0">
+                and pd.priority in
+                <foreach collection="priorityList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="bizDomainIdList!=null and bizDomainIdList.size()>0">
+                and pl.biz_domain_id in
+                <foreach collection="priorityList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="productLineIdList!=null and productLineIdList.size()>0">
+                and pd.product_line_id in
+                <foreach collection="productLineIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="ownerIdList!=null and ownerIdList.size()>0">
+                and pd.owner_id in
+                <foreach collection="ownerIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <choose>
+                <when test="createDateStart!=null and createDateEnd!=null">
+                    and pd.create_date &gt;= #{createDateStart}
+                    and pd.create_date &lt;= #{createDateEnd}
+                </when>
+                <otherwise>
+                    <choose>
+                        <when test="createDateStart!=null">
+                            and pd.create_date &gt;= #{createDateStart}
+                        </when>
+                        <when test="createDateEnd!=null">
+                            and pd.create_date &lt;= #{createDateEnd}
+                        </when>
+                    </choose>
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+    
 </mapper>

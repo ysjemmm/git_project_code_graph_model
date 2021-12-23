@@ -20,5 +20,5 @@ public class LinkOrUnLinkProductDemandReq extends BaseReq {
     Long id;
 
     @ApiModelProperty("关联产品需求Id")
-    List<Long> productIdList;
+    List<Long> productDemandIdList;
 }

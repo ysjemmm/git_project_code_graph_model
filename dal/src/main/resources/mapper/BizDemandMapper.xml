@@ -149,12 +149,12 @@
             </when>
             <otherwise>
                 <choose>
-                    <when test="startDate!=null">
+                    <when test="createDateStart!=null">
                         and bd.create_date &gt;= #{createDateStart}
                     </when>
-                    <otherwise>
+                    <when test="createDateEnd!=null">
                         and bd.create_date &lt;= #{createDateEnd}
-                    </otherwise>
+                    </when>
                 </choose>
             </otherwise>
         </choose>

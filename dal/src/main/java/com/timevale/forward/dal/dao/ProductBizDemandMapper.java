@@ -23,18 +23,21 @@ public interface ProductBizDemandMapper {
     /**
      * 批量插入
      *
-     * @param productBizDemandDOList 产品业务需求ist
+     * @param productBizDemandDOList 产品业务需求list
      * @return int
      */
-    int inserts(List<ProductBizDemandDO> productBizDemandDOList);
+    int inserts(@Param("productBizDemandDOList") List<ProductBizDemandDO> productBizDemandDOList);
 
     /**
      * 批量更新
      *
-     * @param productBizDemandDOList 产品业务需求list
+     * @param list        产品业务需求id list
+     * @param isDeleted   是否删除
+     * @param modifyMan   修改人
+     * @param modifyManId 修改人身份证
      * @return int
      */
-    int updates(List<ProductBizDemandDO> productBizDemandDOList);
+    int updates(@Param("list") List<Long> list, @Param("isDeleted")Boolean isDeleted, @Param("modifyMan")String modifyMan, @Param("modifyManId") String modifyManId);
 
     /**
      * 逻辑删除

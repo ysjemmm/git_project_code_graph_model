@@ -25,7 +25,7 @@ public interface FileMapper {
      * @param list 附件信息列表
      * @return int
      */
-    int inserts(List<FileDO> list);
+    int inserts(@Param("list") List<FileDO> list);
 
 
     /**

@@ -3,6 +3,7 @@ package com.timevale.forward.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.BizDemandLinkProductDemandListCondition;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.ProductBizDemandCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
@@ -11,16 +12,13 @@ import com.timevale.forward.dal.dao.ProductBizDemandMapper;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BizDemandService;
+import com.timevale.forward.facade.api.query.BizDemandLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
-import com.timevale.forward.facade.api.query.BizDemandSubProductDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.request.BizDemandTransferReq;
 import com.timevale.forward.facade.api.request.LinkOrUnLinkProductDemandReq;
-import com.timevale.forward.facade.api.result.BizDemandDetailVO;
-import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.facade.api.result.FileVO;
-import com.timevale.forward.facade.api.result.ProductDemandVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -46,6 +44,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -321,8 +320,23 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(BizDemandSubProductDemandQueryList bizDemandSubProductDemandQueryList) {
-        return null;
+    public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> matchProductDemandList(BizDemandLinkProductDemandQueryList bizDemandSubProductDemandQueryList) {
+        BizDemandLinkProductDemandListCondition conditionx = BizDemandCopier.INSTANCE.convert(bizDemandSubProductDemandQueryList);
+        List<BizDemandLinkProductDemandListDO> productDemandDOListx = productDemandMapper.selectListOfBizDemandLink(conditionx);
+        List<BizDemandLinkProductDemandVO> bizDemandLinkProductDemandVOListx = BizDemandCopier.INSTANCE.transform(productDemandDOListx);
+        System.out.println(productDemandDOListx);
+        System.out.println(bizDemandLinkProductDemandVOListx);
+
+        // 开始分页
+        PageHelper.startPage(bizDemandSubProductDemandQueryList.pageNum, bizDemandSubProductDemandQueryList.pageSize);
+        // 转换查询条件
+        BizDemandLinkProductDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandSubProductDemandQueryList);
+
+        // 查询数据，类型转换
+        List<BizDemandLinkProductDemandListDO> productDemandDOList = productDemandMapper.selectListOfBizDemandLink(condition);
+        List<BizDemandLinkProductDemandVO> bizDemandLinkProductDemandVOList = BizDemandCopier.INSTANCE.transform(productDemandDOList);
+
+        return BaseResult.success(BizDemandCopier.INSTANCE.transform(ResultUtil.pageSuccess(new PageInfo<>(bizDemandLinkProductDemandVOList))));
     }
 
     @Override
@@ -331,7 +345,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         Long bizDemandId = linkOrUnLinkProductDemandReq.getId();
-        List<Long> productIdList = linkOrUnLinkProductDemandReq.getProductIdList();
+        List<Long> productDemandIdList = linkOrUnLinkProductDemandReq.getProductDemandIdList();
 
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
         if(bizDemandDO == null){
@@ -344,51 +358,48 @@ public class BizDemandServiceImpl implements BizDemandService {
                 .build());
 
         // 数据转换为集合，判断交集补集
-        Set<Long> newLinkData = new HashSet<>(productIdList);
-        Map<Long, Boolean> oldLinkDate = list.stream()
-                .collect(Collectors.toMap(ProductBizDemandDO::getProductDemandId, ProductBizDemandDO::getIsDeleted, (a, b) -> a));
+        Set<Long> newLinkData = new HashSet<>(productDemandIdList);
+        Map<Long, ProductBizDemandDO> oldLinkDate = list.stream()
+                .collect(Collectors.toMap(ProductBizDemandDO::getProductDemandId, Function.identity(), (a, b) -> a));
 
         // 更新和新增数据的集合
         List<ProductBizDemandDO> insertLinkDate = Lists.newArrayList();
-        List<ProductBizDemandDO> updateLinkDate = Lists.newArrayList();
+        List<Long> updateLinkDate = Lists.newArrayList();
+        List<Long> deleteLinkDate = Lists.newArrayList();
 
         // 判断旧数据是否存在新数据中，更新逻辑删除标识
-        for (Map.Entry<Long, Boolean> entry : oldLinkDate.entrySet()) {
+        for (Map.Entry<Long, ProductBizDemandDO> entry : oldLinkDate.entrySet()) {
             Boolean isDeleted = null;
             if(newLinkData.contains(entry.getKey())){
-                if(entry.getValue()){
+                if(entry.getValue().getIsDeleted()){
                     isDeleted = false;
                 }
             }else{
-                if(!entry.getValue()){
+                if(!entry.getValue().getIsDeleted()){
                     isDeleted = true;
                 }
             }
             if(isDeleted != null){
-                ProductBizDemandDO productBizDemandDO = ProductBizDemandCopier.INSTANCE.convert(bizDemandId, entry.getKey(), isDeleted);
-                productBizDemandDO.setModifyMan(userInfo.getAlias());
-                productBizDemandDO.setModifyManId(userInfo.getId());
-                updateLinkDate.add(productBizDemandDO);
+                if(isDeleted){updateLinkDate.add(entry.getValue().getId());}
+                else {deleteLinkDate.add(entry.getValue().getId());}
             }
         }
         // 判断新数据是否在旧数据中，添加新增数据
-        for (Long productId : newLinkData) {
-            if(!oldLinkDate.containsKey(productId)){
-                ProductBizDemandDO productBizDemandDO = ProductBizDemandCopier.INSTANCE.convert(bizDemandId, productId, false);
-                productBizDemandDO.setCreateMan(userInfo.getAlias());
-                productBizDemandDO.setCreateManId(userInfo.getId());
+        for (Long productDemandId : newLinkData) {
+            if(!oldLinkDate.containsKey(productDemandId)){
+                ProductBizDemandDO productBizDemandDO = ProductBizDemandCopier.INSTANCE.convert(bizDemandId, productDemandId);
                 insertLinkDate.add(productBizDemandDO);
             }
         }
 
         // 业务需求根据产品需求状态而变化
-        List<ProductDemandDO> productDemandDOList = productDemandMapper.selectByIdList(productIdList);
+        List<ProductDemandDO> productDemandDOList = productDemandMapper.selectByIdList(productDemandIdList);
         Integer status = BizDemandStatusEnum.RECEIVED.getCode();
         for (ProductDemandDO productDemandDO : productDemandDOList) {
             // 排除“已暂停”，“作废”
             if(ProductDemandStatusEnum.INVALID.getCode().equals(productDemandDO.getStatus())
             || ProductDemandStatusEnum.SUSPEND.getCode().equals(productDemandDO.getStatus())){continue;}
-            status = Math.max(status,productDemandDO.getStatus());
+            status = Math.max(status, productDemandDO.getStatus());
         }
 
         // 修改业务状态
@@ -398,10 +409,10 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizDemandDO.setModifyManId(userInfo.getId());
             bizDemandMapper.update(bizDemandDO);
         }
-
         // 新增和更新非空数据
         if(!insertLinkDate.isEmpty()){productBizDemandMapper.inserts(insertLinkDate);}
-        if(!updateLinkDate.isEmpty()){productBizDemandMapper.updates(updateLinkDate);}
+        if(!updateLinkDate.isEmpty()){productBizDemandMapper.updates(updateLinkDate, true, userInfo.getAlias(), userInfo.getId());}
+        if(!deleteLinkDate.isEmpty()){productBizDemandMapper.updates(deleteLinkDate, false, userInfo.getAlias(), userInfo.getId());}
 
         return BaseResult.success(true);
     }

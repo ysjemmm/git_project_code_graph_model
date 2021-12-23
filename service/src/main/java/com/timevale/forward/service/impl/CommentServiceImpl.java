@@ -46,7 +46,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public BaseResult<List<CommentVO>> list(CommentQueryList commentQueryList) {
-        log.info("项目列表接收参数:{}", commentQueryList);
+        log.info("评论列表接收参数:{}", commentQueryList);
 
         Long toId = commentQueryList.getToId();
         Integer type = commentQueryList.getType();

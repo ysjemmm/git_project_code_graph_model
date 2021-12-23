@@ -2,6 +2,7 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.entity.PersonDO;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ public interface PersonMapper {
      * @param list 列表
      * @return int
      */
-    int inserts(List<PersonDO> list);
+    int inserts(@Param("list") List<PersonDO> list);
 
     /**
      * 插入人员信息

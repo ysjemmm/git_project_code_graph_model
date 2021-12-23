@@ -1,6 +1,8 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.BizDemandLinkProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
+import com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import org.apache.ibatis.annotations.Param;
@@ -16,15 +18,6 @@ public interface ProductDemandMapper {
      */
     int insert(ProductDemandDO productDemandDO);
 
-
-    /**
-     * 批量查询产品需求
-     *
-     * @param productDemandIdList 产品需求id列表
-     * @return list
-     */
-    List<ProductDemandDO> selectByIdList(List<Long> productDemandIdList);
-
     /**
      * 选择id查询
      *
@@ -32,6 +25,23 @@ public interface ProductDemandMapper {
      * @return DO
      */
     ProductDemandDO selectById(Long id);
+
+
+    /**
+     * 批量查询产品需求
+     *
+     * @param productDemandIdList 产品需求id列表
+     * @return list
+     */
+    List<ProductDemandDO> selectByIdList(@Param("productDemandIdList") List<Long> productDemandIdList);
+
+    /**
+     * 业务需求关联产品查询
+     *
+     * @param bizDemandLinkProductDemandListCondition 业务需求链接产品需求列表条件
+     * @return list
+     */
+    List<BizDemandLinkProductDemandListDO> selectListOfBizDemandLink(BizDemandLinkProductDemandListCondition bizDemandLinkProductDemandListCondition);
 
     /**
      * 查询产品需求

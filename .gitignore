@@ -5,3 +5,6 @@
 **/mandarin/ahas/**
 **/mq_backup_db/**
 .idea
+/metadata/*
+target/
+/mandarin/*

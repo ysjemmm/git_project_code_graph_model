@@ -15,8 +15,8 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("业务需求产品需求子查询")
-public class BizDemandSubProductDemandQueryList extends QueryBase {
+@ApiModel("业务需求关联产品需求查询")
+public class BizDemandLinkProductDemandQueryList extends QueryBase {
 
     @ApiModelProperty("产品需求主题")
     private String name;
@@ -35,9 +35,6 @@ public class BizDemandSubProductDemandQueryList extends QueryBase {
 
     @ApiModelProperty("产品需求类型")
     private Integer type;
-
-    @ApiModelProperty("关联项目")
-    private Long toProject;
 
     @ApiModelProperty("产品需求负责人")
     private List<PersonQuery> ownerInfoList;
