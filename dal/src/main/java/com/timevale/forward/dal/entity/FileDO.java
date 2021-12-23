@@ -15,20 +15,20 @@ public class FileDO extends BaseDO {
     /**
      * 附件所属id
      */
-    Long attacheId;
+    private Long attacheId;
 
     /**
      * 附件所属类型
      */
-    Integer type;
+    private Integer type;
 
     /**
      * 附件名称
      */
-    String name;
+    private String name;
 
     /**
      * 文件id
      */
-    String fileId;
+    private String fileId;
 }

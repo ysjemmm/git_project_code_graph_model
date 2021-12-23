@@ -2,6 +2,7 @@ package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.BizDemandListDO;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
@@ -12,6 +13,7 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import org.assertj.core.util.Lists;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
@@ -67,12 +69,24 @@ public interface BizDemandCopier {
 
 
     /**
+     * 转换
+     *
+     * @param bizDemandListDO 业务需求列表DO
+     * @return VO
+     */
+    @Mapping(source = "receiveMan", target = "receiveManInfo.userName")
+    @Mapping(source = "receiveManId", target = "receiveManInfo.userId")
+    @Mapping(source = "createMan", target = "createManInfo.userName")
+    @Mapping(source = "createManId", target = "createManInfo.userId")
+    BizDemandVO convert(BizDemandListDO bizDemandListDO);
+
+    /**
      * DO批量转换为VO
      *
      * @param list 列表
      * @return 业务需求列表
      */
-    List<BizDemandVO> convert(List<BizDemandDO> list);
+    List<BizDemandVO> convert(List<BizDemandListDO> list);
 
 
     /**

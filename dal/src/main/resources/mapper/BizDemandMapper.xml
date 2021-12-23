@@ -62,7 +62,6 @@
         where id = #{id}
     </update>
 
-
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BizDemandDO">
         select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status, priority,
                receive_man, processor, os, plan_release_date, reason, is_deleted, create_man_id, create_man, create_date,
@@ -72,10 +71,10 @@
         and id = #{id}
     </select>
 
-    <select id="select" resultType="com.timevale.forward.dal.entity.BizDemandDO">
-        select bd.id, bd.name, bd.product_line_id, bd.data_indicators, bd.target_customer, bd.create_customer,bd.dept_id,
-               bd.`desc`,bd. status, bd.priority, bd.receive_man, bd.processor, bd.os, bd.plan_release_date,bd.reason,
-               bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date
+    <select id="selectList" resultType="com.timevale.forward.dal.entity.BizDemandListDO">
+        select bd.id, bd.name, bd.product_line_id,bd.dept_id, bd.status, bd.priority, bd.receive_man,  bd.receive_man_id,
+               bd.plan_release_date, bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date,
+               pl.biz_domain_id
         from biz_demand bd
         left join product_line pl
         on pl.id = bd.product_line_id
@@ -137,10 +136,10 @@
         </if>
         <if test="copier!=null and copier!='' ">
             and bd.id IN (
-                SELECT p.biz_demand_id
-                FROM person p
-                WHERE p.user_id = #{copier}
-                AND p.type = 30
+            SELECT p.biz_demand_id
+            FROM person p
+            WHERE p.user_id = #{copier}
+            AND p.type = 30
             )
         </if>
         <choose>

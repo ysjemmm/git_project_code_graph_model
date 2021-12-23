@@ -14,75 +14,75 @@ public class BizDemandDO extends BaseDO {
     /**
      * 业务需求主题
      */
-    String name;
+    private String name;
 
     /**
      * 产品线id
      */
-    Long productLineId;
+    private Long productLineId;
 
     /**
      * 数据指标
      */
-    String dataIndicators;
+    private String dataIndicators;
 
     /**
      * 目标客户/用户/项目
      */
-    String targetCustomer;
+    private String targetCustomer;
 
     /**
      * 是否共创用户
      */
-    Boolean createCustomer;
+    private Boolean createCustomer;
 
     /**
      * 部门id
      */
-    Long deptId;
+    private Long deptId;
 
     /**
      * 需求描述
      */
-    String desc;
+    private String desc;
 
     /**
      * 需求解决状态
      */
-    Integer status;
+    private Integer status;
 
     /**
      * 优先级
      */
-    Integer priority;
+    private Integer priority;
 
     /**
      * 接收人
      */
-    String receiveMan;
+    private String receiveMan;
 
     /**
      * 接收人id
      */
-    String receiveManId;
+    private String receiveManId;
 
     /**
      * 处理器
      */
-    Integer processor;
+    private Integer processor;
 
     /**
      * 操作系统
      */
-    Integer os;
+    private Integer os;
 
     /**
      * 计划发布日期
      */
-    Integer planReleaseDate;
+    private Integer planReleaseDate;
 
     /**
      * 驳回理由
      */
-    Integer reason;
+    private Integer reason;
 }

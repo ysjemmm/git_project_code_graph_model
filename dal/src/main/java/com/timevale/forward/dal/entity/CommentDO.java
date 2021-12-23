@@ -15,16 +15,16 @@ public class CommentDO extends BaseDO {
     /**
      * 主体Id
      */
-    Long toId;
+    private Long toId;
 
     /**
      * 主体类型
      */
-    Integer type;
+    private Integer type;
 
     /**
      * 评论内容
      */
-    String content;
+    private String content;
 
 }

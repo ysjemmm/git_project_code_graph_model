@@ -39,7 +39,7 @@ public class BizDemandQueryList extends QueryBase {
     @ApiModelProperty("结束时间")
     private Date createDateEnd;
 
-    @ApiModelProperty("预期上线时间")
+    @ApiModelProperty("预计上线时间0 (Q1上旬)，1(Q1中旬)，2 (Q1下旬)，3 (Q2上旬)，4 (Q2中旬)，5(Q2下旬)，6(Q3上旬)，7 (Q3中旬)，8 (Q3下旬)，6 (Q4上旬)，7 (Q4中旬)，8 (Q4下旬)，9暂无法评估\n")
     private List<Integer> planReleaseDateList;
 
     @ApiModelProperty("需求解决状态")
