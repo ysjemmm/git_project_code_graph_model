@@ -5,6 +5,9 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
 
 /**
  * @author by YangXu
@@ -16,11 +19,14 @@ import lombok.EqualsAndHashCode;
 public class BizDemandTransferReq extends BaseReq{
 
     @ApiModelProperty("业务需求Id")
+    @NotNull(message = "业务需求id不能为空")
     Long id;
 
     @ApiModelProperty("接收人")
+    @NotBlank(message = "接收人不能为空")
     String receiveMan;
 
     @ApiModelProperty("接收人id")
+    @NotBlank(message = "接收人id不能为空")
     String receiveManId;
 }

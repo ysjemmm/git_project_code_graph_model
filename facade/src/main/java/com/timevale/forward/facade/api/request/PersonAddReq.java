@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotBlank;
+
 /**
  * @author by YangXu
  * @date 2021/12/15 14:42
@@ -15,8 +17,10 @@ import lombok.EqualsAndHashCode;
 public class PersonAddReq extends BaseReq {
 
     @ApiModelProperty("人员姓名")
+    @NotBlank(message = "人员姓名不能为空")
     private String userName;
 
     @ApiModelProperty("人员id")
+    @NotBlank(message = "人员id不能为空")
     private String userId;
 }
