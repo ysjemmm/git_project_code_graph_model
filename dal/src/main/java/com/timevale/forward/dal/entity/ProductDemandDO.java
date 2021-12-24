@@ -35,6 +35,11 @@ public class ProductDemandDO extends BaseDO {
      * 负责人
      */
     private String owner;
+
+    /**
+     * 负责人
+     */
+    private String ownerId;
     /**
      * 描述
      */

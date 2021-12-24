@@ -11,13 +11,20 @@
     <select id="list" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
         select  a.id,a.name,a.priority,a.owner,a.status,a.create_man,a.create_man_id,a.create_date,a.modify_date,
         c.name productLineName ,d.name bizDomainName
+        <if test="copierId != null and copierId != ''">
+            ,e.user_name copier
+        </if>
         from product_demand a
         left join project_product_demand b on a.id=b.product_demand_id and b.is_deleted =false
         left join product_line c on a.product_line_id=c.id and c.is_deleted =false
         left join biz_domain d on c.biz_domain_id=d.id and d.is_deleted =false
+        <if test="copierId != null and copierId != ''">
+            left join person e on a.id=e.product_demand_id and e.type =20 and e.is_deleted =false
+        </if>
         <where>
             <if test="id != null">and a.id = #{id}</if>
             <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
+            <if test="copierId != null and copierId != ''">and e.user_id = #{copierId}</if>
             <if test="createDateStart != null and createDateEnd != null">
                 and a.create_date &gt;= #{createDateStart} and a.create_date &lt;= #{createDateEnd}
             </if>
@@ -48,19 +55,14 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="createManIds!=null and createManIds.size()>0">
-                and a.create_man_id in
-                <foreach collection="createManIds" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
             <if test="status!=null and status.size()>0">
                 and a.status in
                 <foreach collection="status" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
-            and b.project_id  is null and  a.is_deleted =false
+            <if test="isNull != null ">and b.project_id  is null</if>
+            and  a.is_deleted =false
         </where>
     </select>
     
@@ -81,7 +83,7 @@
     </select>
 
     <select id="projectProductList" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
-         SELECT a.id,a.name,a.priority,a.owner,a.status,a.create_man,a.create_date,a.modify_date
+         SELECT a.id,a.name,a.priority,a.owner,a.status,a.create_man,a.create_date,b.modify_date
          FROM product_demand a
          LEFT JOIN project_product_demand b ON a.id = b.product_demand_id AND b.is_deleted = false
          LEFT JOIN project c ON b.project_id = c.id AND c.is_deleted = false
@@ -149,5 +151,24 @@
             </choose>
         </where>
     </select>
+
+    <update id="update" parameterType="com.timevale.forward.dal.entity.ProductDemandDO">
+        update product_demand
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="productLineId != null">product_line_id = #{productLineId},</if>
+            <if test="owner != null">owner = #{owner},</if>
+            <if test="ownerId != null">ownerId = #{ownerId},</if>
+            <if test="priority != null">priority = #{priority},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="desc != null">`desc` = #{desc},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
     
 </mapper>

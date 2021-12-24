@@ -75,4 +75,9 @@ public class ProjectListDO extends BaseDO {
      */
     private String bizDomainName;
 
+    /**
+     * 修改时间
+     */
+    private Date modifyDate;
+
 }

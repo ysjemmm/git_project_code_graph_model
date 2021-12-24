@@ -57,4 +57,13 @@ public interface ProductDemandMapper {
      * @return 项目产品需求清单
      */
     List<ProductDemandListDO> projectProductList(@Param("projectId") Long projectId);
+
+
+    /**
+     * 新增单条产品需求
+     *
+     * @param productDemandDO 产品需求DO
+     * @return int
+     */
+    int update(ProductDemandDO productDemandDO);
 }

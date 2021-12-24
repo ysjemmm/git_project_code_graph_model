@@ -2,6 +2,7 @@ package com.timevale.forward.dal.condition;
 
 import com.timevale.mandarin.common.query.QueryBase;
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -105,6 +106,18 @@ public class ProjectListCondition extends QueryBase {
      * 项目实际结束时间右区间
      */
     private Date actualEndDateRight;
+
+    /**
+     * 修改时间开始
+     */
+    @ApiModelProperty("修改时间开始")
+    private Date modifyDateStart;
+
+    /**
+     * 修改时间结束
+     */
+    @ApiModelProperty("修改时间结束")
+    private Date modifyDateEnd;
     /**
      * 偏移量
      */

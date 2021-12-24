@@ -61,6 +61,9 @@
             <if test="actualEndDateLeft != null and actualEndDateRight != null">
                 and a.actual_end_date &gt;= #{actualEndDateLeft} and a.actual_end_date &lt;= #{actualEndDateRight}
             </if>
+            <if test="modifyDateStart != null and modifyDateEnd != null">
+                and a.modify_date &gt;= #{modifyDateStart} and a.modify_date &lt;= #{modifyDateEnd}
+            </if>
             <if test="productLineIds!=null and productLineIds.size()>0">
                 and c.id in
                 <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
@@ -113,11 +116,11 @@
         </where>
     </sql>
     <select id="list" resultType="com.timevale.forward.dal.entity.ProjectListDO">
-        select a.id,a.name, a.priority, a.type ,a.status,a.pm pmName,a.plan_start_date,a.plan_end_date,
+        select a.id,a.name, a.priority, a.type ,a.status,a.pm pmName,a.plan_start_date,a.plan_end_date,a.modify_date,
         a.actual_start_date,a.actual_end_date,a.create_man,c.name productLineName,d.name bizDomainName,
         e.user_name pdName,f.user_name teamMember
         <include refid="commonSearch"/>
-        order by a.create_date desc limit #{offset},#{size}
+        order by a.modify_date desc limit #{offset},#{size}
     </select>
     <select id="count" resultType="int">
         select count(distinct a.id)

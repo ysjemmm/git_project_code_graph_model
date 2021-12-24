@@ -32,11 +32,14 @@ public class ProductDemandQueryList extends QueryBase {
     private List<Long> productLineIds;
 
     @ApiModelProperty("状态:0待排期,10已列入项目,20项目进行中,30已完成上线,40已暂停,50已作废")
-    private Integer status;
+    private List<Integer> status;
 
     @ApiModelProperty("负责人")
     private List<String> ownerIds;
 
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
     private String ascription;
+
+    @ApiModelProperty("用户默认部门id")
+    private String defaultDeptId;
 }

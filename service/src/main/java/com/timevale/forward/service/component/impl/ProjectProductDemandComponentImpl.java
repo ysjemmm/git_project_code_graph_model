@@ -46,5 +46,10 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
         projectProductDemandMapper.batchInsert(list);
     }
 
+    @Override
+    public ProjectProductDemandDO getByProjectId(Long projectId) {
+        return projectProductDemandMapper.getByProjectId(projectId);
+    }
+
 
 }

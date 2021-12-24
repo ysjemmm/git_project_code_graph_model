@@ -22,4 +22,11 @@
         </foreach>
     </insert>
 
+    <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ProjectProductDemandDO">
+        select a.id,a.project_id,a.product_demand_id,b.status
+        from project_product_demand a
+        left join product_demand b on a.product_demand_id=b.id
+        where project_id = #{projectId} and is_deleted=false
+    </select>
+
 </mapper>

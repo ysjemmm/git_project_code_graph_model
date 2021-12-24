@@ -35,7 +35,4 @@ public class ProjectNodeVO extends ToString {
     @ApiModelProperty("实际完成时间")
     private Date actualDate;
 
-    @ApiModelProperty("当前时间")
-    private Date currentDate;
-    
 }
