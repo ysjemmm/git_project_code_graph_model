@@ -40,6 +40,9 @@ public class BizDemandVO extends ToString {
     @ApiModelProperty("创建时间")
     private Date createDate;
 
+    @ApiModelProperty("更新时间")
+    private Date modifyDate;
+
     @ApiModelProperty("预计上线时间0 (Q1上旬)，1(Q1中旬)，2 (Q1下旬)，3 (Q2上旬)，4 (Q2中旬)，5(Q2下旬)，6(Q3上旬)，7 (Q3中旬)，8 (Q3下旬)，6 (Q4上旬)，7 (Q4中旬)，8 (Q4下旬)，9暂无法评估")
     private Integer planReleaseDate;
 

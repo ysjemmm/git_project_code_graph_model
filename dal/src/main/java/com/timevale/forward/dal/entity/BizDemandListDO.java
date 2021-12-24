@@ -3,8 +3,6 @@ package com.timevale.forward.dal.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.Date;
-
 /**
  * @author by YangXu
  * @date 2021/12/23 10:12
@@ -32,11 +30,6 @@ public class BizDemandListDO extends BaseDO {
      * 产品线id
      */
     private Long productLineId;
-
-    /**
-     * 创建时间
-     */
-    private Date createDate;
 
     /**
      * 预计上线时间

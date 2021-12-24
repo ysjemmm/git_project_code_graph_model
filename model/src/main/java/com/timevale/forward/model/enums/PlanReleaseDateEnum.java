@@ -23,7 +23,7 @@ public enum PlanReleaseDateEnum {
     Q4_EARLY(9, "Q4上旬"),
     Q4_MIDDLE(10, "Q4中旬"),
     Q4_LATE(11, "Q4下旬"),
-    UNABLE_EVALUATE(12, "暂时无法评估");
+    UNABLE_EVALUATE(20, "暂时无法评估");
 
     Integer code;
     String text;

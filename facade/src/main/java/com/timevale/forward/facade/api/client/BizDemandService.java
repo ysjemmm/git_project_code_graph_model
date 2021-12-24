@@ -88,23 +88,6 @@ public interface BizDemandService {
     BaseResult<Boolean> transfer(BizDemandTransferReq bizDemandTransferReq);
 
     /**
-     * 产品需求列表
-     *
-     * @param bizDemandSubProductDemandQueryList 业务需求子产品需求查询列表
-     * @return 列表
-     */
-    BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> matchProductDemandList(BizDemandLinkProductDemandQueryList bizDemandSubProductDemandQueryList);
-
-    /**
-     * 关联/取消关联产品需求
-     *
-     * @param linkOrUnLinkProductDemandReq 关联产品线需求请求
-     * @return 成功与否
-     */
-    BaseResult<Boolean> linkOrUnLinkProductDemand(LinkOrUnLinkProductDemandReq linkOrUnLinkProductDemandReq);
-
-
-    /**
      * 测试通知
      *
      * @return 成功与否

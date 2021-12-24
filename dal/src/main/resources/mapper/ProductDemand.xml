@@ -124,7 +124,7 @@
             </if>
             <if test="bizDomainIdList!=null and bizDomainIdList.size()>0">
                 and pl.biz_domain_id in
-                <foreach collection="priorityList" item="item" separator="," open="(" close=")">
+                <foreach collection="bizDomainIdList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
