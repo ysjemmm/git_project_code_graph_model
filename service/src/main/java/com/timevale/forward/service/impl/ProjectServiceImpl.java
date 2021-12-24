@@ -173,7 +173,6 @@ public class ProjectServiceImpl implements ProjectService {
             return BaseResult.success(true);
         }
         fillInfo(projectNode, projectDO);
-        projectMapper.update(projectDO);
         return BaseResult.success(true);
     }
 
@@ -217,7 +216,6 @@ public class ProjectServiceImpl implements ProjectService {
         projectDO.setPmId(projectModifyReq.getPm().getUserId());
         List<ProjectNodeDO> projectNodeDO = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
         fillInfo(projectNodeDO, projectDO);
-        projectMapper.update(projectDO);
 
         // 产品线
         projectProductLineComponent.update(projectDO.getProductLineIds(), projectDO.getId());
@@ -348,7 +346,8 @@ public class ProjectServiceImpl implements ProjectService {
         } else if ((node = nodeMap.get(ProjectStageEnum.DEV_START.getText())) != null && node.getActualDate() != null) {
             projectDO.setActualStartDate(node.getActualDate());
         }
-        log.info("填充项目信息:nodeMap={},projectDO={}", nodeMap,projectDO);
+        log.info("更新项目信息:nodeMap={},,projectDO={}", nodeMap,projectDO);
+        projectMapper.update(projectDO);
         updateProductDemandStatusIfNecessary(projectDO.getId(),projectDO.getStatus());
     }
 
