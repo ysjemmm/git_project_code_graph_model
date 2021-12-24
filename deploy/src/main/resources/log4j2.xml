@@ -4,7 +4,7 @@
     <properties>
         <property name="log.path" value="./logs"/>
         <property name="log.encoding" value="UTF-8"/>
-        <property name="log.level" value="INFO"/>
+        <property name="log.level" value="debug"/>
         <property name="appName" value="forward"/>
     </properties>
 

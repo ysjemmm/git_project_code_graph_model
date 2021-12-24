@@ -76,6 +76,13 @@
         </foreach>
     </select>
 
+    <select id="selectByBizDemandId" resultType="com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO">
+        select pd.id, pd.name, pd.product_line_id, pd.type, pd.`desc`, pd.status, pd.priority, pd.owner, pd.is_deleted, pd.create_man_id, pd.create_man, pd.create_date, pd.modify_man_id, pd.modify_man, pd.modify_date, pd.owner_id
+        from product_demand pd
+        left join product_biz_demand pbd on pd.id = pbd.product_demand_id
+        where pbd.biz_demand_id = #{bizDemandId} and pbd.is_deleted = false
+    </select>
+
     <select id="selectById" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
         select id, name, product_line_id, type, `desc`, status, priority, owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date, owner_id
         from product_demand

@@ -36,6 +36,14 @@ public interface ProductDemandMapper {
     List<ProductDemandDO> selectByIdList(@Param("productDemandIdList") List<Long> productDemandIdList);
 
     /**
+     * 选择通过业务需求id
+     *
+     * @param bizDemandId 业务需求id
+     * @return {@link List<BizDemandLinkProductDemandListDO> }
+     */
+    List<BizDemandLinkProductDemandListDO> selectByBizDemandId(@Param("bizDemandId") Long bizDemandId);
+
+    /**
      * 业务需求关联产品查询
      *
      * @param bizDemandLinkProductDemandListCondition 业务需求链接产品需求列表条件

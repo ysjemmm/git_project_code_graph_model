@@ -11,7 +11,6 @@ import com.timevale.forward.facade.api.request.LinkOrUnLinkProductDemandReq;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
