@@ -6,6 +6,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectService;
@@ -15,17 +16,11 @@ import com.timevale.forward.facade.api.query.ProjectSubProductDemandQueryList;
 import com.timevale.forward.facade.api.request.ProductDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
-import com.timevale.forward.facade.api.result.ProductDemandVO;
-import com.timevale.forward.facade.api.result.ProjectDetailVO;
-import com.timevale.forward.facade.api.result.ProjectNodeVO;
-import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.PersonCopier;
-import com.timevale.forward.service.copy.ProductDemandCopier;
-import com.timevale.forward.service.copy.ProjectCopier;
-import com.timevale.forward.service.copy.ProjectNodeCopier;
+import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -76,6 +71,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private ProductDemandMapper productDemandMapper;
+
+    @Resource
+    private ProductLineMapper productLineMapper;
 
 
     @Override
@@ -238,9 +236,12 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("项目查看接收参数:projectId={}", projectId);
         ProjectDO projectDO = projectMapper.get(projectId);
         ProjectDetailVO projectDetailVO = ProjectCopier.INSTANCE.convert(projectDO);
+        projectDetailVO.setStatusName(ProjectStatusEnum.getTextByCode(projectDetailVO.getStatus()));
+
         //产品线
-        List<Long> productLineIds = projectProductLineComponent.get(projectId);
-        projectDetailVO.setProductLineId(productLineIds);
+        List<ProductLineDO> productLineDO = productLineMapper.get(projectId);
+        List<ProductLineVO> productLineVO = ProductLineCopier.INSTANCE.convert(productLineDO);
+        projectDetailVO.setProductLineVO(productLineVO);
 
         // 产品经理
         List<PersonDO> pds = personComponent.select(projectId, PersonTypeEnum.PROJECT_PD.getCode());
@@ -253,8 +254,8 @@ public class ProjectServiceImpl implements ProjectService {
         //节点
         List<ProjectNodeDO> projectNodeDO = projectNodeComponent.get(projectId);
         List<ProjectNodeVO> projectNodeVO = ProjectNodeCopier.INSTANCE.transform(projectNodeDO);
-        Date currentDate = new Date();
         projectDetailVO.setProjectNodes(projectNodeVO);
+        Date currentDate = new Date();
         projectDetailVO.setCurrentDate(currentDate);
 
         return BaseResult.success(projectDetailVO);

@@ -68,14 +68,6 @@ public class ProjectProductLineComponentImpl implements ProjectProductLineCompon
         });
     }
 
-    @Override
-    public List<Long> get(Long projectId) {
-        List<Long> productLineIds =  projectProductLineMapper.get(projectId)
-                .stream()
-                .map(ProjectProductLineDO::getProductLineId).collect(Collectors.toList());
-        return productLineIds;
-    }
-
     private List<ProjectProductLineDO> buildDO(List<Long> list,Long projectId) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         return list.stream().map(t -> {

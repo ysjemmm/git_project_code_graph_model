@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.entity.ProductLineDO;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -16,4 +17,11 @@ public interface ProductLineMapper {
      * @return 列表
      */
     List<ProductLineDO> selectAllProductLine();
+
+    /**
+     *
+     * @param projectI 项目id
+     * @return 列表
+     */
+    List<ProductLineDO> get(@Param("projectId") Long projectI);
 }

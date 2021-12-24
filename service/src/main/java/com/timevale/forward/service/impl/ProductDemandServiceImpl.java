@@ -5,7 +5,6 @@ import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.facade.api.client.ProductDemandService;
@@ -21,7 +20,6 @@ import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.ProductDemandComponent;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -131,10 +129,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         ProductDemandDO demandDO = ProductDemandCopier.INSTANCE.convert(productDemandModifyReq);
         demandDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         demandDO.setModifyManId(userInfo.getId());
-        // 需求状态计算
-//        demandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
         productDemandMapper.update(demandDO);
-
         // 附件
         fileComponent.update(productDemandModifyReq.getFiles(),demandDO.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
         // 抄送人
@@ -145,10 +140,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Override
     public BaseResult<ProductDemandDetailVO> get(Long productDemandId) {
-        ProductDemandDetailVO productDemandDetailVO = new ProductDemandDetailVO();
         log.info("产品需求查看接收参数:productDemandId={}", productDemandId);
-        List<FileDO> fileDO = fileComponent.select(productDemandId, FileTypeEnum.PRODUCT_DEMAND.getCode());
-        productDemandDetailVO.setFiles(FileCopier.INSTANCE.transform(fileDO));
+        ProductDemandDetailVO productDemandDetailVO =productDemandComponent.get(productDemandId);
         return BaseResult.success(productDemandDetailVO);
     }
 

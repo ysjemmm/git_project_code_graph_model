@@ -74,4 +74,11 @@ public interface ProductDemandMapper {
      * @return int
      */
     int update(ProductDemandDO productDemandDO);
+
+    /**
+     * 查询
+     * @param id id
+     * @return 产品需求DO
+     */
+    ProductDemandDO get(@Param("id") Long id);
 }

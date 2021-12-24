@@ -6,6 +6,7 @@ import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectSubProductDemandQueryList;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
+import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -48,6 +49,14 @@ public interface ProductDemandCopier {
      * @return ProductDemandListCondition
      */
     ProductDemandListCondition convert(ProductDemandQueryList productDemandQueryList);
+
+    /**
+     * 转换转换DO
+     *
+     * @param productDemandDO 对象
+     * @return ProductDemandDetailVO
+     */
+    ProductDemandDetailVO convert(ProductDemandDO productDemandDO);
 
 
 }
