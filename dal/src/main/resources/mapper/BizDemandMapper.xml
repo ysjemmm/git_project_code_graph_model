@@ -15,7 +15,7 @@
         <if test="name!=null  and name!='' ">
             name = #{name},
         </if>
-        <if test="productLineId">
+        <if test="productLineId!=null">
             product_line_id = #{productLineId},
         </if>
         <if test="dataIndicators!=null and dataIndicators!='' ">
@@ -24,37 +24,37 @@
         <if test="targetCustomer!=null  and  targetCustomer!='' ">
             target_customer = #{targetCustomer},
         </if>
-        <if test="createCustomer">
+        <if test="createCustomer!=null">
             create_customer = #{createCustomer},
         </if>
-        <if test="deptId">
+        <if test="deptId!=null">
             dept_id = #{deptId},
         </if>
         <if test="desc!=null  and desc!='' ">
             `desc` = #{desc},
         </if>
-        <if test="status">
+        <if test="status!=null">
             status = #{status},
         </if>
-        <if test="priority">
+        <if test="priority!=null">
             priority = #{priority},
         </if>
-        <if test="receiveMan">
+        <if test="receiveMan!=null">
             receive_man = #{receiveMan},
         </if>
-        <if test="receiveManId">
+        <if test="receiveManId!=null">
             receive_man_id = #{receiveManId},
         </if>
-        <if test="processor">
+        <if test="processor!=null">
             processor = #{processor},
         </if>
-        <if test="os">
+        <if test="os!=null">
             os = #{os},
         </if>
-        <if test="planReleaseDate">
+        <if test="planReleaseDate!=null">
             plan_release_date = #{planReleaseDate},
         </if>
-        <if test="reason">
+        <if test="reason!=null">
             reason = #{reason},
         </if>
         modify_man_id = #{modifyManId},
@@ -67,8 +67,8 @@
                receive_man, receive_man_id, processor, os, plan_release_date, reason, is_deleted, create_man_id, create_man, create_date,
                modify_man_id, modify_man, modify_date
         from biz_demand
-        where is_deleted = false
-        and id = #{id}
+        where id = #{id}
+        and is_deleted = false
     </select>
 
     <select id="selectList" resultType="com.timevale.forward.dal.entity.BizDemandListDO">
@@ -80,7 +80,7 @@
         on pl.id = bd.product_line_id
         where
         bd.is_deleted = false
-        <if test="id">
+        <if test="id!=null">
             and bd.id = #{id}
         </if>
         <if test="name!=null and name!='' ">
