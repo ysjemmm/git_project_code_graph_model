@@ -6,16 +6,16 @@
         select id, product_demand_id, biz_demand_id, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
         from product_biz_demand
         <where>
-            <if test="id">
+            <if test="id!=null">
                 and id = #{id}
             </if>
-            <if test="productDemandId">
+            <if test="productDemandId!=null">
                 and product_demand_id = #{productDemandId}
             </if>
-            <if test="bizDemandId">
+            <if test="bizDemandId!=null">
                 and biz_demand_id = #{bizDemandId}
             </if>
-            <if test="isDeleted">
+            <if test="isDeleted!=null">
                 and is_deleted = #{isDeleted}
             </if>
         </where>
@@ -40,8 +40,14 @@
 
     <delete id="deleteByBizDemandId">
         update product_biz_demand
-        set is_deleted = true
+        set is_deleted = true, modify_man_id = #{modifyManId}, modify_man = #{modifyMan}
         where biz_demand_id = #{bizDemandId}
+    </delete>
+
+    <delete id="delete">
+        update product_biz_demand
+        set is_deleted = true, modify_man_id = #{modifyManId}, modify_man = #{modifyMan}
+        where id = #{id}
     </delete>
 
 </mapper>

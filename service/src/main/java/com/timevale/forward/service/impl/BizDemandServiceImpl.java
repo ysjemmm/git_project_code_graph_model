@@ -131,7 +131,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandMapper.update(bizDemandDO);
 
         // 取消产品关联
-        productBizDemandMapper.deleteByBizDemandId(bizDemandId);
+        productBizDemandMapper.deleteByBizDemandId(bizDemandId, userInfo.getAlias(), userInfo.getId());
 
         // 接收人通知（待实现）
         /*String name = bizDemandDO.getName();
@@ -321,12 +321,6 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> matchProductDemandList(BizDemandLinkProductDemandQueryList bizDemandSubProductDemandQueryList) {
-        BizDemandLinkProductDemandListCondition conditionx = BizDemandCopier.INSTANCE.convert(bizDemandSubProductDemandQueryList);
-        List<BizDemandLinkProductDemandListDO> productDemandDOListx = productDemandMapper.selectListOfBizDemandLink(conditionx);
-        List<BizDemandLinkProductDemandVO> bizDemandLinkProductDemandVOListx = BizDemandCopier.INSTANCE.transform(productDemandDOListx);
-        System.out.println(productDemandDOListx);
-        System.out.println(bizDemandLinkProductDemandVOListx);
-
         // 开始分页
         PageHelper.startPage(bizDemandSubProductDemandQueryList.pageNum, bizDemandSubProductDemandQueryList.pageSize);
         // 转换查询条件

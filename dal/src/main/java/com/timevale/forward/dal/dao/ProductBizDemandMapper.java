@@ -45,6 +45,15 @@ public interface ProductBizDemandMapper {
      * @param bizDemandId 业务需求id
      * @return int
      */
-    int deleteByBizDemandId(@Param("bizDemandId") Long bizDemandId);
+    int deleteByBizDemandId(@Param("bizDemandId") Long bizDemandId, @Param("modifyMan")String modifyMan, @Param("modifyManId") String modifyManId);
+
+
+    /**
+     * 删除
+     *
+     * @param productBizDemandDO 产品业务需求DO
+     * @return int
+     */
+    int delete(ProductBizDemandDO productBizDemandDO);
 
 }
