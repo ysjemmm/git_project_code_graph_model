@@ -2,14 +2,11 @@ package com.timevale.forward.facade.api.result;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.timevale.mandarin.common.result.ToString;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -52,6 +49,4 @@ public class BizDemandDetailVO extends BizDemandVO {
     @ApiModelProperty("抄送人")
     private List<PersonVO> recipientInfoList;
 
-    @ApiModelProperty("项目发布时间")
-    private Date endDate;
 }
