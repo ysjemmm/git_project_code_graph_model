@@ -11,10 +11,10 @@
         select id, to_id, type, content, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
         from comment
         <where>
-            <if test="toId">
+            <if test="toId!=null">
                 and to_id = #{toId}
             </if>
-            <if test="type">
+            <if test="type!=null">
                 and type = #{type}
             </if>
         </where>
