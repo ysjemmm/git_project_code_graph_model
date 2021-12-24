@@ -6,4 +6,5 @@ package com.timevale.forward.service.constant;
  **/
 public class CommonConstant {
     public static final String JOIN_LINE="-";
+    public static final String DEFAULT_ORDER_BY = " modify_date desc ";
 }

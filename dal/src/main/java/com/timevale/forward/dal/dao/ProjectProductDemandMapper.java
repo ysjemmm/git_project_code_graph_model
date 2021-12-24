@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.entity.ProjectProductDemandDO;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -26,5 +27,12 @@ public interface ProjectProductDemandMapper {
      */
     int batchInsert(List<ProjectProductDemandDO> projectProductLineDO);
 
+
+    /**
+     *
+     * @param projectId 项目id
+     * @return ProjectProductDemandDO
+     */
+    ProjectProductDemandDO getByProjectId(@Param("projectId") Long projectId);
 
 }

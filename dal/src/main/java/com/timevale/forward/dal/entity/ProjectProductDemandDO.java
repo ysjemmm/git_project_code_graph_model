@@ -20,6 +20,12 @@ public class ProjectProductDemandDO extends BaseDO {
      * productDemandId
      */
     private Long productDemandId;
+
+
+    /**
+     * status
+     */
+    private Integer status;
     
 
 }

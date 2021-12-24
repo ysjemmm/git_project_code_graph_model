@@ -57,6 +57,11 @@ public class ProductDemandListCondition extends QueryBase {
     private List<String> createManIds;
 
     /**
+     * 抄送人
+     */
+    private String copierId;
+
+    /**
      * 创建时间
      */
     private Date createDateStart;
@@ -73,5 +78,9 @@ public class ProductDemandListCondition extends QueryBase {
      * 修改时间结束
      */
     private Date modifyDateEnd;
+    /**
+     * 项目-产品列表弹框 找出没有被关联的产品需求
+     */
+    private Boolean isNull;
 
 }

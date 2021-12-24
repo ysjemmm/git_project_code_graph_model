@@ -35,4 +35,11 @@ public interface InnerUserPersonClient {
      * @return 用户
      */
     BaseInfoResponse getPersonByAccountNew(String accountId);
+
+    /**
+     * 获取部门员工
+     * @param groupId groupId
+     * @return String
+     */
+    List<String> getByGroupIdNew(String groupId);
 }

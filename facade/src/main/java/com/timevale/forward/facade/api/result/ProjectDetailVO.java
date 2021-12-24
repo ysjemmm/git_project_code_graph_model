@@ -59,7 +59,8 @@ public class ProjectDetailVO extends ToString {
     
     @ApiModelProperty("节点")
     private List<ProjectNodeVO> projectNodes;
-    
-    
-    
+
+    @ApiModelProperty("当前时间")
+    private Date currentDate;
+
 }

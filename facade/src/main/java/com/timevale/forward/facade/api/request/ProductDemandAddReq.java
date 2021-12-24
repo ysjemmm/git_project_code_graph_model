@@ -31,6 +31,9 @@ public class ProductDemandAddReq extends BaseReq {
     @ApiModelProperty("负责人")
     private String owner;
 
+    @ApiModelProperty("负责人id")
+    private String ownerId;
+
     @ApiModelProperty("描述")
     private String desc;
 
