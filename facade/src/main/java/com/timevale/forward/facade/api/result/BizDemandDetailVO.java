@@ -52,4 +52,10 @@ public class BizDemandDetailVO extends BizDemandVO {
 
     @ApiModelProperty("项目发布时间")
     private Date endDate;
+
+    @ApiModelProperty("驳回理由")
+    private Integer reason;
+
+    @ApiModelProperty("驳回理由文本")
+    private String reasonText;
 }

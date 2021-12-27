@@ -10,29 +10,29 @@ import java.util.Objects;
  */
 @Getter
 public enum BizDemandStatusEnum {
-    // 待评估
-    EVALUATE(0),
-    // 已接收
-    RECEIVED(10),
-    // 已列入项目
-    INCLUDE_PROJECT(20),
-    // 项目进行中
-    PROJECTING(30),
-    // 已经完成上线
-    AVAILABLE(40),
-    // 被驳回
-    REJECT(50),
-    // 已作废
-    INVALID(60);
+    /**
+     * 业务需求状态
+     */
+    EVALUATE(0, "待评估"),
+    RECEIVED(10, "已接收"),
+    INCLUDE_PROJECT(20, "已列入项目"),
+    PROJECTING(30, "项目进行中"),
+    AVAILABLE(40, "已经完成上线"),
+    REJECT(50, "被驳回"),
+    INVALID(60, "已作废");
 
-    private Integer code;
+    private final Integer code;
+    private final String text;
 
-    BizDemandStatusEnum(Integer code){this.code = code;}
+    BizDemandStatusEnum(Integer code, String text){
+        this.code = code;
+        this.text = text;
+    }
 
     public static String getTextByCode(Integer code){
         for (BizDemandStatusEnum e : BizDemandStatusEnum.values()){
             if(e.getCode().equals(code)){
-                return e.toString();
+                return e.text;
             }
         }
         return "errorCode";

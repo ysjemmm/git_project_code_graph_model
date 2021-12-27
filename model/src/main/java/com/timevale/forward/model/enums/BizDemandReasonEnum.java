@@ -8,27 +8,28 @@ import lombok.Getter;
  */
 @Getter
 public enum BizDemandReasonEnum {
-    // 需求业务价值较弱
-    BIZDEMAND_VALUE_WEAK(0),
-    // 需求已有替代方案可实现
-    ALREADY_ALTERNATIVES(1),
-    // 需求描述不清
-    DESCRIPTION_NOT_CLEAR(2),
-    // 产品已支持
-    ALREADY_SUPPORT(3),
-    // 重复提交
-    REPEAT_SUBMIT(4),
-    // 线上问题，请提交线上bug
-    ISSUER_ONLINE(5);
+    /**
+     * 驳回理由
+     */
+    BIZDEMAND_VALUE_WEAK(0,"需求业务价值较弱"),
+    ALREADY_ALTERNATIVES(1,"需求已有替代方案可实现"),
+    DESCRIPTION_NOT_CLEAR(2,"需求描述不清"),
+    ALREADY_SUPPORT(3,"产品已支持"),
+    REPEAT_SUBMIT(4,"重复提交"),
+    ISSUER_ONLINE(5,"线上问题，请提交线上bug");
 
-    private Integer code;
+    private final Integer code;
+    private final String text;
 
-    BizDemandReasonEnum(Integer code){this.code = code;}
+    BizDemandReasonEnum(Integer code, String text){
+        this.code = code;
+        this.text = text;
+    }
 
     public static String getTextByCode(Integer code){
         for (BizDemandReasonEnum e : BizDemandReasonEnum.values()){
             if(e.getCode().equals(code)){
-                return e.toString();
+                return e.text;
             }
         }
         return "errorCode";

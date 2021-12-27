@@ -24,7 +24,7 @@ public enum CommentTypeEnum {
     public static String getTextByCode(Integer code) {
         for (CommentTypeEnum e : CommentTypeEnum.values()){
             if(e.getCode().equals(code)){
-                return e.getText();
+                return e.text;
             }
         }
         return "errorCode";
