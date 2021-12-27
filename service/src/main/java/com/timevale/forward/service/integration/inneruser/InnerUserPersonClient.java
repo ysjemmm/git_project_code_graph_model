@@ -41,5 +41,5 @@ public interface InnerUserPersonClient {
      * @param groupId groupId
      * @return String
      */
-    List<String> getByGroupIdNew(String groupId);
+    List<String> getAllByGroupId(String groupId);
 }

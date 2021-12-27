@@ -46,4 +46,12 @@ public class UserInfo {
      * 职位
      */
     private String job;
+
+    /**
+     * 默认部门
+     */
+    private GroupModel defaultGroup;
+
+
+
 }

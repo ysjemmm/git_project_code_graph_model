@@ -23,6 +23,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.envoy.GroupModel;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -63,25 +64,27 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     public BaseResult<PageQueryResult<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
 
         log.info("产品需求接收参数:{}", productDemandQueryList);
-        String currentUser = LocalSessionUtils.getUserInfo().getId();
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        log.info("人员信息:{}", userInfo);
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(),CommonConstant.DEFAULT_ORDER_BY);
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
         if (CollectionUtils.isEmpty(productDemandQueryList.getOwnerIds())) {
             condition.setOwnerIds(new ArrayList<>());
         }
         if (AscriptionEnum.CURRENT_USER.name().equals(productDemandQueryList.getAscription())) {
-            condition.getOwnerIds().add(currentUser);
+            condition.getOwnerIds().add(userInfo.getId());
 
         }else if (AscriptionEnum.TEAM.name().equals(productDemandQueryList.getAscription())) {
-            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(currentUser);
+            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
             log.info("我和我的下属:{}", allMyStaffWithSelf);
             condition.getOwnerIds().addAll(allMyStaffWithSelf);
         }else if (AscriptionEnum.DEPARTMENT.name().equals(productDemandQueryList.getAscription())) {
-            List<String> accountIds = innerUserPersonClient.getByGroupIdNew(productDemandQueryList.getDefaultDeptId());
-            log.info("用户默认部门id:{},同部门人员:{}", productDemandQueryList.getDefaultDeptId(),accountIds);
+            GroupModel defaultGroup = userInfo.getDefaultGroup();
+            List<String> accountIds = innerUserPersonClient.getAllByGroupId(defaultGroup.getGroupId());
+            log.info("用户默认部门id:{},同部门人员:{}", defaultGroup.getGroupId(),accountIds);
             condition.getOwnerIds().addAll(accountIds);
         }else if (AscriptionEnum.COPIER.name().equals(productDemandQueryList.getAscription())) {
-            condition.setCopierId(currentUser);
+            condition.setCopierId(userInfo.getId());
         }
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
         List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);

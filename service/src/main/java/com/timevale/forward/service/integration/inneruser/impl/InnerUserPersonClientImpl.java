@@ -79,7 +79,7 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
     }
 
     @Override
-    public List<String> getByGroupIdNew(String groupId) {
+    public List<String> getAllByGroupId(String groupId) {
         if (StringUtils.isEmpty(groupId)) {
             throw new BaseBizRuntimeException("部门id为空! " + groupId);
         }
@@ -87,7 +87,7 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
         groupRequest.setGroupId(groupId);
         List<String> accountIds = new ArrayList<>();
         try {
-            BaseResult<List<BaseInfoResponse>> personInGroup = rpcPersonService.getByGroupIdNew(groupRequest);
+            BaseResult<List<BaseInfoResponse>> personInGroup = rpcPersonService.getAllByGroupId(groupRequest);
             if (personInGroup.ifSuccess() && !CollectionUtils.isEmpty(personInGroup.getData())) {
                 personInGroup.getData().forEach(t -> {
                     accountIds.add(t.getAccount());
