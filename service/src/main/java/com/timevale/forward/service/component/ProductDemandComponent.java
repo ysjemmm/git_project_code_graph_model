@@ -17,7 +17,7 @@ public interface ProductDemandComponent {
     /**
      *
      * @param id 查询条件
-     * @return 列表
+     * @return 详情
      */
     ProductDemandDetailVO get(Long id);
 

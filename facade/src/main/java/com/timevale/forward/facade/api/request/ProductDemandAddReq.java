@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
@@ -17,22 +18,24 @@ import java.util.List;
 public class ProductDemandAddReq extends BaseReq {
 
     @ApiModelProperty("名称")
+    @NotNull(message = "需求名称不能为空")
     private String name;
 
     @ApiModelProperty("优先级:0(P0),1(P1),2(P2),3(P3)")
+    @NotNull(message = "优先级不能为空")
     private Integer priority;
 
     @ApiModelProperty("产品线")
+    @NotNull(message = "产品线不能为空")
     private Long productLineId;
 
     @ApiModelProperty("类型:0新增功能,1功能迭代,2体验优化,3技术需求,4安全需求")
+    @NotNull(message = "需求类型不能为空")
     private Integer type;
 
-    @ApiModelProperty("负责人")
-    private String owner;
-
-    @ApiModelProperty("负责人id")
-    private String ownerId;
+    @ApiModelProperty("需求负责人")
+    @NotNull(message = "需求负责人不能为空")
+    private PersonAddReq demandOwner;
 
     @ApiModelProperty("描述")
     private String desc;

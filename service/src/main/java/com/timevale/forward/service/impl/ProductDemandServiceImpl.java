@@ -30,6 +30,7 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -98,18 +99,22 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateStatus(Long productDemandId, Integer type) {
         log.info("产品需求暂停或开启收参数:productDemandId={},type={}", productDemandId, type);
         return BaseResult.success(true);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(ProductDemandAddReq productDemandAddReq) {
         log.info("产品需求新增接收参数:{}", productDemandAddReq);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandDO demandDO = ProductDemandCopier.INSTANCE.convert(productDemandAddReq);
         demandDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         demandDO.setCreateManId(userInfo.getId());
+        demandDO.setOwnerId(productDemandAddReq.getDemandOwner().getUserId());
+        demandDO.setOwner(productDemandAddReq.getDemandOwner().getUserName());
         demandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
         productDemandMapper.insert(demandDO);
 
@@ -123,6 +128,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(ProductDemandModifyReq productDemandModifyReq) {
         log.info("产品需求修改接收参数:{}", productDemandModifyReq);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();

@@ -34,10 +34,10 @@ public class FileComponentImpl implements FileComponent {
         List<FileDO> existFiles = fileMapper.select(attacheId, type);
         log.info("已存在附件:existPersons={}", existFiles);
         if(CollectionUtils.isEmpty(existFiles)){
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
             List<FileDO> fileDO = FileCopier.INSTANCE.convert(list);
             fileDO.forEach(f->{
-                f.setAttacheId(attacheId);
-                f.setType(type);
+                fillInfo(f,attacheId,type);
             });
             fileMapper.inserts(fileDO);
         }
@@ -75,8 +75,11 @@ public class FileComponentImpl implements FileComponent {
         }
         List<String> reqFileIds = fileDO.stream().map(FileDO::getFileId).collect(Collectors.toList());
         existFiles.forEach((f)->{
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
             if(!reqFileIds.contains(f.getFileId())){
                 f.setIsDeleted(true);
+                f.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+                f.setModifyManId(userInfo.getId());
                 //删除
                 fileMapper.update(f);
             }

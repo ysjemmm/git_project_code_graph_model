@@ -11,6 +11,8 @@ import com.timevale.forward.facade.api.result.ProjectVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 @Mapper
 public interface ProjectCopier {
 
@@ -54,4 +56,12 @@ public interface ProjectCopier {
      * @return ProjectDetailVO
      */
     ProjectVO convert(ProjectListDO projectListDO);
+
+    /**
+     * 转换转换DO
+     *
+     * @param projectListDO 对象
+     * @return ProjectVO
+     */
+    List<ProjectVO> convert(List<ProjectListDO> projectListDO);
 }

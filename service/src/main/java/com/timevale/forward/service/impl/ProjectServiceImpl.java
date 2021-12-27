@@ -103,25 +103,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProjectListDO> projectListDO = projectMapper.list(condition);
         log.info("查询到项目信息:{}", projectListDO);
 
-        Map<Long, List<ProjectListDO>> listMap = projectListDO.stream().collect(Collectors.groupingBy(ProjectListDO::getId));
-        log.info("分组后项目信息:{}", listMap);
-
-        List<ProjectVO> result = new ArrayList<>();
-        listMap.forEach((k, v) -> {
-            ProjectVO projectVO = ProjectCopier.INSTANCE.convert(v.get(0));
-            String pdName = v.stream().map(ProjectListDO::getPdName).distinct().collect(Collectors.joining(","));
-            String teamMember = v.stream().map(ProjectListDO::getTeamMember).distinct().collect(Collectors.joining(","));
-            String productLineName = v.stream().map(ProjectListDO::getProductLineName).distinct().collect(Collectors.joining(","));
-            String bizDomainName = v.stream().map(ProjectListDO::getBizDomainName).distinct().collect(Collectors.joining(","));
-            projectVO.setPdName(pdName);
-            projectVO.setTeamMember(teamMember);
-            projectVO.setProductLineName(productLineName);
-            projectVO.setBizDomainName(bizDomainName);
-            projectVO.setStatusName(ProjectStatusEnum.getTextByCode(projectVO.getStatus()));
-            projectVO.setPriorityName(PriorityEnum.getTextByCode(projectVO.getPriority()));
-            projectVO.setTypeName(ProjectTypeEnum.getTextByCode(projectVO.getType()));
-            result.add(projectVO);
-        });
+        List<ProjectVO> result = ProjectCopier.INSTANCE.convert(projectListDO);
         pageQueryResult.setCurrentPage(condition.getPageNum());
         pageQueryResult.setItemsPerPage(condition.getPageSize());
         pageQueryResult.setTotalItems(count);
@@ -287,6 +269,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> linkOrUnLinkProductDemand(ProductDemandLinkReq productDemandLinkReq) {
         log.info("关联or取消关联接收参数:productDemandLinkReq={}", productDemandLinkReq);
         List<Long> productDemandIds = productDemandLinkReq.getProductDemandIds();

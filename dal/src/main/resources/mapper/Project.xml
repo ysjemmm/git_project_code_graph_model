@@ -117,10 +117,13 @@
     </sql>
     <select id="list" resultType="com.timevale.forward.dal.entity.ProjectListDO">
         select a.id,a.name, a.priority, a.type ,a.status,a.pm pmName,a.plan_start_date,a.plan_end_date,a.modify_date,
-        a.actual_start_date,a.actual_end_date,a.create_man,c.name productLineName,d.name bizDomainName,
-        e.user_name pdName,f.user_name teamMember
+        a.actual_start_date,a.actual_end_date,a.create_man
+        ,group_concat(distinct c.name separator ',')productLineName
+        ,group_concat(distinct d.name separator ',')bizDomainName
+        ,group_concat(distinct e.user_name separator ',')pdName
+        ,group_concat(distinct f.user_name separator ',')teamMember
         <include refid="commonSearch"/>
-        order by a.modify_date desc limit #{offset},#{size}
+        group by  a.id  order by a.modify_date desc limit #{offset},#{size}
     </select>
     <select id="count" resultType="int">
         select count(distinct a.id)

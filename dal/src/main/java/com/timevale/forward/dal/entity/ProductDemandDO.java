@@ -25,7 +25,7 @@ public class ProductDemandDO extends BaseDO {
     /**
      * 类型:0新增功能,1功能迭代,2体验优化,3技术需求,4安全需求
      */
-    private Integer type;
+    private String type;
 
     /**
      * 0待排期,10已列入项目,20项目进行中,30已完成上线,40已暂停,50已作废

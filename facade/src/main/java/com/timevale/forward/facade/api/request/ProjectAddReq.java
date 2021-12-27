@@ -18,16 +18,20 @@ import java.util.List;
 @ApiModel("项目新增")
 public class ProjectAddReq extends BaseReq {
 
-    @ApiModelProperty("名称")
+    @ApiModelProperty("项目名称")
+    @NotNull(message = "项目名称不能为空")
     private String name;
 
     @ApiModelProperty("优先级:0(P0),1(P1),2(P2)")
+    @NotNull(message = "优先级不能为空")
     private Integer priority;
 
     @ApiModelProperty("产品线")
+    @NotNull(message = "产品线不能为空")
     private List<Long> productLineIds;
 
     @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
+    @NotNull(message = "项目类型不能为空")
     private Integer type;
 
     @ApiModelProperty("项目经理")
@@ -41,9 +45,11 @@ public class ProjectAddReq extends BaseReq {
     private List<PersonAddReq> teamMembers;
 
     @ApiModelProperty("项目计划开始时间")
+    @NotNull(message = "项目计划开始时间不能为空")
     private Date planStartDate;
 
     @ApiModelProperty("项目计划结束时间")
+    @NotNull(message = "项目计划结束时间不能为空")
     private Date planEndDate;
 
     @ApiModelProperty("描述")
