@@ -65,7 +65,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         log.info("产品需求接收参数:{}", productDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        log.info("人员信息:{}", userInfo);
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(),CommonConstant.DEFAULT_ORDER_BY);
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
         if (CollectionUtils.isEmpty(productDemandQueryList.getOwnerIds())) {

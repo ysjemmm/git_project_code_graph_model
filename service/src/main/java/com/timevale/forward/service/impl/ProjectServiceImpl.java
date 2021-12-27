@@ -79,6 +79,8 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        log.info("人员信息:{}", userInfo);
         String currentUser = LocalSessionUtils.getUserInfo().getId();
         ProjectListCondition condition = ProjectCopier.INSTANCE.convert(projectQueryList);
         if (CollectionUtils.isEmpty(projectQueryList.getTeamMembers())) {
