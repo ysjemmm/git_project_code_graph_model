@@ -24,12 +24,22 @@ public class BizDemandListDO extends BaseDO {
     /**
      * 业务域id
      */
-    private Long bizDomainId;
+    private String bizDomainId;
+
+    /**
+     * 业务域名称
+     */
+    private String bizDomainName;
 
     /**
      * 产品线id
      */
-    private Long productLineId;
+    private String productLineId;
+
+    /**
+     * 产品线名称
+     */
+    private String productLineName;
 
     /**
      * 预计上线时间

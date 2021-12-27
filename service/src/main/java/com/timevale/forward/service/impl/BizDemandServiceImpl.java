@@ -5,13 +5,9 @@ import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.FileMapper;
 import com.timevale.forward.dal.dao.ProductBizDemandMapper;
-import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.entity.BizDemandDO;
-import com.timevale.forward.dal.entity.BizDemandListDO;
-import com.timevale.forward.dal.entity.FileDO;
-import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
@@ -22,10 +18,7 @@ import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.FileVO;
 import com.timevale.forward.facade.api.result.PersonVO;
-import com.timevale.forward.model.enums.AscriptionEnum;
-import com.timevale.forward.model.enums.BizDemandStatusEnum;
-import com.timevale.forward.model.enums.FileTypeEnum;
-import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -35,6 +28,7 @@ import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.integration.erp.ErpMessageClient;
 import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
 import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
+import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -48,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author by YangXu
@@ -64,10 +59,16 @@ public class BizDemandServiceImpl implements BizDemandService {
     ProductBizDemandMapper productBizDemandMapper;
 
     @Resource
+    ProductLineMapper productLineMapper;
+
+    @Resource
     ErpMessageClient erpMessageClient;
 
     @Resource
     InnerUserPersonClient innerUserPersonClient;
+
+    @Resource
+    InnerGroupClient innerGroupClient;
 
     @Resource
     PersonComponent personComponent;
@@ -105,8 +106,16 @@ public class BizDemandServiceImpl implements BizDemandService {
                 }
             }
         }
+        Map<Long, String> groupInfo = innerGroupClient.batchGetSimpleGroupMap(bizDemandQueryList.getDeptIdList());
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
+        bizDemandVOList.forEach( iter -> {
+            iter.setPriorityText(PriorityEnum.getTextByCode(iter.getPriority()));
+            iter.setStatusText(BizDemandStatusEnum.getTextByCode(iter.getStatus()));
+            iter.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(iter.getPlanReleaseDate()));
+            iter.setDeptName(groupInfo.get(iter.getDeptId()));
+        });
+
         // 转换后返回数据
         return BaseResult.success(BizDemandCopier.INSTANCE.convert(ResultUtil.pageSuccess(new PageInfo<>(bizDemandVOList))));
     }
@@ -204,9 +213,21 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<PersonDO> personDOList = personComponent.select(bizDemandId, PersonTypeEnum.BIZ_DEMAND_CC.getCode());
         List<PersonVO> personVOList = PersonCopier.INSTANCE.transform(personDOList);
 
+        // 获取对应产品线
+        ProductLineDO productLineDO = productLineMapper.selectById(bizDemandDO.getProductLineId());
+
+        // 信息填充
         BizDemandDetailVO bizDemandDetailVO = BizDemandCopier.INSTANCE.convert(bizDemandDO);
+
         bizDemandDetailVO.setFileList(fileVOList);
         bizDemandDetailVO.setRecipientInfoList(personVOList);
+
+        bizDemandDetailVO.setProductLineName(productLineDO.getName());
+        bizDemandDetailVO.setPriorityText(PriorityEnum.getTextByCode(bizDemandDetailVO.getPriority()));
+        bizDemandDetailVO.setStatusText(BizDemandStatusEnum.getTextByCode(bizDemandDetailVO.getStatus()));
+        bizDemandDetailVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandDetailVO.getPlanReleaseDate()));
+
+        bizDemandDetailVO.setDeptName(innerGroupClient.getSimpleGroup(bizDemandDO.getDeptId()).getGroupName());
 
         return BaseResult.success(bizDemandDetailVO);
     }

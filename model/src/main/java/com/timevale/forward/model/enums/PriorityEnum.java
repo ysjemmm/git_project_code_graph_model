@@ -13,11 +13,11 @@ public enum PriorityEnum {
      */
     P0(0,"P0"),
 
-    P1(1,"P1"),
+    P1(10,"P1"),
 
-    P2(2,"P2"),
+    P2(20,"P2"),
 
-    P3(3,"P2");
+    P3(30,"P2");
 
     final private Integer code;
 

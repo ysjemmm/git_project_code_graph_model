@@ -72,12 +72,13 @@
     </select>
 
     <select id="selectList" resultType="com.timevale.forward.dal.entity.BizDemandListDO">
-        select bd.id, bd.name, bd.product_line_id,bd.dept_id, bd.status, bd.priority, bd.receive_man,  bd.receive_man_id,
+        select bd.id, bd.name, bd.dept_id, bd.status, bd.priority, bd.receive_man,  bd.receive_man_id,
                bd.plan_release_date, bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date,
-               pl.biz_domain_id
+               pl.id productLineId, pl.name productLineName,
+               b.id bizDomainId , b.name bizDomainName
         from biz_demand bd
-        left join product_line pl
-        on pl.id = bd.product_line_id
+        left join product_line pl on pl.id = bd.product_line_id
+        left join biz_domain b    on pl.biz_domain_id = b.id
         where
         bd.is_deleted = false
         <if test="id!=null">
@@ -158,7 +159,7 @@
                 </choose>
             </otherwise>
         </choose>
-        order by bd.modify_date desc;
+        order by bd.modify_date desc
     </select>
 
 

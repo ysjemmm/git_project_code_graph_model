@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -49,4 +50,6 @@ public class BizDemandDetailVO extends BizDemandVO {
     @ApiModelProperty("抄送人")
     private List<PersonVO> recipientInfoList;
 
+    @ApiModelProperty("项目发布时间")
+    private Date endDate;
 }

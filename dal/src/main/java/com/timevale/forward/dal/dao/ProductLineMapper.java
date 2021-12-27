@@ -18,6 +18,15 @@ public interface ProductLineMapper {
      */
     List<ProductLineDO> selectAllProductLine();
 
+
+    /**
+     * 获取产品线
+     *
+     * @param id id
+     * @return {@link ProductLineDO }
+     */
+    ProductLineDO selectById(@Param("id") Long id);
+
     /**
      *
      * @param projectI 项目id

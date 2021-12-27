@@ -28,4 +28,13 @@ public enum BizDemandStatusEnum {
     private Integer code;
 
     BizDemandStatusEnum(Integer code){this.code = code;}
+
+    public static String getTextByCode(Integer code){
+        for (BizDemandStatusEnum e : BizDemandStatusEnum.values()){
+            if(e.getCode().equals(code)){
+                return e.toString();
+            }
+        }
+        return "errorCode";
+    }
 }
