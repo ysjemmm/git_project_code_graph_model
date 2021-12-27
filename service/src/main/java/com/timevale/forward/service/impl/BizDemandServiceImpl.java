@@ -17,6 +17,7 @@ import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.request.BizDemandTransferReq;
+import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.FileVO;
@@ -25,6 +26,7 @@ import com.timevale.forward.model.enums.AscriptionEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.FileTypeEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
@@ -62,9 +64,6 @@ public class BizDemandServiceImpl implements BizDemandService {
     ProductBizDemandMapper productBizDemandMapper;
 
     @Resource
-    FileMapper fileMapper;
-
-    @Resource
     ErpMessageClient erpMessageClient;
 
     @Resource
@@ -72,6 +71,9 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Resource
     PersonComponent personComponent;
+
+    @Resource
+    FileComponent fileComponent;
 
 
     @Override
@@ -161,6 +163,9 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setCreateManId(userInfo.getId());
         bizDemandMapper.insert(bizDemandDO);
 
+        List<FileAddReq> fileIdList = bizDemandAddReq.getFileList();
+        fileComponent.update(fileIdList, bizDemandDO.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
+
         // 添加抄送人
         personComponent.add(bizDemandAddReq.getRecipientInfoList(), bizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
 
@@ -192,7 +197,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 获取对应附件列表
-        List<FileDO> fileDOList = fileMapper.select(bizDemandId, FileTypeEnum.BIZ_DEMAND.getCode());
+        List<FileDO> fileDOList = fileComponent.select(bizDemandId, FileTypeEnum.BIZ_DEMAND.getCode());
         List<FileVO> fileVOList = FileCopier.INSTANCE.transform(fileDOList);
 
         // 获取对应抄送人

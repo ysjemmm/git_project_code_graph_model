@@ -167,12 +167,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                 ProductBizDemandDO productBizDemandDO = ProductBizDemandCopier.INSTANCE.convert(bizDemandId, productDemandId);
                 productBizDemandDO.setCreateMan(userInfo.getAlias());
                 productBizDemandDO.setCreateManId(userInfo.getId());
-                if(productBizDemandDO.getCreateMan() == null){
-                    productBizDemandDO.setCreateMan("test is null");
-                }
-                if(productBizDemandDO.getCreateManId() == null){
-                    productBizDemandDO.setCreateManId("test is null");
-                }
                 insertLinkDate.add(productBizDemandDO);
             }
         }

@@ -27,4 +27,6 @@ public class BizDomainVO extends ToString {
     @ApiModelProperty("负责人")
     private String owner;
 
+    @ApiModelProperty("是否废弃")
+    private Boolean isDeleted;
 }

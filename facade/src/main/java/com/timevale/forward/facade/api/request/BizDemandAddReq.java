@@ -64,4 +64,7 @@ public class BizDemandAddReq extends BaseReq {
     @Valid
     @NotNull(message = "接收人信息不能为空")
     private PersonAddReq receiveManInfo;
+
+    @ApiModelProperty("附件列表")
+    private List<FileAddReq> fileList;
 }
