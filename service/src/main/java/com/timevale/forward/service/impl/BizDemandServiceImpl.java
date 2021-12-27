@@ -43,6 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author by YangXu
@@ -106,9 +107,15 @@ public class BizDemandServiceImpl implements BizDemandService {
                 }
             }
         }
-        Map<Long, String> groupInfo = innerGroupClient.batchGetSimpleGroupMap(bizDemandQueryList.getDeptIdList());
+
+        // 查询并转换
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
+
+        // 查询部门信息
+        List<Long> deptIdList = bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList());
+        Map<Long, String> groupInfo = innerGroupClient.batchGetSimpleGroupMap(deptIdList);
+
         bizDemandVOList.forEach( iter -> {
             iter.setPriorityText(PriorityEnum.getTextByCode(iter.getPriority()));
             iter.setStatusText(BizDemandStatusEnum.getTextByCode(iter.getStatus()));

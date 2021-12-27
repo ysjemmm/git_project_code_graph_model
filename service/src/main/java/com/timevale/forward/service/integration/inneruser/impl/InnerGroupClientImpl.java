@@ -30,7 +30,8 @@ public class InnerGroupClientImpl implements InnerGroupClient {
     @Override
     public List<SimpleGroupResponse>batchGetSimpleGroupList(List<Long> deptIdList) {
         try{
-            List<String> deptIdStringList = deptIdList.stream().map(Object::toString).collect(Collectors.toList());
+            List<String> deptIdStringList = deptIdList.stream().distinct().map(String::valueOf).collect(Collectors.toList());
+            System.out.println(deptIdStringList);
             BaseResult<List<SimpleGroupResponse>> listBaseResult = rpcGroupService.batchGetSimpleGroupList(deptIdStringList);
             if(listBaseResult.ifSuccess()){
                 return listBaseResult.getData();
