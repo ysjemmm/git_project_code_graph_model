@@ -4,7 +4,7 @@ import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
-import com.timevale.forward.facade.api.query.ProjectSubProductDemandQueryList;
+import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
@@ -41,7 +41,7 @@ public interface ProductDemandCopier {
      * @param projectSubProductDemandQueryList 对象
      * @return ProductDemandListCondition
      */
-    ProductDemandListCondition convert(ProjectSubProductDemandQueryList projectSubProductDemandQueryList);
+    ProductDemandListCondition convert(ProjectLinkProductDemandQueryList projectSubProductDemandQueryList);
 
     /**
      * 转换转换DO

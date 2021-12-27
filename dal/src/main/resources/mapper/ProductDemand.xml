@@ -61,7 +61,7 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="isNull != null ">and b.project_id  is null</if>
+            <if test="matchProductDemand != null ">and b.project_id  is null</if>
             and  a.is_deleted =false
         </where>
     </select>

@@ -15,7 +15,7 @@ import lombok.EqualsAndHashCode;
 public class FileAddReq extends BaseReq {
 
     @ApiModelProperty(value = "文件名称")
-    private String name;
+    private String fileName;
 
     @ApiModelProperty(value = "文件id")
     private String fileId;

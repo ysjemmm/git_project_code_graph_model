@@ -49,4 +49,12 @@ public interface ProjectMapper {
     int count(ProjectListCondition condition);
 
 
+    /**
+     * 查询
+     * @param productDemandId 产品需求id
+     * @return 项目信息
+     */
+    ProjectDO getByProductDemandId(@Param("productDemandId") Long productDemandId);
+
+
 }

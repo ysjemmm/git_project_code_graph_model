@@ -34,7 +34,6 @@ public class FileComponentImpl implements FileComponent {
         List<FileDO> existFiles = fileMapper.select(attacheId, type);
         log.info("已存在附件:existPersons={}", existFiles);
         if(CollectionUtils.isEmpty(existFiles)){
-            UserInfo userInfo = LocalSessionUtils.getUserInfo();
             List<FileDO> fileDO = FileCopier.INSTANCE.convert(list);
             fileDO.forEach(f->{
                 fillInfo(f,attacheId,type);

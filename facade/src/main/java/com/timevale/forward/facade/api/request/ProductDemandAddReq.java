@@ -31,7 +31,7 @@ public class ProductDemandAddReq extends BaseReq {
 
     @ApiModelProperty("类型:0新增功能,1功能迭代,2体验优化,3技术需求,4安全需求")
     @NotNull(message = "需求类型不能为空")
-    private Integer type;
+    private List<Integer> types;
 
     @ApiModelProperty("需求负责人")
     @NotNull(message = "需求负责人不能为空")
