@@ -1,7 +1,6 @@
 package com.timevale.forward.service.utils.envoy;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.List;
 
@@ -9,8 +8,7 @@ import java.util.List;
  * @author jingchun
  * created on 2021/10/21
  */
-@Getter
-@Setter
+@Data
 public class UserInfo {
     /**
      * 花名拼音
