@@ -10,10 +10,7 @@ import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
-import com.timevale.forward.facade.api.request.BizDemandAddReq;
-import com.timevale.forward.facade.api.request.BizDemandModifyReq;
-import com.timevale.forward.facade.api.request.BizDemandTransferReq;
-import com.timevale.forward.facade.api.request.FileAddReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.FileVO;
@@ -129,10 +126,12 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> updateStatus(Long bizDemandId) {
+    public BaseResult<Boolean> updateStatus(BizDemandUpdateStatusReq bizDemandUpdateStatusReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
+
         // 修改业务需求状态 —— 作废
+        Long bizDemandId = bizDemandUpdateStatusReq.getBizDemandId();
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
         if(bizDemandDO == null){
             throw new BaseBizRuntimeException("不存在该业务需求");
@@ -262,10 +261,13 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
-    public BaseResult<Boolean> agree(Long bizDemandId, Integer planReleaseDate) {
+    public BaseResult<Boolean> agree(BizDemandAgreeReq bizDemandAgreeReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 修改业务需求状态 —— 接收，添加预期上线时间
+        Long bizDemandId = bizDemandAgreeReq.getBizDemandId();
+        Integer planReleaseDate = bizDemandAgreeReq.getPlanReleaseDate();
+
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
         if(bizDemandDO == null){
             throw new BaseBizRuntimeException("不存在该业务需求");
@@ -299,10 +301,13 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
-    public BaseResult<Boolean> reject(Long bizDemandId, Integer reason) {
+    public BaseResult<Boolean> reject(BizDemandRejectReq bizDemandRejectReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 修改业务需求状态 —— 驳回，添加驳回原因
+        Long bizDemandId = bizDemandRejectReq.getBizDemandId();
+        Integer reason = bizDemandRejectReq.getReason();
+
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
         if(bizDemandDO == null){
             throw new BaseBizRuntimeException("不存在该业务需求");

@@ -4,10 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BizDemandLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
-import com.timevale.forward.facade.api.request.BizDemandAddReq;
-import com.timevale.forward.facade.api.request.BizDemandModifyReq;
-import com.timevale.forward.facade.api.request.BizDemandTransferReq;
-import com.timevale.forward.facade.api.request.LinkOrUnLinkProductDemandReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
@@ -32,10 +29,10 @@ public interface BizDemandService {
     /**
      * 作废
      *
-     * @param bizDemandId 业务需求id
+     * @param bizDemandUpdateStatusReq 业务需求更新状态要求的事情
      * @return 成功与否
      */
-    BaseResult<Boolean> updateStatus(Long bizDemandId);
+    BaseResult<Boolean> updateStatus(BizDemandUpdateStatusReq bizDemandUpdateStatusReq);
 
     /**
      * 新增业务需求
@@ -64,20 +61,18 @@ public interface BizDemandService {
     /**
      * 同意接收
      *
-     * @param bizDemandId     业务需求id
-     * @param planReleaseDate 预期上线时间
+     * @param bizDemandAgreeReq 业务需求同意要求的事情
      * @return 成功与否
      */
-    BaseResult<Boolean> agree(Long bizDemandId, Integer planReleaseDate);
+    BaseResult<Boolean> agree(BizDemandAgreeReq bizDemandAgreeReq);
 
     /**
      * 驳回
      *
-     * @param bizDemandId 业务需求id
-     * @param reason      驳回理由
+     * @param bizDemandRejectReq 业务需求拒绝要求的事情
      * @return 成功与否
      */
-    BaseResult<Boolean> reject(Long bizDemandId, Integer reason);
+    BaseResult<Boolean> reject(BizDemandRejectReq bizDemandRejectReq);
 
     /**
      * 转移

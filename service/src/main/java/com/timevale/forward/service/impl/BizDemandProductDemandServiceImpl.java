@@ -17,6 +17,7 @@ import com.timevale.forward.facade.api.client.BizDemandProductDemandService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.query.BizDemandLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.BizDemandProductDemandQueryList;
+import com.timevale.forward.facade.api.request.BizDemandUnlinkProductDemandReq;
 import com.timevale.forward.facade.api.request.LinkOrUnLinkProductDemandReq;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
@@ -79,10 +80,13 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
     }
 
     @Override
-    public BaseResult<Boolean> unlinkProductDemand(Long bizDemandId, Long productDemandId) {
+    public BaseResult<Boolean> unlinkProductDemand(BizDemandUnlinkProductDemandReq bizDemandUnlinkProductDemandReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 查询对应数据
+        Long bizDemandId = bizDemandUnlinkProductDemandReq.getBizDemandId();
+        Long productDemandId = bizDemandUnlinkProductDemandReq.getProductDemandId();
+
         List<ProductBizDemandDO> list = productBizDemandMapper.select(ProductBizDemandCondition.builder()
                 .bizDemandId(bizDemandId)
                 .productDemandId(productDemandId)
