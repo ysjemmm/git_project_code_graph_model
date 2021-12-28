@@ -3,6 +3,7 @@ package com.timevale.forward.service.copy;
 import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.result.ProductLineVO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
@@ -22,6 +23,8 @@ public interface ProductLineCopier {
      * @param productLineDO 产品线DO
      * @return 产品线VO
      */
+    @Mapping(source = "owner", target = "productLineOwner")
+    @Mapping(source = "ownerId", target = "productLineOwnerId")
     ProductLineVO convert(ProductLineDO productLineDO);
 
     /**

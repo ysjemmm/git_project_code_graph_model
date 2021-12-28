@@ -25,4 +25,9 @@ public class ProductLineDO extends BaseDO {
      * 负责人
      */
     private String owner;
+
+    /**
+     * 负责人id
+     */
+    private String ownerId;
 }

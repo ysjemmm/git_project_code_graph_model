@@ -20,4 +20,10 @@ public class BizDomainDO extends BaseDO{
      * 业务域负责人
      */
     private String owner;
+
+    /**
+     * 业务域负责人id
+     */
+    private String ownerId;
+
 }
