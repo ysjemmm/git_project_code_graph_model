@@ -27,9 +27,19 @@ public class BizDemandLinkProductDemandListDO extends BaseDO {
     private Long bizDomainId;
 
     /**
+     * 业务域名称
+     */
+    private String bizDomainName;
+
+    /**
      * 产品线id
      */
     private Long productLineId;
+
+    /**
+     * 产品线名称
+     */
+    private String productLineName;
 
     /**
      * 产品需求类型

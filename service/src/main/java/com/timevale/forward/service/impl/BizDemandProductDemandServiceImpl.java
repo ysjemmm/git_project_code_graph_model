@@ -115,7 +115,9 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         // 查询数据，类型转换
         List<BizDemandLinkProductDemandListDO> productDemandDOList = productDemandMapper.selectListOfBizDemandLink(condition);
+        System.out.println(productDemandDOList);
         List<BizDemandLinkProductDemandVO> bizDemandLinkProductDemandVOList = BizDemandCopier.INSTANCE.transform(productDemandDOList);
+        System.out.println(bizDemandLinkProductDemandVOList);
 
         return BaseResult.success(BizDemandCopier.INSTANCE.transform(ResultUtil.pageSuccess(new PageInfo<>(bizDemandLinkProductDemandVOList))));
     }

@@ -33,8 +33,14 @@ public class BizDemandLinkProductDemandVO extends ToString {
     @ApiModelProperty("业务域id")
     private Long bizDomainId;
 
+    @ApiModelProperty("业务域名称")
+    private String bizDomainName;
+
     @ApiModelProperty("产品线id")
     private Long productLineId;
+
+    @ApiModelProperty("产品线名称")
+    private String productLineName;
 
     @ApiModelProperty("产品需求类型")
     private Integer type;
