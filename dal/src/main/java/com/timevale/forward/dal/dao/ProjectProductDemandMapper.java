@@ -35,4 +35,11 @@ public interface ProjectProductDemandMapper {
      */
     ProjectProductDemandDO getByProjectId(@Param("projectId") Long projectId);
 
+    /**
+     *
+     * @param productDemandId 产品需求id
+     * @return ProjectProductDemandDO
+     */
+    ProjectProductDemandDO getByProductDemandId(@Param("productDemandId") Long productDemandId);
+
 }

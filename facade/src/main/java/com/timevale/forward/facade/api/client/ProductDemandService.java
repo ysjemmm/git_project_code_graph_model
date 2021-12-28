@@ -37,6 +37,15 @@ public interface ProductDemandService {
      */
     BaseResult<Boolean> updateStatus(Long productDemandId, Integer type);
 
+
+    /**
+     * 开启产品需求
+     *
+     * @param productDemandId 项目id
+     * @return 数量
+     */
+    BaseResult<Boolean> enable(Long productDemandId);
+
     /**
      * 新增
      *

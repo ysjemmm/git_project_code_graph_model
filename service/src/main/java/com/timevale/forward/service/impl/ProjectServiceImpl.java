@@ -121,11 +121,23 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateStatus(Long projectId, Integer type) {
         log.info("项目暂停或作废接收参数:projectId={},type={}", projectId, type);
+        if (!ProjectStatusEnum.SUSPEND.getCode().equals(type)
+                && !ProjectStatusEnum.INVALID.getCode().equals(type)) {
+            throw new BaseBizRuntimeException("操作类型不是暂停或作废,请重试输入");
+        }
+        ProjectDO projectDO = projectMapper.get(projectId);
+        if(projectDO==null){
+            throw new BaseBizRuntimeException("找不到该项目");
+        }
+        if (!ProjectStatusEnum.WAITING.getCode().equals(projectDO.getStatus())
+                && !ProjectStatusEnum.PLANING.getCode().equals(projectDO.getStatus())
+                && !ProjectStatusEnum.DEVING.getCode().equals(projectDO.getStatus())
+                && !ProjectStatusEnum.TESTING.getCode().equals(projectDO.getStatus())) {
+            throw new BaseBizRuntimeException("項目状态不是待启动、规划中、研发中、测试中,不能修改状态");
+        }
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        ProjectDO projectDO = new ProjectDO();
         projectDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         projectDO.setModifyManId(userInfo.getId());
-        projectDO.setId(projectId);
         projectDO.setStatus(type);
         projectMapper.update(projectDO);
         if (ProjectStatusEnum.INVALID.getCode().equals(type)) {
@@ -144,11 +156,14 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("项目开启接收参数:projectId={}", projectId);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProjectDO projectDO = projectMapper.get(projectId);
-        projectDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        projectDO.setModifyManId(userInfo.getId());
+        if(projectDO==null){
+            throw new BaseBizRuntimeException("找不到该项目");
+        }
         if (!ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus())) {
             throw new BaseBizRuntimeException("项目状态不是暂停,不能开启");
         }
+        projectDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        projectDO.setModifyManId(userInfo.getId());
         List<ProjectNodeDO> projectNode = projectNodeComponent.get(projectId);
         log.info("项目开启,节点信息:projectNode={}", projectNode);
         if (CollectionUtils.isEmpty(projectNode)) {

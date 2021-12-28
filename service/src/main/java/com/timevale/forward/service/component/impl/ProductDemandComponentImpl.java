@@ -10,10 +10,13 @@ import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.ProductDemandComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProductLineCopier;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -72,6 +75,14 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         List<PersonDO> personDO= personComponent.select(id, PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
         demandDetailVO.setRecipients(PersonCopier.INSTANCE.transform(personDO));
         return demandDetailVO;
+    }
+
+    @Override
+    public void update(ProductDemandDO productDemandDO) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        productDemandDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        productDemandDO.setModifyManId(userInfo.getId());
+        productDemandMapper.update(productDemandDO);
     }
 
 

@@ -50,4 +50,17 @@
         where id = #{id}
     </delete>
 
+    <update id="update" parameterType="com.timevale.forward.dal.entity.ProductBizDemandDO">
+        update product_biz_demand
+        <set>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            <if test="productDemandId!=null">and product_demand_id = #{productDemandId}</if>
+            <if test="bizDemandId!=null">and biz_demand_id = #{bizDemandId}</if>
+            and is_deleted=false
+        </where>
+    </update>
 </mapper>
