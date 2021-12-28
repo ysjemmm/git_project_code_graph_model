@@ -9,10 +9,8 @@ import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.entity.BizDemandListDO;
-import com.timevale.forward.dal.entity.ProductDemandDO;
-import com.timevale.forward.dal.entity.ProductDemandListDO;
-import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
@@ -24,10 +22,7 @@ import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.FileComponent;
-import com.timevale.forward.service.component.PersonComponent;
-import com.timevale.forward.service.component.ProductDemandComponent;
-import com.timevale.forward.service.component.ProjectComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
@@ -38,6 +33,7 @@ import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.GroupModel;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -84,7 +80,17 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     private BizDemandMapper bizDemandMapper;
 
     @Resource
-    InnerGroupClient innerGroupClient;
+    private InnerGroupClient innerGroupClient;
+
+    @Resource
+    private ProjectProductDemandMapper projectProductDemandMapper;
+
+    @Resource
+    private ProjectProductDemandComponent projectProductDemandComponent;
+
+    @Resource
+    private ProductBizDemandComponent productBizDemandComponent;
+
 
     @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
@@ -129,7 +135,54 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateStatus(Long productDemandId, Integer type) {
-        log.info("产品需求暂停或开启收参数:productDemandId={},type={}", productDemandId, type);
+        log.info("产品需求暂停,作废接收参数:productDemandId={},type={}", productDemandId, type);
+        if (!ProductDemandStatusEnum.SUSPEND.getCode().equals(type)
+                && !ProductDemandStatusEnum.INVALID.getCode().equals(type)) {
+            throw new BaseBizRuntimeException("操作类型不是暂停或作废,请重试输入");
+        }
+        ProductDemandDO demandDO = productDemandMapper.get(productDemandId);
+        if(demandDO==null){
+            throw new BaseBizRuntimeException("找不到该产品需求");
+        }
+        if (!ProductDemandStatusEnum.WAITING.getCode().equals(demandDO.getStatus())
+                && !ProductDemandStatusEnum.INCLUDED.getCode().equals(demandDO.getStatus())
+                && !ProductDemandStatusEnum.PROGRESS.getCode().equals(demandDO.getStatus())) {
+            throw new BaseBizRuntimeException("产品需求状态不是待排期、已列入项目、项目进行中,不能修改状态");
+        }
+        // 更新需求状态
+        demandDO.setStatus(type);
+        productDemandComponent.update(demandDO);
+
+        // 暂停or作废解除项目关联
+        ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
+        productDemandDO.setProductDemandId(productDemandId);
+        productDemandDO.setIsDeleted(true);
+        projectProductDemandComponent.update(productDemandDO);
+
+        if (ProductDemandStatusEnum.INVALID.getCode().equals(type)) {
+            // 作废解业务需求关联
+            ProductBizDemandDO productBizDemandDO=new ProductBizDemandDO();
+            productBizDemandDO.setProductDemandId(productDemandId);
+            productBizDemandDO.setIsDeleted(true);
+            productBizDemandComponent.update(productBizDemandDO);
+
+        }
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> enable(Long productDemandId) {
+        log.info("产品需求开启接收参数:productDemandId={}", productDemandId);
+        ProductDemandDO productDemandDO = productDemandMapper.get(productDemandId);
+        if(productDemandDO==null){
+            throw new BaseBizRuntimeException("找不到该产品需求");
+        }
+        if (!ProductDemandStatusEnum.SUSPEND.getCode().equals(productDemandDO.getStatus())) {
+            throw new BaseBizRuntimeException("产品需求状态不是暂停,不能开启");
+        }
+        productDemandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
+        productDemandComponent.update(productDemandDO);
+
         return BaseResult.success(true);
     }
 
@@ -184,6 +237,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> matchProjectList(ProductDemandLinkProjectQueryList projectQueryList) {
         log.info("产品需求-项目匹配接收参数:projectQueryList={}", projectQueryList);
+        ProjectProductDemandDO productDemandDO = projectProductDemandMapper.getByProductDemandId(projectQueryList.getProductDemandId());
+        if (productDemandDO != null) {
+            throw new BaseBizRuntimeException("该产品需求已被关联,请解除后重试");
+        }
         PageHelper.startPage(projectQueryList.getPageNum(), projectQueryList.getPageSize());
         ProjectListCondition condition = ProjectCopier.INSTANCE.convert(projectQueryList);
         condition.setStatus(Lists.newArrayList(ProjectStatusEnum.WAITING.getCode()
@@ -215,7 +272,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     public BaseResult<PageQueryResult<BizDemandVO>> linkBizDemandList(ProductBizDemandQueryList productBizDemandQueryList) {
         log.info("产品需求-业务需求清单接收参数:productBizDemandQueryList={}", productBizDemandQueryList);
-        PageHelper.startPage(productBizDemandQueryList.getPageNum(), productBizDemandQueryList.getPageSize(),CommonConstant.DEFAULT_ORDER_BY);
+        PageHelper.startPage(productBizDemandQueryList.getPageNum(), productBizDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<BizDemandListDO> bizDemandList = bizDemandMapper.productDemandBizDemandList(productBizDemandQueryList.getProductDemandId());
 
         List<BizDemandVO> bizDemandVO = BizDemandCopier.INSTANCE.convert(bizDemandList);

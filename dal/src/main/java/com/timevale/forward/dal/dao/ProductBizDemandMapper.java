@@ -56,4 +56,12 @@ public interface ProductBizDemandMapper {
      */
     int delete(ProductBizDemandDO productBizDemandDO);
 
+    /**
+     * 更新单条产品需求
+     *
+     * @param productBizDemandDO 产品需求DO
+     * @return int
+     */
+    int update(ProductBizDemandDO productBizDemandDO);
+
 }

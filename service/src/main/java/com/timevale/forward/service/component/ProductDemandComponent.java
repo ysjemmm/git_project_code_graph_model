@@ -1,6 +1,7 @@
 package com.timevale.forward.service.component;
 
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
+import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 
@@ -20,5 +21,11 @@ public interface ProductDemandComponent {
      * @return 详情
      */
     ProductDemandDetailVO get(Long id);
+
+    /**
+     *
+     * @param productDemandDO 项目id
+     */
+    void update(ProductDemandDO productDemandDO);
 
 }

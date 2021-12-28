@@ -11,6 +11,7 @@
         <where>
             <if test="projectId!=null">and project_id = #{projectId}</if>
             <if test="productDemandId!=null">and product_demand_id = #{productDemandId}</if>
+            and is_deleted=false
         </where>
   </update>
 
@@ -27,6 +28,12 @@
         from project_product_demand a
         left join product_demand b on a.product_demand_id=b.id
         where a.project_id = #{projectId} and a.is_deleted=false
+    </select>
+
+    <select id="getByProductDemandId" resultType="com.timevale.forward.dal.entity.ProjectProductDemandDO">
+        select a.id,a.project_id,a.product_demand_id
+        from project_product_demand a
+        where a.product_demand_id = #{productDemandId} and a.is_deleted=false
     </select>
 
 </mapper>
