@@ -177,4 +177,17 @@
         where b.product_demand_id = #{productDemandId} and   a.is_deleted = false
     </select>
 
+    <update id="updateByIds">
+        <if test="ids!=null and ids.size()>0">
+            update biz_demand
+            set status =#{status}
+            <where>
+                and id IN
+                <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </where>
+        </if>
+    </update>
+
 </mapper>

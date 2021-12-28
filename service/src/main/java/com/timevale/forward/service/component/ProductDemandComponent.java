@@ -28,4 +28,11 @@ public interface ProductDemandComponent {
      */
     void update(ProductDemandDO productDemandDO);
 
+    /**
+     *
+     * @param projectId 项目id
+     * @param projectStatus 项目状态
+     */
+    void updateDemandStatusIfNecessary(Long projectId, Integer projectStatus);
+
 }

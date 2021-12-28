@@ -62,4 +62,12 @@ public interface BizDemandMapper {
      */
     List<BizDemandListDO> productDemandBizDemandList(@Param("productDemandId") Long productDemandId);
 
+    /**
+     * 更新业务需求
+     *
+     * @param ids 产品需求DO
+     * @return int
+     */
+    int updateByIds(@Param("ids") List<Long> ids,@Param("status") Integer status);
+
 }

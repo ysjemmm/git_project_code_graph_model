@@ -36,7 +36,7 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
     }
 
     @Override
-    public void batchInsert(Long projectId,List<Long> productDemandIds) {
+    public void batchInsert(Long projectId, List<Long> productDemandIds) {
         List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectId);
         List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
                 .collect(Collectors.toList());

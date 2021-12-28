@@ -19,4 +19,10 @@ public class ProductBizDemandDO extends BaseDO {
      * 业务需求id
      */
     private Long bizDemandId;
+
+
+    /**
+     * 需求状态
+     */
+    private Integer status;
 }

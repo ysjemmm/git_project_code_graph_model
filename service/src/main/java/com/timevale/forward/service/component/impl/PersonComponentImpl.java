@@ -34,6 +34,9 @@ public class PersonComponentImpl implements PersonComponent {
     @Override
     public void add(List<PersonAddReq> list, Long mainId, Integer type) {
         log.info("人员新增接收参数:list={},mainId={},type={}", list, mainId, type);
+        if(CollectionUtils.isEmpty(list)){
+            return;
+        }
         List<PersonDO> existPersons = select(mainId, type);
         log.info("已存在人员:existPersons={}", existPersons);
         if (CollectionUtils.isEmpty(existPersons)) {

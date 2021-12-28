@@ -31,6 +31,9 @@ public class FileComponentImpl implements FileComponent {
     @Override
     public void add(List<FileAddReq> list,Long attacheId,Integer type) {
         log.info("新增时,附件接收参数:list={},attacheId={},type={}", list,attacheId,type);
+        if(CollectionUtils.isEmpty(list)){
+            return;
+        }
         List<FileDO> existFiles = fileMapper.select(attacheId, type);
         log.info("已存在附件:existPersons={}", existFiles);
         if(CollectionUtils.isEmpty(existFiles)){

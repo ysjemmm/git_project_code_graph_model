@@ -71,4 +71,17 @@
             (#{i.productDemandId}, #{i.bizDemandId}, #{i.createManId},#{i.createMan})
         </foreach>
     </insert>
+
+    <select id="getByProductDemandId" resultType="com.timevale.forward.dal.entity.ProductBizDemandDO">
+        select a.id, a.product_demand_id, a.biz_demand_id, a.is_deleted,b.status
+        from product_biz_demand a
+        left join biz_demand b on a.biz_demand_id=b.id
+        <where>
+            and a.product_demand_id IN
+            <foreach item="item" index="index" collection="productDemandIds" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            and a.is_deleted=false
+        </where>
+    </select>
 </mapper>

@@ -72,4 +72,12 @@ public interface ProductBizDemandMapper {
      * @return int
      */
     int batchInsert(List<ProductBizDemandDO> projectProductLineDO);
+
+    /**
+     * 查询产品业务需求关联
+     *
+     * @param productDemandIds 产品业务需求查询条件
+     * @return 列表
+     */
+    List<ProductBizDemandDO> getByProductDemandId(@Param("productDemandIds") List<Long> productDemandIds);
 }

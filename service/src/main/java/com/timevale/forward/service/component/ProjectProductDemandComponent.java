@@ -16,7 +16,7 @@ public interface ProjectProductDemandComponent {
      *
      * @param projectId 新增项目-产品需求id
      */
-    void batchInsert(Long projectId,List<Long> productDemandIds);
+    void batchInsert(Long projectId, List<Long> productDemandIds);
 
     /**
      *
