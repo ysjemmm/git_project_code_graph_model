@@ -30,6 +30,9 @@ public class BizDemandLinkProductDemandVO extends ToString {
     @ApiModelProperty("优先级： 0-紧急，10-高，20-中，30低")
     private Integer priority;
 
+    @ApiModelProperty("优先级名称")
+    private String priorityText;
+
     @ApiModelProperty("业务域id")
     private Long bizDomainId;
 

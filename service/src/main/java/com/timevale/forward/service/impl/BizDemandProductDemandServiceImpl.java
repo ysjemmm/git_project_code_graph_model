@@ -22,6 +22,7 @@ import com.timevale.forward.facade.api.request.BizDemandUnlinkProductDemandReq;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
@@ -70,6 +71,11 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         List<BizDemandLinkProductDemandListDO> doList = productDemandMapper.selectByBizDemandId(bizDemandProductDemandQueryList.getBizDemandId());
         List<BizDemandLinkProductDemandVO> voList = BizDemandCopier.INSTANCE.transform(doList);
+
+        voList.forEach( e -> {
+            e.setPriorityText(PriorityEnum.getTextByCode(e.getPriority()));
+            e.setStatusText(ProductDemandStatusEnum.getTextByCode(e.getStatus()));
+        });
 
         return BaseResult.success(BizDemandCopier.INSTANCE.transform(ResultUtil.pageSuccess(new PageInfo<>(voList))));
     }
