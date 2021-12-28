@@ -42,11 +42,6 @@ public class BizDemandLinkProductDemandListDO extends BaseDO {
     private String productLineName;
 
     /**
-     * 产品需求类型
-     */
-    private Integer type;
-
-    /**
      * 产品需求负责人
      */
     private String owner;

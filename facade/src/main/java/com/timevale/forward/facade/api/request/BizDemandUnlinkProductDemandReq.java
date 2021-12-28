@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("业务需求转交请求")
+@ApiModel("业务需求取消关联请求")
 public class BizDemandUnlinkProductDemandReq extends BaseReq {
 
     @ApiModelProperty("业务需求id")

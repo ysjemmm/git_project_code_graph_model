@@ -99,7 +99,7 @@
     </select>
     
     <select id="selectListOfBizDemandLink" resultType="com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO">
-        select pd.id, pd.name, pd.type, pd.status, pd.priority, pd.owner, pd.owner_id,
+        select pd.id, pd.name, pd.status, pd.priority, pd.owner, pd.owner_id,
                pd.is_deleted, pd.create_man_id, pd.create_man, pd.create_date, pd.modify_man_id, pd.modify_man, pd.modify_date,
                pl.id productLineId, pl.name productLineName,
                bd.id bizDomainId, bd.name bizDomainName
@@ -107,14 +107,11 @@
         left join product_line pl on pd.product_line_id = pl.id
         left join biz_domain bd on pl.biz_domain_id = bd.id
         <where>
-            <if test="id!=null">
-                and pd.id = #{id}
+            <if test="productDemandId!=null">
+                and pd.id = #{productDemandId}
             </if>
             <if test="name!=null and name!=''">
                 and pd.name = #{name}
-            </if>
-            <if test="type!=null">
-                and pd.type = #{type}
             </if>
             <if test="status!=null">
                 and pd.status = #{status}

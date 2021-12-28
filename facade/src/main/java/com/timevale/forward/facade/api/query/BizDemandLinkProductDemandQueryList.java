@@ -18,11 +18,14 @@ import java.util.List;
 @ApiModel("业务需求关联产品需求查询")
 public class BizDemandLinkProductDemandQueryList extends QueryBase {
 
+    @ApiModelProperty("产品需求id")
+    private Long productDemandId;
+
+    @ApiModelProperty("业务需求id")
+    private Long bizDemandId;
+
     @ApiModelProperty("产品需求主题")
     private String name;
-
-    @ApiModelProperty("产品需求id")
-    private Long id;
 
     @ApiModelProperty("优先级： 0-紧急，10-高，20-中，30低")
     private List<Integer> priorityList;
@@ -32,9 +35,6 @@ public class BizDemandLinkProductDemandQueryList extends QueryBase {
 
     @ApiModelProperty("产品线id")
     private List<Long> productLineIdList;
-
-    @ApiModelProperty("产品需求类型")
-    private Integer type;
 
     @ApiModelProperty("产品需求负责人")
     private List<PersonQuery> ownerInfoList;

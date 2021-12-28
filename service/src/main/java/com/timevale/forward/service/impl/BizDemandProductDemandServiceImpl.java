@@ -113,11 +113,20 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         // 转换查询条件
         BizDemandLinkProductDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandSubProductDemandQueryList);
 
-        // 查询数据，类型转换
-        List<BizDemandLinkProductDemandListDO> productDemandDOList = productDemandMapper.selectListOfBizDemandLink(condition);
-        System.out.println(productDemandDOList);
+        // 查询当前业务需求已经关联的产品需求
+        List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.select(ProductBizDemandCondition.builder()
+                .bizDemandId(bizDemandSubProductDemandQueryList.getBizDemandId())
+                .isDeleted(false)
+                .build());
+        Set<Long> productBizDemandDOSet = productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toSet());
+
+        // 查询符合条件的产品需求，并过滤已经关联的
+        List<BizDemandLinkProductDemandListDO> productDemandDOList = productDemandMapper.selectListOfBizDemandLink(condition).stream()
+                .filter(e -> !productBizDemandDOSet.contains(e.getId())).collect(Collectors.toList());
         List<BizDemandLinkProductDemandVO> bizDemandLinkProductDemandVOList = BizDemandCopier.INSTANCE.transform(productDemandDOList);
-        System.out.println(bizDemandLinkProductDemandVOList);
+
+        // 业务需求状态信息赋值
+        bizDemandLinkProductDemandVOList.forEach( e -> e.setStatusText(ProductDemandStatusEnum.getTextByCode(e.getStatus())));
 
         return BaseResult.success(BizDemandCopier.INSTANCE.transform(ResultUtil.pageSuccess(new PageInfo<>(bizDemandLinkProductDemandVOList))));
     }

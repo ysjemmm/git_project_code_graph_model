@@ -53,4 +53,7 @@ public class BizDemandLinkProductDemandVO extends ToString {
 
     @ApiModelProperty("产品需求状态")
     private Integer status;
+
+    @ApiModelProperty("产品需求状态名称")
+    private String statusText;
 }

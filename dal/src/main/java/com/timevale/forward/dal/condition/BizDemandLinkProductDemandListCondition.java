@@ -22,7 +22,12 @@ public class BizDemandLinkProductDemandListCondition {
     /**
      * 产品需求id
      */
-    private Long id;
+    private Long productDemandId;
+
+    /**
+     * 业务需求id
+     */
+    private Long bizDemandId;
 
     /**
      * 优先级： 0-紧急，10-高，20-中，30低
@@ -38,11 +43,6 @@ public class BizDemandLinkProductDemandListCondition {
      * 产品线id列表
      */
     private List<Long> productLineIdList;
-
-    /**
-     * 产品需求类型
-     */
-    private Integer type;
 
     /**
      * 产品需求负责人id列表
