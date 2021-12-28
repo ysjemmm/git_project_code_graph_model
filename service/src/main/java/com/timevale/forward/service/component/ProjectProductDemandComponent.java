@@ -23,6 +23,6 @@ public interface ProjectProductDemandComponent {
      * @param projectId 项目id
      * @return ProjectProductDemandDO
      */
-    ProjectProductDemandDO getByProjectId(Long projectId);
+    List<ProjectProductDemandDO> getByProjectId(Long projectId);
 
 }

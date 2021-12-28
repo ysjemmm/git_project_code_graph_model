@@ -126,7 +126,7 @@ public class ProjectServiceImpl implements ProjectService {
             throw new BaseBizRuntimeException("操作类型不是暂停或作废,请重试输入");
         }
         ProjectDO projectDO = projectMapper.get(projectId);
-        if(projectDO==null){
+        if (projectDO == null) {
             throw new BaseBizRuntimeException("找不到该项目");
         }
         if (!ProjectStatusEnum.WAITING.getCode().equals(projectDO.getStatus())
@@ -156,7 +156,7 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("项目开启接收参数:projectId={}", projectId);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProjectDO projectDO = projectMapper.get(projectId);
-        if(projectDO==null){
+        if (projectDO == null) {
             throw new BaseBizRuntimeException("找不到该项目");
         }
         if (!ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus())) {
@@ -364,30 +364,28 @@ public class ProjectServiceImpl implements ProjectService {
      * @param projectStatus 项目状态
      */
     private void updateProductDemandStatusIfNecessary(Long projectId, Integer projectStatus) {
-        ProjectProductDemandDO productDemandDO = projectProductDemandComponent.getByProjectId(projectId);
+        List<ProjectProductDemandDO> productDemandDO = projectProductDemandComponent.getByProjectId(projectId);
         log.info("项目关联的产品需求:productDemandDO={}", productDemandDO);
-        if (productDemandDO != null
-                && !ProductDemandStatusEnum.SUSPEND.getCode().equals(productDemandDO.getStatus())
-                && !ProductDemandStatusEnum.INVALID.getCode().equals(productDemandDO.getStatus())) {
+        productDemandDO.forEach(p -> {
+            if (!ProductDemandStatusEnum.SUSPEND.getCode().equals(p.getStatus())
+                    && !ProductDemandStatusEnum.INVALID.getCode().equals(p.getStatus())) {
+                ProductDemandDO demandDO = new ProductDemandDO();
+                demandDO.setId(p.getProductDemandId());
+                if (ProjectStatusEnum.WAITING.getCode().equals(projectStatus)) {
+                    demandDO.setStatus(ProductDemandStatusEnum.INCLUDED.getCode());
 
-            ProductDemandDO demandDO = new ProductDemandDO();
-            UserInfo userInfo = LocalSessionUtils.getUserInfo();
-            demandDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-            demandDO.setModifyManId(userInfo.getId());
-            demandDO.setId(productDemandDO.getProductDemandId());
-            if (ProjectStatusEnum.WAITING.getCode().equals(projectStatus)) {
-                demandDO.setStatus(ProductDemandStatusEnum.INCLUDED.getCode());
+                } else if (ProjectStatusEnum.PLANING.getCode().equals(projectStatus)
+                        || ProjectStatusEnum.DEVING.getCode().equals(projectStatus)
+                        || ProjectStatusEnum.TESTING.getCode().equals(projectStatus)) {
+                    demandDO.setStatus(ProductDemandStatusEnum.PROGRESS.getCode());
 
-            } else if (ProjectStatusEnum.PLANING.getCode().equals(projectStatus)
-                    || ProjectStatusEnum.DEVING.getCode().equals(projectStatus)
-                    || ProjectStatusEnum.TESTING.getCode().equals(projectStatus)) {
-                demandDO.setStatus(ProductDemandStatusEnum.PROGRESS.getCode());
-
-            } else if (ProjectStatusEnum.RELEASED.getCode().equals(projectStatus)) {
-                demandDO.setStatus(ProductDemandStatusEnum.ONLINE.getCode());
+                } else if (ProjectStatusEnum.RELEASED.getCode().equals(projectStatus)) {
+                    demandDO.setStatus(ProductDemandStatusEnum.ONLINE.getCode());
+                }
+                productDemandComponent.update(demandDO);
+                log.info("项目关联的产品需求状态更新成功:demandDO={}", demandDO);
             }
-            productDemandMapper.update(demandDO);
-            log.info("项目关联的产品需求状态更新成功:demandDO={}", demandDO);
-        }
+        });
+
     }
 }

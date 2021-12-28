@@ -7,10 +7,13 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -34,20 +37,29 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
 
     @Override
     public void batchInsert(Long projectId,List<Long> productDemandIds) {
+        List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectId);
+        List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
+                .collect(Collectors.toList());
+        log.info("关联产品需求,existProductDemandIds={}", existProductDemandIds);
+        productDemandIds.removeAll(existProductDemandIds);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        List<ProjectProductDemandDO> list = productDemandIds.stream().map(i -> {
-            ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
-            productDemandDO.setProductDemandId(i);
-            productDemandDO.setProjectId(projectId);
-            productDemandDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-            productDemandDO.setCreateManId(userInfo.getId());
-            return productDemandDO;
-        }).collect(Collectors.toList());
-        projectProductDemandMapper.batchInsert(list);
+        if(!CollectionUtils.isEmpty(productDemandIds)){
+            Set<Long> set = new HashSet<>(productDemandIds);
+            List<ProjectProductDemandDO> list = set.stream().map(i -> {
+                ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
+                productDemandDO.setProductDemandId(i);
+                productDemandDO.setProjectId(projectId);
+                productDemandDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+                productDemandDO.setCreateManId(userInfo.getId());
+                return productDemandDO;
+            }).collect(Collectors.toList());
+            projectProductDemandMapper.batchInsert(list);
+        }
+
     }
 
     @Override
-    public ProjectProductDemandDO getByProjectId(Long projectId) {
+    public List<ProjectProductDemandDO> getByProjectId(Long projectId) {
         return projectProductDemandMapper.getByProjectId(projectId);
     }
 

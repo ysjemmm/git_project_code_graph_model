@@ -33,7 +33,7 @@ public interface ProjectProductDemandMapper {
      * @param projectId 项目id
      * @return ProjectProductDemandDO
      */
-    ProjectProductDemandDO getByProjectId(@Param("projectId") Long projectId);
+    List<ProjectProductDemandDO> getByProjectId(@Param("projectId") Long projectId);
 
     /**
      *

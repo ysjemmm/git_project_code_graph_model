@@ -64,4 +64,12 @@ public interface ProductBizDemandMapper {
      */
     int update(ProductBizDemandDO productBizDemandDO);
 
+
+    /**
+     * 新增项目-产品需求
+     *
+     * @param projectProductLineDO 新增项目-产品需求
+     * @return int
+     */
+    int batchInsert(List<ProductBizDemandDO> projectProductLineDO);
 }

@@ -8,6 +8,7 @@ import com.timevale.forward.dal.entity.BizDemandListDO;
 import com.timevale.forward.facade.api.query.BizDemandLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.PersonQuery;
+import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
@@ -141,6 +142,13 @@ public interface BizDemandCopier {
     PageQueryResult<BizDemandLinkProductDemandVO> transform(PageQueryResult<BizDemandLinkProductDemandVO> list);
 
 
+    /**
+     * 业务需求查询关联产品条件转换
+     *
+     * @param demandQueryList 列表
+     * @return Condition
+     */
+    BizDemandListCondition convert(ProductDemandLinkBizDemandQueryList demandQueryList);
 
     /**
      * 信息id

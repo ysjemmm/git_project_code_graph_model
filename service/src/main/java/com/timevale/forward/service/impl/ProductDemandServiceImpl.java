@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
@@ -13,8 +14,10 @@ import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
+import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
+import com.timevale.forward.facade.api.request.BizDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
@@ -141,7 +144,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             throw new BaseBizRuntimeException("操作类型不是暂停或作废,请重试输入");
         }
         ProductDemandDO demandDO = productDemandMapper.get(productDemandId);
-        if(demandDO==null){
+        if (demandDO == null) {
             throw new BaseBizRuntimeException("找不到该产品需求");
         }
         if (!ProductDemandStatusEnum.WAITING.getCode().equals(demandDO.getStatus())
@@ -161,7 +164,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         if (ProductDemandStatusEnum.INVALID.getCode().equals(type)) {
             // 作废解业务需求关联
-            ProductBizDemandDO productBizDemandDO=new ProductBizDemandDO();
+            ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
             productBizDemandDO.setProductDemandId(productDemandId);
             productBizDemandDO.setIsDeleted(true);
             productBizDemandComponent.update(productBizDemandDO);
@@ -171,10 +174,11 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> enable(Long productDemandId) {
         log.info("产品需求开启接收参数:productDemandId={}", productDemandId);
         ProductDemandDO productDemandDO = productDemandMapper.get(productDemandId);
-        if(productDemandDO==null){
+        if (productDemandDO == null) {
             throw new BaseBizRuntimeException("找不到该产品需求");
         }
         if (!ProductDemandStatusEnum.SUSPEND.getCode().equals(productDemandDO.getStatus())) {
@@ -251,14 +255,57 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(Long productDemandId) {
-        log.info("产品需求-业务需求匹配接收参数:productDemandId={}", productDemandId);
-//        PageHelper.startPage(projectQueryList.getPageNum(), projectQueryList.getPageSize());
-        PageQueryResult<BizDemandVO> result = new PageQueryResult<>();
-        result.setResultList(Lists.newArrayList(new BizDemandVO()));
-        return BaseResult.success(result);
+    public BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(ProductDemandLinkBizDemandQueryList bizDemandQueryList) {
+        log.info("产品需求-业务需求匹配接收参数:bizDemandQueryList={}", bizDemandQueryList);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        List<String> receiveManIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
+        log.info("我和我的下属:receiveManIdList={}", receiveManIdList);
+        PageHelper.startPage(bizDemandQueryList.getPageNum(), bizDemandQueryList.getPageSize());
+        BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
+        condition.setReceiveManIdList(receiveManIdList);
+        condition.setStatusList(Lists.newArrayList(
+                BizDemandStatusEnum.RECEIVED.getCode()
+                , BizDemandStatusEnum.INCLUDE_PROJECT.getCode()
+                , BizDemandStatusEnum.PROJECTING.getCode()
+                , BizDemandStatusEnum.AVAILABLE.getCode()
+                , BizDemandStatusEnum.REJECT.getCode()));
+        List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(condition);
+        List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
+
+        // 查询部门信息
+        List<Long> deptIdList = bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList());
+        Map<Long, String> groupInfo = innerGroupClient.batchGetSimpleGroupMap(deptIdList);
+
+        bizDemandVOList.forEach(iter -> {
+            iter.setPriorityText(PriorityEnum.getTextByCode(iter.getPriority()));
+            iter.setStatusText(BizDemandStatusEnum.getTextByCode(iter.getStatus()));
+            iter.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(iter.getPlanReleaseDate()));
+            iter.setDeptName(groupInfo.get(iter.getDeptId()));
+        });
+
+        PageInfo<BizDemandVO> pageInfo = new PageInfo<>(bizDemandVOList);
+        PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(bizDemandVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> linkOrUnLinkBizDemand(BizDemandLinkReq bizDemandLinkReq) {
+        log.info("关联or取消关联接收参数:bizDemandLinkReq={}", bizDemandLinkReq);
+        List<Long> bizDemandIds = bizDemandLinkReq.getBizDemandIds();
+        if (LinkOrUnLinkEnum.LINK.getCode().equals(bizDemandLinkReq.getType())) {
+            productBizDemandComponent.batchInsert(bizDemandLinkReq.getProductDemandId(), bizDemandIds);
+        } else {
+            ProductBizDemandDO productDemandDO = new ProductBizDemandDO();
+            productDemandDO.setIsDeleted(true);
+            productDemandDO.setProductDemandId(bizDemandLinkReq.getProductDemandId());
+            productDemandDO.setBizDemandId(bizDemandIds.get(0));
+            productBizDemandComponent.update(productDemandDO);
+        }
+        return BaseResult.success(true);
+    }
     @Override
     public ProjectVO linkProjectList(Long productDemandId) {
         log.info("产品需求-项目清单接收参数:productDemandId={}", productDemandId);

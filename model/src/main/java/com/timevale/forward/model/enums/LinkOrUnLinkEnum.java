@@ -14,7 +14,7 @@ public enum LinkOrUnLinkEnum {
     LINK(0),
 
     /**
-     * 0:取消关联
+     * 1:取消关联
      */
     UN_LINK(1);
 
