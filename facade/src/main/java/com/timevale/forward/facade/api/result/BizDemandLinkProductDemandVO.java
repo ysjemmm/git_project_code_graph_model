@@ -42,9 +42,6 @@ public class BizDemandLinkProductDemandVO extends ToString {
     @ApiModelProperty("产品线名称")
     private String productLineName;
 
-    @ApiModelProperty("产品需求类型")
-    private Integer type;
-
     @ApiModelProperty("产品需求负责人")
     private PersonQuery ownerInfo;
 
