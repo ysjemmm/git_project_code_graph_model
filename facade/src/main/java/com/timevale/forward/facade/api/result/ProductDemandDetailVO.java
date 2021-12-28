@@ -27,7 +27,7 @@ public class ProductDemandDetailVO extends ToString {
     private String priorityName;
 
     @ApiModelProperty("产品线")
-    private Long productLineId;
+    private ProductLineVO productLineVO;
 
     @ApiModelProperty("类型:0新增功能,1功能迭代,2体验优化,3技术需求,4安全需求")
     private String type;

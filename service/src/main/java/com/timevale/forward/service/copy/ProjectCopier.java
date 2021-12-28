@@ -3,6 +3,7 @@ package com.timevale.forward.service.copy;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
+import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
@@ -64,4 +65,21 @@ public interface ProjectCopier {
      * @return ProjectVO
      */
     List<ProjectVO> convert(List<ProjectListDO> projectListDO);
+
+    /**
+     * 转换转换DO
+     *
+     * @param projectQueryList 对象
+     * @return ProjectListCondition
+     */
+    ProjectListCondition convert(ProductDemandLinkProjectQueryList projectQueryList);
+
+    /**
+     * 转换转换DO
+     *
+     * @param projectDO 对象
+     * @return ProjectVO
+     */
+    ProjectVO transform(ProjectDO projectDO);
+
 }

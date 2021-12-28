@@ -46,4 +46,12 @@ public interface BizDemandMapper {
      */
     List<BizDemandListDO> selectList(BizDemandListCondition bizDemandListCondition);
 
+    /**
+     * 根据条件查询对应需求，查询列表使用
+     *
+     * @param productDemandId 查询条件
+     * @return 列表
+     */
+    List<BizDemandListDO> productDemandBizDemandList(@Param("productDemandId") Long productDemandId);
+
 }

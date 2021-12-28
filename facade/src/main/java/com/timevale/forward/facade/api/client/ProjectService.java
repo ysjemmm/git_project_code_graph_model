@@ -2,9 +2,9 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
-import com.timevale.forward.facade.api.query.ProjectSubProductDemandQueryList;
 import com.timevale.forward.facade.api.request.ProductDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
@@ -77,7 +77,7 @@ public interface ProjectService {
      * @param productDemandQueryList 项目信息
      * @return 列表
      */
-    BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(ProjectSubProductDemandQueryList productDemandQueryList);
+    BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(ProjectLinkProductDemandQueryList productDemandQueryList);
 
 
     /**
@@ -93,6 +93,6 @@ public interface ProjectService {
      * @param productDemandQueryList 查询条件
      * @return 项目产品需求清单
      */
-    BaseResult<PageQueryResult<ProductDemandVO>>  projectProductDemandList(ProjectProductDemandQueryList productDemandQueryList);
+    BaseResult<PageQueryResult<ProductDemandVO>>  linkProductDemandList(ProjectProductDemandQueryList productDemandQueryList);
 
 }

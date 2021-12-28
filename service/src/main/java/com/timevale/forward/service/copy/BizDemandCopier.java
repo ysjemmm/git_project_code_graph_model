@@ -14,10 +14,8 @@ import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.mandarin.common.result.PageQueryResult;
-import org.assertj.core.util.Lists;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
@@ -93,6 +91,8 @@ public interface BizDemandCopier {
      * @param list 列表
      * @return 业务需求列表
      */
+    @Mapping(source = "createMan", target = "createManInfo.userName")
+    @Mapping(source = "createManId", target = "createManInfo.userId")
     List<BizDemandVO> convert(List<BizDemandListDO> list);
 
     /**

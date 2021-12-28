@@ -129,4 +129,13 @@
         select count(distinct a.id)
         <include refid="commonSearch"/>
     </select>
+
+    <select id="getByProductDemandId" resultType="com.timevale.forward.dal.entity.ProjectDO">
+        select a.id,a.name, a.priority, a.type ,a.status,a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
+        a.actual_start_date,a.actual_end_date,a.`desc`,
+        a.create_man_id, a.create_man,a.create_date,a.modify_date
+        from project a
+        left join project_product_demand b on a.id=b.project_id and b.is_deleted=false
+        where b.product_demand_id = #{productDemandId} and a.is_deleted=false
+    </select>
 </mapper>

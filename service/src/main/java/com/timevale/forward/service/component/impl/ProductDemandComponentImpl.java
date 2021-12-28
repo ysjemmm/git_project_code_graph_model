@@ -3,10 +3,8 @@ package com.timevale.forward.service.component.impl;
 import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.entity.FileDO;
-import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.dal.entity.ProductDemandDO;
-import com.timevale.forward.dal.entity.ProductDemandListDO;
+import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.FileComponent;
@@ -15,6 +13,7 @@ import com.timevale.forward.service.component.ProductDemandComponent;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
+import com.timevale.forward.service.copy.ProductLineCopier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -40,6 +39,9 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     @Resource
     private PersonComponent personComponent;
 
+    @Resource
+    private ProductLineMapper productLineMapper;
+
     @Override
     public List<ProductDemandListDO> list(ProductDemandListCondition productDemandListCondition) {
         return productDemandMapper.list(productDemandListCondition);
@@ -57,6 +59,10 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             list.forEach(t->typeName.add(ProductDemandTypeEnum.getTextByCode(t)));
         }
         demandDetailVO.setTypeName(typeName);
+
+        //产品线
+        ProductLineDO productLineDO = productLineMapper.selectById(demandDO.getProductLineId());
+        demandDetailVO.setProductLineVO(ProductLineCopier.INSTANCE.convert(productLineDO));
 
         //附件
         List<FileDO> fileDO = fileComponent.select(id, FileTypeEnum.PRODUCT_DEMAND.getCode());

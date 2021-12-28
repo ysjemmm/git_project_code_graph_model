@@ -25,7 +25,7 @@ public class FileDO extends BaseDO {
     /**
      * 附件名称
      */
-    private String name;
+    private String fileName;
 
     /**
      * 文件id

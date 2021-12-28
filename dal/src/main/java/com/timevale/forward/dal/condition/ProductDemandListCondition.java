@@ -81,6 +81,6 @@ public class ProductDemandListCondition extends QueryBase {
     /**
      * 项目-产品列表弹框 找出没有被关联的产品需求
      */
-    private Boolean isNull;
+    private Boolean matchProductDemand;
 
 }
