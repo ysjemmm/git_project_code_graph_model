@@ -178,6 +178,8 @@ public class BizDemandServiceImpl implements BizDemandService {
             throw new BaseBizRuntimeException("已经有相同的主题名称");
         }
 
+        //
+
         // 新增业务需求
         BizDemandDO bizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandAddReq);
         bizDemandDO.setStatus(BizDemandStatusEnum.EVALUATE.getCode());
@@ -186,10 +188,16 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandMapper.insert(bizDemandDO);
 
         List<FileAddReq> fileIdList = bizDemandAddReq.getFileList();
-        fileComponent.update(fileIdList, bizDemandDO.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
+        if(!fileIdList.isEmpty()){
+            fileComponent.update(fileIdList, bizDemandDO.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
+        }
 
         // 添加抄送人
-        personComponent.add(bizDemandAddReq.getRecipientInfoList(), bizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
+        List<PersonAddReq> recipientInfoList = bizDemandAddReq.getRecipientInfoList();
+        if(!recipientInfoList.isEmpty()){
+            personComponent.add(recipientInfoList, bizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
+        }
+
 
         // 接收人通知（待实现）
        /* String createMan = userInfo.getAlias();
