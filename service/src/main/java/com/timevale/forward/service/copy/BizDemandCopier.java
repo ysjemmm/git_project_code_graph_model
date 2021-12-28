@@ -150,6 +150,9 @@ public interface BizDemandCopier {
      */
     @Named("getInfoId")
     default List<String> getInfoId(List<PersonQuery> list){
+        if(list == null){
+            return null;
+        }
         return list.stream().map(PersonQuery::getUserId).collect(Collectors.toList());
     }
 
