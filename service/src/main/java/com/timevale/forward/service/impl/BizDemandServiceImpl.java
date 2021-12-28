@@ -113,6 +113,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<Long> deptIdList = bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList());
         Map<Long, String> groupInfo = innerGroupClient.batchGetSimpleGroupMap(deptIdList);
 
+        // 部门名称待修改 ，需要完整名称
         bizDemandVOList.forEach( iter -> {
             iter.setPriorityText(PriorityEnum.getTextByCode(iter.getPriority()));
             iter.setStatusText(BizDemandStatusEnum.getTextByCode(iter.getStatus()));
@@ -170,6 +171,12 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(BizDemandAddReq bizDemandAddReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        // 判断主题是否唯一
+        BizDemandDO checkBizDemandDO = bizDemandMapper.selectByName(bizDemandAddReq.getName());
+        if(checkBizDemandDO != null){
+            throw new BaseBizRuntimeException("已经有相同的主题名称");
+        }
 
         // 新增业务需求
         BizDemandDO bizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandAddReq);

@@ -71,6 +71,15 @@
         and is_deleted = false
     </select>
 
+    <select id="selectByName" resultType="com.timevale.forward.dal.entity.BizDemandDO">
+        select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status, priority,
+               receive_man, receive_man_id, processor, os, plan_release_date, reason, is_deleted, create_man_id, create_man, create_date,
+               modify_man_id, modify_man, modify_date
+        from biz_demand
+        where name = #{name}
+          and is_deleted = false
+    </select>
+
     <select id="selectList" resultType="com.timevale.forward.dal.entity.BizDemandListDO">
         select bd.id, bd.name, bd.dept_id, bd.status, bd.priority, bd.receive_man,  bd.receive_man_id,
                bd.plan_release_date, bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date,

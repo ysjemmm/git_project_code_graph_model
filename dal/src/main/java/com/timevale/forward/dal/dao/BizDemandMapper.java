@@ -39,6 +39,14 @@ public interface BizDemandMapper {
     BizDemandDO selectById(@Param("id") Long id);
 
     /**
+     * 选择name获取对应业务需求信息
+     *
+     * @param name 的名字
+     * @return 业务需求DO
+     */
+    BizDemandDO selectByName(@Param("name") String name);
+
+    /**
      * 根据条件查询对应需求，查询列表使用
      *
      * @param bizDemandListCondition 查询条件

@@ -17,8 +17,8 @@ import com.timevale.forward.facade.api.client.BizDemandProductDemandService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.query.BizDemandLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.BizDemandProductDemandQueryList;
+import com.timevale.forward.facade.api.request.BizDemandLinkProductDemandReq;
 import com.timevale.forward.facade.api.request.BizDemandUnlinkProductDemandReq;
-import com.timevale.forward.facade.api.request.LinkOrUnLinkProductDemandReq;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
@@ -80,6 +80,81 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> linkProductDemand(BizDemandLinkProductDemandReq bizDemandLinkProductDemandReq) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        Long bizDemandId = bizDemandLinkProductDemandReq.getId();
+        List<Long> productDemandIdList = bizDemandLinkProductDemandReq.getProductDemandIdList();
+
+        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        if(bizDemandDO == null){
+            throw new BaseBizRuntimeException("不存在该业务需求");
+        }
+
+        // 获取当前关联数据
+        List<ProductBizDemandDO> list = productBizDemandMapper.select(ProductBizDemandCondition.builder()
+                .bizDemandId(bizDemandId)
+                .build());
+
+        // 数据转换为集合，判断交集补集
+        Set<Long> newLinkData = new HashSet<>(productDemandIdList);
+        Map<Long, ProductBizDemandDO> oldLinkDate = list.stream()
+                .collect(Collectors.toMap(ProductBizDemandDO::getProductDemandId, Function.identity(), (a, b) -> a));
+
+        // 更新和新增数据的集合
+        List<ProductBizDemandDO> insertLinkDate = Lists.newArrayList();
+        List<Long> updateLinkDate = Lists.newArrayList();
+
+        // 判断旧数据是否存在新数据中，更新逻辑删除标识
+        for (Map.Entry<Long, ProductBizDemandDO> entry : oldLinkDate.entrySet()) {
+            Boolean isDeleted = null;
+            if(newLinkData.contains(entry.getKey())){
+                if(entry.getValue().getIsDeleted()){
+                    isDeleted = false;
+                }
+            }
+            if(isDeleted != null){
+                updateLinkDate.add(entry.getValue().getId());
+            }
+        }
+
+        // 判断新数据是否在旧数据中，添加新增数据
+        for (Long productDemandId : newLinkData) {
+            if(!oldLinkDate.containsKey(productDemandId)){
+                ProductBizDemandDO productBizDemandDO = ProductBizDemandCopier.INSTANCE.convert(bizDemandId, productDemandId);
+                productBizDemandDO.setCreateMan(userInfo.getAlias());
+                productBizDemandDO.setCreateManId(userInfo.getId());
+                insertLinkDate.add(productBizDemandDO);
+            }
+        }
+
+        // 业务需求根据产品需求状态而变化
+        List<ProductDemandDO> productDemandDOList = productDemandMapper.selectByIdList(productDemandIdList);
+        Integer status = BizDemandStatusEnum.RECEIVED.getCode();
+        for (ProductDemandDO productDemandDO : productDemandDOList) {
+            // 排除“已暂停”，“作废”
+            if(ProductDemandStatusEnum.INVALID.getCode().equals(productDemandDO.getStatus())
+                    || ProductDemandStatusEnum.SUSPEND.getCode().equals(productDemandDO.getStatus())){continue;}
+            status = Math.max(status, productDemandDO.getStatus());
+        }
+
+        // 修改业务状态
+        if(!bizDemandDO.getStatus().equals(status)){
+            bizDemandDO.setStatus(status);
+            bizDemandDO.setModifyMan(userInfo.getAlias());
+            bizDemandDO.setModifyManId(userInfo.getId());
+            bizDemandMapper.update(bizDemandDO);
+        }
+
+        // 新增和更新非空数据
+        if(!insertLinkDate.isEmpty()){productBizDemandMapper.inserts(insertLinkDate);}
+        if(!updateLinkDate.isEmpty()){productBizDemandMapper.updates(updateLinkDate, false, userInfo.getAlias(), userInfo.getId());}
+
+        return BaseResult.success(true);
+    }
+
+    @Override
     public BaseResult<Boolean> unlinkProductDemand(BizDemandUnlinkProductDemandReq bizDemandUnlinkProductDemandReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
@@ -131,83 +206,5 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         return BaseResult.success(BizDemandCopier.INSTANCE.transform(ResultUtil.pageSuccess(new PageInfo<>(bizDemandLinkProductDemandVOList))));
     }
 
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> linkOrUnLinkProductDemand(LinkOrUnLinkProductDemandReq linkOrUnLinkProductDemandReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        Long bizDemandId = linkOrUnLinkProductDemandReq.getId();
-        List<Long> productDemandIdList = linkOrUnLinkProductDemandReq.getProductDemandIdList();
-
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
-        if(bizDemandDO == null){
-            throw new BaseBizRuntimeException("不存在该业务需求");
-        }
-
-        // 获取当前关联数据
-        List<ProductBizDemandDO> list = productBizDemandMapper.select(ProductBizDemandCondition.builder()
-                .bizDemandId(bizDemandId)
-                .build());
-
-        // 数据转换为集合，判断交集补集
-        Set<Long> newLinkData = new HashSet<>(productDemandIdList);
-        Map<Long, ProductBizDemandDO> oldLinkDate = list.stream()
-                .collect(Collectors.toMap(ProductBizDemandDO::getProductDemandId, Function.identity(), (a, b) -> a));
-
-        // 更新和新增数据的集合
-        List<ProductBizDemandDO> insertLinkDate = Lists.newArrayList();
-        List<Long> updateLinkDate = Lists.newArrayList();
-        List<Long> deleteLinkDate = Lists.newArrayList();
-
-        // 判断旧数据是否存在新数据中，更新逻辑删除标识
-        for (Map.Entry<Long, ProductBizDemandDO> entry : oldLinkDate.entrySet()) {
-            Boolean isDeleted = null;
-            if(newLinkData.contains(entry.getKey())){
-                if(entry.getValue().getIsDeleted()){
-                    isDeleted = false;
-                }
-            }else{
-                if(!entry.getValue().getIsDeleted()){
-                    isDeleted = true;
-                }
-            }
-            if(isDeleted != null){
-                if(isDeleted){updateLinkDate.add(entry.getValue().getId());}
-                else {deleteLinkDate.add(entry.getValue().getId());}
-            }
-        }
-        // 判断新数据是否在旧数据中，添加新增数据
-        for (Long productDemandId : newLinkData) {
-            if(!oldLinkDate.containsKey(productDemandId)){
-                ProductBizDemandDO productBizDemandDO = ProductBizDemandCopier.INSTANCE.convert(bizDemandId, productDemandId);
-                productBizDemandDO.setCreateMan(userInfo.getAlias());
-                productBizDemandDO.setCreateManId(userInfo.getId());
-                insertLinkDate.add(productBizDemandDO);
-            }
-        }
-
-        // 业务需求根据产品需求状态而变化
-        List<ProductDemandDO> productDemandDOList = productDemandMapper.selectByIdList(productDemandIdList);
-        Integer status = BizDemandStatusEnum.RECEIVED.getCode();
-        for (ProductDemandDO productDemandDO : productDemandDOList) {
-            // 排除“已暂停”，“作废”
-            if(ProductDemandStatusEnum.INVALID.getCode().equals(productDemandDO.getStatus())
-                    || ProductDemandStatusEnum.SUSPEND.getCode().equals(productDemandDO.getStatus())){continue;}
-            status = Math.max(status, productDemandDO.getStatus());
-        }
-
-        // 修改业务状态
-        if(!bizDemandDO.getStatus().equals(status)){
-            bizDemandDO.setStatus(status);
-            bizDemandDO.setModifyMan(userInfo.getAlias());
-            bizDemandDO.setModifyManId(userInfo.getId());
-            bizDemandMapper.update(bizDemandDO);
-        }
-        // 新增和更新非空数据
-        if(!insertLinkDate.isEmpty()){productBizDemandMapper.inserts(insertLinkDate);}
-        if(!updateLinkDate.isEmpty()){productBizDemandMapper.updates(updateLinkDate, true, userInfo.getAlias(), userInfo.getId());}
-        if(!deleteLinkDate.isEmpty()){productBizDemandMapper.updates(deleteLinkDate, false, userInfo.getAlias(), userInfo.getId());}
-
-        return BaseResult.success(true);
-    }
 }

@@ -4,8 +4,8 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BizDemandLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.BizDemandProductDemandQueryList;
+import com.timevale.forward.facade.api.request.BizDemandLinkProductDemandReq;
 import com.timevale.forward.facade.api.request.BizDemandUnlinkProductDemandReq;
-import com.timevale.forward.facade.api.request.LinkOrUnLinkProductDemandReq;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -34,6 +34,13 @@ public interface BizDemandProductDemandService {
      */
     BaseResult<ProductDemandDetailVO> getProductDemand(Long productDemandId);
 
+    /**
+     * 关联/取消关联产品需求
+     *
+     * @param bizDemandLinkProductDemandReq 业务需求链接产品需求
+     * @return 成功与否
+     */
+    BaseResult<Boolean> linkProductDemand(BizDemandLinkProductDemandReq bizDemandLinkProductDemandReq);
 
     /**
      * 取消关联对应产品需求
@@ -50,12 +57,4 @@ public interface BizDemandProductDemandService {
      * @return 列表
      */
     BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> matchProductDemandList(BizDemandLinkProductDemandQueryList bizDemandSubProductDemandQueryList);
-
-    /**
-     * 关联/取消关联产品需求
-     *
-     * @param linkOrUnLinkProductDemandReq 关联产品线需求请求
-     * @return 成功与否
-     */
-    BaseResult<Boolean> linkOrUnLinkProductDemand(LinkOrUnLinkProductDemandReq linkOrUnLinkProductDemandReq);
 }
