@@ -84,4 +84,13 @@
             and a.is_deleted=false
         </where>
     </select>
+
+    <select id="getByBizDemandId" resultType="com.timevale.forward.dal.entity.ProductBizDemandDO">
+        select a.id, a.product_demand_id, a.biz_demand_id, a.is_deleted,b.status
+        from product_biz_demand a
+        left join product_demand b on a.product_demand_id=b.id
+        <where>
+            and a.biz_demand_id = #{bizDemandId} and a.is_deleted=false
+        </where>
+    </select>
 </mapper>

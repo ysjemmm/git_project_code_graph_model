@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -50,5 +51,9 @@ public class ProductDemandLinkBizDemandQueryList extends QueryBase {
 
     @ApiModelProperty("需求部门id")
     private List<Long> deptIdList;
+
+    @ApiModelProperty("需求id")
+    @NotNull(message = "产品需求id不能为空")
+    private Long productDemandId;
 
 }

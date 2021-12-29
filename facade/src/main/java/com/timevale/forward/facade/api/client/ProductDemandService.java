@@ -85,10 +85,10 @@ public interface ProductDemandService {
     /**
      * 查询满足条件的业务需求列表
      *
-     * @param bizDemandQueryList 产品需求id
+     * @param productDemandLinkBizDemandQueryList 产品需求id
      * @return 列表
      */
-    BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(ProductDemandLinkBizDemandQueryList bizDemandQueryList);
+    BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(ProductDemandLinkBizDemandQueryList productDemandLinkBizDemandQueryList);
 
     /**
      * 关联业务需求

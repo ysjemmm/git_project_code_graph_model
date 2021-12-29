@@ -23,6 +23,7 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
@@ -114,25 +115,25 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         log.info("项目关联的产品需求:productDemandDO={}", productDemandDO);
         productDemandDO.forEach(p -> {
             if (!ProjectStatusEnum.INVALID.getCode().equals(projectStatus)) {
-                ProductDemandDO demandDO = new ProductDemandDO();
-                demandDO.setId(p.getProductDemandId());
+                ProductDemandDO productDemand = new ProductDemandDO();
+                productDemand.setId(p.getProductDemandId());
                 if (ProjectStatusEnum.WAITING.getCode().equals(projectStatus)
                         || ProjectStatusEnum.SUSPEND.getCode().equals(projectStatus)) {
-                    demandDO.setStatus(ProductDemandStatusEnum.INCLUDED.getCode());
+                    productDemand.setStatus(ProductDemandStatusEnum.INCLUDED.getCode());
 
                 } else if (ProjectStatusEnum.PLANING.getCode().equals(projectStatus)
                         || ProjectStatusEnum.DEVING.getCode().equals(projectStatus)
                         || ProjectStatusEnum.TESTING.getCode().equals(projectStatus)) {
-                    demandDO.setStatus(ProductDemandStatusEnum.PROGRESS.getCode());
+                    productDemand.setStatus(ProductDemandStatusEnum.PROGRESS.getCode());
 
                 } else if (ProjectStatusEnum.RELEASED.getCode().equals(projectStatus)) {
-                    demandDO.setStatus(ProductDemandStatusEnum.ONLINE.getCode());
+                    productDemand.setStatus(ProductDemandStatusEnum.ONLINE.getCode());
                 }
-                update(demandDO);
-                log.info("项目关联的产品需求状态更新成功:demandDO={}", demandDO);
+                update(productDemand);
+                log.info("项目关联的产品需求状态更新成功:demandDO={}", productDemand);
 
-                if (ProductDemandStatusEnum.INCLUDED.getCode().equals(demandDO.getStatus())
-                        || ProductDemandStatusEnum.PROGRESS.getCode().equals(demandDO.getStatus())) {
+                if (ProductDemandStatusEnum.INCLUDED.getCode().equals(productDemand.getStatus())
+                        || ProductDemandStatusEnum.PROGRESS.getCode().equals(productDemand.getStatus())) {
                     ProductBizDemandCondition condition = ProductBizDemandCondition.builder().productDemandId(p.getProductDemandId()).isDeleted(false).build();
                     // 一个产品需求下的业务需求
                     List<ProductBizDemandDO> bizDemand = productBizDemandMapper.select(condition);
@@ -140,28 +141,31 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                         condition.setProductDemandId(null);
                         condition.setBizDemandId(a.getBizDemandId());
                         // 该业务需求下的产品需求
-                        List<ProductBizDemandDO> productDemand = productBizDemandMapper.select(condition);
+                        List<ProductBizDemandDO> demand = productBizDemandMapper.getByBizDemandId(a.getBizDemandId());
                         BizDemandDO bizDemandDO = new BizDemandDO();
                         bizDemandDO.setId(a.getBizDemandId());
-                        if (productDemand.size() > 1) {
+                        if (demand.size() > 1) {
                             bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
-                            // 关联的业务需求，存在其他关联的产品需求时,更新为待排期
-                            List<Long> productDemandIds = productDemand.stream().map(ProductBizDemandDO::getProductDemandId)
-                                    .filter((b) -> !p.getProductDemandId().equals(b)).collect(Collectors.toList());
-                            log.info("被关联的业务需求,存在其他关联的产品需求:productDemandIds={}", productDemandIds);
-                            productDemandMapper.updateByIds(productDemandIds,ProductDemandStatusEnum.WAITING.getCode());
+                            // 关联的业务需求，存在其他关联的产品需求且为待排期时 业务需求状态改为：已接收
+                            List<ProductBizDemandDO> productBizDemandDOS = demand.stream()
+                                    .filter((b) ->
+                                            (ProductDemandStatusEnum.WAITING.getCode().equals(b.getStatus()) && !p.getProductDemandId().equals(b.getProductDemandId()))
+                                    ).collect(Collectors.toList());
+                            log.info("被关联的业务需求,存在其他关联的产品需求:productDemandIds={}", productBizDemandDOS);
+                            if(!CollectionUtils.isEmpty(productBizDemandDOS)){
+                                bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
+                                bizDemandMapper.update(bizDemandDO);
+                            }
 
                         } else {
                             //关联的业务需求，仅关联该产品需求时
-                            bizDemandDO.setStatus(demandDO.getStatus());
+                            bizDemandDO.setStatus(productDemand.getStatus());
+                            bizDemandMapper.update(bizDemandDO);
                         }
-                        bizDemandMapper.update(bizDemandDO);
                         log.info("产品需求关联的业务需求状态更新成功:bizDemandDO={}", bizDemandDO);
                     });
                 }
             }
         });
     }
-
-
 }

@@ -299,7 +299,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<Long> productDemandIds = productDemandLinkReq.getProductDemandIds();
         if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
             projectProductDemandComponent.batchInsert(projectDO.getId(), productDemandIds);
-            productDemandComponent.updateDemandStatusIfNecessary(projectDO.getId(),projectDO.getStatus());
+//            productDemandComponent.updateDemandStatusIfNecessary(projectDO.getId(),projectDO.getStatus());
         } else {
             ProjectProductDemandDO projectProductDemandDO = new ProjectProductDemandDO();
             projectProductDemandDO.setIsDeleted(true);
@@ -369,6 +369,6 @@ public class ProjectServiceImpl implements ProjectService {
         }
         log.info("更新项目信息:nodeMap={},,projectDO={}", nodeMap, projectDO);
         projectMapper.update(projectDO);
-        productDemandComponent.updateDemandStatusIfNecessary(projectDO.getId(), projectDO.getStatus());
+//        productDemandComponent.updateDemandStatusIfNecessary(projectDO.getId(), projectDO.getStatus());
     }
 }

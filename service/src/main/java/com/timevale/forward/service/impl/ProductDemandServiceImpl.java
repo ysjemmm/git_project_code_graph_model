@@ -239,14 +239,14 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<ProjectVO>> matchProjectList(ProductDemandLinkProjectQueryList projectQueryList) {
-        log.info("产品需求-项目匹配接收参数:projectQueryList={}", projectQueryList);
-        ProjectProductDemandDO productDemandDO = projectProductDemandMapper.getByProductDemandId(projectQueryList.getProductDemandId());
+    public BaseResult<PageQueryResult<ProjectVO>> matchProjectList(ProductDemandLinkProjectQueryList productDemandLinkProjectQueryList) {
+        log.info("产品需求-项目匹配接收参数:projectQueryList={}", productDemandLinkProjectQueryList);
+        ProjectProductDemandDO productDemandDO = projectProductDemandMapper.getByProductDemandId(productDemandLinkProjectQueryList.getProductDemandId());
         if (productDemandDO != null) {
             throw new BaseBizRuntimeException("该产品需求已被关联,请解除后重试");
         }
-        PageHelper.startPage(projectQueryList.getPageNum(), projectQueryList.getPageSize());
-        ProjectListCondition condition = ProjectCopier.INSTANCE.convert(projectQueryList);
+        PageHelper.startPage(productDemandLinkProjectQueryList.getPageNum(), productDemandLinkProjectQueryList.getPageSize());
+        ProjectListCondition condition = ProjectCopier.INSTANCE.convert(productDemandLinkProjectQueryList);
         condition.setStatus(Lists.newArrayList(ProjectStatusEnum.WAITING.getCode()
                 , ProjectStatusEnum.PLANING.getCode()
                 , ProjectStatusEnum.DEVING.getCode()
@@ -255,13 +255,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(ProductDemandLinkBizDemandQueryList bizDemandQueryList) {
-        log.info("产品需求-业务需求匹配接收参数:bizDemandQueryList={}", bizDemandQueryList);
+    public BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(ProductDemandLinkBizDemandQueryList productDemandLinkBizDemandQueryList) {
+        log.info("产品需求-业务需求匹配接收参数:bizDemandQueryList={}", productDemandLinkBizDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         List<String> receiveManIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
         log.info("我和我的下属:receiveManIdList={}", receiveManIdList);
-        PageHelper.startPage(bizDemandQueryList.getPageNum(), bizDemandQueryList.getPageSize());
-        BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
+        PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize());
+        BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(productDemandLinkBizDemandQueryList);
         condition.setReceiveManIdList(receiveManIdList);
         condition.setStatusList(Lists.newArrayList(
                 BizDemandStatusEnum.RECEIVED.getCode()
@@ -306,6 +306,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
         return BaseResult.success(true);
     }
+
     @Override
     public ProjectVO linkProjectList(Long productDemandId) {
         log.info("产品需求-项目清单接收参数:productDemandId={}", productDemandId);

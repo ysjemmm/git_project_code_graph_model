@@ -79,4 +79,6 @@ public class BizDemandListCondition {
      */
     private String copier;
 
+
+    private Long productDemandId;
 }

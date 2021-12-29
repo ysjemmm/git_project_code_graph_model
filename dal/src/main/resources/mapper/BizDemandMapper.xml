@@ -88,6 +88,9 @@
         from biz_demand bd
         left join product_line pl on pl.id = bd.product_line_id
         left join biz_domain b    on pl.biz_domain_id = b.id
+        <if test="productDemandId != null">
+            left join product_biz_demand d on d.biz_demand_id=bd.id and d.is_deleted =false
+        </if>
         <where>
             <if test="id!=null">
                 and bd.id = #{id}
@@ -167,6 +170,10 @@
                     </choose>
                 </otherwise>
             </choose>
+            <if test="productDemandId != null and productDemandId != ''">
+           <!--产品需求关联业务需求时, 不能选择已经关联的业务需求 -->
+              and   d.product_demand_id !=#{productDemandId}
+            </if>
         </where>
     </select>
 

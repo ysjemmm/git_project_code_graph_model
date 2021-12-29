@@ -80,4 +80,13 @@ public interface ProductBizDemandMapper {
      * @return 列表
      */
     List<ProductBizDemandDO> getByProductDemandId(@Param("productDemandIds") List<Long> productDemandIds);
+
+
+    /**
+     * 查询产品业务需求关联
+     *
+     * @param bizDemandId 产品业务需求查询条件
+     * @return 列表
+     */
+    List<ProductBizDemandDO> getByBizDemandId(@Param("bizDemandId") Long bizDemandId);
 }
