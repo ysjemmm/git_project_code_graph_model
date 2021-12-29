@@ -8,11 +8,12 @@ import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.CommentDO;
 import com.timevale.forward.facade.api.client.CommentService;
 import com.timevale.forward.facade.api.query.CommentQueryList;
+import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.request.CommentAddReq;
 import com.timevale.forward.facade.api.result.CommentVO;
 import com.timevale.forward.model.enums.CommentTypeEnum;
+import com.timevale.forward.service.component.MessageComponent;
 import com.timevale.forward.service.copy.CommentCopier;
-import com.timevale.forward.service.integration.erp.ErpMessageClient;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -20,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author xingyun
@@ -30,7 +32,7 @@ import java.util.List;
 public class CommentServiceImpl implements CommentService {
 
     @Resource
-    ErpMessageClient erpMessageClient;
+    MessageComponent messageComponent;
 
     @Resource
     BizDemandMapper bizDemandMapper;
@@ -67,8 +69,12 @@ public class CommentServiceImpl implements CommentService {
         commentDO.setCreateManId(userInfo.getId());
         commentMapper.insert(commentDO);
 
+        // 评论接收人
+        List<String> receivers = commentAddReq.getReceiverInfoList().stream().map(PersonQuery::getUserId).collect(Collectors.toList());
+        if(receivers.isEmpty()){return BaseResult.success(true);}
+
         // 查询对应业务需求/产品需求/项目名称
-        String name = "";
+        String name;
         Long toId = commentAddReq.getToId();
         Integer type = commentAddReq.getType();
         if(type.equals(CommentTypeEnum.PROJECT.getCode())){
@@ -79,23 +85,13 @@ public class CommentServiceImpl implements CommentService {
             name = bizDemandMapper.selectById(toId).getName();
         }
 
-        // 通知被@人(待实现）
-        /*String creatMan = userInfo.getAlias();
-        String content = commentAddReq.getContent();
-        String title = MessageTitleEnum.COMMENT.getText();
-        String commentType = CommentTypeEnum.getTextByCode(commentAddReq.getType());
-        List<String> receivers = commentAddReq.getReceiverInfoList().stream().map(PersonQuery::getUserId).collect(Collectors.toList());
-
-        String markdown = String.format("%s评论了%s%s：%s，可进入产研项目管理系统查看",creatMan, commentType, name, content);
-
-        ActionCardMsg actionCardMsg = ActionCardMsg.builder()
-                .title(title)
-                .markdown(markdown)
-                .singleUrl("https://www.baidu.com/")
-                .receivers(receivers)
-                .build();
-        erpMessageClient.sendActionCardMsg(actionCardMsg);
-*/
+        // 发送通知
+        messageComponent.commentMsg(
+                userInfo.getId(),
+                receivers,
+                name,
+                commentDO.getContent()
+        );
         return BaseResult.success(true);
     }
 

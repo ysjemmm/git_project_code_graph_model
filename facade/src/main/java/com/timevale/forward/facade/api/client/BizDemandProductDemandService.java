@@ -24,7 +24,7 @@ public interface BizDemandProductDemandService {
      * @param bizDemandProductDemandQueryList 业务需求产品需求查询列表
      * @return 分页数据
      */
-    BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> linkProductDemandList(BizDemandProductDemandQueryList bizDemandProductDemandQueryList);
+    BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> linkedProductDemandList(BizDemandProductDemandQueryList bizDemandProductDemandQueryList);
 
     /**
      * 查看产品需求

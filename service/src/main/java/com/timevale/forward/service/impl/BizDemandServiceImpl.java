@@ -16,6 +16,7 @@ import com.timevale.forward.facade.api.result.FileVO;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.MessageComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
@@ -64,9 +65,6 @@ public class BizDemandServiceImpl implements BizDemandService {
     ProductBizDemandMapper productBizDemandMapper;
 
     @Resource
-    ProjectProductDemandMapper projectProductDemandMapper;
-
-    @Resource
     ErpMessageClient erpMessageClient;
 
     @Resource
@@ -80,6 +78,9 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Resource
     FileComponent fileComponent;
+
+    @Resource
+    MessageComponent messageComponent;
 
 
     @Override
@@ -137,7 +138,6 @@ public class BizDemandServiceImpl implements BizDemandService {
     public BaseResult<Boolean> updateStatus(BizDemandUpdateStatusReq bizDemandUpdateStatusReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-
         // 修改业务需求状态 —— 作废
         Long bizDemandId = bizDemandUpdateStatusReq.getBizDemandId();
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
@@ -154,23 +154,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 取消产品关联
         productBizDemandMapper.deleteByBizDemandId(bizDemandId, userInfo.getAlias(), userInfo.getId());
 
-        // 接收人通知（待实现）
-        /*String name = bizDemandDO.getName();
-        String createMan = userInfo.getAlias();
-        String title = MessageTitleEnum.BIZDEMAND_INVALID.getText();
-        List<String> receivers = Lists.newArrayList(bizDemandDO.getReceiveManId());
+        // 接收人通知
+        messageComponent.bizDemandInvalidMsg(
+                userInfo.getId(),
+                bizDemandDO.getReceiveManId(),
+                bizDemandDO.getName()
+        );
 
-        String markdown = String.format("%s作废了业务需求：%s", createMan, name);
-
-        ActionCardMsg actionCardMsg = ActionCardMsg.builder()
-                .title(title)
-                .markdown(markdown)
-                .singleTitle("跳转连接")
-                .singleUrl("https://www.baidu.com/")
-                .receivers(receivers)
-                .build();
-        erpMessageClient.sendActionCardMsg(actionCardMsg);
-*/
         return BaseResult.success(true);
     }
 
@@ -184,8 +174,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         if(checkBizDemandDO != null){
             throw new BaseBizRuntimeException("已经有相同的主题名称");
         }
-
-        //
 
         // 新增业务需求
         BizDemandDO bizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandAddReq);
@@ -205,23 +193,12 @@ public class BizDemandServiceImpl implements BizDemandService {
             personComponent.add(recipientInfoList, bizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
         }
 
-
-        // 接收人通知（待实现）
-       /* String createMan = userInfo.getAlias();
-        String name = bizDemandAddReq.getName();
-        String title = MessageTitleEnum.BIZDEMAND_RECEIVE.getText();
-        List<String> receivers = Lists.newArrayList(bizDemandAddReq.getReceiveManInfo().getUserId());
-
-        String markdown = String.format("您收到了%s提交的业务需求：%s，可进入产研项目管理系统查看", createMan, name);
-
-        ActionCardMsg actionCardMsg = ActionCardMsg.builder()
-                .title(title)
-                .markdown(markdown)
-                .singleTitle("跳转连接")
-                .singleUrl("https://www.baidu.com/")
-                .receivers(receivers)
-                .build();
-        erpMessageClient.sendActionCardMsg(actionCardMsg);*/
+        // 接收人通知
+        messageComponent.bizDemandToReceiveMsg(
+                userInfo.getId(),
+                bizDemandDO.getReceiveManId(),
+                bizDemandDO.getName()
+        );
 
         return BaseResult.success(true);
     }
@@ -330,23 +307,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
-        // 通知需求提交人（待实现）
-        /*String name = bizDemandDO.getName();
-        String receiver = bizDemandDO.getReceiveMan();
-        String title = MessageTitleEnum.BIZDEMAND_FEEDBACK.getText();
-        String text = PlanReleaseDateEnum.getTextByCode(planReleaseDate);
-        List<String> receivers = Lists.newArrayList(bizDemandDO.getCreateManId());
-
-        String markdown = String.format("%s接收了您提交的业务需求：%s，预期上线时间为%s，可进入产研项目管理系统查看", receiver, name, text);
-
-        ActionCardMsg actionCardMsg = ActionCardMsg.builder()
-                .title(title)
-                .markdown(markdown)
-                .singleTitle("跳转连接")
-                .singleUrl("https://www.baidu.com/")
-                .receivers(receivers)
-                .build();
-        erpMessageClient.sendActionCardMsg(actionCardMsg);*/
+        // 通知需求提交人
+        messageComponent.bizDemandReceivedMsg(
+                userInfo.getId(),
+                bizDemandDO.getCreateManId(),
+                bizDemandDO.getName(),
+                PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
+        );
 
         return BaseResult.success(true);
     }
@@ -371,23 +338,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
-        // 驳回通知（待实现）
-        /*String name = bizDemandDO.getName();
-        String receiver = bizDemandDO.getReceiveMan();
-        String reasonText = BizDemandReasonEnum.getTextByCode(reason);
-        List<String> receivers = Lists.newArrayList(bizDemandDO.getCreateManId());
-
-        String markdown = String.format("%s驳回了您提交的业务需求：%s，驳回理由是%s，可进入产研项目管理系统查看", receiver, name, reasonText);
-
-        ActionCardMsg actionCardMsg = ActionCardMsg.builder()
-                .title(MessageTitleEnum.BIZDEMAND_FEEDBACK.getText())
-                .markdown(markdown)
-                .singleTitle("跳转连接")
-                .singleUrl("https://www.baidu.com/")
-                .receivers(receivers)
-                .build();
-        erpMessageClient.sendActionCardMsg(actionCardMsg);
-*/
+        // 驳回通知
+        messageComponent.bizDemandRejectMsg(
+                userInfo.getId(),
+                bizDemandDO.getCreateManId(),
+                bizDemandDO.getName(),
+                BizDemandReasonEnum.getTextByCode(bizDemandDO.getReason())
+        );
         return BaseResult.success(true);
     }
 
