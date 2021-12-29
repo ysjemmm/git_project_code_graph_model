@@ -29,6 +29,9 @@ public class ProductLineVO extends ToString {
     @ApiModelProperty("名称")
     private String name;
 
+    @ApiModelProperty("产品线类型 0：默认类型 1：金格")
+    private Integer type;
+
     @ApiModelProperty("产品线负责人")
     private String productLineOwner;
 
