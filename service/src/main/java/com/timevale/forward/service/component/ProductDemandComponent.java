@@ -30,9 +30,9 @@ public interface ProductDemandComponent {
 
     /**
      *
-     * @param projectId 项目id
-     * @param projectStatus 项目状态
+     * @param productDemandIds productDemandIds
+     * @param needUpdateStatusWhenLinkOne  业务需求和产品需求 1-1时需要更新的该状态
      */
-    void updateDemandStatusIfNecessary(Long projectId, Integer projectStatus);
+    void updateBizDemandStatusIfNecessary(List<Long> productDemandIds,Integer needUpdateStatusWhenLinkOne);
 
 }

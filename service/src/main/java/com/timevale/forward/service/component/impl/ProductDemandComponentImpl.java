@@ -75,6 +75,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         if (!StringUtils.isEmpty(demandDO.getType())) {
             List<Integer> list = JSON.parseArray(demandDO.getType(), Integer.class);
             list.forEach(t -> typeName.add(ProductDemandTypeEnum.getTextByCode(t)));
+            demandDetailVO.setTypes(list);
         }
         demandDetailVO.setTypeName(typeName);
 
@@ -100,17 +101,30 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         productDemandMapper.update(productDemandDO);
     }
 
-    /**
-     * 当项目状态发生变化时(满足条件时:有关联的产品需求且状态不是已作废)需要改变产品需求状态
-     * 已列入项目：该产品需求所关联的项目状态为待启动
-     * 项目进行中：该产品需求所关联的项目状态为规划中、研发中、测试中
-     * 已完成上线：该产品需求所关联的项目状态为已发布
-     *
-     * @param projectId     项目id
-     * @param projectStatus 项目状态
-     */
     @Override
-    public void updateDemandStatusIfNecessary(Long projectId, Integer projectStatus) {
+    public void updateBizDemandStatusIfNecessary(List<Long> productDemandIds, Integer needUpdateStatusWhenLinkOne) {
+        List<ProductBizDemandDO> bizDemands = productBizDemandMapper.getByProductDemandId(productDemandIds);
+        List<Long> one = new ArrayList<>();
+        List<Long> many = new ArrayList<>();
+        bizDemands.forEach(a -> {
+            List<ProductBizDemandDO> productDemands = productBizDemandMapper.getByBizDemandId(a.getBizDemandId());
+            List<Integer> productDemandStauts = productDemands.stream().map(ProductBizDemandDO::getStatus).collect(Collectors.toList());
+            if (productDemands.size() > 1 && productDemandStauts.contains(ProductDemandStatusEnum.WAITING.getCode())) {
+                // 产品需求关联的业务需求 有多个产品需求,且含有待排期产品需求->则业务需求状态变为：已接收
+                many.add(a.getBizDemandId());
+            } else if (productDemands.size() == 1) {
+                // 产品需求与业务需求 1-1  业务需求状态变为已列入项目
+                one.add(a.getBizDemandId());
+            }
+        });
+        bizDemandMapper.updateByIds(many, BizDemandStatusEnum.RECEIVED.getCode());
+        bizDemandMapper.updateByIds(one, needUpdateStatusWhenLinkOne);
+        log.info("产品需求-更新业务需求:productDemandIds={},many={},one={}",productDemandIds,many, one);
+
+        //发送钉钉
+    }
+
+    private void updateDemandStatusIfNecessary(Long projectId, Integer projectStatus) {
         List<ProjectProductDemandDO> productDemandDO = projectProductDemandComponent.getByProjectId(projectId);
         log.info("项目关联的产品需求:productDemandDO={}", productDemandDO);
         productDemandDO.forEach(p -> {

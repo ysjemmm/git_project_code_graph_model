@@ -35,6 +35,9 @@ public class ProductDemandDetailVO extends ToString {
     @ApiModelProperty("类型")
     private List<String> typeName;
 
+    @ApiModelProperty("类型")
+    private List<Integer> types;
+
     @ApiModelProperty("状态:0待排期,10已列入项目,20项目进行中,30已完成上线,40已暂停,50已作废")
     private Integer status;
 
@@ -43,6 +46,9 @@ public class ProductDemandDetailVO extends ToString {
 
     @ApiModelProperty("负责人")
     private String owner;
+
+    @ApiModelProperty("负责人id")
+    private String ownerId;
 
     @ApiModelProperty("描述")
     private String desc;

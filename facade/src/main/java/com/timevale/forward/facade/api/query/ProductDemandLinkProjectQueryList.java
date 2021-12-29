@@ -16,7 +16,7 @@ import java.util.List;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("项目列表查询")
+@ApiModel("产品需求-项目列表查询")
 public class ProductDemandLinkProjectQueryList extends QueryBase {
     @ApiModelProperty("id")
     private Long id;
@@ -59,18 +59,6 @@ public class ProductDemandLinkProjectQueryList extends QueryBase {
 
     @ApiModelProperty("项目计划结束时间右区间")
     private Date planEndDateRight;
-
-    @ApiModelProperty("项目实际开始时间左区间")
-    private Date actualStartDateLeft;
-
-    @ApiModelProperty("项目实际开始时间右区间")
-    private Date actualStartDateRight;
-
-    @ApiModelProperty("项目实际结束时间左区间")
-    private Date actualEndDateLeft;
-
-    @ApiModelProperty("项目实际结束时间右区间")
-    private Date actualEndDateRight;
 
     @ApiModelProperty("产品需求id")
     @NotNull(message = "产品需求id不能为空")

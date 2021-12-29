@@ -153,6 +153,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             throw new BaseBizRuntimeException("产品需求状态不是待排期、已列入项目、项目进行中,不能修改状态");
         }
         // 更新需求状态
+        Integer oriStatus = demandDO.getStatus();
         demandDO.setStatus(type);
         productDemandComponent.update(demandDO);
 
@@ -162,6 +163,15 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         productDemandDO.setIsDeleted(true);
         projectProductDemandComponent.update(productDemandDO);
 
+//        if (ProductDemandStatusEnum.SUSPEND.getCode().equals(type)) {
+//            if (ProductDemandStatusEnum.WAITING.getCode().equals(oriStatus)
+//                    || ProductDemandStatusEnum.INCLUDED.getCode().equals(oriStatus)
+//                    || ProductDemandStatusEnum.PROGRESS.getCode().equals(oriStatus)) {
+//
+//            }
+//            // 暂停
+//
+//        }
         if (ProductDemandStatusEnum.INVALID.getCode().equals(type)) {
             // 作废解业务需求关联
             ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();

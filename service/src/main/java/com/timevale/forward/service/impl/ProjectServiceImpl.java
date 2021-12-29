@@ -125,31 +125,40 @@ public class ProjectServiceImpl implements ProjectService {
         projectDO.setModifyManId(userInfo.getId());
         projectDO.setStatus(type);
         projectMapper.update(projectDO);
-        if (ProjectStatusEnum.INVALID.getCode().equals(type)) {
-            List<ProjectProductDemandDO> exists = projectProductDemandComponent.getByProjectId(projectId);
+        //所有关联的产品需求
+        List<ProjectProductDemandDO> exists = projectProductDemandComponent.getByProjectId(projectId);
+        List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
+                .collect(Collectors.toList());
 
-            // 作废解除关联
-            ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
-            productDemandDO.setProjectId(projectId);
-            productDemandDO.setIsDeleted(true);
-            projectProductDemandComponent.update(productDemandDO);
+        //修改产品需求状态
+        if (CollectionUtils.isNotEmpty(existProductDemandIds)) {
+            if (ProjectStatusEnum.SUSPEND.getCode().equals(type)) {
+                //暂停  更新产品需求状态
+                productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode());
+                //更新业务需求状态
+                productDemandComponent.updateBizDemandStatusIfNecessary(existProductDemandIds, BizDemandStatusEnum.INCLUDE_PROJECT.getCode());
+            } else {
+                // 作废解除关联
+                ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
+                productDemandDO.setProjectId(projectId);
+                productDemandDO.setIsDeleted(true);
+                projectProductDemandComponent.update(productDemandDO);
 
-            //修改产品需求状态
-            List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
-                    .collect(Collectors.toList());
-            if(CollectionUtils.isNotEmpty(existProductDemandIds)){
-                productDemandMapper.updateByIds(existProductDemandIds,ProductDemandStatusEnum.WAITING.getCode());
-                //修改业务需求状态
-                List<ProductBizDemandDO> bizDemand = productBizDemandMapper.getByProductDemandId(existProductDemandIds);
-                List<Long> ids = bizDemand.stream().filter(a->!BizDemandStatusEnum.REJECT.getCode().equals(a.getStatus()))
+                productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.WAITING.getCode());
+                //修改业务需求状态,找出所有关联的业务需求状态
+                List<ProductBizDemandDO> bizDemands = productBizDemandMapper.getByProductDemandId(existProductDemandIds);
+                List<Long> ids = bizDemands.stream().filter(a -> !BizDemandStatusEnum.REJECT.getCode().equals(a.getStatus()))
                         .map(ProductBizDemandDO::getBizDemandId)
                         .collect(Collectors.toList());
-                bizDemandMapper.updateByIds(ids,BizDemandStatusEnum.RECEIVED.getCode());
-                log.info("需要更新的业务需求:ids={}", ids);
+                bizDemandMapper.updateByIds(ids, BizDemandStatusEnum.RECEIVED.getCode());
+                log.info("需要更新为已接收的业务需求:ids={}", ids);
             }
+
+
         }
         return BaseResult.success(true);
     }
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -293,20 +302,20 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<Boolean> linkOrUnLinkProductDemand(ProductDemandLinkReq productDemandLinkReq) {
         log.info("关联or取消关联接收参数:productDemandLinkReq={}", productDemandLinkReq);
         ProjectDO projectDO = projectMapper.get(productDemandLinkReq.getProjectId());
-        if(projectDO==null){
+        if (projectDO == null) {
             throw new BaseBizRuntimeException("找不到该项目");
         }
         List<Long> productDemandIds = productDemandLinkReq.getProductDemandIds();
         if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
             projectProductDemandComponent.batchInsert(projectDO.getId(), productDemandIds);
-//            productDemandComponent.updateDemandStatusIfNecessary(projectDO.getId(),projectDO.getStatus());
+//            updateProjectBizDemandStatus(projectDO);
         } else {
             ProjectProductDemandDO projectProductDemandDO = new ProjectProductDemandDO();
             projectProductDemandDO.setIsDeleted(true);
             projectProductDemandDO.setProductDemandId(productDemandIds.get(0));
             projectProductDemandComponent.update(projectProductDemandDO);
 
-            ProductDemandDO productDemandDO=new ProductDemandDO();
+            ProductDemandDO productDemandDO = new ProductDemandDO();
             productDemandDO.setId(productDemandIds.get(0));
             productDemandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
             productDemandComponent.update(productDemandDO);
@@ -315,7 +324,7 @@ public class ProjectServiceImpl implements ProjectService {
             ProductBizDemandCondition condition = ProductBizDemandCondition.builder().productDemandId(productDemandIds.get(0)).isDeleted(false).build();
             List<ProductBizDemandDO> bizDemand = productBizDemandMapper.select(condition);
             List<Long> ids = bizDemand.stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
-            bizDemandMapper.updateByIds(ids,BizDemandStatusEnum.RECEIVED.getCode());
+            bizDemandMapper.updateByIds(ids, BizDemandStatusEnum.RECEIVED.getCode());
             log.info("需要更新的业务需求:ids={}", ids);
         }
         return BaseResult.success(true);
@@ -369,6 +378,24 @@ public class ProjectServiceImpl implements ProjectService {
         }
         log.info("更新项目信息:nodeMap={},,projectDO={}", nodeMap, projectDO);
         projectMapper.update(projectDO);
-//        productDemandComponent.updateDemandStatusIfNecessary(projectDO.getId(), projectDO.getStatus());
+
+//        updateProjectBizDemandStatus(projectDO);
+
+    }
+
+    private void updateProjectBizDemandStatus(ProjectDO projectDO) {
+        List<ProjectProductDemandDO> exists = projectProductDemandComponent.getByProjectId(projectDO.getId());
+        List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
+                .collect(Collectors.toList());
+        if (ProjectStatusEnum.WAITING.getCode().equals(projectDO.getStatus())
+                || ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus())) {
+            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode());
+            productDemandComponent.updateBizDemandStatusIfNecessary(existProductDemandIds, BizDemandStatusEnum.INCLUDE_PROJECT.getCode());
+        } else if (ProjectStatusEnum.PLANING.getCode().equals(projectDO.getStatus())
+                || ProjectStatusEnum.DEVING.getCode().equals(projectDO.getStatus())
+                || ProjectStatusEnum.TESTING.getCode().equals(projectDO.getStatus())) {
+            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.PROGRESS.getCode());
+            productDemandComponent.updateBizDemandStatusIfNecessary(existProductDemandIds, BizDemandStatusEnum.PROJECTING.getCode());
+        }
     }
 }
