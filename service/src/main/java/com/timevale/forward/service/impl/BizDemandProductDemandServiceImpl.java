@@ -186,7 +186,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         // 查询符合条件的产品需求，并过滤已经关联的，已经作废的
         List<BizDemandLinkProductDemandListDO> productDemandDOList = productDemandMapper.selectListOfBizDemandLink(condition);
         productDemandDOList = productDemandDOList.stream().filter(e -> !productBizDemandDOSet.contains(e.getId())).collect(Collectors.toList());
-        productDemandDOList = productDemandDOList.stream().filter(e -> e.getStatus().equals(ProductDemandStatusEnum.INVALID.getCode())).collect(Collectors.toList());
+        productDemandDOList = productDemandDOList.stream().filter(e -> !e.getStatus().equals(ProductDemandStatusEnum.INVALID.getCode())).collect(Collectors.toList());
         List<BizDemandLinkProductDemandVO> bizDemandLinkProductDemandVOList = BizDemandCopier.INSTANCE.transform(productDemandDOList);
 
         // 业务需求状态信息赋值
@@ -194,6 +194,5 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         return BaseResult.success(BizDemandCopier.INSTANCE.transform(ResultUtil.pageSuccess(new PageInfo<>(bizDemandLinkProductDemandVOList))));
     }
-
 
 }
