@@ -138,4 +138,18 @@
         left join project_product_demand b on a.id=b.project_id and b.is_deleted=false
         where b.product_demand_id = #{productDemandId} and a.is_deleted=false
     </select>
+
+    <select id="selectByProductDemandIdList" resultType="com.timevale.forward.dal.entity.ProjectDO">
+        select distinct p.id, p.name, p.priority, p.type, p.status, p.pm, p.pm_id, p.plan_start_date, p.plan_end_date, p.actual_start_date, p.actual_end_date, p.`desc`, p.is_deleted, p.create_man_id, p.create_man, p.create_date, p.modify_man_id, p.modify_man, p.modify_date
+        from project_product_demand ppd
+        join project p on ppd.project_id = p.id
+        where ppd.is_deleted = false
+        <if test="productDemandIdList!=null and productDemandIdList.size()>0">
+            and ppd.product_demand_id in
+            <foreach collection="productDemandIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
 </mapper>

@@ -57,4 +57,12 @@ public interface ProjectMapper {
     ProjectDO getByProductDemandId(@Param("productDemandId") Long productDemandId);
 
 
+    /**
+     * 选择通过产品需求id列表
+     *
+     * @param productDemandIdList 产品需求id列表
+     * @return ProjectDO
+     */
+    List<ProjectDO> selectByProductDemandIdList(@Param("productDemandIdList") List<Long> productDemandIdList);
+
 }

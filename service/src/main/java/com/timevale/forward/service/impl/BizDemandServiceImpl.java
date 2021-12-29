@@ -4,9 +4,8 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.ProductBizDemandMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.condition.ProductBizDemandCondition;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
@@ -34,10 +33,12 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.DateUtil;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -54,10 +55,16 @@ public class BizDemandServiceImpl implements BizDemandService {
     BizDemandMapper bizDemandMapper;
 
     @Resource
+    ProductLineMapper productLineMapper;
+
+    @Resource
+    ProjectMapper projectMapper;
+
+    @Resource
     ProductBizDemandMapper productBizDemandMapper;
 
     @Resource
-    ProductLineMapper productLineMapper;
+    ProjectProductDemandMapper projectProductDemandMapper;
 
     @Resource
     ErpMessageClient erpMessageClient;
@@ -140,8 +147,8 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 修改业务需求状态
         bizDemandDO.setStatus(BizDemandStatusEnum.INVALID.getCode());
-        bizDemandDO.setModifyMan(userInfo.getAlias());
         bizDemandDO.setModifyManId(userInfo.getId());
+        bizDemandDO.setModifyMan(userInfo.getAlias());
         bizDemandMapper.update(bizDemandDO);
 
         // 取消产品关联
@@ -251,7 +258,36 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         bizDemandDetailVO.setDeptName(innerGroupClient.getSimpleGroup(bizDemandDO.getDeptId()).getGroupName());
 
+        //获取项目发布时间
+        bizDemandDetailVO.setEndDate(getProjectEndDate(bizDemandId));
+
         return BaseResult.success(bizDemandDetailVO);
+    }
+
+    /**
+     * 得到业务需求关联的产品需求关联的项目的发布日期
+     *
+     * @param bizDemandId 业务需求id
+     * @return Date
+     */
+    public Date getProjectEndDate(Long bizDemandId){
+        // 获取该业务需求所关联的产品需求
+        List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.select(ProductBizDemandCondition.builder()
+                .bizDemandId(bizDemandId)
+                .isDeleted(false)
+                .build());
+        List<Long> productDemandIdList = productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList());
+
+        // 获取关联的产品需求相关的项目
+        List<ProjectDO> projectDOList = projectMapper.selectByProductDemandIdList(productDemandIdList);
+        if(projectDOList.isEmpty()){return null;}
+
+        Date result = projectDOList.get(0).getPlanEndDate();
+        for (ProjectDO projectDO : projectDOList) {
+            Date projectEndDate = projectDO.getActualEndDate() == null? projectDO.getPlanEndDate(): projectDO.getActualEndDate();
+            result = result.after(projectEndDate)? result: projectEndDate;
+        }
+        return result;
     }
 
     @Override
@@ -328,8 +364,9 @@ public class BizDemandServiceImpl implements BizDemandService {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
 
-        bizDemandDO.setStatus(BizDemandStatusEnum.REJECT.getCode());
         bizDemandDO.setReason(reason);
+        bizDemandDO.setPlanReleaseDate(null);
+        bizDemandDO.setStatus(BizDemandStatusEnum.REJECT.getCode());
         bizDemandDO.setModifyMan(userInfo.getAlias());
         bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
