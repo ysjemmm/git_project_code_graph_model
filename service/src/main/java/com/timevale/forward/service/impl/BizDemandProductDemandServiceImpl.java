@@ -190,7 +190,10 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         List<BizDemandLinkProductDemandVO> bizDemandLinkProductDemandVOList = BizDemandCopier.INSTANCE.transform(productDemandDOList);
 
         // 业务需求状态信息赋值
-        bizDemandLinkProductDemandVOList.forEach( e -> e.setStatusText(ProductDemandStatusEnum.getTextByCode(e.getStatus())));
+        bizDemandLinkProductDemandVOList.forEach(e -> {
+            e.setPriorityText(PriorityEnum.getTextByCode(e.getPriority()));
+            e.setStatusText(ProductDemandStatusEnum.getTextByCode(e.getStatus()));
+        });
 
         return BaseResult.success(BizDemandCopier.INSTANCE.transform(ResultUtil.pageSuccess(new PageInfo<>(bizDemandLinkProductDemandVOList))));
     }
