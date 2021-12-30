@@ -27,6 +27,7 @@ import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -175,6 +176,8 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         PageHelper.startPage(bizDemandSubProductDemandQueryList.pageNum, bizDemandSubProductDemandQueryList.pageSize);
         // 转换查询条件
         BizDemandLinkProductDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandSubProductDemandQueryList);
+        // 通配符处理
+        condition.setName(StringUtil.toLikeStr(condition.getName()));
 
         // 查询当前业务需求已经关联的产品需求
         List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.select(ProductBizDemandCondition.builder()

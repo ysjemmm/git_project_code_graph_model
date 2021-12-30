@@ -93,10 +93,8 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 转换查询条件
         BizDemandListCondition bizDemandListCondition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
-
         // 通配符处理
         bizDemandListCondition.setName(StringUtil.toLikeStr(bizDemandListCondition.getName()));
-
         // 根据tabs添加不同的效果
         String ascription = bizDemandQueryList.getAscription();
         if(ascription.equals(AscriptionEnum.CURRENT_USER.toString())){
@@ -331,8 +329,17 @@ public class BizDemandServiceImpl implements BizDemandService {
         newBizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(newBizDemandDO);
 
-        // 筛出新增抄送人，添加抄送人数据
-        personComponent.add(bizDemandModifyReq.getRecipientInfoList(), newBizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
+        // 添加抄送人数据
+        List<PersonAddReq> recipientInfoList = bizDemandModifyReq.getRecipientInfoList();
+        if(!recipientInfoList.isEmpty()){
+            personComponent.add(recipientInfoList, bizDemandModifyReq.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
+        }
+
+        // 添加附件
+        List<FileAddReq> fileIdList = bizDemandModifyReq.getFileList();
+        if(!fileIdList.isEmpty()){
+            fileComponent.update(fileIdList, bizDemandModifyReq.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
+        }
 
         return BaseResult.success(true);
     }

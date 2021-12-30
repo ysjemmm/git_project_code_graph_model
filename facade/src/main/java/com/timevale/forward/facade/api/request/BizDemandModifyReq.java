@@ -61,4 +61,7 @@ public class BizDemandModifyReq extends BaseReq {
 
     @ApiModelProperty("抄送人")
     private List<PersonAddReq> recipientInfoList;
+
+    @ApiModelProperty("附件列表")
+    private List<FileAddReq> fileList;
 }
