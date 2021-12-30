@@ -96,7 +96,7 @@
                 and bd.id = #{id}
             </if>
             <if test="name!=null and name!='' ">
-                and bd.name = #{name}
+                and bd.name like concat('%',#{name},'%')
             </if>
             <if test="priorityList!=null and priorityList.size()>0">
                 and bd.priority in

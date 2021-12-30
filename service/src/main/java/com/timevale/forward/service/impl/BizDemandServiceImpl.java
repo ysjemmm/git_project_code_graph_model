@@ -29,6 +29,7 @@ import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -88,11 +89,15 @@ public class BizDemandServiceImpl implements BizDemandService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 开始分页
-        PageHelper.startPage(bizDemandQueryList.pageNum, bizDemandQueryList.pageSize);
+        PageHelper.startPage(bizDemandQueryList.pageNum, bizDemandQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
 
-        // 转换查询条件,根据tabs添加不同的效果
+        // 转换查询条件
         BizDemandListCondition bizDemandListCondition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
 
+        // 通配符处理
+        bizDemandListCondition.setName(StringUtil.toLikeStr(bizDemandListCondition.getName()));
+
+        // 根据tabs添加不同的效果
         String ascription = bizDemandQueryList.getAscription();
         if(ascription.equals(AscriptionEnum.CURRENT_USER.toString())){
             bizDemandListCondition.setCreateManIdList(Lists.newArrayList(userInfo.getId()));
