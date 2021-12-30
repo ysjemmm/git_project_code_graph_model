@@ -1,6 +1,5 @@
 package com.timevale.forward.service.impl;
 
-import com.ctc.wstx.util.DataUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
@@ -39,6 +38,8 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.jsqlparser.expression.LongValue;
+import org.apache.el.parser.BooleanNode;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
@@ -123,16 +124,15 @@ public class BizDemandServiceImpl implements BizDemandService {
             }
         }
 
-        Set<Long> queryDeptIdSet =  Sets.newHashSet();
+        Set<Long> queryDeptIdSet =  Sets.newHashSet(bizDemandQueryList.getDeptIdList());
         Map<Long, String> deptMap = Maps.newHashMap();
-        List<Long> queryDeptIdList = bizDemandQueryList.getDeptIdList();
         GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
 
         // 如果查询条件有部门id，收集子部门id及所需部门的完整名
-        if(!queryDeptIdList.isEmpty()){
-            queryDeptIdSet.addAll(queryDeptIdList);
+        if(!queryDeptIdSet.isEmpty()){
+            Boolean containsRootNode = queryDeptIdSet.contains(Long.valueOf(rootNode.getGroupId()));
             for (GroupResponse childNode : rootNode.getChildNode()){
-                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
+                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", containsRootNode);
             }
             // 替换查询部门id条件
             bizDemandListCondition.setDeptIdList(Lists.newArrayList(deptMap.keySet()));
@@ -143,7 +143,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
 
         // 如果查询条件没有部门id，收集完整名
-        if(queryDeptIdList.isEmpty()){
+        if(queryDeptIdSet.isEmpty()){
             queryDeptIdSet.addAll(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
             for (GroupResponse childNode : rootNode.getChildNode()){
                 dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
