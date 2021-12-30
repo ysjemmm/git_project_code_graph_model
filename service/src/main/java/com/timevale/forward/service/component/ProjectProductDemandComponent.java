@@ -18,11 +18,5 @@ public interface ProjectProductDemandComponent {
      */
     void batchInsert(Long projectId, List<Long> productDemandIds);
 
-    /**
-     *
-     * @param projectId 项目id
-     * @return ProjectProductDemandDO
-     */
-    List<ProjectProductDemandDO> getByProjectId(Long projectId);
 
 }

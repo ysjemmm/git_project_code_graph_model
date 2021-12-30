@@ -123,13 +123,14 @@ public class ProjectListCondition extends QueryBase {
      */
     @ApiModelProperty("修改时间结束")
     private Date modifyDateEnd;
+
     /**
      * 偏移量
      */
-    private int offset;
+    private Integer offset;
     /**
      * 每页大小
      */
-    private int size;
+    private Integer size;
 
 }

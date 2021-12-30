@@ -162,16 +162,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         productDemandDO.setProductDemandId(productDemandId);
         productDemandDO.setIsDeleted(true);
         projectProductDemandComponent.update(productDemandDO);
-
-//        if (ProductDemandStatusEnum.SUSPEND.getCode().equals(type)) {
-//            if (ProductDemandStatusEnum.WAITING.getCode().equals(oriStatus)
-//                    || ProductDemandStatusEnum.INCLUDED.getCode().equals(oriStatus)
-//                    || ProductDemandStatusEnum.PROGRESS.getCode().equals(oriStatus)) {
-//
-//            }
-//            // 暂停
-//
-//        }
+        if (ProductDemandStatusEnum.SUSPEND.getCode().equals(type)) {
+//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId),false);
+        }
         if (ProductDemandStatusEnum.INVALID.getCode().equals(type)) {
             // 作废解业务需求关联
             ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
@@ -196,6 +189,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
         productDemandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
         productDemandComponent.update(productDemandDO);
+//        productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId),false);
 
         return BaseResult.success(true);
     }
@@ -277,8 +271,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 BizDemandStatusEnum.RECEIVED.getCode()
                 , BizDemandStatusEnum.INCLUDE_PROJECT.getCode()
                 , BizDemandStatusEnum.PROJECTING.getCode()
-                , BizDemandStatusEnum.AVAILABLE.getCode()
-                , BizDemandStatusEnum.REJECT.getCode()));
+                , BizDemandStatusEnum.AVAILABLE.getCode()));
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(condition);
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
 
@@ -307,7 +300,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         List<Long> bizDemandIds = bizDemandLinkReq.getBizDemandIds();
         if (LinkOrUnLinkEnum.LINK.getCode().equals(bizDemandLinkReq.getType())) {
             productBizDemandComponent.batchInsert(bizDemandLinkReq.getProductDemandId(), bizDemandIds);
+//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(bizDemandLinkReq.getProductDemandId()),false);
         } else {
+//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(bizDemandLinkReq.getProductDemandId()),true);
             ProductBizDemandDO productDemandDO = new ProductBizDemandDO();
             productDemandDO.setIsDeleted(true);
             productDemandDO.setProductDemandId(bizDemandLinkReq.getProductDemandId());

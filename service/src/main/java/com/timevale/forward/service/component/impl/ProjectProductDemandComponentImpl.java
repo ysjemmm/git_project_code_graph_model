@@ -58,10 +58,5 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
 
     }
 
-    @Override
-    public List<ProjectProductDemandDO> getByProjectId(Long projectId) {
-        return projectProductDemandMapper.getByProjectId(projectId);
-    }
-
 
 }

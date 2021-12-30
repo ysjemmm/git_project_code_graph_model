@@ -3,7 +3,6 @@ package com.timevale.forward.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.condition.ProductBizDemandCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.*;
@@ -83,6 +82,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private BizDemandMapper bizDemandMapper;
 
+    @Resource
+    private ProjectProductDemandMapper projectProductDemandMapper;
+
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -126,7 +128,7 @@ public class ProjectServiceImpl implements ProjectService {
         projectDO.setStatus(type);
         projectMapper.update(projectDO);
         //所有关联的产品需求
-        List<ProjectProductDemandDO> exists = projectProductDemandComponent.getByProjectId(projectId);
+        List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectId);
         List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
                 .collect(Collectors.toList());
 
@@ -135,25 +137,17 @@ public class ProjectServiceImpl implements ProjectService {
             if (ProjectStatusEnum.SUSPEND.getCode().equals(type)) {
                 //暂停  更新产品需求状态
                 productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode());
-                //更新业务需求状态
-                productDemandComponent.updateBizDemandStatusIfNecessary(existProductDemandIds, BizDemandStatusEnum.INCLUDE_PROJECT.getCode());
             } else {
                 // 作废解除关联
                 ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
                 productDemandDO.setProjectId(projectId);
                 productDemandDO.setIsDeleted(true);
                 projectProductDemandComponent.update(productDemandDO);
-
+                //作废  更新产品需求状态
                 productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.WAITING.getCode());
-                //修改业务需求状态,找出所有关联的业务需求状态
-                List<ProductBizDemandDO> bizDemands = productBizDemandMapper.getByProductDemandId(existProductDemandIds);
-                List<Long> ids = bizDemands.stream().filter(a -> !BizDemandStatusEnum.REJECT.getCode().equals(a.getStatus()))
-                        .map(ProductBizDemandDO::getBizDemandId)
-                        .collect(Collectors.toList());
-                bizDemandMapper.updateByIds(ids, BizDemandStatusEnum.RECEIVED.getCode());
-                log.info("需要更新为已接收的业务需求:ids={}", ids);
             }
-
+            //更新业务需求状态
+//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds,false);
 
         }
         return BaseResult.success(true);
@@ -308,7 +302,8 @@ public class ProjectServiceImpl implements ProjectService {
         List<Long> productDemandIds = productDemandLinkReq.getProductDemandIds();
         if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
             projectProductDemandComponent.batchInsert(projectDO.getId(), productDemandIds);
-//            updateProjectBizDemandStatus(projectDO);
+
+            //updateProjectBizDemandStatus(projectDO);
         } else {
             ProjectProductDemandDO projectProductDemandDO = new ProjectProductDemandDO();
             projectProductDemandDO.setIsDeleted(true);
@@ -321,11 +316,7 @@ public class ProjectServiceImpl implements ProjectService {
             productDemandComponent.update(productDemandDO);
 
             // 一个产品需求下的业务需求
-            ProductBizDemandCondition condition = ProductBizDemandCondition.builder().productDemandId(productDemandIds.get(0)).isDeleted(false).build();
-            List<ProductBizDemandDO> bizDemand = productBizDemandMapper.select(condition);
-            List<Long> ids = bizDemand.stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
-            bizDemandMapper.updateByIds(ids, BizDemandStatusEnum.RECEIVED.getCode());
-            log.info("需要更新的业务需求:ids={}", ids);
+            //productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds,false);
         }
         return BaseResult.success(true);
     }
@@ -379,23 +370,24 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("更新项目信息:nodeMap={},,projectDO={}", nodeMap, projectDO);
         projectMapper.update(projectDO);
 
-//        updateProjectBizDemandStatus(projectDO);
+        //updateProjectBizDemandStatus(projectDO);
 
     }
 
     private void updateProjectBizDemandStatus(ProjectDO projectDO) {
-        List<ProjectProductDemandDO> exists = projectProductDemandComponent.getByProjectId(projectDO.getId());
+        List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectDO.getId());
         List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
                 .collect(Collectors.toList());
         if (ProjectStatusEnum.WAITING.getCode().equals(projectDO.getStatus())
                 || ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus())) {
             productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode());
-            productDemandComponent.updateBizDemandStatusIfNecessary(existProductDemandIds, BizDemandStatusEnum.INCLUDE_PROJECT.getCode());
         } else if (ProjectStatusEnum.PLANING.getCode().equals(projectDO.getStatus())
                 || ProjectStatusEnum.DEVING.getCode().equals(projectDO.getStatus())
                 || ProjectStatusEnum.TESTING.getCode().equals(projectDO.getStatus())) {
             productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.PROGRESS.getCode());
-            productDemandComponent.updateBizDemandStatusIfNecessary(existProductDemandIds, BizDemandStatusEnum.PROJECTING.getCode());
+        } else if (ProjectStatusEnum.RELEASED.getCode().equals(projectDO.getStatus())) {
+            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.ONLINE.getCode());
         }
+//        productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds,false);
     }
 }

@@ -5,6 +5,9 @@ import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.ProjectListDO;
 import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.ProjectTypeEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -39,6 +42,11 @@ public class ProjectComponentImpl implements ProjectComponent {
         log.info("查询到项目信息:{}", projectListDO);
 
         List<ProjectVO> result = ProjectCopier.INSTANCE.convert(projectListDO);
+        result.forEach(a->{
+            a.setTypeName(ProjectTypeEnum.getTextByCode(a.getType()));
+            a.setStatusName(ProjectStatusEnum.getTextByCode(a.getStatus()));
+            a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
+        });
         pageQueryResult.setCurrentPage(condition.getPageNum());
         pageQueryResult.setItemsPerPage(condition.getPageSize());
         pageQueryResult.setTotalItems(count);

@@ -1,12 +1,8 @@
 package com.timevale.forward.service.component.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.timevale.forward.dal.condition.ProductBizDemandCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.ProductBizDemandMapper;
-import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.model.enums.*;
@@ -27,9 +23,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 
 /**
  * @author xingyun
@@ -59,6 +53,9 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
 
     @Resource
     private BizDemandMapper bizDemandMapper;
+
+    @Resource
+    private ProjectProductDemandMapper projectProductDemandMapper;
 
     @Override
     public List<ProductDemandListDO> list(ProductDemandListCondition productDemandListCondition) {
@@ -102,84 +99,104 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     }
 
     @Override
-    public void updateBizDemandStatusIfNecessary(List<Long> productDemandIds, Integer needUpdateStatusWhenLinkOne) {
+    public void updateBizDemandStatusAsProductStatusChange(List<Long> productDemandIds, boolean bizProductDemandUnLink) {
+        if (CollectionUtils.isEmpty(productDemandIds)) {
+            log.info("产品需求变化-更新业务需求,产品需求id不存在");
+            return;
+        }
+        // 找出所有产品需求下的所有业务需求
         List<ProductBizDemandDO> bizDemands = productBizDemandMapper.getByProductDemandId(productDemandIds);
-        List<Long> one = new ArrayList<>();
-        List<Long> many = new ArrayList<>();
-        bizDemands.forEach(a -> {
-            List<ProductBizDemandDO> productDemands = productBizDemandMapper.getByBizDemandId(a.getBizDemandId());
-            List<Integer> productDemandStauts = productDemands.stream().map(ProductBizDemandDO::getStatus).collect(Collectors.toList());
-            if (productDemands.size() > 1 && productDemandStauts.contains(ProductDemandStatusEnum.WAITING.getCode())) {
-                // 产品需求关联的业务需求 有多个产品需求,且含有待排期产品需求->则业务需求状态变为：已接收
-                many.add(a.getBizDemandId());
-            } else if (productDemands.size() == 1) {
-                // 产品需求与业务需求 1-1  业务需求状态变为已列入项目
-                one.add(a.getBizDemandId());
+        Map<Integer, List<Long>> map = new HashMap<>();
+        bizDemands.forEach(b -> {
+            //被驳回和作废的业务需求不处理
+            if (!BizDemandStatusEnum.REJECT.getCode().equals(b.getStatus()) && !BizDemandStatusEnum.INVALID.getCode().equals(b.getStatus())) {
+                List<ProductBizDemandDO> productDemands = productBizDemandMapper.getByBizDemandId(b.getBizDemandId());
+                if (bizProductDemandUnLink && productDemands.size() == 1) {
+                    //业务需求只关联一个产品需求后被解除
+                    map.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), v -> new ArrayList<>()).add(b.getBizDemandId());
+                } else {
+                    // 关联多个产品需求,找到每个业务需求下所有产品需求的最小状态值.
+                    Integer minStauts = productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
+                    if (minStauts != null && !minStauts.equals(ProductDemandStatusEnum.INVALID.getCode())) {
+                        if (minStauts.equals(ProductDemandStatusEnum.WAITING.getCode())
+                                || minStauts.equals(ProductDemandStatusEnum.SUSPEND.getCode())) {
+                            map.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), v -> new ArrayList<>()).add(b.getBizDemandId());
+                        } else if (minStauts.equals(ProductDemandStatusEnum.INCLUDED.getCode())) {
+                            map.computeIfAbsent(BizDemandStatusEnum.INCLUDE_PROJECT.getCode(), v -> new ArrayList<>()).add(b.getBizDemandId());
+                        } else if (minStauts.equals(ProductDemandStatusEnum.PROGRESS.getCode())) {
+                            map.computeIfAbsent(BizDemandStatusEnum.PROJECTING.getCode(), v -> new ArrayList<>()).add(b.getBizDemandId());
+                        } else if (minStauts.equals(ProductDemandStatusEnum.ONLINE.getCode())) {
+                            map.computeIfAbsent(BizDemandStatusEnum.AVAILABLE.getCode(), v -> new ArrayList<>()).add(b.getBizDemandId());
+                        }
+                    }
+                }
+
             }
         });
-        bizDemandMapper.updateByIds(many, BizDemandStatusEnum.RECEIVED.getCode());
-        bizDemandMapper.updateByIds(one, needUpdateStatusWhenLinkOne);
-        log.info("产品需求-更新业务需求:productDemandIds={},many={},one={}",productDemandIds,many, one);
-
+        map.forEach((k, v) -> {
+            //根据业务需求下所有产品需求的最小状态值.批量更新业务需求状态
+            bizDemandMapper.updateByIds(v, k);
+        });
+        log.info("产品需求变化-更新业务需求:map={}", map);
         //发送钉钉
     }
 
-    private void updateDemandStatusIfNecessary(Long projectId, Integer projectStatus) {
-        List<ProjectProductDemandDO> productDemandDO = projectProductDemandComponent.getByProjectId(projectId);
-        log.info("项目关联的产品需求:productDemandDO={}", productDemandDO);
-        productDemandDO.forEach(p -> {
-            if (!ProjectStatusEnum.INVALID.getCode().equals(projectStatus)) {
-                ProductDemandDO productDemand = new ProductDemandDO();
-                productDemand.setId(p.getProductDemandId());
-                if (ProjectStatusEnum.WAITING.getCode().equals(projectStatus)
-                        || ProjectStatusEnum.SUSPEND.getCode().equals(projectStatus)) {
-                    productDemand.setStatus(ProductDemandStatusEnum.INCLUDED.getCode());
-
-                } else if (ProjectStatusEnum.PLANING.getCode().equals(projectStatus)
-                        || ProjectStatusEnum.DEVING.getCode().equals(projectStatus)
-                        || ProjectStatusEnum.TESTING.getCode().equals(projectStatus)) {
-                    productDemand.setStatus(ProductDemandStatusEnum.PROGRESS.getCode());
-
-                } else if (ProjectStatusEnum.RELEASED.getCode().equals(projectStatus)) {
-                    productDemand.setStatus(ProductDemandStatusEnum.ONLINE.getCode());
-                }
-                update(productDemand);
-                log.info("项目关联的产品需求状态更新成功:demandDO={}", productDemand);
-
-                if (ProductDemandStatusEnum.INCLUDED.getCode().equals(productDemand.getStatus())
-                        || ProductDemandStatusEnum.PROGRESS.getCode().equals(productDemand.getStatus())) {
-                    ProductBizDemandCondition condition = ProductBizDemandCondition.builder().productDemandId(p.getProductDemandId()).isDeleted(false).build();
-                    // 一个产品需求下的业务需求
-                    List<ProductBizDemandDO> bizDemand = productBizDemandMapper.select(condition);
-                    bizDemand.forEach(a -> {
-                        condition.setProductDemandId(null);
-                        condition.setBizDemandId(a.getBizDemandId());
-                        // 该业务需求下的产品需求
-                        List<ProductBizDemandDO> demand = productBizDemandMapper.getByBizDemandId(a.getBizDemandId());
-                        BizDemandDO bizDemandDO = new BizDemandDO();
-                        bizDemandDO.setId(a.getBizDemandId());
-                        if (demand.size() > 1) {
-                            bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
-                            // 关联的业务需求，存在其他关联的产品需求且为待排期时 业务需求状态改为：已接收
-                            List<ProductBizDemandDO> productBizDemandDOS = demand.stream()
-                                    .filter((b) ->
-                                            (ProductDemandStatusEnum.WAITING.getCode().equals(b.getStatus()) && !p.getProductDemandId().equals(b.getProductDemandId()))
-                                    ).collect(Collectors.toList());
-                            log.info("被关联的业务需求,存在其他关联的产品需求:productDemandIds={}", productBizDemandDOS);
-                            if(!CollectionUtils.isEmpty(productBizDemandDOS)){
-                                bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
-                                bizDemandMapper.update(bizDemandDO);
-                            }
-
-                        } else {
-                            //关联的业务需求，仅关联该产品需求时
-                            bizDemandDO.setStatus(productDemand.getStatus());
-                            bizDemandMapper.update(bizDemandDO);
-                        }
-                        log.info("产品需求关联的业务需求状态更新成功:bizDemandDO={}", bizDemandDO);
-                    });
-                }
-            }
-        });
-    }
+//    private void updateDemandStatusIfNecessary(Long projectId, Integer projectStatus) {
+//        List<ProjectProductDemandDO> productDemandDO = projectProductDemandMapper.getByProjectId(projectId);
+//        log.info("项目关联的产品需求:productDemandDO={}", productDemandDO);
+//        productDemandDO.forEach(p -> {
+//            if (!ProjectStatusEnum.INVALID.getCode().equals(projectStatus)) {
+//                ProductDemandDO productDemand = new ProductDemandDO();
+//                productDemand.setId(p.getProductDemandId());
+//                if (ProjectStatusEnum.WAITING.getCode().equals(projectStatus)
+//                        || ProjectStatusEnum.SUSPEND.getCode().equals(projectStatus)) {
+//                    productDemand.setStatus(ProductDemandStatusEnum.INCLUDED.getCode());
+//
+//                } else if (ProjectStatusEnum.PLANING.getCode().equals(projectStatus)
+//                        || ProjectStatusEnum.DEVING.getCode().equals(projectStatus)
+//                        || ProjectStatusEnum.TESTING.getCode().equals(projectStatus)) {
+//                    productDemand.setStatus(ProductDemandStatusEnum.PROGRESS.getCode());
+//
+//                } else if (ProjectStatusEnum.RELEASED.getCode().equals(projectStatus)) {
+//                    productDemand.setStatus(ProductDemandStatusEnum.ONLINE.getCode());
+//                }
+//                update(productDemand);
+//                log.info("项目关联的产品需求状态更新成功:demandDO={}", productDemand);
+//
+//                if (ProductDemandStatusEnum.INCLUDED.getCode().equals(productDemand.getStatus())
+//                        || ProductDemandStatusEnum.PROGRESS.getCode().equals(productDemand.getStatus())) {
+//                    ProductBizDemandCondition condition = ProductBizDemandCondition.builder().productDemandId(p.getProductDemandId()).isDeleted(false).build();
+//                    // 一个产品需求下的业务需求
+//                    List<ProductBizDemandDO> bizDemand = productBizDemandMapper.select(condition);
+//                    bizDemand.forEach(a -> {
+//                        condition.setProductDemandId(null);
+//                        condition.setBizDemandId(a.getBizDemandId());
+//                        // 该业务需求下的产品需求
+//                        List<ProductBizDemandDO> demand = productBizDemandMapper.getByBizDemandId(a.getBizDemandId());
+//                        BizDemandDO bizDemandDO = new BizDemandDO();
+//                        bizDemandDO.setId(a.getBizDemandId());
+//                        if (demand.size() > 1) {
+//                            bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
+//                            // 关联的业务需求，存在其他关联的产品需求且为待排期时 业务需求状态改为：已接收
+//                            List<ProductBizDemandDO> productBizDemandDOS = demand.stream()
+//                                    .filter((b) ->
+//                                            (ProductDemandStatusEnum.WAITING.getCode().equals(b.getStatus()) && !p.getProductDemandId().equals(b.getProductDemandId()))
+//                                    ).collect(Collectors.toList());
+//                            log.info("被关联的业务需求,存在其他关联的产品需求:productDemandIds={}", productBizDemandDOS);
+//                            if (!CollectionUtils.isEmpty(productBizDemandDOS)) {
+//                                bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
+//                                bizDemandMapper.update(bizDemandDO);
+//                            }
+//
+//                        } else {
+//                            //关联的业务需求，仅关联该产品需求时
+//                            bizDemandDO.setStatus(productDemand.getStatus());
+//                            bizDemandMapper.update(bizDemandDO);
+//                        }
+//                        log.info("产品需求关联的业务需求状态更新成功:bizDemandDO={}", bizDemandDO);
+//                    });
+//                }
+//            }
+//        });
+//    }
 }
