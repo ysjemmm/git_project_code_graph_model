@@ -42,8 +42,8 @@
     <sql id="commonSearch">
         from project a
         left join project_product_line b on a.id=b.project_id and b.is_deleted =false
-        left join product_line c on b.product_line_id=c.id
-        left join biz_domain d on c.biz_domain_id=d.id
+        left join product_line c on b.product_line_id=c.id and c.is_deleted =false
+        left join biz_domain d on c.biz_domain_id=d.id and d.is_deleted =false
         left join person e on a.id=e.project_id and e.type =0 and e.is_deleted =false
         left join person f on a.id=f.project_id and f.type =1 and f.is_deleted =false
         <where>
@@ -64,32 +64,17 @@
             <if test="modifyDateStart != null and modifyDateEnd != null">
                 and a.modify_date &gt;= #{modifyDateStart} and a.modify_date &lt;= #{modifyDateEnd}
             </if>
-            <!--查数量-->
-            <if test="offset == null">
-                <if test="productLineIds!=null and productLineIds.size()>0">
-                    and c.id in
-                    <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="bizDomainIds!=null and bizDomainIds.size()>0">
-                    and d.id in
-                    <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="pds!=null and pds.size()>0">
-                    and e.user_id in
-                    <foreach collection="pds" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-                <if test="teamMembers!=null and teamMembers.size()>0">
-                    and f.user_id in
-                    <foreach collection="teamMembers" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
+            <if test="productLineIds!=null and productLineIds.size()>0">
+                and c.id in
+                <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="bizDomainIds!=null and bizDomainIds.size()>0">
+                and d.id in
+                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
             </if>
             <if test="priorities!=null and priorities.size()>0">
                 and a.priority in
@@ -115,46 +100,30 @@
                     #{item}
                 </foreach>
             </if>
-            and a.is_deleted =false
-        </where>
-    </sql>
-    <select id="list" resultType="com.timevale.forward.dal.entity.ProjectListDO">
-        select *from (select a.id,a.name, a.priority, a.type ,a.status,a.pm pmName,a.plan_start_date,a.plan_end_date,
-        a.actual_start_date,a.actual_end_date,a.create_man,a.modify_date
-        ,c.id cid,d.id did,e.user_id  euser_id,f.user_id fuser_id
-        ,group_concat(distinct c.name separator ',')productLineName
-        ,group_concat(distinct d.name separator ',')bizDomainName
-        ,group_concat(distinct e.user_name separator ',')pdName
-        ,group_concat(distinct f.user_name separator ',')teamMember
-        <include refid="commonSearch"/>
-        group by  a.id) a
-        <where>
-            <if test="productLineIds!=null and productLineIds.size()>0">
-                and a.cid in
-                <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="bizDomainIds!=null and bizDomainIds.size()>0">
-                and a.did in
-                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
             <if test="pds!=null and pds.size()>0">
-                and a.euser_id in
+                and e.user_id in
                 <foreach collection="pds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
             <if test="teamMembers!=null and teamMembers.size()>0">
-                and a.fuser_id in
+                and f.user_id in
                 <foreach collection="teamMembers" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
+            and a.is_deleted =false
         </where>
-        order by a.modify_date desc limit #{offset},#{size}
+    </sql>
+    <select id="list" resultType="com.timevale.forward.dal.entity.ProjectListDO">
+        select a.id,a.name, a.priority, a.type ,a.status,a.pm pmName,a.plan_start_date,a.plan_end_date,a.modify_date,
+        a.actual_start_date,a.actual_end_date,a.create_man
+        ,group_concat(distinct c.name separator ',')productLineName
+        ,group_concat(distinct d.name separator ',')bizDomainName
+        ,group_concat(distinct e.user_name separator ',')pdName
+        ,group_concat(distinct f.user_name separator ',')teamMember
+        <include refid="commonSearch"/>
+        group by  a.id  order by a.modify_date desc limit #{offset},#{size}
     </select>
     <select id="count" resultType="int">
         select count(distinct a.id)
