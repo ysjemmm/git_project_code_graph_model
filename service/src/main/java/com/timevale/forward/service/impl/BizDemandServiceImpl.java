@@ -126,7 +126,9 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 如果查询条件有部门id，收集子部门id及所需部门的完整名
         if(!queryDeptIdList.isEmpty()){
             queryDeptIdSet.addAll(queryDeptIdList);
-            dfsGroupListTree(rootNode, deptMap, queryDeptIdSet, "", false);
+            for (GroupResponse childNode : rootNode.getChildNode()){
+                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
+            }
             // 替换查询部门id条件
             bizDemandListCondition.setDeptIdList(Lists.newArrayList(deptMap.keySet()));
         }
@@ -138,7 +140,9 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 如果查询条件没有部门id，收集完整名
         if(queryDeptIdList.isEmpty()){
             queryDeptIdSet.addAll(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
-            dfsGroupListTree(rootNode, deptMap, queryDeptIdSet, "", false);
+            for (GroupResponse childNode : rootNode.getChildNode()){
+                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
+            }
         }
 
         // 部门名称待修改 ，需要完整名称
