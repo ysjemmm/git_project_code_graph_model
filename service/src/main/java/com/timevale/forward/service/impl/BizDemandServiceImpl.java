@@ -113,29 +113,27 @@ public class BizDemandServiceImpl implements BizDemandService {
             }
         }
 
-
-        Set<Long> reqDeptIdSet =  Sets.newHashSet();
+        Set<Long> queryDeptIdSet =  Sets.newHashSet();
         Map<Long, String> deptMap = Maps.newHashMap();
         List<Long> queryDeptIdList = bizDemandQueryList.getDeptIdList();
         GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
 
+        // 如果查询条件有部门id，收集子部门id及所需部门的完整名
         if(!queryDeptIdList.isEmpty()){
-            // 遍历部门树，收集id及其完整名
-            reqDeptIdSet.addAll(queryDeptIdList);
-            dfsGroupListTree(rootNode, deptMap, reqDeptIdSet, "", false);
-            // 替换筛选条件
-            List<Long> allDeptIdSet = Lists.newArrayList(deptMap.keySet());
-            bizDemandListCondition.setDeptIdList(Lists.newArrayList(allDeptIdSet));
+            queryDeptIdSet.addAll(queryDeptIdList);
+            dfsGroupListTree(rootNode, deptMap, queryDeptIdSet, "", false);
+            // 替换查询部门id条件
+            bizDemandListCondition.setDeptIdList(Lists.newArrayList(deptMap.keySet()));
         }
 
         // 查询并转换
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
 
+        // 如果查询条件没有部门id，收集完整名
         if(queryDeptIdList.isEmpty()){
-            reqDeptIdSet.addAll(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
-            // 遍历部门树，收集完整名
-            dfsGroupListTree(rootNode, deptMap, reqDeptIdSet, "", false);
+            queryDeptIdSet.addAll(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
+            dfsGroupListTree(rootNode, deptMap, queryDeptIdSet, "", false);
         }
 
         // 部门名称待修改 ，需要完整名称
@@ -150,10 +148,19 @@ public class BizDemandServiceImpl implements BizDemandService {
         return BaseResult.success(BizDemandCopier.INSTANCE.convert(ResultUtil.pageSuccess(new PageInfo<>(bizDemandVOList))));
     }
 
-    void dfsGroupListTree(GroupResponse node, Map<Long, String> deptMap, Set<Long> reqDeptIdSet, String name, Boolean isInsert){
+    /**
+     * 深搜部门树
+     *
+     * @param node           节点
+     * @param deptMap        部门信息id和名称的映射
+     * @param queryDeptIdSet 包含的id
+     * @param name           部门完整名称
+     * @param isInsert       判断是否可直接插入
+     */
+    void dfsGroupListTree(GroupResponse node, Map<Long, String> deptMap, Set<Long> queryDeptIdSet, String name, Boolean isInsert){
         name = name + node.getGroupName();
         Long deptId = Long.valueOf(node.getGroupId());
-        if(isInsert || reqDeptIdSet.contains(deptId)){
+        if(isInsert || queryDeptIdSet.contains(deptId)){
             isInsert = true;
             deptMap.put(deptId, name);
         }
@@ -162,7 +169,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         name = name + CommonConstant.JOIN_LINE;
         for (GroupResponse childNode : node.getChildNode()) {
-            dfsGroupListTree(childNode, deptMap, reqDeptIdSet, name, isInsert);
+            dfsGroupListTree(childNode, deptMap, queryDeptIdSet, name, isInsert);
         }
     }
 
