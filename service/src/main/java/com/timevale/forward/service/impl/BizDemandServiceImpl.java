@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import com.ctc.wstx.util.DataUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
@@ -28,6 +29,7 @@ import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.utils.DateUtil;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -42,6 +44,7 @@ import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +98,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         BizDemandListCondition bizDemandListCondition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
         // 通配符处理
         bizDemandListCondition.setName(StringUtil.toLikeStr(bizDemandListCondition.getName()));
+        // 日期处理
+        bizDemandListCondition.setCreateDateStart(DateUtil.getStartOfDay(bizDemandListCondition.getCreateDateStart()));
+        bizDemandListCondition.setCreateDateEnd(DateUtil.getEndOfDay(bizDemandListCondition.getCreateDateEnd()));
+
         // 根据tabs添加不同的效果
         String ascription = bizDemandQueryList.getAscription();
         if(ascription.equals(AscriptionEnum.CURRENT_USER.toString())){
@@ -427,7 +434,10 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Override
     public BaseResult<Boolean> testNotice(Integer type) {
         if(type == 1){
-            System.out.println(innerGroupClient.getGroupTree(557300580L));
+            Date date = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyMMddE HH:mm:ss");
+            System.out.println(sdf.format(DateUtil.getStartOfDay(date)));
+            System.out.println(sdf.format(DateUtil.getEndOfDay(date)));
         }else{
             System.out.println(innerGroupClient.getAllSubSimpleGroupList(1L));
         }

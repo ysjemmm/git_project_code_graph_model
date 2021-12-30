@@ -26,6 +26,7 @@ import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
+import com.timevale.forward.service.utils.DateUtil;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -178,6 +179,9 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         BizDemandLinkProductDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandSubProductDemandQueryList);
         // 通配符处理
         condition.setName(StringUtil.toLikeStr(condition.getName()));
+        // 日期处理
+        bizDemandSubProductDemandQueryList.setCreateDateStart(DateUtil.getStartOfDay(bizDemandSubProductDemandQueryList.getCreateDateStart()));
+        bizDemandSubProductDemandQueryList.setCreateDateEnd(DateUtil.getEndOfDay(bizDemandSubProductDemandQueryList.getCreateDateEnd()));
 
         // 查询当前业务需求已经关联的产品需求
         List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.select(ProductBizDemandCondition.builder()
