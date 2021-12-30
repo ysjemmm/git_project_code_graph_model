@@ -2,10 +2,14 @@ package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.ProductBizDemandCondition;
-import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.ProductBizDemandMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
@@ -22,9 +26,6 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
-import com.timevale.forward.service.integration.erp.ErpMessageClient;
-import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
-import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -33,15 +34,17 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.DateUtil;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -63,9 +66,6 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Resource
     ProductBizDemandMapper productBizDemandMapper;
-
-    @Resource
-    ErpMessageClient erpMessageClient;
 
     @Resource
     InnerUserPersonClient innerUserPersonClient;
@@ -113,24 +113,57 @@ public class BizDemandServiceImpl implements BizDemandService {
             }
         }
 
+
+        Set<Long> reqDeptIdSet =  Sets.newHashSet();
+        Map<Long, String> deptMap = Maps.newHashMap();
+        List<Long> queryDeptIdList = bizDemandQueryList.getDeptIdList();
+        GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
+
+        if(!queryDeptIdList.isEmpty()){
+            // 遍历部门树，收集id及其完整名
+            reqDeptIdSet.addAll(queryDeptIdList);
+            dfsGroupListTree(rootNode, deptMap, reqDeptIdSet, "", false);
+            // 替换筛选条件
+            List<Long> allDeptIdSet = Lists.newArrayList(deptMap.keySet());
+            bizDemandListCondition.setDeptIdList(Lists.newArrayList(allDeptIdSet));
+        }
+
         // 查询并转换
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
 
-        // 查询部门信息
-        List<Long> deptIdList = bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList());
-        Map<Long, String> groupInfo = innerGroupClient.batchGetSimpleGroupMap(deptIdList);
+        if(queryDeptIdList.isEmpty()){
+            reqDeptIdSet.addAll(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
+            // 遍历部门树，收集完整名
+            dfsGroupListTree(rootNode, deptMap, reqDeptIdSet, "", false);
+        }
 
         // 部门名称待修改 ，需要完整名称
-        bizDemandVOList.forEach( iter -> {
-            iter.setPriorityText(PriorityEnum.getTextByCode(iter.getPriority()));
-            iter.setStatusText(BizDemandStatusEnum.getTextByCode(iter.getStatus()));
-            iter.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(iter.getPlanReleaseDate()));
-            iter.setDeptName(groupInfo.get(iter.getDeptId()));
+        bizDemandVOList.forEach( e -> {
+            e.setPriorityText(PriorityEnum.getTextByCode(e.getPriority()));
+            e.setStatusText(BizDemandStatusEnum.getTextByCode(e.getStatus()));
+            e.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(e.getPlanReleaseDate()));
+            e.setDeptName(deptMap.get(e.getDeptId()));
         });
 
         // 转换后返回数据
         return BaseResult.success(BizDemandCopier.INSTANCE.convert(ResultUtil.pageSuccess(new PageInfo<>(bizDemandVOList))));
+    }
+
+    void dfsGroupListTree(GroupResponse node, Map<Long, String> deptMap, Set<Long> reqDeptIdSet, String name, Boolean isInsert){
+        name = name + node.getGroupName();
+        Long deptId = Long.valueOf(node.getGroupId());
+        if(isInsert || reqDeptIdSet.contains(deptId)){
+            isInsert = true;
+            deptMap.put(deptId, name);
+        }
+        // 如果为叶节点直接返回
+        if(node.getChildNode() == null){return;}
+
+        name = name + CommonConstant.JOIN_LINE;
+        for (GroupResponse childNode : node.getChildNode()) {
+            dfsGroupListTree(childNode, deptMap, reqDeptIdSet, name, isInsert);
+        }
     }
 
     @Override
@@ -370,20 +403,10 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<Boolean> testNotice(Integer type) {
-        if(type.equals(1)){
-            erpMessageClient.sendMarkdownMsg(MarkdownMsg.builder()
-                    .receivers(Lists.newArrayList("wangxuan"))
-                    .title("test")
-                    .content("测试内容")
-                    .build());
+        if(type == 1){
+            System.out.println(innerGroupClient.getGroupTree(557300580L));
         }else{
-            erpMessageClient.sendActionCardMsg(ActionCardMsg.builder()
-                    .receivers(Lists.newArrayList("yangxu"))
-                    .title("test2")
-                    .markdown("测试内容2")
-                    .singleTitle("跳转连接文案")
-                    .singleUrl("https://weibo.com/")
-                    .build());
+            System.out.println(innerGroupClient.getAllSubSimpleGroupList(1L));
         }
         return BaseResult.success(true);
     }
