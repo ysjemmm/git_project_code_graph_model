@@ -432,7 +432,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
-        // 转交人通知（待实现）
+        // 转交人通知
+        messageComponent.bizDemandToReceiveMsg(
+                bizDemandDO.getCreateMan(),
+                bizDemandDO.getReceiveManId(),
+                bizDemandDO.getName()
+        );
+
         return BaseResult.success(true);
     }
 
