@@ -27,7 +27,7 @@ public class MessageComponentImpl implements MessageComponent {
     private static final String BIZ_DEMAND_STATUS_CHANGE_MSG = "您提交的业务需求：%s 状态已变为 %s，项目发布时间为 %s，可进入产研项目管理系统查看";
     private static final String BIZ_DEMAND_TO_RECEIVE_MSG = "您收到了 %s 提交的业务需求：%s，可进入产研项目管理系统查看";
     private static final String BIZ_DEMAND_INVALID_MSG = "%s 作废了业务需求：%s";
-    private static final String COMMENT_MSG = "%s 评论了业务需求/产品需求/项目 %s：%s，可进入产研项目管理系统查看";
+    private static final String COMMENT_MSG = "%s 评论了%s %s：%s，可进入产研项目管理系统查看";
 
     @Override
     public void bizDemandReceivedMsg(String operator, String receiver, String name, String planReleaseDate) {
@@ -38,7 +38,7 @@ public class MessageComponentImpl implements MessageComponent {
         ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                 .title(title)
                 .markdown(markdown)
-                .singleTitle("跳转连接")
+                .singleTitle("点击查看")
                 .singleUrl("https://www.baidu.com/")
                 .receivers(receivers)
                 .build();
@@ -54,7 +54,7 @@ public class MessageComponentImpl implements MessageComponent {
         ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                 .title(title)
                 .markdown(markdown)
-                .singleTitle("跳转连接")
+                .singleTitle("点击查看")
                 .singleUrl("https://www.baidu.com/")
                 .receivers(receivers)
                 .build();
@@ -70,7 +70,7 @@ public class MessageComponentImpl implements MessageComponent {
         ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                 .title(title)
                 .markdown(markdown)
-                .singleTitle("跳转连接")
+                .singleTitle("点击查看")
                 .singleUrl("https://www.baidu.com/")
                 .receivers(receivers)
                 .build();
@@ -86,7 +86,7 @@ public class MessageComponentImpl implements MessageComponent {
         ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                 .title(title)
                 .markdown(markdown)
-                .singleTitle("跳转连接")
+                .singleTitle("点击查看")
                 .singleUrl("https://www.baidu.com/")
                 .receivers(receivers)
                 .build();
@@ -102,7 +102,7 @@ public class MessageComponentImpl implements MessageComponent {
         ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                 .title(title)
                 .markdown(markdown)
-                .singleTitle("跳转连接")
+                .singleTitle("点击查看")
                 .singleUrl("https://www.baidu.com/")
                 .receivers(receivers)
                 .build();
@@ -110,14 +110,14 @@ public class MessageComponentImpl implements MessageComponent {
     }
 
     @Override
-    public void commentMsg(String operator, List<String> receivers, String name, String content) {
+    public void commentMsg(String operator, List<String> receivers, String type, String name, String content) {
         String title = MessageTitleEnum.COMMENT.getText();
-        String markdown = String.format(COMMENT_MSG, operator, name, content);
+        String markdown = String.format(COMMENT_MSG, operator, type, name, content);
 
         ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                 .title(title)
                 .markdown(markdown)
-                .singleTitle("跳转连接")
+                .singleTitle("点击查看")
                 .singleUrl("https://www.baidu.com/")
                 .receivers(receivers)
                 .build();

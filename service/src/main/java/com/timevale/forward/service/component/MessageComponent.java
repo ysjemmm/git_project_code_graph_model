@@ -59,10 +59,11 @@ public interface MessageComponent {
     /**
      * 评论通知
      *
-     * @param operator 操作人
+     * @param operator  操作人
      * @param receivers 接收人
+     * @param type      主体类型
      * @param name      业务需求主题/产品需求主题/项目名称
      * @param content   评论内容
      */
-    void commentMsg(String operator, List<String> receivers, String name, String content);
+    void commentMsg(String operator, List<String> receivers, String type, String name, String content);
 }

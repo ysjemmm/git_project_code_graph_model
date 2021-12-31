@@ -9,7 +9,9 @@ import com.timevale.forward.dal.condition.ProductBizDemandCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProductBizDemandMapper;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO;
+import com.timevale.forward.dal.entity.ProductBizDemandDO;
 import com.timevale.forward.facade.api.client.BizDemandProductDemandService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.query.BizDemandLinkProductDemandQueryList;
@@ -17,9 +19,7 @@ import com.timevale.forward.facade.api.query.BizDemandProductDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandLinkProductDemandReq;
 import com.timevale.forward.facade.api.request.BizDemandUnlinkProductDemandReq;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
-import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
-import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.copy.BizDemandCopier;
@@ -120,13 +120,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         // 判断旧数据是否存在新数据中，更新逻辑删除标识
         for (Map.Entry<Long, ProductBizDemandDO> entry : oldLinkDate.entrySet()) {
-            Boolean isDeleted = null;
-            if(newLinkData.contains(entry.getKey())){
-                if(entry.getValue().getIsDeleted()){
-                    isDeleted = false;
-                }
-            }
-            if(isDeleted != null){
+            if(newLinkData.contains(entry.getKey()) && entry.getValue().getIsDeleted()){
                 updateLinkDate.add(entry.getValue().getId());
             }
         }
@@ -161,6 +155,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                 .productDemandId(productDemandId)
                 .isDeleted(false)
                 .build());
+
 
         if(list == null){
             throw new BaseBizRuntimeException("不存在对应的关联关系");

@@ -89,6 +89,7 @@ public class CommentServiceImpl implements CommentService {
         messageComponent.commentMsg(
                 userInfo.getId(),
                 receivers,
+                CommentTypeEnum.getTextByCode(type),
                 name,
                 commentDO.getContent()
         );
