@@ -117,6 +117,7 @@ public class MessageComponentImpl implements MessageComponent {
         ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                 .title(title)
                 .markdown(markdown)
+                .singleTitle("跳转连接")
                 .singleUrl("https://www.baidu.com/")
                 .receivers(receivers)
                 .build();
