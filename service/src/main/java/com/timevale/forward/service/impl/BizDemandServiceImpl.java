@@ -110,17 +110,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         }else if(ascription.equals(AscriptionEnum.RECEIVE.toString())){
             bizDemandListCondition.setReceiveManIdList(Lists.newArrayList(userInfo.getId()));
         }else if(ascription.equals(AscriptionEnum.COPIER.toString())){
-            bizDemandListCondition.setCopier(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            bizDemandListCondition.setCopier(userInfo.getId());
         }else {
             List<String> teamMember = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
-            if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())){
-                if(bizDemandListCondition.getCreateManIdList().isEmpty()){
-                    bizDemandListCondition.setCreateManIdList(teamMember);
-                }
-            }else if(ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())){
-                if(bizDemandListCondition.getReceiveManIdList().isEmpty()){
-                    bizDemandListCondition.setReceiveManIdList(teamMember);
-                }
+            if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString()) && !bizDemandListCondition.getCreateManIdList().isEmpty()){
+                bizDemandListCondition.setCreateManIdList(teamMember);
+            }else if(ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString()) && !bizDemandListCondition.getReceiveManIdList().isEmpty()){
+                bizDemandListCondition.setReceiveManIdList(teamMember);
             }
         }
 
