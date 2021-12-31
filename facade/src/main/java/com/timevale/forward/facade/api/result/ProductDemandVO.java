@@ -59,7 +59,7 @@ public class ProductDemandVO extends ToString {
     @ApiModelProperty("创建时间")
     private Date createDate;
 
-    @ApiModelProperty("修改时间")
+    @ApiModelProperty("更新时间")
     private Date modifyDate;
 
     @ApiModelProperty("抄送人")

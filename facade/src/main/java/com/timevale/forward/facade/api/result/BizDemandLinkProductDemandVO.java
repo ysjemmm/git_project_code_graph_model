@@ -51,6 +51,9 @@ public class BizDemandLinkProductDemandVO extends ToString {
     @ApiModelProperty("创建时间")
     private Date createDate;
 
+    @ApiModelProperty("更新时间")
+    private Date modifyDate;
+
     @ApiModelProperty("产品需求状态")
     private Integer status;
 

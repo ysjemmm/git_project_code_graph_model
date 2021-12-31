@@ -56,6 +56,9 @@ public class ProjectVO extends ToString {
     @ApiModelProperty("创建时间")
     private Date createDate;
 
+    @ApiModelProperty("更新时间")
+    private Date modifyDate;
+
     @ApiModelProperty("项目经理")
     private String pmName;
 
