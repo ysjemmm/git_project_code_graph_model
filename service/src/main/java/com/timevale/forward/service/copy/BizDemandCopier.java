@@ -92,8 +92,6 @@ public interface BizDemandCopier {
      * @param list 列表
      * @return 业务需求列表
      */
-    @Mapping(source = "createMan", target = "createManInfo.userName")
-    @Mapping(source = "createManId", target = "createManInfo.userId")
     List<BizDemandVO> convert(List<BizDemandListDO> list);
 
     /**
@@ -112,7 +110,7 @@ public interface BizDemandCopier {
      * @param list 分页数据
      * @return VO
      */
-    PageQueryResult<BizDemandVO> convert(PageQueryResult<BizDemandVO> list);
+    PageQueryResult<BizDemandVO> convert(PageQueryResult<BizDemandDO> list);
 
 
     /**
@@ -139,7 +137,7 @@ public interface BizDemandCopier {
      * @param list 分页数据
      * @return VO
      */
-    PageQueryResult<BizDemandLinkProductDemandVO> transform(PageQueryResult<BizDemandLinkProductDemandVO> list);
+    PageQueryResult<BizDemandLinkProductDemandVO> transform(PageQueryResult<BizDemandLinkProductDemandListDO> list);
 
 
     /**

@@ -158,8 +158,13 @@ public class BizDemandServiceImpl implements BizDemandService {
             e.setDeptName(deptMap.get(e.getDeptId()));
         });
 
-        // 转换后返回数据
-        return BaseResult.success(BizDemandCopier.INSTANCE.convert(ResultUtil.pageSuccess(new PageInfo<>(bizDemandVOList))));
+        // 返回分页数据
+        PageInfo<BizDemandListDO> pageInfo = new PageInfo<>(bizDemandListDOList);
+        PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(bizDemandVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
+        return BaseResult.success(pageQueryResult);
     }
 
     /**

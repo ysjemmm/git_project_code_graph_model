@@ -9,10 +9,7 @@ import com.timevale.forward.dal.condition.ProductBizDemandCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProductBizDemandMapper;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.entity.BizDemandDO;
-import com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO;
-import com.timevale.forward.dal.entity.ProductBizDemandDO;
-import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BizDemandProductDemandService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.query.BizDemandLinkProductDemandQueryList;
@@ -20,6 +17,7 @@ import com.timevale.forward.facade.api.query.BizDemandProductDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandLinkProductDemandReq;
 import com.timevale.forward.facade.api.request.BizDemandUnlinkProductDemandReq;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
+import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.PriorityEnum;
@@ -71,15 +69,21 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         // 开始分页
         PageHelper.startPage(bizDemandProductDemandQueryList.pageNum, bizDemandProductDemandQueryList.pageSize);
 
-        List<BizDemandLinkProductDemandListDO> doList = productDemandMapper.selectByBizDemandId(bizDemandProductDemandQueryList.getBizDemandId());
-        List<BizDemandLinkProductDemandVO> voList = BizDemandCopier.INSTANCE.transform(doList);
+        List<BizDemandLinkProductDemandListDO> DOList = productDemandMapper.selectByBizDemandId(bizDemandProductDemandQueryList.getBizDemandId());
+        List<BizDemandLinkProductDemandVO> VOList = BizDemandCopier.INSTANCE.transform(DOList);
 
-        voList.forEach( e -> {
+        VOList.forEach( e -> {
             e.setPriorityText(PriorityEnum.getTextByCode(e.getPriority()));
             e.setStatusText(ProductDemandStatusEnum.getTextByCode(e.getStatus()));
         });
 
-        return BaseResult.success(BizDemandCopier.INSTANCE.transform(ResultUtil.pageSuccess(new PageInfo<>(voList))));
+        // 返回分页数据
+        PageInfo<BizDemandLinkProductDemandListDO> pageInfo = new PageInfo<>(DOList);
+        PageQueryResult<BizDemandLinkProductDemandVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(VOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
+        return BaseResult.success(pageQueryResult);
     }
 
     @Override
@@ -202,7 +206,12 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
             e.setStatusText(ProductDemandStatusEnum.getTextByCode(e.getStatus()));
         });
 
-        return BaseResult.success(BizDemandCopier.INSTANCE.transform(ResultUtil.pageSuccess(new PageInfo<>(bizDemandLinkProductDemandVOList))));
+        PageInfo<BizDemandLinkProductDemandListDO> pageInfo = new PageInfo<>(productDemandDOList);
+        PageQueryResult<BizDemandLinkProductDemandVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(bizDemandLinkProductDemandVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
+        return BaseResult.success(pageQueryResult);
     }
 
 }
