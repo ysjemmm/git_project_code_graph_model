@@ -10,9 +10,10 @@ public class StringUtil {
         if(str == null || "".equals(str)){
             return str;
         }
-        str = str.replaceAll("/", "//");
-        str = str.replaceAll("%", "/%");
-        str = str.replaceAll("_", "/_");
+        str = str.replaceAll("\\\\","\\\\\\\\");
+        str = str.replaceAll("/", "\\\\/");
+        str = str.replaceAll("%", "\\\\%");
+        str = str.replaceAll("_", "\\\\_");
         return str;
     }
 }

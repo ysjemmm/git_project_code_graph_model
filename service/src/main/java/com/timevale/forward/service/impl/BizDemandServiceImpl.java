@@ -120,15 +120,15 @@ public class BizDemandServiceImpl implements BizDemandService {
             }
         }
 
-        Set<Long> queryDeptIdSet =  Sets.newHashSet(bizDemandQueryList.getDeptIdList());
+
         Map<Long, String> deptMap = Maps.newHashMap();
+        Set<Long> queryDeptIdSet =  Sets.newHashSet(bizDemandQueryList.getDeptIdList());
         GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
 
         // 如果查询条件有部门id，收集子部门id及所需部门的完整名
         if(!queryDeptIdSet.isEmpty()){
-            Boolean containsRootNode = queryDeptIdSet.contains(Long.valueOf(rootNode.getGroupId()));
             for (GroupResponse childNode : rootNode.getChildNode()){
-                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", containsRootNode);
+                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
             }
             // 替换查询部门id条件
             bizDemandListCondition.setDeptIdList(Lists.newArrayList(deptMap.keySet()));
