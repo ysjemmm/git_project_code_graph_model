@@ -100,7 +100,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         log.info("产品需求接收参数:{}", productDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
         if (CollectionUtils.isEmpty(productDemandQueryList.getOwnerIds())) {
             condition.setOwnerIds(new ArrayList<>());
@@ -120,13 +119,14 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         } else if (AscriptionEnum.COPIER.name().equals(productDemandQueryList.getAscription())) {
             condition.setCopierId(userInfo.getId());
         }
+        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
         List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
         productDemandVO.forEach(p -> {
             p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
             p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
         });
-        PageInfo<ProductDemandVO> pageInfo = new PageInfo<>(productDemandVO);
+        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
 
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(productDemandVO);
@@ -143,29 +143,31 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 && !ProductDemandStatusEnum.INVALID.getCode().equals(type)) {
             throw new BaseBizRuntimeException("操作类型不是暂停或作废,请重试输入");
         }
-        ProductDemandDO demandDO = productDemandMapper.get(productDemandId);
-        if (demandDO == null) {
+        ProductDemandDO productDemand = productDemandMapper.get(productDemandId);
+        if (productDemand == null) {
             throw new BaseBizRuntimeException("找不到该产品需求");
         }
-        if (!ProductDemandStatusEnum.WAITING.getCode().equals(demandDO.getStatus())
-                && !ProductDemandStatusEnum.INCLUDED.getCode().equals(demandDO.getStatus())
-                && !ProductDemandStatusEnum.PROGRESS.getCode().equals(demandDO.getStatus())) {
+        if (!ProductDemandStatusEnum.WAITING.getCode().equals(productDemand.getStatus())
+                && !ProductDemandStatusEnum.INCLUDED.getCode().equals(productDemand.getStatus())
+                && !ProductDemandStatusEnum.PROGRESS.getCode().equals(productDemand.getStatus())) {
             throw new BaseBizRuntimeException("产品需求状态不是待排期、已列入项目、项目进行中,不能修改状态");
         }
         // 更新需求状态
-        Integer oriStatus = demandDO.getStatus();
-        demandDO.setStatus(type);
-        productDemandComponent.update(demandDO);
+        productDemand.setStatus(type);
+        productDemandComponent.update(productDemand);
+
+        if (ProductDemandStatusEnum.SUSPEND.getCode().equals(type)){
+            // 暂停,更新业务需求状态
+//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId),false);
+        }
 
         // 暂停or作废解除项目关联
         ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
         productDemandDO.setProductDemandId(productDemandId);
         productDemandDO.setIsDeleted(true);
         projectProductDemandComponent.update(productDemandDO);
-        if (ProductDemandStatusEnum.SUSPEND.getCode().equals(type)) {
-//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId),false);
-        }
         if (ProductDemandStatusEnum.INVALID.getCode().equals(type)) {
+//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId),true);
             // 作废解业务需求关联
             ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
             productBizDemandDO.setProductDemandId(productDemandId);
@@ -316,6 +318,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     public ProjectVO linkProjectList(Long productDemandId) {
         log.info("产品需求-项目清单接收参数:productDemandId={}", productDemandId);
         ProjectDO projectDO = projectMapper.getByProductDemandId(productDemandId);
+        if(projectDO==null){
+            return null;
+        }
         ProjectVO projectVO = ProjectCopier.INSTANCE.transform(projectDO);
         projectVO.setStatusName(ProductDemandStatusEnum.getTextByCode(projectDO.getStatus()));
         projectVO.setPriorityName(PriorityEnum.getTextByCode(projectDO.getPriority()));
