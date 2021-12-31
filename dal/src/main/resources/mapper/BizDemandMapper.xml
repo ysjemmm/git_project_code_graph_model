@@ -172,7 +172,7 @@
             </choose>
             <if test="productDemandId != null">
            <!--产品需求关联业务需求时, 不能选择已经被自身关联的业务需求 -->
-                and (d.product_demand_id is null or (d.product_demand_id is not null and d.product_demand_id != #{productDemandId}));
+                and (d.product_demand_id is null or (d.product_demand_id is not null and d.product_demand_id != #{productDemandId}))
             </if>
         </where>
     </select>
