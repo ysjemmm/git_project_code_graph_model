@@ -67,7 +67,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         ProductDemandDO demandDO = productDemandMapper.get(id);
         ProductDemandDetailVO demandDetailVO = ProductDemandCopier.INSTANCE.convert(demandDO);
         demandDetailVO.setStatusName(ProductDemandStatusEnum.getTextByCode(demandDetailVO.getStatus()));
-        demandDetailVO.setPriorityName(PriorityEnum.getTextByCode(demandDetailVO.getPriority()));
+        demandDetailVO.setPriorityName(PriorityEnum.getTextChineseByCode(demandDetailVO.getPriority()));
         List<String> typeName = new ArrayList<>();
         if (!StringUtils.isEmpty(demandDO.getType())) {
             List<Integer> list = JSON.parseArray(demandDO.getType(), Integer.class);
