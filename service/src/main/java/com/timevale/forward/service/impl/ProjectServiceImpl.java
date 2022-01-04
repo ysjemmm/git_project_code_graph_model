@@ -315,7 +315,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
             projectProductDemandComponent.batchInsert(projectDO.getId(), productDemandIds);
 
-            //updateProjectBizDemandStatus(projectDO);
+            updateProjectBizDemandStatus(projectDO);
         } else {
             ProjectProductDemandDO projectProductDemandDO = new ProjectProductDemandDO();
             projectProductDemandDO.setIsDeleted(true);
