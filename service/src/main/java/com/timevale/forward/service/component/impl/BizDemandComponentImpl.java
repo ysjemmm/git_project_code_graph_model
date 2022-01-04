@@ -8,6 +8,7 @@ import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.ProductBizDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.facade.api.result.BizDemandStatusVO;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
@@ -16,6 +17,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -47,20 +49,24 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     MessageComponent messageComponent;
 
     @Override
-    public void updateBizDemandStatusAsLinkProductDemand(Long bizDemandId) {
+    public BizDemandStatusVO updateBizDemandStatusAsLinkProductDemand(Long bizDemandId) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByBizDemandId(bizDemandId);
         List<Long> productDemandIdList = productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList());
-        List<ProductDemandDO> productDemandDOList = productDemandMapper.selectByIdList(productDemandIdList);
 
-        // 筛出最小“未作废”产品需求状态
+        List<ProductDemandDO> productDemandDOList = Lists.newArrayList();
+        if(!productDemandIdList.isEmpty()){
+            productDemandDOList = productDemandMapper.selectByIdList(productDemandIdList);
+        }
+
+        // 筛出最小产品需求状态
         Integer status = null;
         for (ProductDemandDO productDemandDO : productDemandDOList) {
             Integer productDemandStatus = productDemandDO.getStatus();
-            if(productDemandStatus.equals(ProductDemandStatusEnum.INVALID.getCode())
-                    || productDemandStatus.equals(ProductDemandStatusEnum.WAITING.getCode())){
-                continue;
+            if(productDemandStatus.equals(ProductDemandStatusEnum.INVALID.getCode())){continue;}
+            if(productDemandStatus.equals(ProductDemandStatusEnum.SUSPEND.getCode())){
+                status = ProductDemandStatusEnum.WAITING.getCode();
             }
             status = status == null ? productDemandStatus : Math.min(status, productDemandStatus);
         }
@@ -79,20 +85,28 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             result = BizDemandStatusEnum.RECEIVED.getCode();
         }
 
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
-        bizDemandDO.setStatus(result);
-        bizDemandDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getId());
-        bizDemandDO.setModifyManId(userInfo.getId());
-        bizDemandMapper.update(bizDemandDO);
-
-        if(notice){
-            // 获取项目发布时间
+        // 获取项目发布时间
+        Date date = null;
+        if(!productDemandIdList.isEmpty()){
             List<ProjectDO> projectDOList = projectMapper.selectByProductDemandIdList(productDemandIdList);
-            Date date = projectDOList.get(0).getPlanEndDate();
-            for (ProjectDO projectDO : projectDOList) {
-                Date projectEndDate = projectDO.getActualEndDate() == null? projectDO.getPlanEndDate(): projectDO.getActualEndDate();
-                date = date.after(projectEndDate)? date: projectEndDate;
+            if(!projectDOList.isEmpty()){
+                date = projectDOList.get(0).getPlanEndDate();
+                for (ProjectDO projectDO : projectDOList) {
+                    Date projectEndDate = projectDO.getActualEndDate() == null? projectDO.getPlanEndDate(): projectDO.getActualEndDate();
+                    date = date.after(projectEndDate)? date: projectEndDate;
+                }
             }
+        }
+
+        // 判断状态是否发生变更
+        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        if(notice && !bizDemandDO.equals(result)){
+            // 状态更新
+            bizDemandDO.setStatus(result);
+            bizDemandDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getId());
+            bizDemandDO.setModifyManId(userInfo.getId());
+            bizDemandMapper.update(bizDemandDO);
+
             // 钉钉通知
             messageComponent.bizDemandStatusChangeMsg(
                     bizDemandDO.getCreateManId(),
@@ -100,5 +114,11 @@ public class BizDemandComponentImpl implements BizDemandComponent {
                     BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
                     date.toString());
         }
+
+        BizDemandStatusVO bizDemandStatusVO = new BizDemandStatusVO();
+        bizDemandStatusVO.setStatus(result);
+        bizDemandStatusVO.setStatusText(BizDemandStatusEnum.getTextByCode(result));
+        bizDemandStatusVO.setEndDate(date);
+        return bizDemandStatusVO;
     }
 }

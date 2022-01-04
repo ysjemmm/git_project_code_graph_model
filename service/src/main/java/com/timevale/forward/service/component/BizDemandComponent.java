@@ -1,5 +1,7 @@
 package com.timevale.forward.service.component;
 
+import com.timevale.forward.facade.api.result.BizDemandStatusVO;
+
 /**
  * @author by YangXu
  * @date 2022/01/04 10:26
@@ -11,6 +13,6 @@ public interface BizDemandComponent {
      *
      * @param bizDemandId 业务需求id
      */
-    void updateBizDemandStatusAsLinkProductDemand(Long bizDemandId);
+    BizDemandStatusVO updateBizDemandStatusAsLinkProductDemand(Long bizDemandId);
 
 }

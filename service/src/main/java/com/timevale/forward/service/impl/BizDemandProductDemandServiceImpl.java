@@ -19,6 +19,7 @@ import com.timevale.forward.facade.api.query.BizDemandProductDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandLinkProductDemandReq;
 import com.timevale.forward.facade.api.request.BizDemandUnlinkProductDemandReq;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
+import com.timevale.forward.facade.api.result.BizDemandStatusVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
@@ -97,7 +98,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> linkProductDemand(BizDemandLinkProductDemandReq bizDemandLinkProductDemandReq) {
+    public BaseResult<BizDemandStatusVO> linkProductDemand(BizDemandLinkProductDemandReq bizDemandLinkProductDemandReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         Long bizDemandId = bizDemandLinkProductDemandReq.getId();
@@ -143,14 +144,12 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         if(!insertLinkDate.isEmpty()){productBizDemandMapper.inserts(insertLinkDate);}
         if(!updateLinkDate.isEmpty()){productBizDemandMapper.updates(updateLinkDate, false, userInfo.getAlias(), userInfo.getId());}
 
-        bizDemandComponent.updateBizDemandStatusAsLinkProductDemand(bizDemandId);
-
-        return BaseResult.success(true);
+        return BaseResult.success(bizDemandComponent.updateBizDemandStatusAsLinkProductDemand(bizDemandId));
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> unlinkProductDemand(BizDemandUnlinkProductDemandReq bizDemandUnlinkProductDemandReq) {
+    public BaseResult<BizDemandStatusVO> unlinkProductDemand(BizDemandUnlinkProductDemandReq bizDemandUnlinkProductDemandReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 查询对应数据
@@ -174,9 +173,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         productBizDemandMapper.delete(productBizDemandDO);
 
-        bizDemandComponent.updateBizDemandStatusAsLinkProductDemand(bizDemandId);
-
-        return BaseResult.success(true);
+        return BaseResult.success(bizDemandComponent.updateBizDemandStatusAsLinkProductDemand(bizDemandId));
     }
 
     @Override
