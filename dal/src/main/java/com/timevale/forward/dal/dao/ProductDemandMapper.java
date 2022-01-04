@@ -90,4 +90,11 @@ public interface ProductDemandMapper {
      * @return int
      */
     int updateByIds(@Param("ids") List<Long> ids,@Param("status") Integer status);
+
+    /**
+     * 查询
+     * @param name name
+     * @return 产品需求DO
+     */
+    ProductDemandDO getByName(@Param("name") String name);
 }

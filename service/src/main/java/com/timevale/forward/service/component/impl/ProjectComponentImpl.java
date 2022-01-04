@@ -1,21 +1,31 @@
 package com.timevale.forward.service.component.impl;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProjectListCondition;
+import com.timevale.forward.dal.dao.PersonMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
+import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
 import com.timevale.forward.facade.api.result.ProjectVO;
-import com.timevale.forward.model.enums.PriorityEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
-import com.timevale.forward.model.enums.ProjectTypeEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.component.ProjectComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
+import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author xingyun
@@ -28,31 +38,113 @@ public class ProjectComponentImpl implements ProjectComponent {
     @Resource
     private ProjectMapper projectMapper;
 
-    @Override
-    public BaseResult<PageQueryResult<ProjectVO>> page(ProjectListCondition condition) {
-        int count = projectMapper.count(condition);
-        PageQueryResult<ProjectVO> pageQueryResult = new PageQueryResult<>();
-        if (count == 0) {
-            log.info("没有查询到项目信息");
-            return BaseResult.success(pageQueryResult);
-        }
-        condition.setOffset((condition.getPageNum() - 1) * condition.getPageSize());
-        condition.setSize(condition.getPageSize());
-        List<ProjectListDO> projectListDO = projectMapper.list(condition);
-        log.info("查询到项目信息:{}", projectListDO);
+    @Resource
+    private PersonMapper personMapper;
 
-        List<ProjectVO> result = ProjectCopier.INSTANCE.convert(projectListDO);
-        result.forEach(a->{
-            a.setTypeName(ProjectTypeEnum.getTextByCode(a.getType()));
-            a.setStatusName(ProjectStatusEnum.getTextByCode(a.getStatus()));
-            a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
+    @Resource
+    private ProductLineMapper productLineMapper;
+
+
+    @Override
+    public BaseResult<PageQueryResult<ProjectVO>> page(ProjectListCondition condition,List<Long> projectIds) {
+        PageQueryResult<ProjectVO> queryResult = new PageQueryResult<>();
+        // 查找产品经理或团队成员
+        if (CollectionUtils.isNotEmpty(condition.getPds())) {
+            projectIds = personMapper.getProjectIds(condition.getPds(), projectIds, PersonTypeEnum.PROJECT_PD.getCode());
+            if (CollectionUtils.isEmpty(projectIds)) {
+                return BaseResult.success(queryResult);
+            }
+        }
+        if (CollectionUtils.isNotEmpty(condition.getTeamMembers())) {
+            projectIds = personMapper.getProjectIds(condition.getTeamMembers(), projectIds, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            if (CollectionUtils.isEmpty(projectIds)) {
+                return BaseResult.success(queryResult);
+            }
+        }
+        if (CollectionUtils.isNotEmpty(condition.getProductLineIds())
+                || CollectionUtils.isNotEmpty(condition.getBizDomainIds())) {
+            projectIds = projectMapper.getProjectIds(projectIds, condition.getProductLineIds(), condition.getBizDomainIds());
+            if (CollectionUtils.isEmpty(projectIds)) {
+                return BaseResult.success(new PageQueryResult<>());
+            }
+        }
+        condition.setIds(projectIds);
+        condition.setName(StringUtil.toLikeStr(condition.getName()));
+        PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        List<ProjectListDO> projectDO = projectMapper.list2(condition);
+        projectIds = projectDO.stream().map(ProjectListDO::getId).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(projectIds)) {
+            return BaseResult.success(new PageQueryResult<>());
+        }
+        //2.填充人员信息
+        Map<Long, List<PersonDO>> pdMap = personMapper.get(projectIds, PersonTypeEnum.PROJECT_PD.getCode())
+                .stream().collect(Collectors.groupingBy(PersonDO::getProjectId));
+
+        Map<Long, List<PersonDO>> teamMemberMap = personMapper.get(projectIds, PersonTypeEnum.PROJECT_MEMBER.getCode())
+                .stream().collect(Collectors.groupingBy(PersonDO::getProjectId));
+
+        //3.填充产品线/业务域信息
+        Map<Long, List<ProjectProductLineBizDomain>> productLineMap = productLineMapper.getByProjectIds(projectIds)
+                .stream().collect(Collectors.groupingBy(ProjectProductLineBizDomain::getProjectId));
+
+        List<ProjectVO> projectVO = ProjectCopier.INSTANCE.convert(projectDO);
+        projectVO.forEach(a -> {
+            List<PersonDO> pds = pdMap.get(a.getId());
+            if (CollectionUtils.isNotEmpty(pds)) {
+                String pdName = pds.stream().map(PersonDO::getUserName).collect(Collectors.joining(","));
+                a.setPdName(pdName);
+            }
+
+            List<PersonDO> teamMembers = teamMemberMap.get(a.getId());
+            if (CollectionUtils.isNotEmpty(teamMembers)) {
+                String teamMemberName = teamMembers.stream().map(PersonDO::getUserName).collect(Collectors.joining(","));
+                a.setTeamMember(teamMemberName);
+            }
+
+            List<ProjectProductLineBizDomain> pdls = productLineMap.get(a.getId());
+            if (CollectionUtils.isNotEmpty(pdls)) {
+                String productLineName = pdls.stream().map(ProjectProductLineBizDomain::getProductLineName).collect(Collectors.joining(","));
+                a.setProductLineName(productLineName);
+                String bizDomainName = pdls.stream().map(ProjectProductLineBizDomain::getBizDomainName).collect(Collectors.joining(","));
+                a.setBizDomainName(bizDomainName);
+            }
         });
-        pageQueryResult.setCurrentPage(condition.getPageNum());
-        pageQueryResult.setItemsPerPage(condition.getPageSize());
-        pageQueryResult.setTotalItems(count);
-        pageQueryResult.setResultList(result);
-        pageQueryResult.setTotalPages(count % condition.getPageSize() == 0
-                ? count / condition.getPageSize() : count / condition.getPageSize() + 1);
+
+        PageInfo<ProjectListDO> pageInfo = new PageInfo<>(projectDO);
+        PageQueryResult<ProjectVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(projectVO);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);
+
     }
+
+
+//    @Override
+//    public BaseResult<PageQueryResult<ProjectVO>> page(ProjectListCondition condition) {
+//        condition.setName(StringUtil.toLikeStr(condition.getName()));
+//        int count = projectMapper.count(condition);
+//        PageQueryResult<ProjectVO> pageQueryResult = new PageQueryResult<>();
+//        if (count == 0) {
+//            log.info("没有查询到项目信息");
+//            return BaseResult.success(pageQueryResult);
+//        }
+//        condition.setOffset((condition.getPageNum() - 1) * condition.getPageSize());
+//        condition.setSize(condition.getPageSize());
+//        List<ProjectListDO> projectListDO = projectMapper.list(condition);
+//        log.info("查询到项目信息:{}", projectListDO);
+//
+//        List<ProjectVO> result = ProjectCopier.INSTANCE.convert(projectListDO);
+//        result.forEach(a -> {
+//            a.setTypeName(ProjectTypeEnum.getTextByCode(a.getType()));
+//            a.setStatusName(ProjectStatusEnum.getTextByCode(a.getStatus()));
+//            a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
+//        });
+//        pageQueryResult.setCurrentPage(condition.getPageNum());
+//        pageQueryResult.setItemsPerPage(condition.getPageSize());
+//        pageQueryResult.setTotalItems(count);
+//        pageQueryResult.setResultList(result);
+//        pageQueryResult.setTotalPages(count % condition.getPageSize() == 0
+//                ? count / condition.getPageSize() : count / condition.getPageSize() + 1);
+//        return BaseResult.success(pageQueryResult);
+//    }
 }

@@ -85,23 +85,27 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
 
+    @Resource
+    private PersonMapper personMapper;
+
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
         String currentUser = LocalSessionUtils.getUserInfo().getId();
         ProjectListCondition condition = ProjectCopier.INSTANCE.convert(projectQueryList);
-        if (CollectionUtils.isEmpty(projectQueryList.getTeamMembers())) {
-            condition.setTeamMembers(new ArrayList<>());
-        }
+        List<Long> projectIds = new ArrayList<>();
+        //1.查找我或我的团队所属项目id
         if (AscriptionEnum.CURRENT_USER.name().equals(projectQueryList.getAscription())) {
-            condition.getTeamMembers().add(currentUser);
+            projectIds = personMapper.getProjectIds(Lists.newArrayList(currentUser), null, PersonTypeEnum.PROJECT_MEMBER.getCode());
+
 
         } else if (AscriptionEnum.TEAM.name().equals(projectQueryList.getAscription())) {
             List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(currentUser);
             log.info("我和我的下属:{}", allMyStaffWithSelf);
-            condition.getTeamMembers().addAll(allMyStaffWithSelf);
+            projectIds = personMapper.getProjectIds(allMyStaffWithSelf, null, PersonTypeEnum.PROJECT_MEMBER.getCode());
         }
-        return projectComponent.page(condition);
+
+        return projectComponent.page(condition, projectIds);
     }
 
     @Override
@@ -147,7 +151,7 @@ public class ProjectServiceImpl implements ProjectService {
                 productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.WAITING.getCode());
             }
             //更新业务需求状态
-//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds,false);
+//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds);
 
         }
         return BaseResult.success(true);
@@ -184,6 +188,10 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(ProjectAddReq projectAddReq) {
         log.info("项目新增接收参数:{}", projectAddReq);
+        ProjectDO project = projectMapper.getByName(projectAddReq.getName());
+        if (project != null) {
+            throw new BaseBizRuntimeException("该项目名称已存在,请修改后重试");
+        }
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
         projectDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
@@ -211,6 +219,10 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(ProjectModifyReq projectModifyReq) {
         log.info("项目修改接收参数:{}", projectModifyReq);
+        ProjectDO project = projectMapper.getByName(projectModifyReq.getName());
+        if (project != null && !project.getId().equals(projectModifyReq.getId())) {
+            throw new BaseBizRuntimeException("该项目名称已存在,请修改后重试");
+        }
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectModifyReq);
         projectDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
@@ -269,20 +281,20 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(ProjectLinkProductDemandQueryList productDemandQueryList) {
         log.info("项目-产品需求匹配,接收参数:productDemandQueryList={}", productDemandQueryList);
-        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
         condition.setStatus(Lists.newArrayList(ProductDemandStatusEnum.WAITING.getCode()
                 , ProductDemandStatusEnum.INCLUDED.getCode()
                 , ProductDemandStatusEnum.PROGRESS.getCode()
                 , ProductDemandStatusEnum.ONLINE.getCode()));
         condition.setMatchProductDemand(true);
+        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
         List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
         productDemandVO.forEach(p -> {
             p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
             p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
         });
-        PageInfo<ProductDemandVO> pageInfo = new PageInfo<>(productDemandVO);
+        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
 
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(productDemandVO);
@@ -316,7 +328,7 @@ public class ProjectServiceImpl implements ProjectService {
             productDemandComponent.update(productDemandDO);
 
             // 一个产品需求下的业务需求
-            //productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds,false);
+            //productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds);
         }
         return BaseResult.success(true);
     }
@@ -332,7 +344,7 @@ public class ProjectServiceImpl implements ProjectService {
             p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
         });
 
-        PageInfo<ProductDemandVO> pageInfo = new PageInfo<>(productDemandVO);
+        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
 
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(productDemandVO);
@@ -388,6 +400,6 @@ public class ProjectServiceImpl implements ProjectService {
         } else if (ProjectStatusEnum.RELEASED.getCode().equals(projectDO.getStatus())) {
             productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.ONLINE.getCode());
         }
-//        productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds,false);
+//        productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds);
     }
 }

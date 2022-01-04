@@ -35,4 +35,12 @@ public interface ProductDemandComponent {
      */
     void updateBizDemandStatusAsProductStatusChange(List<Long> productDemandIds,boolean bizProductDemandUnLink);
 
+    /**
+     *
+     * @param productDemandId 产品需求id
+     * @param bizDemandId 业务需求id
+     * @param bizProductDemandUnLink 业务需求关联或者取消关联产品需求
+     */
+    void updateBizDemandStatusAsWhenLinkOrUnlink(Long productDemandId,Long bizDemandId,boolean bizProductDemandUnLink);
+
 }

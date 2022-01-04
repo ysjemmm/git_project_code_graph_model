@@ -101,21 +101,28 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         log.info("产品需求接收参数:{}", productDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
-        if (CollectionUtils.isEmpty(productDemandQueryList.getOwnerIds())) {
-            condition.setOwnerIds(new ArrayList<>());
-        }
+        List<String> filtered = new ArrayList<>();
         if (AscriptionEnum.CURRENT_USER.name().equals(productDemandQueryList.getAscription())) {
             condition.getOwnerIds().add(userInfo.getId());
-
         } else if (AscriptionEnum.TEAM.name().equals(productDemandQueryList.getAscription())) {
             List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
-            log.info("我和我的下属:{}", allMyStaffWithSelf);
-            condition.getOwnerIds().addAll(allMyStaffWithSelf);
+            if (!CollectionUtils.isEmpty(productDemandQueryList.getOwnerIds())) {
+                filtered = allMyStaffWithSelf.stream().filter(a -> productDemandQueryList.getOwnerIds().contains(a)).collect(Collectors.toList());
+            } else {
+                filtered = allMyStaffWithSelf;
+            }
+            log.info("我和我的下属:{},过滤后:{}", allMyStaffWithSelf, filtered);
+            condition.setOwnerIds(filtered);
         } else if (AscriptionEnum.DEPARTMENT.name().equals(productDemandQueryList.getAscription())) {
             GroupModel defaultGroup = userInfo.getDefaultGroup();
             List<String> accountIds = innerUserPersonClient.getAllByGroupId(defaultGroup.getGroupId());
-            log.info("用户默认部门id:{},同部门人员:{}", defaultGroup.getGroupId(), accountIds);
-            condition.getOwnerIds().addAll(accountIds);
+            if (!CollectionUtils.isEmpty(productDemandQueryList.getOwnerIds())) {
+                filtered = accountIds.stream().filter(a -> productDemandQueryList.getOwnerIds().contains(a)).collect(Collectors.toList());
+            } else {
+                filtered = accountIds;
+            }
+            log.info("用户默认部门id:{},同部门人员:{},过滤后:{}", defaultGroup.getGroupId(), accountIds, filtered);
+            condition.setOwnerIds(filtered);
         } else if (AscriptionEnum.COPIER.name().equals(productDemandQueryList.getAscription())) {
             condition.setCopierId(userInfo.getId());
         }
@@ -156,7 +163,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         productDemand.setStatus(type);
         productDemandComponent.update(productDemand);
 
-        if (ProductDemandStatusEnum.SUSPEND.getCode().equals(type)){
+        if (ProductDemandStatusEnum.SUSPEND.getCode().equals(type)) {
             // 暂停,更新业务需求状态
 //            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId),false);
         }
@@ -200,6 +207,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(ProductDemandAddReq productDemandAddReq) {
         log.info("产品需求新增接收参数:{}", productDemandAddReq);
+        ProductDemandDO productDemandDO = productDemandMapper.getByName(productDemandAddReq.getName());
+        if (productDemandDO != null) {
+            throw new BaseBizRuntimeException("该产品需求名称已存在,请修改后重试");
+        }
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandDO demandDO = ProductDemandCopier.INSTANCE.convert(productDemandAddReq);
         demandDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
@@ -223,6 +234,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(ProductDemandModifyReq productDemandModifyReq) {
         log.info("产品需求修改接收参数:{}", productDemandModifyReq);
+        ProductDemandDO productDemandDO = productDemandMapper.getByName(productDemandModifyReq.getName());
+        if (productDemandDO != null && !productDemandDO.getId().equals(productDemandModifyReq.getId())) {
+            throw new BaseBizRuntimeException("该产品需求名称已存在,请修改后重试");
+        }
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandDO demandDO = ProductDemandCopier.INSTANCE.convert(productDemandModifyReq);
         demandDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
@@ -251,13 +266,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (productDemandDO != null) {
             throw new BaseBizRuntimeException("该产品需求已被关联,请解除后重试");
         }
-        PageHelper.startPage(productDemandLinkProjectQueryList.getPageNum(), productDemandLinkProjectQueryList.getPageSize());
         ProjectListCondition condition = ProjectCopier.INSTANCE.convert(productDemandLinkProjectQueryList);
         condition.setStatus(Lists.newArrayList(ProjectStatusEnum.WAITING.getCode()
                 , ProjectStatusEnum.PLANING.getCode()
                 , ProjectStatusEnum.DEVING.getCode()
                 , ProjectStatusEnum.TESTING.getCode()));
-        return projectCmponent.page(condition);
+        return projectCmponent.page(condition, Lists.newArrayList());
     }
 
     @Override
@@ -266,7 +280,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         List<String> receiveManIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
         log.info("我和我的下属:receiveManIdList={}", receiveManIdList);
-        PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize());
         BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(productDemandLinkBizDemandQueryList);
         condition.setReceiveManIdList(receiveManIdList);
         condition.setStatusList(Lists.newArrayList(
@@ -274,6 +287,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 , BizDemandStatusEnum.INCLUDE_PROJECT.getCode()
                 , BizDemandStatusEnum.PROJECTING.getCode()
                 , BizDemandStatusEnum.AVAILABLE.getCode()));
+        PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize());
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(condition);
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
 
@@ -288,7 +302,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             iter.setDeptName(groupInfo.get(iter.getDeptId()));
         });
 
-        PageInfo<BizDemandVO> pageInfo = new PageInfo<>(bizDemandVOList);
+        PageInfo<BizDemandListDO> pageInfo = new PageInfo<>(bizDemandListDOList);
         PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(bizDemandVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
@@ -302,9 +316,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         List<Long> bizDemandIds = bizDemandLinkReq.getBizDemandIds();
         if (LinkOrUnLinkEnum.LINK.getCode().equals(bizDemandLinkReq.getType())) {
             productBizDemandComponent.batchInsert(bizDemandLinkReq.getProductDemandId(), bizDemandIds);
-//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(bizDemandLinkReq.getProductDemandId()),false);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(bizDemandLinkReq.getProductDemandId()), false);
         } else {
-//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(bizDemandLinkReq.getProductDemandId()),true);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(bizDemandLinkReq.getProductDemandId()), true);
             ProductBizDemandDO productDemandDO = new ProductBizDemandDO();
             productDemandDO.setIsDeleted(true);
             productDemandDO.setProductDemandId(bizDemandLinkReq.getProductDemandId());
@@ -318,11 +332,11 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     public ProjectVO linkProjectList(Long productDemandId) {
         log.info("产品需求-项目清单接收参数:productDemandId={}", productDemandId);
         ProjectDO projectDO = projectMapper.getByProductDemandId(productDemandId);
-        if(projectDO==null){
+        if (projectDO == null) {
             return null;
         }
         ProjectVO projectVO = ProjectCopier.INSTANCE.transform(projectDO);
-        projectVO.setStatusName(ProductDemandStatusEnum.getTextByCode(projectDO.getStatus()));
+        projectVO.setStatusName(ProjectStatusEnum.getTextByCode(projectDO.getStatus()));
         projectVO.setPriorityName(PriorityEnum.getTextByCode(projectDO.getPriority()));
         return projectVO;
     }
@@ -337,11 +351,11 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         List<Long> deptIdList = bizDemandVO.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList());
         Map<Long, String> groupInfo = innerGroupClient.batchGetSimpleGroupMap(deptIdList);
         bizDemandVO.forEach(p -> {
-            p.setPriorityText(ProductDemandStatusEnum.getTextByCode(p.getPriority()));
+            p.setPriorityText(PriorityEnum.getTextByCode(p.getPriority()));
             p.setDeptName(groupInfo.get(p.getDeptId()));
         });
 
-        PageInfo<BizDemandVO> pageInfo = new PageInfo<>(bizDemandVO);
+        PageInfo<BizDemandListDO> pageInfo = new PageInfo<>(bizDemandList);
         PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(bizDemandVO);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);

@@ -65,4 +65,28 @@ public interface ProjectMapper {
      */
     List<ProjectDO> selectByProductDemandIdList(@Param("productDemandIdList") List<Long> productDemandIdList);
 
+    /**
+     *
+     * @param projectIds 项目id
+     * @param productLineIds 产品线id
+     * @return
+     */
+    List<Long> getProjectIds(@Param("projectIds") List<Long> projectIds, @Param("productLineIds") List<Long> productLineIds, @Param("bizDomainIds") List<Long> bizDomainIds);
+
+
+    /**
+     * 选择通过产品需求id列表
+     *
+     * @param condition 产品需求id列表
+     * @return ProjectDO
+     */
+    List<ProjectListDO> list2(ProjectListCondition condition);
+
+    /**
+     * 查询
+     * @param name name
+     * @return 产品需求DO
+     */
+    ProjectDO getByName(@Param("name") String name);
+
 }

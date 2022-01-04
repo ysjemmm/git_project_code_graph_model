@@ -39,15 +39,70 @@
         </where>
     </update>
 
-    <sql id="commonSearch">
+
+    <select id="getByProductDemandId" resultType="com.timevale.forward.dal.entity.ProjectDO">
+        select a.id,a.name, a.priority, a.type ,a.status,a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
+        a.actual_start_date,a.actual_end_date,a.`desc`,
+        a.create_man_id, a.create_man,a.create_date,a.modify_date
         from project a
-        left join project_product_line b on a.id=b.project_id and b.is_deleted =false
-        left join product_line c on b.product_line_id=c.id and c.is_deleted =false
-        left join biz_domain d on c.biz_domain_id=d.id and d.is_deleted =false
-        left join person e on a.id=e.project_id and e.type =0 and e.is_deleted =false
-        left join person f on a.id=f.project_id and f.type =1 and f.is_deleted =false
+        left join project_product_demand b on a.id=b.project_id and b.is_deleted=false
+        where b.product_demand_id = #{productDemandId} and a.is_deleted=false
+    </select>
+
+    <select id="selectByProductDemandIdList" resultType="com.timevale.forward.dal.entity.ProjectDO">
+        select distinct p.id, p.name, p.priority, p.type, p.status, p.pm, p.pm_id, p.plan_start_date, p.plan_end_date, p.actual_start_date, p.actual_end_date, p.`desc`, p.is_deleted, p.create_man_id, p.create_man, p.create_date, p.modify_man_id, p.modify_man, p.modify_date
+        from project_product_demand ppd
+        join project p on ppd.project_id = p.id
+        where ppd.is_deleted = false
+        <if test="productDemandIdList!=null and productDemandIdList.size()>0">
+            and ppd.product_demand_id in
+            <foreach collection="productDemandIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="getProjectIds" resultType="long">
+        select distinct b.project_id
+        <if test="bizDomainIds!=null and bizDomainIds.size()>0">
+            ,d.name bizDomainName
+        </if>
+         from project_product_line b
+         left join product_line c on b.product_line_id=c.id
+        <if test="bizDomainIds!=null and bizDomainIds.size()>0">
+            left join biz_domain d on c.biz_domain_id=d.id
+        </if>
         <where>
-            <if test="id != null">and a.id = #{id}</if>
+            and b.project_id in
+            <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            and b.product_line_id in
+            <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            <if test="bizDomainIds!=null and bizDomainIds.size()>0">
+                and d.id in
+                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and b.is_deleted=false
+        </where>
+    </select>
+
+    <select id="list2" resultType="com.timevale.forward.dal.entity.ProjectListDO">
+        select a.id,a.name, a.priority, a.type ,a.status,a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
+        a.actual_start_date,a.actual_end_date,a.`desc`,
+        a.create_man_id, a.create_man,a.create_date,a.modify_date
+        from project a
+        <where>
+            <if test="ids!=null and ids.size()>0">
+                and a.id in
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
             <if test="planStartDateLeft != null and planStartDateRight != null">
                 and a.plan_start_date &gt;= #{planStartDateLeft} and a.plan_start_date &lt;= #{planStartDateRight}
@@ -63,18 +118,6 @@
             </if>
             <if test="modifyDateStart != null and modifyDateEnd != null">
                 and a.modify_date &gt;= #{modifyDateStart} and a.modify_date &lt;= #{modifyDateEnd}
-            </if>
-            <if test="productLineIds!=null and productLineIds.size()>0">
-                and c.id in
-                <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="bizDomainIds!=null and bizDomainIds.size()>0">
-                and d.id in
-                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
             </if>
             <if test="priorities!=null and priorities.size()>0">
                 and a.priority in
@@ -100,56 +143,15 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="pds!=null and pds.size()>0">
-                and e.user_id in
-                <foreach collection="pds" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="teamMembers!=null and teamMembers.size()>0">
-                and f.user_id in
-                <foreach collection="teamMembers" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
             and a.is_deleted =false
         </where>
-    </sql>
-    <select id="list" resultType="com.timevale.forward.dal.entity.ProjectListDO">
-        select a.id,a.name, a.priority, a.type ,a.status,a.pm pmName,a.plan_start_date,a.plan_end_date,a.modify_date,
-        a.actual_start_date,a.actual_end_date,a.create_man
-        ,group_concat(distinct c.name separator ',')productLineName
-        ,group_concat(distinct d.name separator ',')bizDomainName
-        ,group_concat(distinct e.user_name separator ',')pdName
-        ,group_concat(distinct f.user_name separator ',')teamMember
-        <include refid="commonSearch"/>
-        group by  a.id  order by a.modify_date desc limit #{offset},#{size}
-    </select>
-    <select id="count" resultType="int">
-        select count(distinct a.id)
-        <include refid="commonSearch"/>
     </select>
 
-    <select id="getByProductDemandId" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select a.id,a.name, a.priority, a.type ,a.status,a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
-        a.actual_start_date,a.actual_end_date,a.`desc`,
-        a.create_man_id, a.create_man,a.create_date,a.modify_date
-        from project a
-        left join project_product_demand b on a.id=b.project_id and b.is_deleted=false
-        where b.product_demand_id = #{productDemandId} and a.is_deleted=false
-    </select>
-
-    <select id="selectByProductDemandIdList" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select distinct p.id, p.name, p.priority, p.type, p.status, p.pm, p.pm_id, p.plan_start_date, p.plan_end_date, p.actual_start_date, p.actual_end_date, p.`desc`, p.is_deleted, p.create_man_id, p.create_man, p.create_date, p.modify_man_id, p.modify_man, p.modify_date
-        from project_product_demand ppd
-        join project p on ppd.project_id = p.id
-        where ppd.is_deleted = false
-        <if test="productDemandIdList!=null and productDemandIdList.size()>0">
-            and ppd.product_demand_id in
-            <foreach collection="productDemandIdList" item="item" separator="," open="(" close=")">
-                #{item}
-            </foreach>
-        </if>
+    <select id="getByName" resultType="com.timevale.forward.dal.entity.ProjectDO">
+        select id,name, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date,
+        actual_start_date,actual_end_date,`desc`, create_man_id, create_man,create_date,modify_date
+        from project
+        where name = #{name} and is_deleted=false
     </select>
 
 </mapper>

@@ -42,5 +42,35 @@
         </where>
     </update>
 
+    <select id="getProjectIds" resultType="long">
+        select distinct project_id
+        from person
+        <where>
+            and user_id in
+            <foreach collection="userIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            <if test="projectIds!=null and projectIds.size()>0">
+            and project_id in
+            <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            </if>
+            and type = #{type} and is_deleted=false
+        </where>
+    </select>
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.PersonDO">
+        select id ,project_id,product_demand_id,biz_demand_id,user_name,user_id, type,is_deleted,create_man ,create_date ,modify_man ,modify_date
+        from person
+        <where>
+            and project_id in
+            <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            and type = #{type} and is_deleted=false
+        </where>
+    </select>
+
 
 </mapper>

@@ -19,4 +19,19 @@
         left join project_product_line b on a.id=b.product_line_id
         where b.project_id = #{projectId} and b.is_deleted = false and a.id is not null
     </select>
+
+    <select id="getByProjectIds" resultType="com.timevale.forward.dal.entity.ProjectProductLineBizDomain">
+        select b.project_id,c.name productLineName,d.name bizDomainName
+        from project_product_line b
+        left join product_line c on b.product_line_id=c.id
+            left join biz_domain d on c.biz_domain_id=d.id
+        <where>
+            and b.project_id in
+            <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            and b.is_deleted=false
+        </where>
+    </select>
+
 </mapper>

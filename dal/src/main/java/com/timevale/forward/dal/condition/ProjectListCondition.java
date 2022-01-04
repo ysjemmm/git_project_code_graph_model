@@ -23,6 +23,11 @@ public class ProjectListCondition extends QueryBase {
     private Long id;
 
     /**
+     * id
+     */
+    private List<Long> ids;
+
+    /**
      * productDemandId
      */
     private Long productDemandId;

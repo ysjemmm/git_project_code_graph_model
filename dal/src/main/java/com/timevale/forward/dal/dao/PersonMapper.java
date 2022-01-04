@@ -45,4 +45,21 @@ public interface PersonMapper {
      */
     int update(PersonDO personDO);
 
+    /**
+     * 获取人员信息
+     * @param userIds 花名
+     * @param projectIds 项目id
+     * @param type 产品经理or团队成员
+     * @return list
+     */
+    List<Long> getProjectIds(@Param("userIds") List<String> userIds,@Param("projectIds") List<Long> projectIds,@Param("type") Integer type);
+
+
+    /**
+     * 获取人员信息
+     * @param projectIds 项目id
+     * @param type 产品经理or团队成员
+     * @return list
+     */
+    List<PersonDO> get(@Param("projectIds") List<Long> projectIds,@Param("type") Integer type);
 }
