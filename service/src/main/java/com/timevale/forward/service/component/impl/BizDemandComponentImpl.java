@@ -100,19 +100,21 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
         // 判断状态是否发生变更
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
-        if(notice && !bizDemandDO.equals(result)){
+        if(!bizDemandDO.getStatus().equals(result)){
             // 状态更新
             bizDemandDO.setStatus(result);
             bizDemandDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getId());
             bizDemandDO.setModifyManId(userInfo.getId());
             bizDemandMapper.update(bizDemandDO);
 
-            // 钉钉通知
-            messageComponent.bizDemandStatusChangeMsg(
-                    bizDemandDO.getCreateManId(),
-                    bizDemandDO.getName(),
-                    BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
-                    date.toString());
+            if(notice){
+                // 钉钉通知
+                messageComponent.bizDemandStatusChangeMsg(
+                        bizDemandDO.getCreateManId(),
+                        bizDemandDO.getName(),
+                        BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
+                        date.toString());
+            }
         }
 
         BizDemandStatusVO bizDemandStatusVO = new BizDemandStatusVO();
