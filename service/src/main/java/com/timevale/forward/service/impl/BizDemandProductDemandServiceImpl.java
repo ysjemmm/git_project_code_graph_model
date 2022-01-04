@@ -22,6 +22,7 @@ import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
 import com.timevale.forward.service.utils.DateUtil;
@@ -63,6 +64,9 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
     @Resource
     ProductDemandService productDemandService;
+
+    @Resource
+    BizDemandComponent bizDemandComponent;
 
     @Override
     public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> linkedProductDemandList(BizDemandProductDemandQueryList bizDemandProductDemandQueryList) {
@@ -139,10 +143,13 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         if(!insertLinkDate.isEmpty()){productBizDemandMapper.inserts(insertLinkDate);}
         if(!updateLinkDate.isEmpty()){productBizDemandMapper.updates(updateLinkDate, false, userInfo.getAlias(), userInfo.getId());}
 
+        bizDemandComponent.updateBizDemandStatusAsLinkProductDemand(bizDemandId);
+
         return BaseResult.success(true);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> unlinkProductDemand(BizDemandUnlinkProductDemandReq bizDemandUnlinkProductDemandReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
@@ -166,6 +173,8 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         productBizDemandDO.setModifyManId(userInfo.getId());
 
         productBizDemandMapper.delete(productBizDemandDO);
+
+        bizDemandComponent.updateBizDemandStatusAsLinkProductDemand(bizDemandId);
 
         return BaseResult.success(true);
     }
