@@ -15,6 +15,7 @@ import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
+import com.timevale.forward.service.utils.DateUtil;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -70,6 +71,8 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
         condition.setIds(projectIds);
         condition.setName(StringUtil.toLikeStr(condition.getName()));
+//        condition.setPlanStartDateLeft(DateUtil.getStartOfDay(condition.getPlanEndDateLeft()));
+//        condition.setPlanStartDateRight(DateUtil.getEndOfDay(condition.getPlanStartDateRight()));
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProjectListDO> projectDO = projectMapper.list2(condition);
         projectIds = projectDO.stream().map(ProjectListDO::getId).collect(Collectors.toList());

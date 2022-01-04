@@ -3,6 +3,7 @@ package com.timevale.forward.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
@@ -39,15 +40,15 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -288,18 +289,33 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 , BizDemandStatusEnum.PROJECTING.getCode()
                 , BizDemandStatusEnum.AVAILABLE.getCode()));
         PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize());
+        // 如果查询条件有部门id，收集子部门id及所需部门的完整名
+        Set<Long> queryDeptIdSet =  Sets.newHashSet(productDemandLinkBizDemandQueryList.getDeptIdList());
+        GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
+        Map<Long, String> deptMap = Maps.newHashMap();
+        if(!queryDeptIdSet.isEmpty()){
+            for (GroupResponse childNode : rootNode.getChildNode()){
+                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
+            }
+            // 替换查询部门id条件
+            condition.setDeptIdList(Lists.newArrayList(deptMap.keySet()));
+        }
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(condition);
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
 
-        // 查询部门信息
-        List<Long> deptIdList = bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList());
-        Map<Long, String> groupInfo = innerGroupClient.batchGetSimpleGroupMap(deptIdList);
+        // 如果查询条件没有部门id，收集完整名
+        if(queryDeptIdSet.isEmpty()){
+            queryDeptIdSet.addAll(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
+            for (GroupResponse childNode : rootNode.getChildNode()){
+                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
+            }
+        }
 
         bizDemandVOList.forEach(iter -> {
             iter.setPriorityText(PriorityEnum.getTextByCode(iter.getPriority()));
             iter.setStatusText(BizDemandStatusEnum.getTextByCode(iter.getStatus()));
             iter.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(iter.getPlanReleaseDate()));
-            iter.setDeptName(groupInfo.get(iter.getDeptId()));
+            iter.setDeptName(deptMap.get(iter.getDeptId()));
         });
 
         PageInfo<BizDemandListDO> pageInfo = new PageInfo<>(bizDemandListDOList);
@@ -348,11 +364,15 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         List<BizDemandListDO> bizDemandList = bizDemandMapper.productDemandBizDemandList(productBizDemandQueryList.getProductDemandId());
 
         List<BizDemandVO> bizDemandVO = BizDemandCopier.INSTANCE.convert(bizDemandList);
-        List<Long> deptIdList = bizDemandVO.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList());
-        Map<Long, String> groupInfo = innerGroupClient.batchGetSimpleGroupMap(deptIdList);
+        GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
+        Map<Long, String> deptMap = Maps.newHashMap();
+        Set<Long> deptIds = bizDemandVO.stream().map(BizDemandVO::getDeptId).collect(Collectors.toSet());
+        for (GroupResponse childNode : rootNode.getChildNode()){
+            dfsGroupListTree(childNode, deptMap, deptIds, "", false);
+        }
         bizDemandVO.forEach(p -> {
             p.setPriorityText(PriorityEnum.getTextByCode(p.getPriority()));
-            p.setDeptName(groupInfo.get(p.getDeptId()));
+            p.setDeptName(deptMap.get(p.getDeptId()));
         });
 
         PageInfo<BizDemandListDO> pageInfo = new PageInfo<>(bizDemandList);
@@ -360,6 +380,31 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         pageQueryResult.setResultList(bizDemandVO);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);
+    }
+
+    /**
+     * 深搜部门树
+     *
+     * @param node           节点
+     * @param deptMap        部门信息id和名称的映射
+     * @param queryDeptIdSet 包含的id
+     * @param name           部门完整名称
+     * @param isInsert       判断是否可直接插入
+     */
+    private void dfsGroupListTree(GroupResponse node, Map<Long, String> deptMap, Set<Long> queryDeptIdSet, String name, Boolean isInsert){
+        name = name + node.getGroupName();
+        Long deptId = Long.valueOf(node.getGroupId());
+        if(isInsert || queryDeptIdSet.contains(deptId)){
+            isInsert = true;
+            deptMap.put(deptId, name);
+        }
+        // 如果为叶节点直接返回
+        if(node.getChildNode() == null){return;}
+
+        name = name + CommonConstant.JOIN_LINE;
+        for (GroupResponse childNode : node.getChildNode()) {
+            dfsGroupListTree(childNode, deptMap, queryDeptIdSet, name, isInsert);
+        }
     }
 
 }

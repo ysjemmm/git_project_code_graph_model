@@ -382,7 +382,7 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("更新项目信息:nodeMap={},,projectDO={}", nodeMap, projectDO);
         projectMapper.update(projectDO);
 
-        //updateProjectBizDemandStatus(projectDO);
+        updateProjectBizDemandStatus(projectDO);
 
     }
 
