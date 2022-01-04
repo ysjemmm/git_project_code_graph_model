@@ -8,6 +8,7 @@ import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.ProductDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
+import com.timevale.forward.facade.api.result.ProductDemandStatusVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
@@ -85,7 +86,7 @@ public interface ProjectService {
      *
      * @param productDemandLinkReq 产品需求
      */
-    BaseResult<Boolean> linkOrUnLinkProductDemand(ProductDemandLinkReq productDemandLinkReq);
+    BaseResult<ProductDemandStatusVO> linkOrUnLinkProductDemand(ProductDemandLinkReq productDemandLinkReq);
 
 
     /**
