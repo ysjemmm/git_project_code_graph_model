@@ -388,6 +388,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     private void updateProjectBizDemandStatus(ProjectDO projectDO) {
         List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectDO.getId());
+        if(CollectionUtils.isEmpty(exists)){
+            log.info("更新项目信息,没有找到产品需求");
+            return;
+        }
         List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
                 .collect(Collectors.toList());
         if (ProjectStatusEnum.WAITING.getCode().equals(projectDO.getStatus())

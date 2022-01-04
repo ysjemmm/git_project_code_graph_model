@@ -185,7 +185,6 @@
     </select>
 
     <update id="updateByIds">
-        <if test="ids!=null and ids.size()>0">
             update biz_demand
             set status =#{status}
             <where>
@@ -194,7 +193,6 @@
                     #{item}
                 </foreach>
             </where>
-        </if>
     </update>
 
 </mapper>

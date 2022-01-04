@@ -186,7 +186,6 @@
     </select>
 
     <update id="updateByIds">
-        <if test="ids!=null and ids.size()>0">
         update product_demand
         set status =#{status}
         <where>
@@ -195,7 +194,6 @@
                 #{item}
             </foreach>
         </where>
-        </if>
     </update>
 
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
