@@ -151,7 +151,7 @@ public class ProjectServiceImpl implements ProjectService {
                 productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.WAITING.getCode());
             }
             //更新业务需求状态
-//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds,false);
 
         }
         return BaseResult.success(true);
@@ -328,7 +328,7 @@ public class ProjectServiceImpl implements ProjectService {
             productDemandComponent.update(productDemandDO);
 
             // 一个产品需求下的业务需求
-            //productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds,false);
         }
         return BaseResult.success(true);
     }
@@ -400,6 +400,6 @@ public class ProjectServiceImpl implements ProjectService {
         } else if (ProjectStatusEnum.RELEASED.getCode().equals(projectDO.getStatus())) {
             productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.ONLINE.getCode());
         }
-//        productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds);
+        productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds,false);
     }
 }

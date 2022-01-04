@@ -165,7 +165,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         if (ProductDemandStatusEnum.SUSPEND.getCode().equals(type)) {
             // 暂停,更新业务需求状态
-//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId),false);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId),false);
         }
 
         // 暂停or作废解除项目关联
@@ -174,7 +174,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         productDemandDO.setIsDeleted(true);
         projectProductDemandComponent.update(productDemandDO);
         if (ProductDemandStatusEnum.INVALID.getCode().equals(type)) {
-//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId),true);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId),true);
             // 作废解业务需求关联
             ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
             productBizDemandDO.setProductDemandId(productDemandId);
@@ -198,7 +198,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
         productDemandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
         productDemandComponent.update(productDemandDO);
-//        productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId),false);
+        productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId),false);
 
         return BaseResult.success(true);
     }
