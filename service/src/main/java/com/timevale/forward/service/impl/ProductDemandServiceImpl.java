@@ -312,9 +312,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         bizDemandVOList.forEach(iter -> {
-            iter.setPriorityText(PriorityEnum.getTextByCode(iter.getPriority()));
+            iter.setPriorityText(PriorityEnum.getTextChineseByCode(iter.getPriority()));
             iter.setStatusText(BizDemandStatusEnum.getTextByCode(iter.getStatus()));
-            iter.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(iter.getPlanReleaseDate()));
             iter.setDeptName(deptMap.get(iter.getDeptId()));
         });
 

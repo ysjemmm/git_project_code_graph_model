@@ -17,7 +17,7 @@ public enum PriorityEnum {
 
     P2(20,"P2", "中"),
 
-    P3(30,"P2", "低");
+    P3(30,"P3", "低");
 
     final private Integer code;
 

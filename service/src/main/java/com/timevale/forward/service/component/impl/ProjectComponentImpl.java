@@ -12,10 +12,12 @@ import com.timevale.forward.dal.entity.ProjectListDO;
 import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.ProjectTypeEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
-import com.timevale.forward.service.utils.DateUtil;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -111,6 +113,9 @@ public class ProjectComponentImpl implements ProjectComponent {
                 String bizDomainName = pdls.stream().map(ProjectProductLineBizDomain::getBizDomainName).collect(Collectors.joining(","));
                 a.setBizDomainName(bizDomainName);
             }
+            a.setTypeName(ProjectTypeEnum.getTextByCode(a.getType()));
+            a.setStatusName(ProjectStatusEnum.getTextByCode(a.getStatus()));
+            a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
         });
 
         PageInfo<ProjectListDO> pageInfo = new PageInfo<>(projectDO);

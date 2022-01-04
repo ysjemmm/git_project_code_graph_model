@@ -38,8 +38,6 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.jsqlparser.expression.LongValue;
-import org.apache.el.parser.BooleanNode;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
@@ -148,7 +146,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 部门名称待修改 ，需要完整名称
         bizDemandVOList.forEach( e -> {
-            e.setPriorityText(PriorityEnum.getTextByCode(e.getPriority()));
+            e.setPriorityText(PriorityEnum.getTextChineseByCode(e.getPriority()));
             e.setStatusText(BizDemandStatusEnum.getTextByCode(e.getStatus()));
             e.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(e.getPlanReleaseDate()));
             e.setDeptName(deptMap.get(e.getDeptId()));
