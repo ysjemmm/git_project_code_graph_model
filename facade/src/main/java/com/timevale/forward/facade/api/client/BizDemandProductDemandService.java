@@ -7,6 +7,7 @@ import com.timevale.forward.facade.api.query.BizDemandProductDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandLinkProductDemandReq;
 import com.timevale.forward.facade.api.request.BizDemandUnlinkProductDemandReq;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
+import com.timevale.forward.facade.api.result.BizDemandStatusVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -38,17 +39,17 @@ public interface BizDemandProductDemandService {
      * 关联/取消关联产品需求
      *
      * @param bizDemandLinkProductDemandReq 业务需求链接产品需求
-     * @return 成功与否
+     * @return 业务需求状态
      */
-    BaseResult<Boolean> linkProductDemand(BizDemandLinkProductDemandReq bizDemandLinkProductDemandReq);
+    BaseResult<BizDemandStatusVO> linkProductDemand(BizDemandLinkProductDemandReq bizDemandLinkProductDemandReq);
 
     /**
      * 取消关联对应产品需求
      *
      * @param bizDemandUnlinkProductDemandReq 业务需求拆开产品需求要求的事情
-     * @return 成功与否
+     * @return 业务需求状态
      */
-    BaseResult<Boolean> unlinkProductDemand(BizDemandUnlinkProductDemandReq bizDemandUnlinkProductDemandReq);
+    BaseResult<BizDemandStatusVO> unlinkProductDemand(BizDemandUnlinkProductDemandReq bizDemandUnlinkProductDemandReq);
 
     /**
      * 产品需求列表

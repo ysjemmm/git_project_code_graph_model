@@ -70,7 +70,8 @@
         select id, name, product_line_id, type, `desc`, status, priority, owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date, owner_id
         from product_demand
         where
-        id in
+        is_deleted = false
+        and id in
         <foreach collection="productDemandIdList" item="item" separator="," open="(" close=")">
             #{item}
         </foreach>
