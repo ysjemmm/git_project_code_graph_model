@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -39,4 +40,10 @@ public class ProductDemandQueryList extends QueryBase {
 
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
     private String ascription;
+
+    @ApiModelProperty("起始时间")
+    private Date createDateStart;
+
+    @ApiModelProperty("结束时间")
+    private Date createDateEnd;
 }

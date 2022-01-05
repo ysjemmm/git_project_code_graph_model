@@ -83,4 +83,6 @@ public class ProductDemandListCondition extends QueryBase {
      */
     private Boolean matchProductDemand;
 
+
+
 }

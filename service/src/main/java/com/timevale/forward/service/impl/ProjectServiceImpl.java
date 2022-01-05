@@ -291,11 +291,11 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(ProjectLinkProductDemandQueryList productDemandQueryList) {
         log.info("项目-产品需求匹配,接收参数:productDemandQueryList={}", productDemandQueryList);
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
+        condition.setMatchProductDemand(true);
         condition.setStatus(Lists.newArrayList(ProductDemandStatusEnum.WAITING.getCode()
                 , ProductDemandStatusEnum.INCLUDED.getCode()
                 , ProductDemandStatusEnum.PROGRESS.getCode()
                 , ProductDemandStatusEnum.ONLINE.getCode()));
-        condition.setMatchProductDemand(true);
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
         List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);

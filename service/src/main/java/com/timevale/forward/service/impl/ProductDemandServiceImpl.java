@@ -274,12 +274,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> matchProjectList(ProductDemandLinkProjectQueryList productDemandLinkProjectQueryList) {
         log.info("产品需求-项目匹配接收参数:projectQueryList={}", productDemandLinkProjectQueryList);
-//        if (!productDemandLinkProjectQueryList.getIsAddWhenMatchList()) {
-//            ProjectProductDemandDO productDemandDO = projectProductDemandMapper.getByProductDemandId(productDemandLinkProjectQueryList.getProductDemandId());
-//            if (productDemandDO != null) {
-//                throw new BaseBizRuntimeException("该产品需求已被关联,请解除后重试");
-//            }
-//        }
+        if (productDemandLinkProjectQueryList.getProductDemandId()!=null) {
+            ProjectProductDemandDO productDemandDO = projectProductDemandMapper.getByProductDemandId(productDemandLinkProjectQueryList.getProductDemandId());
+            if (productDemandDO != null) {
+                throw new BaseBizRuntimeException("该产品需求已被关联,请解除后重试");
+            }
+        }
         ProjectListCondition condition = ProjectCopier.INSTANCE.convert(productDemandLinkProjectQueryList);
         condition.setStatus(Lists.newArrayList(ProjectStatusEnum.WAITING.getCode()
                 , ProjectStatusEnum.PLANING.getCode()
@@ -300,6 +300,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 BizDemandStatusEnum.RECEIVED.getCode()
                 , BizDemandStatusEnum.INCLUDE_PROJECT.getCode()
                 , BizDemandStatusEnum.PROJECTING.getCode()
+                , BizDemandStatusEnum.REJECT.getCode()
                 , BizDemandStatusEnum.AVAILABLE.getCode()));
         PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize());
         // 如果查询条件有部门id，收集子部门id及所需部门的完整名

@@ -62,7 +62,4 @@ public class ProductDemandLinkProjectQueryList extends QueryBase {
     @ApiModelProperty("产品需求id")
     private Long productDemandId;
 
-    @ApiModelProperty("新增时打开项目弹窗为true,否则false")
-    private Boolean isAddWhenMatchList;
-
 }

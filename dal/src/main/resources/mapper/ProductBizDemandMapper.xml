@@ -73,7 +73,7 @@
     </insert>
 
     <select id="getByProductDemandId" resultType="com.timevale.forward.dal.entity.ProductBizDemandDO">
-        select a.id, a.product_demand_id, a.biz_demand_id, a.is_deleted,b.status,b.name,b.create_man
+        select a.id, a.product_demand_id, a.biz_demand_id, a.is_deleted,b.status,b.name,b.create_man_id
         from product_biz_demand a
         left join biz_demand b on a.biz_demand_id=b.id
         <where>

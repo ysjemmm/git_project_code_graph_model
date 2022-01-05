@@ -12,11 +12,13 @@ import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProductLineCopier;
+import com.timevale.forward.service.utils.DateUtil;
 import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -63,10 +65,15 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     @Resource
     private  MessageComponent messageComponent;
 
+//    @Resource
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
     @Override
-    public List<ProductDemandListDO> list(ProductDemandListCondition productDemandListCondition) {
-        productDemandListCondition.setName(StringUtil.toLikeStr(productDemandListCondition.getName()));
-        return productDemandMapper.list(productDemandListCondition);
+    public List<ProductDemandListDO> list(ProductDemandListCondition condition) {
+        condition.setName(StringUtil.toLikeStr(condition.getName()));
+        condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
+        condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
+        return productDemandMapper.list(condition);
     }
 
     @Override
@@ -158,25 +165,26 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             bizDemandMapper.updateByIds(v, k);
         });
         log.info("产品需求变化-更新业务需求:产品需求id={},需要更新的业务需求id和状态={}", productDemandIds, condition);
-
-        //发送钉钉
-//        condition.forEach((k, v) -> {
-//            if(ProductDemandStatusEnum.INCLUDED.getCode().equals(k)
-//                    ||ProductDemandStatusEnum.PROGRESS.getCode().equals(k)
-//                    ||ProductDemandStatusEnum.ONLINE.getCode().equals(k)){
-//                v.forEach(a->{
-//                    ProductBizDemandDO bizDemand = bizDemandMap.get(a);
-//                    Date projectEndDate = bizDemandComponent.getProjectEndDate(a);
-//                    messageComponent.bizDemandStatusChangeMsg(
-//                            bizDemand.getCreateMan(),
-//                            bizDemand.getName(),
-//                            BizDemandStatusEnum.getTextByCode(k),
-//                            projectEndDate.toString());
-//                });
-//            }
-//        });
+        sendDingMsg(condition,bizDemandMap);
     }
-
+    private void sendDingMsg(Map<Integer, List<Long>> condition,Map<Long, ProductBizDemandDO> bizDemandMap){
+        condition.forEach((k, v) -> {
+            if(BizDemandStatusEnum.INCLUDE_PROJECT.getCode().equals(k)
+                    ||BizDemandStatusEnum.PROJECTING.getCode().equals(k)
+                    ||BizDemandStatusEnum.AVAILABLE.getCode().equals(k)){
+                v.forEach(a->{
+                    ProductBizDemandDO bizDemand = bizDemandMap.get(a);
+                    Date projectEndDate = bizDemandComponent.getProjectEndDate(a);
+                    messageComponent.bizDemandStatusChangeMsg(
+                            bizDemand.getCreateManId(),
+                            bizDemand.getName(),
+                            BizDemandStatusEnum.getTextByCode(k),
+                            projectEndDate);
+                });
+                log.info("发送钉钉消息成功");
+            }
+        });
+    }
     private void processUpdateStatus(Map<Integer, List<Long>> condition, Integer minStauts, Long bizDemandId) {
         if (minStauts != null && !minStauts.equals(ProductDemandStatusEnum.INVALID.getCode())) {
             if (minStauts.equals(ProductDemandStatusEnum.WAITING.getCode())
