@@ -276,6 +276,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<Boolean> modify(BizDemandModifyReq bizDemandModifyReq) {
+        log.info("业务需求修改接收参数 bizDemandModifyReq = {}", bizDemandModifyReq);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 修改业务需求
@@ -292,7 +293,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 添加抄送人数据
         List<PersonAddReq> recipientInfoList = bizDemandModifyReq.getRecipientInfoList();
         if(!recipientInfoList.isEmpty()){
-            personComponent.add(recipientInfoList, bizDemandModifyReq.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
+            personComponent.update(recipientInfoList, bizDemandModifyReq.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
         }
 
         // 添加附件
