@@ -11,6 +11,7 @@ import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
+import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
@@ -205,13 +206,13 @@ public class ProjectServiceImpl implements ProjectService {
         projectProductLineComponent.add(projectDO.getProductLineIds(), projectDO.getId());
 
         // 产品经理
-        if (CollectionUtils.isNotEmpty(projectAddReq.getPds())) {
-            personComponent.add(projectAddReq.getPds(), projectDO.getId(), PersonTypeEnum.PROJECT_PD.getCode());
-        }
+        personComponent.add(projectAddReq.getPds(), projectDO.getId(), PersonTypeEnum.PROJECT_PD.getCode());
+
         // 团队成员
-        if (CollectionUtils.isNotEmpty(projectAddReq.getTeamMembers())) {
-            personComponent.add(projectAddReq.getTeamMembers(), projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
-        }
+        List<PersonAddReq> teamMembers = projectAddReq.getTeamMembers();
+        teamMembers.addAll(projectAddReq.getPds());
+        teamMembers.add(projectAddReq.getPm());
+        personComponent.add(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
         return BaseResult.success(true);
     }
 
@@ -239,7 +240,10 @@ public class ProjectServiceImpl implements ProjectService {
         personComponent.update(projectModifyReq.getPds(), projectDO.getId(), PersonTypeEnum.PROJECT_PD.getCode());
 
         // 团队成员
-        personComponent.update(projectModifyReq.getTeamMembers(), projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
+        List<PersonAddReq> teamMembers = projectModifyReq.getTeamMembers();
+        teamMembers.addAll(projectModifyReq.getPds());
+        teamMembers.add(projectModifyReq.getPm());
+        personComponent.update(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         // 节点信息
         if (CollectionUtils.isNotEmpty(projectModifyReq.getProjectNodes())) {
@@ -254,6 +258,8 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO projectDO = projectMapper.get(projectId);
         ProjectDetailVO projectDetailVO = ProjectCopier.INSTANCE.convert(projectDO);
         projectDetailVO.setStatusName(ProjectStatusEnum.getTextByCode(projectDetailVO.getStatus()));
+        projectDetailVO.setPriorityName(PriorityEnum.getTextByCode(projectDetailVO.getPriority()));
+        projectDetailVO.setTypeName(ProjectTypeEnum.getTextByCode(projectDetailVO.getType()));
 
         //产品线
         List<ProductLineDO> productLineDO = productLineMapper.get(projectId);
@@ -263,10 +269,13 @@ public class ProjectServiceImpl implements ProjectService {
         // 产品经理
         List<PersonDO> pds = personComponent.select(projectId, PersonTypeEnum.PROJECT_PD.getCode());
         projectDetailVO.setPd(PersonCopier.INSTANCE.transform(pds));
-
+        List<String> pdUserIds = pds.stream().map(PersonDO::getUserId).collect(Collectors.toList());
         // 团队成员
-        List<PersonDO> team = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
-        projectDetailVO.setTeamMember(PersonCopier.INSTANCE.transform(team));
+        List<PersonDO> teamMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        //过滤掉产品经理和项目经理
+        teamMembers = teamMembers.stream().filter(a -> !a.getUserId().equals(projectDO.getPmId()) && !pdUserIds.contains(a.getUserId()))
+                .collect(Collectors.toList());
+        projectDetailVO.setTeamMember(PersonCopier.INSTANCE.transform(teamMembers));
 
         //节点
         List<ProjectNodeDO> projectNodeDO = projectNodeComponent.get(projectId);

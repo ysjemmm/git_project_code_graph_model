@@ -30,11 +30,17 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("优先级:0(P0),1(P1),2(P2)")
     private Integer priority;
 
+    @ApiModelProperty("优先级")
+    private String priorityName;
+
     @ApiModelProperty("产品线")
     private List<ProductLineVO> productLineVO;
 
     @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
     private Integer type;
+
+    @ApiModelProperty("项目类型")
+    private String typeName;
 
     @ApiModelProperty("项目经理id")
     private String pmId;

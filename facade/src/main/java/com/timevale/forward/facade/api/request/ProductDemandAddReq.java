@@ -46,5 +46,9 @@ public class ProductDemandAddReq extends BaseReq {
     @ApiModelProperty("文件信息")
     private List<FileAddReq> files;
 
+    @ApiModelProperty("业务需求id")
+    private List<Long> bizDemandIds;
 
+    @ApiModelProperty("项目id")
+    private Long projectId;
 }

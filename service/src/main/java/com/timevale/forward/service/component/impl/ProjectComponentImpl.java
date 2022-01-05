@@ -18,6 +18,7 @@ import com.timevale.forward.model.enums.ProjectTypeEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
+import com.timevale.forward.service.utils.DateUtil;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -51,35 +52,34 @@ public class ProjectComponentImpl implements ProjectComponent {
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> page(ProjectListCondition condition,List<Long> projectIds) {
         PageQueryResult<ProjectVO> queryResult = new PageQueryResult<>();
-        // 查找产品经理或团队成员
+        // 查找产品经理
         if (CollectionUtils.isNotEmpty(condition.getPds())) {
             projectIds = personMapper.getProjectIds(condition.getPds(), projectIds, PersonTypeEnum.PROJECT_PD.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(queryResult);
             }
         }
+        //团队成员
         if (CollectionUtils.isNotEmpty(condition.getTeamMembers())) {
             projectIds = personMapper.getProjectIds(condition.getTeamMembers(), projectIds, PersonTypeEnum.PROJECT_MEMBER.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(queryResult);
             }
         }
+        //产品线业务域
         if (CollectionUtils.isNotEmpty(condition.getProductLineIds())
                 || CollectionUtils.isNotEmpty(condition.getBizDomainIds())) {
             projectIds = projectMapper.getProjectIds(projectIds, condition.getProductLineIds(), condition.getBizDomainIds());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(new PageQueryResult<>());
+                return BaseResult.success(queryResult);
             }
         }
-        condition.setIds(projectIds);
-        condition.setName(StringUtil.toLikeStr(condition.getName()));
-//        condition.setPlanStartDateLeft(DateUtil.getStartOfDay(condition.getPlanEndDateLeft()));
-//        condition.setPlanStartDateRight(DateUtil.getEndOfDay(condition.getPlanStartDateRight()));
+        buildConditionBeforeQuery(projectIds,condition);
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
-        List<ProjectListDO> projectDO = projectMapper.list2(condition);
+        List<ProjectListDO> projectDO = projectMapper.list(condition);
         projectIds = projectDO.stream().map(ProjectListDO::getId).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(projectIds)) {
-            return BaseResult.success(new PageQueryResult<>());
+            return BaseResult.success(queryResult);
         }
         //2.填充人员信息
         Map<Long, List<PersonDO>> pdMap = personMapper.get(projectIds, PersonTypeEnum.PROJECT_PD.getCode())
@@ -119,40 +119,21 @@ public class ProjectComponentImpl implements ProjectComponent {
         });
 
         PageInfo<ProjectListDO> pageInfo = new PageInfo<>(projectDO);
-        PageQueryResult<ProjectVO> pageQueryResult = new PageQueryResult<>();
-        pageQueryResult.setResultList(projectVO);
-        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
-        return BaseResult.success(pageQueryResult);
+        queryResult.setResultList(projectVO);
+        ResultUtil.fillPageInfo(queryResult, pageInfo);
+        return BaseResult.success(queryResult);
 
     }
-
-
-//    @Override
-//    public BaseResult<PageQueryResult<ProjectVO>> page(ProjectListCondition condition) {
-//        condition.setName(StringUtil.toLikeStr(condition.getName()));
-//        int count = projectMapper.count(condition);
-//        PageQueryResult<ProjectVO> pageQueryResult = new PageQueryResult<>();
-//        if (count == 0) {
-//            log.info("没有查询到项目信息");
-//            return BaseResult.success(pageQueryResult);
-//        }
-//        condition.setOffset((condition.getPageNum() - 1) * condition.getPageSize());
-//        condition.setSize(condition.getPageSize());
-//        List<ProjectListDO> projectListDO = projectMapper.list(condition);
-//        log.info("查询到项目信息:{}", projectListDO);
-//
-//        List<ProjectVO> result = ProjectCopier.INSTANCE.convert(projectListDO);
-//        result.forEach(a -> {
-//            a.setTypeName(ProjectTypeEnum.getTextByCode(a.getType()));
-//            a.setStatusName(ProjectStatusEnum.getTextByCode(a.getStatus()));
-//            a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
-//        });
-//        pageQueryResult.setCurrentPage(condition.getPageNum());
-//        pageQueryResult.setItemsPerPage(condition.getPageSize());
-//        pageQueryResult.setTotalItems(count);
-//        pageQueryResult.setResultList(result);
-//        pageQueryResult.setTotalPages(count % condition.getPageSize() == 0
-//                ? count / condition.getPageSize() : count / condition.getPageSize() + 1);
-//        return BaseResult.success(pageQueryResult);
-//    }
+    private void buildConditionBeforeQuery(List<Long>projectIds,ProjectListCondition condition){
+        condition.setIds(projectIds);
+        condition.setName(StringUtil.toLikeStr(condition.getName()));
+        condition.setPlanStartDateLeft(DateUtil.getStartOfDay(condition.getPlanStartDateLeft()));
+        condition.setPlanStartDateRight(DateUtil.getEndOfDay(condition.getPlanStartDateRight()));
+        condition.setPlanEndDateLeft(DateUtil.getStartOfDay(condition.getPlanEndDateLeft()));
+        condition.setPlanEndDateRight(DateUtil.getEndOfDay(condition.getPlanEndDateRight()));
+        condition.setActualStartDateLeft(DateUtil.getStartOfDay(condition.getActualStartDateLeft()));
+        condition.setActualStartDateRight(DateUtil.getEndOfDay(condition.getActualStartDateRight()));
+        condition.setActualEndDateLeft(DateUtil.getStartOfDay(condition.getActualEndDateLeft()));
+        condition.setActualEndDateRight(DateUtil.getEndOfDay(condition.getActualEndDateRight()));
+    }
 }

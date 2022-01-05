@@ -2,11 +2,9 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.query.BizDemandLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
-import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -88,5 +86,13 @@ public interface BizDemandService {
      * @return 成功与否
      */
     BaseResult<Boolean> testNotice(Integer type);
+
+    /**
+     * 修改
+     *
+     * @param recipientAddReq 抄送人信息
+     * @return 数量
+     */
+    BaseResult<Boolean> addRecipients(RecipientAddReq recipientAddReq);
 
 }

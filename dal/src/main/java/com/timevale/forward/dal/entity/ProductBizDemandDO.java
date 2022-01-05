@@ -25,4 +25,9 @@ public class ProductBizDemandDO extends BaseDO {
      * 需求状态
      */
     private Integer status;
+
+    /**
+     * 需求名称
+     */
+    private String name;
 }

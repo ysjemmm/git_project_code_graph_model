@@ -6,10 +6,7 @@ import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.FileComponent;
-import com.timevale.forward.service.component.PersonComponent;
-import com.timevale.forward.service.component.ProductDemandComponent;
-import com.timevale.forward.service.component.ProjectProductDemandComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
@@ -26,6 +23,7 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author xingyun
@@ -58,6 +56,12 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
 
     @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
+
+    @Resource
+    private BizDemandComponent bizDemandComponent;
+
+    @Resource
+    private  MessageComponent messageComponent;
 
     @Override
     public List<ProductDemandListDO> list(ProductDemandListCondition productDemandListCondition) {
@@ -110,93 +114,80 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         if (bizProductDemandUnLink) {
             //解除产品需求和业务需求关系(含作废情况)
             productDemandIds.forEach(p -> {
-                processUpdateCondition(Lists.newArrayList(p), true);
+                buildConditionBeforeUpdate(Lists.newArrayList(p), true);
             });
         } else {
-            processUpdateCondition(productDemandIds, false);
+            buildConditionBeforeUpdate(productDemandIds, false);
         }
     }
 
-    @Override
-    public void updateBizDemandStatusAsWhenLinkOrUnlink(Long productDemandId, Long bizDemandId, boolean bizProductDemandUnLink) {
-        log.info("业务需求关联或取消关联产品需求-更新业务需求,产品需求id={},业务需求id={},解除二者关联={}", productDemandId, bizDemandId, bizProductDemandUnLink);
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
-        if (!BizDemandStatusEnum.REJECT.getCode().equals(bizDemandDO.getStatus()) && !BizDemandStatusEnum.INVALID.getCode().equals(bizDemandDO.getStatus())) {
-            List<ProductBizDemandDO> productDemands = productBizDemandMapper.getByBizDemandId(bizDemandDO.getId());
-            Map<Integer, List<Long>> map = new HashMap<>();
-            if (bizProductDemandUnLink) {
-                //如果是解除关联:计算业务需求状态时需要过滤掉本次被解除的产品需求
-                Integer minStauts = productDemands.stream().filter(i -> !productDemandId.equals(i.getProductDemandId())).map(ProductBizDemandDO::getStatus)
-                        .min(Comparator.comparingInt(o -> o)).orElse(null);
-                if (minStauts == null) {
-                    //业务需求只关联一个产品需求后且被解除
-                    map.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), v -> new ArrayList<>()).add(bizDemandDO.getId());
-                } else {
-                    processUpdateStatus(map, minStauts, bizDemandDO.getId());
-                }
-            } else {
-                Integer minStauts = productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
-                if (minStauts != null) {
-                    processUpdateStatus(map, minStauts, bizDemandDO.getId());
-                }
-            }
-            map.forEach((k, v) -> {
-                //更新产品需求下的所有业务需求状态
-                bizDemandMapper.updateByIds(v, k);
-            });
-            log.info("业务需求关联或取消关联产品需求-更新业务需求,产品需求id={},需要更新的业务需求id和状态={}", productDemandId, map);
-        }
-    }
 
-    private void processUpdateCondition(List<Long> productDemandIds, boolean bizProductDemandUnLink) {
+    private void buildConditionBeforeUpdate(List<Long> productDemandIds, boolean bizProductDemandUnLink) {
         log.info("产品需求变化-更新业务需求,产品需求id={},解除二者关联={}", productDemandIds, bizProductDemandUnLink);
         // 产品需求下的所有业务需求
         List<ProductBizDemandDO> bizDemands = productBizDemandMapper.getByProductDemandId(productDemandIds);
-        Map<Integer, List<Long>> map = new HashMap<>();
-        bizDemands.forEach(b -> {
+        // 业务需求id去重
+        Map<Long, ProductBizDemandDO> bizDemandMap = bizDemands.stream()
+                .collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, k -> k, (v1, v2) -> v2));
+        Map<Integer, List<Long>> condition = new HashMap<>();
+        bizDemandMap.forEach((k,v)->{
             //被驳回和作废的业务需求不处理
-            if (!BizDemandStatusEnum.REJECT.getCode().equals(b.getStatus()) && !BizDemandStatusEnum.INVALID.getCode().equals(b.getStatus())) {
+            if (!BizDemandStatusEnum.REJECT.getCode().equals(v.getStatus()) && !BizDemandStatusEnum.INVALID.getCode().equals(v.getStatus())) {
                 //当前业务需求下的所有产品需求
-                List<ProductBizDemandDO> productDemands = productBizDemandMapper.getByBizDemandId(b.getBizDemandId());
+                List<ProductBizDemandDO> productDemands = productBizDemandMapper.getByBizDemandId(k);
                 if (bizProductDemandUnLink) {
                     //如果是解除关联:计算业务需求状态时需要过滤掉本次被解除的产品需求
                     Integer minStauts = productDemands.stream().filter(i -> !productDemandIds.get(0).equals(i.getProductDemandId())).map(ProductBizDemandDO::getStatus)
                             .min(Comparator.comparingInt(o -> o)).orElse(null);
                     if (minStauts == null) {
                         //业务需求只关联一个产品需求后且被解除
-                        map.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), v -> new ArrayList<>()).add(b.getBizDemandId());
+                        condition.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), value -> new ArrayList<>()).add(k);
                     } else {
-                        processUpdateStatus(map, minStauts, b.getBizDemandId());
+                        processUpdateStatus(condition, minStauts, k);
                     }
                 } else {
                     Integer minStauts = productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
                     if (minStauts != null) {
-                        processUpdateStatus(map, minStauts, b.getBizDemandId());
+                        processUpdateStatus(condition, minStauts, k);
                     }
                 }
-
             }
         });
-        map.forEach((k, v) -> {
+        condition.forEach((k, v) -> {
             //更新产品需求下的所有业务需求状态
             bizDemandMapper.updateByIds(v, k);
         });
-        log.info("产品需求变化-更新业务需求:产品需求id={},需要更新的业务需求id和状态={}", productDemandIds, map);
+        log.info("产品需求变化-更新业务需求:产品需求id={},需要更新的业务需求id和状态={}", productDemandIds, condition);
 
         //发送钉钉
+//        condition.forEach((k, v) -> {
+//            if(ProductDemandStatusEnum.INCLUDED.getCode().equals(k)
+//                    ||ProductDemandStatusEnum.PROGRESS.getCode().equals(k)
+//                    ||ProductDemandStatusEnum.ONLINE.getCode().equals(k)){
+//                v.forEach(a->{
+//                    ProductBizDemandDO bizDemand = bizDemandMap.get(a);
+//                    Date projectEndDate = bizDemandComponent.getProjectEndDate(a);
+//                    messageComponent.bizDemandStatusChangeMsg(
+//                            bizDemand.getCreateMan(),
+//                            bizDemand.getName(),
+//                            BizDemandStatusEnum.getTextByCode(k),
+//                            projectEndDate.toString());
+//                });
+//            }
+//        });
     }
 
-    private void processUpdateStatus(Map<Integer, List<Long>> map, Integer minStauts, Long bizDemandId) {
+    private void processUpdateStatus(Map<Integer, List<Long>> condition, Integer minStauts, Long bizDemandId) {
         if (minStauts != null && !minStauts.equals(ProductDemandStatusEnum.INVALID.getCode())) {
             if (minStauts.equals(ProductDemandStatusEnum.WAITING.getCode())
                     || minStauts.equals(ProductDemandStatusEnum.SUSPEND.getCode())) {
-                map.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), v -> new ArrayList<>()).add(bizDemandId);
+                condition.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), v -> new ArrayList<>()).add(bizDemandId);
             } else if (minStauts.equals(ProductDemandStatusEnum.INCLUDED.getCode())) {
-                map.computeIfAbsent(BizDemandStatusEnum.INCLUDE_PROJECT.getCode(), v -> new ArrayList<>()).add(bizDemandId);
+                condition.computeIfAbsent(BizDemandStatusEnum.INCLUDE_PROJECT.getCode(), v -> new ArrayList<>()).add(bizDemandId);
             } else if (minStauts.equals(ProductDemandStatusEnum.PROGRESS.getCode())) {
-                map.computeIfAbsent(BizDemandStatusEnum.PROJECTING.getCode(), v -> new ArrayList<>()).add(bizDemandId);
+                condition.computeIfAbsent(BizDemandStatusEnum.PROJECTING.getCode(), v -> new ArrayList<>()).add(bizDemandId);
             } else if (minStauts.equals(ProductDemandStatusEnum.ONLINE.getCode())) {
-                map.computeIfAbsent(BizDemandStatusEnum.AVAILABLE.getCode(), v -> new ArrayList<>()).add(bizDemandId);
+                condition.computeIfAbsent(BizDemandStatusEnum.AVAILABLE.getCode(), v -> new ArrayList<>()).add(bizDemandId);
             }
         }
     }

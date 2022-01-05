@@ -10,6 +10,7 @@ import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
@@ -25,6 +26,8 @@ public interface ProductDemandCopier {
      * @param productDemandAddReq 对象
      * @return ProductDemandDO
      */
+    @Mapping(source = "demandOwner.userName", target = "owner")
+    @Mapping(source = "demandOwner.userId", target = "ownerId")
     ProductDemandDO convert(ProductDemandAddReq productDemandAddReq);
 
     /**
@@ -33,6 +36,8 @@ public interface ProductDemandCopier {
      * @param productDemandModifyReq 对象
      * @return ProductDemandDO
      */
+    @Mapping(source = "demandOwner.userName", target = "owner")
+    @Mapping(source = "demandOwner.userId", target = "ownerId")
     ProductDemandDO convert(ProductDemandModifyReq productDemandModifyReq);
 
     /**

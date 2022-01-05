@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -61,7 +60,9 @@ public class ProductDemandLinkProjectQueryList extends QueryBase {
     private Date planEndDateRight;
 
     @ApiModelProperty("产品需求id")
-    @NotNull(message = "产品需求id不能为空")
     private Long productDemandId;
+
+    @ApiModelProperty("新增时打开项目弹窗为true,否则false")
+    private Boolean isAddWhenMatchList;
 
 }

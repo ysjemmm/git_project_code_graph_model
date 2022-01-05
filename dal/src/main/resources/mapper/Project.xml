@@ -64,23 +64,24 @@
 
     <select id="getProjectIds" resultType="long">
         select distinct b.project_id
-        <if test="bizDomainIds!=null and bizDomainIds.size()>0">
-            ,d.name bizDomainName
-        </if>
          from project_product_line b
          left join product_line c on b.product_line_id=c.id
         <if test="bizDomainIds!=null and bizDomainIds.size()>0">
             left join biz_domain d on c.biz_domain_id=d.id
         </if>
         <where>
-            and b.project_id in
-            <foreach collection="projectIds" item="item" separator="," open="(" close=")">
-                #{item}
-            </foreach>
-            and b.product_line_id in
-            <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
-                #{item}
-            </foreach>
+            <if test="projectIds!=null and projectIds.size()>0">
+                and b.project_id in
+                <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="productLineIds!=null and productLineIds.size()>0">
+                and b.product_line_id in
+                <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="bizDomainIds!=null and bizDomainIds.size()>0">
                 and d.id in
                 <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
@@ -91,7 +92,7 @@
         </where>
     </select>
 
-    <select id="list2" resultType="com.timevale.forward.dal.entity.ProjectListDO">
+    <select id="list" resultType="com.timevale.forward.dal.entity.ProjectListDO">
         select a.id,a.name, a.priority, a.type ,a.status,a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
         a.actual_start_date,a.actual_end_date,a.`desc`,
         a.create_man_id, a.create_man,a.create_date,a.modify_date
@@ -103,6 +104,7 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="id != null">and a.id = #{id}</if>
             <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
             <if test="planStartDateLeft != null and planStartDateRight != null">
                 and a.plan_start_date &gt;= #{planStartDateLeft} and a.plan_start_date &lt;= #{planStartDateRight}

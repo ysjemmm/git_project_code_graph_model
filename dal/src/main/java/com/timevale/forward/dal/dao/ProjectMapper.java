@@ -33,23 +33,6 @@ public interface ProjectMapper {
     int update(ProjectDO projectDO);
 
     /**
-     * 新增单条项目
-     *
-     * @param condition 项目
-     * @return int
-     */
-    List<ProjectListDO> list(ProjectListCondition condition);
-
-    /**
-     * 查数量
-     *
-     * @param condition 项目
-     * @return int
-     */
-    int count(ProjectListCondition condition);
-
-
-    /**
      * 查询
      * @param productDemandId 产品需求id
      * @return 项目信息
@@ -80,7 +63,7 @@ public interface ProjectMapper {
      * @param condition 产品需求id列表
      * @return ProjectDO
      */
-    List<ProjectListDO> list2(ProjectListCondition condition);
+    List<ProjectListDO> list(ProjectListCondition condition);
 
     /**
      * 查询

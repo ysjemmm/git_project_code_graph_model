@@ -21,6 +21,7 @@ import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
+import com.timevale.forward.facade.api.request.RecipientAddReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
@@ -95,6 +96,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Resource
     private ProductBizDemandComponent productBizDemandComponent;
 
+    @Resource
+    BizDemandComponent bizDemandComponent;
+
 
     @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
@@ -166,7 +170,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         if (ProductDemandStatusEnum.SUSPEND.getCode().equals(type)) {
             // 暂停,更新业务需求状态
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId),false);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), false);
         }
 
         // 暂停or作废解除项目关联
@@ -175,7 +179,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         productDemandDO.setIsDeleted(true);
         projectProductDemandComponent.update(productDemandDO);
         if (ProductDemandStatusEnum.INVALID.getCode().equals(type)) {
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId),true);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), true);
             // 作废解业务需求关联
             ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
             productBizDemandDO.setProductDemandId(productDemandId);
@@ -199,7 +203,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
         productDemandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
         productDemandComponent.update(productDemandDO);
-        productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId),false);
+        productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), false);
 
         return BaseResult.success(true);
     }
@@ -216,8 +220,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         ProductDemandDO demandDO = ProductDemandCopier.INSTANCE.convert(productDemandAddReq);
         demandDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         demandDO.setCreateManId(userInfo.getId());
-        demandDO.setOwnerId(productDemandAddReq.getDemandOwner().getUserId());
-        demandDO.setOwner(productDemandAddReq.getDemandOwner().getUserName());
         demandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
         demandDO.setType(JSON.toJSONString(productDemandAddReq.getTypes()));
         productDemandMapper.insert(demandDO);
@@ -227,6 +229,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
         if (CollectionUtils.isNotEmpty(productDemandAddReq.getRecipients())) {
             personComponent.add(productDemandAddReq.getRecipients(), demandDO.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+        }
+        if (!CollectionUtils.isEmpty(productDemandAddReq.getBizDemandIds())) {
+            productBizDemandComponent.batchInsert(demandDO.getId(), productDemandAddReq.getBizDemandIds());
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(demandDO.getId()), false);
+        }
+        if (productDemandAddReq.getProjectId() != null) {
+            projectProductDemandComponent.batchInsert(productDemandAddReq.getProjectId(), Lists.newArrayList(demandDO.getId()));
         }
         return BaseResult.success(true);
     }
@@ -263,10 +272,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> matchProjectList(ProductDemandLinkProjectQueryList productDemandLinkProjectQueryList) {
         log.info("产品需求-项目匹配接收参数:projectQueryList={}", productDemandLinkProjectQueryList);
-        ProjectProductDemandDO productDemandDO = projectProductDemandMapper.getByProductDemandId(productDemandLinkProjectQueryList.getProductDemandId());
-        if (productDemandDO != null) {
-            throw new BaseBizRuntimeException("该产品需求已被关联,请解除后重试");
-        }
+//        if (!productDemandLinkProjectQueryList.getIsAddWhenMatchList()) {
+//            ProjectProductDemandDO productDemandDO = projectProductDemandMapper.getByProductDemandId(productDemandLinkProjectQueryList.getProductDemandId());
+//            if (productDemandDO != null) {
+//                throw new BaseBizRuntimeException("该产品需求已被关联,请解除后重试");
+//            }
+//        }
         ProjectListCondition condition = ProjectCopier.INSTANCE.convert(productDemandLinkProjectQueryList);
         condition.setStatus(Lists.newArrayList(ProjectStatusEnum.WAITING.getCode()
                 , ProjectStatusEnum.PLANING.getCode()
@@ -290,12 +301,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 , BizDemandStatusEnum.AVAILABLE.getCode()));
         PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize());
         // 如果查询条件有部门id，收集子部门id及所需部门的完整名
-        Set<Long> queryDeptIdSet =  Sets.newHashSet(productDemandLinkBizDemandQueryList.getDeptIdList());
+        Set<Long> queryDeptIdSet = Sets.newHashSet(productDemandLinkBizDemandQueryList.getDeptIdList());
         GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
         Map<Long, String> deptMap = Maps.newHashMap();
-        if(!queryDeptIdSet.isEmpty()){
-            for (GroupResponse childNode : rootNode.getChildNode()){
-                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
+        if (!queryDeptIdSet.isEmpty()) {
+            for (GroupResponse childNode : rootNode.getChildNode()) {
+                bizDemandComponent.dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
             }
             // 替换查询部门id条件
             condition.setDeptIdList(Lists.newArrayList(deptMap.keySet()));
@@ -304,10 +315,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
 
         // 如果查询条件没有部门id，收集完整名
-        if(queryDeptIdSet.isEmpty()){
+        if (queryDeptIdSet.isEmpty()) {
             queryDeptIdSet.addAll(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
-            for (GroupResponse childNode : rootNode.getChildNode()){
-                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
+            for (GroupResponse childNode : rootNode.getChildNode()) {
+                bizDemandComponent.dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
             }
         }
 
@@ -366,11 +377,11 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
         Map<Long, String> deptMap = Maps.newHashMap();
         Set<Long> deptIds = bizDemandVO.stream().map(BizDemandVO::getDeptId).collect(Collectors.toSet());
-        for (GroupResponse childNode : rootNode.getChildNode()){
-            dfsGroupListTree(childNode, deptMap, deptIds, "", false);
+        for (GroupResponse childNode : rootNode.getChildNode()) {
+            bizDemandComponent.dfsGroupListTree(childNode, deptMap, deptIds, "", false);
         }
         bizDemandVO.forEach(p -> {
-            p.setPriorityText(PriorityEnum.getTextByCode(p.getPriority()));
+            p.setPriorityText(PriorityEnum.getTextChineseByCode(p.getPriority()));
             p.setDeptName(deptMap.get(p.getDeptId()));
         });
 
@@ -381,29 +392,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         return BaseResult.success(pageQueryResult);
     }
 
-    /**
-     * 深搜部门树
-     *
-     * @param node           节点
-     * @param deptMap        部门信息id和名称的映射
-     * @param queryDeptIdSet 包含的id
-     * @param name           部门完整名称
-     * @param isInsert       判断是否可直接插入
-     */
-    private void dfsGroupListTree(GroupResponse node, Map<Long, String> deptMap, Set<Long> queryDeptIdSet, String name, Boolean isInsert){
-        name = name + node.getGroupName();
-        Long deptId = Long.valueOf(node.getGroupId());
-        if(isInsert || queryDeptIdSet.contains(deptId)){
-            isInsert = true;
-            deptMap.put(deptId, name);
-        }
-        // 如果为叶节点直接返回
-        if(node.getChildNode() == null){return;}
-
-        name = name + CommonConstant.JOIN_LINE;
-        for (GroupResponse childNode : node.getChildNode()) {
-            dfsGroupListTree(childNode, deptMap, queryDeptIdSet, name, isInsert);
-        }
+    @Override
+    public BaseResult<Boolean> addRecipients(RecipientAddReq recipientAddReq) {
+        // 抄送人
+        personComponent.update(recipientAddReq.getRecipients(), recipientAddReq.getMainId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+        return BaseResult.success(true);
     }
-
 }
