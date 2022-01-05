@@ -14,7 +14,7 @@ public enum MessageTitleEnum {
     BIZDEMAND_RECEIVE("业务需求接收通知"),
     BIZDEMAND_INVALID("业务需求作废通知"),
     // 评论区@通知标题
-    COMMENT("评论区");
+    COMMENT("评论通知");
 
     private String text;
 
