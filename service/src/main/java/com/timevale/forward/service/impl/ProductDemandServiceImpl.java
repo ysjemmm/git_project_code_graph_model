@@ -21,7 +21,6 @@ import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
-import com.timevale.forward.facade.api.request.RecipientAddReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
@@ -49,7 +48,10 @@ import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -392,10 +394,4 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         return BaseResult.success(pageQueryResult);
     }
 
-    @Override
-    public BaseResult<Boolean> addRecipients(RecipientAddReq recipientAddReq) {
-        // 抄送人
-        personComponent.update(recipientAddReq.getRecipients(), recipientAddReq.getMainId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
-        return BaseResult.success(true);
-    }
 }

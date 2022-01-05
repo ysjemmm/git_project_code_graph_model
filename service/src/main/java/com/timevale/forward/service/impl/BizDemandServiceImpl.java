@@ -404,11 +404,4 @@ public class BizDemandServiceImpl implements BizDemandService {
         return BaseResult.success(true);
     }
 
-    @Override
-    public BaseResult<Boolean> addRecipients(RecipientAddReq recipientAddReq) {
-        // 抄送人
-        personComponent.update(recipientAddReq.getRecipients(), recipientAddReq.getMainId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
-        return BaseResult.success(true);
-    }
-
 }

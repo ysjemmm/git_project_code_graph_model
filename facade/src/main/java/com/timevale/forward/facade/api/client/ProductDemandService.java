@@ -9,7 +9,6 @@ import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
-import com.timevale.forward.facade.api.request.RecipientAddReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
@@ -115,12 +114,4 @@ public interface ProductDemandService {
      */
     BaseResult<PageQueryResult<BizDemandVO>> linkBizDemandList(ProductBizDemandQueryList productBizDemandQueryList);
 
-
-    /**
-     * 修改
-     *
-     * @param recipientAddReq 抄送人信息
-     * @return 数量
-     */
-    BaseResult<Boolean> addRecipients(RecipientAddReq recipientAddReq);
 }

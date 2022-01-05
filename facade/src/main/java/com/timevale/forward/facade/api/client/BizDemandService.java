@@ -87,12 +87,4 @@ public interface BizDemandService {
      */
     BaseResult<Boolean> testNotice(Integer type);
 
-    /**
-     * 修改
-     *
-     * @param recipientAddReq 抄送人信息
-     * @return 数量
-     */
-    BaseResult<Boolean> addRecipients(RecipientAddReq recipientAddReq);
-
 }

@@ -25,5 +25,9 @@ public class RecipientAddReq extends BaseReq {
     @NotNull(message = "主体id不能为空")
     private Long mainId;
 
+    @ApiModelProperty(value = "20产品需求-抄送人,30业务需求-抄送人")
+    @NotNull(message = "类型不能为空")
+    private Integer type;
+
 
 }
