@@ -16,6 +16,7 @@ import com.timevale.forward.service.component.MessageComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,8 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -122,5 +125,41 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         bizDemandStatusVO.setStatusText(BizDemandStatusEnum.getTextByCode(result));
         bizDemandStatusVO.setEndDate(date);
         return bizDemandStatusVO;
+    }
+
+    @Override
+    public void dfsGroupListTree(GroupResponse node, Map<Long, String> deptMap, Set<Long> queryDeptIdSet, String name, Boolean isInsert){
+        name = name + node.getGroupName();
+        Long deptId = Long.valueOf(node.getGroupId());
+        if(isInsert || queryDeptIdSet.contains(deptId)){
+            isInsert = true;
+            deptMap.put(deptId, name);
+        }
+        // 如果为叶节点直接返回
+        if(node.getChildNode() == null){return;}
+
+        name = name + CommonConstant.JOIN_LINE;
+        for (GroupResponse childNode : node.getChildNode()) {
+            dfsGroupListTree(childNode, deptMap, queryDeptIdSet, name, isInsert);
+        }
+    }
+
+    @Override
+    public Date getProjectEndDate(Long bizDemandId){
+        // 获取该业务需求所关联的产品需求
+        List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByBizDemandId(bizDemandId);
+        if(productBizDemandDOList.isEmpty()){return null;}
+
+        // 获取关联的产品需求相关的项目
+        List<Long> productDemandIdList = productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList());
+        List<ProjectDO> projectDOList = projectMapper.selectByProductDemandIdList(productDemandIdList);
+        if(projectDOList.isEmpty()){return null;}
+
+        Date result = projectDOList.get(0).getPlanEndDate();
+        for (ProjectDO projectDO : projectDOList) {
+            Date projectEndDate = projectDO.getActualEndDate() == null? projectDO.getPlanEndDate(): projectDO.getActualEndDate();
+            result = result.after(projectEndDate)? result: projectEndDate;
+        }
+        return result;
     }
 }

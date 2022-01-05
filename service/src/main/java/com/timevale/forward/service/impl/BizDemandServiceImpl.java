@@ -5,7 +5,6 @@ import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
-import com.timevale.forward.dal.condition.ProductBizDemandCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProductBizDemandMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
@@ -19,6 +18,7 @@ import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.FileVO;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.MessageComponent;
 import com.timevale.forward.service.component.PersonComponent;
@@ -85,6 +85,8 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Resource
     MessageComponent messageComponent;
 
+    @Resource
+    BizDemandComponent bizDemandComponent;
 
     @Override
     public BaseResult<PageQueryResult<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
@@ -118,7 +120,6 @@ public class BizDemandServiceImpl implements BizDemandService {
             }
         }
 
-
         Map<Long, String> deptMap = Maps.newHashMap();
         Set<Long> queryDeptIdSet =  Sets.newHashSet(bizDemandQueryList.getDeptIdList());
         GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
@@ -126,7 +127,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 如果查询条件有部门id，收集子部门id及所需部门的完整名
         if(!queryDeptIdSet.isEmpty()){
             for (GroupResponse childNode : rootNode.getChildNode()){
-                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
+                bizDemandComponent.dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
             }
             // 替换查询部门id条件
             bizDemandListCondition.setDeptIdList(Lists.newArrayList(deptMap.keySet()));
@@ -140,14 +141,14 @@ public class BizDemandServiceImpl implements BizDemandService {
         if(queryDeptIdSet.isEmpty()){
             queryDeptIdSet.addAll(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
             for (GroupResponse childNode : rootNode.getChildNode()){
-                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
+                bizDemandComponent.dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
             }
         }
 
         // 部门名称待修改 ，需要完整名称
         bizDemandVOList.forEach( e -> {
-            e.setPriorityText(PriorityEnum.getTextChineseByCode(e.getPriority()));
             e.setStatusText(BizDemandStatusEnum.getTextByCode(e.getStatus()));
+            e.setPriorityText(PriorityEnum.getTextChineseByCode(e.getPriority()));
             e.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(e.getPlanReleaseDate()));
             e.setDeptName(deptMap.get(e.getDeptId()));
         });
@@ -159,31 +160,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
         return BaseResult.success(pageQueryResult);
-    }
-
-    /**
-     * 深搜部门树
-     *
-     * @param node           节点
-     * @param deptMap        部门信息id和名称的映射
-     * @param queryDeptIdSet 包含的id
-     * @param name           部门完整名称
-     * @param isInsert       判断是否可直接插入
-     */
-    void dfsGroupListTree(GroupResponse node, Map<Long, String> deptMap, Set<Long> queryDeptIdSet, String name, Boolean isInsert){
-        name = name + node.getGroupName();
-        Long deptId = Long.valueOf(node.getGroupId());
-        if(isInsert || queryDeptIdSet.contains(deptId)){
-            isInsert = true;
-            deptMap.put(deptId, name);
-        }
-        // 如果为叶节点直接返回
-        if(node.getChildNode() == null){return;}
-
-        name = name + CommonConstant.JOIN_LINE;
-        for (GroupResponse childNode : node.getChildNode()) {
-            dfsGroupListTree(childNode, deptMap, queryDeptIdSet, name, isInsert);
-        }
     }
 
     @Override
@@ -285,37 +261,17 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDetailVO.setStatusText(BizDemandStatusEnum.getTextByCode(bizDemandDetailVO.getStatus()));
         bizDemandDetailVO.setPriorityText(PriorityEnum.getTextChineseByCode(bizDemandDetailVO.getPriority()));
         bizDemandDetailVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandDetailVO.getPlanReleaseDate()));
+        if(ProductLineTypeEnum.KINGGRID.getCode().equals(productLineDO.getType())){
+            bizDemandDetailVO.setOsText(OsEnum.getTextByCode(bizDemandDetailVO.getOs()));
+            bizDemandDetailVO.setProcessorText(ProcessorEnum.getTextByCode(bizDemandDetailVO.getProcessor()));
+        }
 
         bizDemandDetailVO.setDeptName(innerGroupClient.getSimpleGroup(bizDemandDO.getDeptId()).getGroupName());
 
         //获取项目发布时间
-        bizDemandDetailVO.setEndDate(getProjectEndDate(bizDemandId));
+        bizDemandDetailVO.setEndDate(bizDemandComponent.getProjectEndDate(bizDemandId));
 
         return BaseResult.success(bizDemandDetailVO);
-    }
-
-    /**
-     * 得到业务需求关联的产品需求关联的项目的发布日期
-     *
-     * @param bizDemandId 业务需求id
-     * @return Date
-     */
-    public Date getProjectEndDate(Long bizDemandId){
-        // 获取该业务需求所关联的产品需求
-        List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByBizDemandId(bizDemandId);
-        if(productBizDemandDOList.isEmpty()){return null;}
-
-        // 获取关联的产品需求相关的项目
-        List<Long> productDemandIdList = productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList());
-        List<ProjectDO> projectDOList = projectMapper.selectByProductDemandIdList(productDemandIdList);
-        if(projectDOList.isEmpty()){return null;}
-
-        Date result = projectDOList.get(0).getPlanEndDate();
-        for (ProjectDO projectDO : projectDOList) {
-            Date projectEndDate = projectDO.getActualEndDate() == null? projectDO.getPlanEndDate(): projectDO.getActualEndDate();
-            result = result.after(projectEndDate)? result: projectEndDate;
-        }
-        return result;
     }
 
     @Override

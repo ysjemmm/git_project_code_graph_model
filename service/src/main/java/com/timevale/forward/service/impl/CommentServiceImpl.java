@@ -13,6 +13,7 @@ import com.timevale.forward.facade.api.request.CommentAddReq;
 import com.timevale.forward.facade.api.result.CommentVO;
 import com.timevale.forward.model.enums.CommentTypeEnum;
 import com.timevale.forward.service.component.MessageComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.CommentCopier;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -87,7 +88,7 @@ public class CommentServiceImpl implements CommentService {
 
         // 发送通知
         messageComponent.commentMsg(
-                userInfo.getId(),
+                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 receivers,
                 CommentTypeEnum.getTextByCode(type),
                 name,
