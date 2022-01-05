@@ -116,7 +116,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
                         bizDemandDO.getCreateManId(),
                         bizDemandDO.getName(),
                         BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
-                        date.toString());
+                        date);
             }
         }
 

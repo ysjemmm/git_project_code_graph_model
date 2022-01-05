@@ -5,10 +5,13 @@ import com.timevale.forward.model.enums.MessageTitleEnum;
 import com.timevale.forward.service.component.MessageComponent;
 import com.timevale.forward.service.integration.erp.ErpMessageClient;
 import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
+import com.timevale.forward.service.utils.date.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -62,10 +65,13 @@ public class MessageComponentImpl implements MessageComponent {
     }
 
     @Override
-    public void bizDemandStatusChangeMsg(String receiver, String name, String status, String projectEndDate) {
+    public void bizDemandStatusChangeMsg(String receiver, String name, String status, Date projectEndDate) {
+        String date = DateUtil.getDate(projectEndDate);
+        String time = DateUtil.getTime(projectEndDate);
+
         List<String> receivers = Lists.newArrayList(receiver);
         String title = MessageTitleEnum.BIZDEMAND_STATUS_CHANGE.getText();
-        String markdown = String.format(BIZ_DEMAND_STATUS_CHANGE_MSG, title, name, status, projectEndDate);
+        String markdown = String.format(BIZ_DEMAND_STATUS_CHANGE_MSG, title, name, status, date + time);
 
         ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                 .title(title)

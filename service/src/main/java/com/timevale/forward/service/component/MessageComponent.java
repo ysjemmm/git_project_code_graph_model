@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -36,7 +37,7 @@ public interface MessageComponent {
      * @param status         状态
      * @param projectEndDate 项目发布时间
      */
-    void bizDemandStatusChangeMsg(String receiver, String name, String status, String projectEndDate);
+    void bizDemandStatusChangeMsg(String receiver, String name, String status, Date projectEndDate);
 
     /**
      * 业务需求请求接收通知
