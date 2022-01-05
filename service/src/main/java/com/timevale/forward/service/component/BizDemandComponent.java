@@ -17,6 +17,7 @@ public interface BizDemandComponent {
      * 更新业务需求状态根据关联的产品需求
      *
      * @param bizDemandId 业务需求id
+     * @return 业务需求状态VO
      */
     BizDemandStatusVO updateBizDemandStatusAsLinkProductDemand(Long bizDemandId);
 

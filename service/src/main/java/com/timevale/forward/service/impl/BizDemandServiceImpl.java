@@ -185,7 +185,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 接收人通知
         messageComponent.bizDemandInvalidMsg(
-                userInfo.getId(),
+                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 bizDemandDO.getReceiveManId(),
                 bizDemandDO.getName()
         );
@@ -224,7 +224,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 接收人通知
         messageComponent.bizDemandToReceiveMsg(
-                userInfo.getId(),
+                bizDemandDO.getCreateMan(),
                 bizDemandDO.getReceiveManId(),
                 bizDemandDO.getName()
         );
@@ -326,7 +326,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 通知需求提交人
         messageComponent.bizDemandReceivedMsg(
-                userInfo.getId(),
+                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 bizDemandDO.getCreateManId(),
                 bizDemandDO.getName(),
                 PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
@@ -357,7 +357,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 驳回通知
         messageComponent.bizDemandRejectMsg(
-                userInfo.getId(),
+                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 bizDemandDO.getCreateManId(),
                 bizDemandDO.getName(),
                 BizDemandReasonEnum.getTextByCode(bizDemandDO.getReason())
