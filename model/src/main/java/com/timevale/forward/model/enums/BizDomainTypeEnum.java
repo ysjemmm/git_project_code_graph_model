@@ -7,21 +7,21 @@ import lombok.Getter;
  * @date 2022/01/05 10:37
  */
 @Getter
-public enum ProductLineTypeEnum {
-    // 产品线类型 0：默认产品线  1：金格产品线
-    DEFAULT(0, "默认产品线"),
-    KINGGRID(1, "金格产品线");
+public enum BizDomainTypeEnum {
+    // 产品线类型 0：默认产  1：金格
+    DEFAULT(0, "默认业务域"),
+    KINGGRID(1, "金格业务域");
 
     private final Integer code;
     private final String text;
 
-    ProductLineTypeEnum(Integer code, String text){
+    BizDomainTypeEnum(Integer code, String text){
         this.code = code;
         this.text = text;
     }
 
     public static String getTextByCode(Integer code){
-        for (ProductLineTypeEnum e : ProductLineTypeEnum.values()){
+        for (BizDomainTypeEnum e : BizDomainTypeEnum.values()){
             if(e.code.equals(code)){
                 return e.text;
             }

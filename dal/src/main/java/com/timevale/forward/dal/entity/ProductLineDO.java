@@ -30,10 +30,4 @@ public class ProductLineDO extends BaseDO {
      * 负责人id
      */
     private String ownerId;
-
-
-    /**
-     * 产品线类型
-     */
-    private Integer type;
 }

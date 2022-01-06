@@ -4,12 +4,10 @@ import com.github.pagehelper.PageHelper;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.dao.ProductBizDemandMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.entity.BizDemandDO;
-import com.timevale.forward.dal.entity.FileDO;
-import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.dal.entity.ProductLineDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.request.*;
@@ -57,6 +55,9 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Resource
     ProductLineMapper productLineMapper;
+
+    @Resource
+    BizDomainMapper bizDomainMapper;
 
     @Resource
     ProductBizDemandMapper productBizDemandMapper;
@@ -198,8 +199,9 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<PersonDO> personDOList = personComponent.select(bizDemandId, PersonTypeEnum.BIZ_DEMAND_CC.getCode());
         List<PersonVO> personVOList = PersonCopier.INSTANCE.transform(personDOList);
 
-        // 获取对应产品线
+        // 获取对应产品线，业务域
         ProductLineDO productLineDO = productLineMapper.selectById(bizDemandDO.getProductLineId());
+        BizDomainDO bizDomainDO = bizDomainMapper.selectById(productLineDO.getBizDomainId());
 
         // 信息填充
         BizDemandDetailVO bizDemandDetailVO = BizDemandCopier.INSTANCE.convert(bizDemandDO);
@@ -212,7 +214,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDetailVO.setStatusText(BizDemandStatusEnum.getTextByCode(bizDemandDetailVO.getStatus()));
         bizDemandDetailVO.setPriorityText(PriorityEnum.getTextChineseByCode(bizDemandDetailVO.getPriority()));
         bizDemandDetailVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandDetailVO.getPlanReleaseDate()));
-        if(ProductLineTypeEnum.KINGGRID.getCode().equals(productLineDO.getType())){
+        if(BizDomainTypeEnum.KINGGRID.getCode().equals(bizDomainDO.getType())){
             bizDemandDetailVO.setOsText(OsEnum.getTextByCode(bizDemandDetailVO.getOs()));
             bizDemandDetailVO.setProcessorText(ProcessorEnum.getTextByCode(bizDemandDetailVO.getProcessor()));
         }

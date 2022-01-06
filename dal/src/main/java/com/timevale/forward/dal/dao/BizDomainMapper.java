@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.entity.BizDomainDO;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -16,4 +17,12 @@ public interface BizDomainMapper {
      * @return 列表
      */
     List<BizDomainDO> selectAllBizDomain();
+
+    /**
+     * 通过id选择
+     *
+     * @param id id
+     * @return 业务域DO
+     */
+    BizDomainDO selectById(@Param("id") Long id);
 }

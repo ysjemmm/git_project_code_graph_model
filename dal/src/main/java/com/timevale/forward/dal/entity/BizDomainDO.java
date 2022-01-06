@@ -26,4 +26,9 @@ public class BizDomainDO extends BaseDO{
      */
     private String ownerId;
 
+    /**
+     * 业务域类型
+     */
+    private Integer type;
+
 }
