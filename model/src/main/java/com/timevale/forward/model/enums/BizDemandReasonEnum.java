@@ -32,7 +32,7 @@ public enum BizDemandReasonEnum {
                 return e.text;
             }
         }
-        return "errorCode";
+        return "";
     }
 
 }
