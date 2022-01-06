@@ -42,8 +42,8 @@ public class Application {
 
     public static void main(String[] args) {
         ConfigurableApplicationContext run = SpringApplication.run(Application.class, args);
-        SqlSessionFactory sqlSessionFactory = run.getBean(SqlSessionFactory.class);
-        TypeHandlerRegistry typeHandlerRegistry = sqlSessionFactory.getConfiguration().getTypeHandlerRegistry();
-        typeHandlerRegistry.register(String.class, StringTypeHandler.class);
+        // SqlSessionFactory sqlSessionFactory = run.getBean(SqlSessionFactory.class);
+        // TypeHandlerRegistry typeHandlerRegistry = sqlSessionFactory.getConfiguration().getTypeHandlerRegistry();
+        // typeHandlerRegistry.register(String.class, StringTypeHandler.class);
     }
 }
