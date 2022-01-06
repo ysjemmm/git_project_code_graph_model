@@ -10,6 +10,7 @@ import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
 import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
  * @author yuankai
  * @date 2021/12/16 15:55
  */
+@Slf4j
 @Service
 public class ErpMessageClientImpl implements ErpMessageClient {
 
@@ -33,7 +35,11 @@ public class ErpMessageClientImpl implements ErpMessageClient {
         input.setMarkdown(actionCardMsg.getMarkdown());
         input.setSingleTitle(actionCardMsg.getSingleTitle());
         input.setSingleUrl(actionCardMsg.getSingleUrl());
-        return erpMsgService.sendActionCardMsg(input);
+
+        ErpResult erpResult = erpMsgService.sendActionCardMsg(input);
+        if(erpResult.isSuccess()){return erpResult;}
+        log.error("[erpMessage]调用钉钉通知接口失败  error: " + erpResult.getMessage() + " 发送通知信息：" + actionCardMsg);
+        throw new BaseBizRuntimeException("调用钉钉通知接口失败! " + actionCardMsg);
     }
 
     @Override
@@ -49,6 +55,10 @@ public class ErpMessageClientImpl implements ErpMessageClient {
         }).collect(Collectors.toList()));
         input.setBizObtTitle(markdownMsg.getTitle());
         input.setBizObt(markdownMsg.getContent());
-        return erpMsgService.sendDingMarkdownMsg(input);
+
+        ErpResult erpResult = erpMsgService.sendDingMarkdownMsg(input);
+        if(erpResult.isSuccess()){return erpResult;}
+        log.error("[erpMessage]调用钉钉通知接口失败  error: " + erpResult.getMessage() + " 发送通知信息：" + markdownMsg);
+        throw new BaseBizRuntimeException("调用钉钉通知接口失败! " + markdownMsg);
     }
 }
