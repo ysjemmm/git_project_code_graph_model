@@ -121,7 +121,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
             if(notice){
                 // 钉钉通知
-                messageComponent.bizDemandStatusChangeMsg(
+                messageComponent.bizDemandStatusChangeMsg(bizDemandDO.getId(),
                         bizDemandDO.getCreateManId(),
                         bizDemandDO.getName(),
                         BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),

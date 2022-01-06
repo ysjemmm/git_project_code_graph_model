@@ -164,7 +164,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             //更新产品需求下的所有业务需求状态
             bizDemandMapper.updateByIds(v, k);
         });
-        log.info("产品需求变化-更新业务需求:产品需求id={},需要更新的业务需求id和状态={}", productDemandIds, condition);
+        log.info("产品需求变化-更新业务需求:产品需求id={},需要更新的业务需求状态和id={}", productDemandIds, condition);
         sendDingMsg(condition,bizDemandMap);
     }
     private void sendDingMsg(Map<Integer, List<Long>> condition,Map<Long, ProductBizDemandDO> bizDemandMap){
@@ -177,7 +177,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                     log.info("发送钉钉消息,更新前状态={},更新后状态={},业务需求id={}",bizDemand.getStatus(),k,a);
                     Date projectEndDate = bizDemandComponent.getProjectEndDate(a);
                     try {
-                        messageComponent.bizDemandStatusChangeMsg(
+                        messageComponent.bizDemandStatusChangeMsg(a,
                                 bizDemand.getCreateManId(),
                                 bizDemand.getName(),
                                 BizDemandStatusEnum.getTextByCode(k),

@@ -136,7 +136,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         productBizDemandMapper.deleteByBizDemandId(bizDemandId, userInfo.getAlias(), userInfo.getId());
 
         // 接收人通知
-        messageComponent.bizDemandInvalidMsg(
+        messageComponent.bizDemandInvalidMsg(bizDemandDO.getId(),
                 userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 bizDemandDO.getReceiveManId(),
                 bizDemandDO.getName()
@@ -175,7 +175,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 接收人通知
-        messageComponent.bizDemandToReceiveMsg(
+        messageComponent.bizDemandToReceiveMsg(bizDemandDO.getId(),
                 bizDemandDO.getCreateMan(),
                 bizDemandDO.getReceiveManId(),
                 bizDemandDO.getName()
@@ -278,7 +278,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandMapper.update(bizDemandDO);
 
         // 通知需求提交人
-        messageComponent.bizDemandReceivedMsg(
+        messageComponent.bizDemandReceivedMsg(bizDemandDO.getId(),
                 userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 bizDemandDO.getCreateManId(),
                 bizDemandDO.getName(),
@@ -309,7 +309,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandMapper.update(bizDemandDO);
 
         // 驳回通知
-        messageComponent.bizDemandRejectMsg(
+        messageComponent.bizDemandRejectMsg(bizDemandDO.getId(),
                 userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 bizDemandDO.getCreateManId(),
                 bizDemandDO.getName(),
@@ -335,7 +335,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandMapper.update(bizDemandDO);
 
         // 转交人通知
-        messageComponent.bizDemandToReceiveMsg(
+        messageComponent.bizDemandToReceiveMsg(bizDemandDO.getId(),
                 bizDemandDO.getCreateMan(),
                 bizDemandDO.getReceiveManId(),
                 bizDemandDO.getName()

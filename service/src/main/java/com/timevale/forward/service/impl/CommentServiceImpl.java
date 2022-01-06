@@ -87,7 +87,7 @@ public class CommentServiceImpl implements CommentService {
         }
 
         // 发送通知
-        messageComponent.commentMsg(
+        messageComponent.commentMsg(toId,
                 userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 receivers,
                 CommentTypeEnum.getTextByCode(type),
