@@ -172,15 +172,19 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             if(BizDemandStatusEnum.INCLUDE_PROJECT.getCode().equals(k)
                     ||BizDemandStatusEnum.PROJECTING.getCode().equals(k)
                     ||BizDemandStatusEnum.AVAILABLE.getCode().equals(k)){
-                log.info("发送钉钉消息,bizDemandMap={}",bizDemandMap);
                 v.forEach(a->{
                     ProductBizDemandDO bizDemand = bizDemandMap.get(a);
+                    log.info("发送钉钉消息,更新前状态={},更新后状态={},业务需求id={}",bizDemand.getStatus(),k,a);
                     Date projectEndDate = bizDemandComponent.getProjectEndDate(a);
-                    messageComponent.bizDemandStatusChangeMsg(
-                            bizDemand.getCreateManId(),
-                            bizDemand.getName(),
-                            BizDemandStatusEnum.getTextByCode(k),
-                            projectEndDate);
+                    try {
+                        messageComponent.bizDemandStatusChangeMsg(
+                                bizDemand.getCreateManId(),
+                                bizDemand.getName(),
+                                BizDemandStatusEnum.getTextByCode(k),
+                                projectEndDate);
+                    }catch (Exception e){
+                        log.error("发送钉钉消息失败",e);
+                    }
                 });
             }
         });
