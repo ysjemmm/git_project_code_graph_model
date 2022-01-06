@@ -44,7 +44,6 @@ import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
-import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -310,39 +309,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     , BizDemandStatusEnum.AVAILABLE.getCode()));
         }
         PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize());
-        // 如果查询条件有部门id，收集子部门id及所需部门的完整名
-        Set<Long> queryDeptIdSet = Sets.newHashSet(productDemandLinkBizDemandQueryList.getDeptIdList());
-        GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
-        Map<Long, String> deptMap = Maps.newHashMap();
-        if (!queryDeptIdSet.isEmpty()) {
-            for (GroupResponse childNode : rootNode.getChildNode()) {
-                bizDemandComponent.dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
-            }
-            // 替换查询部门id条件
-            condition.setDeptIdList(Lists.newArrayList(deptMap.keySet()));
-        }
-        List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(condition);
-        List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
-
-        // 如果查询条件没有部门id，收集完整名
-        if (queryDeptIdSet.isEmpty()) {
-            queryDeptIdSet.addAll(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
-            for (GroupResponse childNode : rootNode.getChildNode()) {
-                bizDemandComponent.dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
-            }
-        }
-
-        bizDemandVOList.forEach(iter -> {
-            iter.setPriorityText(PriorityEnum.getTextChineseByCode(iter.getPriority()));
-            iter.setStatusText(BizDemandStatusEnum.getTextByCode(iter.getStatus()));
-            iter.setDeptName(deptMap.get(iter.getDeptId()));
-        });
-
-        PageInfo<BizDemandListDO> pageInfo = new PageInfo<>(bizDemandListDOList);
-        PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
-        pageQueryResult.setResultList(bizDemandVOList);
-        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
-        return BaseResult.success(pageQueryResult);
+        return bizDemandComponent.page(condition);
     }
 
     @Override

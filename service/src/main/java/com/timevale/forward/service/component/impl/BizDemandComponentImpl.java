@@ -1,24 +1,33 @@
 package com.timevale.forward.service.component.impl;
 
+import com.github.pagehelper.PageInfo;
+import com.google.common.collect.Maps;
+import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProductBizDemandMapper;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.entity.BizDemandDO;
-import com.timevale.forward.dal.entity.ProductBizDemandDO;
-import com.timevale.forward.dal.entity.ProductDemandDO;
-import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.BizDemandStatusVO;
+import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.PlanReleaseDateEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.MessageComponent;
 import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.service.copy.BizDemandCopier;
+import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Sets;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -50,6 +59,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Resource
     MessageComponent messageComponent;
+
+    @Resource
+    InnerGroupClient innerGroupClient;
 
     @Override
     public BizDemandStatusVO updateBizDemandStatusAsLinkProductDemand(Long bizDemandId) {
@@ -161,5 +173,49 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             result = result.after(projectEndDate)? result: projectEndDate;
         }
         return result;
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<BizDemandVO>> page(BizDemandListCondition bizDemandListCondition) {
+        Map<Long, String> deptMap = Maps.newHashMap();
+        Set<Long> queryDeptIdSet =  Sets.newHashSet(bizDemandListCondition.getDeptIdList());
+        GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
+
+        // 如果查询条件有部门id，收集子部门id及所需部门的完整名
+        if(!queryDeptIdSet.isEmpty()){
+            for (GroupResponse childNode : rootNode.getChildNode()){
+                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
+            }
+            // 替换查询部门id条件
+            bizDemandListCondition.setDeptIdList(Lists.newArrayList(deptMap.keySet()));
+        }
+
+        // 查询并转换
+
+        List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
+        List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
+
+        // 如果查询条件没有部门id，收集完整名
+        if(queryDeptIdSet.isEmpty()){
+            queryDeptIdSet.addAll(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
+            for (GroupResponse childNode : rootNode.getChildNode()){
+                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
+            }
+        }
+
+        // 部门名称待修改 ，需要完整名称
+        bizDemandVOList.forEach( e -> {
+            e.setStatusText(BizDemandStatusEnum.getTextByCode(e.getStatus()));
+            e.setPriorityText(PriorityEnum.getTextChineseByCode(e.getPriority()));
+            e.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(e.getPlanReleaseDate()));
+            e.setDeptName(deptMap.get(e.getDeptId()));
+        });
+
+        // 返回分页数据
+        PageInfo<BizDemandListDO> pageInfo = new PageInfo<>(bizDemandListDOList);
+        PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(bizDemandVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
     }
 }

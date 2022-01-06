@@ -1,6 +1,10 @@
 package com.timevale.forward.service.component;
 
+import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.facade.api.result.BizDemandStatusVO;
+import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 
 import java.util.Date;
@@ -42,4 +46,13 @@ public interface BizDemandComponent {
      * @return 项目发布时间
      */
     Date getProjectEndDate(Long bizDemandId);
+
+
+    /**
+     * 列表
+     *
+     * @param bizDemandListCondition 业务需求查询列表
+     * @return 列表
+     */
+    BaseResult<PageQueryResult<BizDemandVO>> page(BizDemandListCondition bizDemandListCondition);
 }
