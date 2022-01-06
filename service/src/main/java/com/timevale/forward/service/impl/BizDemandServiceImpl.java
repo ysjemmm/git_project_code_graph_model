@@ -8,7 +8,6 @@ import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProductBizDemandMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
@@ -28,9 +27,8 @@ import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.utils.DateUtil;
 import com.timevale.forward.service.utils.ResultUtil;
-import com.timevale.forward.service.utils.StringUtil;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -65,9 +63,6 @@ public class BizDemandServiceImpl implements BizDemandService {
     ProductLineMapper productLineMapper;
 
     @Resource
-    ProjectMapper projectMapper;
-
-    @Resource
     ProductBizDemandMapper productBizDemandMapper;
 
     @Resource
@@ -97,8 +92,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 转换查询条件
         BizDemandListCondition bizDemandListCondition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
-        // 通配符处理
-        bizDemandListCondition.setName(StringUtil.toLikeStr(bizDemandListCondition.getName()));
+
         // 日期处理
         bizDemandListCondition.setCreateDateStart(DateUtil.getStartOfDay(bizDemandListCondition.getCreateDateStart()));
         bizDemandListCondition.setCreateDateEnd(DateUtil.getEndOfDay(bizDemandListCondition.getCreateDateEnd()));
