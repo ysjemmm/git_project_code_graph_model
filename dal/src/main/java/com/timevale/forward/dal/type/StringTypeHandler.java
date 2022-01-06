@@ -43,9 +43,9 @@ public class StringTypeHandler extends BaseTypeHandler<String> {
             return str;
         }
         str = str.replaceAll("\\\\","\\\\\\\\");
-        str = str.replaceAll("/", "\\/");
-        str = str.replaceAll("%", "\\%");
-        str = str.replaceAll("_", "\\_");
+        str = str.replaceAll("/", "\\\\/");
+        str = str.replaceAll("%", "\\\\%");
+        str = str.replaceAll("_", "\\\\_");
         return str;
     }
 }

@@ -182,6 +182,8 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         PageHelper.startPage(bizDemandSubProductDemandQueryList.pageNum, bizDemandSubProductDemandQueryList.pageSize);
         // 转换查询条件
         BizDemandLinkProductDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandSubProductDemandQueryList);
+        //通配符处理
+        bizDemandSubProductDemandQueryList.setName(StringUtil.toLikeStr(bizDemandSubProductDemandQueryList.getName()));
         // 日期处理
         bizDemandSubProductDemandQueryList.setCreateDateStart(DateUtil.getStartOfDay(bizDemandSubProductDemandQueryList.getCreateDateStart()));
         bizDemandSubProductDemandQueryList.setCreateDateEnd(DateUtil.getEndOfDay(bizDemandSubProductDemandQueryList.getCreateDateEnd()));
