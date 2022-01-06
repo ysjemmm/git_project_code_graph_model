@@ -172,6 +172,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             if(BizDemandStatusEnum.INCLUDE_PROJECT.getCode().equals(k)
                     ||BizDemandStatusEnum.PROJECTING.getCode().equals(k)
                     ||BizDemandStatusEnum.AVAILABLE.getCode().equals(k)){
+                log.info("发送钉钉消息,bizDemandMap={}",bizDemandMap);
                 v.forEach(a->{
                     ProductBizDemandDO bizDemand = bizDemandMap.get(a);
                     Date projectEndDate = bizDemandComponent.getProjectEndDate(a);
@@ -181,7 +182,6 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                             BizDemandStatusEnum.getTextByCode(k),
                             projectEndDate);
                 });
-                log.info("发送钉钉消息成功");
             }
         });
     }
