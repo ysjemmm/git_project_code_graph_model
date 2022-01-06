@@ -42,7 +42,7 @@ public class MessageComponentImpl implements MessageComponent {
                 .title(title)
                 .markdown(markdown)
                 .singleTitle("点击查看详情")
-                .singleUrl("https://www.baidu.com/")
+                .singleUrl("http://forward-front-forward-v1.projectk8s.tsign.cn/")
                 .receivers(receivers)
                 .build();
         erpMessageClient.sendActionCardMsg(actionCardMsg);
@@ -58,7 +58,7 @@ public class MessageComponentImpl implements MessageComponent {
                 .title(title)
                 .markdown(markdown)
                 .singleTitle("点击查看详情")
-                .singleUrl("https://www.baidu.com/")
+                .singleUrl("http://forward-front-forward-v1.projectk8s.tsign.cn/")
                 .receivers(receivers)
                 .build();
         erpMessageClient.sendActionCardMsg(actionCardMsg);
@@ -76,7 +76,7 @@ public class MessageComponentImpl implements MessageComponent {
                 .title(title)
                 .markdown(markdown)
                 .singleTitle("点击查看详情")
-                .singleUrl("https://www.baidu.com/")
+                .singleUrl("http://forward-front-forward-v1.projectk8s.tsign.cn/")
                 .receivers(receivers)
                 .build();
         erpMessageClient.sendActionCardMsg(actionCardMsg);
@@ -92,7 +92,7 @@ public class MessageComponentImpl implements MessageComponent {
                 .title(title)
                 .markdown(markdown)
                 .singleTitle("点击查看详情")
-                .singleUrl("https://www.baidu.com/")
+                .singleUrl("http://forward-front-forward-v1.projectk8s.tsign.cn/")
                 .receivers(receivers)
                 .build();
         erpMessageClient.sendActionCardMsg(actionCardMsg);
@@ -108,7 +108,7 @@ public class MessageComponentImpl implements MessageComponent {
                 .title(title)
                 .markdown(markdown)
                 .singleTitle("点击查看详情")
-                .singleUrl("https://www.baidu.com/")
+                .singleUrl("http://forward-front-forward-v1.projectk8s.tsign.cn/")
                 .receivers(receivers)
                 .build();
         erpMessageClient.sendActionCardMsg(actionCardMsg);
@@ -123,7 +123,7 @@ public class MessageComponentImpl implements MessageComponent {
                 .title(title)
                 .markdown(markdown)
                 .singleTitle("点击查看详情")
-                .singleUrl("https://www.baidu.com/")
+                .singleUrl("http://forward-front-forward-v1.projectk8s.tsign.cn/")
                 .receivers(receivers)
                 .build();
         erpMessageClient.sendActionCardMsg(actionCardMsg);
