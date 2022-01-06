@@ -19,9 +19,9 @@ public enum ProductDemandStatusEnum {
 
     ONLINE(30,"已完成上线"),
 
-    SUSPEND(40,"已暂停"),
+    SUSPEND(-10,"已暂停"),
 
-    INVALID(50,"已作废");
+    INVALID(-20,"已作废");
 
     final private Integer code;
 

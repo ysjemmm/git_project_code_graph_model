@@ -274,17 +274,21 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> matchProjectList(ProductDemandLinkProjectQueryList productDemandLinkProjectQueryList) {
         log.info("产品需求-项目匹配接收参数:projectQueryList={}", productDemandLinkProjectQueryList);
-        if (productDemandLinkProjectQueryList.getProductDemandId()!=null) {
+        if (productDemandLinkProjectQueryList.getProductDemandId() != null) {
             ProjectProductDemandDO productDemandDO = projectProductDemandMapper.getByProductDemandId(productDemandLinkProjectQueryList.getProductDemandId());
             if (productDemandDO != null) {
                 throw new BaseBizRuntimeException("该产品需求已被关联,请解除后重试");
             }
         }
         ProjectListCondition condition = ProjectCopier.INSTANCE.convert(productDemandLinkProjectQueryList);
-        condition.setStatus(Lists.newArrayList(ProjectStatusEnum.WAITING.getCode()
-                , ProjectStatusEnum.PLANING.getCode()
-                , ProjectStatusEnum.DEVING.getCode()
-                , ProjectStatusEnum.TESTING.getCode()));
+        List<Integer> status = productDemandLinkProjectQueryList.getStatus();
+        if (CollectionUtils.isEmpty(status)) {
+            // 空,默认选择下列状态
+            condition.setStatus(Lists.newArrayList(ProjectStatusEnum.WAITING.getCode()
+                    , ProjectStatusEnum.PLANING.getCode()
+                    , ProjectStatusEnum.DEVING.getCode()
+                    , ProjectStatusEnum.TESTING.getCode()));
+        }
         return projectCmponent.page(condition, Lists.newArrayList());
     }
 
@@ -296,12 +300,15 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         log.info("我和我的下属:receiveManIdList={}", receiveManIdList);
         BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(productDemandLinkBizDemandQueryList);
         condition.setReceiveManIdList(receiveManIdList);
-        condition.setStatusList(Lists.newArrayList(
-                BizDemandStatusEnum.RECEIVED.getCode()
-                , BizDemandStatusEnum.INCLUDE_PROJECT.getCode()
-                , BizDemandStatusEnum.PROJECTING.getCode()
-                , BizDemandStatusEnum.REJECT.getCode()
-                , BizDemandStatusEnum.AVAILABLE.getCode()));
+        List<Integer> status = productDemandLinkBizDemandQueryList.getStatusList();
+        if (CollectionUtils.isEmpty(status) ) {
+            condition.setStatusList(Lists.newArrayList(
+                    BizDemandStatusEnum.RECEIVED.getCode()
+                    , BizDemandStatusEnum.INCLUDE_PROJECT.getCode()
+                    , BizDemandStatusEnum.PROJECTING.getCode()
+                    , BizDemandStatusEnum.REJECT.getCode()
+                    , BizDemandStatusEnum.AVAILABLE.getCode()));
+        }
         PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize());
         // 如果查询条件有部门id，收集子部门id及所需部门的完整名
         Set<Long> queryDeptIdSet = Sets.newHashSet(productDemandLinkBizDemandQueryList.getDeptIdList());

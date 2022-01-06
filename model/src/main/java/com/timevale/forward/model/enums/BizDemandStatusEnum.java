@@ -2,8 +2,6 @@ package com.timevale.forward.model.enums;
 
 import lombok.Getter;
 
-import java.util.Objects;
-
 /**
  * @author by YangXu
  * @date 2021/12/15 17:13
@@ -18,8 +16,8 @@ public enum BizDemandStatusEnum {
     INCLUDE_PROJECT(20, "已列入项目"),
     PROJECTING(30, "项目进行中"),
     AVAILABLE(40, "已经完成上线"),
-    REJECT(50, "被驳回"),
-    INVALID(60, "已作废");
+    REJECT(-10, "被驳回"),
+    INVALID(-20, "已作废");
 
     private final Integer code;
     private final String text;

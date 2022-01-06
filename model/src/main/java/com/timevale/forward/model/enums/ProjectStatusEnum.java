@@ -21,9 +21,9 @@ public enum ProjectStatusEnum {
 
     RELEASED(40,"已发布"),
 
-    SUSPEND(50,"已暂停"),
+    SUSPEND(-10,"已暂停"),
 
-    INVALID(60,"已作废");
+    INVALID(-20,"已作废");
 
     final private Integer code;
 
