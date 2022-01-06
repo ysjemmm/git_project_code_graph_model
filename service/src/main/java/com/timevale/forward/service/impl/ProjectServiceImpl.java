@@ -207,9 +207,13 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 产品经理
         personComponent.add(projectAddReq.getPds(), projectDO.getId(), PersonTypeEnum.PROJECT_PD.getCode());
+        List<String> pdUserIds = projectAddReq.getPds().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
 
         // 团队成员
         List<PersonAddReq> teamMembers = projectAddReq.getTeamMembers();
+        //过滤掉重复选择的项目经理,产品经理
+        teamMembers = teamMembers.stream().filter(a -> !a.getUserId().equals(projectDO.getPmId()) && !pdUserIds.contains(a.getUserId()))
+                .collect(Collectors.toList());
         teamMembers.addAll(projectAddReq.getPds());
         teamMembers.add(projectAddReq.getPm());
         personComponent.add(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
@@ -238,9 +242,13 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 产品经理
         personComponent.update(projectModifyReq.getPds(), projectDO.getId(), PersonTypeEnum.PROJECT_PD.getCode());
+        List<String> pdUserIds = projectModifyReq.getPds().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
 
         // 团队成员
         List<PersonAddReq> teamMembers = projectModifyReq.getTeamMembers();
+        //过滤掉重复选择的项目经理,产品经理
+        teamMembers = teamMembers.stream().filter(a -> !a.getUserId().equals(projectDO.getPmId()) && !pdUserIds.contains(a.getUserId()))
+                .collect(Collectors.toList());
         teamMembers.addAll(projectModifyReq.getPds());
         teamMembers.add(projectModifyReq.getPm());
         personComponent.update(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
