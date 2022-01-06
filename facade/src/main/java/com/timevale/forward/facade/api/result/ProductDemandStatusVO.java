@@ -15,7 +15,7 @@ import lombok.EqualsAndHashCode;
 @ApiModel("产品需求状态信息")
 public class ProductDemandStatusVO extends ToString {
 
-    @ApiModelProperty("状态:0待排期,10已列入项目,20项目进行中,30已完成上线,40已暂停,50已作废")
+    @ApiModelProperty("状态:0待排期,10已列入项目,20项目进行中,30已完成上线,-10已暂停,-20已作废")
     private Integer status;
 
     @ApiModelProperty("状态名称")

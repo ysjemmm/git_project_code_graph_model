@@ -57,7 +57,7 @@ public class BizDemandVO extends ToString {
     @ApiModelProperty("预计上线时间名称")
     private String planReleaseDateText;
 
-    @ApiModelProperty("需求解决状态:0待评估，10已接收，20已列入项目，30项目进行中，40已完成上线，50被驳回，60已作废")
+    @ApiModelProperty("需求解决状态:0待评估，10已接收，20已列入项目，30项目进行中，40已完成上线，-10被驳回，-20已作废")
     private Integer status;
 
     @ApiModelProperty("需求解决状态名称")

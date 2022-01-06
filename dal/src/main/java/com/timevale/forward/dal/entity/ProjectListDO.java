@@ -27,7 +27,7 @@ public class ProjectListDO extends BaseDO {
     private Integer type;
 
     /**
-     * 0待启动,10规划中,20研发中,30测试中,40已发布,50已暂停,60已作废
+     * 0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废
      */
     private Integer status;
     

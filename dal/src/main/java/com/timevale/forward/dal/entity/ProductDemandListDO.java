@@ -18,7 +18,7 @@ public class ProductDemandListDO extends BaseDO {
     private String name;
 
     /**
-     * 需求状态:0待排期,10已列入项目,20项目进行中,30已完成上线,40已暂停,50已作废
+     * 需求状态:0待排期,10已列入项目,20项目进行中,30已完成上线,-10已暂停,-20已作废
      */
     private Integer status;
 

@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 public enum ProductDemandStatusEnum {
     /**
-     * 0待排期,10已列入项目,20项目进行中,30已完成上线,40已暂停,50已作废
+     * 0待排期,10已列入项目,20项目进行中,30已完成上线,-10已暂停,-20已作废
      */
     WAITING(0,"待排期"),
 

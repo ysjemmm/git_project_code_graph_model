@@ -35,7 +35,7 @@ public class ProductDemandLinkProjectQueryList extends QueryBase {
     @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
     private List<Integer> types;
 
-    @ApiModelProperty("项目状态:0待启动,10规划中,20研发中,30测试中,40已发布,50已暂停,60已作废")
+    @ApiModelProperty("项目状态:0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废")
     private List<Integer> status;
 
     @ApiModelProperty("项目经理")
