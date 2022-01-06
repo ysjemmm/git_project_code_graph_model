@@ -215,7 +215,10 @@ public class ProjectServiceImpl implements ProjectService {
         teamMembers = teamMembers.stream().filter(a -> !a.getUserId().equals(projectDO.getPmId()) && !pdUserIds.contains(a.getUserId()))
                 .collect(Collectors.toList());
         teamMembers.addAll(projectAddReq.getPds());
-        teamMembers.add(projectAddReq.getPm());
+        if (!pdUserIds.contains(projectAddReq.getPm().getUserId())) {
+            //产品经理不包含项目经理时,将项目经理加入团队中
+            teamMembers.add(projectAddReq.getPm());
+        }
         personComponent.add(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
         return BaseResult.success(true);
     }
@@ -250,7 +253,10 @@ public class ProjectServiceImpl implements ProjectService {
         teamMembers = teamMembers.stream().filter(a -> !a.getUserId().equals(projectDO.getPmId()) && !pdUserIds.contains(a.getUserId()))
                 .collect(Collectors.toList());
         teamMembers.addAll(projectModifyReq.getPds());
-        teamMembers.add(projectModifyReq.getPm());
+        if (!pdUserIds.contains(projectModifyReq.getPm().getUserId())) {
+            //产品经理不包含项目经理时,将项目经理加入团队中
+            teamMembers.add(projectModifyReq.getPm());
+        }
         personComponent.update(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         // 节点信息
