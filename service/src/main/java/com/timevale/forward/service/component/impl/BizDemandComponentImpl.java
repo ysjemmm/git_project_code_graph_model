@@ -80,9 +80,6 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         for (ProductDemandDO productDemandDO : productDemandDOList) {
             Integer productDemandStatus = productDemandDO.getStatus();
             if(productDemandStatus.equals(ProductDemandStatusEnum.INVALID.getCode())){continue;}
-            if(productDemandStatus.equals(ProductDemandStatusEnum.SUSPEND.getCode())){
-                status = ProductDemandStatusEnum.WAITING.getCode();
-            }
             status = status == null ? productDemandStatus : Math.min(status, productDemandStatus);
         }
 
@@ -191,7 +188,6 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         }
 
         // 查询并转换
-
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
 
@@ -216,6 +212,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(bizDemandVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
         return BaseResult.success(pageQueryResult);
     }
 }
