@@ -11,16 +11,12 @@
 package com.timevale.forward.deploy;
 
 import com.timevale.billing.log.monitor.interfaces.EnableLogMonitor;
-import com.timevale.forward.dal.type.StringTypeHandler;
 import com.timevale.framework.puppeteer.spring.annotation.EnablePuppeteerConfig;
 import com.timevale.mandarin.microservice.UniversalService;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.type.TypeHandlerRegistry;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
-import org.springframework.context.ConfigurableApplicationContext;
 
 /**
  * 服务启动入口
@@ -39,11 +35,5 @@ import org.springframework.context.ConfigurableApplicationContext;
 @EnablePuppeteerConfig({"application", "JSBZ.SOA_PUBLIC"})
 @EnableLogMonitor
 public class Application {
-
-    public static void main(String[] args) {
-        ConfigurableApplicationContext run = SpringApplication.run(Application.class, args);
-        // SqlSessionFactory sqlSessionFactory = run.getBean(SqlSessionFactory.class);
-        // TypeHandlerRegistry typeHandlerRegistry = sqlSessionFactory.getConfiguration().getTypeHandlerRegistry();
-        // typeHandlerRegistry.register(String.class, StringTypeHandler.class);
-    }
+    public static void main(String[] args) {SpringApplication.run(Application.class, args);}
 }

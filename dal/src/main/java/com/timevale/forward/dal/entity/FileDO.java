@@ -31,9 +31,4 @@ public class FileDO extends BaseDO {
      * 文件id
      */
     private String fileId;
-
-    /**
-     * 文件类型
-     */
-    private String fileType;
 }

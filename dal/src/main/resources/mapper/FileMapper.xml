@@ -3,7 +3,7 @@
 <mapper namespace="com.timevale.forward.dal.dao.FileMapper">
 
     <select id="select" resultType="com.timevale.forward.dal.entity.FileDO">
-        select id ,attache_id, type, name fileName , file_id, file_type,is_deleted,create_man ,create_date ,modify_man ,modify_date
+        select id ,attache_id, type, name fileName , file_id, is_deleted,create_man ,create_date ,modify_man ,modify_date
         from file
         where is_deleted = false
         <if test="attacheId!=null">and attache_id = #{attacheId}</if>
@@ -11,16 +11,16 @@
     </select>
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.FileDO">
-        insert into file (attache_id, type, name , file_id,file_type, create_man_id, create_man)
+        insert into file (attache_id, type, name , file_id, create_man_id, create_man)
         values
-        (#{attacheId}, #{type}, #{fileName}, #{fileId}, #{fileType}, #{createManId}, #{createMan})
+        (#{attacheId}, #{type}, #{fileName}, #{fileId}, #{createManId}, #{createMan})
     </insert>
 
     <insert id="inserts" parameterType="java.util.List">
-        insert into file (attache_id, type, name , file_id, file_type,create_man_id, create_man)
+        insert into file (attache_id, type, name , file_id, create_man_id, create_man)
         values
         <foreach collection="list" item="i" open="" separator="," close="">
-            (#{i.attacheId}, #{i.type}, #{i.fileName}, #{i.fileId},#{i.fileType}, #{i.createManId}, #{i.createMan})
+            (#{i.attacheId}, #{i.type}, #{i.fileName}, #{i.fileId}, #{i.createManId}, #{i.createMan})
         </foreach>
     </insert>
 
