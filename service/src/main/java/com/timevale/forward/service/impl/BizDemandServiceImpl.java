@@ -106,18 +106,17 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizDemandListCondition.setCopier(userInfo.getId());
         }else {
             List<String> teamMember = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
-            if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())){
-                List<String> teamIdList =  bizDemandListCondition.getCreateManIdList();
-                if(!teamIdList.isEmpty()){
-                    teamMember = teamMember.stream().filter(teamIdList::contains).collect(Collectors.toList());
+            if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString()) || ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())){
+                List<String> teamCreateIdList =  bizDemandListCondition.getCreateManIdList();
+                List<String> teamReceiveIdList =  bizDemandListCondition.getReceiveManIdList();
+                if(!teamCreateIdList.isEmpty()){
+                    teamCreateIdList = teamMember.stream().filter(teamCreateIdList::contains).collect(Collectors.toList());
                 }
-                bizDemandListCondition.setCreateManIdList(teamMember);
-            }else if(ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())){
-                List<String> teamIdList =  bizDemandListCondition.getReceiveManIdList();
-                if(!teamIdList.isEmpty()){
-                    teamMember = teamMember.stream().filter(teamIdList::contains).collect(Collectors.toList());
+                if(!teamReceiveIdList.isEmpty()){
+                    teamCreateIdList = teamMember.stream().filter(teamReceiveIdList::contains).collect(Collectors.toList());
                 }
-                bizDemandListCondition.setReceiveManIdList(teamMember);
+                bizDemandListCondition.setCreateManIdList(teamCreateIdList);
+                bizDemandListCondition.setReceiveManIdList(teamReceiveIdList);
             }
         }
         return bizDemandComponent.page(bizDemandListCondition);
