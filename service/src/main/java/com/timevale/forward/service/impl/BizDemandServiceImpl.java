@@ -41,6 +41,7 @@ import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author by YangXu
@@ -105,9 +106,17 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizDemandListCondition.setCopier(userInfo.getId());
         }else {
             List<String> teamMember = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
-            if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString()) && !bizDemandListCondition.getCreateManIdList().isEmpty()){
+            if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())){
+                List<String> teamIdList =  bizDemandListCondition.getCreateManIdList();
+                if(!teamIdList.isEmpty()){
+                    teamMember = teamMember.stream().filter(teamIdList::contains).collect(Collectors.toList());
+                }
                 bizDemandListCondition.setCreateManIdList(teamMember);
-            }else if(ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString()) && !bizDemandListCondition.getReceiveManIdList().isEmpty()){
+            }else if(ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())){
+                List<String> teamIdList =  bizDemandListCondition.getReceiveManIdList();
+                if(!teamIdList.isEmpty()){
+                    teamMember = teamMember.stream().filter(teamIdList::contains).collect(Collectors.toList());
+                }
                 bizDemandListCondition.setReceiveManIdList(teamMember);
             }
         }
