@@ -66,7 +66,7 @@ public class CommentServiceImpl implements CommentService {
 
         // 添加评论
         CommentDO commentDO = CommentCopier.INSTANCE.convert(commentAddReq);
-        commentDO.setCreateMan(userInfo.getAlias());
+        commentDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         commentDO.setCreateManId(userInfo.getId());
         commentMapper.insert(commentDO);
 
