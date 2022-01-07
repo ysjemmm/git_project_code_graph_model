@@ -148,6 +148,8 @@ public interface BizDemandCopier {
      * @param demandQueryList 列表
      * @return Condition
      */
+    @Mapping(source = "createManInfoList", target = "createManIdList", qualifiedByName = "getInfoId")
+    @Mapping(source = "receiveManInfoList", target = "receiveManIdList", qualifiedByName = "getInfoId")
     BizDemandListCondition convert(ProductDemandLinkBizDemandQueryList demandQueryList);
 
     /**
