@@ -59,6 +59,8 @@ public interface BizDemandCopier {
      * @param bizDemandModifyReq 业务需求修改要求的事情
      * @return DO
      */
+    @Mapping(source = "receiveManInfo.userName", target = "receiveMan")
+    @Mapping(source = "receiveManInfo.userId", target = "receiveManId")
     BizDemandDO convert(BizDemandModifyReq bizDemandModifyReq);
 
     /**
