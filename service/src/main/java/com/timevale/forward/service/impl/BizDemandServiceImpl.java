@@ -113,7 +113,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                     teamCreateIdList = teamMember.stream().filter(teamCreateIdList::contains).collect(Collectors.toList());
                 }
                 if(!teamReceiveIdList.isEmpty()){
-                    teamCreateIdList = teamMember.stream().filter(teamReceiveIdList::contains).collect(Collectors.toList());
+                    teamReceiveIdList = teamMember.stream().filter(teamReceiveIdList::contains).collect(Collectors.toList());
                 }
                 bizDemandListCondition.setCreateManIdList(teamCreateIdList);
                 bizDemandListCondition.setReceiveManIdList(teamReceiveIdList);
