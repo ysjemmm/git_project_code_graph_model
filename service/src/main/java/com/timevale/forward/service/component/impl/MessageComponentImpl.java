@@ -30,6 +30,8 @@ public class MessageComponentImpl implements MessageComponent {
     @Value("${domain_name:http://forward-front-forward-v1.projectk8s.tsign.cn/}")
     private String domainName;
 
+    private static final String SINGLE_TITLE = "点击查看详情";
+
     private static final String BIZ_DEMAND_RECEIVED_MSG = "### %s\n**%s**接收了您提交的业务需求 **%s**，预期上线时间为 **%s**";
     private static final String BIZ_DEMAND_REJECT_MSG = "### %s\n**%s**驳回了您提交的业务需求 **%s**，驳回理由是 **%s**";
     private static final String BIZ_DEMAND_STATUS_CHANGE_MSG = "### %s\n您提交的业务需求 **%s** 状态已变为 **%s**，项目发布时间为 **%s**";
@@ -47,7 +49,7 @@ public class MessageComponentImpl implements MessageComponent {
         ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                 .title(title)
                 .markdown(markdown)
-                .singleTitle("点击查看详情")
+                .singleTitle(SINGLE_TITLE)
                 .singleUrl(singleUrl)
                 .receivers(receivers)
                 .build();
@@ -64,7 +66,7 @@ public class MessageComponentImpl implements MessageComponent {
         ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                 .title(title)
                 .markdown(markdown)
-                .singleTitle("点击查看详情")
+                .singleTitle(SINGLE_TITLE)
                 .singleUrl(singleUrl)
                 .receivers(receivers)
                 .build();
@@ -83,7 +85,7 @@ public class MessageComponentImpl implements MessageComponent {
         ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                 .title(title)
                 .markdown(markdown)
-                .singleTitle("点击查看详情")
+                .singleTitle(SINGLE_TITLE)
                 .singleUrl(singleUrl)
                 .receivers(receivers)
                 .build();
@@ -100,7 +102,7 @@ public class MessageComponentImpl implements MessageComponent {
         ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                 .title(title)
                 .markdown(markdown)
-                .singleTitle("点击查看详情")
+                .singleTitle(SINGLE_TITLE)
                 .singleUrl(singleUrl)
                 .receivers(receivers)
                 .build();
@@ -117,7 +119,7 @@ public class MessageComponentImpl implements MessageComponent {
         ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                 .title(title)
                 .markdown(markdown)
-                .singleTitle("点击查看详情")
+                .singleTitle(SINGLE_TITLE)
                 .singleUrl(singleUrl)
                 .receivers(receivers)
                 .build();
@@ -128,7 +130,7 @@ public class MessageComponentImpl implements MessageComponent {
     public void commentMsg(Long mainId, String operator, List<String> receivers, String type, String name, String content) {
         String title = type + MessageTitleEnum.COMMENT.getText();
         String markdown = String.format(COMMENT_MSG, title, operator, type, name, content);
-        String singleUrl = null;
+        String singleUrl;
         if (CommentTypeEnum.PROJECT.getText().equals(type)) {
             singleUrl = domainName + String.format(PARAM, TabEnum.PROJECT_EDIT.getText(), mainId);
         } else if (CommentTypeEnum.PRODUCT_DEMAND.getText().equals(type)) {
@@ -139,8 +141,8 @@ public class MessageComponentImpl implements MessageComponent {
         ActionCardMsg actionCardMsg = ActionCardMsg.builder()
                 .title(title)
                 .markdown(markdown)
-                .singleTitle("点击查看详情")
-                .singleUrl("http://forward-front-forward-v1.projectk8s.tsign.cn/")
+                .singleTitle(SINGLE_TITLE)
+                .singleUrl(singleUrl)
                 .receivers(receivers)
                 .build();
         erpMessageClient.sendActionCardMsg(actionCardMsg);
