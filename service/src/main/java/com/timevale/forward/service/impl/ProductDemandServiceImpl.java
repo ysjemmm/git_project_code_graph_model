@@ -47,7 +47,6 @@ import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -107,7 +106,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         log.info("产品需求接收参数:{}", productDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
-        List<String> filtered = new ArrayList<>();
+        List<String> filtered;
         if (AscriptionEnum.CURRENT_USER.name().equals(productDemandQueryList.getAscription())) {
             condition.getOwnerIds().add(userInfo.getId());
         } else if (AscriptionEnum.TEAM.name().equals(productDemandQueryList.getAscription())) {
@@ -118,6 +117,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 filtered = allMyStaffWithSelf;
             }
             log.info("我和我的下属:{},过滤后:{}", allMyStaffWithSelf, filtered);
+            if(CollectionUtils.isEmpty(filtered)){
+                //所选人员不在我的团队中
+                return BaseResult.success(new PageQueryResult<>());
+            }
             condition.setOwnerIds(filtered);
         } else if (AscriptionEnum.DEPARTMENT.name().equals(productDemandQueryList.getAscription())) {
             GroupModel defaultGroup = userInfo.getDefaultGroup();
@@ -128,6 +131,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 filtered = accountIds;
             }
             log.info("用户默认部门id:{},同部门人员:{},过滤后:{}", defaultGroup.getGroupId(), accountIds, filtered);
+            if(CollectionUtils.isEmpty(filtered)){
+                //所选人员不在我的部门中
+                return BaseResult.success(new PageQueryResult<>());
+            }
             condition.setOwnerIds(filtered);
         } else if (AscriptionEnum.COPIER.name().equals(productDemandQueryList.getAscription())) {
             condition.setCopierId(userInfo.getId());
@@ -298,7 +305,17 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         List<String> receiveManIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
         log.info("我和我的下属:receiveManIdList={}", receiveManIdList);
         BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(productDemandLinkBizDemandQueryList);
-        condition.setReceiveManIdList(receiveManIdList);
+        List<String> filtered;
+        if (!CollectionUtils.isEmpty(condition.getReceiveManIdList())) {
+            filtered = receiveManIdList.stream().filter(a -> condition.getReceiveManIdList().contains(a)).collect(Collectors.toList());
+        } else {
+            filtered = receiveManIdList;
+        }
+        if(CollectionUtils.isEmpty(filtered)){
+            //所选人员不在我和我的下属中
+            return BaseResult.success(new PageQueryResult<>());
+        }
+        condition.setReceiveManIdList(filtered);
         List<Integer> status = productDemandLinkBizDemandQueryList.getStatusList();
         if (CollectionUtils.isEmpty(status) ) {
             condition.setStatusList(Lists.newArrayList(
