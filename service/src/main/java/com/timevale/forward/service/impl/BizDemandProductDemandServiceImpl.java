@@ -179,8 +179,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
     @Override
     public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> matchProductDemandList(BizDemandLinkProductDemandQueryList bizDemandSubProductDemandQueryList) {
-        // 开始分页
-        PageHelper.startPage(bizDemandSubProductDemandQueryList.pageNum, bizDemandSubProductDemandQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
         // 转换查询条件
         BizDemandLinkProductDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandSubProductDemandQueryList);
         //通配符处理
@@ -189,6 +187,8 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         bizDemandSubProductDemandQueryList.setCreateDateStart(DateUtil.getStartOfDay(bizDemandSubProductDemandQueryList.getCreateDateStart()));
         bizDemandSubProductDemandQueryList.setCreateDateEnd(DateUtil.getEndOfDay(bizDemandSubProductDemandQueryList.getCreateDateEnd()));
 
+        // 开始分页
+        PageHelper.startPage(bizDemandSubProductDemandQueryList.pageNum, bizDemandSubProductDemandQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
         // 查询当前业务需求已经关联的产品需求
         List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.select(ProductBizDemandCondition.builder()
                 .bizDemandId(bizDemandSubProductDemandQueryList.getBizDemandId())
