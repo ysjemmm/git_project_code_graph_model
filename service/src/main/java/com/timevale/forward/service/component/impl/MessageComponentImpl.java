@@ -31,13 +31,12 @@ public class MessageComponentImpl implements MessageComponent {
     private String domainName;
 
     private static final String SINGLE_TITLE = "点击查看详情";
-
-    private static final String BIZ_DEMAND_RECEIVED_MSG = "### %s\n**%s**接收了您提交的业务需求 **%s**，预期上线时间为 **%s**";
-    private static final String BIZ_DEMAND_REJECT_MSG = "### %s\n**%s**驳回了您提交的业务需求 **%s**，驳回理由是 **%s**";
-    private static final String BIZ_DEMAND_STATUS_CHANGE_MSG = "### %s\n您提交的业务需求 **%s** 状态已变为 **%s**，项目发布时间为 **%s**";
-    private static final String BIZ_DEMAND_TO_RECEIVE_MSG = "### %s\n您收到了**%s**提交的业务需求 **%s**";
-    private static final String BIZ_DEMAND_INVALID_MSG = "### %s\n**%s**作废了业务需求 **%s**";
-    private static final String COMMENT_MSG = "### %s\n**%s**评论了%s **%s**\n> %s";
+    private static final String BIZ_DEMAND_RECEIVED_MSG = "### %s  \n  **%s**接收了您提交的业务需求 **%s**，预期上线时间为 **%s**";
+    private static final String BIZ_DEMAND_REJECT_MSG = "### %s  \n  **%s**驳回了您提交的业务需求 **%s**，驳回理由是 **%s**";
+    private static final String BIZ_DEMAND_STATUS_CHANGE_MSG = "### %s  \n  您提交的业务需求 **%s** 状态已变为 **%s**，项目发布时间为 **%s**";
+    private static final String BIZ_DEMAND_TO_RECEIVE_MSG = "### %s  \n  您收到了**%s**提交的业务需求 **%s**";
+    private static final String BIZ_DEMAND_INVALID_MSG = "### %s  \n  **%s**作废了业务需求 **%s**";
+    private static final String COMMENT_MSG = "### %s  \n  **%s**评论了%s **%s**  \n  > %s";
     private static final String PARAM = "%s?id=%d&type=check";
 
     @Override
