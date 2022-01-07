@@ -92,9 +92,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         BizDemandListCondition bizDemandListCondition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
         // 通配符处理
         bizDemandListCondition.setName(StringUtil.toLikeStr(bizDemandListCondition.getName()));
-        // 日期处理
-        bizDemandListCondition.setCreateDateStart(DateUtil.getStartOfDay(bizDemandListCondition.getCreateDateStart()));
-        bizDemandListCondition.setCreateDateEnd(DateUtil.getEndOfDay(bizDemandListCondition.getCreateDateEnd()));
 
         // 根据tabs添加不同的效果
         String ascription = bizDemandQueryList.getAscription();
@@ -106,17 +103,18 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizDemandListCondition.setCopier(userInfo.getId());
         }else {
             List<String> teamMember = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
-            if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString()) || ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())){
-                List<String> teamCreateIdList =  bizDemandListCondition.getCreateManIdList();
-                List<String> teamReceiveIdList =  bizDemandListCondition.getReceiveManIdList();
+            if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())){
+                List<String> teamCreateIdList = bizDemandListCondition.getCreateManIdList();
                 if(!teamCreateIdList.isEmpty()){
-                    teamCreateIdList = teamMember.stream().filter(teamCreateIdList::contains).collect(Collectors.toList());
+                    teamMember.retainAll(teamCreateIdList);
                 }
+                bizDemandListCondition.setCreateManIdList(teamMember);
+            }else if(ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())){
+                List<String> teamReceiveIdList = bizDemandListCondition.getReceiveManIdList();
                 if(!teamReceiveIdList.isEmpty()){
-                    teamReceiveIdList = teamMember.stream().filter(teamReceiveIdList::contains).collect(Collectors.toList());
+                    teamMember.retainAll(teamReceiveIdList);
                 }
-                bizDemandListCondition.setCreateManIdList(teamCreateIdList);
-                bizDemandListCondition.setReceiveManIdList(teamReceiveIdList);
+                bizDemandListCondition.setReceiveManIdList(teamMember);
             }
         }
         return bizDemandComponent.page(bizDemandListCondition);
