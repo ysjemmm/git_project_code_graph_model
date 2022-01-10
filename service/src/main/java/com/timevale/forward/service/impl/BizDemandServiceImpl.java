@@ -40,7 +40,9 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -99,19 +101,19 @@ public class BizDemandServiceImpl implements BizDemandService {
         }else if(ascription.equals(AscriptionEnum.COPIER.toString())){
             bizDemandListCondition.setCopier(userInfo.getId());
         }else {
-            List<String> teamMember = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
+            Set<String> createIdSet = new HashSet<>(bizDemandListCondition.getCreateManIdList());
+            Set<String> receiveIdSet = new HashSet<>(bizDemandListCondition.getReceiveManIdList());
+            List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
             if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())){
-                List<String> teamCreateIdList = bizDemandListCondition.getCreateManIdList();
-                if(!teamCreateIdList.isEmpty()){
-                    teamMember.retainAll(teamCreateIdList);
+                if(!createIdSet.isEmpty()){
+                    teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
                 }
-                bizDemandListCondition.setCreateManIdList(teamMember);
+                bizDemandListCondition.setCreateManIdList(teamMemberIdList);
             }else if(ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())){
-                List<String> teamReceiveIdList = bizDemandListCondition.getReceiveManIdList();
-                if(!teamReceiveIdList.isEmpty()){
-                    teamMember.retainAll(teamReceiveIdList);
+                if(!receiveIdSet.isEmpty()){
+                    teamMemberIdList = teamMemberIdList.stream().filter(receiveIdSet::contains).collect(Collectors.toList());
                 }
-                bizDemandListCondition.setReceiveManIdList(teamMember);
+                bizDemandListCondition.setReceiveManIdList(teamMemberIdList);
             }
         }
         // 开始分页
