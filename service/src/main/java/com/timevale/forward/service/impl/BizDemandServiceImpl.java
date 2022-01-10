@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
@@ -26,6 +27,7 @@ import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -89,6 +91,8 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 转换查询条件
         BizDemandListCondition bizDemandListCondition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
 
+        // 标志是否有对应数据
+        boolean resultIsEmpty = false;
         // 根据tabs添加不同的效果
         String ascription = bizDemandQueryList.getAscription();
         if(ascription.equals(AscriptionEnum.CURRENT_USER.toString())){
@@ -103,17 +107,20 @@ public class BizDemandServiceImpl implements BizDemandService {
                 Set<String> createIdSet = new HashSet<>(bizDemandListCondition.getCreateManIdList());
                 if(!createIdSet.isEmpty()){
                     teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
-                    if(teamMemberIdList.isEmpty()){teamMemberIdList.add(CommonConstant.NO_ONE_IN_LIST);}
+                    resultIsEmpty = teamMemberIdList.isEmpty();
                 }
                 bizDemandListCondition.setCreateManIdList(teamMemberIdList);
             }else if(ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())){
                 Set<String> receiveIdSet = new HashSet<>(bizDemandListCondition.getReceiveManIdList());
                 if(!receiveIdSet.isEmpty()){
                     teamMemberIdList = teamMemberIdList.stream().filter(receiveIdSet::contains).collect(Collectors.toList());
-                    if(teamMemberIdList.isEmpty()){teamMemberIdList.add(CommonConstant.NO_ONE_IN_LIST);}
+                    resultIsEmpty = teamMemberIdList.isEmpty();
                 }
                 bizDemandListCondition.setReceiveManIdList(teamMemberIdList);
             }
+        }
+        if(resultIsEmpty){
+            return BaseResult.success(ResultUtil.pageEmpty());
         }
         // 开始分页
         PageHelper.startPage(bizDemandQueryList.pageNum, bizDemandQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
@@ -141,12 +148,16 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 取消产品关联
         productBizDemandMapper.deleteByBizDemandId(bizDemandId, userInfo.getAlias(), userInfo.getId());
 
-        // 接收人通知
-        messageComponent.bizDemandInvalidMsg(bizDemandDO.getId(),
-                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
-                bizDemandDO.getReceiveManId(),
-                bizDemandDO.getName()
-        );
+        try{
+            // 接收人通知
+            messageComponent.bizDemandInvalidMsg(bizDemandDO.getId(),
+                    userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
+                    bizDemandDO.getReceiveManId(),
+                    bizDemandDO.getName()
+            );
+        }catch (BaseBizRuntimeException e){
+            log.error("updateStatus 调用钉钉通知接口失败 error: " + e.getMessage(), e);
+        }
 
         return BaseResult.success(true);
     }
@@ -180,12 +191,16 @@ public class BizDemandServiceImpl implements BizDemandService {
             personComponent.add(recipientInfoList, bizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
         }
 
-        // 接收人通知
-        messageComponent.bizDemandToReceiveMsg(bizDemandDO.getId(),
-                bizDemandDO.getCreateMan(),
-                bizDemandDO.getReceiveManId(),
-                bizDemandDO.getName()
-        );
+        try {
+            // 接收人通知
+            messageComponent.bizDemandToReceiveMsg(bizDemandDO.getId(),
+                    bizDemandDO.getCreateMan(),
+                    bizDemandDO.getReceiveManId(),
+                    bizDemandDO.getName()
+            );
+        } catch (BaseBizRuntimeException e){
+            log.error("add 调用钉钉通知接口失败 error: " + e.getMessage(), e);
+        }
 
         return BaseResult.success(true);
     }
@@ -283,13 +298,17 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
-        // 通知需求提交人
-        messageComponent.bizDemandReceivedMsg(bizDemandDO.getId(),
-                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
-                bizDemandDO.getCreateManId(),
-                bizDemandDO.getName(),
-                PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
-        );
+        try{
+            // 通知需求提交人
+            messageComponent.bizDemandReceivedMsg(bizDemandDO.getId(),
+                    userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
+                    bizDemandDO.getCreateManId(),
+                    bizDemandDO.getName(),
+                    PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
+            );
+        }catch (BaseBizRuntimeException e){
+            log.error("agree 调用钉钉通知接口失败 error: " + e.getMessage(), e);
+        }
 
         return BaseResult.success(true);
     }
@@ -314,13 +333,18 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
-        // 驳回通知
-        messageComponent.bizDemandRejectMsg(bizDemandDO.getId(),
-                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
-                bizDemandDO.getCreateManId(),
-                bizDemandDO.getName(),
-                BizDemandReasonEnum.getTextByCode(bizDemandDO.getReason())
-        );
+        try {
+            // 驳回通知
+            messageComponent.bizDemandRejectMsg(bizDemandDO.getId(),
+                    userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
+                    bizDemandDO.getCreateManId(),
+                    bizDemandDO.getName(),
+                    BizDemandReasonEnum.getTextByCode(bizDemandDO.getReason())
+            );
+        }catch (BaseBizRuntimeException e){
+            log.error("reject 调用钉钉通知接口失败 error: " + e.getMessage(), e);
+        }
+
         return BaseResult.success(true);
     }
 
@@ -340,12 +364,16 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
-        // 转交人通知
-        messageComponent.bizDemandToReceiveMsg(bizDemandDO.getId(),
-                bizDemandDO.getCreateMan(),
-                bizDemandDO.getReceiveManId(),
-                bizDemandDO.getName()
-        );
+        try{
+            // 转交人通知
+            messageComponent.bizDemandToReceiveMsg(bizDemandDO.getId(),
+                    bizDemandDO.getCreateMan(),
+                    bizDemandDO.getReceiveManId(),
+                    bizDemandDO.getName()
+            );
+        }catch (BaseBizRuntimeException e){
+            log.error("transfer 调用钉钉通知接口失败 error: " + e.getMessage(), e);
+        }
 
         return BaseResult.success(true);
     }
