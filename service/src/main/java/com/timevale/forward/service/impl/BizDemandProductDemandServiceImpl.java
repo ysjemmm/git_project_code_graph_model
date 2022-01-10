@@ -27,6 +27,7 @@ import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
+import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
@@ -69,6 +70,9 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
     @Resource
     BizDemandComponent bizDemandComponent;
+
+    @Resource
+    InnerUserPersonClient innerUserPersonClient;
 
     @Override
     public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> linkedProductDemandList(BizDemandProductDemandQueryList bizDemandProductDemandQueryList) {
@@ -179,6 +183,8 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
     @Override
     public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> matchProductDemandList(BizDemandLinkProductDemandQueryList bizDemandSubProductDemandQueryList) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         // 转换查询条件
         BizDemandLinkProductDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandSubProductDemandQueryList);
 
@@ -187,18 +193,24 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         // 日期处理
         condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
         condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
-        // 查询当前业务需求已经关联的产品需求
+        // 过滤当前业务需求已经关联的产品需求
         List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.select(ProductBizDemandCondition.builder()
                 .bizDemandId(bizDemandSubProductDemandQueryList.getBizDemandId())
                 .isDeleted(false)
                 .build());
         condition.setLinkedIdList(productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList()));
 
+        // 仅展示自己及其下属负责的产品需求
+        Set<String> staffWithSelfSet = new HashSet<>(innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId()));
+        List<String> ownerIdList = condition.getOwnerIdList().stream().filter(staffWithSelfSet::contains).collect(Collectors.toList());
+        condition.setOwnerIdList(ownerIdList);
+
         // 开始分页
         PageHelper.startPage(bizDemandSubProductDemandQueryList.pageNum, bizDemandSubProductDemandQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
-        // 查询符合条件的产品需求，并过滤已经关联的，已经作废的
+        // 查询符合条件的产品需求
         List<BizDemandLinkProductDemandListDO> productDemandDOList = productDemandMapper.selectListOfBizDemandLink(condition);
         List<BizDemandLinkProductDemandVO> bizDemandLinkProductDemandVOList = BizDemandCopier.INSTANCE.transform(productDemandDOList);
+
 
         // 业务需求状态信息赋值
         bizDemandLinkProductDemandVOList.forEach(e -> {
