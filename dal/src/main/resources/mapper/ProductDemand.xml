@@ -108,6 +108,7 @@
         left join product_line pl on pd.product_line_id = pl.id
         left join biz_domain bd on pl.biz_domain_id = bd.id
         <where>
+            and pd.status != -20
             <if test="productDemandId!=null">
                 and pd.id = #{productDemandId}
             </if>
@@ -138,6 +139,12 @@
             <if test="ownerIdList!=null and ownerIdList.size()>0">
                 and pd.owner_id in
                 <foreach collection="ownerIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="linkedIdList!=null and linkedIdList.size()>0">
+                and pd.id not in
+                <foreach collection="linkedIdList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>

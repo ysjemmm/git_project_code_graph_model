@@ -85,9 +85,6 @@ public class BizDemandServiceImpl implements BizDemandService {
     public BaseResult<PageQueryResult<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        // 开始分页
-        PageHelper.startPage(bizDemandQueryList.pageNum, bizDemandQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
-
         // 转换查询条件
         BizDemandListCondition bizDemandListCondition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
         // 通配符处理
@@ -117,6 +114,8 @@ public class BizDemandServiceImpl implements BizDemandService {
                 bizDemandListCondition.setReceiveManIdList(teamMember);
             }
         }
+        // 开始分页
+        PageHelper.startPage(bizDemandQueryList.pageNum, bizDemandQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
         return bizDemandComponent.page(bizDemandListCondition);
     }
 

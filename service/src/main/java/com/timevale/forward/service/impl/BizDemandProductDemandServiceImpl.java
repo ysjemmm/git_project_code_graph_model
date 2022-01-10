@@ -181,25 +181,23 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
     public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> matchProductDemandList(BizDemandLinkProductDemandQueryList bizDemandSubProductDemandQueryList) {
         // 转换查询条件
         BizDemandLinkProductDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandSubProductDemandQueryList);
-        //通配符处理
-        bizDemandSubProductDemandQueryList.setName(StringUtil.toLikeStr(bizDemandSubProductDemandQueryList.getName()));
-        // 日期处理
-        bizDemandSubProductDemandQueryList.setCreateDateStart(DateUtil.getStartOfDay(bizDemandSubProductDemandQueryList.getCreateDateStart()));
-        bizDemandSubProductDemandQueryList.setCreateDateEnd(DateUtil.getEndOfDay(bizDemandSubProductDemandQueryList.getCreateDateEnd()));
 
-        // 开始分页
-        PageHelper.startPage(bizDemandSubProductDemandQueryList.pageNum, bizDemandSubProductDemandQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        //通配符处理
+        condition.setName(StringUtil.toLikeStr(condition.getName()));
+        // 日期处理
+        condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
+        condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
         // 查询当前业务需求已经关联的产品需求
         List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.select(ProductBizDemandCondition.builder()
                 .bizDemandId(bizDemandSubProductDemandQueryList.getBizDemandId())
                 .isDeleted(false)
                 .build());
-        Set<Long> productBizDemandDOSet = productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toSet());
+        condition.setLinkedIdList(productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList()));
 
+        // 开始分页
+        PageHelper.startPage(bizDemandSubProductDemandQueryList.pageNum, bizDemandSubProductDemandQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
         // 查询符合条件的产品需求，并过滤已经关联的，已经作废的
         List<BizDemandLinkProductDemandListDO> productDemandDOList = productDemandMapper.selectListOfBizDemandLink(condition);
-        productDemandDOList = productDemandDOList.stream().filter(e -> !productBizDemandDOSet.contains(e.getId())).collect(Collectors.toList());
-        productDemandDOList = productDemandDOList.stream().filter(e -> !e.getStatus().equals(ProductDemandStatusEnum.INVALID.getCode())).collect(Collectors.toList());
         List<BizDemandLinkProductDemandVO> bizDemandLinkProductDemandVOList = BizDemandCopier.INSTANCE.transform(productDemandDOList);
 
         // 业务需求状态信息赋值

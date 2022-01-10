@@ -325,7 +325,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     , BizDemandStatusEnum.REJECT.getCode()
                     , BizDemandStatusEnum.AVAILABLE.getCode()));
         }
-        PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize());
+        PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         return bizDemandComponent.page(condition);
     }
 
