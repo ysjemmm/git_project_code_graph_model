@@ -45,12 +45,18 @@ public class MessageComponentImpl implements MessageComponent {
         String title = MessageTitleEnum.BIZDEMAND_FEEDBACK.getText();
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_EDIT.getText(), bizDemandId);
         String markdown = String.format(BIZ_DEMAND_RECEIVED_MSG, title, operator, name, planReleaseDate, singleUrl);
+
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(title)
                 .content(markdown)
                 .receivers(receivers)
                 .build();
-        erpMessageClient.sendMarkdownMsg(markdownMsg);
+        try {
+            erpMessageClient.sendMarkdownMsg(markdownMsg);
+        } catch (Exception e){
+            log.error("bizDemandReceivedMsg 调用钉钉通知接口失败 error: " + e.getMessage(), e);
+        }
+
     }
 
     @Override
@@ -65,7 +71,11 @@ public class MessageComponentImpl implements MessageComponent {
                 .content(markdown)
                 .receivers(receivers)
                 .build();
-        erpMessageClient.sendMarkdownMsg(markdownMsg);
+        try {
+            erpMessageClient.sendMarkdownMsg(markdownMsg);
+        } catch (Exception e){
+            log.error("bizDemandRejectMsg 调用钉钉通知接口失败 error: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -82,7 +92,11 @@ public class MessageComponentImpl implements MessageComponent {
                 .content(markdown)
                 .receivers(receivers)
                 .build();
-        erpMessageClient.sendMarkdownMsg(markdownMsg);
+        try {
+            erpMessageClient.sendMarkdownMsg(markdownMsg);
+        } catch (Exception e){
+            log.error("bizDemandStatusChangeMsg 调用钉钉通知接口失败 error: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -97,7 +111,11 @@ public class MessageComponentImpl implements MessageComponent {
                 .content(markdown)
                 .receivers(receivers)
                 .build();
-        erpMessageClient.sendMarkdownMsg(markdownMsg);
+        try {
+            erpMessageClient.sendMarkdownMsg(markdownMsg);
+        } catch (Exception e){
+            log.error("bizDemandToReceiveMsg 调用钉钉通知接口失败 error: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -112,7 +130,11 @@ public class MessageComponentImpl implements MessageComponent {
                 .content(markdown)
                 .receivers(receivers)
                 .build();
-        erpMessageClient.sendMarkdownMsg(markdownMsg);
+        try {
+            erpMessageClient.sendMarkdownMsg(markdownMsg);
+        } catch (Exception e){
+            log.error("bizDemandInvalidMsg 调用钉钉通知接口失败 error: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -133,6 +155,10 @@ public class MessageComponentImpl implements MessageComponent {
                 .content(markdown)
                 .receivers(receivers)
                 .build();
-        erpMessageClient.sendMarkdownMsg(markdownMsg);
+        try {
+            erpMessageClient.sendMarkdownMsg(markdownMsg);
+        } catch (Exception e){
+            log.error("commentMsg 调用钉钉通知接口失败 error: " + e.getMessage(), e);
+        }
     }
 }

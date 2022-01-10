@@ -148,16 +148,12 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 取消产品关联
         productBizDemandMapper.deleteByBizDemandId(bizDemandId, userInfo.getAlias(), userInfo.getId());
 
-        try{
-            // 接收人通知
-            messageComponent.bizDemandInvalidMsg(bizDemandDO.getId(),
-                    userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
-                    bizDemandDO.getReceiveManId(),
-                    bizDemandDO.getName()
-            );
-        }catch (BaseBizRuntimeException e){
-            log.error("updateStatus 调用钉钉通知接口失败 error: " + e.getMessage(), e);
-        }
+        // 接收人通知
+        messageComponent.bizDemandInvalidMsg(bizDemandDO.getId(),
+                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
+                bizDemandDO.getReceiveManId(),
+                bizDemandDO.getName()
+        );
 
         return BaseResult.success(true);
     }
@@ -191,16 +187,11 @@ public class BizDemandServiceImpl implements BizDemandService {
             personComponent.add(recipientInfoList, bizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
         }
 
-        try {
-            // 接收人通知
-            messageComponent.bizDemandToReceiveMsg(bizDemandDO.getId(),
-                    bizDemandDO.getCreateMan(),
-                    bizDemandDO.getReceiveManId(),
-                    bizDemandDO.getName()
-            );
-        } catch (BaseBizRuntimeException e){
-            log.error("add 调用钉钉通知接口失败 error: " + e.getMessage(), e);
-        }
+        messageComponent.bizDemandToReceiveMsg(bizDemandDO.getId(),
+                bizDemandDO.getCreateMan(),
+                bizDemandDO.getReceiveManId(),
+                bizDemandDO.getName()
+        );
 
         return BaseResult.success(true);
     }
@@ -298,17 +289,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
-        try{
-            // 通知需求提交人
-            messageComponent.bizDemandReceivedMsg(bizDemandDO.getId(),
-                    userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
-                    bizDemandDO.getCreateManId(),
-                    bizDemandDO.getName(),
-                    PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
-            );
-        }catch (BaseBizRuntimeException e){
-            log.error("agree 调用钉钉通知接口失败 error: " + e.getMessage(), e);
-        }
+        // 通知需求提交人
+        messageComponent.bizDemandReceivedMsg(bizDemandDO.getId(),
+                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
+                bizDemandDO.getCreateManId(),
+                bizDemandDO.getName(),
+                PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
+        );
 
         return BaseResult.success(true);
     }
@@ -333,17 +320,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
-        try {
-            // 驳回通知
-            messageComponent.bizDemandRejectMsg(bizDemandDO.getId(),
-                    userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
-                    bizDemandDO.getCreateManId(),
-                    bizDemandDO.getName(),
-                    BizDemandReasonEnum.getTextByCode(bizDemandDO.getReason())
-            );
-        }catch (BaseBizRuntimeException e){
-            log.error("reject 调用钉钉通知接口失败 error: " + e.getMessage(), e);
-        }
+        // 驳回通知
+        messageComponent.bizDemandRejectMsg(bizDemandDO.getId(),
+                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
+                bizDemandDO.getCreateManId(),
+                bizDemandDO.getName(),
+                BizDemandReasonEnum.getTextByCode(bizDemandDO.getReason())
+        );
 
         return BaseResult.success(true);
     }
@@ -364,16 +347,12 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
-        try{
-            // 转交人通知
-            messageComponent.bizDemandToReceiveMsg(bizDemandDO.getId(),
-                    bizDemandDO.getCreateMan(),
-                    bizDemandDO.getReceiveManId(),
-                    bizDemandDO.getName()
-            );
-        }catch (BaseBizRuntimeException e){
-            log.error("transfer 调用钉钉通知接口失败 error: " + e.getMessage(), e);
-        }
+        // 转交人通知
+        messageComponent.bizDemandToReceiveMsg(bizDemandDO.getId(),
+                bizDemandDO.getCreateMan(),
+                bizDemandDO.getReceiveManId(),
+                bizDemandDO.getName()
+        );
 
         return BaseResult.success(true);
     }

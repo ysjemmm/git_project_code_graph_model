@@ -205,7 +205,9 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         Set<String> ownerIdSet = new HashSet<>(condition.getOwnerIdList());
         if(!ownerIdSet.isEmpty()){
             allMyStaffWithSelfList = allMyStaffWithSelfList.stream().filter(ownerIdSet::contains).collect(Collectors.toList());
-            if(allMyStaffWithSelfList.isEmpty()){allMyStaffWithSelfList.add(CommonConstant.NO_ONE_IN_LIST);}
+            if(allMyStaffWithSelfList.isEmpty()){
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
         }
         condition.setOwnerIdList(allMyStaffWithSelfList);
 
