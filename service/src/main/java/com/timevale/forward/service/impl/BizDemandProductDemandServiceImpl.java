@@ -201,7 +201,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         condition.setLinkedIdList(productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList()));
 
         // 仅展示自己及其下属负责的产品需求
-        List<String> allMyStaffWithSelfList = innerUserPersonClient.getAllMyStaffWithSelf("yangxu");
+        List<String> allMyStaffWithSelfList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
         Set<String> ownerIdSet = new HashSet<>(condition.getOwnerIdList());
         if(!ownerIdSet.isEmpty()){
             allMyStaffWithSelfList = allMyStaffWithSelfList.stream().filter(ownerIdSet::contains).collect(Collectors.toList());
