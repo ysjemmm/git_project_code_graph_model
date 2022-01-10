@@ -26,7 +26,6 @@ import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -89,8 +88,6 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 转换查询条件
         BizDemandListCondition bizDemandListCondition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
-        // 通配符处理
-        bizDemandListCondition.setName(StringUtil.toLikeStr(bizDemandListCondition.getName()));
 
         // 根据tabs添加不同的效果
         String ascription = bizDemandQueryList.getAscription();

@@ -50,6 +50,9 @@ public class ProductDemandVO extends ToString {
     @ApiModelProperty("负责人")
     private String owner;
 
+    @ApiModelProperty("负责人id")
+    private String ownerId;
+
     @ApiModelProperty("创建人id")
     private String createManId;
 

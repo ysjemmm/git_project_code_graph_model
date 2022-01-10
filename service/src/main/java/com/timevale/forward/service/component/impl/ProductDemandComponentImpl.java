@@ -113,6 +113,28 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     }
 
     @Override
+    public void updateProductDemandStatus(Long projectId,Integer status) {
+        List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectId);
+        if (CollectionUtils.isEmpty(exists)) {
+            log.info("更新产品需求,没有找到产品需求");
+            return;
+        }
+        List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
+                .collect(Collectors.toList());
+        if (ProjectStatusEnum.WAITING.getCode().equals(status)
+                || ProjectStatusEnum.SUSPEND.getCode().equals(status)) {
+            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode());
+        } else if (ProjectStatusEnum.PLANING.getCode().equals(status)
+                || ProjectStatusEnum.DEVING.getCode().equals(status)
+                || ProjectStatusEnum.TESTING.getCode().equals(status)) {
+            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.PROGRESS.getCode());
+        } else if (ProjectStatusEnum.RELEASED.getCode().equals(status)) {
+            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.ONLINE.getCode());
+        }
+        updateBizDemandStatusAsProductStatusChange(existProductDemandIds, false);
+    }
+
+    @Override
     public void updateBizDemandStatusAsProductStatusChange(List<Long> productDemandIds, boolean bizProductDemandUnLink) {
         if (CollectionUtils.isEmpty(productDemandIds)) {
             log.info("产品需求变化-更新业务需求,产品需求id不存在");
@@ -133,6 +155,10 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         log.info("产品需求变化-更新业务需求,产品需求id={},解除二者关联={}", productDemandIds, bizProductDemandUnLink);
         // 产品需求下的所有业务需求
         List<ProductBizDemandDO> bizDemands = productBizDemandMapper.getByProductDemandId(productDemandIds);
+        if(CollectionUtils.isEmpty(bizDemands)){
+            log.info("产品需求变化-更新业务需求,业务需求不存在");
+            return;
+        }
         // 业务需求id去重
         Map<Long, ProductBizDemandDO> bizDemandMap = bizDemands.stream()
                 .collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, k -> k, (v1, v2) -> v2));

@@ -32,6 +32,11 @@ public class ProductDemandListDO extends BaseDO {
      */
     private String owner;
 
+    /**
+     * 负责人ID
+     */
+    private String ownerId;
+
 
     /**
      * 产品线
