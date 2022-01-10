@@ -98,16 +98,16 @@ public class BizDemandServiceImpl implements BizDemandService {
         }else if(ascription.equals(AscriptionEnum.COPIER.toString())){
             bizDemandListCondition.setCopier(userInfo.getId());
         }else {
-            Set<String> createIdSet = new HashSet<>(bizDemandListCondition.getCreateManIdList());
-            Set<String> receiveIdSet = new HashSet<>(bizDemandListCondition.getReceiveManIdList());
             List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
             if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())){
+                Set<String> createIdSet = new HashSet<>(bizDemandListCondition.getCreateManIdList());
                 if(!createIdSet.isEmpty()){
                     teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
                     if(teamMemberIdList.isEmpty()){teamMemberIdList.add(CommonConstant.NO_ONE_IN_LIST);}
                 }
                 bizDemandListCondition.setCreateManIdList(teamMemberIdList);
             }else if(ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())){
+                Set<String> receiveIdSet = new HashSet<>(bizDemandListCondition.getReceiveManIdList());
                 if(!receiveIdSet.isEmpty()){
                     teamMemberIdList = teamMemberIdList.stream().filter(receiveIdSet::contains).collect(Collectors.toList());
                     if(teamMemberIdList.isEmpty()){teamMemberIdList.add(CommonConstant.NO_ONE_IN_LIST);}
