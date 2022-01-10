@@ -63,9 +63,9 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     private BizDemandComponent bizDemandComponent;
 
     @Resource
-    private  MessageComponent messageComponent;
+    private MessageComponent messageComponent;
 
-//    @Resource
+    //    @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Override
@@ -113,7 +113,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     }
 
     @Override
-    public void updateProductDemandStatus(Long projectId,Integer status) {
+    public void updateProductDemandStatus(Long projectId, Integer status) {
         List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectId);
         if (CollectionUtils.isEmpty(exists)) {
             log.info("更新产品需求,没有找到产品需求");
@@ -155,7 +155,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         log.info("产品需求变化-更新业务需求,产品需求id={},解除二者关联={}", productDemandIds, bizProductDemandUnLink);
         // 产品需求下的所有业务需求
         List<ProductBizDemandDO> bizDemands = productBizDemandMapper.getByProductDemandId(productDemandIds);
-        if(CollectionUtils.isEmpty(bizDemands)){
+        if (CollectionUtils.isEmpty(bizDemands)) {
             log.info("产品需求变化-更新业务需求,业务需求不存在");
             return;
         }
@@ -163,20 +163,20 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         Map<Long, ProductBizDemandDO> bizDemandMap = bizDemands.stream()
                 .collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, k -> k, (v1, v2) -> v2));
         Map<Integer, List<Long>> condition = new HashMap<>();
-        bizDemandMap.forEach((k,v)->{
+        bizDemandMap.forEach((k, v) -> {
             //被驳回和作废的业务需求不处理
             if (!BizDemandStatusEnum.REJECT.getCode().equals(v.getStatus()) && !BizDemandStatusEnum.INVALID.getCode().equals(v.getStatus())) {
                 //当前业务需求下的所有产品需求
                 List<ProductBizDemandDO> productDemands = productBizDemandMapper.getByBizDemandId(k);
                 if (bizProductDemandUnLink) {
                     //如果是解除关联:计算业务需求状态时需要过滤掉本次被解除的产品需求
-                    Integer minStauts = productDemands.stream().filter(i -> !productDemandIds.get(0).equals(i.getProductDemandId())).map(ProductBizDemandDO::getStatus)
+                    Integer minStatus = productDemands.stream().filter(i -> !productDemandIds.get(0).equals(i.getProductDemandId())).map(ProductBizDemandDO::getStatus)
                             .min(Comparator.comparingInt(o -> o)).orElse(null);
-                    if (minStauts == null) {
+                    if (minStatus == null) {
                         //业务需求只关联一个产品需求后且被解除
                         condition.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), value -> new ArrayList<>()).add(k);
                     } else {
-                        processUpdateStatus(condition, minStauts, k);
+                        processUpdateStatus(condition, minStatus, k);
                     }
                 } else {
                     Integer minStauts = productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
@@ -191,30 +191,32 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             bizDemandMapper.updateByIds(v, k);
         });
         log.info("产品需求变化-更新业务需求:产品需求id={},需要更新的业务需求状态和id={}", productDemandIds, condition);
-        sendDingMsg(condition,bizDemandMap);
+        sendDingMsg(condition, bizDemandMap);
     }
-    private void sendDingMsg(Map<Integer, List<Long>> condition,Map<Long, ProductBizDemandDO> bizDemandMap){
+
+    private void sendDingMsg(Map<Integer, List<Long>> condition, Map<Long, ProductBizDemandDO> bizDemandMap) {
         condition.forEach((k, v) -> {
-            if(BizDemandStatusEnum.INCLUDE_PROJECT.getCode().equals(k)
-                    ||BizDemandStatusEnum.PROJECTING.getCode().equals(k)
-                    ||BizDemandStatusEnum.AVAILABLE.getCode().equals(k)){
-                v.forEach(a->{
+            if (BizDemandStatusEnum.INCLUDE_PROJECT.getCode().equals(k)
+                    || BizDemandStatusEnum.PROJECTING.getCode().equals(k)
+                    || BizDemandStatusEnum.AVAILABLE.getCode().equals(k)) {
+                v.forEach(a -> {
                     ProductBizDemandDO bizDemand = bizDemandMap.get(a);
-                    log.info("发送钉钉消息,更新前状态={},更新后状态={},业务需求id={}",bizDemand.getStatus(),k,a);
-                    Date projectEndDate = bizDemandComponent.getProjectEndDate(a);
-                    try {
+                    if(!Objects.equals(bizDemand.getStatus(),k)){
+                        // 业务需求状态发生变化,发送消息
+                        log.info("发送钉钉消息,更新前状态={},更新后状态={},业务需求id={}", bizDemand.getStatus(), k, a);
+                        Date projectEndDate = bizDemandComponent.getProjectEndDate(a);
                         messageComponent.bizDemandStatusChangeMsg(a,
                                 bizDemand.getCreateManId(),
                                 bizDemand.getName(),
                                 BizDemandStatusEnum.getTextByCode(k),
                                 projectEndDate);
-                    }catch (Exception e){
-                        log.error("发送钉钉消息失败",e);
                     }
+
                 });
             }
         });
     }
+
     private void processUpdateStatus(Map<Integer, List<Long>> condition, Integer minStauts, Long bizDemandId) {
         if (minStauts != null && !minStauts.equals(ProductDemandStatusEnum.INVALID.getCode())) {
             if (minStauts.equals(ProductDemandStatusEnum.WAITING.getCode())

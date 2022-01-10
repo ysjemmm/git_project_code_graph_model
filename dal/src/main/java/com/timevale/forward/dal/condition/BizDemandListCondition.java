@@ -79,6 +79,12 @@ public class BizDemandListCondition {
      */
     private String copier;
 
-
+    /**
+     * 产品需求id
+     */
     private Long productDemandId;
+    /**
+     * 业务需求id
+     */
+    private List<Long> bizDemandIds;
 }

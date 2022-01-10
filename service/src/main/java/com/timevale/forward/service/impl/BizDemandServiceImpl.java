@@ -1,7 +1,6 @@
 package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
@@ -166,7 +165,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 判断主题是否唯一
         BizDemandDO checkBizDemandDO = bizDemandMapper.selectByName(bizDemandAddReq.getName());
         if(checkBizDemandDO != null){
-            throw new BaseBizRuntimeException("已经有相同的主题名称");
+            throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
         }
 
         // 新增业务需求
@@ -178,7 +177,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         List<FileAddReq> fileIdList = bizDemandAddReq.getFileList();
         if(!fileIdList.isEmpty()){
-            fileComponent.update(fileIdList, bizDemandDO.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
+            fileComponent.add(fileIdList, bizDemandDO.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
         }
 
         // 添加抄送人

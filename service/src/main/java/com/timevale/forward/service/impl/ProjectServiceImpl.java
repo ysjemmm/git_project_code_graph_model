@@ -300,7 +300,10 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(ProjectLinkProductDemandQueryList productDemandQueryList) {
         log.info("项目-产品需求匹配,接收参数:productDemandQueryList={}", productDemandQueryList);
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
-        condition.setMatchProductDemand(true);
+        // 过滤掉已经关联的产品需求
+        List<Long> productDemandIds = projectProductDemandMapper.getByProjectId(condition.getProjectId())
+                .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
+        condition.setProductDemandIds(productDemandIds);
         condition.setStatus(Lists.newArrayList(ProductDemandStatusEnum.WAITING.getCode()
                 , ProductDemandStatusEnum.INCLUDED.getCode()
                 , ProductDemandStatusEnum.PROGRESS.getCode()
@@ -333,7 +336,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
             projectProductDemandComponent.batchInsert(projectDO.getId(), productDemandIds);
 
-            productDemandComponent.updateProductDemandStatus(projectDO.getId(),projectDO.getStatus());
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
         } else {
             ProjectProductDemandDO projectProductDemandDO = new ProjectProductDemandDO();
             projectProductDemandDO.setIsDeleted(true);
@@ -405,7 +408,7 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("更新项目信息:nodeMap={},,projectDO={}", nodeMap, projectDO);
         projectMapper.update(projectDO);
 
-        productDemandComponent.updateProductDemandStatus(projectDO.getId(),projectDO.getStatus());
+        productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
 
     }
 

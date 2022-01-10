@@ -20,6 +20,9 @@ public class ProjectLinkProductDemandQueryList extends QueryBase {
     @ApiModelProperty("id")
     private Long id;
 
+    @ApiModelProperty("projectId")
+    private Long projectId;
+
     @ApiModelProperty("名称")
     private String name;
 

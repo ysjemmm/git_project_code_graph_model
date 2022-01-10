@@ -51,19 +51,18 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> page(ProjectListCondition condition,List<Long> projectIds) {
-        PageQueryResult<ProjectVO> queryResult = new PageQueryResult<>();
         // 查找产品经理
         if (CollectionUtils.isNotEmpty(condition.getPds())) {
             projectIds = personMapper.getProjectIds(condition.getPds(), projectIds, PersonTypeEnum.PROJECT_PD.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(queryResult);
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
         //团队成员
         if (CollectionUtils.isNotEmpty(condition.getTeamMembers())) {
             projectIds = personMapper.getProjectIds(condition.getTeamMembers(), projectIds, PersonTypeEnum.PROJECT_MEMBER.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(queryResult);
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
         //产品线业务域
@@ -71,7 +70,7 @@ public class ProjectComponentImpl implements ProjectComponent {
                 || CollectionUtils.isNotEmpty(condition.getBizDomainIds())) {
             projectIds = projectMapper.getProjectIds(projectIds, condition.getProductLineIds(), condition.getBizDomainIds());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(queryResult);
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
         buildConditionBeforeQuery(projectIds,condition);
@@ -79,7 +78,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         List<ProjectListDO> projectDO = projectMapper.list(condition);
         projectIds = projectDO.stream().map(ProjectListDO::getId).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(projectIds)) {
-            return BaseResult.success(queryResult);
+            return BaseResult.success(ResultUtil.pageEmpty());
         }
         //2.填充人员信息
         Map<Long, List<PersonDO>> pdMap = personMapper.get(projectIds, PersonTypeEnum.PROJECT_PD.getCode())
@@ -117,11 +116,11 @@ public class ProjectComponentImpl implements ProjectComponent {
             a.setStatusName(ProjectStatusEnum.getTextByCode(a.getStatus()));
             a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
         });
-
+        PageQueryResult<ProjectVO> pageQueryResult = new PageQueryResult<>();
         PageInfo<ProjectListDO> pageInfo = new PageInfo<>(projectDO);
-        queryResult.setResultList(projectVO);
-        ResultUtil.fillPageInfo(queryResult, pageInfo);
-        return BaseResult.success(queryResult);
+        pageQueryResult.setResultList(projectVO);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
 
     }
     private void buildConditionBeforeQuery(List<Long>projectIds,ProjectListCondition condition){

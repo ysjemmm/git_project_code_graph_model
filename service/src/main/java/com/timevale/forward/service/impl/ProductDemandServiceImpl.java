@@ -6,12 +6,10 @@ import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
+import com.timevale.forward.dal.condition.ProductBizDemandCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
@@ -97,12 +95,14 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     private ProductBizDemandComponent productBizDemandComponent;
 
     @Resource
-    BizDemandComponent bizDemandComponent;
+    private BizDemandComponent bizDemandComponent;
+
+    @Resource
+    private ProductBizDemandMapper productBizDemandMapper;
 
 
     @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
-
         log.info("产品需求接收参数:{}", productDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
@@ -119,7 +119,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             log.info("我和我的下属:{},过滤后:{}", allMyStaffWithSelf, filtered);
             if(CollectionUtils.isEmpty(filtered)){
                 //所选人员不在我的团队中
-                return BaseResult.success(new PageQueryResult<>());
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
             condition.setOwnerIds(filtered);
         } else if (AscriptionEnum.DEPARTMENT.name().equals(productDemandQueryList.getAscription())) {
@@ -133,7 +133,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             log.info("用户默认部门id:{},同部门人员:{},过滤后:{}", defaultGroup.getGroupId(), accountIds, filtered);
             if(CollectionUtils.isEmpty(filtered)){
                 //所选人员不在我的部门中
-                return BaseResult.success(new PageQueryResult<>());
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
             condition.setOwnerIds(filtered);
         } else if (AscriptionEnum.COPIER.name().equals(productDemandQueryList.getAscription())) {
@@ -147,7 +147,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
         });
         PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
-
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(productDemandVO);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
@@ -317,7 +316,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
         if(CollectionUtils.isEmpty(filtered)){
             //所选人员不在我和我的下属中
-            return BaseResult.success(new PageQueryResult<>());
+            return BaseResult.success(ResultUtil.pageEmpty());
         }
         condition.setReceiveManIdList(filtered);
         List<Integer> status = productDemandLinkBizDemandQueryList.getStatusList();
@@ -329,6 +328,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     , BizDemandStatusEnum.REJECT.getCode()
                     , BizDemandStatusEnum.AVAILABLE.getCode()));
         }
+        // 过滤掉已经关联的业务需求
+        List<ProductBizDemandDO> productBizDemand = productBizDemandMapper.select(ProductBizDemandCondition.builder()
+                .productDemandId(condition.getProductDemandId())
+                .isDeleted(false)
+                .build());
+        List<Long> bizDemandIds = productBizDemand.stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
+        condition.setBizDemandIds(bizDemandIds);
         PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         return bizDemandComponent.page(condition);
     }
@@ -343,6 +349,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(bizDemandLinkReq.getProductDemandId()), false);
         } else {
             productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(bizDemandLinkReq.getProductDemandId()), true);
+
             ProductBizDemandDO productDemandDO = new ProductBizDemandDO();
             productDemandDO.setIsDeleted(true);
             productDemandDO.setProductDemandId(bizDemandLinkReq.getProductDemandId());

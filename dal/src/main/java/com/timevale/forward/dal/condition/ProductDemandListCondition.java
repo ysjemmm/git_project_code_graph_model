@@ -22,6 +22,11 @@ public class ProductDemandListCondition extends QueryBase {
     private Long id;
 
     /**
+     * projectId
+     */
+    private Long projectId;
+
+    /**
      * 名称
      */
     private String name;
@@ -78,11 +83,10 @@ public class ProductDemandListCondition extends QueryBase {
      * 修改时间结束
      */
     private Date modifyDateEnd;
+
     /**
-     * 项目-产品列表弹框 找出没有被关联的产品需求
+     * 产品id
      */
-    private Boolean matchProductDemand;
-
-
+    private List<Long> productDemandIds;
 
 }

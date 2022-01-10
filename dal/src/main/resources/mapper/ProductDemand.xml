@@ -15,7 +15,6 @@
             ,e.user_name copier
         </if>
         from product_demand a
-        left join project_product_demand b on a.id=b.product_demand_id and b.is_deleted =false
         left join product_line c on a.product_line_id=c.id and c.is_deleted =false
         left join biz_domain d on c.biz_domain_id=d.id and d.is_deleted =false
         <if test="copierId != null and copierId != ''">
@@ -61,7 +60,12 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="matchProductDemand != null ">and b.project_id  is null</if>
+            <if test="productDemandIds!=null and productDemandIds.size()>0">
+                and a.id not in
+                <foreach collection="productDemandIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             and  a.is_deleted =false
         </where>
     </select>
