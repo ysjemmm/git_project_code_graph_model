@@ -31,12 +31,12 @@ public class MessageComponentImpl implements MessageComponent {
     @Value("${domain_name:http://forward-front-forward-v1.projectk8s.tsign.cn/}")
     private String domainName;
 
-    private static final String BIZ_DEMAND_RECEIVED_MSG = "### %s  \n  **%s**接收了您提交的业务需求 **%s**，预期上线时间为 **%s**  \n\n  [查看详情](%s)";
-    private static final String BIZ_DEMAND_REJECT_MSG = "### %s  \n  **%s**驳回了您提交的业务需求 **%s**，驳回理由是 **%s**  \n\n  [查看详情](%s)";
-    private static final String BIZ_DEMAND_STATUS_CHANGE_MSG = "### %s  \n  您提交的业务需求 **%s** 状态已变为 **%s**，项目发布时间为 **%s**  \n\n  [查看详情](%s)";
-    private static final String BIZ_DEMAND_TO_RECEIVE_MSG = "### %s  \n  您收到了**%s**提交的业务需求 **%s**  \n\n  [查看详情](%s)";
-    private static final String BIZ_DEMAND_INVALID_MSG = "### %s  \n  **%s**作废了业务需求 **%s**  \n\n  [查看详情](%s)";
-    private static final String COMMENT_MSG = "### %s  \n  **%s**评论了%s **%s**  \n  > %s  \n\n  [查看详情](%s)";
+    private static final String BIZ_DEMAND_RECEIVED_MSG = "### %s  \n  **%s**接收了您提交的业务需求 **%s**，预期上线时间为 **%s**  \n\n  ***  \n  [查看详情](%s)";
+    private static final String BIZ_DEMAND_REJECT_MSG = "### %s  \n  **%s**驳回了您提交的业务需求 **%s**，驳回理由是 **%s**  \n\n  ***  \n  [查看详情](%s)";
+    private static final String BIZ_DEMAND_STATUS_CHANGE_MSG = "### %s  \n  您提交的业务需求 **%s** 状态已变为 **%s**，项目发布时间为 **%s**  \n\n  ***  \n  [查看详情](%s)";
+    private static final String BIZ_DEMAND_TO_RECEIVE_MSG = "### %s  \n  您收到了**%s**提交的业务需求 **%s**  \n\n  ***  \n  [查看详情](%s)";
+    private static final String BIZ_DEMAND_INVALID_MSG = "### %s  \n  **%s**作废了业务需求 **%s**  \n\n ***  \n  [查看详情](%s)";
+    private static final String COMMENT_MSG = "### %s  \n  **%s**评论了%s **%s**  \n  > %s  \n\n  ***  \n  [查看详情](%s)";
     private static final String PARAM = "%s?id=%d&type=check";
 
     @Override
