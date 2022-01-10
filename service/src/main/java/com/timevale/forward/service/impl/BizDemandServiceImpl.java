@@ -107,11 +107,13 @@ public class BizDemandServiceImpl implements BizDemandService {
             if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())){
                 if(!createIdSet.isEmpty()){
                     teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
+                    if(teamMemberIdList.isEmpty()){teamMemberIdList.add(CommonConstant.NO_ONE_IN_LIST);}
                 }
                 bizDemandListCondition.setCreateManIdList(teamMemberIdList);
             }else if(ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())){
                 if(!receiveIdSet.isEmpty()){
                     teamMemberIdList = teamMemberIdList.stream().filter(receiveIdSet::contains).collect(Collectors.toList());
+                    if(teamMemberIdList.isEmpty()){teamMemberIdList.add(CommonConstant.NO_ONE_IN_LIST);}
                 }
                 bizDemandListCondition.setReceiveManIdList(teamMemberIdList);
             }

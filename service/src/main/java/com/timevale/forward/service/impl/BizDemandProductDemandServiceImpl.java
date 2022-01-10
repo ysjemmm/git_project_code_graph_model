@@ -201,9 +201,13 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         condition.setLinkedIdList(productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList()));
 
         // 仅展示自己及其下属负责的产品需求
-        Set<String> staffWithSelfSet = new HashSet<>(innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId()));
-        List<String> ownerIdList = condition.getOwnerIdList().stream().filter(staffWithSelfSet::contains).collect(Collectors.toList());
-        condition.setOwnerIdList(ownerIdList);
+        List<String> allMyStaffWithSelfList = innerUserPersonClient.getAllMyStaffWithSelf("yangxu");
+        Set<String> ownerIdSet = new HashSet<>(condition.getOwnerIdList());
+        if(!ownerIdSet.isEmpty()){
+            allMyStaffWithSelfList = allMyStaffWithSelfList.stream().filter(ownerIdSet::contains).collect(Collectors.toList());
+            if(allMyStaffWithSelfList.isEmpty()){allMyStaffWithSelfList.add(CommonConstant.NO_ONE_IN_LIST);}
+        }
+        condition.setOwnerIdList(allMyStaffWithSelfList);
 
         // 开始分页
         PageHelper.startPage(bizDemandSubProductDemandQueryList.pageNum, bizDemandSubProductDemandQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
