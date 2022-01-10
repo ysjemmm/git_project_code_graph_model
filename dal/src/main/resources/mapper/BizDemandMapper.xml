@@ -18,7 +18,7 @@
         <if test="productLineId!=null">
             product_line_id = #{productLineId},
         </if>
-        <if test="dataIndicators!=null and dataIndicators!='' ">
+        <if test="dataIndicators!=null">
             data_indicators = #{dataIndicators},
         </if>
         <if test="targetCustomer!=null  and  targetCustomer!='' ">
@@ -30,7 +30,7 @@
         <if test="deptId!=null">
             dept_id = #{deptId},
         </if>
-        <if test="desc!=null  and desc!='' ">
+        <if test="desc!=null">
             `desc` = #{desc},
         </if>
         <if test="status!=null">
