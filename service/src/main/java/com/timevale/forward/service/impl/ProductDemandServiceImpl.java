@@ -225,25 +225,29 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             throw new BaseBizRuntimeException("该产品需求名称已存在,请修改后重试");
         }
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        ProductDemandDO demandDO = ProductDemandCopier.INSTANCE.convert(productDemandAddReq);
-        demandDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        demandDO.setCreateManId(userInfo.getId());
-        demandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
-        demandDO.setType(JSON.toJSONString(productDemandAddReq.getTypes()));
-        productDemandMapper.insert(demandDO);
+        ProductDemandDO productDemand = ProductDemandCopier.INSTANCE.convert(productDemandAddReq);
+        productDemand.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        productDemand.setCreateManId(userInfo.getId());
+        productDemand.setStatus(ProductDemandStatusEnum.WAITING.getCode());
+        productDemand.setType(JSON.toJSONString(productDemandAddReq.getTypes()));
+        productDemandMapper.insert(productDemand);
 
         if (CollectionUtils.isNotEmpty(productDemandAddReq.getFiles())) {
-            fileComponent.add(productDemandAddReq.getFiles(), demandDO.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
+            fileComponent.add(productDemandAddReq.getFiles(), productDemand.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
         }
         if (CollectionUtils.isNotEmpty(productDemandAddReq.getRecipients())) {
-            personComponent.add(productDemandAddReq.getRecipients(), demandDO.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+            personComponent.add(productDemandAddReq.getRecipients(), productDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
         }
         if (!CollectionUtils.isEmpty(productDemandAddReq.getBizDemandIds())) {
-            productBizDemandComponent.batchInsert(demandDO.getId(), productDemandAddReq.getBizDemandIds());
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(demandDO.getId()), false);
+            productBizDemandComponent.batchInsert(productDemand.getId(), productDemandAddReq.getBizDemandIds());
         }
         if (productDemandAddReq.getProjectId() != null) {
-            projectProductDemandComponent.batchInsert(productDemandAddReq.getProjectId(), Lists.newArrayList(demandDO.getId()));
+            ProjectDO projectDO = projectMapper.get(productDemandAddReq.getProjectId());
+            if (projectDO == null) {
+                throw new BaseBizRuntimeException("找不到该项目");
+            }
+            projectProductDemandComponent.batchInsert(productDemandAddReq.getProjectId(), Lists.newArrayList(productDemand.getId()));
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(),projectDO.getStatus());
         }
         return BaseResult.success(true);
     }

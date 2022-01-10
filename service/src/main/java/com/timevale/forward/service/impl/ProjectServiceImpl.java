@@ -78,16 +78,11 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectComponent projectComponent;
 
     @Resource
-    private ProductBizDemandMapper productBizDemandMapper;
-
-    @Resource
-    private BizDemandMapper bizDemandMapper;
-
-    @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
 
     @Resource
     private PersonMapper personMapper;
+
 
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -338,7 +333,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
             projectProductDemandComponent.batchInsert(projectDO.getId(), productDemandIds);
 
-            updateProjectBizDemandStatus(projectDO);
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(),projectDO.getStatus());
         } else {
             ProjectProductDemandDO projectProductDemandDO = new ProjectProductDemandDO();
             projectProductDemandDO.setIsDeleted(true);
@@ -410,28 +405,8 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("更新项目信息:nodeMap={},,projectDO={}", nodeMap, projectDO);
         projectMapper.update(projectDO);
 
-        updateProjectBizDemandStatus(projectDO);
+        productDemandComponent.updateProductDemandStatus(projectDO.getId(),projectDO.getStatus());
 
     }
 
-    private void updateProjectBizDemandStatus(ProjectDO projectDO) {
-        List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectDO.getId());
-        if (CollectionUtils.isEmpty(exists)) {
-            log.info("更新项目信息,没有找到产品需求");
-            return;
-        }
-        List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
-                .collect(Collectors.toList());
-        if (ProjectStatusEnum.WAITING.getCode().equals(projectDO.getStatus())
-                || ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus())) {
-            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode());
-        } else if (ProjectStatusEnum.PLANING.getCode().equals(projectDO.getStatus())
-                || ProjectStatusEnum.DEVING.getCode().equals(projectDO.getStatus())
-                || ProjectStatusEnum.TESTING.getCode().equals(projectDO.getStatus())) {
-            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.PROGRESS.getCode());
-        } else if (ProjectStatusEnum.RELEASED.getCode().equals(projectDO.getStatus())) {
-            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.ONLINE.getCode());
-        }
-        productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds, false);
-    }
 }
