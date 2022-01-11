@@ -382,8 +382,9 @@ public class ProjectServiceImpl implements ProjectService {
                 .stream()
                 .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
         ProjectNodeDO node = null;
+        Integer oriStatus = projectDO.getStatus();
         if ((node = nodeMap.get(ProjectStageEnum.TEST_RELEASE.getText())) != null && node.getActualDate() != null) {
-            if (!enable && ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus())) {
+            if (!enable && ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
                 // 编辑项目时，当状态是暂停,不修改项目状态
                 throw new BaseBizRuntimeException("项目状态为暂停时,不能填写发布正式的实际时间");
             }
@@ -412,6 +413,10 @@ public class ProjectServiceImpl implements ProjectService {
             projectDO.setActualStartDate(node.getActualDate());
         } else if ((node = nodeMap.get(ProjectStageEnum.DEV_START.getText())) != null && node.getActualDate() != null) {
             projectDO.setActualStartDate(node.getActualDate());
+        }
+        if (!enable && ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
+            // 编辑项目时，当状态是暂停,不修改项目状态
+            projectDO.setStatus(oriStatus);
         }
         log.info("更新项目信息:nodeMap={},,projectDO={},enable={}", nodeMap, projectDO,enable);
         projectMapper.update(projectDO);
