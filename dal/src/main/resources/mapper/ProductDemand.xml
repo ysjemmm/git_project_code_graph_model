@@ -15,8 +15,8 @@
             ,e.user_name copier
         </if>
         from product_demand a
-        left join product_line c on a.product_line_id=c.id and c.is_deleted =false
-        left join biz_domain d on c.biz_domain_id=d.id and d.is_deleted =false
+        left join product_line c on a.product_line_id=c.id
+        left join biz_domain d on c.biz_domain_id=d.id
         <if test="copierId != null and copierId != ''">
             left join person e on a.id=e.product_demand_id and e.type =20 and e.is_deleted =false
         </if>
