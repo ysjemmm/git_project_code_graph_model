@@ -33,10 +33,7 @@ import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -175,7 +172,7 @@ public class ProjectServiceImpl implements ProjectService {
             projectMapper.update(projectDO);
             return BaseResult.success(true);
         }
-        fillInfo(projectNode, projectDO);
+        fillInfo(projectNode, projectDO, true);
         return BaseResult.success(true);
     }
 
@@ -233,7 +230,9 @@ public class ProjectServiceImpl implements ProjectService {
         projectDO.setPmName(projectModifyReq.getPm().getUserName());
         projectDO.setPmId(projectModifyReq.getPm().getUserId());
         List<ProjectNodeDO> projectNodeDO = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
-        fillInfo(projectNodeDO, projectDO);
+        Integer status = projectMapper.get(projectModifyReq.getId()).getStatus();
+        projectDO.setStatus(status);
+        fillInfo(projectNodeDO, projectDO, false);
 
         // 产品线
         projectProductLineComponent.update(projectDO.getProductLineIds(), projectDO.getId());
@@ -378,12 +377,18 @@ public class ProjectServiceImpl implements ProjectService {
         return BaseResult.success(pageQueryResult);
     }
 
-    private void fillInfo(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
+    private void fillInfo(List<ProjectNodeDO> projectNodes, ProjectDO projectDO, boolean enable) {
         Map<String, ProjectNodeDO> nodeMap = projectNodes
                 .stream()
                 .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
         ProjectNodeDO node = null;
+        Integer oriStatus = projectDO.getStatus();
         if ((node = nodeMap.get(ProjectStageEnum.TEST_RELEASE.getText())) != null && node.getActualDate() != null) {
+            List<Date> nullDate = projectNodes.stream().map(ProjectNodeDO::getActualDate)
+                    .filter(Objects::isNull).collect(Collectors.toList());
+            if(!CollectionUtils.isEmpty(nullDate)){
+                throw new BaseBizRuntimeException("请填写完其他节点的实际时间后,再填写发布正式的实际时间");
+            }
             projectDO.setStatus(ProjectStatusEnum.RELEASED.getCode());
             projectDO.setActualEndDate(node.getActualDate());
         } else if ((node = nodeMap.get(ProjectStageEnum.TEST_START.getText())) != null && node.getActualDate() != null) {
@@ -405,10 +410,16 @@ public class ProjectServiceImpl implements ProjectService {
         } else if ((node = nodeMap.get(ProjectStageEnum.DEV_START.getText())) != null && node.getActualDate() != null) {
             projectDO.setActualStartDate(node.getActualDate());
         }
-        log.info("更新项目信息:nodeMap={},,projectDO={}", nodeMap, projectDO);
+        if (!enable && ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
+            // 编辑项目时，当状态是暂停,不修改项目状态
+            projectDO.setStatus(oriStatus);
+        }
+        log.info("更新项目信息:nodeMap={},,projectDO={},enable={}", nodeMap, projectDO,enable);
         projectMapper.update(projectDO);
-
-        productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
+        if (enable || !ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
+            // 启用项目时或当状态不是暂停,更新产品需求状态
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
+        }
 
     }
 
