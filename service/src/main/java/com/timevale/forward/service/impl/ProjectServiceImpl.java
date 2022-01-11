@@ -382,8 +382,11 @@ public class ProjectServiceImpl implements ProjectService {
                 .stream()
                 .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
         ProjectNodeDO node = null;
-        Integer oriStatus = projectDO.getStatus();
         if ((node = nodeMap.get(ProjectStageEnum.TEST_RELEASE.getText())) != null && node.getActualDate() != null) {
+            if (!enable && ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus())) {
+                // 编辑项目时，当状态是暂停,不修改项目状态
+                throw new BaseBizRuntimeException("项目状态为暂停时,不能填写发布正式的实际时间");
+            }
             List<Date> nullDate = projectNodes.stream().map(ProjectNodeDO::getActualDate)
                     .filter(Objects::isNull).collect(Collectors.toList());
             if(!CollectionUtils.isEmpty(nullDate)){
@@ -410,17 +413,10 @@ public class ProjectServiceImpl implements ProjectService {
         } else if ((node = nodeMap.get(ProjectStageEnum.DEV_START.getText())) != null && node.getActualDate() != null) {
             projectDO.setActualStartDate(node.getActualDate());
         }
-        if (!enable && ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
-            // 编辑项目时，当状态是暂停,不修改项目状态
-            projectDO.setStatus(oriStatus);
-        }
         log.info("更新项目信息:nodeMap={},,projectDO={},enable={}", nodeMap, projectDO,enable);
         projectMapper.update(projectDO);
-        if (enable || !ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
-            // 启用项目时或当状态不是暂停,更新产品需求状态
-            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
-        }
 
+        productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
     }
 
 }
