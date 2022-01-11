@@ -421,7 +421,10 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("更新项目信息:nodeMap={},,projectDO={},enable={}", nodeMap, projectDO,enable);
         projectMapper.update(projectDO);
 
-        productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
+        if (enable || !ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
+            // 启用项目时或当状态不是暂停,更新产品需求状态
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
+        }
     }
 
 }
