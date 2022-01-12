@@ -90,12 +90,16 @@ public class ProjectServiceImpl implements ProjectService {
         //1.查找我或我的团队所属项目id
         if (AscriptionEnum.CURRENT_USER.name().equals(projectQueryList.getAscription())) {
             projectIds = personMapper.getProjectIds(Lists.newArrayList(currentUser), null, PersonTypeEnum.PROJECT_MEMBER.getCode());
-
-
+            if(CollectionUtils.isEmpty(projectIds)){
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
         } else if (AscriptionEnum.TEAM.name().equals(projectQueryList.getAscription())) {
             List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(currentUser);
             log.info("我和我的下属:{}", allMyStaffWithSelf);
             projectIds = personMapper.getProjectIds(allMyStaffWithSelf, null, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            if(CollectionUtils.isEmpty(projectIds)){
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
         }
 
         return projectComponent.page(condition, projectIds);

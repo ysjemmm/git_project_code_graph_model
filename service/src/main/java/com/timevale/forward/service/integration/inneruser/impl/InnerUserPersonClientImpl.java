@@ -5,7 +5,6 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.security.facade.api.RpcPersonService;
 import com.timevale.security.facade.request.AccountRequest;
-import com.timevale.security.facade.request.GroupRequest;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -78,16 +77,19 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
         throw new BaseBizRuntimeException("调用内部用户中心失败! " + accountId);
     }
 
+    /**
+     *
+     * @param groupId groupId
+     * @return 部门及子部门员工(含离职)
+     */
     @Override
     public List<String> getAllByGroupId(String groupId) {
         if (StringUtils.isEmpty(groupId)) {
             throw new BaseBizRuntimeException("部门id为空! " + groupId);
         }
-        GroupRequest groupRequest = new GroupRequest();
-        groupRequest.setGroupId(groupId);
         List<String> accountIds = new ArrayList<>();
         try {
-            BaseResult<List<BaseInfoResponse>> personInGroup = rpcPersonService.getAllByGroupId(groupRequest);
+            BaseResult<List<BaseInfoResponse>> personInGroup = rpcPersonService.getAllStaffsByGroupId(groupId);
             if (personInGroup.ifSuccess() && !CollectionUtils.isEmpty(personInGroup.getData())) {
                 personInGroup.getData().forEach(t -> {
                     accountIds.add(t.getAccount());
