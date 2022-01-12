@@ -379,8 +379,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     private void fillInfo(List<ProjectNodeDO> projectNodes, ProjectDO projectDO, boolean enable) {
         Map<String, ProjectNodeDO> nodeMap = projectNodes
-                .stream()
-                .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
+                .stream().collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
         Integer oriStatus = projectDO.getStatus();
         ProjectNodeDO releaseNode = nodeMap.get(ProjectStageEnum.TEST_RELEASE.getText());
         ProjectNodeDO node = null;
