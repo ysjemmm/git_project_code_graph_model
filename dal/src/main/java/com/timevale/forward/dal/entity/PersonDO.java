@@ -12,19 +12,9 @@ import lombok.EqualsAndHashCode;
 public class PersonDO extends BaseDO {
 
     /**
-     * 项目id
+     * 主体id
      */
-    private Long projectId;
-
-    /**
-     * 产品需求id
-     */
-    private Long productDemandId;
-
-    /**
-     * 业务需求id
-     */
-    private Long bizDemandId;
+    private Long mainId;
 
     /**
      * 用户名

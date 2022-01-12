@@ -4,7 +4,6 @@ import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.facade.api.request.PersonAddReq;
-import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.PersonCopier;
@@ -86,14 +85,7 @@ public class PersonComponentImpl implements PersonComponent {
     public List<PersonDO> select(Long mainId, Integer type) {
         PersonListCondition condition = PersonListCondition.builder().build();
         condition.setType(type);
-        if (PersonTypeEnum.PROJECT_PD.getCode().equals(type)
-                || PersonTypeEnum.PROJECT_MEMBER.getCode().equals(type)) {
-            condition.setProjectId(mainId);
-        } else if (PersonTypeEnum.PRODUCT_DEMAND_CC.getCode().equals(type)) {
-            condition.setProductDemandId(mainId);
-        } else if (PersonTypeEnum.BIZ_DEMAND_CC.getCode().equals(type)) {
-            condition.setBizDemandId(mainId);
-        }
+        condition.setMainId(mainId);
         return personMapper.select(condition);
     }
 
@@ -101,34 +93,17 @@ public class PersonComponentImpl implements PersonComponent {
     private void fillInfo(Long mainId, Integer type, List<PersonDO> personDO) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         personDO.forEach(t -> {
-            t.setProjectId(0L);
-            t.setProductDemandId(0L);
-            t.setBizDemandId(0L);
             t.setType(type);
+            t.setMainId(mainId);
             t.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
             t.setCreateManId(userInfo.getId());
-            if (PersonTypeEnum.PROJECT_PD.getCode().equals(type)
-                    || PersonTypeEnum.PROJECT_MEMBER.getCode().equals(type)) {
-                t.setProjectId(mainId);
-            } else if (PersonTypeEnum.PRODUCT_DEMAND_CC.getCode().equals(type)) {
-                t.setProductDemandId(mainId);
-            } else if (PersonTypeEnum.BIZ_DEMAND_CC.getCode().equals(type)) {
-                t.setBizDemandId(mainId);
-            }
         });
     }
 
     private void delete(List<PersonAddReq> list, Long mainId, Integer type) {
         if (CollectionUtils.isEmpty(list)) {
             PersonDO personDO = new PersonDO();
-            if (PersonTypeEnum.PROJECT_PD.getCode().equals(type)
-                    || PersonTypeEnum.PROJECT_MEMBER.getCode().equals(type)) {
-                personDO.setProjectId(mainId);
-            } else if (PersonTypeEnum.PRODUCT_DEMAND_CC.getCode().equals(type)) {
-                personDO.setProductDemandId(mainId);
-            } else if (PersonTypeEnum.BIZ_DEMAND_CC.getCode().equals(type)) {
-                personDO.setBizDemandId(mainId);
-            }
+            personDO.setMainId(mainId);
             personDO.setType(type);
             personDO.setIsDeleted(true);
             personMapper.update(personDO);

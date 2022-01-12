@@ -93,6 +93,7 @@ public class ProjectServiceImpl implements ProjectService {
             if(CollectionUtils.isEmpty(projectIds)){
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
+
         } else if (AscriptionEnum.TEAM.name().equals(projectQueryList.getAscription())) {
             List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(currentUser);
             log.info("我和我的下属:{}", allMyStaffWithSelf);

@@ -82,10 +82,10 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
         //2.填充人员信息
         Map<Long, List<PersonDO>> pdMap = personMapper.get(projectIds, PersonTypeEnum.PROJECT_PD.getCode())
-                .stream().collect(Collectors.groupingBy(PersonDO::getProjectId));
+                .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
 
         Map<Long, List<PersonDO>> teamMemberMap = personMapper.get(projectIds, PersonTypeEnum.PROJECT_MEMBER.getCode())
-                .stream().collect(Collectors.groupingBy(PersonDO::getProjectId));
+                .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
 
         //3.填充产品线/业务域信息
         Map<Long, List<ProjectProductLineBizDomain>> productLineMap = productLineMapper.getByProjectIds(projectIds)

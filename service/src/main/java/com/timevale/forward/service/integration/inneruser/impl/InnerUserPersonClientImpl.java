@@ -39,6 +39,7 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
         try {
             final AccountRequest request = new AccountRequest();
             request.setAccount(account);
+            request.setIsLeave(true);
             final BaseResult<Set<String>> allMyStaffNew = rpcPersonService.getAllMyStaffNew(request);
             if (allMyStaffNew.ifSuccess()) {
                 return new ArrayList<>(allMyStaffNew.getData());
