@@ -188,11 +188,11 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         // 转换查询条件
         BizDemandLinkProductDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandSubProductDemandQueryList);
 
-        //通配符处理
+        //通配符、日期处理处理
         condition.setName(StringUtil.toLikeStr(condition.getName()));
-        // 日期处理
         condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
         condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
+
         // 过滤当前业务需求已经关联的产品需求
         List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.select(ProductBizDemandCondition.builder()
                 .bizDemandId(bizDemandSubProductDemandQueryList.getBizDemandId())
@@ -216,7 +216,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         // 查询符合条件的产品需求
         List<BizDemandLinkProductDemandListDO> productDemandDOList = productDemandMapper.selectListOfBizDemandLink(condition);
         List<BizDemandLinkProductDemandVO> bizDemandLinkProductDemandVOList = BizDemandCopier.INSTANCE.transform(productDemandDOList);
-
 
         // 业务需求状态信息赋值
         bizDemandLinkProductDemandVOList.forEach(e -> {
