@@ -381,9 +381,10 @@ public class ProjectServiceImpl implements ProjectService {
         Map<String, ProjectNodeDO> nodeMap = projectNodes
                 .stream()
                 .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
-        ProjectNodeDO node = null;
         Integer oriStatus = projectDO.getStatus();
-        if ((node = nodeMap.get(ProjectStageEnum.TEST_RELEASE.getText())) != null && node.getActualDate() != null) {
+        ProjectNodeDO releaseNode = nodeMap.get(ProjectStageEnum.TEST_RELEASE.getText());
+        ProjectNodeDO node = null;
+        if (releaseNode.getActualDate() != null) {
             if (!enable && ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
                 // 编辑项目时，当状态是暂停,不修改项目状态
                 throw new BaseBizRuntimeException("项目状态为暂停时,不能填写发布正式的实际时间");
@@ -394,7 +395,6 @@ public class ProjectServiceImpl implements ProjectService {
                 throw new BaseBizRuntimeException("请填写完其他节点的实际时间后,再填写发布正式的实际时间");
             }
             projectDO.setStatus(ProjectStatusEnum.RELEASED.getCode());
-            projectDO.setActualEndDate(node.getActualDate());
         } else if ((node = nodeMap.get(ProjectStageEnum.TEST_START.getText())) != null && node.getActualDate() != null) {
             projectDO.setStatus(ProjectStatusEnum.TESTING.getCode());
         } else if ((node = nodeMap.get(ProjectStageEnum.DEV_REVIEW.getText())) != null && node.getActualDate() != null) {
@@ -407,13 +407,14 @@ public class ProjectServiceImpl implements ProjectService {
             projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
         }
         //优先取需求阶段实际时间作为项目实际开始时间,若无,则取开发阶段第一个节点实际时间做为作为项目实际开始时间
-        if ((node = nodeMap.get(ProjectStageEnum.DEMAND_START.getText())) != null && node.getActualDate() != null) {
+        if ((node = nodeMap.get(ProjectStageEnum.DEMAND_START.getText())) != null) {
             projectDO.setActualStartDate(node.getActualDate());
-        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_REVIEW.getText())) != null && node.getActualDate() != null) {
+        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_REVIEW.getText())) != null ) {
             projectDO.setActualStartDate(node.getActualDate());
-        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_START.getText())) != null && node.getActualDate() != null) {
+        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_START.getText())) != null ) {
             projectDO.setActualStartDate(node.getActualDate());
         }
+        projectDO.setActualEndDate(releaseNode.getActualDate());
         if (!enable && ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
             // 编辑项目时，当状态是暂停,不修改项目状态
             projectDO.setStatus(oriStatus);
