@@ -329,12 +329,14 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     , BizDemandStatusEnum.AVAILABLE.getCode()));
         }
         // 过滤掉已经关联的业务需求
-        List<ProductBizDemandDO> productBizDemand = productBizDemandMapper.select(ProductBizDemandCondition.builder()
-                .productDemandId(condition.getProductDemandId())
-                .isDeleted(false)
-                .build());
-        List<Long> bizDemandIds = productBizDemand.stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
-        condition.setBizDemandIds(bizDemandIds);
+        if(condition.getProductDemandId()!=null){
+            List<ProductBizDemandDO> productBizDemand = productBizDemandMapper.select(ProductBizDemandCondition.builder()
+                    .productDemandId(condition.getProductDemandId())
+                    .isDeleted(false)
+                    .build());
+            List<Long> bizDemandIds = productBizDemand.stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
+            condition.setBizDemandIds(bizDemandIds);
+        }
         PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         return bizDemandComponent.page(condition);
     }
