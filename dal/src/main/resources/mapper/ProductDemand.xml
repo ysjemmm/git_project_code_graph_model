@@ -18,7 +18,7 @@
         left join product_line c on a.product_line_id=c.id
         left join biz_domain d on c.biz_domain_id=d.id
         <if test="copierId != null and copierId != ''">
-            left join person e on a.id=e.product_demand_id and e.type =20 and e.is_deleted =false
+            left join person e on a.id=e.main_id and e.type =20 and e.is_deleted =false
         </if>
         <where>
             <if test="id != null">and a.id = #{id}</if>

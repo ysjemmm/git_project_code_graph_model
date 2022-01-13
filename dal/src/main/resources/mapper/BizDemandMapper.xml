@@ -151,7 +151,7 @@
             </if>
             <if test="copier!=null and copier!='' ">
                 and bd.id IN (
-                SELECT p.biz_demand_id
+                SELECT p.main_id
                 FROM person p
                 WHERE p.user_id = #{copier}
                 AND p.type = 30
