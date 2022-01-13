@@ -28,7 +28,6 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.mapping.BoundSql;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.stereotype.Component;
