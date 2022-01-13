@@ -15,7 +15,7 @@ public enum BizDemandStatusEnum {
     RECEIVED(10, "已接收"),
     INCLUDE_PROJECT(20, "已列入项目"),
     PROJECTING(30, "项目进行中"),
-    AVAILABLE(40, "已经完成上线"),
+    AVAILABLE(40, "已完成上线"),
     REJECT(-10, "被驳回"),
     INVALID(-20, "已作废");
 

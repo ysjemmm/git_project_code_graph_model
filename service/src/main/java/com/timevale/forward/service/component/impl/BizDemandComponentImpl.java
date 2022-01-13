@@ -103,10 +103,12 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         Date date = null;
         if(!productDemandIdList.isEmpty()){
             List<ProjectDO> projectDOList = projectMapper.selectByProductDemandIdList(productDemandIdList);
-            if(!projectDOList.isEmpty()){
-                date = projectDOList.get(0).getPlanEndDate();
-                for (ProjectDO projectDO : projectDOList) {
-                    Date projectEndDate = projectDO.getActualEndDate() == null? projectDO.getPlanEndDate(): projectDO.getActualEndDate();
+            log.info("产品需求id={},关联项目={}",productDemandIdList,projectDOList);
+            for (ProjectDO projectDO : projectDOList) {
+                Date projectEndDate = projectDO.getActualEndDate() == null? projectDO.getPlanEndDate(): projectDO.getActualEndDate();
+                if(date == null){
+                    date = projectEndDate;
+                }else{
                     date = date.after(projectEndDate)? date: projectEndDate;
                 }
             }
