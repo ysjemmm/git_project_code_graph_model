@@ -90,7 +90,7 @@ public class ProjectServiceImpl implements ProjectService {
         //1.查找我或我的团队所属项目id
         if (AscriptionEnum.CURRENT_USER.name().equals(projectQueryList.getAscription())) {
             projectIds = personMapper.getProjectIds(Lists.newArrayList(currentUser), null, PersonTypeEnum.PROJECT_MEMBER.getCode());
-            if(CollectionUtils.isEmpty(projectIds)){
+            if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
 
@@ -98,7 +98,7 @@ public class ProjectServiceImpl implements ProjectService {
             List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(currentUser);
             log.info("我和我的下属:{}", allMyStaffWithSelf);
             projectIds = personMapper.getProjectIds(allMyStaffWithSelf, null, PersonTypeEnum.PROJECT_MEMBER.getCode());
-            if(CollectionUtils.isEmpty(projectIds)){
+            if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
@@ -305,7 +305,7 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("项目-产品需求匹配,接收参数:productDemandQueryList={}", productDemandQueryList);
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
         // 过滤掉已经关联的产品需求
-        List<Long> productDemandIds = projectProductDemandMapper.getLinkedProductDemand()
+        List<Long> productDemandIds = projectProductDemandMapper.getLinkedProductDemand(Lists.newArrayList())
                 .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
         condition.setProductDemandIds(productDemandIds);
         condition.setStatus(Lists.newArrayList(ProductDemandStatusEnum.WAITING.getCode()
@@ -338,6 +338,11 @@ public class ProjectServiceImpl implements ProjectService {
         }
         List<Long> productDemandIds = productDemandLinkReq.getProductDemandIds();
         if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
+            List<ProjectProductDemandDO> productDemand = projectProductDemandMapper.getLinkedProductDemand(productDemandIds);
+            if (CollectionUtils.isNotEmpty(productDemand)) {
+                List<Long> existedIds = productDemand.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
+                throw new BaseBizRuntimeException("产品需求id为" + existedIds + "已被项目关联,请刷后重试");
+            }
             projectProductDemandComponent.batchInsert(projectDO.getId(), productDemandIds);
 
             productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
@@ -395,7 +400,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
             List<Date> nullDate = projectNodes.stream().map(ProjectNodeDO::getActualDate)
                     .filter(Objects::isNull).collect(Collectors.toList());
-            if(!CollectionUtils.isEmpty(nullDate)){
+            if (!CollectionUtils.isEmpty(nullDate)) {
                 throw new BaseBizRuntimeException("请填写完其他节点的实际时间后,再填写发布正式的实际时间");
             }
             projectDO.setStatus(ProjectStatusEnum.RELEASED.getCode());
@@ -414,16 +419,16 @@ public class ProjectServiceImpl implements ProjectService {
         //优先取需求阶段实际时间作为项目实际开始时间,若无,则取开发阶段第一个节点实际时间做为作为项目实际开始时间
         if ((node = nodeMap.get(ProjectStageEnum.DEMAND_START.getText())) != null) {
             projectDO.setActualStartDate(node.getActualDate());
-        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_REVIEW.getText())) != null ) {
+        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_REVIEW.getText())) != null) {
             projectDO.setActualStartDate(node.getActualDate());
-        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_START.getText())) != null ) {
+        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_START.getText())) != null) {
             projectDO.setActualStartDate(node.getActualDate());
         }
         if (!enable && ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
             // 编辑项目时，当状态是暂停,不修改项目状态
             projectDO.setStatus(oriStatus);
         }
-        log.info("更新项目信息:nodeMap={},,projectDO={},enable={}", nodeMap, projectDO,enable);
+        log.info("更新项目信息:nodeMap={},,projectDO={},enable={}", nodeMap, projectDO, enable);
         projectMapper.update(projectDO);
 
         if (enable || !ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
