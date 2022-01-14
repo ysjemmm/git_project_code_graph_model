@@ -34,6 +34,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -256,13 +257,13 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 添加抄送人数据
         List<PersonAddReq> recipientInfoList = bizDemandModifyReq.getRecipientInfoList();
-        if(!recipientInfoList.isEmpty()){
+        if(!CollectionUtils.isEmpty(recipientInfoList)){
             personComponent.update(recipientInfoList, bizDemandModifyReq.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
         }
 
         // 添加附件
         List<FileAddReq> fileIdList = bizDemandModifyReq.getFileList();
-        if(!fileIdList.isEmpty()){
+        if(!CollectionUtils.isEmpty(fileIdList)){
             fileComponent.update(fileIdList, bizDemandModifyReq.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
         }
 

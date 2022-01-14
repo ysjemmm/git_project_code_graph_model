@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.condition;
 
+import com.timevale.forward.dal.annotation.WildcardEscape;
 import lombok.Builder;
 import lombok.Data;
 
@@ -17,6 +18,7 @@ public class BizDemandListCondition {
     /**
      * 名称
      */
+    @WildcardEscape
     private String name;
 
     /**

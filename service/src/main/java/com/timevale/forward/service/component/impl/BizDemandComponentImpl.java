@@ -196,7 +196,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         }
 
         // 通配符、日期处理
-        bizDemandListCondition.setName(StringUtil.toLikeStr(bizDemandListCondition.getName()));
+        // bizDemandListCondition.setName(StringUtil.toLikeStr(bizDemandListCondition.getName()));
         bizDemandListCondition.setCreateDateStart(DateUtil.getStartOfDay(bizDemandListCondition.getCreateDateStart()));
         bizDemandListCondition.setCreateDateEnd(DateUtil.getEndOfDay(bizDemandListCondition.getCreateDateEnd()));
 
