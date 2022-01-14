@@ -305,7 +305,7 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("项目-产品需求匹配,接收参数:productDemandQueryList={}", productDemandQueryList);
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
         // 过滤掉已经关联的产品需求
-        List<Long> productDemandIds = projectProductDemandMapper.getByProjectId(condition.getProjectId())
+        List<Long> productDemandIds = projectProductDemandMapper.getLinkedProductDemand()
                 .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
         condition.setProductDemandIds(productDemandIds);
         condition.setStatus(Lists.newArrayList(ProductDemandStatusEnum.WAITING.getCode()

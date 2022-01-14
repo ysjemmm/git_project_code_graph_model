@@ -42,4 +42,11 @@ public interface ProjectProductDemandMapper {
      */
     ProjectProductDemandDO getByProductDemandId(@Param("productDemandId") Long productDemandId);
 
+
+
+    /**
+     *
+     * @return ProjectProductDemandDO
+     */
+    List<ProjectProductDemandDO> getLinkedProductDemand();
 }

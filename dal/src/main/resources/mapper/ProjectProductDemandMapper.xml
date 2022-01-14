@@ -35,4 +35,10 @@
         where a.product_demand_id = #{productDemandId} and a.is_deleted=false
     </select>
 
+    <select id="getLinkedProductDemand" resultType="com.timevale.forward.dal.entity.ProjectProductDemandDO">
+        select a.id,a.project_id,a.product_demand_id
+        from project_product_demand a
+        where  a.is_deleted=false
+    </select>
+
 </mapper>
