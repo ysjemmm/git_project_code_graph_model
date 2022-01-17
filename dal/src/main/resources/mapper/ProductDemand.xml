@@ -95,7 +95,7 @@
         where id = #{id}
     </select>
 
-    <select id="projectProductList" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
+    <select id="linkProductDemandList" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
          SELECT a.id,a.name,a.priority,a.owner,a.status,a.create_man,a.create_date,b.modify_date
          FROM product_demand a
          LEFT JOIN project_product_demand b ON a.id = b.product_demand_id AND b.is_deleted = false

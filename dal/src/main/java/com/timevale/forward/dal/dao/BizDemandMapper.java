@@ -60,7 +60,7 @@ public interface BizDemandMapper {
      * @param productDemandId 查询条件
      * @return 列表
      */
-    List<BizDemandListDO> productDemandBizDemandList(@Param("productDemandId") Long productDemandId);
+    List<BizDemandListDO> linkBizDemandList(@Param("productDemandId") Long productDemandId);
 
     /**
      * 更新业务需求

@@ -379,7 +379,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     public BaseResult<PageQueryResult<BizDemandVO>> linkBizDemandList(ProductBizDemandQueryList productBizDemandQueryList) {
         log.info("产品需求-业务需求清单接收参数:productBizDemandQueryList={}", productBizDemandQueryList);
         PageHelper.startPage(productBizDemandQueryList.getPageNum(), productBizDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
-        List<BizDemandListDO> bizDemandList = bizDemandMapper.productDemandBizDemandList(productBizDemandQueryList.getProductDemandId());
+        List<BizDemandListDO> bizDemandList = bizDemandMapper.linkBizDemandList(productBizDemandQueryList.getProductDemandId());
 
         List<BizDemandVO> bizDemandVO = BizDemandCopier.INSTANCE.convert(bizDemandList);
         GroupResponse rootNode = innerGroupClient.getGroupListTree(true);

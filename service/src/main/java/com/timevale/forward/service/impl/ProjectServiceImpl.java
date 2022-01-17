@@ -372,7 +372,7 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<PageQueryResult<ProductDemandVO>> linkProductDemandList(ProjectProductDemandQueryList productDemandQueryList) {
         //产品需求
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
-        List<ProductDemandListDO> productDemandListDO = productDemandMapper.projectProductList(productDemandQueryList.getProjectId());
+        List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(productDemandQueryList.getProjectId());
         List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
         productDemandVO.forEach(p -> {
             p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
