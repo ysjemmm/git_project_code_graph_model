@@ -6,7 +6,6 @@ import com.timevale.forward.model.enums.MessageTitleEnum;
 import com.timevale.forward.model.enums.TabEnum;
 import com.timevale.forward.service.component.MessageComponent;
 import com.timevale.forward.service.integration.erp.ErpMessageClient;
-import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
 import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
 import com.timevale.forward.service.utils.date.DateUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -86,7 +85,7 @@ public class MessageComponentImpl implements MessageComponent {
         String title = MessageTitleEnum.BIZDEMAND_STATUS_CHANGE.getText();
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_EDIT.getText(), bizDemandId);
         String markdown = String.format(BIZ_DEMAND_STATUS_CHANGE_MSG, title, name, status, date, singleUrl);
-
+        log.info("singleUrl={}",singleUrl);
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(title)
                 .content(markdown)
