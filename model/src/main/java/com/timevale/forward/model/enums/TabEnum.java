@@ -9,9 +9,9 @@ import lombok.Getter;
 @Getter
 public enum TabEnum {
     // 跳转页
-    PROJECT_EDIT("projectEdit"),
-    PRODUCT_EDIT("productEdit"),
-    BUSINESS_EDIT("businessEdit");
+    PROJECT_MANAGEMENT("projectManagement"),
+    PRODUCT_MANAGEMENT("productManagement"),
+    BUSINESS_MANAGEMENT("businessManagement");
     private String text;
 
     TabEnum(String text){this.text = text;}
