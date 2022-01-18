@@ -54,7 +54,16 @@
         <if test="reason!=null">
             reason = #{reason},
         </if>
-        plan_release_date = #{planReleaseDate},
+        <if test="planReleaseDate!=null">
+            <choose>
+                <when test="planReleaseDate lt 0">
+                    plan_release_date = null,
+                </when>
+                <otherwise>
+                    plan_release_date = #{planReleaseDate},
+                </otherwise>
+            </choose>
+        </if>
         modify_man_id = #{modifyManId},
         modify_man = #{modifyMan}
         where id = #{id}

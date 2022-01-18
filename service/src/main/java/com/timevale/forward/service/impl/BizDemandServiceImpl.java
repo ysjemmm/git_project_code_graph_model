@@ -139,7 +139,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 修改业务需求状态
-        bizDemandDO.setPlanReleaseDate(null);
+        bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
         bizDemandDO.setStatus(BizDemandStatusEnum.INVALID.getCode());
         bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandDO.setModifyMan(userInfo.getAlias());
@@ -321,7 +321,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         bizDemandDO.setReason(reason);
-        bizDemandDO.setPlanReleaseDate(null);
+        bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
         bizDemandDO.setStatus(BizDemandStatusEnum.REJECT.getCode());
         bizDemandDO.setModifyMan(userInfo.getAlias());
         bizDemandDO.setModifyManId(userInfo.getId());
