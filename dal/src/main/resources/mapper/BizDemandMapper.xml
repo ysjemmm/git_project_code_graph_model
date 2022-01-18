@@ -51,12 +51,10 @@
         <if test="os!=null">
             os = #{os},
         </if>
-        <if test="planReleaseDate!=null">
-            plan_release_date = #{planReleaseDate},
-        </if>
         <if test="reason!=null">
             reason = #{reason},
         </if>
+        plan_release_date = #{planReleaseDate},
         modify_man_id = #{modifyManId},
         modify_man = #{modifyMan}
         where id = #{id}
