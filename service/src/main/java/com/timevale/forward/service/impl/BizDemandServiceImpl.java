@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
+import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
@@ -33,17 +34,16 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -140,6 +140,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 修改业务需求状态
+        bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
         bizDemandDO.setStatus(BizDemandStatusEnum.INVALID.getCode());
         bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandDO.setModifyMan(userInfo.getAlias());
@@ -230,8 +231,14 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizDemandDetailVO.setOsText(OsEnum.getTextByCode(bizDemandDetailVO.getOs()));
             bizDemandDetailVO.setProcessorText(ProcessorEnum.getTextByCode(bizDemandDetailVO.getProcessor()));
         }
-
-        bizDemandDetailVO.setDeptName(innerGroupClient.getSimpleGroup(bizDemandDO.getDeptId()).getGroupName());
+        Set<Long> deptIdSet =  Sets.newHashSet();
+        deptIdSet.add(bizDemandDO.getDeptId());
+        Map<Long, String> deptMap = Maps.newHashMap();
+        GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
+        for (GroupResponse childNode : rootNode.getChildNode()){
+            bizDemandComponent.dfsGroupListTree(childNode, deptMap, deptIdSet, "", false);
+        }
+        bizDemandDetailVO.setDeptName(deptMap.get(bizDemandDO.getDeptId()));
 
         //获取项目发布时间
         bizDemandDetailVO.setEndDate(bizDemandComponent.getProjectEndDate(bizDemandId));
@@ -240,6 +247,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(BizDemandModifyReq bizDemandModifyReq) {
         log.info("业务需求修改接收参数 bizDemandModifyReq = {}", bizDemandModifyReq);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -314,7 +322,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         bizDemandDO.setReason(reason);
-        bizDemandDO.setPlanReleaseDate(null);
+        bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
         bizDemandDO.setStatus(BizDemandStatusEnum.REJECT.getCode());
         bizDemandDO.setModifyMan(userInfo.getAlias());
         bizDemandDO.setModifyManId(userInfo.getId());

@@ -51,11 +51,18 @@
         <if test="os!=null">
             os = #{os},
         </if>
-        <if test="planReleaseDate!=null">
-            plan_release_date = #{planReleaseDate},
-        </if>
         <if test="reason!=null">
             reason = #{reason},
+        </if>
+        <if test="planReleaseDate!=null">
+            <choose>
+                <when test="planReleaseDate lt 0">
+                    plan_release_date = null,
+                </when>
+                <otherwise>
+                    plan_release_date = #{planReleaseDate},
+                </otherwise>
+            </choose>
         </if>
         modify_man_id = #{modifyManId},
         modify_man = #{modifyMan}
@@ -176,7 +183,7 @@
         </where>
     </select>
 
-    <select id="productDemandBizDemandList" resultType="com.timevale.forward.dal.entity.BizDemandListDO">
+    <select id="linkBizDemandList" resultType="com.timevale.forward.dal.entity.BizDemandListDO">
         select a.id, a.name,a.priority,a.dept_id,a.modify_date,a.create_man,a.create_man_id
         from biz_demand a
                  left join product_biz_demand b on a.id=b.biz_demand_id and b.is_deleted=false

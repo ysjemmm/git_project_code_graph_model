@@ -68,6 +68,17 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     @Override
     public BizDemandStatusVO updateBizDemandStatusAsLinkProductDemand(Long bizDemandId) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        // 业务需求状态
+        BizDemandStatusVO bizDemandStatusVO = new BizDemandStatusVO();
+
+        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        // 如果为驳回状态，则不更新状态
+        if(bizDemandDO.getStatus().equals(BizDemandStatusEnum.REJECT.getCode())){
+            bizDemandStatusVO.setEndDate(null);
+            bizDemandStatusVO.setStatus(BizDemandStatusEnum.REJECT.getCode());
+            bizDemandStatusVO.setStatusText(BizDemandStatusEnum.REJECT.getText());
+            return bizDemandStatusVO;
+        }
 
         List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByBizDemandId(bizDemandId);
         List<Long> productDemandIdList = productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList());
@@ -114,8 +125,6 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             }
         }
 
-        // 判断状态是否发生变更
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
         if(!bizDemandDO.getStatus().equals(result)){
             // 状态更新
             bizDemandDO.setStatus(result);
@@ -133,7 +142,6 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             }
         }
 
-        BizDemandStatusVO bizDemandStatusVO = new BizDemandStatusVO();
         bizDemandStatusVO.setEndDate(date);
         bizDemandStatusVO.setStatus(result);
         bizDemandStatusVO.setStatusText(BizDemandStatusEnum.getTextByCode(result));

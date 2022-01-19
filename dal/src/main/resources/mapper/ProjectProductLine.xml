@@ -5,8 +5,7 @@
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectProductLineDO">
         select id,project_id,product_line_id,create_man_id, create_man
         from project_product_line
-        where is_deleted = false
-        <if test="projectId!=null">and project_id = #{projectId}</if>
+        where project_id = #{projectId} and is_deleted = false
     </select>
 
     <insert id="batchInsert" parameterType="java.util.List">
