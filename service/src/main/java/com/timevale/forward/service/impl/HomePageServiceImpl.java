@@ -2,7 +2,7 @@ package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.client.HomePageService;
-import com.timevale.forward.facade.api.query.HomeTaskBoardQueryList;
+import com.timevale.forward.facade.api.query.HomePageTaskBoardQueryList;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -17,33 +17,33 @@ import lombok.extern.slf4j.Slf4j;
 public class HomePageServiceImpl implements HomePageService {
 
     @Override
-    public BaseResult<HomeDataIndicatorVO> getDataIndicator() {
-        HomeDataIndicatorVO dataIndicatorVO=new HomeDataIndicatorVO();
+    public BaseResult<HomePageDataIndicatorVO> getDataIndicator() {
+        HomePageDataIndicatorVO dataIndicatorVO=new HomePageDataIndicatorVO();
         return BaseResult.success(dataIndicatorVO);
     }
 
     @Override
-    public BaseResult<HomeTodoCardVO> getTodoCard() {
-        HomeTodoCardVO todoCardVO=new HomeTodoCardVO();
+    public BaseResult<HomePageTodoCardVO> getTodoCard() {
+        HomePageTodoCardVO todoCardVO=new HomePageTodoCardVO();
         return BaseResult.success(todoCardVO);
     }
 
     @Override
-    public BaseResult<PageQueryResult<HomeProjectOnlineLatelyVO>> getProjectOnlineLately() {
-        PageQueryResult<HomeProjectOnlineLatelyVO> pageQueryResult = new PageQueryResult<>();
+    public BaseResult<PageQueryResult<HomePageProjectOnlineLatelyVO>> getProjectOnlineLately() {
+        PageQueryResult<HomePageProjectOnlineLatelyVO> pageQueryResult = new PageQueryResult<>();
 //        ProjectOnlineLatelyVO projectOnlineLatelyVO=new ProjectOnlineLatelyVO();
         return BaseResult.success(pageQueryResult);
     }
 
     @Override
-    public BaseResult<HomeRiskWarningVO> getRiskWarning() {
-        HomeRiskWarningVO riskWarningVO=new HomeRiskWarningVO();
+    public BaseResult<HomePageRiskWarningVO> getRiskWarning() {
+        HomePageRiskWarningVO riskWarningVO=new HomePageRiskWarningVO();
         return BaseResult.success(riskWarningVO);
     }
 
     @Override
-    public BaseResult<HomeTaskBoardVO> getHomeTaskBoard(HomeTaskBoardQueryList boardQueryList) {
-        HomeTaskBoardVO homeTaskBoardVO=new HomeTaskBoardVO();
+    public BaseResult<HomePageTaskBoardVO> getHomeTaskBoard(HomePageTaskBoardQueryList boardQueryList) {
+        HomePageTaskBoardVO homeTaskBoardVO=new HomePageTaskBoardVO();
         return BaseResult.success(homeTaskBoardVO);
     }
 }

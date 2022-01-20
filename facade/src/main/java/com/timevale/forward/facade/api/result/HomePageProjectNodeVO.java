@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("首页-风险预警-项目节点")
-public class HomeProjectNodeVO extends ToString {
+public class HomePageProjectNodeVO extends ToString {
 
     @ApiModelProperty("名称")
     private String name;

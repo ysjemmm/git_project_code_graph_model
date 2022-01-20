@@ -8,7 +8,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.List;
+import java.util.Date;
 
 /**
  * @author: xingyun
@@ -16,28 +16,22 @@ import java.util.List;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("首页-风险预警")
-public class HomeRiskWarningVO extends ToString {
+@ApiModel("首页-近三周上线项目")
+public class HomePageProjectOnlineLatelyVO extends ToString {
 
-    @ApiModelProperty("项目id")
+    @ApiModelProperty("id")
     @JsonSerialize(using = ToStringSerializer.class)
-    private Long projectId;
+    private Long id;
 
     @ApiModelProperty("项目名称")
-    private String projectName;
+    private String name;
 
-    @ApiModelProperty("项目节点")
-    private List<HomeProjectNodeVO>homeProjectNodeVO;
+    @ApiModelProperty("项目经理")
+    private String pm;
 
-    @ApiModelProperty("提测单id")
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long testBillId;
+    @ApiModelProperty("状态")
+    private String status;
 
-    @ApiModelProperty("提测单名称")
-    private String testBillName;
-
-    @ApiModelProperty("任务")
-    private List<HomeTaskVO>homeTaskVO;
-
-
+    @ApiModelProperty("项目计划上线时间")
+    private Date planStartDate;
 }

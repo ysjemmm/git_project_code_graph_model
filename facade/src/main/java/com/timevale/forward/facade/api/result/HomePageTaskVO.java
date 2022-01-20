@@ -8,7 +8,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.Date;
+import java.math.BigDecimal;
 
 /**
  * @author: xingyun
@@ -16,22 +16,20 @@ import java.util.Date;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("首页-近三周上线项目")
-public class HomeProjectOnlineLatelyVO extends ToString {
+@ApiModel("首页-风险预警-任务")
+public class HomePageTaskVO extends ToString {
 
     @ApiModelProperty("id")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
-    @ApiModelProperty("项目名称")
+    @ApiModelProperty("名称")
     private String name;
 
-    @ApiModelProperty("项目经理")
-    private String pm;
+    @ApiModelProperty("逾期类型")
+    private String overdueType;
 
-    @ApiModelProperty("状态")
-    private String status;
+    @ApiModelProperty("超时时间")
+    private BigDecimal overdueTime;
 
-    @ApiModelProperty("项目计划上线时间")
-    private Date planStartDate;
 }

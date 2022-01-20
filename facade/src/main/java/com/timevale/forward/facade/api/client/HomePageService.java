@@ -2,7 +2,7 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.query.HomeTaskBoardQueryList;
+import com.timevale.forward.facade.api.query.HomePageTaskBoardQueryList;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -19,14 +19,14 @@ public interface HomePageService {
      *
      * @return 列表
      */
-    BaseResult<HomeDataIndicatorVO> getDataIndicator();
+    BaseResult<HomePageDataIndicatorVO> getDataIndicator();
 
     /**
      * 待办卡片
      *
      * @return 列表
      */
-    BaseResult<HomeTodoCardVO> getTodoCard();
+    BaseResult<HomePageTodoCardVO> getTodoCard();
 
 
     /**
@@ -34,7 +34,7 @@ public interface HomePageService {
      *
      * @return 列表
      */
-    BaseResult<PageQueryResult<HomeProjectOnlineLatelyVO>> getProjectOnlineLately();
+    BaseResult<PageQueryResult<HomePageProjectOnlineLatelyVO>> getProjectOnlineLately();
 
 
     /**
@@ -42,13 +42,13 @@ public interface HomePageService {
      *
      * @return 列表
      */
-    BaseResult<HomeRiskWarningVO> getRiskWarning();
+    BaseResult<HomePageRiskWarningVO> getRiskWarning();
 
     /**
      * 任务工时看板查询
      *
      * @return 列表
      */
-    BaseResult<HomeTaskBoardVO> getHomeTaskBoard(HomeTaskBoardQueryList boardQueryList);
+    BaseResult<HomePageTaskBoardVO> getHomeTaskBoard(HomePageTaskBoardQueryList boardQueryList);
 
 }

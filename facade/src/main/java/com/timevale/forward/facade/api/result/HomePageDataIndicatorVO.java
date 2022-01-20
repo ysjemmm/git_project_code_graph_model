@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("首页-数据指标")
-public class HomeDataIndicatorVO extends ToString {
+public class HomePageDataIndicatorVO extends ToString {
 
     @ApiModelProperty("项目总数")
     private Integer projectCount;
