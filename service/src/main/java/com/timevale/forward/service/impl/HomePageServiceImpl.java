@@ -42,8 +42,8 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     @Override
-    public BaseResult<HomePageTaskBoardVO> getHomeTaskBoard(HomePageTaskBoardQueryList boardQueryList) {
-        HomePageTaskBoardVO homeTaskBoardVO=new HomePageTaskBoardVO();
-        return BaseResult.success(homeTaskBoardVO);
+    public BaseResult<HomePageTaskBoardVO> getTaskBoard(HomePageTaskBoardQueryList boardQueryList) {
+        HomePageTaskBoardVO taskBoardVO=new HomePageTaskBoardVO();
+        return BaseResult.success(taskBoardVO);
     }
 }

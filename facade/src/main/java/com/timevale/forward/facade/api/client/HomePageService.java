@@ -49,6 +49,6 @@ public interface HomePageService {
      *
      * @return 列表
      */
-    BaseResult<HomePageTaskBoardVO> getHomeTaskBoard(HomePageTaskBoardQueryList boardQueryList);
+    BaseResult<HomePageTaskBoardVO> getTaskBoard(HomePageTaskBoardQueryList boardQueryList);
 
 }
