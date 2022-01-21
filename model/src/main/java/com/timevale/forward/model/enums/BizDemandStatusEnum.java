@@ -35,4 +35,9 @@ public enum BizDemandStatusEnum {
         }
         return "errorCode";
     }
+
+    public static Boolean statusNeedNotice(Integer code){
+        return code.equals(INCLUDE_PROJECT.getCode()) || code.equals(PROJECTING.getCode()) || code.equals(AVAILABLE.getCode());
+    }
+
 }

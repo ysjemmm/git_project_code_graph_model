@@ -60,25 +60,11 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     ProductBizDemandMapper productBizDemandMapper;
 
     @Resource
-    MessageComponent messageComponent;
-
-    @Resource
     InnerGroupClient innerGroupClient;
 
     @Override
-    public BizDemandStatusVO updateBizDemandStatusAsLinkProductDemand(Long bizDemandId) {
+    public void updateBizDemandStatusByLinkedProductDemand(Long bizDemandId) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        // 业务需求状态
-        BizDemandStatusVO bizDemandStatusVO = new BizDemandStatusVO();
-
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
-        // 如果为驳回状态，则不更新状态
-        if(bizDemandDO.getStatus().equals(BizDemandStatusEnum.REJECT.getCode())){
-            bizDemandStatusVO.setEndDate(null);
-            bizDemandStatusVO.setStatus(BizDemandStatusEnum.REJECT.getCode());
-            bizDemandStatusVO.setStatusText(BizDemandStatusEnum.REJECT.getText());
-            return bizDemandStatusVO;
-        }
 
         List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByBizDemandId(bizDemandId);
         List<Long> productDemandIdList = productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList());
@@ -98,7 +84,6 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
         // 根据产品需求状态判断业务需求状态
         int result;
-        boolean notice = true;
         if(ProductDemandStatusEnum.INCLUDED.getCode().equals(status)){
             result = BizDemandStatusEnum.INCLUDE_PROJECT.getCode();
         }else if(ProductDemandStatusEnum.PROGRESS.getCode().equals(status)){
@@ -106,46 +91,18 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         }else if(ProductDemandStatusEnum.ONLINE.getCode().equals(status)){
             result = BizDemandStatusEnum.AVAILABLE.getCode();
         }else{
-            notice = false;
             result = BizDemandStatusEnum.RECEIVED.getCode();
         }
 
-        // 获取项目发布时间
-        Date date = null;
-        if(!productDemandIdList.isEmpty()){
-            List<ProjectDO> projectDOList = projectMapper.selectByProductDemandIdList(productDemandIdList);
-            log.info("产品需求id={},关联项目={}",productDemandIdList,projectDOList);
-            for (ProjectDO projectDO : projectDOList) {
-                Date projectEndDate = projectDO.getActualEndDate() == null? projectDO.getPlanEndDate(): projectDO.getActualEndDate();
-                if(date == null){
-                    date = projectEndDate;
-                }else{
-                    date = date.after(projectEndDate)? date: projectEndDate;
-                }
-            }
-        }
-
+        // 判断状态是否发生变更
+        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
         if(!bizDemandDO.getStatus().equals(result)){
             // 状态更新
             bizDemandDO.setStatus(result);
             bizDemandDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getId());
             bizDemandDO.setModifyManId(userInfo.getId());
             bizDemandMapper.update(bizDemandDO);
-
-            if(notice){
-                // 钉钉通知
-                messageComponent.bizDemandStatusChangeMsg(bizDemandDO.getId(),
-                        bizDemandDO.getCreateManId(),
-                        bizDemandDO.getName(),
-                        BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
-                        date);
-            }
         }
-
-        bizDemandStatusVO.setEndDate(date);
-        bizDemandStatusVO.setStatus(result);
-        bizDemandStatusVO.setStatusText(BizDemandStatusEnum.getTextByCode(result));
-        return bizDemandStatusVO;
     }
 
     @Override
@@ -178,7 +135,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
         Date result = null;
         for (ProjectDO projectDO : projectDOList) {
-            Date projectEndDate = projectDO.getActualEndDate() == null? projectDO.getPlanEndDate(): projectDO.getActualEndDate();
+            Date projectEndDate = projectDO.getActualEndDate() == null ? projectDO.getPlanEndDate(): projectDO.getActualEndDate();
             if(result == null){
                 result = projectEndDate;
             }else{
@@ -203,8 +160,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             bizDemandListCondition.setDeptIdList(Lists.newArrayList(deptMap.keySet()));
         }
 
-        // 通配符、日期处理
-        // bizDemandListCondition.setName(StringUtil.toLikeStr(bizDemandListCondition.getName()));
+        // 日期处理
         bizDemandListCondition.setCreateDateStart(DateUtil.getStartOfDay(bizDemandListCondition.getCreateDateStart()));
         bizDemandListCondition.setCreateDateEnd(DateUtil.getEndOfDay(bizDemandListCondition.getCreateDateEnd()));
 

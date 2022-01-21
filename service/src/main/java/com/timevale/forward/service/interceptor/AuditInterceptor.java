@@ -61,7 +61,8 @@ public class AuditInterceptor implements Interceptor {
             String fieldName = field.getName();
             if (man.equals(fieldName)) {
                 setProperty(parameter, fieldName, name);
-            } else if (manId.equals(fieldName)) {
+            }
+            if (manId.equals(fieldName)) {
                 setProperty(parameter, fieldName, id);
             }
         }

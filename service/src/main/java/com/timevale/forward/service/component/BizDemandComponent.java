@@ -2,7 +2,6 @@ package com.timevale.forward.service.component;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
-import com.timevale.forward.facade.api.result.BizDemandStatusVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
@@ -21,9 +20,8 @@ public interface BizDemandComponent {
      * 更新业务需求状态根据关联的产品需求
      *
      * @param bizDemandId 业务需求id
-     * @return 业务需求状态VO
      */
-    BizDemandStatusVO updateBizDemandStatusAsLinkProductDemand(Long bizDemandId);
+    void updateBizDemandStatusByLinkedProductDemand(Long bizDemandId);
 
     /**
      * 深搜部门树

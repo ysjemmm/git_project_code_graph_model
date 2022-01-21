@@ -21,16 +21,18 @@ import com.timevale.forward.facade.api.request.BizDemandUnlinkProductDemandReq;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
 import com.timevale.forward.facade.api.result.BizDemandStatusVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.MessageComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -38,13 +40,11 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
+import org.springframework.context.ApplicationContext;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -73,6 +73,9 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
     @Resource
     InnerUserPersonClient innerUserPersonClient;
+
+    @Resource
+    MessageComponent messageComponent;
 
     @Override
     public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> linkedProductDemandList(BizDemandProductDemandQueryList bizDemandProductDemandQueryList) {
@@ -149,13 +152,20 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         if(!insertLinkDate.isEmpty()){productBizDemandMapper.inserts(insertLinkDate);}
         if(!updateLinkDate.isEmpty()){productBizDemandMapper.updates(updateLinkDate, false, userInfo.getAlias(), userInfo.getId());}
 
-        return BaseResult.success(bizDemandComponent.updateBizDemandStatusAsLinkProductDemand(bizDemandId));
+        bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
+
+        return BaseResult.success(compareBizDemandStatus(bizDemandDO));
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<BizDemandStatusVO> unlinkProductDemand(BizDemandUnlinkProductDemandReq bizDemandUnlinkProductDemandReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandUnlinkProductDemandReq.getBizDemandId());
+        if(bizDemandDO == null){
+            throw new BaseBizRuntimeException("不存在该业务需求");
+        }
 
         // 查询对应数据
         Long bizDemandId = bizDemandUnlinkProductDemandReq.getBizDemandId();
@@ -178,8 +188,40 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         productBizDemandMapper.delete(productBizDemandDO);
 
-        return BaseResult.success(bizDemandComponent.updateBizDemandStatusAsLinkProductDemand(bizDemandId));
+        bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
+
+        return BaseResult.success(compareBizDemandStatus(bizDemandDO));
     }
+
+    private BizDemandStatusVO compareBizDemandStatus(BizDemandDO oldBizDemandDO){
+        Long bizDemandId = oldBizDemandDO.getId();
+        BizDemandDO newBizDemandDO = bizDemandMapper.selectById(bizDemandId);
+
+        Integer oldStatus = oldBizDemandDO.getStatus();
+        Integer newStatus = newBizDemandDO.getStatus();
+
+        String statusText = BizDemandStatusEnum.getTextByCode(newStatus);
+        Date projectEndDate = bizDemandComponent.getProjectEndDate(bizDemandId);
+
+        // 如果新旧状态不同，且需要发送通知
+        if(!oldStatus.equals(newStatus) && BizDemandStatusEnum.statusNeedNotice(newStatus)){
+            messageComponent.bizDemandStatusChangeMsg(
+                    newBizDemandDO.getId(),
+                    newBizDemandDO.getReceiveManId(),
+                    newBizDemandDO.getName(),
+                    statusText,
+                    projectEndDate
+            );
+        }
+
+        // 返回当前状态
+        BizDemandStatusVO bizDemandStatusVO = new BizDemandStatusVO();
+        bizDemandStatusVO.setStatus(newStatus);
+        bizDemandStatusVO.setStatusText(statusText);
+        bizDemandStatusVO.setEndDate(projectEndDate);
+        return bizDemandStatusVO;
+    }
+
 
     @Override
     public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> matchProductDemandList(BizDemandLinkProductDemandQueryList bizDemandSubProductDemandQueryList) {
