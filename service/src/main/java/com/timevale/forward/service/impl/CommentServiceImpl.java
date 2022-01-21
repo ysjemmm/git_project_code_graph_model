@@ -12,9 +12,10 @@ import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.request.CommentAddReq;
 import com.timevale.forward.facade.api.result.CommentVO;
 import com.timevale.forward.model.enums.CommentTypeEnum;
-import com.timevale.forward.service.component.MessageComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.CommentCopier;
+import com.timevale.forward.service.observer.event.CommentMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -33,9 +34,6 @@ import java.util.stream.Collectors;
 public class CommentServiceImpl implements CommentService {
 
     @Resource
-    MessageComponent messageComponent;
-
-    @Resource
     BizDemandMapper bizDemandMapper;
 
     @Resource
@@ -46,6 +44,9 @@ public class CommentServiceImpl implements CommentService {
 
     @Resource
     CommentMapper commentMapper;
+
+    @Resource
+    MessageEventPublisher messageEventPublisher;
 
     @Override
     public BaseResult<List<CommentVO>> list(CommentQueryList commentQueryList) {
@@ -87,13 +88,16 @@ public class CommentServiceImpl implements CommentService {
         }
 
         // 发送通知
-        messageComponent.commentMsg(toId,
+        messageEventPublisher.publish(new CommentMsgEvent(
+                this,
+                toId,
                 userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 receivers,
                 CommentTypeEnum.getTextByCode(type),
                 name,
                 commentDO.getContent()
-        );
+        ));
+
         return BaseResult.success(true);
     }
 
