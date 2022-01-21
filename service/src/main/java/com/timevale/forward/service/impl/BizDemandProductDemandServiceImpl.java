@@ -142,8 +142,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         for (Long productDemandId : newLinkData) {
             if(!oldLinkDate.containsKey(productDemandId)){
                 ProductBizDemandDO productBizDemandDO = ProductBizDemandCopier.INSTANCE.convert(bizDemandId, productDemandId);
-                productBizDemandDO.setCreateMan(userInfo.getAlias());
-                productBizDemandDO.setCreateManId(userInfo.getId());
                 insertLinkDate.add(productBizDemandDO);
             }
         }
@@ -183,8 +181,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         }
 
         ProductBizDemandDO productBizDemandDO = list.get(0);
-        productBizDemandDO.setModifyManId(userInfo.getAlias());
-        productBizDemandDO.setModifyManId(userInfo.getId());
 
         productBizDemandMapper.delete(productBizDemandDO);
 

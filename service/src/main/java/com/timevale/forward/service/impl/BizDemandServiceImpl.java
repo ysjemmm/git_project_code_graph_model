@@ -146,8 +146,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 修改业务需求状态
         bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
         bizDemandDO.setStatus(BizDemandStatusEnum.INVALID.getCode());
-        bizDemandDO.setModifyManId(userInfo.getId());
-        bizDemandDO.setModifyMan(userInfo.getAlias());
         bizDemandMapper.update(bizDemandDO);
 
         // 取消产品关联
@@ -171,16 +169,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 判断主题是否唯一
-        BizDemandDO checkBizDemandDO = bizDemandMapper.selectByName(bizDemandAddReq.getName());
-        if(checkBizDemandDO != null){
+        if(bizDemandMapper.selectByName(bizDemandAddReq.getName()) != null){
             throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
         }
 
         // 新增业务需求
         BizDemandDO bizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandAddReq);
         bizDemandDO.setStatus(BizDemandStatusEnum.EVALUATE.getCode());
-        bizDemandDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        bizDemandDO.setCreateManId(userInfo.getId());
         bizDemandMapper.insert(bizDemandDO);
 
         List<FileAddReq> fileIdList = bizDemandAddReq.getFileList();
@@ -267,9 +262,12 @@ public class BizDemandServiceImpl implements BizDemandService {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
 
+        // 判断主题是否唯一
+        if(bizDemandMapper.selectByName(bizDemandModifyReq.getName()) != null){
+            throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
+        }
+
         BizDemandDO newBizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandModifyReq);
-        newBizDemandDO.setModifyMan(userInfo.getAlias());
-        newBizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(newBizDemandDO);
 
         // 添加抄送人数据
@@ -302,8 +300,6 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
         bizDemandDO.setPlanReleaseDate(planReleaseDate);
-        bizDemandDO.setModifyMan(userInfo.getAlias());
-        bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
         // 通知需求提交人
@@ -335,8 +331,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setReason(reason);
         bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
         bizDemandDO.setStatus(BizDemandStatusEnum.REJECT.getCode());
-        bizDemandDO.setModifyMan(userInfo.getAlias());
-        bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
         // 驳回通知
@@ -364,8 +358,6 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         bizDemandDO.setReceiveMan(bizDemandTransferReq.getReceiveMan());
         bizDemandDO.setReceiveManId(bizDemandTransferReq.getReceiveManId());
-        bizDemandDO.setModifyMan(userInfo.getAlias());
-        bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
         // 转交人通知
