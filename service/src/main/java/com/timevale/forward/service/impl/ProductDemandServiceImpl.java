@@ -32,12 +32,12 @@ import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
-import com.timevale.forward.service.utils.envoy.GroupModel;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -123,14 +123,17 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             }
             condition.setOwnerIds(filtered);
         } else if (AscriptionEnum.DEPARTMENT.name().equals(productDemandQueryList.getAscription())) {
-            GroupModel defaultGroup = userInfo.getDefaultGroup();
-            List<String> accountIds = innerUserPersonClient.getAllByGroupId(defaultGroup.getGroupId());
+            BaseInfoResponse baseInfo= innerUserPersonClient.getPersonByAccountNew(userInfo.getId());
+
+            String groupId = baseInfo.getDefaultGroup().getGroupId();
+            List<String> accountIds = innerUserPersonClient.getAllByGroupId(groupId);
+
             if (!CollectionUtils.isEmpty(productDemandQueryList.getOwnerIds())) {
                 filtered = accountIds.stream().filter(a -> productDemandQueryList.getOwnerIds().contains(a)).collect(Collectors.toList());
             } else {
                 filtered = accountIds;
             }
-            log.info("用户默认部门id:{},同部门人员:{},过滤后:{}", defaultGroup.getGroupId(), accountIds, filtered);
+            log.info("用户默认部门id:{},同部门人员:{},过滤后:{}", groupId, accountIds, filtered);
             if(CollectionUtils.isEmpty(filtered)){
                 //所选人员不在我的部门中
                 return BaseResult.success(ResultUtil.pageEmpty());
