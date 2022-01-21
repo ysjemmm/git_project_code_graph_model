@@ -2,7 +2,7 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.query.HomePageTaskBoardQueryList;
+import com.timevale.forward.facade.api.query.HomePageProjectBoardQueryList;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -38,17 +38,17 @@ public interface HomePageService {
 
 
     /**
-     * 待办卡片
+     * 预警
      *
      * @return 列表
      */
     BaseResult<HomePageRiskWarningVO> getRiskWarning();
 
     /**
-     * 任务工时看板查询
+     * 项目工时看板查询
      *
      * @return 列表
      */
-    BaseResult<HomePageTaskBoardVO> getTaskBoard(HomePageTaskBoardQueryList boardQueryList);
+    BaseResult<HomePageProjectBoardVO> getProjectBoard(HomePageProjectBoardQueryList boardQueryList);
 
 }

@@ -14,8 +14,8 @@ import java.util.List;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("首页-任务工时看板")
-public class HomePageTaskBoardVO extends ToString {
+@ApiModel("首页-项目工时看板")
+public class HomePageProjectBoardVO extends ToString {
 
     @ApiModelProperty("项目人员姓名")
     private String name;

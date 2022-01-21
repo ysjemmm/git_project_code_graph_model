@@ -2,7 +2,7 @@ package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.client.HomePageService;
-import com.timevale.forward.facade.api.query.HomePageTaskBoardQueryList;
+import com.timevale.forward.facade.api.query.HomePageProjectBoardQueryList;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -42,8 +42,8 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     @Override
-    public BaseResult<HomePageTaskBoardVO> getTaskBoard(HomePageTaskBoardQueryList boardQueryList) {
-        HomePageTaskBoardVO taskBoardVO=new HomePageTaskBoardVO();
-        return BaseResult.success(taskBoardVO);
+    public BaseResult<HomePageProjectBoardVO> getProjectBoard(HomePageProjectBoardQueryList boardQueryList) {
+        HomePageProjectBoardVO projectBoardVO=new HomePageProjectBoardVO();
+        return BaseResult.success(projectBoardVO);
     }
 }

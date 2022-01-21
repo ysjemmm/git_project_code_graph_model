@@ -15,8 +15,8 @@ import java.util.List;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("首页-任务工时看板查询")
-public class HomePageTaskBoardQueryList extends QueryBase {
+@ApiModel("首页-项目工时看板查询")
+public class HomePageProjectBoardQueryList extends QueryBase {
 
     @ApiModelProperty("部门id")
     private List<Long> deptIds;
