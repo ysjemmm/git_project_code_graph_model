@@ -64,5 +64,8 @@
         <mapper resource="mapper/ProjectProductDemandMapper.xml"/>
         <mapper resource="mapper/ProjectProductLine.xml"/>
         <mapper resource="mapper/ProjectProductDemandMapper.xml"/>
+        <mapper resource="mapper/TaskMapper.xml"/>
+        <mapper resource="mapper/TaskTimeMapper.xml"/>
+        <mapper resource="mapper/TaskProductDemandMapper.xml"/>
     </mappers>
 </configuration>

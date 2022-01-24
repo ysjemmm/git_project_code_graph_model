@@ -118,9 +118,6 @@
             <if test="actualEndDateLeft != null and actualEndDateRight != null">
                 and a.actual_end_date &gt;= #{actualEndDateLeft} and a.actual_end_date &lt;= #{actualEndDateRight}
             </if>
-            <if test="modifyDateStart != null and modifyDateEnd != null">
-                and a.modify_date &gt;= #{modifyDateStart} and a.modify_date &lt;= #{modifyDateEnd}
-            </if>
             <if test="priorities!=null and priorities.size()>0">
                 and a.priority in
                 <foreach collection="priorities" item="item" separator="," open="(" close=")">

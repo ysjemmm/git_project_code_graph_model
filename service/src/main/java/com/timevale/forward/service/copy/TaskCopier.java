@@ -3,6 +3,7 @@ package com.timevale.forward.service.copy;
 import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.query.TaskQueryList;
+import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.result.TaskVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -28,6 +29,15 @@ public interface TaskCopier {
      * @return TaskVO
      */
     List<TaskVO> convert(List<TaskDO> taskDO);
+
+
+    /**
+     * 转换转换DO
+     *
+     * @param taskAddReq 对象
+     * @return TaskDO
+     */
+    TaskDO convert(TaskAddReq taskAddReq);
 
 
 }

@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.TaskCondition;
 import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.entity.TaskDO;
 import org.apache.ibatis.annotations.Param;
@@ -44,5 +45,22 @@ public interface TaskMapper {
      * @return 项目id
      */
     List<Long> getProjectIds(@Param("ids") List<Long> ids);
+
+
+    /**
+     * 新增任务信息
+     *
+     * @param taskDO 任务
+     * @return int
+     */
+    int insert(TaskDO taskDO);
+
+    /**
+     *
+     * @param taskCondition 查询条件
+     * @return TaskDO
+     */
+
+    TaskDO get(TaskCondition taskCondition);
 
 }

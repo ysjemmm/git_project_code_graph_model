@@ -45,7 +45,7 @@
         select a.id,a.project_id, a.name, a.stage ,a.status,a.plan_start_date,a.plan_end_date,
         a.actual_start_date,a.actual_end_date,
         a.create_man_id, a.create_man,a.create_date,a.modify_date
-        from project a
+        from task a
         <where>
             <if test="ids!=null and ids.size()>0">
                 and a.id in
@@ -70,9 +70,9 @@
             <if test="modifyDateStart != null and modifyDateEnd != null">
                 and a.modify_date &gt;= #{modifyDateStart} and a.modify_date &lt;= #{modifyDateEnd}
             </if>
-            <if test="priorities!=null and priorities.size()>0">
-                and a.priority in
-                <foreach collection="priorities" item="item" separator="," open="(" close=")">
+            <if test="createManIds!=null and createManIds.size()>0">
+                and a.create_man_id in
+                <foreach collection="createManIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
@@ -82,20 +82,32 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="types!=null and types.size()>0">
-                and a.type in
-                <foreach collection="types" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="pms!=null and pms.size()>0">
-                and a.pm_id in
-                <foreach collection="pms" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
             and a.is_deleted =false
         </where>
     </select>
 
+
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.TaskDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into task (project_id, name, stage ,status,todo,todo_id
+        , plan_start_date, plan_end_date, plan_use_time
+        ,actual_start_date,actual_end_date,task_use_time
+        ,create_man,create_man_id)
+        values
+        (#{projectId}, #{name}, #{stage}, #{status}, #{todo}, #{todoId}
+        , #{planStartDate}, #{planEndDate}, #{planUseTime}
+        , #{actualStartDate}, #{actualEndDate}, #{taskUseTime}
+        ,#{createMan},#{createManId})
+    </insert>
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.TaskDO">
+        select a.id,a.project_id, a.name, a.stage ,a.status,a.plan_start_date,a.plan_end_date,
+        a.actual_start_date,a.actual_end_date,
+        a.create_man_id, a.create_man,a.create_date,a.modify_date
+        from task a
+        <where>
+            <if test="id != null">and a.id = #{id}</if>
+            <if test="projectId != null">and a.project_id = #{projectId}</if>
+            <if test="name != null">and a.name = #{name}</if>
+        </where>
+    </select>
 </mapper>
