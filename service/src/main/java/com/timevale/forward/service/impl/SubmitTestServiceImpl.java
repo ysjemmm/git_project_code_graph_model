@@ -121,7 +121,7 @@ public class SubmitTestServiceImpl implements SubmitTestService {
         fileDO.setModifyMan(alias);
         fileDO.setModifyManId(id);
         fileDO.setAttacheId(projectId);
-        fileDO.setType(FileTypeEnum.SMOKING_USE_CASES.getCode());
+        fileDO.setType(FileTypeEnum.TEST_BILL_CASE.getCode());
         //删除文件表中的原有信息
         fileMapper.update(fileDO);
 
@@ -129,7 +129,7 @@ public class SubmitTestServiceImpl implements SubmitTestService {
         //将FileAddReq转化成FileDO
         for (FileAddReq fileAddReq : list) {
             FileDO file = new FileDO();
-            file.setType(FileTypeEnum.SMOKING_USE_CASES.getCode());
+            file.setType(FileTypeEnum.TEST_BILL_CASE.getCode());
             file.setAttacheId(projectId);
             file.setFileName(fileAddReq.getFileName());
             file.setFileId(fileAddReq.getFileId());
@@ -164,7 +164,7 @@ public class SubmitTestServiceImpl implements SubmitTestService {
         for (FileAddReq fileAddReq : list) {
             FileDO fileDO = new FileDO();
             fileDO.setAttacheId(attacheId);
-            fileDO.setType(FileTypeEnum.SELF_TEST_PASS.getCode());
+            fileDO.setType(FileTypeEnum.TEST_BILL_PASS.getCode());
             fileDO.setFileName(fileAddReq.getFileName());
             fileDO.setFileId(fileAddReq.getFileId());
             fileDOList.add(fileDO);
