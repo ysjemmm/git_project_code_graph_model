@@ -72,4 +72,11 @@ public interface ProjectMapper {
      */
     ProjectDO getByName(@Param("name") String name);
 
+    /**
+     * 查询
+     * @param ids id
+     * @return 项目信息
+     */
+    List<ProjectDO>  getByIds(@Param("ids") List<Long> ids);
+
 }

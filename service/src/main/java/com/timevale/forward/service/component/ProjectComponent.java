@@ -14,11 +14,5 @@ public interface ProjectComponent {
      * @return 列表
      */
     BaseResult<PageQueryResult<ProjectVO>> page (ProjectListCondition projectListCondition, List<Long> projectIds);
-    /**
-     *
-     * @param projectListCondition 查询条件
-     * @return 列表
-     */
-//    BaseResult<PageQueryResult<ProjectVO>> page (ProjectListCondition projectListCondition);
 
 }

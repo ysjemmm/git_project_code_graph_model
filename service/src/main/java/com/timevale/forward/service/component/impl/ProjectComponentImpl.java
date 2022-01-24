@@ -53,14 +53,14 @@ public class ProjectComponentImpl implements ProjectComponent {
     public BaseResult<PageQueryResult<ProjectVO>> page(ProjectListCondition condition,List<Long> projectIds) {
         // 查找产品经理
         if (CollectionUtils.isNotEmpty(condition.getPds())) {
-            projectIds = personMapper.getProjectIds(condition.getPds(), projectIds, PersonTypeEnum.PROJECT_PD.getCode());
+            projectIds = personMapper.getMainIds(condition.getPds(), projectIds, PersonTypeEnum.PROJECT_PD.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
         //团队成员
         if (CollectionUtils.isNotEmpty(condition.getTeamMembers())) {
-            projectIds = personMapper.getProjectIds(condition.getTeamMembers(), projectIds, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            projectIds = personMapper.getMainIds(condition.getTeamMembers(), projectIds, PersonTypeEnum.PROJECT_MEMBER.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }

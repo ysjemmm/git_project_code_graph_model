@@ -38,7 +38,7 @@
         </where>
     </update>
 
-    <select id="getProjectIds" resultType="long">
+    <select id="getMainIds" resultType="long">
         select distinct main_id
         from person
         <where>
@@ -46,9 +46,9 @@
             <foreach collection="userIds" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
-            <if test="projectIds!=null and projectIds.size()>0">
+            <if test="mainIds!=null and mainIds.size()>0">
             and main_id in
-            <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+            <foreach collection="mainIds" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
             </if>
@@ -61,7 +61,7 @@
         from person
         <where>
             and main_id in
-            <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+            <foreach collection="mainIds" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
             and type = #{type} and is_deleted=false

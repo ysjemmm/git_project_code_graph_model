@@ -23,6 +23,13 @@ public class TaskVO extends ToString {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
+    @ApiModelProperty("projectId")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long projectId;
+
+    @ApiModelProperty("项目名称")
+    private String projectName;
+
     @ApiModelProperty("名称")
     private String name;
 
@@ -31,6 +38,9 @@ public class TaskVO extends ToString {
 
     @ApiModelProperty("项目状态")
     private String statusName;
+
+    @ApiModelProperty("执行人")
+    private String executor;
 
     @ApiModelProperty("项目计划开始时间")
     private Date planStartDate;
