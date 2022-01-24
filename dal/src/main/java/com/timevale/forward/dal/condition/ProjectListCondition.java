@@ -3,6 +3,7 @@ package com.timevale.forward.dal.condition;
 import com.timevale.mandarin.common.query.QueryBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -15,6 +16,7 @@ import java.util.List;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
+@Builder
 @ApiModel("项目查询条件")
 public class ProjectListCondition extends QueryBase {
     /**

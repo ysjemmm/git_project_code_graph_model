@@ -14,6 +14,7 @@ public class ParamHelper {
     private static final String FIELD_NAME = "name";
     private static final String FIELD_VALUE = "value";
     private static final String ASC = "asc";
+    private static final String PAGE = "page";
     private static final String PAGESIZE = "pageSize";
     private static final String OFFSET = "offset";
     private static final String LIMIT = "limit";
@@ -56,6 +57,9 @@ public class ParamHelper {
         return append(field, IS_NOT_NULL);
     }
 
+    public ParamHelper page(Integer value) {
+        return append(PAGE, value);
+    }
 
     public ParamHelper pageSize(Integer value) {
         return append(PAGESIZE, value);

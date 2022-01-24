@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
 public class HomePageProjectNodeVO extends ToString {
 
     @ApiModelProperty("名称")
-    private String name;
+    private String nodeName;
 
     @ApiModelProperty("逾期类型")
     private String overdueType;
