@@ -44,7 +44,7 @@ public enum ProjectStatusEnum {
     }
 
     public static Boolean ongoing(Integer code){
-        return code.equals(WAITING.code) || code.equals(PLANING.code) || code.equals(DEVING.code) || code.equals(TESTING.code);
+        return code.equals(PLANING.code) || code.equals(DEVING.code) || code.equals(TESTING.code);
     }
 
 }

@@ -27,7 +27,7 @@ public interface HomePageService {
      *
      * @return 列表
      */
-    BaseResult<HomePageTodoCardVO> getTodoCard();
+    BaseResult<HomePageTodoCardVO> getTodoCard(String userType);
 
 
     /**
