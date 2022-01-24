@@ -28,16 +28,4 @@ public class HomePageRiskWarningVO extends ToString {
 
     @ApiModelProperty("项目节点")
     private List<HomePageProjectNodeVO>homePageProjectNodeVO;
-
-    @ApiModelProperty("提测单id")
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long testBillId;
-
-    @ApiModelProperty("提测单名称")
-    private String testBillName;
-
-    @ApiModelProperty("任务")
-    private List<HomePageTaskVO>homePageTaskVO;
-
-
 }

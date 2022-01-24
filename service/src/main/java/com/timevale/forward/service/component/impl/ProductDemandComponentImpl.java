@@ -12,6 +12,8 @@ import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProductLineCopier;
+import com.timevale.forward.service.observer.event.BizDemandStatusChangeMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -63,7 +65,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     private BizDemandComponent bizDemandComponent;
 
     @Resource
-    private MessageComponent messageComponent;
+    private MessageEventPublisher messageEventPublisher;
 
     //    @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
@@ -205,13 +207,16 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                         // 业务需求状态发生变化,发送消息
                         log.info("发送钉钉消息,更新前状态={},更新后状态={},业务需求id={}", bizDemand.getStatus(), k, a);
                         Date projectEndDate = bizDemandComponent.getProjectEndDate(a);
-                        messageComponent.bizDemandStatusChangeMsg(a,
+                        
+                        messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
+                                this,
+                                a,
                                 bizDemand.getCreateManId(),
                                 bizDemand.getName(),
                                 BizDemandStatusEnum.getTextByCode(k),
-                                projectEndDate);
+                                projectEndDate)
+                        );
                     }
-
                 });
             }
         });

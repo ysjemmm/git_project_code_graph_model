@@ -89,7 +89,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<Long> projectIds = new ArrayList<>();
         //1.查找我或我的团队所属项目id
         if (AscriptionEnum.CURRENT_USER.name().equals(projectQueryList.getAscription())) {
-            projectIds = personMapper.getProjectIds(Lists.newArrayList(currentUser), null, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            projectIds = personMapper.getMainIds(Lists.newArrayList(currentUser), null, PersonTypeEnum.PROJECT_MEMBER.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
@@ -97,7 +97,7 @@ public class ProjectServiceImpl implements ProjectService {
         } else if (AscriptionEnum.TEAM.name().equals(projectQueryList.getAscription())) {
             List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(currentUser);
             log.info("我和我的下属:{}", allMyStaffWithSelf);
-            projectIds = personMapper.getProjectIds(allMyStaffWithSelf, null, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            projectIds = personMapper.getMainIds(allMyStaffWithSelf, null, PersonTypeEnum.PROJECT_MEMBER.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }

@@ -14,14 +14,14 @@ public enum FileTypeEnum {
     BIZ_DEMAND(2),
     // 任务
     TASK(3),
-    //提测单-冒烟用例
-    SMOKING_USE_CASES(4),
-    //提测单-自测通过
-    SELF_TEST_PASS(5);
+    // 提测单-冒烟用例
+    TEST_BILL_CASE(4),
+    // 提测单-自测通过
+    TEST_BILL_PASS(5),
+
+    ;
 
     private Integer code;
 
-    FileTypeEnum(Integer code) {
-        this.code = code;
-    }
+    FileTypeEnum(Integer code){this.code = code;}
 }

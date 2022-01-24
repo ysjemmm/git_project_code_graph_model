@@ -118,9 +118,6 @@
             <if test="actualEndDateLeft != null and actualEndDateRight != null">
                 and a.actual_end_date &gt;= #{actualEndDateLeft} and a.actual_end_date &lt;= #{actualEndDateRight}
             </if>
-            <if test="modifyDateStart != null and modifyDateEnd != null">
-                and a.modify_date &gt;= #{modifyDateStart} and a.modify_date &lt;= #{modifyDateEnd}
-            </if>
             <if test="priorities!=null and priorities.size()>0">
                 and a.priority in
                 <foreach collection="priorities" item="item" separator="," open="(" close=")">
@@ -154,6 +151,18 @@
         actual_start_date,actual_end_date,`desc`, create_man_id, create_man,create_date,modify_date
         from project
         where name = #{name} and is_deleted=false
+    </select>
+
+    <select id="getByIds" resultType="com.timevale.forward.dal.entity.ProjectDO">
+        select id,name, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date,
+        actual_start_date,actual_end_date,`desc`, create_man_id, create_man,create_date,modify_date
+        from project
+        <where>
+             id in
+            <foreach collection="ids" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
     </select>
 
 </mapper>

@@ -33,6 +33,7 @@ public enum ProjectStatusEnum {
         this.code = code;
         this.text = text;
     }
+
     public static String getTextByCode(Integer code){
         for (ProjectStatusEnum e : ProjectStatusEnum.values()){
             if(e.getCode().equals(code)){
@@ -41,4 +42,9 @@ public enum ProjectStatusEnum {
         }
         return "errorCode";
     }
+
+    public static Boolean ongoing(Integer code){
+        return code.equals(PLANING.code) || code.equals(DEVING.code) || code.equals(TESTING.code);
+    }
+
 }

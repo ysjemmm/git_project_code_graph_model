@@ -3,9 +3,12 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.HomePageProjectBoardQueryList;
+import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
+
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -19,14 +22,14 @@ public interface HomePageService {
      *
      * @return 列表
      */
-    BaseResult<HomePageDataIndicatorVO> getDataIndicator();
+    BaseResult<HomePageDataIndicatorVO> getDataIndicator(String userType);
 
     /**
      * 待办卡片
      *
      * @return 列表
      */
-    BaseResult<HomePageTodoCardVO> getTodoCard();
+    BaseResult<HomePageTodoCardVO> getTodoCard(String userType);
 
 
     /**
@@ -42,7 +45,7 @@ public interface HomePageService {
      *
      * @return 列表
      */
-    BaseResult<HomePageRiskWarningVO> getRiskWarning();
+    BaseResult<List<HomePageRiskWarningVO>> getRiskWarning(String userType);
 
     /**
      * 项目工时看板查询

@@ -117,13 +117,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 filtered = allMyStaffWithSelf;
             }
             log.info("我和我的下属:{},过滤后:{}", allMyStaffWithSelf, filtered);
-            if(CollectionUtils.isEmpty(filtered)){
+            if (CollectionUtils.isEmpty(filtered)) {
                 //所选人员不在我的团队中
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
             condition.setOwnerIds(filtered);
         } else if (AscriptionEnum.DEPARTMENT.name().equals(productDemandQueryList.getAscription())) {
-            BaseInfoResponse baseInfo= innerUserPersonClient.getPersonByAccountNew(userInfo.getId());
+            BaseInfoResponse baseInfo = innerUserPersonClient.getPersonByAccountNew(userInfo.getId());
 
             String groupId = baseInfo.getDefaultGroup().getGroupId();
             List<String> accountIds = innerUserPersonClient.getAllByGroupId(groupId);
@@ -134,7 +134,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 filtered = accountIds;
             }
             log.info("用户默认部门id:{},同部门人员:{},过滤后:{}", groupId, accountIds, filtered);
-            if(CollectionUtils.isEmpty(filtered)){
+            if (CollectionUtils.isEmpty(filtered)) {
                 //所选人员不在我的部门中
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
@@ -234,22 +234,18 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         productDemand.setType(JSON.toJSONString(productDemandAddReq.getTypes()));
         productDemandMapper.insert(productDemand);
 
-        if (CollectionUtils.isNotEmpty(productDemandAddReq.getFiles())) {
-            fileComponent.add(productDemandAddReq.getFiles(), productDemand.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
-        }
-        if (CollectionUtils.isNotEmpty(productDemandAddReq.getRecipients())) {
-            personComponent.add(productDemandAddReq.getRecipients(), productDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
-        }
-        if (!CollectionUtils.isEmpty(productDemandAddReq.getBizDemandIds())) {
-            productBizDemandComponent.batchInsert(productDemand.getId(), productDemandAddReq.getBizDemandIds());
-        }
+        fileComponent.add(productDemandAddReq.getFiles(), productDemand.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
+
+        personComponent.add(productDemandAddReq.getRecipients(), productDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+
+        productBizDemandComponent.batchInsert(productDemand.getId(), productDemandAddReq.getBizDemandIds());
         if (productDemandAddReq.getProjectId() != null) {
             ProjectDO projectDO = projectMapper.get(productDemandAddReq.getProjectId());
             if (projectDO == null) {
                 throw new BaseBizRuntimeException("找不到该项目");
             }
             projectProductDemandComponent.batchInsert(productDemandAddReq.getProjectId(), Lists.newArrayList(productDemand.getId()));
-            productDemandComponent.updateProductDemandStatus(projectDO.getId(),projectDO.getStatus());
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
         }
         return BaseResult.success(true);
     }
@@ -317,13 +313,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         } else {
             filtered = receiveManIdList;
         }
-        if(CollectionUtils.isEmpty(filtered)){
+        if (CollectionUtils.isEmpty(filtered)) {
             //所选人员不在我和我的下属中
             return BaseResult.success(ResultUtil.pageEmpty());
         }
         condition.setReceiveManIdList(filtered);
         List<Integer> status = productDemandLinkBizDemandQueryList.getStatusList();
-        if (CollectionUtils.isEmpty(status) ) {
+        if (CollectionUtils.isEmpty(status)) {
             condition.setStatusList(Lists.newArrayList(
                     BizDemandStatusEnum.RECEIVED.getCode()
                     , BizDemandStatusEnum.INCLUDE_PROJECT.getCode()
@@ -332,7 +328,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     , BizDemandStatusEnum.AVAILABLE.getCode()));
         }
         // 过滤掉已经关联的业务需求
-        if(condition.getProductDemandId()!=null){
+        if (condition.getProductDemandId() != null) {
             List<ProductBizDemandDO> productBizDemand = productBizDemandMapper.select(ProductBizDemandCondition.builder()
                     .productDemandId(condition.getProductDemandId())
                     .isDeleted(false)

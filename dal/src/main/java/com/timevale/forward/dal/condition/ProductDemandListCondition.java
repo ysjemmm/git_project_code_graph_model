@@ -1,9 +1,8 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.mandarin.common.query.QueryBase;
-import io.swagger.annotations.ApiModel;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.util.Date;
 import java.util.List;
@@ -12,9 +11,8 @@ import java.util.List;
  * @author xingyun
  * @date 2021-12-13 13:58
  **/
-@EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("产品需求查询条件")
+@Builder
 public class ProductDemandListCondition extends QueryBase {
     /**
      * id

@@ -1,0 +1,21 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.TaskProductDemandMapper">
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into task_product_demand (task_id,product_demand_id,create_man_id, create_man)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.taskId}, #{i.productDemandId}, #{i.createManId},#{i.createMan})
+        </foreach>
+    </insert>
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.TaskProductDemandDO">
+        select a.id, a.task_id, a.product_demand_id, a.is_deleted
+        from task_product_demand a
+        <where>
+            a.task_id=#{taskId} and a.is_deleted=false
+        </where>
+    </select>
+
+</mapper>

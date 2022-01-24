@@ -1,10 +1,8 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.mandarin.common.query.QueryBase;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.util.Date;
 import java.util.List;
@@ -13,9 +11,8 @@ import java.util.List;
  * @author xingyun
  * @date 2021-12-13 13:58
  **/
-@EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("项目查询条件")
+@Builder
 public class ProjectListCondition extends QueryBase {
     /**
      * id
@@ -116,17 +113,5 @@ public class ProjectListCondition extends QueryBase {
      * 项目实际结束时间右区间
      */
     private Date actualEndDateRight;
-
-    /**
-     * 修改时间开始
-     */
-    @ApiModelProperty("修改时间开始")
-    private Date modifyDateStart;
-
-    /**
-     * 修改时间结束
-     */
-    @ApiModelProperty("修改时间结束")
-    private Date modifyDateEnd;
 
 }

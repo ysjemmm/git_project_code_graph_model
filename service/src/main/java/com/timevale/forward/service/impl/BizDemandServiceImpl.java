@@ -19,7 +19,6 @@ import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.FileComponent;
-import com.timevale.forward.service.component.MessageComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
@@ -27,6 +26,11 @@ import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.BizDemandInvalidMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandReceivedMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandRejectMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandToReceiveMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -79,7 +83,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     FileComponent fileComponent;
 
     @Resource
-    MessageComponent messageComponent;
+    MessageEventPublisher messageEventPublisher;
 
     @Resource
     BizDemandComponent bizDemandComponent;
@@ -142,19 +146,19 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 修改业务需求状态
         bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
         bizDemandDO.setStatus(BizDemandStatusEnum.INVALID.getCode());
-        bizDemandDO.setModifyManId(userInfo.getId());
-        bizDemandDO.setModifyMan(userInfo.getAlias());
         bizDemandMapper.update(bizDemandDO);
 
         // 取消产品关联
         productBizDemandMapper.deleteByBizDemandId(bizDemandId, userInfo.getAlias(), userInfo.getId());
 
         // 接收人通知
-        messageComponent.bizDemandInvalidMsg(bizDemandDO.getId(),
+        messageEventPublisher.publish(new BizDemandInvalidMsgEvent(
+                this,
+                bizDemandDO.getId(),
                 userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 bizDemandDO.getReceiveManId(),
                 bizDemandDO.getName()
-        );
+        ));
 
         return BaseResult.success(true);
     }
@@ -165,16 +169,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 判断主题是否唯一
-        BizDemandDO checkBizDemandDO = bizDemandMapper.selectByName(bizDemandAddReq.getName());
-        if(checkBizDemandDO != null){
+        if(bizDemandMapper.selectByName(bizDemandAddReq.getName()) != null){
             throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
         }
 
         // 新增业务需求
         BizDemandDO bizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandAddReq);
         bizDemandDO.setStatus(BizDemandStatusEnum.EVALUATE.getCode());
-        bizDemandDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        bizDemandDO.setCreateManId(userInfo.getId());
         bizDemandMapper.insert(bizDemandDO);
 
         List<FileAddReq> fileIdList = bizDemandAddReq.getFileList();
@@ -188,11 +189,14 @@ public class BizDemandServiceImpl implements BizDemandService {
             personComponent.add(recipientInfoList, bizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
         }
 
-        messageComponent.bizDemandToReceiveMsg(bizDemandDO.getId(),
+        // 通知需求接收人
+        messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
+                this,
+                bizDemandDO.getId(),
                 bizDemandDO.getCreateMan(),
                 bizDemandDO.getReceiveManId(),
                 bizDemandDO.getName()
-        );
+        ));
 
         return BaseResult.success(true);
     }
@@ -258,9 +262,12 @@ public class BizDemandServiceImpl implements BizDemandService {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
 
+        // 判断主题是否唯一
+        if(bizDemandMapper.selectByName(bizDemandModifyReq.getName()) != null){
+            throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
+        }
+
         BizDemandDO newBizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandModifyReq);
-        newBizDemandDO.setModifyMan(userInfo.getAlias());
-        newBizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(newBizDemandDO);
 
         // 添加抄送人数据
@@ -293,17 +300,17 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
         bizDemandDO.setPlanReleaseDate(planReleaseDate);
-        bizDemandDO.setModifyMan(userInfo.getAlias());
-        bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
         // 通知需求提交人
-        messageComponent.bizDemandReceivedMsg(bizDemandDO.getId(),
+        messageEventPublisher.publish(new BizDemandReceivedMsgEvent(
+                this,
+                bizDemandDO.getId(),
                 userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 bizDemandDO.getCreateManId(),
                 bizDemandDO.getName(),
                 PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
-        );
+        ));
 
         return BaseResult.success(true);
     }
@@ -324,17 +331,17 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setReason(reason);
         bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
         bizDemandDO.setStatus(BizDemandStatusEnum.REJECT.getCode());
-        bizDemandDO.setModifyMan(userInfo.getAlias());
-        bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
         // 驳回通知
-        messageComponent.bizDemandRejectMsg(bizDemandDO.getId(),
+        messageEventPublisher.publish(new BizDemandRejectMsgEvent(
+                this,
+                bizDemandDO.getId(),
                 userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 bizDemandDO.getCreateManId(),
                 bizDemandDO.getName(),
                 BizDemandReasonEnum.getTextByCode(bizDemandDO.getReason())
-        );
+        ));
 
         return BaseResult.success(true);
     }
@@ -351,16 +358,16 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         bizDemandDO.setReceiveMan(bizDemandTransferReq.getReceiveMan());
         bizDemandDO.setReceiveManId(bizDemandTransferReq.getReceiveManId());
-        bizDemandDO.setModifyMan(userInfo.getAlias());
-        bizDemandDO.setModifyManId(userInfo.getId());
         bizDemandMapper.update(bizDemandDO);
 
         // 转交人通知
-        messageComponent.bizDemandToReceiveMsg(bizDemandDO.getId(),
+        messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
+                this,
+                bizDemandDO.getId(),
                 bizDemandDO.getCreateMan(),
                 bizDemandDO.getReceiveManId(),
                 bizDemandDO.getName()
-        );
+        ));
 
         return BaseResult.success(true);
     }

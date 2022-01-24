@@ -44,7 +44,7 @@ public class BaseDistributeClientImpl<T> implements BaseDistributeClient<T> {
     @Value("${distribute.host:http://hua.testk8s.tsign.cn/proxy/dataDis/api/40/}")
     private String distributeHost;
 
-    @Resource
+    // @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Resource

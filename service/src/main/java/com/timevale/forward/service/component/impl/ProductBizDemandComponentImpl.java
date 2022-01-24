@@ -38,6 +38,9 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
 
     @Override
     public void batchInsert(Long productDemandId, List<Long> bizDemandIds) {
+        if(CollectionUtils.isEmpty(bizDemandIds)){
+            return;
+        }
         List<ProductBizDemandDO> exists = productBizDemandMapper.select(ProductBizDemandCondition.builder()
                 .productDemandId(productDemandId)
                 .isDeleted(false)

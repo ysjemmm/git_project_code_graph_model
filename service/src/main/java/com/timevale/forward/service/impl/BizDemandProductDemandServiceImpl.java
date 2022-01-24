@@ -25,11 +25,12 @@ import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
-import com.timevale.forward.service.component.MessageComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.BizDemandStatusChangeMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -40,7 +41,6 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
-import org.springframework.context.ApplicationContext;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -75,7 +75,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
     InnerUserPersonClient innerUserPersonClient;
 
     @Resource
-    MessageComponent messageComponent;
+    MessageEventPublisher messageEventPublisher;
 
     @Override
     public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> linkedProductDemandList(BizDemandProductDemandQueryList bizDemandProductDemandQueryList) {
@@ -142,8 +142,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         for (Long productDemandId : newLinkData) {
             if(!oldLinkDate.containsKey(productDemandId)){
                 ProductBizDemandDO productBizDemandDO = ProductBizDemandCopier.INSTANCE.convert(bizDemandId, productDemandId);
-                productBizDemandDO.setCreateMan(userInfo.getAlias());
-                productBizDemandDO.setCreateManId(userInfo.getId());
                 insertLinkDate.add(productBizDemandDO);
             }
         }
@@ -183,8 +181,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         }
 
         ProductBizDemandDO productBizDemandDO = list.get(0);
-        productBizDemandDO.setModifyManId(userInfo.getAlias());
-        productBizDemandDO.setModifyManId(userInfo.getId());
 
         productBizDemandMapper.delete(productBizDemandDO);
 
@@ -205,13 +201,14 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         // 如果新旧状态不同，且需要发送通知
         if(!oldStatus.equals(newStatus) && BizDemandStatusEnum.statusNeedNotice(newStatus)){
-            messageComponent.bizDemandStatusChangeMsg(
+            messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
+                    this,
                     newBizDemandDO.getId(),
                     newBizDemandDO.getReceiveManId(),
                     newBizDemandDO.getName(),
                     statusText,
                     projectEndDate
-            );
+            ));
         }
 
         // 返回当前状态

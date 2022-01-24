@@ -58,10 +58,10 @@ public interface ProjectMapper {
 
 
     /**
-     * 选择通过产品需求id列表
+     * 根据查询条件获取项目列表
      *
-     * @param condition 产品需求id列表
-     * @return ProjectDO
+     * @param condition 查询条件
+     * @return ProjectDO列表
      */
     List<ProjectListDO> list(ProjectListCondition condition);
 
@@ -71,5 +71,12 @@ public interface ProjectMapper {
      * @return 产品需求DO
      */
     ProjectDO getByName(@Param("name") String name);
+
+    /**
+     * 查询
+     * @param ids id
+     * @return 项目信息
+     */
+    List<ProjectDO>  getByIds(@Param("ids") List<Long> ids);
 
 }
