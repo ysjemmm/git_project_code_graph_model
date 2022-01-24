@@ -11,9 +11,17 @@ public enum FileTypeEnum {
     // 产品需求
     PRODUCT_DEMAND(1),
     // 业务需求
-    BIZ_DEMAND(2);
+    BIZ_DEMAND(2),
+    // 任务
+    TASK(3),
+    //提测单-冒烟用例
+    SMOKING_USE_CASES(4),
+    //提测单-自测通过
+    SELF_TEST_PASS(5);
 
     private Integer code;
 
-    FileTypeEnum(Integer code){this.code = code;}
+    FileTypeEnum(Integer code) {
+        this.code = code;
+    }
 }

@@ -22,4 +22,12 @@
         </where>
         order by plan_date asc
     </select>
+
+    <update id="updateSubmitTestActualDate">
+        update project_node
+        set actual_date=#{actualDate}
+        where project_id=#{projectId} and name="提测"
+    </update>
+
+
 </mapper>

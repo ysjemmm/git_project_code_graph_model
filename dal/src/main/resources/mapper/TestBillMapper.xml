@@ -1,0 +1,44 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.TestBillMapper">
+    <insert id="submitTestBill">
+        insert into test_bill(project_id,status,test_man,test_man_id,create_man,create_man_id) values
+        (#{projectId},0,#{testMan},#{testManId},#{createMan},#{createManId})
+    </insert>
+
+    <update id="submitSmokeTesting">
+        update test_bill
+        set case_url=#{caseUrl},status=1,create_man=#{createMan},create_man_id=#{createManId}
+        where project_id=#{projectId}
+    </update>
+
+    <update id="modifyTestMan">
+        update test_bill
+        set test_man=#{testMan},test_man_id=#{testManId},modify_man=#{modifyMan},modify_man_id=#{modifyManId}
+        where project_id=#{projectId}
+    </update>
+
+    <update id="selfTestPass">
+        update test_bill
+        set `desc`=#{desc},test_count=test_count+1,status=2,progress=#{progress}
+        ,modify_man=#{modifyMan},modify_man_id=#{modifyManId}
+        where project_id=#{projectId}
+    </update>
+
+    <update id="selfTestPass">
+        update test_bill
+        set status=3,pass_rate=#{pass_rate},modify_man=#{modifyMan},modify_man_id=#{modifyManId}
+        where project_id=#{projectId}
+    </update>
+
+    <update id="submitTestBack">
+        update test_bill
+        set return_count=return_count+1,reason=#{reason},status=1,modify_man=#{modifyMan},modify_man_id=#{modifyManId}
+        where project_id=#{projectId}
+    </update>
+
+    <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.SubmitTestDO">
+        select * from test_bill
+        where project_id=#{projectId}
+    </select>
+</mapper>
