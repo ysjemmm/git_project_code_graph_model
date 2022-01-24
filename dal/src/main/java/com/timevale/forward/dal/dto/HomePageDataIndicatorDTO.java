@@ -47,4 +47,16 @@ public class HomePageDataIndicatorDTO {
      */
     @JSONField(name = "overdue_pj_prop")
     private BigDecimal overdueProjectRate;
+
+    /**
+     * 本季度输出需求个数
+     */
+    @JSONField(name = "demand_total_q")
+    private Integer productDemandCount;
+
+    /**
+     * 本季度需求已上线个数占比
+     */
+    @JSONField(name = "online_demand_prop")
+    private BigDecimal onlineProductDemandRate;
 }

@@ -29,18 +29,50 @@ public class DistributeConfig {
     }
 
     /**
-     * 数据指标配置
+     * 数据指标配置 —— 产品PD
      *
      */
-    public DistributeConfigVO getDataIndicator() {
+    public DistributeConfigVO getDataIndicatorPD() {
         return databases.get("csm.dataIndicator");
     }
 
     /**
-     * 数据指标配置
+     * 数据指标配置 —— 开发RD
+     *
+     */
+    public DistributeConfigVO getDataIndicatorRD() {
+        return databases.get("csm.dataIndicator");
+    }
+
+    /**
+     * 数据指标配置 —— 测试QA
+     *
+     */
+    public DistributeConfigVO getDataIndicatorQA() {
+        return databases.get("csm.dataIndicator");
+    }
+
+    /**
+     * 近三周计划上线项目配置
      *
      */
     public DistributeConfigVO getProjectOnlineLately() {
+        return databases.get("csm.projectOnlineLately");
+    }
+
+    /**
+     * 风险预警 —— 开发RD
+     *
+     */
+    public DistributeConfigVO getRiskWarningRD() {
+        return databases.get("csm.projectOnlineLately");
+    }
+
+    /**
+     * 风险预警 —— 测试QA
+     *
+     */
+    public DistributeConfigVO getRiskWarningQA() {
         return databases.get("csm.projectOnlineLately");
     }
 

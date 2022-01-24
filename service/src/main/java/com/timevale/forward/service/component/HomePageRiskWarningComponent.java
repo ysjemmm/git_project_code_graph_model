@@ -1,10 +1,6 @@
 package com.timevale.forward.service.component;
 
-import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
-import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.result.HomePageRiskWarningVO;
-import com.timevale.mandarin.common.annotation.RestClient;
 
 import java.util.List;
 
@@ -16,7 +12,8 @@ public interface HomePageRiskWarningComponent {
     /**
      * 预警
      *
+     * @param userType 用户类型
      * @return 列表
      */
-    List<HomePageRiskWarningDTO> getRiskWarning();
+    List<HomePageRiskWarningDTO> getRiskWarning(String userType);
 }

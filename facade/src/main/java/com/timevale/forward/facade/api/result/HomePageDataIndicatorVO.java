@@ -41,23 +41,4 @@ public class HomePageDataIndicatorVO extends ToString {
     @ApiModelProperty("已上线需求占比")
     private BigDecimal onlineProductDemandRate;
 
-//    @ApiModelProperty("项目总数")
-//    private Integer pjTotalQ;
-//
-//    @ApiModelProperty("已上线项目占比")
-//    private BigDecimal onlinePjProp;
-//
-//    @ApiModelProperty("P0P1项目总数")
-//    private Integer p0p1PjQ;
-//
-//    @ApiModelProperty("已上线P0P1项目占比")
-//    private BigDecimal onlineP0p1PjProp;
-//
-//    @ApiModelProperty("逾期项目")
-//    private Integer overduePj;
-//
-//    @ApiModelProperty("逾期项目占比")
-//    private BigDecimal overduePjProp;
-
-
 }

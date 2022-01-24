@@ -12,5 +12,5 @@ public interface HomePageDataIndicatorComponent {
      *
      * @return 数据指标VO
      */
-    HomePageDataIndicatorDTO getDataIndicator();
+    HomePageDataIndicatorDTO getDataIndicator(String userType);
 }

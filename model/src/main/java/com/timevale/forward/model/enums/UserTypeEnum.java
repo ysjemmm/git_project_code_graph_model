@@ -7,7 +7,7 @@ import lombok.Getter;
  * @date 2022/01/24 15:13
  */
 @Getter
-public enum UserType {
+public enum UserTypeEnum {
     /**
      * 产品
      */

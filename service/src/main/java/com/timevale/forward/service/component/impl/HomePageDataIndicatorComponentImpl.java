@@ -1,10 +1,12 @@
 package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dto.HomePageDataIndicatorDTO;
+import com.timevale.forward.model.enums.UserTypeEnum;
 import com.timevale.forward.service.component.HomePageDataIndicatorComponent;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.integration.superset.client.impl.BaseDistributeClientImpl;
 import com.timevale.forward.service.integration.superset.config.DistributeConfig;
+import com.timevale.forward.service.integration.superset.config.DistributeConfigVO;
 import com.timevale.forward.service.integration.superset.model.base.DistributePageQueryVO;
 import com.timevale.forward.service.integration.superset.util.ParamHelper;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -29,7 +31,7 @@ public class HomePageDataIndicatorComponentImpl extends BaseDistributeClientImpl
     private InnerUserPersonClient innerUserPersonClient;
 
     @Override
-    public HomePageDataIndicatorDTO getDataIndicator() {
+    public HomePageDataIndicatorDTO getDataIndicator(String userType) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
@@ -39,9 +41,17 @@ public class HomePageDataIndicatorComponentImpl extends BaseDistributeClientImpl
                 .page(1)
                 .in("user_id", allMyStaffWithSelf);
 
+        // 根据用户类型访问不同接口
+        DistributeConfigVO projectOnlineLately;
+        if(userType.equals(UserTypeEnum.PD.toString())){
+            projectOnlineLately = distributeConfig.getDataIndicatorPD();
+        }else{
+            projectOnlineLately = distributeConfig.getDataIndicatorRD();
+        }
+
         DistributePageQueryVO params = DistributePageQueryVO.builder()
                 .params(paramHelper.params())
-                .distributeConfigVO(distributeConfig.getProjectOnlineLately())
+                .distributeConfigVO(projectOnlineLately)
                 .build();
 
         List<HomePageDataIndicatorDTO> list = doGet(params);

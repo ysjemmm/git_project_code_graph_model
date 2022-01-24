@@ -8,6 +8,8 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
+import java.util.List;
+
 /**
  * @author by YangXu
  * @date 2022/01/11 17:42
@@ -20,7 +22,7 @@ public interface HomePageService {
      *
      * @return 列表
      */
-    BaseResult<HomePageDataIndicatorVO> getDataIndicator();
+    BaseResult<HomePageDataIndicatorVO> getDataIndicator(String userType);
 
     /**
      * 待办卡片
@@ -43,7 +45,7 @@ public interface HomePageService {
      *
      * @return 列表
      */
-    BaseResult<HomePageRiskWarningVO> getRiskWarning();
+    BaseResult<List<HomePageRiskWarningVO>> getRiskWarning(String userType);
 
     /**
      * 项目工时看板查询

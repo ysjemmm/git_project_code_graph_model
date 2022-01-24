@@ -24,4 +24,7 @@ public class HomePageProjectNodeVO extends ToString {
     @ApiModelProperty("超时天数")
     private Integer overdueDay;
 
+    @ApiModelProperty("提测单名称")
+    private Integer testBillName;
+
 }

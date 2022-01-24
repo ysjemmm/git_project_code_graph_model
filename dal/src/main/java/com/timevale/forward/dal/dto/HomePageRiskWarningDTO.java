@@ -38,4 +38,9 @@ public class HomePageRiskWarningDTO {
      */
     @JSONField(name = "latedate")
     private String overdueDay;
+
+    /**
+     * 提测单名称
+     */
+    private String testBillName;
 }
