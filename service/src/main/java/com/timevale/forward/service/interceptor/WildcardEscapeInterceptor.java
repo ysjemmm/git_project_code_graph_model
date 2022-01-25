@@ -27,7 +27,7 @@ import java.util.Properties;
 public class WildcardEscapeInterceptor implements Interceptor {
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
-        if(invocation.getArgs().length == 1){
+        if(invocation.getArgs().length <= 1 || invocation.getArgs()[1] == null){
             return invocation.proceed();
         }
         Object parameter = invocation.getArgs()[1];
