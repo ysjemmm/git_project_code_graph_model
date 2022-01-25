@@ -12,6 +12,7 @@ import com.timevale.forward.service.integration.superset.util.ParamHelper;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -25,7 +26,7 @@ import java.util.List;
 @Component
 public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<HomePageRiskWarningDTO> implements HomePageRiskWarningComponent {
 
-    // @Resource
+    @Resource
     private DistributeConfig distributeConfig;
 
     @Resource
@@ -40,7 +41,7 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
         ParamHelper paramHelper = ParamHelper.newInstance()
                 .offset(0)
                 .page(Integer.MAX_VALUE)
-                .in("user_id", allMyStaffWithSelf);
+                .in("user_id", Lists.emptyList());
 
         // 根据用户类型选择不同配置
         DistributeConfigVO riskWarning;

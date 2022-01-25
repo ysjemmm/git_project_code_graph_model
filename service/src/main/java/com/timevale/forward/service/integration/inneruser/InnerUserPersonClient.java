@@ -37,11 +37,18 @@ public interface InnerUserPersonClient {
     BaseInfoResponse getPersonByAccountNew(String accountId);
 
     /**
-     * 获取部门员工
+     * 获取当前部门及其所有子部门员工 (含离职)
      * @param groupId groupId
      * @return String
      */
     List<String> getAllByGroupId(String groupId);
+
+    /**
+     * 获取部门员工
+     * @param groupId 部门id
+     * @return 员工idList
+     */
+    List<String> getByGroupIdNew(String groupId);
 
     /**
      * 获取用户

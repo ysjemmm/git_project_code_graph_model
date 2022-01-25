@@ -41,7 +41,7 @@ public class BaseDistributeClientImpl<T> implements BaseDistributeClient<T> {
     /**
      * superset 环境地址
      */
-    @Value("${distribute.host:http://hua.testk8s.tsign.cn/proxy/dataDis/api/40/}")
+    @Value("${distribute.host:http://hua.testk8s.tsign.cn/proxy/dataDis/api/}")
     private String distributeHost;
 
     // @Resource

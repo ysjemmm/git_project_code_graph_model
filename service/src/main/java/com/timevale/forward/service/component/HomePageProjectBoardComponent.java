@@ -6,6 +6,8 @@ import com.timevale.forward.facade.api.query.HomePageProjectBoardQueryList;
 import com.timevale.forward.facade.api.result.HomePageProjectBoardVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
+import java.util.List;
+
 /**
  * @author by YangXu
  * @date 2022/01/24 09:48
@@ -14,8 +16,9 @@ public interface HomePageProjectBoardComponent {
     /**
      * 项目工时看板查询
      *
-     * @param boardQueryList 查询条件
+     * @param userType 用户类型
+     * @param userIdList 用户idList
      * @return VO
      */
-    BaseResult<HomePageProjectBoardVO> getProjectBoard(HomePageProjectBoardQueryList boardQueryList);
+    List<HomePageProjectBoardVO> getProjectBoard(String userType, List<String> userIdList);
 }

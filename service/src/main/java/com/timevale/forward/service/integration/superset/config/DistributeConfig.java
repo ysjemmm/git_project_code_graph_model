@@ -13,7 +13,7 @@ import java.util.Map;
  * @author yuankai
  * @date 2021/6/16 18:07
  */
-// @Configuration
+@Configuration
 @Slf4j
 public class DistributeConfig {
     @Value("${distribute.databases}")
@@ -33,7 +33,7 @@ public class DistributeConfig {
      *
      */
     public DistributeConfigVO getDataIndicatorPD() {
-        return databases.get("csm.dataIndicator");
+        return databases.get("pd.dataIndicator");
     }
 
     /**
@@ -41,15 +41,7 @@ public class DistributeConfig {
      *
      */
     public DistributeConfigVO getDataIndicatorRD() {
-        return databases.get("csm.dataIndicator");
-    }
-
-    /**
-     * 数据指标配置 —— 测试QA
-     *
-     */
-    public DistributeConfigVO getDataIndicatorQA() {
-        return databases.get("csm.dataIndicator");
+        return databases.get("rd.dataIndicator");
     }
 
     /**
@@ -57,7 +49,7 @@ public class DistributeConfig {
      *
      */
     public DistributeConfigVO getProjectOnlineLately() {
-        return databases.get("csm.projectOnlineLately");
+        return databases.get("all.projectOnlineLately");
     }
 
     /**
@@ -65,7 +57,7 @@ public class DistributeConfig {
      *
      */
     public DistributeConfigVO getRiskWarningRD() {
-        return databases.get("csm.projectOnlineLately");
+        return databases.get("rd.riskWarning");
     }
 
     /**
@@ -73,7 +65,24 @@ public class DistributeConfig {
      *
      */
     public DistributeConfigVO getRiskWarningQA() {
-        return databases.get("csm.projectOnlineLately");
+        return databases.get("qa.riskWarning");
     }
 
+    /**
+     * 项目工时看板 —— 产品PD
+     *
+     */
+    public DistributeConfigVO getProjectBoardPD(){return databases.get("pd.projectBoard");}
+
+    /**
+     * 项目工时看板 —— 开发RD
+     *
+     */
+    public DistributeConfigVO getProjectBoardRD(){return databases.get("rd.projectBoard");}
+
+    /**
+     * 项目工时看板 —— 测试QA
+     *
+     */
+    public DistributeConfigVO getProjectBoardQA(){return databases.get("qa.projectBoard");}
 }

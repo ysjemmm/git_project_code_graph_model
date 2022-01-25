@@ -5,6 +5,7 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.security.facade.api.RpcPersonService;
 import com.timevale.security.facade.request.AccountRequest;
+import com.timevale.security.facade.request.GroupRequest;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -118,5 +119,27 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountIds + " error: " + e.getMessage(), e);
         }
         throw new BaseBizRuntimeException("调用内部用户中心失败! " + accountIds);
+    }
+
+    @Override
+    public List<String> getByGroupIdNew(String groupId) {
+        if (StringUtils.isEmpty(groupId)) {
+            throw new BaseBizRuntimeException("部门id为空! " + groupId);
+        }
+        List<String> accountIds = new ArrayList<>();
+        try {
+            GroupRequest groupRequest = new GroupRequest();
+            groupRequest.setGroupId(groupId);
+            BaseResult<List<BaseInfoResponse>> personInGroup = rpcPersonService.getByGroupIdNew(groupRequest);
+            if (personInGroup.ifSuccess() && !CollectionUtils.isEmpty(personInGroup.getData())) {
+                personInGroup.getData().forEach(t -> {
+                    accountIds.add(t.getAccount());
+                });
+                return accountIds;
+            }
+        } catch (Exception e) {
+            log.error("调用内部用户中心失败 getPersonByAccountNew groupId: " + groupId + " error: " + e.getMessage(), e);
+        }
+        throw new BaseBizRuntimeException("调用内部用户中心失败! " + groupId);
     }
 }

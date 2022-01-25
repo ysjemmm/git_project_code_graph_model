@@ -3,7 +3,6 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.HomePageProjectBoardQueryList;
-import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -20,6 +19,7 @@ public interface HomePageService {
     /**
      * 查数据指标
      *
+     * @param userType 用户类型
      * @return 列表
      */
     BaseResult<HomePageDataIndicatorVO> getDataIndicator(String userType);
@@ -27,6 +27,7 @@ public interface HomePageService {
     /**
      * 待办卡片
      *
+     * @param userType 用户类型
      * @return 列表
      */
     BaseResult<HomePageTodoCardVO> getTodoCard(String userType);
@@ -35,14 +36,16 @@ public interface HomePageService {
     /**
      * 近三周上线项目
      *
+     * @param pageNum 对应页数
      * @return 列表
      */
-    BaseResult<PageQueryResult<HomePageProjectOnlineLatelyVO>> getProjectOnlineLately();
+    BaseResult<PageQueryResult<HomePageProjectOnlineLatelyVO>> getProjectOnlineLately(Integer pageNum);
 
 
     /**
      * 预警
      *
+     * @param userType 用户类型
      * @return 列表
      */
     BaseResult<List<HomePageRiskWarningVO>> getRiskWarning(String userType);
@@ -50,8 +53,9 @@ public interface HomePageService {
     /**
      * 项目工时看板查询
      *
+     * @param homePageProjectBoardQueryList 查询条件
      * @return 列表
      */
-    BaseResult<HomePageProjectBoardVO> getProjectBoard(HomePageProjectBoardQueryList boardQueryList);
+    BaseResult<HomePageProjectBoardVO> getProjectBoard(HomePageProjectBoardQueryList homePageProjectBoardQueryList);
 
 }

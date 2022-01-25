@@ -6,8 +6,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.math.BigDecimal;
-
 /**
  * @author: xingyun
  * @create: 2021-12-13 13:53
@@ -21,24 +19,24 @@ public class HomePageDataIndicatorVO extends ToString {
     private Integer projectCount;
 
     @ApiModelProperty("已上线项目占比")
-    private BigDecimal onlineProjectRate;
+    private String onlineProjectRate;
 
     @ApiModelProperty("P0P1项目总数")
     private Integer projectCountP0P1;
 
     @ApiModelProperty("已上线P0P1项目占比")
-    private BigDecimal onlineProjectRateP0P1;
+    private String onlineProjectRateP0P1;
 
     @ApiModelProperty("逾期项目")
     private Integer overdueProjectCount;
 
     @ApiModelProperty("逾期项目占比")
-    private BigDecimal overdueProjectRate;
+    private String overdueProjectRate;
 
     @ApiModelProperty("需求总数")
     private Integer productDemandCount;
 
     @ApiModelProperty("已上线需求占比")
-    private BigDecimal onlineProductDemandRate;
+    private String onlineProductDemandRate;
 
 }

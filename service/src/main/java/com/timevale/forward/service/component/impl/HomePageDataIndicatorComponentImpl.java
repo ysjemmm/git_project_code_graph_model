@@ -12,9 +12,12 @@ import com.timevale.forward.service.integration.superset.util.ParamHelper;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.lang.reflect.Field;
 import java.util.List;
 
 /**
@@ -24,7 +27,7 @@ import java.util.List;
 @Slf4j
 @Component
 public class HomePageDataIndicatorComponentImpl extends BaseDistributeClientImpl<HomePageDataIndicatorDTO> implements HomePageDataIndicatorComponent {
-    // @Resource
+    @Resource
     private DistributeConfig distributeConfig;
 
     @Resource
@@ -39,23 +42,26 @@ public class HomePageDataIndicatorComponentImpl extends BaseDistributeClientImpl
         ParamHelper paramHelper = ParamHelper.newInstance()
                 .offset(0)
                 .page(1)
-                .in("user_id", allMyStaffWithSelf);
+                .in("user_id", Lists.emptyList());
 
         // 根据用户类型访问不同接口
-        DistributeConfigVO projectOnlineLately;
+        DistributeConfigVO distributeConfigVO;
         if(userType.equals(UserTypeEnum.PD.toString())){
-            projectOnlineLately = distributeConfig.getDataIndicatorPD();
+            distributeConfigVO = distributeConfig.getDataIndicatorPD();
         }else{
-            projectOnlineLately = distributeConfig.getDataIndicatorRD();
+            distributeConfigVO = distributeConfig.getDataIndicatorRD();
         }
 
         DistributePageQueryVO params = DistributePageQueryVO.builder()
                 .params(paramHelper.params())
-                .distributeConfigVO(projectOnlineLately)
+                .distributeConfigVO(distributeConfigVO)
                 .build();
+        List<HomePageDataIndicatorDTO> homePageDataIndicatorDTOList = doGet(params);
 
-        List<HomePageDataIndicatorDTO> list = doGet(params);
-
-        return list.get(0);
+        // 验空
+        if(CollectionUtils.isEmpty(homePageDataIndicatorDTOList)){
+            return new HomePageDataIndicatorDTO();
+        }
+        return homePageDataIndicatorDTOList.get(0);
     }
 }

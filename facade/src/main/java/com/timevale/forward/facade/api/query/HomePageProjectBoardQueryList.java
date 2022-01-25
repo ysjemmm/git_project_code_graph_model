@@ -21,7 +21,7 @@ public class HomePageProjectBoardQueryList extends QueryBase {
     @ApiModelProperty("部门id")
     private List<Long> deptIds;
 
-    @ApiModelProperty("团队成员:花名")
+    @ApiModelProperty("团队成员:花名id")
     private List<String> teamMembers;
 
     @ApiModelProperty("开始时间")
@@ -30,4 +30,6 @@ public class HomePageProjectBoardQueryList extends QueryBase {
     @ApiModelProperty("结束时间")
     private Date endDate;
 
+    @ApiModelProperty("用户类型")
+    private String userType;
 }

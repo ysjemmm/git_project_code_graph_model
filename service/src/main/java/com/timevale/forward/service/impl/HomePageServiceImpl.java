@@ -1,11 +1,13 @@
 package com.timevale.forward.service.impl;
 
+import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dto.HomePageDataIndicatorDTO;
+import com.timevale.forward.dal.dto.HomePageProjectOnlineLatelyDTO;
 import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
 import com.timevale.forward.dal.entity.BizDemandListDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
@@ -17,18 +19,22 @@ import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.UserTypeEnum;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.copy.HomePageDataIndicatorCopier;
+import com.timevale.forward.service.copy.HomePageProjectOnlineLatelyCopier;
 import com.timevale.forward.service.copy.HomePageRiskWarningCopier;
+import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Sets;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -50,9 +56,6 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Resource
     HomePageRiskWarningComponent homePageRiskWarningComponent;
-
-    @Resource
-    HomePageTodoCardComponent homePageTodoCardComponent;
 
     @Resource
     InnerUserPersonClient innerUserPersonClient;
@@ -100,10 +103,9 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<HomePageProjectOnlineLatelyVO>> getProjectOnlineLately() {
-        PageQueryResult<HomePageProjectOnlineLatelyVO> pageQueryResult = new PageQueryResult<>();
-//        ProjectOnlineLatelyVO projectOnlineLatelyVO=new ProjectOnlineLatelyVO();
-        return BaseResult.success(pageQueryResult);
+    public BaseResult<PageQueryResult<HomePageProjectOnlineLatelyVO>> getProjectOnlineLately(Integer pageNum) {
+        List<HomePageProjectOnlineLatelyDTO> projectOnlineLatelyDTOList = homePageProjectOnlineLatelyComponent.getProjectOnlineLately(pageNum);
+        return BaseResult.success(HomePageProjectOnlineLatelyCopier.INSTANCE.convert(ResultUtil.pageSuccess(new PageInfo<>(projectOnlineLatelyDTOList))));
     }
 
     @Override
@@ -127,8 +129,31 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     @Override
-    public BaseResult<HomePageProjectBoardVO> getProjectBoard(HomePageProjectBoardQueryList boardQueryList) {
-        HomePageProjectBoardVO projectBoardVO=new HomePageProjectBoardVO();
+    public BaseResult<HomePageProjectBoardVO> getProjectBoard(HomePageProjectBoardQueryList homePageProjectBoardQueryList) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        String userType = homePageProjectBoardQueryList.getUserType();
+        List<Long> deptIds = homePageProjectBoardQueryList.getDeptIds();
+        List<String> teamMembers = homePageProjectBoardQueryList.getTeamMembers();
+
+        // 我和我的所有员工 Set
+        Set<String> allMyStaffWithSelfSet = Sets.newHashSet(innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId()));
+
+        // 部门id非空取交集
+        if(!CollectionUtils.isEmpty(deptIds)){
+            for (Long deptId : deptIds) {
+                allMyStaffWithSelfSet.retainAll(innerUserPersonClient.getByGroupIdNew(String.valueOf(deptId)));
+            }
+        }
+        // 员工id非空取交集
+        if(!CollectionUtils.isEmpty(teamMembers)){
+            allMyStaffWithSelfSet.retainAll(teamMembers);
+        }
+
+        List<HomePageProjectBoardVO> projectBoard = homePageProjectBoardComponent.getProjectBoard(userType, new ArrayList<>(allMyStaffWithSelfSet));
+
+
+        HomePageProjectBoardVO projectBoardVO= new HomePageProjectBoardVO();
         return BaseResult.success(projectBoardVO);
     }
 }
