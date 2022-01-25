@@ -3,7 +3,10 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.request.RecipientAddReq;
+import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.mandarin.common.annotation.RestClient;
+
+import java.util.List;
 
 /**
  * @author xingyun
@@ -18,4 +21,13 @@ public interface PersonService {
      * @return 数量
      */
     BaseResult<Boolean> addRecipients(RecipientAddReq recipientAddReq);
+
+
+    /**
+     * 查看团队成员
+     *
+     * @param projectId 项目信息
+     * @return 详情信息
+     */
+    BaseResult<List<PersonVO>> getTeamMembers(Long projectId);
 }

@@ -9,7 +9,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
-import java.util.List;
 
 /**
  * @author: xingyun
@@ -72,8 +71,5 @@ public class TaskVO extends ToString {
 
     @ApiModelProperty("产品线名称")
     private String productLineName;
-
-    @ApiModelProperty("产品线")
-    private List<ProductLineVO> productLines;
 
 }
