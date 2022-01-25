@@ -1,6 +1,7 @@
 package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dto.HomePageProjectOnlineLatelyDTO;
+import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
 import com.timevale.forward.service.component.HomePageProjectOnlineLatelyComponent;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.integration.superset.client.impl.BaseDistributeClientImpl;
@@ -32,14 +33,14 @@ public class HomePageProjectOnlineLatelyComponentImpl extends BaseDistributeClie
     private InnerUserPersonClient innerUserPersonClient;
 
     @Override
-    public List<HomePageProjectOnlineLatelyDTO> getProjectOnlineLately(Integer pageNum) {
+    public List<HomePageProjectOnlineLatelyDTO> getProjectOnlineLately(HomePageProjectOnlineLatelyQueryList homePageProjectOnlineLatelyQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
 
         ParamHelper paramHelper = ParamHelper.newInstance()
                 .offset(0)
-                .page(pageNum)
+                .page(homePageProjectOnlineLatelyQueryList.getPageNum())
                 .in("user_id", Lists.emptyList());
 
         DistributePageQueryVO params = DistributePageQueryVO.builder()

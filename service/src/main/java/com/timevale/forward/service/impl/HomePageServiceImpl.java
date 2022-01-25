@@ -13,15 +13,18 @@ import com.timevale.forward.dal.entity.BizDemandListDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
 import com.timevale.forward.facade.api.client.HomePageService;
 import com.timevale.forward.facade.api.query.HomePageProjectBoardQueryList;
+import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.UserTypeEnum;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.component.HomePageDataIndicatorComponent;
+import com.timevale.forward.service.component.HomePageProjectBoardComponent;
+import com.timevale.forward.service.component.HomePageProjectOnlineLatelyComponent;
+import com.timevale.forward.service.component.HomePageRiskWarningComponent;
 import com.timevale.forward.service.copy.HomePageDataIndicatorCopier;
 import com.timevale.forward.service.copy.HomePageProjectOnlineLatelyCopier;
 import com.timevale.forward.service.copy.HomePageRiskWarningCopier;
-import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -34,7 +37,10 @@ import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -103,8 +109,8 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<HomePageProjectOnlineLatelyVO>> getProjectOnlineLately(Integer pageNum) {
-        List<HomePageProjectOnlineLatelyDTO> projectOnlineLatelyDTOList = homePageProjectOnlineLatelyComponent.getProjectOnlineLately(pageNum);
+    public BaseResult<PageQueryResult<HomePageProjectOnlineLatelyVO>> getProjectOnlineLately(HomePageProjectOnlineLatelyQueryList homePageProjectOnlineLatelyQueryList) {
+        List<HomePageProjectOnlineLatelyDTO> projectOnlineLatelyDTOList = homePageProjectOnlineLatelyComponent.getProjectOnlineLately(homePageProjectOnlineLatelyQueryList);
         return BaseResult.success(HomePageProjectOnlineLatelyCopier.INSTANCE.convert(ResultUtil.pageSuccess(new PageInfo<>(projectOnlineLatelyDTOList))));
     }
 
