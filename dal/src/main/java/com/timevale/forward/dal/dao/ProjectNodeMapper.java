@@ -37,5 +37,5 @@ public interface ProjectNodeMapper {
      * @param projectId  项目id
      * @param actualDate 实际提测时间
      */
-    void updateSubmitTestActualDate(Long projectId, LocalDateTime actualDate);
+    void updateSubmitTestActualDate(@Param("projectId") Long projectId, @Param("actualDate") LocalDateTime actualDate);
 }

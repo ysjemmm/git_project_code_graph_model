@@ -67,5 +67,6 @@
         <mapper resource="mapper/TaskMapper.xml"/>
         <mapper resource="mapper/TaskTimeMapper.xml"/>
         <mapper resource="mapper/TaskProductDemandMapper.xml"/>
+        <mapper resource="mapper/TestBillMapper.xml"/>
     </mappers>
 </configuration>

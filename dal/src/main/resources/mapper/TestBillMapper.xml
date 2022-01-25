@@ -3,41 +3,85 @@
 <mapper namespace="com.timevale.forward.dal.dao.TestBillMapper">
     <insert id="submitTestBill">
         insert into test_bill(project_id,status,test_man,test_man_id,create_man,create_man_id) values
-        (#{projectId},0,#{testMan},#{testManId},#{createMan},#{createManId})
+        (#{testBillDO.projectId},0,#{testBillDO.testMan},#{testBillDO.testManId}
+        ,#{testBillDO.createMan},#{testBillDO.createManId})
     </insert>
 
     <update id="submitSmokeTesting">
         update test_bill
-        set case_url=#{caseUrl},status=1,create_man=#{createMan},create_man_id=#{createManId}
-        where project_id=#{projectId}
+        <set>
+            <if test="testBillDO.caseUrl != null">case_url=#{testBillDO.caseUrl},</if>
+            <if test="true">status=1,</if>
+            <if test="testBillDO.modifyMan != null">modify_man=#{testBillDO.modifyMan},</if>
+            <if test="testBillDO.modifyManId != null">modify_man_id=#{testBillDO.modifyManId},</if>
+        </set>
+        <where>
+            <if test="testBillDO.projectId != null">
+                and project_id=#{testBillDO.projectId}
+            </if>
+        </where>
     </update>
 
     <update id="modifyTestMan">
         update test_bill
-        set test_man=#{testMan},test_man_id=#{testManId},modify_man=#{modifyMan},modify_man_id=#{modifyManId}
-        where project_id=#{projectId}
+        <set>
+            <if test="testBillDO.testMan != null">test_man=#{testBillDO.testMan},</if>
+            <if test="testBillDO.testManId != null">test_man_id=#{testBillDO.testManId},</if>
+            <if test="testBillDO.modifyMan != null">modify_man=#{testBillDO.modifyMan},</if>
+            <if test="testBillDO.modifyManId != null">modify_man_id=#{testBillDO.modifyManId},</if>
+        </set>
+        <where>
+            <if test="testBillDO.projectId != null">
+                and project_id=#{testBillDO.projectId}
+            </if>
+        </where>
     </update>
 
     <update id="selfTestPass">
         update test_bill
-        set `desc`=#{desc},test_count=test_count+1,status=2,progress=#{progress}
-        ,modify_man=#{modifyMan},modify_man_id=#{modifyManId}
-        where project_id=#{projectId}
+        <set>
+            <if test="testBillDO.desc != null">`desc`=#{testBillDO.desc},</if>
+            <if test="true">`test_count`=`test_count`+1,</if>
+            <if test="true">status=2,</if>
+            <if test="testBillDO.progress != null">progress=#{testBillDO.progress},</if>
+            <if test="testBillDO.modifyMan != null">modify_man=#{testBillDO.modifyMan},</if>
+            <if test="testBillDO.modifyManId != null">modify_man_id=#{testBillDO.modifyManId},</if>
+        </set>
+        <where>
+            <if test="testBillDO.projectId != null">
+                and project_id=#{testBillDO.projectId}
+            </if>
+        </where>
     </update>
 
-    <update id="selfTestPass">
+    <update id="submitTestPass">
         update test_bill
-        set status=3,pass_rate=#{pass_rate},modify_man=#{modifyMan},modify_man_id=#{modifyManId}
-        where project_id=#{projectId}
+        <set>
+            <if test="true">status=3,</if>
+            <if test="testBillDO.passRate != null">pass_rate=#{testBillDO.passRate},</if>
+            <if test="testBillDO.modifyMan != null">modify_man=#{testBillDO.modifyMan},</if>
+            <if test="testBillDO.modifyManId != null">modify_man_id=#{testBillDO.modifyManId},</if>
+        </set>
+        <where>
+            and project_id=#{testBillDO.projectId}
+        </where>
     </update>
 
     <update id="submitTestBack">
         update test_bill
-        set return_count=return_count+1,reason=#{reason},status=1,modify_man=#{modifyMan},modify_man_id=#{modifyManId}
-        where project_id=#{projectId}
+        <set>
+            <if test="testBillDO.reason != null">reason=#{testBillDO.reason},</if>
+            <if test="true">status=1,</if>
+            <if test="true">`return_count`=`return_count`+1,</if>
+            <if test="testBillDO.modifyMan != null">modify_man=#{testBillDO.modifyMan},</if>
+            <if test="testBillDO.modifyManId != null">modify_man_id=#{testBillDO.modifyManId},</if>
+        </set>
+        <where>
+            and project_id=#{testBillDO.projectId}
+        </where>
     </update>
 
-    <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.SubmitTestDO">
+    <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.TestBillDO">
         select * from test_bill
         where project_id=#{projectId}
     </select>

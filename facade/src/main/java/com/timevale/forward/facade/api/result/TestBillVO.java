@@ -16,7 +16,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("提测单")
-public class SubmitTestVO extends ToString {
+public class TestBillVO extends ToString {
     @ApiModelProperty("项目id")
     Long projectId;
 

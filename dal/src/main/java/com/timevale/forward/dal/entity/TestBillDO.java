@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class SubmitTestDO extends BaseDO {
+public class TestBillDO extends BaseDO {
     /**
      * 项目id
      */
