@@ -12,7 +12,6 @@ import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
 import com.timevale.forward.dal.entity.TaskDO;
-import com.timevale.forward.facade.api.result.ProductLineVO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
@@ -113,15 +112,6 @@ public class TaskComponentImpl implements TaskComponent{
             }
             a.setStatusName(TaskStatusEnum.getTextByCode(a.getStatus()));
             a.setProjectName(projectMap.get(a.getProjectId()));
-            // 该项目的所有产品线
-            List<ProductLineVO> productLines = pdls.stream().map(i -> {
-                ProductLineVO p = new ProductLineVO();
-                p.setId(i.getProductLineId());
-                p.setName(i.getProductLineName());
-                p.setIsDeleted(i.getIsDeleted());
-                return p;
-            }).collect(Collectors.toList());
-            a.setProductLines(productLines);
         });
         PageQueryResult<TaskVO> pageQueryResult = new PageQueryResult<>();
         PageInfo<TaskDO> pageInfo = new PageInfo<>(taskDO);

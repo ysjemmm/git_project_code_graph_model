@@ -1,10 +1,10 @@
 package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.BizDomainDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.client.ProductLineService;
 import com.timevale.forward.facade.api.result.ProductLineVO;
 import com.timevale.forward.service.copy.ProductLineCopier;
@@ -46,6 +46,13 @@ public class ProductLineServiceImpl implements ProductLineService {
             e.setBizDomainOwnerId(bizDomainDO.getOwnerId());
         });
 
+        return BaseResult.success(productLineVOList);
+    }
+
+    @Override
+    public BaseResult<List<ProductLineVO>> getProductLines(Long projectId) {
+        List<ProductLineDO> productLineDO = productLineMapper.get(projectId);
+        List<ProductLineVO> productLineVOList = ProductLineCopier.INSTANCE.convert(productLineDO);
         return BaseResult.success(productLineVOList);
     }
 }

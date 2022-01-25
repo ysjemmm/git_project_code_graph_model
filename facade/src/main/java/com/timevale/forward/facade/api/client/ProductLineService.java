@@ -20,4 +20,12 @@ public interface ProductLineService {
      * @return 返回产品线列表
      */
     BaseResult<List<ProductLineVO>> productLineList();
+
+
+    /**
+     * 列表
+     *
+     * @return 返回产品线列表
+     */
+    BaseResult<List<ProductLineVO>> getProductLines(Long projectId);
 }
