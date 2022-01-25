@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.entity.TaskTimeDO;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * @author by xingyun
@@ -16,5 +17,17 @@ public interface TaskTimeMapper {
      * @return int
      */
     int insert(TaskTimeDO taskTimeDO);
+
+    /**
+     * 新增任务耗时表
+     *
+     * @param taskId 任务
+     * @return int
+     */
+    int delete(@Param("taskId") Long taskId);
+
+    TaskTimeDO get(@Param("taskId") Long taskId);
+
+    int update(TaskTimeDO taskTimeDO);
 
 }

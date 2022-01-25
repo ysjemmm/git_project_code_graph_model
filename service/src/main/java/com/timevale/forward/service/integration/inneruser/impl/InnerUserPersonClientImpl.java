@@ -12,10 +12,8 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author yuankai
@@ -101,5 +99,24 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             log.error("调用内部用户中心失败 getPersonByAccountNew groupId: " + groupId + " error: " + e.getMessage(), e);
         }
         throw new BaseBizRuntimeException("调用内部用户中心失败! " + groupId);
+    }
+
+    /**
+     * 获取用户
+     *
+     * @param accountIds id
+     * @return -unionId
+     */
+    @Override
+    public List<String> getUnionIds(List<String> accountIds) {
+        try {
+            BaseResult<List<BaseInfoResponse>> personByAccountNew = rpcPersonService.getPersonByAccountNew(accountIds);
+            if (personByAccountNew.ifSuccess() && !CollectionUtils.isEmpty(personByAccountNew.getData())) {
+                return personByAccountNew.getData().stream().map(BaseInfoResponse::getUnionId).collect(Collectors.toList());
+            }
+        } catch (Exception e) {
+            log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountIds + " error: " + e.getMessage(), e);
+        }
+        throw new BaseBizRuntimeException("调用内部用户中心失败! " + accountIds);
     }
 }

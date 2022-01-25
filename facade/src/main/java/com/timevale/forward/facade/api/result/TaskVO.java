@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author: xingyun
@@ -66,10 +67,13 @@ public class TaskVO extends ToString {
     @ApiModelProperty("更新时间")
     private Date modifyDate;
 
-    @ApiModelProperty("业务域")
+    @ApiModelProperty("业务域名称")
     private String bizDomainName;
 
-    @ApiModelProperty("产品线")
+    @ApiModelProperty("产品线名称")
     private String productLineName;
+
+    @ApiModelProperty("产品线")
+    private List<ProductLineVO> productLines;
 
 }

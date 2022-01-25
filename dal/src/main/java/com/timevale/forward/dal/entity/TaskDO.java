@@ -3,6 +3,7 @@ package com.timevale.forward.dal.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -22,6 +23,11 @@ public class TaskDO extends BaseDO {
      * projectId
      */
     private Long projectId;
+
+    /**
+     * productLineId
+     */
+    private Long productLineId;
     /**
      * 阶段:0需求规划阶段,1研发阶段,2测试阶段
      */
@@ -40,6 +46,11 @@ public class TaskDO extends BaseDO {
      * 项目计划结束时间
      */
     private Date planEndDate;
+    /**
+     * 计划耗时
+     */
+
+    private BigDecimal planUseTime;
 
     /**
      * 项目实际开始时间
@@ -49,6 +60,12 @@ public class TaskDO extends BaseDO {
      * 项目实际结束时间
      */
     private Date actualEndDate;
+
+    /**
+     * 任务耗时
+     */
+
+    private BigDecimal taskUseTime;
     /**
      * 产品需求id
      */

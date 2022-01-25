@@ -42,4 +42,12 @@ public interface InnerUserPersonClient {
      * @return String
      */
     List<String> getAllByGroupId(String groupId);
+
+    /**
+     * 获取用户
+     *
+     * @param accountIds id
+     * @return unionId
+     */
+    List<String> getUnionIds(List<String> accountIds);
 }

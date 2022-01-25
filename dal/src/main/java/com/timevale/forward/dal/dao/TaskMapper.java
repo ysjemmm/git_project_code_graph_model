@@ -63,4 +63,12 @@ public interface TaskMapper {
 
     TaskDO get(TaskCondition taskCondition);
 
+    /**
+     * 新增任务信息
+     *
+     * @param taskDO 任务
+     * @return int
+     */
+    int update(TaskDO taskDO);
+
 }

@@ -21,10 +21,10 @@
     </select>
 
     <select id="getByProjectIds" resultType="com.timevale.forward.dal.entity.ProjectProductLineBizDomain">
-        select b.project_id,c.name productLineName,d.name bizDomainName
+        select b.project_id,c.id product_line_id,c.name productLineName,c.is_deleted,d.name bizDomainName
         from project_product_line b
         left join product_line c on b.product_line_id=c.id
-            left join biz_domain d on c.biz_domain_id=d.id
+        left join biz_domain d on c.biz_domain_id=d.id
         <where>
             and b.project_id in
             <foreach collection="projectIds" item="item" separator="," open="(" close=")">

@@ -3,7 +3,7 @@
 <mapper namespace="com.timevale.forward.dal.dao.TaskTimeMapper">
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.TaskTimeDO">
-        insert into task (task_id, start_date
+        insert into task_time (task_id, start_date
         <if test="endDate != null">
         , end_date
         </if>
@@ -15,4 +15,21 @@
         </if>
         ,#{createMan},#{createManId})
     </insert>
+
+    <delete id="delete" parameterType="long">
+        delete  from task_time where task_id=#{taskId}
+    </delete>
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.TaskTimeDO">
+        select a.id,a.task_id, a.start_date, a.end_date ,a.is_deleted
+        ,a.create_man_id, a.create_man,a.create_date,a.modify_date
+        from task_time a
+        where a.task_id=#{taskId} and a.end_date is null
+    </select>
+
+    <select id="update" parameterType="com.timevale.forward.dal.entity.TaskTimeDO">
+        update task_time a
+        set a.end_date=#{endDate}
+        where a.task_id=#{taskId} and a.end_date is null
+    </select>
 </mapper>
