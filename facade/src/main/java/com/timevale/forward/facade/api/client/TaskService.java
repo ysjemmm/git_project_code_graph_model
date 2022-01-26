@@ -7,6 +7,7 @@ import com.timevale.forward.facade.api.query.TaskProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskQueryList;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
+import com.timevale.forward.facade.api.request.TaskProductDemandLinkReq;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.TaskDetailVO;
 import com.timevale.forward.facade.api.result.TaskVO;
@@ -78,6 +79,14 @@ public interface TaskService {
      * @return 列表
      */
     BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(TaskLinkProductDemandQueryList taskLinkProductDemandQueryList);
+
+
+    /**
+     * 关联or取消关联
+     *
+     * @param taskProductDemandLinkReq 产品需求
+     */
+    BaseResult<Boolean> linkOrUnLinkProductDemand(TaskProductDemandLinkReq taskProductDemandLinkReq);
 
     /**
      * @param taskProductDemandQueryList 查询条件

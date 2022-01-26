@@ -12,9 +12,9 @@ import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.PersonAddReq;
-import com.timevale.forward.facade.api.request.ProductDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
+import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
@@ -332,7 +332,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<ProductDemandStatusVO> linkOrUnLinkProductDemand(ProductDemandLinkReq productDemandLinkReq) {
+    public BaseResult<ProductDemandStatusVO> linkOrUnLinkProductDemand(ProjectProductDemandLinkReq productDemandLinkReq) {
         log.info("关联or取消关联接收参数:productDemandLinkReq={}", productDemandLinkReq);
         ProjectDO projectDO = projectMapper.get(productDemandLinkReq.getProjectId());
         if (projectDO == null) {

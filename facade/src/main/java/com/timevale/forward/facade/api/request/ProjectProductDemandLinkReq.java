@@ -14,8 +14,8 @@ import java.util.List;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("产品需求关联")
-public class ProductDemandLinkReq extends BaseReq {
+@ApiModel("项目-产品需求关联")
+public class ProjectProductDemandLinkReq extends BaseReq {
 
     @ApiModelProperty("项目id,关联时必填")
     private Long projectId;

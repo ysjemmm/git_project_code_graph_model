@@ -17,6 +17,7 @@ import com.timevale.forward.facade.api.query.TaskQueryList;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
+import com.timevale.forward.facade.api.request.TaskProductDemandLinkReq;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.TaskDetailVO;
 import com.timevale.forward.facade.api.result.TaskVO;
@@ -92,8 +93,6 @@ public class TaskServiceImpl implements TaskService {
 
     @Resource
     private ProductDemandComponent productDemandComponent;
-
-
 
     public static final String PRIVATE_CLOUD = "私有云";
 
@@ -210,7 +209,24 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateStatus(Long taskId, Integer type) {
-        log.info("任务状态变化接收参数:taskId={},type={}", taskId,type);
+        log.info("暂停或作废任务接收参数:taskId={},type={}", taskId,type);
+        TaskCondition condition = TaskCondition.builder().id(taskId).build();
+        TaskDO taskDO = taskMapper.get(condition);
+        if(taskDO==null){
+            throw new BaseBizRuntimeException("找不到该任务");
+        }
+        if (!TaskStatusEnum.WAITING.getCode().equals(taskDO.getStatus())
+                && !TaskStatusEnum.PROGRESS.getCode().equals(taskDO.getStatus())) {
+            throw new BaseBizRuntimeException("任务状态不是待执行、进行中不能修改状态");
+        }
+        taskDO.setStatus(type);
+        taskMapper.update(taskDO);
+        if(TaskStatusEnum.INVALID.getCode().equals(type)){
+            if (TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
+                throw new BaseBizRuntimeException("任务状态已完成,不能修改状态");
+            }
+            taskProductDemandComponent.update(taskDO.getId(),null);
+        }
         return BaseResult.success(true);
     }
 
@@ -250,6 +266,20 @@ public class TaskServiceImpl implements TaskService {
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
         return BaseResult.success(pageQueryResult);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> linkOrUnLinkProductDemand(TaskProductDemandLinkReq taskProductDemandLinkReq) {
+        log.info("关联or取消关联接收参数:taskProductDemandLinkReq={}", taskProductDemandLinkReq);
+        List<Long> productDemandIds = taskProductDemandLinkReq.getProductDemandIds();
+        if (LinkOrUnLinkEnum.LINK.getCode().equals(taskProductDemandLinkReq.getType())) {
+            taskProductDemandComponent.batchInsert(taskProductDemandLinkReq.getTaskId(), productDemandIds);
+
+        } else {
+            taskProductDemandComponent.update(taskProductDemandLinkReq.getTaskId(),productDemandIds.get(0));
+        }
+        return BaseResult.success(true);
     }
 
     @Override

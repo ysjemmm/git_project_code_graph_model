@@ -5,9 +5,9 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
-import com.timevale.forward.facade.api.request.ProductDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
+import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
 import com.timevale.forward.facade.api.result.ProductDemandStatusVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
@@ -86,7 +86,7 @@ public interface ProjectService {
      *
      * @param productDemandLinkReq 产品需求
      */
-    BaseResult<ProductDemandStatusVO> linkOrUnLinkProductDemand(ProductDemandLinkReq productDemandLinkReq);
+    BaseResult<ProductDemandStatusVO> linkOrUnLinkProductDemand(ProjectProductDemandLinkReq productDemandLinkReq);
 
 
     /**
