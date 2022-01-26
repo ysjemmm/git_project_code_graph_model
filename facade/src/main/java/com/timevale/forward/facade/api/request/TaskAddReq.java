@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -36,10 +37,12 @@ public class TaskAddReq extends BaseReq {
 
     @ApiModelProperty("计划开始时间")
     @NotNull(message = "计划开始时间不能为空")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
     private Date planStartDate;
 
     @ApiModelProperty("计划结束时间")
     @NotNull(message = "计划结束时间不能为空")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
     private Date planEndDate;
 
     @ApiModelProperty("计划耗时")
@@ -47,9 +50,11 @@ public class TaskAddReq extends BaseReq {
     private Integer planUseTime;
 
     @ApiModelProperty("实际开始时间")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
     private Date actualStartDate;
 
     @ApiModelProperty("实际结束时间")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
     private Date actualEndDate;
 
     @ApiModelProperty(value = "执行人")

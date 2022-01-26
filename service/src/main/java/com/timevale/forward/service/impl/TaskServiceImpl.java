@@ -12,6 +12,7 @@ import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TaskService;
 import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
+import com.timevale.forward.facade.api.query.TaskProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskQueryList;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.TaskAddReq;
@@ -188,6 +189,7 @@ public class TaskServiceImpl implements TaskService {
         //项目
         ProjectDO projectDO = projectMapper.get(taskDO.getProjectId());
         taskDetailVO.setProjectName(projectDO.getName());
+        taskDetailVO.setPmId(projectDO.getPmId());
 
         //产品线
         ProductLineDO productLineDO = productLineMapper.selectById(taskDO.getProductLineId());
@@ -247,6 +249,25 @@ public class TaskServiceImpl implements TaskService {
         pageQueryResult.setResultList(productDemandVO);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
+        return BaseResult.success(pageQueryResult);
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<ProductDemandVO>> linkProductDemandList(TaskProductDemandQueryList taskProductDemandQueryList) {
+        //产品需求
+        PageHelper.startPage(taskProductDemandQueryList.getPageNum(), taskProductDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        List<ProductDemandListDO> productDemandListDO = taskProductDemandMapper.linkProductDemandList(taskProductDemandQueryList.getTaskId());
+        List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
+        productDemandVO.forEach(p -> {
+            p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
+            p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
+        });
+
+        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
+
+        PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(productDemandVO);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);
     }
 

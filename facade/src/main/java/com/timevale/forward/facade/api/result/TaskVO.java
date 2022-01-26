@@ -30,6 +30,9 @@ public class TaskVO extends ToString {
     @ApiModelProperty("项目名称")
     private String projectName;
 
+    @ApiModelProperty("项目经理")
+    private String pmId;
+
     @ApiModelProperty("名称")
     private String name;
 

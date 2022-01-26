@@ -26,6 +26,9 @@ public class TaskDetailVO extends ToString {
     @ApiModelProperty("项目名称")
     private String projectName;
 
+    @ApiModelProperty("项目经理")
+    private String pmId;
+
     @ApiModelProperty(value = "0需求规划阶段,1研发阶段,2测试阶段")
     private Integer stage;
 

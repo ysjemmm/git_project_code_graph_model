@@ -3,6 +3,7 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
+import com.timevale.forward.facade.api.query.TaskProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskQueryList;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
@@ -57,7 +58,7 @@ public interface TaskService {
      * 修改状态
      *
      * @param taskId, 任务id
-     * @param type       操作类型 暂停,作废
+     * @param type    操作类型 暂停,作废
      * @return 数量
      */
     BaseResult<Boolean> updateStatus(Long taskId, Integer type);
@@ -73,9 +74,16 @@ public interface TaskService {
     /**
      * 查询满足条件的产品需求列表
      *
-     * @param productDemandQueryList 项目信息
+     * @param taskLinkProductDemandQueryList 项目信息
      * @return 列表
      */
-    BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(TaskLinkProductDemandQueryList productDemandQueryList);
+    BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(TaskLinkProductDemandQueryList taskLinkProductDemandQueryList);
+
+    /**
+     * @param taskProductDemandQueryList 查询条件
+     * @return 任务产品需求清单
+     */
+    BaseResult<PageQueryResult<ProductDemandVO>> linkProductDemandList(TaskProductDemandQueryList taskProductDemandQueryList);
+
 
 }

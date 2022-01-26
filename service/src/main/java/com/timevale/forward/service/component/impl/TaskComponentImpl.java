@@ -94,8 +94,8 @@ public class TaskComponentImpl implements TaskComponent{
                 .stream().collect(Collectors.groupingBy(ProjectProductLineBizDomain::getProjectId));
 
         //3.填充项目信息
-        Map<Long, String> projectMap = projectMapper.getByIds(projectIds).stream()
-                .collect(Collectors.toMap(ProjectDO::getId, ProjectDO::getName, (v1, v2) -> v1));
+        Map<Long, ProjectDO> projectMap = projectMapper.getByIds(projectIds).stream()
+                .collect(Collectors.toMap(ProjectDO::getId, p->p, (v1, v2) -> v1));
         List<TaskVO> taskVO = TaskCopier.INSTANCE.convert(taskDO);
         taskVO.forEach(a -> {
             List<PersonDO> executors = executorMap.get(a.getId());
@@ -111,7 +111,8 @@ public class TaskComponentImpl implements TaskComponent{
                 a.setBizDomainName(bizDomainName);
             }
             a.setStatusName(TaskStatusEnum.getTextByCode(a.getStatus()));
-            a.setProjectName(projectMap.get(a.getProjectId()));
+            a.setProjectName(projectMap.get(a.getProjectId()).getName());
+            a.setPmId(projectMap.get(a.getProjectId()).getPmId());
         });
         PageQueryResult<TaskVO> pageQueryResult = new PageQueryResult<>();
         PageInfo<TaskDO> pageInfo = new PageInfo<>(taskDO);

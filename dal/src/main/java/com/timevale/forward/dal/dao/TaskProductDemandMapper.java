@@ -1,7 +1,9 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.TaskProductDemandCondition;
+import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.dal.entity.TaskProductDemandDO;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -22,8 +24,15 @@ public interface TaskProductDemandMapper {
 
     /**
      *
-     * @param taskProductDemandCondition
-     * @return
+     * @param taskProductDemandCondition taskProductDemandCondition
+     * @return TaskProductDemandDO
      */
     List<TaskProductDemandDO> get(TaskProductDemandCondition taskProductDemandCondition);
+
+    /**
+     *
+     * @param taskId 查询条件
+     * @return 项目产品需求清单
+     */
+    List<ProductDemandListDO> linkProductDemandList(@Param("taskId") Long taskId);
 }
