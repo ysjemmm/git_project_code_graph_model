@@ -80,6 +80,8 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private PersonMapper personMapper;
 
+    @Resource
+    private TaskMapper taskMapper;
 
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -307,7 +309,7 @@ public class ProjectServiceImpl implements ProjectService {
         // 过滤掉已经关联的产品需求
         List<Long> productDemandIds = projectProductDemandMapper.getLinkedProductDemand(Lists.newArrayList())
                 .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
-        condition.setProductDemandIds(productDemandIds);
+        condition.setFilterProductDemandIds(productDemandIds);
         condition.setStatus(Lists.newArrayList(ProductDemandStatusEnum.WAITING.getCode()
                 , ProductDemandStatusEnum.INCLUDED.getCode()
                 , ProductDemandStatusEnum.PROGRESS.getCode()
@@ -391,6 +393,19 @@ public class ProjectServiceImpl implements ProjectService {
         Map<String, ProjectNodeDO> nodeMap = projectNodes
                 .stream()
                 .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
+        // 检查任务
+        boolean checkTask = nodeMap.get(ProjectStageEnum.DEMAND_START.getText()) == null
+                && nodeMap.get(ProjectStageEnum.DEMAND_CHECK.getText()) == null
+                && nodeMap.get(ProjectStageEnum.DEMAND_ANALYSE.getText()) == null;
+        if (checkTask) {
+            //删除需求规划阶段时需要校验是否有关联任务,若有关联待执行&进行中&已完成&已暂停的任务,不能删除
+            Integer taskStatus = taskMapper.getByProjectId(projectDO.getId())
+                    .stream().map(TaskDO::getStatus).max(Comparator.comparingInt(o -> o)).orElse(TaskStatusEnum.INVALID.getCode());
+            if (taskStatus > TaskStatusEnum.INVALID.getCode()) {
+                throw new BaseBizRuntimeException("需求规划阶段已关联任务，不可删除");
+            }
+        }
+        // 计算项目状态
         ProjectNodeDO node = null;
         Integer oriStatus = projectDO.getStatus();
         if ((node = nodeMap.get(ProjectStageEnum.TEST_RELEASE.getText())) != null && node.getActualDate() != null) {
@@ -416,7 +431,7 @@ public class ProjectServiceImpl implements ProjectService {
         } else {
             projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
         }
-        //优先取需求阶段实际时间作为项目实际开始时间,若无,则取开发阶段第一个节点实际时间做为作为项目实际开始时间
+        //计算项目实际开始时间：优先取需求阶段实际时间作为项目实际开始时间,若无,则取开发阶段第一个节点实际时间做为作为项目实际开始时间
         if ((node = nodeMap.get(ProjectStageEnum.DEMAND_START.getText())) != null) {
             projectDO.setActualStartDate(node.getActualDate());
         } else if ((node = nodeMap.get(ProjectStageEnum.DEV_REVIEW.getText())) != null) {

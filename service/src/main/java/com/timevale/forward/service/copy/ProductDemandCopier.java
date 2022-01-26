@@ -5,6 +5,7 @@ import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
+import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
@@ -71,6 +72,14 @@ public interface ProductDemandCopier {
      * @return ProductDemandDetailVO
      */
     ProductDemandDetailVO convert(ProductDemandDO productDemandDO);
+
+    /**
+     * 转换转换DO
+     *
+     * @param taskLinkProductDemandQueryList 对象
+     * @return ProductDemandListCondition
+     */
+    ProductDemandListCondition convert(TaskLinkProductDemandQueryList taskLinkProductDemandQueryList);
 
 
 }

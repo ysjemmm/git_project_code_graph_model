@@ -29,6 +29,9 @@ public class TaskDetailVO extends ToString {
     @ApiModelProperty(value = "0需求规划阶段,1研发阶段,2测试阶段")
     private Integer stage;
 
+    @ApiModelProperty(value = "阶段")
+    private String stageName;
+
     @ApiModelProperty("计划开始时间")
     private Date planStartDate;
 
@@ -48,7 +51,7 @@ public class TaskDetailVO extends ToString {
     private BigDecimal taskUseTime;
 
     @ApiModelProperty(value = "执行人")
-    private List<PersonVO> executorIds;
+    private List<PersonVO> executors;
 
     @ApiModelProperty(value = "产品需求id")
     private List<Long> productDemandIds;
@@ -67,12 +70,10 @@ public class TaskDetailVO extends ToString {
     private String statusName;
 
     @ApiModelProperty("产品线")
-    private List<ProductLineVO> productLines;
-
-    @ApiModelProperty("产品需求")
-    private List<ProductDemandVO> productDemands;
+    private ProductLineVO productLineVO;
 
     @ApiModelProperty("人员耗时")
-    private List<ExecutorVO> executors;
+    private List<ExecutorVO> executorVO;
+
 
 }
