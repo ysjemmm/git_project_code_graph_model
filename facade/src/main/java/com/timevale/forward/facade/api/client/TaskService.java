@@ -2,9 +2,11 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskQueryList;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.TaskDetailVO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -67,5 +69,13 @@ public interface TaskService {
      * @return 数量
      */
     BaseResult<Boolean> enable(Long taskId);
+
+    /**
+     * 查询满足条件的产品需求列表
+     *
+     * @param productDemandQueryList 项目信息
+     * @return 列表
+     */
+    BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(TaskLinkProductDemandQueryList productDemandQueryList);
 
 }

@@ -71,4 +71,11 @@ public interface TaskMapper {
      */
     int update(TaskDO taskDO);
 
+    /**
+     *
+     * @param projectId 项目id
+     * @return 项目id
+     */
+    List<TaskDO> getByProjectId(@Param("projectId") Long projectId);
+
 }

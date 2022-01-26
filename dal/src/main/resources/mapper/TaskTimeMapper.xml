@@ -29,7 +29,11 @@
 
     <select id="update" parameterType="com.timevale.forward.dal.entity.TaskTimeDO">
         update task_time a
-        set a.end_date=#{endDate}
+        <set>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            a.end_date=#{endDate}
+        </set>
         where a.task_id=#{taskId} and a.end_date is null
     </select>
 </mapper>

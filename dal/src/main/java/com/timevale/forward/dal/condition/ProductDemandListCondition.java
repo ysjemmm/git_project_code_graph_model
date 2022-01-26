@@ -83,8 +83,13 @@ public class ProductDemandListCondition extends QueryBase {
     private Date modifyDateEnd;
 
     /**
-     * 产品id
+     * 需要过滤的产品需求
      */
-    private List<Long> productDemandIds;
+    private List<Long> filterProductDemandIds;
+
+    /**
+     * 需要包含的产品需求
+     */
+    private List<Long> inProductDemandIds;
 
 }

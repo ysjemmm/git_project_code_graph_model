@@ -11,7 +11,11 @@ public enum ProjectStageEnum {
      * 项目阶段
      */
     DEMAND_START("开始规划"),
-    
+
+    DEMAND_CHECK("需求内审"),
+
+    DEMAND_ANALYSE("需求串讲"),
+
     DEV_REVIEW("技术详设评审"),
     
     DEV_START("开发开始"),

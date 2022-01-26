@@ -1,27 +1,28 @@
 package com.timevale.forward.service.impl;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.TaskCondition;
 import com.timevale.forward.dal.condition.TaskListCondition;
+import com.timevale.forward.dal.condition.TaskProductDemandCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TaskService;
+import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskQueryList;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.TaskDetailVO;
 import com.timevale.forward.facade.api.result.TaskVO;
-import com.timevale.forward.model.enums.AscriptionEnum;
-import com.timevale.forward.model.enums.FileTypeEnum;
-import com.timevale.forward.model.enums.PersonTypeEnum;
-import com.timevale.forward.model.enums.TaskStatusEnum;
-import com.timevale.forward.service.component.FileComponent;
-import com.timevale.forward.service.component.PersonComponent;
-import com.timevale.forward.service.component.TaskComponent;
-import com.timevale.forward.service.component.TaskProductDemandComponent;
-import com.timevale.forward.service.copy.TaskCopier;
+import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
 import com.timevale.forward.service.integration.erp.model.CreateTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
@@ -81,6 +82,16 @@ public class TaskServiceImpl implements TaskService {
 
     @Resource
     private DingWorkRecordClient dingWorkRecordClient;
+
+    @Resource
+    private ProjectMapper projectMapper;
+
+    @Resource
+    private TaskProductDemandMapper taskProductDemandMapper;
+
+    @Resource
+    private ProductDemandComponent productDemandComponent;
+
 
 
     public static final String PRIVATE_CLOUD = "私有云";
@@ -145,7 +156,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(TaskModifyReq taskModifyReq) {
-        log.info("任务新增接收参数:{}", taskModifyReq);
+        log.info("任务修改接收参数:{}", taskModifyReq);
         TaskDO taskDO = TaskCopier.INSTANCE.convert(taskModifyReq);
 
         checkNameExisted(taskDO);
@@ -168,20 +179,75 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public BaseResult<TaskDetailVO> get(Long taskId) {
-        TaskDetailVO taskDetailVO = new TaskDetailVO();
+        log.info("任务查看接收参数:{}", taskId);
+        TaskCondition condition = TaskCondition.builder().id(taskId).build();
+        TaskDO taskDO = taskMapper.get(condition);
+        TaskDetailVO taskDetailVO = TaskCopier.INSTANCE.convert(taskDO);
+        taskDetailVO.setStatusName(TaskStatusEnum.getTextByCode(taskDetailVO.getStatus()));
+        taskDetailVO.setStageName(TaskStageEnum.getTextByCode(taskDetailVO.getStage()));
+        //项目
+        ProjectDO projectDO = projectMapper.get(taskDO.getProjectId());
+        taskDetailVO.setProjectName(projectDO.getName());
+
+        //产品线
+        ProductLineDO productLineDO = productLineMapper.selectById(taskDO.getProductLineId());
+        taskDetailVO.setProductLineVO(ProductLineCopier.INSTANCE.convert(productLineDO));
+
+        //附件
+        List<FileDO> fileDO = fileComponent.select(taskId, FileTypeEnum.TASK.getCode());
+        taskDetailVO.setFiles(FileCopier.INSTANCE.transform(fileDO));
+
+        // 抄送人
+        List<PersonDO> personDO = personComponent.select(taskId, PersonTypeEnum.TASK_EXECUTOR.getCode());
+        taskDetailVO.setExecutors(PersonCopier.INSTANCE.transform(personDO));
+
+        //人员耗时
         return BaseResult.success(taskDetailVO);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateStatus(Long taskId, Integer type) {
+        log.info("任务状态变化接收参数:taskId={},type={}", taskId,type);
         return BaseResult.success(true);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> enable(Long taskId) {
+        log.info("任务开启接收参数:{}", taskId);
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(TaskLinkProductDemandQueryList taskQueryList) {
+        log.info("任务-产品需求匹配,接收参数:taskQueryList={}", taskQueryList);
+        ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(taskQueryList);
+        // 该项目下的产品需求
+        List<Long> inProductDemandIds = projectProductDemandMapper.getByProjectId(condition.getProjectId())
+                .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
+        condition.setInProductDemandIds(inProductDemandIds);
+        // 过滤掉已经被该任务关联的产品需求
+        if(condition.getId()!=null){
+            TaskProductDemandCondition c = TaskProductDemandCondition.builder().taskId(condition.getId()).build();
+            List<Long> filterProductDemandIds = taskProductDemandMapper.get(c).stream().map(TaskProductDemandDO::getProductDemandId).collect(Collectors.toList());
+            condition.setFilterProductDemandIds(filterProductDemandIds);
+            condition.setId(null);
+        }
+        PageHelper.startPage(taskQueryList.getPageNum(), taskQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
+        List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
+        productDemandVO.forEach(p -> {
+            p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
+            p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
+        });
+        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
+
+        PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(productDemandVO);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
+        return BaseResult.success(pageQueryResult);
     }
 
     /**

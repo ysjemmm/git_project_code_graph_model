@@ -60,9 +60,15 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="productDemandIds!=null and productDemandIds.size()>0">
+            <if test="filterProductDemandIds!=null and filterProductDemandIds.size()>0">
                 and a.id not in
-                <foreach collection="productDemandIds" item="item" separator="," open="(" close=")">
+                <foreach collection="filterProductDemandIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="inProductDemandIds!=null and inProductDemandIds.size()>0">
+                and a.id  in
+                <foreach collection="inProductDemandIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>

@@ -96,7 +96,7 @@
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.TaskDO">
-        select a.id,a.project_id,product_line_id, a.name, a.stage ,a.status,a.plan_start_date,a.plan_end_date,
+        select a.id,a.project_id,product_line_id, a.name,a.todo,a.todo_id, a.stage ,a.status,a.plan_start_date,a.plan_end_date,
         a.actual_start_date,a.actual_end_date,
         a.create_man_id, a.create_man,a.create_date,a.modify_date
         from task a
@@ -104,6 +104,7 @@
             <if test="id != null">and a.id = #{id}</if>
             <if test="projectId != null">and a.project_id = #{projectId}</if>
             <if test="name != null">and a.name = #{name}</if>
+            and a.is_deleted=false
         </where>
     </select>
 
@@ -118,6 +119,8 @@
             <if test="planStartDate != null">plan_start_date = #{planStartDate},</if>
             <if test="planEndDate != null">plan_end_date = #{planEndDate},</if>
             <if test="productLineId != null">product_line_id = #{productLineId},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             actual_start_date = #{actualStartDate},
             actual_end_date = #{actualEndDate}
         </set>
@@ -125,4 +128,14 @@
             id = #{id} and is_deleted=false
         </where>
     </update>
+
+    <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.TaskDO">
+        select a.id,a.project_id,product_line_id, a.name, a.stage ,a.status,a.plan_start_date,a.plan_end_date,
+        a.actual_start_date,a.actual_end_date,
+        a.create_man_id, a.create_man,a.create_date,a.modify_date
+        from task a
+        <where>
+            a.project_id = #{projectId} and a.is_deleted=false
+        </where>
+    </select>
 </mapper>
