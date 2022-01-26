@@ -53,4 +53,13 @@ public class TaskProductDemandComponentImpl implements TaskProductDemandComponen
             taskProductDemandMapper.batchInsert(list);
         }
     }
+
+    @Override
+    public void update(Long taskId, Long productDemandId) {
+        TaskProductDemandDO taskProductDemandDO = new TaskProductDemandDO();
+        taskProductDemandDO.setIsDeleted(true);
+        taskProductDemandDO.setTaskId(taskId);
+        taskProductDemandDO.setProductDemandId(productDemandId);
+        taskProductDemandMapper.update(taskProductDemandDO);
+    }
 }

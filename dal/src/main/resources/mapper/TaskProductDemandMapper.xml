@@ -25,4 +25,19 @@
          where b.task_id = #{taskId}
     </select>
 
+    <update id="update" parameterType="com.timevale.forward.dal.entity.TaskProductDemandDO">
+        update task_product_demand
+        <set>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            <if test="taskId!=null">and task_id = #{taskId}</if>
+            <if test="productDemandId!=null">and product_demand_id = #{productDemandId}</if>
+            and is_deleted=false
+        </where>
+    </update>
+
+
 </mapper>

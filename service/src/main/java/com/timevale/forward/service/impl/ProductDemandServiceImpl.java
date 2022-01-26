@@ -16,7 +16,7 @@ import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
-import com.timevale.forward.facade.api.request.BizDemandLinkReq;
+import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
@@ -342,7 +342,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> linkOrUnLinkBizDemand(BizDemandLinkReq bizDemandLinkReq) {
+    public BaseResult<Boolean> linkOrUnLinkBizDemand(ProductBizDemandLinkReq bizDemandLinkReq) {
         log.info("关联or取消关联接收参数:bizDemandLinkReq={}", bizDemandLinkReq);
         List<Long> bizDemandIds = bizDemandLinkReq.getBizDemandIds();
         if (LinkOrUnLinkEnum.LINK.getCode().equals(bizDemandLinkReq.getType())) {

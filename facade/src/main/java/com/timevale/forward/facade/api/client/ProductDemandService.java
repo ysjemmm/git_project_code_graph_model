@@ -6,7 +6,7 @@ import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
-import com.timevale.forward.facade.api.request.BizDemandLinkReq;
+import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
@@ -96,7 +96,7 @@ public interface ProductDemandService {
      * @param bizDemandLinkReq 业务需求
      * @return true false
      */
-    BaseResult<Boolean> linkOrUnLinkBizDemand(BizDemandLinkReq bizDemandLinkReq);
+    BaseResult<Boolean> linkOrUnLinkBizDemand(ProductBizDemandLinkReq bizDemandLinkReq);
 
     /**
      * 产品需求-项目清单

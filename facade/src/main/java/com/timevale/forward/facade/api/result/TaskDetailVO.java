@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
@@ -42,7 +41,7 @@ public class TaskDetailVO extends ToString {
     private Date planEndDate;
 
     @ApiModelProperty("计划耗时")
-    private Integer planUseTime;
+    private BigDecimal planUseTime;
 
     @ApiModelProperty("实际开始时间")
     private Date actualStartDate;
@@ -63,7 +62,6 @@ public class TaskDetailVO extends ToString {
     private List<FileVO> files;
 
     @ApiModelProperty("是否创建待办")
-    @NotNull(message = "是否创建不能为空")
     private Boolean todo;
 
     @ApiModelProperty("状态:0待执行、10进行中、20已完成、-10已暂停、-20已作废")

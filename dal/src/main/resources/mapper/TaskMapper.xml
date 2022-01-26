@@ -96,8 +96,10 @@
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.TaskDO">
-        select a.id,a.project_id,product_line_id, a.name,a.todo,a.todo_id, a.stage ,a.status,a.plan_start_date,a.plan_end_date,
-        a.actual_start_date,a.actual_end_date,
+        select a.id,a.project_id,product_line_id, a.name,a.todo,a.todo_id, a.stage ,a.status,
+        a.plan_use_time,a.task_use_time,
+        a.plan_start_date,a.plan_end_date,
+        a.actual_start_date,a.actual_end_date,a.is_deleted,
         a.create_man_id, a.create_man,a.create_date,a.modify_date
         from task a
         <where>
