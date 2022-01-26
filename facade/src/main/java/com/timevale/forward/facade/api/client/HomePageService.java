@@ -57,6 +57,6 @@ public interface HomePageService {
      * @param homePageProjectBoardQueryList 查询条件
      * @return 列表
      */
-    BaseResult<HomePageProjectBoardVO> getProjectBoard(HomePageProjectBoardQueryList homePageProjectBoardQueryList);
+    BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardQueryList homePageProjectBoardQueryList);
 
 }

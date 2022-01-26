@@ -10,7 +10,23 @@ import lombok.Data;
 @Data
 public class HomePageProjectBoardDTO {
 
+    /**
+     * 用户id
+     */
+    @JSONField(name = "user_id")
     private String userId;
+
+    /**
+     * 用户id
+     */
+    @JSONField(name = "user_name")
+    private String userName;
+
+    /**
+     * 项目id
+     */
+    @JSONField(name = "id")
+    private String projectId;
 
     /**
      * 项目名称

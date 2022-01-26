@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component.impl;
 
+import com.timevale.forward.dal.dto.HomePageProjectBoardDTO;
 import com.timevale.forward.facade.api.result.HomePageProjectBoardVO;
 import com.timevale.forward.model.enums.UserTypeEnum;
 import com.timevale.forward.service.component.HomePageProjectBoardComponent;
@@ -21,12 +22,12 @@ import java.util.List;
  */
 @Slf4j
 @Component
-public class HomePageProjectBoardComponentImpl extends BaseDistributeClientImpl<HomePageProjectBoardVO> implements HomePageProjectBoardComponent {
+public class HomePageProjectBoardComponentImpl extends BaseDistributeClientImpl<HomePageProjectBoardDTO> implements HomePageProjectBoardComponent {
     @Resource
     private DistributeConfig distributeConfig;
 
     @Override
-    public List<HomePageProjectBoardVO> getProjectBoard(String userType, List<String> userIdList) {
+    public List<HomePageProjectBoardDTO> getProjectBoard(String userType, List<String> userIdList) {
         ParamHelper paramHelper = ParamHelper.newInstance()
                 .offset(0)
                 .page(Integer.MAX_VALUE)

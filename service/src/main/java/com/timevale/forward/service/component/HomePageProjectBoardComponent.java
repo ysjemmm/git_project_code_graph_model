@@ -1,10 +1,6 @@
 package com.timevale.forward.service.component;
 
-import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.query.HomePageProjectBoardQueryList;
-import com.timevale.forward.facade.api.result.HomePageProjectBoardVO;
-import com.timevale.mandarin.common.annotation.RestClient;
+import com.timevale.forward.dal.dto.HomePageProjectBoardDTO;
 
 import java.util.List;
 
@@ -20,5 +16,5 @@ public interface HomePageProjectBoardComponent {
      * @param userIdList 用户idList
      * @return VO
      */
-    List<HomePageProjectBoardVO> getProjectBoard(String userType, List<String> userIdList);
+    List<HomePageProjectBoardDTO> getProjectBoard(String userType, List<String> userIdList);
 }

@@ -7,6 +7,7 @@ import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dto.HomePageDataIndicatorDTO;
+import com.timevale.forward.dal.dto.HomePageProjectBoardDTO;
 import com.timevale.forward.dal.dto.HomePageProjectOnlineLatelyDTO;
 import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
 import com.timevale.forward.dal.entity.BizDemandListDO;
@@ -23,6 +24,7 @@ import com.timevale.forward.service.component.HomePageProjectBoardComponent;
 import com.timevale.forward.service.component.HomePageProjectOnlineLatelyComponent;
 import com.timevale.forward.service.component.HomePageRiskWarningComponent;
 import com.timevale.forward.service.copy.HomePageDataIndicatorCopier;
+import com.timevale.forward.service.copy.HomePageProjectBoardCopier;
 import com.timevale.forward.service.copy.HomePageProjectOnlineLatelyCopier;
 import com.timevale.forward.service.copy.HomePageRiskWarningCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
@@ -135,7 +137,7 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     @Override
-    public BaseResult<HomePageProjectBoardVO> getProjectBoard(HomePageProjectBoardQueryList homePageProjectBoardQueryList) {
+    public BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardQueryList homePageProjectBoardQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         String userType = homePageProjectBoardQueryList.getUserType();
@@ -151,15 +153,26 @@ public class HomePageServiceImpl implements HomePageService {
                 allMyStaffWithSelfSet.retainAll(innerUserPersonClient.getByGroupIdNew(String.valueOf(deptId)));
             }
         }
+
         // 员工id非空取交集
         if(!CollectionUtils.isEmpty(teamMembers)){
             allMyStaffWithSelfSet.retainAll(teamMembers);
         }
 
-        List<HomePageProjectBoardVO> projectBoard = homePageProjectBoardComponent.getProjectBoard(userType, new ArrayList<>(allMyStaffWithSelfSet));
+        // 查询数据
+        List<HomePageProjectBoardDTO> homePageProjectBoardDTOList = homePageProjectBoardComponent.getProjectBoard(userType, new ArrayList<>(allMyStaffWithSelfSet));
 
+        // 数据分组后转换
+        List<HomePageProjectBoardVO> result = Lists.newArrayList();
+        Map<String, List<HomePageProjectBoardDTO>> homePageProjectBoardDTOGroup = homePageProjectBoardDTOList.stream().collect(Collectors.groupingBy(HomePageProjectBoardDTO::getUserId));
+        homePageProjectBoardDTOGroup.forEach((key, value) -> {
+            HomePageProjectBoardVO homePageProjectBoardVO = new HomePageProjectBoardVO();
+            homePageProjectBoardVO.setUserId(Long.valueOf(key));
+            homePageProjectBoardVO.setUserName(value.get(0).getUserName());
+            homePageProjectBoardVO.setHomePageProjectTimeVOList(HomePageProjectBoardCopier.INSTANCE.convert(value));
+            result.add(homePageProjectBoardVO);
+        });
 
-        HomePageProjectBoardVO projectBoardVO= new HomePageProjectBoardVO();
-        return BaseResult.success(projectBoardVO);
+        return BaseResult.success(result);
     }
 }
