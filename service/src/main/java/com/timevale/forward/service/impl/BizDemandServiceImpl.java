@@ -263,7 +263,8 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 判断主题是否唯一
-        if(bizDemandMapper.selectByName(bizDemandModifyReq.getName()) != null){
+        BizDemandDO checkUniqueName = bizDemandMapper.selectByName(bizDemandModifyReq.getName());
+        if(checkUniqueName != null && !checkUniqueName.getId().equals(bizDemandModifyReq.getId())){
             throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
         }
 
