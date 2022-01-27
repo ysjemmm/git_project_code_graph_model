@@ -11,20 +11,20 @@ import lombok.EqualsAndHashCode;
 import java.util.Date;
 
 /**
- * @author: xingyun
- * @create: 2021-12-13 13:53
- **/
+ * @author by YangXu
+ * @date 2022/01/27 15:51
+ */
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("首页-近三周上线项目")
 public class HomePageProjectOnlineLatelyVO extends ToString {
 
-    @ApiModelProperty("id")
+    @ApiModelProperty("项目id")
     @JsonSerialize(using = ToStringSerializer.class)
-    private Long id;
+    private Long projectId;
 
     @ApiModelProperty("项目名称")
-    private String name;
+    private String projectName;
 
     @ApiModelProperty("项目经理")
     private String pm;

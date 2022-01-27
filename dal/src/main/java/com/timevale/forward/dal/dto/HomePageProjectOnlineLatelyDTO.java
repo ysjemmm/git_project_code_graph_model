@@ -13,16 +13,16 @@ import java.util.Date;
 public class HomePageProjectOnlineLatelyDTO {
 
     /**
-     * id
+     * 项目id
      */
-    @JSONField(name = "user_id")
-    private Long id;
+    @JSONField(name = "project_id")
+    private Long projectId;
 
     /**
      * 项目名称
      */
     @JSONField(name = "pj_name")
-    private String name;
+    private String projectName;
 
     /**
      * 项目经理

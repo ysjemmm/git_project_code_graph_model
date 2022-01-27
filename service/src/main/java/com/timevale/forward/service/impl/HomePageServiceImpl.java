@@ -130,9 +130,13 @@ public class HomePageServiceImpl implements HomePageService {
     @Override
     public BaseResult<PageQueryResult<HomePageProjectOnlineLatelyVO>> getProjectOnlineLately(HomePageProjectOnlineLatelyQueryList homePageProjectOnlineLatelyQueryList) {
         PageResult<HomePageProjectOnlineLatelyDTO> homePageProjectOnlineLatelyDTOPageResult = homePageProjectOnlineLatelyComponent.getProjectOnlineLately(homePageProjectOnlineLatelyQueryList);
-        PageQueryResult<HomePageProjectOnlineLatelyVO> result = PageQueryResult.resResult(HomePageProjectOnlineLatelyCopier.INSTANCE.convert(homePageProjectOnlineLatelyDTOPageResult.getResult()));
+        // 分页配置
+        List<HomePageProjectOnlineLatelyVO> homePageProjectOnlineLatelyVOList = HomePageProjectOnlineLatelyCopier
+                .INSTANCE.convert(homePageProjectOnlineLatelyDTOPageResult.getResult());
+        PageQueryResult<HomePageProjectOnlineLatelyVO> result = PageQueryResult.resResult(homePageProjectOnlineLatelyVOList);
         result.setCurrentPage(homePageProjectOnlineLatelyQueryList.getPageNum());
         result.setTotalItems(homePageProjectOnlineLatelyDTOPageResult.getTotal());
+        result.setItemsPerPage(homePageProjectOnlineLatelyQueryList.getPageSize());
         return BaseResult.success(result);
     }
 

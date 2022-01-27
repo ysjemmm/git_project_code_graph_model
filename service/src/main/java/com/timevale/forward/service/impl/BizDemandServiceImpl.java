@@ -371,18 +371,4 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         return BaseResult.success(true);
     }
-
-    @Override
-    public BaseResult<Boolean> testNotice(Integer type) {
-        if(type == 1){
-            Date date = new Date();
-            SimpleDateFormat sdf = new SimpleDateFormat("yyMMddE HH:mm:ss");
-            System.out.println(sdf.format(DateUtil.getStartOfDay(date)));
-            System.out.println(sdf.format(DateUtil.getEndOfDay(date)));
-        }else{
-            System.out.println(innerGroupClient.getAllSubSimpleGroupList(1L));
-        }
-        return BaseResult.success(true);
-    }
-
 }
