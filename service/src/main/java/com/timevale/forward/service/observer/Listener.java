@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class Listener {
-    @Async
     @EventListener
+    @Async("threadPoolTaskExecutor")
     public void listen(MessageEvent event){
         event.run();
     }
