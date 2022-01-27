@@ -50,7 +50,6 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
         }else{
             riskWarning = distributeConfig.getRiskWarningQA();
         }
-
         DistributePageQueryVO params = DistributePageQueryVO.builder()
                 .params(paramHelper.params())
                 .distributeConfigVO(riskWarning)

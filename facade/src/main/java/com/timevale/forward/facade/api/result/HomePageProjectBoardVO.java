@@ -1,7 +1,5 @@
 package com.timevale.forward.facade.api.result;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -20,13 +18,12 @@ import java.util.List;
 @ApiModel("首页-项目工时看板")
 public class HomePageProjectBoardVO extends ToString {
     @ApiModelProperty("项目人员id")
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long userId;
+    private String userId;
 
     @ApiModelProperty("项目人员姓名")
     private String userName;
 
     @ApiModelProperty("项目阶段时间段")
-    private List<HomePageProjectTimeVO> homePageProjectTimeVOList;
+    private List<HomePageProjectDateVO> homePageProjectDateVOList;
 
 }

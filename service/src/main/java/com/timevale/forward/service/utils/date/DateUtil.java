@@ -1910,4 +1910,18 @@ public class DateUtil implements DateFormatConst {
         DateStyle dateStyle = getDateStyle(date);
         return parseToString(getEndOfPrevDay(parseToDate(date, dateStyle)), dateStyle);
     }
+
+    /**
+     * 判断是否在时间范围内
+     *
+     * @param date      日期
+     * @param startDate 开始日期
+     * @param endDate   结束日期
+     * @return boolean
+     */
+    public static Boolean inInterval(Date date, Date startDate, Date endDate){
+        return !date.before(startDate) && !date.after(endDate);
+    }
+
+
 }

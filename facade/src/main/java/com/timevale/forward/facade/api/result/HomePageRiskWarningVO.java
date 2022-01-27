@@ -27,5 +27,11 @@ public class HomePageRiskWarningVO extends ToString {
     private String projectName;
 
     @ApiModelProperty("项目节点")
-    private List<HomePageProjectNodeVO>homePageProjectNodeVO;
+    private List<HomePageProjectNodeVO> homePageProjectNodeVOList;
+
+    @ApiModelProperty("提测")
+    private List<HomePageSubmitTestVO> homePageSubmitTestVOList;
+
+    @ApiModelProperty("任务")
+    private List<HomePageTaskVO> homePageTaskVOList;
 }

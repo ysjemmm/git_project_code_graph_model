@@ -29,60 +29,52 @@ public class DistributeConfig {
     }
 
     /**
-     * 数据指标配置 —— 产品PD
+     * 数据指标配置 —— 产品PD,开发RD
      *
      */
     public DistributeConfigVO getDataIndicatorPD() {
         return databases.get("pd.dataIndicator");
     }
 
-    /**
-     * 数据指标配置 —— 开发RD
-     *
-     */
     public DistributeConfigVO getDataIndicatorRD() {
         return databases.get("rd.dataIndicator");
     }
 
     /**
-     * 近三周计划上线项目配置
+     * 近三周计划上线项目配置,数量
      *
      */
     public DistributeConfigVO getProjectOnlineLately() {
         return databases.get("all.projectOnlineLately");
     }
 
+    public DistributeConfigVO getProjectOnlineLatelyCount() {
+        return databases.get("all.projectOnlineLatelyCount");
+    }
+
     /**
-     * 风险预警 —— 开发RD
+     * 风险预警 —— 开发RD,测试QA，提测，任务逾期
      *
      */
     public DistributeConfigVO getRiskWarningRD() {
         return databases.get("rd.riskWarning");
     }
 
-    /**
-     * 风险预警 —— 测试QA
-     *
-     */
     public DistributeConfigVO getRiskWarningQA() {
         return databases.get("qa.riskWarning");
     }
 
-    /**
-     * 项目工时看板 —— 产品PD
-     *
-     */
-    public DistributeConfigVO getProjectBoardPD(){return databases.get("pd.projectBoard");}
+    public DistributeConfigVO getRiskWarningSubmitTest() {
+        return databases.get("all.riskWarningSubmitTest");
+    }
+
+    public DistributeConfigVO getRiskWarningTask() {
+        return databases.get("all.riskWarningTask");
+    }
 
     /**
-     * 项目工时看板 —— 开发RD
+     * 项目工时看板
      *
      */
-    public DistributeConfigVO getProjectBoardRD(){return databases.get("rd.projectBoard");}
-
-    /**
-     * 项目工时看板 —— 测试QA
-     *
-     */
-    public DistributeConfigVO getProjectBoardQA(){return databases.get("qa.projectBoard");}
+    public DistributeConfigVO getProjectBoard(){return databases.get("all.projectBoard");}
 }

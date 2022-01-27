@@ -1,7 +1,11 @@
 package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
+import com.timevale.forward.dal.dto.HomePageRiskWarningSubmitTestDTO;
+import com.timevale.forward.dal.dto.HomePageRiskWarningTaskDTO;
 import com.timevale.forward.facade.api.result.HomePageProjectNodeVO;
+import com.timevale.forward.facade.api.result.HomePageSubmitTestVO;
+import com.timevale.forward.facade.api.result.HomePageTaskVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -26,8 +30,18 @@ public interface HomePageRiskWarningCopier {
     /**
      * 转换
      *
-     * @param homePageRiskWarningDTOList DTOList
+     * @param homePageRiskWarningTaskDTO DTO
      * @return VO
      */
-    List<HomePageProjectNodeVO> convert(List<HomePageRiskWarningDTO> homePageRiskWarningDTOList);
+    HomePageTaskVO convert(HomePageRiskWarningTaskDTO homePageRiskWarningTaskDTO);
+
+    /**
+     * 转换
+     *
+     * @param homePageRiskWarningTaskDTO DTO
+     * @return VO
+     */
+    HomePageSubmitTestVO convert(HomePageRiskWarningSubmitTestDTO homePageRiskWarningTaskDTO);
+
+
 }

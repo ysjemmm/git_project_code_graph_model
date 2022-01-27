@@ -1,15 +1,12 @@
 package com.timevale.forward.service.impl;
 
-import com.github.pagehelper.PageInfo;
+import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.dto.HomePageDataIndicatorDTO;
-import com.timevale.forward.dal.dto.HomePageProjectBoardDTO;
-import com.timevale.forward.dal.dto.HomePageProjectOnlineLatelyDTO;
-import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
+import com.timevale.forward.dal.dto.*;
 import com.timevale.forward.dal.entity.BizDemandListDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
 import com.timevale.forward.facade.api.client.HomePageService;
@@ -19,30 +16,26 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.UserTypeEnum;
-import com.timevale.forward.service.component.HomePageDataIndicatorComponent;
-import com.timevale.forward.service.component.HomePageProjectBoardComponent;
-import com.timevale.forward.service.component.HomePageProjectOnlineLatelyComponent;
-import com.timevale.forward.service.component.HomePageRiskWarningComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.copy.HomePageDataIndicatorCopier;
 import com.timevale.forward.service.copy.HomePageProjectBoardCopier;
 import com.timevale.forward.service.copy.HomePageProjectOnlineLatelyCopier;
 import com.timevale.forward.service.copy.HomePageRiskWarningCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.integration.superset.model.base.PageResult;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -64,6 +57,12 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Resource
     HomePageRiskWarningComponent homePageRiskWarningComponent;
+
+    @Resource
+    HomePageRiskWarningSubmitTestComponent homePageRiskWarningSubmitTestComponent;
+
+    @Resource
+    HomePageRiskWarningTaskComponent homePageRiskWarningTaskComponent;
 
     @Resource
     InnerUserPersonClient innerUserPersonClient;
@@ -112,35 +111,75 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Override
     public BaseResult<PageQueryResult<HomePageProjectOnlineLatelyVO>> getProjectOnlineLately(HomePageProjectOnlineLatelyQueryList homePageProjectOnlineLatelyQueryList) {
-        List<HomePageProjectOnlineLatelyDTO> projectOnlineLatelyDTOList = homePageProjectOnlineLatelyComponent.getProjectOnlineLately(homePageProjectOnlineLatelyQueryList);
-        return BaseResult.success(HomePageProjectOnlineLatelyCopier.INSTANCE.convert(ResultUtil.pageSuccess(new PageInfo<>(projectOnlineLatelyDTOList))));
+        PageResult<HomePageProjectOnlineLatelyDTO> homePageProjectOnlineLatelyDTOPageResult = homePageProjectOnlineLatelyComponent.getProjectOnlineLately(homePageProjectOnlineLatelyQueryList);
+        PageQueryResult<HomePageProjectOnlineLatelyVO> result = PageQueryResult.resResult(HomePageProjectOnlineLatelyCopier.INSTANCE.convert(homePageProjectOnlineLatelyDTOPageResult.getResult()));
+        result.setCurrentPage(homePageProjectOnlineLatelyQueryList.getPageNum());
+        result.setTotalItems(homePageProjectOnlineLatelyDTOPageResult.getTotal());
+        return BaseResult.success(result);
     }
 
     @Override
     public BaseResult<List<HomePageRiskWarningVO>> getRiskWarning(String userType) {
         List<HomePageRiskWarningDTO> riskWarningDTOList = homePageRiskWarningComponent.getRiskWarning(userType);
+        List<HomePageRiskWarningTaskDTO> riskWarningTaskDTOList = homePageRiskWarningTaskComponent.getRiskWarningTask();
+        List<HomePageRiskWarningSubmitTestDTO> riskWarningSubmitTestDTOList = homePageRiskWarningSubmitTestComponent.getRiskWarningSubmitTest();
 
-        // 按项目id分组
-        Map<Long, List<HomePageRiskWarningDTO>> riskWarningGroup = riskWarningDTOList.stream().collect(Collectors.groupingBy(HomePageRiskWarningDTO::getProjectId));
+        // 结果集
+        Map<Long, HomePageRiskWarningVO> result = Maps.newHashMap();
 
-        // 转换填充
-        List<HomePageRiskWarningVO> riskWarningVOList = Lists.newArrayList();
-        for (List<HomePageRiskWarningDTO> dtoList : riskWarningGroup.values()) {
-            HomePageRiskWarningVO riskWarningVO = new HomePageRiskWarningVO();
-            riskWarningVO.setProjectId(dtoList.get(0).getProjectId());
-            riskWarningVO.setProjectName(dtoList.get(0).getProjectName());
-            riskWarningVO.setHomePageProjectNodeVO(HomePageRiskWarningCopier.INSTANCE.convert(dtoList));
-            riskWarningVOList.add(riskWarningVO);
-        }
+        // 查询结果中所有的项目
+        Set<Long> projectIdSet = Sets.newHashSet();
+        projectIdSet.addAll(riskWarningDTOList.stream().map(HomePageRiskWarningDTO::getProjectId).collect(Collectors.toSet()));
+        projectIdSet.addAll(riskWarningTaskDTOList.stream().map(HomePageRiskWarningTaskDTO::getProjectId).collect(Collectors.toSet()));
+        projectIdSet.addAll(riskWarningSubmitTestDTOList.stream().map(HomePageRiskWarningSubmitTestDTO::getProjectId).collect(Collectors.toSet()));
+        projectIdSet.forEach(key -> result.put(key, new HomePageRiskWarningVO()));
 
-        return BaseResult.success(riskWarningVOList);
+        // 初始化结果集中集合
+        result.forEach((key, value) -> {
+            value.setHomePageTaskVOList(Lists.emptyList());
+            value.setHomePageSubmitTestVOList(Lists.emptyList());
+            value.setHomePageProjectNodeVOList(Lists.emptyList());
+        });
+
+        // 按项目分类
+        Map<Long, List<HomePageRiskWarningDTO>> riskWarningGroup = riskWarningDTOList.stream()
+                .collect(Collectors.groupingBy(HomePageRiskWarningDTO::getProjectId));
+        Map<Long, List<HomePageRiskWarningTaskDTO>> riskWarningTaskGroup = riskWarningTaskDTOList.stream()
+                .collect(Collectors.groupingBy(HomePageRiskWarningTaskDTO::getProjectId));
+        Map<Long, List<HomePageRiskWarningSubmitTestDTO>> riskWarningSubmitTestGroup = riskWarningSubmitTestDTOList.stream()
+                .collect(Collectors.groupingBy(HomePageRiskWarningSubmitTestDTO::getProjectId));
+
+        // 填入数据
+        riskWarningGroup.forEach((key, value) -> {
+            HomePageRiskWarningVO riskWarningVO = result.get(key);
+            riskWarningVO.setProjectId(key);
+            riskWarningVO.setProjectName(value.get(0).getProjectName());
+            riskWarningVO.setHomePageProjectNodeVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
+        });
+        riskWarningTaskGroup.forEach((key, value) -> {
+            HomePageRiskWarningVO riskWarningVO = result.get(key);
+            riskWarningVO.setProjectId(key);
+            riskWarningVO.setProjectName(value.get(0).getProjectName());
+            riskWarningVO.setHomePageTaskVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
+        });
+        riskWarningSubmitTestGroup.forEach((key, value) -> {
+            HomePageRiskWarningVO riskWarningVO = result.get(key);
+            riskWarningVO.setProjectId(key);
+            riskWarningVO.setProjectName(value.get(0).getProjectName());
+            riskWarningVO.setHomePageSubmitTestVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
+        });
+
+        return BaseResult.success(Lists.newArrayList(result.values()));
     }
 
     @Override
     public BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardQueryList homePageProjectBoardQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
+        // 取出查询参数
         String userType = homePageProjectBoardQueryList.getUserType();
+        Date startDate = homePageProjectBoardQueryList.getStartDate();
+        Date endDate = homePageProjectBoardQueryList.getEndDate();
         List<Long> deptIds = homePageProjectBoardQueryList.getDeptIds();
         List<String> teamMembers = homePageProjectBoardQueryList.getTeamMembers();
 
@@ -167,12 +206,65 @@ public class HomePageServiceImpl implements HomePageService {
         Map<String, List<HomePageProjectBoardDTO>> homePageProjectBoardDTOGroup = homePageProjectBoardDTOList.stream().collect(Collectors.groupingBy(HomePageProjectBoardDTO::getUserId));
         homePageProjectBoardDTOGroup.forEach((key, value) -> {
             HomePageProjectBoardVO homePageProjectBoardVO = new HomePageProjectBoardVO();
-            homePageProjectBoardVO.setUserId(Long.valueOf(key));
+
+            List<HomePageProjectDateVO> homePageProjectDateVOList = HomePageProjectBoardCopier.INSTANCE.convert(value);
+
+            // 时间过滤
+            if(startDate != null){
+                homePageProjectDateVOList = filterByDate(userType, startDate, endDate, homePageProjectDateVOList);
+            }
+
+            // 填充数据
+            homePageProjectBoardVO.setUserId(key);
             homePageProjectBoardVO.setUserName(value.get(0).getUserName());
-            homePageProjectBoardVO.setHomePageProjectTimeVOList(HomePageProjectBoardCopier.INSTANCE.convert(value));
+            homePageProjectBoardVO.setHomePageProjectDateVOList(homePageProjectDateVOList);
             result.add(homePageProjectBoardVO);
         });
 
         return BaseResult.success(result);
     }
+
+    public List<HomePageProjectDateVO> filterByDate(String userType, Date startDate, Date endDate, List<HomePageProjectDateVO> list){
+        if(userType.equals(UserTypeEnum.PD.toString())){
+            return list.stream().filter(e -> {
+                if(e.getStartPlan() != null){
+                    return DateUtil.inInterval(e.getStartPlan(), startDate, endDate);
+                }
+                if(e.getDemandInternalAudit() != null){
+                    return DateUtil.inInterval(e.getDemandInternalAudit(), startDate, endDate);
+                }
+                if(e.getDemandConstrue() != null){
+                    return DateUtil.inInterval(e.getDemandConstrue(), startDate, endDate);
+                }
+                return false;
+            }).collect(Collectors.toList());
+        }else if(userType.equals(UserTypeEnum.RD.toString())){
+            return list.stream().filter(e -> {
+                if(e.getTechnicalDetailReview() != null){
+                    return DateUtil.inInterval(e.getTechnicalDetailReview(), startDate, endDate);
+                }
+                if(e.getDevelopStart() != null){
+                    return DateUtil.inInterval(e.getDevelopStart(), startDate, endDate);
+                }
+                if(e.getSubmitTest() != null){
+                    return DateUtil.inInterval(e.getSubmitTest(), startDate, endDate);
+                }
+                return false;
+            }).collect(Collectors.toList());
+        }else{
+            return list.stream().filter(e -> {
+                if(e.getUseCaseReview() != null){
+                    return DateUtil.inInterval(e.getUseCaseReview(), startDate, endDate);
+                }
+                if(e.getTestStart() != null){
+                    return DateUtil.inInterval(e.getTestStart(), startDate, endDate);
+                }
+                if(e.getPublishSimulate() != null){
+                    return DateUtil.inInterval(e.getPublishSimulate(), startDate, endDate);
+                }
+                return false;
+            }).collect(Collectors.toList());
+        }
+    }
+
 }

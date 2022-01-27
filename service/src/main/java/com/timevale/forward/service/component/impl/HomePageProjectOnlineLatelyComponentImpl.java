@@ -7,6 +7,7 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.integration.superset.client.impl.BaseDistributeClientImpl;
 import com.timevale.forward.service.integration.superset.config.DistributeConfig;
 import com.timevale.forward.service.integration.superset.model.base.DistributePageQueryVO;
+import com.timevale.forward.service.integration.superset.model.base.PageResult;
 import com.timevale.forward.service.integration.superset.util.ParamHelper;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -15,7 +16,6 @@ import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -33,23 +33,26 @@ public class HomePageProjectOnlineLatelyComponentImpl extends BaseDistributeClie
     private InnerUserPersonClient innerUserPersonClient;
 
     @Override
-    public List<HomePageProjectOnlineLatelyDTO> getProjectOnlineLately(HomePageProjectOnlineLatelyQueryList homePageProjectOnlineLatelyQueryList) {
+    public PageResult<HomePageProjectOnlineLatelyDTO> getProjectOnlineLately(HomePageProjectOnlineLatelyQueryList homePageProjectOnlineLatelyQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
 
-        ParamHelper paramHelper = ParamHelper.newInstance()
-                .offset(0)
-                .page(homePageProjectOnlineLatelyQueryList.getPageNum())
+        ParamHelper queryParamHelper = ParamHelper.newInstance()
+                .offset((homePageProjectOnlineLatelyQueryList.getPageNum() - 1) * homePageProjectOnlineLatelyQueryList.getPageSize())
+                .page(homePageProjectOnlineLatelyQueryList.getPageSize())
                 .in("user_id", Lists.emptyList());
-
-        DistributePageQueryVO params = DistributePageQueryVO.builder()
-                .params(paramHelper.params())
+        DistributePageQueryVO queryParams = DistributePageQueryVO.builder()
+                .params(queryParamHelper.params())
                 .distributeConfigVO(distributeConfig.getProjectOnlineLately())
                 .build();
-        // 按日期从大到小排序
-        List<HomePageProjectOnlineLatelyDTO> projectOnlineLatelyDTOList = doGet(params);
-        projectOnlineLatelyDTOList.sort(Comparator.comparing(HomePageProjectOnlineLatelyDTO::getPlanStartDate).reversed());
-        return projectOnlineLatelyDTOList;
+
+        ParamHelper countParamHelper = ParamHelper.newInstance()
+                .in("user_id", Lists.emptyList());
+        DistributePageQueryVO countParams = DistributePageQueryVO.builder()
+                .params(countParamHelper.params())
+                .distributeConfigVO(distributeConfig.getProjectOnlineLatelyCount())
+                .build();
+        return doPage(queryParams, countParams);
     }
 }

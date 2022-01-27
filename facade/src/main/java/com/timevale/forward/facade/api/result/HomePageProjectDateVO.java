@@ -17,7 +17,7 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("首页-任务工时看板-项目时间段")
-public class HomePageProjectTimeVO extends ToString {
+public class HomePageProjectDateVO extends ToString {
 
     @ApiModelProperty("项目id")
     @JsonSerialize(using = ToStringSerializer.class)
@@ -35,7 +35,7 @@ public class HomePageProjectTimeVO extends ToString {
     @ApiModelProperty("需求串讲时间")
     private Date demandConstrue;
 
-    @ApiModelProperty("技术评审时间")
+    @ApiModelProperty("技术详设评审时间")
     private Date technicalDetailReview;
 
     @ApiModelProperty("开发开始时间")
@@ -55,5 +55,8 @@ public class HomePageProjectTimeVO extends ToString {
 
     @ApiModelProperty("发布模拟时间")
     private Date publishSimulate;
+
+    @ApiModelProperty("发布正式时间")
+    private Date publishOfficial;
 
 }

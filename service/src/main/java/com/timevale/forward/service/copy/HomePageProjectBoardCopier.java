@@ -1,8 +1,8 @@
 package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.dto.HomePageProjectBoardDTO;
-import com.timevale.forward.facade.api.result.HomePageProjectBoardVO;
-import com.timevale.forward.facade.api.result.HomePageProjectTimeVO;
+import com.timevale.forward.facade.api.result.HomePageProjectDateVO;
+import com.timevale.forward.service.copy.convertor.DateConvertor;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -12,7 +12,7 @@ import java.util.List;
  * @author by YangXu
  * @date 2022/01/26 10:00
  */
-@Mapper
+@Mapper(uses = DateConvertor.class)
 public interface HomePageProjectBoardCopier {
     HomePageProjectBoardCopier INSTANCE = Mappers.getMapper(HomePageProjectBoardCopier.class);
 
@@ -22,7 +22,7 @@ public interface HomePageProjectBoardCopier {
      * @param homePageProjectBoardDTO DTO
      * @return VO
      */
-    HomePageProjectTimeVO convert(HomePageProjectBoardDTO homePageProjectBoardDTO);
+    HomePageProjectDateVO convert(HomePageProjectBoardDTO homePageProjectBoardDTO);
 
     /**
      * 转换
@@ -30,5 +30,5 @@ public interface HomePageProjectBoardCopier {
      * @param homePageProjectBoardDTOList DTOList
      * @return VOList
      */
-    List<HomePageProjectTimeVO> convert(List<HomePageProjectBoardDTO> homePageProjectBoardDTOList);
+    List<HomePageProjectDateVO> convert(List<HomePageProjectBoardDTO> homePageProjectBoardDTOList);
 }

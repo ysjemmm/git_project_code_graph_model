@@ -8,7 +8,7 @@ import lombok.Data;
  * @date 2022/01/24 13:54
  */
 @Data
-public class HomePageRiskWarningDTO {
+public class HomePageRiskWarningSubmitTestDTO {
     /**
      * 项目id
      */
@@ -22,20 +22,14 @@ public class HomePageRiskWarningDTO {
     private String projectName;
 
     /**
-     * 节点名称
+     * 提测单名称
      */
-    @JSONField(name = "node")
-    private String nodeName;
+    @JSONField(name = "bill_name")
+    private String testBillName;
 
     /**
-     * 逾期类型
+     * 提测结果
      */
-    @JSONField(name = "flag")
-    private String overdueType;
-
-    /**
-     * 逾期天数
-     */
-    @JSONField(name = "latedate")
-    private String overdueDay;
+    @JSONField(name = "bill_result")
+    private String testBillResult;
 }

@@ -15,7 +15,7 @@ import lombok.EqualsAndHashCode;
 @ApiModel("首页-风险预警-项目节点")
 public class HomePageProjectNodeVO extends ToString {
 
-    @ApiModelProperty("名称")
+    @ApiModelProperty("节点名称")
     private String nodeName;
 
     @ApiModelProperty("逾期类型")
@@ -23,8 +23,4 @@ public class HomePageProjectNodeVO extends ToString {
 
     @ApiModelProperty("逾期时间")
     private String overdueDay;
-
-    @ApiModelProperty("提测单名称")
-    private String testBillName;
-
 }

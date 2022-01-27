@@ -25,13 +25,13 @@ public class HomePageProjectBoardDTO {
     /**
      * 项目id
      */
-    @JSONField(name = "id")
+    @JSONField(name = "project_id")
     private String projectId;
 
     /**
      * 项目名称
      */
-    @JSONField(name = "name")
+    @JSONField(name = "project_name")
     private String projectName;
 
     /**
@@ -93,4 +93,11 @@ public class HomePageProjectBoardDTO {
      */
     @JSONField(name = "fbmn")
     private String publishSimulate;
+
+    /**
+     * 发布正式
+     */
+    @JSONField(name = "fbzs")
+    private String publishOfficial;
+
 }

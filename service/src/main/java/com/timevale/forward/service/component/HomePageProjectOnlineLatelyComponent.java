@@ -2,8 +2,7 @@ package com.timevale.forward.service.component;
 
 import com.timevale.forward.dal.dto.HomePageProjectOnlineLatelyDTO;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
-
-import java.util.List;
+import com.timevale.forward.service.integration.superset.model.base.PageResult;
 
 /**
  * @author by YangXu
@@ -16,5 +15,5 @@ public interface HomePageProjectOnlineLatelyComponent {
      * @param homePageProjectOnlineLatelyQueryList 查询条件
      * @return 项目列表
      */
-    List<HomePageProjectOnlineLatelyDTO> getProjectOnlineLately(HomePageProjectOnlineLatelyQueryList homePageProjectOnlineLatelyQueryList);
+    PageResult<HomePageProjectOnlineLatelyDTO> getProjectOnlineLately(HomePageProjectOnlineLatelyQueryList homePageProjectOnlineLatelyQueryList);
 }
