@@ -23,6 +23,7 @@ import com.timevale.forward.service.observer.event.BillTestMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
@@ -89,6 +90,12 @@ public class TestBillServiceImpl implements TestBillService {
 
     @Override
     public BaseResult<Boolean> submitTestBill(TestBillAddReq testBillAddReq) {
+        //判断该项目是否已经有提测单了，有的话则显示提示信息
+        TestBillDO testBill = testBillMapper.selectByProjectId(testBillAddReq.getProjectId());
+        if (testBill != null) {
+            throw new BaseBizRuntimeException("该项目已经有提测单了!");
+        }
+
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String alias = userInfo.getAlias();
         String id = userInfo.getId();
