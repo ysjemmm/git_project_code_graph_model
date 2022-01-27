@@ -19,6 +19,8 @@ import com.timevale.forward.model.enums.FileTypeEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.TestBillCopier;
+import com.timevale.forward.service.observer.event.BillTestMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.util.CollectionUtils;
@@ -48,6 +50,9 @@ public class TestBillServiceImpl implements TestBillService {
 
     @Resource
     private ProjectMapper projectMapper;
+
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
 
 
     @Override
@@ -96,6 +101,16 @@ public class TestBillServiceImpl implements TestBillService {
 
         //提交提测单
         testBillMapper.submitTestBill(testBillDO);
+
+        //通知提测单接收人
+        messageEventPublisher.publish(
+                new BillTestMsgEvent(
+                        this,
+                        "望轩",
+                        "wangxuan"
+                )
+        );
+
         return BaseResult.success(true);
     }
 

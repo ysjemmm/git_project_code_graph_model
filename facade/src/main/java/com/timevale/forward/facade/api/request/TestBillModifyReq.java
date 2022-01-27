@@ -23,11 +23,9 @@ public class TestBillModifyReq extends BaseReq {
     private Long projectId;
 
     @ApiModelProperty(value = "测试人")
-    @NotNull(message = "测试人不能为空")
     private String testMan;
 
     @ApiModelProperty(value = "测试人花名拼音")
-    @NotNull(message = "测试人花名拼音不能为空")
     private String testManId;
 
     @ApiModelProperty(value = "影响范围与变更SQL")
