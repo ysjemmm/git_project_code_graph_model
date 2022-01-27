@@ -2,8 +2,8 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.query.HomePageProjectBoardQueryList;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
+import com.timevale.forward.facade.api.request.HomePageProjectBoardReq;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -54,9 +54,9 @@ public interface HomePageService {
     /**
      * 项目工时看板查询
      *
-     * @param homePageProjectBoardQueryList 查询条件
+     * @param homePageProjectBoardReq 查询条件
      * @return 列表
      */
-    BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardQueryList homePageProjectBoardQueryList);
+    BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardReq homePageProjectBoardReq);
 
 }

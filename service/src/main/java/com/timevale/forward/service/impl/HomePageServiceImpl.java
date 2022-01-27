@@ -13,8 +13,8 @@ import com.timevale.forward.dal.entity.BizDemandListDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.client.HomePageService;
-import com.timevale.forward.facade.api.query.HomePageProjectBoardQueryList;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
+import com.timevale.forward.facade.api.request.HomePageProjectBoardReq;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
@@ -34,7 +34,6 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 
@@ -192,15 +191,15 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     @Override
-    public BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardQueryList homePageProjectBoardQueryList) {
+    public BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardReq homePageProjectBoardReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 取出查询参数
-        String userType = homePageProjectBoardQueryList.getUserType();
-        Date startDate = homePageProjectBoardQueryList.getStartDate();
-        Date endDate = homePageProjectBoardQueryList.getEndDate();
-        List<Long> deptIds = homePageProjectBoardQueryList.getDeptIds();
-        List<String> teamMembers = homePageProjectBoardQueryList.getTeamMembers();
+        String userType = homePageProjectBoardReq.getUserType();
+        Date startDate = homePageProjectBoardReq.getStartDate();
+        Date endDate = homePageProjectBoardReq.getEndDate();
+        List<Long> deptIds = homePageProjectBoardReq.getDeptIds();
+        List<String> teamMembers = homePageProjectBoardReq.getTeamMembers();
 
         // 我和我的所有员工 Set
         Set<String> allMyStaffWithSelfSet = Sets.newHashSet(innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId()));
