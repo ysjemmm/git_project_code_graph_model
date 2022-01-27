@@ -254,7 +254,6 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(BizDemandModifyReq bizDemandModifyReq) {
         log.info("业务需求修改接收参数 bizDemandModifyReq = {}", bizDemandModifyReq);
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 修改业务需求
         BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(bizDemandModifyReq.getId());
