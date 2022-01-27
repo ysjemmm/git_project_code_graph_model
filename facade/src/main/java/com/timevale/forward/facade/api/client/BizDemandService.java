@@ -79,12 +79,4 @@ public interface BizDemandService {
      * @return 成功与否
      */
     BaseResult<Boolean> transfer(BizDemandTransferReq bizDemandTransferReq);
-
-    /**
-     * 测试通知
-     *
-     * @return 成功与否
-     */
-    BaseResult<Boolean> testNotice(Integer type);
-
 }
