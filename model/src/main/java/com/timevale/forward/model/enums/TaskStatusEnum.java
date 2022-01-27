@@ -37,4 +37,9 @@ public enum TaskStatusEnum {
         }
         return "errorCode";
     }
+
+    public static Boolean ongoing(Integer code){
+        return code.equals(WAITING.code) || code.equals(PROGRESS.code);
+    }
+
 }

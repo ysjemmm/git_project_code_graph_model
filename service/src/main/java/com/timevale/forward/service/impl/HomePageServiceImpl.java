@@ -4,17 +4,21 @@ import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
+import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.dto.*;
 import com.timevale.forward.dal.entity.BizDemandListDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
+import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.client.HomePageService;
 import com.timevale.forward.facade.api.query.HomePageProjectBoardQueryList;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.model.enums.UserTypeEnum;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.copy.HomePageDataIndicatorCopier;
@@ -73,6 +77,9 @@ public class HomePageServiceImpl implements HomePageService {
     @Resource
     BizDemandMapper bizDemandMapper;
 
+    @Resource
+    TaskMapper taskMapper;
+
     @Override
     public BaseResult<HomePageDataIndicatorVO> getDataIndicator(String userType) {
         HomePageDataIndicatorDTO dataIndicator = homePageDataIndicatorComponent.getDataIndicator(userType);
@@ -83,7 +90,9 @@ public class HomePageServiceImpl implements HomePageService {
     public BaseResult<HomePageTodoCardVO> getTodoCard(String userType) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        HomePageTodoCardVO todoCardVO = new HomePageTodoCardVO();
+        int taskCount = 0;
+        int projectCount = 0;
+        int bizDemandCount = 0;
 
         // 获取我及所有下属
         List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
@@ -92,8 +101,8 @@ public class HomePageServiceImpl implements HomePageService {
         List<ProjectListDO> projectListDOList = projectMapper.list(ProjectListCondition.builder()
                 .teamMembers(allMyStaffWithSelf)
                 .build());
-        int projectCount = Math.toIntExact(projectListDOList.stream().filter(e -> ProjectStatusEnum.ongoing(e.getStatus())).count());
-        todoCardVO.setProjectCount(projectCount);
+        projectCount = Math.toIntExact(projectListDOList.stream()
+                .filter(e -> ProjectStatusEnum.ongoing(e.getStatus())).count());
 
         // 如果为产品则添加待处理业务需求，否则添加待处理任务
         if(userType.equals(UserTypeEnum.PD.toString())){
@@ -101,11 +110,21 @@ public class HomePageServiceImpl implements HomePageService {
             List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(BizDemandListCondition.builder()
                     .receiveManIdList(allMyStaffWithSelf)
                     .build());
-            int bizDemandCount = Math.toIntExact(bizDemandListDOList.stream().filter(e -> e.getStatus().equals(BizDemandStatusEnum.EVALUATE.getCode())).count());
-            todoCardVO.setBizDemandCount(bizDemandCount);
+            bizDemandCount = Math.toIntExact(bizDemandListDOList.stream()
+                    .filter(e -> e.getStatus().equals(BizDemandStatusEnum.EVALUATE.getCode())).count());
         }else{
-            // 待完成的任务
+            List<TaskDO> taskDOList = taskMapper.list(TaskListCondition.builder()
+                    .executorIds(allMyStaffWithSelf)
+                    .build());
+            taskCount = Math.toIntExact(taskDOList.stream()
+                    .filter(e -> TaskStatusEnum.ongoing(e.getStatus())).count());
         }
+
+        HomePageTodoCardVO todoCardVO = new HomePageTodoCardVO();
+        todoCardVO.setTaskCount(taskCount);
+        todoCardVO.setProjectCount(projectCount);
+        todoCardVO.setBizDemandCount(bizDemandCount);
+
         return BaseResult.success(todoCardVO);
     }
 
