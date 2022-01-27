@@ -2,6 +2,7 @@ package com.timevale.forward.service.observer;
 
 import com.timevale.forward.service.observer.event.MessageEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 /**
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class Listener {
+    @Async
     @EventListener
     public void listen(MessageEvent event){
         event.run();
