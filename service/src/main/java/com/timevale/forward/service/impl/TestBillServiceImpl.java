@@ -31,7 +31,6 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -139,8 +138,9 @@ public class TestBillServiceImpl implements TestBillService {
             testBillVO.setProjectManager(projectDO.getPmName());
             //附件集合
             List<FileDO> fileDOList = fileMapper.select(projectId, null);
-            List<FileVO> fileVOList = FileCopier.INSTANCE.transform(fileDOList);
+            List<FileVO> fileVOList = fileDOList.stream().map(FileCopier.INSTANCE::change).collect(Collectors.toList());
             testBillVO.setFileVOList(fileVOList);
+
             //实际提测时间
             List<ProjectNodeDO> projectNodeDOList = projectNodeMapper.get(projectId).stream().filter(e -> e.getName()
                     .equals(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName())).collect(Collectors.toList());
