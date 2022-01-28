@@ -4,6 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.request.TestBillAddReq;
 import com.timevale.forward.facade.api.request.TestBillModifyReq;
+import com.timevale.forward.facade.api.result.CreateTestBillVO;
 import com.timevale.forward.facade.api.result.TestBillVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
@@ -21,7 +22,7 @@ public interface TestBillService {
      * @param projectId 项目id
      * @return 返回结果（项目是否有提测单和提测计划时间以及提测人）
      */
-    BaseResult<Map<String, Object>> addTestBill(Long projectId);
+    BaseResult<CreateTestBillVO> addTestBill(Long projectId);
 
 
     /**

@@ -13,47 +13,45 @@ public class TestBillDO extends BaseDO {
     /**
      * 项目id
      */
-    Long projectId;
+    private Long projectId;
     /**
      * 项目状态
      */
-    Integer status;
+    private Integer status;
     /**
      * 用例执行情况
      */
-    Integer progress;
+    private Integer progress;
     /**
      * 测试人
      */
-    String testMan;
+    private String testMan;
     /**
      * 测试人花名拼音
      */
-    String testManId;
+    private String testManId;
     /**
      * 提测次数
      */
-    Integer testCount;
+    private Integer testCount;
     /**
      * 打回次数
      */
-    Integer returnCount;
+    private Integer returnCount;
     /**
      * 测试用例链接
      */
-    String caseUrl;
+    private String caseUrl;
     /**
      * 提测失败原因
      */
-    String reason;
+    private String reason;
     /**
      * 提测通过率
      */
-    Integer passRate;
+    private Integer passRate;
     /**
      * 影响范围与变更SQL
      */
-    String desc;
-
-
+    private String desc;
 }

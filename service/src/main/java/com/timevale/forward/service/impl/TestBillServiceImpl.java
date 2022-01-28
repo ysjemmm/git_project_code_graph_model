@@ -1,5 +1,7 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.date.DateUnit;
+import cn.hutool.core.date.DateUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.FileMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
@@ -13,10 +15,12 @@ import com.timevale.forward.facade.api.client.TestBillService;
 import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.facade.api.request.TestBillAddReq;
 import com.timevale.forward.facade.api.request.TestBillModifyReq;
+import com.timevale.forward.facade.api.result.CreateTestBillVO;
 import com.timevale.forward.facade.api.result.FileVO;
 import com.timevale.forward.facade.api.result.TestBillVO;
 import com.timevale.forward.model.enums.FileTypeEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
+import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.TestBillCopier;
 import com.timevale.forward.service.observer.event.BillTestMsgEvent;
@@ -29,7 +33,8 @@ import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -55,14 +60,15 @@ public class TestBillServiceImpl implements TestBillService {
     @Resource
     private MessageEventPublisher messageEventPublisher;
 
+    @Resource
+    private FileComponent fileComponent;
 
     @Override
-    public BaseResult<Map<String, Object>> addTestBill(Long projectId) {
+    public BaseResult<CreateTestBillVO> addTestBill(Long projectId) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String alias = userInfo.getAlias();
 
-        //存放返回结果
-        Map<String, Object> map = new HashMap<>(16);
+        CreateTestBillVO createTestBillVO = new CreateTestBillVO();
 
         List<ProjectNodeDO> projectNodeDOList = projectNodeMapper.get(projectId);
         if (CollectionUtils.isNotEmpty(projectNodeDOList)) {
@@ -70,22 +76,23 @@ public class TestBillServiceImpl implements TestBillService {
             Date planDate = projectNodeDOList.stream().filter(e -> e.getName()
                     .equals(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName())).map(ProjectNodeDO::getPlanDate)
                     .collect(Collectors.toList()).get(0);
-            //查看该项目是否已经有提测单
-            TestBillDO testBillDO = testBillMapper.selectByProjectId(projectId);
-            //设置提测计划时间
-            map.put("planDate", planDate);
-            //设置此项目是否有提测单
-            if (testBillDO != null) {
-                map.put("isHaveSubmitTest", true);
-            } else {
-                map.put("isHaveSubmitTest", false);
-            }
 
-            //设置提测人
-            map.put("submitTestMan", alias);
+            //该项目对应的提测单
+            TestBillDO testBillDO = testBillMapper.selectByProjectId(projectId);
+
+            //提测计划时间
+            createTestBillVO.setPlanDate(planDate);
+            //提测人
+            createTestBillVO.setSubmitTestMan(alias);
+            //此项目是否有提测单
+            if (testBillDO != null) {
+                createTestBillVO.setIsHaveSubmitTest(true);
+            } else {
+                createTestBillVO.setIsHaveSubmitTest(false);
+            }
         }
 
-        return BaseResult.success(map);
+        return BaseResult.success(createTestBillVO);
     }
 
     @Override
@@ -103,8 +110,8 @@ public class TestBillServiceImpl implements TestBillService {
         testBillAddReq.setAccount(id);
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.transform(testBillAddReq);
-        testBillDO.setCreateMan(alias);
-        testBillDO.setCreateManId(id);
+//        testBillDO.setCreateMan(alias);
+//        testBillDO.setCreateManId(id);
 
         //提交提测单
         testBillMapper.submitTestBill(testBillDO);
@@ -140,6 +147,27 @@ public class TestBillServiceImpl implements TestBillService {
                     .equals(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName())).collect(Collectors.toList());
             Date actualDate = projectNodeDOList.get(0).getActualDate();
             testBillVO.setActualDate(actualDate);
+
+            //计划提测时间
+            Date planDate = projectNodeDOList.get(0).getPlanDate();
+            testBillVO.setPlanDate(planDate);
+
+            //是否延期以及延期天数
+            if (planDate != null && actualDate != null) {
+                int compare = DateUtil.compare(planDate, actualDate);
+                if (compare < 0) {
+                    testBillVO.setIsDelay(true);
+                    Integer delayDay = (int) DateUtil.between(planDate, actualDate, DateUnit.DAY);
+                    testBillVO.setDelayDay(delayDay);
+                    testBillVO.setDelayDay(delayDay);
+                }
+            } else {
+                testBillVO.setIsDelay(false);
+            }
+
+            //提测人
+            testBillVO.setTestBillMan(testBillDO.getCreateMan());
+
         }
 
         return BaseResult.success(testBillVO);
@@ -167,22 +195,11 @@ public class TestBillServiceImpl implements TestBillService {
         //删除文件表中的原有信息
         fileMapper.update(fileDO);
 
-        List<FileDO> fileDOList = new ArrayList<>();
         List<FileAddReq> fileAddReqList = testBillModifyReq.getList();
         if (CollectionUtils.isNotEmpty(fileAddReqList)) {
-            //将FileAddReq转化成FileDO
-            for (FileAddReq fileAddReq : fileAddReqList) {
-                FileDO file = new FileDO();
-                file.setType(FileTypeEnum.TEST_BILL_CASE.getCode());
-                file.setAttacheId(testBillModifyReq.getProjectId());
-                file.setFileName(fileAddReq.getFileName());
-                file.setFileId(fileAddReq.getFileId());
-                fileDOList.add(file);
-            }
+            //向文件表中插入新的数据
+            fileComponent.add(fileAddReqList, testBillModifyReq.getProjectId(), FileTypeEnum.TEST_BILL_CASE.getCode());
         }
-
-        //向文件表中插入新的数据
-        fileMapper.inserts(fileDOList);
 
         return BaseResult.success(true);
     }
@@ -213,22 +230,11 @@ public class TestBillServiceImpl implements TestBillService {
         //更新提测表信息
         testBillMapper.selfTestPass(testBillDO);
 
-        List<FileDO> fileDOList = new ArrayList<>();
         List<FileAddReq> fileAddReqList = testBillModifyReq.getList();
         if (CollectionUtils.isNotEmpty(fileAddReqList)) {
-            for (FileAddReq fileAddReq : fileAddReqList) {
-                FileDO fileDO = new FileDO();
-                fileDO.setAttacheId(testBillModifyReq.getProjectId());
-                fileDO.setType(FileTypeEnum.TEST_BILL_PASS.getCode());
-                fileDO.setFileName(fileAddReq.getFileName());
-                fileDO.setFileId(fileAddReq.getFileId());
-                fileDOList.add(fileDO);
-            }
+            //往文件表中插入信息
+            fileComponent.add(fileAddReqList, testBillModifyReq.getProjectId(), FileTypeEnum.TEST_BILL_PASS.getCode());
         }
-
-
-        //往文件表中插入信息
-        fileMapper.inserts(fileDOList);
 
         return BaseResult.success(true);
     }

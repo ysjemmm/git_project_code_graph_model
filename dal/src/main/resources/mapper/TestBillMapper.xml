@@ -2,9 +2,8 @@
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
 <mapper namespace="com.timevale.forward.dal.dao.TestBillMapper">
     <insert id="submitTestBill">
-        insert into test_bill(project_id,status,test_man,test_man_id,create_man,create_man_id) values
-        (#{testBillDO.projectId},0,#{testBillDO.testMan},#{testBillDO.testManId}
-        ,#{testBillDO.createMan},#{testBillDO.createManId})
+        insert into test_bill(project_id,status,test_man,test_man_id) values
+        (#{testBillDO.projectId},0,#{testBillDO.testMan},#{testBillDO.testManId})
     </insert>
 
     <update id="submitSmokeTesting">

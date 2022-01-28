@@ -18,49 +18,61 @@ import java.util.List;
 @ApiModel("提测单")
 public class TestBillVO extends ToString {
     @ApiModelProperty("项目id")
-    Long projectId;
+    private Long projectId;
 
     @ApiModelProperty("项目状态:0待提交冒烟用例,1待自测,2待提测预演,3提测成功")
-    Integer status;
+    private Integer status;
 
-    @ApiModelProperty("用例执行情况")
-    Integer progress;
+    @ApiModelProperty("自测情况")
+    private Integer progress;
 
     @ApiModelProperty("测试人")
-    String testMan;
+    private String testMan;
 
     @ApiModelProperty("测试人花名拼音")
-    String testManId;
+    private String testManId;
 
     @ApiModelProperty("提测次数")
-    Integer testCount;
+    private Integer testCount;
 
     @ApiModelProperty("打回次数")
-    Integer returnCount;
+    private Integer returnCount;
 
     @ApiModelProperty("测试用例链接")
-    String caseUrl;
+    private String caseUrl;
 
     @ApiModelProperty("提测失败原因")
-    String reason;
+    private String reason;
 
     @ApiModelProperty("提测通过率")
-    Integer passRate;
+    private Integer passRate;
 
     @ApiModelProperty("影响范围与变更SQL")
-    String desc;
+    private String desc;
 
     @ApiModelProperty("提测单主题")
-    String submitTestName;
+    private String submitTestName;
 
     @ApiModelProperty("项目经理")
-    String projectManager;
+    private String projectManager;
 
     @ApiModelProperty("附件集合")
-    List<FileVO> fileVOList;
+    private List<FileVO> fileVOList;
 
     @ApiModelProperty("实际提测时间")
-    Date actualDate;
+    private Date actualDate;
+
+    @ApiModelProperty("计划提测时间")
+    private Date planDate;
+
+    @ApiModelProperty("是否延期")
+    private Boolean isDelay;
+
+    @ApiModelProperty("延期天数")
+    private Integer delayDay;
+
+    @ApiModelProperty("提测人")
+    private String testBillMan;
 
 
 }
