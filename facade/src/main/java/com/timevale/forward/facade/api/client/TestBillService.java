@@ -37,10 +37,9 @@ public interface TestBillService {
      * 提测单详情
      *
      * @param projectId 项目id
-     * @param type      文件类型
      * @return 返回提测单详情信息
      */
-    BaseResult<TestBillVO> getTestBill(Long projectId, Integer type);
+    BaseResult<TestBillVO> getTestBill(Long projectId);
 
     /**
      * 提交提测单

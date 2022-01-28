@@ -127,7 +127,7 @@ public class TestBillServiceImpl implements TestBillService {
     }
 
     @Override
-    public BaseResult<TestBillVO> getTestBill(Long projectId, Integer type) {
+    public BaseResult<TestBillVO> getTestBill(Long projectId) {
         TestBillDO testBillDO = testBillMapper.selectByProjectId(projectId);
         TestBillVO testBillVO = TestBillCopier.INSTANCE.convert(testBillDO);
 
@@ -137,7 +137,7 @@ public class TestBillServiceImpl implements TestBillService {
             testBillVO.setSubmitTestName(projectDO.getName() + "提测单");
             testBillVO.setProjectManager(projectDO.getPmName());
             //附件集合
-            List<FileDO> fileDOList = fileMapper.select(projectId, type);
+            List<FileDO> fileDOList = fileMapper.select(projectId, null);
             List<FileVO> fileVOList = FileCopier.INSTANCE.transform(fileDOList);
             testBillVO.setFileVOList(fileVOList);
             //实际提测时间
