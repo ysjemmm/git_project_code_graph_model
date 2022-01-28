@@ -105,7 +105,6 @@ public class HomePageServiceImpl implements HomePageService {
 
         // 如果为产品则添加待处理业务需求，否则添加待处理任务
         if(userType.equals(UserTypeEnum.PD.toString())){
-            // 待处理业务
             List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(BizDemandListCondition.builder()
                     .receiveManIdList(allMyStaffWithSelf)
                     .build());
