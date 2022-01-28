@@ -129,6 +129,10 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     public BaseResult<TestBillVO> getTestBill(Long projectId) {
         TestBillDO testBillDO = testBillMapper.selectByProjectId(projectId);
+        if(testBillDO == null){
+            throw new BaseBizRuntimeException("该项目id没有对应的提测单");
+        }
+
         TestBillVO testBillVO = TestBillCopier.INSTANCE.convert(testBillDO);
 
         //提测单主题
