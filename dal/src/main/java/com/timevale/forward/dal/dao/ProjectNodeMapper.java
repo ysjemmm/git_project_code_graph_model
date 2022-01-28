@@ -3,7 +3,7 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import org.apache.ibatis.annotations.Param;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 public interface ProjectNodeMapper {
@@ -37,5 +37,5 @@ public interface ProjectNodeMapper {
      * @param projectId  项目id
      * @param actualDate 实际提测时间
      */
-    void updateSubmitTestActualDate(@Param("projectId") Long projectId, @Param("actualDate") LocalDateTime actualDate);
+    void updateSubmitTestActualDate(@Param("projectId") Long projectId, @Param("actualDate") Date actualDate);
 }
