@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -38,7 +38,7 @@ public class TestBillModifyReq extends BaseReq {
     private List<FileAddReq> list;
 
     @ApiModelProperty(value = "实际提测时间")
-    private LocalDateTime actualDate;
+    private Date actualDate;
 
     @ApiModelProperty(value = "提测通过率")
     private Integer passRate;
