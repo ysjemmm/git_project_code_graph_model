@@ -23,7 +23,7 @@ public class TestBillVO extends ToString {
     @ApiModelProperty("项目状态:0待提交冒烟用例,1待自测,2待提测预演,3提测成功")
     private Integer status;
 
-    @ApiModelProperty("自测情况")
+    @ApiModelProperty("自测情况:0冒烟用例执行通过,1冒烟用例部分执行,2冒烟用例未执行")
     private Integer progress;
 
     @ApiModelProperty("测试人")
