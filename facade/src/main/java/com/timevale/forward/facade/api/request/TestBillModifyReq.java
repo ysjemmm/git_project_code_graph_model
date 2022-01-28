@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -38,6 +39,7 @@ public class TestBillModifyReq extends BaseReq {
     private List<FileAddReq> list;
 
     @ApiModelProperty(value = "实际提测时间")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
     private Date actualDate;
 
     @ApiModelProperty(value = "提测通过率")

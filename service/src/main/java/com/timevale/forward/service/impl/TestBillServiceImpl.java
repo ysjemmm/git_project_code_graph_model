@@ -31,6 +31,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.Resource;
 import java.util.Date;
