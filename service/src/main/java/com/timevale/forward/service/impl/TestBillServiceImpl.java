@@ -110,8 +110,6 @@ public class TestBillServiceImpl implements TestBillService {
         testBillAddReq.setAccount(id);
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.transform(testBillAddReq);
-//        testBillDO.setCreateMan(alias);
-//        testBillDO.setCreateManId(id);
 
         //提交提测单
         testBillMapper.submitTestBill(testBillDO);
@@ -175,21 +173,14 @@ public class TestBillServiceImpl implements TestBillService {
 
     @Override
     public BaseResult<Boolean> submitSmokeTesting(TestBillModifyReq testBillModifyReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        String alias = userInfo.getAlias();
-        String id = userInfo.getId();
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
-        testBillDO.setModifyMan(alias);
-        testBillDO.setModifyManId(id);
 
         //更新提测单
         testBillMapper.submitSmokeTesting(testBillDO);
 
         FileDO fileDO = new FileDO();
         fileDO.setIsDeleted(true);
-        fileDO.setModifyMan(alias);
-        fileDO.setModifyManId(id);
         fileDO.setAttacheId(testBillModifyReq.getProjectId());
         fileDO.setType(FileTypeEnum.TEST_BILL_CASE.getCode());
         //删除文件表中的原有信息
@@ -206,26 +197,16 @@ public class TestBillServiceImpl implements TestBillService {
 
     @Override
     public BaseResult<Boolean> modifyTestMan(TestBillModifyReq testBillModifyReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        String alias = userInfo.getAlias();
-        String id = userInfo.getId();
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
-        testBillDO.setModifyMan(alias);
-        testBillDO.setModifyManId(id);
 
         return BaseResult.success(testBillMapper.modifyTestMan(testBillDO));
     }
 
     @Override
     public BaseResult<Boolean> selfTestPass(TestBillModifyReq testBillModifyReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        String alias = userInfo.getAlias();
-        String id = userInfo.getId();
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
-        testBillDO.setModifyMan(alias);
-        testBillDO.setModifyManId(id);
 
         //更新提测表信息
         testBillMapper.selfTestPass(testBillDO);
@@ -241,13 +222,8 @@ public class TestBillServiceImpl implements TestBillService {
 
     @Override
     public BaseResult<Boolean> submitTestPass(TestBillModifyReq testBillModifyReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        String alias = userInfo.getAlias();
-        String id = userInfo.getId();
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
-        testBillDO.setModifyMan(alias);
-        testBillDO.setModifyManId(id);
 
         //更新提测表信息
         testBillMapper.submitTestPass(testBillDO);
@@ -260,13 +236,8 @@ public class TestBillServiceImpl implements TestBillService {
 
     @Override
     public BaseResult<Boolean> submitTestBack(TestBillModifyReq testBillModifyReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        String alias = userInfo.getAlias();
-        String id = userInfo.getId();
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
-        testBillDO.setModifyMan(alias);
-        testBillDO.setModifyManId(id);
 
         //更新提测表信息
         testBillMapper.submitTestBack(testBillDO);

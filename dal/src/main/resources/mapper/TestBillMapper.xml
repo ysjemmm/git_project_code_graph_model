@@ -2,8 +2,8 @@
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
 <mapper namespace="com.timevale.forward.dal.dao.TestBillMapper">
     <insert id="submitTestBill">
-        insert into test_bill(project_id,status,test_man,test_man_id) values
-        (#{testBillDO.projectId},0,#{testBillDO.testMan},#{testBillDO.testManId})
+        insert into test_bill(project_id,status,test_man,test_man_id,create_man,create_man_id) values
+        (#{testBillDO.projectId},0,#{testBillDO.testMan},#{testBillDO.testManId},#{createMan},#{createManId})
     </insert>
 
     <update id="submitSmokeTesting">
@@ -11,8 +11,8 @@
         <set>
             <if test="testBillDO.caseUrl != null">case_url=#{testBillDO.caseUrl},</if>
             <if test="true">status=1,</if>
-            <if test="testBillDO.modifyMan != null">modify_man=#{testBillDO.modifyMan},</if>
-            <if test="testBillDO.modifyManId != null">modify_man_id=#{testBillDO.modifyManId},</if>
+            <if test="true">modify_man=#{modifyMan},</if>
+            <if test="true">modify_man_id=#{modifyManId},</if>
         </set>
         <where>
             <if test="testBillDO.projectId != null">
@@ -26,8 +26,8 @@
         <set>
             <if test="testBillDO.testMan != null">test_man=#{testBillDO.testMan},</if>
             <if test="testBillDO.testManId != null">test_man_id=#{testBillDO.testManId},</if>
-            <if test="testBillDO.modifyMan != null">modify_man=#{testBillDO.modifyMan},</if>
-            <if test="testBillDO.modifyManId != null">modify_man_id=#{testBillDO.modifyManId},</if>
+            <if test="true">modify_man=#{modifyMan},</if>
+            <if test="true">modify_man_id=#{modifyManId},</if>
         </set>
         <where>
             <if test="testBillDO.projectId != null">
@@ -43,8 +43,8 @@
             <if test="true">`test_count`=`test_count`+1,</if>
             <if test="true">status=2,</if>
             <if test="testBillDO.progress != null">progress=#{testBillDO.progress},</if>
-            <if test="testBillDO.modifyMan != null">modify_man=#{testBillDO.modifyMan},</if>
-            <if test="testBillDO.modifyManId != null">modify_man_id=#{testBillDO.modifyManId},</if>
+            <if test="true">modify_man=#{modifyMan},</if>
+            <if test="true">modify_man_id=#{modifyManId},</if>
         </set>
         <where>
             <if test="testBillDO.projectId != null">
@@ -58,8 +58,8 @@
         <set>
             <if test="true">status=3,</if>
             <if test="testBillDO.passRate != null">pass_rate=#{testBillDO.passRate},</if>
-            <if test="testBillDO.modifyMan != null">modify_man=#{testBillDO.modifyMan},</if>
-            <if test="testBillDO.modifyManId != null">modify_man_id=#{testBillDO.modifyManId},</if>
+            <if test="true">modify_man=#{modifyMan},</if>
+            <if test="true">modify_man_id=#{modifyManId},</if>
         </set>
         <where>
             and project_id=#{testBillDO.projectId}
@@ -72,8 +72,8 @@
             <if test="testBillDO.reason != null">reason=#{testBillDO.reason},</if>
             <if test="true">status=1,</if>
             <if test="true">`return_count`=`return_count`+1,</if>
-            <if test="testBillDO.modifyMan != null">modify_man=#{testBillDO.modifyMan},</if>
-            <if test="testBillDO.modifyManId != null">modify_man_id=#{testBillDO.modifyManId},</if>
+            <if test="true">modify_man=#{modifyMan},</if>
+            <if test="true">modify_man_id=#{modifyManId},</if>
         </set>
         <where>
             and project_id=#{testBillDO.projectId}
