@@ -20,6 +20,8 @@ import com.timevale.forward.facade.api.result.FileVO;
 import com.timevale.forward.facade.api.result.TestBillVO;
 import com.timevale.forward.model.enums.FileTypeEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
+import com.timevale.forward.model.enums.TestBillProgressEnum;
+import com.timevale.forward.model.enums.TestBillStatusEnum;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.TestBillCopier;
@@ -129,49 +131,48 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     public BaseResult<TestBillVO> getTestBill(Long projectId) {
         TestBillDO testBillDO = testBillMapper.selectByProjectId(projectId);
-        if(testBillDO == null){
+        if (testBillDO == null) {
             throw new BaseBizRuntimeException("该项目id没有对应的提测单");
         }
 
         TestBillVO testBillVO = TestBillCopier.INSTANCE.convert(testBillDO);
+        testBillVO.setProgressName(TestBillProgressEnum.getTextByCode(testBillDO.getProgress()));
+        testBillVO.setStatusName(TestBillStatusEnum.getTextByCode(testBillDO.getStatus()));
 
         //提测单主题
         ProjectDO projectDO = projectMapper.get(projectId);
-        if (testBillVO != null) {
-            testBillVO.setSubmitTestName(projectDO.getName() + "提测单");
-            testBillVO.setProjectManager(projectDO.getPmName());
-            //附件集合
-            List<FileDO> fileDOList = fileMapper.select(projectId, null);
-            List<FileVO> fileVOList = fileDOList.stream().map(FileCopier.INSTANCE::change).collect(Collectors.toList());
-            testBillVO.setFileVOList(fileVOList);
+        testBillVO.setSubmitTestName(projectDO.getName() + "提测单");
+        testBillVO.setProjectManager(projectDO.getPmName());
+        //附件集合
+        List<FileDO> fileDOList = fileMapper.select(projectId, null);
+        List<FileVO> fileVOList = fileDOList.stream().map(FileCopier.INSTANCE::change).collect(Collectors.toList());
+        testBillVO.setFileVOList(fileVOList);
 
-            //实际提测时间
-            List<ProjectNodeDO> projectNodeDOList = projectNodeMapper.get(projectId).stream().filter(e -> e.getName()
-                    .equals(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName())).collect(Collectors.toList());
-            Date actualDate = projectNodeDOList.get(0).getActualDate();
-            testBillVO.setActualDate(actualDate);
+        //实际提测时间
+        List<ProjectNodeDO> projectNodeDOList = projectNodeMapper.get(projectId).stream().filter(e -> e.getName()
+                .equals(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName())).collect(Collectors.toList());
+        Date actualDate = projectNodeDOList.get(0).getActualDate();
+        testBillVO.setActualDate(actualDate);
 
-            //计划提测时间
-            Date planDate = projectNodeDOList.get(0).getPlanDate();
-            testBillVO.setPlanDate(planDate);
+        //计划提测时间
+        Date planDate = projectNodeDOList.get(0).getPlanDate();
+        testBillVO.setPlanDate(planDate);
 
-            //是否延期以及延期天数
-            if (planDate != null && actualDate != null) {
-                int compare = DateUtil.compare(planDate, actualDate);
-                if (compare < 0) {
-                    testBillVO.setIsDelay(true);
-                    Integer delayDay = (int) DateUtil.between(planDate, actualDate, DateUnit.DAY);
-                    testBillVO.setDelayDay(delayDay);
-                    testBillVO.setDelayDay(delayDay);
-                }
-            } else {
-                testBillVO.setIsDelay(false);
+        //是否延期以及延期天数
+        if (planDate != null && actualDate != null) {
+            int compare = DateUtil.compare(planDate, actualDate);
+            if (compare < 0) {
+                testBillVO.setIsDelay(true);
+                Integer delayDay = (int) DateUtil.between(planDate, actualDate, DateUnit.DAY);
+                testBillVO.setDelayDay(delayDay);
+                testBillVO.setDelayDay(delayDay);
             }
-
-            //提测人
-            testBillVO.setTestBillMan(testBillDO.getCreateMan());
-
+        } else {
+            testBillVO.setIsDelay(false);
         }
+
+        //提测人
+        testBillVO.setTestBillMan(testBillDO.getCreateMan());
 
         return BaseResult.success(testBillVO);
     }
