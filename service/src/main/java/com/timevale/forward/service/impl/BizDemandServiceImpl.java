@@ -166,8 +166,6 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(BizDemandAddReq bizDemandAddReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         // 判断主题是否唯一
         if(bizDemandMapper.selectByName(bizDemandAddReq.getName()) != null){
             throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
@@ -343,8 +341,6 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<Boolean> transfer(BizDemandTransferReq bizDemandTransferReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         // 转交：修改接收人
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandTransferReq.getId());
         if(bizDemandDO == null){
