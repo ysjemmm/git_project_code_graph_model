@@ -4,6 +4,7 @@ import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.facade.api.result.FileVO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
@@ -29,5 +30,14 @@ public interface FileCopier {
      * @return FileDO列表
      */
     List<FileVO> transform(List<FileDO> list);
+
+    /**
+     * 单个转换DO -> VO
+     *
+     * @param fileDO 参数
+     * @return FileVO对象
+     */
+    @Mapping(source = "type", target = "fileType")
+    FileVO change(FileDO fileDO);
 
 }

@@ -24,7 +24,7 @@ public class FileVO extends ToString {
     @ApiModelProperty(value = "文件下载地址")
     private String downloadUrl;
 
-    @ApiModelProperty(value = "文件类型")
+    @ApiModelProperty(value = "文件类型:1产品需求,2业务需求,3任务,4提测单-冒烟用例,5提测单-自测通过")
     private String fileType;
 
 }
