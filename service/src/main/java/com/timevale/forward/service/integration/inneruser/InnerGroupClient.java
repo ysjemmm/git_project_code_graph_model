@@ -43,7 +43,7 @@ public interface InnerGroupClient {
      * @param deptId 部门id
      * @return 部门链信息列表
      */
-    List<GroupResponse> getGroupTree(Long deptId);
+    List<GroupResponse> getGroupChain(Long deptId);
 
     /**
      * 获取子部门列表 (不包含自身)

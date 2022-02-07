@@ -36,6 +36,13 @@ public interface BizDemandComponent {
      */
     void dfsGroupListTree(GroupResponse node, Map<Long, String> deptMap, Set<Long> queryDeptIdSet, String name, Boolean isInsert);
 
+    /**
+     * 获取部门完整链名
+     *
+     * @param deptId 部门id
+     * @return 完整链名
+     */
+    String getDeptChainName(Long deptId);
 
     /**
      * 得到业务需求，关联的产品需求，关联的项目的发布时间
@@ -44,7 +51,6 @@ public interface BizDemandComponent {
      * @return 项目发布时间
      */
     Date getProjectEndDate(Long bizDemandId);
-
 
     /**
      * 列表

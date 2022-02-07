@@ -59,7 +59,7 @@ public class InnerGroupClientImpl implements InnerGroupClient {
     }
 
     @Override
-    public List<GroupResponse> getGroupTree(Long deptId){
+    public List<GroupResponse> getGroupChain(Long deptId){
         try{
             GroupRequest groupRequest = new GroupRequest();
             groupRequest.setGroupId(deptId.toString());

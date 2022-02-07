@@ -30,10 +30,7 @@ import org.assertj.core.util.Sets;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -117,6 +114,16 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         for (GroupResponse childNode : node.getChildNode()) {
             dfsGroupListTree(childNode, deptMap, queryDeptIdSet, name, isInsert);
         }
+    }
+
+    @Override
+    public String getDeptChainName(Long deptId){
+        StringBuilder deptName = new StringBuilder();
+        List<GroupResponse> groupChain = innerGroupClient.getGroupChain(deptId);
+        groupChain.remove(groupChain.size() - 1);
+        Collections.reverse(groupChain);
+        groupChain.forEach(e -> deptName.append(e.getGroupName()).append(CommonConstant.JOIN_LINE));
+        return deptName.deleteCharAt(deptName.length() - 1).toString();
     }
 
     @Override

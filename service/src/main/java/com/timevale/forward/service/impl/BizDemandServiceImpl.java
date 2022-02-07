@@ -235,14 +235,9 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizDemandDetailVO.setOsText(OsEnum.getTextByCode(bizDemandDetailVO.getOs()));
             bizDemandDetailVO.setProcessorText(ProcessorEnum.getTextByCode(bizDemandDetailVO.getProcessor()));
         }
-        Set<Long> deptIdSet =  Sets.newHashSet();
-        deptIdSet.add(bizDemandDO.getDeptId());
-        Map<Long, String> deptMap = Maps.newHashMap();
-        GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
-        for (GroupResponse childNode : rootNode.getChildNode()){
-            bizDemandComponent.dfsGroupListTree(childNode, deptMap, deptIdSet, "", false);
-        }
-        bizDemandDetailVO.setDeptName(deptMap.get(bizDemandDO.getDeptId()));
+
+        // 获取部门链，添加完整部门信息
+        bizDemandDetailVO.setDeptName(bizDemandComponent.getDeptChainName(bizDemandDO.getDeptId()));
 
         //获取项目发布时间
         bizDemandDetailVO.setEndDate(bizDemandComponent.getProjectEndDate(bizDemandId));
