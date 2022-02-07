@@ -38,7 +38,10 @@ import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -103,7 +106,7 @@ public class HomePageServiceImpl implements HomePageService {
         projectCount = Math.toIntExact(projectListDOList.stream()
                 .filter(e -> ProjectStatusEnum.ongoing(e.getStatus())).count());
 
-        // 如果为产品则添加待处理业务需求，否则添加待处理任务
+        // 产品添加待处理业务需求，开发测试添加待处理任务
         if(userType.equals(UserTypeEnum.PD.toString())){
             List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(BizDemandListCondition.builder()
                     .receiveManIdList(allMyStaffWithSelf)
@@ -141,18 +144,19 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Override
     public BaseResult<List<HomePageRiskWarningVO>> getRiskWarning(String userType) {
-        List<HomePageRiskWarningDTO> riskWarningDTOList = homePageRiskWarningComponent.getRiskWarning(userType);
-        List<HomePageRiskWarningTaskDTO> riskWarningTaskDTOList = homePageRiskWarningTaskComponent.getRiskWarningTask();
-        List<HomePageRiskWarningSubmitTestDTO> riskWarningSubmitTestDTOList = homePageRiskWarningSubmitTestComponent.getRiskWarningSubmitTest();
+        // 查询数据，同时转换为Set去重
+        Set<HomePageRiskWarningDTO> riskWarningDTOSet = Sets.newHashSet(homePageRiskWarningComponent.getRiskWarning(userType));
+        Set<HomePageRiskWarningTaskDTO> riskWarningTaskDTOSet = Sets.newHashSet(homePageRiskWarningTaskComponent.getRiskWarningTask());
+        Set<HomePageRiskWarningSubmitTestDTO> riskWarningSubmitTestDTOSet = Sets.newHashSet(homePageRiskWarningSubmitTestComponent.getRiskWarningSubmitTest());
 
         // 结果集
         Map<Long, HomePageRiskWarningVO> result = Maps.newHashMap();
 
         // 查询结果中所有的项目
         Set<Long> projectIdSet = Sets.newHashSet();
-        projectIdSet.addAll(riskWarningDTOList.stream().map(HomePageRiskWarningDTO::getProjectId).collect(Collectors.toSet()));
-        projectIdSet.addAll(riskWarningTaskDTOList.stream().map(HomePageRiskWarningTaskDTO::getProjectId).collect(Collectors.toSet()));
-        projectIdSet.addAll(riskWarningSubmitTestDTOList.stream().map(HomePageRiskWarningSubmitTestDTO::getProjectId).collect(Collectors.toSet()));
+        projectIdSet.addAll(riskWarningDTOSet.stream().map(HomePageRiskWarningDTO::getProjectId).collect(Collectors.toSet()));
+        projectIdSet.addAll(riskWarningTaskDTOSet.stream().map(HomePageRiskWarningTaskDTO::getProjectId).collect(Collectors.toSet()));
+        projectIdSet.addAll(riskWarningSubmitTestDTOSet.stream().map(HomePageRiskWarningSubmitTestDTO::getProjectId).collect(Collectors.toSet()));
         projectIdSet.forEach(key -> result.put(key, new HomePageRiskWarningVO()));
 
         // 初始化结果集中集合
@@ -162,12 +166,12 @@ public class HomePageServiceImpl implements HomePageService {
             value.setHomePageProjectNodeVOList(Lists.emptyList());
         });
 
-        // 按项目分类
-        Map<Long, List<HomePageRiskWarningDTO>> riskWarningGroup = riskWarningDTOList.stream()
+        // 按项目id分类
+        Map<Long, List<HomePageRiskWarningDTO>> riskWarningGroup = riskWarningDTOSet.stream()
                 .collect(Collectors.groupingBy(HomePageRiskWarningDTO::getProjectId));
-        Map<Long, List<HomePageRiskWarningTaskDTO>> riskWarningTaskGroup = riskWarningTaskDTOList.stream()
+        Map<Long, List<HomePageRiskWarningTaskDTO>> riskWarningTaskGroup = riskWarningTaskDTOSet.stream()
                 .collect(Collectors.groupingBy(HomePageRiskWarningTaskDTO::getProjectId));
-        Map<Long, List<HomePageRiskWarningSubmitTestDTO>> riskWarningSubmitTestGroup = riskWarningSubmitTestDTOList.stream()
+        Map<Long, List<HomePageRiskWarningSubmitTestDTO>> riskWarningSubmitTestGroup = riskWarningSubmitTestDTOSet.stream()
                 .collect(Collectors.groupingBy(HomePageRiskWarningSubmitTestDTO::getProjectId));
 
         // 填入数据
@@ -207,20 +211,23 @@ public class HomePageServiceImpl implements HomePageService {
         // 我和我的所有员工 Set
         Set<String> allMyStaffWithSelfSet = Sets.newHashSet(innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId()));
 
-        // 部门id非空取交集
+        // 部门id、员工id非空取交集
         if(!CollectionUtils.isEmpty(deptIds)){
             for (Long deptId : deptIds) {
                 allMyStaffWithSelfSet.retainAll(innerUserPersonClient.getByGroupIdNew(String.valueOf(deptId)));
             }
         }
-
-        // 员工id非空取交集
         if(!CollectionUtils.isEmpty(teamMembers)){
             allMyStaffWithSelfSet.retainAll(teamMembers);
         }
 
+        // 如果查询条件为空直接返回空数据
+        if(CollectionUtils.isEmpty(allMyStaffWithSelfSet)){
+            return BaseResult.success(Lists.emptyList());
+        }
+
         // 查询数据
-        List<HomePageProjectBoardDTO> homePageProjectBoardDTOList = homePageProjectBoardComponent.getProjectBoard(userType, new ArrayList<>(allMyStaffWithSelfSet));
+        List<HomePageProjectBoardDTO> homePageProjectBoardDTOList = homePageProjectBoardComponent.getProjectBoard(userType, Lists.newArrayList(allMyStaffWithSelfSet));
 
         // 数据分组后转换
         List<HomePageProjectBoardVO> result = Lists.newArrayList();
