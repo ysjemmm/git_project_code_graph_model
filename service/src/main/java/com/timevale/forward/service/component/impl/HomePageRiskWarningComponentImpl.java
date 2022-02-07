@@ -41,7 +41,7 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
         ParamHelper paramHelper = ParamHelper.newInstance()
                 .offset(0)
                 .page(Integer.MAX_VALUE)
-                .in("user_id", Lists.emptyList());
+                .in("user_id", allMyStaffWithSelf);
 
         // 根据用户类型选择不同配置
         DistributeConfigVO riskWarning;

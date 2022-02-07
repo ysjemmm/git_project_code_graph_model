@@ -1,6 +1,5 @@
 package com.timevale.forward.service.impl;
 
-import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
@@ -28,7 +27,6 @@ import com.timevale.forward.service.copy.HomePageProjectOnlineLatelyCopier;
 import com.timevale.forward.service.copy.HomePageRiskWarningCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.integration.superset.model.base.PageResult;
-import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -157,17 +155,15 @@ public class HomePageServiceImpl implements HomePageService {
         Set<HomePageRiskWarningTaskDTO> riskWarningTaskDTOSet = Sets.newHashSet(homePageRiskWarningTaskComponent.getRiskWarningTask());
         Set<HomePageRiskWarningSubmitTestDTO> riskWarningSubmitTestDTOSet = Sets.newHashSet(homePageRiskWarningSubmitTestComponent.getRiskWarningSubmitTest());
 
-        // 结果集
-        Map<Long, HomePageRiskWarningVO> result = Maps.newHashMap();
-
-        // 查询结果中所有的项目
+        // 查询结果中所有的项目id
         Set<Long> projectIdSet = Sets.newHashSet();
         projectIdSet.addAll(riskWarningDTOSet.stream().map(HomePageRiskWarningDTO::getProjectId).collect(Collectors.toSet()));
         projectIdSet.addAll(riskWarningTaskDTOSet.stream().map(HomePageRiskWarningTaskDTO::getProjectId).collect(Collectors.toSet()));
         projectIdSet.addAll(riskWarningSubmitTestDTOSet.stream().map(HomePageRiskWarningSubmitTestDTO::getProjectId).collect(Collectors.toSet()));
-        projectIdSet.forEach(key -> result.put(key, new HomePageRiskWarningVO()));
 
-        // 初始化结果集中集合
+        // 初始化结果集
+        Map<Long, HomePageRiskWarningVO> result = Maps.newHashMap();
+        projectIdSet.forEach(key -> result.put(key, new HomePageRiskWarningVO()));
         result.forEach((key, value) -> {
             value.setHomePageTaskVOList(Lists.emptyList());
             value.setHomePageSubmitTestVOList(Lists.emptyList());

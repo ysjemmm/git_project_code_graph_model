@@ -42,7 +42,7 @@ public class HomePageDataIndicatorComponentImpl extends BaseDistributeClientImpl
         ParamHelper paramHelper = ParamHelper.newInstance()
                 .offset(0)
                 .page(1)
-                .in("user_id", Lists.emptyList());
+                .in("user_id", allMyStaffWithSelf);
 
         // 根据用户类型访问不同接口
         DistributeConfigVO distributeConfigVO;

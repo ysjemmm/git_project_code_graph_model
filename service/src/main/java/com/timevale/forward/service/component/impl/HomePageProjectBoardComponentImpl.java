@@ -31,7 +31,7 @@ public class HomePageProjectBoardComponentImpl extends BaseDistributeClientImpl<
         ParamHelper paramHelper = ParamHelper.newInstance()
                 .offset(0)
                 .page(Integer.MAX_VALUE)
-                .in("user_id", Lists.emptyList());
+                .in("user_id", userIdList);
 
         DistributePageQueryVO params = DistributePageQueryVO.builder()
                 .params(paramHelper.params())

@@ -41,7 +41,7 @@ public class HomePageRiskWarningTaskComponentImpl extends BaseDistributeClientIm
         ParamHelper paramHelper = ParamHelper.newInstance()
                 .offset(0)
                 .page(Integer.MAX_VALUE)
-                .in("user_id", Lists.emptyList());
+                .in("user_id", allMyStaffWithSelf);
 
         DistributePageQueryVO params = DistributePageQueryVO.builder()
                 .params(paramHelper.params())

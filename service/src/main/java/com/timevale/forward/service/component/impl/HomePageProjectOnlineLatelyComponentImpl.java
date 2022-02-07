@@ -41,14 +41,14 @@ public class HomePageProjectOnlineLatelyComponentImpl extends BaseDistributeClie
         ParamHelper queryParamHelper = ParamHelper.newInstance()
                 .offset((homePageProjectOnlineLatelyQueryList.getPageNum() - 1) * homePageProjectOnlineLatelyQueryList.getPageSize())
                 .page(homePageProjectOnlineLatelyQueryList.getPageSize())
-                .in("user_id", Lists.emptyList());
+                .in("user_id", allMyStaffWithSelf);
         DistributePageQueryVO queryParams = DistributePageQueryVO.builder()
                 .params(queryParamHelper.params())
                 .distributeConfigVO(distributeConfig.getProjectOnlineLately())
                 .build();
 
         ParamHelper countParamHelper = ParamHelper.newInstance()
-                .in("user_id", Lists.emptyList());
+                .in("user_id", allMyStaffWithSelf);
         DistributePageQueryVO countParams = DistributePageQueryVO.builder()
                 .params(countParamHelper.params())
                 .distributeConfigVO(distributeConfig.getProjectOnlineLatelyCount())
