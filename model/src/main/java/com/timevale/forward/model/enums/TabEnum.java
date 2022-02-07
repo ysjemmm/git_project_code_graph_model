@@ -11,7 +11,8 @@ public enum TabEnum {
     // 跳转页
     PROJECT_MANAGEMENT("projectManagement"),
     PRODUCT_MANAGEMENT("productManagement"),
-    BUSINESS_MANAGEMENT("businessManagement");
+    BUSINESS_MANAGEMENT("businessManagement"),
+    TASK_MANAGEMENT("taskManagement");
     private String text;
 
     TabEnum(String text){this.text = text;}

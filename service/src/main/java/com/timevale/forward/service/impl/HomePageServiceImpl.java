@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
@@ -27,6 +28,7 @@ import com.timevale.forward.service.copy.HomePageProjectOnlineLatelyCopier;
 import com.timevale.forward.service.copy.HomePageRiskWarningCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.integration.superset.model.base.PageResult;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -136,9 +138,15 @@ public class HomePageServiceImpl implements HomePageService {
         List<HomePageProjectOnlineLatelyVO> homePageProjectOnlineLatelyVOList = HomePageProjectOnlineLatelyCopier
                 .INSTANCE.convert(homePageProjectOnlineLatelyDTOPageResult.getResult());
         PageQueryResult<HomePageProjectOnlineLatelyVO> result = PageQueryResult.resResult(homePageProjectOnlineLatelyVOList);
+
+        int total = homePageProjectOnlineLatelyDTOPageResult.getTotal();
+        int pageSize = homePageProjectOnlineLatelyQueryList.getPageSize();
+
+        result.setTotalItems(total);
+        result.setItemsPerPage(pageSize);
+        result.setTotalPages((total - 1) / pageSize + 1);
         result.setCurrentPage(homePageProjectOnlineLatelyQueryList.getPageNum());
-        result.setTotalItems(homePageProjectOnlineLatelyDTOPageResult.getTotal());
-        result.setItemsPerPage(homePageProjectOnlineLatelyQueryList.getPageSize());
+
         return BaseResult.success(result);
     }
 

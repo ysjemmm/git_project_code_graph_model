@@ -1,10 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.CommentMapper;
-import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.CommentDO;
 import com.timevale.forward.facade.api.client.CommentService;
 import com.timevale.forward.facade.api.query.CommentQueryList;
@@ -43,6 +40,9 @@ public class CommentServiceImpl implements CommentService {
     ProjectMapper projectMapper;
 
     @Resource
+    TaskMapper taskMapper;
+
+    @Resource
     CommentMapper commentMapper;
 
     @Resource
@@ -77,12 +77,14 @@ public class CommentServiceImpl implements CommentService {
         String name;
         Long toId = commentAddReq.getToId();
         Integer type = commentAddReq.getType();
-        if(type.equals(CommentTypeEnum.PROJECT.getCode())){
+        if(CommentTypeEnum.PROJECT.getCode().equals(type)){
             name = projectMapper.get(toId).getName();
-        }else if(type.equals(CommentTypeEnum.PRODUCT_DEMAND.getCode())){
+        }else if(CommentTypeEnum.PRODUCT_DEMAND.getCode().equals(type)){
             name = productDemandMapper.selectById(toId).getName();
-        }else{
+        }else if(CommentTypeEnum.BIZ_DEMAND.getCode().equals(type)){
             name = bizDemandMapper.selectById(toId).getName();
+        }else {
+            name = taskMapper.getById(toId).getName();
         }
 
         // 发送通知

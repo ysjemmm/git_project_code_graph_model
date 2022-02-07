@@ -58,7 +58,6 @@ public interface TaskMapper {
      * @param taskCondition 查询条件
      * @return TaskDO
      */
-
     TaskDO get(TaskCondition taskCondition);
 
     /**
@@ -68,6 +67,12 @@ public interface TaskMapper {
      * @return int
      */
     int update(TaskDO taskDO);
+
+    /**
+     * @param id id
+     * @return TaskDO
+     */
+    TaskDO getById(@Param("id") Long id);
 
     /**
      * @param projectId 项目id

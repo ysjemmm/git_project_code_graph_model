@@ -11,7 +11,8 @@ public enum CommentTypeEnum {
     // 主体类型: 0项目，1产品需求2业务需求
     PROJECT(0,"项目"),
     PRODUCT_DEMAND(1,"产品需求"),
-    BIZ_DEMAND(2,"业务需求");
+    BIZ_DEMAND(2,"业务需求"),
+    TASK(3,"任务"),;
 
     private Integer code;
     private String text;

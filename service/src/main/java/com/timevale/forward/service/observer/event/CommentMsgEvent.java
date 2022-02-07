@@ -4,6 +4,7 @@ import com.timevale.forward.model.enums.CommentTypeEnum;
 import com.timevale.forward.model.enums.MessageTitleEnum;
 import com.timevale.forward.model.enums.TabEnum;
 import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
+import com.timevale.forward.service.utils.StringUtil;
 
 import java.util.List;
 
@@ -40,8 +41,10 @@ public class CommentMsgEvent extends MessageEvent {
             singleUrl = domainName + String.format(PARAM, TabEnum.PROJECT_MANAGEMENT.getText(), mainId);
         } else if (CommentTypeEnum.PRODUCT_DEMAND.getText().equals(type)) {
             singleUrl = domainName + String.format(PARAM, TabEnum.PRODUCT_MANAGEMENT.getText(), mainId);
-        } else {
+        } else if (CommentTypeEnum.BIZ_DEMAND.getText().equals(type)){
             singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_MANAGEMENT.getText(), mainId);
+        } else {
+            singleUrl = domainName + String.format(PARAM, TabEnum.TASK_MANAGEMENT.getText(), mainId);
         }
         String markdown = String.format(COMMENT_MSG, title, operator, type, name, content, singleUrl);
 
