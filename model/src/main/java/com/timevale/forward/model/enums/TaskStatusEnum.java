@@ -11,7 +11,7 @@ public enum TaskStatusEnum {
     /**
      * 任务状态:0待执行、10进行中、20已完成、-10已暂停、-20已作废
      */
-    WAITING(0,"待启动"),
+    WAITING(0,"待执行"),
 
     PROGRESS(10,"进行中"),
 

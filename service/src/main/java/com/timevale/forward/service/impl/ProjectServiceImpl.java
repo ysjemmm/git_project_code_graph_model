@@ -83,6 +83,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private TaskMapper taskMapper;
 
+    @Resource
+    private TaskComponent taskComponent;
+
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -141,6 +144,7 @@ public class ProjectServiceImpl implements ProjectService {
             if (ProjectStatusEnum.SUSPEND.getCode().equals(type)) {
                 //暂停  更新产品需求状态
                 productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode());
+
             } else {
                 // 作废解除关联
                 ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
@@ -154,6 +158,8 @@ public class ProjectServiceImpl implements ProjectService {
             productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds, false);
 
         }
+        // 更新任务状态
+        taskComponent.updateStatusAsProjectStatusChange(projectId, type);
         return BaseResult.success(true);
     }
 
@@ -179,7 +185,10 @@ public class ProjectServiceImpl implements ProjectService {
             projectMapper.update(projectDO);
             return BaseResult.success(true);
         }
-        fillInfo(projectNode, projectDO, true);
+
+        fillInfoWhenEnable(projectNode, projectDO);
+        // 更新任务状态
+        taskComponent.updateStatusAsProjectStatusChange(projectId,projectDO.getStatus());
         return BaseResult.success(true);
     }
 
@@ -239,7 +248,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProjectNodeDO> projectNodeDO = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
         Integer status = projectMapper.get(projectModifyReq.getId()).getStatus();
         projectDO.setStatus(status);
-        fillInfo(projectNodeDO, projectDO, false);
+        fillInfoWhenModify(projectNodeDO, projectDO);
 
         // 产品线
         projectProductLineComponent.update(projectDO.getProductLineIds(), projectDO.getId());
@@ -389,7 +398,7 @@ public class ProjectServiceImpl implements ProjectService {
         return BaseResult.success(pageQueryResult);
     }
 
-    private void fillInfo(List<ProjectNodeDO> projectNodes, ProjectDO projectDO, boolean enable) {
+    private void fillInfoWhenModify(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
         Map<String, ProjectNodeDO> nodeMap = projectNodes
                 .stream()
                 .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
@@ -409,8 +418,8 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectNodeDO node = null;
         Integer oriStatus = projectDO.getStatus();
         if ((node = nodeMap.get(ProjectStageEnum.TEST_RELEASE.getText())) != null && node.getActualDate() != null) {
-            if (!enable && ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
-                // 编辑项目时，当状态是暂停,不修改项目状态
+            if (ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
+                // 编辑项目
                 throw new BaseBizRuntimeException("项目状态为暂停时,不能填写发布正式的实际时间");
             }
             List<Date> nullDate = projectNodes.stream().map(ProjectNodeDO::getActualDate)
@@ -418,6 +427,37 @@ public class ProjectServiceImpl implements ProjectService {
             if (!CollectionUtils.isEmpty(nullDate)) {
                 throw new BaseBizRuntimeException("请填写完其他节点的实际时间后,再填写发布正式的实际时间");
             }
+        }
+        fillInfo(nodeMap,projectDO);
+        if (ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
+            // 编辑项目时，当状态是暂停,不修改项目状态
+            projectDO.setStatus(oriStatus);
+        }
+        log.info("更新项目信息:nodeMap={},,projectDO={}", nodeMap, projectDO);
+        projectMapper.update(projectDO);
+        if (!ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
+            //当状态不是暂停,更新产品需求状态
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
+        }
+    }
+
+    private void fillInfoWhenEnable(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
+        Map<String, ProjectNodeDO> nodeMap = projectNodes
+                .stream()
+                .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
+        fillInfo(nodeMap,projectDO);
+        log.info("启用项目:nodeMap={},,projectDO={}", nodeMap, projectDO);
+        projectMapper.update(projectDO);
+        productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
+    }
+
+    private void fillInfo(Map<String, ProjectNodeDO> nodeMap, ProjectDO projectDO) {
+        // 计算项目状态
+        ProjectNodeDO node = null;
+        if ((node = nodeMap.get(ProjectStageEnum.TEST_RELEASE.getText())) != null && node.getActualDate() != null) {
+            projectDO.setStatus(ProjectStatusEnum.RELEASED.getCode());
+            projectDO.setActualEndDate(node.getActualDate());
+        }else if ((node = nodeMap.get(ProjectStageEnum.TEST_RELEASE.getText())) != null && node.getActualDate() != null) {
             projectDO.setStatus(ProjectStatusEnum.RELEASED.getCode());
             projectDO.setActualEndDate(node.getActualDate());
         } else if ((node = nodeMap.get(ProjectStageEnum.TEST_START.getText())) != null && node.getActualDate() != null) {
@@ -438,17 +478,6 @@ public class ProjectServiceImpl implements ProjectService {
             projectDO.setActualStartDate(node.getActualDate());
         } else if ((node = nodeMap.get(ProjectStageEnum.DEV_START.getText())) != null) {
             projectDO.setActualStartDate(node.getActualDate());
-        }
-        if (!enable && ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
-            // 编辑项目时，当状态是暂停,不修改项目状态
-            projectDO.setStatus(oriStatus);
-        }
-        log.info("更新项目信息:nodeMap={},,projectDO={},enable={}", nodeMap, projectDO, enable);
-        projectMapper.update(projectDO);
-
-        if (enable || !ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
-            // 启用项目时或当状态不是暂停,更新产品需求状态
-            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
         }
     }
 

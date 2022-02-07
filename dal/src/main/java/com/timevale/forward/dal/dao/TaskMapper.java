@@ -24,23 +24,22 @@ public interface TaskMapper {
 
     /**
      * 获取任务信息
-     * @param ids 任务
+     *
+     * @param ids        任务
      * @param projectIds 项目
      * @return list
      */
-    List<Long> getByProjectIds(@Param("ids") List<Long> ids,@Param("projectIds") List<Long> projectIds);
+    List<Long> getByProjectIds(@Param("ids") List<Long> ids, @Param("projectIds") List<Long> projectIds);
 
     /**
-     *
-     * @param ids 任务id
+     * @param ids            任务id
      * @param productLineIds 产品线id
      * @return 任务id
      */
 
-    List<Long> getByProductLineIds(@Param("ids") List<Long> ids,@Param("productLineIds") List<Long> productLineIds);
+    List<Long> getByProductLineIds(@Param("ids") List<Long> ids, @Param("productLineIds") List<Long> productLineIds);
 
     /**
-     *
      * @param ids 任务id
      * @return 项目id
      */
@@ -56,7 +55,6 @@ public interface TaskMapper {
     int insert(TaskDO taskDO);
 
     /**
-     *
      * @param taskCondition 查询条件
      * @return TaskDO
      */
@@ -72,10 +70,19 @@ public interface TaskMapper {
     int update(TaskDO taskDO);
 
     /**
-     *
      * @param projectId 项目id
      * @return 项目id
      */
     List<TaskDO> getByProjectId(@Param("projectId") Long projectId);
+
+
+    /**
+     *
+     * @param projectId projectId
+     * @param preUpdate 更新前状态
+     * @param updated 需要更新的状态
+     * @return 数量
+     */
+    int updateStatusAsProjectStatusChange(@Param("projectId") Long projectId, @Param("preUpdate") List<Integer> preUpdate, @Param("updated") Integer updated);
 
 }

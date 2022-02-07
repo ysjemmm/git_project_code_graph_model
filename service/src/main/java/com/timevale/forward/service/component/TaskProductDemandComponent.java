@@ -13,9 +13,9 @@ public interface TaskProductDemandComponent {
 
     /**
      * 新增任务-产品需求
-     * @param taskId taskId
+     * @param taskIds taskIds
      * @param productDemandId productDemandId
      */
-    void update(Long taskId, Long productDemandId);
+    void update(List<Long> taskIds, Long productDemandId);
 
 }

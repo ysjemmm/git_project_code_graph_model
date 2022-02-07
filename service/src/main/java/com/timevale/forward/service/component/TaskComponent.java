@@ -16,4 +16,12 @@ public interface TaskComponent {
      */
     BaseResult<PageQueryResult<TaskVO>> page (TaskListCondition taskListCondition, List<Long> mainIds);
 
+    /**
+     *
+     * @param projectId 项目id
+     * @param projectStatus 项目状态
+     * @return Boolean
+     */
+    BaseResult<Boolean> updateStatusAsProjectStatusChange(Long projectId,Integer projectStatus);
+
 }

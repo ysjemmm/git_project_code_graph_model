@@ -140,4 +140,19 @@
             a.project_id = #{projectId} and a.is_deleted=false
         </where>
     </select>
+
+    <update id="updateStatusAsProjectStatusChange">
+        update task
+        <set>
+            <if test="updated != null">status = #{updated},</if>
+        </set>
+        <where>
+            project_id = #{projectId}
+            and status in
+            <foreach collection="preUpdate" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            and is_deleted=false
+        </where>
+    </update>
 </mapper>

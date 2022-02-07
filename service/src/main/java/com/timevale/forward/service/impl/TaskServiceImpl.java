@@ -41,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -225,7 +226,7 @@ public class TaskServiceImpl implements TaskService {
             if (TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
                 throw new BaseBizRuntimeException("任务状态已完成,不能修改状态");
             }
-            taskProductDemandComponent.update(taskDO.getId(),null);
+            taskProductDemandComponent.update(Lists.newArrayList(taskDO.getId()),null);
         }
         return BaseResult.success(true);
     }
@@ -234,13 +235,41 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> enable(Long taskId) {
         log.info("任务开启接收参数:{}", taskId);
+        TaskCondition condition = TaskCondition.builder().id(taskId).build();
+        TaskDO taskDO = taskMapper.get(condition);
+        if(taskDO==null){
+            throw new BaseBizRuntimeException("找不到该任务");
+        }
+        if (!TaskStatusEnum.SUSPEND.getCode().equals(taskDO.getStatus())) {
+            throw new BaseBizRuntimeException("任务状态不是已暂停,不能修改状态");
+        }
+        fillStatus(taskDO);
+        taskMapper.update(taskDO);
         return BaseResult.success(true);
     }
 
     @Override
-    public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(TaskLinkProductDemandQueryList taskQueryList) {
-        log.info("任务-产品需求匹配,接收参数:taskQueryList={}", taskQueryList);
-        ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(taskQueryList);
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> execute(Long taskId) {
+        log.info("任务执行接收参数:{}", taskId);
+        TaskCondition condition = TaskCondition.builder().id(taskId).build();
+        TaskDO taskDO = taskMapper.get(condition);
+        if(taskDO==null){
+            throw new BaseBizRuntimeException("找不到该任务");
+        }
+        if (!TaskStatusEnum.WAITING.getCode().equals(taskDO.getStatus())) {
+            throw new BaseBizRuntimeException("任务状态不是待执行,不能修改状态");
+        }
+        taskDO.setStatus(TaskStatusEnum.PROGRESS.getCode());
+        taskDO.setActualStartDate(new Date());
+        taskMapper.update(taskDO);
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(TaskLinkProductDemandQueryList taskLinkProductDemandQueryList) {
+        log.info("任务-产品需求匹配,接收参数:taskQueryList={}", taskLinkProductDemandQueryList);
+        ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(taskLinkProductDemandQueryList);
         // 该项目下的产品需求
         List<Long> inProductDemandIds = projectProductDemandMapper.getByProjectId(condition.getProjectId())
                 .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
@@ -252,7 +281,7 @@ public class TaskServiceImpl implements TaskService {
             condition.setFilterProductDemandIds(filterProductDemandIds);
             condition.setId(null);
         }
-        PageHelper.startPage(taskQueryList.getPageNum(), taskQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        PageHelper.startPage(taskLinkProductDemandQueryList.getPageNum(), taskLinkProductDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
         List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
         productDemandVO.forEach(p -> {
@@ -277,7 +306,7 @@ public class TaskServiceImpl implements TaskService {
             taskProductDemandComponent.batchInsert(taskProductDemandLinkReq.getTaskId(), productDemandIds);
 
         } else {
-            taskProductDemandComponent.update(taskProductDemandLinkReq.getTaskId(),productDemandIds.get(0));
+            taskProductDemandComponent.update(Lists.newArrayList(taskProductDemandLinkReq.getTaskId()),productDemandIds.get(0));
         }
         return BaseResult.success(true);
     }

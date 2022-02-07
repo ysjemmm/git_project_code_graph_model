@@ -14,8 +14,10 @@ import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.component.TaskComponent;
+import com.timevale.forward.service.component.TaskProductDemandComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -23,6 +25,7 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -36,7 +39,7 @@ import java.util.stream.Collectors;
  **/
 @Component
 @Slf4j
-public class TaskComponentImpl implements TaskComponent{
+public class TaskComponentImpl implements TaskComponent {
 
     @Resource
     private ProjectMapper projectMapper;
@@ -50,9 +53,12 @@ public class TaskComponentImpl implements TaskComponent{
     @Resource
     private TaskMapper taskMapper;
 
+    @Resource
+    private TaskProductDemandComponent taskProductDemandComponent;
+
 
     @Override
-    public BaseResult<PageQueryResult<TaskVO>> page (TaskListCondition condition, List<Long> taskIds) {
+    public BaseResult<PageQueryResult<TaskVO>> page(TaskListCondition condition, List<Long> taskIds) {
         // 查找执行人
         if (CollectionUtils.isNotEmpty(condition.getExecutorIds())) {
             taskIds = personMapper.getMainIds(condition.getExecutorIds(), taskIds, PersonTypeEnum.TASK_EXECUTOR.getCode());
@@ -75,7 +81,7 @@ public class TaskComponentImpl implements TaskComponent{
             }
         }
         // 查任务
-        buildConditionBeforeQuery(taskIds,condition);
+        buildConditionBeforeQuery(taskIds, condition);
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<TaskDO> taskDO = taskMapper.list(condition);
 
@@ -95,7 +101,7 @@ public class TaskComponentImpl implements TaskComponent{
 
         //3.填充项目信息
         Map<Long, ProjectDO> projectMap = projectMapper.getByIds(projectIds).stream()
-                .collect(Collectors.toMap(ProjectDO::getId, p->p, (v1, v2) -> v1));
+                .collect(Collectors.toMap(ProjectDO::getId, p -> p, (v1, v2) -> v1));
         List<TaskVO> taskVO = TaskCopier.INSTANCE.convert(taskDO);
         taskVO.forEach(a -> {
             List<PersonDO> executors = executorMap.get(a.getId());
@@ -121,7 +127,37 @@ public class TaskComponentImpl implements TaskComponent{
         return BaseResult.success(pageQueryResult);
 
     }
-    private void buildConditionBeforeQuery(List<Long>taskIds,TaskListCondition condition){
+
+    @Override
+    public BaseResult<Boolean> updateStatusAsProjectStatusChange(Long projectId, Integer projectStatus) {
+        if (ProjectStatusEnum.SUSPEND.getCode().equals(projectStatus)) {
+            taskMapper.updateStatusAsProjectStatusChange(projectId
+                    , Lists.newArrayList(TaskStatusEnum.WAITING.getCode(), TaskStatusEnum.PROGRESS.getCode())
+                    , TaskStatusEnum.SUSPEND.getCode());
+        } else if (ProjectStatusEnum.INVALID.getCode().equals(projectStatus)) {
+            taskMapper.updateStatusAsProjectStatusChange(projectId
+                    , Lists.newArrayList(TaskStatusEnum.WAITING.getCode(), TaskStatusEnum.PROGRESS.getCode(), TaskStatusEnum.SUSPEND.getCode())
+                    , TaskStatusEnum.INVALID.getCode());
+            List<Long> taskIds = taskMapper.getByProjectId(projectId).stream().map(TaskDO::getId).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(taskIds)) {
+                taskProductDemandComponent.update(taskIds, null);
+            }
+        } else {
+            //开启
+            List<TaskDO> taskDO = taskMapper.getByProjectId(projectId);
+            taskDO.forEach(a -> {
+                if (a.getActualStartDate() == null && a.getActualEndDate() == null) {
+                    a.setStatus(TaskStatusEnum.WAITING.getCode());
+                } else if (a.getActualStartDate() != null && a.getActualEndDate() == null) {
+                    a.setStatus(TaskStatusEnum.PROGRESS.getCode());
+                }
+                taskMapper.update(a);
+            });
+        }
+        return BaseResult.success(true);
+    }
+
+    private void buildConditionBeforeQuery(List<Long> taskIds, TaskListCondition condition) {
         condition.setIds(taskIds);
         condition.setPlanStartDateLeft(DateUtil.getStartOfDay(condition.getPlanStartDateLeft()));
         condition.setPlanStartDateRight(DateUtil.getEndOfDay(condition.getPlanStartDateRight()));

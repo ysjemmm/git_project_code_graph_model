@@ -55,10 +55,10 @@ public class TaskProductDemandComponentImpl implements TaskProductDemandComponen
     }
 
     @Override
-    public void update(Long taskId, Long productDemandId) {
+    public void update(List<Long> taskIds, Long productDemandId) {
         TaskProductDemandDO taskProductDemandDO = new TaskProductDemandDO();
         taskProductDemandDO.setIsDeleted(true);
-        taskProductDemandDO.setTaskId(taskId);
+        taskProductDemandDO.setUpdateTaskIds(taskIds);
         taskProductDemandDO.setProductDemandId(productDemandId);
         taskProductDemandMapper.update(taskProductDemandDO);
     }

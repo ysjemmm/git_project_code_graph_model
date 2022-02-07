@@ -33,7 +33,12 @@
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
         </set>
         <where>
-            <if test="taskId!=null">and task_id = #{taskId}</if>
+            <if test="updateTaskIds!=null and updateTaskIds.size()>0">
+                and task_id in
+                <foreach collection="updateTaskIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="productDemandId!=null">and product_demand_id = #{productDemandId}</if>
             and is_deleted=false
         </where>
