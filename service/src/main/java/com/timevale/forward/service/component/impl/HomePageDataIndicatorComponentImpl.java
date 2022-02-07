@@ -62,8 +62,8 @@ public class HomePageDataIndicatorComponentImpl extends BaseDistributeClientImpl
         if(CollectionUtils.isEmpty(homePageDataIndicatorDTOList)){
             return new HomePageDataIndicatorDTO();
         }
-        HomePageDataIndicatorDTO result = homePageDataIndicatorDTOList.get(0);
-        result.setOnlineProjectRateP0P1(allMyStaffWithSelf.toString());
-        return result;
+        homePageDataIndicatorDTOList.get(0).setOnlineProjectRate("yangxu");
+        homePageDataIndicatorDTOList.get(0).setOnlineProjectRateP0P1(allMyStaffWithSelf.toString());
+        return homePageDataIndicatorDTOList.get(0);
     }
 }
