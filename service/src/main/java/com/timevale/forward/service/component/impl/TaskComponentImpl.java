@@ -175,7 +175,7 @@ public class TaskComponentImpl implements TaskComponent {
                     a.setStatus(TaskStatusEnum.WAITING.getCode());
                 } else if (a.getActualStartDate() != null && a.getActualEndDate() == null) {
                     a.setStatus(TaskStatusEnum.PROGRESS.getCode());
-                    taskTimeComponent.insert(a.getId(), a.getActualStartDate(), a.getActualEndDate());
+                    taskTimeComponent.insert(a.getId(), new Date(), null);
                 }
                 taskMapper.update(a);
             });

@@ -262,8 +262,10 @@ public class TaskServiceImpl implements TaskService {
         }
         fillStatus(taskDO);
         taskMapper.update(taskDO);
-        //耗时表入库
-        insertTaskTime(taskDO);
+        //耗时表入库,当任务启用后是进行中时,去当前时间作为耗时表开始时间
+        if (TaskStatusEnum.PROGRESS.getCode().equals(taskDO.getStatus())) {
+            taskTimeComponent.insert(taskDO.getId(), new Date(), null);
+        }
         return BaseResult.success(true);
     }
 
@@ -454,7 +456,7 @@ public class TaskServiceImpl implements TaskService {
             taskTimeComponent.updateEndDate(taskDO.getId(), taskDO.getActualEndDate());
         } else if (existTaskTimeDO == null && taskDO.getActualStartDate() != null) {
             // 如果存在开始时间,入库一条新数据
-            insertTaskTime(taskDO);
+            taskTimeComponent.insert(taskDO.getId(), taskDO.getActualStartDate(), taskDO.getActualEndDate());
         }
     }
 
