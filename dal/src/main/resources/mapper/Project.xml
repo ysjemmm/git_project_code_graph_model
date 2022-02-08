@@ -165,4 +165,20 @@
         </where>
     </select>
 
+    <select id="countByTeamMember" resultType="java.lang.Integer">
+        select count(distinct pj.id)
+        from person p
+        join project pj
+        on pj.id = p.main_id
+        where
+        p.user_id in
+        <foreach collection="teamMemberList" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        and p.type &lt; 20
+        and p.is_deleted = false
+        and pj.is_deleted = false
+    </select>
+
+
 </mapper>

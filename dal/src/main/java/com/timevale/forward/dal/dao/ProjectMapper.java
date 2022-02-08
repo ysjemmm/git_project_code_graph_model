@@ -49,6 +49,14 @@ public interface ProjectMapper {
     List<ProjectDO> selectByProductDemandIdList(@Param("productDemandIdList") List<Long> productDemandIdList);
 
     /**
+     * 通过团队成员选择
+     *
+     * @param teamMemberList 团队成员列表
+     * @return int
+     */
+    int countByTeamMember(@Param("teamMemberList") List<String> teamMemberList);
+
+    /**
      *
      * @param projectIds 项目id
      * @param productLineIds 产品线id

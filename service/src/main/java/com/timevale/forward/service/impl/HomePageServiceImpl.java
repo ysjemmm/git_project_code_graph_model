@@ -97,14 +97,10 @@ public class HomePageServiceImpl implements HomePageService {
         int bizDemandCount = 0;
 
         // 获取我及所有下属
-        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
+        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf("yangxu");
 
         // 进行中的项目
-        List<ProjectListDO> projectListDOList = projectMapper.list(ProjectListCondition.builder()
-                .teamMembers(allMyStaffWithSelf)
-                .build());
-        projectCount = Math.toIntExact(projectListDOList.stream()
-                .filter(e -> ProjectStatusEnum.ongoing(e.getStatus())).count());
+        projectCount = projectMapper.countByTeamMember(allMyStaffWithSelf);
 
         // 产品添加待处理业务需求，开发测试添加待处理任务
         if(userType.equals(UserTypeEnum.PD.toString())){
