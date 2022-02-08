@@ -42,9 +42,10 @@ public interface ProjectService {
      * 开启项目
      *
      * @param projectId 项目id
+     * @param enableTask 是否启用任务
      * @return 数量
      */
-    BaseResult<Boolean> enable(Long projectId);
+    BaseResult<Boolean> enable(Long projectId,Boolean enableTask);
 
     /**
      * 新增

@@ -3,6 +3,7 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.condition.TaskCondition;
 import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.entity.TaskDO;
+import com.timevale.forward.dal.entity.TaskStatusUpdateDO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -83,11 +84,9 @@ public interface TaskMapper {
 
     /**
      *
-     * @param projectId projectId
-     * @param preUpdate 更新前状态
-     * @param updated 需要更新的状态
-     * @return 数量
+     * @param taskStatusUpdateDO taskStatusUpdateDO
+     * @return return
      */
-    int updateStatusAsProjectStatusChange(@Param("projectId") Long projectId, @Param("preUpdate") List<Integer> preUpdate, @Param("updated") Integer updated);
+    int updateStatusAsProjectStatusChange(TaskStatusUpdateDO taskStatusUpdateDO);
 
 }

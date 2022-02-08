@@ -5,6 +5,7 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskQueryList;
+import com.timevale.forward.facade.api.request.ElapsedTimeQueryReq;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
 import com.timevale.forward.facade.api.request.TaskProductDemandLinkReq;
@@ -13,6 +14,8 @@ import com.timevale.forward.facade.api.result.TaskDetailVO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
+
+import java.math.BigDecimal;
 
 /**
  * @author xingyun
@@ -82,6 +85,14 @@ public interface TaskService {
     BaseResult<Boolean> execute(Long taskId);
 
     /**
+     * 完成项目
+     *
+     * @param taskId 任务id
+     * @return 数量
+     */
+    BaseResult<Boolean> done(Long taskId);
+
+    /**
      * 查询满足条件的产品需求列表
      *
      * @param taskLinkProductDemandQueryList 项目信息
@@ -103,5 +114,10 @@ public interface TaskService {
      */
     BaseResult<PageQueryResult<ProductDemandVO>> linkProductDemandList(TaskProductDemandQueryList taskProductDemandQueryList);
 
-
+    /**
+     *
+     * @param elapsedTimeQueryReq 查询条件
+     * @return 耗时(h)
+     */
+    BigDecimal getElapsedTime(ElapsedTimeQueryReq elapsedTimeQueryReq);
 }

@@ -14,10 +14,7 @@ import com.timevale.forward.facade.api.client.TaskService;
 import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskQueryList;
-import com.timevale.forward.facade.api.request.PersonAddReq;
-import com.timevale.forward.facade.api.request.TaskAddReq;
-import com.timevale.forward.facade.api.request.TaskModifyReq;
-import com.timevale.forward.facade.api.request.TaskProductDemandLinkReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.TaskDetailVO;
 import com.timevale.forward.facade.api.result.TaskVO;
@@ -28,6 +25,7 @@ import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
 import com.timevale.forward.service.integration.erp.model.CreateTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
+import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -40,10 +38,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+
+import static com.timevale.forward.service.constant.CommonConstant.SECONDS_PER_HOUR;
 
 /**
  * @author xingyun
@@ -95,6 +97,12 @@ public class TaskServiceImpl implements TaskService {
     @Resource
     private ProductDemandComponent productDemandComponent;
 
+    @Resource
+    private ElapsedTimeClient elapsedTimeClient;
+
+    @Resource
+    private TaskTimeComponent taskTimeComponent;
+
     public static final String PRIVATE_CLOUD = "私有云";
 
     public static final String TITLE = "您收到了一条任务：%s";
@@ -137,12 +145,15 @@ public class TaskServiceImpl implements TaskService {
         checkPlanDate(taskDO);
         //填充状态
         fillStatus(taskDO);
-        //处理待办
-        List<String> executorIds = taskAddReq.getExecutors().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
-        processDingTodo(taskDO, executorIds);
+
+        if (!TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
+            //处理待办
+            List<String> executorIds = taskAddReq.getExecutors().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+            processDingTodo(taskDO, executorIds);
+        }
         //入库
         taskMapper.insert(taskDO);
-       //耗时表入库
+        //耗时表入库
         insertTaskTime(taskDO);
         //附件
         fileComponent.add(taskAddReq.getFiles(), taskDO.getId(), FileTypeEnum.TASK.getCode());
@@ -210,10 +221,10 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateStatus(Long taskId, Integer type) {
-        log.info("暂停或作废任务接收参数:taskId={},type={}", taskId,type);
+        log.info("暂停或作废任务接收参数:taskId={},type={}", taskId, type);
         TaskCondition condition = TaskCondition.builder().id(taskId).build();
         TaskDO taskDO = taskMapper.get(condition);
-        if(taskDO==null){
+        if (taskDO == null) {
             throw new BaseBizRuntimeException("找不到该任务");
         }
         if (!TaskStatusEnum.WAITING.getCode().equals(taskDO.getStatus())
@@ -222,12 +233,18 @@ public class TaskServiceImpl implements TaskService {
         }
         taskDO.setStatus(type);
         taskMapper.update(taskDO);
-        if(TaskStatusEnum.INVALID.getCode().equals(type)){
+        if (TaskStatusEnum.SUSPEND.getCode().equals(type)) {
+            // 暂停,耗时表更新数据
+            taskTimeComponent.updateEndDate(taskDO.getId(), taskDO.getActualEndDate());
+
+        } else {
             if (TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
                 throw new BaseBizRuntimeException("任务状态已完成,不能修改状态");
             }
-            taskProductDemandComponent.update(Lists.newArrayList(taskDO.getId()),null);
+            taskProductDemandComponent.update(Lists.newArrayList(taskDO.getId()), null);
+            taskTimeMapper.delete(Lists.newArrayList(taskDO.getId()));
         }
+        // 删除钉钉待办
         return BaseResult.success(true);
     }
 
@@ -237,7 +254,7 @@ public class TaskServiceImpl implements TaskService {
         log.info("任务开启接收参数:{}", taskId);
         TaskCondition condition = TaskCondition.builder().id(taskId).build();
         TaskDO taskDO = taskMapper.get(condition);
-        if(taskDO==null){
+        if (taskDO == null) {
             throw new BaseBizRuntimeException("找不到该任务");
         }
         if (!TaskStatusEnum.SUSPEND.getCode().equals(taskDO.getStatus())) {
@@ -245,6 +262,8 @@ public class TaskServiceImpl implements TaskService {
         }
         fillStatus(taskDO);
         taskMapper.update(taskDO);
+        //耗时表入库
+        insertTaskTime(taskDO);
         return BaseResult.success(true);
     }
 
@@ -254,7 +273,7 @@ public class TaskServiceImpl implements TaskService {
         log.info("任务执行接收参数:{}", taskId);
         TaskCondition condition = TaskCondition.builder().id(taskId).build();
         TaskDO taskDO = taskMapper.get(condition);
-        if(taskDO==null){
+        if (taskDO == null) {
             throw new BaseBizRuntimeException("找不到该任务");
         }
         if (!TaskStatusEnum.WAITING.getCode().equals(taskDO.getStatus())) {
@@ -263,6 +282,33 @@ public class TaskServiceImpl implements TaskService {
         taskDO.setStatus(TaskStatusEnum.PROGRESS.getCode());
         taskDO.setActualStartDate(new Date());
         taskMapper.update(taskDO);
+
+        //耗时表入库
+        insertTaskTime(taskDO);
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> done(Long taskId) {
+        log.info("任务完成接收参数:{}", taskId);
+        TaskCondition condition = TaskCondition.builder().id(taskId).build();
+        TaskDO taskDO = taskMapper.get(condition);
+        if (taskDO == null) {
+            throw new BaseBizRuntimeException("找不到该任务");
+        }
+        if (!TaskStatusEnum.PROGRESS.getCode().equals(taskDO.getStatus())) {
+            throw new BaseBizRuntimeException("任务状态不是进行中,不能修改状态");
+        }
+        taskDO.setStatus(TaskStatusEnum.DONE.getCode());
+        taskDO.setActualEndDate(new Date());
+
+        //更新耗时表
+        taskTimeComponent.updateEndDate(taskDO.getId(), taskDO.getActualEndDate());
+
+        // 计算任务耗时
+        calTaskTime(taskDO);
+        taskMapper.update(taskDO);
+
         return BaseResult.success(true);
     }
 
@@ -275,7 +321,7 @@ public class TaskServiceImpl implements TaskService {
                 .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
         condition.setInProductDemandIds(inProductDemandIds);
         // 过滤掉已经被该任务关联的产品需求
-        if(condition.getId()!=null){
+        if (condition.getId() != null) {
             TaskProductDemandCondition c = TaskProductDemandCondition.builder().taskId(condition.getId()).build();
             List<Long> filterProductDemandIds = taskProductDemandMapper.get(c).stream().map(TaskProductDemandDO::getProductDemandId).collect(Collectors.toList());
             condition.setFilterProductDemandIds(filterProductDemandIds);
@@ -306,7 +352,7 @@ public class TaskServiceImpl implements TaskService {
             taskProductDemandComponent.batchInsert(taskProductDemandLinkReq.getTaskId(), productDemandIds);
 
         } else {
-            taskProductDemandComponent.update(Lists.newArrayList(taskProductDemandLinkReq.getTaskId()),productDemandIds.get(0));
+            taskProductDemandComponent.update(Lists.newArrayList(taskProductDemandLinkReq.getTaskId()), productDemandIds.get(0));
         }
         return BaseResult.success(true);
     }
@@ -330,6 +376,11 @@ public class TaskServiceImpl implements TaskService {
         return BaseResult.success(pageQueryResult);
     }
 
+    @Override
+    public BigDecimal getElapsedTime(ElapsedTimeQueryReq elapsedTimeQueryReq) {
+        return taskComponent.getElapsedTime(elapsedTimeQueryReq.getStartTime(), elapsedTimeQueryReq.getEndTime());
+    }
+
     /**
      * 名称重复
      *
@@ -350,7 +401,7 @@ public class TaskServiceImpl implements TaskService {
     /**
      * 只能关联本项目下的产品需求
      *
-     * @param taskDO
+     * @param taskDO taskDO
      */
     private void checkProductDemandIdsByProjectLinked(TaskDO taskDO) {
         List<Long> existProductDemandIds = projectProductDemandMapper.getByProjectId(taskDO.getProjectId())
@@ -371,7 +422,6 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void fillStatus(TaskDO taskDO) {
-        //计算计划耗时todo
         if (taskDO.getActualStartDate() == null && taskDO.getActualEndDate() == null) {
             taskDO.setStatus(TaskStatusEnum.WAITING.getCode());
         } else if (taskDO.getActualStartDate() != null && taskDO.getActualEndDate() == null) {
@@ -384,11 +434,7 @@ public class TaskServiceImpl implements TaskService {
 
     private void insertTaskTime(TaskDO taskDO) {
         if (!TaskStatusEnum.WAITING.getCode().equals(taskDO.getStatus())) {
-            TaskTimeDO taskTimeDO = new TaskTimeDO();
-            taskTimeDO.setTaskId(taskDO.getId());
-            taskTimeDO.setStartDate(taskDO.getActualStartDate());
-            taskTimeDO.setEndDate(taskDO.getActualEndDate());
-            taskTimeMapper.insert(taskTimeDO);
+            taskTimeComponent.insert(taskDO.getId(), taskDO.getActualStartDate(), taskDO.getActualEndDate());
         }
     }
 
@@ -398,17 +444,15 @@ public class TaskServiceImpl implements TaskService {
         fillStatus(taskDO);
         if (existTaskDO.getActualStartDate() != null && !existTaskDO.getActualStartDate().equals(taskDO.getActualStartDate())) {
             //实际开始时间有变动
-            taskTimeMapper.delete(taskDO.getId());
-
+            taskTimeMapper.delete((Lists.newArrayList(taskDO.getId())));
         }
+
         TaskTimeDO existTaskTimeDO = taskTimeMapper.get(taskDO.getId());
-        if (existTaskTimeDO != null) {
-            //实际开始时间无变动,当有完成时间时,可以更新
-            TaskTimeDO taskTimeDO = new TaskTimeDO();
-            taskTimeDO.setTaskId(taskDO.getId());
-            taskTimeDO.setEndDate(taskDO.getActualEndDate());
-            taskTimeMapper.update(taskTimeDO);
-        } else if (taskDO.getActualStartDate() != null) {
+
+        if (existTaskTimeDO != null && taskDO.getActualEndDate() != null) {
+            //实际开始时间无变动,当有完成时间时,更新
+            taskTimeComponent.updateEndDate(taskDO.getId(), taskDO.getActualEndDate());
+        } else if (existTaskTimeDO == null && taskDO.getActualStartDate() != null) {
             // 如果存在开始时间,入库一条新数据
             insertTaskTime(taskDO);
         }
@@ -476,5 +520,27 @@ public class TaskServiceImpl implements TaskService {
                 .executorIds(unionIds)
                 .dueTime(taskDO.getPlanEndDate().getTime()).build();
         dingWorkRecordClient.updateTask(updateTodoTaskMsg);
+    }
+
+    /**
+     * 当任务暂停时,扣除暂停时间,计算任务耗时
+     *
+     * @param taskDO
+     * @return
+     */
+    private void calTaskTime(TaskDO taskDO) {
+        AtomicLong totalTime = new AtomicLong();
+        List<TaskTimeDO> list = taskTimeMapper.list(taskDO.getId());
+        if (CollectionUtils.isEmpty(list)) {
+            log.info("任务耗时表找不到数据,taskId:{}", taskDO.getId());
+            return;
+        }
+        list.forEach(a -> {
+            Long result = elapsedTimeClient.getElapsedTime(a.getStartDate(), a.getEndDate());
+            totalTime.getAndAdd(result);
+        });
+        BigDecimal elapsedTime = new BigDecimal(String.valueOf(totalTime.get()));
+        BigDecimal decimal = elapsedTime.divide(new BigDecimal(SECONDS_PER_HOUR), 2, BigDecimal.ROUND_HALF_UP);
+        taskDO.setTaskUseTime(decimal);
     }
 }

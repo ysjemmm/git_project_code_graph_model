@@ -4,22 +4,19 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.TaskListCondition;
-import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.dao.TaskMapper;
-import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
-import com.timevale.forward.dal.entity.TaskDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.TaskStageEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.component.TaskComponent;
 import com.timevale.forward.service.component.TaskProductDemandComponent;
+import com.timevale.forward.service.component.TaskTimeComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TaskCopier;
+import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.util.CollectionUtils;
@@ -29,9 +26,13 @@ import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.timevale.forward.service.constant.CommonConstant.SECONDS_PER_HOUR;
 
 /**
  * @author xingyun
@@ -56,6 +57,14 @@ public class TaskComponentImpl implements TaskComponent {
     @Resource
     private TaskProductDemandComponent taskProductDemandComponent;
 
+    @Resource
+    private ElapsedTimeClient elapsedTimeClient;
+
+    @Resource
+    private TaskTimeComponent taskTimeComponent;
+
+    @Resource
+    private TaskTimeMapper taskTimeMapper;
 
     @Override
     public BaseResult<PageQueryResult<TaskVO>> page(TaskListCondition condition, List<Long> taskIds) {
@@ -119,6 +128,7 @@ public class TaskComponentImpl implements TaskComponent {
             a.setStatusName(TaskStatusEnum.getTextByCode(a.getStatus()));
             a.setProjectName(projectMap.get(a.getProjectId()).getName());
             a.setPmId(projectMap.get(a.getProjectId()).getPmId());
+            a.setStageName(TaskStageEnum.getTextByCode(a.getStage()));
         });
         PageQueryResult<TaskVO> pageQueryResult = new PageQueryResult<>();
         PageInfo<TaskDO> pageInfo = new PageInfo<>(taskDO);
@@ -129,32 +139,55 @@ public class TaskComponentImpl implements TaskComponent {
     }
 
     @Override
-    public BaseResult<Boolean> updateStatusAsProjectStatusChange(Long projectId, Integer projectStatus) {
+    public void updateStatusAsProjectStatusChange(Long projectId, Integer projectStatus, Boolean enableTask) {
+        log.info("项目状态改变,更新任务状态 projectId:{},projectStatus:{}", projectId, projectStatus);
+        List<TaskDO> existTaskDO = taskMapper.getByProjectId(projectId);
+        if (CollectionUtils.isEmpty(existTaskDO)) {
+            return;
+        }
+        TaskStatusUpdateDO taskStatusUpdateDO = new TaskStatusUpdateDO();
+        taskStatusUpdateDO.setProjectId(projectId);
+        List<Integer> preUpdate = Lists.newArrayList(TaskStatusEnum.WAITING.getCode(), TaskStatusEnum.PROGRESS.getCode());
         if (ProjectStatusEnum.SUSPEND.getCode().equals(projectStatus)) {
-            taskMapper.updateStatusAsProjectStatusChange(projectId
-                    , Lists.newArrayList(TaskStatusEnum.WAITING.getCode(), TaskStatusEnum.PROGRESS.getCode())
-                    , TaskStatusEnum.SUSPEND.getCode());
+            taskStatusUpdateDO.setPreUpdate(preUpdate);
+            taskStatusUpdateDO.setUpdated(TaskStatusEnum.SUSPEND.getCode());
+            taskMapper.updateStatusAsProjectStatusChange(taskStatusUpdateDO);
+            // 暂停,耗时表更新数据
+            existTaskDO.forEach(a -> {
+                taskTimeComponent.updateEndDate(a.getId(), a.getActualEndDate());
+            });
         } else if (ProjectStatusEnum.INVALID.getCode().equals(projectStatus)) {
-            taskMapper.updateStatusAsProjectStatusChange(projectId
-                    , Lists.newArrayList(TaskStatusEnum.WAITING.getCode(), TaskStatusEnum.PROGRESS.getCode(), TaskStatusEnum.SUSPEND.getCode())
-                    , TaskStatusEnum.INVALID.getCode());
-            List<Long> taskIds = taskMapper.getByProjectId(projectId).stream().map(TaskDO::getId).collect(Collectors.toList());
-            if (CollectionUtils.isNotEmpty(taskIds)) {
-                taskProductDemandComponent.update(taskIds, null);
-            }
-        } else {
+            preUpdate.add(TaskStatusEnum.SUSPEND.getCode());
+            taskStatusUpdateDO.setPreUpdate(preUpdate);
+            taskStatusUpdateDO.setUpdated(TaskStatusEnum.INVALID.getCode());
+            taskMapper.updateStatusAsProjectStatusChange(taskStatusUpdateDO);
+            //解除任务产品需求关联
+            List<Long> taskIds = existTaskDO.stream().map(TaskDO::getId).collect(Collectors.toList());
+            taskProductDemandComponent.update(taskIds, null);
+
+            taskTimeMapper.delete(taskIds);
+
+        }
+        if (enableTask) {
             //开启
-            List<TaskDO> taskDO = taskMapper.getByProjectId(projectId);
-            taskDO.forEach(a -> {
+            existTaskDO.forEach(a -> {
                 if (a.getActualStartDate() == null && a.getActualEndDate() == null) {
                     a.setStatus(TaskStatusEnum.WAITING.getCode());
                 } else if (a.getActualStartDate() != null && a.getActualEndDate() == null) {
                     a.setStatus(TaskStatusEnum.PROGRESS.getCode());
+                    taskTimeComponent.insert(a.getId(), a.getActualStartDate(), a.getActualEndDate());
                 }
                 taskMapper.update(a);
             });
         }
-        return BaseResult.success(true);
+    }
+
+    @Override
+    public BigDecimal getElapsedTime(Date startTime, Date endTime) {
+        Long result = elapsedTimeClient.getElapsedTime(startTime, endTime);
+        BigDecimal elapsedTime = new BigDecimal(result.toString());
+        BigDecimal decimal = elapsedTime.divide(new BigDecimal(SECONDS_PER_HOUR), 2, BigDecimal.ROUND_HALF_UP);
+        return decimal;
     }
 
     private void buildConditionBeforeQuery(List<Long> taskIds, TaskListCondition condition) {

@@ -78,6 +78,12 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="stages!=null and stages.size()>0">
+                and a.stage in
+                <foreach collection="stages" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             and a.is_deleted =false
         </where>
     </select>
@@ -121,6 +127,7 @@
             <if test="planStartDate != null">plan_start_date = #{planStartDate},</if>
             <if test="planEndDate != null">plan_end_date = #{planEndDate},</if>
             <if test="productLineId != null">product_line_id = #{productLineId},</if>
+            <if test="taskUseTime != null">task_use_time = #{taskUseTime},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             actual_start_date = #{actualStartDate},
@@ -149,7 +156,7 @@
         where id = #{id}
     </select>
 
-    <update id="updateStatusAsProjectStatusChange">
+    <update id="updateStatusAsProjectStatusChange" parameterType="com.timevale.forward.dal.entity.TaskStatusUpdateDO" >
         update task
         <set>
             <if test="updated != null">status = #{updated},</if>

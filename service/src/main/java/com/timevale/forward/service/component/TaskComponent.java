@@ -5,6 +5,8 @@ import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 public interface TaskComponent {
@@ -20,8 +22,15 @@ public interface TaskComponent {
      *
      * @param projectId 项目id
      * @param projectStatus 项目状态
-     * @return Boolean
      */
-    BaseResult<Boolean> updateStatusAsProjectStatusChange(Long projectId,Integer projectStatus);
+    void updateStatusAsProjectStatusChange(Long projectId,Integer projectStatus,Boolean enableTask);
+
+    /**
+     *
+     * @param startTime startTime
+     * @param endTime endTime
+     * @return 时长(h)
+     */
+    BigDecimal getElapsedTime(Date startTime, Date endTime);
 
 }

@@ -42,6 +42,12 @@ public class TaskVO extends ToString {
     @ApiModelProperty("项目状态")
     private String statusName;
 
+    @ApiModelProperty("项目阶段:0需求规划阶段,1研发阶段,2测试阶段")
+    private Integer stage;
+
+    @ApiModelProperty("项目阶段")
+    private String stageName;
+
     @ApiModelProperty("执行人")
     private String executor;
 

@@ -17,7 +17,13 @@
     </insert>
 
     <delete id="delete" parameterType="long">
-        delete  from task_time where task_id=#{taskId}
+        delete  from task_time
+        <where>
+             task_id in
+            <foreach collection="taskIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
     </delete>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.TaskTimeDO">
@@ -35,5 +41,12 @@
             a.end_date=#{endDate}
         </set>
         where a.task_id=#{taskId} and a.end_date is null
+    </select>
+
+    <select id="list" resultType="com.timevale.forward.dal.entity.TaskTimeDO">
+        select a.id,a.task_id, a.start_date, a.end_date ,a.is_deleted
+        ,a.create_man_id, a.create_man,a.create_date,a.modify_date
+        from task_time a
+        where a.task_id=#{taskId}
     </select>
 </mapper>

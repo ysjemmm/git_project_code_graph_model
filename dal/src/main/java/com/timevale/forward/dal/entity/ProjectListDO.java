@@ -60,20 +60,6 @@ public class ProjectListDO extends BaseDO {
      */
     private String pmName;
 
-    /**
-     * 团队成员
-     */
-    private String teamMember;
-
-    /**
-     * 产品线
-     */
-    private String productLineName;
-
-    /**
-     * 业务域
-     */
-    private String bizDomainName;
 
     /**
      * 修改时间

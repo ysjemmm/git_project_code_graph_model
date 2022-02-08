@@ -86,6 +86,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private TaskComponent taskComponent;
 
+    @Resource
+    private TaskProductDemandComponent taskProductDemandComponent;
+
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -159,14 +162,14 @@ public class ProjectServiceImpl implements ProjectService {
 
         }
         // 更新任务状态
-        taskComponent.updateStatusAsProjectStatusChange(projectId, type);
+        taskComponent.updateStatusAsProjectStatusChange(projectId, type,false);
         return BaseResult.success(true);
     }
 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> enable(Long projectId) {
+    public BaseResult<Boolean> enable(Long projectId,Boolean enableTask) {
         log.info("项目开启接收参数:projectId={}", projectId);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProjectDO projectDO = projectMapper.get(projectId);
@@ -188,7 +191,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         fillInfoWhenEnable(projectNode, projectDO);
         // 更新任务状态
-        taskComponent.updateStatusAsProjectStatusChange(projectId,projectDO.getStatus());
+        taskComponent.updateStatusAsProjectStatusChange(projectId,projectDO.getStatus(),true);
         return BaseResult.success(true);
     }
 
@@ -370,6 +373,11 @@ public class ProjectServiceImpl implements ProjectService {
 
             // 一个产品需求下的业务需求
             productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false);
+
+            // 取消产品需求和任务的关联
+            productDemandIds.forEach(a->{
+                taskProductDemandComponent.update(null,a);
+            });
         }
         //产品需求和项目关联或删除时,需要给前端刷新产品需求状态
         ProductDemandDO productDemandDO = productDemandMapper.selectById(productDemandIds.get(0));

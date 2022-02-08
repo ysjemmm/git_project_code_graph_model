@@ -23,6 +23,9 @@ public class TaskQueryList extends QueryBase {
     @ApiModelProperty("名称")
     private String name;
 
+    @ApiModelProperty("项目阶段")
+    private List<Integer>stages;
+
     @ApiModelProperty("项目id")
     private List<Long> projectIds;
 
