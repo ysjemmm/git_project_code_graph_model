@@ -52,9 +52,9 @@ public interface ProjectMapper {
      * 通过团队成员选择
      *
      * @param teamMemberList 团队成员列表
-     * @return int
+     * @return ProjectDO List
      */
-    int countByTeamMember(@Param("teamMemberList") List<String> teamMemberList);
+    List<ProjectDO> selectByTeamMember(@Param("teamMemberList") List<String> teamMemberList);
 
     /**
      *

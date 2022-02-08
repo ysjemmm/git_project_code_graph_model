@@ -3,14 +3,13 @@ package com.timevale.forward.service.impl;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
-import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.dto.*;
 import com.timevale.forward.dal.entity.BizDemandListDO;
-import com.timevale.forward.dal.entity.ProjectListDO;
+import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.client.HomePageService;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
@@ -100,16 +99,17 @@ public class HomePageServiceImpl implements HomePageService {
         List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
 
         // 进行中的项目
-        projectCount = projectMapper.countByTeamMember(allMyStaffWithSelf);
+        List<ProjectDO> projectDOList = projectMapper.selectByTeamMember(allMyStaffWithSelf);
+        projectCount = (int) projectDOList.stream().filter(e -> ProjectStatusEnum.ongoing(e.getStatus())).count();
 
         // 产品添加待处理业务需求，开发测试添加待处理任务
-        if(userType.equals(UserTypeEnum.PD.toString())){
+        if (userType.equals(UserTypeEnum.PD.toString())) {
             List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(BizDemandListCondition.builder()
                     .receiveManIdList(allMyStaffWithSelf)
                     .build());
             bizDemandCount = Math.toIntExact(bizDemandListDOList.stream()
                     .filter(e -> e.getStatus().equals(BizDemandStatusEnum.EVALUATE.getCode())).count());
-        }else{
+        } else {
             List<TaskDO> taskDOList = taskMapper.list(TaskListCondition.builder()
                     .executorIds(allMyStaffWithSelf)
                     .build());
@@ -126,8 +126,11 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<HomePageProjectOnlineLatelyVO>> getProjectOnlineLately(HomePageProjectOnlineLatelyQueryList homePageProjectOnlineLatelyQueryList) {
-        PageResult<HomePageProjectOnlineLatelyDTO> homePageProjectOnlineLatelyDTOPageResult = homePageProjectOnlineLatelyComponent.getProjectOnlineLately(homePageProjectOnlineLatelyQueryList);
+    public BaseResult<PageQueryResult<HomePageProjectOnlineLatelyVO>> getProjectOnlineLately(
+            HomePageProjectOnlineLatelyQueryList homePageProjectOnlineLatelyQueryList) {
+
+        PageResult<HomePageProjectOnlineLatelyDTO> homePageProjectOnlineLatelyDTOPageResult =
+                homePageProjectOnlineLatelyComponent.getProjectOnlineLately(homePageProjectOnlineLatelyQueryList);
         // 分页配置
         List<HomePageProjectOnlineLatelyVO> homePageProjectOnlineLatelyVOList = HomePageProjectOnlineLatelyCopier
                 .INSTANCE.convert(homePageProjectOnlineLatelyDTOPageResult.getResult());
@@ -212,17 +215,17 @@ public class HomePageServiceImpl implements HomePageService {
         Set<String> allMyStaffWithSelfSet = Sets.newHashSet(innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId()));
 
         // 部门id、员工id非空取交集
-        if(!CollectionUtils.isEmpty(deptIds)){
+        if (!CollectionUtils.isEmpty(deptIds)) {
             for (Long deptId : deptIds) {
                 allMyStaffWithSelfSet.retainAll(innerUserPersonClient.getByGroupIdNew(String.valueOf(deptId)));
             }
         }
-        if(!CollectionUtils.isEmpty(teamMembers)){
+        if (!CollectionUtils.isEmpty(teamMembers)) {
             allMyStaffWithSelfSet.retainAll(teamMembers);
         }
 
         // 如果查询条件为空直接返回空数据
-        if(CollectionUtils.isEmpty(allMyStaffWithSelfSet)){
+        if (CollectionUtils.isEmpty(allMyStaffWithSelfSet)) {
             return BaseResult.success(Lists.emptyList());
         }
 
@@ -238,7 +241,7 @@ public class HomePageServiceImpl implements HomePageService {
             List<HomePageProjectDateVO> homePageProjectDateVOList = HomePageProjectBoardCopier.INSTANCE.convert(value);
 
             // 时间过滤
-            if(startDate != null){
+            if (startDate != null) {
                 homePageProjectDateVOList = filterByDate(userType, startDate, endDate, homePageProjectDateVOList);
             }
 
@@ -252,42 +255,42 @@ public class HomePageServiceImpl implements HomePageService {
         return BaseResult.success(result);
     }
 
-    public List<HomePageProjectDateVO> filterByDate(String userType, Date startDate, Date endDate, List<HomePageProjectDateVO> list){
-        if(userType.equals(UserTypeEnum.PD.toString())){
+    public List<HomePageProjectDateVO> filterByDate(String userType, Date startDate, Date endDate, List<HomePageProjectDateVO> list) {
+        if (userType.equals(UserTypeEnum.PD.toString())) {
             return list.stream().filter(e -> {
-                if(e.getStartPlan() != null){
+                if (e.getStartPlan() != null) {
                     return DateUtil.inInterval(e.getStartPlan(), startDate, endDate);
                 }
-                if(e.getDemandInternalAudit() != null){
+                if (e.getDemandInternalAudit() != null) {
                     return DateUtil.inInterval(e.getDemandInternalAudit(), startDate, endDate);
                 }
-                if(e.getDemandConstrue() != null){
+                if (e.getDemandConstrue() != null) {
                     return DateUtil.inInterval(e.getDemandConstrue(), startDate, endDate);
                 }
                 return false;
             }).collect(Collectors.toList());
-        }else if(userType.equals(UserTypeEnum.RD.toString())){
+        } else if (userType.equals(UserTypeEnum.RD.toString())) {
             return list.stream().filter(e -> {
-                if(e.getTechnicalDetailReview() != null){
+                if (e.getTechnicalDetailReview() != null) {
                     return DateUtil.inInterval(e.getTechnicalDetailReview(), startDate, endDate);
                 }
-                if(e.getDevelopStart() != null){
+                if (e.getDevelopStart() != null) {
                     return DateUtil.inInterval(e.getDevelopStart(), startDate, endDate);
                 }
-                if(e.getSubmitTest() != null){
+                if (e.getSubmitTest() != null) {
                     return DateUtil.inInterval(e.getSubmitTest(), startDate, endDate);
                 }
                 return false;
             }).collect(Collectors.toList());
-        }else{
+        } else {
             return list.stream().filter(e -> {
-                if(e.getUseCaseReview() != null){
+                if (e.getUseCaseReview() != null) {
                     return DateUtil.inInterval(e.getUseCaseReview(), startDate, endDate);
                 }
-                if(e.getTestStart() != null){
+                if (e.getTestStart() != null) {
                     return DateUtil.inInterval(e.getTestStart(), startDate, endDate);
                 }
-                if(e.getPublishSimulate() != null){
+                if (e.getPublishSimulate() != null) {
                     return DateUtil.inInterval(e.getPublishSimulate(), startDate, endDate);
                 }
                 return false;
