@@ -33,11 +33,9 @@ public interface ProductBizDemandMapper {
      *
      * @param list        产品业务需求id list
      * @param isDeleted   是否删除
-     * @param modifyMan   修改人
-     * @param modifyManId 修改人身份证
      * @return int
      */
-    int updates(@Param("list") List<Long> list, @Param("isDeleted")Boolean isDeleted, @Param("modifyMan")String modifyMan, @Param("modifyManId") String modifyManId);
+    int updates(@Param("list") List<Long> list, @Param("isDeleted")Boolean isDeleted);
 
     /**
      * 逻辑删除

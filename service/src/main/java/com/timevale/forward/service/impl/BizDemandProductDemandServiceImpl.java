@@ -128,13 +128,13 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                 .collect(Collectors.toMap(ProductBizDemandDO::getProductDemandId, Function.identity(), (a, b) -> a));
 
         // 更新和新增数据的集合
-        List<ProductBizDemandDO> insertLinkDate = Lists.newArrayList();
-        List<Long> updateLinkDate = Lists.newArrayList();
+        List<ProductBizDemandDO> insertLinkData = Lists.newArrayList();
+        List<Long> updateLinkData = Lists.newArrayList();
 
         // 判断旧数据是否存在新数据中，更新逻辑删除标识
         for (Map.Entry<Long, ProductBizDemandDO> entry : oldLinkDate.entrySet()) {
             if(newLinkData.contains(entry.getKey()) && entry.getValue().getIsDeleted()){
-                updateLinkDate.add(entry.getValue().getId());
+                updateLinkData.add(entry.getValue().getId());
             }
         }
 
@@ -142,13 +142,13 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         for (Long productDemandId : newLinkData) {
             if(!oldLinkDate.containsKey(productDemandId)){
                 ProductBizDemandDO productBizDemandDO = ProductBizDemandCopier.INSTANCE.convert(bizDemandId, productDemandId);
-                insertLinkDate.add(productBizDemandDO);
+                insertLinkData.add(productBizDemandDO);
             }
         }
 
         // 新增和更新非空数据
-        if(!insertLinkDate.isEmpty()){productBizDemandMapper.inserts(insertLinkDate);}
-        if(!updateLinkDate.isEmpty()){productBizDemandMapper.updates(updateLinkDate, false, userInfo.getAlias(), userInfo.getId());}
+        if(!insertLinkData.isEmpty()){productBizDemandMapper.inserts(insertLinkData);}
+        if(!updateLinkData.isEmpty()){productBizDemandMapper.updates(updateLinkData, false);}
 
         bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
 

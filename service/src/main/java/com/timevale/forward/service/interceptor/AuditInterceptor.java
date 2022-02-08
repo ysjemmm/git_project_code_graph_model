@@ -44,27 +44,13 @@ public class AuditInterceptor implements Interceptor {
         String id = userInfo.getId();
         String name = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
 
-        String man;
-        String manId;
+        // 填充字段
         if(sqlCommandType == SqlCommandType.INSERT){
-            man = AuditEnum.CREATE_MAN.getText();
-            manId = AuditEnum.CREATE_MAN_ID.getText();
+            setProperty(parameter, AuditEnum.CREATE_MAN.getText(), name);
+            setProperty(parameter, AuditEnum.CREATE_MAN_ID.getText(), id);
         }else{
-            man = AuditEnum.MODIFY_MAN.getText();
-            manId = AuditEnum.MODIFY_MAN_ID.getText();
-        }
-
-        // 获取审计字段类型
-        Field[] fields = BaseDO.class.getDeclaredFields();
-        for (Field field : fields) {
-            field.setAccessible(true);
-            String fieldName = field.getName();
-            if (man.equals(fieldName)) {
-                setProperty(parameter, fieldName, name);
-            }
-            if (manId.equals(fieldName)) {
-                setProperty(parameter, fieldName, id);
-            }
+            setProperty(parameter, AuditEnum.MODIFY_MAN.getText(), name);
+            setProperty(parameter, AuditEnum.MODIFY_MAN_ID.getText(), id);
         }
 
         return invocation.proceed();
