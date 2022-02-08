@@ -107,14 +107,11 @@ public class HomePageServiceImpl implements HomePageService {
             List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(BizDemandListCondition.builder()
                     .receiveManIdList(allMyStaffWithSelf)
                     .build());
-            bizDemandCount = Math.toIntExact(bizDemandListDOList.stream()
-                    .filter(e -> e.getStatus().equals(BizDemandStatusEnum.EVALUATE.getCode())).count());
+            bizDemandCount = (int) bizDemandListDOList.stream()
+                    .filter(e -> e.getStatus().equals(BizDemandStatusEnum.EVALUATE.getCode())).count();
         } else {
-            List<TaskDO> taskDOList = taskMapper.list(TaskListCondition.builder()
-                    .executorIds(allMyStaffWithSelf)
-                    .build());
-            taskCount = Math.toIntExact(taskDOList.stream()
-                    .filter(e -> TaskStatusEnum.ongoing(e.getStatus())).count());
+            List<TaskDO> taskDOList = taskMapper.selectByExecutorList(Lists.newArrayList(allMyStaffWithSelf));
+            taskCount = (int) taskDOList.stream().filter(e -> TaskStatusEnum.ongoing(e.getStatus())).count();
         }
 
         HomePageTodoCardVO todoCardVO = new HomePageTodoCardVO();

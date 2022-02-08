@@ -41,6 +41,14 @@ public interface TaskMapper {
     List<Long> getByProductLineIds(@Param("ids") List<Long> ids, @Param("productLineIds") List<Long> productLineIds);
 
     /**
+     * 通过执行人查询
+     *
+     * @param userIdList 用户id列表
+     * @return TaskDO List
+     */
+    List<TaskDO> selectByExecutorList(@Param("userIdList") List<String> userIdList);
+
+    /**
      * @param ids 任务id
      * @return 项目id
      */

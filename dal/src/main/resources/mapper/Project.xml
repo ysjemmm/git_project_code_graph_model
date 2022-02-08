@@ -164,6 +164,7 @@
             </foreach>
         </where>
     </select>
+
     <select id="selectByTeamMember" resultType="com.timevale.forward.dal.entity.ProjectDO">
         select distinct pj.id, pj.name, pj.priority, pj.type, pj.status, pj.pm, pj.pm_id, pj.plan_start_date,
                         pj.plan_end_date, pj.actual_start_date, pj.actual_end_date, pj.`desc`, pj.is_deleted,
