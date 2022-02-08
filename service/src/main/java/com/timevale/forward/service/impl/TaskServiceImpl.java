@@ -377,8 +377,8 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public BigDecimal getElapsedTime(ElapsedTimeQueryReq elapsedTimeQueryReq) {
-        return taskComponent.getElapsedTime(elapsedTimeQueryReq.getStartTime(), elapsedTimeQueryReq.getEndTime());
+    public BaseResult<BigDecimal> getElapsedTime(ElapsedTimeQueryReq elapsedTimeQueryReq) {
+        return BaseResult.success(taskComponent.getElapsedTime(elapsedTimeQueryReq.getStartTime(), elapsedTimeQueryReq.getEndTime()));
     }
 
     /**

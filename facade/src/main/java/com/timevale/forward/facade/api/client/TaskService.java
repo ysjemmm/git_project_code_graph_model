@@ -119,5 +119,5 @@ public interface TaskService {
      * @param elapsedTimeQueryReq 查询条件
      * @return 耗时(h)
      */
-    BigDecimal getElapsedTime(ElapsedTimeQueryReq elapsedTimeQueryReq);
+    BaseResult<BigDecimal> getElapsedTime(ElapsedTimeQueryReq elapsedTimeQueryReq);
 }
