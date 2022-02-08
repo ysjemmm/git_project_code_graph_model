@@ -97,7 +97,7 @@ public class HomePageServiceImpl implements HomePageService {
         int bizDemandCount = 0;
 
         // 获取我及所有下属
-        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf("yangxu");
+        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
 
         // 进行中的项目
         projectCount = projectMapper.countByTeamMember(allMyStaffWithSelf);
