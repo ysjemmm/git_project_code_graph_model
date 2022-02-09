@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -25,6 +26,9 @@ public class HomePageRiskWarningVO extends ToString {
 
     @ApiModelProperty("项目名称")
     private String projectName;
+
+    @ApiModelProperty("项目计划上线时间")
+    private Date planEndDate;
 
     @ApiModelProperty("项目节点")
     private List<HomePageProjectNodeVO> homePageProjectNodeVOList;

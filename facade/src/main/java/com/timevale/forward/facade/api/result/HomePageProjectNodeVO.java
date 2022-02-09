@@ -1,5 +1,7 @@
 package com.timevale.forward.facade.api.result;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -14,6 +16,13 @@ import lombok.EqualsAndHashCode;
 @Data
 @ApiModel("首页-风险预警-项目节点")
 public class HomePageProjectNodeVO extends ToString {
+
+    @ApiModelProperty("项目id")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long projectId;
+
+    @ApiModelProperty("项目名称")
+    private String projectName;
 
     @ApiModelProperty("节点名称")
     private String nodeName;

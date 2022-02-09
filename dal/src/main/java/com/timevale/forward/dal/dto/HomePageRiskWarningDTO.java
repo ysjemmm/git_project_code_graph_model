@@ -3,6 +3,8 @@ package com.timevale.forward.dal.dto;
 import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;
 
+import java.util.Date;
+
 /**
  * @author by YangXu
  * @date 2022/01/24 13:54
@@ -20,6 +22,12 @@ public class HomePageRiskWarningDTO {
      */
     @JSONField(name = "name")
     private String projectName;
+
+    /**
+     * 项目计划上线时间
+     */
+    @JSONField(name = "plan_end_date")
+    private Date planEndDate;
 
     /**
      * 节点名称
