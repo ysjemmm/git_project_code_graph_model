@@ -33,4 +33,11 @@ public interface TaskComponent {
      */
     BigDecimal getElapsedTime(Date startTime, Date endTime);
 
+    /**
+     *
+     * @param projectId 项目id
+     * @param productLineIdsInProject 产品线id
+     */
+    void containProductLineInTask(Long projectId,List<Long> productLineIdsInProject);
+
 }

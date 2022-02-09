@@ -253,6 +253,7 @@ public class ProjectServiceImpl implements ProjectService {
         projectDO.setStatus(status);
         fillInfoWhenModify(projectNodeDO, projectDO);
 
+        taskComponent.containProductLineInTask(projectDO.getId(),projectDO.getProductLineIds());
         // 产品线
         projectProductLineComponent.update(projectDO.getProductLineIds(), projectDO.getId());
 

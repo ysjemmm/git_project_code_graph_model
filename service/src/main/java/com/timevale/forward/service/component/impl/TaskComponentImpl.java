@@ -19,6 +19,7 @@ import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -103,12 +104,13 @@ public class TaskComponentImpl implements TaskComponent {
         Map<Long, List<PersonDO>> executorMap = personMapper.get(taskIds, PersonTypeEnum.TASK_EXECUTOR.getCode())
                 .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
 
-        List<Long> projectIds = taskMapper.getProjectIds(taskIds);
-        //2.填充产品线/业务域信息
-        Map<Long, List<ProjectProductLineBizDomain>> productLineMap = productLineMapper.getByProjectIds(projectIds)
-                .stream().collect(Collectors.groupingBy(ProjectProductLineBizDomain::getProjectId));
+        //2.填充产品线
+        List<Long> productLineIds = taskDO.stream().map(TaskDO::getProductLineId).collect(Collectors.toList());
+        Map<Long, String> productLineMap =productLineMapper.selectByIds(productLineIds)
+                .stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (v1, v2) -> v2));
 
         //3.填充项目信息
+        List<Long> projectIds = taskMapper.getProjectIds(taskIds);
         Map<Long, ProjectDO> projectMap = projectMapper.getByIds(projectIds).stream()
                 .collect(Collectors.toMap(ProjectDO::getId, p -> p, (v1, v2) -> v1));
         List<TaskVO> taskVO = TaskCopier.INSTANCE.convert(taskDO);
@@ -118,13 +120,7 @@ public class TaskComponentImpl implements TaskComponent {
                 String executor = executors.stream().map(PersonDO::getUserName).collect(Collectors.joining(","));
                 a.setExecutor(executor);
             }
-            List<ProjectProductLineBizDomain> pdls = productLineMap.get(a.getProjectId());
-            if (CollectionUtils.isNotEmpty(pdls)) {
-                String productLineName = pdls.stream().map(ProjectProductLineBizDomain::getProductLineName).collect(Collectors.joining(","));
-                a.setProductLineName(productLineName);
-                String bizDomainName = pdls.stream().map(ProjectProductLineBizDomain::getBizDomainName).collect(Collectors.joining(","));
-                a.setBizDomainName(bizDomainName);
-            }
+            a.setProductLineName(productLineMap.get(a.getProductLineId()));
             a.setStatusName(TaskStatusEnum.getTextByCode(a.getStatus()));
             a.setProjectName(projectMap.get(a.getProjectId()).getName());
             a.setPmId(projectMap.get(a.getProjectId()).getPmId());
@@ -189,6 +185,18 @@ public class TaskComponentImpl implements TaskComponent {
         BigDecimal elapsedTime = new BigDecimal(result.toString());
         BigDecimal decimal = elapsedTime.divide(new BigDecimal(SECONDS_PER_HOUR), 2, BigDecimal.ROUND_HALF_UP);
         return decimal;
+    }
+
+    @Override
+    public void containProductLineInTask(Long projectId, List<Long> productLineIdsInProject) {
+        List<Long> productLineIdsInTask = taskMapper.getByProjectId(projectId)
+                .stream().map(TaskDO::getProductLineId).collect(Collectors.toList());
+        productLineIdsInTask.forEach(a->{
+            if(!productLineIdsInProject.contains(a)){
+                throw new BaseBizRuntimeException("项目中的产品线需包含该项目下任务中的产品线,请修改产品线后重试");
+            }
+        });
+
     }
 
     private void buildConditionBeforeQuery(List<Long> taskIds, TaskListCondition condition) {

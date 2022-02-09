@@ -81,4 +81,7 @@ public class TaskVO extends ToString {
     @ApiModelProperty("产品线名称")
     private String productLineName;
 
+    @ApiModelProperty("产品线id")
+    private Long productLineId;
+
 }
