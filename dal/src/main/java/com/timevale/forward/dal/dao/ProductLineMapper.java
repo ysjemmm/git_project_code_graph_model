@@ -49,4 +49,11 @@ public interface ProductLineMapper {
      * @return {@link ProductLineDO }
      */
     List<ProductLineDO> selectByIds(@Param("ids") List<Long> ids);
+
+    /**
+     *
+     * @param id 产品线id
+     * @return
+     */
+    ProjectProductLineBizDomain getById(@Param("id") Long id);
 }

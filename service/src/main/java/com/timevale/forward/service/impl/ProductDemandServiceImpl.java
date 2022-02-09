@@ -292,6 +292,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             }
         }
         ProjectListCondition condition = ProjectCopier.INSTANCE.convert(productDemandLinkProjectQueryList);
+        condition.setPageNum(productDemandLinkProjectQueryList.getPageNum());
+        condition.setPageSize(productDemandLinkProjectQueryList.getPageSize());
         List<Integer> status = productDemandLinkProjectQueryList.getStatus();
         if (CollectionUtils.isEmpty(status)) {
             // 空,默认选择下列状态

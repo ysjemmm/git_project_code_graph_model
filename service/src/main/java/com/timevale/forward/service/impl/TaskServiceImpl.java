@@ -122,6 +122,8 @@ public class TaskServiceImpl implements TaskService {
         log.info("任务列表接收参数:{}", taskQueryList);
         String currentUser = LocalSessionUtils.getUserInfo().getId();
         TaskListCondition condition = TaskCopier.INSTANCE.convert(taskQueryList);
+        condition.setPageNum(taskQueryList.getPageNum());
+        condition.setPageSize(taskQueryList.getPageSize());
         List<Long> taskIds = new ArrayList<>();
         //1.查找我或我的团队所属任务id
         if (AscriptionEnum.CURRENT_USER.name().equals(taskQueryList.getAscription())) {
@@ -171,7 +173,7 @@ public class TaskServiceImpl implements TaskService {
         //关联产品需求
         taskProductDemandComponent.batchInsert(taskDO.getId(), taskAddReq.getProductDemandIds());
 
-        sendDingMsg(taskDO,executorIds);
+        sendDingMsg(taskDO, executorIds);
         return BaseResult.success(true);
     }
 
@@ -199,7 +201,7 @@ public class TaskServiceImpl implements TaskService {
 
         personComponent.update(taskModifyReq.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
 
-        sendDingMsg(taskDO,executorIds);
+        sendDingMsg(taskDO, executorIds);
         return BaseResult.success(true);
     }
 
@@ -232,7 +234,7 @@ public class TaskServiceImpl implements TaskService {
         taskDetailVO.setExecutors(PersonCopier.INSTANCE.transform(personDO));
 
         //人员耗时
-        if(TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())){
+        if (TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
             List<TaskTimeDTO> useTime = taskTimeComponent.getUseTime(taskDO);
             taskDetailVO.setTaskTimeVO(TaskTimeCopier.INSTANCE.convert(useTime));
         }
@@ -289,7 +291,7 @@ public class TaskServiceImpl implements TaskService {
         if (TaskStatusEnum.PROGRESS.getCode().equals(taskDO.getStatus())) {
             taskTimeComponent.insert(taskDO.getId(), new Date(), null);
         }
-        if(taskDO.getTodo()){
+        if (taskDO.getTodo()) {
             //暂停后会删除待办,启用后新增待办
             List<String> existExecutorIds = personComponent.select(taskId, PersonTypeEnum.TASK_EXECUTOR.getCode())
                     .stream().map(PersonDO::getUserId).collect(Collectors.toList());
@@ -343,10 +345,10 @@ public class TaskServiceImpl implements TaskService {
         //更新待办
         List<String> existExecutorIds = personComponent.select(taskId, PersonTypeEnum.TASK_EXECUTOR.getCode())
                 .stream().map(PersonDO::getUserId).collect(Collectors.toList());
-        if(taskDO.getTodo()){
-            updateTodoTask(taskDO,existExecutorIds);
+        if (taskDO.getTodo()) {
+            updateTodoTask(taskDO, existExecutorIds);
         }
-        sendDingMsg(taskDO,existExecutorIds);
+        sendDingMsg(taskDO, existExecutorIds);
         return BaseResult.success(true);
     }
 
@@ -357,7 +359,7 @@ public class TaskServiceImpl implements TaskService {
         // 该项目下的产品需求
         List<Long> inProductDemandIds = projectProductDemandMapper.getByProjectId(condition.getProjectId())
                 .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
-        if(CollectionUtils.isEmpty(inProductDemandIds)){
+        if (CollectionUtils.isEmpty(inProductDemandIds)) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
         condition.setInProductDemandIds(inProductDemandIds);
@@ -455,10 +457,11 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void checkPlanDate(TaskDO taskDO) {
-        List<String> bizDomainNames = productLineMapper.getByProjectIds(Lists.newArrayList(taskDO.getProjectId()))
-                .stream().map(ProjectProductLineBizDomain::getBizDomainName).collect(Collectors.toList());
-        if (!bizDomainNames.contains(PRIVATE_CLOUD)) {
+        ProjectProductLineBizDomain bizDomain = productLineMapper.getById(taskDO.getProductLineId());
+        if (!PRIVATE_CLOUD.equals(bizDomain.getBizDomainName())
+                && taskDO.getPlanUseTime().compareTo(BigDecimal.valueOf(16)) > 0) {
             //除私有云业务域外,计划时间不能超过16h
+            throw new BaseBizRuntimeException("除私有云业务域外,计划时间不能超过16小时");
         }
     }
 
@@ -501,6 +504,7 @@ public class TaskServiceImpl implements TaskService {
             taskTimeComponent.insert(taskDO.getId(), taskDO.getActualStartDate(), taskDO.getActualEndDate());
         }
     }
+
     /**
      * 当任务暂停时,扣除暂停时间,计算任务耗时
      *
@@ -537,7 +541,7 @@ public class TaskServiceImpl implements TaskService {
         } else {
             TaskCondition condition = TaskCondition.builder().id(taskDO.getId()).build();
             TaskDO existTaskDO = taskMapper.get(condition);
-            log.info("编辑时,发送钉钉待办,existTaskDO:{}",existTaskDO);
+            log.info("编辑时,发送钉钉待办,existTaskDO:{}", existTaskDO);
             if (taskDO.getTodo() && StringUtils.isEmpty(existTaskDO.getTodoId())) {
 //            //编辑时需发送待办
                 addTodoTask(taskDO, executorIds);
@@ -639,16 +643,17 @@ public class TaskServiceImpl implements TaskService {
 
     /**
      * 钉钉消息处理
-     * @param taskDO taskDO
+     *
+     * @param taskDO      taskDO
      * @param executorIds 执行人
      */
-    private void sendDingMsg(TaskDO taskDO,List<String> executorIds){
+    private void sendDingMsg(TaskDO taskDO, List<String> executorIds) {
 //        // 通知需求接收人
-        if(TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())){
+        if (TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
             String pmId = projectMapper.get(taskDO.getProjectId()).getPmId();
             executorIds.add(pmId);
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
-            String operator=userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
+            String operator = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
             messageEventPublisher.publish(new TaskDoneMsgEvent(
                     this,
                     operator,

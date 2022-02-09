@@ -45,4 +45,11 @@
         </where>
     </select>
 
+    <select id="getById" resultType="com.timevale.forward.dal.entity.ProjectProductLineBizDomain">
+        select a.id product_line_id,a.name productLineName,b.name bizDomainName
+        from product_line a
+        left join biz_domain b on a.biz_domain_id=b.id
+        where a.id = #{id}
+    </select>
+
 </mapper>

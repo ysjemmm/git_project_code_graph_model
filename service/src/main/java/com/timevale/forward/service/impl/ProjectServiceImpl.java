@@ -94,6 +94,8 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("项目列表接收参数:{}", projectQueryList);
         String currentUser = LocalSessionUtils.getUserInfo().getId();
         ProjectListCondition condition = ProjectCopier.INSTANCE.convert(projectQueryList);
+        condition.setPageNum(projectQueryList.getPageNum());
+        condition.setPageSize(projectQueryList.getPageSize());
         List<Long> projectIds = new ArrayList<>();
         //1.查找我或我的团队所属项目id
         if (AscriptionEnum.CURRENT_USER.name().equals(projectQueryList.getAscription())) {
