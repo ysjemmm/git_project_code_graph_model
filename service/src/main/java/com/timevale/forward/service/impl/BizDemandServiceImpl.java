@@ -235,7 +235,9 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 获取部门链，添加完整部门信息
-        bizDemandDetailVO.setDeptName(bizDemandComponent.getDeptChainName(bizDemandDO.getDeptId()));
+        Map<Long, GroupResponse> deptMap = bizDemandComponent.getGroupListTreeMap(Lists.newArrayList(bizDemandDO.getDeptId()));
+        bizDemandDetailVO.setDeptName(deptMap.get(bizDemandDetailVO.getDeptId()).getGroupName());
+        bizDemandDetailVO.setDeptDeleteFlag(deptMap.get(bizDemandDetailVO.getDeptId()).getDeleteFlag());
 
         //获取项目发布时间
         bizDemandDetailVO.setEndDate(bizDemandComponent.getProjectEndDate(bizDemandId));

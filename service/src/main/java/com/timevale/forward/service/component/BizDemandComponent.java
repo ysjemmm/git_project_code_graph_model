@@ -7,6 +7,7 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,17 +25,12 @@ public interface BizDemandComponent {
     void updateBizDemandStatusByLinkedProductDemand(Long bizDemandId);
 
     /**
-     * 深搜部门树
      * 获取所有子部门及其完整链名
-     * 传入的Map储存结果
      *
-     * @param node           节点
-     * @param deptMap        部门信息id和名称的映射
-     * @param queryDeptIdSet 包含的id
-     * @param name           部门完整名称
-     * @param isInsert       判断是否可直接插入
+     * @param queryDeptIdList 查询部门id列表
+     * @return 部门id -> 部门信息（完整名称）
      */
-    void dfsGroupListTree(GroupResponse node, Map<Long, String> deptMap, Set<Long> queryDeptIdSet, String name, Boolean isInsert);
+    Map<Long, GroupResponse> getGroupListTreeMap(List<Long> queryDeptIdList);
 
     /**
      * 获取部门完整链名

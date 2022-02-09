@@ -72,6 +72,9 @@ public class BizDemandVO extends ToString {
     @ApiModelProperty("需求部门")
     private String deptName;
 
+    @ApiModelProperty("是否为已删除部门：0-未删除;1-已删除")
+    private Integer deptDeleteFlag;
+
     @ApiModelProperty("创建人信息")
     private PersonVO createManInfo;
 }

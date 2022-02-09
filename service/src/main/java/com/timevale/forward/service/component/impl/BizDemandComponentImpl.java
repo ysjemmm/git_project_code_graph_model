@@ -25,6 +25,7 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.stereotype.Component;
@@ -100,12 +101,22 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     }
 
     @Override
-    public void dfsGroupListTree(GroupResponse node, Map<Long, String> deptMap, Set<Long> queryDeptIdSet, String name, Boolean isInsert){
+    public Map<Long, GroupResponse> getGroupListTreeMap(List<Long> queryDeptIdList) {
+        Map<Long, GroupResponse> deptMap = Maps.newHashMap();
+        Set<Long> queryDeptIdSet =  Sets.newHashSet(queryDeptIdList);
+        GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
+        for (GroupResponse childNode : rootNode.getChildNode()){
+            dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
+        }
+        return deptMap;
+    }
+
+    public void dfsGroupListTree(GroupResponse node, Map<Long, GroupResponse> deptMap, Set<Long> queryDeptIdSet, String name, Boolean isInsert){
         name = name + node.getGroupName();
         Long deptId = Long.valueOf(node.getGroupId());
         if(isInsert || queryDeptIdSet.contains(deptId)){
             isInsert = true;
-            deptMap.put(deptId, name);
+            deptMap.put(deptId, node);
         }
         // 如果为叶节点直接返回
         if(node.getChildNode() == null){return;}
@@ -151,17 +162,14 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Override
     public BaseResult<PageQueryResult<BizDemandVO>> page(BizDemandListCondition bizDemandListCondition) {
-        Map<Long, String> deptMap = Maps.newHashMap();
+        Map<Long, GroupResponse> deptNodeMap = null;
         Set<Long> queryDeptIdSet =  Sets.newHashSet(bizDemandListCondition.getDeptIdList());
-        GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
 
         // 如果查询条件有部门id，收集子部门id及所需部门的完整名
-        if(!queryDeptIdSet.isEmpty()){
-            for (GroupResponse childNode : rootNode.getChildNode()){
-                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
-            }
+        if(!CollectionUtils.isEmpty(queryDeptIdSet)){
+            deptNodeMap = getGroupListTreeMap(Lists.newArrayList(queryDeptIdSet));
             // 替换查询部门id条件
-            bizDemandListCondition.setDeptIdList(Lists.newArrayList(deptMap.keySet()));
+            bizDemandListCondition.setDeptIdList(Lists.newArrayList(deptNodeMap.keySet()));
         }
 
         // 日期处理
@@ -175,17 +183,22 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         // 如果查询条件没有部门id，收集完整名
         if(queryDeptIdSet.isEmpty()){
             queryDeptIdSet.addAll(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
-            for (GroupResponse childNode : rootNode.getChildNode()){
-                dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
-            }
+            deptNodeMap = getGroupListTreeMap(Lists.newArrayList(queryDeptIdSet));
         }
 
-        // 部门名称待修改 ，需要完整名称
+        // 信息填充
+        for (BizDemandVO bizDemandVO : bizDemandVOList) {
+            bizDemandVO.setDeptName(deptNodeMap.get(bizDemandVO.getDeptId()).getGroupName());
+            bizDemandVO.setDeptDeleteFlag(deptNodeMap.get(bizDemandVO.getDeptId()).getDeleteFlag());
+            bizDemandVO.setStatusText(BizDemandStatusEnum.getTextByCode(bizDemandVO.getStatus()));
+            bizDemandVO.setPriorityText(PriorityEnum.getTextChineseByCode(bizDemandVO.getPriority()));
+            bizDemandVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandVO.getPlanReleaseDate()));
+        }
+
         bizDemandVOList.forEach( e -> {
             e.setStatusText(BizDemandStatusEnum.getTextByCode(e.getStatus()));
             e.setPriorityText(PriorityEnum.getTextChineseByCode(e.getPriority()));
             e.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(e.getPlanReleaseDate()));
-            e.setDeptName(deptMap.get(e.getDeptId()));
         });
 
         // 返回分页数据

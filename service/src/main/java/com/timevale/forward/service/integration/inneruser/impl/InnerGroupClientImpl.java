@@ -93,7 +93,7 @@ public class InnerGroupClientImpl implements InnerGroupClient {
     @Override
     public GroupResponse getGroupListTree(Boolean isTree) {
         try{
-            BaseResult<List<GroupResponse>> groupListTree = rpcGroupService.getGroupListTree(true);
+            BaseResult<List<GroupResponse>> groupListTree = rpcGroupService.getGroupListTreeWithDeleted(true);
             if(groupListTree.ifSuccess()){
                 return groupListTree.getData().get(0);
             }

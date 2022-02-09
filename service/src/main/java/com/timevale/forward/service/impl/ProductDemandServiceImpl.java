@@ -3,7 +3,6 @@ package com.timevale.forward.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.ProductBizDemandCondition;
@@ -47,7 +46,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -385,21 +383,16 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         PageHelper.startPage(productBizDemandQueryList.getPageNum(), productBizDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<BizDemandListDO> bizDemandList = bizDemandMapper.linkBizDemandList(productBizDemandQueryList.getProductDemandId());
 
-        List<BizDemandVO> bizDemandVO = BizDemandCopier.INSTANCE.convert(bizDemandList);
-        GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
-        Map<Long, String> deptMap = Maps.newHashMap();
-        Set<Long> deptIds = bizDemandVO.stream().map(BizDemandVO::getDeptId).collect(Collectors.toSet());
-        for (GroupResponse childNode : rootNode.getChildNode()) {
-            bizDemandComponent.dfsGroupListTree(childNode, deptMap, deptIds, "", false);
-        }
-        bizDemandVO.forEach(p -> {
+        List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandList);
+        Map<Long, GroupResponse> deptMap = bizDemandComponent.getGroupListTreeMap(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
+        bizDemandVOList.forEach(p -> {
             p.setPriorityText(PriorityEnum.getTextChineseByCode(p.getPriority()));
-            p.setDeptName(deptMap.get(p.getDeptId()));
+            p.setDeptName(deptMap.get(p.getDeptId()).getGroupName());
         });
 
         PageInfo<BizDemandListDO> pageInfo = new PageInfo<>(bizDemandList);
         PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
-        pageQueryResult.setResultList(bizDemandVO);
+        pageQueryResult.setResultList(bizDemandVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);
     }
