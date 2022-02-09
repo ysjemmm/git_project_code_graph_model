@@ -14,11 +14,8 @@ import java.math.BigDecimal;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("执行人详情")
-public class ExecutorVO extends ToString {
-
-    @ApiModelProperty("花名拼音")
-    private String userId;
+@ApiModel("人员实际耗时")
+public class TaskTimeVO extends ToString {
 
     @ApiModelProperty("花名")
     private String userName;

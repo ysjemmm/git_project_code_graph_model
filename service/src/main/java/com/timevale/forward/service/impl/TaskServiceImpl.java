@@ -9,6 +9,7 @@ import com.timevale.forward.dal.condition.TaskCondition;
 import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.condition.TaskProductDemandCondition;
 import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dto.TaskTimeDTO;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TaskService;
 import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
@@ -207,6 +208,9 @@ public class TaskServiceImpl implements TaskService {
         log.info("任务查看接收参数:{}", taskId);
         TaskCondition condition = TaskCondition.builder().id(taskId).build();
         TaskDO taskDO = taskMapper.get(condition);
+        if (taskDO == null) {
+            throw new BaseBizRuntimeException("找不到该任务");
+        }
         TaskDetailVO taskDetailVO = TaskCopier.INSTANCE.convert(taskDO);
         taskDetailVO.setStatusName(TaskStatusEnum.getTextByCode(taskDetailVO.getStatus()));
         taskDetailVO.setStageName(TaskStageEnum.getTextByCode(taskDetailVO.getStage()));
@@ -223,11 +227,15 @@ public class TaskServiceImpl implements TaskService {
         List<FileDO> fileDO = fileComponent.select(taskId, FileTypeEnum.TASK.getCode());
         taskDetailVO.setFiles(FileCopier.INSTANCE.transform(fileDO));
 
-        // 抄送人
+        // 执行人
         List<PersonDO> personDO = personComponent.select(taskId, PersonTypeEnum.TASK_EXECUTOR.getCode());
         taskDetailVO.setExecutors(PersonCopier.INSTANCE.transform(personDO));
 
         //人员耗时
+        if(TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())){
+            List<TaskTimeDTO> useTime = taskTimeComponent.getUseTime(taskDO);
+            taskDetailVO.setTaskTimeVO(TaskTimeCopier.INSTANCE.convert(useTime));
+        }
         return BaseResult.success(taskDetailVO);
     }
 
@@ -257,7 +265,7 @@ public class TaskServiceImpl implements TaskService {
             taskTimeMapper.delete(Lists.newArrayList(taskDO.getId()));
         }
         // 删除钉钉待办
-        deleteTask(taskDO);
+        deleteTodoTask(taskDO);
         taskDO.setTodo(false);
         taskDO.setTodoId(null);
         taskMapper.update(taskDO);
@@ -285,7 +293,7 @@ public class TaskServiceImpl implements TaskService {
             //暂停后会删除待办,启用后新增待办
             List<String> existExecutorIds = personComponent.select(taskId, PersonTypeEnum.TASK_EXECUTOR.getCode())
                     .stream().map(PersonDO::getUserId).collect(Collectors.toList());
-            addTask(taskDO, existExecutorIds);
+            addTodoTask(taskDO, existExecutorIds);
         }
         taskMapper.update(taskDO);
         return BaseResult.success(true);
@@ -336,7 +344,7 @@ public class TaskServiceImpl implements TaskService {
         List<String> existExecutorIds = personComponent.select(taskId, PersonTypeEnum.TASK_EXECUTOR.getCode())
                 .stream().map(PersonDO::getUserId).collect(Collectors.toList());
         if(taskDO.getTodo()){
-            updateTask(taskDO,existExecutorIds);
+            updateTodoTask(taskDO,existExecutorIds);
         }
         sendDingMsg(taskDO,existExecutorIds);
         return BaseResult.success(true);
@@ -349,6 +357,9 @@ public class TaskServiceImpl implements TaskService {
         // 该项目下的产品需求
         List<Long> inProductDemandIds = projectProductDemandMapper.getByProjectId(condition.getProjectId())
                 .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
+        if(CollectionUtils.isEmpty(inProductDemandIds)){
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
         condition.setInProductDemandIds(inProductDemandIds);
         // 过滤掉已经被该任务关联的产品需求
         if (condition.getId() != null) {
@@ -471,6 +482,9 @@ public class TaskServiceImpl implements TaskService {
     private void processTaskTime(TaskDO taskDO) {
         TaskCondition condition = TaskCondition.builder().id(taskDO.getId()).build();
         TaskDO existTaskDO = taskMapper.get(condition);
+        if (existTaskDO == null) {
+            throw new BaseBizRuntimeException("找不到该任务");
+        }
         fillStatus(taskDO);
         if (existTaskDO.getActualStartDate() != null && !existTaskDO.getActualStartDate().equals(taskDO.getActualStartDate())) {
             //实际开始时间有变动
@@ -518,7 +532,7 @@ public class TaskServiceImpl implements TaskService {
             //新增
             if (taskDO.getTodo()) {
 //            //钉钉待办
-                addTask(taskDO, executorIds);
+                addTodoTask(taskDO, executorIds);
             }
         } else {
             TaskCondition condition = TaskCondition.builder().id(taskDO.getId()).build();
@@ -526,7 +540,7 @@ public class TaskServiceImpl implements TaskService {
             log.info("编辑时,发送钉钉待办,existTaskDO:{}",existTaskDO);
             if (taskDO.getTodo() && StringUtils.isEmpty(existTaskDO.getTodoId())) {
 //            //编辑时需发送待办
-                addTask(taskDO, executorIds);
+                addTodoTask(taskDO, executorIds);
             } else {
                 List<String> existExecutorIds = personComponent.select(existTaskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode())
                         .stream().map(PersonDO::getUserId).collect(Collectors.toList());
@@ -536,7 +550,7 @@ public class TaskServiceImpl implements TaskService {
                         && ((!taskDO.getPlanEndDate().equals(existTaskDO.getPlanEndDate())) || tmpExecutorIds.size() != 0);
                 if (needUpdate) {
                     //已发送过待办,当计划时间或执行人变动时更新待办
-                    updateTask(taskDO, executorIds);
+                    updateTodoTask(taskDO, executorIds);
                 }
             }
 
@@ -549,7 +563,7 @@ public class TaskServiceImpl implements TaskService {
      * @param taskDO      taskDO
      * @param executorIds executorIds
      */
-    private void addTask(TaskDO taskDO, List<String> executorIds) {
+    private void addTodoTask(TaskDO taskDO, List<String> executorIds) {
         if (CollectionUtils.isEmpty(executorIds)) {
             return;
         }
@@ -583,7 +597,7 @@ public class TaskServiceImpl implements TaskService {
      * @param taskDO      taskDO
      * @param executorIds executorIds
      */
-    private void updateTask(TaskDO taskDO, List<String> executorIds) {
+    private void updateTodoTask(TaskDO taskDO, List<String> executorIds) {
         if (CollectionUtils.isEmpty(executorIds)) {
             return;
         }
@@ -612,7 +626,7 @@ public class TaskServiceImpl implements TaskService {
      *
      * @param taskDO taskDO
      */
-    private void deleteTask(TaskDO taskDO) {
+    private void deleteTodoTask(TaskDO taskDO) {
         String id = LocalSessionUtils.getUserInfo().getId();
         Map<String, String> map = innerUserPersonClient.getUnionIds(Lists.newArrayList(id));
         DeleteTodoTaskMsg deleteTodoTaskMsg = DeleteTodoTaskMsg.builder()

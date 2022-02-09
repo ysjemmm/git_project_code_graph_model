@@ -74,7 +74,7 @@ public class TaskDetailVO extends ToString {
     private ProductLineVO productLineVO;
 
     @ApiModelProperty("人员耗时")
-    private List<ExecutorVO> executorVO;
+    private List<TaskTimeVO> taskTimeVO;
 
 
 }
