@@ -1,8 +1,8 @@
 package com.timevale.forward.service.observer.event;
 
-import com.google.common.collect.Lists;
 import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -12,20 +12,19 @@ import java.util.List;
 public class BillTestMsgEvent extends MessageEvent {
 
     private final String operator;
-    private final String receiver;
+    private final List<String> receivers;
 
-    public BillTestMsgEvent(Object source, String operator, String receiver) {
+    public BillTestMsgEvent(Object source, String operator, List<String> receivers) {
         super(source);
         this.operator = operator;
-        this.receiver = receiver;
+        this.receivers = receivers;
     }
 
     @Override
     public void run() {
-        List<String> receivers = Lists.newArrayList(receiver);
         String title = "XX提测单XX";
         String singleUrl = "www.baidu.com";
-        String markdown = String.format("%s测一下看看行不行[查看详情](%s)", operator, singleUrl);
+        String markdown = String.format("%s测一下看%s看行不行[查看详情](%s)", operator, new Date(), singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(title)

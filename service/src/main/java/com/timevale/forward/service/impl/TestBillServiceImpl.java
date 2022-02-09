@@ -35,6 +35,7 @@ import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -121,7 +122,7 @@ public class TestBillServiceImpl implements TestBillService {
                 new BillTestMsgEvent(
                         this,
                         "望轩",
-                        "wangxuan"
+                        Collections.singletonList("wangxuan")
                 )
         );
 
@@ -164,7 +165,6 @@ public class TestBillServiceImpl implements TestBillService {
             if (compare < 0) {
                 testBillVO.setIsDelay(true);
                 Integer delayDay = (int) DateUtil.between(planDate, actualDate, DateUnit.DAY);
-                testBillVO.setDelayDay(delayDay);
                 testBillVO.setDelayDay(delayDay);
             }
         } else {
