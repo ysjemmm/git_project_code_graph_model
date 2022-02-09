@@ -229,9 +229,11 @@ public class HomePageServiceImpl implements HomePageService {
 
         // 部门id、员工id非空取交集
         if (!CollectionUtils.isEmpty(deptIds)) {
+            Set<String> deptAllMyStaffSet = Sets.newHashSet();
             for (Long deptId : deptIds) {
-                allMyStaffWithSelfSet.retainAll(innerUserPersonClient.getByGroupIdNew(String.valueOf(deptId)));
+                deptAllMyStaffSet.addAll(innerUserPersonClient.getByGroupIdNew(String.valueOf(deptId)));
             }
+            allMyStaffWithSelfSet.retainAll(deptAllMyStaffSet);
         }
         if (!CollectionUtils.isEmpty(teamMembers)) {
             allMyStaffWithSelfSet.retainAll(teamMembers);
@@ -276,47 +278,25 @@ public class HomePageServiceImpl implements HomePageService {
         }
         if (userType.equals(UserTypeEnum.PD.toString())) {
             return list.stream().filter(e -> {
-                boolean filter = false;
-                if (e.getStartPlan() != null) {
-                    filter = DateUtil.inInterval(e.getStartPlan(), startDate, endDate);
-                }
-                if (e.getDemandInternalAudit() != null) {
-                    filter = filter ||  DateUtil.inInterval(e.getDemandInternalAudit(), startDate, endDate);
-                }
-                if (e.getDemandConstrue() != null) {
-                    filter = filter ||  DateUtil.inInterval(e.getDemandConstrue(), startDate, endDate);
-                }
+                boolean filter = DateUtil.inInterval(e.getStartPlan(), startDate, endDate);
+                filter = filter || DateUtil.inInterval(e.getDemandInternalAudit(), startDate, endDate);
+                filter = filter || DateUtil.inInterval(e.getDemandConstrue(), startDate, endDate);
                 return filter;
             }).collect(Collectors.toList());
         } else if (userType.equals(UserTypeEnum.RD.toString())) {
             return list.stream().filter(e -> {
-                boolean filter = false;
-                if (e.getTechnicalDetailReview() != null) {
-                    filter = DateUtil.inInterval(e.getTechnicalDetailReview(), startDate, endDate);
-                }
-                if (e.getDevelopStart() != null) {
-                    filter = filter ||  DateUtil.inInterval(e.getDevelopStart(), startDate, endDate);
-                }
-                if (e.getSubmitTest() != null) {
-                    filter = filter ||  DateUtil.inInterval(e.getSubmitTest(), startDate, endDate);
-                }
+                boolean filter = DateUtil.inInterval(e.getTechnicalDetailReview(), startDate, endDate);
+                filter = filter || DateUtil.inInterval(e.getDevelopStart(), startDate, endDate);
+                filter = filter || DateUtil.inInterval(e.getSubmitTest(), startDate, endDate);
                 return filter;
             }).collect(Collectors.toList());
         } else {
             return list.stream().filter(e -> {
-                boolean filter = false;
-                if (e.getUseCaseReview() != null) {
-                    filter = DateUtil.inInterval(e.getUseCaseReview(), startDate, endDate);
-                }
-                if(e.getWriteTestCases() != null){
-                    filter = DateUtil.inInterval(e.getWriteTestCases(), startDate, endDate);
-                }
-                if (e.getTestStart() != null) {
-                    filter = filter ||  DateUtil.inInterval(e.getTestStart(), startDate, endDate);
-                }
-                if (e.getPublishSimulate() != null) {
-                    filter = filter ||  DateUtil.inInterval(e.getPublishSimulate(), startDate, endDate);
-                }
+                boolean filter = DateUtil.inInterval(e.getWriteTestCases(), startDate, endDate);
+                filter = filter || DateUtil.inInterval(e.getUseCaseReview(), startDate, endDate);
+                filter = filter || DateUtil.inInterval(e.getTestStart(), startDate, endDate);
+                filter = filter || DateUtil.inInterval(e.getPublishSimulate(), startDate, endDate);
+                filter = filter || DateUtil.inInterval(e.getPublishOfficial(), startDate, endDate);
                 return filter;
             }).collect(Collectors.toList());
         }

@@ -1920,6 +1920,9 @@ public class DateUtil implements DateFormatConst {
      * @return boolean
      */
     public static Boolean inInterval(Date date, Date startDate, Date endDate){
+        if(date == null || startDate == null || endDate == null){
+            return false;
+        }
         return !date.before(startDate) && !date.after(endDate);
     }
 
