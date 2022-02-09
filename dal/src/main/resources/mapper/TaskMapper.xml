@@ -5,28 +5,34 @@
     <select id="getByProjectIds" resultType="long">
         select distinct id from task
         <where>
-            and id in
-            <foreach collection="ids" item="item" separator="," open="(" close=")">
-                #{item}
-            </foreach>
+            <if test="ids!=null and ids.size()>0">
+                and id in
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             and project_id in
             <foreach collection="projectIds" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
+            and is_deleted=false
         </where>
     </select>
 
     <select id="getByProductLineIds" resultType="long">
         select distinct a.id from task a
         <where>
-            and a.id in
-            <foreach collection="ids" item="item" separator="," open="(" close=")">
-                #{item}
-            </foreach>
+            <if test="ids!=null and ids.size()>0">
+                and a.id in
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             and a.product_line_id in
             <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
+            and a.is_deleted=false
         </where>
     </select>
 
@@ -37,6 +43,7 @@
             <foreach collection="ids" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
+            and is_deleted=false
         </where>
     </select>
 
@@ -123,6 +130,7 @@
             <if test="status != null">status = #{status},</if>
             <if test="stage != null">stage = #{stage},</if>
             <if test="todo != null">todo = #{todo},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
             <if test="planStartDate != null">plan_start_date = #{planStartDate},</if>
             <if test="planEndDate != null">plan_end_date = #{planEndDate},</if>
             <if test="productLineId != null">product_line_id = #{productLineId},</if>
@@ -153,7 +161,7 @@
                plan_use_time, actual_start_date, actual_end_date, task_use_time, is_deleted, create_man_id, create_man,
                create_date, modify_man_id, modify_man, modify_date
         from task
-        where id = #{id}
+        where id = #{id} and is_deleted=false
     </select>
 
     <select id="selectByExecutorList" resultType="com.timevale.forward.dal.entity.TaskDO">

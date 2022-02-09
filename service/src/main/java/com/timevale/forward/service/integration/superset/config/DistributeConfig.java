@@ -77,4 +77,12 @@ public class DistributeConfig {
      *
      */
     public DistributeConfigVO getProjectBoard(){return databases.get("all.projectBoard");}
+
+    /**
+     * 人员耗时
+     *
+     */
+    public DistributeConfigVO getTaskUseTime() {
+        return databases.get("task.useTime");
+    }
 }
