@@ -231,7 +231,9 @@ public class HomePageServiceImpl implements HomePageService {
 
         // 数据分组后转换
         List<HomePageProjectBoardVO> result = Lists.newArrayList();
-        Map<String, List<HomePageProjectBoardDTO>> homePageProjectBoardDTOGroup = homePageProjectBoardDTOList.stream().collect(Collectors.groupingBy(HomePageProjectBoardDTO::getUserId));
+        Map<String, List<HomePageProjectBoardDTO>> homePageProjectBoardDTOGroup = homePageProjectBoardDTOList
+                .stream().collect(Collectors.groupingBy(HomePageProjectBoardDTO::getUserId));
+
         homePageProjectBoardDTOGroup.forEach((key, value) -> {
             HomePageProjectBoardVO homePageProjectBoardVO = new HomePageProjectBoardVO();
 
@@ -253,44 +255,50 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     public List<HomePageProjectDateVO> filterByDate(String userType, Date startDate, Date endDate, List<HomePageProjectDateVO> list) {
+        if(CollectionUtils.isEmpty(list)){
+            return Lists.emptyList();
+        }
         if (userType.equals(UserTypeEnum.PD.toString())) {
             return list.stream().filter(e -> {
+                boolean filter = false;
                 if (e.getStartPlan() != null) {
-                    return DateUtil.inInterval(e.getStartPlan(), startDate, endDate);
+                    filter = DateUtil.inInterval(e.getStartPlan(), startDate, endDate);
                 }
                 if (e.getDemandInternalAudit() != null) {
-                    return DateUtil.inInterval(e.getDemandInternalAudit(), startDate, endDate);
+                    filter = filter ||  DateUtil.inInterval(e.getDemandInternalAudit(), startDate, endDate);
                 }
                 if (e.getDemandConstrue() != null) {
-                    return DateUtil.inInterval(e.getDemandConstrue(), startDate, endDate);
+                    filter = filter ||  DateUtil.inInterval(e.getDemandConstrue(), startDate, endDate);
                 }
-                return false;
+                return filter;
             }).collect(Collectors.toList());
         } else if (userType.equals(UserTypeEnum.RD.toString())) {
             return list.stream().filter(e -> {
+                boolean filter = false;
                 if (e.getTechnicalDetailReview() != null) {
-                    return DateUtil.inInterval(e.getTechnicalDetailReview(), startDate, endDate);
+                    filter = DateUtil.inInterval(e.getTechnicalDetailReview(), startDate, endDate);
                 }
                 if (e.getDevelopStart() != null) {
-                    return DateUtil.inInterval(e.getDevelopStart(), startDate, endDate);
+                    filter = filter ||  DateUtil.inInterval(e.getDevelopStart(), startDate, endDate);
                 }
                 if (e.getSubmitTest() != null) {
-                    return DateUtil.inInterval(e.getSubmitTest(), startDate, endDate);
+                    filter = filter ||  DateUtil.inInterval(e.getSubmitTest(), startDate, endDate);
                 }
-                return false;
+                return filter;
             }).collect(Collectors.toList());
         } else {
             return list.stream().filter(e -> {
+                boolean filter = false;
                 if (e.getUseCaseReview() != null) {
-                    return DateUtil.inInterval(e.getUseCaseReview(), startDate, endDate);
+                    filter = DateUtil.inInterval(e.getUseCaseReview(), startDate, endDate);
                 }
                 if (e.getTestStart() != null) {
-                    return DateUtil.inInterval(e.getTestStart(), startDate, endDate);
+                    filter = filter ||  DateUtil.inInterval(e.getTestStart(), startDate, endDate);
                 }
                 if (e.getPublishSimulate() != null) {
-                    return DateUtil.inInterval(e.getPublishSimulate(), startDate, endDate);
+                    filter = filter ||  DateUtil.inInterval(e.getPublishSimulate(), startDate, endDate);
                 }
-                return false;
+                return filter;
             }).collect(Collectors.toList());
         }
     }
