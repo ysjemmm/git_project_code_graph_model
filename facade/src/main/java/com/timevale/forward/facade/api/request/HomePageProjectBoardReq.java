@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -30,5 +31,6 @@ public class HomePageProjectBoardReq extends BaseReq {
     private Date endDate;
 
     @ApiModelProperty("用户类型")
+    @NotNull
     private String userType;
 }
