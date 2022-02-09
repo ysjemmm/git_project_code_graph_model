@@ -17,5 +17,11 @@ public interface TaskProductDemandComponent {
      * @param productDemandId productDemandId
      */
     void update(List<Long> taskIds, Long productDemandId);
+    /**
+     * 任务对应的产品需求状态全部变更为已暂停/作废时时，取消关联任务
+     *
+     * @param productDemandId productDemandId
+     */
+    void unLinkIfProductDemandStatusAllChange(Long productDemandId);
 
 }

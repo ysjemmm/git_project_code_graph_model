@@ -123,7 +123,6 @@
             <if test="status != null">status = #{status},</if>
             <if test="stage != null">stage = #{stage},</if>
             <if test="todo != null">todo = #{todo},</if>
-            <if test="todoId != null">todo_id = #{todoId},</if>
             <if test="planStartDate != null">plan_start_date = #{planStartDate},</if>
             <if test="planEndDate != null">plan_end_date = #{planEndDate},</if>
             <if test="productLineId != null">product_line_id = #{productLineId},</if>
@@ -131,7 +130,8 @@
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             actual_start_date = #{actualStartDate},
-            actual_end_date = #{actualEndDate}
+            actual_end_date = #{actualEndDate},
+            todo_id = #{todoId}
         </set>
         <where>
             id = #{id} and is_deleted=false

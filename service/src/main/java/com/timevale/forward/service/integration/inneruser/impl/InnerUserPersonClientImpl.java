@@ -65,16 +65,16 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
     }
 
     @Override
-    public BaseInfoResponse getPersonByAccountNew(String accountId) {
+    public List<BaseInfoResponse> getPersonByAccountNew(List<String> accountIds) {
         try {
-            BaseResult<List<BaseInfoResponse>> personByAccountNew = rpcPersonService.getPersonByAccountNew(Collections.singletonList(accountId));
+            BaseResult<List<BaseInfoResponse>> personByAccountNew = rpcPersonService.getPersonByAccountNew(accountIds);
             if (personByAccountNew.ifSuccess() && !CollectionUtils.isEmpty(personByAccountNew.getData())) {
-                return personByAccountNew.getData().get(0);
+                return personByAccountNew.getData();
             }
         } catch (Exception e) {
-            log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountId + " error: " + e.getMessage(), e);
+            log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountIds + " error: " + e.getMessage(), e);
         }
-        throw new BaseBizRuntimeException("调用内部用户中心失败! " + accountId);
+        throw new BaseBizRuntimeException("调用内部用户中心失败! " + accountIds);
     }
 
     /**
@@ -106,14 +106,15 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
      * 获取用户
      *
      * @param accountIds id
-     * @return -unionId
+     * @return accountId-unionId
      */
     @Override
-    public List<String> getUnionIds(List<String> accountIds) {
+    public Map<String, String> getUnionIds(List<String> accountIds) {
         try {
             BaseResult<List<BaseInfoResponse>> personByAccountNew = rpcPersonService.getPersonByAccountNew(accountIds);
             if (personByAccountNew.ifSuccess() && !CollectionUtils.isEmpty(personByAccountNew.getData())) {
-                return personByAccountNew.getData().stream().map(BaseInfoResponse::getUnionId).collect(Collectors.toList());
+                return personByAccountNew.getData().stream()
+                        .collect(Collectors.toMap(BaseInfoResponse::getAccount, BaseInfoResponse::getUnionId, (v1, v2) -> v1));
             }
         } catch (Exception e) {
             log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountIds + " error: " + e.getMessage(), e);

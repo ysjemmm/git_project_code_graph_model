@@ -66,7 +66,7 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
         try {
             dingWorkRecordService.deleteTask(input);
         }catch (Exception e){
-            log.error("[erpMessage]更新待办失败  error: " + e.getMessage() + " 发送通知信息：" + deleteTodoTaskMsg);
+            log.error("[erpMessage]删除待办失败  error: " + e.getMessage() + " 发送通知信息：" + deleteTodoTaskMsg);
         }
     }
 }

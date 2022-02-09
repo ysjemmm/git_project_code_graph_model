@@ -14,7 +14,9 @@
         select a.id, a.task_id, a.product_demand_id, a.is_deleted
         from task_product_demand a
         <where>
-            a.task_id=#{taskId} and a.is_deleted=false
+            <if test="taskId != null">and a.task_id = #{taskId}</if>
+            <if test="productDemandId != null">and a.product_demand_id = #{productDemandId}</if>
+            and a.is_deleted=false
         </where>
     </select>
 
@@ -25,7 +27,7 @@
          where b.task_id = #{taskId}
     </select>
 
-    <update id="update" parameterType="com.timevale.forward.dal.entity.TaskProductDemandDO">
+    <update id="update" parameterType="com.timevale.forward.dal.entity.TaskProductDemandUpdateDO">
         update task_product_demand
         <set>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
@@ -43,6 +45,5 @@
             and is_deleted=false
         </where>
     </update>
-
 
 </mapper>

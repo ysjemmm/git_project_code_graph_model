@@ -9,12 +9,16 @@ import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.copy.PersonCopier;
+import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.mandarin.common.annotation.RestService;
+import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author xingyun
@@ -29,6 +33,9 @@ public class PersonServiceImpl implements PersonService {
     @Resource
     private PersonMapper personMapper;
 
+    @Resource
+    private InnerUserPersonClient innerUserPersonClient;
+
     @Override
     public BaseResult<Boolean> addRecipients(RecipientAddReq recipientAddReq) {
         // 抄送人
@@ -39,7 +46,17 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public BaseResult<List<PersonVO>> getTeamMembers(Long projectId) {
         List<PersonDO> personDO = personMapper.get(Lists.newArrayList(projectId), PersonTypeEnum.PROJECT_MEMBER.getCode());
-        List<PersonVO> personVO=PersonCopier.INSTANCE.transform(personDO);
+        if(CollectionUtils.isEmpty(personDO)){
+            return BaseResult.success(Lists.emptyList());
+        }
+        List<String> accounts = personDO.stream().map(PersonDO::getUserId).collect(Collectors.toList());
+        //在职员工
+        List<String> employeeOnJob = innerUserPersonClient.getPersonByAccountNew(accounts).stream()
+                .filter(a -> Integer.valueOf(0).equals(a.getStatus()))
+                .map(BaseInfoResponse::getAccount)
+                .collect(Collectors.toList());
+        List<PersonDO> result = personDO.stream().filter(a -> employeeOnJob.contains(a.getUserId())).collect(Collectors.toList());
+        List<PersonVO> personVO=PersonCopier.INSTANCE.transform(result);
         return BaseResult.success(personVO);
     }
 

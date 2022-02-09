@@ -140,9 +140,10 @@ public class TaskComponentImpl implements TaskComponent {
 
     @Override
     public void updateStatusAsProjectStatusChange(Long projectId, Integer projectStatus, Boolean enableTask) {
-        log.info("项目状态改变,更新任务状态 projectId:{},projectStatus:{}", projectId, projectStatus);
+        log.info("项目状态改变,更新任务状态 projectId:{},projectStatus:{},enableTask:{}", projectId, projectStatus,enableTask);
         List<TaskDO> existTaskDO = taskMapper.getByProjectId(projectId);
         if (CollectionUtils.isEmpty(existTaskDO)) {
+            log.info("项目状态改变,项目无任务");
             return;
         }
         TaskStatusUpdateDO taskStatusUpdateDO = new TaskStatusUpdateDO();

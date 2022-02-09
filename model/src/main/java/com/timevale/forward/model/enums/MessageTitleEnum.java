@@ -15,7 +15,9 @@ public enum MessageTitleEnum {
     BIZDEMAND_INVALID("业务需求作废通知"),
     // 评论区@通知标题
     COMMENT("评论通知"),
-    TEST_BILL("提测单消息通知");
+    TEST_BILL("提测单消息通知"),
+    TASK_DONE("任务完成通知"),
+    ;
 
     private String text;
 

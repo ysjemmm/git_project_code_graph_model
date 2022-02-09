@@ -3,6 +3,7 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.condition.TaskProductDemandCondition;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.dal.entity.TaskProductDemandDO;
+import com.timevale.forward.dal.entity.TaskProductDemandUpdateDO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -39,8 +40,8 @@ public interface TaskProductDemandMapper {
     /**
      * 新增项目-产品需求
      *
-     * @param taskProductDemandDO 新增产品需求-任务
+     * @param taskProductDemandUpdateDO 新增产品需求-任务
      * @return int
      */
-    int update(TaskProductDemandDO taskProductDemandDO);
+    int update(TaskProductDemandUpdateDO taskProductDemandUpdateDO);
 }

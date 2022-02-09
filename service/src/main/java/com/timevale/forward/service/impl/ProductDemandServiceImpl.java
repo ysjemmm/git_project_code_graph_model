@@ -100,6 +100,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Resource
     private ProductBizDemandMapper productBizDemandMapper;
 
+    @Resource
+    private TaskProductDemandComponent taskProductDemandComponent;
+
 
     @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
@@ -123,9 +126,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             }
             condition.setOwnerIds(filtered);
         } else if (AscriptionEnum.DEPARTMENT.name().equals(productDemandQueryList.getAscription())) {
-            BaseInfoResponse baseInfo = innerUserPersonClient.getPersonByAccountNew(userInfo.getId());
+            List<BaseInfoResponse> baseInfos = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(userInfo.getId()));
 
-            String groupId = baseInfo.getDefaultGroup().getGroupId();
+            String groupId = baseInfos.get(0).getDefaultGroup().getGroupId();
             List<String> accountIds = innerUserPersonClient.getAllByGroupId(groupId);
 
             if (!CollectionUtils.isEmpty(productDemandQueryList.getOwnerIds())) {
@@ -197,6 +200,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             productBizDemandComponent.update(productBizDemandDO);
 
         }
+        //解除任务关联
+        taskProductDemandComponent.unLinkIfProductDemandStatusAllChange(productDemandId);
         return BaseResult.success(true);
     }
 

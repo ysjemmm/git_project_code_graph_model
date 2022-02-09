@@ -3,6 +3,7 @@ package com.timevale.forward.service.integration.inneruser;
 import com.timevale.security.facade.response.BaseInfoResponse;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 内部用户中心接口
@@ -31,10 +32,10 @@ public interface InnerUserPersonClient {
     /**
      * 获取用户
      *
-     * @param accountId id
+     * @param accountIds id
      * @return 用户
      */
-    BaseInfoResponse getPersonByAccountNew(String accountId);
+    List<BaseInfoResponse> getPersonByAccountNew(List<String> accountIds);
 
     /**
      * 获取当前部门及其所有子部门员工 (含离职)
@@ -54,7 +55,7 @@ public interface InnerUserPersonClient {
      * 获取用户
      *
      * @param accountIds id
-     * @return unionId
+     * @return accountId-unionId
      */
-    List<String> getUnionIds(List<String> accountIds);
+    Map<String, String> getUnionIds(List<String> accountIds);
 }
