@@ -292,6 +292,9 @@ public class HomePageServiceImpl implements HomePageService {
                 if (e.getUseCaseReview() != null) {
                     filter = DateUtil.inInterval(e.getUseCaseReview(), startDate, endDate);
                 }
+                if(e.getWriteTestCases() != null){
+                    filter = DateUtil.inInterval(e.getWriteTestCases(), startDate, endDate);
+                }
                 if (e.getTestStart() != null) {
                     filter = filter ||  DateUtil.inInterval(e.getTestStart(), startDate, endDate);
                 }
