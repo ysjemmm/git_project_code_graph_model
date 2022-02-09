@@ -18,6 +18,14 @@ import java.util.Date;
 @Data
 @ApiModel("首页-风险预警-任务")
 public class HomePageTaskVO extends ToString {
+
+    @ApiModelProperty("项目id")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long projectId;
+
+    @ApiModelProperty("项目名称")
+    private String projectName;
+
     @ApiModelProperty("用户id")
     private String userId;
 

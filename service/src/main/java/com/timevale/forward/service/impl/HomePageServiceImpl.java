@@ -3,7 +3,6 @@ package com.timevale.forward.service.impl;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
-import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
@@ -37,10 +36,8 @@ import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.math.BigDecimal;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -158,9 +155,9 @@ public class HomePageServiceImpl implements HomePageService {
         projectIdSet.addAll(riskWarningSubmitTestDTOSet.stream().map(HomePageRiskWarningSubmitTestDTO::getProjectId).collect(Collectors.toSet()));
 
         // 初始化结果集
-        Map<Long, HomePageRiskWarningVO> result = Maps.newHashMap();
-        projectIdSet.forEach(key -> result.put(key, new HomePageRiskWarningVO()));
-        result.forEach((key, value) -> {
+        Map<Long, HomePageRiskWarningVO> resultMap = Maps.newHashMap();
+        projectIdSet.forEach(key -> resultMap.put(key, new HomePageRiskWarningVO()));
+        resultMap.forEach((key, value) -> {
             value.setHomePageTaskVOList(Lists.emptyList());
             value.setHomePageSubmitTestVOList(Lists.emptyList());
             value.setHomePageProjectNodeVOList(Lists.emptyList());
@@ -174,27 +171,46 @@ public class HomePageServiceImpl implements HomePageService {
         Map<Long, List<HomePageRiskWarningSubmitTestDTO>> riskWarningSubmitTestGroup = riskWarningSubmitTestDTOSet.stream()
                 .collect(Collectors.groupingBy(HomePageRiskWarningSubmitTestDTO::getProjectId));
 
+        // 节点排序
+        riskWarningGroup.forEach((key, value) -> value.sort((x, y) -> {
+            Integer xOverDueDay = Integer.valueOf(x.getOverdueDay());
+            Integer yOverDueDay = Integer.valueOf(y.getOverdueDay());
+            return yOverDueDay.compareTo(xOverDueDay);
+        }));
+        riskWarningTaskGroup.forEach((key, value) -> value.sort((x, y) -> {
+            BigDecimal xOverTime = new BigDecimal(x.getOverdueTime());
+            BigDecimal yOverTime = new BigDecimal(y.getOverdueTime());
+            return yOverTime.compareTo(xOverTime);
+        }));
+
         // 填入数据
         riskWarningGroup.forEach((key, value) -> {
-            HomePageRiskWarningVO riskWarningVO = result.get(key);
+            HomePageRiskWarningVO riskWarningVO = resultMap.get(key);
             riskWarningVO.setProjectId(key);
             riskWarningVO.setProjectName(value.get(0).getProjectName());
+            riskWarningVO.setPlanEndDate(value.get(0).getPlanEndDate());
             riskWarningVO.setHomePageProjectNodeVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
         });
         riskWarningTaskGroup.forEach((key, value) -> {
-            HomePageRiskWarningVO riskWarningVO = result.get(key);
+            HomePageRiskWarningVO riskWarningVO = resultMap.get(key);
             riskWarningVO.setProjectId(key);
             riskWarningVO.setProjectName(value.get(0).getProjectName());
+            riskWarningVO.setPlanEndDate(value.get(0).getPlanEndDate());
             riskWarningVO.setHomePageTaskVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
         });
         riskWarningSubmitTestGroup.forEach((key, value) -> {
-            HomePageRiskWarningVO riskWarningVO = result.get(key);
+            HomePageRiskWarningVO riskWarningVO = resultMap.get(key);
             riskWarningVO.setProjectId(key);
             riskWarningVO.setProjectName(value.get(0).getProjectName());
+            riskWarningVO.setPlanEndDate(value.get(0).getPlanEndDate());
             riskWarningVO.setHomePageSubmitTestVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
         });
 
-        return BaseResult.success(Lists.newArrayList(result.values()));
+        // 按项目计划上线时间排序
+        List<HomePageRiskWarningVO> resultList = Lists.newArrayList(resultMap.values());
+        resultList.sort(Comparator.comparing(HomePageRiskWarningVO::getPlanEndDate));
+
+        return BaseResult.success(resultList);
     }
 
     @Override
