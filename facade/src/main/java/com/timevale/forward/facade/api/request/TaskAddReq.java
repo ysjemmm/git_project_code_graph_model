@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -47,7 +48,7 @@ public class TaskAddReq extends BaseReq {
 
     @ApiModelProperty("计划耗时")
     @NotNull(message = "计划耗时不能为空")
-    private Integer planUseTime;
+    private BigDecimal planUseTime;
 
     @ApiModelProperty("实际开始时间")
     @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")

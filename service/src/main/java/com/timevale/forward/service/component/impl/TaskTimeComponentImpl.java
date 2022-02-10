@@ -52,7 +52,13 @@ public class TaskTimeComponentImpl extends BaseDistributeClientImpl<TaskTimeDTO>
         taskTimeDO.setTaskId(taskId);
         taskTimeDO.setStartDate(actualStartDate);
         taskTimeDO.setEndDate(actualEndDate);
-        taskTimeMapper.insert(taskTimeDO);
+        TaskTimeDO existTaskTimeDO = taskTimeMapper.get(taskId);
+        if (existTaskTimeDO != null) {
+            taskTimeMapper.update(taskTimeDO);
+        } else {
+            taskTimeMapper.insert(taskTimeDO);
+        }
+
     }
 
     @Override
@@ -60,7 +66,7 @@ public class TaskTimeComponentImpl extends BaseDistributeClientImpl<TaskTimeDTO>
         List<String> existExecutorIds = personComponent.select(taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode())
                 .stream().map(PersonDO::getUserId).collect(Collectors.toList());
         ParamHelper queryParamHelper = ParamHelper.newInstance()
-                .equals("task_id",taskDO.getId().toString())
+                .equals("task_id", taskDO.getId().toString())
                 .in("user_id", existExecutorIds);
         DistributePageQueryVO queryParams = DistributePageQueryVO.builder()
                 .params(queryParamHelper.params())

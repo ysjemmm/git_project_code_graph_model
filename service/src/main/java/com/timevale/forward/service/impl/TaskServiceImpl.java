@@ -162,10 +162,12 @@ public class TaskServiceImpl implements TaskService {
             //处理待办
             sendDingTodo(taskDO, executorIds);
         }
-        //入库
-        taskMapper.insert(taskDO);
         //耗时表入库
         insertTaskTime(taskDO);
+        // 计算任务耗时
+        calTaskTime(taskDO);
+        //入库
+        taskMapper.insert(taskDO);
         //附件
         fileComponent.add(taskAddReq.getFiles(), taskDO.getId(), FileTypeEnum.TASK.getCode());
         //执行人
@@ -516,19 +518,21 @@ public class TaskServiceImpl implements TaskService {
      * @param taskDO taskDO
      */
     private void calTaskTime(TaskDO taskDO) {
-        AtomicLong totalTime = new AtomicLong();
-        List<TaskTimeDO> list = taskTimeMapper.list(taskDO.getId());
-        if (CollectionUtils.isEmpty(list)) {
-            log.info("任务耗时表找不到数据,taskId:{}", taskDO.getId());
-            return;
+        if(TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())){
+            AtomicLong totalTime = new AtomicLong();
+            List<TaskTimeDO> list = taskTimeMapper.list(taskDO.getId());
+            if (CollectionUtils.isEmpty(list)) {
+                log.info("任务耗时表找不到数据,taskId:{}", taskDO.getId());
+                return;
+            }
+            list.forEach(a -> {
+                Long result = elapsedTimeClient.getElapsedTime(a.getStartDate(), a.getEndDate());
+                totalTime.getAndAdd(result);
+            });
+            BigDecimal elapsedTime = new BigDecimal(String.valueOf(totalTime.get()));
+            BigDecimal decimal = elapsedTime.divide(new BigDecimal(SECONDS_PER_HOUR), 2, BigDecimal.ROUND_HALF_UP);
+            taskDO.setTaskUseTime(decimal);
         }
-        list.forEach(a -> {
-            Long result = elapsedTimeClient.getElapsedTime(a.getStartDate(), a.getEndDate());
-            totalTime.getAndAdd(result);
-        });
-        BigDecimal elapsedTime = new BigDecimal(String.valueOf(totalTime.get()));
-        BigDecimal decimal = elapsedTime.divide(new BigDecimal(SECONDS_PER_HOUR), 2, BigDecimal.ROUND_HALF_UP);
-        taskDO.setTaskUseTime(decimal);
     }
 
     /**
@@ -610,6 +614,7 @@ public class TaskServiceImpl implements TaskService {
      * @param executorIds executorIds
      */
     private void updateTodoTask(TaskDO taskDO, List<String> executorIds) {
+        log.info("更新待办,taskDO:{},executorIds:{}",taskDO,executorIds);
         if (CollectionUtils.isEmpty(executorIds)) {
             return;
         }
