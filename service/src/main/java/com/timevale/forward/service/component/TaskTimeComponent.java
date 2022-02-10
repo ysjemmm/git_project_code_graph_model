@@ -25,8 +25,8 @@ public interface TaskTimeComponent {
 
     /**
      *
-     * @param taskId 任务id
-     * @param accounts 花名
+     * @param taskDO taskDO
+     * @return 耗时
      */
     List<TaskTimeDTO> getUseTime(TaskDO taskDO);
 

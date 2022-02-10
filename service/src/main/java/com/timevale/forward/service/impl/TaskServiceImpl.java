@@ -257,7 +257,7 @@ public class TaskServiceImpl implements TaskService {
         taskDO.setStatus(type);
         if (TaskStatusEnum.SUSPEND.getCode().equals(type)) {
             // 暂停,耗时表更新数据
-            taskTimeComponent.updateEndDate(taskDO.getId(), taskDO.getActualEndDate());
+            taskTimeComponent.updateEndDate(taskDO.getId(), new Date());
 
         } else {
             if (TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
@@ -370,6 +370,9 @@ public class TaskServiceImpl implements TaskService {
             condition.setFilterProductDemandIds(filterProductDemandIds);
             condition.setId(null);
         }
+        condition.setStatus(Lists.newArrayList(ProductDemandStatusEnum.INCLUDED.getCode()
+                , ProductDemandStatusEnum.PROGRESS.getCode()
+                , ProductDemandStatusEnum.ONLINE.getCode()));
         PageHelper.startPage(taskLinkProductDemandQueryList.getPageNum(), taskLinkProductDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
         List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
