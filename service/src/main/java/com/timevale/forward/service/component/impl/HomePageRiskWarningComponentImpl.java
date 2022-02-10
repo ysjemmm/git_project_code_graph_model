@@ -12,6 +12,7 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
@@ -37,7 +38,7 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
     public List<HomePageRiskWarningDTO> getRiskWarning(String userType) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        List<BaseInfoResponse> allMyStaffInfoWithSelf = innerUserPersonClient.getAllMyStaffInfoWithSelf(userInfo.getId());
+        List<BaseInfoResponse> allMyStaffInfoWithSelf = innerUserPersonClient.getAllMyStaffInfoWithSelf("fengran");
 
         // 区分开发和测试身份
         List<BaseInfoResponse> QAList = allMyStaffInfoWithSelf.stream()
@@ -49,29 +50,35 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
         List<String> QANameList = QAList.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toList());
         List<String> RDNameList = RDList.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toList());
 
-        // 参数配置
-        ParamHelper paramHelperQA = ParamHelper.newInstance()
-                .offset(0)
-                .page(Integer.MAX_VALUE)
-                .in("user_id", QANameList);
-        ParamHelper paramHelperRD = ParamHelper.newInstance()
-                .offset(0)
-                .page(Integer.MAX_VALUE)
-                .in("user_id", RDNameList);
-
-        DistributePageQueryVO paramsQA = DistributePageQueryVO.builder()
-                .params(paramHelperQA.params())
-                .distributeConfigVO(distributeConfig.getRiskWarningQA())
-                .build();
-        DistributePageQueryVO paramsRD = DistributePageQueryVO.builder()
-                .params(paramHelperRD.params())
-                .distributeConfigVO(distributeConfig.getRiskWarningRD())
-                .build();
-
-        // 合并数据
         List<HomePageRiskWarningDTO> result = Lists.newArrayList();
-        result.addAll(doGet(paramsRD));
-        result.addAll(doGet(paramsQA));
+
+        // 参数配置
+        ParamHelper paramHelper;
+        DistributePageQueryVO params;
+
+        if(!CollectionUtils.isEmpty(QANameList)){
+            paramHelper = ParamHelper.newInstance()
+                    .offset(0)
+                    .page(Integer.MAX_VALUE)
+                    .in("user_id", QANameList);
+            params = DistributePageQueryVO.builder()
+                    .params(paramHelper.params())
+                    .distributeConfigVO(distributeConfig.getRiskWarningQA())
+                    .build();
+            result.addAll(doGet(params));
+        }
+        if(!CollectionUtils.isEmpty(RDNameList)){
+            paramHelper = ParamHelper.newInstance()
+                    .offset(0)
+                    .page(Integer.MAX_VALUE)
+                    .in("user_id", RDNameList);
+            params = DistributePageQueryVO.builder()
+                    .params(paramHelper.params())
+                    .distributeConfigVO(distributeConfig.getRiskWarningRD())
+                    .build();
+            result.addAll(doGet(params));
+        }
+
         return result;
     }
 }
