@@ -285,8 +285,6 @@ public class TaskServiceImpl implements TaskService {
         }
         // 删除钉钉待办
         deleteTodoTask(taskDO);
-        taskDO.setTodo(false);
-        taskDO.setTodoId(null);
         taskMapper.update(taskDO);
         return BaseResult.success(true);
     }
@@ -617,7 +615,7 @@ public class TaskServiceImpl implements TaskService {
         String todoId = dingWorkRecordClient.addTask(createTodoTaskMsg);
         taskDO.setTodoId(todoId);
         if (StringUtils.isEmpty(todoId)) {
-            log.info("新增待办异常");
+            log.info("新增待办异常,createTodoTaskMsg :{}",createTodoTaskMsg);
             taskDO.setTodo(false);
         }
     }
@@ -666,6 +664,7 @@ public class TaskServiceImpl implements TaskService {
                 .unionId(map.get(id))
                 .build();
         dingWorkRecordClient.deleteTask(deleteTodoTaskMsg);
+        log.info("删除待办,deleteTodoTaskMsg:{}", deleteTodoTaskMsg);
     }
 
 
