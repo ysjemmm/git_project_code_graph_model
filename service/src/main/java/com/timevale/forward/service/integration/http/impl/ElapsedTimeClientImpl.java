@@ -31,7 +31,7 @@ public class ElapsedTimeClientImpl implements ElapsedTimeClient {
     @Resource
     private RestTemplate restTemplate;
 
-    @Value("${elapsedTime.baseUrl:http://dingtalk.testk8s.tsign.cn/workday/elapsedTimeV2/}")
+    @Value("${elapsedTime.baseUrl:http://dingtalk-testvpc-svc.local-test:8181/workday/elapsedTimeV2/}")
     private String baseUrl;
 
     @Override

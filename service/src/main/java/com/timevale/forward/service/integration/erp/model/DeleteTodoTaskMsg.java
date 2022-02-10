@@ -1,7 +1,7 @@
 package com.timevale.forward.service.integration.erp.model;
 
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 
 /**
  * 钉钉待办消息
@@ -9,7 +9,7 @@ import lombok.Getter;
  * @author xingyun
  * @date 2022/01/25 10:51
  */
-@Getter
+@Data
 @Builder
 public class DeleteTodoTaskMsg {
     /**

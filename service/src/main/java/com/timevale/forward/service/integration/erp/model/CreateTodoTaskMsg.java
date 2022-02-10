@@ -1,7 +1,7 @@
 package com.timevale.forward.service.integration.erp.model;
 
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 
 import java.util.List;
 
@@ -11,8 +11,8 @@ import java.util.List;
  * @author xingyun
  * @date 2022/01/25 10:51
  */
-@Getter
 @Builder
+@Data
 public class CreateTodoTaskMsg {
     /**
      * 待办标题

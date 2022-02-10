@@ -200,7 +200,7 @@ public class TaskServiceImpl implements TaskService {
         calTaskTime(taskDO);
 
         taskMapper.update(taskDO);
-
+        log.info("任务修改,taskDO:{}",taskDO);
         fileComponent.update(taskModifyReq.getFiles(), taskDO.getId(), FileTypeEnum.TASK.getCode());
 
         personComponent.update(taskModifyReq.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
@@ -566,6 +566,7 @@ public class TaskServiceImpl implements TaskService {
                                 || tmpExecutorIds.size() != 0
                                 || taskDO.getActualEndDate() != null);
                 if (needUpdate) {
+                    taskDO.setTodoId(existTaskDO.getTodoId());
                     updateTodoTask(taskDO, executorIds);
                 }
             }
