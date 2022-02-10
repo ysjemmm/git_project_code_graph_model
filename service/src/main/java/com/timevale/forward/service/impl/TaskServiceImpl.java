@@ -162,12 +162,18 @@ public class TaskServiceImpl implements TaskService {
             //处理待办
             sendDingTodo(taskDO, executorIds);
         }
+        //入库
+        taskMapper.insert(taskDO);
         //耗时表入库
         insertTaskTime(taskDO);
         // 计算任务耗时
         calTaskTime(taskDO);
-        //入库
-        taskMapper.insert(taskDO);
+
+        if(TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())){
+            // 更新任务耗时
+            taskMapper.update(taskDO);
+        }
+
         //附件
         fileComponent.add(taskAddReq.getFiles(), taskDO.getId(), FileTypeEnum.TASK.getCode());
         //执行人
@@ -200,7 +206,7 @@ public class TaskServiceImpl implements TaskService {
         calTaskTime(taskDO);
 
         taskMapper.update(taskDO);
-        log.info("任务修改,taskDO:{}",taskDO);
+
         fileComponent.update(taskModifyReq.getFiles(), taskDO.getId(), FileTypeEnum.TASK.getCode());
 
         personComponent.update(taskModifyReq.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
@@ -615,7 +621,6 @@ public class TaskServiceImpl implements TaskService {
      * @param executorIds executorIds
      */
     private void updateTodoTask(TaskDO taskDO, List<String> executorIds) {
-        log.info("更新待办,taskDO:{},executorIds:{}",taskDO,executorIds);
         if (CollectionUtils.isEmpty(executorIds)) {
             return;
         }
@@ -636,6 +641,7 @@ public class TaskServiceImpl implements TaskService {
                 .executorIds(Lists.newArrayList(map.values()))
                 .done(taskDO.getActualEndDate() != null)
                 .dueTime(taskDO.getPlanEndDate().getTime()).build();
+        log.info("更新待办,taskDO:{},executorIds:{},updateTodoTaskMsg:{}",taskDO,executorIds,updateTodoTaskMsg);
         dingWorkRecordClient.updateTask(updateTodoTaskMsg);
     }
 
