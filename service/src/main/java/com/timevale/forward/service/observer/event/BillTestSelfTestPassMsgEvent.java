@@ -1,8 +1,9 @@
 package com.timevale.forward.service.observer.event;
 
+import com.timevale.forward.model.enums.TabEnum;
+import com.timevale.forward.model.enums.TestBillMessageTitleEnum;
 import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -13,20 +14,22 @@ public class BillTestSelfTestPassMsgEvent extends MessageEvent {
     private final String operator;
     private final String billTestName;
     private final List<String> receivers;
+    private final Long projectId;
 
-    public BillTestSelfTestPassMsgEvent(Object source, String operator, String billTestName, List<String> receivers) {
+    public BillTestSelfTestPassMsgEvent(Object source, String operator, String billTestName, List<String> receivers, Long projectId) {
         super(source);
         this.operator = operator;
         this.billTestName = billTestName;
         this.receivers = receivers;
+        this.projectId = projectId;
     }
 
     @Override
     public void run() {
-        String title = "提测预演通知";
-        String singleUrl = "www.baidu.com";
-        String markdown = String.format("### 【提测单】 \n  **%s**自测通过**%s**，请验收提测预演。  \n *** \n   [查看详情](%s)   \n   防止内容相同%s",
-                operator, billTestName, singleUrl, new Date());
+        String title = TestBillMessageTitleEnum.SUBMIT_TEST_SHOW.getText();
+        String singleUrl = domainName + String.format(PARAM, TabEnum.PROJECT_MANAGEMENT.getText(), projectId);
+        String markdown = String.format("### 【提测单】 \n  **%s**自测通过**%s**，请验收提测预演。  \n *** \n   [查看详情](%s)",
+                operator, billTestName, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(title)

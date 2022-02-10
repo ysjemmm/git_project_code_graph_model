@@ -117,6 +117,9 @@ public class TestBillServiceImpl implements TestBillService {
         //提交提测单
         testBillMapper.submitTestBill(testBillDO);
 
+        //创建一个项目的提测单之后需要清空项目原本的提测节点的实际时间
+        projectNodeMapper.updateSubmitTestActualDate(testBillAddReq.getProjectId(), null);
+
         //获取提测单名称
         ProjectDO projectDO = projectMapper.get(testBillAddReq.getProjectId());
         String testBillName = projectDO.getName() + "提测单";
@@ -131,7 +134,8 @@ public class TestBillServiceImpl implements TestBillService {
                         this,
                         alias,
                         receivers,
-                        testBillName
+                        testBillName,
+                        testBillAddReq.getProjectId()
                 )
         );
 
@@ -223,7 +227,8 @@ public class TestBillServiceImpl implements TestBillService {
                         this,
                         alias,
                         receivers,
-                        testBillName
+                        testBillName,
+                        testBillModifyReq.getProjectId()
                 )
         );
 
@@ -251,7 +256,8 @@ public class TestBillServiceImpl implements TestBillService {
                         this,
                         testBillName,
                         testBillModifyReq.getTestMan(),
-                        receivers
+                        receivers,
+                        testBillModifyReq.getProjectId()
                 )
         );
 
@@ -292,7 +298,8 @@ public class TestBillServiceImpl implements TestBillService {
                         this,
                         alias,
                         testBillName,
-                        receivers
+                        receivers,
+                        testBillModifyReq.getProjectId()
                 )
         );
 
@@ -325,7 +332,8 @@ public class TestBillServiceImpl implements TestBillService {
                 new BillTestSubmitTestSuccessMsgEvent(
                         this,
                         testBillName,
-                        receivers
+                        receivers,
+                        testBillModifyReq.getProjectId()
                 )
         );
 
@@ -355,7 +363,8 @@ public class TestBillServiceImpl implements TestBillService {
                 new BillTestSubmitTestFailMsgEvent(
                         this,
                         testBillName,
-                        receivers
+                        receivers,
+                        testBillModifyReq.getProjectId()
                 )
         );
 
