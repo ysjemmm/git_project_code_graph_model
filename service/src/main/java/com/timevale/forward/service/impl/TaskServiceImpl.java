@@ -169,7 +169,7 @@ public class TaskServiceImpl implements TaskService {
         // 计算任务耗时
         calTaskTime(taskDO);
 
-        if(TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())){
+        if (TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
             // 更新任务耗时
             taskMapper.update(taskDO);
         }
@@ -189,6 +189,13 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(TaskModifyReq taskModifyReq) {
         log.info("任务修改接收参数:{}", taskModifyReq);
+        TaskCondition condition = TaskCondition.builder().id(taskModifyReq.getId()).build();
+        TaskDO existTaskDO = taskMapper.get(condition);
+        if (!TaskStatusEnum.WAITING.getCode().equals(existTaskDO.getStatus())
+                && !TaskStatusEnum.PROGRESS.getCode().equals(existTaskDO.getStatus())) {
+            throw new BaseBizRuntimeException("任务状态不是待执行、进行中不能编辑");
+        }
+
         TaskDO taskDO = TaskCopier.INSTANCE.convert(taskModifyReq);
 
         checkNameExisted(taskDO);
@@ -524,7 +531,7 @@ public class TaskServiceImpl implements TaskService {
      * @param taskDO taskDO
      */
     private void calTaskTime(TaskDO taskDO) {
-        if(TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())){
+        if (TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
             AtomicLong totalTime = new AtomicLong();
             List<TaskTimeDO> list = taskTimeMapper.list(taskDO.getId());
             if (CollectionUtils.isEmpty(list)) {
@@ -556,9 +563,10 @@ public class TaskServiceImpl implements TaskService {
         } else {
             TaskCondition condition = TaskCondition.builder().id(taskDO.getId()).build();
             TaskDO existTaskDO = taskMapper.get(condition);
-            log.info("编辑时,发送钉钉待办,existTaskDO:{}", existTaskDO);
-            if (taskDO.getTodo() && StringUtils.isEmpty(existTaskDO.getTodoId())) {
-//            //编辑时需发送待办
+            log.info("编辑时,处理钉钉待办,existTaskDO:{}", existTaskDO);
+            if (taskDO.getTodo() && StringUtils.isEmpty(existTaskDO.getTodoId())
+                    && !TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
+//            //编辑时,状态为待执行,进行中时才能新增待办
                 addTodoTask(taskDO, executorIds);
             } else {
                 List<String> existExecutorIds = personComponent.select(existTaskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode())
@@ -641,7 +649,7 @@ public class TaskServiceImpl implements TaskService {
                 .executorIds(Lists.newArrayList(map.values()))
                 .done(taskDO.getActualEndDate() != null)
                 .dueTime(taskDO.getPlanEndDate().getTime()).build();
-        log.info("更新待办,taskDO:{},executorIds:{},updateTodoTaskMsg:{}",taskDO,executorIds,updateTodoTaskMsg);
+        log.info("更新待办,taskDO:{},executorIds:{},updateTodoTaskMsg:{}", taskDO, executorIds, updateTodoTaskMsg);
         dingWorkRecordClient.updateTask(updateTodoTaskMsg);
     }
 
