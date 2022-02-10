@@ -135,6 +135,7 @@
             <if test="planEndDate != null">plan_end_date = #{planEndDate},</if>
             <if test="productLineId != null">product_line_id = #{productLineId},</if>
             <if test="taskUseTime != null">task_use_time = #{taskUseTime},</if>
+            <if test="planUseTime != null">plan_use_time = #{planUseTime},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             actual_start_date = #{actualStartDate},

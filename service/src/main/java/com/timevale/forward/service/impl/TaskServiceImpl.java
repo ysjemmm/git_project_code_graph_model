@@ -190,10 +190,12 @@ public class TaskServiceImpl implements TaskService {
         processTaskTime(taskDO);
 
         List<String> executorIds = taskModifyReq.getExecutors().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
-        if (!TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
-            //处理待办
-            sendDingTodo(taskDO, executorIds);
-        }
+
+        //处理待办
+        sendDingTodo(taskDO, executorIds);
+
+        // 计算任务耗时
+        calTaskTime(taskDO);
 
         taskMapper.update(taskDO);
 
@@ -553,10 +555,13 @@ public class TaskServiceImpl implements TaskService {
                         .stream().map(PersonDO::getUserId).collect(Collectors.toList());
                 List<String> tmpExecutorIds = new ArrayList<>(executorIds);
                 tmpExecutorIds.removeAll(existExecutorIds);
+                //1.计划结束时间有变,2.执行人有变,3.任务完成发送待办
                 boolean needUpdate = !StringUtils.isEmpty(existTaskDO.getTodoId())
-                        && ((!taskDO.getPlanEndDate().equals(existTaskDO.getPlanEndDate())) || tmpExecutorIds.size() != 0);
+                        &&
+                        ((!taskDO.getPlanEndDate().equals(existTaskDO.getPlanEndDate()))
+                                || tmpExecutorIds.size() != 0
+                                || taskDO.getActualEndDate() != null);
                 if (needUpdate) {
-                    //已发送过待办,当计划时间或执行人变动时更新待办
                     updateTodoTask(taskDO, executorIds);
                 }
             }
