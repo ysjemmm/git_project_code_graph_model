@@ -9,22 +9,25 @@ import java.util.List;
  * @Date 2022/1/26 14:47
  * @Author 望轩
  */
-public class BillTestMsgEvent extends MessageEvent {
+public class BillTestCreateMsgEvent extends MessageEvent {
 
     private final String operator;
     private final List<String> receivers;
+    private final String billTestName;
 
-    public BillTestMsgEvent(Object source, String operator, List<String> receivers) {
+    public BillTestCreateMsgEvent(Object source, String operator, List<String> receivers, String billTestName) {
         super(source);
         this.operator = operator;
         this.receivers = receivers;
+        this.billTestName = billTestName;
     }
 
     @Override
     public void run() {
-        String title = "XX提测单XX";
+        String title = "提交冒烟用例通知";
         String singleUrl = "www.baidu.com";
-        String markdown = String.format("%s测一下看%s看行不行[查看详情](%s)", operator, new Date(), singleUrl);
+        String markdown = String.format("### 【提测单】 \n  **%s**发起了**%s**,请前往提交冒烟用例。   \n *** \n   [查看详情](%s)   \n   防止内容相同%s",
+                operator, billTestName, singleUrl, new Date());
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(title)

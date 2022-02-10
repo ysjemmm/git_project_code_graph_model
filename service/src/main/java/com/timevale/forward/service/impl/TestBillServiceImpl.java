@@ -25,7 +25,7 @@ import com.timevale.forward.model.enums.TestBillStatusEnum;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.TestBillCopier;
-import com.timevale.forward.service.observer.event.BillTestMsgEvent;
+import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -35,7 +35,7 @@ import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -117,12 +117,21 @@ public class TestBillServiceImpl implements TestBillService {
         //提交提测单
         testBillMapper.submitTestBill(testBillDO);
 
+        //获取提测单名称
+        ProjectDO projectDO = projectMapper.get(testBillAddReq.getProjectId());
+        String testBillName = projectDO.getName() + "提测单";
+
+        //消息接收人
+        List<String> receivers = new ArrayList<>();
+        receivers.add(testBillAddReq.getTestManId());
+
         //通知提测单接收人
         messageEventPublisher.publish(
-                new BillTestMsgEvent(
+                new BillTestCreateMsgEvent(
                         this,
-                        "望轩",
-                        Collections.singletonList("wangxuan")
+                        alias,
+                        receivers,
+                        testBillName
                 )
         );
 
@@ -182,6 +191,17 @@ public class TestBillServiceImpl implements TestBillService {
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String alias = userInfo.getAlias();
+
+        //获取提测人先注释掉模拟一个，后续改成提测人
+        List<String> receivers = new ArrayList<>();
+        receivers.add("wangxuan");
+
+        //获取提测单名称
+        ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
+        String testBillName = projectDO.getName() + "提测单";
+
         //更新提测单
         testBillMapper.submitSmokeTesting(testBillDO);
 
@@ -198,6 +218,15 @@ public class TestBillServiceImpl implements TestBillService {
             fileComponent.add(fileAddReqList, testBillModifyReq.getProjectId(), FileTypeEnum.TEST_BILL_CASE.getCode());
         }
 
+        messageEventPublisher.publish(
+                new BillTestSubmitSmokeMsgEvent(
+                        this,
+                        alias,
+                        receivers,
+                        testBillName
+                )
+        );
+
         return BaseResult.success(true);
     }
 
@@ -206,6 +235,26 @@ public class TestBillServiceImpl implements TestBillService {
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
+        //接收人先默认，后续再变成测试人，提测人
+        List<String> receivers = new ArrayList<>();
+        receivers.add("wangxuan");
+
+        //获取提测单名称
+        ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
+        String testBillName = "";
+        if (projectDO != null) {
+            testBillName = projectDO.getName() + "提测单";
+        }
+
+        messageEventPublisher.publish(
+                new BillTestModifyTestManMsgEvent(
+                        this,
+                        testBillName,
+                        testBillModifyReq.getTestMan(),
+                        receivers
+                )
+        );
+
         return BaseResult.success(testBillMapper.modifyTestMan(testBillDO));
     }
 
@@ -213,6 +262,21 @@ public class TestBillServiceImpl implements TestBillService {
     public BaseResult<Boolean> selfTestPass(TestBillModifyReq testBillModifyReq) {
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
+
+        //获取发起人
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String alias = userInfo.getAlias();
+
+        //获取提测单名称
+        ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
+        String testBillName = "";
+        if (projectDO != null) {
+            testBillName = projectDO.getName() + "提测单";
+        }
+
+        //模拟消息接收人
+        List<String> receivers = new ArrayList<>();
+        receivers.add("wangxuan");
 
         //更新提测表信息
         testBillMapper.selfTestPass(testBillDO);
@@ -223,6 +287,15 @@ public class TestBillServiceImpl implements TestBillService {
             fileComponent.add(fileAddReqList, testBillModifyReq.getProjectId(), FileTypeEnum.TEST_BILL_PASS.getCode());
         }
 
+        messageEventPublisher.publish(
+                new BillTestSelfTestPassMsgEvent(
+                        this,
+                        alias,
+                        testBillName,
+                        receivers
+                )
+        );
+
         return BaseResult.success(true);
     }
 
@@ -231,11 +304,30 @@ public class TestBillServiceImpl implements TestBillService {
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
+        //获取提测单名称
+        ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
+        String testBillName = "";
+        if (projectDO != null) {
+            testBillName = projectDO.getName() + "提测单";
+        }
+
+        //模拟接收人
+        List<String> receivers = new ArrayList<>();
+        receivers.add("wangxuan");
+
         //更新提测表信息
         testBillMapper.submitTestPass(testBillDO);
 
         //更新项目节点表
         projectNodeMapper.updateSubmitTestActualDate(testBillModifyReq.getProjectId(), testBillModifyReq.getActualDate());
+
+        messageEventPublisher.publish(
+                new BillTestSubmitTestSuccessMsgEvent(
+                        this,
+                        testBillName,
+                        receivers
+                )
+        );
 
         return BaseResult.success(true);
     }
@@ -245,8 +337,27 @@ public class TestBillServiceImpl implements TestBillService {
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
+        //获取提测单名称
+        ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
+        String testBillName = "";
+        if (projectDO != null) {
+            testBillName = projectDO.getName() + "提测单";
+        }
+
+        //模拟接收人
+        List<String> receivers = new ArrayList<>();
+        receivers.add("wangxuan");
+
         //更新提测表信息
         testBillMapper.submitTestBack(testBillDO);
+
+        messageEventPublisher.publish(
+                new BillTestSubmitTestFailMsgEvent(
+                        this,
+                        testBillName,
+                        receivers
+                )
+        );
 
         return BaseResult.success(true);
     }
