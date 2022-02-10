@@ -34,11 +34,11 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
      * @return 下属花名拼音列表
      */
     @Override
-    public List<String> getAllMyStaff(String account) {
+    public List<String> getAllMyStaff(String account, Boolean isLeave) {
         try {
             final AccountRequest request = new AccountRequest();
             request.setAccount(account);
-            request.setIsLeave(true);
+            request.setIsLeave(isLeave);
             final BaseResult<Set<String>> allMyStaffNew = rpcPersonService.getAllMyStaffNew(request);
             if (allMyStaffNew.ifSuccess()) {
                 return new ArrayList<>(allMyStaffNew.getData());
@@ -76,8 +76,8 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
      * @return 下属花名拼音列表（包含自己）
      */
     @Override
-    public List<String> getAllMyStaffWithSelf(String account) {
-        List<String> allMyStaff = this.getAllMyStaff(account);
+    public List<String> getAllMyStaffWithSelf(String account, Boolean isLeave) {
+        List<String> allMyStaff = this.getAllMyStaff(account, isLeave);
         allMyStaff.add(account);
         return allMyStaff;
     }
@@ -129,9 +129,7 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
         try {
             BaseResult<List<BaseInfoResponse>> personInGroup = rpcPersonService.getAllStaffsByGroupId(groupId);
             if (personInGroup.ifSuccess() && !CollectionUtils.isEmpty(personInGroup.getData())) {
-                personInGroup.getData().forEach(t -> {
-                    accountIds.add(t.getAccount());
-                });
+                personInGroup.getData().forEach(t -> accountIds.add(t.getAccount()));
                 return accountIds;
             }
         } catch (Exception e) {
@@ -171,9 +169,7 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             groupRequest.setGroupId(groupId);
             BaseResult<List<BaseInfoResponse>> personInGroup = rpcPersonService.getByGroupIdNew(groupRequest);
             if (personInGroup.ifSuccess() && !CollectionUtils.isEmpty(personInGroup.getData())) {
-                personInGroup.getData().forEach(t -> {
-                    accountIds.add(t.getAccount());
-                });
+                personInGroup.getData().forEach(t -> accountIds.add(t.getAccount()));
                 return accountIds;
             }
         } catch (Exception e) {

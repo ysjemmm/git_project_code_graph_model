@@ -106,7 +106,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }else if(ascription.equals(AscriptionEnum.COPIER.toString())){
             bizDemandListCondition.setCopier(userInfo.getId());
         }else {
-            List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
+            List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
             if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())){
                 Set<String> createIdSet = new HashSet<>(bizDemandListCondition.getCreateManIdList());
                 if(!createIdSet.isEmpty()){

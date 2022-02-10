@@ -36,7 +36,7 @@ public class HomePageProjectOnlineLatelyComponentImpl extends BaseDistributeClie
     public PageResult<HomePageProjectOnlineLatelyDTO> getProjectOnlineLately(HomePageProjectOnlineLatelyQueryList homePageProjectOnlineLatelyQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
+        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
 
         ParamHelper queryParamHelper = ParamHelper.newInstance()
                 .offset((homePageProjectOnlineLatelyQueryList.getPageNum() - 1) * homePageProjectOnlineLatelyQueryList.getPageSize())

@@ -13,11 +13,9 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.lang.reflect.Field;
 import java.util.List;
 
 /**
@@ -37,11 +35,9 @@ public class HomePageDataIndicatorComponentImpl extends BaseDistributeClientImpl
     public HomePageDataIndicatorDTO getDataIndicator(String userType) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
+        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
 
         ParamHelper paramHelper = ParamHelper.newInstance()
-                .offset(0)
-                .page(1)
                 .in("user_id", allMyStaffWithSelf);
 
         // 根据用户类型访问不同接口

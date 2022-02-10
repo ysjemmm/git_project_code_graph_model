@@ -1,6 +1,7 @@
 package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
+import com.timevale.forward.model.enums.JobFunctionEnum;
 import com.timevale.forward.model.enums.UserTypeEnum;
 import com.timevale.forward.service.component.HomePageRiskWarningComponent;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
@@ -42,10 +43,11 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
 
         // 区分开发和测试身份
         List<BaseInfoResponse> QAList = allMyStaffInfoWithSelf.stream()
-                .filter(e -> UserTypeEnum.QA.getJobFunction().equals(e.getJobFunction()))
+                .filter(e -> UserTypeEnum.QA.getType().equals(JobFunctionEnum.getType(e.getJobFunction())))
                 .collect(Collectors.toList());
-        allMyStaffInfoWithSelf.removeAll(QAList);
-        List<BaseInfoResponse> RDList = allMyStaffInfoWithSelf;
+        List<BaseInfoResponse> RDList = allMyStaffInfoWithSelf.stream()
+                .filter(e -> UserTypeEnum.RD.getType().equals(JobFunctionEnum.getType(e.getJobFunction())))
+                .collect(Collectors.toList());
 
         List<String> QANameList = QAList.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toList());
         List<String> RDNameList = RDList.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toList());
@@ -53,26 +55,23 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
         List<HomePageRiskWarningDTO> result = Lists.newArrayList();
 
         // 参数配置
-        ParamHelper paramHelper;
-        DistributePageQueryVO params;
-
         if(!CollectionUtils.isEmpty(QANameList)){
-            paramHelper = ParamHelper.newInstance()
+            ParamHelper paramHelper = ParamHelper.newInstance()
                     .offset(0)
                     .page(Integer.MAX_VALUE)
                     .in("user_id", QANameList);
-            params = DistributePageQueryVO.builder()
+            DistributePageQueryVO params = DistributePageQueryVO.builder()
                     .params(paramHelper.params())
                     .distributeConfigVO(distributeConfig.getRiskWarningQA())
                     .build();
             result.addAll(doGet(params));
         }
         if(!CollectionUtils.isEmpty(RDNameList)){
-            paramHelper = ParamHelper.newInstance()
+            ParamHelper paramHelper = ParamHelper.newInstance()
                     .offset(0)
                     .page(Integer.MAX_VALUE)
                     .in("user_id", RDNameList);
-            params = DistributePageQueryVO.builder()
+            DistributePageQueryVO params = DistributePageQueryVO.builder()
                     .params(paramHelper.params())
                     .distributeConfigVO(distributeConfig.getRiskWarningRD())
                     .build();

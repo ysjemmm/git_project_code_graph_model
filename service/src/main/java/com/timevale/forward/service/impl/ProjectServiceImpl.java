@@ -105,7 +105,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
 
         } else if (AscriptionEnum.TEAM.name().equals(projectQueryList.getAscription())) {
-            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(currentUser);
+            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(currentUser, true);
             log.info("我和我的下属:{}", allMyStaffWithSelf);
             projectIds = personMapper.getMainIds(allMyStaffWithSelf, null, PersonTypeEnum.PROJECT_MEMBER.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
@@ -378,9 +378,7 @@ public class ProjectServiceImpl implements ProjectService {
             productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false);
 
             // 取消产品需求和任务的关联
-            productDemandIds.forEach(a->{
-                taskProductDemandComponent.update(null,a);
-            });
+            productDemandIds.forEach(a-> taskProductDemandComponent.update(null,a));
         }
         //产品需求和项目关联或删除时,需要给前端刷新产品需求状态
         ProductDemandDO productDemandDO = productDemandMapper.selectById(productDemandIds.get(0));

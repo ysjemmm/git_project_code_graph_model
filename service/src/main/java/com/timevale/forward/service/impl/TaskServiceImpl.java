@@ -133,7 +133,7 @@ public class TaskServiceImpl implements TaskService {
             }
 
         } else if (AscriptionEnum.TEAM.name().equals(taskQueryList.getAscription())) {
-            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(currentUser);
+            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(currentUser, true);
             log.info("我和我的下属:{}", allMyStaffWithSelf);
             taskIds = personMapper.getMainIds(allMyStaffWithSelf, null, PersonTypeEnum.TASK_EXECUTOR.getCode());
             if (CollectionUtils.isEmpty(taskIds)) {

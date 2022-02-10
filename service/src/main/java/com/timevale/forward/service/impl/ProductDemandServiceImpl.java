@@ -111,7 +111,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (AscriptionEnum.CURRENT_USER.name().equals(productDemandQueryList.getAscription())) {
             condition.getOwnerIds().add(userInfo.getId());
         } else if (AscriptionEnum.TEAM.name().equals(productDemandQueryList.getAscription())) {
-            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
+            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
             if (!CollectionUtils.isEmpty(productDemandQueryList.getOwnerIds())) {
                 filtered = allMyStaffWithSelf.stream().filter(a -> productDemandQueryList.getOwnerIds().contains(a)).collect(Collectors.toList());
             } else {
@@ -309,7 +309,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     public BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(ProductDemandLinkBizDemandQueryList productDemandLinkBizDemandQueryList) {
         log.info("产品需求-业务需求匹配接收参数:bizDemandQueryList={}", productDemandLinkBizDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        List<String> receiveManIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
+        List<String> receiveManIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
         log.info("我和我的下属:receiveManIdList={}", receiveManIdList);
         BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(productDemandLinkBizDemandQueryList);
         List<String> filtered;

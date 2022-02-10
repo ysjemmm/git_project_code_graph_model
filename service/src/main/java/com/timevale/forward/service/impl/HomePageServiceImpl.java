@@ -93,7 +93,7 @@ public class HomePageServiceImpl implements HomePageService {
         int bizDemandCount = 0;
 
         // 获取我及所有下属
-        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
+        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
 
         // 进行中的项目
         List<ProjectDO> projectDOList = projectMapper.selectByTeamMember(allMyStaffWithSelf);
@@ -225,7 +225,7 @@ public class HomePageServiceImpl implements HomePageService {
         List<String> teamMembers = homePageProjectBoardReq.getTeamMembers();
 
         // 我和我的所有员工 Set
-        Set<String> allMyStaffWithSelfSet = Sets.newHashSet(innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId()));
+        Set<String> allMyStaffWithSelfSet = Sets.newHashSet(innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), false));
 
         // 部门id、员工id非空取交集
         if (!CollectionUtils.isEmpty(deptIds)) {

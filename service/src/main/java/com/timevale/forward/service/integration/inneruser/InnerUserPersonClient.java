@@ -17,9 +17,10 @@ public interface InnerUserPersonClient {
      * 获取所有下属
      *
      * @param account 当前用户花名拼音
+     * @param isLeave 是否包含已经离职用户
      * @return 下属花名拼音列表
      */
-    List<String> getAllMyStaff(String account);
+    List<String> getAllMyStaff(String account, Boolean isLeave);
 
     /**
      * 获取所有下属详细信息
@@ -33,9 +34,10 @@ public interface InnerUserPersonClient {
      * 获取所有下属（包含自己）
      *
      * @param account 当前用户花名拼音
+     * @param isLeave 是否包含离职用户
      * @return 下属花名拼音列表（包含自己）
      */
-    List<String> getAllMyStaffWithSelf(String account);
+    List<String> getAllMyStaffWithSelf(String account, Boolean isLeave);
 
     /**
      * 获取所有下属详细信息（包含自己）

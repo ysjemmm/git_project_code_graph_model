@@ -21,11 +21,19 @@ public enum UserTypeEnum {
     /**
      * 测试
      */
-    QA("测试");
+    QA("测试"),
 
-    private final String jobFunction;
+    /**
+     * 其他
+     */
+    OTHER("其他");
 
-    UserTypeEnum(String jobFunction) {
-        this.jobFunction = jobFunction;
+    private final String type;
+
+    UserTypeEnum(String type) {
+        this.type = type;
     }
+
+
+
 }

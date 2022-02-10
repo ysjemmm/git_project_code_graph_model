@@ -36,7 +36,7 @@ public class HomePageRiskWarningTaskComponentImpl extends BaseDistributeClientIm
     public List<HomePageRiskWarningTaskDTO> getRiskWarningTask() {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
+        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
 
         ParamHelper paramHelper = ParamHelper.newInstance()
                 .offset(0)
