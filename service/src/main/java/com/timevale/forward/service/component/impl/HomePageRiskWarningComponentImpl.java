@@ -38,7 +38,7 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
     public List<HomePageRiskWarningDTO> getRiskWarning(String userType) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        List<BaseInfoResponse> allMyStaffInfoWithSelf = innerUserPersonClient.getAllMyStaffInfoWithSelf("fengran");
+        List<BaseInfoResponse> allMyStaffInfoWithSelf = innerUserPersonClient.getAllMyStaffInfoWithSelf(userInfo.getId());
 
         // 区分开发和测试身份
         List<BaseInfoResponse> QAList = allMyStaffInfoWithSelf.stream()
