@@ -51,6 +51,24 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
         }
     }
 
+    @Override
+    public List<BaseInfoResponse> getAllMyStaffInfo(String account) {
+        try {
+            final AccountRequest request = new AccountRequest();
+            request.setAccount(account);
+            request.setIsLeave(true);
+            final BaseResult<List<BaseInfoResponse>> allMyStaffs = rpcPersonService.getAllMyStaffs(request);
+            if(allMyStaffs.ifSuccess()){
+                return new ArrayList<>(allMyStaffs.getData());
+            }
+            log.error("[innerUser]调用内部用户中心失败 account: " + account + " error: " + allMyStaffs.getMessage());
+            return new ArrayList<>();
+        } catch (Exception e) {
+            log.error("调用内部用户中心失败 account: " + account + " error: " + e.getMessage(), e);
+            throw new BaseBizRuntimeException("调用内部用户中心失败! " + account);
+        }
+    }
+
     /**
      * 获取所有下属（包含自己）
      *
@@ -62,6 +80,26 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
         List<String> allMyStaff = this.getAllMyStaff(account);
         allMyStaff.add(account);
         return allMyStaff;
+    }
+
+    @Override
+    public List<BaseInfoResponse> getAllMyStaffInfoWithSelf(String account) {
+        try {
+            final AccountRequest request = new AccountRequest();
+            request.setAccount(account);
+            request.setIsLeave(true);
+            final BaseResult<BaseInfoResponse> accountInfo = rpcPersonService.getByAccount(request);
+            if(accountInfo.ifSuccess()){
+                List<BaseInfoResponse> allMyStaffInfoWithSelf = this.getAllMyStaffInfo(account);
+                allMyStaffInfoWithSelf.add(accountInfo.getData());
+                return allMyStaffInfoWithSelf;
+            }
+            log.error("[innerUser]调用内部用户中心失败 account: " + account + " error: " + accountInfo.getMessage());
+            return new ArrayList<>();
+        } catch (Exception e) {
+            log.error("调用内部用户中心失败 account: " + account + " error: " + e.getMessage(), e);
+            throw new BaseBizRuntimeException("调用内部用户中心失败! " + account);
+        }
     }
 
     @Override

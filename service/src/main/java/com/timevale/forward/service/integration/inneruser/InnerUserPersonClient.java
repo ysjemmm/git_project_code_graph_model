@@ -22,12 +22,28 @@ public interface InnerUserPersonClient {
     List<String> getAllMyStaff(String account);
 
     /**
+     * 获取所有下属详细信息
+     *
+     * @param account 当前用户花名拼音
+     * @return 下属信息列表
+     */
+    List<BaseInfoResponse> getAllMyStaffInfo(String account);
+
+    /**
      * 获取所有下属（包含自己）
      *
      * @param account 当前用户花名拼音
      * @return 下属花名拼音列表（包含自己）
      */
     List<String> getAllMyStaffWithSelf(String account);
+
+    /**
+     * 获取所有下属详细信息（包含自己）
+     *
+     * @param account 当前用户花名拼音
+     * @return 下属信息列表（包含自己）
+     */
+    List<BaseInfoResponse> getAllMyStaffInfoWithSelf(String account);
 
     /**
      * 获取用户

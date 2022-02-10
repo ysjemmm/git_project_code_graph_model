@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dto;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import com.google.common.base.Objects;
 import lombok.Data;
 
 import java.util.Date;
@@ -65,4 +66,21 @@ public class HomePageRiskWarningTaskDTO {
      */
     @JSONField(name = "task_duetime")
     private String overdueTime;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        HomePageRiskWarningTaskDTO that = (HomePageRiskWarningTaskDTO) o;
+        return Objects.equal(projectId, that.projectId) && Objects.equal(taskId, that.taskId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(projectId, taskId);
+    }
 }

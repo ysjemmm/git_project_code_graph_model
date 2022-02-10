@@ -11,15 +11,21 @@ public enum UserTypeEnum {
     /**
      * 产品
      */
-    PD,
+    PD("产品"),
 
     /**
      * 开发
      */
-    RD,
+    RD("开发"),
 
     /**
      * 测试
      */
-    QA
+    QA("测试");
+
+    private final String jobFunction;
+
+    UserTypeEnum(String jobFunction) {
+        this.jobFunction = jobFunction;
+    }
 }

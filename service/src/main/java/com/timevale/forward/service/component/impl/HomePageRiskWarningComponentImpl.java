@@ -6,17 +6,18 @@ import com.timevale.forward.service.component.HomePageRiskWarningComponent;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.integration.superset.client.impl.BaseDistributeClientImpl;
 import com.timevale.forward.service.integration.superset.config.DistributeConfig;
-import com.timevale.forward.service.integration.superset.config.DistributeConfigVO;
 import com.timevale.forward.service.integration.superset.model.base.DistributePageQueryVO;
 import com.timevale.forward.service.integration.superset.util.ParamHelper;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author by YangXu
@@ -36,25 +37,41 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
     public List<HomePageRiskWarningDTO> getRiskWarning(String userType) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId());
+        List<BaseInfoResponse> allMyStaffInfoWithSelf = innerUserPersonClient.getAllMyStaffInfoWithSelf(userInfo.getId());
 
-        ParamHelper paramHelper = ParamHelper.newInstance()
+        // 区分开发和测试身份
+        List<BaseInfoResponse> QAList = allMyStaffInfoWithSelf.stream()
+                .filter(e -> UserTypeEnum.QA.getJobFunction().equals(e.getJobFunction()))
+                .collect(Collectors.toList());
+        allMyStaffInfoWithSelf.removeAll(QAList);
+        List<BaseInfoResponse> RDList = allMyStaffInfoWithSelf;
+
+        List<String> QANameList = QAList.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toList());
+        List<String> RDNameList = RDList.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toList());
+
+        // 参数配置
+        ParamHelper paramHelperQA = ParamHelper.newInstance()
                 .offset(0)
                 .page(Integer.MAX_VALUE)
-                .in("user_id", allMyStaffWithSelf);
+                .in("user_id", QANameList);
+        ParamHelper paramHelperRD = ParamHelper.newInstance()
+                .offset(0)
+                .page(Integer.MAX_VALUE)
+                .in("user_id", RDNameList);
 
-        // 根据用户类型选择不同配置
-        DistributeConfigVO riskWarning;
-        if(userType.equals(UserTypeEnum.RD.toString())){
-            riskWarning = distributeConfig.getRiskWarningRD();
-        }else{
-            riskWarning = distributeConfig.getRiskWarningQA();
-        }
-        DistributePageQueryVO params = DistributePageQueryVO.builder()
-                .params(paramHelper.params())
-                .distributeConfigVO(riskWarning)
+        DistributePageQueryVO paramsQA = DistributePageQueryVO.builder()
+                .params(paramHelperQA.params())
+                .distributeConfigVO(distributeConfig.getRiskWarningQA())
+                .build();
+        DistributePageQueryVO paramsRD = DistributePageQueryVO.builder()
+                .params(paramHelperRD.params())
+                .distributeConfigVO(distributeConfig.getRiskWarningRD())
                 .build();
 
-        return doGet(params);
+        // 合并数据
+        List<HomePageRiskWarningDTO> result = Lists.newArrayList();
+        result.addAll(doGet(paramsRD));
+        result.addAll(doGet(paramsQA));
+        return result;
     }
 }

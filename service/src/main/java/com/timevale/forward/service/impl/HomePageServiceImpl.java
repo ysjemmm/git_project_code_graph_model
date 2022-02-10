@@ -273,9 +273,6 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     public List<HomePageProjectDateVO> filterByDate(String userType, Date startDate, Date endDate, List<HomePageProjectDateVO> list) {
-        if(CollectionUtils.isEmpty(list)){
-            return Lists.emptyList();
-        }
         if (userType.equals(UserTypeEnum.PD.toString())) {
             return list.stream().filter(e -> {
                 boolean filter = DateUtil.inInterval(e.getStartPlan(), startDate, endDate);
