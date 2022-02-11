@@ -40,4 +40,10 @@ public interface TaskComponent {
      */
     void containProductLineInTask(Long projectId,List<Long> productLineIdsInProject);
 
+    /**
+     *
+     * @param todoId todoId
+     */
+    void deleteTodoTask(String todoId);
+
 }

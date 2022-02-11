@@ -16,13 +16,18 @@ import com.timevale.forward.service.component.TaskProductDemandComponent;
 import com.timevale.forward.service.component.TaskTimeComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TaskCopier;
+import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
+import com.timevale.forward.service.integration.erp.model.DeleteTodoTaskMsg;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
+import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
@@ -67,6 +72,12 @@ public class TaskComponentImpl implements TaskComponent {
     @Resource
     private TaskTimeMapper taskTimeMapper;
 
+    @Resource
+    private InnerUserPersonClient innerUserPersonClient;
+
+    @Resource
+    private DingWorkRecordClient dingWorkRecordClient;
+
     @Override
     public BaseResult<PageQueryResult<TaskVO>> page(TaskListCondition condition, List<Long> taskIds) {
         // 查找执行人
@@ -106,7 +117,7 @@ public class TaskComponentImpl implements TaskComponent {
 
         //2.填充产品线
         List<Long> productLineIds = taskDO.stream().map(TaskDO::getProductLineId).collect(Collectors.toList());
-        Map<Long, String> productLineMap =productLineMapper.selectByIds(productLineIds)
+        Map<Long, String> productLineMap = productLineMapper.selectByIds(productLineIds)
                 .stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (v1, v2) -> v2));
 
         //3.填充项目信息
@@ -136,7 +147,7 @@ public class TaskComponentImpl implements TaskComponent {
 
     @Override
     public void updateStatusAsProjectStatusChange(Long projectId, Integer projectStatus, Boolean enableTask) {
-        log.info("项目状态改变,更新任务状态 projectId:{},projectStatus:{},enableTask:{}", projectId, projectStatus,enableTask);
+        log.info("项目状态改变,更新任务状态 projectId:{},projectStatus:{},enableTask:{}", projectId, projectStatus, enableTask);
         List<TaskDO> existTaskDO = taskMapper.getByProjectId(projectId);
         if (CollectionUtils.isEmpty(existTaskDO)) {
             log.info("项目状态改变,项目无任务");
@@ -149,9 +160,13 @@ public class TaskComponentImpl implements TaskComponent {
             taskStatusUpdateDO.setPreUpdate(preUpdate);
             taskStatusUpdateDO.setUpdated(TaskStatusEnum.SUSPEND.getCode());
             taskMapper.updateStatusAsProjectStatusChange(taskStatusUpdateDO);
-            // 暂停,耗时表更新数据
+
+            existTaskDO = existTaskDO.stream().filter(a -> (preUpdate.contains(a.getStatus()))).collect(Collectors.toList());
+            log.info("项目状态改变,待执行和进行中的任务,existTaskDO:{}",existTaskDO);
             existTaskDO.forEach(a -> {
+                // 暂停,耗时表更新数据
                 taskTimeComponent.updateEndDate(a.getId(), a.getActualEndDate());
+                deleteTodoTask(a.getTodoId());
             });
         } else if (ProjectStatusEnum.INVALID.getCode().equals(projectStatus)) {
             preUpdate.add(TaskStatusEnum.SUSPEND.getCode());
@@ -164,9 +179,16 @@ public class TaskComponentImpl implements TaskComponent {
 
             taskTimeMapper.delete(taskIds);
 
+            preUpdate.remove(TaskStatusEnum.SUSPEND.getCode());
+            existTaskDO = existTaskDO.stream().filter(a -> (preUpdate.contains(a.getStatus()))).collect(Collectors.toList());
+            existTaskDO.forEach(a -> {
+                deleteTodoTask(a.getTodoId());
+            });
         }
         if (enableTask) {
-            //开启
+            //开启暂停的任务
+            existTaskDO = existTaskDO.stream().filter(a -> (TaskStatusEnum.SUSPEND.getCode().equals(a.getStatus()))).collect(Collectors.toList());
+            log.info("项目状态改变,暂停的任务,existTaskDO:{}",existTaskDO);
             existTaskDO.forEach(a -> {
                 if (a.getActualStartDate() == null && a.getActualEndDate() == null) {
                     a.setStatus(TaskStatusEnum.WAITING.getCode());
@@ -191,12 +213,27 @@ public class TaskComponentImpl implements TaskComponent {
     public void containProductLineInTask(Long projectId, List<Long> productLineIdsInProject) {
         List<Long> productLineIdsInTask = taskMapper.getByProjectId(projectId)
                 .stream().map(TaskDO::getProductLineId).collect(Collectors.toList());
-        productLineIdsInTask.forEach(a->{
-            if(!productLineIdsInProject.contains(a)){
+        productLineIdsInTask.forEach(a -> {
+            if (!productLineIdsInProject.contains(a)) {
                 throw new BaseBizRuntimeException("项目中的产品线需包含该项目下任务中的产品线,请修改产品线后重试");
             }
         });
 
+    }
+
+    @Override
+    public void deleteTodoTask(String todoId) {
+        if (StringUtils.isEmpty(todoId)) {
+            return;
+        }
+        String id = LocalSessionUtils.getUserInfo().getId();
+        Map<String, String> map = innerUserPersonClient.getUnionIds(com.google.common.collect.Lists.newArrayList(id));
+        DeleteTodoTaskMsg deleteTodoTaskMsg = DeleteTodoTaskMsg.builder()
+                .recordId(todoId)
+                .unionId(map.get(id))
+                .build();
+        dingWorkRecordClient.deleteTask(deleteTodoTaskMsg);
+        log.info("删除待办,deleteTodoTaskMsg:{}", deleteTodoTaskMsg);
     }
 
     private void buildConditionBeforeQuery(List<Long> taskIds, TaskListCondition condition) {

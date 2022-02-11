@@ -188,10 +188,9 @@ public class ProjectServiceImpl implements ProjectService {
         if (CollectionUtils.isEmpty(projectNode)) {
             projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
             projectMapper.update(projectDO);
-            return BaseResult.success(true);
+        }else{
+            fillInfoWhenEnable(projectNode, projectDO);
         }
-
-        fillInfoWhenEnable(projectNode, projectDO);
         // 更新任务状态
         taskComponent.updateStatusAsProjectStatusChange(projectId,projectDO.getStatus(),true);
         return BaseResult.success(true);
