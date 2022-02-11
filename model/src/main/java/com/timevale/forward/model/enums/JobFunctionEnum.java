@@ -1,6 +1,7 @@
 package com.timevale.forward.model.enums;
 
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author by YangXu
@@ -58,6 +59,9 @@ public enum JobFunctionEnum {
     }
 
     public static UserTypeEnum getType(String name){
+        if(StringUtils.isEmpty(name)){
+            return UserTypeEnum.OTHER;
+        }
         for (JobFunctionEnum e : JobFunctionEnum.values()){
             if(e.name.equals(name)){
                 return e.type;

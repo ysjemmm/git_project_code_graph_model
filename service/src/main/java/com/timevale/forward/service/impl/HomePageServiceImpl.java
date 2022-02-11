@@ -222,38 +222,40 @@ public class HomePageServiceImpl implements HomePageService {
         List<String> teamMembers = homePageProjectBoardReq.getTeamMembers();
 
         // 我和我的所有下属信息
-        List<BaseInfoResponse> allMyStaffInfoWithSelf =
-                innerUserPersonClient.getAllMyStaffInfoWithSelf(userInfo.getId(), false);
+        List<BaseInfoResponse> allMyStaffInfoWithSelfInfo =
+                innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
         //我和我所有下属的职能类型 Map(userid,jobFunction)
-        Map<String, String> allMyStaffInfoJobFunctionWithSelfMap = allMyStaffInfoWithSelf
+        Map<String, String> allMyStaffInfoWithSelfJobFunction = allMyStaffInfoWithSelfInfo
                 .stream()
-                .collect(Collectors.toMap(BaseInfoResponse::getAccount, BaseInfoResponse::getJobFunction, (old, curr) -> curr));
+                .collect(Collectors.toMap(BaseInfoResponse::getAccount,
+                        e -> e.getJobFunction() == null ? "": e.getJobFunction(),
+                        (old, curr) -> curr));
         // 我和我的下属的所有名字
-        Set<String> allMyStaffNameWithSelfSet = allMyStaffInfoWithSelf
+        Set<String> allMyStaffNameWithSelf = allMyStaffInfoWithSelfInfo
                 .stream()
                 .map(BaseInfoResponse::getAccount)
                 .collect(Collectors.toSet());
 
         // 部门id、员工id非空取交集
         if (!CollectionUtils.isEmpty(deptIds)) {
-            Set<String> deptAllMyStaffSet = Sets.newHashSet();
+            Set<String> deptAllMyStaff = Sets.newHashSet();
             for (Long deptId : deptIds) {
-                deptAllMyStaffSet.addAll(innerUserPersonClient.getByGroupIdNew(String.valueOf(deptId)));
+                deptAllMyStaff.addAll(innerUserPersonClient.getByGroupIdNew(String.valueOf(deptId)));
             }
-            allMyStaffNameWithSelfSet.retainAll(deptAllMyStaffSet);
+            allMyStaffNameWithSelf.retainAll(deptAllMyStaff);
         }
         if (!CollectionUtils.isEmpty(teamMembers)) {
-            allMyStaffNameWithSelfSet.retainAll(teamMembers);
+            allMyStaffNameWithSelf.retainAll(teamMembers);
         }
 
         // 如果查询条件为空直接返回空数据
-        if (CollectionUtils.isEmpty(allMyStaffNameWithSelfSet)) {
+        if (CollectionUtils.isEmpty(allMyStaffNameWithSelf)) {
             return BaseResult.success(Lists.emptyList());
         }
 
         // 查询数据
         List<HomePageProjectBoardDTO> homePageProjectBoardDTOList =
-                homePageProjectBoardComponent.getProjectBoard(Lists.newArrayList(allMyStaffNameWithSelfSet));
+                homePageProjectBoardComponent.getProjectBoard(Lists.newArrayList(allMyStaffNameWithSelf));
 
         // 数据分组后转换
         List<HomePageProjectBoardVO> result = Lists.newArrayList();
@@ -262,7 +264,7 @@ public class HomePageServiceImpl implements HomePageService {
 
         homePageProjectBoardDTOGroup.forEach((key, value) -> {
             HomePageProjectBoardVO homePageProjectBoardVO = new HomePageProjectBoardVO();
-            UserTypeEnum userType = JobFunctionEnum.getType(allMyStaffInfoJobFunctionWithSelfMap.get(key));
+            UserTypeEnum userType = JobFunctionEnum.getType(allMyStaffInfoWithSelfJobFunction.get(key));
 
             List<HomePageProjectDateVO> homePageProjectDateVOList = HomePageProjectBoardCopier.INSTANCE.convert(value);
 

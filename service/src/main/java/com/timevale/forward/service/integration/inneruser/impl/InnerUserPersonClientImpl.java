@@ -83,7 +83,7 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
     }
 
     @Override
-    public List<BaseInfoResponse> getAllMyStaffInfoWithSelf(String account, Boolean isLeave) {
+    public List<BaseInfoResponse> getAllMyStaffWithSelfInfo(String account, Boolean isLeave) {
         try {
             final AccountRequest request = new AccountRequest();
             request.setAccount(account);

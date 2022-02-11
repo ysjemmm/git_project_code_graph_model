@@ -31,6 +31,5 @@ public class HomePageProjectBoardReq extends BaseReq {
     private Date endDate;
 
     @ApiModelProperty("用户类型")
-    @NotNull(message = "用户类型不能为空")
     private String userType;
 }

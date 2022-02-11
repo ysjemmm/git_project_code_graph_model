@@ -47,7 +47,7 @@ public interface InnerUserPersonClient {
      * @param isLeave 是否包含已经离职用户
      * @return 下属信息列表（包含自己）
      */
-    List<BaseInfoResponse> getAllMyStaffInfoWithSelf(String account, Boolean isLeave);
+    List<BaseInfoResponse> getAllMyStaffWithSelfInfo(String account, Boolean isLeave);
 
     /**
      * 获取用户
