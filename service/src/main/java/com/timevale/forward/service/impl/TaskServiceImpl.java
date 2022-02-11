@@ -25,7 +25,6 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
 import com.timevale.forward.service.integration.erp.model.CreateTodoTaskMsg;
-import com.timevale.forward.service.integration.erp.model.DeleteTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
@@ -284,7 +283,7 @@ public class TaskServiceImpl implements TaskService {
             taskTimeMapper.delete(Lists.newArrayList(taskDO.getId()));
         }
         // 删除钉钉待办
-        deleteTodoTask(taskDO);
+        deleteTodoTask(taskDO.getTodoId());
         taskMapper.update(taskDO);
         return BaseResult.success(true);
     }
@@ -567,16 +566,24 @@ public class TaskServiceImpl implements TaskService {
 //            //编辑时,状态为待执行,进行中时才能新增待办
                 addTodoTask(taskDO, executorIds);
             } else {
+                boolean executorChanged=false;
                 List<String> existExecutorIds = personComponent.select(existTaskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode())
                         .stream().map(PersonDO::getUserId).collect(Collectors.toList());
-                List<String> tmpExecutorIds = new ArrayList<>(executorIds);
-                tmpExecutorIds.removeAll(existExecutorIds);
+                if(existExecutorIds.size()!=executorIds.size()){
+                    executorChanged=true;
+                }else {
+                    List<String> tmpExecutorIds = new ArrayList<>(executorIds);
+                    tmpExecutorIds.removeAll(existExecutorIds);
+                    if(tmpExecutorIds.size() != 0){
+                        //执行人数量不变,改变了人员
+                        executorChanged=true;
+                    }
+                }
                 //1.计划结束时间有变,2.执行人有变,3.任务完成发送待办
                 boolean needUpdate = !StringUtils.isEmpty(existTaskDO.getTodoId())
                         &&
                         ((!taskDO.getPlanEndDate().equals(existTaskDO.getPlanEndDate()))
-                                || tmpExecutorIds.size() != 0
-                                || taskDO.getActualEndDate() != null);
+                                || executorChanged || taskDO.getActualEndDate() != null);
                 if (needUpdate) {
                     taskDO.setTodoId(existTaskDO.getTodoId());
                     updateTodoTask(taskDO, executorIds);
@@ -654,17 +661,10 @@ public class TaskServiceImpl implements TaskService {
     /**
      * 删除待办
      *
-     * @param taskDO taskDO
+     * @param todoId todoId
      */
-    private void deleteTodoTask(TaskDO taskDO) {
-        String id = LocalSessionUtils.getUserInfo().getId();
-        Map<String, String> map = innerUserPersonClient.getUnionIds(Lists.newArrayList(id));
-        DeleteTodoTaskMsg deleteTodoTaskMsg = DeleteTodoTaskMsg.builder()
-                .recordId(taskDO.getTodoId())
-                .unionId(map.get(id))
-                .build();
-        dingWorkRecordClient.deleteTask(deleteTodoTaskMsg);
-        log.info("删除待办,deleteTodoTaskMsg:{}", deleteTodoTaskMsg);
+    private void deleteTodoTask(String todoId) {
+        taskComponent.deleteTodoTask(todoId);
     }
 
 
