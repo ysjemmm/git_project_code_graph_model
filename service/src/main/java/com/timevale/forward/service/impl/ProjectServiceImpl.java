@@ -152,10 +152,7 @@ public class ProjectServiceImpl implements ProjectService {
 
             } else {
                 // 作废解除关联
-                ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
-                productDemandDO.setProjectId(projectId);
-                productDemandDO.setIsDeleted(true);
-                projectProductDemandComponent.update(productDemandDO);
+                projectProductDemandComponent.update(projectId,null);
                 //作废  更新产品需求状态
                 productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.WAITING.getCode());
             }
@@ -363,10 +360,7 @@ public class ProjectServiceImpl implements ProjectService {
 
             productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
         } else {
-            ProjectProductDemandDO projectProductDemandDO = new ProjectProductDemandDO();
-            projectProductDemandDO.setIsDeleted(true);
-            projectProductDemandDO.setProductDemandId(productDemandIds.get(0));
-            projectProductDemandComponent.update(projectProductDemandDO);
+            projectProductDemandComponent.update(null,productDemandIds.get(0));
 
             ProductDemandDO productDemandDO = new ProductDemandDO();
             productDemandDO.setId(productDemandIds.get(0));

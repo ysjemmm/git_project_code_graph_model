@@ -173,7 +173,7 @@ public class TaskComponentImpl implements TaskComponent {
             log.info("项目状态改变,待执行和进行中的任务,existTaskDO:{}",existTaskDO);
             existTaskDO.forEach(a -> {
                 // 暂停,耗时表更新数据
-                taskTimeComponent.updateEndDate(a.getId(), a.getActualEndDate());
+                taskTimeComponent.updateEndDate(a.getId(), new Date());
                 deleteTodoTask(a.getTodoId());
             });
         } else if (ProjectStatusEnum.INVALID.getCode().equals(projectStatus)) {
@@ -204,12 +204,12 @@ public class TaskComponentImpl implements TaskComponent {
                     a.setStatus(TaskStatusEnum.PROGRESS.getCode());
                     taskTimeComponent.insert(a.getId(), new Date(), null);
                 }
-//                if (a.getTodo()) {
-//                    //暂停后会删除待办,启用后新增待办
-//                    List<String> existExecutorIds = personComponent.select(a.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode())
-//                            .stream().map(PersonDO::getUserId).collect(Collectors.toList());
-//                    addTodoTask(a, existExecutorIds);
-//                }
+                if (a.getTodo()) {
+                    //暂停后会删除待办,启用后新增待办
+                    List<String> existExecutorIds = personComponent.select(a.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode())
+                            .stream().map(PersonDO::getUserId).collect(Collectors.toList());
+                    addTodoTask(a, existExecutorIds);
+                }
                 taskMapper.update(a);
             });
         }

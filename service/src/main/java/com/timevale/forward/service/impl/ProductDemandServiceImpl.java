@@ -185,10 +185,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         // 暂停or作废解除项目关联
-        ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
-        productDemandDO.setProductDemandId(productDemandId);
-        productDemandDO.setIsDeleted(true);
-        projectProductDemandComponent.update(productDemandDO);
+        projectProductDemandComponent.update(null,productDemandId);
         if (ProductDemandStatusEnum.INVALID.getCode().equals(type)) {
             productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), true);
             // 作废解业务需求关联
@@ -199,7 +196,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         }
         //解除任务关联
-        taskProductDemandComponent.unLinkIfProductDemandStatusAllChange(productDemandId);
+        taskProductDemandComponent.update(null,productDemandId);
         return BaseResult.success(true);
     }
 

@@ -28,10 +28,11 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
     private ProjectProductDemandMapper projectProductDemandMapper;
 
     @Override
-    public void update(ProjectProductDemandDO projectProductDemandDO) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        projectProductDemandDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        projectProductDemandDO.setModifyManId(userInfo.getId());
+    public void update(Long projectId,Long productDemandId) {
+        ProjectProductDemandDO projectProductDemandDO=new ProjectProductDemandDO();
+        projectProductDemandDO.setProjectId(projectId);
+        projectProductDemandDO.setProductDemandId(productDemandId);
+        projectProductDemandDO.setIsDeleted(true);
         projectProductDemandMapper.update(projectProductDemandDO);
     }
 
