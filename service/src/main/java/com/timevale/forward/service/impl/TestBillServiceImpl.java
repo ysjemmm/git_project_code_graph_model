@@ -69,7 +69,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     public BaseResult<CreateTestBillVO> addTestBill(Long projectId) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        String alias = userInfo.getAlias();
+        String alias = userInfo.getAlias() + "-" + userInfo.getName();
 
         CreateTestBillVO createTestBillVO = new CreateTestBillVO();
 
