@@ -39,14 +39,14 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
     public List<HomePageRiskWarningDTO> getRiskWarning(String userType) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        List<BaseInfoResponse> allMyStaffInfoWithSelf = innerUserPersonClient.getAllMyStaffInfoWithSelf(userInfo.getId());
+        List<BaseInfoResponse> allMyStaffInfoWithSelf = innerUserPersonClient.getAllMyStaffInfoWithSelf(userInfo.getId(), true);
 
         // 区分开发和测试身份
         List<BaseInfoResponse> QAList = allMyStaffInfoWithSelf.stream()
-                .filter(e -> UserTypeEnum.QA.getType().equals(JobFunctionEnum.getType(e.getJobFunction())))
+                .filter(e -> UserTypeEnum.QA.equals(JobFunctionEnum.getType(e.getJobFunction())))
                 .collect(Collectors.toList());
         List<BaseInfoResponse> RDList = allMyStaffInfoWithSelf.stream()
-                .filter(e -> UserTypeEnum.RD.getType().equals(JobFunctionEnum.getType(e.getJobFunction())))
+                .filter(e -> UserTypeEnum.RD.equals(JobFunctionEnum.getType(e.getJobFunction())))
                 .collect(Collectors.toList());
 
         List<String> QANameList = QAList.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toList());

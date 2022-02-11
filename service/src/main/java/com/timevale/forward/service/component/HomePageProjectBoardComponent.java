@@ -12,9 +12,8 @@ public interface HomePageProjectBoardComponent {
     /**
      * 项目工时看板查询
      *
-     * @param userType 用户类型
      * @param userIdList 用户idList
      * @return VO
      */
-    List<HomePageProjectBoardDTO> getProjectBoard(String userType, List<String> userIdList);
+    List<HomePageProjectBoardDTO> getProjectBoard(List<String> userIdList);
 }

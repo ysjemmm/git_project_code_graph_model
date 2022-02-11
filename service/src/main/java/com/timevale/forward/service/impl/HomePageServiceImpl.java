@@ -14,10 +14,7 @@ import com.timevale.forward.facade.api.client.HomePageService;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
 import com.timevale.forward.facade.api.request.HomePageProjectBoardReq;
 import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.BizDemandStatusEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
-import com.timevale.forward.model.enums.TaskStatusEnum;
-import com.timevale.forward.model.enums.UserTypeEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.copy.HomePageDataIndicatorCopier;
 import com.timevale.forward.service.copy.HomePageProjectBoardCopier;
@@ -30,6 +27,7 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
@@ -218,14 +216,23 @@ public class HomePageServiceImpl implements HomePageService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 取出查询参数
-        String userType = homePageProjectBoardReq.getUserType();
         Date startDate = homePageProjectBoardReq.getStartDate();
         Date endDate = homePageProjectBoardReq.getEndDate();
         List<Long> deptIds = homePageProjectBoardReq.getDeptIds();
         List<String> teamMembers = homePageProjectBoardReq.getTeamMembers();
 
-        // 我和我的所有员工 Set
-        Set<String> allMyStaffWithSelfSet = Sets.newHashSet(innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), false));
+        // 我和我的所有下属信息
+        List<BaseInfoResponse> allMyStaffInfoWithSelf =
+                innerUserPersonClient.getAllMyStaffInfoWithSelf(userInfo.getId(), false);
+        //我和我所有下属的职能类型 Map(userid,jobFunction)
+        Map<String, String> allMyStaffInfoJobFunctionWithSelfMap = allMyStaffInfoWithSelf
+                .stream()
+                .collect(Collectors.toMap(BaseInfoResponse::getAccount, BaseInfoResponse::getJobFunction, (old, curr) -> curr));
+        // 我和我的下属的所有名字
+        Set<String> allMyStaffNameWithSelfSet = allMyStaffInfoWithSelf
+                .stream()
+                .map(BaseInfoResponse::getAccount)
+                .collect(Collectors.toSet());
 
         // 部门id、员工id非空取交集
         if (!CollectionUtils.isEmpty(deptIds)) {
@@ -233,19 +240,20 @@ public class HomePageServiceImpl implements HomePageService {
             for (Long deptId : deptIds) {
                 deptAllMyStaffSet.addAll(innerUserPersonClient.getByGroupIdNew(String.valueOf(deptId)));
             }
-            allMyStaffWithSelfSet.retainAll(deptAllMyStaffSet);
+            allMyStaffNameWithSelfSet.retainAll(deptAllMyStaffSet);
         }
         if (!CollectionUtils.isEmpty(teamMembers)) {
-            allMyStaffWithSelfSet.retainAll(teamMembers);
+            allMyStaffNameWithSelfSet.retainAll(teamMembers);
         }
 
         // 如果查询条件为空直接返回空数据
-        if (CollectionUtils.isEmpty(allMyStaffWithSelfSet)) {
+        if (CollectionUtils.isEmpty(allMyStaffNameWithSelfSet)) {
             return BaseResult.success(Lists.emptyList());
         }
 
         // 查询数据
-        List<HomePageProjectBoardDTO> homePageProjectBoardDTOList = homePageProjectBoardComponent.getProjectBoard(userType, Lists.newArrayList(allMyStaffWithSelfSet));
+        List<HomePageProjectBoardDTO> homePageProjectBoardDTOList =
+                homePageProjectBoardComponent.getProjectBoard(Lists.newArrayList(allMyStaffNameWithSelfSet));
 
         // 数据分组后转换
         List<HomePageProjectBoardVO> result = Lists.newArrayList();
@@ -254,6 +262,7 @@ public class HomePageServiceImpl implements HomePageService {
 
         homePageProjectBoardDTOGroup.forEach((key, value) -> {
             HomePageProjectBoardVO homePageProjectBoardVO = new HomePageProjectBoardVO();
+            UserTypeEnum userType = JobFunctionEnum.getType(allMyStaffInfoJobFunctionWithSelfMap.get(key));
 
             List<HomePageProjectDateVO> homePageProjectDateVOList = HomePageProjectBoardCopier.INSTANCE.convert(value);
 
@@ -263,31 +272,34 @@ public class HomePageServiceImpl implements HomePageService {
             }
 
             // 填充数据
-            homePageProjectBoardVO.setUserId(key);
-            homePageProjectBoardVO.setUserName(value.get(0).getUserName());
-            homePageProjectBoardVO.setHomePageProjectDateVOList(homePageProjectDateVOList);
-            result.add(homePageProjectBoardVO);
+            if(!CollectionUtils.isEmpty(homePageProjectBoardDTOList)){
+                homePageProjectBoardVO.setUserId(key);
+                homePageProjectBoardVO.setUserName(value.get(0).getUserName());
+                homePageProjectBoardVO.setUserType(userType.toString());
+                homePageProjectBoardVO.setHomePageProjectDateVOList(homePageProjectDateVOList);
+                result.add(homePageProjectBoardVO);
+            }
         });
 
         return BaseResult.success(result);
     }
 
-    public List<HomePageProjectDateVO> filterByDate(String userType, Date startDate, Date endDate, List<HomePageProjectDateVO> list) {
-        if (userType.equals(UserTypeEnum.PD.toString())) {
+    public List<HomePageProjectDateVO> filterByDate(UserTypeEnum userType, Date startDate, Date endDate, List<HomePageProjectDateVO> list) {
+        if (userType.equals(UserTypeEnum.PD)) {
             return list.stream().filter(e -> {
                 boolean filter = DateUtil.inInterval(e.getStartPlan(), startDate, endDate);
                 filter = filter || DateUtil.inInterval(e.getDemandInternalAudit(), startDate, endDate);
                 filter = filter || DateUtil.inInterval(e.getDemandConstrue(), startDate, endDate);
                 return filter;
             }).collect(Collectors.toList());
-        } else if (userType.equals(UserTypeEnum.RD.toString())) {
+        } else if (userType.equals(UserTypeEnum.RD)) {
             return list.stream().filter(e -> {
                 boolean filter = DateUtil.inInterval(e.getTechnicalDetailReview(), startDate, endDate);
                 filter = filter || DateUtil.inInterval(e.getDevelopStart(), startDate, endDate);
                 filter = filter || DateUtil.inInterval(e.getSubmitTest(), startDate, endDate);
                 return filter;
             }).collect(Collectors.toList());
-        } else {
+        } else if(userType.equals(UserTypeEnum.QA)){
             return list.stream().filter(e -> {
                 boolean filter = DateUtil.inInterval(e.getWriteTestCases(), startDate, endDate);
                 filter = filter || DateUtil.inInterval(e.getUseCaseReview(), startDate, endDate);
@@ -296,6 +308,8 @@ public class HomePageServiceImpl implements HomePageService {
                 filter = filter || DateUtil.inInterval(e.getPublishOfficial(), startDate, endDate);
                 return filter;
             }).collect(Collectors.toList());
+        } else{
+            return Lists.emptyList();
         }
     }
 
