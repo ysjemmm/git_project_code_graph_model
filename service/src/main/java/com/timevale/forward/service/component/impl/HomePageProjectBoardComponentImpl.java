@@ -27,7 +27,7 @@ public class HomePageProjectBoardComponentImpl extends BaseDistributeClientImpl<
     private DistributeConfig distributeConfig;
 
     @Override
-    public List<HomePageProjectBoardDTO> getProjectBoard(String userType, List<String> userIdList) {
+    public List<HomePageProjectBoardDTO> getProjectBoard(List<String> userIdList) {
         ParamHelper paramHelper = ParamHelper.newInstance()
                 .offset(0)
                 .page(Integer.MAX_VALUE)

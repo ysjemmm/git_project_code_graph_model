@@ -52,7 +52,7 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
     }
 
     @Override
-    public List<BaseInfoResponse> getAllMyStaffInfo(String account) {
+    public List<BaseInfoResponse> getAllMyStaffInfo(String account, Boolean isLeave) {
         try {
             final AccountRequest request = new AccountRequest();
             request.setAccount(account);
@@ -83,14 +83,14 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
     }
 
     @Override
-    public List<BaseInfoResponse> getAllMyStaffInfoWithSelf(String account) {
+    public List<BaseInfoResponse> getAllMyStaffInfoWithSelf(String account, Boolean isLeave) {
         try {
             final AccountRequest request = new AccountRequest();
             request.setAccount(account);
-            request.setIsLeave(true);
+            request.setIsLeave(isLeave);
             final BaseResult<BaseInfoResponse> accountInfo = rpcPersonService.getByAccount(request);
             if(accountInfo.ifSuccess()){
-                List<BaseInfoResponse> allMyStaffInfoWithSelf = this.getAllMyStaffInfo(account);
+                List<BaseInfoResponse> allMyStaffInfoWithSelf = this.getAllMyStaffInfo(account, isLeave);
                 allMyStaffInfoWithSelf.add(accountInfo.getData());
                 return allMyStaffInfoWithSelf;
             }

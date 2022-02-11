@@ -23,6 +23,9 @@ public class HomePageProjectBoardVO extends ToString {
     @ApiModelProperty("项目人员姓名")
     private String userName;
 
+    @ApiModelProperty("项目人员类型")
+    private String userType;
+
     @ApiModelProperty("项目阶段时间段")
     private List<HomePageProjectDateVO> homePageProjectDateVOList;
 
