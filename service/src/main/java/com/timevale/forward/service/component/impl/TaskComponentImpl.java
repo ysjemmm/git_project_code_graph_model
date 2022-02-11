@@ -11,13 +11,16 @@ import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.TaskStageEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
+import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.TaskComponent;
 import com.timevale.forward.service.component.TaskProductDemandComponent;
 import com.timevale.forward.service.component.TaskTimeComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
+import com.timevale.forward.service.integration.erp.model.CreateTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.DeleteTodoTaskMsg;
+import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -77,6 +80,11 @@ public class TaskComponentImpl implements TaskComponent {
 
     @Resource
     private DingWorkRecordClient dingWorkRecordClient;
+
+    @Resource
+    private PersonComponent personComponent;
+
+    public static final String TITLE = "您收到了一条任务：%s";
 
     @Override
     public BaseResult<PageQueryResult<TaskVO>> page(TaskListCondition condition, List<Long> taskIds) {
@@ -196,6 +204,12 @@ public class TaskComponentImpl implements TaskComponent {
                     a.setStatus(TaskStatusEnum.PROGRESS.getCode());
                     taskTimeComponent.insert(a.getId(), new Date(), null);
                 }
+//                if (a.getTodo()) {
+//                    //暂停后会删除待办,启用后新增待办
+//                    List<String> existExecutorIds = personComponent.select(a.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode())
+//                            .stream().map(PersonDO::getUserId).collect(Collectors.toList());
+//                    addTodoTask(a, existExecutorIds);
+//                }
                 taskMapper.update(a);
             });
         }
@@ -222,6 +236,61 @@ public class TaskComponentImpl implements TaskComponent {
     }
 
     @Override
+    public void addTodoTask(TaskDO taskDO, List<String> executorIds) {
+        if (CollectionUtils.isEmpty(executorIds)) {
+            return;
+        }
+        boolean containsCurrentUser = true;
+        String id = LocalSessionUtils.getUserInfo().getId();
+        if (!executorIds.contains(id)) {
+            executorIds.add(id);
+            containsCurrentUser = false;
+        }
+        Map<String, String> map = innerUserPersonClient.getUnionIds(executorIds);
+        String unionId = map.get(id);
+        if (!containsCurrentUser) {
+            map.remove(id);
+        }
+        CreateTodoTaskMsg createTodoTaskMsg = CreateTodoTaskMsg.builder()
+                .title(String.format(TITLE, taskDO.getName()))
+                .unionId(unionId)
+                .executorIds(com.google.common.collect.Lists.newArrayList(map.values()))
+                .dueTime(taskDO.getPlanEndDate().getTime()).build();
+        String todoId = dingWorkRecordClient.addTask(createTodoTaskMsg);
+        taskDO.setTodoId(todoId);
+        if (StringUtils.isEmpty(todoId)) {
+            log.info("新增待办异常,createTodoTaskMsg :{}",createTodoTaskMsg);
+            taskDO.setTodo(false);
+        }
+    }
+
+    @Override
+    public void updateTodoTask(TaskDO taskDO, List<String> executorIds) {
+        if (CollectionUtils.isEmpty(executorIds)) {
+            return;
+        }
+        boolean containsCurrentUser = true;
+        String id = LocalSessionUtils.getUserInfo().getId();
+        if (!executorIds.contains(id)) {
+            executorIds.add(id);
+            containsCurrentUser = false;
+        }
+        Map<String, String> map = innerUserPersonClient.getUnionIds(executorIds);
+        String unionId = map.get(id);
+        if (!containsCurrentUser) {
+            map.remove(id);
+        }
+        UpdateTodoTaskMsg updateTodoTaskMsg = UpdateTodoTaskMsg.builder()
+                .recordId(taskDO.getTodoId())
+                .unionId(unionId)
+                .executorIds(com.google.common.collect.Lists.newArrayList(map.values()))
+                .done(taskDO.getActualEndDate() != null)
+                .dueTime(taskDO.getPlanEndDate().getTime()).build();
+        log.info("更新待办,taskDO:{},executorIds:{},updateTodoTaskMsg:{}", taskDO, executorIds, updateTodoTaskMsg);
+        dingWorkRecordClient.updateTask(updateTodoTaskMsg);
+    }
+
+    @Override
     public void deleteTodoTask(String todoId) {
         if (StringUtils.isEmpty(todoId)) {
             return;
@@ -235,6 +304,7 @@ public class TaskComponentImpl implements TaskComponent {
         dingWorkRecordClient.deleteTask(deleteTodoTaskMsg);
         log.info("删除待办,deleteTodoTaskMsg:{}", deleteTodoTaskMsg);
     }
+
 
     private void buildConditionBeforeQuery(List<Long> taskIds, TaskListCondition condition) {
         condition.setIds(taskIds);

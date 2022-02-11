@@ -192,7 +192,7 @@ public class ProjectServiceImpl implements ProjectService {
             fillInfoWhenEnable(projectNode, projectDO);
         }
         // 更新任务状态
-        taskComponent.updateStatusAsProjectStatusChange(projectId,projectDO.getStatus(),true);
+        taskComponent.updateStatusAsProjectStatusChange(projectId,projectDO.getStatus(),enableTask);
         return BaseResult.success(true);
     }
 

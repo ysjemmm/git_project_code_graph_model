@@ -2,6 +2,7 @@ package com.timevale.forward.service.component;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.TaskListCondition;
+import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
@@ -40,10 +41,23 @@ public interface TaskComponent {
      */
     void containProductLineInTask(Long projectId,List<Long> productLineIdsInProject);
 
+
+    /**
+     *
+     * @param taskDO
+     * @param executorIds
+     */
+     void addTodoTask(TaskDO taskDO, List<String> executorIds);
+
+    /**
+     *
+     * @param taskDO
+     * @param executorIds
+     */
+     void updateTodoTask(TaskDO taskDO, List<String> executorIds) ;
     /**
      *
      * @param todoId todoId
      */
     void deleteTodoTask(String todoId);
-
 }

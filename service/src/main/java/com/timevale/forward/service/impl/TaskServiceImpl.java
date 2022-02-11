@@ -23,9 +23,6 @@ import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
-import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
-import com.timevale.forward.service.integration.erp.model.CreateTodoTaskMsg;
-import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.TaskDoneMsgEvent;
@@ -46,7 +43,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -91,9 +87,6 @@ public class TaskServiceImpl implements TaskService {
     private PersonComponent personComponent;
 
     @Resource
-    private DingWorkRecordClient dingWorkRecordClient;
-
-    @Resource
     private ProjectMapper projectMapper;
 
     @Resource
@@ -112,8 +105,6 @@ public class TaskServiceImpl implements TaskService {
     MessageEventPublisher messageEventPublisher;
 
     public static final String PRIVATE_CLOUD = "私有云";
-
-    public static final String TITLE = "您收到了一条任务：%s";
 
     @Override
     public BaseResult<PageQueryResult<TaskVO>> list(TaskQueryList taskQueryList) {
@@ -600,31 +591,7 @@ public class TaskServiceImpl implements TaskService {
      * @param executorIds executorIds
      */
     private void addTodoTask(TaskDO taskDO, List<String> executorIds) {
-        if (CollectionUtils.isEmpty(executorIds)) {
-            return;
-        }
-        boolean containsCurrentUser = true;
-        String id = LocalSessionUtils.getUserInfo().getId();
-        if (!executorIds.contains(id)) {
-            executorIds.add(id);
-            containsCurrentUser = false;
-        }
-        Map<String, String> map = innerUserPersonClient.getUnionIds(executorIds);
-        String unionId = map.get(id);
-        if (!containsCurrentUser) {
-            map.remove(id);
-        }
-        CreateTodoTaskMsg createTodoTaskMsg = CreateTodoTaskMsg.builder()
-                .title(String.format(TITLE, taskDO.getName()))
-                .unionId(unionId)
-                .executorIds(Lists.newArrayList(map.values()))
-                .dueTime(taskDO.getPlanEndDate().getTime()).build();
-        String todoId = dingWorkRecordClient.addTask(createTodoTaskMsg);
-        taskDO.setTodoId(todoId);
-        if (StringUtils.isEmpty(todoId)) {
-            log.info("新增待办异常,createTodoTaskMsg :{}",createTodoTaskMsg);
-            taskDO.setTodo(false);
-        }
+        taskComponent.addTodoTask(taskDO,executorIds);
     }
 
     /**
@@ -634,28 +601,7 @@ public class TaskServiceImpl implements TaskService {
      * @param executorIds executorIds
      */
     private void updateTodoTask(TaskDO taskDO, List<String> executorIds) {
-        if (CollectionUtils.isEmpty(executorIds)) {
-            return;
-        }
-        boolean containsCurrentUser = true;
-        String id = LocalSessionUtils.getUserInfo().getId();
-        if (!executorIds.contains(id)) {
-            executorIds.add(id);
-            containsCurrentUser = false;
-        }
-        Map<String, String> map = innerUserPersonClient.getUnionIds(executorIds);
-        String unionId = map.get(id);
-        if (!containsCurrentUser) {
-            map.remove(id);
-        }
-        UpdateTodoTaskMsg updateTodoTaskMsg = UpdateTodoTaskMsg.builder()
-                .recordId(taskDO.getTodoId())
-                .unionId(unionId)
-                .executorIds(Lists.newArrayList(map.values()))
-                .done(taskDO.getActualEndDate() != null)
-                .dueTime(taskDO.getPlanEndDate().getTime()).build();
-        log.info("更新待办,taskDO:{},executorIds:{},updateTodoTaskMsg:{}", taskDO, executorIds, updateTodoTaskMsg);
-        dingWorkRecordClient.updateTask(updateTodoTaskMsg);
+        taskComponent.updateTodoTask(taskDO,executorIds);
     }
 
     /**
