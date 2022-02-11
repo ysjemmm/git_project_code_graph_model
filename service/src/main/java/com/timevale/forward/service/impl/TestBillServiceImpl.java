@@ -198,9 +198,12 @@ public class TestBillServiceImpl implements TestBillService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String alias = userInfo.getAlias();
 
-        //获取提测人先注释掉模拟一个，后续改成提测人
+        //获取提测人
         List<String> receivers = new ArrayList<>();
-        receivers.add("wangxuan");
+        TestBillDO testBill = testBillMapper.selectByProjectId(testBillModifyReq.getProjectId());
+        if (testBill != null) {
+            receivers.add(testBill.getCreateManId());
+        }
 
         //获取提测单名称
         ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
@@ -240,9 +243,13 @@ public class TestBillServiceImpl implements TestBillService {
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
-        //接收人先默认，后续再变成测试人，提测人
+        //接收人设置成修改后的测试人和提测人
         List<String> receivers = new ArrayList<>();
-        receivers.add("wangxuan");
+        TestBillDO testBill = testBillMapper.selectByProjectId(testBillModifyReq.getProjectId());
+        if (testBill != null) {
+            receivers.add(testBill.getCreateManId());
+        }
+        receivers.add(testBillModifyReq.getTestManId());
 
         //获取提测单名称
         ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
@@ -280,9 +287,12 @@ public class TestBillServiceImpl implements TestBillService {
             testBillName = projectDO.getName() + "提测单";
         }
 
-        //模拟消息接收人
+        //消息接收人设置成提测单测试人
         List<String> receivers = new ArrayList<>();
-        receivers.add("wangxuan");
+        TestBillDO testBill = testBillMapper.selectByProjectId(testBillModifyReq.getProjectId());
+        if (testBill != null) {
+            receivers.add(testBill.getTestManId());
+        }
 
         //更新提测表信息
         testBillMapper.selfTestPass(testBillDO);
@@ -318,9 +328,12 @@ public class TestBillServiceImpl implements TestBillService {
             testBillName = projectDO.getName() + "提测单";
         }
 
-        //模拟接收人
+        //接收人设置成提测人
         List<String> receivers = new ArrayList<>();
-        receivers.add("wangxuan");
+        TestBillDO testBill = testBillMapper.selectByProjectId(testBillModifyReq.getProjectId());
+        if (testBill != null) {
+            receivers.add(testBill.getCreateManId());
+        }
 
         //更新提测表信息
         testBillMapper.submitTestPass(testBillDO);
@@ -352,9 +365,12 @@ public class TestBillServiceImpl implements TestBillService {
             testBillName = projectDO.getName() + "提测单";
         }
 
-        //模拟接收人
+        //接收人设置成提测人
         List<String> receivers = new ArrayList<>();
-        receivers.add("wangxuan");
+        TestBillDO testBill = testBillMapper.selectByProjectId(testBillModifyReq.getProjectId());
+        if (testBill != null) {
+            receivers.add(testBill.getCreateManId());
+        }
 
         //更新提测表信息
         testBillMapper.submitTestBack(testBillDO);
