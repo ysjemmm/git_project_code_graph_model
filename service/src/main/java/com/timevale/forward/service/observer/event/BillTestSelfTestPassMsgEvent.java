@@ -27,7 +27,7 @@ public class BillTestSelfTestPassMsgEvent extends MessageEvent {
     @Override
     public void run() {
         String title = TestBillMessageTitleEnum.SUBMIT_TEST_SHOW.getText();
-        String singleUrl = domainName + String.format(PARAM, TabEnum.PROJECT_MANAGEMENT.getText(), projectId);
+        String singleUrl = domainName + String.format(PARAM, TabEnum.PROJECT_MANAGEMENT.getText(), projectId) + "&tabActive=3";
         String markdown = String.format("### 【提测单】 \n  **%s**自测通过**%s**，请验收提测预演。  \n *** \n   [查看详情](%s)",
                 operator, billTestName, singleUrl);
 

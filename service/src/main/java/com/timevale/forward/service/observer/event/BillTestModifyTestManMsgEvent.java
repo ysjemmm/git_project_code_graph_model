@@ -27,7 +27,7 @@ public class BillTestModifyTestManMsgEvent extends MessageEvent {
     @Override
     public void run() {
         String title = TestBillMessageTitleEnum.TEST_MAN_UPDATE.getText();
-        String singleUrl = domainName + String.format(PARAM, TabEnum.PROJECT_MANAGEMENT.getText(), projectId);
+        String singleUrl = domainName + String.format(PARAM, TabEnum.PROJECT_MANAGEMENT.getText(), projectId) + "&tabActive=3";
         String markdown = String.format("### 【提测单】  \n   **%s**测试人改为**%s**。  \n *** \n   [查看详情](%s)",
                 testBillName, testMan, singleUrl);
 

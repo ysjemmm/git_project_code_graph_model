@@ -27,7 +27,7 @@ public class BillTestSubmitSmokeMsgEvent extends MessageEvent {
     @Override
     public void run() {
         String title = TestBillMessageTitleEnum.SELF_TEST.getText();
-        String singleUrl = domainName + String.format(PARAM, TabEnum.PROJECT_MANAGEMENT.getText(), projectId);
+        String singleUrl = domainName + String.format(PARAM, TabEnum.PROJECT_MANAGEMENT.getText(), projectId) + "&tabActive=3";
         String markdown = String.format("### 【提测单】 \n  **%s**提起了**%s**冒烟用例，请自测。  \n *** \n   [查看详情](%s)",
                 operator, billTestName, singleUrl);
 
