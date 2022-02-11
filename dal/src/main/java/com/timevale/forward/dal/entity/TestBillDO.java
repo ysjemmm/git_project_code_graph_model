@@ -49,7 +49,7 @@ public class TestBillDO extends BaseDO {
     /**
      * 提测通过率
      */
-    private Integer passRate;
+    private Double passRate;
     /**
      * 影响范围与变更SQL
      */

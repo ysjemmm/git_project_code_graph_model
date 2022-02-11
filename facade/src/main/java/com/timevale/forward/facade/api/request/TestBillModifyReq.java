@@ -39,11 +39,11 @@ public class TestBillModifyReq extends BaseReq {
     private List<FileAddReq> list;
 
     @ApiModelProperty(value = "实际提测时间")
-    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm")
     private Date actualDate;
 
     @ApiModelProperty(value = "提测通过率")
-    private Integer passRate;
+    private Double passRate;
 
     @ApiModelProperty(value = "提测打回原因")
     private String reason;
