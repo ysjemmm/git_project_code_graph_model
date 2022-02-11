@@ -51,7 +51,7 @@ public class TestBillVO extends ToString {
     private String reason;
 
     @ApiModelProperty("提测通过率")
-    private Integer passRate;
+    private Double passRate;
 
     @ApiModelProperty("影响范围与变更SQL")
     private String desc;
