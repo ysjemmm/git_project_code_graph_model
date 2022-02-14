@@ -2,6 +2,7 @@ package com.timevale.forward.service.component;
 
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 
+import java.util.Date;
 import java.util.List;
 
 public interface ProjectNodeComponent {
@@ -18,5 +19,14 @@ public interface ProjectNodeComponent {
      * @return ProjectNodeDO
      */
     List<ProjectNodeDO> get(Long projectId);
+
+
+    /**
+     *
+     * @param projectStartDate projectStartDate
+     * @param projectEndDate  projectEndDate
+     * @param projectId  projectId
+     */
+    void buildDefaultNode(Date projectStartDate,Date projectEndDate, Long projectId);
 
 }
