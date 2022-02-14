@@ -242,17 +242,28 @@ public class TestBillServiceImpl implements TestBillService {
     public BaseResult<Boolean> modifyTestMan(TestBillModifyReq testBillModifyReq) {
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
-        String testManId = "";
+
+        //得到项目测试人id
+        String testManId = null;
+
+        //得到项目经理的id
+        ProjectDO project = projectMapper.get(testBillModifyReq.getProjectId());
+        String projectManagerId = project.getPmId();
 
         //接收人设置成修改后的测试人和提测人
         List<String> receivers = new ArrayList<>();
         TestBillDO testBill = testBillMapper.selectByProjectId(testBillModifyReq.getProjectId());
         if (testBill != null) {
             receivers.add(testBill.getCreateManId());
-            //获取原本的测试人id
             testManId = testBill.getTestManId();
         }
         receivers.add(testBillModifyReq.getTestManId());
+
+        //如果当前登录人既不是项目经理也不是测试人，那么当前登录人没有修改权限，直接退出
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        if (!userInfo.getId().equals(testManId) && !userInfo.getId().equals(projectManagerId)) {
+            return BaseResult.fail(500, "测试人已经发生了变动，您没有修改权限");
+        }
 
         //获取提测单名称
         ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
@@ -272,10 +283,6 @@ public class TestBillServiceImpl implements TestBillService {
         );
 
         testBillMapper.modifyTestMan(testBillDO);
-
-        if (!testBillModifyReq.getTestManId().equals(testManId)) {
-            return BaseResult.fail(500, "测试人发生了变动，需要变动原本测试人的修改权限");
-        }
 
         return BaseResult.success();
     }
