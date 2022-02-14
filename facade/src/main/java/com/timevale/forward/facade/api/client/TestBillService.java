@@ -53,9 +53,9 @@ public interface TestBillService {
      * 修改测试人
      *
      * @param testBillModifyReq 提测单修改信息
-     * @return boolean 返回结果
+     * @return String 返回结果
      */
-    BaseResult<Boolean> modifyTestMan(TestBillModifyReq testBillModifyReq);
+    BaseResult<String> modifyTestMan(TestBillModifyReq testBillModifyReq);
 
     /**
      * 自测通过

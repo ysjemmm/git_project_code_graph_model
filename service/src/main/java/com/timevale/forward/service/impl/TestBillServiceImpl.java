@@ -239,15 +239,19 @@ public class TestBillServiceImpl implements TestBillService {
     }
 
     @Override
-    public BaseResult<Boolean> modifyTestMan(TestBillModifyReq testBillModifyReq) {
+    public BaseResult<String> modifyTestMan(TestBillModifyReq testBillModifyReq) {
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
+        String testManId = "";
+        String result;
 
         //接收人设置成修改后的测试人和提测人
         List<String> receivers = new ArrayList<>();
         TestBillDO testBill = testBillMapper.selectByProjectId(testBillModifyReq.getProjectId());
         if (testBill != null) {
             receivers.add(testBill.getCreateManId());
+            //获取原本的测试人id
+            testManId = testBill.getTestManId();
         }
         receivers.add(testBillModifyReq.getTestManId());
 
@@ -268,7 +272,15 @@ public class TestBillServiceImpl implements TestBillService {
                 )
         );
 
-        return BaseResult.success(testBillMapper.modifyTestMan(testBillDO));
+        if (!testBillModifyReq.getTestManId().equals(testManId)) {
+            result = "测试人发生了变动，需要变动原本测试人的修改权限";
+        } else {
+            result = "测试人未变动，不需要变动原本测试人的修改权限";
+        }
+
+        testBillMapper.modifyTestMan(testBillDO);
+
+        return BaseResult.success(result);
     }
 
     @Override

@@ -216,8 +216,8 @@ public class HomePageServiceImpl implements HomePageService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 取出查询参数
-        Date startDate = homePageProjectBoardReq.getStartDate();
-        Date endDate = homePageProjectBoardReq.getEndDate();
+        Date startDate = DateUtil.getStartOfDay(homePageProjectBoardReq.getStartDate());
+        Date endDate = DateUtil.getEndOfDay(homePageProjectBoardReq.getEndDate());
         List<Long> deptIds = homePageProjectBoardReq.getDeptIds();
         List<String> teamMembers = homePageProjectBoardReq.getTeamMembers();
 
