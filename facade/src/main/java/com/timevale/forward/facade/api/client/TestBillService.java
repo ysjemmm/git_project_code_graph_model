@@ -8,8 +8,6 @@ import com.timevale.forward.facade.api.result.CreateTestBillVO;
 import com.timevale.forward.facade.api.result.TestBillVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
-import java.util.Map;
-
 /**
  * @Date 2022/1/21 13:55
  * @Author 望轩
@@ -53,9 +51,9 @@ public interface TestBillService {
      * 修改测试人
      *
      * @param testBillModifyReq 提测单修改信息
-     * @return String 返回结果
+     * @return Boolean 返回结果
      */
-    BaseResult<String> modifyTestMan(TestBillModifyReq testBillModifyReq);
+    BaseResult<Boolean> modifyTestMan(TestBillModifyReq testBillModifyReq);
 
     /**
      * 自测通过
