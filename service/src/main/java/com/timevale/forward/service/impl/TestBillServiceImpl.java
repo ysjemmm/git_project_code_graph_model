@@ -271,11 +271,11 @@ public class TestBillServiceImpl implements TestBillService {
                 )
         );
 
+        testBillMapper.modifyTestMan(testBillDO);
+
         if (!testBillModifyReq.getTestManId().equals(testManId)) {
             return BaseResult.fail(500, "测试人发生了变动，需要变动原本测试人的修改权限");
         }
-
-        testBillMapper.modifyTestMan(testBillDO);
 
         return BaseResult.success();
     }
