@@ -12,4 +12,6 @@ public class CommonConstant {
 
     public static final Integer INVALID = Integer.MIN_VALUE;
     public static final String SECONDS_PER_HOUR = "3600";
+
+    public static final String TESTBILL_SUFFIX = "提测单";
 }
