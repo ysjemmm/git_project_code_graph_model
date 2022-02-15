@@ -60,7 +60,7 @@
             <if test="testBillDO.passRate != null">pass_rate=#{testBillDO.passRate},</if>
             <if test="true">modify_man=#{modifyMan},</if>
             <if test="true">modify_man_id=#{modifyManId},</if>
-            <if test="true">reason=#{reason}</if>
+            <if test="true">reason=#{testBillDO.reason}</if>
         </set>
         <where>
             and project_id=#{testBillDO.projectId}
