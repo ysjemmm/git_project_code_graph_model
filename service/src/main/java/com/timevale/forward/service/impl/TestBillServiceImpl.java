@@ -351,6 +351,7 @@ public class TestBillServiceImpl implements TestBillService {
             receivers.add(testBill.getCreateManId());
         }
 
+        testBillDO.setReason(null);
         //更新提测表信息
         testBillMapper.submitTestPass(testBillDO);
 
