@@ -32,7 +32,6 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.BizDemandStatusChangeMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
-import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -107,8 +106,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<BizDemandStatusVO> linkProductDemand(BizDemandLinkProductDemandReq bizDemandLinkProductDemandReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         Long bizDemandId = bizDemandLinkProductDemandReq.getId();
         List<Long> productDemandIdList = bizDemandLinkProductDemandReq.getProductDemandIdList();
 
@@ -158,8 +155,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<BizDemandStatusVO> unlinkProductDemand(BizDemandUnlinkProductDemandReq bizDemandUnlinkProductDemandReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandUnlinkProductDemandReq.getBizDemandId());
         if(bizDemandDO == null){
             throw new BaseBizRuntimeException("不存在该业务需求");
@@ -174,7 +169,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                 .productDemandId(productDemandId)
                 .isDeleted(false)
                 .build());
-
 
         if(list == null){
             throw new BaseBizRuntimeException("不存在对应的关联关系");
@@ -199,7 +193,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         String statusText = BizDemandStatusEnum.getTextByCode(newStatus);
         Date projectEndDate = bizDemandComponent.getProjectEndDate(bizDemandId);
 
-        // 如果新旧状态不同，且需要发送通知
+        // 如果新旧状态不同，且当前状态需要发送通知
         if(!oldStatus.equals(newStatus) && BizDemandStatusEnum.statusNeedNotice(newStatus)){
             messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
                     this,
@@ -228,7 +222,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         BizDemandLinkProductDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandSubProductDemandQueryList);
 
         //通配符、日期处理处理
-        condition.setName(StringUtil.toLikeStr(condition.getName()));
         condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
         condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
 

@@ -123,6 +123,7 @@ public class HomePageServiceImpl implements HomePageService {
 
         PageResult<HomePageProjectOnlineLatelyDTO> homePageProjectOnlineLatelyDTOPageResult =
                 homePageProjectOnlineLatelyComponent.getProjectOnlineLately(homePageProjectOnlineLatelyQueryList);
+
         // 分页配置
         List<HomePageProjectOnlineLatelyVO> homePageProjectOnlineLatelyVOList = HomePageProjectOnlineLatelyCopier
                 .INSTANCE.convert(homePageProjectOnlineLatelyDTOPageResult.getResult());
@@ -269,7 +270,7 @@ public class HomePageServiceImpl implements HomePageService {
             List<HomePageProjectDateVO> homePageProjectDateVOList = HomePageProjectBoardCopier.INSTANCE.convert(value);
 
             // 时间过滤
-            if (startDate != null) {
+            if (startDate != null || endDate != null) {
                 homePageProjectDateVOList = filterByDate(userType, startDate, endDate, homePageProjectDateVOList);
             }
 
@@ -289,21 +290,21 @@ public class HomePageServiceImpl implements HomePageService {
     public List<HomePageProjectDateVO> filterByDate(UserTypeEnum userType, Date startDate, Date endDate, List<HomePageProjectDateVO> list) {
         if (userType.equals(UserTypeEnum.PD)) {
             return list.stream().filter(e -> {
-                boolean filter = DateUtil.inInterval(e.getStartPlan(), startDate, endDate);
+                boolean  filter =  DateUtil.inInterval(e.getStartPlan(), startDate, endDate);
                 filter = filter || DateUtil.inInterval(e.getDemandInternalAudit(), startDate, endDate);
                 filter = filter || DateUtil.inInterval(e.getDemandConstrue(), startDate, endDate);
                 return filter;
             }).collect(Collectors.toList());
         } else if (userType.equals(UserTypeEnum.RD)) {
             return list.stream().filter(e -> {
-                boolean filter = DateUtil.inInterval(e.getTechnicalDetailReview(), startDate, endDate);
+                boolean  filter =  DateUtil.inInterval(e.getTechnicalDetailReview(), startDate, endDate);
                 filter = filter || DateUtil.inInterval(e.getDevelopStart(), startDate, endDate);
                 filter = filter || DateUtil.inInterval(e.getSubmitTest(), startDate, endDate);
                 return filter;
             }).collect(Collectors.toList());
         } else if(userType.equals(UserTypeEnum.QA)){
             return list.stream().filter(e -> {
-                boolean filter = DateUtil.inInterval(e.getWriteTestCases(), startDate, endDate);
+                boolean  filter =  DateUtil.inInterval(e.getWriteTestCases(), startDate, endDate);
                 filter = filter || DateUtil.inInterval(e.getUseCaseReview(), startDate, endDate);
                 filter = filter || DateUtil.inInterval(e.getTestStart(), startDate, endDate);
                 filter = filter || DateUtil.inInterval(e.getPublishSimulate(), startDate, endDate);

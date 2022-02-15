@@ -274,7 +274,7 @@ public class TaskServiceImpl implements TaskService {
             taskTimeMapper.delete(Lists.newArrayList(taskDO.getId()));
         }
         // 删除钉钉待办
-        deleteTodoTask(taskDO.getTodoId());
+        taskComponent.deleteTodoTask(taskDO.getTodoId());
         taskMapper.update(taskDO);
         return BaseResult.success(true);
     }
@@ -300,7 +300,7 @@ public class TaskServiceImpl implements TaskService {
             //暂停后会删除待办,启用后新增待办
             List<String> existExecutorIds = personComponent.select(taskId, PersonTypeEnum.TASK_EXECUTOR.getCode())
                     .stream().map(PersonDO::getUserId).collect(Collectors.toList());
-            addTodoTask(taskDO, existExecutorIds);
+            taskComponent.addTodoTask(taskDO,existExecutorIds);
         }
         taskMapper.update(taskDO);
         return BaseResult.success(true);
@@ -351,7 +351,7 @@ public class TaskServiceImpl implements TaskService {
         List<String> existExecutorIds = personComponent.select(taskId, PersonTypeEnum.TASK_EXECUTOR.getCode())
                 .stream().map(PersonDO::getUserId).collect(Collectors.toList());
         if (taskDO.getTodo()) {
-            updateTodoTask(taskDO, existExecutorIds);
+            taskComponent.updateTodoTask(taskDO,existExecutorIds);
         }
         sendDingMsg(taskDO, existExecutorIds);
         return BaseResult.success(true);
@@ -546,7 +546,7 @@ public class TaskServiceImpl implements TaskService {
             //新增
             if (taskDO.getTodo()) {
 //            //钉钉待办
-                addTodoTask(taskDO, executorIds);
+                taskComponent.addTodoTask(taskDO,executorIds);
             }
         } else {
             TaskCondition condition = TaskCondition.builder().id(taskDO.getId()).build();
@@ -555,7 +555,7 @@ public class TaskServiceImpl implements TaskService {
             if (taskDO.getTodo() && StringUtils.isEmpty(existTaskDO.getTodoId())
                     && !TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
 //            //编辑时,状态为待执行,进行中时才能新增待办
-                addTodoTask(taskDO, executorIds);
+                taskComponent.addTodoTask(taskDO,executorIds);
             } else {
                 boolean executorChanged=false;
                 List<String> existExecutorIds = personComponent.select(existTaskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode())
@@ -577,43 +577,12 @@ public class TaskServiceImpl implements TaskService {
                                 || executorChanged || taskDO.getActualEndDate() != null);
                 if (needUpdate) {
                     taskDO.setTodoId(existTaskDO.getTodoId());
-                    updateTodoTask(taskDO, executorIds);
+                    taskComponent.updateTodoTask(taskDO,executorIds);
                 }
             }
 
         }
     }
-
-    /**
-     * 新增待办
-     *
-     * @param taskDO      taskDO
-     * @param executorIds executorIds
-     */
-    private void addTodoTask(TaskDO taskDO, List<String> executorIds) {
-        taskComponent.addTodoTask(taskDO,executorIds);
-    }
-
-    /**
-     * 更新待办
-     *
-     * @param taskDO      taskDO
-     * @param executorIds executorIds
-     */
-    private void updateTodoTask(TaskDO taskDO, List<String> executorIds) {
-        taskComponent.updateTodoTask(taskDO,executorIds);
-    }
-
-    /**
-     * 删除待办
-     *
-     * @param todoId todoId
-     */
-    private void deleteTodoTask(String todoId) {
-        taskComponent.deleteTodoTask(todoId);
-    }
-
-
     /**
      * 钉钉消息处理
      *

@@ -74,9 +74,6 @@ public class BizDemandServiceImpl implements BizDemandService {
     InnerUserPersonClient innerUserPersonClient;
 
     @Resource
-    InnerGroupClient innerGroupClient;
-
-    @Resource
     PersonComponent personComponent;
 
     @Resource

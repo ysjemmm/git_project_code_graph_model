@@ -23,6 +23,7 @@ import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.model.enums.TestBillProgressEnum;
 import com.timevale.forward.model.enums.TestBillStatusEnum;
 import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.TestBillCopier;
 import com.timevale.forward.service.observer.event.*;
@@ -69,7 +70,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     public BaseResult<CreateTestBillVO> addTestBill(Long projectId) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        String alias = userInfo.getAlias() + "-" + userInfo.getName();
+        String alias = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
 
         CreateTestBillVO createTestBillVO = new CreateTestBillVO();
 
@@ -88,11 +89,7 @@ public class TestBillServiceImpl implements TestBillService {
             //提测人
             createTestBillVO.setSubmitTestMan(alias);
             //此项目是否有提测单
-            if (testBillDO != null) {
-                createTestBillVO.setIsHaveSubmitTest(true);
-            } else {
-                createTestBillVO.setIsHaveSubmitTest(false);
-            }
+            createTestBillVO.setIsHaveSubmitTest(testBillDO != null);
         }
 
         return BaseResult.success(createTestBillVO);
@@ -122,7 +119,7 @@ public class TestBillServiceImpl implements TestBillService {
 
         //获取提测单名称
         ProjectDO projectDO = projectMapper.get(testBillAddReq.getProjectId());
-        String testBillName = projectDO.getName() + "提测单";
+        String testBillName = projectDO.getName() + CommonConstant.TESTBILL_SUFFIX;
 
         //消息接收人
         List<String> receivers = new ArrayList<>();
@@ -155,7 +152,7 @@ public class TestBillServiceImpl implements TestBillService {
 
         //提测单主题
         ProjectDO projectDO = projectMapper.get(projectId);
-        testBillVO.setSubmitTestName(projectDO.getName() + "提测单");
+        testBillVO.setSubmitTestName(projectDO.getName() + CommonConstant.TESTBILL_SUFFIX);
         testBillVO.setProjectManager(projectDO.getPmName());
         //附件集合
         List<FileDO> fileDOList = fileMapper.select(projectId, null);
@@ -207,7 +204,7 @@ public class TestBillServiceImpl implements TestBillService {
 
         //获取提测单名称
         ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
-        String testBillName = projectDO.getName() + "提测单";
+        String testBillName = projectDO.getName() + CommonConstant.TESTBILL_SUFFIX;
 
         //更新提测单
         testBillMapper.submitSmokeTesting(testBillDO);
@@ -269,7 +266,7 @@ public class TestBillServiceImpl implements TestBillService {
         ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
         String testBillName = "";
         if (projectDO != null) {
-            testBillName = projectDO.getName() + "提测单";
+            testBillName = projectDO.getName() + CommonConstant.TESTBILL_SUFFIX;
         }
 
         messageEventPublisher.publish(
@@ -300,7 +297,7 @@ public class TestBillServiceImpl implements TestBillService {
         ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
         String testBillName = "";
         if (projectDO != null) {
-            testBillName = projectDO.getName() + "提测单";
+            testBillName = projectDO.getName() + CommonConstant.TESTBILL_SUFFIX;
         }
 
         //消息接收人设置成提测单测试人
@@ -341,7 +338,7 @@ public class TestBillServiceImpl implements TestBillService {
         ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
         String testBillName = "";
         if (projectDO != null) {
-            testBillName = projectDO.getName() + "提测单";
+            testBillName = projectDO.getName() + CommonConstant.TESTBILL_SUFFIX;
         }
 
         //接收人设置成提测人
@@ -379,7 +376,7 @@ public class TestBillServiceImpl implements TestBillService {
         ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
         String testBillName = "";
         if (projectDO != null) {
-            testBillName = projectDO.getName() + "提测单";
+            testBillName = projectDO.getName() + CommonConstant.TESTBILL_SUFFIX;
         }
 
         //接收人设置成提测人

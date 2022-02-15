@@ -381,6 +381,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         bizDemandVOList.forEach(p -> {
             p.setPriorityText(PriorityEnum.getTextChineseByCode(p.getPriority()));
             p.setDeptName(deptMap.get(p.getDeptId()).getGroupName());
+            p.setDeptDeleteFlag(deptMap.get(p.getDeptId()).getDeleteFlag());
         });
 
         PageInfo<BizDemandListDO> pageInfo = new PageInfo<>(bizDemandList);
