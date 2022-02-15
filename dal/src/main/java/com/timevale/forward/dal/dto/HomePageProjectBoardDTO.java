@@ -3,6 +3,8 @@ package com.timevale.forward.dal.dto;
 import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;
 
+import java.util.Date;
+
 /**
  * @author by YangXu
  * @date 2022/01/25 15:52
@@ -38,66 +40,72 @@ public class HomePageProjectBoardDTO {
      * 开始规划
      */
     @JSONField(name = "ksgh")
-    private String startPlan;
+    private Date startPlan;
 
     /**
      * 需求内审
      */
     @JSONField(name = "xqns")
-    private String demandInternalAudit;
+    private Date demandInternalAudit;
 
     /**
      * 需求串讲
      */
     @JSONField(name = "xqcj")
-    private String demandConstrue;
+    private Date demandConstrue;
 
     /**
      * 技术详设评审
      */
     @JSONField(name = "jsxsps")
-    private String technicalDetailReview;
+    private Date technicalDetailReview;
 
     /**
      * 开发开始
      */
     @JSONField(name = "kskf")
-    private String developStart;
+    private Date developStart;
 
     /**
      * 提测
      */
     @JSONField(name = "tc")
-    private String submitTest;
+    private Date submitTest;
 
     /**
      * 编写测试用例
      */
     @JSONField(name = "bxcsyl")
-    private String writeTestCases;
+    private Date writeTestCases;
 
     /**
      * 用例评审
      */
     @JSONField(name = "ylps")
-    private String useCaseReview;
+    private Date useCaseReview;
 
     /**
      * 测试开始
      */
     @JSONField(name = "csks")
-    private String testStart;
+    private Date testStart;
 
     /**
      * 发布模拟
      */
     @JSONField(name = "fbmn")
-    private String publishSimulate;
+    private Date publishSimulate;
 
     /**
      * 发布正式
      */
     @JSONField(name = "fbzs")
-    private String publishOfficial;
+    private Date publishOfficial;
+
+    /**
+     * 项目上线日期
+     */
+    @JSONField(name = "plan_end_date")
+    private Date planEndDate;
 
 }
