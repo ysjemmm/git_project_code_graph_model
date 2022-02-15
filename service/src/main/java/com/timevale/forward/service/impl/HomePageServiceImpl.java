@@ -224,7 +224,7 @@ public class HomePageServiceImpl implements HomePageService {
 
         // 我和我的所有下属信息
         List<BaseInfoResponse> allMyStaffInfoWithSelfInfo =
-                innerUserPersonClient.getAllMyStaffWithSelfInfo("shifeng", false);
+                innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
         //我和我所有下属的职能类型 Map(userid,jobFunction)
         Map<String, String> allMyStaffInfoWithSelfJobFunction = allMyStaffInfoWithSelfInfo
                 .stream()
