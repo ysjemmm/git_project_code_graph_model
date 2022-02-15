@@ -277,7 +277,7 @@ public class HomePageServiceImpl implements HomePageService {
             List<HomePageProjectDateVO> homePageProjectDateVOList = HomePageProjectBoardCopier.INSTANCE.convert(value);
 
             // 填充数据
-            if(!CollectionUtils.isEmpty(homePageProjectBoardDTOList)){
+            if(!CollectionUtils.isEmpty(value)){
                 homePageProjectBoardVO.setUserId(key);
                 homePageProjectBoardVO.setUserName(value.get(0).getUserName());
                 homePageProjectBoardVO.setUserType(userType.toString());
