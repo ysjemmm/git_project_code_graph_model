@@ -184,6 +184,9 @@ public class TestBillServiceImpl implements TestBillService {
         //提测人
         testBillVO.setTestBillMan(testBillDO.getCreateMan());
 
+        //提测人id
+        testBillVO.setTestManId(testBillDO.getCreateManId());
+
         return BaseResult.success(testBillVO);
     }
 

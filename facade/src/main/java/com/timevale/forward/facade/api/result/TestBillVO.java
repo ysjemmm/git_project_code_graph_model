@@ -80,6 +80,8 @@ public class TestBillVO extends ToString {
     @ApiModelProperty("提测人")
     private String testBillMan;
 
+    @ApiModelProperty("提测人id")
+    private String testBillManId;
 
 
 }
