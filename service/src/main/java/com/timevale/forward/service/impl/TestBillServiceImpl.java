@@ -34,6 +34,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -96,6 +97,7 @@ public class TestBillServiceImpl implements TestBillService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitTestBill(TestBillAddReq testBillAddReq) {
         //判断该项目是否已经有提测单了，有的话则显示提示信息
         TestBillDO testBill = testBillMapper.selectByProjectId(testBillAddReq.getProjectId());
@@ -191,6 +193,7 @@ public class TestBillServiceImpl implements TestBillService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitSmokeTesting(TestBillModifyReq testBillModifyReq) {
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
@@ -239,6 +242,7 @@ public class TestBillServiceImpl implements TestBillService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modifyTestMan(TestBillModifyReq testBillModifyReq) {
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
@@ -288,6 +292,7 @@ public class TestBillServiceImpl implements TestBillService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> selfTestPass(TestBillModifyReq testBillModifyReq) {
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
@@ -333,6 +338,7 @@ public class TestBillServiceImpl implements TestBillService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitTestPass(TestBillModifyReq testBillModifyReq) {
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
@@ -371,6 +377,7 @@ public class TestBillServiceImpl implements TestBillService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitTestBack(TestBillModifyReq testBillModifyReq) {
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
