@@ -2,6 +2,7 @@ package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dao.ProjectNodeMapper;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
+import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -23,19 +24,6 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
     @Resource
     private ProjectNodeMapper projectNodeMapper;
 
-    private final Map<Integer, String> defaultNode = new HashMap<Integer, String>() {{
-        put(1, "开始规划");
-        put(2, "需求内审");
-        put(3, "需求串讲");
-        put(4, "技术详设评审");
-        put(5, "开发开始");
-        put(6, "编写测试用例");
-        put(7, "用例评审");
-        put(8, "提测");
-        put(9, "测试开始");
-        put(10, "发布模拟");
-        put(11, "发布正式");
-    }};
 
     @Override
     public void add(List<ProjectNodeDO> list, Long projectId) {
@@ -55,7 +43,7 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
         List<ProjectNodeDO> list = new ArrayList<>();
         for (int i = 1; i <= 11; i++) {
             ProjectNodeDO nodeDO = new ProjectNodeDO();
-            nodeDO.setName(defaultNode.get(i));
+            nodeDO.setName(ProjectNodeEnum.DEFAULT_NODE.get(i));
             if (i == 1) {
                 nodeDO.setPlanDate(projectStartDate);
             }

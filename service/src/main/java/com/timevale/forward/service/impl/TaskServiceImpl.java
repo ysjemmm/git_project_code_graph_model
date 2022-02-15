@@ -469,7 +469,7 @@ public class TaskServiceImpl implements TaskService {
         if (!PRIVATE_CLOUD.equals(bizDomain.getBizDomainName())
                 && taskDO.getPlanUseTime().compareTo(BigDecimal.valueOf(16)) > 0) {
             //除私有云业务域外,计划时间不能超过16h
-            throw new BaseBizRuntimeException("除私有云业务域外,计划时间不能超过16小时");
+            throw new BaseBizRuntimeException("除私有云业务域外,计划耗时不能超过16小时");
         }
     }
 
