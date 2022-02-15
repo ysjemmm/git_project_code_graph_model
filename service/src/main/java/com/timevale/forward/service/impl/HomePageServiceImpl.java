@@ -267,12 +267,14 @@ public class HomePageServiceImpl implements HomePageService {
             HomePageProjectBoardVO homePageProjectBoardVO = new HomePageProjectBoardVO();
             UserTypeEnum userType = JobFunctionEnum.getType(allMyStaffInfoWithSelfJobFunction.get(key));
 
-            List<HomePageProjectDateVO> homePageProjectDateVOList = HomePageProjectBoardCopier.INSTANCE.convert(value);
-
             // 时间过滤
             if (startDate != null || endDate != null) {
-                homePageProjectDateVOList = filterByDate(userType, startDate, endDate, homePageProjectDateVOList);
+                value = filterByDate(userType, startDate, endDate, value);
             }
+            // 项目排序按计划上线时间倒序
+            value.sort((x, y) -> y.getPlanEndDate().compareTo(x.getPlanEndDate()));
+
+            List<HomePageProjectDateVO> homePageProjectDateVOList = HomePageProjectBoardCopier.INSTANCE.convert(value);
 
             // 填充数据
             if(!CollectionUtils.isEmpty(homePageProjectBoardDTOList)){
@@ -287,7 +289,7 @@ public class HomePageServiceImpl implements HomePageService {
         return BaseResult.success(result);
     }
 
-    public List<HomePageProjectDateVO> filterByDate(UserTypeEnum userType, Date startDate, Date endDate, List<HomePageProjectDateVO> list) {
+    public List<HomePageProjectBoardDTO> filterByDate(UserTypeEnum userType, Date startDate, Date endDate, List<HomePageProjectBoardDTO> list) {
         if (userType.equals(UserTypeEnum.PD)) {
             return list.stream().filter(e -> {
                 boolean  filter =  DateUtil.inInterval(e.getStartPlan(), startDate, endDate);
