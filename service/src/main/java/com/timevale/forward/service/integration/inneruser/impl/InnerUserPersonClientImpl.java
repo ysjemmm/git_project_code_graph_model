@@ -8,6 +8,7 @@ import com.timevale.security.facade.request.AccountRequest;
 import com.timevale.security.facade.request.GroupRequest;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -163,13 +164,15 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
         if (StringUtils.isEmpty(groupId)) {
             throw new BaseBizRuntimeException("部门id为空! " + groupId);
         }
-        List<String> accountIds = new ArrayList<>();
+        List<String> accountIds = Lists.newArrayList();
         try {
             GroupRequest groupRequest = new GroupRequest();
             groupRequest.setGroupId(groupId);
             BaseResult<List<BaseInfoResponse>> personInGroup = rpcPersonService.getByGroupIdNew(groupRequest);
-            if (personInGroup.ifSuccess() && !CollectionUtils.isEmpty(personInGroup.getData())) {
-                personInGroup.getData().forEach(t -> accountIds.add(t.getAccount()));
+            if (personInGroup.ifSuccess()) {
+                if(!CollectionUtils.isEmpty(personInGroup.getData())){
+                    personInGroup.getData().forEach(e -> accountIds.add(e.getAccount()));
+                }
                 return accountIds;
             }
         } catch (Exception e) {
