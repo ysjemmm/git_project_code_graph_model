@@ -69,7 +69,7 @@ public class BaseDistributeClientImpl<T> implements BaseDistributeClient<T> {
 
         DistributeResult<T> o = JSON.parseObject(result, type);
         if (!Integer.valueOf(0).equals(o.getCode())) {
-            log.info("数据分发返回code={},message={},data={},", o.getCode(), o.getMessage(), o.getData());
+            log.error("数据分发返回code={},message={},data={},", o.getCode(), o.getMessage(), o.getData());
         }
         return o.getData();
     }
@@ -161,7 +161,7 @@ public class BaseDistributeClientImpl<T> implements BaseDistributeClient<T> {
             pageResult.setResult(getListResult(queryThread.getSupersetResult()));
             pageResult.setTotal(getCountResult(countThread.getSupersetResult()));
             return pageResult;
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             log.error(e.getMessage(), e);
             log.error("查询异常, queryFormData:{}, countFormData:{}", param, countParam);
             return new PageResult<>();
