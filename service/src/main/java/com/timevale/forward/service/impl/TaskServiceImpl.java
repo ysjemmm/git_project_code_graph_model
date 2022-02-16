@@ -328,6 +328,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> done(Long taskId) {
         log.info("任务完成接收参数:{}", taskId);
         TaskCondition condition = TaskCondition.builder().id(taskId).build();
