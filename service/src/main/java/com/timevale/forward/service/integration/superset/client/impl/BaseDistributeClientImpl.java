@@ -161,7 +161,7 @@ public class BaseDistributeClientImpl<T> implements BaseDistributeClient<T> {
             pageResult.setResult(getListResult(queryThread.getSupersetResult()));
             pageResult.setTotal(getCountResult(countThread.getSupersetResult()));
             return pageResult;
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             log.error(e.getMessage(), e);
             log.error("查询异常, queryFormData:{}, countFormData:{}", param, countParam);
             return new PageResult<>();
