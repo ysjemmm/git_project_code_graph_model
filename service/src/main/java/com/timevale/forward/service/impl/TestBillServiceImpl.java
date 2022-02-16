@@ -176,7 +176,8 @@ public class TestBillServiceImpl implements TestBillService {
         //是否延期以及延期天数
         if (planDate != null && actualDate != null) {
             int compare = DateUtil.compare(planDate, actualDate);
-            if (compare < 0) {
+            boolean result = DateUtil.isSameDay(planDate, actualDate);
+            if (compare < 0 && !result) {
                 testBillVO.setIsDelay(true);
                 Integer delayDay = (int) DateUtil.between(planDate, actualDate, DateUnit.DAY);
                 testBillVO.setDelayDay(delayDay);
