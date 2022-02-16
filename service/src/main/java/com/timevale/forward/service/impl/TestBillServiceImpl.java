@@ -38,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -156,9 +157,10 @@ public class TestBillServiceImpl implements TestBillService {
         ProjectDO projectDO = projectMapper.get(projectId);
         testBillVO.setSubmitTestName(projectDO.getName() + CommonConstant.TESTBILL_SUFFIX);
         testBillVO.setProjectManager(projectDO.getPmName());
+
         //附件集合
-        List<FileDO> fileDOList = fileMapper.select(projectId, null);
-        List<FileVO> fileVOList = fileDOList.stream().map(FileCopier.INSTANCE::change).collect(Collectors.toList());
+        List<Integer> types = Arrays.asList(FileTypeEnum.TEST_BILL_CASE.getCode(), FileTypeEnum.TEST_BILL_PASS.getCode());
+        List<FileVO> fileVOList = getFileByAttachIdAndTypes(projectId, types);
         testBillVO.setFileVOList(fileVOList);
 
         //实际提测时间
@@ -409,6 +411,18 @@ public class TestBillServiceImpl implements TestBillService {
         );
 
         return BaseResult.success(true);
+    }
+
+    public List<FileVO> getFileByAttachIdAndTypes(Long attachId, List<Integer> types) {
+        List<FileVO> fileVOList = new ArrayList<>();
+        for (Integer type : types) {
+            List<FileDO> fileDOList = fileMapper.select(attachId, type);
+            if (CollectionUtils.isNotEmpty(fileDOList)) {
+                List<FileVO> fileVOS = fileDOList.stream().map(FileCopier.INSTANCE::change).collect(Collectors.toList());
+                fileVOList.addAll(fileVOS);
+            }
+        }
+        return fileVOList;
     }
 }
 
