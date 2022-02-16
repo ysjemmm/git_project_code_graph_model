@@ -254,7 +254,7 @@ public class TaskComponentImpl implements TaskComponent {
         CreateTodoTaskMsg createTodoTaskMsg = CreateTodoTaskMsg.builder()
                 .title(String.format(TITLE, taskDO.getName()))
                 .unionId(unionId)
-                .executorIds(com.google.common.collect.Lists.newArrayList(map.values()))
+                .executorIds(Lists.newArrayList(map.values()))
                 .dueTime(taskDO.getPlanEndDate().getTime()).build();
         String todoId = dingWorkRecordClient.addTask(createTodoTaskMsg);
         taskDO.setTodoId(todoId);
@@ -283,7 +283,7 @@ public class TaskComponentImpl implements TaskComponent {
         UpdateTodoTaskMsg updateTodoTaskMsg = UpdateTodoTaskMsg.builder()
                 .recordId(taskDO.getTodoId())
                 .unionId(unionId)
-                .executorIds(com.google.common.collect.Lists.newArrayList(map.values()))
+                .executorIds(Lists.newArrayList(map.values()))
                 .done(taskDO.getActualEndDate() != null)
                 .dueTime(taskDO.getPlanEndDate().getTime()).build();
         log.info("更新待办,taskDO:{},executorIds:{},updateTodoTaskMsg:{}", taskDO, executorIds, updateTodoTaskMsg);

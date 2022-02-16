@@ -23,7 +23,6 @@ import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
-import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -134,9 +133,6 @@ public class ProjectServiceImpl implements ProjectService {
                 && !ProjectStatusEnum.TESTING.getCode().equals(projectDO.getStatus())) {
             throw new BaseBizRuntimeException("項目状态不是待启动、规划中、研发中、测试中,不能修改状态");
         }
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        projectDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        projectDO.setModifyManId(userInfo.getId());
         projectDO.setStatus(type);
         projectMapper.update(projectDO);
         //所有关联的产品需求
@@ -170,7 +166,6 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> enable(Long projectId, Boolean enableTask) {
         log.info("项目开启接收参数:projectId={}", projectId);
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProjectDO projectDO = projectMapper.get(projectId);
         if (projectDO == null) {
             throw new BaseBizRuntimeException("找不到该项目");
@@ -178,8 +173,6 @@ public class ProjectServiceImpl implements ProjectService {
         if (!ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus())) {
             throw new BaseBizRuntimeException("项目状态不是暂停,不能开启");
         }
-        projectDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        projectDO.setModifyManId(userInfo.getId());
         List<ProjectNodeDO> projectNode = projectNodeComponent.get(projectId);
         log.info("项目开启,节点信息:projectNode={}", projectNode);
         if (CollectionUtils.isEmpty(projectNode)) {
@@ -202,10 +195,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (project != null) {
             throw new BaseBizRuntimeException("该项目名称已存在,请修改后重试");
         }
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
-        projectDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        projectDO.setCreateManId(userInfo.getId());
         projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
         projectDO.setPmName(projectAddReq.getPm().getUserName());
         projectDO.setPmId(projectAddReq.getPm().getUserId());
@@ -242,10 +232,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (project != null && !project.getId().equals(projectModifyReq.getId())) {
             throw new BaseBizRuntimeException("该项目名称已存在,请修改后重试");
         }
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectModifyReq);
-        projectDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        projectDO.setModifyManId(userInfo.getId());
         projectDO.setPmName(projectModifyReq.getPm().getUserName());
         projectDO.setPmId(projectModifyReq.getPm().getUserId());
         List<ProjectNodeDO> projectNodeDO = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());

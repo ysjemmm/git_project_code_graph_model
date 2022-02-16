@@ -222,10 +222,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (productDemandDO != null) {
             throw new BaseBizRuntimeException("该产品需求名称已存在,请修改后重试");
         }
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandDO productDemand = ProductDemandCopier.INSTANCE.convert(productDemandAddReq);
-        productDemand.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        productDemand.setCreateManId(userInfo.getId());
         productDemand.setStatus(ProductDemandStatusEnum.WAITING.getCode());
         productDemand.setType(JSON.toJSONString(productDemandAddReq.getTypes()));
         productDemandMapper.insert(productDemand);
@@ -254,10 +251,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (productDemandDO != null && !productDemandDO.getId().equals(productDemandModifyReq.getId())) {
             throw new BaseBizRuntimeException("该产品需求名称已存在,请修改后重试");
         }
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandDO demandDO = ProductDemandCopier.INSTANCE.convert(productDemandModifyReq);
-        demandDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        demandDO.setModifyManId(userInfo.getId());
         demandDO.setType(JSON.toJSONString(productDemandModifyReq.getTypes()));
         productDemandMapper.update(demandDO);
         // 附件
