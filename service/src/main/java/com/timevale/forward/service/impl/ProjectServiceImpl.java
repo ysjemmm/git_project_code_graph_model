@@ -400,7 +400,8 @@ public class ProjectServiceImpl implements ProjectService {
         if (checkTask) {
             //删除需求规划阶段时需要校验是否有关联任务,若有关联待执行&进行中&已完成&已暂停的任务,不能删除
             Integer taskStatus = taskMapper.getByProjectId(projectDO.getId())
-                    .stream().map(TaskDO::getStatus).max(Comparator.comparingInt(o -> o)).orElse(TaskStatusEnum.INVALID.getCode());
+                    .stream().filter(a -> TaskStageEnum.DEMAND.getCode().equals(a.getStage()))
+                    .map(TaskDO::getStatus).max(Comparator.comparingInt(o -> o)).orElse(TaskStatusEnum.INVALID.getCode());
             if (taskStatus > TaskStatusEnum.INVALID.getCode()) {
                 throw new BaseBizRuntimeException("需求规划阶段已关联任务，不可删除");
             }
