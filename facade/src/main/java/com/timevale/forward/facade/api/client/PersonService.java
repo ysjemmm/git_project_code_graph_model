@@ -3,7 +3,7 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.request.RecipientAddReq;
-import com.timevale.forward.facade.api.result.PersonVO;
+import com.timevale.forward.facade.api.result.TeamMemberVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
 import java.util.List;
@@ -29,5 +29,5 @@ public interface PersonService {
      * @param projectId 项目信息
      * @return 详情信息
      */
-    BaseResult<List<PersonVO>> getTeamMembers(Long projectId);
+    BaseResult<List<TeamMemberVO>> getTeamMembers(Long projectId);
 }

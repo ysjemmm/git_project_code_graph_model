@@ -5,10 +5,10 @@ import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.facade.api.client.PersonService;
 import com.timevale.forward.facade.api.request.RecipientAddReq;
-import com.timevale.forward.facade.api.result.PersonVO;
+import com.timevale.forward.facade.api.result.TeamMemberVO;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.component.PersonComponent;
-import com.timevale.forward.service.copy.PersonCopier;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.security.facade.response.BaseInfoResponse;
@@ -44,20 +44,22 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
-    public BaseResult<List<PersonVO>> getTeamMembers(Long projectId) {
+    public BaseResult<List<TeamMemberVO>> getTeamMembers(Long projectId) {
         List<PersonDO> personDO = personMapper.get(Lists.newArrayList(projectId), PersonTypeEnum.PROJECT_MEMBER.getCode());
-        if(CollectionUtils.isEmpty(personDO)){
+        if (CollectionUtils.isEmpty(personDO)) {
             return BaseResult.success(Lists.emptyList());
         }
         List<String> accounts = personDO.stream().map(PersonDO::getUserId).collect(Collectors.toList());
         //在职员工
-        List<String> employeeOnJob = innerUserPersonClient.getPersonByAccountNew(accounts).stream()
-                .filter(a -> Integer.valueOf(0).equals(a.getStatus()))
-                .map(BaseInfoResponse::getAccount)
-                .collect(Collectors.toList());
-        List<PersonDO> result = personDO.stream().filter(a -> employeeOnJob.contains(a.getUserId())).collect(Collectors.toList());
-        List<PersonVO> personVO=PersonCopier.INSTANCE.transform(result);
-        return BaseResult.success(personVO);
+        List<BaseInfoResponse> personByAccountNew = innerUserPersonClient.getPersonByAccountNew(accounts);
+        List<TeamMemberVO> list = personByAccountNew.stream().map(a -> {
+            TeamMemberVO teamMemberVO = new TeamMemberVO();
+            teamMemberVO.setUserId(a.getAccount());
+            teamMemberVO.setUserName(a.getAlias() + CommonConstant.JOIN_LINE + a.getName());
+            teamMemberVO.setQuited(Integer.valueOf(1).equals(a.getStatus()));
+            return teamMemberVO;
+        }).collect(Collectors.toList());
+        return BaseResult.success(list);
     }
 
 }
