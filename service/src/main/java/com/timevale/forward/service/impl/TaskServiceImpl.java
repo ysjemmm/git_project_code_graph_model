@@ -258,7 +258,6 @@ public class TaskServiceImpl implements TaskService {
             throw new BaseBizRuntimeException("找不到该任务");
         }
         List<Integer> sureStatus = Lists.newArrayList(TaskStatusEnum.WAITING.getCode(), TaskStatusEnum.PROGRESS.getCode());
-        taskDO.setStatus(type);
         if (TaskStatusEnum.SUSPEND.getCode().equals(type)) {
             if (!sureStatus.contains(taskDO.getStatus())) {
                 throw new BaseBizRuntimeException("任务状态不是待执行、进行中不能修改状态");
@@ -276,6 +275,7 @@ public class TaskServiceImpl implements TaskService {
         }
         // 删除钉钉待办
         taskComponent.deleteTodoTask(taskDO.getTodoId());
+        taskDO.setStatus(type);
         taskMapper.update(taskDO);
         return BaseResult.success(true);
     }
