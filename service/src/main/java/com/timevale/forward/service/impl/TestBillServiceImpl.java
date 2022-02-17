@@ -221,7 +221,7 @@ public class TestBillServiceImpl implements TestBillService {
         FileDO fileDO = new FileDO();
         fileDO.setIsDeleted(true);
         fileDO.setAttacheId(testBillModifyReq.getProjectId());
-        fileDO.setType(FileTypeEnum.TEST_BILL_PASS.getCode());
+        fileDO.setType(FileTypeEnum.TEST_BILL_CASE.getCode());
         //删除文件表中的原有信息
         fileMapper.update(fileDO);
 
