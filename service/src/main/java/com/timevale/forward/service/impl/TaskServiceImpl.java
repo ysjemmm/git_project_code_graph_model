@@ -104,6 +104,9 @@ public class TaskServiceImpl implements TaskService {
     @Resource
     MessageEventPublisher messageEventPublisher;
 
+    @Resource
+    private ProjectNodeMapper projectNodeMapper;
+
     public static final String PRIVATE_CLOUD = "私有云";
 
     @Override
@@ -140,6 +143,8 @@ public class TaskServiceImpl implements TaskService {
         TaskDO taskDO = TaskCopier.INSTANCE.convert(taskAddReq);
         //名称查重
         checkNameExisted(taskDO);
+        //阶段限制
+        checkTaskStage(taskDO);
         //关联本项目产品需求
         checkProductDemandIdsByProjectLinked(taskDO);
         //检查开始日期
@@ -448,6 +453,22 @@ public class TaskServiceImpl implements TaskService {
         } else if (taskDO.getId() != null && existTaskDO != null && !taskDO.getId().equals(existTaskDO.getId())) {
             // 编辑
             throw new BaseBizRuntimeException("该任务名称已存在,请修改后重试");
+        }
+    }
+
+    /**
+     * 名称重复
+     *
+     * @param taskDO
+     */
+    private void checkTaskStage(TaskDO taskDO) {
+        List<ProjectNodeDO> projectNodeDO = projectNodeMapper.get(taskDO.getProjectId());
+        List<String> sureNode = Lists.newArrayList(ProjectStageEnum.DEMAND_START.getText()
+                , ProjectStageEnum.DEMAND_CHECK.getText()
+                , ProjectStageEnum.DEMAND_ANALYSE.getText());
+        List<ProjectNodeDO> filter = projectNodeDO.stream().filter(a -> sureNode.contains(a.getName())).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(filter) && TaskStageEnum.DEMAND.getCode().equals(taskDO.getStage())) {
+            throw new BaseBizRuntimeException("项目无需求规划阶段,不能创建该阶段的任务,请修改后重试");
         }
     }
 
