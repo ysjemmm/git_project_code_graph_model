@@ -218,6 +218,13 @@ public class TestBillServiceImpl implements TestBillService {
         //更新提测单
         testBillMapper.submitSmokeTesting(testBillDO);
 
+        FileDO fileDO = new FileDO();
+        fileDO.setIsDeleted(true);
+        fileDO.setAttacheId(testBillModifyReq.getProjectId());
+        fileDO.setType(FileTypeEnum.TEST_BILL_PASS.getCode());
+        //删除文件表中的原有信息
+        fileMapper.update(fileDO);
+
         List<FileAddReq> fileAddReqList = testBillModifyReq.getList();
         if (CollectionUtils.isNotEmpty(fileAddReqList)) {
             //向文件表中插入新的数据
