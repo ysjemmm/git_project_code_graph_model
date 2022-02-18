@@ -566,7 +566,7 @@ public class TaskServiceImpl implements TaskService {
                         //最后一条数据不用计算
                         Long result = elapsedTimeClient.getElapsedTime(a.getStartDate(), lastTaskTimeDO.getEndDate());
                         totalTime.getAndAdd(result);
-                        return;
+                        break;
                     }
                 }
             }
