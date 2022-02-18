@@ -549,6 +549,29 @@ public class TaskServiceImpl implements TaskService {
                 log.info("任务耗时表找不到数据,taskId:{}", taskDO.getId());
                 return;
             }
+            //最后数据的完成时间
+            TaskTimeDO lastTaskTimeDO = list.get(list.size() - 1);
+            if(lastTaskTimeDO.getEndDate().after(lastTaskTimeDO.getStartDate())){
+                // 完成结束时间大于暂停时间
+                for (TaskTimeDO a : list) {
+                    Long result = elapsedTimeClient.getElapsedTime(a.getStartDate(), a.getEndDate());
+                    totalTime.getAndAdd(result);
+                }
+            }else{
+                for (TaskTimeDO a : list) {
+                    if(a.getEndDate().before(lastTaskTimeDO.getEndDate())){
+                        Long result = elapsedTimeClient.getElapsedTime(a.getStartDate(), a.getEndDate());
+                        totalTime.getAndAdd(result);
+                    }else{
+                        Long result = elapsedTimeClient.getElapsedTime(a.getStartDate(), lastTaskTimeDO.getEndDate());
+                        totalTime.getAndAdd(result);
+                        return;
+                    }
+                }
+            }
+
+
+
             list.forEach(a -> {
                 Long result = elapsedTimeClient.getElapsedTime(a.getStartDate(), a.getEndDate());
                 totalTime.getAndAdd(result);

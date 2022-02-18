@@ -43,13 +43,13 @@ public class ElapsedTimeClientImpl implements ElapsedTimeClient {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<JSONObject> entity = new HttpEntity<>(param, httpHeaders);
-        String result = restTemplate.postForObject(baseUrl, entity, String.class);
-        log.info("获取工作日工作时长返回结果: result :{}", result);
+        String result = restTemplate.postForObject("http://dingtalk.testk8s.tsign.cn/workday/elapsedTimeV2/", entity, String.class);
         JSONObject jsonObject = JSONObject.parseObject(result);
         Integer code = jsonObject.getInteger("code");
         if (Integer.valueOf(0).equals(code)) {
             return jsonObject.getJSONObject("data").getLong("elapsedtime");
         }
+        log.info("获取工作日工作时长返回结果: result :{}", result);
         throw new BaseBizRuntimeException("计算工作日工作时长失败！" );
     }
 }

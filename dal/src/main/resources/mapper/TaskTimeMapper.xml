@@ -47,6 +47,6 @@
         select a.id,a.task_id, a.start_date, a.end_date ,a.is_deleted
         ,a.create_man_id, a.create_man,a.create_date,a.modify_date
         from task_time a
-        where a.task_id=#{taskId}
+        where a.task_id=#{taskId} order by a.id
     </select>
 </mapper>
