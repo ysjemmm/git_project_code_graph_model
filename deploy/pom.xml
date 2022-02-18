@@ -120,7 +120,7 @@
                         <exclude>**/model/**</exclude>
                         <exclude>**/dto/*</exclude>
                         <exclude>**/dal/**</exclude>
-                        <exclude>**/copy/*</exclude>
+                        <exclude>**/copy/**</exclude>
                         <exclude>**/util/*</exclude>
                         <exclude>**/utils/**</exclude>
                         <exclude>**/task/**</exclude>
@@ -129,6 +129,8 @@
                         <exclude>**/*Util.class</exclude>
                         <exclude>**/*Exception.class</exclude>
                         <exclude>**/*Enum.class</exclude>
+                        <exclude>**/integration/**</exclude>
+                        <exclude>**/interceptor/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>

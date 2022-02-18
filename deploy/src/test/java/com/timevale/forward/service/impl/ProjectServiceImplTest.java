@@ -4,6 +4,7 @@ import org.mockito.InjectMocks;
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
+import org.testng.annotations.Test;
 
 /**
  * @author xingyun
@@ -14,6 +15,10 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
 
     @InjectMocks
     private ProjectServiceImpl projectService;
+
+    @Test
+    public void testUpdateStatus(){
+    }
 
 
 }
