@@ -29,15 +29,15 @@ public class DistributeConfig {
     }
 
     /**
-     * 数据指标配置 —— 产品PD,开发RD
+     * 数据指标配置 —— 个人，leader
      *
      */
-    public DistributeConfigVO getDataIndicatorPD() {
-        return databases.get("pd.dataIndicator");
+    public DistributeConfigVO getDataIndicatorCommon() {
+        return databases.get("common.dataIndicator");
     }
 
-    public DistributeConfigVO getDataIndicatorRD() {
-        return databases.get("rd.dataIndicator");
+    public DistributeConfigVO getDataIndicatorLeader() {
+        return databases.get("leader.dataIndicator");
     }
 
     /**

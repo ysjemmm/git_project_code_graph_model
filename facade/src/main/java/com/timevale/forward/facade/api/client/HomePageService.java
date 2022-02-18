@@ -20,10 +20,9 @@ public interface HomePageService {
     /**
      * 查数据指标
      *
-     * @param userType 用户类型
      * @return 列表
      */
-    BaseResult<HomePageDataIndicatorVO> getDataIndicator(String userType);
+    BaseResult<HomePageDataIndicatorVO> getDataIndicator();
 
     /**
      * 待办卡片
