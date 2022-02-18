@@ -247,6 +247,10 @@ public class TaskComponentImpl implements TaskComponent {
             containsCurrentUser = false;
         }
         Map<String, String> map = innerUserPersonClient.getUnionIds(executorIds);
+        if(map.isEmpty()){
+            log.info("新增待办时,查询用户中心所属用户无unionId");
+            return;
+        }
         String unionId = map.get(id);
         if (!containsCurrentUser) {
             map.remove(id);
@@ -276,14 +280,20 @@ public class TaskComponentImpl implements TaskComponent {
             containsCurrentUser = false;
         }
         Map<String, String> map = innerUserPersonClient.getUnionIds(executorIds);
+        if(map.isEmpty()){
+            log.info("更新待办时,查询用户中心所属用户无unionId");
+            return;
+        }
         String unionId = map.get(id);
         if (!containsCurrentUser) {
             map.remove(id);
         }
         UpdateTodoTaskMsg updateTodoTaskMsg = UpdateTodoTaskMsg.builder()
                 .recordId(taskDO.getTodoId())
+                .title(taskDO.getName())
                 .unionId(unionId)
                 .executorIds(Lists.newArrayList(map.values()))
+                .participantIds(Lists.newArrayList(map.values()))
                 .done(taskDO.getActualEndDate() != null)
                 .dueTime(taskDO.getPlanEndDate().getTime()).build();
         log.info("更新待办,taskDO:{},executorIds:{},updateTodoTaskMsg:{}", taskDO, executorIds, updateTodoTaskMsg);
@@ -297,6 +307,10 @@ public class TaskComponentImpl implements TaskComponent {
         }
         String id = LocalSessionUtils.getUserInfo().getId();
         Map<String, String> map = innerUserPersonClient.getUnionIds(com.google.common.collect.Lists.newArrayList(id));
+        if(map.isEmpty()){
+            log.info("删除待办时,查询用户中心所属用户无unionId");
+            return;
+        }
         DeleteTodoTaskMsg deleteTodoTaskMsg = DeleteTodoTaskMsg.builder()
                 .recordId(todoId)
                 .unionId(map.get(id))

@@ -47,8 +47,10 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
     public void updateTask(UpdateTodoTaskMsg updateTodoTaskMsg) {
         final DingUpdateTodoTaskInput input = new DingUpdateTodoTaskInput();
         input.setRecordId(updateTodoTaskMsg.getRecordId());
+        input.setTitle(updateTodoTaskMsg.getTitle());
         input.setUnionId(updateTodoTaskMsg.getUnionId());
         input.setExecutorIds(updateTodoTaskMsg.getExecutorIds());
+        input.setParticipantIds(updateTodoTaskMsg.getParticipantIds());
         input.setDone(updateTodoTaskMsg.getDone());
         input.setDueTime(updateTodoTaskMsg.getDueTime());
         try {

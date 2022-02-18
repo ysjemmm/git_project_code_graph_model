@@ -20,9 +20,19 @@ public class UpdateTodoTaskMsg {
     private String recordId;
 
     /**
-     * 待办接收人unionId
+     * 标题
+     */
+    private String title;
+
+    /**
+     * 待办执行人unionId
      */
     private List<String> executorIds;
+
+    /**
+     * 待办参与人unionId
+     */
+    private List<String> participantIds;
     /**
      * 待办操作人unionId
      */

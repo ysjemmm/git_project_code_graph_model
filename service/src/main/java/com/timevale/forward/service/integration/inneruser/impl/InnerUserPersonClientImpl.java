@@ -1,5 +1,6 @@
 package com.timevale.forward.service.integration.inneruser.impl;
 
+import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -8,13 +9,16 @@ import com.timevale.security.facade.request.AccountRequest;
 import com.timevale.security.facade.request.GroupRequest;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -44,10 +48,10 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             if (allMyStaffNew.ifSuccess()) {
                 return new ArrayList<>(allMyStaffNew.getData());
             }
-            log.error("[innerUser]调用内部用户中心失败 account: " + account + " error: " + allMyStaffNew.getMessage());
+            log.error("[innerUser]调用内部用户中心失败 getAllMyStaffNew account: " + account + " error: " + allMyStaffNew.getMessage());
             return new ArrayList<>();
         } catch (Exception e) {
-            log.error("调用内部用户中心失败 account: " + account + " error: " + e.getMessage(), e);
+            log.error("调用内部用户中心失败 getAllMyStaffNew account: " + account + " error: " + e.getMessage(), e);
             throw new BaseBizRuntimeException("调用内部用户中心失败! " + account);
         }
     }
@@ -59,13 +63,13 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             request.setAccount(account);
             request.setIsLeave(true);
             final BaseResult<List<BaseInfoResponse>> allMyStaffs = rpcPersonService.getAllMyStaffs(request);
-            if(allMyStaffs.ifSuccess()){
+            if (allMyStaffs.ifSuccess()) {
                 return new ArrayList<>(allMyStaffs.getData());
             }
-            log.error("[innerUser]调用内部用户中心失败 account: " + account + " error: " + allMyStaffs.getMessage());
+            log.error("[innerUser]调用内部用户中心失败 getAllMyStaffs account: " + account + " error: " + allMyStaffs.getMessage());
             return new ArrayList<>();
         } catch (Exception e) {
-            log.error("调用内部用户中心失败 account: " + account + " error: " + e.getMessage(), e);
+            log.error("调用内部用户中心失败 getAllMyStaffs account: " + account + " error: " + e.getMessage(), e);
             throw new BaseBizRuntimeException("调用内部用户中心失败! " + account);
         }
     }
@@ -90,13 +94,15 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             request.setAccount(account);
             request.setIsLeave(isLeave);
             final BaseResult<BaseInfoResponse> accountInfo = rpcPersonService.getByAccount(request);
-            if(accountInfo.ifSuccess()){
+            if (accountInfo.ifSuccess()) {
                 List<BaseInfoResponse> allMyStaffInfoWithSelf = this.getAllMyStaffInfo(account, isLeave);
                 allMyStaffInfoWithSelf.add(accountInfo.getData());
                 return allMyStaffInfoWithSelf;
             }
+            log.error("调用内部用户中心失败 getByAccount account: " + account + " error: " + accountInfo);
+            return Lists.emptyList();
         } catch (Exception e) {
-            log.error("调用内部用户中心失败 account: " + account + " error: " + e.getMessage(), e);
+            log.error("调用内部用户中心失败 getByAccount account: " + account + " error: " + e.getMessage(), e);
         }
         throw new BaseBizRuntimeException("调用内部用户中心失败! " + account);
     }
@@ -108,6 +114,8 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             if (personByAccountNew.ifSuccess() && !CollectionUtils.isEmpty(personByAccountNew.getData())) {
                 return personByAccountNew.getData();
             }
+            log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountIds + " error: " + personByAccountNew);
+            return Lists.emptyList();
         } catch (Exception e) {
             log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountIds + " error: " + e.getMessage(), e);
         }
@@ -115,7 +123,6 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
     }
 
     /**
-     *
      * @param groupId groupId
      * @return 部门及子部门员工(含离职)
      */
@@ -131,8 +138,10 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
                 personInGroup.getData().forEach(t -> accountIds.add(t.getAccount()));
                 return accountIds;
             }
+            log.error("调用内部用户中心失败 getAllStaffsByGroupId groupId: " + groupId + " error: " + personInGroup);
+            return Lists.emptyList();
         } catch (Exception e) {
-            log.error("调用内部用户中心失败 getPersonByAccountNew groupId: " + groupId + " error: " + e.getMessage(), e);
+            log.error("调用内部用户中心失败 getAllStaffsByGroupId groupId: " + groupId + " error: " + e.getMessage(), e);
         }
         throw new BaseBizRuntimeException("调用内部用户中心失败! " + groupId);
     }
@@ -147,10 +156,12 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
     public Map<String, String> getUnionIds(List<String> accountIds) {
         try {
             BaseResult<List<BaseInfoResponse>> personByAccountNew = rpcPersonService.getPersonByAccountNew(accountIds);
-            if (personByAccountNew.ifSuccess() && !CollectionUtils.isEmpty(personByAccountNew.getData())) {
-                return personByAccountNew.getData().stream()
+            if (personByAccountNew.ifSuccess()&&!CollectionUtils.isEmpty(personByAccountNew.getData())) {
+                return personByAccountNew.getData().stream().filter(a -> StringUtils.isNotEmpty(a.getUnionId()))
                         .collect(Collectors.toMap(BaseInfoResponse::getAccount, BaseInfoResponse::getUnionId, (v1, v2) -> v1));
             }
+            log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountIds + " error: " + personByAccountNew);
+            return Maps.newHashMap();
         } catch (Exception e) {
             log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountIds + " error: " + e.getMessage(), e);
         }
@@ -168,13 +179,13 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             groupRequest.setGroupId(groupId);
             BaseResult<List<BaseInfoResponse>> personInGroup = rpcPersonService.getByGroupIdNew(groupRequest);
             if (personInGroup.ifSuccess()) {
-                if(!CollectionUtils.isEmpty(personInGroup.getData())){
+                if (!CollectionUtils.isEmpty(personInGroup.getData())) {
                     personInGroup.getData().forEach(e -> accountIds.add(e.getAccount()));
                 }
                 return accountIds;
             }
         } catch (Exception e) {
-            log.error("调用内部用户中心失败 getPersonByAccountNew groupId: " + groupId + " error: " + e.getMessage(), e);
+            log.error("调用内部用户中心失败 getByGroupIdNew groupId: " + groupId + " error: " + e.getMessage(), e);
         }
         throw new BaseBizRuntimeException("调用内部用户中心失败! " + groupId);
     }

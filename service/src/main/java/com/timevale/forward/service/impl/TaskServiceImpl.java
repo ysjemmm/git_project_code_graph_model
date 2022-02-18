@@ -575,6 +575,7 @@ public class TaskServiceImpl implements TaskService {
             TaskCondition condition = TaskCondition.builder().id(taskDO.getId()).build();
             TaskDO existTaskDO = taskMapper.get(condition);
             log.info("编辑时,处理钉钉待办,existTaskDO:{}", existTaskDO);
+            taskDO.setTodoId(existTaskDO.getTodoId());
             if (taskDO.getTodo() && StringUtils.isEmpty(existTaskDO.getTodoId())
                     && !TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
 //            //编辑时,状态为待执行,进行中时才能新增待办
@@ -599,7 +600,6 @@ public class TaskServiceImpl implements TaskService {
                         ((!taskDO.getPlanEndDate().equals(existTaskDO.getPlanEndDate()))
                                 || executorChanged || taskDO.getActualEndDate() != null);
                 if (needUpdate) {
-                    taskDO.setTodoId(existTaskDO.getTodoId());
                     taskComponent.updateTodoTask(taskDO, executorIds);
                 }
             }
