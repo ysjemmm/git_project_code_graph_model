@@ -43,7 +43,7 @@ public class ElapsedTimeClientImpl implements ElapsedTimeClient {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<JSONObject> entity = new HttpEntity<>(param, httpHeaders);
-        String result = restTemplate.postForObject("http://dingtalk.testk8s.tsign.cn/workday/elapsedTimeV2/", entity, String.class);
+        String result = restTemplate.postForObject(baseUrl, entity, String.class);
         JSONObject jsonObject = JSONObject.parseObject(result);
         Integer code = jsonObject.getInteger("code");
         if (Integer.valueOf(0).equals(code)) {
