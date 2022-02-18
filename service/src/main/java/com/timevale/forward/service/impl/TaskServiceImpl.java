@@ -551,31 +551,25 @@ public class TaskServiceImpl implements TaskService {
             }
             //最后数据的完成时间
             TaskTimeDO lastTaskTimeDO = list.get(list.size() - 1);
-            if(lastTaskTimeDO.getEndDate().after(lastTaskTimeDO.getStartDate())){
-                // 完成结束时间大于暂停时间
+            if (lastTaskTimeDO.getEndDate().after(lastTaskTimeDO.getStartDate())) {
+                // 完成时,结束时间大于暂停时间
                 for (TaskTimeDO a : list) {
                     Long result = elapsedTimeClient.getElapsedTime(a.getStartDate(), a.getEndDate());
                     totalTime.getAndAdd(result);
                 }
-            }else{
+            } else {
                 for (TaskTimeDO a : list) {
-                    if(a.getEndDate().before(lastTaskTimeDO.getEndDate())){
+                    if (a.getEndDate().before(lastTaskTimeDO.getEndDate())) {
                         Long result = elapsedTimeClient.getElapsedTime(a.getStartDate(), a.getEndDate());
                         totalTime.getAndAdd(result);
-                    }else{
+                    } else if (!a.getId().equals(lastTaskTimeDO.getId())) {
+                        //最后一条数据不用计算
                         Long result = elapsedTimeClient.getElapsedTime(a.getStartDate(), lastTaskTimeDO.getEndDate());
                         totalTime.getAndAdd(result);
                         return;
                     }
                 }
             }
-
-
-
-            list.forEach(a -> {
-                Long result = elapsedTimeClient.getElapsedTime(a.getStartDate(), a.getEndDate());
-                totalTime.getAndAdd(result);
-            });
             BigDecimal elapsedTime = new BigDecimal(String.valueOf(totalTime.get()));
             BigDecimal decimal = elapsedTime.divide(new BigDecimal(SECONDS_PER_HOUR), 2, BigDecimal.ROUND_HALF_UP);
             taskDO.setTaskUseTime(decimal);
@@ -617,11 +611,12 @@ public class TaskServiceImpl implements TaskService {
                         executorChanged = true;
                     }
                 }
-                //1.计划结束时间有变,2.执行人有变,3.任务完成发送待办
+                //1.计划结束时间有变,2.执行人有变,3.任务完成发送待办,4.任务名称改变
                 boolean needUpdate = !StringUtils.isEmpty(existTaskDO.getTodoId())
                         &&
                         ((!taskDO.getPlanEndDate().equals(existTaskDO.getPlanEndDate()))
-                                || executorChanged || taskDO.getActualEndDate() != null);
+                                || executorChanged || taskDO.getActualEndDate() != null
+                                || !taskDO.getName().equals(existTaskDO.getName()));
                 if (needUpdate) {
                     taskComponent.updateTodoTask(taskDO, executorIds);
                 }
