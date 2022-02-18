@@ -32,20 +32,20 @@ public class HomePageDataIndicatorComponentImpl extends BaseDistributeClientImpl
     private InnerUserPersonClient innerUserPersonClient;
 
     @Override
-    public HomePageDataIndicatorDTO getDataIndicator(String userType) {
+    public HomePageDataIndicatorDTO getDataIndicator() {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
 
         ParamHelper paramHelper = ParamHelper.newInstance()
-                .in("user_id", allMyStaffWithSelf);
+                .equals("user_id", userInfo.getId());
 
         // 根据用户类型访问不同接口
         DistributeConfigVO distributeConfigVO;
-        if(userType.equals(UserTypeEnum.PD.toString())){
-            distributeConfigVO = distributeConfig.getDataIndicatorPD();
+        if(allMyStaffWithSelf.size() == 1){
+            distributeConfigVO = distributeConfig.getDataIndicatorCommon();
         }else{
-            distributeConfigVO = distributeConfig.getDataIndicatorRD();
+            distributeConfigVO = distributeConfig.getDataIndicatorLeader();
         }
 
         DistributePageQueryVO params = DistributePageQueryVO.builder()

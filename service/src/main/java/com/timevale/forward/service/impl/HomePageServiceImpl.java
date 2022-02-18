@@ -77,15 +77,14 @@ public class HomePageServiceImpl implements HomePageService {
     TaskMapper taskMapper;
 
     @Override
-    public BaseResult<HomePageDataIndicatorVO> getDataIndicator(String userType) {
-        HomePageDataIndicatorDTO dataIndicator = homePageDataIndicatorComponent.getDataIndicator(userType);
+    public BaseResult<HomePageDataIndicatorVO> getDataIndicator() {
+        HomePageDataIndicatorDTO dataIndicator = homePageDataIndicatorComponent.getDataIndicator();
         return BaseResult.success(HomePageDataIndicatorCopier.INSTANCE.convert(dataIndicator));
     }
 
     @Override
     public BaseResult<HomePageTodoCardVO> getTodoCard(String userType) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         int taskCount = 0;
         int projectCount = 0;
         int bizDemandCount = 0;
