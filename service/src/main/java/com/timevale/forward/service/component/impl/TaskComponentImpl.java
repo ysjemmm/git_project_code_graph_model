@@ -290,7 +290,7 @@ public class TaskComponentImpl implements TaskComponent {
         }
         UpdateTodoTaskMsg updateTodoTaskMsg = UpdateTodoTaskMsg.builder()
                 .recordId(taskDO.getTodoId())
-                .title(taskDO.getName())
+                .title(String.format(TITLE, taskDO.getName()))
                 .unionId(unionId)
                 .executorIds(Lists.newArrayList(map.values()))
                 .participantIds(Lists.newArrayList(map.values()))
