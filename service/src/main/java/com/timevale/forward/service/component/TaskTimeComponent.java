@@ -30,4 +30,11 @@ public interface TaskTimeComponent {
      */
     List<TaskTimeDTO> getUseTime(TaskDO taskDO);
 
+    /**
+     *
+     * @param id id
+     * @param endDate 结束时间
+     */
+    void updateById(Long id,Date endDate);
+
 }

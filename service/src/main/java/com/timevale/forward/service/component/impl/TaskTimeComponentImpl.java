@@ -74,4 +74,12 @@ public class TaskTimeComponentImpl extends BaseDistributeClientImpl<TaskTimeDTO>
                 .build();
         return doGet(queryParams);
     }
+
+    @Override
+    public void updateById(Long id, Date endDate) {
+        TaskTimeDO taskTimeDO = new TaskTimeDO();
+        taskTimeDO.setId(id);
+        taskTimeDO.setEndDate(endDate);
+        taskTimeMapper.updateById(taskTimeDO);
+    }
 }
