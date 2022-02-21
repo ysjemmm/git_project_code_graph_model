@@ -2,6 +2,7 @@ package com.timevale.forward.service.component;
 
 import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
 import com.timevale.forward.dal.dto.HomePageRiskWarningTaskDTO;
+import com.timevale.forward.facade.api.request.HomePageBaseReq;
 
 import java.util.List;
 
@@ -15,5 +16,5 @@ public interface HomePageRiskWarningTaskComponent {
      *
      * @return 列表
      */
-    List<HomePageRiskWarningTaskDTO> getRiskWarningTask();
+    List<HomePageRiskWarningTaskDTO> getRiskWarningTask(HomePageBaseReq homePageBaseReq);
 }

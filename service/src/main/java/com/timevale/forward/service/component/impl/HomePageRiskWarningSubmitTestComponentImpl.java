@@ -1,6 +1,8 @@
 package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dto.HomePageRiskWarningSubmitTestDTO;
+import com.timevale.forward.facade.api.request.HomePageBaseReq;
+import com.timevale.forward.model.enums.HomePageTabEnum;
 import com.timevale.forward.model.enums.UserTypeEnum;
 import com.timevale.forward.service.component.HomePageRiskWarningSubmitTestComponent;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
@@ -33,10 +35,15 @@ public class HomePageRiskWarningSubmitTestComponentImpl extends BaseDistributeCl
     private InnerUserPersonClient innerUserPersonClient;
 
     @Override
-    public List<HomePageRiskWarningSubmitTestDTO> getRiskWarningSubmitTest() {
+    public List<HomePageRiskWarningSubmitTestDTO> getRiskWarningSubmitTest(HomePageBaseReq homePageBaseReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+        List<String> allMyStaffWithSelf;
+        if(HomePageTabEnum.INDIVIDUAL.getCode().equals(homePageBaseReq.getTabType())){
+            allMyStaffWithSelf = Lists.newArrayList(userInfo.getId());
+        }else {
+            allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+        }
 
         ParamHelper paramHelper = ParamHelper.newInstance()
                 .offset(0)

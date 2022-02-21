@@ -3,6 +3,7 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
+import com.timevale.forward.facade.api.request.HomePageBaseReq;
 import com.timevale.forward.facade.api.request.HomePageProjectBoardReq;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -20,17 +21,18 @@ public interface HomePageService {
     /**
      * 查数据指标
      *
+     * @param homePageBaseReq 查询条件
      * @return 列表
      */
-    BaseResult<HomePageDataIndicatorVO> getDataIndicator();
+    BaseResult<HomePageDataIndicatorVO> getDataIndicator(HomePageBaseReq homePageBaseReq);
 
     /**
      * 待办卡片
      *
-     * @param userType 用户类型
+     * @param homePageBaseReq 查询条件
      * @return 列表
      */
-    BaseResult<HomePageTodoCardVO> getTodoCard(String userType);
+    BaseResult<HomePageTodoCardVO> getTodoCard(HomePageBaseReq homePageBaseReq);
 
 
     /**
@@ -45,10 +47,10 @@ public interface HomePageService {
     /**
      * 预警
      *
-     * @param userType 用户类型
+     * @param homePageBaseReq 查询条件
      * @return 列表
      */
-    BaseResult<List<HomePageRiskWarningVO>> getRiskWarning(String userType);
+    BaseResult<List<HomePageRiskWarningVO>> getRiskWarning(HomePageBaseReq homePageBaseReq);
 
     /**
      * 项目工时看板查询

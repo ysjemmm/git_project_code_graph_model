@@ -1,9 +1,9 @@
 package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dto.HomePageDataIndicatorDTO;
-import com.timevale.forward.model.enums.UserTypeEnum;
+import com.timevale.forward.facade.api.request.HomePageBaseReq;
+import com.timevale.forward.model.enums.HomePageTabEnum;
 import com.timevale.forward.service.component.HomePageDataIndicatorComponent;
-import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.integration.superset.client.impl.BaseDistributeClientImpl;
 import com.timevale.forward.service.integration.superset.config.DistributeConfig;
 import com.timevale.forward.service.integration.superset.config.DistributeConfigVO;
@@ -28,25 +28,20 @@ public class HomePageDataIndicatorComponentImpl extends BaseDistributeClientImpl
     @Resource
     private DistributeConfig distributeConfig;
 
-    @Resource
-    private InnerUserPersonClient innerUserPersonClient;
-
     @Override
-    public HomePageDataIndicatorDTO getDataIndicator() {
+    public HomePageDataIndicatorDTO getDataIndicator(HomePageBaseReq homePageBaseReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
-        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
-
-        ParamHelper paramHelper = ParamHelper.newInstance()
-                .equals("user_id", userInfo.getId());
 
         // 根据用户类型访问不同接口
         DistributeConfigVO distributeConfigVO;
-        if(allMyStaffWithSelf.size() == 1){
+        if(HomePageTabEnum.INDIVIDUAL.getCode().equals(homePageBaseReq.getTabType())){
             distributeConfigVO = distributeConfig.getDataIndicatorCommon();
         }else{
             distributeConfigVO = distributeConfig.getDataIndicatorLeader();
         }
+
+        ParamHelper paramHelper = ParamHelper.newInstance()
+                .equals("user_id", userInfo.getId());
 
         DistributePageQueryVO params = DistributePageQueryVO.builder()
                 .params(paramHelper.params())

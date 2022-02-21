@@ -12,6 +12,7 @@ import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.client.HomePageService;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
+import com.timevale.forward.facade.api.request.HomePageBaseReq;
 import com.timevale.forward.facade.api.request.HomePageProjectBoardReq;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
@@ -77,14 +78,16 @@ public class HomePageServiceImpl implements HomePageService {
     TaskMapper taskMapper;
 
     @Override
-    public BaseResult<HomePageDataIndicatorVO> getDataIndicator() {
-        HomePageDataIndicatorDTO dataIndicator = homePageDataIndicatorComponent.getDataIndicator();
+    public BaseResult<HomePageDataIndicatorVO> getDataIndicator(HomePageBaseReq homePageBaseReq) {
+        HomePageDataIndicatorDTO dataIndicator = homePageDataIndicatorComponent.getDataIndicator(homePageBaseReq);
         return BaseResult.success(HomePageDataIndicatorCopier.INSTANCE.convert(dataIndicator));
     }
 
     @Override
-    public BaseResult<HomePageTodoCardVO> getTodoCard(String userType) {
+    public BaseResult<HomePageTodoCardVO> getTodoCard(HomePageBaseReq homePageBaseReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        int bugCount = 0;
         int taskCount = 0;
         int projectCount = 0;
         int bizDemandCount = 0;
@@ -96,8 +99,8 @@ public class HomePageServiceImpl implements HomePageService {
         List<ProjectDO> projectDOList = projectMapper.selectByTeamMember(allMyStaffWithSelf);
         projectCount = (int) projectDOList.stream().filter(e -> ProjectStatusEnum.ongoing(e.getStatus())).count();
 
-        // 产品添加待处理业务需求，开发测试添加待处理任务
-        if (userType.equals(UserTypeEnum.PD.toString())) {
+        // 产品添加待处理业务需求，开发测试添加待处理任务,待验证bug
+        if (UserTypeEnum.PD.getCode().equals(homePageBaseReq.getUserType())) {
             List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(BizDemandListCondition.builder()
                     .receiveManIdList(allMyStaffWithSelf)
                     .build());
@@ -109,6 +112,7 @@ public class HomePageServiceImpl implements HomePageService {
         }
 
         HomePageTodoCardVO todoCardVO = new HomePageTodoCardVO();
+        todoCardVO.setBugCount(bugCount);
         todoCardVO.setTaskCount(taskCount);
         todoCardVO.setProjectCount(projectCount);
         todoCardVO.setBizDemandCount(bizDemandCount);
@@ -140,11 +144,14 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     @Override
-    public BaseResult<List<HomePageRiskWarningVO>> getRiskWarning(String userType) {
+    public BaseResult<List<HomePageRiskWarningVO>> getRiskWarning(HomePageBaseReq homePageBaseReq) {
         // 查询数据，同时转换为Set去重
-        Set<HomePageRiskWarningDTO> riskWarningDTOSet = Sets.newHashSet(homePageRiskWarningComponent.getRiskWarning(userType));
-        Set<HomePageRiskWarningTaskDTO> riskWarningTaskDTOSet = Sets.newHashSet(homePageRiskWarningTaskComponent.getRiskWarningTask());
-        Set<HomePageRiskWarningSubmitTestDTO> riskWarningSubmitTestDTOSet = Sets.newHashSet(homePageRiskWarningSubmitTestComponent.getRiskWarningSubmitTest());
+        Set<HomePageRiskWarningDTO> riskWarningDTOSet =
+                Sets.newHashSet(homePageRiskWarningComponent.getRiskWarning(homePageBaseReq));
+        Set<HomePageRiskWarningTaskDTO> riskWarningTaskDTOSet =
+                Sets.newHashSet(homePageRiskWarningTaskComponent.getRiskWarningTask(homePageBaseReq));
+        Set<HomePageRiskWarningSubmitTestDTO> riskWarningSubmitTestDTOSet =
+                Sets.newHashSet(homePageRiskWarningSubmitTestComponent.getRiskWarningSubmitTest(homePageBaseReq));
 
         // 查询结果中所有的项目id
         Set<Long> projectIdSet = Sets.newHashSet();
@@ -221,9 +228,13 @@ public class HomePageServiceImpl implements HomePageService {
         List<Long> deptIds = homePageProjectBoardReq.getDeptIds();
         List<String> teamMembers = homePageProjectBoardReq.getTeamMembers();
 
-        // 我和我的所有下属信息
-        List<BaseInfoResponse> allMyStaffInfoWithSelfInfo =
-                innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
+        // 个人 或者 我和我的所有下属信息
+        List<BaseInfoResponse> allMyStaffInfoWithSelfInfo;
+        if(HomePageTabEnum.INDIVIDUAL.getCode().equals(homePageProjectBoardReq.getTabType())){
+            allMyStaffInfoWithSelfInfo = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(userInfo.getId()));
+        }else{
+            allMyStaffInfoWithSelfInfo = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), true);
+        }
         //我和我所有下属的职能类型 Map(userid,jobFunction)
         Map<String, String> allMyStaffInfoWithSelfJobFunction = allMyStaffInfoWithSelfInfo
                 .stream()

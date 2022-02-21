@@ -1,12 +1,12 @@
 package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dto.HomePageRiskWarningTaskDTO;
-import com.timevale.forward.model.enums.UserTypeEnum;
+import com.timevale.forward.facade.api.request.HomePageBaseReq;
+import com.timevale.forward.model.enums.HomePageTabEnum;
 import com.timevale.forward.service.component.HomePageRiskWarningTaskComponent;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.integration.superset.client.impl.BaseDistributeClientImpl;
 import com.timevale.forward.service.integration.superset.config.DistributeConfig;
-import com.timevale.forward.service.integration.superset.config.DistributeConfigVO;
 import com.timevale.forward.service.integration.superset.model.base.DistributePageQueryVO;
 import com.timevale.forward.service.integration.superset.util.ParamHelper;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -33,10 +33,15 @@ public class HomePageRiskWarningTaskComponentImpl extends BaseDistributeClientIm
     private InnerUserPersonClient innerUserPersonClient;
 
     @Override
-    public List<HomePageRiskWarningTaskDTO> getRiskWarningTask() {
+    public List<HomePageRiskWarningTaskDTO> getRiskWarningTask(HomePageBaseReq homePageBaseReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+        List<String> allMyStaffWithSelf;
+        if(HomePageTabEnum.INDIVIDUAL.getCode().equals(homePageBaseReq.getTabType())){
+            allMyStaffWithSelf = Lists.newArrayList(userInfo.getId());
+        }else {
+            allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+        }
 
         ParamHelper paramHelper = ParamHelper.newInstance()
                 .offset(0)

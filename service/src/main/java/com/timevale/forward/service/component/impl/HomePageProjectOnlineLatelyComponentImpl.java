@@ -2,6 +2,7 @@ package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dto.HomePageProjectOnlineLatelyDTO;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
+import com.timevale.forward.model.enums.HomePageTabEnum;
 import com.timevale.forward.service.component.HomePageProjectOnlineLatelyComponent;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.integration.superset.client.impl.BaseDistributeClientImpl;
@@ -36,7 +37,12 @@ public class HomePageProjectOnlineLatelyComponentImpl extends BaseDistributeClie
     public PageResult<HomePageProjectOnlineLatelyDTO> getProjectOnlineLately(HomePageProjectOnlineLatelyQueryList homePageProjectOnlineLatelyQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+        List<String> allMyStaffWithSelf;
+        if(HomePageTabEnum.INDIVIDUAL.getCode().equals(homePageProjectOnlineLatelyQueryList.getTabType())) {
+            allMyStaffWithSelf = Lists.newArrayList(userInfo.getId());
+        }else{
+            allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+        }
 
         ParamHelper queryParamHelper = ParamHelper.newInstance()
                 .offset((homePageProjectOnlineLatelyQueryList.getPageNum() - 1) * homePageProjectOnlineLatelyQueryList.getPageSize())

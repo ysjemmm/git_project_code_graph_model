@@ -1,7 +1,7 @@
 package com.timevale.forward.service.component;
 
-import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
 import com.timevale.forward.dal.dto.HomePageRiskWarningSubmitTestDTO;
+import com.timevale.forward.facade.api.request.HomePageBaseReq;
 
 import java.util.List;
 
@@ -15,5 +15,5 @@ public interface HomePageRiskWarningSubmitTestComponent {
      *
      * @return 列表
      */
-    List<HomePageRiskWarningSubmitTestDTO> getRiskWarningSubmitTest();
+    List<HomePageRiskWarningSubmitTestDTO> getRiskWarningSubmitTest(HomePageBaseReq homePageBaseReq);
 }

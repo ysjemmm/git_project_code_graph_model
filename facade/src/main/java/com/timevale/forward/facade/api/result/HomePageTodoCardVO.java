@@ -7,9 +7,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * @author: xingyun
- * @create: 2021-12-13 13:53
- **/
+ * @author by YangXu
+ * @date 2022/02/21 17:29
+ */
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("首页-待办卡片")
@@ -24,4 +24,6 @@ public class HomePageTodoCardVO extends ToString {
     @ApiModelProperty("业务需求数量")
     private Integer bizDemandCount;
 
+    @ApiModelProperty("bug数量")
+    private Integer bugCount;
 }

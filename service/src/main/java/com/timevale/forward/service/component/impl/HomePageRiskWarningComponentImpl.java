@@ -1,6 +1,8 @@
 package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
+import com.timevale.forward.facade.api.request.HomePageBaseReq;
+import com.timevale.forward.model.enums.HomePageTabEnum;
 import com.timevale.forward.model.enums.JobFunctionEnum;
 import com.timevale.forward.model.enums.UserTypeEnum;
 import com.timevale.forward.service.component.HomePageRiskWarningComponent;
@@ -36,10 +38,15 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
     private InnerUserPersonClient innerUserPersonClient;
 
     @Override
-    public List<HomePageRiskWarningDTO> getRiskWarning(String userType) {
+    public List<HomePageRiskWarningDTO> getRiskWarning(HomePageBaseReq homePageBaseReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        List<BaseInfoResponse> allMyStaffInfoWithSelf = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), true);
+        List<BaseInfoResponse> allMyStaffInfoWithSelf;
+        if(HomePageTabEnum.INDIVIDUAL.getCode().equals(homePageBaseReq.getTabType())){
+            allMyStaffInfoWithSelf = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(userInfo.getId()));
+        }else{
+            allMyStaffInfoWithSelf = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), true);
+        }
 
         // 区分开发和测试身份
         List<BaseInfoResponse> QAList = allMyStaffInfoWithSelf.stream()
