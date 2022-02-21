@@ -1,0 +1,73 @@
+package com.timevale.forward.facade.api.query;
+
+import com.timevale.mandarin.common.query.QueryBase;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.util.Date;
+import java.util.List;
+
+/**
+ * @author xingyun
+ * @date 2021-12-13 13:58
+ **/
+@EqualsAndHashCode(callSuper = true)
+@Data
+@ApiModel("线下bug列表查询")
+public class BugOfflineQueryList extends QueryBase {
+    @ApiModelProperty("id")
+    private Long id;
+
+    @ApiModelProperty("名称")
+    private String name;
+
+    @ApiModelProperty("状态")
+    private List<Integer>status;
+
+    @ApiModelProperty("经办人id")
+    private List<String> operatorIds;
+
+    @ApiModelProperty("提出人")
+    private List<String> createManIds;
+
+    @ApiModelProperty("关联项目")
+    private List<Long> projectIds;
+
+    @ApiModelProperty("产品线")
+    private List<Long> productLineIds;
+
+    @ApiModelProperty("业务域")
+    private List<Long> bizDomainIds;
+
+    @ApiModelProperty("优先级")
+    private List<Integer>priorities;
+
+    @ApiModelProperty("环境")
+    private List<Integer>envs;
+
+    @ApiModelProperty("原因")
+    private List<Integer>reasons;
+
+    @ApiModelProperty("来源")
+    private List<Integer>sources;
+
+    @ApiModelProperty("所属端")
+    private List<Integer>belongs;
+
+    @ApiModelProperty("创建时间左区间")
+    private Date createDateLeft;
+
+    @ApiModelProperty("创建时间有区间")
+    private Date createDateRight;
+
+    @ApiModelProperty("修改时间左区间")
+    private Date modifyDateLeft;
+
+    @ApiModelProperty("修改时间有区间")
+    private Date modifyDateRight;
+
+    @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
+    private String ascription;
+}
