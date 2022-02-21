@@ -16,7 +16,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("首页-项目工时看板查询")
-public class HomePageProjectBoardReq extends BaseReq {
+public class HomePageProjectBoardReq extends HomePageBaseReq {
 
     @ApiModelProperty("部门id")
     private List<Long> deptIds;
@@ -29,7 +29,4 @@ public class HomePageProjectBoardReq extends BaseReq {
 
     @ApiModelProperty("结束时间")
     private Date endDate;
-
-    @ApiModelProperty("用户类型")
-    private String userType;
 }
