@@ -45,6 +45,7 @@
             <if test="testBillDO.progress != null">progress=#{testBillDO.progress},</if>
             <if test="true">modify_man=#{modifyMan},</if>
             <if test="true">modify_man_id=#{modifyManId},</if>
+            <if test="true">reason=#{testBillDO.reason}</if>
         </set>
         <where>
             <if test="testBillDO.projectId != null">
