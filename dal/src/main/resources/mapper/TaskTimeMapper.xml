@@ -23,6 +23,9 @@
             <foreach collection="taskIds" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
+            <if test="id != null">
+              and   id  &gt; #{id}
+            </if>
         </where>
     </delete>
 
@@ -33,7 +36,7 @@
         where a.task_id=#{taskId} and a.end_date is null
     </select>
 
-    <select id="update" parameterType="com.timevale.forward.dal.entity.TaskTimeDO">
+    <update id="update" parameterType="com.timevale.forward.dal.entity.TaskTimeDO">
         update task_time a
         <set>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
@@ -41,7 +44,7 @@
             a.end_date=#{endDate}
         </set>
         where a.task_id=#{taskId} and a.end_date is null
-    </select>
+    </update>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.TaskTimeDO">
         select a.id,a.task_id, a.start_date, a.end_date ,a.is_deleted
@@ -49,4 +52,14 @@
         from task_time a
         where a.task_id=#{taskId} order by a.id
     </select>
+
+    <update id="updateById" parameterType="com.timevale.forward.dal.entity.TaskTimeDO">
+        update task_time a
+        <set>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            a.end_date=#{endDate}
+        </set>
+        where a.id=#{id}
+    </update>
 </mapper>

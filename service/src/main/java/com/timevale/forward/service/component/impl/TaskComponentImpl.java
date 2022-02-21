@@ -185,7 +185,7 @@ public class TaskComponentImpl implements TaskComponent {
             List<Long> taskIds = existTaskDO.stream().map(TaskDO::getId).collect(Collectors.toList());
             taskProductDemandComponent.update(taskIds, null);
 
-            taskTimeMapper.delete(taskIds);
+            taskTimeMapper.delete(taskIds,null);
 
             preUpdate.remove(TaskStatusEnum.SUSPEND.getCode());
             existTaskDO = existTaskDO.stream().filter(a -> (preUpdate.contains(a.getStatus()))).collect(Collectors.toList());
