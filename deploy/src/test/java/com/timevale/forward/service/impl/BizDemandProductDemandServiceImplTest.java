@@ -158,7 +158,6 @@ public class BizDemandProductDemandServiceImplTest extends AbstractTestNGSpringC
         userInfo.setName("轩振营");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
         localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
-        localSessionUtilsMockedStatic.close();
 
         ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
         productBizDemandDO.setProductDemandId(1L);
@@ -180,6 +179,8 @@ public class BizDemandProductDemandServiceImplTest extends AbstractTestNGSpringC
         bizDemandLinkProductDemandQueryList.setOwnerInfoList(Collections.singletonList(personQuery));
 
         assert bizDemandProductDemandService.matchProductDemandList(bizDemandLinkProductDemandQueryList).ifSuccess();
+
+        localSessionUtilsMockedStatic.close();
     }
 
 }

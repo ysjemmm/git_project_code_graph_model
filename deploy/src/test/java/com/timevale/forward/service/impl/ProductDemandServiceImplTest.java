@@ -93,7 +93,6 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
         userInfo.setId("www");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
         localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
-        localSessionUtilsMockedStatic.close();
 
         ProductDemandListDO productDemandListDO = new ProductDemandListDO();
         productDemandListDO.setStatus(1);
@@ -107,6 +106,7 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
         productDemandQueryList.setOwnerIds(Collections.singletonList("www"));
 
         assert productDemandService.list(productDemandQueryList).ifSuccess();
+        localSessionUtilsMockedStatic.close();
     }
 
 

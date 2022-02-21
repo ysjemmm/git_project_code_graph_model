@@ -24,6 +24,7 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
@@ -78,7 +79,7 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         userInfo.setName("轩振营");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
         localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
-        localSessionUtilsMockedStatic.close();
+
 
         BaseResult<PageQueryResult<BizDemandVO>> baseResult = new BaseResult<>();
         baseResult.setMessage("成功");
@@ -97,6 +98,8 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         bizDemandQueryList.setCreateDateStart(new Date());
 
         assert bizDemandService.list(bizDemandQueryList).ifSuccess();
+
+        localSessionUtilsMockedStatic.close();
     }
 
     @Test
@@ -106,7 +109,6 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         userInfo.setName("轩振营");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
         localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
-        localSessionUtilsMockedStatic.close();
 
         BizDemandDO bizDemandDO = new BizDemandDO();
         bizDemandDO.setId(1L);
@@ -118,12 +120,16 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
 
         when(productBizDemandMapper.deleteByBizDemandId(any(), any(), any())).thenReturn(1);
 
-        mockConstruction(BizDemandInvalidMsgEvent.class).constructed();
+        MockedConstruction<BizDemandInvalidMsgEvent> bizDemandInvalidMsgEventMocked = mockConstruction(BizDemandInvalidMsgEvent.class);
+        bizDemandInvalidMsgEventMocked.constructed();
         doNothing().when(messageEventPublisher).publish(any());
 
         BizDemandUpdateStatusReq bizDemandUpdateStatusReq = new BizDemandUpdateStatusReq();
         bizDemandUpdateStatusReq.setBizDemandId(1L);
         assert bizDemandService.updateStatus(bizDemandUpdateStatusReq).ifSuccess();
+
+        bizDemandInvalidMsgEventMocked.close();
+        localSessionUtilsMockedStatic.close();
     }
 
     @Test
@@ -137,7 +143,8 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
 
         doNothing().when(personComponent).add(any(), any(), any());
 
-        mockConstruction(BizDemandToReceiveMsgEvent.class).constructed();
+        MockedConstruction<BizDemandToReceiveMsgEvent> bizDemandToReceiveMsgEventMock = mockConstruction(BizDemandToReceiveMsgEvent.class);
+        bizDemandToReceiveMsgEventMock.constructed();
         doNothing().when(messageEventPublisher).publish(any());
 
         BizDemandAddReq bizDemandAddReq = new BizDemandAddReq();
@@ -149,6 +156,7 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         bizDemandAddReq.setRecipientInfoList(Collections.singletonList(personAddReq));
 
         assert bizDemandService.add(bizDemandAddReq).ifSuccess();
+        bizDemandToReceiveMsgEventMock.close();
     }
 
     @Test
@@ -227,7 +235,6 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         userInfo.setName("轩振营");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
         localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
-        localSessionUtilsMockedStatic.close();
 
         BizDemandDO bizDemandDO = new BizDemandDO();
         bizDemandDO.setStatus(1);
@@ -235,13 +242,17 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
 
         when(bizDemandMapper.update(any())).thenReturn(1);
 
-        mockConstruction(BizDemandReceivedMsgEvent.class).constructed();
+        MockedConstruction<BizDemandReceivedMsgEvent> bizDemandReceivedMsgEventMock = mockConstruction(BizDemandReceivedMsgEvent.class);
+        bizDemandReceivedMsgEventMock.constructed();
         doNothing().when(messageEventPublisher).publish(any());
 
         BizDemandAgreeReq bizDemandAgreeReq = new BizDemandAgreeReq();
         bizDemandAgreeReq.setBizDemandId(1L);
         bizDemandAgreeReq.setPlanReleaseDate(1);
         assert bizDemandService.agree(bizDemandAgreeReq).ifSuccess();
+
+        bizDemandReceivedMsgEventMock.close();
+        localSessionUtilsMockedStatic.close();
     }
 
     @Test
@@ -251,7 +262,6 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         userInfo.setName("轩振营");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
         localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
-        localSessionUtilsMockedStatic.close();
 
         BizDemandDO bizDemandDO = new BizDemandDO();
         bizDemandDO.setStatus(1);
@@ -263,10 +273,14 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
 
         when(bizDemandMapper.update(any())).thenReturn(1);
 
-        mockConstruction(BizDemandRejectMsgEvent.class).constructed();
+        MockedConstruction<BizDemandRejectMsgEvent> bizDemandRejectMsgEventMock = mockConstruction(BizDemandRejectMsgEvent.class);
+        bizDemandRejectMsgEventMock.constructed();
         doNothing().when(messageEventPublisher).publish(any());
 
         assert bizDemandService.reject(bizDemandRejectReq).ifSuccess();
+
+        bizDemandRejectMsgEventMock.close();
+        localSessionUtilsMockedStatic.close();
     }
 
     @Test
@@ -278,7 +292,8 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
 
         when(bizDemandMapper.update(any())).thenReturn(1);
 
-        mockConstruction(BizDemandToReceiveMsgEvent.class).constructed();
+        MockedConstruction<BizDemandToReceiveMsgEvent> MockedConstruction = mockConstruction(BizDemandToReceiveMsgEvent.class);
+        MockedConstruction.constructed();
         doNothing().when(messageEventPublisher).publish(any());
 
         BizDemandTransferReq bizDemandTransferReq = new BizDemandTransferReq();
@@ -287,6 +302,7 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         bizDemandTransferReq.setReceiveManId("www");
 
         assert bizDemandService.transfer(bizDemandTransferReq).ifSuccess();
+        MockedConstruction.close();
     }
 
 }

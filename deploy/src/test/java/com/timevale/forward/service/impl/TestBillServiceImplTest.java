@@ -54,7 +54,7 @@ public class TestBillServiceImplTest extends AbstractTestNGSpringContextTests {
     private FileComponent fileComponent;
 
     @Test
-    public void testAddTestBill(){
+    public void testAddTestBill() {
         UserInfo userInfo = new UserInfo();
         userInfo.setAlias("望轩");
         userInfo.setName("轩振营");
@@ -71,6 +71,7 @@ public class TestBillServiceImplTest extends AbstractTestNGSpringContextTests {
         when(testBillMapper.selectByProjectId(any())).thenReturn(testBillDO);
 
         assert testBillServiceImpl.addTestBill(3L).ifSuccess();
+        localSessionUtilsMockedStatic.close();
     }
 }
 

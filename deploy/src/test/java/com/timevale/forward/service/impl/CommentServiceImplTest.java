@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
-import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dao.CommentMapper;
+import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.entity.CommentDO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.query.CommentQueryList;
@@ -12,6 +13,7 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
@@ -59,7 +61,6 @@ public class CommentServiceImplTest extends AbstractTestNGSpringContextTests {
         userInfo.setName("轩振营");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
         localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
-        localSessionUtilsMockedStatic.close();
 
         when(commentMapper.insert(any())).thenReturn(1);
 
@@ -67,9 +68,9 @@ public class CommentServiceImplTest extends AbstractTestNGSpringContextTests {
         taskDO.setName("www");
         when(taskMapper.getById(any())).thenReturn(taskDO);
 
-        mockConstruction(CommentMsgEvent.class).constructed();
+        MockedConstruction<CommentMsgEvent> commentMsgEventMockedConstruction = mockConstruction(CommentMsgEvent.class);
+        commentMsgEventMockedConstruction.constructed();
         doNothing().when(messageEventPublisher).publish(any());
-
 
         CommentAddReq commentAddReq = new CommentAddReq();
         PersonQuery personQuery = new PersonQuery();
@@ -79,6 +80,8 @@ public class CommentServiceImplTest extends AbstractTestNGSpringContextTests {
         commentAddReq.setType(100);
 
         assert commentService.add(commentAddReq).ifSuccess();
+        commentMsgEventMockedConstruction.close();
+        localSessionUtilsMockedStatic.close();
     }
 }
 

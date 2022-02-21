@@ -90,7 +90,7 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
         userInfo.setId("www");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
         localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
-        localSessionUtilsMockedStatic.close();
+
 
         when(personMapper.getMainIds(any(), any(), any())).thenReturn(Arrays.asList(1L, 2L));
 
@@ -104,6 +104,7 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
         projectQueryList.setAscription("CURRENT_USER");
 
         assert projectService.list(projectQueryList).ifSuccess();
+        localSessionUtilsMockedStatic.close();
     }
 
     @Test
@@ -259,7 +260,6 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
         productDemandListDO.setStatus(1);
         productDemandListDO.setPriority(1);
         when(productDemandMapper.linkProductDemandList(any())).thenReturn(Collections.singletonList(productDemandListDO));
-
 
         ProjectProductDemandQueryList projectProductDemandQueryList = new ProjectProductDemandQueryList();
         projectProductDemandQueryList.setPageNum(1);
