@@ -9,6 +9,7 @@ import com.timevale.forward.facade.api.client.BugOfflineService;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.request.BugOfflineAddReq;
 import com.timevale.forward.facade.api.request.BugOfflineModifyReq;
+import com.timevale.forward.facade.api.request.BugOfflineTransferReq;
 import com.timevale.forward.facade.api.result.BugOfflineDetailVO;
 import com.timevale.forward.facade.api.result.BugOfflineVO;
 import com.timevale.forward.model.enums.AscriptionEnum;
@@ -85,6 +86,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         //3.若存在抄送人,抄送人数据入库
 
+        //4.bug日志表记录一条新增数据
+
+        //5.消息通知
         return BaseResult.success(true);
     }
 
@@ -98,114 +102,154 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         //3.更新抄送人数据
 
+        //5.修改经办人消息通知
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> transfer(BugOfflineTransferReq bugOfflineTransferReq) {
+        //1.验证操作人是否是经办人或其上级,状态是否是bug打开,待修复,待确认,待验收
+
+        //2.查找bug数据
+
+        //3.赋值:经办人为表单选择人,上一阶段经办人不变(测试角色),状态不变
+
+        //4.更新bug数据
+
+        //5.消息通知
         return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<Boolean> unHandle(Long id) {
-        //1.验证操作人是否是经办人,状态是否是bug打开
+        //1.验证操作人是否是经办人或其上级,状态是否是bug打开
 
         //2.查找bug数据
 
-        //3.赋值:经办人为bug提出人,上一阶段经办人为本次操作人,状态变成待确认
+        //3.赋值:经办人为bug表中上一阶段经办人(测试角色),上一阶段经办人赋值为本次操作人,状态变成待确认
 
         //4.更新bug数据
+
+        //5.bug日志表记录状态变更
+
+        //5.消息通知
         return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<Boolean> agree(Long id) {
-        //1.验证操作人是否是经办人,状态是否是待确认
+        //1.验证操作人是否是经办人或其上级,状态是否是待确认
 
         //2.查找bug数据
 
-        //3.赋值:状态变成关闭,经办人与上一阶段经办人不变,
+        //3.赋值:状态变成关闭,经办人(测试角色)与上一阶段经办人(开发角色)不变,
 
         //4.更新bug数据
+
+        //5.bug日志表记录状态变更
         return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<Boolean> reject(Long id) {
-        //1.验证操作人是否是经办人,状态是否是待确认
+        //1.验证操作人是否是经办人或其上级,状态是否是待确认
 
         //2.查找bug数据
 
-        //3.赋值:经办人为bug接收人,上一阶段经办人为本次操作人,状态变成bug打开
+        //3.赋值:经办人为bug表中上一阶段经办人(开发角色),上一阶段经办人为本次操作人,状态变成bug打开
 
         //4.更新bug数据
+
+        //5.bug日志表记录状态变更
         return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<Boolean> delayHandle(Long id) {
-        //1.验证操作人是否是经办人,状态是否是bug打开或待修复
+        //1.验证操作人是否是经办人或其上级,状态是否是bug打开或待修复
 
         //2.查找bug数据
 
-        //3.赋值:经办人为bug提出人,上一阶段经办人为本次操作人,状态变成延期修复
+        //3.赋值:经办人为bug表中上一阶段经办人(测试角色),上一阶段经办人为本次操作人,状态变成延期修复,取消关联项目
 
         //4.更新bug数据
+
+        //5.bug日志表记录状态变更
         return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<Boolean> doHandle(Long id) {
-        //1.验证操作人是否是经办人,状态是否是bug打开
+        //1.验证操作人是否是经办人或其上级,状态是否是bug打开
 
         //2.查找bug数据
 
-        //3.赋值:经办人和上一阶段经办人为本次操作人,状态变成待修复
+        //3.赋值:经办人为本次操作人,上一阶段经办人不变(测试角色),状态变成待修复
 
         //4.更新bug数据
+
+        //5.bug日志表记录状态变更
         return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<Boolean> passSelf(Long id) {
-        //1.验证操作人是否是经办人,状态是否是待修复
+        //1.验证操作人是否是经办人或其上级,状态是否是待修复
 
         //2.查找bug数据
 
-        //3.赋值:经办人为bug提出人,上一阶段经办人为本次操作人,状态变成待验收
+        //3.赋值:经办人为bug表中上一阶段经办人(测试角色),上一阶段经办人为本次操作人,状态变成待验收
 
         //4.更新bug数据
+
+        //5.bug日志表记录状态变更
+
+        //5.消息通知
         return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<Boolean> accepted(Long id) {
-        //1.验证操作人是否是经办人,状态是否是待验收
+        //1.验证操作人是否是经办人或其上级,状态是否是待验收
 
         //2.查找bug数据
 
         //3.赋值:经办人和上一阶段经办人不变(自测通过时的数据),状态变成完成
 
         //4.更新bug数据
+
+        //5.bug日志表记录状态变更
         return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<Boolean> acceptFailed(Long id) {
-        //1.验证操作人是否是经办人,状态是否是待验收
+        //1.验证操作人是否是经办人或其上级,状态是否是待验收
 
         //2.查找bug数据
 
-        //3.赋值:经办人为bug接收人(自测通过时的操作人),上一阶段经办人为本次操作人,状态变成bug打开
+        //3.赋值:经办人为bug表中上一阶段经办人(自测通过时的数据),上一阶段经办人为本次操作人,状态变成bug打开,bug打回次数+1
 
         //4.更新bug数据
+
+        //5.bug日志表记录状态变更
         return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<Boolean> reopen(Long id) {
-        //1.验证操作人是否是经办人,状态是否是完成或关闭
+        //1.验证操作人是否是提出人或其上级,状态是否是完成或关闭
 
         //2.查找bug数据
 
         //3.赋值:经办人为bug接收人(验收通过或同意时记录的上一阶段操作人),上一阶段经办人为本次操作人,状态变成bug打开
 
-        //4.更新bug数据
+        //4.完成状态下点击重新打开，bug打回次数+1,完成后重新打开次数+1,更新bug数据
+
+        //5.bug日志表记录状态变更
+
+        //5.消息通知
+
         return BaseResult.success(true);
     }
 
@@ -235,6 +279,4 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     public BaseResult<Boolean> delete(Long id) {
         return BaseResult.success(true);
     }
-
-
 }

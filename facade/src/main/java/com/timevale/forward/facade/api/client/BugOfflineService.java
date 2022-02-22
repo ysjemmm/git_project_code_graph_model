@@ -5,6 +5,7 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.request.BugOfflineAddReq;
 import com.timevale.forward.facade.api.request.BugOfflineModifyReq;
+import com.timevale.forward.facade.api.request.BugOfflineTransferReq;
 import com.timevale.forward.facade.api.result.BugOfflineDetailVO;
 import com.timevale.forward.facade.api.result.BugOfflineVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -42,6 +43,14 @@ public interface BugOfflineService {
      * @return Boolean
      */
     BaseResult<Boolean> modify(BugOfflineModifyReq bugOfflineModifyReq);
+
+    /**
+     * 转交
+     *
+     * @param bugOfflineTransferReq  bugOfflineTransferReq
+     * @return Boolean
+     */
+    BaseResult<Boolean> transfer(BugOfflineTransferReq bugOfflineTransferReq);
 
     /**
      * 不用修复
