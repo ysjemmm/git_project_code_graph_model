@@ -26,7 +26,7 @@ public interface TaskTimeMapper {
      * @param taskIds 任务
      * @return int
      */
-    int delete(@Param("taskIds") List<Long> taskIds);
+    int delete(@Param("taskIds") List<Long> taskIds,@Param("id") Long id);
 
     /**
      * 查看任务耗时表
@@ -52,5 +52,20 @@ public interface TaskTimeMapper {
      */
 
     List<TaskTimeDO> list(@Param("taskId") Long taskId);
+
+    /**
+     * 更新任务耗时表
+     *
+     * @param taskTimeDO 任务
+     */
+    void updateById(TaskTimeDO taskTimeDO);
+
+//   i /**
+//     * 新增任务耗时表
+//     *
+//     * @param taskIds 任务
+//     * @return int
+//     */
+//    int delete(@Param("taskIds") Lst<Long> taskIds);
 
 }

@@ -276,7 +276,7 @@ public class TaskServiceImpl implements TaskService {
                 throw new BaseBizRuntimeException("任务状态不是待执行、进行中、已暂停不能修改状态");
             }
             taskProductDemandComponent.update(Lists.newArrayList(taskDO.getId()), null);
-            taskTimeMapper.delete(Lists.newArrayList(taskDO.getId()));
+            taskTimeMapper.delete(Lists.newArrayList(taskDO.getId()), null);
         }
         // 删除钉钉待办
         taskComponent.deleteTodoTask(taskDO.getTodoId());
@@ -522,7 +522,7 @@ public class TaskServiceImpl implements TaskService {
         fillStatus(taskDO);
         if (existTaskDO.getActualStartDate() != null && !existTaskDO.getActualStartDate().equals(taskDO.getActualStartDate())) {
             //实际开始时间有变动
-            taskTimeMapper.delete((Lists.newArrayList(taskDO.getId())));
+            taskTimeMapper.delete((Lists.newArrayList(taskDO.getId())), null);
         }
 
         TaskTimeDO existTaskTimeDO = taskTimeMapper.get(taskDO.getId());
@@ -566,6 +566,10 @@ public class TaskServiceImpl implements TaskService {
                         //最后一条数据不用计算
                         Long result = elapsedTimeClient.getElapsedTime(a.getStartDate(), lastTaskTimeDO.getEndDate());
                         totalTime.getAndAdd(result);
+                        //更新最后时间
+                        taskTimeComponent.updateById(a.getId(), lastTaskTimeDO.getEndDate());
+                        //删除不需要的数据
+                        taskTimeMapper.delete(Lists.newArrayList(a.getTaskId()), a.getId());
                         break;
                     }
                 }

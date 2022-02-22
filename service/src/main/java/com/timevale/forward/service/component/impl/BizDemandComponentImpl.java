@@ -181,7 +181,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
 
         // 如果查询条件没有部门id，收集完整名
-        if(queryDeptIdSet.isEmpty()){
+        if(CollectionUtils.isEmpty(queryDeptIdSet)){
             queryDeptIdSet.addAll(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
             deptNodeMap = getGroupListTreeMap(Lists.newArrayList(queryDeptIdSet));
         }
