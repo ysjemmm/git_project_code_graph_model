@@ -48,11 +48,8 @@ public class BugOfflineVO extends ToString {
     @ApiModelProperty(value = "bug来源")
     private String sourceName;
 
-    @ApiModelProperty(value = "bug原因:0功能错误；1功能缺失；2改动波及；3参数校验错误；4历史遗留；5实现与需求不符；6配置错误；7环境部署；8页面格式错误；9文案提示；10UI和原型不一致；11数据问题；12需求问题；13兼容性问题；14交互体验；15交付文档错误；16优化建议；17性能问题；18安全问题；19数据库问题；20低级错误；21外部原因；22重复出现")
-    private Integer reason;
-
-    @ApiModelProperty(value = "优先级")
-    private String reasonName;
+    @ApiModelProperty(value = "bug原因")
+    private String reason;
 
     @ApiModelProperty(value = "bug所属端:0后端bug,1PC客户端,2PCweb端,3Android,4IOS,5H5")
     private Integer belong;

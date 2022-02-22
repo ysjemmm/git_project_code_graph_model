@@ -48,7 +48,7 @@ public class BugOfflineQueryList extends QueryBase {
     private List<Integer>envs;
 
     @ApiModelProperty("原因")
-    private List<Integer>reasons;
+    private List<String>reasons;
 
     @ApiModelProperty("来源")
     private List<Integer>sources;

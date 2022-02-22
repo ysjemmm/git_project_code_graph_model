@@ -11,6 +11,8 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface FieldCompare{
+
     String fieldName() default "";
+
     String enumMapping() default "";
 }
