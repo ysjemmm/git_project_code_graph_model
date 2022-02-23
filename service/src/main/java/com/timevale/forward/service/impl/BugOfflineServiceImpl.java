@@ -1,6 +1,9 @@
 package com.timevale.forward.service.impl;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.BugOfflineListCondition;
 import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
@@ -16,18 +19,25 @@ import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.TaskComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BugOfflineCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.BugOfflineAddMsg;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
+import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author xingyun
@@ -61,22 +71,60 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Resource
     MessageEventPublisher messageEventPublisher;
 
+
     @Override
     public BaseResult<PageQueryResult<BugOfflineVO>> list(BugOfflineQueryList bugOfflineQueryList) {
-        log.info("线下bug列表接收参数:{}", bugOfflineQueryList);
-        if (AscriptionEnum.CURRENT_USER.name().equals(bugOfflineQueryList.getAscription())) {
-            //我的
-        }else if(AscriptionEnum.RECEIVE.name().equals(bugOfflineQueryList.getAscription())){
-            //我收到的
-        }else if(AscriptionEnum.TEAM_SUBMIT.name().equals(bugOfflineQueryList.getAscription())){
-            //我团队提出的
-        }else if(AscriptionEnum.TEAM_RECEIVE.name().equals(bugOfflineQueryList.getAscription())){
-            //我团队收到的
-        }else if(AscriptionEnum.COPIER.name().equals(bugOfflineQueryList.getAscription())){
-            //抄送我的
-        }else {
-            //全部
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        // 转换查询条件
+        BugOfflineListCondition condition = BugOfflineCopier.INSTANCE.convert(bugOfflineQueryList);
+
+        // 标志是否有对应数据
+        boolean resultIsEmpty = false;
+        // 根据tabs添加不同的效果
+        String ascription = bugOfflineQueryList.getAscription();
+        if (AscriptionEnum.CURRENT_USER.toString().equals(ascription)) {
+            condition.setProposerIds(Lists.newArrayList(userInfo.getId()));
+        }else if(AscriptionEnum.RECEIVE.toString().equals(ascription)){
+            condition.setOperatorIds(Lists.newArrayList(userInfo.getId()));
+        }else if(AscriptionEnum.COPIER.toString().equals(ascription)){
+            condition.setCopier(userInfo.getId());
+        }else{
+            List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+            if(AscriptionEnum.TEAM_SUBMIT.toString().equals(ascription)){
+                Set<String> createIdSet = Sets.newHashSet(condition.getProposerIds());
+                if(!createIdSet.isEmpty()){
+                    teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
+                    resultIsEmpty = teamMemberIdList.isEmpty();
+                }
+            }else if(AscriptionEnum.TEAM_RECEIVE.toString().equals(ascription)){
+                Set<String> createIdSet = Sets.newHashSet(condition.getOperatorIds());
+                if(!createIdSet.isEmpty()){
+                    teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
+                    resultIsEmpty = teamMemberIdList.isEmpty();
+                }
+            }
         }
+        if(resultIsEmpty){
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+        // 开始分页
+        PageHelper.startPage(bugOfflineQueryList.pageNum, bugOfflineQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+
+        // 查询并转换
+        List<BugOfflineDO> bugOfflineDOList = Lists.newArrayList();
+        List<BugOfflineVO> bugOfflineVOList = bugOfflineDOList.stream().map(BugOfflineCopier.INSTANCE::convert).collect(Collectors.toList());
+
+        bugOfflineVOList.forEach(e -> {
+
+        });
+
+        // 返回分页数据
+        PageInfo<BugOfflineDO> pageInfo = new PageInfo<>(bugOfflineDOList);
+        PageQueryResult<BugOfflineVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(bugOfflineVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
         return BaseResult.success(ResultUtil.pageEmpty());
     }
 

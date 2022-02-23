@@ -5,39 +5,37 @@ import lombok.Getter;
 
 /**
  * @author by YangXu
- * @date 2022/02/23 17:05
+ * @date 2022/02/23 17:59
  */
 @Getter
 @AllArgsConstructor
-public enum BugEnvEnum {
+public enum BugSourceEnum {
 
     /**
-     * 项目环境
+     * 预演bug
      */
-    PROJECT(0,"项目环境"),
+    PREVIEW(0,"预演bug"),
 
     /**
-     * 测试环境
+     * 测试阶段bug
      */
-    TEST(1,"测试环境"),
+    TEST(1,"测试阶段bug"),
 
     /**
-     * 模拟环境
+     * 历史版本bug
      */
-    PREPARE(2,"模拟环境"),
+    HISTORY(2,"历史版本bug"),
 
     /**
-     * 生产环境
+     * 自动化脚本执行发现bug
      */
-    production(3,"生产环境")
-
-    ;
+    SCRIPT(3,"自动化脚本执行发现bug");
 
     private final Integer code;
     private final String text;
 
     public static String getTextByCode(Integer code){
-        for (BugEnvEnum e : BugEnvEnum.values()){
+        for (BugSourceEnum e : BugSourceEnum.values()){
             if(e.code.equals(code)){
                 return e.text;
             }

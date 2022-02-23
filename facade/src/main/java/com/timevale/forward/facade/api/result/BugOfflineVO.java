@@ -10,10 +10,11 @@ import lombok.EqualsAndHashCode;
 
 import java.util.Date;
 
+
 /**
- * @author: xingyun
- * @create: 2021-12-13 13:53
- **/
+ * @author by YangXu
+ * @date 2022/02/23 18:23
+ */
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("线下bug列表")
@@ -86,14 +87,4 @@ public class BugOfflineVO extends ToString {
 
     @ApiModelProperty("产品线名称")
     private String productLineName;
-
-    @ApiModelProperty("产品线id")
-    private Long productLineId;
-
-    @ApiModelProperty("延期修复原因")
-    private String delayHandleReason;
-
-    @ApiModelProperty("不用修复原因:0被否定,1重复提交,2无法再次复现,3前端缓存,4产品需求调整,10无")
-    private String unHandleReason;
-
 }

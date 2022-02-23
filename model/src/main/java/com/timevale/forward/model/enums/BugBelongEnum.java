@@ -5,51 +5,48 @@ import lombok.Getter;
 
 /**
  * @author by YangXu
- * @date 2022/02/23 16:59
+ * @date 2022/02/23 18:09
  */
 @Getter
 @AllArgsConstructor
-public enum BugStatusEnum {
-    /**
-     * bug打开
-     */
-    OPEN(0,"打开"),
+public enum BugBelongEnum {
 
     /**
-     * 待修复
+     * 后端bug
      */
-    REPAIR(1,"待修复"),
+    BACK_END(0,"后端bug"),
 
     /**
-     * 待验收
+     * PC客户端
      */
-    ACCEPTANCE(2, "待验收"),
+    PC_CLIENT(1,"PC客户端"),
 
     /**
-     * 待确认
+     * PCweb端
      */
-    CONFIRM(3,"待确认"),
+    PC_WEB(2,"PCweb端"),
 
     /**
-     * 延迟修复
+     * Android
      */
-    POSTPONE_REPAIR(4,"延迟修复"),
+    ANDROID(3,"Android"),
 
     /**
-     * 完成
+     * ios
      */
-    COMPLETE(5,"完成"),
+    IOS(4,"IOS"),
 
     /**
-     * 关闭
+     * h5
      */
-    CLOSE(6,"关闭");
+    H5(5,"H5")
+    ;
 
     private final Integer code;
     private final String text;
 
     public static String getTextByCode(Integer code){
-        for (BugStatusEnum e : BugStatusEnum.values()){
+        for (BugBelongEnum e : BugBelongEnum.values()){
             if(e.code.equals(code)){
                 return e.text;
             }

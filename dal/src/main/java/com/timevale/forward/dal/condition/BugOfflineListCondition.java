@@ -50,12 +50,11 @@ public class BugOfflineListCondition extends QueryBase {
     /**
      * 执行人
      */
-    private List<String> executorIds;
+    private List<String> operatorIds;
     /**
      * 创建人
      */
-    private List<String> createManIds;
-
+    private List<String> proposerIds;
     /**
      * 计划开始时间左区间
      */
@@ -95,5 +94,10 @@ public class BugOfflineListCondition extends QueryBase {
      * 实际结束时间右区间
      */
     private Date actualEndDateRight;
+
+    /**
+     * 用于判断是否为"抄送我的需求"tab
+     */
+    private String copier;
 
 }
