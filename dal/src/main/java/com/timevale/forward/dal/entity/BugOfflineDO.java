@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.entity;
 
 import com.timevale.forward.dal.annotation.FieldCompare;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -72,6 +73,16 @@ public class BugOfflineDO extends BaseDO {
      */
     @FieldCompare(fieldName = "bug经办人")
     private String operator;
+
+    /**
+     * 延期修复原因
+     * */
+    private String delayHandleReason;
+
+    /**
+     * 不用修复原因:0被否定,1重复提交,2无法再次复现,3前端缓存,4产品需求调整,10无
+     * */
+    private String unHandleReason;
 
     /**
      * 经办人花名拼音

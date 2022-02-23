@@ -90,4 +90,10 @@ public class BugOfflineVO extends ToString {
     @ApiModelProperty("产品线id")
     private Long productLineId;
 
+    @ApiModelProperty("延期修复原因")
+    private String delayHandleReason;
+
+    @ApiModelProperty("不用修复原因:0被否定,1重复提交,2无法再次复现,3前端缓存,4产品需求调整,10无")
+    private String unHandleReason;
+
 }
