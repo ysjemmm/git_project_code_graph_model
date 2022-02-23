@@ -42,9 +42,9 @@ public enum JobFunctionEnum {
      */
     BIG_DATA("大数据",UserTypeEnum.RD),
     /**
-     * 技术
+     * 技术支持
      */
-    TECHNICIAN("技术",UserTypeEnum.RD),
+    TECHNICIAN("技术支持",UserTypeEnum.RD),
     /**
      * 技术专家
      */
