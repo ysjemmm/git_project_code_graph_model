@@ -182,5 +182,17 @@
         group by pj.id
     </select>
 
+    <select id="selectByProductLine" resultType="com.timevale.forward.dal.entity.ProjectDO">
+        select *
+        from person p
+            join project pj on p.main_id = pj.id
+            join project_product_line ppl on pj.id = ppl.project_id
+        where
+            p.user_id = #{userId}
+            and pj.status != 40
+            and pj.status != -20
+            and ppl.product_line_id = #{productLineId}
+    </select>
+
 
 </mapper>

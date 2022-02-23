@@ -79,12 +79,12 @@ public interface ProjectCopier {
     /**
      * 转换
      *
-     * @param projectListDO 项目列表DO
+     * @param projectDO 项目DO
      * @return ProjectBaseVO
      */
     @Mapping(source = "id", target = "projectId")
     @Mapping(source = "name", target = "projectName")
-    ProjectBaseVO transform(ProjectListDO projectListDO);
+    ProjectBaseVO convertTo(ProjectDO projectDO);
 
     /**
      * 转换转换DO

@@ -9,10 +9,10 @@ public interface ProjectProductLineMapper {
 
     /**
      *
-     * @param projectI 项目id
+     * @param projectId 项目id
      * @return 列表
      */
-    List<ProjectProductLineDO> get(@Param("projectId") Long projectI);
+    List<ProjectProductLineDO> get(@Param("projectId") Long projectId);
     /**
      * 新增项目产品线
      *

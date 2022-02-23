@@ -30,6 +30,7 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -394,19 +395,8 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<List<ProjectBaseVO>> getProjectByProductLine(Long productLineId) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        List<Integer> projectStatusList = Arrays.stream(
-                ProjectStatusEnum.values())
-                .filter(e -> !(e.equals(ProjectStatusEnum.INVALID) || e.equals(ProjectStatusEnum.RELEASED)))
-                .map(ProjectStatusEnum::getCode)
-                .collect(Collectors.toList());
-
-        List<ProjectListDO> projectDOList = projectMapper.list(ProjectListCondition.builder()
-                        .productLineIds(Lists.newArrayList(productLineId))
-                        .teamMembers(Lists.newArrayList(userInfo.getId()))
-                        .status(projectStatusList)
-                        .build());
-
-        List<ProjectBaseVO> projectBaseVOList = projectDOList.stream().map(ProjectCopier.INSTANCE::transform).collect(Collectors.toList());
+        List<ProjectDO> projectDOList = projectMapper.selectByProductLine(productLineId, userInfo.getId());
+        List<ProjectBaseVO> projectBaseVOList = projectDOList.stream().map(ProjectCopier.INSTANCE::convertTo).collect(Collectors.toList());
 
         return BaseResult.success(projectBaseVOList);
     }

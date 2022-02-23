@@ -87,4 +87,13 @@ public interface ProjectMapper {
      */
     List<ProjectDO>  getByIds(@Param("ids") List<Long> ids);
 
+    /**
+     * 查询id
+     *
+     * @param productLineId 产品线id
+     * @param userId        用户id
+     * @return 项目DOList
+     */
+    List<ProjectDO> selectByProductLine(@Param("productLineId") Long productLineId, @Param("userId") String userId);
+
 }
