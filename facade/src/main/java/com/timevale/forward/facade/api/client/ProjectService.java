@@ -8,12 +8,11 @@ import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
-import com.timevale.forward.facade.api.result.ProductDemandStatusVO;
-import com.timevale.forward.facade.api.result.ProductDemandVO;
-import com.timevale.forward.facade.api.result.ProjectDetailVO;
-import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
+
+import java.util.List;
 
 /**
  * @author: xingyun
@@ -97,4 +96,12 @@ public interface ProjectService {
      */
     BaseResult<PageQueryResult<ProductDemandVO>>  linkProductDemandList(ProjectProductDemandQueryList productDemandQueryList);
 
+
+    /**
+     * 产品线Id
+     *
+     * @param productLineId 产品id
+     * @return 项目简单VO列表
+     */
+    BaseResult<List<ProjectBaseVO>> getProjectByProductLine(Long productLineId);
 }

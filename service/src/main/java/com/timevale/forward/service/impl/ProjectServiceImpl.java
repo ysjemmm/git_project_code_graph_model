@@ -23,6 +23,7 @@ import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -387,6 +388,27 @@ public class ProjectServiceImpl implements ProjectService {
         pageQueryResult.setResultList(productDemandVO);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);
+    }
+
+    @Override
+    public BaseResult<List<ProjectBaseVO>> getProjectByProductLine(Long productLineId) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        List<Integer> projectStatusList = Arrays.stream(
+                ProjectStatusEnum.values())
+                .filter(e -> !(e.equals(ProjectStatusEnum.INVALID) || e.equals(ProjectStatusEnum.RELEASED)))
+                .map(ProjectStatusEnum::getCode)
+                .collect(Collectors.toList());
+
+        List<ProjectListDO> projectDOList = projectMapper.list(ProjectListCondition.builder()
+                        .productLineIds(Lists.newArrayList(productLineId))
+                        .teamMembers(Lists.newArrayList(userInfo.getId()))
+                        .status(projectStatusList)
+                        .build());
+
+        List<ProjectBaseVO> projectBaseVOList = projectDOList.stream().map(ProjectCopier.INSTANCE::transform).collect(Collectors.toList());
+
+        return BaseResult.success(projectBaseVOList);
     }
 
     private void fillInfoWhenModify(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {

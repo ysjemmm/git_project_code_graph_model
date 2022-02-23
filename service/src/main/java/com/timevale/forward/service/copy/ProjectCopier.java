@@ -7,9 +7,11 @@ import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
+import com.timevale.forward.facade.api.result.ProjectBaseVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
@@ -73,6 +75,16 @@ public interface ProjectCopier {
      * @return ProjectListCondition
      */
     ProjectListCondition convert(ProductDemandLinkProjectQueryList projectQueryList);
+
+    /**
+     * 转换
+     *
+     * @param projectListDO 项目列表DO
+     * @return ProjectBaseVO
+     */
+    @Mapping(source = "id", target = "projectId")
+    @Mapping(source = "name", target = "projectName")
+    ProjectBaseVO transform(ProjectListDO projectListDO);
 
     /**
      * 转换转换DO

@@ -14,8 +14,8 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("项目节点")
-public class ProjectListVO extends ToString {
+@ApiModel("项目简单信息")
+public class ProjectBaseVO extends ToString {
     @ApiModelProperty("项目id")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long projectId;
