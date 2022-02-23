@@ -43,8 +43,10 @@ public class CommentMsgEvent extends MessageEvent {
             singleUrl = domainName + String.format(PARAM, TabEnum.PRODUCT_MANAGEMENT.getText(), mainId);
         } else if (CommentTypeEnum.BIZ_DEMAND.getText().equals(type)){
             singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_MANAGEMENT.getText(), mainId);
-        } else {
+        } else if(CommentTypeEnum.TASK.getText().equals(type)){
             singleUrl = domainName + String.format(PARAM, TabEnum.TASK_MANAGEMENT.getText(), mainId);
+        } else{
+            singleUrl = domainName + String.format(PARAM, TabEnum.BUG_MANAGEMENT.getText(), mainId);
         }
         String markdown = String.format(COMMENT_MSG, title, operator, type, name, content, singleUrl);
 

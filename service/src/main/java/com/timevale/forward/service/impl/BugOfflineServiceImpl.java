@@ -7,17 +7,19 @@ import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.facade.api.client.BugOfflineService;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
-import com.timevale.forward.facade.api.request.BugOfflineAddReq;
-import com.timevale.forward.facade.api.request.BugOfflineModifyReq;
-import com.timevale.forward.facade.api.request.BugOfflineTransferReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BugOfflineDetailVO;
 import com.timevale.forward.facade.api.result.BugOfflineVO;
 import com.timevale.forward.model.enums.AscriptionEnum;
+import com.timevale.forward.model.enums.FileTypeEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.TaskComponent;
 import com.timevale.forward.service.copy.BugOfflineCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.BugOfflineAddMsg;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -25,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author xingyun
@@ -55,6 +58,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Resource
     private ProjectMapper projectMapper;
 
+    @Resource
+    MessageEventPublisher messageEventPublisher;
+
     @Override
     public BaseResult<PageQueryResult<BugOfflineVO>> list(BugOfflineQueryList bugOfflineQueryList) {
         log.info("线下bug列表接收参数:{}", bugOfflineQueryList);
@@ -83,12 +89,23 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //1.接收表单参数,状态为:bug打开,经办人所选用户,上一阶段经办人为bug提出人,bug数据入库
 
         //2.若存在附件,附件数据入库
+        List<FileAddReq> files = bugOfflineAddReq.getFiles();
+        fileComponent.add(files, bugOfflineDO.getId(), FileTypeEnum.BUG_OFFLINE.getCode());
 
         //3.若存在抄送人,抄送人数据入库
+        List<PersonAddReq> recipients = bugOfflineAddReq.getRecipients();
+        personComponent.add(recipients, bugOfflineDO.getId(), PersonTypeEnum.BUG_OFFLINE_CC.getCode());
 
         //4.bug日志表记录一条新增数据
 
         //5.消息通知
+        messageEventPublisher.publish(new BugOfflineAddMsg(
+                this,
+                bugOfflineDO.getId(),
+                bugOfflineDO.getCreateMan(),
+                bugOfflineDO.getOperatorId(),
+                bugOfflineDO.getName()
+        ));
         return BaseResult.success(true);
     }
 

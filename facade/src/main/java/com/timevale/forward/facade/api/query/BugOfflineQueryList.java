@@ -17,14 +17,12 @@ import java.util.List;
 @Data
 @ApiModel("线下bug列表查询")
 public class BugOfflineQueryList extends QueryBase {
-    @ApiModelProperty("id")
-    private Long id;
 
-    @ApiModelProperty("名称")
+    @ApiModelProperty("bug标题")
     private String name;
 
-    @ApiModelProperty("状态")
-    private List<Integer>status;
+    @ApiModelProperty("bug状态")
+    private List<Integer> status;
 
     @ApiModelProperty("经办人id")
     private List<String> operatorIds;
@@ -35,31 +33,31 @@ public class BugOfflineQueryList extends QueryBase {
     @ApiModelProperty("关联项目")
     private List<Long> projectIds;
 
-    @ApiModelProperty("产品线")
-    private List<Long> productLineIds;
-
-    @ApiModelProperty("业务域")
+    @ApiModelProperty("所属业务域")
     private List<Long> bizDomainIds;
 
-    @ApiModelProperty("优先级")
-    private List<Integer>priorities;
+    @ApiModelProperty("所属产品线")
+    private List<Long> productLineIds;
 
-    @ApiModelProperty("环境")
-    private List<Integer>envs;
+    @ApiModelProperty("bug优先级")
+    private List<Integer> priorities;
 
-    @ApiModelProperty("原因")
-    private List<String>reasons;
+    @ApiModelProperty("bug环境")
+    private List<Integer> envs;
 
-    @ApiModelProperty("来源")
-    private List<Integer>sources;
+    @ApiModelProperty("bug原因")
+    private List<String> reasons;
 
-    @ApiModelProperty("所属端")
+    @ApiModelProperty("bug来源")
+    private List<Integer> sources;
+
+    @ApiModelProperty("bug所属端")
     private List<Integer>belongs;
 
     @ApiModelProperty("创建时间左区间")
     private Date createDateLeft;
 
-    @ApiModelProperty("创建时间有区间")
+    @ApiModelProperty("创建时间右区间")
     private Date createDateRight;
 
     @ApiModelProperty("修改时间左区间")
@@ -67,6 +65,12 @@ public class BugOfflineQueryList extends QueryBase {
 
     @ApiModelProperty("修改时间有区间")
     private Date modifyDateRight;
+
+    @ApiModelProperty("打回次数判断类型")
+    private Integer returnCountType;
+
+    @ApiModelProperty("打回次数")
+    private Integer returnCount;
 
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
     private String ascription;

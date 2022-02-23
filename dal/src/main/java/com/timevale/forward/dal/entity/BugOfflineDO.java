@@ -16,24 +16,29 @@ public class BugOfflineDO extends BaseDO {
      */
     @FieldCompare(fieldName = "bug标题")
     private String name;
+
     /**
      * 项目id
      */
     private Long projectId;
+
     /**
      * 产品线id
      */
     private Long productLineId;
+
     /**
      * 优先级不能为空
      */
     @FieldCompare(fieldName = "bug优先级",enumMapping ="{0:\"紧急\",10:\"高\",20:\"中\",30:\"低\"}")
     private Integer priority;
+
     /**
      * bug来源不能为空
      */
     @FieldCompare(fieldName = "bug来源",enumMapping ="{0:\"预演bug\",1:\"测试阶段bug\",2:\"历史版本bug\",3:\"自动化脚本执行发现bug\"}")
     private Integer source;
+
     /**
      * bug原因不能为空
      */
@@ -49,21 +54,25 @@ public class BugOfflineDO extends BaseDO {
      */
     @FieldCompare(fieldName = "bug环境",enumMapping ="{0:\"项目环境\",1:\"测试环境\",2:\"模拟环境\",3:\"生产环境\"}")
     private Integer env;
+
     /**
      * 复现频率
      */
     @FieldCompare(fieldName = "bug复现频率",enumMapping ="{0:\"必现\",1:\"偶现\"}")
     private Integer frequency;
+
     /**
      * 描述
      */
     @FieldCompare(fieldName = "bug详情描述")
     private String desc;
+
     /**
      * 经办人
      */
     @FieldCompare(fieldName = "bug经办人")
     private String operator;
+
     /**
      * 经办人花名拼音
      */

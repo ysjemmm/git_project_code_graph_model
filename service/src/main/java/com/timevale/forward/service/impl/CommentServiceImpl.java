@@ -83,8 +83,10 @@ public class CommentServiceImpl implements CommentService {
             name = productDemandMapper.selectById(toId).getName();
         }else if(CommentTypeEnum.BIZ_DEMAND.getCode().equals(type)){
             name = bizDemandMapper.selectById(toId).getName();
-        }else {
+        }else if(CommentTypeEnum.TASK.getCode().equals(type)){
             name = taskMapper.getById(toId).getName();
+        }else{
+            name = "线下BUG";
         }
 
         // 发送通知

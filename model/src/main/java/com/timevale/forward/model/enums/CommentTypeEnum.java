@@ -1,5 +1,6 @@
 package com.timevale.forward.model.enums;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -7,20 +8,17 @@ import lombok.Getter;
  * @date 2021/12/21 18:17
  */
 @Getter
+@AllArgsConstructor
 public enum CommentTypeEnum {
     // 主体类型: 0项目，1产品需求2业务需求
     PROJECT(0,"项目"),
     PRODUCT_DEMAND(1,"产品需求"),
     BIZ_DEMAND(2,"业务需求"),
-    TASK(3,"任务"),;
+    TASK(3,"任务"),
+    BUG(4,"线下bug");
 
-    private Integer code;
-    private String text;
-
-    CommentTypeEnum(Integer code, String text){
-        this.code = code;
-        this.text = text;
-    }
+    private final Integer code;
+    private final String text;
 
     public static String getTextByCode(Integer code) {
         for (CommentTypeEnum e : CommentTypeEnum.values()){

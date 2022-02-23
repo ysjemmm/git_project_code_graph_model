@@ -17,8 +17,9 @@ public enum PersonTypeEnum {
     // 30 业务需求-抄送人
     BIZ_DEMAND_CC(30),
     // 40 任务执行人
-    TASK_EXECUTOR(40)
-
+    TASK_EXECUTOR(40),
+    // 50 线下bug-抄送人
+    BUG_OFFLINE_CC(50)
     ;
 
     private Integer code;

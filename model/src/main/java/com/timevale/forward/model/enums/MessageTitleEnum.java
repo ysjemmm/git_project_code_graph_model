@@ -17,6 +17,8 @@ public enum MessageTitleEnum {
     COMMENT("评论通知"),
     TEST_BILL("提测单消息通知"),
     TASK_DONE("任务完成通知"),
+    // 线下BUG通知标题
+    BUG_OFFLINE_ADD("线下bug接收通知")
     ;
 
     private String text;

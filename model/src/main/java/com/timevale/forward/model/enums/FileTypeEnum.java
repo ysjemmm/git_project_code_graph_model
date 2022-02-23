@@ -18,7 +18,8 @@ public enum FileTypeEnum {
     TEST_BILL_CASE(4),
     // 提测单-自测通过
     TEST_BILL_PASS(5),
-
+    // 线下bug
+    BUG_OFFLINE(6)
     ;
 
     private Integer code;
