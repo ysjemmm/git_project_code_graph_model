@@ -4,26 +4,19 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BugOfflineListCondition;
+import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.BugLogDO;
-import com.timevale.forward.dal.entity.BugOfflineDO;
-import com.timevale.forward.dal.entity.ProductLineDO;
-import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BugOfflineService;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.BugLogVO;
-import com.timevale.forward.facade.api.result.BugOfflineDetailVO;
-import com.timevale.forward.facade.api.result.BugOfflineVO;
-import com.timevale.forward.facade.api.result.ProductLineVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.TaskComponent;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.BugLogCopier;
-import com.timevale.forward.service.copy.BugOfflineCopier;
-import com.timevale.forward.service.copy.ProductLineCopier;
+import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.BugOfflineAddMsg;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
@@ -53,34 +46,34 @@ import java.util.stream.Collectors;
 public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Resource
+    MessageEventPublisher messageEventPublisher;
+    @Resource
     private TaskComponent taskComponent;
-
     @Resource
     private InnerUserPersonClient innerUserPersonClient;
-
     @Resource
     private PersonMapper personMapper;
-
     @Resource
     private ProductLineMapper productLineMapper;
-
     @Resource
     private FileComponent fileComponent;
-
     @Resource
     private PersonComponent personComponent;
-
     @Resource
     private ProjectMapper projectMapper;
-
     @Resource
     private BugOfflineMapper bugOfflineMapper;
-
-    @Resource
-    MessageEventPublisher messageEventPublisher;
-
     @Resource
     private BugLogMapper bugLogMapper;
+
+    @Resource
+    private FileMapper fileMapper;
+
+    @Resource
+    private BizDomainMapper bizDomainMapper;
+
+    @Resource
+    private CommentMapper commentMapper;
 
 
     @Override
@@ -96,27 +89,27 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         String ascription = bugOfflineQueryList.getAscription();
         if (AscriptionEnum.CURRENT_USER.toString().equals(ascription)) {
             condition.setProposerIds(Lists.newArrayList(userInfo.getId()));
-        }else if(AscriptionEnum.RECEIVE.toString().equals(ascription)){
+        } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
             condition.setOperatorIds(Lists.newArrayList(userInfo.getId()));
-        }else if(AscriptionEnum.COPIER.toString().equals(ascription)){
+        } else if (AscriptionEnum.COPIER.toString().equals(ascription)) {
             condition.setCopier(userInfo.getId());
-        }else{
+        } else {
             List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
-            if(AscriptionEnum.TEAM_SUBMIT.toString().equals(ascription)){
+            if (AscriptionEnum.TEAM_SUBMIT.toString().equals(ascription)) {
                 Set<String> createIdSet = Sets.newHashSet(condition.getProposerIds());
-                if(!createIdSet.isEmpty()){
+                if (!createIdSet.isEmpty()) {
                     teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
                     resultIsEmpty = teamMemberIdList.isEmpty();
                 }
-            }else if(AscriptionEnum.TEAM_RECEIVE.toString().equals(ascription)){
+            } else if (AscriptionEnum.TEAM_RECEIVE.toString().equals(ascription)) {
                 Set<String> createIdSet = Sets.newHashSet(condition.getOperatorIds());
-                if(!createIdSet.isEmpty()){
+                if (!createIdSet.isEmpty()) {
                     teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
                     resultIsEmpty = teamMemberIdList.isEmpty();
                 }
             }
         }
-        if(resultIsEmpty){
+        if (resultIsEmpty) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
 
@@ -352,7 +345,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         log.info("查看线下bug详情接收参数:{}", id);
         //校验线下bug是否存在
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
-        if(bugOfflineDO == null){
+        if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("您要查询的线下bug不存在。");
         }
 
@@ -363,22 +356,28 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         BugOfflineDetailVO bugOfflineDetailVO = BugOfflineCopier.INSTANCE.transform(bugOfflineDO);
 
         //如果bug日志不为空，转化bug日志然后给线下bug赋值
-        if(CollectionUtils.isNotEmpty(bugLogDOList)){
+        if (CollectionUtils.isNotEmpty(bugLogDOList)) {
             List<BugLogVO> bugLogVOList = bugLogDOList.stream().map(BugLogCopier.INSTANCE::convert).collect(Collectors.toList());
             bugOfflineDetailVO.setBugLogVOList(bugLogVOList);
         }
 
         //给线下bug的项目名称赋值
         ProjectDO projectDO = projectMapper.get(bugOfflineDO.getProjectId());
-        if(projectDO != null){
+        if (projectDO != null) {
             bugOfflineDetailVO.setProjectName(projectDO.getName());
         }
 
-        //给线下bug的产品线赋值
+        //给线下bug的产品线赋值,给线下bug的业务域赋值
         ProductLineDO productLineDO = productLineMapper.selectById(bugOfflineDO.getProductLineId());
-        if(productLineDO != null){
+        if (productLineDO != null) {
             ProductLineVO productLineVO = ProductLineCopier.INSTANCE.convert(productLineDO);
             bugOfflineDetailVO.setProductLineVO(productLineVO);
+            BizDomainDO bizDomainDO = bizDomainMapper.selectById(productLineDO.getBizDomainId());
+            //如果业务域不为空，赋值给线下bug的相关属性
+            if (bizDomainDO != null) {
+                BizDomainVO bizDomainVO = BizDomainCopier.INSTANCE.convert(bizDomainDO);
+                bugOfflineDetailVO.setBizDomainVO(bizDomainVO);
+            }
         }
 
         //给线下bug的状态赋值
@@ -386,8 +385,52 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugOfflineDetailVO.setStatusName(statusName);
 
         //给线下bug的优先级赋值
+        String priorityName = BugPriorityEnum.getTextByCode(bugOfflineDO.getPriority());
+        bugOfflineDetailVO.setPriorityName(priorityName);
 
+        //给线下bug的来源赋值
+        String sourceName = BugSourceEnum.getTextByCode(bugOfflineDO.getSource());
+        bugOfflineDetailVO.setSourceName(sourceName);
 
+        //给线下bug的所属端赋值
+        String belongName = BugBelongEnum.getTextByCode(bugOfflineDO.getBelong());
+        bugOfflineDetailVO.setBelongName(belongName);
+
+        //给线下爱bug的环境赋值
+        String envName = BugEnvEnum.getTextByCode(bugOfflineDO.getEnv());
+        bugOfflineDetailVO.setEnvName(envName);
+
+        //给线下bug的浮现频率赋值
+        String frequencyName = BugFrequencyEnum.getTextByCode(bugOfflineDO.getFrequency());
+        bugOfflineDetailVO.setFrequencyName(frequencyName);
+
+        //给线下bug的不用修复原因赋值
+        String reason = BugNoFixReasonEnum.getTextByCode(bugOfflineDO.getUnhandleReason());
+        bugOfflineDetailVO.setUnhandleReasonName(reason);
+
+        //给线下bug的附件集合赋值
+        List<FileDO> fileDOList = fileMapper.select(id, FileTypeEnum.BUG_OFFLINE.getCode());
+        if (CollectionUtils.isNotEmpty(fileDOList)) {
+            List<FileVO> files = fileDOList.stream().map(FileCopier.INSTANCE::change).collect(Collectors.toList());
+            bugOfflineDetailVO.setFiles(files);
+        }
+
+        //给线下bug的抄送人赋值
+        List<PersonDO> personDOList = personMapper.select(PersonListCondition.builder()
+                .mainId(id)
+                .type(50)
+                .build());
+        if (CollectionUtils.isNotEmpty(personDOList)) {
+            List<PersonVO> personVOList = personDOList.stream().map(PersonCopier.INSTANCE::change).collect(Collectors.toList());
+            bugOfflineDetailVO.setRecipientInfoList(personVOList);
+        }
+
+        //给bug相关的评论赋值
+        List<CommentDO> commentDOList = commentMapper.select(id, CommentTypeEnum.BUG.getCode());
+        if (CollectionUtils.isNotEmpty(commentDOList)) {
+            List<CommentVO> commentVOList = commentDOList.stream().map(CommentCopier.INSTANCE::change).collect(Collectors.toList());
+            bugOfflineDetailVO.setCommentVOList(commentVOList);
+        }
 
         return BaseResult.success(bugOfflineDetailVO);
     }
@@ -395,6 +438,33 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> delete(Long id) {
+
+
         return BaseResult.success(true);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

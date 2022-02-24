@@ -1,7 +1,6 @@
 package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import org.mapstruct.Mapper;
@@ -33,5 +32,13 @@ public interface PersonCopier {
      * @return PersonVO列表
      */
     List<PersonVO> transform(List<PersonDO> list);
+
+    /**
+     * PersonDO  -->  PersonVO
+     *
+     * @param personDO 参数
+     * @return PersonVO 返回值
+     */
+    PersonVO change(PersonDO personDO);
 
 }

@@ -32,4 +32,12 @@ public interface CommentCopier {
      * @return VO列表
      */
     List<CommentVO> convert(List<CommentDO> commentDOList);
+
+    /**
+     * CommentDO  -->  CommentVO
+     *
+     * @param commentDO 参数
+     * @return CommentVO 返回值
+     */
+    CommentVO change(CommentDO commentDO);
 }

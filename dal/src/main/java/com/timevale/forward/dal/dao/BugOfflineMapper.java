@@ -35,6 +35,5 @@ public interface BugOfflineMapper {
      * @return BugOfflineListDO List
      */
     List<BugOfflineListDO> selectByCondition(BugOfflineListCondition bugOfflineListCondition);
-    List<BugOfflineDO> selectByCondition(@Param("condition") BugOfflineListCondition bugOfflineListCondition);
 
 }

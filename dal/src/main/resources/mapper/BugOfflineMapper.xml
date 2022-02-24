@@ -19,16 +19,17 @@
     </select>
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.BugOfflineListDO">
-        select bo.id, bo.status, bo.operator, bo.proposer, bo.priority, bo.env, bo.reason, bo.source, bo.belong, bo.return_count,
-               bo.create_date, bo.modify_date,
-               bo.name bugName,
-               p.name projectName,
-               pl.name productLineName,
-               bd.name bizDomainName
+        select bo.id, bo.status, bo.operator, bo.proposer, bo.priority, bo.env, bo.reason, bo.source, bo.belong,
+        bo.return_count,
+        bo.create_date, bo.modify_date,
+        bo.name bugName,
+        p.name projectName,
+        pl.name productLineName,
+        bd.name bizDomainName
         from bug_offline bo
-            join project p on bo.project_id = p.id
-            join product_line pl on pl.id = bo.product_line_id
-            join biz_domain bd on pl.biz_domain_id = bd.id
+        join project p on bo.project_id = p.id
+        join product_line pl on pl.id = bo.product_line_id
+        join biz_domain bd on pl.biz_domain_id = bd.id
         <where>
             <if test="name != null and name != '' ">
                 and bo.name like concat('%',#{name},'%')
@@ -100,23 +101,19 @@
                 and bo.modify_date &gt;= #{modifyDateLeft} and bo.modify_date &lt;= #{modifyDateRight}
             </if>
             <if test="returnCountType != null and returnCount != null">
-                <if test="returnCountType = 0"> and bo.return_count = #{returnCount} </if>
-                <if test="returnCountType = 1"> and bo.return_count &gt; #{returnCount} </if>
-                <if test="returnCountType = 2"> and bo.return_count &gt;= #{returnCount} </if>
-                <if test="returnCountType = 3"> and bo.return_count &lt; #{returnCount} </if>
-                <if test="returnCountType = 4"> and bo.return_count &lt;= #{returnCount} </if>
+                <if test="returnCountType = 0">and bo.return_count = #{returnCount}</if>
+                <if test="returnCountType = 1">and bo.return_count &gt; #{returnCount}</if>
+                <if test="returnCountType = 2">and bo.return_count &gt;= #{returnCount}</if>
+                <if test="returnCountType = 3">and bo.return_count &lt; #{returnCount}</if>
+                <if test="returnCountType = 4">and bo.return_count &lt;= #{returnCount}</if>
             </if>
             <if test="copier!=null and copier!='' ">
                 and bo.id IN (
-                    select p.main_id
-                    from person p
-                    where p.user_id = #{copier} p.type = 50
+                select p.main_id
+                from person p
+                where p.user_id = #{copier} p.type = 50
                 )
             </if>
         </where>
-    <select id="selectById" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
-        select * from bug_offline
-        where id = #{bugOfflineId} and is_deleted = 0
     </select>
-
 </mapper>
