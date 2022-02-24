@@ -290,6 +290,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         log.info("确认修复接收参数{}", id);
         //得到当前线下bug
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
+        if (bugOfflineDO == null) {
+            throw new BaseBizRuntimeException("线下不存在。");
+        }
 
         //判断当前操作人是否有权限
         Boolean result = IsPermission(bugOfflineDO.getOperatorId());
@@ -298,7 +301,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
 
         //线下bug的状态变更为"待修复"
-        bugOfflineDO.setStatus(1);
+        bugOfflineDO.setStatus(BugStatusEnum.REPAIR.getCode());
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
@@ -306,7 +309,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setOldValue("bug打开");
         bugLogDO.setNewValue("待修复");
         bugLogDO.setMainId(id);
-        bugLogDO.setType(0);
+        bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
         bugLogDO.setBugName("线下bug");
 
         //往bug日志表中插入数据
@@ -315,40 +318,47 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         return BaseResult.success(true);
     }
 
-    Boolean IsPermission(String personId) {
-        //得到当前操作人账户
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        String account = userInfo.getId();
-
-        //得到经办人所有上级
-        AccountRequest accountRequest = new AccountRequest();
-        accountRequest.setAccount(personId);
-        Set<String> higherLevels = innerUserPersonClient.getAllSuperiorByAccount(accountRequest).getData();
-        //把当前经办人添加到当前经办人上级的Set集合中
-        higherLevels.add(personId);
-
-        //判断当前操作人账户是否有权限
-        if (!higherLevels.contains(account)) {
-            return false;
-        }
-
-        return true;
-    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> passSelf(Long id) {
-        //1.验证操作人是否是经办人或其上级,状态是否是待修复
+        log.info("自测通过接收参数{}", id);
+        //得到当前线下bug
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
+        if (bugOfflineDO == null) {
+            throw new BaseBizRuntimeException("线下不存在。");
+        }
 
-        //2.查找bug数据
+        //判断当前操作人是否有权限
+        Boolean result = IsPermission(bugOfflineDO.getOperatorId());
+        if (!result) {
+            throw new BaseBizRuntimeException("您没有操作权限");
+        }
 
-        //3.赋值:经办人为bug提出人,上一阶段经办人赋值为确认修复时经办人,状态变成待验收
+        //获取现在的经办人
+        String operatorId = bugOfflineDO.getOperatorId();
+        String operator = bugOfflineDO.getOperator();
 
-        //4.更新bug数据
+        //bug状态变为"待验收",上一环节经办人变成目前经办人，目前经办人变成提出人
+        bugOfflineDO.setStatus(BugStatusEnum.ACCEPTANCE.getCode());
+        bugOfflineDO.setLastOperator(operator);
+        bugOfflineDO.setLastOperatorId(operatorId);
+        bugOfflineDO.setOperator(bugOfflineDO.getProposer());
+        bugOfflineDO.setOperatorId(bugOfflineDO.getProposerId());
 
-        //5.bug日志表记录状态变更
+        bugOfflineMapper.update(bugOfflineDO);
 
-        //5.消息通知
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction("自测通过");
+        bugLogDO.setOldValue("待修复");
+        bugLogDO.setNewValue("待验收");
+        bugLogDO.setMainId(id);
+        bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setBugName("线下bug");
+
+        //往bug日志表中插入数据
+        bugLogMapper.insert(bugLogDO);
+
         return BaseResult.success(true);
     }
 
@@ -529,6 +539,26 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         fileMapper.update(fileDO);
 
         return BaseResult.success(true);
+    }
+
+    Boolean IsPermission(String personId) {
+        //得到当前操作人账户
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String account = userInfo.getId();
+
+        //得到经办人所有上级
+        AccountRequest accountRequest = new AccountRequest();
+        accountRequest.setAccount(personId);
+        Set<String> higherLevels = innerUserPersonClient.getAllSuperiorByAccount(accountRequest).getData();
+        //把当前经办人添加到当前经办人上级的Set集合中
+        higherLevels.add(personId);
+
+        //判断当前操作人账户是否有权限
+        if (!higherLevels.contains(account)) {
+            return false;
+        }
+
+        return true;
     }
 }
 
