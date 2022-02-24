@@ -2,6 +2,7 @@ package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.timevale.footstone.base.model.enums.IResultEnum;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
@@ -89,6 +90,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private TaskProductDemandComponent taskProductDemandComponent;
+
+    @Resource
+    private BugOfflineMapper bugOfflineMapper;
 
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -399,6 +403,18 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProjectBaseVO> projectBaseVOList = projectDOList.stream().map(ProjectCopier.INSTANCE::convertTo).collect(Collectors.toList());
 
         return BaseResult.success(projectBaseVOList);
+    }
+
+    @Override
+    public BaseResult<Boolean> switchProductLine(Long projectId, Long productLineId) {
+        List<TaskDO> taskDOList = taskMapper.getByProjectId(projectId);
+        List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);
+
+        // 是否可以切换
+        boolean result = taskDOList.stream().anyMatch(e -> productLineId.equals(e.getProductLineId()))
+                || bugOfflineDOList.stream().anyMatch(e -> productLineId.equals(e.getProductLineId()));
+
+        return BaseResult.success(!result);
     }
 
     private void fillInfoWhenModify(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
