@@ -18,7 +18,7 @@ public interface BugOfflineMapper {
      * @param bugOfflineDO 线下bugDO
      * @return 影响行数
      */
-    int insert(@Param("bugOfflineDO") BugOfflineDO bugOfflineDO);
+    int insert(BugOfflineDO bugOfflineDO);
 
     /**
      * 选择id获取DO
@@ -34,5 +34,5 @@ public interface BugOfflineMapper {
      * @param bugOfflineListCondition 线下bug查询列表条件
      * @return BugOfflineListDO List
      */
-    List<BugOfflineListDO> selectByCondition(@Param("condition") BugOfflineListCondition bugOfflineListCondition);
+    List<BugOfflineListDO> selectByCondition(BugOfflineListCondition bugOfflineListCondition);
 }

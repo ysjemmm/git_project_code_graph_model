@@ -61,6 +61,12 @@ public class BugOfflineAddReq extends BaseReq {
     @ApiModelProperty("抄送人")
     private List<PersonAddReq> recipients;
 
+    @NotNull(message = "提出人")
+    private String proposer;
+
+    @NotNull(message = "提出人花名拼音")
+    private String proposerId;
+
     @NotNull(message = "经办人")
     private String operator;
 

@@ -18,17 +18,17 @@ public class BugOfflineListDO extends BaseDO {
     /**
      * 项目名称
      */
-    private Long projectName;
+    private String projectName;
 
     /**
      * 产品线名称
      */
-    private Long productLineName;
+    private String productLineName;
 
     /**
      * 业务域名称
      */
-    private Long bizDomainName;
+    private String bizDomainName;
 
     /**
      * 状态 0bug打开、1待修复、2待验收、3待确认、4延期修复、5完成、6关闭

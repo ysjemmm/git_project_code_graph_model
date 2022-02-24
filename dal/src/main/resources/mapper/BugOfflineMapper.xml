@@ -3,7 +3,7 @@
 <mapper namespace="com.timevale.forward.dal.dao.BugOfflineMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into bug_offline(priority, product_line_id, name, status, operator, operator_id, proposer, proposer_id,
+        insert into bug_offline(project_id, product_line_id, name, status, operator, operator_id, proposer, proposer_id,
                                 priority, env, reason, source, belong, frequency, `desc`, open_count, create_man_id, create_man)
         values (#{projectId}, #{productLineId}, #{name}, #{status}, #{operator}, #{operatorId}, #{proposer}, #{proposerId},
                 #{priority}, #{env}, #{reason}, #{source}, #{belong}, #{frequency}, #{desc}, #{openCount}, #{createManId}, #{createMan})
@@ -24,7 +24,7 @@
                bo.name bugName,
                p.name projectName,
                pl.name productLineName,
-               bd.name bizDomainName,
+               bd.name bizDomainName
         from bug_offline bo
             join project p on bo.project_id = p.id
             join product_line pl on pl.id = bo.product_line_id
