@@ -7,17 +7,23 @@ import com.timevale.forward.dal.condition.BugOfflineListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.BugLogDO;
 import com.timevale.forward.dal.entity.BugOfflineDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
+import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.facade.api.client.BugOfflineService;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.BugLogVO;
 import com.timevale.forward.facade.api.result.BugOfflineDetailVO;
 import com.timevale.forward.facade.api.result.BugOfflineVO;
+import com.timevale.forward.facade.api.result.ProductLineVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.TaskComponent;
 import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.service.copy.BugLogCopier;
 import com.timevale.forward.service.copy.BugOfflineCopier;
+import com.timevale.forward.service.copy.ProductLineCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.BugOfflineAddMsg;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
@@ -28,6 +34,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
@@ -342,7 +349,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Override
     public BaseResult<BugOfflineDetailVO> get(Long id) {
         log.info("查看线下bug详情接收参数:{}", id);
-        BugOfflineDetailVO bugOfflineDetailVO = new BugOfflineDetailVO();
         //校验线下bug是否存在
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
         if(bugOfflineDO == null){
@@ -353,6 +359,32 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineId(id);
 
         //转化线下bug
+        BugOfflineDetailVO bugOfflineDetailVO = BugOfflineCopier.INSTANCE.transform(bugOfflineDO);
+
+        //如果bug日志不为空，转化bug日志然后给线下bug赋值
+        if(CollectionUtils.isNotEmpty(bugLogDOList)){
+            List<BugLogVO> bugLogVOList = bugLogDOList.stream().map(BugLogCopier.INSTANCE::convert).collect(Collectors.toList());
+            bugOfflineDetailVO.setBugLogVOList(bugLogVOList);
+        }
+
+        //给线下bug的项目名称赋值
+        ProjectDO projectDO = projectMapper.get(bugOfflineDO.getProjectId());
+        if(projectDO != null){
+            bugOfflineDetailVO.setProjectName(projectDO.getName());
+        }
+
+        //给线下bug的产品线赋值
+        ProductLineDO productLineDO = productLineMapper.selectById(bugOfflineDO.getProductLineId());
+        if(productLineDO != null){
+            ProductLineVO productLineVO = ProductLineCopier.INSTANCE.convert(productLineDO);
+            bugOfflineDetailVO.setProductLineVO(productLineVO);
+        }
+
+        //给线下bug的状态赋值
+        String statusName = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
+        bugOfflineDetailVO.setStatusName(statusName);
+
+        //给线下bug的优先级赋值
 
 
 
