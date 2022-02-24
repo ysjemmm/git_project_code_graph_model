@@ -1,9 +1,12 @@
 package com.timevale.forward.service.integration.inneruser;
 
+import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.security.facade.request.AccountRequest;
 import com.timevale.security.facade.response.BaseInfoResponse;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 内部用户中心接口
@@ -12,6 +15,13 @@ import java.util.Map;
  * @date 2020/11/5 16:17
  */
 public interface InnerUserPersonClient {
+    /**
+     * 查询上级
+     *
+     * @param request 查询用户的相关信息
+     * @return 上级花名拼音列表
+     */
+    BaseResult<Set<String>> getAllSuperiorByAccount(AccountRequest request);
 
     /**
      * 获取所有下属
@@ -59,6 +69,7 @@ public interface InnerUserPersonClient {
 
     /**
      * 获取当前部门及其所有子部门员工 (含离职)
+     *
      * @param groupId groupId
      * @return String
      */
@@ -66,6 +77,7 @@ public interface InnerUserPersonClient {
 
     /**
      * 获取部门员工（不包含离职）
+     *
      * @param groupId 部门id
      * @return 员工idList
      */

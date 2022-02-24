@@ -32,6 +32,12 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
     @Resource
     private RpcPersonService rpcPersonService;
 
+    @Override
+    public BaseResult<Set<String>> getAllSuperiorByAccount(AccountRequest request) {
+        BaseResult<Set<String>> allSuperiorByAccount = rpcPersonService.getAllSuperiorByAccount(request);
+        return allSuperiorByAccount;
+    }
+
     /**
      * 获取所有下属
      *
@@ -156,7 +162,7 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
     public Map<String, String> getUnionIds(List<String> accountIds) {
         try {
             BaseResult<List<BaseInfoResponse>> personByAccountNew = rpcPersonService.getPersonByAccountNew(accountIds);
-            if (personByAccountNew.ifSuccess()&&!CollectionUtils.isEmpty(personByAccountNew.getData())) {
+            if (personByAccountNew.ifSuccess() && !CollectionUtils.isEmpty(personByAccountNew.getData())) {
                 return personByAccountNew.getData().stream().filter(a -> StringUtils.isNotEmpty(a.getUnionId()))
                         .collect(Collectors.toMap(BaseInfoResponse::getAccount, BaseInfoResponse::getUnionId, (v1, v2) -> v1));
             }

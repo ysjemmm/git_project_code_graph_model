@@ -25,4 +25,12 @@ public interface BugLogMapper {
      * @return Boolean 返回值
      */
     Boolean deleteByBugOfflineId(@Param("bugOfflineId") Long bugOfflineId);
+
+    /**
+     * 往bug日志表中插入数据
+     *
+     * @param bugLogDO 参数
+     * @return 返回影响行数
+     */
+    Integer insert(@Param("bugLogDO") BugLogDO bugLogDO);
 }

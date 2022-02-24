@@ -16,4 +16,10 @@
         where main_id = #{bugOfflineId} and type = 0
     </update>
 
+    <insert id="insert">
+        insert into bug_log (`main_id`,`type`,`old_value`,`new_value`,`field`,`action`,`bug_name`,`content`
+        ,`create_man_id`,`create_man`)
+        values (#{bugLogDO.mainId},#{bugLogDO.type},#{bugLogDO.oldValue},#{bugLogDO.newValue},#{bugLogDO.field}
+        ,#{bugLogDO.action},#{bugLogDO.bugName},#{bugLogDO.content},#{createManId},#{createMan})
+    </insert>
 </mapper>

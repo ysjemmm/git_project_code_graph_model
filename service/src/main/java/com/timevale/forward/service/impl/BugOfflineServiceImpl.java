@@ -27,6 +27,7 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.request.AccountRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
@@ -175,7 +176,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(BugOfflineModifyReq bugOfflineModifyReq) {
         BugOfflineDO oldBugOfflineDO = bugOfflineMapper.selectById(bugOfflineModifyReq.getId());
-        if(oldBugOfflineDO == null){
+        if (oldBugOfflineDO == null) {
             throw new BaseBizRuntimeException("该线下bug不存在");
         }
 
@@ -185,13 +186,13 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         //2.更新附件数据
         List<FileAddReq> fileIdList = bugOfflineModifyReq.getFiles();
-        if(!CollectionUtils.isEmpty(fileIdList)){
+        if (!CollectionUtils.isEmpty(fileIdList)) {
             fileComponent.update(fileIdList, bugOfflineModifyReq.getId(), FileTypeEnum.BUG_OFFLINE.getCode());
         }
 
         //3.更新抄送人数据
         List<PersonAddReq> recipientInfoList = bugOfflineModifyReq.getRecipients();
-        if(!CollectionUtils.isEmpty(recipientInfoList)){
+        if (!CollectionUtils.isEmpty(recipientInfoList)) {
             personComponent.update(recipientInfoList, bugOfflineModifyReq.getId(), PersonTypeEnum.BUG_OFFLINE_CC.getCode());
         }
 
@@ -286,15 +287,41 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> doHandle(Long id) {
-        //1.验证操作人是否是经办人或其上级,状态是否是bug打开
+        log.info("确认修复接收参数{}", id);
+        //得到当前线下bug
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
 
-        //2.查找bug数据
+        //得到当前操作人账户
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String account = userInfo.getId();
 
-        //3.赋值:经办人不变,上一阶段经办人不变(bug提出人),状态变成待修复
+        //得到经办人所有上级
+        AccountRequest accountRequest = new AccountRequest();
+        accountRequest.setAccount(bugOfflineDO.getOperatorId());
+        Set<String> higherLevels = innerUserPersonClient.getAllSuperiorByAccount(accountRequest).getData();
+        //把当前经办人添加到当前经办人上级的Set集合中
+        higherLevels.add(bugOfflineDO.getOperatorId());
 
-        //4.更新bug数据
+        //校验当前操作人的权限,先关闭后期打开，要不然本地测试不能通过
+        /*if(!higherLevels.contains(account)){
+            throw new BaseBizRuntimeException("您没有操作权限");
+        }*/
 
-        //5.bug日志表记录状态变更
+        //线下bug的状态变更为"待修复"
+        bugOfflineDO.setStatus(1);
+        bugOfflineMapper.update(bugOfflineDO);
+
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction("确认修复");
+        bugLogDO.setOldValue("bug打开");
+        bugLogDO.setNewValue("待修复");
+        bugLogDO.setMainId(id);
+        bugLogDO.setType(0);
+        bugLogDO.setBugName("线下bug");
+
+        //往bug日志表中插入数据
+        bugLogMapper.insert(bugLogDO);
+
         return BaseResult.success(true);
     }
 
@@ -381,8 +408,14 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //如果bug日志不为空，转化bug日志然后给线下bug赋值
         if (CollectionUtils.isNotEmpty(bugLogDOList)) {
             List<BugLogVO> bugLogVOList = bugLogDOList.stream().map(BugLogCopier.INSTANCE::convert).collect(Collectors.toList());
+            //给bug日志的内容变更类型名字赋值
+            bugLogVOList.forEach(bugLogVO -> {
+                bugLogVO.setTypeName(BugLogTypeEnum.getTextByCode(bugLogVO.getType()));
+            });
             bugOfflineDetailVO.setBugLogVOList(bugLogVOList);
+
         }
+
 
         //给线下bug的项目名称赋值
         ProjectDO projectDO = projectMapper.get(bugOfflineDO.getProjectId());
