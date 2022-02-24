@@ -14,9 +14,7 @@ import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BugOfflineDetailVO;
 import com.timevale.forward.facade.api.result.BugOfflineVO;
-import com.timevale.forward.model.enums.AscriptionEnum;
-import com.timevale.forward.model.enums.FileTypeEnum;
-import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.TaskComponent;
@@ -112,6 +110,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         if(resultIsEmpty){
             return BaseResult.success(ResultUtil.pageEmpty());
         }
+
         // 开始分页
         PageHelper.startPage(bugOfflineQueryList.pageNum, bugOfflineQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
 
@@ -119,8 +118,13 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         List<BugOfflineDO> bugOfflineDOList = Lists.newArrayList();
         List<BugOfflineVO> bugOfflineVOList = bugOfflineDOList.stream().map(BugOfflineCopier.INSTANCE::convert).collect(Collectors.toList());
 
+        // 信息填充
         bugOfflineVOList.forEach(e -> {
-
+            e.setStatusName(BugStatusEnum.getTextByCode(e.getStatus()));
+            e.setPriorityName(PriorityEnum.getTextChineseByCode(e.getPriority()));
+            e.setSourceName(BugSourceEnum.getTextByCode(e.getSource()));
+            e.setBelongName(BugBelongEnum.getTextByCode(e.getBelong()));
+            e.setEnvName(BugBelongEnum.getTextByCode(e.getEnv()));
         });
 
         // 返回分页数据
@@ -149,6 +153,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         personComponent.add(recipients, bugOfflineDO.getId(), PersonTypeEnum.BUG_OFFLINE_CC.getCode());
 
         //4.bug日志表记录一条新增数据
+
 
         //5.消息通知
         messageEventPublisher.publish(new BugOfflineAddMsg(

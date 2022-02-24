@@ -12,7 +12,7 @@ import lombok.EqualsAndHashCode;
 public class BugLogDO extends BaseDO {
 
     /**
-     * 主题id
+     * 主体id
      */
     private Long mainId;
 

@@ -6,4 +6,8 @@
 
     </insert>
 
+    <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
+        
+    </select>
+
 </mapper>

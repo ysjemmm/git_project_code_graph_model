@@ -1,7 +1,10 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.BugOfflineListCondition;
 import com.timevale.forward.dal.entity.BugOfflineDO;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -15,4 +18,12 @@ public interface BugOfflineMapper {
      * @return 影响行数
      */
     int insert(@Param("bugOfflineDO") BugOfflineDO bugOfflineDO);
+
+    /**
+     * 根据查询条件获取DO列表
+     *
+     * @param bugOfflineListCondition 线下bug查询列表条件
+     * @return BugOfflineDO List
+     */
+    List<BugOfflineDO> selectByCondition(@Param("condition") BugOfflineListCondition bugOfflineListCondition);
 }

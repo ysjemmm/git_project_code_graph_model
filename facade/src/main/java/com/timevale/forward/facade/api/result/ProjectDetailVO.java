@@ -21,6 +21,9 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("名称")
     private String name;
 
+    @ApiModelProperty("是否为客户开发项目：0否，1是")
+    private Integer customerDev;
+
     @ApiModelProperty("项目状态:0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废")
     private Integer status;
 

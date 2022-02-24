@@ -3,15 +3,15 @@
 <mapper namespace="com.timevale.forward.dal.dao.ProjectMapper">
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        insert into project (name, priority, type ,status,pm,pm_id,plan_start_date,plan_end_date,
+        insert into project (name, customer_dev, priority, type ,status,pm,pm_id,plan_start_date,plan_end_date,
         `desc`, create_man_id, create_man)
         values
-        (#{name}, #{priority}, #{type},#{status}, #{pmName},#{pmId},#{planStartDate},#{planEndDate},
+        (#{name}, #{customerDev}, #{priority}, #{type},#{status}, #{pmName},#{pmId},#{planStartDate},#{planEndDate},
         #{desc}, #{createManId}, #{createMan})
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select id,name, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date,
+        select id,name, customer_dev, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date,
         actual_start_date,actual_end_date,`desc`, create_man_id, create_man,create_date,modify_date
         from project
         where id = #{id} and is_deleted=false
@@ -21,6 +21,7 @@
         update project
         <set>
             <if test="name != null">name = #{name},</if>
+            <if test="customerDev != null">customer_dev = #{customerDev},</if>
             <if test="priority != null">priority = #{priority},</if>
             <if test="type != null">type = #{type},</if>
             <if test="pmName != null">pm = #{pmName},</if>
@@ -41,7 +42,7 @@
 
 
     <select id="getByProductDemandId" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select a.id,a.name, a.priority, a.type ,a.status,a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
+        select a.id,a.name, a.customer_dev, a.priority, a.type ,a.status,a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
         a.actual_start_date,a.actual_end_date,a.`desc`,
         a.create_man_id, a.create_man,a.create_date,a.modify_date
         from project a
@@ -50,7 +51,7 @@
     </select>
 
     <select id="selectByProductDemandIdList" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select distinct p.id, p.name, p.priority, p.type, p.status, p.pm, p.pm_id, p.plan_start_date, p.plan_end_date, p.actual_start_date, p.actual_end_date, p.`desc`, p.is_deleted, p.create_man_id, p.create_man, p.create_date, p.modify_man_id, p.modify_man, p.modify_date
+        select distinct p.id, p.name, p.customer_dev, p.priority, p.type, p.status, p.pm, p.pm_id, p.plan_start_date, p.plan_end_date, p.actual_start_date, p.actual_end_date, p.`desc`, p.is_deleted, p.create_man_id, p.create_man, p.create_date, p.modify_man_id, p.modify_man, p.modify_date
         from project_product_demand ppd
         join project p on ppd.project_id = p.id
         where ppd.is_deleted = false
@@ -93,7 +94,7 @@
     </select>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProjectListDO">
-        select a.id,a.name, a.priority, a.type ,a.status,a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
+        select a.id,a.name, a.customer_dev,  a.priority, a.type ,a.status,a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
         a.actual_start_date,a.actual_end_date,a.`desc`,
         a.create_man_id, a.create_man,a.create_date,a.modify_date
         from project a
@@ -147,7 +148,7 @@
     </select>
 
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select id,name, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date,
+        select id,name, customer_dev, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date,
         actual_start_date,actual_end_date,`desc`, create_man_id, create_man,create_date,modify_date
         from project
         where name = #{name} and is_deleted=false
@@ -166,7 +167,7 @@
     </select>
 
     <select id="selectByTeamMember" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select  pj.id, pj.name, pj.priority, pj.type, pj.status, pj.pm, pj.pm_id, pj.plan_start_date,
+        select  pj.id, pj.name, pj.customer_dev, pj.priority, pj.type, pj.status, pj.pm, pj.pm_id, pj.plan_start_date,
                 pj.plan_end_date, pj.actual_start_date, pj.actual_end_date, pj.`desc`, pj.is_deleted,
                 pj.create_man_id, pj.create_man, pj.create_date, pj.modify_man_id, pj.modify_man, pj.modify_date
         from person p
@@ -183,7 +184,9 @@
     </select>
 
     <select id="selectByProductLine" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select *
+        select pj.id, pj.name, pj.customer_dev, pj.priority, pj.type, pj.status, pj.pm, pj.pm_id,
+               pj.plan_start_date, pj.plan_end_date, pj.actual_start_date, pj.actual_end_date, pj.`desc`,
+               pj.is_deleted, pj.create_man_id, pj.create_man, pj.create_date, pj.modify_man_id, pj.modify_man, pj.modify_date
         from person p
             join project pj on p.main_id = pj.id
             join project_product_line ppl on pj.id = ppl.project_id
