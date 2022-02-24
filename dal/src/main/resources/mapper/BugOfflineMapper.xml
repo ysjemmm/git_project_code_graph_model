@@ -7,7 +7,12 @@
     </insert>
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
-        
+
+    </select>
+
+    <select id="selectById" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
+        select * from bug_offline
+        where id = #{bugOfflineId} and is_deleted = 0
     </select>
 
 </mapper>

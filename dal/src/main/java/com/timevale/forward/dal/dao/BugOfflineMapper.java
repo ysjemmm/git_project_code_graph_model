@@ -26,4 +26,12 @@ public interface BugOfflineMapper {
      * @return BugOfflineDO List
      */
     List<BugOfflineDO> selectByCondition(@Param("condition") BugOfflineListCondition bugOfflineListCondition);
+
+    /**
+     * 更具线下bug的id获取到线下bug的详情信息
+     *
+     * @param bugOfflineId 线下bug的id
+     * @return BugOfflineDO 返回数据
+     */
+    BugOfflineDO selectById(@Param("bugOfflineId") Long bugOfflineId);
 }

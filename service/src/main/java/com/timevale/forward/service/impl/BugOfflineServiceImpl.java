@@ -26,6 +26,7 @@ import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -339,23 +340,16 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Override
     public BaseResult<BugOfflineDetailVO> get(Long id) {
-        log.info("任务查看接收参数:{}", id);
+        log.info("查看线下bug详情接收参数:{}", id);
         BugOfflineDetailVO bugOfflineDetailVO = new BugOfflineDetailVO();
-        //1.检查bug数据是否存在
+        //校验线下bug是否存在
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
+        if(bugOfflineDO == null){
+            throw new BaseBizRuntimeException("您要查询的线下bug不存在。");
+        }
 
-        //2.查询bug表
 
-        //3.查询产品线表
 
-        //4.查询项目表
-
-        //5.查询附件表
-
-        //6.查询抄送人表
-
-        //7.查询评论表
-
-        //8.查询bug日志表
         return BaseResult.success(bugOfflineDetailVO);
     }
 

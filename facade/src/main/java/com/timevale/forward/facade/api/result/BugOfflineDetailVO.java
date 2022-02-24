@@ -86,8 +86,11 @@ public class BugOfflineDetailVO extends ToString {
     @ApiModelProperty(value = "打回次数")
     private Integer returnCount;
 
-    @ApiModelProperty(value = "bug提出人")
-    private List<PersonVO> createMans;
+    @ApiModelProperty(value = "bug提出人名字")
+    private String proposer;
+
+    @ApiModelProperty(value = "bug提出人id")
+    private String proposerId;
 
     @ApiModelProperty("附件集合")
     private List<FileVO> files;
@@ -106,4 +109,7 @@ public class BugOfflineDetailVO extends ToString {
 
     @ApiModelProperty("线下bug对应的bug日志")
     private List<BugLogVO> bugLogVOList;
+
+    @ApiModelProperty("评论")
+    private List<CommentVO> commentVOList;
 }
