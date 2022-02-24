@@ -44,4 +44,12 @@ public interface BugOfflineMapper {
      */
     List<BugOfflineListDO> selectByCondition(BugOfflineListCondition bugOfflineListCondition);
 
+    /**
+     * 根据bug的id删除线下bug
+     *
+     * @param bugOfflineId 参数
+     * @return Boolean 返回值
+     */
+    Boolean deleteById(@Param("bugOfflineId") Long bugOfflineId);
+
 }

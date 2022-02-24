@@ -47,10 +47,10 @@
                 #{item}
             </foreach>
             <if test="mainIds!=null and mainIds.size()>0">
-            and main_id in
-            <foreach collection="mainIds" item="item" separator="," open="(" close=")">
-                #{item}
-            </foreach>
+                and main_id in
+                <foreach collection="mainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
             </if>
             and type = #{type} and is_deleted=false
         </where>
