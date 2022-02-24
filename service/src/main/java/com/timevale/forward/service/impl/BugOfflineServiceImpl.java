@@ -7,6 +7,7 @@ import com.timevale.forward.dal.condition.BugOfflineListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.BugLogDO;
 import com.timevale.forward.dal.entity.BugOfflineDO;
+import com.timevale.forward.dal.entity.BugOfflineListDO;
 import com.timevale.forward.facade.api.client.BugOfflineService;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.request.*;
@@ -117,20 +118,20 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         PageHelper.startPage(bugOfflineQueryList.pageNum, bugOfflineQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
 
         // 查询并转换
-        List<BugOfflineDO> bugOfflineDOList = Lists.newArrayList();
-        List<BugOfflineVO> bugOfflineVOList = bugOfflineDOList.stream().map(BugOfflineCopier.INSTANCE::convert).collect(Collectors.toList());
-
-        // 信息填充
-        bugOfflineVOList.forEach(e -> {
-            e.setStatusName(BugStatusEnum.getTextByCode(e.getStatus()));
-            e.setPriorityName(PriorityEnum.getTextChineseByCode(e.getPriority()));
-            e.setSourceName(BugSourceEnum.getTextByCode(e.getSource()));
-            e.setBelongName(BugBelongEnum.getTextByCode(e.getBelong()));
-            e.setEnvName(BugBelongEnum.getTextByCode(e.getEnv()));
-        });
+        List<BugOfflineListDO> bugOfflineDOList = bugOfflineMapper.selectByCondition(condition);
+        List<BugOfflineVO> bugOfflineVOList = bugOfflineDOList.stream().map(e -> {
+                    BugOfflineVO bugOfflineVO = BugOfflineCopier.INSTANCE.convert(e);
+                    bugOfflineVO.setStatusName(BugStatusEnum.getTextByCode(e.getStatus()));
+                    bugOfflineVO.setPriorityName(PriorityEnum.getTextChineseByCode(e.getPriority()));
+                    bugOfflineVO.setSourceName(BugSourceEnum.getTextByCode(e.getSource()));
+                    bugOfflineVO.setBelongName(BugBelongEnum.getTextByCode(e.getBelong()));
+                    bugOfflineVO.setEnvName(BugBelongEnum.getTextByCode(e.getEnv()));
+                    return bugOfflineVO;
+                }
+        ).collect(Collectors.toList());
 
         // 返回分页数据
-        PageInfo<BugOfflineDO> pageInfo = new PageInfo<>(bugOfflineDOList);
+        PageInfo<BugOfflineListDO> pageInfo = new PageInfo<>(bugOfflineDOList);
         PageQueryResult<BugOfflineVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(bugOfflineVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);

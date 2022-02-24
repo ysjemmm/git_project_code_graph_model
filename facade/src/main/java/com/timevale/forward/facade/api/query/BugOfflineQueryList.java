@@ -22,7 +22,7 @@ public class BugOfflineQueryList extends QueryBase {
     private String name;
 
     @ApiModelProperty("bug状态")
-    private List<Integer> status;
+    private List<Integer> statuses;
 
     @ApiModelProperty("经办人id")
     private List<String> operatorIds;

@@ -16,88 +16,93 @@ import java.util.List;
 @Builder
 public class BugOfflineListCondition extends QueryBase {
     /**
-     * id
-     */
-    private Long id;
-
-    /**
-     * id
-     */
-    private List<Long> ids;
-    /**
      * 名称
      */
     @WildcardEscape
     private String name;
 
     /**
-     * 项目阶段
+     * 状态
      */
-    private List<Integer>stages;
+    private List<Integer> statuses;
 
     /**
-     * 产品线
+     * 经办人
+     */
+    private List<String> operatorIds;
+
+    /**
+     * 提出人
+     */
+    private List<String> proposerIds;
+
+    /**
+     * 关联项目
      */
     private List<Long> projectIds;
+
     /**
      * 产品线
      */
     private List<Long> productLineIds;
-    /**
-     * 状态
-     */
-    private List<Integer> status;
-    /**
-     * 执行人
-     */
-    private List<String> operatorIds;
-    /**
-     * 创建人
-     */
-    private List<String> proposerIds;
-    /**
-     * 计划开始时间左区间
-     */
-    private Date planStartDateLeft;
 
     /**
-     * 计划开始时间右区间
+     * 优先级
      */
-    private Date planStartDateRight;
+    private List<Integer> priorities;
 
     /**
-     * 计划结束时间左区间
+     * bug环境
      */
-    private Date planEndDateLeft;
+    private List<Integer> envs;
 
     /**
-     * 计划结束时间右区间
+     * 原因
      */
-    private Date planEndDateRight;
+    private List<String> reasons;
 
     /**
-     * 实际开始时间左区间
+     * 来源
      */
-    private Date actualStartDateLeft;
+    private List<Integer> sources;
 
     /**
-     * 实际开始时间右区间
+     * 属于
      */
-    private Date actualStartDateRight;
+    private List<Integer> belongs;
 
     /**
-     * 实际结束时间左区间
+     * 创建时间左区间
      */
-    private Date actualEndDateLeft;
+    private Date createDateLeft;
 
     /**
-     * 实际结束时间右区间
+     * 创建时间右区间
      */
-    private Date actualEndDateRight;
+    private Date createDateRight;
+
+    /**
+     * 修改时间左区间
+     */
+    private Date modifyDateLeft;
+
+    /**
+     * 修改时间有区间
+     */
+    private Date modifyDateRight;
+
+    /**
+     * 打回次数判断类型
+     */
+    private Integer returnCountType;
+
+    /**
+     * 打回次数
+     */
+    private Integer returnCount;
 
     /**
      * 用于判断是否为"抄送我的需求"tab
      */
     private String copier;
-
 }
