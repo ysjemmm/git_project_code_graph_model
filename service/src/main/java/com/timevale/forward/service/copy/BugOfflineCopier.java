@@ -4,6 +4,7 @@ import com.timevale.forward.dal.condition.BugOfflineListCondition;
 import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.request.BugOfflineAddReq;
+import com.timevale.forward.facade.api.result.BugOfflineDetailVO;
 import com.timevale.forward.facade.api.result.BugOfflineVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -42,4 +43,47 @@ public interface BugOfflineCopier {
      */
     BugOfflineVO convert(BugOfflineDO bugOfflineDO);
 
+    /**
+     * BugOfflineDO  -->  BugOfflineDetailVO
+     *
+     * @param  bugOfflineDO 参数
+     * @return BugOfflineDetailVO
+     * */
+    BugOfflineDetailVO transform(BugOfflineDO bugOfflineDO);
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

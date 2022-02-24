@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @Date 2022/2/24 10:49
@@ -53,6 +53,6 @@ public class BugLogVO extends ToString {
     private String operatorId;
 
     @ApiModelProperty("创建时间")
-    private LocalDateTime localDateTime;
+    private Date createDate;
 
 }

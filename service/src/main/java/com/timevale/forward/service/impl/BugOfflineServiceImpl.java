@@ -4,10 +4,8 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BugOfflineListCondition;
-import com.timevale.forward.dal.dao.BugOfflineMapper;
-import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.BugLogDO;
 import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.facade.api.client.BugOfflineService;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
@@ -73,6 +71,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Resource
     MessageEventPublisher messageEventPublisher;
+
+    @Resource
+    private BugLogMapper bugLogMapper;
 
 
     @Override
@@ -347,6 +348,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         if(bugOfflineDO == null){
             throw new BaseBizRuntimeException("您要查询的线下bug不存在。");
         }
+
+        //查询bug的日志信息
+        List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineId(id);
+
+        //转化线下bug
 
 
 
