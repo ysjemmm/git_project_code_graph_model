@@ -19,6 +19,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.BugOfflineAddMsg;
+import com.timevale.forward.service.observer.event.BugOfflineUpdateMsg;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -158,6 +159,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         //4.bug日志表记录一条新增数据
 
+
         //5.消息通知
         messageEventPublisher.publish(new BugOfflineAddMsg(
                 this,
@@ -194,6 +196,13 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
 
         //5.修改经办人消息通知
+        messageEventPublisher.publish(new BugOfflineUpdateMsg(
+                this,
+                newBugOfflineDO.getId(),
+                newBugOfflineDO.getOperatorId(),
+                newBugOfflineDO.getName(),
+                BugStatusEnum.getTextByCode(newBugOfflineDO.getStatus())
+        ));
         return BaseResult.success(true);
     }
 
