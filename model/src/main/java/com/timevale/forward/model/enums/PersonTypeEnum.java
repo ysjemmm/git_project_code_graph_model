@@ -1,5 +1,6 @@
 package com.timevale.forward.model.enums;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -7,6 +8,7 @@ import lombok.Getter;
  * @date 2021/12/16 09:50
  */
 @Getter
+@AllArgsConstructor
 public enum PersonTypeEnum {
     // 0 项目-产品经理
     PROJECT_PD(0),
@@ -22,8 +24,6 @@ public enum PersonTypeEnum {
     BUG_OFFLINE_CC(50)
     ;
 
-    private Integer code;
-
-    PersonTypeEnum(Integer code){this.code = code;}
+    private final Integer code;
 
 }

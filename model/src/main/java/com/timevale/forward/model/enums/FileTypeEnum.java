@@ -1,5 +1,6 @@
 package com.timevale.forward.model.enums;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -7,6 +8,7 @@ import lombok.Getter;
  * @date 2021/12/16 10:18
  */
 @Getter
+@AllArgsConstructor
 public enum FileTypeEnum {
     // 产品需求
     PRODUCT_DEMAND(1),
@@ -24,5 +26,4 @@ public enum FileTypeEnum {
 
     private Integer code;
 
-    FileTypeEnum(Integer code){this.code = code;}
 }

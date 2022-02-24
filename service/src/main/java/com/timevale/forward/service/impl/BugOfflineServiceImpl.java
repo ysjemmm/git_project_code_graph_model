@@ -4,6 +4,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BugOfflineListCondition;
+import com.timevale.forward.dal.dao.BugOfflineMapper;
 import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
@@ -69,6 +70,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     private ProjectMapper projectMapper;
 
     @Resource
+    private BugOfflineMapper bugOfflineMapper;
+
+    @Resource
     MessageEventPublisher messageEventPublisher;
 
 
@@ -132,9 +136,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(BugOfflineAddReq bugOfflineAddReq) {
-        log.info("线下bug新增接收参数:{}", bugOfflineAddReq);
-        BugOfflineDO bugOfflineDO = BugOfflineCopier.INSTANCE.convert(bugOfflineAddReq);
         //1.接收表单参数,状态为:bug打开,经办人所选用户,上一阶段经办人为bug提出人,bug数据入库
+        BugOfflineDO bugOfflineDO = BugOfflineCopier.INSTANCE.convert(bugOfflineAddReq);
+        bugOfflineMapper.insert(bugOfflineDO);
 
         //2.若存在附件,附件数据入库
         List<FileAddReq> files = bugOfflineAddReq.getFiles();
