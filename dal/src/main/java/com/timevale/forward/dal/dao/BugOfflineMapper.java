@@ -2,6 +2,7 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.BugOfflineListCondition;
 import com.timevale.forward.dal.entity.BugOfflineDO;
+import com.timevale.forward.dal.entity.BugOfflineListDO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -17,21 +18,23 @@ public interface BugOfflineMapper {
      * @param bugOfflineDO 线下bugDO
      * @return 影响行数
      */
-    int insert(@Param("bugOfflineDO") BugOfflineDO bugOfflineDO);
+    int insert(BugOfflineDO bugOfflineDO);
+
+    /**
+     * 选择id获取DO
+     *
+     * @param id id
+     * @return BugOfflineDO
+     */
+    BugOfflineDO selectById(@Param("id") Long id);
 
     /**
      * 根据查询条件获取DO列表
      *
      * @param bugOfflineListCondition 线下bug查询列表条件
-     * @return BugOfflineDO List
+     * @return BugOfflineListDO List
      */
+    List<BugOfflineListDO> selectByCondition(BugOfflineListCondition bugOfflineListCondition);
     List<BugOfflineDO> selectByCondition(@Param("condition") BugOfflineListCondition bugOfflineListCondition);
 
-    /**
-     * 更具线下bug的id获取到线下bug的详情信息
-     *
-     * @param bugOfflineId 线下bug的id
-     * @return BugOfflineDO 返回数据
-     */
-    BugOfflineDO selectById(@Param("bugOfflineId") Long bugOfflineId);
 }

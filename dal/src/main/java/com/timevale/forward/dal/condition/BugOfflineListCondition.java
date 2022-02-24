@@ -1,7 +1,6 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.forward.dal.annotation.WildcardEscape;
-import com.timevale.mandarin.common.query.QueryBase;
 import lombok.Builder;
 import lombok.Data;
 
@@ -14,7 +13,7 @@ import java.util.List;
  **/
 @Data
 @Builder
-public class BugOfflineListCondition extends QueryBase {
+public class BugOfflineListCondition {
     /**
      * 名称
      */

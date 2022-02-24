@@ -142,7 +142,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         pageQueryResult.setResultList(bugOfflineVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
-        return BaseResult.success(ResultUtil.pageEmpty());
+        return BaseResult.success(pageQueryResult);
     }
 
 
@@ -151,6 +151,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     public BaseResult<Boolean> add(BugOfflineAddReq bugOfflineAddReq) {
         //1.接收表单参数,状态为:bug打开,经办人所选用户,上一阶段经办人为bug提出人,bug数据入库
         BugOfflineDO bugOfflineDO = BugOfflineCopier.INSTANCE.convert(bugOfflineAddReq);
+        bugOfflineDO.setOpenCount(1);
+        bugOfflineDO.setStatus(BugStatusEnum.OPEN.getCode());
         bugOfflineMapper.insert(bugOfflineDO);
 
         //2.若存在附件,附件数据入库
@@ -162,7 +164,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         personComponent.add(recipients, bugOfflineDO.getId(), PersonTypeEnum.BUG_OFFLINE_CC.getCode());
 
         //4.bug日志表记录一条新增数据
-
 
         //5.消息通知
         messageEventPublisher.publish(new BugOfflineAddMsg(
