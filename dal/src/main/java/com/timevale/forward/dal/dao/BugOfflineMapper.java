@@ -21,6 +21,14 @@ public interface BugOfflineMapper {
     int insert(BugOfflineDO bugOfflineDO);
 
     /**
+     * 更新
+     *
+     * @param bugOfflineDO 线下bugDO
+     * @return 影响行数
+     */
+    int update(BugOfflineDO bugOfflineDO);
+
+    /**
      * 选择id获取DO
      *
      * @param id id

@@ -172,12 +172,26 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(BugOfflineModifyReq bugOfflineModifyReq) {
-        log.info("线下bug修改接收参数:{}", bugOfflineModifyReq);
+        BugOfflineDO oldBugOfflineDO = bugOfflineMapper.selectById(bugOfflineModifyReq.getId());
+        if(oldBugOfflineDO == null){
+            throw new BaseBizRuntimeException("该线下bug不存在");
+        }
+
         //1.接收表单参数,状态不变,经办人为所选用户,上一阶段经办人不变,bug数据入库
+        BugOfflineDO newBugOfflineDO = BugOfflineCopier.INSTANCE.convert(bugOfflineModifyReq);
+        bugOfflineMapper.update(newBugOfflineDO);
 
         //2.更新附件数据
+        List<FileAddReq> fileIdList = bugOfflineModifyReq.getFiles();
+        if(!CollectionUtils.isEmpty(fileIdList)){
+            fileComponent.update(fileIdList, bugOfflineModifyReq.getId(), FileTypeEnum.BUG_OFFLINE.getCode());
+        }
 
         //3.更新抄送人数据
+        List<PersonAddReq> recipientInfoList = bugOfflineModifyReq.getRecipients();
+        if(!CollectionUtils.isEmpty(recipientInfoList)){
+            personComponent.update(recipientInfoList, bugOfflineModifyReq.getId(), PersonTypeEnum.BUG_OFFLINE_CC.getCode());
+        }
 
         //5.修改经办人消息通知
         return BaseResult.success(true);
@@ -405,7 +419,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugOfflineDetailVO.setFrequencyName(frequencyName);
 
         //给线下bug的不用修复原因赋值
-        String reason = BugNoFixReasonEnum.getTextByCode(bugOfflineDO.getUnhandleReason());
+        String reason = BugNoFixReasonEnum.getTextByCode(bugOfflineDO.getUnHandleReason());
         bugOfflineDetailVO.setUnhandleReasonName(reason);
 
         //给线下bug的附件集合赋值

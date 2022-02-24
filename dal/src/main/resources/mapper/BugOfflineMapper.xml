@@ -9,6 +9,78 @@
                 #{priority}, #{env}, #{reason}, #{source}, #{belong}, #{frequency}, #{desc}, #{openCount}, #{createManId}, #{createMan})
     </insert>
 
+    <update id="update">
+        update bug_offline
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="projectId != null">
+                project_id = #{projectId},
+            </if>
+            <if test="productLineId != null">
+                product_line_id = #{productLineId},
+            </if>
+            <if test="status != null">
+                `status` = #{status},
+            </if>
+            <if test="lastOperator != null and lastOperator != ''">
+                last_operator = #{lastOperator},
+            </if>
+            <if test="lastOperatorId != null and lastOperatorId != ''">
+                last_operator = #{lastOperatorId},
+            </if>
+            <if test="operator != null and operator != ''">
+                operator = #{operator},
+            </if>
+            <if test="operatorId != null and operatorId != ''">
+                operator_id = #{operatorId},
+            </if>
+            <if test="proposer != null and proposer != ''">
+                proposer = #{proposer},
+            </if>
+            <if test="proposerId != null and proposerId != ''">
+                proposer_id = #{proposerId},
+            </if>
+            <if test="priority != null">
+                priority = #{priority},
+            </if>
+            <if test="env != null">
+                env = #{env},
+            </if>
+            <if test="reason != null">
+                reason = #{reason},
+            </if>
+            <if test="source != null">
+                `source` = #{source},
+            </if>
+            <if test="belong != null">
+                belong = #{belong},
+            </if>
+            <if test="frequency != null">
+                frequency = #{frequency},
+            </if>
+            <if test="desc != null">
+                `desc` = #{desc},
+            </if>
+            <if test="openCount != null">
+                open_count = #{openCount},
+            </if>
+            <if test="returnCount != null">
+                return_count = #{returnCount},
+            </if>
+            <if test="delayHandleReason != null">
+                delay_handle_reason = #{delayHandleReason},
+            </if>
+            <if test="unHandleReason != null">
+                unhandle_reason = #{unHandleReason},
+            </if>
+            modify_man_id = #{modifyManId},
+            modify_man = #{modifyMan}
+        </set>
+        where id = #{id}
+    </update>
+
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
         select id, project_id, product_line_id, name, status, last_operator, last_operator_id, operator, operator_id,
                proposer, proposer_id, priority, env, reason, source, belong, frequency, `desc`, open_count, return_count,
