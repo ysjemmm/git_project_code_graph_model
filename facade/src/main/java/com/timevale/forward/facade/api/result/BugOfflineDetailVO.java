@@ -104,4 +104,6 @@ public class BugOfflineDetailVO extends ToString {
     @ApiModelProperty("抄送人")
     private List<PersonVO> recipientInfoList;
 
+    @ApiModelProperty("线下bug对应的bug日志")
+    private List<BugLogVO> bugLogVOList;
 }
