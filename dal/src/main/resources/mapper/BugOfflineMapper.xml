@@ -3,117 +3,16 @@
 <mapper namespace="com.timevale.forward.dal.dao.BugOfflineMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into bug_offline(priority, product_line_id, name, status, operator, operator_id, proposer, proposer_id,
-                                priority, env, reason, source, belong, frequency, `desc`, open_count, create_man_id, create_man)
-        values (#{projectId}, #{productLineId}, #{name}, #{status}, #{operator}, #{operatorId}, #{proposer}, #{proposerId},
-                #{priority}, #{env}, #{reason}, #{source}, #{belong}, #{frequency}, #{desc}, #{openCount}, #{createManId}, #{createMan})
+
     </insert>
 
-    <select id="selectById" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
-        select id, project_id, product_line_id, name, status, last_operator, last_operator_id, operator, operator_id,
-               proposer, proposer_id, priority, env, reason, source, belong, frequency, `desc`, open_count, return_count,
-               delay_handle_reason, unhandle_reason,
-               is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
-        from bug_offline
-        where id = #{id} and is_deleted = false
+    <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
+
     </select>
 
-    <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.BugOfflineListDO">
-        select bo.id, bo.status, bo.operator, bo.proposer, bo.priority, bo.env, bo.reason, bo.source, bo.belong, bo.return_count,
-               bo.create_date, bo.modify_date,
-               bo.name bugName,
-               p.name projectName,
-               pl.name productLineName,
-               bd.name bizDomainName,
-        from bug_offline bo
-            join project p on bo.project_id = p.id
-            join product_line pl on pl.id = bo.product_line_id
-            join biz_domain bd on pl.biz_domain_id = bd.id
-        <where>
-            <if test="name != null and name != '' ">
-                and bo.name like concat('%',#{name},'%')
-            </if>
-            <if test="statuses != null and statuses.size() > 0">
-                and bo.status in
-                <foreach collection="statuses" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="operatorIds != null and operatorIds.size() > 0">
-                and bo.operator_id in
-                <foreach collection="operatorIds" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="proposerIds != null and proposerIds.size() > 0">
-                and bo.proposer_id in
-                <foreach collection="proposerIds" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="projectIds != null and projectIds.size() > 0">
-                and bo.project_id in
-                <foreach collection="projectIds" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="productLineIds != null and productLineIds.size() > 0">
-                and bo.product_line_id in
-                <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="priorities != null and priorities.size() > 0">
-                and bo.priority in
-                <foreach collection="priorities" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="envs != null and envs.size() > 0">
-                and bo.env in
-                <foreach collection="envs" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="reasons != null and reasons.size() > 0">
-                and bo.reason in
-                <foreach collection="reasons" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="sources != null and sources.size() > 0">
-                and bo.source in
-                <foreach collection="sources" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="belongs != null and belongs.size() > 0">
-                and bo.belong in
-                <foreach collection="belongs" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="createDateLeft != null and createDateRight != null">
-                and bo.create_date &gt;= #{createDateLeft} and bo.create_date &lt;= #{createDateRight}
-            </if>
-            <if test="modifyDateLeft != null and modifyDateRight != null">
-                and bo.modify_date &gt;= #{modifyDateLeft} and bo.modify_date &lt;= #{modifyDateRight}
-            </if>
-            <if test="returnCountType != null and returnCount != null">
-                <if test="returnCountType = 0"> and bo.return_count = #{returnCount} </if>
-                <if test="returnCountType = 1"> and bo.return_count &gt; #{returnCount} </if>
-                <if test="returnCountType = 2"> and bo.return_count &gt;= #{returnCount} </if>
-                <if test="returnCountType = 3"> and bo.return_count &lt; #{returnCount} </if>
-                <if test="returnCountType = 4"> and bo.return_count &lt;= #{returnCount} </if>
-            </if>
-            <if test="copier!=null and copier!='' ">
-                and bo.id IN (
-                    select p.main_id
-                    from person p
-                    where p.user_id = #{copier} p.type = 50
-                )
-            </if>
-        </where>
+    <select id="selectById" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
+        select * from bug_offline
+        where id = #{bugOfflineId} and is_deleted = 0
     </select>
 
 </mapper>
