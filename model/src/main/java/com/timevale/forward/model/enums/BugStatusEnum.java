@@ -13,12 +13,12 @@ public enum BugStatusEnum {
     /**
      * bug打开
      */
-    OPEN(0,"打开"),
+    OPEN(0, "bug打开"),
 
     /**
      * 待修复
      */
-    REPAIR(1,"待修复"),
+    REPAIR(1, "待修复"),
 
     /**
      * 待验收
@@ -28,29 +28,29 @@ public enum BugStatusEnum {
     /**
      * 待确认
      */
-    CONFIRM(3,"待确认"),
+    CONFIRM(3, "待确认"),
 
     /**
      * 延迟修复
      */
-    POSTPONE_REPAIR(4,"延迟修复"),
+    POSTPONE_REPAIR(4, "延迟修复"),
 
     /**
      * 完成
      */
-    COMPLETE(5,"完成"),
+    COMPLETE(5, "完成"),
 
     /**
      * 关闭
      */
-    CLOSE(6,"关闭");
+    CLOSE(6, "关闭");
 
     private final Integer code;
     private final String text;
 
-    public static String getTextByCode(Integer code){
-        for (BugStatusEnum e : BugStatusEnum.values()){
-            if(e.code.equals(code)){
+    public static String getTextByCode(Integer code) {
+        for (BugStatusEnum e : BugStatusEnum.values()) {
+            if (e.code.equals(code)) {
                 return e.text;
             }
         }

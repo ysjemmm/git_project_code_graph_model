@@ -291,11 +291,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //得到当前线下bug
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
         if (bugOfflineDO == null) {
-            throw new BaseBizRuntimeException("线下不存在。");
+            throw new BaseBizRuntimeException("线下bug不存在。");
         }
 
         //判断当前操作人是否有权限
-        Boolean result = IsPermission(bugOfflineDO.getOperatorId());
+        Boolean result = isPermission(bugOfflineDO.getOperatorId());
         if (!result) {
             throw new BaseBizRuntimeException("您没有操作权限");
         }
@@ -326,11 +326,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //得到当前线下bug
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
         if (bugOfflineDO == null) {
-            throw new BaseBizRuntimeException("线下不存在。");
+            throw new BaseBizRuntimeException("线下bug不存在。");
         }
 
         //判断当前操作人是否有权限
-        Boolean result = IsPermission(bugOfflineDO.getOperatorId());
+        Boolean result = isPermission(bugOfflineDO.getOperatorId());
         if (!result) {
             throw new BaseBizRuntimeException("您没有操作权限");
         }
@@ -365,30 +365,80 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> accepted(Long id) {
-        //1.验证操作人是否是经办人或其上级,状态是否是待验收
+        log.info("验收通过接收参数{}", id);
+        //得到当前线下bug
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
+        if (bugOfflineDO == null) {
+            throw new BaseBizRuntimeException("线下bug不存在。");
+        }
 
-        //2.查找bug数据
+        //判断当前操作人是否有权限
+        Boolean result = isPermission(bugOfflineDO.getOperatorId());
+        if (!result) {
+            throw new BaseBizRuntimeException("您没有操作权限");
+        }
 
-        //3.赋值:经办人和上一阶段经办人不变(自测通过时的数据),状态变成完成
+        //线下bug状态变更为"完成"
+        bugOfflineDO.setStatus(BugStatusEnum.COMPLETE.getCode());
+        bugOfflineMapper.update(bugOfflineDO);
 
-        //4.更新bug数据
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction("验收通过");
+        bugLogDO.setOldValue("待验收");
+        bugLogDO.setNewValue("完成");
+        bugLogDO.setMainId(id);
+        bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setBugName("线下bug");
 
-        //5.bug日志表记录状态变更
+        //往bug日志表中插入数据
+        bugLogMapper.insert(bugLogDO);
+
         return BaseResult.success(true);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> acceptFailed(Long id) {
-        //1.验证操作人是否是经办人或其上级,状态是否是待验收
+        log.info("验收失败接收参数{}", id);
+        //得到当前线下bug
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
+        if (bugOfflineDO == null) {
+            throw new BaseBizRuntimeException("线下bug不存在。");
+        }
 
-        //2.查找bug数据
+        //判断当前操作人是否有权限
+        Boolean result = isPermission(bugOfflineDO.getOperatorId());
+        if (!result) {
+            throw new BaseBizRuntimeException("您没有操作权限");
+        }
 
-        //3.赋值:经办人为自测通过时上一阶段经办人,上一阶段经办人为本次经办人(经办人与上一阶段经办人交换位置),状态变成bug打开,bug打回次数+1
+        //获取当前经办人和上一环节经办人
+        String operatorId = bugOfflineDO.getOperatorId();
+        String operator = bugOfflineDO.getOperator();
+        String lastOperatorId = bugOfflineDO.getLastOperatorId();
+        String lastOperator = bugOfflineDO.getLastOperator();
 
-        //4.更新bug数据
+        //bug状态变为"bug打开",bug的打回次数加一，上一环节的经办人变成当前经办人，当前经办人变成上一环节经办人
+        bugOfflineDO.setStatus(BugStatusEnum.OPEN.getCode());
+        bugOfflineDO.setReturnCount(bugOfflineDO.getReturnCount() + 1);
+        bugOfflineDO.setLastOperatorId(operatorId);
+        bugOfflineDO.setLastOperator(operator);
+        bugOfflineDO.setOperatorId(lastOperatorId);
+        bugOfflineDO.setOperator(lastOperator);
 
-        //5.bug日志表记录状态变更
+        bugOfflineMapper.update(bugOfflineDO);
+
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction("验收失败");
+        bugLogDO.setOldValue("待验收");
+        bugLogDO.setNewValue("bug打开");
+        bugLogDO.setMainId(id);
+        bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setBugName("线下bug");
+
+        //往bug日志表中插入数据
+        bugLogMapper.insert(bugLogDO);
+
         return BaseResult.success(true);
     }
 
@@ -429,9 +479,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         if (CollectionUtils.isNotEmpty(bugLogDOList)) {
             List<BugLogVO> bugLogVOList = bugLogDOList.stream().map(BugLogCopier.INSTANCE::convert).collect(Collectors.toList());
             //给bug日志的内容变更类型名字赋值
-            bugLogVOList.forEach(bugLogVO -> {
-                bugLogVO.setTypeName(BugLogTypeEnum.getTextByCode(bugLogVO.getType()));
-            });
+            bugLogVOList.forEach(bugLogVO -> bugLogVO.setTypeName(BugLogTypeEnum.getTextByCode(bugLogVO.getType())));
             bugOfflineDetailVO.setBugLogVOList(bugLogVOList);
 
         }
@@ -541,7 +589,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         return BaseResult.success(true);
     }
 
-    Boolean IsPermission(String personId) {
+    Boolean isPermission(String personId) {
         //得到当前操作人账户
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String account = userInfo.getId();
@@ -554,11 +602,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         higherLevels.add(personId);
 
         //判断当前操作人账户是否有权限
-        if (!higherLevels.contains(account)) {
-            return false;
-        }
-
-        return true;
+        return higherLevels.contains(account);
     }
 }
 
