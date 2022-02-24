@@ -20,10 +20,10 @@ public class BugOfflineDetailVO extends ToString {
     @ApiModelProperty("名称")
     private String name;
 
-    @ApiModelProperty("项目名称")
+    @ApiModelProperty("项目id")
     private String projectId;
 
-    @ApiModelProperty("项目id")
+    @ApiModelProperty("项目名称")
     private String projectName;
 
     @ApiModelProperty("产品线")
@@ -68,7 +68,7 @@ public class BugOfflineDetailVO extends ToString {
     @ApiModelProperty(value = "复现频率")
     private String frequencyName;
 
-    @ApiModelProperty(value = "描述")
+    @ApiModelProperty(value = "详情描述")
     private String desc;
 
     @ApiModelProperty(value = "延期修复原因")
@@ -80,7 +80,7 @@ public class BugOfflineDetailVO extends ToString {
     @ApiModelProperty(value = "不用修复原因")
     private String unhandleReasonName;
 
-    @ApiModelProperty(value = "打开次数")
+    @ApiModelProperty(value = "完成后重新打开次数")
     private Integer openCount;
 
     @ApiModelProperty(value = "打回次数")
@@ -89,8 +89,19 @@ public class BugOfflineDetailVO extends ToString {
     @ApiModelProperty(value = "bug提出人")
     private List<PersonVO> createMans;
 
-    @ApiModelProperty("文件信息")
+    @ApiModelProperty("附件集合")
     private List<FileVO> files;
 
+    @ApiModelProperty("经办人")
+    private String operator;
+
+    @ApiModelProperty("经办人id")
+    private String operatorId;
+
+    @ApiModelProperty("所属业务域")
+    private BizDomainVO bizDomainVO;
+
+    @ApiModelProperty("抄送人")
+    private List<PersonVO> recipientInfoList;
 
 }
