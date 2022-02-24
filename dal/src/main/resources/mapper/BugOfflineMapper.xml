@@ -188,4 +188,14 @@
             </if>
         </where>
     </select>
+
+    <update id="deleteById">
+        update bug_offline
+        <set>
+            <if test="true">is_deleted=true,</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        where id=#{bugOfflineId}
+    </update>
 </mapper>

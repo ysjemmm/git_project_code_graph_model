@@ -6,4 +6,14 @@
         where main_id=#{bugOfflineId} and is_deleted=0
     </select>
 
+    <update id="deleteByBugOfflineId">
+        update bug_log
+        <set>
+            <if test="true ">is_deleted = true,</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        where main_id = #{bugOfflineId} and type = 0
+    </update>
+
 </mapper>

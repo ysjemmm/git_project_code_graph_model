@@ -8,7 +8,8 @@
     </insert>
 
     <select id="select" resultType="com.timevale.forward.dal.entity.CommentDO">
-        select id, to_id, type, content, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        select id, to_id, type, content, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man,
+        modify_date
         from comment
         <where>
             <if test="toId!=null">
@@ -20,5 +21,15 @@
         </where>
         order by create_date desc;
     </select>
+
+    <update id="deleteByToIdAndType">
+        update comment
+        <set>
+            <if test="true">is_deleted=true,</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        where to_id = #{toId} and type = #{type}
+    </update>
 
 </mapper>

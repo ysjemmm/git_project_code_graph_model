@@ -461,7 +461,29 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> delete(Long id) {
+        log.info("删除线下bug接收参数:{}", id);
+        //删除线下bug表中的数据
+        bugOfflineMapper.deleteById(id);
 
+        //删除bug日志表中的数据
+        bugLogMapper.deleteByBugOfflineId(id);
+
+        //删除抄送人表person中的数据
+        PersonDO personDO = new PersonDO();
+        personDO.setMainId(id);
+        personDO.setType(PersonTypeEnum.BUG_OFFLINE_CC.getCode());
+        personDO.setIsDeleted(true);
+        personMapper.update(personDO);
+
+        //删除评论数据
+        commentMapper.deleteByToIdAndType(id, CommentTypeEnum.BUG.getCode());
+
+        //删除附件数据
+        FileDO fileDO = new FileDO();
+        fileDO.setIsDeleted(true);
+        fileDO.setAttacheId(id);
+        fileDO.setType(FileTypeEnum.BUG_OFFLINE.getCode());
+        fileMapper.update(fileDO);
 
         return BaseResult.success(true);
     }

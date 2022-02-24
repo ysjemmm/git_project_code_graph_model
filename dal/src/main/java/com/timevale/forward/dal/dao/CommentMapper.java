@@ -28,4 +28,13 @@ public interface CommentMapper {
      * @return
      */
     List<CommentDO> select(@Param("toId") Long toId, @Param("type") Integer type);
+
+    /**
+     * 删除对应的主体评论
+     *
+     * @param toId 主体id
+     * @param type 类型
+     * @return
+     */
+    Boolean deleteByToIdAndType(@Param("toId") Long toId, @Param("type") Integer type);
 }

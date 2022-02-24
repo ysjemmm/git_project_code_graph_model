@@ -17,4 +17,12 @@ public interface BugLogMapper {
      * @return List<BugLogDO> 返回类型
      */
     List<BugLogDO> selectByBugOfflineId(@Param("bugOfflineId") Long bugOfflineId);
+
+    /**
+     * 通过线下bug的id删除对应的操作日志
+     *
+     * @param bugOfflineId 线下bug的id
+     * @return Boolean 返回值
+     */
+    Boolean deleteByBugOfflineId(@Param("bugOfflineId") Long bugOfflineId);
 }
