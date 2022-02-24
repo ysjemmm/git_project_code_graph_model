@@ -4,10 +4,12 @@ import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.BugOfflineMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.dto.*;
 import com.timevale.forward.dal.entity.BizDemandListDO;
+import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.client.HomePageService;
@@ -77,6 +79,9 @@ public class HomePageServiceImpl implements HomePageService {
     @Resource
     TaskMapper taskMapper;
 
+    @Resource
+    BugOfflineMapper bugOfflineMapper;
+
     @Override
     public BaseResult<HomePageDataIndicatorVO> getDataIndicator(HomePageBaseReq homePageBaseReq) {
         HomePageDataIndicatorDTO dataIndicator = homePageDataIndicatorComponent.getDataIndicator(homePageBaseReq);
@@ -99,7 +104,7 @@ public class HomePageServiceImpl implements HomePageService {
         List<ProjectDO> projectDOList = projectMapper.selectByTeamMember(allMyStaffWithSelf);
         projectCount = (int) projectDOList.stream().filter(e -> ProjectStatusEnum.ongoing(e.getStatus())).count();
 
-        // 产品添加待处理业务需求，开发测试添加待处理任务,待验证bug
+        // 产品添加待处理业务需求，开发测试添加待处理任务
         if (UserTypeEnum.PD.getCode().equals(homePageBaseReq.getUserType())) {
             List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(BizDemandListCondition.builder()
                     .receiveManIdList(allMyStaffWithSelf)
@@ -109,6 +114,26 @@ public class HomePageServiceImpl implements HomePageService {
         } else {
             List<TaskDO> taskDOList = taskMapper.selectByExecutorList(Lists.newArrayList(allMyStaffWithSelf));
             taskCount = (int) taskDOList.stream().filter(e -> TaskStatusEnum.ongoing(e.getStatus())).count();
+
+            /*
+                添加待验证bug
+                用户身份为研发：我的-待解决线下bug = （ bug打开 +待修复）且（经办人=我）
+                用户身份为测试：我的-待验证线下bug = （待验收 + 待确认）且（提出人=我）
+            */
+            List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByMembers(allMyStaffWithSelf);
+            if(UserTypeEnum.RD.getCode().equals(homePageBaseReq.getUserType())){
+                bugCount = (int)bugOfflineDOList.stream()
+                        .filter(e -> BugStatusEnum.OPEN.getCode().equals(e.getStatus())
+                                && BugStatusEnum.REPAIR.getCode().equals(e.getStatus())
+                                && e.getOperatorId().equals(userInfo.getId()))
+                        .count();
+            }else{
+                bugCount = (int)bugOfflineDOList.stream()
+                        .filter(e -> BugStatusEnum.ACCEPTANCE.getCode().equals(e.getStatus())
+                                && BugStatusEnum.CONFIRM.getCode().equals(e.getStatus())
+                                && e.getProposerId().equals(userInfo.getId()))
+                        .count();
+            }
         }
 
         HomePageTodoCardVO todoCardVO = new HomePageTodoCardVO();

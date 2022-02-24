@@ -189,6 +189,15 @@
         </where>
     </select>
 
+    <select id="selectByMembers" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
+        select *
+        from bug_offline
+        where (operator_id, project_id) in
+        <foreach collection="userIds" separator="," item="item" open="(" close=")">
+            (#{item}, #{item})
+        </foreach>
+    </select>
+
     <update id="deleteById">
         update bug_offline
         <set>

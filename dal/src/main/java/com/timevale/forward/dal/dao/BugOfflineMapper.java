@@ -31,6 +31,14 @@ public interface BugOfflineMapper {
     /**
      * 选择id获取DO
      *
+     * @param userIds 用户id
+     * @return BugOfflineDO list
+     */
+    List<BugOfflineDO> selectByMembers(@Param("userIds") List<String> userIds);
+
+    /**
+     * 选择id获取DO
+     *
      * @param id id
      * @return BugOfflineDO
      */
