@@ -90,7 +90,7 @@ public class BugOfflineDetailVO extends ToString {
     private List<PersonVO> createMans;
 
     @ApiModelProperty("附件集合")
-    private List<FileVO> fileVOList;
+    private List<FileVO> files;
 
     @ApiModelProperty("经办人")
     private String operator;
