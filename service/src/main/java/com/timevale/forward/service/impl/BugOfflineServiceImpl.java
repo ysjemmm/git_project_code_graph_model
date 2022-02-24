@@ -291,21 +291,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //得到当前线下bug
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
 
-        //得到当前操作人账户
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        String account = userInfo.getId();
-
-        //得到经办人所有上级
-        AccountRequest accountRequest = new AccountRequest();
-        accountRequest.setAccount(bugOfflineDO.getOperatorId());
-        Set<String> higherLevels = innerUserPersonClient.getAllSuperiorByAccount(accountRequest).getData();
-        //把当前经办人添加到当前经办人上级的Set集合中
-        higherLevels.add(bugOfflineDO.getOperatorId());
-
-        //校验当前操作人的权限,先关闭后期打开，要不然本地测试不能通过
-        /*if(!higherLevels.contains(account)){
+        //判断当前操作人是否有权限
+        Boolean result = IsPermission(bugOfflineDO.getOperatorId());
+        if (!result) {
             throw new BaseBizRuntimeException("您没有操作权限");
-        }*/
+        }
 
         //线下bug的状态变更为"待修复"
         bugOfflineDO.setStatus(1);
@@ -323,6 +313,26 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogMapper.insert(bugLogDO);
 
         return BaseResult.success(true);
+    }
+
+    Boolean IsPermission(String personId) {
+        //得到当前操作人账户
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String account = userInfo.getId();
+
+        //得到经办人所有上级
+        AccountRequest accountRequest = new AccountRequest();
+        accountRequest.setAccount(personId);
+        Set<String> higherLevels = innerUserPersonClient.getAllSuperiorByAccount(accountRequest).getData();
+        //把当前经办人添加到当前经办人上级的Set集合中
+        higherLevels.add(personId);
+
+        //判断当前操作人账户是否有权限
+        if (!higherLevels.contains(account)) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
