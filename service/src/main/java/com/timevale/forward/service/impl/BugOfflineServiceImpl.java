@@ -328,15 +328,47 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> reject(Long id) {
-        //1.验证操作人是否是经办人或其上级,状态是否是待确认
+        log.info("线下bug'拒绝'接收参数{}", id);
+        //得到当前线下bug
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
+        if (bugOfflineDO == null) {
+            throw new BaseBizRuntimeException("线下bug不存在。");
+        }
 
-        //2.查找bug数据
+        //判断当前操作人是否有权限
+        Boolean result = isPermission(bugOfflineDO.getOperatorId());
+        if (!result) {
+            throw new BaseBizRuntimeException("您没有操作权限");
+        }
 
-        //3.赋值:经办人为不用修复时上一阶段经办人,上一阶段经办人赋值为本次经办人(经办人与上一阶段经办人交换位置),状态变成bug打开
+        //获取当前经办人和上一环节经办人
+        String operatorId = bugOfflineDO.getOperatorId();
+        String operator = bugOfflineDO.getOperator();
+        String lastOperatorId = bugOfflineDO.getLastOperatorId();
+        String lastOperator = bugOfflineDO.getLastOperator();
 
-        //4.更新bug数据
+        //保存老的状态
+        String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
 
-        //5.bug日志表记录状态变更
+        //状态变为  bug打开,上一环节的经办人变成当前经办人,当前经办人变成上一环节的经办人
+        bugOfflineDO.setStatus(BugStatusEnum.OPEN.getCode());
+        bugOfflineDO.setLastOperatorId(operatorId);
+        bugOfflineDO.setLastOperator(operator);
+        bugOfflineDO.setOperator(lastOperator);
+        bugOfflineDO.setOperatorId(lastOperatorId);
+        bugOfflineMapper.update(bugOfflineDO);
+
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction(ButtonActionEnum.REFUSED.getAction());
+        bugLogDO.setOldValue(oldValue);
+        bugLogDO.setNewValue(BugStatusEnum.OPEN.getText());
+        bugLogDO.setMainId(id);
+        bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getName());
+
+        //往bug日志表中插入数据
+        bugLogMapper.insert(bugLogDO);
+
         return BaseResult.success(true);
     }
 
