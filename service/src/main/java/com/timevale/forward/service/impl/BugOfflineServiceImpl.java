@@ -2,7 +2,6 @@ package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.annotation.FieldCompare;
 import com.timevale.forward.dal.condition.BugOfflineListCondition;
@@ -10,6 +9,7 @@ import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BugOfflineService;
+import com.timevale.forward.facade.api.query.BugLogQueryList;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
@@ -24,7 +24,6 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.BugOfflineAddMsg;
 import com.timevale.forward.service.observer.event.BugOfflineUpdateMsg;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
-import com.timevale.forward.service.utils.FieldCompareUtils;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -221,7 +220,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogMapper.batchInsert(bugLogDOList);
 
         //5.修改经办人消息通知
-        if(!Objects.equals(oldBugOfflineDO.getOperatorId(), newBugOfflineDO.getOperatorId())){
+        if (!Objects.equals(oldBugOfflineDO.getOperatorId(), newBugOfflineDO.getOperatorId())) {
             messageEventPublisher.publish(new BugOfflineUpdateMsg(
                     this,
                     newBugOfflineDO.getId(),
@@ -796,6 +795,33 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         return BaseResult.success(true);
     }
 
+    @Override
+    public BaseResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList bugLogQueryList) {
+
+        PageHelper.startPage(bugLogQueryList.pageNum, bugLogQueryList.pageSize);
+        List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineId(bugLogQueryList.getId());
+        PageInfo<BugLogDO> pageInfo = new PageInfo<>(bugLogDOList);
+
+        PageQueryResult<BugLogVO> pageQueryResult = new PageQueryResult<>();
+        //如果没有查询到日志，直接返回空的数据
+        if (CollectionUtils.isEmpty(bugLogDOList)) {
+            return BaseResult.success(pageQueryResult);
+        }
+
+        //获取分页数据
+        bugLogDOList = pageInfo.getList();
+
+        //bugLogDO  -->  bugLogVO
+        List<BugLogVO> bugLogVOList = bugLogDOList.stream().map(BugLogCopier.INSTANCE::convert).collect(Collectors.toList());
+        //给bug内容变更记录类型的名字赋值
+        bugLogVOList.forEach(bugLogVO -> bugLogVO.setTypeName(BugLogTypeEnum.getTextByCode(bugLogVO.getType())));
+
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        pageQueryResult.setResultList(bugLogVOList);
+
+        return BaseResult.success(pageQueryResult);
+    }
+
     Boolean isPermission(String personId) {
         //得到当前操作人账户
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -824,11 +850,13 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                 })
                 .collect(Collectors.toMap(Field::getName, Function.identity()));
 
-        try{
+        try {
             for (Field oldField : oldFields) {
                 Field newField = newFieldMap.get(oldField.getName());
 
-                if(newField == null){continue;}
+                if (newField == null) {
+                    continue;
+                }
 
                 oldField.setAccessible(true);
                 newField.setAccessible(true);
@@ -836,7 +864,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                 Object oldValue = oldField.get(oldObj);
                 Object newValue = newField.get(newObj);
 
-                if(!Objects.equals(oldValue, newValue)){
+                if (!Objects.equals(oldValue, newValue)) {
                     FieldCompare annotation = oldField.getAnnotation(FieldCompare.class);
 
                     String fieldName = annotation.fieldName();
@@ -845,10 +873,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                     String oldString = "";
                     String newString = "";
 
-                    if(fieldType == String.class){
+                    if (fieldType == String.class) {
                         oldString = (String) oldField.get(oldObj);
                         newString = (String) newField.get(newObj);
-                    }else if(fieldType == Integer.class){
+                    } else if (fieldType == Integer.class) {
                         Method method = annotation.enumClass().getMethod("getTextByCode", Integer.class);
                         oldString = (String) method.invoke(null, oldValue);
                         newString = (String) method.invoke(null, newValue);
@@ -861,10 +889,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                     result.add(bugLogDO);
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        log.info("字段对比完成后,返回结果:{}",result);
+        log.info("字段对比完成后,返回结果:{}", result);
         return result;
     }
 }

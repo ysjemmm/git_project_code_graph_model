@@ -2,8 +2,10 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.query.BugLogQueryList;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.BugLogVO;
 import com.timevale.forward.facade.api.result.BugOfflineDetailVO;
 import com.timevale.forward.facade.api.result.BugOfflineVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -137,6 +139,14 @@ public interface BugOfflineService {
      * @return Boolean
      */
     BaseResult<Boolean> delete(Long id);
+
+    /**
+     * 查询bug日志列表
+     *
+     * @param bugLogQueryList 参数
+     * @return 返回分页结果
+     */
+    BaseResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList bugLogQueryList);
 
 
 }

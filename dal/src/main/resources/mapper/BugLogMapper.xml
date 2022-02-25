@@ -4,6 +4,7 @@
     <select id="selectByBugOfflineId" resultType="com.timevale.forward.dal.entity.BugLogDO">
         select * from bug_log
         where main_id=#{bugOfflineId} and is_deleted=0
+        order by `create_date` desc
     </select>
 
     <update id="deleteByBugOfflineId">
@@ -22,10 +23,10 @@
         values (#{bugLogDO.mainId},#{bugLogDO.type},#{bugLogDO.oldValue},#{bugLogDO.newValue},#{bugLogDO.field}
         ,#{bugLogDO.action},#{bugLogDO.bugName},#{bugLogDO.content},#{createManId},#{createMan})
     </insert>
-    
+
     <insert id="batchInsert">
         insert into bug_log (`main_id`,`type`,`old_value`,`new_value`,`field`,`action`,`bug_name`,`content`
-                            ,`create_man_id`,`create_man`)
+        ,`create_man_id`,`create_man`)
         values
         <foreach collection="bugLogDOList" item="item" separator=",">
             (#{item.mainId},#{item.type},#{item.oldValue},#{item.newValue},#{item.field}
