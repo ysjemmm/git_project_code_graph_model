@@ -22,6 +22,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.BugOfflineAddMsg;
+import com.timevale.forward.service.observer.event.BugOfflineSelfTestPassMsgEvent;
 import com.timevale.forward.service.observer.event.BugOfflineUpdateMsg;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -493,10 +494,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
 
         //判断当前操作人是否有权限
-        Boolean result = isPermission(bugOfflineDO.getOperatorId());
+       /* Boolean result = isPermission(bugOfflineDO.getOperatorId());
         if (!result) {
             throw new BaseBizRuntimeException("您没有操作权限");
-        }
+        }*/
 
         //获取现在的经办人
         String operatorId = bugOfflineDO.getOperatorId();
@@ -524,6 +525,16 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
+
+        //发送消息
+        messageEventPublisher.publish(
+                new BugOfflineSelfTestPassMsgEvent(
+                        this,
+                        "望轩-轩振营",
+                        "bug",
+                        "wangxuan"
+                )
+        );
 
         return BaseResult.success(true);
     }
@@ -814,11 +825,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String account = userInfo.getId();
 
-        //得到经办人所有上级
+        //得到权限人或者是权限人的所有上级
         AccountRequest accountRequest = new AccountRequest();
         accountRequest.setAccount(personId);
         Set<String> higherLevels = innerUserPersonClient.getAllSuperiorByAccount(accountRequest).getData();
-        //把当前经办人添加到当前经办人上级的Set集合中
+        //把权限人添加到当前权限人上级的Set集合中
         higherLevels.add(personId);
 
         //判断当前操作人账户是否有权限
