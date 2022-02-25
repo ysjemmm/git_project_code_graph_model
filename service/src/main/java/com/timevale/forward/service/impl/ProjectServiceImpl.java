@@ -2,7 +2,6 @@ package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.timevale.footstone.base.model.enums.IResultEnum;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
@@ -31,7 +30,6 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
-import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -475,9 +473,6 @@ public class ProjectServiceImpl implements ProjectService {
         // 计算项目状态
         ProjectNodeDO node = null;
         if ((node = nodeMap.get(ProjectStageEnum.TEST_RELEASE.getText())) != null && node.getActualDate() != null) {
-            projectDO.setStatus(ProjectStatusEnum.RELEASED.getCode());
-            projectDO.setActualEndDate(node.getActualDate());
-        } else if ((node = nodeMap.get(ProjectStageEnum.TEST_RELEASE.getText())) != null && node.getActualDate() != null) {
             projectDO.setStatus(ProjectStatusEnum.RELEASED.getCode());
             projectDO.setActualEndDate(node.getActualDate());
         } else if ((node = nodeMap.get(ProjectStageEnum.TEST_START.getText())) != null && node.getActualDate() != null) {
