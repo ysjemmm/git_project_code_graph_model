@@ -2,6 +2,7 @@ package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.condition.BugOfflineListCondition;
 import com.timevale.forward.dal.entity.BugOfflineDO;
+import com.timevale.forward.dal.entity.BugOfflineListDO;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.request.BugOfflineAddReq;
 import com.timevale.forward.facade.api.request.BugOfflineModifyReq;
@@ -47,10 +48,10 @@ public interface BugOfflineCopier {
     /**
      * 转换转换DO
      *
-     * @param bugOfflineDO 对象
+     * @param bugOfflineListDO 对象
      * @return BugOfflineVO
      */
-    BugOfflineVO convert(BugOfflineDO bugOfflineDO);
+    BugOfflineVO convert(BugOfflineListDO bugOfflineListDO);
 
     /**
      * BugOfflineDO  -->  BugOfflineDetailVO

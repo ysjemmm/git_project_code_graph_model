@@ -24,10 +24,6 @@ public class BugOfflineVO extends ToString {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
-    @ApiModelProperty("projectId")
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long projectId;
-
     @ApiModelProperty("项目名称")
     private String projectName;
 
@@ -64,17 +60,11 @@ public class BugOfflineVO extends ToString {
     @ApiModelProperty(value = "bug环境")
     private String envName;
 
-    @ApiModelProperty("创建人id")
-    private String createManId;
-    
-    @ApiModelProperty("创建人")
-    private String createMan;
-
     @ApiModelProperty("经办人")
     private String operator;
 
-    @ApiModelProperty("经办人id")
-    private String operatorId;
+    @ApiModelProperty("提出人")
+    private String proposer;
 
     @ApiModelProperty("创建时间")
     private Date createDate;

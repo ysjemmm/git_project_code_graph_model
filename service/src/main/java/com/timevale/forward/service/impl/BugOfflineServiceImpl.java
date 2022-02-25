@@ -125,7 +125,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         PageHelper.startPage(bugOfflineQueryList.pageNum, bugOfflineQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
 
         // 查询并转换
-        List<BugOfflineDO> bugOfflineDOList = Lists.newArrayList();
+        List<BugOfflineListDO> bugOfflineDOList = bugOfflineMapper.selectByCondition(condition);
         List<BugOfflineVO> bugOfflineVOList = bugOfflineDOList.stream().map(BugOfflineCopier.INSTANCE::convert).collect(Collectors.toList());
 
         // 信息填充
@@ -138,7 +138,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         });
 
         // 返回分页数据
-        PageInfo<BugOfflineDO> pageInfo = new PageInfo<>(bugOfflineDOList);
+        PageInfo<BugOfflineListDO> pageInfo = new PageInfo<>(bugOfflineDOList);
         PageQueryResult<BugOfflineVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(bugOfflineVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
