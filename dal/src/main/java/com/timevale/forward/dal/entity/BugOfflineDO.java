@@ -11,7 +11,7 @@ import java.io.Serializable;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class BugOfflineDO extends BaseDO implements Serializable {
+public class BugOfflineDO extends BaseDO {
     /**
      * 名称
      */

@@ -2,8 +2,6 @@
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
 <mapper namespace="com.timevale.forward.dal.dao.BugOfflineMapper">
 
-    <cache/>
-
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into bug_offline(project_id, product_line_id, name, status, operator, operator_id, proposer, proposer_id,
                                 priority, env, reason, source, belong, frequency, `desc`, open_count, create_man_id, create_man)

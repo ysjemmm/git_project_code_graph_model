@@ -1,8 +1,6 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.timevale.forward.dal.dao.BugLogMapper">
 
-    <cache/>
-
     <select id="selectByBugOfflineId" resultType="com.timevale.forward.dal.entity.BugLogDO">
         select * from bug_log
         where main_id=#{bugOfflineId} and is_deleted=0
