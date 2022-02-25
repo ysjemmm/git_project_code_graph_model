@@ -224,18 +224,44 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> unHandle(Long id) {
-        //1.验证操作人是否是经办人或其上级,状态是否是bug打开
+    public BaseResult<Boolean> unHandle(BugOfflineUnHandleReq bugOfflineUnHandleReq) {
+        log.info("不用修复接收参数{}", bugOfflineUnHandleReq.getId());
+        //得到当前线下bug
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineUnHandleReq.getId());
+        if (bugOfflineDO == null) {
+            throw new BaseBizRuntimeException("线下bug不存在。");
+        }
 
-        //2.查找bug数据
+        //判断当前操作人是否有权限
+        Boolean result = isPermission(bugOfflineDO.getOperatorId());
+        if (!result) {
+            throw new BaseBizRuntimeException("您没有操作权限");
+        }
 
-        //3.赋值:经办人为bug提出人,上一阶段经办人赋值为新增bug时经办人,状态变成待确认
+        //获取当前经办人
+        String operatorId = bugOfflineDO.getOperatorId();
+        String operator = bugOfflineDO.getOperator();
 
-        //4.更新bug数据
+        //bug状态变更为"延期修复",上一环节的经办人变成经办人,现在的经办人变成提出人,延期修复原因更新
+        bugOfflineDO.setStatus(BugStatusEnum.CONFIRM.getCode());
+        bugOfflineDO.setLastOperator(operator);
+        bugOfflineDO.setLastOperatorId(operatorId);
+        bugOfflineDO.setOperator(bugOfflineDO.getProposer());
+        bugOfflineDO.setOperatorId(bugOfflineDO.getProposerId());
+        bugOfflineDO.setUnHandleReason(bugOfflineUnHandleReq.getUnHandleReason());
+        bugOfflineMapper.update(bugOfflineDO);
 
-        //5.bug日志表记录状态变更
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction("不用修复");
+        bugLogDO.setOldValue("bug打开");
+        bugLogDO.setNewValue("待确认");
+        bugLogDO.setMainId(bugOfflineUnHandleReq.getId());
+        bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setBugName("线下bug");
 
-        //5.消息通知
+        //往bug日志表中插入数据
+        bugLogMapper.insert(bugLogDO);
+
         return BaseResult.success(true);
     }
 

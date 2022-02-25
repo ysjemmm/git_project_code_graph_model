@@ -3,10 +3,7 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
-import com.timevale.forward.facade.api.request.BugOfflineAddReq;
-import com.timevale.forward.facade.api.request.BugOfflineDelayHandleReq;
-import com.timevale.forward.facade.api.request.BugOfflineModifyReq;
-import com.timevale.forward.facade.api.request.BugOfflineTransferReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BugOfflineDetailVO;
 import com.timevale.forward.facade.api.result.BugOfflineVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -56,10 +53,10 @@ public interface BugOfflineService {
     /**
      * 不用修复
      *
-     * @param id bug id
+     * @param bugOfflineUnHandleReq 不用修复参数
      * @return Boolean
      */
-    BaseResult<Boolean> unHandle(Long id);
+    BaseResult<Boolean> unHandle(BugOfflineUnHandleReq bugOfflineUnHandleReq);
 
     /**
      * 同意
