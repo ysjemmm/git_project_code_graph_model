@@ -54,6 +54,6 @@ public enum BugStatusEnum {
                 return e.text;
             }
         }
-        return "errorCode";
+        return OPEN.text;
     }
 }

@@ -11,9 +11,9 @@ public enum BugNameEnum {
 
     BUG_OFFLINE("线下bug");
 
-    private final String name;
+    private final String text;
 
-    BugNameEnum(String name) {
-        this.name = name;
+    BugNameEnum(String text) {
+        this.text = text;
     }
 }

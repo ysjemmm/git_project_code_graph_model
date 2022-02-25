@@ -56,11 +56,16 @@ public enum ButtonActionEnum {
     /**
      * 重新打开
      */
-    OPEN_AGAIN("重新打开");
+    OPEN_AGAIN("重新打开"),
 
-    private final String action;
+    /**
+     * 提交
+     */
+    SUBMIT("提交");
 
-    ButtonActionEnum(String action) {
-        this.action = action;
+    private final String text;
+
+    ButtonActionEnum(String text) {
+        this.text = text;
     }
 }

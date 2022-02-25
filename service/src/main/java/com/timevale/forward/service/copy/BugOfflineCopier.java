@@ -7,6 +7,7 @@ import com.timevale.forward.facade.api.request.BugOfflineAddReq;
 import com.timevale.forward.facade.api.request.BugOfflineModifyReq;
 import com.timevale.forward.facade.api.result.BugOfflineDetailVO;
 import com.timevale.forward.facade.api.result.BugOfflineVO;
+import com.timevale.forward.model.middle.BugOfflineMD;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -43,7 +44,6 @@ public interface BugOfflineCopier {
      */
     BugOfflineDO convert(BugOfflineModifyReq bugOfflineModifyReq);
 
-
     /**
      * 转换转换DO
      *
@@ -59,6 +59,14 @@ public interface BugOfflineCopier {
      * @return BugOfflineDetailVO
      * */
     BugOfflineDetailVO transform(BugOfflineDO bugOfflineDO);
+
+    /**
+     * 转换转换MD
+     *
+     * @param bugOfflineDO 对象
+     * @return BugOfflineVO
+     */
+    BugOfflineMD convertToMD(BugOfflineDO bugOfflineDO);
 
 }
 

@@ -33,4 +33,12 @@ public interface BugLogMapper {
      * @return 返回影响行数
      */
     Integer insert(@Param("bugLogDO") BugLogDO bugLogDO);
+
+    /**
+     * 批量 往bug日志表中插入数据
+     *
+     * @param bugLogDOList 参数
+     * @return 返回影响行数
+     */
+    int batchInsert(@Param("bugLogDOList") List<BugLogDO> bugLogDOList);
 }

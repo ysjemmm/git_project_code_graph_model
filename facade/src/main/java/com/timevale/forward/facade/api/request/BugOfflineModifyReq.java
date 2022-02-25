@@ -20,4 +20,10 @@ public class BugOfflineModifyReq extends BugOfflineAddReq {
     @NotNull(message = "id不能为空")
     private Long id;
 
+    @ApiModelProperty(value = "项目名称")
+    private String projectName;
+
+    @ApiModelProperty(value = "产品线名称")
+    @NotNull(message = "产品线名称不能为空")
+    private Long productLineName;
 }
