@@ -229,12 +229,12 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
-        bugLogDO.setAction("转交");
+        bugLogDO.setAction(ButtonActionEnum.TRANSMIT.getAction());
         bugLogDO.setOldValue(BugStatusEnum.getTextByCode(bugOfflineDO.getStatus()));
         bugLogDO.setNewValue(BugStatusEnum.getTextByCode(bugOfflineDO.getStatus()));
         bugLogDO.setMainId(bugOfflineTransferReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName("线下bug");
+        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getName());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -262,6 +262,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         String operatorId = bugOfflineDO.getOperatorId();
         String operator = bugOfflineDO.getOperator();
 
+        //保存老的状态
+        String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
+
         //bug状态变更为"延期修复",上一环节的经办人变成经办人,现在的经办人变成提出人,延期修复原因更新
         bugOfflineDO.setStatus(BugStatusEnum.CONFIRM.getCode());
         bugOfflineDO.setLastOperator(operator);
@@ -272,12 +275,12 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
-        bugLogDO.setAction("不用修复");
-        bugLogDO.setOldValue("bug打开");
-        bugLogDO.setNewValue("待确认");
+        bugLogDO.setAction(ButtonActionEnum.NO_REPAIR.getAction());
+        bugLogDO.setOldValue(oldValue);
+        bugLogDO.setNewValue(BugStatusEnum.CONFIRM.getText());
         bugLogDO.setMainId(bugOfflineUnHandleReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName("线下bug");
+        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getName());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -296,10 +299,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
 
         //判断当前操作人是否有权限
-        /*Boolean result = isPermission(bugOfflineDO.getOperatorId());
+        Boolean result = isPermission(bugOfflineDO.getOperatorId());
         if (!result) {
             throw new BaseBizRuntimeException("您没有操作权限");
-        }*/
+        }
 
         //保存bug的当前状态
         String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
@@ -309,12 +312,12 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
-        bugLogDO.setAction("同意");
+        bugLogDO.setAction(ButtonActionEnum.AGREE.getAction());
         bugLogDO.setOldValue(oldValue);
         bugLogDO.setNewValue(BugStatusEnum.getTextByCode(BugStatusEnum.CLOSE.getCode()));
         bugLogDO.setMainId(id);
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName("线下bug");
+        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getName());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -357,6 +360,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         String operatorId = bugOfflineDO.getOperatorId();
         String operator = bugOfflineDO.getOperator();
 
+        //保存老的状态
+        String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
+
         //bug状态变更为"延期修复",上一环节的经办人变成经办人,现在的经办人变成提出人,延期修复原因更新
         bugOfflineDO.setStatus(BugStatusEnum.POSTPONE_REPAIR.getCode());
         bugOfflineDO.setLastOperator(operator);
@@ -367,12 +373,12 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
-        bugLogDO.setAction("延期修复");
-        bugLogDO.setOldValue(BugStatusEnum.getTextByCode(bugOfflineDO.getStatus()));
-        bugLogDO.setNewValue("延期修复");
+        bugLogDO.setAction(ButtonActionEnum.POSTPONE_REPAIR.getAction());
+        bugLogDO.setOldValue(oldValue);
+        bugLogDO.setNewValue(BugStatusEnum.POSTPONE_REPAIR.getText());
         bugLogDO.setMainId(bugOfflineDelayHandleReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName("线下bug");
+        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getName());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -396,17 +402,20 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             throw new BaseBizRuntimeException("您没有操作权限");
         }
 
+        //保存老的状态
+        String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
+
         //线下bug的状态变更为"待修复"
         bugOfflineDO.setStatus(BugStatusEnum.REPAIR.getCode());
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
-        bugLogDO.setAction("确认修复");
-        bugLogDO.setOldValue("bug打开");
-        bugLogDO.setNewValue("待修复");
+        bugLogDO.setAction(ButtonActionEnum.CONFIRM_REPAIR.getAction());
+        bugLogDO.setOldValue(oldValue);
+        bugLogDO.setNewValue(BugStatusEnum.CONFIRM.getText());
         bugLogDO.setMainId(id);
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName("线下bug");
+        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getName());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -435,6 +444,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         String operatorId = bugOfflineDO.getOperatorId();
         String operator = bugOfflineDO.getOperator();
 
+        //保存老的状态
+        String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
+
         //bug状态变为"待验收",上一环节经办人变成目前经办人，目前经办人变成提出人
         bugOfflineDO.setStatus(BugStatusEnum.ACCEPTANCE.getCode());
         bugOfflineDO.setLastOperator(operator);
@@ -445,12 +457,12 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
-        bugLogDO.setAction("自测通过");
-        bugLogDO.setOldValue("待修复");
-        bugLogDO.setNewValue("待验收");
+        bugLogDO.setAction(ButtonActionEnum.SELF_PASS.getAction());
+        bugLogDO.setOldValue(oldValue);
+        bugLogDO.setNewValue(BugStatusEnum.ACCEPTANCE.getText());
         bugLogDO.setMainId(id);
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName("线下bug");
+        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getName());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -474,17 +486,20 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             throw new BaseBizRuntimeException("您没有操作权限");
         }
 
+        //保存老的状态
+        String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
+
         //线下bug状态变更为"完成"
         bugOfflineDO.setStatus(BugStatusEnum.COMPLETE.getCode());
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
-        bugLogDO.setAction("验收通过");
-        bugLogDO.setOldValue("待验收");
-        bugLogDO.setNewValue("完成");
+        bugLogDO.setAction(ButtonActionEnum.ACCEPTANCE_PASSED.getAction());
+        bugLogDO.setOldValue(oldValue);
+        bugLogDO.setNewValue(BugStatusEnum.COMPLETE.getText());
         bugLogDO.setMainId(id);
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName("线下bug");
+        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getName());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -514,6 +529,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         String lastOperatorId = bugOfflineDO.getLastOperatorId();
         String lastOperator = bugOfflineDO.getLastOperator();
 
+        //保存老的状态
+        String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
+
         //bug状态变为"bug打开",bug的打回次数加一，上一环节的经办人变成当前经办人，当前经办人变成上一环节经办人
         bugOfflineDO.setStatus(BugStatusEnum.OPEN.getCode());
         bugOfflineDO.setReturnCount(bugOfflineDO.getReturnCount() + 1);
@@ -525,12 +543,12 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
-        bugLogDO.setAction("验收失败");
-        bugLogDO.setOldValue("待验收");
-        bugLogDO.setNewValue("bug打开");
+        bugLogDO.setAction(ButtonActionEnum.ACCEPTANCE_FAILED.getAction());
+        bugLogDO.setOldValue(oldValue);
+        bugLogDO.setNewValue(BugStatusEnum.OPEN.getText());
         bugLogDO.setMainId(id);
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName("线下bug");
+        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getName());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
