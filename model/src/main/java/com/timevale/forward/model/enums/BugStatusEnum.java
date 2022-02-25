@@ -33,7 +33,7 @@ public enum BugStatusEnum {
     /**
      * 延迟修复
      */
-    POSTPONE_REPAIR(4, "延迟修复"),
+    POSTPONE_REPAIR(4, "延期修复"),
 
     /**
      * 完成

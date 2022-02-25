@@ -4,6 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.request.BugOfflineAddReq;
+import com.timevale.forward.facade.api.request.BugOfflineDelayHandleReq;
 import com.timevale.forward.facade.api.request.BugOfflineModifyReq;
 import com.timevale.forward.facade.api.request.BugOfflineTransferReq;
 import com.timevale.forward.facade.api.result.BugOfflineDetailVO;
@@ -47,7 +48,7 @@ public interface BugOfflineService {
     /**
      * 转交
      *
-     * @param bugOfflineTransferReq  bugOfflineTransferReq
+     * @param bugOfflineTransferReq bugOfflineTransferReq
      * @return Boolean
      */
     BaseResult<Boolean> transfer(BugOfflineTransferReq bugOfflineTransferReq);
@@ -55,7 +56,7 @@ public interface BugOfflineService {
     /**
      * 不用修复
      *
-     * @param id  bug id
+     * @param id bug id
      * @return Boolean
      */
     BaseResult<Boolean> unHandle(Long id);
@@ -63,7 +64,7 @@ public interface BugOfflineService {
     /**
      * 同意
      *
-     * @param id  bug id
+     * @param id bug id
      * @return Boolean
      */
     BaseResult<Boolean> agree(Long id);
@@ -71,7 +72,7 @@ public interface BugOfflineService {
     /**
      * 拒绝
      *
-     * @param id  bug id
+     * @param id bug id
      * @return Boolean
      */
     BaseResult<Boolean> reject(Long id);
@@ -79,15 +80,15 @@ public interface BugOfflineService {
     /**
      * 延期修复
      *
-     * @param id  bug id
+     * @param bugOfflineDelayHandleReq 延期修复参数
      * @return Boolean
      */
-    BaseResult<Boolean> delayHandle(Long id);
+    BaseResult<Boolean> delayHandle(BugOfflineDelayHandleReq bugOfflineDelayHandleReq);
 
     /**
      * 确认修复
      *
-     * @param id  bug id
+     * @param id bug id
      * @return Boolean
      */
     BaseResult<Boolean> doHandle(Long id);
@@ -95,7 +96,7 @@ public interface BugOfflineService {
     /**
      * 自测通过
      *
-     * @param id  bug id
+     * @param id bug id
      * @return Boolean
      */
     BaseResult<Boolean> passSelf(Long id);
@@ -103,7 +104,7 @@ public interface BugOfflineService {
     /**
      * 验收通过
      *
-     * @param id  bug id
+     * @param id bug id
      * @return Boolean
      */
     BaseResult<Boolean> accepted(Long id);
@@ -111,7 +112,7 @@ public interface BugOfflineService {
     /**
      * 验收失败
      *
-     * @param id  bug id
+     * @param id bug id
      * @return Boolean
      */
     BaseResult<Boolean> acceptFailed(Long id);
@@ -119,7 +120,7 @@ public interface BugOfflineService {
     /**
      * 重新打开
      *
-     * @param id  bug id
+     * @param id bug id
      * @return Boolean
      */
     BaseResult<Boolean> reopen(Long id);

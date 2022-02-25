@@ -28,7 +28,7 @@
                 last_operator = #{lastOperator},
             </if>
             <if test="lastOperatorId != null and lastOperatorId != ''">
-                last_operator = #{lastOperatorId},
+                last_operator_id = #{lastOperatorId},
             </if>
             <if test="operator != null and operator != ''">
                 operator = #{operator},
@@ -191,8 +191,9 @@
 
     <select id="selectByMembers" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
         select id, project_id, product_line_id, name, status, last_operator, last_operator_id, operator, operator_id,
-                proposer, proposer_id, priority, env, reason, source, belong, frequency, `desc`, open_count, return_count,
-                delay_handle_reason, unhandle_reason, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        proposer, proposer_id, priority, env, reason, source, belong, frequency, `desc`, open_count, return_count,
+        delay_handle_reason, unhandle_reason, is_deleted, create_man_id, create_man, create_date, modify_man_id,
+        modify_man, modify_date
         from bug_offline
         where (operator_id, project_id) in
         <foreach collection="userIds" separator="," item="item" open="(" close=")">
