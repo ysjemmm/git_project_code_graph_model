@@ -288,15 +288,37 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> agree(Long id) {
-        //1.验证操作人是否是经办人或其上级,状态是否是待确认
+        log.info("线下bug'同意'接收参数{}", id);
+        //得到当前线下bug
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
+        if (bugOfflineDO == null) {
+            throw new BaseBizRuntimeException("线下bug不存在。");
+        }
 
-        //2.查找bug数据
+        //判断当前操作人是否有权限
+        /*Boolean result = isPermission(bugOfflineDO.getOperatorId());
+        if (!result) {
+            throw new BaseBizRuntimeException("您没有操作权限");
+        }*/
 
-        //3.赋值:状态变成关闭,经办人与上一阶段经办人不变,
+        //保存bug的当前状态
+        String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
 
-        //4.更新bug数据
+        //线下bug的状态变更为关闭
+        bugOfflineDO.setStatus(BugStatusEnum.CLOSE.getCode());
+        bugOfflineMapper.update(bugOfflineDO);
 
-        //5.bug日志表记录状态变更
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction("同意");
+        bugLogDO.setOldValue(oldValue);
+        bugLogDO.setNewValue(BugStatusEnum.getTextByCode(BugStatusEnum.CLOSE.getCode()));
+        bugLogDO.setMainId(id);
+        bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setBugName("线下bug");
+
+        //往bug日志表中插入数据
+        bugLogMapper.insert(bugLogDO);
+
         return BaseResult.success(true);
     }
 
