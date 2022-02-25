@@ -675,21 +675,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             throw new BaseBizRuntimeException("您要查询的线下bug不存在。");
         }
 
-        //查询bug的日志信息
-        List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineId(id);
-
         //转化线下bug
         BugOfflineDetailVO bugOfflineDetailVO = BugOfflineCopier.INSTANCE.transform(bugOfflineDO);
-
-        //如果bug日志不为空，转化bug日志然后给线下bug赋值
-        if (CollectionUtils.isNotEmpty(bugLogDOList)) {
-            List<BugLogVO> bugLogVOList = bugLogDOList.stream().map(BugLogCopier.INSTANCE::convert).collect(Collectors.toList());
-            //给bug日志的内容变更类型名字赋值
-            bugLogVOList.forEach(bugLogVO -> bugLogVO.setTypeName(BugLogTypeEnum.getTextByCode(bugLogVO.getType())));
-            bugOfflineDetailVO.setBugLogVOList(bugLogVOList);
-
-        }
-
 
         //给线下bug的项目名称赋值
         ProjectDO projectDO = projectMapper.get(bugOfflineDO.getProjectId());

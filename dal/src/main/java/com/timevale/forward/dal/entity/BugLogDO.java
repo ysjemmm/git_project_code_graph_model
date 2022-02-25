@@ -3,13 +3,15 @@ package com.timevale.forward.dal.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serializable;
+
 /**
  * @author by YangXu
  * @date 2022/02/24 09:51
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class BugLogDO extends BaseDO {
+public class BugLogDO extends BaseDO implements Serializable {
 
     /**
      * 主体id

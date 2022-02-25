@@ -14,6 +14,8 @@
         <setting name="lazyLoadingEnabled" value="true"/>
         <!-- 设置超时时间，它决定驱动等待数据库响应的秒数。-->
         <setting name="defaultStatementTimeout" value="10"/>
+        <!--开启二级缓存-->
+        <setting name="cacheEnabled" value="true"/>
     </settings>
 
     <plugins>
