@@ -25,6 +25,7 @@ public class BugOfflineTransferReq extends BaseReq {
     private String userName;
 
     @ApiModelProperty(value = "线下bug id")
+    @NotNull(message = "id不能为空")
     private Long id;
 
 

@@ -210,15 +210,35 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> transfer(BugOfflineTransferReq bugOfflineTransferReq) {
-        //1.验证操作人是否是经办人或其上级,状态是否是bug打开,待修复,延期修复,待确认,待验收
+        log.info("线下bug转交接收参数{}", bugOfflineTransferReq.getId());
+        //得到当前线下bug
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineTransferReq.getId());
+        if (bugOfflineDO == null) {
+            throw new BaseBizRuntimeException("线下bug不存在。");
+        }
 
-        //2.查找bug数据
+        //判断当前操作人是否有权限
+        Boolean result = isPermission(bugOfflineDO.getOperatorId());
+        if (!result) {
+            throw new BaseBizRuntimeException("您没有操作权限");
+        }
 
-        //3.赋值:经办人为表单选择人,上一阶段经办人不变,状态不变
+        //经办人变成转交后的成员
+        bugOfflineDO.setOperatorId(bugOfflineTransferReq.getUserId());
+        bugOfflineDO.setOperator(bugOfflineTransferReq.getUserName());
+        bugOfflineMapper.update(bugOfflineDO);
 
-        //4.更新bug数据
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction("转交");
+        bugLogDO.setOldValue(BugStatusEnum.getTextByCode(bugOfflineDO.getStatus()));
+        bugLogDO.setNewValue(BugStatusEnum.getTextByCode(bugOfflineDO.getStatus()));
+        bugLogDO.setMainId(bugOfflineTransferReq.getId());
+        bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setBugName("线下bug");
 
-        //5.消息通知
+        //往bug日志表中插入数据
+        bugLogMapper.insert(bugLogDO);
+
         return BaseResult.success(true);
     }
 
@@ -326,7 +346,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction("延期修复");
-        bugLogDO.setOldValue("bug打开");
+        bugLogDO.setOldValue(BugStatusEnum.getTextByCode(bugOfflineDO.getStatus()));
         bugLogDO.setNewValue("延期修复");
         bugLogDO.setMainId(bugOfflineDelayHandleReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
