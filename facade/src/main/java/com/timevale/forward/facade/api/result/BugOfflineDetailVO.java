@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -109,4 +110,10 @@ public class BugOfflineDetailVO extends ToString {
 
     @ApiModelProperty("评论")
     private List<CommentVO> commentVOList;
+
+    @ApiModelProperty("提交时间")
+    private Date submitDate;
+
+    @ApiModelProperty("最后更新时间")
+    private Date lastModifyDate;
 }
