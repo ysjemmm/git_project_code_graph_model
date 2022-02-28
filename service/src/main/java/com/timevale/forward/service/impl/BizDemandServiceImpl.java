@@ -276,6 +276,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
+    @Transactional
     public BaseResult<Boolean> agree(BizDemandAgreeReq bizDemandAgreeReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
@@ -287,10 +288,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         if(bizDemandDO == null){
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
-        bizDemandDO.setReason(null);
         bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
         bizDemandDO.setPlanReleaseDate(planReleaseDate);
         bizDemandMapper.update(bizDemandDO);
+        bizDemandMapper.updateReason(bizDemandId, null);
 
         // 通知需求提交人
         messageEventPublisher.publish(new BizDemandReceivedMsgEvent(

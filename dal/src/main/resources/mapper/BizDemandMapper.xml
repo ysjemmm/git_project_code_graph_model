@@ -21,7 +21,7 @@
         <if test="dataIndicators!=null">
             data_indicators = #{dataIndicators},
         </if>
-        <if test="targetCustomer!=null  and  targetCustomer!='' ">
+        <if test="targetCustomer!=null and targetCustomer!='' ">
             target_customer = #{targetCustomer},
         </if>
         <if test="createCustomer!=null">
@@ -191,14 +191,20 @@
     </select>
 
     <update id="updateByIds">
-            update biz_demand
-            set status =#{status}
-            <where>
-                and id IN
-                <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
-                    #{item}
-                </foreach>
-            </where>
+        update biz_demand
+        set status =#{status}
+        <where>
+            and id IN
+            <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </where>
+    </update>
+
+    <update id="updateReason">
+        update biz_demand
+        set reason = #{reason}
+        where id = #{bizDemandId}
     </update>
 
 </mapper>

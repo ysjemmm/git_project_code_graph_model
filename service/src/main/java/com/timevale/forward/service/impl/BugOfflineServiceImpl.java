@@ -151,7 +151,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     public BaseResult<Boolean> add(BugOfflineAddReq bugOfflineAddReq) {
         //1.接收表单参数,状态为:bug打开,经办人所选用户,上一阶段经办人为bug提出人,bug数据入库
         BugOfflineDO bugOfflineDO = BugOfflineCopier.INSTANCE.convert(bugOfflineAddReq);
-        bugOfflineDO.setOpenCount(1);
+        bugOfflineDO.setOpenCount(0);
         bugOfflineDO.setStatus(BugStatusEnum.OPEN.getCode());
         bugOfflineMapper.insert(bugOfflineDO);
 
