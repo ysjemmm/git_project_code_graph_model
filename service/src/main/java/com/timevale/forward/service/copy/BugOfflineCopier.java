@@ -10,6 +10,7 @@ import com.timevale.forward.facade.api.result.BugOfflineDetailVO;
 import com.timevale.forward.facade.api.result.BugOfflineVO;
 import com.timevale.forward.model.middle.BugOfflineMD;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 /**
@@ -56,9 +57,11 @@ public interface BugOfflineCopier {
     /**
      * BugOfflineDO  -->  BugOfflineDetailVO
      *
-     * @param  bugOfflineDO 参数
+     * @param bugOfflineDO 参数
      * @return BugOfflineDetailVO
-     * */
+     */
+    @Mapping(source = "modifyDate", target = "lastModifyDate")
+    @Mapping(source = "createDate", target = "submitDate")
     BugOfflineDetailVO transform(BugOfflineDO bugOfflineDO);
 
     /**

@@ -21,5 +21,6 @@ public class BugLogQueryList extends QueryBase {
     private Long id;
 
     @ApiModelProperty("内容变更记录类型:0线下bug,1线上bug")
+    @NotNull(message = "内容变更记录类型不能为空")
     private Integer type;
 }
