@@ -213,6 +213,25 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         BugOfflineMD oldBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(oldBugOfflineDO);
         BugOfflineMD newBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(newBugOfflineDO);
         List<BugLogDO> bugLogDOList = compare(oldBugOfflineMD, newBugOfflineMD);
+        // 额外判断项目与产品
+        if(!Objects.equals(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId())){
+            List<ProjectDO> projectDOList = projectMapper
+                    .getByIds(Lists.newArrayList(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId()));
+            BugLogDO bugLogDO = new BugLogDO();
+            bugLogDO.setField(BugFieldEnum.PROJECTS.getText());
+            bugLogDO.setOldValue(projectDOList.get(0).getName());
+            bugLogDO.setNewValue(projectDOList.get(1).getName());
+            bugLogDOList.add(bugLogDO);
+        }
+        if(!Objects.equals(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId())){
+            List<ProductLineDO> productLineDOList = productLineMapper
+                    .selectByIds(Lists.newArrayList(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId()));
+            BugLogDO bugLogDO = new BugLogDO();
+            bugLogDO.setField(BugFieldEnum.PRODUCT_LINE.getText());
+            bugLogDO.setOldValue(productLineDOList.get(0).getName());
+            bugLogDO.setNewValue(productLineDOList.get(1).getName());
+            bugLogDOList.add(bugLogDO);
+        }
         bugLogDOList.forEach(e -> {
             e.setMainId(bugOfflineModifyReq.getId());
             e.setType(BugLogTypeEnum.OFFLINE.getCode());
