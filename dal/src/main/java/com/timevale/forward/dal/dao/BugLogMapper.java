@@ -11,12 +11,13 @@ import java.util.List;
  */
 public interface BugLogMapper {
     /**
-     * 通过线下bug的id查询对应的操作日志
+     * 通过线下bug的id和type类型查询对应的操作日志
      *
      * @param bugOfflineId 线下bug的id
+     * @param type         bug类型
      * @return List<BugLogDO> 返回类型
      */
-    List<BugLogDO> selectByBugOfflineId(@Param("bugOfflineId") Long bugOfflineId);
+    List<BugLogDO> selectByBugOfflineIdAndType(@Param("bugOfflineId") Long bugOfflineId, @Param("type") Integer type);
 
     /**
      * 通过线下bug的id删除对应的操作日志

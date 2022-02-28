@@ -800,7 +800,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     public BaseResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList bugLogQueryList) {
 
         PageHelper.startPage(bugLogQueryList.pageNum, bugLogQueryList.pageSize);
-        List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineId(bugLogQueryList.getId());
+        List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType());
         PageInfo<BugLogDO> pageInfo = new PageInfo<>(bugLogDOList);
 
         PageQueryResult<BugLogVO> pageQueryResult = new PageQueryResult<>();
