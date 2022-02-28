@@ -241,7 +241,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             e.setType(BugLogTypeEnum.OFFLINE.getCode());
             e.setBugName(BugNameEnum.BUG_OFFLINE.getText());
         });
-        bugLogMapper.batchInsert(bugLogDOList);
+        if(!CollectionUtils.isEmpty(bugLogDOList)){
+            bugLogMapper.batchInsert(bugLogDOList);    
+        }
 
         //5.修改经办人消息通知
         if (!Objects.equals(oldBugOfflineDO.getOperatorId(), newBugOfflineDO.getOperatorId())) {
