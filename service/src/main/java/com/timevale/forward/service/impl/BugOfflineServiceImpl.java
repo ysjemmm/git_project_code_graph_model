@@ -217,19 +217,23 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         if(!Objects.equals(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId())){
             List<ProjectDO> projectDOList = projectMapper
                     .getByIds(Lists.newArrayList(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId()));
+            Map<Long,String> projectMap = projectDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getName));
+
             BugLogDO bugLogDO = new BugLogDO();
             bugLogDO.setField(BugFieldEnum.PROJECTS.getText());
-            bugLogDO.setOldValue(projectDOList.get(0).getName());
-            bugLogDO.setNewValue(projectDOList.get(1).getName());
+            bugLogDO.setOldValue(projectMap.get(oldBugOfflineDO.getProjectId()));
+            bugLogDO.setNewValue(projectMap.get(newBugOfflineDO.getProjectId()));
             bugLogDOList.add(bugLogDO);
         }
         if(!Objects.equals(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId())){
             List<ProductLineDO> productLineDOList = productLineMapper
                     .selectByIds(Lists.newArrayList(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId()));
+            Map<Long,String> productLineMap = productLineDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProductLineDO::getName));
+
             BugLogDO bugLogDO = new BugLogDO();
             bugLogDO.setField(BugFieldEnum.PRODUCT_LINE.getText());
-            bugLogDO.setOldValue(productLineDOList.get(0).getName());
-            bugLogDO.setNewValue(productLineDOList.get(1).getName());
+            bugLogDO.setOldValue(productLineMap.get(oldBugOfflineDO.getProductLineId()));
+            bugLogDO.setNewValue(productLineMap.get(newBugOfflineDO.getProductLineId()));
             bugLogDOList.add(bugLogDO);
         }
         bugLogDOList.forEach(e -> {
