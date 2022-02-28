@@ -70,4 +70,13 @@ public interface BizDemandMapper {
      */
     int updateByIds(@Param("ids") List<Long> ids,@Param("status") Integer status);
 
+    /**
+     * 更新业务需求
+     *
+     * @param bizDemandId 业务需求id
+     * @param reason      原因
+     * @return int
+     */
+    int updateReason(@Param("bizDemandId")Long bizDemandId, @Param("reason") Integer reason);
+
 }

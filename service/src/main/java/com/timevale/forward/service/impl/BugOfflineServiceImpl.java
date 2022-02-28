@@ -151,7 +151,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     public BaseResult<Boolean> add(BugOfflineAddReq bugOfflineAddReq) {
         //1.接收表单参数,状态为:bug打开,经办人所选用户,上一阶段经办人为bug提出人,bug数据入库
         BugOfflineDO bugOfflineDO = BugOfflineCopier.INSTANCE.convert(bugOfflineAddReq);
-        bugOfflineDO.setOpenCount(1);
+        bugOfflineDO.setOpenCount(0);
         bugOfflineDO.setStatus(BugStatusEnum.OPEN.getCode());
         bugOfflineMapper.insert(bugOfflineDO);
 
@@ -213,12 +213,37 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         BugOfflineMD oldBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(oldBugOfflineDO);
         BugOfflineMD newBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(newBugOfflineDO);
         List<BugLogDO> bugLogDOList = compare(oldBugOfflineMD, newBugOfflineMD);
+        // 额外判断项目与产品
+        if(!Objects.equals(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId())){
+            List<ProjectDO> projectDOList = projectMapper
+                    .getByIds(Lists.newArrayList(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId()));
+            Map<Long,String> projectMap = projectDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getName));
+
+            BugLogDO bugLogDO = new BugLogDO();
+            bugLogDO.setField(BugFieldEnum.PROJECTS.getText());
+            bugLogDO.setOldValue(projectMap.get(oldBugOfflineDO.getProjectId()));
+            bugLogDO.setNewValue(projectMap.get(newBugOfflineDO.getProjectId()));
+            bugLogDOList.add(bugLogDO);
+        }
+        if(!Objects.equals(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId())){
+            List<ProductLineDO> productLineDOList = productLineMapper
+                    .selectByIds(Lists.newArrayList(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId()));
+            Map<Long,String> productLineMap = productLineDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProductLineDO::getName));
+
+            BugLogDO bugLogDO = new BugLogDO();
+            bugLogDO.setField(BugFieldEnum.PRODUCT_LINE.getText());
+            bugLogDO.setOldValue(productLineMap.get(oldBugOfflineDO.getProductLineId()));
+            bugLogDO.setNewValue(productLineMap.get(newBugOfflineDO.getProductLineId()));
+            bugLogDOList.add(bugLogDO);
+        }
         bugLogDOList.forEach(e -> {
             e.setMainId(bugOfflineModifyReq.getId());
             e.setType(BugLogTypeEnum.OFFLINE.getCode());
             e.setBugName(BugNameEnum.BUG_OFFLINE.getText());
         });
-        bugLogMapper.batchInsert(bugLogDOList);
+        if(!CollectionUtils.isEmpty(bugLogDOList)){
+            bugLogMapper.batchInsert(bugLogDOList);    
+        }
 
         //5.修改经办人消息通知
         if (!Objects.equals(oldBugOfflineDO.getOperatorId(), newBugOfflineDO.getOperatorId())) {
