@@ -244,9 +244,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
 
-        //判断当前操作人是否有权限
-        Boolean result = isPermission(bugOfflineDO.getOperatorId());
-        if (!result) {
+        //判断当前操作人是否有权限,如果当前操作人不是经办人或经办人的上级或提出人或提出人的上级，则没有权限
+        Boolean operatorResult = isPermission(bugOfflineDO.getOperatorId());
+        Boolean proposerResult = isPermission(bugOfflineDO.getProposerId());
+        if (!operatorResult && !proposerResult) {
             throw new BaseBizRuntimeException("您没有操作权限");
         }
 
@@ -377,12 +378,13 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //保存老的状态
         String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
 
-        //状态变为  bug打开,上一环节的经办人变成当前经办人,当前经办人变成上一环节的经办人
+        //状态变为  bug打开,上一环节的经办人变成当前经办人,当前经办人变成上一环节的经办人，清空不用修复原因
         bugOfflineDO.setStatus(BugStatusEnum.OPEN.getCode());
         bugOfflineDO.setLastOperatorId(operatorId);
         bugOfflineDO.setLastOperator(operator);
         bugOfflineDO.setOperator(lastOperator);
         bugOfflineDO.setOperatorId(lastOperatorId);
+        bugOfflineDO.setUnHandleReason(null);
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
@@ -650,7 +652,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //保存老的状态
         String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
 
-        //状态变为  bug打开,上一环节的经办人变成当前经办人,当前经办人变成上一环节的经办人
+        //状态变为  bug打开,上一环节的经办人变成当前经办人,当前经办人变成上一环节的经办人,清空延期修复原因
         bugOfflineDO.setStatus(BugStatusEnum.OPEN.getCode());
         bugOfflineDO.setLastOperatorId(operatorId);
         bugOfflineDO.setLastOperator(operator);
@@ -661,6 +663,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             bugOfflineDO.setReturnCount(bugOfflineDO.getReturnCount() + 1);
             bugOfflineDO.setOpenCount(bugOfflineDO.getOpenCount() + 1);
         }
+        bugOfflineDO.setDelayHandleReason(null);
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
