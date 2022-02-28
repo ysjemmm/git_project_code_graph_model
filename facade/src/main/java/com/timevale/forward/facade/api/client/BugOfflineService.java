@@ -63,18 +63,18 @@ public interface BugOfflineService {
     /**
      * 同意
      *
-     * @param id bug id
+     * @param bugOfflineReq 参数
      * @return Boolean
      */
-    BaseResult<Boolean> agree(Long id);
+    BaseResult<Boolean> agree(BugOfflineReq bugOfflineReq);
 
     /**
      * 拒绝
      *
-     * @param id bug id
+     * @param bugOfflineReq 参数
      * @return Boolean
      */
-    BaseResult<Boolean> reject(Long id);
+    BaseResult<Boolean> reject(BugOfflineReq bugOfflineReq);
 
     /**
      * 延期修复
@@ -87,42 +87,42 @@ public interface BugOfflineService {
     /**
      * 确认修复
      *
-     * @param id bug id
+     * @param bugOfflineReq 参数
      * @return Boolean
      */
-    BaseResult<Boolean> doHandle(Long id);
+    BaseResult<Boolean> doHandle(BugOfflineReq bugOfflineReq);
 
     /**
      * 自测通过
      *
-     * @param id bug id
+     * @param bugOfflineReq 参数
      * @return Boolean
      */
-    BaseResult<Boolean> passSelf(Long id);
+    BaseResult<Boolean> passSelf(BugOfflineReq bugOfflineReq);
 
     /**
      * 验收通过
      *
-     * @param id bug id
+     * @param bugOfflineReq 参数
      * @return Boolean
      */
-    BaseResult<Boolean> accepted(Long id);
+    BaseResult<Boolean> accepted(BugOfflineReq bugOfflineReq);
 
     /**
      * 验收失败
      *
-     * @param id bug id
+     * @param bugOfflineReq 参数
      * @return Boolean
      */
-    BaseResult<Boolean> acceptFailed(Long id);
+    BaseResult<Boolean> acceptFailed(BugOfflineReq bugOfflineReq);
 
     /**
      * 重新打开
      *
-     * @param id bug id
+     * @param bugOfflineReq 参数
      * @return Boolean
      */
-    BaseResult<Boolean> reopen(Long id);
+    BaseResult<Boolean> reopen(BugOfflineReq bugOfflineReq);
 
     /**
      * 查看
@@ -135,10 +135,10 @@ public interface BugOfflineService {
     /**
      * 删除
      *
-     * @param id bug id
+     * @param bugOfflineReq 参数
      * @return Boolean
      */
-    BaseResult<Boolean> delete(Long id);
+    BaseResult<Boolean> delete(BugOfflineReq bugOfflineReq);
 
     /**
      * 查询bug日志列表

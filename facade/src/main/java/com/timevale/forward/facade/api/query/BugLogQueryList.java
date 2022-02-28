@@ -23,4 +23,8 @@ public class BugLogQueryList extends QueryBase {
     @ApiModelProperty("内容变更记录类型:0线下bug,1线上bug")
     @NotNull(message = "内容变更记录类型不能为空")
     private Integer type;
+
+    @ApiModelProperty("根据是否有按钮动作判断是否为日志状态变更:true表示是日志状态变更,false表示不是日志状态变更")
+    @NotNull(message = "该字段不能为空")
+    private Boolean statusChange;
 }

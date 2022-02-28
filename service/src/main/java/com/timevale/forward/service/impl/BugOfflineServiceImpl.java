@@ -318,10 +318,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> agree(Long id) {
-        log.info("线下bug'同意'接收参数{}", id);
+    public BaseResult<Boolean> agree(BugOfflineReq bugOfflineReq) {
+        log.info("线下bug'同意'接收参数{}", bugOfflineReq.getId());
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
@@ -343,7 +343,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setAction(ButtonActionEnum.AGREE.getText());
         bugLogDO.setOldValue(oldValue);
         bugLogDO.setNewValue(BugStatusEnum.getTextByCode(BugStatusEnum.CLOSE.getCode()));
-        bugLogDO.setMainId(id);
+        bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
         bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
@@ -355,10 +355,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> reject(Long id) {
-        log.info("线下bug'拒绝'接收参数{}", id);
+    public BaseResult<Boolean> reject(BugOfflineReq bugOfflineReq) {
+        log.info("线下bug'拒绝'接收参数{}", bugOfflineReq.getId());
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
@@ -391,7 +391,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setAction(ButtonActionEnum.REFUSED.getText());
         bugLogDO.setOldValue(oldValue);
         bugLogDO.setNewValue(BugStatusEnum.OPEN.getText());
-        bugLogDO.setMainId(id);
+        bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
         bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
@@ -449,10 +449,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> doHandle(Long id) {
-        log.info("确认修复接收参数{}", id);
+    public BaseResult<Boolean> doHandle(BugOfflineReq bugOfflineReq) {
+        log.info("确认修复接收参数{}", bugOfflineReq.getId());
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
@@ -474,7 +474,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setAction(ButtonActionEnum.CONFIRM_REPAIR.getText());
         bugLogDO.setOldValue(oldValue);
         bugLogDO.setNewValue(BugStatusEnum.CONFIRM.getText());
-        bugLogDO.setMainId(id);
+        bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
         bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
@@ -487,19 +487,19 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> passSelf(Long id) {
-        log.info("自测通过接收参数{}", id);
+    public BaseResult<Boolean> passSelf(BugOfflineReq bugOfflineReq) {
+        log.info("自测通过接收参数{}", bugOfflineReq.getId());
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
 
         //判断当前操作人是否有权限
-       /* Boolean result = isPermission(bugOfflineDO.getOperatorId());
+        Boolean result = isPermission(bugOfflineDO.getOperatorId());
         if (!result) {
             throw new BaseBizRuntimeException("您没有操作权限");
-        }*/
+        }
 
         //获取现在的经办人
         String operatorId = bugOfflineDO.getOperatorId();
@@ -521,7 +521,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setAction(ButtonActionEnum.SELF_PASS.getText());
         bugLogDO.setOldValue(oldValue);
         bugLogDO.setNewValue(BugStatusEnum.ACCEPTANCE.getText());
-        bugLogDO.setMainId(id);
+        bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
         bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
@@ -543,10 +543,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> accepted(Long id) {
-        log.info("验收通过接收参数{}", id);
+    public BaseResult<Boolean> accepted(BugOfflineReq bugOfflineReq) {
+        log.info("验收通过接收参数{}", bugOfflineReq.getId());
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
@@ -568,7 +568,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setAction(ButtonActionEnum.ACCEPTANCE_PASSED.getText());
         bugLogDO.setOldValue(oldValue);
         bugLogDO.setNewValue(BugStatusEnum.COMPLETE.getText());
-        bugLogDO.setMainId(id);
+        bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
         bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
@@ -580,10 +580,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> acceptFailed(Long id) {
-        log.info("验收失败接收参数{}", id);
+    public BaseResult<Boolean> acceptFailed(BugOfflineReq bugOfflineReq) {
+        log.info("验收失败接收参数{}", bugOfflineReq.getId());
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
@@ -617,7 +617,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setAction(ButtonActionEnum.ACCEPTANCE_FAILED.getText());
         bugLogDO.setOldValue(oldValue);
         bugLogDO.setNewValue(BugStatusEnum.OPEN.getText());
-        bugLogDO.setMainId(id);
+        bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
         bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
@@ -629,19 +629,19 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> reopen(Long id) {
-        log.info("线下bug'重新打开'接收参数{}", id);
+    public BaseResult<Boolean> reopen(BugOfflineReq bugOfflineReq) {
+        log.info("线下bug'重新打开'接收参数{}", bugOfflineReq.getId());
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
 
         //判断当前操作人是否有权限
-        /*Boolean result = isPermission(bugOfflineDO.getProposerId());
+        Boolean result = isPermission(bugOfflineDO.getProposerId());
         if (!result) {
             throw new BaseBizRuntimeException("您没有操作权限");
-        }*/
+        }
 
         //获取当前经办人和上一环节经办人
         String operatorId = bugOfflineDO.getOperatorId();
@@ -670,7 +670,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setAction(ButtonActionEnum.OPEN_AGAIN.getText());
         bugLogDO.setOldValue(oldValue);
         bugLogDO.setNewValue(BugStatusEnum.OPEN.getText());
-        bugLogDO.setMainId(id);
+        bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
         bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
@@ -768,28 +768,28 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> delete(Long id) {
-        log.info("删除线下bug接收参数:{}", id);
+    public BaseResult<Boolean> delete(BugOfflineReq bugOfflineReq) {
+        log.info("删除线下bug接收参数:{}", bugOfflineReq.getId());
         //删除线下bug表中的数据
-        bugOfflineMapper.deleteById(id);
+        bugOfflineMapper.deleteById(bugOfflineReq.getId());
 
         //删除bug日志表中的数据
-        bugLogMapper.deleteByBugOfflineId(id);
+        bugLogMapper.deleteByBugOfflineId(bugOfflineReq.getId());
 
         //删除抄送人表person中的数据
         PersonDO personDO = new PersonDO();
-        personDO.setMainId(id);
+        personDO.setMainId(bugOfflineReq.getId());
         personDO.setType(PersonTypeEnum.BUG_OFFLINE_CC.getCode());
         personDO.setIsDeleted(true);
         personMapper.update(personDO);
 
         //删除评论数据
-        commentMapper.deleteByToIdAndType(id, CommentTypeEnum.BUG.getCode());
+        commentMapper.deleteByToIdAndType(bugOfflineReq.getId(), CommentTypeEnum.BUG.getCode());
 
         //删除附件数据
         FileDO fileDO = new FileDO();
         fileDO.setIsDeleted(true);
-        fileDO.setAttacheId(id);
+        fileDO.setAttacheId(bugOfflineReq.getId());
         fileDO.setType(FileTypeEnum.BUG_OFFLINE.getCode());
         fileMapper.update(fileDO);
 
@@ -798,10 +798,17 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Override
     public BaseResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList bugLogQueryList) {
-
+        List<BugLogDO> bugLogDOList1 = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), false);
         PageHelper.startPage(bugLogQueryList.pageNum, bugLogQueryList.pageSize);
-        List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType());
+        List<BugLogDO> bugLogDOList = new ArrayList<>();
+        //如果是状态变更,需要进行筛选出状态变更的数据
+        if (bugLogQueryList.getStatusChange()) {
+            bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), true);
+        } else {
+            bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), false);
+        }
         PageInfo<BugLogDO> pageInfo = new PageInfo<>(bugLogDOList);
+
 
         PageQueryResult<BugLogVO> pageQueryResult = new PageQueryResult<>();
         //如果没有查询到日志，直接返回空的数据

@@ -3,7 +3,12 @@
 
     <select id="selectByBugOfflineIdAndType" resultType="com.timevale.forward.dal.entity.BugLogDO">
         select * from bug_log
-        where main_id=#{bugOfflineId} and type=#{type} and is_deleted=0
+        <where>
+            <if test="bugOfflineId != null">and main_id=#{bugOfflineId}</if>
+            <if test="type != null">and `type`=#{type}</if>
+            <if test="true">and is_deleted=0</if>
+            <if test="statusChange == true">and `action` is not null</if>
+        </where>
         order by `create_date` desc
     </select>
 
