@@ -304,6 +304,8 @@ public class BizDemandServiceImpl implements BizDemandService {
                 PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
         ));
 
+        bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
+
         return BaseResult.success(true);
     }
 
