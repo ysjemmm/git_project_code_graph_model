@@ -199,7 +199,7 @@
         <foreach collection="userIds" separator="," item="item" open="(" close=")">
             (#{item}, #{item})
         </foreach>
-        and
+        and is_deleted = false
     </select>
 
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
