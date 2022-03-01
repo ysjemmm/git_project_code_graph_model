@@ -186,6 +186,9 @@
                 where p.user_id = #{copier} p.type = 50
                 )
             </if>
+            <if test="true">
+                and is_deleted = false
+            </if>
         </where>
     </select>
 
