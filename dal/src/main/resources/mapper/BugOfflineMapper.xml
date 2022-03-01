@@ -187,7 +187,7 @@
                 )
             </if>
             <if test="true">
-                and is_deleted = false
+                and bo.is_deleted = false
             </if>
         </where>
     </select>
