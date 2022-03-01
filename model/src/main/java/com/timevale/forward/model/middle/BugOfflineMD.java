@@ -43,8 +43,8 @@ public class BugOfflineMD{
     /**
      * bug原因不能为空
      */
-    @FieldCompare(fieldName = "bug原因")
-    private String reason;
+    @FieldCompare(fieldName = "bug原因", enumClass = BugReasonEnum.class)
+    private Integer reason;
 
     /**
      * bug来源不能为空

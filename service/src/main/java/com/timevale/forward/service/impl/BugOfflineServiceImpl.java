@@ -134,6 +134,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             e.setStatusName(BugStatusEnum.getTextByCode(e.getStatus()));
             e.setSourceName(BugSourceEnum.getTextByCode(e.getSource()));
             e.setBelongName(BugBelongEnum.getTextByCode(e.getBelong()));
+            e.setReasonName(BugReasonEnum.getTextByCode(e.getReason()));
             e.setPriorityName(PriorityEnum.getTextChineseByCode(e.getPriority()));
         });
 
@@ -813,7 +814,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     public BaseResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList bugLogQueryList) {
         List<BugLogDO> bugLogDOList1 = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), false);
         PageHelper.startPage(bugLogQueryList.pageNum, bugLogQueryList.pageSize);
-        List<BugLogDO> bugLogDOList = new ArrayList<>();
+        List<BugLogDO> bugLogDOList;
         //如果是状态变更,需要进行筛选出状态变更的数据
         if (bugLogQueryList.getStatusChange()) {
             bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), true);

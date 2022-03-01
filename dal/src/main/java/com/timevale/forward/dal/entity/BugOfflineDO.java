@@ -73,12 +73,12 @@ public class BugOfflineDO extends BaseDO {
     private Integer env;
 
     /**
-     * bug原因不能为空
+     * bug原因
      */
-    private String reason;
+    private Integer reason;
 
     /**
-     * bug来源不能为空
+     * bug来源
      */
     private Integer source;
 
