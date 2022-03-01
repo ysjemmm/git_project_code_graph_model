@@ -91,7 +91,7 @@
     </select>
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.BugOfflineListDO">
-        select bo.id, bo.status, bo.operator, bo.proposer, bo.priority, bo.env, bo.reason, bo.source, bo.belong,
+        select bo.id, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env, bo.reason, bo.source, bo.belong,
         bo.return_count,
         bo.create_date, bo.modify_date,
         bo.name bugName,

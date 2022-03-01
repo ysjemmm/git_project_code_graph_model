@@ -41,9 +41,19 @@ public class BugOfflineListDO extends BaseDO {
     private String operator;
 
     /**
+     * 经办人id
+     */
+    private String operatorId;
+
+    /**
      * bug提出人
      */
     private String proposer;
+
+    /**
+     * bug提出人id
+     */
+    private String proposerId;
 
     /**
      * bug优先级: 0紧急,10高,20中,30低
