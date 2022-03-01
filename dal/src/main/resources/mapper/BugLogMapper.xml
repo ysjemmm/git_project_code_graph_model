@@ -23,19 +23,19 @@
     </update>
 
     <insert id="insert">
-        insert into bug_log (`main_id`,`type`,`old_value`,`new_value`,`field`,`action`,`bug_name`,`content`
+        insert into bug_log (`main_id`,`type`,`old_value`,`new_value`,`field`,`action`
         ,`create_man_id`,`create_man`)
         values (#{bugLogDO.mainId},#{bugLogDO.type},#{bugLogDO.oldValue},#{bugLogDO.newValue},#{bugLogDO.field}
-        ,#{bugLogDO.action},#{bugLogDO.bugName},#{bugLogDO.content},#{createManId},#{createMan})
+        ,#{bugLogDO.action},#{createManId},#{createMan})
     </insert>
 
     <insert id="batchInsert">
-        insert into bug_log (`main_id`,`type`,`old_value`,`new_value`,`field`,`action`,`bug_name`,`content`
+        insert into bug_log (`main_id`,`type`,`old_value`,`new_value`,`field`,`action`
         ,`create_man_id`,`create_man`)
         values
         <foreach collection="bugLogDOList" item="item" separator=",">
             (#{item.mainId},#{item.type},#{item.oldValue},#{item.newValue},#{item.field}
-            ,#{item.action},#{item.bugName},#{item.content},#{createManId},#{createMan})
+            ,#{item.action},#{createManId},#{createMan})
         </foreach>
     </insert>
 </mapper>

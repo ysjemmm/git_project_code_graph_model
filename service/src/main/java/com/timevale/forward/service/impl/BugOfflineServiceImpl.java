@@ -171,7 +171,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setNewValue(BugStatusEnum.OPEN.getText());
         bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
         bugLogDO.setAction(ButtonActionEnum.SUBMIT.getText());
-        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
         bugLogMapper.insert(bugLogDO);
 
         //5.消息通知
@@ -214,10 +213,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         BugOfflineMD newBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(newBugOfflineDO);
         List<BugLogDO> bugLogDOList = compare(oldBugOfflineMD, newBugOfflineMD);
         // 额外判断项目与产品
-        if(!Objects.equals(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId())){
+        if (!Objects.equals(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId())) {
             List<ProjectDO> projectDOList = projectMapper
                     .getByIds(Lists.newArrayList(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId()));
-            Map<Long,String> projectMap = projectDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getName));
+            Map<Long, String> projectMap = projectDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getName));
 
             BugLogDO bugLogDO = new BugLogDO();
             bugLogDO.setField(BugFieldEnum.PROJECTS.getText());
@@ -225,10 +224,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             bugLogDO.setNewValue(projectMap.get(newBugOfflineDO.getProjectId()));
             bugLogDOList.add(bugLogDO);
         }
-        if(!Objects.equals(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId())){
+        if (!Objects.equals(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId())) {
             List<ProductLineDO> productLineDOList = productLineMapper
                     .selectByIds(Lists.newArrayList(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId()));
-            Map<Long,String> productLineMap = productLineDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProductLineDO::getName));
+            Map<Long, String> productLineMap = productLineDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProductLineDO::getName));
 
             BugLogDO bugLogDO = new BugLogDO();
             bugLogDO.setField(BugFieldEnum.PRODUCT_LINE.getText());
@@ -239,10 +238,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDOList.forEach(e -> {
             e.setMainId(bugOfflineModifyReq.getId());
             e.setType(BugLogTypeEnum.OFFLINE.getCode());
-            e.setBugName(BugNameEnum.BUG_OFFLINE.getText());
         });
-        if(!CollectionUtils.isEmpty(bugLogDOList)){
-            bugLogMapper.batchInsert(bugLogDOList);    
+        if (!CollectionUtils.isEmpty(bugLogDOList)) {
+            bugLogMapper.batchInsert(bugLogDOList);
         }
 
         //5.修改经办人消息通知
@@ -287,7 +285,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setNewValue(BugStatusEnum.getTextByCode(bugOfflineDO.getStatus()));
         bugLogDO.setMainId(bugOfflineTransferReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -318,7 +315,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //保存老的状态
         String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
 
-        //bug状态变更为"延期修复",上一环节的经办人变成经办人,现在的经办人变成提出人,延期修复原因更新
+        //bug状态变更为"不用修复",上一环节的经办人变成经办人,现在的经办人变成提出人,不用修复原因更新
         bugOfflineDO.setStatus(BugStatusEnum.CONFIRM.getCode());
         bugOfflineDO.setLastOperator(operator);
         bugOfflineDO.setLastOperatorId(operatorId);
@@ -333,7 +330,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setNewValue(BugStatusEnum.CONFIRM.getText());
         bugLogDO.setMainId(bugOfflineUnHandleReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -370,7 +366,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setNewValue(BugStatusEnum.getTextByCode(BugStatusEnum.CLOSE.getCode()));
         bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -418,7 +413,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setNewValue(BugStatusEnum.OPEN.getText());
         bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -464,7 +458,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setNewValue(BugStatusEnum.POSTPONE_REPAIR.getText());
         bugLogDO.setMainId(bugOfflineDelayHandleReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -501,7 +494,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setNewValue(BugStatusEnum.CONFIRM.getText());
         bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -548,7 +540,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setNewValue(BugStatusEnum.ACCEPTANCE.getText());
         bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -595,7 +586,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setNewValue(BugStatusEnum.COMPLETE.getText());
         bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -644,7 +634,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setNewValue(BugStatusEnum.OPEN.getText());
         bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -697,7 +686,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setNewValue(BugStatusEnum.OPEN.getText());
         bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setBugName(BugNameEnum.BUG_OFFLINE.getText());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
