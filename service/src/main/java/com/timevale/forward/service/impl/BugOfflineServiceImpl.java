@@ -963,12 +963,15 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String account = userInfo.getId();
 
-        //得到权限人或者是权限人的所有上级
+        //如果当前操作人是权限人员，直接返回true
+        if(personId.equals(account)){
+            return true;
+        }
+
+        //如果当前操作人不是直接权限人，看看是不是直接权限人的上级
         AccountRequest accountRequest = new AccountRequest();
         accountRequest.setAccount(personId);
         Set<String> higherLevels = innerUserPersonClient.getAllSuperiorByAccount(accountRequest).getData();
-        //把权限人添加到当前权限人上级的Set集合中
-        higherLevels.add(personId);
 
         //判断当前操作人账户是否有权限
         return higherLevels.contains(account);
