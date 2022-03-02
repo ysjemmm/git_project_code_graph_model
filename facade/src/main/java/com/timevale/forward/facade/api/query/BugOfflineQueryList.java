@@ -28,7 +28,7 @@ public class BugOfflineQueryList extends QueryBase {
     private List<String> operatorIds;
 
     @ApiModelProperty("提出人")
-    private List<String> createManIds;
+    private List<String> proposerIds;
 
     @ApiModelProperty("关联项目")
     private List<Long> projectIds;
