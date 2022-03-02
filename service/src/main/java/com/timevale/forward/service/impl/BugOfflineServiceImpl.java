@@ -20,9 +20,7 @@ import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.observer.event.BugOfflineAddMsg;
-import com.timevale.forward.service.observer.event.BugOfflineSelfTestPassMsgEvent;
-import com.timevale.forward.service.observer.event.BugOfflineUpdateMsg;
+import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -257,6 +255,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> transfer(BugOfflineTransferReq bugOfflineTransferReq) {
         log.info("线下bug转交接收参数{}", bugOfflineTransferReq.getId());
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         //得到当前线下bug
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineTransferReq.getId());
         if (bugOfflineDO == null) {
@@ -284,6 +285,18 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //往bug日志表中插入bug状态数据
         bugLogMapper.insert(bugLogDO);
 
+        //发送消息
+        messageEventPublisher.publish(
+                new BugOfflineTransMsgEvent(
+                        this,
+                        userInfo.getAlias() + "-" + userInfo.getName(),
+                        bugOfflineDO.getName(),
+                        BugStatusEnum.getTextByCode(bugOfflineDO.getStatus()),
+                        bugOfflineDO.getOperatorId(),
+                        bugOfflineDO.getId()
+                )
+        );
+
         return BaseResult.success(true);
     }
 
@@ -291,6 +304,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> unHandle(BugOfflineUnHandleReq bugOfflineUnHandleReq) {
         log.info("不用修复接收参数{}", bugOfflineUnHandleReq.getId());
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         //得到当前线下bug
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineUnHandleReq.getId());
         if (bugOfflineDO == null) {
@@ -339,6 +355,17 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //插入bug日志内容变更记录
         bugLogMapper.insert(bugLog);
 
+        //发送消息
+        messageEventPublisher.publish(
+                new BugOfflineNoRepairMsgEvent(
+                        this,
+                        userInfo.getAlias() + "-" + userInfo.getName(),
+                        bugOfflineDO.getName(),
+                        bugOfflineDO.getOperatorId(),
+                        bugOfflineDO.getId()
+                )
+        );
+
         return BaseResult.success(true);
     }
 
@@ -382,6 +409,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> reject(BugOfflineReq bugOfflineReq) {
         log.info("线下bug'拒绝'接收参数{}", bugOfflineReq.getId());
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         //得到当前线下bug
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
@@ -430,6 +460,17 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //插入bug日志内容变更记录
         bugLogMapper.insert(bugLog);
 
+        //发送消息
+        messageEventPublisher.publish(
+                new BugOfflineRejectMsgEvent(
+                        this,
+                        userInfo.getAlias() + "-" + userInfo.getName(),
+                        bugOfflineDO.getName(),
+                        bugOfflineDO.getOperatorId(),
+                        bugOfflineDO.getId()
+                )
+        );
+
         return BaseResult.success(true);
     }
 
@@ -437,6 +478,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> delayHandle(BugOfflineDelayHandleReq bugOfflineDelayHandleReq) {
         log.info("延期修复接收参数{}", bugOfflineDelayHandleReq.getId());
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         //得到当前线下bug
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineDelayHandleReq.getId());
         if (bugOfflineDO == null) {
@@ -483,6 +527,17 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //插入bug日志内容变更记录
         bugLogMapper.insert(bugLog);
 
+        //发送消息
+        messageEventPublisher.publish(
+                new BugOfflineDelayRepairMsgEvent(
+                        this,
+                        userInfo.getAlias() + "-" + userInfo.getName(),
+                        bugOfflineDO.getName(),
+                        bugOfflineDO.getProposerId(),
+                        bugOfflineDO.getId()
+                )
+        );
+
         return BaseResult.success(true);
     }
 
@@ -527,6 +582,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> passSelf(BugOfflineReq bugOfflineReq) {
         log.info("自测通过接收参数{}", bugOfflineReq.getId());
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         //得到当前线下bug
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
@@ -569,9 +627,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         messageEventPublisher.publish(
                 new BugOfflineSelfTestPassMsgEvent(
                         this,
-                        "望轩-轩振营",
-                        "bug",
-                        "wangxuan"
+                        userInfo.getAlias() + "-" + userInfo.getName(),
+                        bugOfflineDO.getName(),
+                        bugOfflineDO.getOperatorId(),
+                        bugOfflineDO.getId()
                 )
         );
 
@@ -618,6 +677,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> acceptFailed(BugOfflineReq bugOfflineReq) {
         log.info("验收失败接收参数{}", bugOfflineReq.getId());
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         //得到当前线下bug
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
@@ -659,6 +721,15 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
 
+        messageEventPublisher.publish(
+                new BugOfflineCheckFailMsgEvent(
+                        this,
+                        userInfo.getAlias() + "-" + userInfo.getName(),
+                        bugOfflineDO.getName(),
+                        bugOfflineDO.getId()
+                )
+        );
+
         return BaseResult.success(true);
     }
 
@@ -666,6 +737,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> reopen(BugOfflineReq bugOfflineReq) {
         log.info("线下bug'重新打开'接收参数{}", bugOfflineReq.getId());
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         //得到当前线下bug
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
@@ -718,6 +792,16 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLog.setType(BugLogTypeEnum.OFFLINE.getCode());
         //插入bug日志内容变更记录
         bugLogMapper.insert(bugLog);
+
+        messageEventPublisher.publish(
+                new BugOfflineOpenAgainMsgEvent(
+                        this,
+                        userInfo.getAlias() + "-" + userInfo.getName(),
+                        bugOfflineDO.getOperatorId(),
+                        bugOfflineDO.getName(),
+                        bugOfflineDO.getId()
+                )
+        );
 
         return BaseResult.success(true);
     }

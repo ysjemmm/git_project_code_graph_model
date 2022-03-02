@@ -8,11 +8,11 @@ import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
 import java.util.List;
 
 /**
- * @Date 2022/2/25 19:17
+ * @Date 2022/3/2 11:41
  * @Author 望轩
  */
-public class BugOfflineSelfTestPassMsgEvent extends MessageEvent {
-    private final String BUG_OFFLINE_SELF_PASS = "%s自测通过【线下bug】%s,请验收，可进入产研项目管理系统查看:%s";
+public class BugOfflineRejectMsgEvent extends MessageEvent {
+    private final String BUG_OFFLINE_REJECT = "%s拒绝您申请不用修复【线下bug】：%s，请及时处理，可进入产研项目管理系统查看：%s";
     /**
      * 操作人，花名-真名
      */
@@ -30,7 +30,7 @@ public class BugOfflineSelfTestPassMsgEvent extends MessageEvent {
      */
     private Long bugOfflineId;
 
-    public BugOfflineSelfTestPassMsgEvent(Object source, String operator, String bugName, String receiver, Long bugOfflineId) {
+    public BugOfflineRejectMsgEvent(Object source, String operator, String bugName, String receiver, Long bugOfflineId) {
         super(source);
         this.operator = operator;
         this.bugName = bugName;
@@ -42,10 +42,10 @@ public class BugOfflineSelfTestPassMsgEvent extends MessageEvent {
     public void run() {
         List<String> receivers = Lists.newArrayList(receiver);
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUG_MANAGEMENT.getText(), bugOfflineId);
-        String markdown = String.format(BUG_OFFLINE_SELF_PASS, operator, bugName, singleUrl);
+        String markdown = String.format(BUG_OFFLINE_REJECT, operator, bugName, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
-                .title(MessageTitleEnum.BUG_OFFLINE_CHECK.getText())
+                .title(MessageTitleEnum.BUG_OFFLINE_REJECT.getText())
                 .content(markdown)
                 .receivers(receivers)
                 .build();
