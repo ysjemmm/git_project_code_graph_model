@@ -313,6 +313,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
 
+        //校验当前状态
+        if (!bugOfflineDO.getStatus().equals(BugStatusEnum.OPEN.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击<不用修复>按钮");
+        }
+
         //判断当前操作人是否有权限
         Boolean result = isPermission(bugOfflineDO.getOperatorId());
         if (!result) {
@@ -379,6 +384,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
 
+        //校验当前状态
+        if (!bugOfflineDO.getStatus().equals(BugStatusEnum.CONFIRM.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击<同意>按钮");
+        }
+
         //判断当前操作人是否有权限
         Boolean result = isPermission(bugOfflineDO.getOperatorId());
         if (!result) {
@@ -416,6 +426,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
+        }
+
+        //校验当前状态
+        if (!bugOfflineDO.getStatus().equals(BugStatusEnum.CONFIRM.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击<拒绝>按钮");
         }
 
         //判断当前操作人是否有权限
@@ -487,6 +502,12 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
 
+        //校验当前状态
+        if (!bugOfflineDO.getStatus().equals(BugStatusEnum.OPEN.getCode())
+                && !bugOfflineDO.getStatus().equals(BugStatusEnum.REPAIR.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击<延期修复>按钮");
+        }
+
         //判断当前操作人是否有权限
         Boolean result = isPermission(bugOfflineDO.getOperatorId());
         if (!result) {
@@ -551,6 +572,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
 
+        //校验当前状态
+        if (!bugOfflineDO.getStatus().equals(BugStatusEnum.OPEN.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击<确认修复>按钮");
+        }
+
         //判断当前操作人是否有权限
         Boolean result = isPermission(bugOfflineDO.getOperatorId());
         if (!result) {
@@ -589,6 +615,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
+        }
+
+        //校验当前状态
+        if (!bugOfflineDO.getStatus().equals(BugStatusEnum.REPAIR.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击<自测通过>按钮");
         }
 
         //判断当前操作人是否有权限
@@ -647,6 +678,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
 
+        //校验当前状态
+        if (!bugOfflineDO.getStatus().equals(BugStatusEnum.ACCEPTANCE.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击<验收通过>按钮");
+        }
+
         //判断当前操作人是否有权限
         Boolean result = isPermission(bugOfflineDO.getOperatorId());
         if (!result) {
@@ -684,6 +720,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
+        }
+
+        //校验当前状态
+        if (!bugOfflineDO.getStatus().equals(BugStatusEnum.ACCEPTANCE.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击<验收失败>按钮");
         }
 
         //判断当前操作人是否有权限
@@ -744,6 +785,13 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
+        }
+
+        //校验当前状态
+        if (!bugOfflineDO.getStatus().equals(BugStatusEnum.COMPLETE.getCode())
+                && !bugOfflineDO.getStatus().equals(BugStatusEnum.POSTPONE_REPAIR.getCode())
+                && !bugOfflineDO.getStatus().equals(BugStatusEnum.CLOSE.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击<重新打开>按钮");
         }
 
         //判断当前操作人是否有权限
@@ -817,6 +865,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         //转化线下bug
         BugOfflineDetailVO bugOfflineDetailVO = BugOfflineCopier.INSTANCE.transform(bugOfflineDO);
+
+        //给bug原因名字赋值
+        bugOfflineDetailVO.setReasonName(BugReasonEnum.getTextByCode(bugOfflineDO.getReason()));
 
         //给线下bug的项目名称赋值
         ProjectDO projectDO = projectMapper.get(bugOfflineDO.getProjectId());
@@ -960,12 +1011,15 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String account = userInfo.getId();
 
-        //得到权限人或者是权限人的所有上级
+        //如果当前操作人是权限人员，直接返回true
+        if (personId.equals(account)) {
+            return true;
+        }
+
+        //如果当前操作人不是直接权限人，看看是不是直接权限人的上级
         AccountRequest accountRequest = new AccountRequest();
         accountRequest.setAccount(personId);
         Set<String> higherLevels = innerUserPersonClient.getAllSuperiorByAccount(accountRequest).getData();
-        //把权限人添加到当前权限人上级的Set集合中
-        higherLevels.add(personId);
 
         //判断当前操作人账户是否有权限
         return higherLevels.contains(account);

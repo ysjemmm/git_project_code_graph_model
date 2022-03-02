@@ -49,7 +49,10 @@ public class BugOfflineDetailVO extends ToString {
     private String sourceName;
 
     @ApiModelProperty(value = "bug原因")
-    private String reason;
+    private Integer reason;
+
+    @ApiModelProperty(value = "bug原因名字")
+    private String reasonName;
 
     @ApiModelProperty(value = "bug所属端:0后端bug,1PC客户端,2PCweb端,3Android,4IOS,5H5")
     private Integer belong;
