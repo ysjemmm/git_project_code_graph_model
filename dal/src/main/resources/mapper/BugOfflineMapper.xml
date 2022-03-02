@@ -183,7 +183,8 @@
                 and bo.id IN (
                 select p.main_id
                 from person p
-                where p.user_id = #{copier} p.type = 50
+                where p.user_id = #{copier}
+                and p.type = 50
                 )
             </if>
             <if test="true">
