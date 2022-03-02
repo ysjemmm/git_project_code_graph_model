@@ -41,7 +41,6 @@ public class ProductLineServiceImpl implements ProductLineService {
         // 填充产品线对应业务域负责人信息
         productLineVOList.forEach(e -> {
             BizDomainDO bizDomainDO = bizDomainIdMap.get(e.getBizDomainId());
-            e.setType(bizDomainDO.getType());
             e.setBizDomainOwner(bizDomainDO.getOwner());
             e.setBizDomainOwnerId(bizDomainDO.getOwnerId());
         });

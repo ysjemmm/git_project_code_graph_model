@@ -30,9 +30,6 @@ public class BizDomainVO extends ToString {
     @ApiModelProperty("负责人id")
     private String ownerId;
 
-    @ApiModelProperty("业务域线类型 0：默认类型 1：金格")
-    private Integer type;
-
     @ApiModelProperty("是否废弃")
     private Boolean isDeleted;
 }

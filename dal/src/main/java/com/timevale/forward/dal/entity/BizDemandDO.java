@@ -67,16 +67,6 @@ public class BizDemandDO extends BaseDO {
     private String receiveManId;
 
     /**
-     * 处理器
-     */
-    private Integer processor;
-
-    /**
-     * 操作系统
-     */
-    private Integer os;
-
-    /**
      * 计划发布日期
      */
     private Integer planReleaseDate;

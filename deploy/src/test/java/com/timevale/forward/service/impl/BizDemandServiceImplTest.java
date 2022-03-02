@@ -185,7 +185,6 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         when(productLineMapper.selectById(any())).thenReturn(productLineDO);
 
         BizDomainDO bizDomainDO = new BizDomainDO();
-        bizDomainDO.setType(1);
         when(bizDomainMapper.selectById(any())).thenReturn(bizDomainDO);
 
         GroupResponse groupResponse = new GroupResponse();
