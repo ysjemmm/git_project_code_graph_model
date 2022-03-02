@@ -818,6 +818,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //转化线下bug
         BugOfflineDetailVO bugOfflineDetailVO = BugOfflineCopier.INSTANCE.transform(bugOfflineDO);
 
+        //给bug原因名字赋值
+        bugOfflineDetailVO.setReasonName(BugReasonEnum.getTextByCode(bugOfflineDO.getReason()));
+
         //给线下bug的项目名称赋值
         ProjectDO projectDO = projectMapper.get(bugOfflineDO.getProjectId());
         if (projectDO != null) {
