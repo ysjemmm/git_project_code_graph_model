@@ -195,9 +195,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         //2.更新附件数据
         List<FileAddReq> fileIdList = bugOfflineModifyReq.getFiles();
-        if (!CollectionUtils.isEmpty(fileIdList)) {
-            fileComponent.update(fileIdList, bugOfflineModifyReq.getId(), FileTypeEnum.BUG_OFFLINE.getCode());
-        }
+        fileComponent.update(fileIdList, bugOfflineModifyReq.getId(), FileTypeEnum.BUG_OFFLINE.getCode());
 
         //3.更新抄送人数据
         List<PersonAddReq> recipientInfoList = bugOfflineModifyReq.getRecipients();

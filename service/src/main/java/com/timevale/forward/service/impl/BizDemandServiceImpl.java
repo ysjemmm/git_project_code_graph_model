@@ -268,9 +268,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 添加附件
         List<FileAddReq> fileIdList = bizDemandModifyReq.getFileList();
-        if(!CollectionUtils.isEmpty(fileIdList)){
-            fileComponent.update(fileIdList, bizDemandModifyReq.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
-        }
+        fileComponent.update(fileIdList, bizDemandModifyReq.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
 
         return BaseResult.success(true);
     }
