@@ -3,12 +3,12 @@
 <mapper namespace="com.timevale.forward.dal.dao.BizDomainMapper">
 
     <select id="selectAllBizDomain" resultType="com.timevale.forward.dal.entity.BizDomainDO">
-        select id, name, owner, owner_id, type,is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        select id, name, owner, owner_id,is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
         from biz_domain
     </select>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BizDomainDO">
-        select id, name, owner, owner_id, type,is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        select id, name, owner, owner_id,is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
         from biz_domain
         where id = #{id}
     </select>
