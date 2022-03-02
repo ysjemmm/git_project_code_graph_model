@@ -36,11 +36,13 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -107,7 +109,8 @@ public class TaskServiceImpl implements TaskService {
     @Resource
     private ProjectNodeMapper projectNodeMapper;
 
-    public static final String PRIVATE_CLOUD = "私有云";
+    @Value("${excludeBizDomain:混合云电子签章}")
+    private String excludeBizDomain;
 
     @Override
     public BaseResult<PageQueryResult<TaskVO>> list(TaskQueryList taskQueryList) {
@@ -488,11 +491,12 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void checkPlanDate(TaskDO taskDO) {
+        List<String> excludeBizDomains = Arrays.asList(excludeBizDomain.split(";"));
         ProjectProductLineBizDomain bizDomain = productLineMapper.getById(taskDO.getProductLineId());
-        if (!PRIVATE_CLOUD.equals(bizDomain.getBizDomainName())
+        if (!excludeBizDomains.contains(bizDomain.getBizDomainName())
                 && taskDO.getPlanUseTime().compareTo(BigDecimal.valueOf(16)) > 0) {
             //除私有云业务域外,计划时间不能超过16h
-            throw new BaseBizRuntimeException("除私有云业务域外,计划耗时不能超过16小时");
+            throw new BaseBizRuntimeException("除" + excludeBizDomains + "外,计划耗时不能超过16小时");
         }
     }
 
