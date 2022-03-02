@@ -9,7 +9,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum BugNoFixReasonEnum {
+public enum BugUnHandleReasonEnum {
     /**
      * 被否定
      */
@@ -44,11 +44,11 @@ public enum BugNoFixReasonEnum {
     private final String text;
 
     public static String getTextByCode(Integer code) {
-        for (BugNoFixReasonEnum e : BugNoFixReasonEnum.values()) {
+        for (BugUnHandleReasonEnum e : BugUnHandleReasonEnum.values()) {
             if (e.code.equals(code)) {
                 return e.text;
             }
         }
-        return "errorCode";
+        return "";
     }
 }

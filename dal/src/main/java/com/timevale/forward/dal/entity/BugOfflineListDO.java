@@ -84,4 +84,9 @@ public class BugOfflineListDO extends BaseDO {
      * 打回次数
      */
     private Integer returnCount;
+
+    /**
+     * 不用修复原因
+     */
+    private Integer unHandleReason;
 }
