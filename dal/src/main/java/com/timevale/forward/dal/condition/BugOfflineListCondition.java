@@ -23,7 +23,7 @@ public class BugOfflineListCondition {
     /**
      * 状态
      */
-    private List<Integer> statuses;
+    private List<Integer> status;
 
     /**
      * 经办人

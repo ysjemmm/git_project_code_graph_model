@@ -106,9 +106,9 @@
             <if test="name != null and name != '' ">
                 and bo.name like concat('%',#{name},'%')
             </if>
-            <if test="statuses != null and statuses.size() > 0">
+            <if test="status != null and status.size() > 0">
                 and bo.status in
-                <foreach collection="statuses" item="item" separator="," open="(" close=")">
+                <foreach collection="status" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
