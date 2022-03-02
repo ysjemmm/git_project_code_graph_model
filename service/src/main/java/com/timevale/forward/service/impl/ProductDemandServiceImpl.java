@@ -181,7 +181,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         // 暂停or作废解除项目关联
-        projectProductDemandComponent.update(null,productDemandId);
+        projectProductDemandComponent.update(null, productDemandId);
         if (ProductDemandStatusEnum.INVALID.getCode().equals(type)) {
             productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), true);
             // 作废解业务需求关联
@@ -192,7 +192,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         }
         //解除任务关联
-        taskProductDemandComponent.update(null,productDemandId);
+        taskProductDemandComponent.update(null, productDemandId);
         return BaseResult.success(true);
     }
 
@@ -373,9 +373,14 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandList);
         Map<Long, GroupResponse> deptMap = bizDemandComponent.getGroupListTreeMap(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
         bizDemandVOList.forEach(p -> {
+            GroupResponse response = deptMap.get(p.getDeptId());
+            if (response == null) {
+                log.info("没有找到部门,id为:{}", p.getDeptId());
+            } else {
+                p.setDeptName(response.getGroupName());
+                p.setDeptDeleteFlag(response.getDeleteFlag());
+            }
             p.setPriorityText(PriorityEnum.getTextChineseByCode(p.getPriority()));
-            p.setDeptName(deptMap.get(p.getDeptId()).getGroupName());
-            p.setDeptDeleteFlag(deptMap.get(p.getDeptId()).getDeleteFlag());
         });
 
         PageInfo<BizDemandListDO> pageInfo = new PageInfo<>(bizDemandList);

@@ -94,31 +94,31 @@ public class BizDemandServiceImpl implements BizDemandService {
         boolean resultIsEmpty = false;
         // 根据tabs添加不同的效果
         String ascription = bizDemandQueryList.getAscription();
-        if(ascription.equals(AscriptionEnum.CURRENT_USER.toString())){
+        if (ascription.equals(AscriptionEnum.CURRENT_USER.toString())) {
             bizDemandListCondition.setCreateManIdList(Lists.newArrayList(userInfo.getId()));
-        }else if(ascription.equals(AscriptionEnum.RECEIVE.toString())){
+        } else if (ascription.equals(AscriptionEnum.RECEIVE.toString())) {
             bizDemandListCondition.setReceiveManIdList(Lists.newArrayList(userInfo.getId()));
-        }else if(ascription.equals(AscriptionEnum.COPIER.toString())){
+        } else if (ascription.equals(AscriptionEnum.COPIER.toString())) {
             bizDemandListCondition.setCopier(userInfo.getId());
-        }else {
+        } else {
             List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
-            if(ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())){
+            if (ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())) {
                 Set<String> createIdSet = new HashSet<>(bizDemandListCondition.getCreateManIdList());
-                if(!createIdSet.isEmpty()){
+                if (!createIdSet.isEmpty()) {
                     teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
                     resultIsEmpty = teamMemberIdList.isEmpty();
                 }
                 bizDemandListCondition.setCreateManIdList(teamMemberIdList);
-            }else if(ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())){
+            } else if (ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())) {
                 Set<String> receiveIdSet = new HashSet<>(bizDemandListCondition.getReceiveManIdList());
-                if(!receiveIdSet.isEmpty()){
+                if (!receiveIdSet.isEmpty()) {
                     teamMemberIdList = teamMemberIdList.stream().filter(receiveIdSet::contains).collect(Collectors.toList());
                     resultIsEmpty = teamMemberIdList.isEmpty();
                 }
                 bizDemandListCondition.setReceiveManIdList(teamMemberIdList);
             }
         }
-        if(resultIsEmpty){
+        if (resultIsEmpty) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
         // 开始分页
@@ -134,7 +134,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 修改业务需求状态 —— 作废
         Long bizDemandId = bizDemandUpdateStatusReq.getBizDemandId();
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
-        if(bizDemandDO == null){
+        if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
 
@@ -162,7 +162,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(BizDemandAddReq bizDemandAddReq) {
         // 判断主题是否唯一
-        if(bizDemandMapper.selectByName(bizDemandAddReq.getName()) != null){
+        if (bizDemandMapper.selectByName(bizDemandAddReq.getName()) != null) {
             throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
         }
 
@@ -172,13 +172,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandMapper.insert(bizDemandDO);
 
         List<FileAddReq> fileIdList = bizDemandAddReq.getFileList();
-        if(!fileIdList.isEmpty()){
+        if (!fileIdList.isEmpty()) {
             fileComponent.add(fileIdList, bizDemandDO.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
         }
 
         // 添加抄送人
         List<PersonAddReq> recipientInfoList = bizDemandAddReq.getRecipientInfoList();
-        if(!recipientInfoList.isEmpty()){
+        if (!recipientInfoList.isEmpty()) {
             personComponent.add(recipientInfoList, bizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
         }
 
@@ -197,7 +197,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Override
     public BaseResult<BizDemandDetailVO> getBizDemandById(Long bizDemandId) {
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
-        if(bizDemandDO == null){
+        if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
 
@@ -226,9 +226,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDetailVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandDetailVO.getPlanReleaseDate()));
         // 获取部门链，添加完整部门信息
         Map<Long, GroupResponse> deptMap = bizDemandComponent.getGroupListTreeMap(Lists.newArrayList(bizDemandDO.getDeptId()));
-        bizDemandDetailVO.setDeptName(deptMap.get(bizDemandDetailVO.getDeptId()).getGroupName());
-        bizDemandDetailVO.setDeptDeleteFlag(deptMap.get(bizDemandDetailVO.getDeptId()).getDeleteFlag());
-
+        GroupResponse response = deptMap.get(bizDemandDetailVO.getDeptId());
+        if (response == null) {
+            log.info("没有找到部门,id为:{}", bizDemandDetailVO.getDeptId());
+        } else {
+            bizDemandDetailVO.setDeptName(response.getGroupName());
+            bizDemandDetailVO.setDeptDeleteFlag(response.getDeleteFlag());
+        }
         //获取项目发布时间
         bizDemandDetailVO.setEndDate(bizDemandComponent.getProjectEndDate(bizDemandId));
 
@@ -242,13 +246,13 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 修改业务需求
         BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(bizDemandModifyReq.getId());
-        if(oldBizDemandDO == null){
+        if (oldBizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
 
         // 判断主题是否唯一
         BizDemandDO checkUniqueName = bizDemandMapper.selectByName(bizDemandModifyReq.getName());
-        if(checkUniqueName != null && !checkUniqueName.getId().equals(bizDemandModifyReq.getId())){
+        if (checkUniqueName != null && !checkUniqueName.getId().equals(bizDemandModifyReq.getId())) {
             throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
         }
 
@@ -257,7 +261,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 添加抄送人数据
         List<PersonAddReq> recipientInfoList = bizDemandModifyReq.getRecipientInfoList();
-        if(!CollectionUtils.isEmpty(recipientInfoList)){
+        if (!CollectionUtils.isEmpty(recipientInfoList)) {
             personComponent.update(recipientInfoList, bizDemandModifyReq.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
         }
 
@@ -278,7 +282,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         Integer planReleaseDate = bizDemandAgreeReq.getPlanReleaseDate();
 
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
-        if(bizDemandDO == null){
+        if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
         bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
@@ -310,7 +314,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         Integer reason = bizDemandRejectReq.getReason();
 
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
-        if(bizDemandDO == null){
+        if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
 
@@ -336,7 +340,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     public BaseResult<Boolean> transfer(BizDemandTransferReq bizDemandTransferReq) {
         // 转交：修改接收人
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandTransferReq.getId());
-        if(bizDemandDO == null){
+        if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
 

@@ -65,7 +65,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         List<Long> productDemandIdList = productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList());
 
         List<ProductDemandDO> productDemandDOList = Lists.newArrayList();
-        if(!productDemandIdList.isEmpty()){
+        if (!productDemandIdList.isEmpty()) {
             productDemandDOList = productDemandMapper.selectByIdList(productDemandIdList);
         }
 
@@ -73,25 +73,27 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         Integer status = null;
         for (ProductDemandDO productDemandDO : productDemandDOList) {
             Integer productDemandStatus = productDemandDO.getStatus();
-            if(productDemandStatus.equals(ProductDemandStatusEnum.INVALID.getCode())){continue;}
+            if (productDemandStatus.equals(ProductDemandStatusEnum.INVALID.getCode())) {
+                continue;
+            }
             status = status == null ? productDemandStatus : Math.min(status, productDemandStatus);
         }
 
         // 根据产品需求状态判断业务需求状态
         int result;
-        if(ProductDemandStatusEnum.INCLUDED.getCode().equals(status)){
+        if (ProductDemandStatusEnum.INCLUDED.getCode().equals(status)) {
             result = BizDemandStatusEnum.INCLUDE_PROJECT.getCode();
-        }else if(ProductDemandStatusEnum.PROGRESS.getCode().equals(status)){
+        } else if (ProductDemandStatusEnum.PROGRESS.getCode().equals(status)) {
             result = BizDemandStatusEnum.PROJECTING.getCode();
-        }else if(ProductDemandStatusEnum.ONLINE.getCode().equals(status)){
+        } else if (ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
             result = BizDemandStatusEnum.AVAILABLE.getCode();
-        }else{
+        } else {
             result = BizDemandStatusEnum.RECEIVED.getCode();
         }
 
         // 判断状态是否发生变更
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
-        if(!bizDemandDO.getStatus().equals(result)){
+        if (!bizDemandDO.getStatus().equals(result)) {
             // 状态更新
             bizDemandDO.setStatus(result);
             bizDemandDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getId());
@@ -103,23 +105,25 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     @Override
     public Map<Long, GroupResponse> getGroupListTreeMap(List<Long> queryDeptIdList) {
         Map<Long, GroupResponse> deptMap = Maps.newHashMap();
-        Set<Long> queryDeptIdSet =  Sets.newHashSet(queryDeptIdList);
+        Set<Long> queryDeptIdSet = Sets.newHashSet(queryDeptIdList);
         GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
-        for (GroupResponse childNode : rootNode.getChildNode()){
+        for (GroupResponse childNode : rootNode.getChildNode()) {
             dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
         }
         return deptMap;
     }
 
-    public void dfsGroupListTree(GroupResponse node, Map<Long, GroupResponse> deptMap, Set<Long> queryDeptIdSet, String name, Boolean isInsert){
+    public void dfsGroupListTree(GroupResponse node, Map<Long, GroupResponse> deptMap, Set<Long> queryDeptIdSet, String name, Boolean isInsert) {
         name = name + node.getGroupName();
         Long deptId = Long.valueOf(node.getGroupId());
-        if(isInsert || queryDeptIdSet.contains(deptId)){
+        if (isInsert || queryDeptIdSet.contains(deptId)) {
             isInsert = true;
             deptMap.put(deptId, node);
         }
         // 如果为叶节点直接返回
-        if(node.getChildNode() == null){return;}
+        if (node.getChildNode() == null) {
+            return;
+        }
 
         name = name + CommonConstant.JOIN_LINE;
         for (GroupResponse childNode : node.getChildNode()) {
@@ -128,7 +132,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     }
 
     @Override
-    public String getDeptChainName(Long deptId){
+    public String getDeptChainName(Long deptId) {
         StringBuilder deptName = new StringBuilder();
         List<GroupResponse> groupChain = innerGroupClient.getGroupChain(deptId);
         groupChain.remove(groupChain.size() - 1);
@@ -138,23 +142,27 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     }
 
     @Override
-    public Date getProjectEndDate(Long bizDemandId){
+    public Date getProjectEndDate(Long bizDemandId) {
         // 获取该业务需求所关联的产品需求
         List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByBizDemandId(bizDemandId);
-        if(productBizDemandDOList.isEmpty()){return null;}
+        if (productBizDemandDOList.isEmpty()) {
+            return null;
+        }
 
         // 获取关联的产品需求相关的项目
         List<Long> productDemandIdList = productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList());
         List<ProjectDO> projectDOList = projectMapper.selectByProductDemandIdList(productDemandIdList);
-        if(projectDOList.isEmpty()){return null;}
+        if (projectDOList.isEmpty()) {
+            return null;
+        }
 
         Date result = null;
         for (ProjectDO projectDO : projectDOList) {
-            Date projectEndDate = projectDO.getActualEndDate() == null ? projectDO.getPlanEndDate(): projectDO.getActualEndDate();
-            if(result == null){
+            Date projectEndDate = projectDO.getActualEndDate() == null ? projectDO.getPlanEndDate() : projectDO.getActualEndDate();
+            if (result == null) {
                 result = projectEndDate;
-            }else{
-                result = result.after(projectEndDate)? result: projectEndDate;
+            } else {
+                result = result.after(projectEndDate) ? result : projectEndDate;
             }
         }
         return result;
@@ -163,10 +171,10 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     @Override
     public BaseResult<PageQueryResult<BizDemandVO>> page(BizDemandListCondition bizDemandListCondition) {
         Map<Long, GroupResponse> deptNodeMap = null;
-        Set<Long> queryDeptIdSet =  Sets.newHashSet(bizDemandListCondition.getDeptIdList());
+        Set<Long> queryDeptIdSet = Sets.newHashSet(bizDemandListCondition.getDeptIdList());
 
         // 如果查询条件有部门id，收集子部门id及所需部门的完整名
-        if(!CollectionUtils.isEmpty(queryDeptIdSet)){
+        if (!CollectionUtils.isEmpty(queryDeptIdSet)) {
             deptNodeMap = getGroupListTreeMap(Lists.newArrayList(queryDeptIdSet));
             // 替换查询部门id条件
             bizDemandListCondition.setDeptIdList(Lists.newArrayList(deptNodeMap.keySet()));
@@ -181,21 +189,26 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
 
         // 如果查询条件没有部门id，收集完整名
-        if(CollectionUtils.isEmpty(queryDeptIdSet)){
+        if (CollectionUtils.isEmpty(queryDeptIdSet)) {
             queryDeptIdSet.addAll(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
             deptNodeMap = getGroupListTreeMap(Lists.newArrayList(queryDeptIdSet));
         }
 
         // 信息填充
         for (BizDemandVO bizDemandVO : bizDemandVOList) {
-            bizDemandVO.setDeptName(deptNodeMap.get(bizDemandVO.getDeptId()).getGroupName());
-            bizDemandVO.setDeptDeleteFlag(deptNodeMap.get(bizDemandVO.getDeptId()).getDeleteFlag());
+            GroupResponse response = deptNodeMap.get(bizDemandVO.getDeptId());
+            if (response == null) {
+                log.info("没有找到部门,id为:{}", bizDemandVO.getDeptId());
+            } else {
+                bizDemandVO.setDeptName(response.getGroupName());
+                bizDemandVO.setDeptDeleteFlag(response.getDeleteFlag());
+            }
             bizDemandVO.setStatusText(BizDemandStatusEnum.getTextByCode(bizDemandVO.getStatus()));
             bizDemandVO.setPriorityText(PriorityEnum.getTextChineseByCode(bizDemandVO.getPriority()));
             bizDemandVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandVO.getPlanReleaseDate()));
         }
 
-        bizDemandVOList.forEach( e -> {
+        bizDemandVOList.forEach(e -> {
             e.setStatusText(BizDemandStatusEnum.getTextByCode(e.getStatus()));
             e.setPriorityText(PriorityEnum.getTextChineseByCode(e.getPriority()));
             e.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(e.getPlanReleaseDate()));
