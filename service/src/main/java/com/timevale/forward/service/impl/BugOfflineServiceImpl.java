@@ -124,7 +124,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         // 信息填充
         bugOfflineVOList.forEach(e -> {
-            e.setEnvName(BugBelongEnum.getTextByCode(e.getEnv()));
+            e.setEnvName(BugEnvEnum.getTextByCode(e.getEnv()));
             e.setStatusName(BugStatusEnum.getTextByCode(e.getStatus()));
             e.setSourceName(BugSourceEnum.getTextByCode(e.getSource()));
             e.setBelongName(BugBelongEnum.getTextByCode(e.getBelong()));
@@ -149,6 +149,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         BugOfflineDO bugOfflineDO = BugOfflineCopier.INSTANCE.convert(bugOfflineAddReq);
         bugOfflineDO.setOpenCount(0);
         bugOfflineDO.setStatus(BugStatusEnum.OPEN.getCode());
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        bugOfflineDO.setLastOperatorId(userInfo.getId());
+        bugOfflineDO.setLastOperator(userInfo.getAlias() + "-" + userInfo.getName());
         bugOfflineMapper.insert(bugOfflineDO);
 
         //2.若存在附件,附件数据入库
@@ -934,7 +937,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
 
         //给bug相关的评论赋值
-        List<CommentDO> commentDOList = commentMapper.select(id, CommentTypeEnum.BUG.getCode());
+        List<CommentDO> commentDOList = commentMapper.select(id, CommentTypeEnum.BUG_OFFLINE.getCode());
         if (CollectionUtils.isNotEmpty(commentDOList)) {
             List<CommentVO> commentVOList = commentDOList.stream().map(CommentCopier.INSTANCE::change).collect(Collectors.toList());
             bugOfflineDetailVO.setCommentVOList(commentVOList);
@@ -961,7 +964,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         personMapper.update(personDO);
 
         //删除评论数据
-        commentMapper.deleteByToIdAndType(bugOfflineReq.getId(), CommentTypeEnum.BUG.getCode());
+        commentMapper.deleteByToIdAndType(bugOfflineReq.getId(), CommentTypeEnum.BUG_OFFLINE.getCode());
 
         //删除附件数据
         FileDO fileDO = new FileDO();

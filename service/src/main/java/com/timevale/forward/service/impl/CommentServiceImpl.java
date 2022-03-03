@@ -43,6 +43,9 @@ public class CommentServiceImpl implements CommentService {
     TaskMapper taskMapper;
 
     @Resource
+    private BugOfflineMapper bugOfflineMapper;
+
+    @Resource
     CommentMapper commentMapper;
 
     @Resource
@@ -86,7 +89,7 @@ public class CommentServiceImpl implements CommentService {
         }else if(CommentTypeEnum.TASK.getCode().equals(type)){
             name = taskMapper.getById(toId).getName();
         }else{
-            name = "线下BUG";
+            name = bugOfflineMapper.selectById(toId).getName();
         }
 
         // 发送通知

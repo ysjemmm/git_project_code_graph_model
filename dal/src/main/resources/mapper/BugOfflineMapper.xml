@@ -3,9 +3,9 @@
 <mapper namespace="com.timevale.forward.dal.dao.BugOfflineMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into bug_offline(project_id, product_line_id, name, status, operator, operator_id, proposer, proposer_id,
+        insert into bug_offline(project_id, product_line_id, name, status, operator, operator_id,last_operator,last_operator_id, proposer, proposer_id,
                                 priority, env, reason, source, belong, frequency, `desc`, open_count, create_man_id, create_man)
-        values (#{projectId}, #{productLineId}, #{name}, #{status}, #{operator}, #{operatorId}, #{proposer}, #{proposerId},
+        values (#{projectId}, #{productLineId}, #{name}, #{status}, #{operator}, #{operatorId},#{lastOperator}, #{lastOperatorId}, #{proposer}, #{proposerId},
                 #{priority}, #{env}, #{reason}, #{source}, #{belong}, #{frequency}, #{desc}, #{openCount}, #{createManId}, #{createMan})
     </insert>
 
@@ -99,7 +99,7 @@
         pl.name productLineName,
         bd.name bizDomainName
         from bug_offline bo
-        join project p on bo.project_id = p.id
+        left join project p on bo.project_id = p.id
         join product_line pl on pl.id = bo.product_line_id
         join biz_domain bd on pl.biz_domain_id = bd.id
         <where>
@@ -133,6 +133,12 @@
             <if test="productLineIds != null and productLineIds.size() > 0">
                 and bo.product_line_id in
                 <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="bizDomainIds != null and bizDomainIds.size() > 0">
+                and bd.id in
+                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
@@ -173,11 +179,11 @@
                 and bo.modify_date &gt;= #{modifyDateLeft} and bo.modify_date &lt;= #{modifyDateRight}
             </if>
             <if test="returnCountType != null and returnCount != null">
-                <if test="returnCountType = 0">and bo.return_count = #{returnCount}</if>
-                <if test="returnCountType = 1">and bo.return_count &gt; #{returnCount}</if>
-                <if test="returnCountType = 2">and bo.return_count &gt;= #{returnCount}</if>
-                <if test="returnCountType = 3">and bo.return_count &lt; #{returnCount}</if>
-                <if test="returnCountType = 4">and bo.return_count &lt;= #{returnCount}</if>
+                <if test="returnCountType == 0">and bo.return_count = #{returnCount}</if>
+                <if test="returnCountType == 1">and bo.return_count &gt; #{returnCount}</if>
+                <if test="returnCountType == 2">and bo.return_count &gt;= #{returnCount}</if>
+                <if test="returnCountType == 3">and bo.return_count &lt; #{returnCount}</if>
+                <if test="returnCountType == 4">and bo.return_count &lt;= #{returnCount}</if>
             </if>
             <if test="copier!=null and copier!='' ">
                 and bo.id IN (

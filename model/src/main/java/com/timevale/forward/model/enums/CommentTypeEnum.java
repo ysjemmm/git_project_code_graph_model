@@ -15,7 +15,7 @@ public enum CommentTypeEnum {
     PRODUCT_DEMAND(1,"产品需求"),
     BIZ_DEMAND(2,"业务需求"),
     TASK(3,"任务"),
-    BUG(4,"线下bug");
+    BUG_OFFLINE(4,"线下bug");
 
     private final Integer code;
     private final String text;

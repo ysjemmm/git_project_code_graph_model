@@ -46,6 +46,11 @@ public class BugOfflineListCondition {
     private List<Long> productLineIds;
 
     /**
+     * 业务域
+     */
+    private List<Long> bizDomainIds;
+
+    /**
      * 优先级
      */
     private List<Integer> priorities;
