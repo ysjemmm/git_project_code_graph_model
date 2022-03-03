@@ -12,7 +12,7 @@ import java.util.List;
  * @Author 望轩
  */
 public class BugOfflineTransMsgEvent extends MessageEvent {
-    private final String BUG_OFFLINE_TRANS = "%s转交给您一条【线下bug】：%s，状态为%s，请及时处理，可进入产研项目管理系统查看：%s";
+    private final String BUG_OFFLINE_TRANS = "### %s \n **%s**转交给您一条【线下bug】：**%s**，状态为**%s**，请及时处理。 \n *** \n[查看详情](%s)";
     /**
      * 操作人，花名-真名
      */
@@ -47,7 +47,7 @@ public class BugOfflineTransMsgEvent extends MessageEvent {
     public void run() {
         List<String> receivers = Lists.newArrayList(receiver);
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUG_MANAGEMENT.getText(), bugOfflineId);
-        String markdown = String.format(BUG_OFFLINE_TRANS, operator, bugName, bugStatus, singleUrl);
+        String markdown = String.format(BUG_OFFLINE_TRANS, MessageTitleEnum.BUG_OFFLINE_TRANS.getText(), operator, bugName, bugStatus, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(MessageTitleEnum.BUG_OFFLINE_TRANS.getText())

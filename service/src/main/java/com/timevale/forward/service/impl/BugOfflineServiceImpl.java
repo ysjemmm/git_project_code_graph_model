@@ -512,7 +512,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
 
         //判断当前操作人是否有权限
-        Boolean result = isPermission(bugOfflineDO.getOperatorId());
+        Boolean result = isPermission(bugOfflineDO.getProposerId());
         if (!result) {
             throw new BaseBizRuntimeException("您没有操作权限");
         }

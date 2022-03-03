@@ -12,7 +12,8 @@ import java.util.List;
  * @Author 望轩
  */
 public class BugOfflineCheckFailMsgEvent extends MessageEvent {
-    private final String BUG_OFFLINE_CHECK_FAIL = "您的【线下bug】验收失败：%s，请及时处理，可进入产研项目管理系统查看：%s";
+    private final String BUG_OFFLINE_CHECK_FAIL = "### %s\n 您的【线下bug】验收失败：**%s**，请及时处理。\n ***\n [查看详情](%s)";
+
     /**
      * bug标题
      */
@@ -37,7 +38,7 @@ public class BugOfflineCheckFailMsgEvent extends MessageEvent {
     public void run() {
         List<String> receivers = Lists.newArrayList(receiver);
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUG_MANAGEMENT.getText(), bugOfflineId);
-        String markdown = String.format(BUG_OFFLINE_CHECK_FAIL, bugName, singleUrl);
+        String markdown = String.format(BUG_OFFLINE_CHECK_FAIL, MessageTitleEnum.BUG_OFFLINE_CHECK_FAIL.getText(), bugName, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(MessageTitleEnum.BUG_OFFLINE_CHECK_FAIL.getText())

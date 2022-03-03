@@ -22,7 +22,7 @@ public abstract class MessageEvent extends ApplicationEvent {
         erpMessageClient = (ErpMessageClient) SpringContextUtil.getBean(ErpMessageClient.class);
 
         if(StringUtils.isEmpty(domainName)){
-            domainName = "http://forward-front-forward-v2.projectk8s.tsign.cn/";
+            domainName = "http://forward-front-forward-v3.projectk8s.tsign.cn/";
         }
     }
 
