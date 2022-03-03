@@ -17,6 +17,13 @@ public class ProjectListDO extends BaseDO {
      */
     private String name;
 
+
+    /**
+     * 是否客开项目
+     */
+    private Integer customerDev;
+
+
     /**
      * 优先级:0(P0),1(P1),2(P2),3(P3)
      */
@@ -30,7 +37,7 @@ public class ProjectListDO extends BaseDO {
      * 0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废
      */
     private Integer status;
-    
+
     /**
      * 项目计划开始时间
      */
