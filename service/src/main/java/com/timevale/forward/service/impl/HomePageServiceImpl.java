@@ -123,15 +123,13 @@ public class HomePageServiceImpl implements HomePageService {
             List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByMembers(allMyStaffWithSelf);
             if(UserTypeEnum.RD.getCode().equals(homePageBaseReq.getUserType())){
                 bugCount = (int)bugOfflineDOList.stream()
-                        .filter(e -> BugStatusEnum.OPEN.getCode().equals(e.getStatus())
-                                && BugStatusEnum.REPAIR.getCode().equals(e.getStatus())
-                                && e.getOperatorId().equals(userInfo.getId()))
+                        .filter(e -> e.getOperatorId().equals(userInfo.getId())
+                                && (BugStatusEnum.OPEN.getCode().equals(e.getStatus()) || BugStatusEnum.REPAIR.getCode().equals(e.getStatus())))
                         .count();
             }else{
                 bugCount = (int)bugOfflineDOList.stream()
-                        .filter(e -> BugStatusEnum.ACCEPTANCE.getCode().equals(e.getStatus())
-                                && BugStatusEnum.CONFIRM.getCode().equals(e.getStatus())
-                                && e.getProposerId().equals(userInfo.getId()))
+                        .filter(e -> e.getProposerId().equals(userInfo.getId())
+                                && (BugStatusEnum.ACCEPTANCE.getCode().equals(e.getStatus()) || BugStatusEnum.CONFIRM.getCode().equals(e.getStatus())))
                         .count();
             }
         }
