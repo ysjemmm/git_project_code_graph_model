@@ -3,7 +3,6 @@ package com.timevale.forward.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.annotation.FieldCompare;
 import com.timevale.forward.dal.condition.BugOfflineListCondition;
 import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.dao.*;
@@ -19,6 +18,7 @@ import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.handler.AbstractFieldCompareHandler;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
@@ -37,10 +37,7 @@ import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -49,7 +46,7 @@ import java.util.stream.Collectors;
  **/
 @Slf4j
 @RestService
-public class BugOfflineServiceImpl implements BugOfflineService {
+public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflineDO> implements BugOfflineService {
 
     @Resource
     MessageEventPublisher messageEventPublisher;
@@ -214,30 +211,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //4.bug_log记录
         BugOfflineMD oldBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(oldBugOfflineDO);
         BugOfflineMD newBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(newBugOfflineDO);
-        List<BugLogDO> bugLogDOList = compare(oldBugOfflineMD, newBugOfflineMD);
+        List<BugLogDO> bugLogDOList = commonCompare(oldBugOfflineMD, newBugOfflineMD);
         // 额外判断项目与产品
-        if (!Objects.equals(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId())) {
-            List<ProjectDO> projectDOList = projectMapper
-                    .getByIds(Lists.newArrayList(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId()));
-            Map<Long, String> projectMap = projectDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getName));
-
-            BugLogDO bugLogDO = new BugLogDO();
-            bugLogDO.setField(BugFieldEnum.PROJECTS.getText());
-            bugLogDO.setOldValue(projectMap.get(oldBugOfflineDO.getProjectId()));
-            bugLogDO.setNewValue(projectMap.get(newBugOfflineDO.getProjectId()));
-            bugLogDOList.add(bugLogDO);
-        }
-        if (!Objects.equals(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId())) {
-            List<ProductLineDO> productLineDOList = productLineMapper
-                    .selectByIds(Lists.newArrayList(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId()));
-            Map<Long, String> productLineMap = productLineDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProductLineDO::getName));
-
-            BugLogDO bugLogDO = new BugLogDO();
-            bugLogDO.setField(BugFieldEnum.PRODUCT_LINE.getText());
-            bugLogDO.setOldValue(productLineMap.get(oldBugOfflineDO.getProductLineId()));
-            bugLogDO.setNewValue(productLineMap.get(newBugOfflineDO.getProductLineId()));
-            bugLogDOList.add(bugLogDO);
-        }
+        bugLogDOList.addAll(compareExtraIfNecessary(oldBugOfflineDO, newBugOfflineDO));
         bugLogDOList.forEach(e -> {
             e.setMainId(bugOfflineModifyReq.getId());
             e.setType(BugLogTypeEnum.OFFLINE.getCode());
@@ -1032,62 +1008,32 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         return higherLevels.contains(account);
     }
 
-    public List<BugLogDO> compare(Object oldObj, Object newObj) {
-        Field[] oldFields = oldObj.getClass().getDeclaredFields();
-        Field[] newFields = newObj.getClass().getDeclaredFields();
+    @Override
+    protected List<BugLogDO> compareExtraIfNecessary(BugOfflineDO oldBugOfflineDO, BugOfflineDO newBugOfflineDO) {
+        List<BugLogDO> bugLogDOList=new ArrayList<>();
+        if (!Objects.equals(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId())) {
+            List<ProjectDO> projectDOList = projectMapper
+                    .getByIds(Lists.newArrayList(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId()));
+            Map<Long, String> projectMap = projectDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getName));
 
-        List<BugLogDO> result = Lists.newArrayList();
-        Map<String, Field> newFieldMap = Arrays.stream(newFields)
-                .filter(e -> {
-                    e.setAccessible(true);
-                    return e.getAnnotation(FieldCompare.class) != null;
-                })
-                .collect(Collectors.toMap(Field::getName, Function.identity()));
-
-        try {
-            for (Field oldField : oldFields) {
-                Field newField = newFieldMap.get(oldField.getName());
-
-                if (newField == null) {
-                    continue;
-                }
-
-                oldField.setAccessible(true);
-                newField.setAccessible(true);
-
-                Object oldValue = oldField.get(oldObj);
-                Object newValue = newField.get(newObj);
-
-                if (!Objects.equals(oldValue, newValue)) {
-                    FieldCompare annotation = oldField.getAnnotation(FieldCompare.class);
-
-                    String fieldName = annotation.fieldName();
-                    Class<?> fieldType = oldField.getType();
-
-                    String oldString = "";
-                    String newString = "";
-
-                    if (fieldType == String.class) {
-                        oldString = (String) oldField.get(oldObj);
-                        newString = (String) newField.get(newObj);
-                    } else if (fieldType == Integer.class) {
-                        Method method = annotation.enumClass().getMethod("getTextByCode", Integer.class);
-                        oldString = (String) method.invoke(null, oldValue);
-                        newString = (String) method.invoke(null, newValue);
-                    }
-
-                    BugLogDO bugLogDO = new BugLogDO();
-                    bugLogDO.setField(fieldName);
-                    bugLogDO.setOldValue(oldString);
-                    bugLogDO.setNewValue(newString);
-                    result.add(bugLogDO);
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            BugLogDO bugLogDO = new BugLogDO();
+            bugLogDO.setField(BugFieldEnum.PROJECTS.getText());
+            bugLogDO.setOldValue(projectMap.get(oldBugOfflineDO.getProjectId()));
+            bugLogDO.setNewValue(projectMap.get(newBugOfflineDO.getProjectId()));
+            bugLogDOList.add(bugLogDO);
         }
-        log.info("字段对比完成后,返回结果:{}", result);
-        return result;
+        if (!Objects.equals(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId())) {
+            List<ProductLineDO> productLineDOList = productLineMapper
+                    .selectByIds(Lists.newArrayList(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId()));
+            Map<Long, String> productLineMap = productLineDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProductLineDO::getName));
+
+            BugLogDO bugLogDO = new BugLogDO();
+            bugLogDO.setField(BugFieldEnum.PRODUCT_LINE.getText());
+            bugLogDO.setOldValue(productLineMap.get(oldBugOfflineDO.getProductLineId()));
+            bugLogDO.setNewValue(productLineMap.get(newBugOfflineDO.getProductLineId()));
+            bugLogDOList.add(bugLogDO);
+        }
+        return bugLogDOList;
     }
 }
 

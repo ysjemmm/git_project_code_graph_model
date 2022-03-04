@@ -40,12 +40,6 @@ public class BugLogVO extends ToString {
     @ApiModelProperty("按钮动作")
     private String action;
 
-    @ApiModelProperty("单据名称")
-    private String bugName;
-
-    @ApiModelProperty("变更内容")
-    private String content;
-
     @ApiModelProperty("经办人")
     private String operator;
 
