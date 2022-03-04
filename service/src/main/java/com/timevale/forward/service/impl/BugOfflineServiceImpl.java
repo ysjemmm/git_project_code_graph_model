@@ -766,7 +766,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                 new BugOfflineCheckFailMsgEvent(
                         this,
                         userInfo.getAlias() + "-" + userInfo.getName(),
-                        bugOfflineDO.getName(),
+                        bugOfflineDO.getOperatorId(),
                         bugOfflineDO.getId()
                 )
         );
@@ -844,8 +844,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                 new BugOfflineOpenAgainMsgEvent(
                         this,
                         userInfo.getAlias() + "-" + userInfo.getName(),
-                        bugOfflineDO.getOperatorId(),
                         bugOfflineDO.getName(),
+                        bugOfflineDO.getOperatorId(),
                         bugOfflineDO.getId()
                 )
         );
