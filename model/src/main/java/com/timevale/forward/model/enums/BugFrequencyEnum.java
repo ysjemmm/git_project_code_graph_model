@@ -18,7 +18,7 @@ public enum BugFrequencyEnum {
     /**
      * 偶现
      */
-    OCCASIONALLY(2, "偶现");
+    OCCASIONALLY(1, "偶现");
 
     private final Integer code;
     private final String text;
