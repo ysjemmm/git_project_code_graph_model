@@ -514,13 +514,14 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         //保存老的状态
         String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
 
-        //bug状态变更为"延期修复",上一环节的经办人变成经办人,现在的经办人变成提出人,延期修复原因更新
+        //bug状态变更为"延期修复",上一环节的经办人变成经办人,现在的经办人变成提出人,延期修复原因更新,不用修复原因清空
         bugOfflineDO.setStatus(BugStatusEnum.POSTPONE_REPAIR.getCode());
         bugOfflineDO.setLastOperator(operator);
         bugOfflineDO.setLastOperatorId(operatorId);
         bugOfflineDO.setOperator(bugOfflineDO.getProposer());
         bugOfflineDO.setOperatorId(bugOfflineDO.getProposerId());
         bugOfflineDO.setDelayHandleReason(bugOfflineDelayHandleReq.getDelayHandleReason());
+        bugOfflineDO.setUnHandleReason(null);
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
@@ -578,8 +579,9 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         //保存老的状态
         String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
 
-        //线下bug的状态变更为"待修复"
+        //线下bug的状态变更为"待修复"，不用修复原因清空
         bugOfflineDO.setStatus(BugStatusEnum.REPAIR.getCode());
+        bugOfflineDO.setUnHandleReason(null);
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
