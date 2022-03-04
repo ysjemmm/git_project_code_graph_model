@@ -342,7 +342,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         BugLogDO bugLog = new BugLogDO();
         bugLog.setField(BugFieldEnum.UN_HANDLE_REASON.getText());
         //如果有老的不用修复原因，需要给老值赋值
-        if(unHandleReason != null){
+        if (unHandleReason != null) {
             bugLog.setOldValue(BugUnHandleReasonEnum.getTextByCode(unHandleReason));
         }
         bugLog.setNewValue(BugUnHandleReasonEnum.getTextByCode(bugOfflineUnHandleReq.getUnHandleReason()));
@@ -1020,7 +1020,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
 
     @Override
     protected List<BugLogDO> compareExtraIfNecessary(BugOfflineDO oldBugOfflineDO, BugOfflineDO newBugOfflineDO) {
-        List<BugLogDO> bugLogDOList=new ArrayList<>();
+        List<BugLogDO> bugLogDOList = new ArrayList<>();
         if (!Objects.equals(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId())) {
             List<ProjectDO> projectDOList = projectMapper
                     .getByIds(Lists.newArrayList(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId()));
