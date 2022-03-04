@@ -181,13 +181,15 @@ public class TaskComponentImpl implements TaskComponent {
             taskStatusUpdateDO.setPreUpdate(preUpdate);
             taskStatusUpdateDO.setUpdated(TaskStatusEnum.INVALID.getCode());
             taskMapper.updateStatusAsProjectStatusChange(taskStatusUpdateDO);
-            //解除任务产品需求关联
-            List<Long> taskIds = existTaskDO.stream().map(TaskDO::getId).collect(Collectors.toList());
-            taskProductDemandComponent.update(taskIds, null);
 
+            List<Long> taskIds = existTaskDO.stream().filter(a -> (preUpdate.contains(a.getStatus()))).map(TaskDO::getId).collect(Collectors.toList());
+            log.info("项目状态改变,待执行,进行中,已暂停的任务,taskIds:{}",taskIds);
+            //解除任务产品需求关联
+            taskProductDemandComponent.update(taskIds, null);
             taskTimeMapper.delete(taskIds,null);
 
             preUpdate.remove(TaskStatusEnum.SUSPEND.getCode());
+            // 待执行,进行中任务变成作废时,需要删除钉钉待办
             existTaskDO = existTaskDO.stream().filter(a -> (preUpdate.contains(a.getStatus()))).collect(Collectors.toList());
             existTaskDO.forEach(a -> {
                 deleteTodoTask(a.getTodoId());

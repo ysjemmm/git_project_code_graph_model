@@ -55,4 +55,6 @@ public class BugLogVO extends ToString {
     @ApiModelProperty("创建时间")
     private Date createDate;
 
+    @ApiModelProperty("系统当前时间")
+    private Date currentDate;
 }

@@ -23,7 +23,7 @@ public enum MessageTitleEnum {
     BUG_OFFLINE_CHECK_FAIL("线下bug验收失败通知"),
     BUG_OFFLINE_DELAY_REPAIR("线下bug延期修复通知"),
     BUG_OFFLINE_NO_REPAIR("线下bug不用修复通知"),
-    BUG_OFFLINE_TRANS("线下bug转交"),
+    BUG_OFFLINE_TRANS("线下bug转交通知"),
     BUG_OFFLINE_REJECT("线下bug不用修复被拒绝通知"),
     BUG_OFFLINE_OPEN_AGAIN("线下bug重新打开通知")
     ;
