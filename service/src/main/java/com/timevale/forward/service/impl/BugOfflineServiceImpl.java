@@ -439,6 +439,9 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         //保存老的状态
         String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
 
+        //保存老的不用修复原因
+        Integer unHandleReason = bugOfflineDO.getUnHandleReason();
+
         //状态变为  bug打开,上一环节的经办人变成当前经办人,当前经办人变成上一环节的经办人，清空不用修复原因
         bugOfflineDO.setStatus(BugStatusEnum.OPEN.getCode());
         bugOfflineDO.setLastOperatorId(operatorId);
@@ -459,7 +462,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
 
         BugLogDO bugLog = new BugLogDO();
         bugLog.setField(BugFieldEnum.UN_HANDLE_REASON.getText());
-        bugLog.setOldValue(BugUnHandleReasonEnum.getTextByCode(bugOfflineDO.getUnHandleReason()));
+        bugLog.setOldValue(BugUnHandleReasonEnum.getTextByCode(unHandleReason));
         bugLog.setMainId(bugOfflineReq.getId());
         bugLog.setType(BugLogTypeEnum.OFFLINE.getCode());
         //插入bug日志内容变更记录
