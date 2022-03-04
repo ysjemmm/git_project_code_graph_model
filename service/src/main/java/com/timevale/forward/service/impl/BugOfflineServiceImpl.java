@@ -356,7 +356,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //内容变更
         BugLogDO bugLog = new BugLogDO();
         bugLog.setField(BugFieldEnum.UN_HANDLE_REASON.getText());
-        bugLog.setOldValue(BugUnHandleReasonEnum.NOT.getText());
         bugLog.setNewValue(BugUnHandleReasonEnum.getTextByCode(bugOfflineUnHandleReq.getUnHandleReason()));
         bugLog.setMainId(bugOfflineUnHandleReq.getId());
         bugLog.setType(BugLogTypeEnum.OFFLINE.getCode());
@@ -472,7 +471,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         BugLogDO bugLog = new BugLogDO();
         bugLog.setField(BugFieldEnum.UN_HANDLE_REASON.getText());
         bugLog.setOldValue(BugUnHandleReasonEnum.getTextByCode(bugOfflineDO.getUnHandleReason()));
-        bugLog.setNewValue(BugUnHandleReasonEnum.NOT.getText());
         bugLog.setMainId(bugOfflineReq.getId());
         bugLog.setType(BugLogTypeEnum.OFFLINE.getCode());
         //插入bug日志内容变更记录
@@ -544,7 +542,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         BugLogDO bugLog = new BugLogDO();
         bugLog.setField(BugFieldEnum.DELAY_HANDLE_REASON.getText());
-        bugLog.setOldValue(BugUnHandleReasonEnum.NOT.getText());
         bugLog.setNewValue(bugOfflineDelayHandleReq.getDelayHandleReason());
         bugLog.setMainId(bugOfflineDelayHandleReq.getId());
         bugLog.setType(BugLogTypeEnum.OFFLINE.getCode());
@@ -838,7 +835,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         BugLogDO bugLog = new BugLogDO();
         bugLog.setField(BugFieldEnum.DELAY_HANDLE_REASON.getText());
         bugLog.setOldValue(bugOfflineDO.getDelayHandleReason());
-        bugLog.setNewValue(BugUnHandleReasonEnum.NOT.getText());
         bugLog.setMainId(bugOfflineReq.getId());
         bugLog.setType(BugLogTypeEnum.OFFLINE.getCode());
         //插入bug日志内容变更记录

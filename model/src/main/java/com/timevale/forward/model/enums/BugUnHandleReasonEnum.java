@@ -33,12 +33,7 @@ public enum BugUnHandleReasonEnum {
     /**
      * 产品需求调整
      */
-    PRODUCT_DEMAND_ADJUSTMENT(4, "产品需求调整"),
-
-    /**
-     * 无
-     */
-    NOT(10, "无");
+    PRODUCT_DEMAND_ADJUSTMENT(4, "产品需求调整");
 
     private final Integer code;
     private final String text;
