@@ -988,7 +988,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
         PageInfo<BugLogDO> pageInfo = new PageInfo<>(bugLogDOList);
 
-
         PageQueryResult<BugLogVO> pageQueryResult = new PageQueryResult<>();
         //如果没有查询到日志，直接返回空的数据
         if (CollectionUtils.isEmpty(bugLogDOList)) {
@@ -1000,8 +999,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         //bugLogDO  -->  bugLogVO
         List<BugLogVO> bugLogVOList = bugLogDOList.stream().map(BugLogCopier.INSTANCE::convert).collect(Collectors.toList());
-        //给bug内容变更记录类型的名字赋值
-        bugLogVOList.forEach(bugLogVO -> bugLogVO.setTypeName(BugLogTypeEnum.getTextByCode(bugLogVO.getType())));
+        //给bug内容变更记录类型的名字赋值，给当前时间赋值
+        bugLogVOList.forEach(bugLogVO -> {
+            bugLogVO.setTypeName(BugLogTypeEnum.getTextByCode(bugLogVO.getType()));
+            bugLogVO.setCurrentDate(new Date());
+        });
 
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         pageQueryResult.setResultList(bugLogVOList);
