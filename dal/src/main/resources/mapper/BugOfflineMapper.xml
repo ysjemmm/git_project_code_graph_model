@@ -205,11 +205,19 @@
         delay_handle_reason, unhandle_reason, is_deleted, create_man_id, create_man, create_date, modify_man_id,
         modify_man, modify_date
         from bug_offline
-        where (operator_id, project_id) in
-        <foreach collection="userIds" separator="," item="item" open="(" close=")">
-            (#{item}, #{item})
-        </foreach>
-        and is_deleted = false
+        <where>
+            <if test="true">is_deleted = false</if>
+            <if test="userIds != null and userIds.size() > 0">
+                and operator_id in
+                <foreach collection="userIds" separator="," item="item" open="(" close=")">
+                    #{item}
+                </foreach>
+                or proposer_id in
+                <foreach collection="userIds" separator="," item="item" open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
     </select>
 
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
