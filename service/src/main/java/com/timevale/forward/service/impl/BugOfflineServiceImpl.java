@@ -23,6 +23,7 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -84,6 +85,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         // 转换查询条件
         BugOfflineListCondition condition = BugOfflineCopier.INSTANCE.convert(bugOfflineQueryList);
+        // 时间处理
+        condition.setCreateDateLeft(DateUtil.getStartOfDay(condition.getCreateDateLeft()));
+        condition.setCreateDateRight(DateUtil.getEndOfDay(condition.getCreateDateRight()));
+        condition.setModifyDateLeft(DateUtil.getStartOfDay(condition.getModifyDateLeft()));
+        condition.setModifyDateRight(DateUtil.getEndOfDay(condition.getModifyDateRight()));
 
         // 标志是否有对应数据
         boolean resultIsEmpty = false;
