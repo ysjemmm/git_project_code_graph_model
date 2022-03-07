@@ -502,7 +502,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         }
 
         //判断当前操作人是否有权限
-        Boolean result = isPermission(bugOfflineDO.getProposerId());
+        Boolean result = isPermission(bugOfflineDO.getOperatorId());
         if (!result) {
             throw new BaseBizRuntimeException("您没有操作权限");
         }
