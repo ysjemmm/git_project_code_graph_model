@@ -587,7 +587,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.CONFIRM_REPAIR.getText());
         bugLogDO.setOldValue(oldValue);
-        bugLogDO.setNewValue(BugStatusEnum.CONFIRM.getText());
+        bugLogDO.setNewValue(BugStatusEnum.REPAIR.getText());
         bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
 
