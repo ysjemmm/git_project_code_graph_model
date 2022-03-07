@@ -45,4 +45,12 @@ public interface FileMapper {
      */
     int update(FileDO fileDO);
 
+    /**
+     * 删除
+     *
+     * @param fileDO fileDO
+     * @return int
+     */
+    int updateFileId(FileDO fileDO);
+
 }

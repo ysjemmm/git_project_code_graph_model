@@ -23,4 +23,7 @@ public class FileAddReq extends BaseReq {
     @ApiModelProperty(value = "文件id")
     @NotNull(message = "文件id不能为空")
     private String fileId;
+
+    @ApiModelProperty(value = "文件类型(选填):0产品线图片")
+    private Integer type;
 }
