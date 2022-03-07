@@ -106,12 +106,14 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
                     teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
                     resultIsEmpty = teamMemberIdList.isEmpty();
                 }
+                condition.setProposerIds(teamMemberIdList);
             } else if (AscriptionEnum.TEAM_RECEIVE.toString().equals(ascription)) {
-                Set<String> createIdSet = Sets.newHashSet(condition.getOperatorIds());
-                if (!createIdSet.isEmpty()) {
-                    teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
+                Set<String> operatorSet = Sets.newHashSet(condition.getOperatorIds());
+                if (!operatorSet.isEmpty()) {
+                    teamMemberIdList = teamMemberIdList.stream().filter(operatorSet::contains).collect(Collectors.toList());
                     resultIsEmpty = teamMemberIdList.isEmpty();
                 }
+                condition.setOperatorIds(teamMemberIdList);
             }
         }
         if (resultIsEmpty) {
