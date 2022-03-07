@@ -21,7 +21,7 @@ public class ProductDemandAddReq extends BaseReq {
     @NotNull(message = "需求名称不能为空")
     private String name;
 
-    @ApiModelProperty("优先级:0(P0),1(P1),2(P2),3(P3)")
+    @ApiModelProperty("优先级:0(P0),10(P1),20(P2),30(P3)")
     @NotNull(message = "优先级不能为空")
     private Integer priority;
 
