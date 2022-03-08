@@ -520,8 +520,6 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugOfflineDO.setStatus(BugStatusEnum.POSTPONE_REPAIR.getCode());
         bugOfflineDO.setLastOperator(operator);
         bugOfflineDO.setLastOperatorId(operatorId);
-        bugOfflineDO.setOperator(bugOfflineDO.getProposer());
-        bugOfflineDO.setOperatorId(bugOfflineDO.getProposerId());
         bugOfflineDO.setDelayHandleReason(bugOfflineDelayHandleReq.getDelayHandleReason());
         bugOfflineDO.setUnHandleReason(null);
         bugOfflineMapper.update(bugOfflineDO);
@@ -635,8 +633,6 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugOfflineDO.setStatus(BugStatusEnum.ACCEPTANCE.getCode());
         bugOfflineDO.setLastOperator(operator);
         bugOfflineDO.setLastOperatorId(operatorId);
-        bugOfflineDO.setOperator(bugOfflineDO.getProposer());
-        bugOfflineDO.setOperatorId(bugOfflineDO.getProposerId());
 
         bugOfflineMapper.update(bugOfflineDO);
 
