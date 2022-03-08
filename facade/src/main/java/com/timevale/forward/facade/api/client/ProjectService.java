@@ -112,12 +112,4 @@ public interface ProjectService {
      * @return 是否关联
      */
     BaseResult<Boolean> switchProductLine(Long projectId, Long productLineId);
-
-    /**
-     * 是否可以切换发布正式，校验线下bug的状态
-     *
-     * @param projectId 项目id
-     * @return 成功与否
-     */
-    BaseResult<Boolean> checkProductRelease(Long projectId);
 }

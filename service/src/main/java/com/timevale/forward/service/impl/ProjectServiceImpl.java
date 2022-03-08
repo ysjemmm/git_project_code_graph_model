@@ -239,10 +239,10 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectModifyReq);
         projectDO.setPmName(projectModifyReq.getPm().getUserName());
         projectDO.setPmId(projectModifyReq.getPm().getUserId());
-        List<ProjectNodeDO> projectNodeDO = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
+        List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
         Integer status = projectMapper.get(projectModifyReq.getId()).getStatus();
         projectDO.setStatus(status);
-        fillInfoWhenModify(projectNodeDO, projectDO);
+        fillInfoWhenModify(projectNodeDOList, projectDO);
 
         taskComponent.containProductLineInTask(projectDO.getId(), projectDO.getProductLineIds());
         // 产品线
@@ -265,8 +265,12 @@ public class ProjectServiceImpl implements ProjectService {
         personComponent.update(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         // 节点信息
-        if (CollectionUtils.isNotEmpty(projectModifyReq.getProjectNodes())) {
-            projectNodeComponent.add(projectNodeDO, projectDO.getId());
+        if (CollectionUtils.isNotEmpty(projectNodeDOList)) {
+            boolean match = projectNodeDOList.stream().anyMatch(e -> ProjectNodeEnum.PUBLISH_OFFICIAL.getProjectNodeName().equals(e.getName()));
+            if(match && !checkProductRelease(projectModifyReq.getId())){
+                throw new BaseBizRuntimeException("该项目还有bug未关闭，请关闭后再发布");
+            }
+            projectNodeComponent.add(projectNodeDOList, projectDO.getId());
         }
         return BaseResult.success(true);
     }
@@ -415,8 +419,7 @@ public class ProjectServiceImpl implements ProjectService {
         return BaseResult.success(!result);
     }
 
-    @Override
-    public BaseResult<Boolean> checkProductRelease(Long projectId) {
+    private boolean checkProductRelease(Long projectId) {
         List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);
 
         List<BugOfflineDO> releaseList = bugOfflineDOList.stream()
@@ -426,14 +429,14 @@ public class ProjectServiceImpl implements ProjectService {
                 .collect(Collectors.toList());
         // 如果不仅为完成、关闭、延期修复，返回报错
         if(releaseList.size() != bugOfflineDOList.size()){
-            throw new BaseBizRuntimeException("该项目还有bug未关闭，请关闭后再发布");
+            return false;
         }
 
         List<BugOfflineDO> postponeList = releaseList.stream()
                 .filter(e -> BugStatusEnum.POSTPONE_REPAIR.getCode().equals(e.getStatus()))
                 .collect(Collectors.toList());
         bugOfflineMapper.unlinkBugOffline(postponeList);
-        return BaseResult.success(true);
+        return true;
     }
 
     private void fillInfoWhenModify(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
