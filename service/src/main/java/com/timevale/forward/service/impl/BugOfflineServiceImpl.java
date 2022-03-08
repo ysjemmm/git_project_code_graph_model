@@ -263,13 +263,14 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugOfflineDO.setOperator(bugOfflineTransferReq.getUserName());
         bugOfflineMapper.update(bugOfflineDO);
 
+        //内容变更
         BugLogDO bugLogDO = new BugLogDO();
-        bugLogDO.setAction(ButtonActionEnum.TRANSMIT.getText());
-        bugLogDO.setOldValue(BugStatusEnum.getTextByCode(bugOfflineDO.getStatus()));
-        bugLogDO.setNewValue(BugStatusEnum.getTextByCode(bugOfflineDO.getStatus()));
+        bugLogDO.setField(BugFieldEnum.OPERATOR.getText());
+        bugLogDO.setOldValue(userInfo.getAlias() + "-" + userInfo.getName());
+        bugLogDO.setNewValue(bugOfflineTransferReq.getUserName());
         bugLogDO.setMainId(bugOfflineTransferReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        //往bug日志表中插入bug状态数据
+        //往bug日志表中插入bug内容变更数据
         bugLogMapper.insert(bugLogDO);
 
         //发送消息
