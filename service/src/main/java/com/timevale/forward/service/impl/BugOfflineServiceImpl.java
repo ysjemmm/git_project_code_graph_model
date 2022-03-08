@@ -784,17 +784,17 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         }
 
         //校验当前状态
-        if (!bugOfflineDO.getStatus().equals(BugStatusEnum.COMPLETE.getCode())
+        /*if (!bugOfflineDO.getStatus().equals(BugStatusEnum.COMPLETE.getCode())
                 && !bugOfflineDO.getStatus().equals(BugStatusEnum.POSTPONE_REPAIR.getCode())
                 && !bugOfflineDO.getStatus().equals(BugStatusEnum.CLOSE.getCode())) {
             throw new BaseBizRuntimeException("当前状态不允许点击<重新打开>按钮");
-        }
+        }*/
 
         //判断当前操作人是否有权限
-        Boolean result = isPermission(bugOfflineDO.getProposerId());
+        /*Boolean result = isPermission(bugOfflineDO.getProposerId());
         if (!result) {
             throw new BaseBizRuntimeException("您没有操作权限");
-        }
+        }*/
 
         //获取当前经办人和上一环节经办人
         String operatorId = bugOfflineDO.getOperatorId();
@@ -832,7 +832,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugLogMapper.insert(bugLogDO);
 
         //如果延期修复原因存在老的值则往bug日志表里插入一条记录
-        if (delayHandleReason != null) {
+        if (delayHandleReason != null && delayHandleReason != "") {
             BugLogDO bugLog = new BugLogDO();
             bugLog.setField(BugFieldEnum.DELAY_HANDLE_REASON.getText());
             bugLog.setOldValue(delayHandleReason);
