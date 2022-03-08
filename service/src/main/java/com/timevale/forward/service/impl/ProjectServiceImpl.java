@@ -415,6 +415,27 @@ public class ProjectServiceImpl implements ProjectService {
         return BaseResult.success(!result);
     }
 
+    @Override
+    public BaseResult<Boolean> checkProductRelease(Long projectId) {
+        List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);
+
+        List<BugOfflineDO> releaseList = bugOfflineDOList.stream()
+                .filter(e -> BugStatusEnum.COMPLETE.getCode().equals(e.getStatus())
+                        || BugStatusEnum.CLOSE.getCode().equals(e.getStatus())
+                        || BugStatusEnum.POSTPONE_REPAIR.getCode().equals(e.getStatus()))
+                .collect(Collectors.toList());
+        // 如果不仅为完成、关闭、延期修复，返回报错
+        if(releaseList.size() != bugOfflineDOList.size()){
+            throw new BaseBizRuntimeException("该项目还有bug未关闭，请关闭后再发布");
+        }
+
+        List<BugOfflineDO> postponeList = releaseList.stream()
+                .filter(e -> BugStatusEnum.POSTPONE_REPAIR.getCode().equals(e.getStatus()))
+                .collect(Collectors.toList());
+        bugOfflineMapper.unlinkBugOffline(postponeList);
+        return BaseResult.success(true);
+    }
+
     private void fillInfoWhenModify(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
         Map<String, ProjectNodeDO> nodeMap = projectNodes
                 .stream()

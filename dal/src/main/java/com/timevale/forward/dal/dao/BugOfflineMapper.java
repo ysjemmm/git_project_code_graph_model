@@ -29,6 +29,14 @@ public interface BugOfflineMapper {
     int update(BugOfflineDO bugOfflineDO);
 
     /**
+     * 线下bug断开项目
+     *
+     * @param bugOfflineDOList 线下bug列表
+     * @return 影响行数
+     */
+    int unlinkBugOffline(@Param("bugOfflineDOList")List<BugOfflineDO> bugOfflineDOList);
+
+    /**
      * 选择id获取DO
      *
      * @param userIds 用户id
