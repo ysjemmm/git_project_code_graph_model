@@ -828,13 +828,16 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
 
-        BugLogDO bugLog = new BugLogDO();
-        bugLog.setField(BugFieldEnum.DELAY_HANDLE_REASON.getText());
-        bugLog.setOldValue(delayHandleReason);
-        bugLog.setMainId(bugOfflineReq.getId());
-        bugLog.setType(BugLogTypeEnum.OFFLINE.getCode());
-        //插入bug日志内容变更记录
-        bugLogMapper.insert(bugLog);
+        //如果延期修复原因存在老的值则往bug日志表里插入一条记录
+        if (delayHandleReason != null) {
+            BugLogDO bugLog = new BugLogDO();
+            bugLog.setField(BugFieldEnum.DELAY_HANDLE_REASON.getText());
+            bugLog.setOldValue(delayHandleReason);
+            bugLog.setMainId(bugOfflineReq.getId());
+            bugLog.setType(BugLogTypeEnum.OFFLINE.getCode());
+            //插入bug日志内容变更记录
+            bugLogMapper.insert(bugLog);
+        }
 
         messageEventPublisher.publish(
                 new BugOfflineOpenAgainMsgEvent(
