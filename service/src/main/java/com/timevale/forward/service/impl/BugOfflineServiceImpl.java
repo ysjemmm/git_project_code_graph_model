@@ -820,6 +820,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
             bugOfflineDO.setOpenCount(bugOfflineDO.getOpenCount() + 1);
         }
         bugOfflineDO.setDelayHandleReason(null);
+        bugOfflineDO.setUnHandleReason(null);
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
