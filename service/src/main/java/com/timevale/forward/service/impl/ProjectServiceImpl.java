@@ -267,7 +267,8 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 节点信息
         if (CollectionUtils.isNotEmpty(projectNodeDOList)) {
-            boolean match = projectNodeDOList.stream().anyMatch(e -> ProjectNodeEnum.PUBLISH_OFFICIAL.getProjectNodeName().equals(e.getName()));
+            boolean match = projectNodeDOList.stream().anyMatch(e ->
+                    ProjectNodeEnum.PUBLISH_OFFICIAL.getProjectNodeName().equals(e.getName()) && e.getActualDate() != null);
             if(match && !checkProductRelease(projectModifyReq.getId())){
                 throw new BaseBizRuntimeException("该项目还有bug未关闭，请关闭后再发布");
             }
