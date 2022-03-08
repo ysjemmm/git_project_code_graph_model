@@ -231,7 +231,7 @@ public class TaskComponentImpl implements TaskComponent {
                 .stream().map(TaskDO::getProductLineId).collect(Collectors.toList());
         productLineIdsInTask.forEach(a -> {
             if (!productLineIdsInProject.contains(a)) {
-                throw new BaseBizRuntimeException("项目中的产品线需包含该项目下任务中的产品线,请修改产品线后重试");
+                throw new BaseBizRuntimeException("该产品线已关联任务，无法修改");
             }
         });
 

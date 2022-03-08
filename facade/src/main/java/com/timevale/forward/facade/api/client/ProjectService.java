@@ -103,13 +103,4 @@ public interface ProjectService {
      * @return 项目简单VO列表
      */
     BaseResult<List<ProjectBaseVO>> getProjectByProductLine(Long productLineId);
-
-    /**
-     * 是否可以切换产品线，校验该产品线是否关联该项目下的任务或线下bug
-     *
-     * @param projectId     项目id
-     * @param productLineId 产品线id
-     * @return 是否关联
-     */
-    BaseResult<Boolean> switchProductLine(Long projectId, Long productLineId);
 }

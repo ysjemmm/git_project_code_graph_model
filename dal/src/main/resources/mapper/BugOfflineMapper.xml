@@ -241,7 +241,7 @@
 
     <update id="unlinkBugOffline">
         update bug_offline
-        set project_id = null
+        set project_id = 0
         <where>
             <if test="bugOfflineDOList != null and bugOfflineDOList.size() > 0">
                 and id in

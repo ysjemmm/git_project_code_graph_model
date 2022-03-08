@@ -245,6 +245,7 @@ public class ProjectServiceImpl implements ProjectService {
         fillInfoWhenModify(projectNodeDOList, projectDO);
 
         taskComponent.containProductLineInTask(projectDO.getId(), projectDO.getProductLineIds());
+
         // 产品线
         projectProductLineComponent.update(projectDO.getProductLineIds(), projectDO.getId());
 
@@ -405,18 +406,6 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProjectBaseVO> projectBaseVOList = projectDOList.stream().map(ProjectCopier.INSTANCE::convertTo).collect(Collectors.toList());
 
         return BaseResult.success(projectBaseVOList);
-    }
-
-    @Override
-    public BaseResult<Boolean> switchProductLine(Long projectId, Long productLineId) {
-        List<TaskDO> taskDOList = taskMapper.getByProjectId(projectId);
-        List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);
-
-        // 是否可以切换
-        boolean result = taskDOList.stream().anyMatch(e -> productLineId.equals(e.getProductLineId()))
-                || bugOfflineDOList.stream().anyMatch(e -> productLineId.equals(e.getProductLineId()));
-
-        return BaseResult.success(!result);
     }
 
     private boolean checkProductRelease(Long projectId) {
