@@ -5,6 +5,7 @@ import com.timevale.forward.model.enums.MessageTitleEnum;
 import com.timevale.forward.model.enums.TabEnum;
 import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -12,7 +13,7 @@ import java.util.List;
  * @Author 望轩
  */
 public class BugOfflineOpenAgainMsgEvent extends MessageEvent {
-    private final String BUG_OFFLINE_OPEN_AGAIN = "### %s \n **%s**重新打开【线下bug】**%s**，请确认修复。\n *** \n[查看详情](%s)";
+    private final String BUG_OFFLINE_OPEN_AGAIN = "### %s \n **%s**重新打开【线下bug】**%s**，请确认修复。\n *** \n[查看详情](%s) \n <!--%s-->";
     /**
      * 提交人，花名-真名
      */
@@ -42,7 +43,7 @@ public class BugOfflineOpenAgainMsgEvent extends MessageEvent {
     public void run() {
         List<String> receivers = Lists.newArrayList(receiver);
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUG_MANAGEMENT.getText(), bugOfflineId);
-        String markdown = String.format(BUG_OFFLINE_OPEN_AGAIN, MessageTitleEnum.BUG_OFFLINE_OPEN_AGAIN.getText(), proposer, bugName, singleUrl);
+        String markdown = String.format(BUG_OFFLINE_OPEN_AGAIN, MessageTitleEnum.BUG_OFFLINE_OPEN_AGAIN.getText(), proposer, bugName, singleUrl, new Date());
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(MessageTitleEnum.BUG_OFFLINE_OPEN_AGAIN.getText())

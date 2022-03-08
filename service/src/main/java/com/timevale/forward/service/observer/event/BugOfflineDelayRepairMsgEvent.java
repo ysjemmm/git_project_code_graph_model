@@ -5,6 +5,7 @@ import com.timevale.forward.model.enums.MessageTitleEnum;
 import com.timevale.forward.model.enums.TabEnum;
 import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -12,7 +13,7 @@ import java.util.List;
  * @Author 望轩
  */
 public class BugOfflineDelayRepairMsgEvent extends MessageEvent {
-    private final String BUG_OFFLINE_DELAY_REPAIR = "### %s\n **%s**延期修复【线下bug】**%s**，请查看延期修复原因。\n *** \n[查看详情](%s)";
+    private final String BUG_OFFLINE_DELAY_REPAIR = "### %s\n **%s**延期修复【线下bug】**%s**，请查看延期修复原因。\n *** \n[查看详情](%s) \n <!--%s-->";
     /**
      * 操作人，花名-真名
      */
@@ -42,7 +43,7 @@ public class BugOfflineDelayRepairMsgEvent extends MessageEvent {
     public void run() {
         List<String> receivers = Lists.newArrayList(receiver);
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUG_MANAGEMENT.getText(), bugOfflineId);
-        String markdown = String.format(BUG_OFFLINE_DELAY_REPAIR, MessageTitleEnum.BUG_OFFLINE_DELAY_REPAIR.getText(), operator, bugName, singleUrl);
+        String markdown = String.format(BUG_OFFLINE_DELAY_REPAIR, MessageTitleEnum.BUG_OFFLINE_DELAY_REPAIR.getText(), operator, bugName, singleUrl, new Date());
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(MessageTitleEnum.BUG_OFFLINE_DELAY_REPAIR.getText())

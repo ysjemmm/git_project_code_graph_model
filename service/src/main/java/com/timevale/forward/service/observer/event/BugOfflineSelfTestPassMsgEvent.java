@@ -5,6 +5,7 @@ import com.timevale.forward.model.enums.MessageTitleEnum;
 import com.timevale.forward.model.enums.TabEnum;
 import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -12,7 +13,7 @@ import java.util.List;
  * @Author 望轩
  */
 public class BugOfflineSelfTestPassMsgEvent extends MessageEvent {
-    private final String BUG_OFFLINE_SELF_PASS = "### %s \n **%s**自测通过【线下bug】**%s**,请验收。\n *** \n[查看详情](%s)";
+    private final String BUG_OFFLINE_SELF_PASS = "### %s \n **%s**自测通过【线下bug】**%s**,请验收。\n *** \n[查看详情](%s) \n <!--%s-->";
     /**
      * 操作人，花名-真名
      */
@@ -42,7 +43,7 @@ public class BugOfflineSelfTestPassMsgEvent extends MessageEvent {
     public void run() {
         List<String> receivers = Lists.newArrayList(receiver);
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUG_MANAGEMENT.getText(), bugOfflineId);
-        String markdown = String.format(BUG_OFFLINE_SELF_PASS, MessageTitleEnum.BUG_OFFLINE_CHECK.getText(), operator, bugName, singleUrl);
+        String markdown = String.format(BUG_OFFLINE_SELF_PASS, MessageTitleEnum.BUG_OFFLINE_CHECK.getText(), operator, bugName, singleUrl, new Date());
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(MessageTitleEnum.BUG_OFFLINE_CHECK.getText())

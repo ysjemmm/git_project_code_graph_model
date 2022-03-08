@@ -11,14 +11,13 @@ import java.util.List;
  * @author by YangXu
  * @date 2022/02/23 16:37
  */
-public class BugOfflineUpdateMsg extends MessageEvent{
+public class BugOfflineUpdateMsg extends MessageEvent {
 
+    private static final String BUG_OFFLINE_CHANGE_MSG = "### %s\n 您有一条【线下bug】：%s，状态为**%s**，请及时处理 \n\n  ***\n  [查看详情](%s) ";
     private final Long bugOfflineId;
     private final String receiver;
     private final String name;
     private final String statusName;
-
-    private static final String BUG_OFFLINE_CHANGE_MSG = "### %s\n 您有一条【线下bug】：%s，状态为**%s**，请及时处理 \n\n  ***\n  [查看详情](%s)";
 
     public BugOfflineUpdateMsg(Object source, Long bugOfflineId, String receiver, String name, String statusName) {
         super(source);
