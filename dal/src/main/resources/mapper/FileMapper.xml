@@ -38,5 +38,14 @@
         </where>
   </update>
 
+    <update id="updateFileId" parameterType="com.timevale.forward.dal.entity.FileDO">
+        update file
+        <set>
+            <if test="fileId != null">file_id = #{fileId},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        where id = #{id}
+    </update>
 
 </mapper>
