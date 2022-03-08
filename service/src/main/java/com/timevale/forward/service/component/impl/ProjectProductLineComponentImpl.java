@@ -56,10 +56,12 @@ public class ProjectProductLineComponentImpl implements ProjectProductLineCompon
         List<Long> existProductLineIds = existProductLines.stream().map(ProjectProductLineDO::getProductLineId).collect(Collectors.toList());
         log.info("已存在项目-产品线:existProductLines={}", existProductLines);
 
+
         // 是否可以切换
+        List<Long> unLinkProductLineIdList = existProductLineIds.stream().filter(e -> !list.contains(e)).collect(Collectors.toList());
         List<TaskDO> taskDOList = taskMapper.getByProjectId(projectId);
         List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);
-        for (Long productLineId : existProductLineIds) {
+        for (Long productLineId : unLinkProductLineIdList) {
             boolean result = taskDOList.stream().anyMatch(e -> productLineId.equals(e.getProductLineId()))
                     || bugOfflineDOList.stream().anyMatch(e -> productLineId.equals(e.getProductLineId()));
             if(result){
