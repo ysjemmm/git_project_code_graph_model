@@ -258,6 +258,9 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
             throw new BaseBizRuntimeException("您没有操作权限");
         }
 
+        //保存老的经办人  花名-真名
+        String oldOperator = bugOfflineDO.getOperator();
+
         //经办人变成转交后的成员
         bugOfflineDO.setOperatorId(bugOfflineTransferReq.getUserId());
         bugOfflineDO.setOperator(bugOfflineTransferReq.getUserName());
@@ -266,7 +269,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         //内容变更
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setField(BugFieldEnum.OPERATOR.getText());
-        bugLogDO.setOldValue(userInfo.getAlias() + "-" + userInfo.getName());
+        bugLogDO.setOldValue(oldOperator);
         bugLogDO.setNewValue(bugOfflineTransferReq.getUserName());
         bugLogDO.setMainId(bugOfflineTransferReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
