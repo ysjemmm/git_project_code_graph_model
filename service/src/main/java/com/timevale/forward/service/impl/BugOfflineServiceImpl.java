@@ -656,7 +656,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
                         this,
                         userInfo.getAlias() + "-" + userInfo.getName(),
                         bugOfflineDO.getName(),
-                        bugOfflineDO.getOperatorId(),
+                        bugOfflineDO.getProposerId(),
                         bugOfflineDO.getId()
                 )
         );
