@@ -56,7 +56,6 @@ public class ProjectProductLineComponentImpl implements ProjectProductLineCompon
         List<Long> existProductLineIds = existProductLines.stream().map(ProjectProductLineDO::getProductLineId).collect(Collectors.toList());
         log.info("已存在项目-产品线:existProductLines={}", existProductLines);
 
-
         // 是否可以切换
         List<Long> unLinkProductLineIdList = existProductLineIds.stream().filter(e -> !list.contains(e)).collect(Collectors.toList());
         List<TaskDO> taskDOList = taskMapper.getByProjectId(projectId);
@@ -68,6 +67,7 @@ public class ProjectProductLineComponentImpl implements ProjectProductLineCompon
                 throw new BaseBizRuntimeException("关联的产品线已关联任务或线下bug，无法修改");
             }
         }
+
         List<ProjectProductLineDO> needAddProductLines=new ArrayList<>();
         projectProductLineDO.forEach((f)->{
             if(!existProductLineIds.contains(f.getProductLineId())){

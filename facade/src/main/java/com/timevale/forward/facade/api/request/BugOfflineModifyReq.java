@@ -19,4 +19,10 @@ public class BugOfflineModifyReq extends BugOfflineAddReq {
     @ApiModelProperty("id")
     @NotNull(message = "id不能为空")
     private Long id;
+
+    @ApiModelProperty("延期修复原因")
+    private String delayHandleReason;
+
+    @ApiModelProperty("不用修复原因")
+    private Integer unHandleReason;
 }

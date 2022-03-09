@@ -69,14 +69,16 @@
             <if test="returnCount != null">
                 return_count = #{returnCount},
             </if>
+            <if test="delayHandleReason != null">
+                delay_handle_reason = #{dalayHandleReason}
+            </if>
+            <if test="unHandleReason != null">
+                unhandle_reason = #{unHandleReason}
+            </if>
             <if test="true">
-                delay_handle_reason = #{delayHandleReason},
+                modify_man_id = #{modifyManId},
+                modify_man = #{modifyMan}
             </if>
-            <if test="true ">
-                unhandle_reason = #{unHandleReason},
-            </if>
-            modify_man_id = #{modifyManId},
-            modify_man = #{modifyMan}
         </set>
         where id = #{id}
     </update>
