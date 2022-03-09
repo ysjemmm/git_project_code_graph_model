@@ -24,5 +24,5 @@ public class BugOfflineModifyReq extends BugOfflineAddReq {
     private String delayHandleReason;
 
     @ApiModelProperty("不用修复原因")
-    private Integer unHandleReason;
+    private Integer unhandleReason;
 }
