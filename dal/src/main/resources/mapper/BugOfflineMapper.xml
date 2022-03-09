@@ -72,7 +72,7 @@
             <if test="delayHandleReason != null">
                 delay_handle_reason = #{delayHandleReason},
             </if>
-            <if test="unhandleReason != null">
+            <if test="true">
                 unhandle_reason = #{unhandleReason},
             </if>
             <if test="true">
