@@ -242,15 +242,13 @@
     </update>
 
     <update id="unlinkBugOffline">
-        update bug_offline
-        set project_id = 0
-        <where>
-            <if test="bugOfflineDOList != null and bugOfflineDOList.size() > 0">
-                and id in
-                <foreach collection="bugOfflineDOList" item="item" open="(" close=")" separator=",">
-                    #{item.id}
-                </foreach>
-            </if>
-        </where>
+        <if test="bugOfflineDOList != null and bugOfflineDOList.size() > 0">
+            update bug_offline
+            set project_id = 0
+            where id in
+            <foreach collection="bugOfflineDOList" item="item" open="(" close=")" separator=",">
+                #{item.id}
+            </foreach>
+        </if>
     </update>
 </mapper>
