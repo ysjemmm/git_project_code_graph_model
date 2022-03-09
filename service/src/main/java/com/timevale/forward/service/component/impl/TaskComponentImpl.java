@@ -170,7 +170,7 @@ public class TaskComponentImpl implements TaskComponent {
             taskMapper.updateStatusAsProjectStatusChange(taskStatusUpdateDO);
 
             existTaskDO = existTaskDO.stream().filter(a -> (preUpdate.contains(a.getStatus()))).collect(Collectors.toList());
-            log.info("项目状态改变,待执行和进行中的任务,existTaskDO:{}",existTaskDO);
+            log.info("项目状态改变,待执行和进行中的任务,existTaskDO:{}", existTaskDO);
             existTaskDO.forEach(a -> {
                 // 暂停,耗时表更新数据
                 taskTimeComponent.updateEndDate(a.getId(), new Date());
@@ -183,11 +183,12 @@ public class TaskComponentImpl implements TaskComponent {
             taskMapper.updateStatusAsProjectStatusChange(taskStatusUpdateDO);
 
             List<Long> taskIds = existTaskDO.stream().filter(a -> (preUpdate.contains(a.getStatus()))).map(TaskDO::getId).collect(Collectors.toList());
-            log.info("项目状态改变,待执行,进行中,已暂停的任务,taskIds:{}",taskIds);
+            log.info("项目状态改变,待执行,进行中,已暂停的任务,taskIds:{}", taskIds);
             //解除任务产品需求关联
-            taskProductDemandComponent.update(taskIds, null);
-            taskTimeMapper.delete(taskIds,null);
-
+            if (!CollectionUtils.isEmpty(taskIds)) {
+                taskProductDemandComponent.update(taskIds, null);
+                taskTimeMapper.delete(taskIds, null);
+            }
             preUpdate.remove(TaskStatusEnum.SUSPEND.getCode());
             // 待执行,进行中任务变成作废时,需要删除钉钉待办
             existTaskDO = existTaskDO.stream().filter(a -> (preUpdate.contains(a.getStatus()))).collect(Collectors.toList());
@@ -198,7 +199,7 @@ public class TaskComponentImpl implements TaskComponent {
         if (enableTask) {
             //开启暂停的任务
             existTaskDO = existTaskDO.stream().filter(a -> (TaskStatusEnum.SUSPEND.getCode().equals(a.getStatus()))).collect(Collectors.toList());
-            log.info("项目状态改变,暂停的任务,existTaskDO:{}",existTaskDO);
+            log.info("项目状态改变,暂停的任务,existTaskDO:{}", existTaskDO);
             existTaskDO.forEach(a -> {
                 if (a.getActualStartDate() == null && a.getActualEndDate() == null) {
                     a.setStatus(TaskStatusEnum.WAITING.getCode());
@@ -249,7 +250,7 @@ public class TaskComponentImpl implements TaskComponent {
             containsCurrentUser = false;
         }
         Map<String, String> map = innerUserPersonClient.getUnionIds(executorIds);
-        if(map.isEmpty()){
+        if (map.isEmpty()) {
             log.info("新增待办时,查询用户中心所属用户无unionId");
             return;
         }
@@ -265,7 +266,7 @@ public class TaskComponentImpl implements TaskComponent {
         String todoId = dingWorkRecordClient.addTask(createTodoTaskMsg);
         taskDO.setTodoId(todoId);
         if (StringUtils.isEmpty(todoId)) {
-            log.info("新增待办异常,createTodoTaskMsg :{}",createTodoTaskMsg);
+            log.info("新增待办异常,createTodoTaskMsg :{}", createTodoTaskMsg);
             taskDO.setTodo(false);
         }
     }
@@ -282,7 +283,7 @@ public class TaskComponentImpl implements TaskComponent {
             containsCurrentUser = false;
         }
         Map<String, String> map = innerUserPersonClient.getUnionIds(executorIds);
-        if(map.isEmpty()){
+        if (map.isEmpty()) {
             log.info("更新待办时,查询用户中心所属用户无unionId");
             return;
         }
@@ -309,7 +310,7 @@ public class TaskComponentImpl implements TaskComponent {
         }
         String id = LocalSessionUtils.getUserInfo().getId();
         Map<String, String> map = innerUserPersonClient.getUnionIds(com.google.common.collect.Lists.newArrayList(id));
-        if(map.isEmpty()){
+        if (map.isEmpty()) {
             log.info("删除待办时,查询用户中心所属用户无unionId");
             return;
         }
