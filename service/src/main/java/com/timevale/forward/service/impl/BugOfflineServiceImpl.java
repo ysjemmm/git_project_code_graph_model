@@ -323,7 +323,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
 
         //保存老的不用修复原因
-        Integer unHandleReason = bugOfflineDO.getUnHandleReason();
+        Integer unHandleReason = bugOfflineDO.getUnhandleReason();
 
         //bug状态变更为"不用修复",上一环节的经办人变成经办人,现在的经办人变成提出人,不用修复原因更新
         bugOfflineDO.setStatus(BugStatusEnum.CONFIRM.getCode());
@@ -331,7 +331,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugOfflineDO.setLastOperatorId(operatorId);
         bugOfflineDO.setOperator(bugOfflineDO.getProposer());
         bugOfflineDO.setOperatorId(bugOfflineDO.getProposerId());
-        bugOfflineDO.setUnHandleReason(bugOfflineUnHandleReq.getUnHandleReason());
+        bugOfflineDO.setUnhandleReason(bugOfflineUnHandleReq.getUnHandleReason());
         bugOfflineMapper.update(bugOfflineDO);
 
         //状态变更
@@ -446,7 +446,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
 
         //保存老的不用修复原因
-        Integer unHandleReason = bugOfflineDO.getUnHandleReason();
+        Integer unHandleReason = bugOfflineDO.getUnhandleReason();
 
         //状态变为  bug打开,上一环节的经办人变成当前经办人,当前经办人变成上一环节的经办人，清空不用修复原因
         bugOfflineDO.setStatus(BugStatusEnum.OPEN.getCode());
@@ -454,7 +454,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugOfflineDO.setLastOperator(operator);
         bugOfflineDO.setOperator(lastOperator);
         bugOfflineDO.setOperatorId(lastOperatorId);
-        bugOfflineDO.setUnHandleReason(null);
+        bugOfflineDO.setUnhandleReason(null);
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
@@ -525,7 +525,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugOfflineDO.setLastOperator(operator);
         bugOfflineDO.setLastOperatorId(operatorId);
         bugOfflineDO.setDelayHandleReason(bugOfflineDelayHandleReq.getDelayHandleReason());
-        bugOfflineDO.setUnHandleReason(null);
+        bugOfflineDO.setUnhandleReason(null);
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
@@ -585,7 +585,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
 
         //线下bug的状态变更为"待修复"，不用修复原因清空
         bugOfflineDO.setStatus(BugStatusEnum.REPAIR.getCode());
-        bugOfflineDO.setUnHandleReason(null);
+        bugOfflineDO.setUnhandleReason(null);
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
@@ -820,7 +820,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
             bugOfflineDO.setOpenCount(bugOfflineDO.getOpenCount() + 1);
         }
         bugOfflineDO.setDelayHandleReason(null);
-        bugOfflineDO.setUnHandleReason(null);
+        bugOfflineDO.setUnhandleReason(null);
         bugOfflineMapper.update(bugOfflineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
@@ -915,7 +915,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugOfflineDetailVO.setFrequencyName(frequencyName);
 
         //给线下bug的不用修复原因赋值
-        String reason = BugUnHandleReasonEnum.getTextByCode(bugOfflineDO.getUnHandleReason());
+        String reason = BugUnHandleReasonEnum.getTextByCode(bugOfflineDO.getUnhandleReason());
         bugOfflineDetailVO.setUnhandleReasonName(reason);
 
         //给线下bug的附件集合赋值
