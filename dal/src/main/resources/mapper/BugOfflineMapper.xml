@@ -69,7 +69,7 @@
             <if test="returnCount != null">
                 return_count = #{returnCount},
             </if>
-            <if test="delayHandleReason != null">
+            <if test="true">
                 delay_handle_reason = #{delayHandleReason},
             </if>
             <if test="true">
