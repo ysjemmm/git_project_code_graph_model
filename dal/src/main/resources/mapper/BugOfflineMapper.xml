@@ -72,8 +72,8 @@
             <if test="delayHandleReason != null">
                 delay_handle_reason = #{delayHandleReason},
             </if>
-            <if test="unHandleReason != null">
-                unhandle_reason = #{unHandleReason},
+            <if test="unhandleReason != null">
+                unhandle_reason = #{unhandleReason},
             </if>
             <if test="true">
                 modify_man_id = #{modifyManId},
