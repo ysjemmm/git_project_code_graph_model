@@ -115,6 +115,6 @@ public class BugOfflineDO extends BaseDO {
     /**
      * 不用修复原因:0被否定,1重复提交,2无法再次复现,3前端缓存,4产品需求调整,10无
      */
-    private Integer unHandleReason;
+    private Integer unhandleReason;
 
 }
