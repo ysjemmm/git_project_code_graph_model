@@ -2,6 +2,7 @@ package com.timevale.forward.model.middle;
 
 import com.timevale.forward.dal.annotation.FieldCompare;
 import com.timevale.forward.model.enums.*;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -69,5 +70,18 @@ public class BugOfflineMD{
      */
     @FieldCompare(fieldName = "bug详情描述")
     private String desc;
+
+
+    /**
+     * 延期修复原因
+     */
+    @FieldCompare(fieldName = "延期修复原因")
+    private String delayHandleReason;
+
+    /**
+     * 不用修复原因
+     */
+    @FieldCompare(fieldName = "不用修复原因", enumClass = BugUnHandleReasonEnum.class)
+    private Integer unhandleReason;
 
 }
