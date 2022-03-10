@@ -92,6 +92,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private BugOfflineMapper bugOfflineMapper;
 
+    @Resource
+    protected BugLogMapper bugLogMapper;
+
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -425,7 +428,26 @@ public class ProjectServiceImpl implements ProjectService {
         List<BugOfflineDO> postponeList = releaseList.stream()
                 .filter(e -> BugStatusEnum.POSTPONE_REPAIR.getCode().equals(e.getStatus()))
                 .collect(Collectors.toList());
-        bugOfflineMapper.unlinkBugOffline(postponeList);
+
+        // 断开关联关系，并且记录bug日志
+        if(!CollectionUtils.isEmpty(postponeList)){
+            ProjectDO projectDO = projectMapper.get(projectId);
+
+            List<BugLogDO> bugLogDOList = Lists.newArrayList();
+            postponeList.forEach(e -> {
+                BugLogDO bugLogDO = new BugLogDO();
+                bugLogDO.setField(BugFieldEnum.PROJECTS.getText());
+                bugLogDO.setOldValue(projectDO.getName());
+                bugLogDO.setNewValue(CommonConstant.NULL);
+                bugLogDO.setMainId(e.getId());
+                bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+                bugLogDOList.add(bugLogDO);
+            });
+
+            bugLogMapper.batchInsert(bugLogDOList);
+            bugOfflineMapper.unlinkBugOffline(postponeList);
+        }
+
         return true;
     }
 
