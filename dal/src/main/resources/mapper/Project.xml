@@ -107,7 +107,7 @@
             </if>
             <if test="id != null">and a.id = #{id}</if>
             <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
-            <if test="customerDev != null and customerDev">and a.customer_dev = #{customerDev}</if>
+            <if test="customerDev != null">and a.customer_dev = #{customerDev}</if>
             <if test="planStartDateLeft != null and planStartDateRight != null">
                 and a.plan_start_date &gt;= #{planStartDateLeft} and a.plan_start_date &lt;= #{planStartDateRight}
             </if>
