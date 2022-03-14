@@ -50,9 +50,6 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     private ProductLineMapper productLineMapper;
 
     @Resource
-    private ProjectProductDemandComponent projectProductDemandComponent;
-
-    @Resource
     private ProductBizDemandMapper productBizDemandMapper;
 
     @Resource
@@ -178,12 +175,12 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                         //业务需求只关联一个产品需求后且被解除
                         condition.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), value -> new ArrayList<>()).add(k);
                     } else {
-                        processUpdateStatus(condition, minStatus, k);
+                        processBizDemandStatus(condition, minStatus, k);
                     }
                 } else {
                     Integer minStauts = productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
                     if (minStauts != null) {
-                        processUpdateStatus(condition, minStauts, k);
+                        processBizDemandStatus(condition, minStauts, k);
                     }
                 }
             }
@@ -222,7 +219,8 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         });
     }
 
-    private void processUpdateStatus(Map<Integer, List<Long>> condition, Integer minStauts, Long bizDemandId) {
+    @Override
+    public void processBizDemandStatus(Map<Integer, List<Long>> condition, Integer minStauts, Long bizDemandId) {
         if (minStauts != null && !minStauts.equals(ProductDemandStatusEnum.INVALID.getCode())) {
             if (minStauts.equals(ProductDemandStatusEnum.WAITING.getCode())
                     || minStauts.equals(ProductDemandStatusEnum.SUSPEND.getCode())) {

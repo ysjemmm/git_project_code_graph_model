@@ -7,20 +7,15 @@ import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.dal.entity.ProjectListDO;
-import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.ProjectVO;
-import com.timevale.forward.model.enums.PersonTypeEnum;
-import com.timevale.forward.model.enums.PriorityEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
-import com.timevale.forward.model.enums.ProjectTypeEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
-import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -123,6 +118,39 @@ public class ProjectComponentImpl implements ProjectComponent {
         return BaseResult.success(pageQueryResult);
 
     }
+
+    @Override
+    public void fillInfo(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
+        // 计算项目状态
+        Map<String, ProjectNodeDO> nodeMap = projectNodes
+                .stream()
+                .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
+        log.info("nodeMap={},,projectDO={}", nodeMap, projectDO);
+        ProjectNodeDO node = null;
+        if ((node = nodeMap.get(ProjectStageEnum.TEST_RELEASE.getText())) != null && node.getActualDate() != null) {
+            projectDO.setStatus(ProjectStatusEnum.RELEASED.getCode());
+            projectDO.setActualEndDate(node.getActualDate());
+        } else if ((node = nodeMap.get(ProjectStageEnum.TEST_START.getText())) != null && node.getActualDate() != null) {
+            projectDO.setStatus(ProjectStatusEnum.TESTING.getCode());
+        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_REVIEW.getText())) != null && node.getActualDate() != null) {
+            projectDO.setStatus(ProjectStatusEnum.DEVING.getCode());
+        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_START.getText())) != null && node.getActualDate() != null) {
+            projectDO.setStatus(ProjectStatusEnum.DEVING.getCode());
+        } else if ((node = nodeMap.get(ProjectStageEnum.DEMAND_START.getText())) != null && node.getActualDate() != null) {
+            projectDO.setStatus(ProjectStatusEnum.PLANING.getCode());
+        } else {
+            projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
+        }
+        //计算项目实际开始时间：优先取需求阶段实际时间作为项目实际开始时间,若无,则取开发阶段第一个节点实际时间做为作为项目实际开始时间
+        if ((node = nodeMap.get(ProjectStageEnum.DEMAND_START.getText())) != null) {
+            projectDO.setActualStartDate(node.getActualDate());
+        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_REVIEW.getText())) != null) {
+            projectDO.setActualStartDate(node.getActualDate());
+        } else if ((node = nodeMap.get(ProjectStageEnum.DEV_START.getText())) != null) {
+            projectDO.setActualStartDate(node.getActualDate());
+        }
+    }
+
     private void buildConditionBeforeQuery(List<Long>projectIds,ProjectListCondition condition){
         condition.setIds(projectIds);
         condition.setName(StringUtil.toLikeStr(condition.getName()));

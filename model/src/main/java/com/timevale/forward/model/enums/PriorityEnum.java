@@ -3,8 +3,8 @@ package com.timevale.forward.model.enums;
 import lombok.Getter;
 
 /**
- * @author: xingyun
- * @create: 2021-12-17 11:10
+ * @author xingyun
+ * @date 2021-12-13 13:58
  **/
 @Getter
 public enum PriorityEnum {
