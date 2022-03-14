@@ -56,7 +56,7 @@ public class BugOfflineMD{
     /**
      * bug所属端
      */
-    @FieldCompare(fieldName = "bug所属端口", enumClass = BugBelongEnum.class)
+    @FieldCompare(fieldName = "bug所属端", enumClass = BugBelongEnum.class)
     private Integer belong;
 
     /**
