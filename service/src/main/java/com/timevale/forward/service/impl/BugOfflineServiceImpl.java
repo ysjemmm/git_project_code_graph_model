@@ -783,7 +783,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         messageEventPublisher.publish(
                 new BugOfflineCheckFailMsgEvent(
                         this,
-                        userInfo.getAlias() + "-" + userInfo.getName(),
+                        bugOfflineDO.getName(),
                         bugOfflineDO.getOperatorId(),
                         bugOfflineDO.getId()
                 )
