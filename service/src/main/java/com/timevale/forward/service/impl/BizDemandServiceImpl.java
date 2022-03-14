@@ -209,9 +209,11 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<PersonDO> personDOList = personComponent.select(bizDemandId, PersonTypeEnum.BIZ_DEMAND_CC.getCode());
         List<PersonVO> personVOList = PersonCopier.INSTANCE.transform(personDOList);
 
-        // 获取对应产品线，业务域
+        // 获取对应产品线
         ProductLineDO productLineDO = productLineMapper.selectById(bizDemandDO.getProductLineId());
-        BizDomainDO bizDomainDO = bizDomainMapper.selectById(productLineDO.getBizDomainId());
+        if(productLineDO == null){
+            throw new BaseBizRuntimeException("业务需求未关联产品线");
+        }
 
         // 信息填充
         BizDemandDetailVO bizDemandDetailVO = BizDemandCopier.INSTANCE.convert(bizDemandDO);

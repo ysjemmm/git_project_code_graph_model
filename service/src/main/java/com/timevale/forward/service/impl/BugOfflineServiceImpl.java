@@ -32,6 +32,7 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.request.AccountRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
@@ -220,6 +221,19 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
             e.setMainId(bugOfflineModifyReq.getId());
             e.setType(BugLogTypeEnum.OFFLINE.getCode());
         });
+
+        // 特殊判断null和空字符串‘’
+        bugLogDOList.removeIf(e -> {
+            if(e.getField().equals(BugFieldEnum.DELAY_HANDLE_REASON.getText())){
+                String oldValue = e.getOldValue();
+                String newValue = e.getNewValue();
+                oldValue = StringUtils.isEmpty(oldValue) ? "" : oldValue;
+                newValue = StringUtils.isEmpty(newValue) ? "" : newValue;
+                return Objects.equals(oldValue, newValue);
+            }
+            return false;
+        });
+
         if (!CollectionUtils.isEmpty(bugLogDOList)) {
             bugLogMapper.batchInsert(bugLogDOList);
         }
