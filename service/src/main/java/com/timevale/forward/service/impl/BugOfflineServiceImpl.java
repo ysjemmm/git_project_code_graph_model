@@ -341,6 +341,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugLogDO.setNewValue(BugStatusEnum.CONFIRM.getText());
         bugLogDO.setMainId(bugOfflineUnHandleReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
         //插入bug日志状态变更
         bugLogMapper.insert(bugLogDO);
 
@@ -405,6 +406,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugLogDO.setNewValue(BugStatusEnum.getTextByCode(BugStatusEnum.CLOSE.getCode()));
         bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -463,6 +465,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugLogDO.setNewValue(BugStatusEnum.OPEN.getText());
         bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
         //往bug日志表中插入状态变更数据
         bugLogMapper.insert(bugLogDO);
 
@@ -534,6 +537,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugLogDO.setNewValue(BugStatusEnum.POSTPONE_REPAIR.getText());
         bugLogDO.setMainId(bugOfflineDelayHandleReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
         //往bug日志表中插入状态变更记录
         bugLogMapper.insert(bugLogDO);
 
@@ -594,6 +598,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugLogDO.setNewValue(BugStatusEnum.REPAIR.getText());
         bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -646,6 +651,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugLogDO.setNewValue(BugStatusEnum.ACCEPTANCE.getText());
         bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -698,6 +704,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugLogDO.setNewValue(BugStatusEnum.COMPLETE.getText());
         bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -754,6 +761,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugLogDO.setNewValue(BugStatusEnum.OPEN.getText());
         bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
 
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
@@ -829,6 +837,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         bugLogDO.setNewValue(BugStatusEnum.OPEN.getText());
         bugLogDO.setMainId(bugOfflineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
         //往bug日志表中插入数据
         bugLogMapper.insert(bugLogDO);
 
