@@ -40,6 +40,7 @@ import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -100,6 +101,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private TaskProductDemandComponent taskProductDemandComponent;
+
+    private static final Integer MAX_LENGTH = 64 * 1000;
 
 
     @Override
@@ -222,6 +225,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (productDemandDO != null) {
             throw new BaseBizRuntimeException("该产品需求名称已存在,请修改后重试");
         }
+        checkDescLength(productDemandAddReq.getDesc());
         ProductDemandDO productDemand = ProductDemandCopier.INSTANCE.convert(productDemandAddReq);
         productDemand.setStatus(ProductDemandStatusEnum.WAITING.getCode());
         productDemand.setType(JSON.toJSONString(productDemandAddReq.getTypes()));
@@ -251,6 +255,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (productDemandDO != null && !productDemandDO.getId().equals(productDemandModifyReq.getId())) {
             throw new BaseBizRuntimeException("该产品需求名称已存在,请修改后重试");
         }
+        checkDescLength(productDemandModifyReq.getDesc());
         ProductDemandDO demandDO = ProductDemandCopier.INSTANCE.convert(productDemandModifyReq);
         demandDO.setType(JSON.toJSONString(productDemandModifyReq.getTypes()));
         productDemandMapper.update(demandDO);
@@ -390,4 +395,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         return BaseResult.success(pageQueryResult);
     }
 
+    private void checkDescLength(String desc) {
+        if (StringUtils.isNotEmpty(desc) && desc.getBytes().length>MAX_LENGTH){
+            throw new BaseBizRuntimeException("需求描述超过最大限制(64kb),若有大图片请选择附件上传");
+        }
+    }
 }
