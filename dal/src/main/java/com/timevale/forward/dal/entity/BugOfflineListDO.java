@@ -21,6 +21,11 @@ public class BugOfflineListDO extends BaseDO {
     private String projectName;
 
     /**
+     * 项目状态
+     */
+    private Integer projectStatus;
+
+    /**
      * 产品线名称
      */
     private String productLineName;

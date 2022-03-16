@@ -97,7 +97,7 @@
         bo.return_count, bo.unhandle_reason,
         bo.create_date, bo.modify_date,
         bo.name bugName,
-        p.name projectName,
+        p.name projectName, p.status projectStatus,
         pl.name productLineName,
         bd.name bizDomainName
         from bug_offline bo
