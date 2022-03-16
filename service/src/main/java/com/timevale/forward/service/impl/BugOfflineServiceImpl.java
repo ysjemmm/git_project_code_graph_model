@@ -919,10 +919,11 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         //给bug原因名字赋值
         bugOfflineDetailVO.setReasonName(BugReasonEnum.getTextByCode(bugOfflineDO.getReason()));
 
-        //给线下bug的项目名称赋值
+        //给线下bug的项目名称赋值并且查询项目状态并赋值
         ProjectDO projectDO = projectMapper.get(bugOfflineDO.getProjectId());
         if (projectDO != null) {
             bugOfflineDetailVO.setProjectName(projectDO.getName());
+            bugOfflineDetailVO.setProjectStatus(projectDO.getStatus());
         }
 
         //给线下bug的产品线赋值,给线下bug的业务域赋值
