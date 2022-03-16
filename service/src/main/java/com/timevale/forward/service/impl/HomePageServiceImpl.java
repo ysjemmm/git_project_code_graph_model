@@ -92,10 +92,11 @@ public class HomePageServiceImpl implements HomePageService {
     public BaseResult<HomePageTodoCardVO> getTodoCard(HomePageBaseReq homePageBaseReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        int bugCount = 0;
         int taskCount = 0;
         int projectCount = 0;
         int bizDemandCount = 0;
+        int bugOnLineCount = 0;
+        int bugOfflineCount = 0;
 
         // 获取我及所有下属
         List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
@@ -122,12 +123,12 @@ public class HomePageServiceImpl implements HomePageService {
             */
             List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByMembers(allMyStaffWithSelf);
             if(UserTypeEnum.RD.getCode().equals(homePageBaseReq.getUserType())){
-                bugCount = (int)bugOfflineDOList.stream()
+                bugOfflineCount = (int)bugOfflineDOList.stream()
                         .filter(e -> e.getOperatorId().equals(userInfo.getId())
                                 && (BugStatusEnum.OPEN.getCode().equals(e.getStatus()) || BugStatusEnum.REPAIR.getCode().equals(e.getStatus())))
                         .count();
             }else{
-                bugCount = (int)bugOfflineDOList.stream()
+                bugOfflineCount = (int)bugOfflineDOList.stream()
                         .filter(e -> e.getProposerId().equals(userInfo.getId())
                                 && (BugStatusEnum.ACCEPTANCE.getCode().equals(e.getStatus()) || BugStatusEnum.CONFIRM.getCode().equals(e.getStatus())))
                         .count();
@@ -135,10 +136,11 @@ public class HomePageServiceImpl implements HomePageService {
         }
 
         HomePageTodoCardVO todoCardVO = new HomePageTodoCardVO();
-        todoCardVO.setBugCount(bugCount);
         todoCardVO.setTaskCount(taskCount);
         todoCardVO.setProjectCount(projectCount);
         todoCardVO.setBizDemandCount(bizDemandCount);
+        todoCardVO.setBugOnlineCount(bugOnLineCount);
+        todoCardVO.setBugOfflineCount(bugOfflineCount);
 
         return BaseResult.success(todoCardVO);
     }

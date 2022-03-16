@@ -26,4 +26,12 @@ public class HomePageTodoCardVO extends ToString {
 
     @ApiModelProperty("bug数量")
     private Integer bugCount;
+
+    @ApiModelProperty("线上bug数量")
+    private Integer bugOnlineCount;
+
+    @ApiModelProperty("线下bug数量")
+    private Integer bugOfflineCount;
+
+
 }
