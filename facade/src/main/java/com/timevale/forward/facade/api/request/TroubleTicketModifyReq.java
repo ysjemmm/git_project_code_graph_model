@@ -76,7 +76,7 @@ public class TroubleTicketModifyReq extends BaseReq {
     @ApiModelProperty("复盘时间")
     private Date replayTime;
 
-    @ApiModelProperty("是否有资损 0 是, 1 否")
+    @ApiModelProperty("是否有资损 0 否, 1 是")
     private Integer assetLoss;
 
     @ApiModelProperty("损失金额（元）")
