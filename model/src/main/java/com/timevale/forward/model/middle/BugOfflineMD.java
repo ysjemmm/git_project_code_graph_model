@@ -2,7 +2,6 @@ package com.timevale.forward.model.middle;
 
 import com.timevale.forward.dal.annotation.FieldCompare;
 import com.timevale.forward.model.enums.*;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -20,7 +19,7 @@ public class BugOfflineMD{
     /**
      * 经办人
      */
-    @FieldCompare(fieldName = "bug经办人")
+    @FieldCompare(fieldName = "经办人")
     private String operator;
 
     /**
