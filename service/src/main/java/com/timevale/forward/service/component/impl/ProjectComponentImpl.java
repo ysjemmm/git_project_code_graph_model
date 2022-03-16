@@ -104,7 +104,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             if (CollectionUtils.isNotEmpty(pdls)) {
                 String productLineName = pdls.stream().map(ProjectProductLineBizDomain::getProductLineName).collect(Collectors.joining(","));
                 a.setProductLineName(productLineName);
-                String bizDomainName = pdls.stream().map(ProjectProductLineBizDomain::getBizDomainName).collect(Collectors.joining(","));
+                String bizDomainName = pdls.stream().map(ProjectProductLineBizDomain::getBizDomainName).distinct().collect(Collectors.joining(","));
                 a.setBizDomainName(bizDomainName);
             }
             a.setTypeName(ProjectTypeEnum.getTextByCode(a.getType()));
