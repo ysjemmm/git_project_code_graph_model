@@ -27,6 +27,9 @@ public class BugOfflineDetailVO extends ToString {
     @ApiModelProperty("项目名称")
     private String projectName;
 
+    @ApiModelProperty("项目状态")
+    private Integer projectStatus;
+
     @ApiModelProperty("产品线")
     private ProductLineVO productLineVO;
 
