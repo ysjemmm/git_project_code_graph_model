@@ -153,7 +153,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
     public BaseResult<Boolean> add(BugOfflineAddReq bugOfflineAddReq) {
         // 校验关联项目状态
         Long projectId = bugOfflineAddReq.getProjectId();
-        if(projectId != null){
+        if(projectId != 0){
             ProjectDO projectDO = projectMapper.get(projectId);
             if(projectDO == null){
                 throw new BaseBizRuntimeException("所选关联项目不存在");
