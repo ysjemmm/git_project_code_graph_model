@@ -21,7 +21,11 @@ public enum FileTypeEnum {
     // 提测单-自测通过
     TEST_BILL_PASS(5),
     // 线下bug
-    BUG_OFFLINE(6)
+    BUG_OFFLINE(6),
+    // 线上bug
+    BUG_ONLINE(7),
+    // 故障单
+    TROUBLE_TICKET(8)
     ;
 
     private Integer code;

@@ -10,12 +10,22 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum CommentTypeEnum {
-    // 主体类型: 0项目，1产品需求2业务需求
+    // 主体类型:
+    // 0项目
     PROJECT(0,"项目"),
+    // 1产品需求
     PRODUCT_DEMAND(1,"产品需求"),
+    // 2业务需求
     BIZ_DEMAND(2,"业务需求"),
+    // 3任务
     TASK(3,"任务"),
-    BUG_OFFLINE(4,"线下bug");
+    // 4线下bug
+    BUG_OFFLINE(4,"线下bug"),
+    // 5线上bug
+    BUG_ONLINE(5,"线上bug"),
+    // 6故障单
+    TROUBLE_TICKET(6,"故障单")
+    ;
 
     private final Integer code;
     private final String text;
