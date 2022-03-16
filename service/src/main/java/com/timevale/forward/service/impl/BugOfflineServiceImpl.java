@@ -151,6 +151,18 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(BugOfflineAddReq bugOfflineAddReq) {
+        // 校验关联项目状态
+        Long projectId = bugOfflineAddReq.getProjectId();
+        if(projectId != null){
+            ProjectDO projectDO = projectMapper.get(projectId);
+            if(projectDO == null){
+                throw new BaseBizRuntimeException("所选关联项目不存在");
+            }
+            if(ProjectStatusEnum.RELEASED.getCode().equals(projectDO.getStatus())){
+                throw new BaseBizRuntimeException("关联项目已发布，无法创建");
+            }
+        }
+
         //1.接收表单参数,状态为:bug打开,经办人所选用户,上一阶段经办人为bug提出人,bug数据入库
         BugOfflineDO bugOfflineDO = BugOfflineCopier.INSTANCE.convert(bugOfflineAddReq);
         bugOfflineDO.setOpenCount(0);

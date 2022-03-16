@@ -30,6 +30,9 @@ public class BugOfflineVO extends ToString {
     @ApiModelProperty("项目名称")
     private String projectName;
 
+    @ApiModelProperty("项目状态:0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废")
+    private Integer projectStatus;
+
     @ApiModelProperty(value = "状态:0bug打开、1待修复、2待验收、3待确认、4延期修复、5完成、6关闭")
     private Integer status;
 
