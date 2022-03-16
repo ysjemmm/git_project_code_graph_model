@@ -829,6 +829,8 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
 
         //保存老的延期修复原因
         String delayHandleReason = bugOfflineDO.getDelayHandleReason();
+        //保存老的不用修复原因
+        Integer unhandleReason = bugOfflineDO.getUnhandleReason();
 
         //状态变为  bug打开,上一环节的经办人变成当前经办人,当前经办人变成上一环节的经办人,清空延期修复原因
         bugOfflineDO.setStatus(BugStatusEnum.OPEN.getCode());
@@ -860,6 +862,17 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
             BugLogDO bugLog = new BugLogDO();
             bugLog.setField(BugFieldEnum.DELAY_HANDLE_REASON.getText());
             bugLog.setOldValue(delayHandleReason);
+            bugLog.setMainId(bugOfflineReq.getId());
+            bugLog.setType(BugLogTypeEnum.OFFLINE.getCode());
+            //插入bug日志内容变更记录
+            bugLogMapper.insert(bugLog);
+        }
+
+        //如果不用修复原因存在老的值则往bug日志表里插入一条记录
+        if(unhandleReason != null){
+            BugLogDO bugLog = new BugLogDO();
+            bugLog.setField(BugFieldEnum.UN_HANDLE_REASON.getText());
+            bugLog.setOldValue(BugUnHandleReasonEnum.getTextByCode(unhandleReason));
             bugLog.setMainId(bugOfflineReq.getId());
             bugLog.setType(BugLogTypeEnum.OFFLINE.getCode());
             //插入bug日志内容变更记录
