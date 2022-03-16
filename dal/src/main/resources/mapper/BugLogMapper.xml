@@ -9,7 +9,7 @@
             <if test="true">and is_deleted=0</if>
             <if test="statusChange == true">and `action` is not null</if>
         </where>
-        order by `create_date` desc
+        order by `create_date` desc,`id` DESC
     </select>
 
     <update id="deleteByBugOfflineId">
