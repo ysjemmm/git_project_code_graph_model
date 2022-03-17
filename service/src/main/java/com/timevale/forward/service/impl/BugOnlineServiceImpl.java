@@ -27,86 +27,118 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
     public BusinessResult<PageQueryResult<BugOnlineVO>> list(BugOnlineQueryList bugOnlineQueryList) {
-        return null;
+        BusinessResult<PageQueryResult<BugOnlineVO>> businessResult = new BusinessResult<>();
+        return businessResult;
     }
 
     @Override
     public BusinessResult<Boolean> add(BugOnlineAddReq bugOnlineAddReq) {
-        return null;
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
     }
 
     @Override
     public BusinessResult<Boolean> modify(BugOnlineModifyReq bugOnlineModifyReq) {
-        return null;
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
     }
 
     @Override
     public BusinessResult<BugOnlineDetailVO> get(BugOnlineDetailReq bugOnlineDetailReq) {
-        return null;
+        BusinessResult<BugOnlineDetailVO> businessResult = new BusinessResult<>();
+        return businessResult;
     }
 
     @Override
     public BusinessResult<Boolean> confirm(BugOnlineReq bugOnlineReq) {
-        return null;
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
     }
 
     @Override
     public BusinessResult<Boolean> startRepair(BugOnlineReq bugOnlineReq) {
-        return null;
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
     }
 
     @Override
     public BusinessResult<Boolean> repairFinished(BugOnlineRepairFinishedReq bugOnlineRepairFinishedReq) {
-        return null;
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
     }
 
     @Override
     public BusinessResult<Boolean> confirmRepair(BugOnlineConfirmRepairReq bugOnlineConfirmRepairReq) {
-        return null;
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
     }
 
     @Override
     public BusinessResult<Boolean> online(BugOnlineOnlineReq bugOnlineOnlineReq) {
-        return null;
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
     }
 
     @Override
     public BusinessResult<Boolean> openAgain(BugOnlineOpenAgainReq bugOnlineOpenAgainReq) {
-        return null;
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
     }
 
     @Override
     public BusinessResult<Boolean> noRepair(BugOnlineNoRepairReq bugOnlineNoRepairReq) {
-        return null;
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
     }
 
     @Override
     public BusinessResult<Boolean> transfer(BugOnlineTransferReq bugOnlineTransferReq) {
-        return null;
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
     }
 
     @Override
     public BusinessResult<Boolean> agree(BugOnlineReq bugOnlineReq) {
-        return null;
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
     }
 
     @Override
     public BusinessResult<Boolean> reject(BugOnlineReq bugOnlineReq) {
-        return null;
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
     }
 
     @Override
     public BusinessResult<Boolean> reconfirm(BugOnlineReq bugOnlineReq) {
-        return null;
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
     }
 
     @Override
     public BusinessResult<Boolean> temporaryNoRepair(BugOnlineReq bugOnlineReq) {
-        return null;
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
     }
 
     @Override
     public BusinessResult<Boolean> repairFailed(BugOnlineRepairFailedReasonReq bugOnlineRepairFailedReasonReq) {
-        return null;
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
     }
 }
