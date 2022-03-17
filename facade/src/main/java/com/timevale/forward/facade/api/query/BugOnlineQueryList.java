@@ -1,0 +1,64 @@
+package com.timevale.forward.facade.api.query;
+
+import com.timevale.mandarin.common.query.QueryBase;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.util.Date;
+import java.util.List;
+
+/**
+ * @Date 2022/3/17 14:20
+ * @Author 望轩
+ */
+@EqualsAndHashCode(callSuper = true)
+@Data
+@ApiModel("线上bug列表查询")
+public class BugOnlineQueryList extends QueryBase {
+    @ApiModelProperty("bug标题")
+    private String name;
+
+    @ApiModelProperty("bug状态")
+    private List<Integer> status;
+
+    @ApiModelProperty("经办人id")
+    private List<String> operatorIdList;
+
+    @ApiModelProperty("提出人id")
+    private List<String> proposerIdList;
+
+    @ApiModelProperty("所属业务域")
+    private List<Long> bizDomainIdList;
+
+    @ApiModelProperty("所属产品线")
+    private List<Long> productLineIdList;
+
+    @ApiModelProperty("bug优先级")
+    private List<Integer> priorities;
+
+    @ApiModelProperty("bug环境")
+    private List<Integer> envs;
+
+    @ApiModelProperty("bug原因")
+    private List<Integer> reasons;
+
+    @ApiModelProperty("bug所属端")
+    private List<Integer> belongs;
+
+    @ApiModelProperty("创建时间左区间")
+    private Date createDateLeft;
+
+    @ApiModelProperty("创建时间右区间")
+    private Date createDateRight;
+
+    @ApiModelProperty("更新时间左区间")
+    private Date modifyDateLeft;
+
+    @ApiModelProperty("更新时间右区间")
+    private Date modifyDateRight;
+
+    @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
+    private String ascription;
+}

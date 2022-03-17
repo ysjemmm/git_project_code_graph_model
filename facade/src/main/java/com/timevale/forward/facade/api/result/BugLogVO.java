@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @Date 2022/2/24 10:49
@@ -51,4 +52,7 @@ public class BugLogVO extends ToString {
 
     @ApiModelProperty("系统当前时间")
     private Date currentDate;
+
+    @ApiModelProperty("经办人及其耗时列表")
+    private List<BugStatusOperatorVO> bugStatusOperatorVOList;
 }

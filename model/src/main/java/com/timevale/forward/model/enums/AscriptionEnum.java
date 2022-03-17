@@ -19,7 +19,8 @@ public enum AscriptionEnum {
     DEPARTMENT("我部门的"),
     COPIER("抄送我的"),
     RECEIVE("我接收的"),
-    ALL("全部");
+    ALL("全部"),
+    ;
 
     private final String text;
     AscriptionEnum(String text){
