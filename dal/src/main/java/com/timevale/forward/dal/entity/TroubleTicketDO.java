@@ -89,9 +89,9 @@ public class TroubleTicketDO extends BaseDO {
     private Date replayTime;
     
     /**
-     * 是否有资损, 0 否 1 是
+     * 是否有资损
      */
-    private Integer assetLoss;
+    private Boolean assetLoss;
     
     /**
      * 损失金额(元)

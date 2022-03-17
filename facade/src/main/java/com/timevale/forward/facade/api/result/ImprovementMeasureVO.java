@@ -35,11 +35,8 @@ public class ImprovementMeasureVO extends ToString {
     @ApiModelProperty("落实日期")
     private Date implementationTime;
 
-    @ApiModelProperty("是否已建待办 0:否，1 是")
-    private Integer todo;
-
-    @ApiModelProperty("是否已建待办-描述")
-    private Integer todoName;
+    @ApiModelProperty("是否已建待办")
+    private Boolean todo;
 
     @ApiModelProperty("状态 0 待处理，1 已完成")
     private Integer status;

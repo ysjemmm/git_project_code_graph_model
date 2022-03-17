@@ -15,5 +15,5 @@ import lombok.EqualsAndHashCode;
 public class ImprovementMeasureCompleteReq extends BaseReq {
 
     @ApiModelProperty("事项id")
-    private String id;
+    private Long id;
 }

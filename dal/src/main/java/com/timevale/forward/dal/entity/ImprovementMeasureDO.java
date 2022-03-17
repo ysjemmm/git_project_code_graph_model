@@ -41,9 +41,9 @@ public class ImprovementMeasureDO extends BaseDO{
     private Date implementationTime;
 
     /**
-     * 是否创建待办 0 是，1 否
+     * 是否创建待办
      */
-    private Integer todo;
+    private Boolean todo;
 
     /**
      * 待办id

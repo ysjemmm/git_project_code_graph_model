@@ -78,8 +78,8 @@ public class TroubleTicketAddReq extends BaseReq {
     @ApiModelProperty("复盘时间")
     private Date replayTime;
 
-    @ApiModelProperty("是否有资损 0 否, 1 是")
-    private Integer assetLoss;
+    @ApiModelProperty("是否有资损")
+    private Boolean assetLoss;
 
     @ApiModelProperty("损失金额（元）")
     private BigDecimal amountLoss;

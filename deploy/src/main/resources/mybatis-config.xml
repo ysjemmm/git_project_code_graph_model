@@ -70,5 +70,7 @@
         <mapper resource="mapper/TestBillMapper.xml"/>
         <mapper resource="mapper/BugOfflineMapper.xml"/>
         <mapper resource="mapper/BugLogMapper.xml"/>
+        <mapper resource="mapper/TroubleTicketMapper.xml"/>
+        <mapper resource="mapper/ImprovementMeasureMapper.xml"/>
     </mappers>
 </configuration>

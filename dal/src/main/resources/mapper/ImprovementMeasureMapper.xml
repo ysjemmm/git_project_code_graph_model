@@ -1,0 +1,45 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.ImprovementMeasureMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO improvement_measure(trouble_ticket_id, name, executor, executor_id, implementation_time,
+                                        todo, todo_id, status, create_man_id, create_man)
+        VALUES (#{troubleTicketId}, #{name}, #{executor}, #{executorId}, #{implementationTime}, #{todo}, #{todoId},
+                #{status}, #{createManId}, #{createMan})
+    </insert>
+
+    <update id="update">
+        UPDATE improvement_measure
+        <set>
+            <if test="troubleTicketId != null">trouble_ticket_id = #{troubleTicketId},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="executor != null">executor = #{executor},</if>
+            <if test="executorId != null">executor_id = #{executorId},</if>
+            <if test="implementationTime != null">implementation_time = #{implementationTime},</if>
+            <if test="todo != null">todo = #{todo},</if>
+            <if test="todoId != null and todoId != ''">todo_id = #{todoId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <select id="selectByTroubleTicketId" resultType="com.timevale.forward.dal.entity.ImprovementMeasureDO">
+        SELECT id, name, executor, implementation_time, todo, status, create_man, modify_date
+        FROM improvement_measure
+        WHERE trouble_ticket_id = #{troubleTicketId} AND is_deleted = false
+    </select>
+
+    <select id="selectById" resultType="com.timevale.forward.dal.entity.ImprovementMeasureDO">
+        SELECT id, trouble_ticket_id, name, executor, executor_id, implementation_time, todo, todo_id, status,
+               is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        FROM improvement_measure
+        WHERE id = #{id}
+    </select>
+
+</mapper>

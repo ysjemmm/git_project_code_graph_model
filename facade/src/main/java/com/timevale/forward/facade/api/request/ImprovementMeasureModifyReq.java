@@ -17,7 +17,7 @@ import java.util.Date;
 public class ImprovementMeasureModifyReq extends BaseReq {
 
     @ApiModelProperty("事项id")
-    private String id;
+    private Long id;
 
     @ApiModelProperty("事项概述")
     private String name;

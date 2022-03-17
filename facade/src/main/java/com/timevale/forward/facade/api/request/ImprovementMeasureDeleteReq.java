@@ -17,6 +17,6 @@ import java.util.Date;
 public class ImprovementMeasureDeleteReq extends BaseReq {
 
     @ApiModelProperty("事项id")
-    private String id;
+    private Long id;
 
 }

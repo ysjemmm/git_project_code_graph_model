@@ -28,6 +28,6 @@ public class ImprovementMeasureAddReq extends BaseReq {
     @ApiModelProperty("落实日期")
     private Date implementationTime;
 
-    @ApiModelProperty("是否已建待办 0:否，1 是")
-    private Integer todo;
+    @ApiModelProperty("是否创建待办")
+    private Boolean todo;
 }
