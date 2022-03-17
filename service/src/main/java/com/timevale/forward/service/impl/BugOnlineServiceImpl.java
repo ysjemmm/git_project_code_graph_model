@@ -5,12 +5,11 @@ import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
+import com.timevale.forward.facade.api.result.ProductLineToFieldVO;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 
 /**
  * @Date 2022/3/17 16:59
@@ -21,8 +20,9 @@ import java.util.List;
 public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
-    public BusinessResult<List<String>> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
-        return null;
+    public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
+        BusinessResult<ProductLineToFieldVO> businessResult = new BusinessResult<>();
+        return businessResult;
     }
 
     @Override

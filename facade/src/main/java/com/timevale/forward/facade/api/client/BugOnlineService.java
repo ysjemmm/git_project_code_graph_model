@@ -5,6 +5,7 @@ import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
+import com.timevale.forward.facade.api.result.ProductLineToFieldVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -23,7 +24,7 @@ public interface BugOnlineService {
      * @param bugOnlineGetFieldReq 参数
      * @return 返回值
      */
-    BusinessResult<List<String>> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq);
+    BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq);
 
     /**
      * 查询线上bug列表
