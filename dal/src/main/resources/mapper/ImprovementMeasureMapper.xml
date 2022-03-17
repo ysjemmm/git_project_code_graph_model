@@ -5,7 +5,7 @@
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO improvement_measure(trouble_ticket_id, name, executor, executor_id, implementation_time,
                                         todo, todo_id, status, create_man_id, create_man)
-        VALUES (#{troubleTicketId}, #{name}, #{executor}, #{executorId}, #{implementationTime}, #{todo}, #{todoId},
+        VALUES (#{troubleTicketId}, #{name}, #{executor}, #{executorId}, #{implementationTime}, #{todo}, ifnull(#{todoId},''),
                 #{status}, #{createManId}, #{createMan})
     </insert>
 
@@ -18,7 +18,7 @@
             <if test="executorId != null">executor_id = #{executorId},</if>
             <if test="implementationTime != null">implementation_time = #{implementationTime},</if>
             <if test="todo != null">todo = #{todo},</if>
-            <if test="todoId != null and todoId != ''">todo_id = #{todoId},</if>
+            <if test="todoId != null">todo_id = #{todoId},</if>
             <if test="status != null">status = #{status},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
@@ -30,7 +30,7 @@
     </update>
 
     <select id="selectByTroubleTicketId" resultType="com.timevale.forward.dal.entity.ImprovementMeasureDO">
-        SELECT id, name, executor, implementation_time, todo, status, create_man, modify_date
+        SELECT id, name, executor, executor_id, implementation_time, todo, status, create_man, create_man_id, modify_date
         FROM improvement_measure
         WHERE trouble_ticket_id = #{troubleTicketId} AND is_deleted = false
     </select>

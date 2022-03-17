@@ -2,6 +2,7 @@ package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.entity.ImprovementMeasureDO;
 import com.timevale.forward.facade.api.request.ImprovementMeasureAddReq;
+import com.timevale.forward.facade.api.request.ImprovementMeasureModifyReq;
 import com.timevale.forward.facade.api.result.ImprovementMeasureVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -25,9 +26,18 @@ public interface ImprovementMeasureCopier {
     /**
      * 转换
      *
+     * @param improvementMeasureModifyReq 改进措施-修改请求
+     * @return 改进措施DO
+     */
+    ImprovementMeasureDO convert(ImprovementMeasureModifyReq improvementMeasureModifyReq);
+
+    /**
+     * 转换
+     *
      * @param improvementMeasureDO 改进措施DO
      * @return 改进措施VO
      */
     ImprovementMeasureVO convert(ImprovementMeasureDO improvementMeasureDO);
+
 
 }

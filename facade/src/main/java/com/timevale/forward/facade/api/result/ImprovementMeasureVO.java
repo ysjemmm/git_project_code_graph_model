@@ -42,7 +42,7 @@ public class ImprovementMeasureVO extends ToString {
     private Integer status;
 
     @ApiModelProperty("状态-描述")
-    private Integer statusName;
+    private String statusName;
 
     @ApiModelProperty("创建人")
     private String createMan;

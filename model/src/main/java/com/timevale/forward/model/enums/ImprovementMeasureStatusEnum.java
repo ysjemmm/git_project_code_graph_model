@@ -23,4 +23,13 @@ public enum ImprovementMeasureStatusEnum {
 
     private Integer code;
     private String text;
+
+    public static String getTextByCode(Integer code){
+        for (ImprovementMeasureStatusEnum e : ImprovementMeasureStatusEnum.values()){
+            if(e.code.equals(code)){
+                return e.text;
+            }
+        }
+        return "";
+    }
 }

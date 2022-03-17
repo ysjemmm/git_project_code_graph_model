@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 /**
@@ -18,6 +19,10 @@ public class ImprovementMeasureAddReq extends BaseReq {
 
     @ApiModelProperty("事项概述")
     private String name;
+
+    @ApiModelProperty("故障工单id")
+    @NotNull(message = "故障工单id")
+    private Long troubleTicketId;
 
     @ApiModelProperty("执行人")
     private String executor;
