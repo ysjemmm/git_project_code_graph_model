@@ -1,8 +1,10 @@
 package com.timevale.forward.service.impl;
 
 import com.timevale.forward.facade.api.client.BugOnlineService;
+import com.timevale.forward.facade.api.query.BugLogQueryList;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.BugLogVO;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
 import com.timevale.forward.facade.api.result.ProductLineToFieldVO;
@@ -139,6 +141,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     public BusinessResult<Boolean> repairFailed(BugOnlineRepairFailedReasonReq bugOnlineRepairFailedReasonReq) {
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
+        return businessResult;
+    }
+
+    @Override
+    public BusinessResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList bugLogQueryList) {
+        BusinessResult<PageQueryResult<BugLogVO>> businessResult = new BusinessResult<>();
         return businessResult;
     }
 }

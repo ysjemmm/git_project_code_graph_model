@@ -1,16 +1,16 @@
 package com.timevale.forward.facade.api.client;
 
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.query.BugLogQueryList;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.BugLogVO;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
 import com.timevale.forward.facade.api.result.ProductLineToFieldVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
-
-import java.util.List;
 
 /**
  * @Date 2022/3/17 10:22
@@ -161,6 +161,14 @@ public interface BugOnlineService {
      * @return 返回值
      */
     BusinessResult<Boolean> repairFailed(BugOnlineRepairFailedReasonReq bugOnlineRepairFailedReasonReq);
+
+    /**
+     * 查询日志变更列表
+     *
+     * @param bugLogQueryList 参数
+     * @return 返回值
+     */
+    BusinessResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList bugLogQueryList);
 }
 
 
