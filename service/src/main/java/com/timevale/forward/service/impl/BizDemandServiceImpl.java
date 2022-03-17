@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
+import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
@@ -270,6 +271,18 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 添加附件
         List<FileAddReq> fileIdList = bizDemandModifyReq.getFileList();
         fileComponent.update(fileIdList, bizDemandModifyReq.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
+
+
+        if(!Objects.equal(oldBizDemandDO.getReceiveManId(), newBizDemandDO.getReceiveManId())){
+            // 产品线变更带来的接收人变更
+            messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
+                    this,
+                    oldBizDemandDO.getId(),
+                    oldBizDemandDO.getCreateMan(),
+                    newBizDemandDO.getReceiveManId(),
+                    newBizDemandDO.getName()
+            ));
+        }
 
         return BaseResult.success(true);
     }
