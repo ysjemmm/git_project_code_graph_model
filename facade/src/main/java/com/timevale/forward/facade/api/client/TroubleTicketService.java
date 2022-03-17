@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.client;
 
+import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.TroubleTicketQueryList;
 import com.timevale.forward.facade.api.request.TroubleTicketAddReq;
@@ -8,7 +9,6 @@ import com.timevale.forward.facade.api.request.TroubleTicketModifyReq;
 import com.timevale.forward.facade.api.result.TroubleTicketDetailVO;
 import com.timevale.forward.facade.api.result.TroubleTicketVO;
 import com.timevale.mandarin.common.annotation.RestClient;
-import com.timevale.mandarin.common.result.BusinessResult;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ public interface TroubleTicketService {
      * @param troubleTicketAddReq 故障单添加请求
      * @return 成功与否
      */
-    BusinessResult<Boolean> add(TroubleTicketAddReq troubleTicketAddReq);
+    BaseResult<Boolean> add(TroubleTicketAddReq troubleTicketAddReq);
 
     /**
      * 修改故障单
@@ -34,7 +34,7 @@ public interface TroubleTicketService {
      * @param troubleTicketModifyReq 故障单修改请求
      * @return 成功与否
      */
-    BusinessResult<Boolean> modify(TroubleTicketModifyReq troubleTicketModifyReq);
+    BaseResult<Boolean> modify(TroubleTicketModifyReq troubleTicketModifyReq);
 
     /**
      * 查看故障单
@@ -42,7 +42,7 @@ public interface TroubleTicketService {
      * @param troubleTicketId 故障单id
      * @return 故障单详情
      */
-    BusinessResult<TroubleTicketDetailVO> get(Long troubleTicketId);
+    BaseResult<TroubleTicketDetailVO> get(Long troubleTicketId);
 
     /**
      * 删除故障单
@@ -50,7 +50,7 @@ public interface TroubleTicketService {
      * @param troubleTicketDeleteReq 故障单删除请求
      * @return 成功与否
      */
-    BusinessResult<Boolean> delete( TroubleTicketDeleteReq troubleTicketDeleteReq);
+    BaseResult<Boolean> delete( TroubleTicketDeleteReq troubleTicketDeleteReq);
 
     /**
      * 故障单列表查询
@@ -58,6 +58,6 @@ public interface TroubleTicketService {
      * @param troubleTicketQueryList 故障单列表查询条件
      * @return 故障单列表
      */
-    BusinessResult<List<TroubleTicketVO>> list( TroubleTicketQueryList troubleTicketQueryList);
+    BaseResult<List<TroubleTicketVO>> list( TroubleTicketQueryList troubleTicketQueryList);
 
 }

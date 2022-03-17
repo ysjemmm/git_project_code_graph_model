@@ -3,4 +3,25 @@
 <mapper namespace="com.timevale.forward.dal.dao.TroubleTicketMapper">
 
 
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO trouble_ticket(name, influence, type, product_line_id, handler, handler_id, occurrence_time,
+                                   influence_count, influence_client, during_time, failure_time, influence_scope, reason,
+                                   restore_time, replay_time, asset_loss, amount_loss, time_line, reason_analysis, trouble_rank,
+                                   prime_principal, prime_principal_id, minor_principal, minor_principal_id, duty_team,
+                                   create_man_id, create_man)
+        VALUES (#{name}, #{influence}, #{type}, #{productLineId}, #{handler}, #{handlerId}, #{occurrenceTime},
+                #{influenceCount}, #{influenceClient}, #{duringTime}, #{failureTime}, #{influenceScope}, #{reason},
+                #{restoreTime}, #{replayTime}, #{assetLoss}, #{amountLoss}, #{timeLine}, #{reasonAnalysis}, #{troubleRank},
+                #{primePrincipal}, #{primePrincipalId}, #{minorPrincipal}, #{minorPrincipalId}, #{dutyTeam},
+                #{createManId}, #{createMan})
+    </insert>
+
+    <select id="selectById" resultType="com.timevale.forward.dal.entity.TroubleTicketDO">
+        SELECT id, name, influence, type, product_line_id, handler, handler_id, occurrence_time, influence_count,
+               influence_client, during_time, failure_time, influence_scope, reason, restore_time, replay_time, asset_loss,
+               amount_loss, time_line, reason_analysis, trouble_rank, prime_principal, prime_principal_id, minor_principal,
+               minor_principal_id, duty_team, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        FROM trouble_ticket
+        WHERE id = #{id} AND is_deleted = false
+    </select>
 </mapper>

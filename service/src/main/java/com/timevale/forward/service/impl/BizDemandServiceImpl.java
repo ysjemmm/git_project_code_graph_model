@@ -173,9 +173,8 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandMapper.insert(bizDemandDO);
 
         List<FileAddReq> fileIdList = bizDemandAddReq.getFileList();
-        if (!fileIdList.isEmpty()) {
-            fileComponent.add(fileIdList, bizDemandDO.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
-        }
+        fileComponent.add(fileIdList, bizDemandDO.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
+
 
         // 添加抄送人
         List<PersonAddReq> recipientInfoList = bizDemandAddReq.getRecipientInfoList();
@@ -227,6 +226,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDetailVO.setStatusText(BizDemandStatusEnum.getTextByCode(bizDemandDetailVO.getStatus()));
         bizDemandDetailVO.setPriorityText(PriorityEnum.getTextChineseByCode(bizDemandDetailVO.getPriority()));
         bizDemandDetailVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandDetailVO.getPlanReleaseDate()));
+
         // 获取部门链，添加完整部门信息
         Map<Long, GroupResponse> deptMap = bizDemandComponent.getGroupListTreeMap(Lists.newArrayList(bizDemandDO.getDeptId()));
         GroupResponse response = deptMap.get(bizDemandDetailVO.getDeptId());

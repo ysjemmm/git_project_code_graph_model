@@ -44,13 +44,13 @@ import java.util.stream.Collectors;
 public class ImprovementMeasureServiceImpl implements ImprovementMeasureService {
 
     @Resource
-    ImprovementMeasureMapper improvementMeasureMapper;
+    private ImprovementMeasureMapper improvementMeasureMapper;
 
     @Resource
-    DingWorkRecordClient dingWorkRecordClient;
+    private DingWorkRecordClient dingWorkRecordClient;
 
     @Resource
-    InnerUserPersonClient innerUserPersonClient;
+    private InnerUserPersonClient innerUserPersonClient;
 
     public static final String TITLE = "您收到了一条任务：%s";
 
@@ -119,6 +119,8 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
 
     @Override
     public BaseResult<Boolean> delete(ImprovementMeasureDeleteReq improvementMeasureDeleteReq) {
+        log.info("改进措施-删除 delete 参数:{}", improvementMeasureDeleteReq);
+
         // 查询是否有对应事项
         Long id = improvementMeasureDeleteReq.getId();
         ImprovementMeasureDO improvementMeasureDO = improvementMeasureMapper.selectById(id);
@@ -153,7 +155,8 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
     }
 
     @Override
-    public BaseResult<Boolean> complete(ImprovementMeasureCompleteReq improvementMeasureCompleteReq) {
+    public BaseResult<Boolean> complete(ImprovementMeasureCompleteReq improvementMeasureCompleteReq){
+     log.info("改进措施-完成 complete 参数:{}", improvementMeasureCompleteReq);
         // 查询是否有对应事项
         Long id = improvementMeasureCompleteReq.getId();
         ImprovementMeasureDO improvementMeasureDO = improvementMeasureMapper.selectById(id);
@@ -195,6 +198,8 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
 
     @Override
     public BaseResult<List<ImprovementMeasureVO>> list(ImprovementMeasureQueryList improvementMeasureQueryList) {
+        log.info("改进措施-列表 list 参数:{}", improvementMeasureQueryList);
+
         PageHelper.startPage(improvementMeasureQueryList.pageNum, improvementMeasureQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
 
         // 读取数据，转换格式

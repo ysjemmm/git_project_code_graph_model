@@ -53,7 +53,7 @@ public class TroubleTicketDetailVO extends ToString {
     private Integer type;
 
     @ApiModelProperty("故障类型-描述")
-    private Integer typeName;
+    private String typeName;
 
     @ApiModelProperty("处理人")
     private String handler;
@@ -104,7 +104,7 @@ public class TroubleTicketDetailVO extends ToString {
     private Date replayTime;
 
     @ApiModelProperty("是否有资损 0 否, 1 是")
-    private Integer assetLoss;
+    private Boolean assetLoss;
 
     @ApiModelProperty("损失金额（元）")
     private BigDecimal amountLoss;
@@ -119,7 +119,7 @@ public class TroubleTicketDetailVO extends ToString {
     private Integer troubleRank;
 
     @ApiModelProperty("故障定级-描述")
-    private Integer troubleRankName;
+    private String troubleRankName;
 
     @ApiModelProperty("主责任人")
     private String primePrincipal;
