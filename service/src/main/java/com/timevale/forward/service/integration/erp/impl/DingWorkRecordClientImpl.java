@@ -3,11 +3,16 @@ package com.timevale.forward.service.integration.erp.impl;
 import com.timevale.erp.message.service.api.DingWorkRecordService;
 import com.timevale.erp.message.service.model.DingCreateTodoTaskInput;
 import com.timevale.erp.message.service.model.DingDeleteTodoTaskInput;
+import com.timevale.erp.message.service.model.DingGetTodoTaskInput;
 import com.timevale.erp.message.service.model.DingUpdateTodoTaskInput;
+import com.timevale.erp.message.service.result.DingTodoTaskResponseBody;
 import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
 import com.timevale.forward.service.integration.erp.model.CreateTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.DeleteTodoTaskMsg;
+import com.timevale.forward.service.integration.erp.model.GetTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.common.result.QueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -70,5 +75,21 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
         }catch (Exception e){
             log.error("[erpMessage]删除待办失败  error: " + e.getMessage() + " 发送通知信息：" + deleteTodoTaskMsg);
         }
+    }
+
+    @Override
+    public DingTodoTaskResponseBody getTask(GetTodoTaskMsg getTodoTaskMsg) {
+        final DingGetTodoTaskInput input = new DingGetTodoTaskInput();
+        input.setRecordId(getTodoTaskMsg.getRecordId());
+        input.setUnionId(getTodoTaskMsg.getUnionId());
+        try {
+            QueryResult<DingTodoTaskResponseBody> task = dingWorkRecordService.getTask(input);
+            if(task.isSuccess()){
+                return dingWorkRecordService.getTask(input).getResultObject();
+            }
+        }catch (Exception e){
+            log.error("[erpMessage]获取待办失败  error: " + e.getMessage() + " 发送通知信息：" + getTodoTaskMsg);
+        }
+        throw new BaseBizRuntimeException("获取待办信息失败");
     }
 }

@@ -1,7 +1,9 @@
 package com.timevale.forward.service.integration.erp;
 
+import com.timevale.erp.message.service.result.DingTodoTaskResponseBody;
 import com.timevale.forward.service.integration.erp.model.CreateTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.DeleteTodoTaskMsg;
+import com.timevale.forward.service.integration.erp.model.GetTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
 
 /**
@@ -21,14 +23,20 @@ public interface DingWorkRecordClient {
     /**
      * 更新待办
      * @param updateTodoTaskMsg 待办请求类型
-     * @return 待办返回信息
      */
     void updateTask(UpdateTodoTaskMsg updateTodoTaskMsg);
 
     /**
      * 删除待办
      * @param deleteTodoTaskMsg 待办请求类型
-     * @return 待办返回信息
      */
     void deleteTask(DeleteTodoTaskMsg deleteTodoTaskMsg);
+
+    /**
+     * 获取待办详情
+     *
+     * @param getTodoTaskMsg 得到todo任务味精
+     * @return 待办详情
+     */
+    DingTodoTaskResponseBody getTask(GetTodoTaskMsg getTodoTaskMsg);
 }

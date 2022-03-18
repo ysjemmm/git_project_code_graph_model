@@ -30,7 +30,7 @@
     </update>
 
     <select id="selectByTroubleTicketId" resultType="com.timevale.forward.dal.entity.ImprovementMeasureDO">
-        SELECT id, name, executor, executor_id, implementation_time, todo, status, create_man, create_man_id, modify_date
+        SELECT id, name, executor, executor_id, implementation_time, todo, todo_id, status, create_man, create_man_id, modify_date
         FROM improvement_measure
         WHERE trouble_ticket_id = #{troubleTicketId} AND is_deleted = false
     </select>

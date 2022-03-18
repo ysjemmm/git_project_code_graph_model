@@ -2,6 +2,7 @@ package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.timevale.erp.message.service.result.DingTodoTaskResponseBody;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ImprovementMeasureMapper;
 import com.timevale.forward.dal.entity.ImprovementMeasureDO;
@@ -18,6 +19,7 @@ import com.timevale.forward.service.copy.ImprovementMeasureCopier;
 import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
 import com.timevale.forward.service.integration.erp.model.CreateTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.DeleteTodoTaskMsg;
+import com.timevale.forward.service.integration.erp.model.GetTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -33,6 +35,7 @@ import org.assertj.core.util.Lists;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -64,7 +67,8 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
         // 查看是否创建待办
         if(improvementMeasureDO.getTodo()){
             // 获取 unionId
-            String userId = LocalSessionUtils.getUserInfo().getId();
+            // String userId = LocalSessionUtils.getUserInfo().getId();
+            String userId = "yangxu";
             String executorId = improvementMeasureDO.getExecutorId();
             Map<String, String> unionIdMap = innerUserPersonClient.getUnionIds(Lists.newArrayList(userId,executorId));
             if (CollectionUtils.isEmpty(unionIdMap)) {
@@ -202,9 +206,14 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
 
         PageHelper.startPage(improvementMeasureQueryList.pageNum, improvementMeasureQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
 
-        // 读取数据，转换格式
+        // 读取数据
         List<ImprovementMeasureDO> improvementMeasureDOList =
                 improvementMeasureMapper.selectByTroubleTicketId(improvementMeasureQueryList.getTroubleTicketId());
+
+        // 更新待办状态
+        updateTodoStatus(improvementMeasureDOList);
+
+        // 转换格式
         List<ImprovementMeasureVO> improvementMeasureVOList =
                 improvementMeasureDOList.stream().map(ImprovementMeasureCopier.INSTANCE::convert).collect(Collectors.toList());
 
@@ -212,9 +221,6 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
         improvementMeasureVOList.forEach(e -> {
             e.setStatusName(ImprovementMeasureStatusEnum.getTextByCode(e.getStatus()));
         });
-
-        // 更新待办状态
-
 
         // 返回分页数据
         PageInfo<ImprovementMeasureDO> pageInfo = new PageInfo<>(improvementMeasureDOList);
@@ -224,4 +230,40 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
 
         return BaseResult.success(pageQueryResult);
     }
+
+    /**
+     * 更新钉钉待办状态状态
+     *
+     * @param improvementMeasureDOList 改进措施DO List
+     */
+    private void updateTodoStatus(List<ImprovementMeasureDO> improvementMeasureDOList){
+        // 筛选出，已创建待办 并且 状态为待处理的事项
+        List<ImprovementMeasureDO> createdTodoList = improvementMeasureDOList.stream()
+                .filter(e -> e.getTodo() && ImprovementMeasureStatusEnum.PENDING.getCode().equals(e.getStatus()) &&  e.getName().contains("待办") )
+                .collect(Collectors.toList());
+
+        if(createdTodoList.isEmpty()){
+            return;
+        }
+
+        // 查询执行人的 unionId
+        List<String> executorIdList = createdTodoList.stream().map(ImprovementMeasureDO::getExecutorId).collect(Collectors.toList());
+        Map<String, String> unionIdMap = innerUserPersonClient.getUnionIds(executorIdList);
+
+        // 遍历查询钉钉待办状态
+        GetTodoTaskMsg getTodoTaskMsg = GetTodoTaskMsg.builder().build();
+        createdTodoList.forEach(e -> {
+            getTodoTaskMsg.setRecordId(e.getTodoId());
+            getTodoTaskMsg.setUnionId(unionIdMap.get(e.getExecutorId()));
+            DingTodoTaskResponseBody task = dingWorkRecordClient.getTask(getTodoTaskMsg);
+            if(task.getDone()){
+                e.setStatus(ImprovementMeasureStatusEnum.COMPLETED.getCode());
+            }
+        });
+
+        // 更新状态
+        Map<Long, Integer> statusMap = createdTodoList.stream().collect(Collectors.toMap(ImprovementMeasureDO::getId, ImprovementMeasureDO::getStatus));
+        improvementMeasureDOList.forEach(e -> e.setStatus(statusMap.get(e.getId())));
+    }
+
 }
