@@ -13,6 +13,7 @@
             <class name="com.timevale.forward.service.impl.ProductLineServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.ProjectServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.TestBillServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.TaskServiceImplTest"/>
             <class name="com.timevale.forward.service.component.impl.BizDemandComponentImplTest"/>
             <class name="com.timevale.forward.service.component.impl.FileComponentImplTest"/>
             <class name="com.timevale.forward.service.component.impl.PersonComponentImplTest"/>
@@ -22,6 +23,7 @@
             <class name="com.timevale.forward.service.component.impl.ProjectNodeComponentImplTest"/>
             <class name="com.timevale.forward.service.component.impl.ProjectProductDemandComponentImplTest"/>
             <class name="com.timevale.forward.service.component.impl.ProjectProductLineComponentImplTest"/>
+            <class name="com.timevale.forward.service.component.impl.TaskComponentImplTest"/>
         </classes>
     </test>
 </suite>

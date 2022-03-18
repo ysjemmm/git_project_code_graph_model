@@ -1,6 +1,8 @@
 package com.timevale.forward.service.component.impl;
 
+import com.timevale.forward.dal.dao.BugOfflineMapper;
 import com.timevale.forward.dal.dao.ProjectProductLineMapper;
+import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.entity.ProjectProductLineDO;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -32,6 +34,11 @@ public class ProjectProductLineComponentImplTest extends AbstractTestNGSpringCon
     @Mock
     private ProjectProductLineMapper projectProductLineMapper;
 
+    @Mock
+    private TaskMapper taskMapper;
+
+    @Mock
+    private BugOfflineMapper bugOfflineMapper;
     @Test
     public void testAdd() {
 
