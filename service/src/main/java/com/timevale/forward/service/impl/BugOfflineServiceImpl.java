@@ -77,6 +77,9 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
     @Resource
     private CommentMapper commentMapper;
 
+    @Resource
+    private BugStatusOperatorMapper bugStatusOperatorMapper;
+
     @Override
     public BaseResult<PageQueryResult<BugOfflineVO>> list(BugOfflineQueryList bugOfflineQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -153,12 +156,12 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
     public BaseResult<Boolean> add(BugOfflineAddReq bugOfflineAddReq) {
         // 校验关联项目状态
         Long projectId = bugOfflineAddReq.getProjectId();
-        if(projectId != 0){
+        if (projectId != 0) {
             ProjectDO projectDO = projectMapper.get(projectId);
-            if(projectDO == null){
+            if (projectDO == null) {
                 throw new BaseBizRuntimeException("所选关联项目不存在");
             }
-            if(ProjectStatusEnum.RELEASED.getCode().equals(projectDO.getStatus())){
+            if (ProjectStatusEnum.RELEASED.getCode().equals(projectDO.getStatus())) {
                 throw new BaseBizRuntimeException("关联项目已发布，无法创建");
             }
         }
@@ -236,7 +239,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
 
         // 特殊判断null和空字符串‘’
         bugLogDOList.removeIf(e -> {
-            if(e.getField().equals(BugFieldEnum.DELAY_HANDLE_REASON.getText())){
+            if (e.getField().equals(BugFieldEnum.DELAY_HANDLE_REASON.getText())) {
                 String oldValue = e.getOldValue();
                 String newValue = e.getNewValue();
                 oldValue = StringUtils.isEmpty(oldValue) ? "" : oldValue;
@@ -881,7 +884,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         }
 
         //如果不用修复原因存在老的值则往bug日志表里插入一条记录
-        if(unhandleReason != null){
+        if (unhandleReason != null) {
             BugLogDO bugLog = new BugLogDO();
             bugLog.setField(BugFieldEnum.UN_HANDLE_REASON.getText());
             bugLog.setOldValue(BugUnHandleReasonEnum.getTextByCode(unhandleReason));
@@ -1052,6 +1055,25 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
             bugLogVO.setTypeName(BugLogTypeEnum.getTextByCode(bugLogVO.getType()));
             bugLogVO.setCurrentDate(new Date());
         });
+        //如果是状态变更，需要填充状态经办人信息
+        if (bugLogQueryList.getStatusChange()) {
+            //查询出所有的状态经办人记录
+            List<Integer> bugLogIdList = bugLogVOList.stream().map(BugLogVO::getId).collect(Collectors.toList());
+            List<BugStatusOperatorDO> bugStatusOperatorDOList = bugStatusOperatorMapper.batchSelectByBugIds(bugLogIdList);
+
+            //转化bugStatusOperatorDO --> bugStatusOperatorVO
+            List<BugStatusOperatorVO> bugStatusOperatorVOList = bugStatusOperatorDOList.stream()
+                    .map(BugStatusOperatorCopier.INSTANCE::convert).collect(Collectors.toList());
+
+            //Map(线上bug的id  ->  状态经办人)
+            Map<Integer, List<BugStatusOperatorVO>> map = bugStatusOperatorVOList.stream()
+                    .collect(Collectors.groupingBy(BugStatusOperatorVO::getBugLogId));
+
+            //给每个状态变更记录赋值，把状态经办人集合赋给她
+            bugLogVOList.forEach(bugLogVO -> {
+                bugLogVO.setBugStatusOperatorVOList(map.get(bugLogVO.getId()));
+            });
+        }
 
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         pageQueryResult.setResultList(bugLogVOList);

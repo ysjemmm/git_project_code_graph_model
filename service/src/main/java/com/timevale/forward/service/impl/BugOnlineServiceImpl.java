@@ -1,8 +1,10 @@
 package com.timevale.forward.service.impl;
 
+import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.facade.api.client.BugOfflineService;
 import com.timevale.forward.facade.api.client.BugOnlineService;
 import com.timevale.forward.facade.api.query.BugLogQueryList;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
@@ -48,6 +50,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Resource
     private CommentMapper commentMapper;
+
+    @Resource
+    private BugOfflineService bugOfflineService;
 
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
@@ -245,10 +250,23 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         businessResult.setData(true);
         return businessResult;
     }
-
-    @Override
-    public BusinessResult<PageQueryResult<BugLogVO>> onlineBugLogList(BugLogQueryList bugLogQueryList) {
-        BusinessResult<PageQueryResult<BugLogVO>> businessResult = new BusinessResult<>();
-        return businessResult;
-    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

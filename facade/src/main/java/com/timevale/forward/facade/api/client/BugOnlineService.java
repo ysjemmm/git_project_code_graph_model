@@ -161,14 +161,6 @@ public interface BugOnlineService {
      * @return 返回值
      */
     BusinessResult<Boolean> repairFailed(BugOnlineRepairFailedReasonReq bugOnlineRepairFailedReasonReq);
-
-    /**
-     * 查询日志变更列表
-     *
-     * @param bugLogQueryList 参数
-     * @return 返回值
-     */
-    BusinessResult<PageQueryResult<BugLogVO>> onlineBugLogList(BugLogQueryList bugLogQueryList);
 }
 
 

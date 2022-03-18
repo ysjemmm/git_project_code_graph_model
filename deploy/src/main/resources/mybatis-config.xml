@@ -74,5 +74,6 @@
         <mapper resource="mapper/ImprovementMeasureMapper.xml"/>
         <mapper resource="mapper/BugOnlineMapper.xml"/>
         <mapper resource="mapper/BugOnlineProductLineMapper.xml"/>
+        <mapper resource="mapper/BugStatusOperatorMapper.xml"/>
     </mappers>
 </configuration>

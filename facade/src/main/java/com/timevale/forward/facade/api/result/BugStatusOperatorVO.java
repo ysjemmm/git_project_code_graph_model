@@ -22,4 +22,7 @@ public class BugStatusOperatorVO extends ToString {
 
     @ApiModelProperty("创建时间")
     private String createDate;
+
+    @ApiModelProperty("bug变更的id")
+    private Integer bugLogId;
 }
