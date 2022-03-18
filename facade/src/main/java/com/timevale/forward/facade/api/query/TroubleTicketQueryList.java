@@ -28,7 +28,7 @@ public class TroubleTicketQueryList extends QueryBase {
     private List<String> createMandIdList;
 
     @ApiModelProperty("故障定级-列表")
-    private List<Integer> troubleRank;
+    private List<Integer> troubleRankList;
 
     @ApiModelProperty("业务域id-列表")
     private List<Long> bizDomainIdList;
@@ -41,5 +41,8 @@ public class TroubleTicketQueryList extends QueryBase {
 
     @ApiModelProperty("故障发生时间-结束")
     private Date occurrenceTimeEnd;
+
+    @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
+    private String ascription;
 
 }

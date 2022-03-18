@@ -1,7 +1,11 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.TroubleTicketCondition;
 import com.timevale.forward.dal.entity.TroubleTicketDO;
+import com.timevale.forward.dal.entity.TroubleTicketListDO;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -32,4 +36,12 @@ public interface TroubleTicketMapper {
      * @return 故障工单DO
      */
     TroubleTicketDO selectById(@Param("id")Long id);
+
+    /**
+     * 条件查询
+     *
+     * @param troubleTicketCondition 故障工单id
+     * @return 故障工单DO 列表
+     */
+    List<TroubleTicketListDO> selectList(TroubleTicketCondition troubleTicketCondition);
 }

@@ -1,11 +1,14 @@
 package com.timevale.forward.service.impl;
 
+import com.github.pagehelper.PageHelper;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.TroubleTicketCondition;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.TroubleTicketMapper;
 import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.dal.entity.TroubleTicketDO;
+import com.timevale.forward.dal.entity.TroubleTicketListDO;
 import com.timevale.forward.facade.api.client.TroubleTicketService;
 import com.timevale.forward.facade.api.query.TroubleTicketQueryList;
 import com.timevale.forward.facade.api.request.FileAddReq;
@@ -18,8 +21,12 @@ import com.timevale.forward.facade.api.result.TroubleTicketVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.TroubleTicketCopier;
+import com.timevale.forward.service.utils.date.DateUtil;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.security.facade.response.GroupResponse;
@@ -28,7 +35,9 @@ import org.assertj.core.util.Lists;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author by YangXu
@@ -52,6 +61,8 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
     @Override
     public BaseResult<Boolean> add(TroubleTicketAddReq troubleTicketAddReq) {
+        log.info("故障工单-新增 add 参数:{}", troubleTicketAddReq);
+
         // 转换后行插入数据
         TroubleTicketDO troubleTicketDO = TroubleTicketCopier.INSTANCE.convert(troubleTicketAddReq);
         troubleTicketMapper.insert(troubleTicketDO);
@@ -65,6 +76,8 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
     @Override
     public BaseResult<Boolean> modify(TroubleTicketModifyReq troubleTicketModifyReq) {
+        log.info("故障工单-修改 modify 参数:{}", troubleTicketModifyReq);
+
         Long id = troubleTicketModifyReq.getId();
         TroubleTicketDO oldTroubleTicketDO = troubleTicketMapper.selectById(id);
         if(oldTroubleTicketDO == null){
@@ -84,6 +97,8 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
     @Override
     public BaseResult<TroubleTicketDetailVO> get(Long troubleTicketId) {
+        log.info("故障工单-查看 get 参数:{}", troubleTicketId);
+
         // 读取数据，判断是否存在
         TroubleTicketDO troubleTicketDO = troubleTicketMapper.selectById(troubleTicketId);
         if(troubleTicketDO == null){
@@ -119,6 +134,8 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
     @Override
     public BaseResult<Boolean> delete(TroubleTicketDeleteReq troubleTicketDeleteReq) {
+        log.info("故障工单-删除 delete 参数:{}", troubleTicketDeleteReq);
+
         Long id = troubleTicketDeleteReq.getId();
         TroubleTicketDO troubleTicketDO = troubleTicketMapper.selectById(id);
         if(troubleTicketDO == null){
@@ -134,6 +151,38 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
     @Override
     public BaseResult<List<TroubleTicketVO>> list(TroubleTicketQueryList troubleTicketQueryList) {
-        return null;
+        log.info("故障工单-列表 list 参数:{}", troubleTicketQueryList);
+
+        String userId = LocalSessionUtils.getUserInfo().getId();
+
+        // 条件转换
+        TroubleTicketCondition troubleTicketCondition = TroubleTicketCopier.INSTANCE.convert(troubleTicketQueryList);
+
+        // 日期处理
+        troubleTicketCondition.setOccurrenceTimeStart(DateUtil.getStartOfDay(troubleTicketCondition.getOccurrenceTimeStart()));
+        troubleTicketCondition.setOccurrenceTimeEnd(DateUtil.getEndOfDay(troubleTicketCondition.getOccurrenceTimeEnd()));
+
+        // tab页面条件
+        String ascription = troubleTicketQueryList.getAscription();
+        if(AscriptionEnum.CURRENT_USER.getText().equals(ascription)){
+            troubleTicketCondition.setCreateMandIdList(Lists.newArrayList(userId));
+        }else if(AscriptionEnum.RECEIVE.getText().equals(ascription)){
+            troubleTicketCondition.setHandlerIdList(Lists.newArrayList(userId));
+        }
+
+        // 分页查询
+        PageHelper.startPage(troubleTicketQueryList.pageNum, troubleTicketQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        List<TroubleTicketListDO> troubleTicketListDOList = troubleTicketMapper.selectList(troubleTicketCondition);
+
+        // 结果集转换
+        List<TroubleTicketVO> troubleTicketVOList = troubleTicketListDOList.stream()
+                .map(TroubleTicketCopier.INSTANCE::convert).collect(Collectors.toList());
+
+        // 描述数据填充
+        troubleTicketVOList.forEach(e -> {
+            e.setTroubleRankName(TroubleTicketRankEnum.getTextByCode(e.getTroubleRank()));
+        });
+
+        return BaseResult.success(troubleTicketVOList);
     }
 }

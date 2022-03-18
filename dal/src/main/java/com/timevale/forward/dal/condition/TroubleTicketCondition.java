@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.condition;
 
+import com.timevale.forward.dal.annotation.WildcardEscape;
 import lombok.Builder;
 import lombok.Data;
 
@@ -17,6 +18,7 @@ public class TroubleTicketCondition {
     /**
      * 故障概述
      */
+    @WildcardEscape
     private String name;
 
     /**
@@ -32,7 +34,7 @@ public class TroubleTicketCondition {
     /**
      * 故障定级-列表
      */
-    private List<Integer> troubleRank;
+    private List<Integer> troubleRankList;
 
     /**
      * 业务域id-列表

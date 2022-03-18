@@ -30,7 +30,7 @@ public class TroubleTicketVO extends ToString {
     private Integer troubleRank;
 
     @ApiModelProperty("故障定级描述")
-    private Integer troubleRankName;
+    private String troubleRankName;
 
     @ApiModelProperty("业务域名称")
     private String bizDomainName;

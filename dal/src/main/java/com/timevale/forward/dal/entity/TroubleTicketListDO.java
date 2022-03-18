@@ -35,6 +35,11 @@ public class TroubleTicketListDO extends BaseDO {
     private String handlerId;
 
     /**
+     * 发生时间
+     */
+    private Date occurrenceTime;
+
+    /**
      * 业务域
      */
     private String bizDomainName;
