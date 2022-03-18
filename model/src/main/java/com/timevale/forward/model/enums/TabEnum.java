@@ -11,11 +11,40 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum TabEnum {
-    // 跳转页
+    /**
+     * 项目路由
+     */
     PROJECT_MANAGEMENT("projectManagement"),
+
+    /**
+     * 产品路由
+     */
     PRODUCT_MANAGEMENT("productManagement"),
+
+    /**
+     * 业务需求路由
+     */
     BUSINESS_MANAGEMENT("businessManagement"),
+
+    /**
+     * 任务路由
+     */
     TASK_MANAGEMENT("taskManagement"),
-    BUG_MANAGEMENT("bugManagement");
+
+    /**
+     * 线下bug路由
+     */
+    BUG_MANAGEMENT("bugManagement"),
+
+    /**
+     * 线上bug路由
+     */
+    BUG_ONLINE_MANAGEMENT("mainBugManagement"),
+
+    /**
+     * 故障单路由
+     */
+    TROUBLE_MANAGEMENT("faultManagement");
+
     private final String text;
 }

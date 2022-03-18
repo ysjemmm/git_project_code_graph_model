@@ -31,25 +31,28 @@ import java.util.stream.Collectors;
 public class CommentServiceImpl implements CommentService {
 
     @Resource
-    BizDemandMapper bizDemandMapper;
+    private BizDemandMapper bizDemandMapper;
 
     @Resource
-    ProductDemandMapper productDemandMapper;
+    private ProductDemandMapper productDemandMapper;
 
     @Resource
-    ProjectMapper projectMapper;
+    private ProjectMapper projectMapper;
 
     @Resource
-    TaskMapper taskMapper;
+    private TaskMapper taskMapper;
 
     @Resource
     private BugOfflineMapper bugOfflineMapper;
 
     @Resource
-    CommentMapper commentMapper;
+    private TroubleTicketMapper troubleTicketMapper;
 
     @Resource
-    MessageEventPublisher messageEventPublisher;
+    private CommentMapper commentMapper;
+
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
 
     @Override
     public BaseResult<List<CommentVO>> list(CommentQueryList commentQueryList) {
@@ -77,7 +80,7 @@ public class CommentServiceImpl implements CommentService {
         if(receivers.isEmpty()){return BaseResult.success(true);}
 
         // 查询对应业务需求/产品需求/项目名称
-        String name;
+        String name = "";
         Long toId = commentAddReq.getToId();
         Integer type = commentAddReq.getType();
         if(CommentTypeEnum.PROJECT.getCode().equals(type)){
@@ -88,8 +91,12 @@ public class CommentServiceImpl implements CommentService {
             name = bizDemandMapper.selectById(toId).getName();
         }else if(CommentTypeEnum.TASK.getCode().equals(type)){
             name = taskMapper.getById(toId).getName();
-        }else{
+        }else if(CommentTypeEnum.BUG_OFFLINE.getCode().equals(type)) {
             name = bugOfflineMapper.selectById(toId).getName();
+        }else if(CommentTypeEnum.BUG_ONLINE.getCode().equals(type)){
+            name = "线上bug";
+        }else if(CommentTypeEnum.TROUBLE_TICKET.getCode().equals(type)){
+            name = troubleTicketMapper.selectById(toId).getName();
         }
 
         // 发送通知
