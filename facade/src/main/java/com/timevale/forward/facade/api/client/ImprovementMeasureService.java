@@ -10,6 +10,7 @@ import com.timevale.forward.facade.api.request.ImprovementMeasureModifyReq;
 import com.timevale.forward.facade.api.result.ImprovementMeasureVO;
 import com.timevale.forward.facade.api.result.TroubleTicketVO;
 import com.timevale.mandarin.common.annotation.RestClient;
+import com.timevale.mandarin.common.result.PageQueryResult;
 
 import java.util.List;
 
@@ -59,6 +60,6 @@ public interface ImprovementMeasureService {
      * @param improvementMeasureQueryList 改进措施列表查询条件
      * @return 改进措施列表
      */
-    BaseResult<List<ImprovementMeasureVO>> list(ImprovementMeasureQueryList improvementMeasureQueryList);
+    BaseResult<PageQueryResult<ImprovementMeasureVO>> list(ImprovementMeasureQueryList improvementMeasureQueryList);
 
 }

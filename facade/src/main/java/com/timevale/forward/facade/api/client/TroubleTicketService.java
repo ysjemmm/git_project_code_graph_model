@@ -9,6 +9,7 @@ import com.timevale.forward.facade.api.request.TroubleTicketModifyReq;
 import com.timevale.forward.facade.api.result.TroubleTicketDetailVO;
 import com.timevale.forward.facade.api.result.TroubleTicketVO;
 import com.timevale.mandarin.common.annotation.RestClient;
+import com.timevale.mandarin.common.result.PageQueryResult;
 
 import java.util.List;
 
@@ -58,6 +59,6 @@ public interface TroubleTicketService {
      * @param troubleTicketQueryList 故障单列表查询条件
      * @return 故障单列表
      */
-    BaseResult<List<TroubleTicketVO>> list(TroubleTicketQueryList troubleTicketQueryList);
+    BaseResult<PageQueryResult<TroubleTicketVO>> list(TroubleTicketQueryList troubleTicketQueryList);
 
 }

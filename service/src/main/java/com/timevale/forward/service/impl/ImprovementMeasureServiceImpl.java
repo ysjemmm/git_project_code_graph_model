@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ImprovementMeasureMapper;
 import com.timevale.forward.dal.entity.ImprovementMeasureDO;
@@ -19,10 +20,12 @@ import com.timevale.forward.service.integration.erp.model.CreateTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.DeleteTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
+import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
@@ -194,7 +197,7 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
     }
 
     @Override
-    public BaseResult<List<ImprovementMeasureVO>> list(ImprovementMeasureQueryList improvementMeasureQueryList) {
+    public BaseResult<PageQueryResult<ImprovementMeasureVO>> list(ImprovementMeasureQueryList improvementMeasureQueryList) {
         log.info("改进措施-列表 list 参数:{}", improvementMeasureQueryList);
 
         PageHelper.startPage(improvementMeasureQueryList.pageNum, improvementMeasureQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
@@ -212,6 +215,13 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
 
         // 更新待办状态
 
-        return BaseResult.success(improvementMeasureVOList);
+
+        // 返回分页数据
+        PageInfo<ImprovementMeasureDO> pageInfo = new PageInfo<>(improvementMeasureDOList);
+        PageQueryResult<ImprovementMeasureVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(improvementMeasureVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
+        return BaseResult.success(pageQueryResult);
     }
 }

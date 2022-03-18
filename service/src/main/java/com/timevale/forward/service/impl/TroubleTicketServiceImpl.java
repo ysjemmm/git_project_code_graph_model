@@ -1,20 +1,19 @@
 package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.TroubleTicketCondition;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.TroubleTicketMapper;
-import com.timevale.forward.dal.entity.FileDO;
-import com.timevale.forward.dal.entity.ProductLineDO;
-import com.timevale.forward.dal.entity.TroubleTicketDO;
-import com.timevale.forward.dal.entity.TroubleTicketListDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TroubleTicketService;
 import com.timevale.forward.facade.api.query.TroubleTicketQueryList;
 import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.facade.api.request.TroubleTicketAddReq;
 import com.timevale.forward.facade.api.request.TroubleTicketDeleteReq;
 import com.timevale.forward.facade.api.request.TroubleTicketModifyReq;
+import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.FileVO;
 import com.timevale.forward.facade.api.result.TroubleTicketDetailVO;
 import com.timevale.forward.facade.api.result.TroubleTicketVO;
@@ -24,11 +23,13 @@ import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.TroubleTicketCopier;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
+import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
@@ -150,7 +151,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
     }
 
     @Override
-    public BaseResult<List<TroubleTicketVO>> list(TroubleTicketQueryList troubleTicketQueryList) {
+    public BaseResult<PageQueryResult<TroubleTicketVO>> list(TroubleTicketQueryList troubleTicketQueryList) {
         log.info("故障工单-列表 list 参数:{}", troubleTicketQueryList);
 
         String userId = LocalSessionUtils.getUserInfo().getId();
@@ -183,6 +184,12 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
             e.setTroubleRankName(TroubleTicketRankEnum.getTextByCode(e.getTroubleRank()));
         });
 
-        return BaseResult.success(troubleTicketVOList);
+        // 返回分页数据
+        PageInfo<TroubleTicketListDO> pageInfo = new PageInfo<>(troubleTicketListDOList);
+        PageQueryResult<TroubleTicketVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(troubleTicketVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
+        return BaseResult.success(pageQueryResult);
     }
 }
