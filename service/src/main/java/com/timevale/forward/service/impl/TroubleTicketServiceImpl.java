@@ -66,10 +66,20 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
     @Override
     public BaseResult<Boolean> modify(TroubleTicketModifyReq troubleTicketModifyReq) {
         Long id = troubleTicketModifyReq.getId();
+        TroubleTicketDO oldTroubleTicketDO = troubleTicketMapper.selectById(id);
+        if(oldTroubleTicketDO == null){
+            throw new BaseBizRuntimeException("不存在对应的故障工单");
+        }
 
+        // 故障单信息
+        TroubleTicketDO newTroubleTicketDO = TroubleTicketCopier.INSTANCE.convert(troubleTicketModifyReq);
+        troubleTicketMapper.update(newTroubleTicketDO);
 
+        // 更新附件信息
+        List<FileAddReq> fileIdList = troubleTicketModifyReq.getFileList();
+        fileComponent.update(fileIdList, id, FileTypeEnum.TROUBLE_TICKET.getCode());
 
-        return null;
+        return BaseResult.success(true);
     }
 
     @Override
@@ -84,6 +94,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
             throw new BaseBizRuntimeException("不存在对应的产品线");
         }
 
+        // 转换格式
         TroubleTicketDetailVO ticketDetailVO = TroubleTicketCopier.INSTANCE.convert(troubleTicketDO);
 
         // 填充描述数据
@@ -98,19 +109,27 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         String deptChainName = bizDemandComponent.getDeptChainName(ticketDetailVO.getDutyTeam());
         ticketDetailVO.setDutyTeamName(deptChainName);
 
-        // 附件
+        // 添加附件信息
         List<FileDO> fileDOList = fileComponent.select(troubleTicketId, FileTypeEnum.TROUBLE_TICKET.getCode());
         List<FileVO> fileVOList = FileCopier.INSTANCE.transform(fileDOList);
-
-        // 改进措施
-
+        ticketDetailVO.setFileVOList(fileVOList);
 
         return BaseResult.success(ticketDetailVO);
     }
 
     @Override
     public BaseResult<Boolean> delete(TroubleTicketDeleteReq troubleTicketDeleteReq) {
-        return null;
+        Long id = troubleTicketDeleteReq.getId();
+        TroubleTicketDO troubleTicketDO = troubleTicketMapper.selectById(id);
+        if(troubleTicketDO == null){
+            throw new BaseBizRuntimeException("不存在对应的故障工单");
+        }
+
+        // 逻辑删除
+        troubleTicketDO.setIsDeleted(true);
+        troubleTicketMapper.update(troubleTicketDO);
+
+        return BaseResult.success(true);
     }
 
     @Override

@@ -18,6 +18,14 @@ public interface TroubleTicketMapper {
     int insert(TroubleTicketDO troubleTicketDO);
 
     /**
+     * 更新数据
+     *
+     * @param troubleTicketDO 故障单DO
+     * @return 影响行数
+     */
+    int update(TroubleTicketDO troubleTicketDO);
+
+    /**
      * 根据id查询
      *
      * @param id 故障工单id

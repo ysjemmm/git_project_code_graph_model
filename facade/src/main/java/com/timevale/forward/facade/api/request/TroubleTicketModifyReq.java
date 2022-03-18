@@ -11,6 +11,7 @@ import lombok.EqualsAndHashCode;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -106,5 +107,8 @@ public class TroubleTicketModifyReq extends BaseReq {
     @ApiModelProperty("责任团队id")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long dutyTeam;
+
+    @ApiModelProperty("附件列表")
+    private List<FileAddReq> fileList;
 
 }

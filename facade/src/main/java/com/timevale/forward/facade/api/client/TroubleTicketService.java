@@ -50,7 +50,7 @@ public interface TroubleTicketService {
      * @param troubleTicketDeleteReq 故障单删除请求
      * @return 成功与否
      */
-    BaseResult<Boolean> delete( TroubleTicketDeleteReq troubleTicketDeleteReq);
+    BaseResult<Boolean> delete(TroubleTicketDeleteReq troubleTicketDeleteReq);
 
     /**
      * 故障单列表查询
@@ -58,6 +58,6 @@ public interface TroubleTicketService {
      * @param troubleTicketQueryList 故障单列表查询条件
      * @return 故障单列表
      */
-    BaseResult<List<TroubleTicketVO>> list( TroubleTicketQueryList troubleTicketQueryList);
+    BaseResult<List<TroubleTicketVO>> list(TroubleTicketQueryList troubleTicketQueryList);
 
 }

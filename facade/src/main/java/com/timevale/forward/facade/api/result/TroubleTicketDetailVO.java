@@ -139,10 +139,7 @@ public class TroubleTicketDetailVO extends ToString {
 
     @ApiModelProperty("责任团队-描述")
     private String dutyTeamName;
-
-    @ApiModelProperty("改进措施")
-    private List<ImprovementMeasureVO> improvementMeasureVOList;
-
+    
     @ApiModelProperty("附件")
     private List<FileVO> fileVOList;
 
