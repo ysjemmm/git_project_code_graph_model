@@ -145,7 +145,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
-    public BusinessResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList bugLogQueryList) {
+    public BusinessResult<PageQueryResult<BugLogVO>> onlineBugLogList(BugLogQueryList bugLogQueryList) {
         BusinessResult<PageQueryResult<BugLogVO>> businessResult = new BusinessResult<>();
         return businessResult;
     }

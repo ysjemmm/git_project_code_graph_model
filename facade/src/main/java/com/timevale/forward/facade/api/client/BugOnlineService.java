@@ -168,7 +168,7 @@ public interface BugOnlineService {
      * @param bugLogQueryList 参数
      * @return 返回值
      */
-    BusinessResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList bugLogQueryList);
+    BusinessResult<PageQueryResult<BugLogVO>> onlineBugLogList(BugLogQueryList bugLogQueryList);
 }
 
 
