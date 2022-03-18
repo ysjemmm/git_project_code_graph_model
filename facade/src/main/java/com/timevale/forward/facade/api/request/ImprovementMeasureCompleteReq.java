@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * @author by YangXu
  * @date 2022/03/16 15:21
@@ -15,5 +17,6 @@ import lombok.EqualsAndHashCode;
 public class ImprovementMeasureCompleteReq extends BaseReq {
 
     @ApiModelProperty("事项id")
+    @NotNull(message = "事项id不能为空")
     private Long id;
 }

@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 /**
@@ -17,6 +18,7 @@ import java.util.Date;
 public class ImprovementMeasureDeleteReq extends BaseReq {
 
     @ApiModelProperty("事项id")
+    @NotNull(message = "事项id不能为空")
     private Long id;
 
 }

@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -21,27 +22,27 @@ import java.util.List;
 @ApiModel("故障工单-新增")
 public class TroubleTicketAddReq extends BaseReq {
 
-    @NotNull(message = "故障概述不能为空")
     @ApiModelProperty("故障概述")
+    @NotNull(message = "故障概述不能为空")
     private String name;
 
     @ApiModelProperty("故障影响")
     private String influence;
 
-    @NotNull(message = "故障类型不能为空")
     @ApiModelProperty("故障类型 0 业务故障，1 数据故障")
+    @NotNull(message = "故障类型不能为空")
     private Integer type;
 
-    @NotNull(message = "处理人不能为空")
     @ApiModelProperty("处理人")
+    @NotBlank(message = "处理人不能为空")
     private String handler;
 
-    @NotNull(message = "处理人id不能为空")
     @ApiModelProperty("处理人id")
+    @NotBlank(message = "处理人id不能为空")
     private String handlerId;
 
-    @NotNull(message = "产品线不能为空")
     @ApiModelProperty("产品线id")
+    @NotNull(message = "产品线不能为空")
     private Long productLineId;
 
     @ApiModelProperty("影响客户数（家）")

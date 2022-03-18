@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 /**
@@ -17,17 +19,22 @@ import java.util.Date;
 public class ImprovementMeasureModifyReq extends BaseReq {
 
     @ApiModelProperty("事项id")
+    @NotNull(message = "事项id不能为空")
     private Long id;
 
     @ApiModelProperty("事项概述")
+    @NotBlank(message = "事项概述不能为空")
     private String name;
 
     @ApiModelProperty("执行人")
+    @NotBlank(message = "执行人不能为空")
     private String executor;
 
     @ApiModelProperty("执行人id")
+    @NotBlank(message = "执行人id为空")
     private String executorId;
 
     @ApiModelProperty("落实日期")
+    @NotNull(message = "落实日期不能为空")
     private Date implementationTime;
 }

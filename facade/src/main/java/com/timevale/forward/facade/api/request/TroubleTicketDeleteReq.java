@@ -16,8 +16,8 @@ import javax.validation.constraints.NotNull;
 @ApiModel("故障工单-删除")
 public class TroubleTicketDeleteReq extends BaseReq {
 
-    @NotNull(message = "故障工单id不能为空")
     @ApiModelProperty("故障工单id")
+    @NotNull(message = "故障工单id不能为空")
     private Long id;
 
 }
