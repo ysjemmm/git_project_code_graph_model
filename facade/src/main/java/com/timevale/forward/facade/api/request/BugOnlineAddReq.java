@@ -65,7 +65,7 @@ public class BugOnlineAddReq extends BaseReq {
     @ApiModelProperty("期望解决日期")
     private Date expectDate;
 
-    @ApiModelProperty("产品线相关业务，格式是json字符串格式")
+    @ApiModelProperty("产品线相关业务，格式是json字符串格式:{flowId->流程flow id,mainOId->实名主体 oid,templateId->模板id,appId->appid,sealId->sealid,operatorNameAccount->操作人姓名账号,loginAccount->登录账号}")
     private String business;
 
     @ApiModelProperty("bug详情描述")

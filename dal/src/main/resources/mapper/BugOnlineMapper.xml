@@ -1,0 +1,7 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.timevale.forward.dal.dao.BugOnlineMapper">
+    <select id="selectById" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+        select * from bug_online
+    </select>
+
+</mapper>
