@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
@@ -53,9 +54,11 @@ public class TroubleTicketAddReq extends BaseReq {
 
     @NotNull(message = "故障发生时间不能为空")
     @ApiModelProperty("故障发生时间")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
     private Date occurrenceTime;
 
     @ApiModelProperty("业务恢复时间")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
     private Date restoreTime;
 
     @ApiModelProperty("故障持续时间 0 ≤5分钟，1 5~20分钟，2 20~30分钟，3 30~60分钟，4 ＞60分钟")
@@ -71,6 +74,7 @@ public class TroubleTicketAddReq extends BaseReq {
     private Integer reason;
 
     @ApiModelProperty("复盘时间")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
     private Date replayTime;
 
     @ApiModelProperty("是否有资损")
