@@ -67,8 +67,8 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
         // 查看是否创建待办
         if(improvementMeasureDO.getTodo()){
             // 获取 unionId
-            // String userId = LocalSessionUtils.getUserInfo().getId();
-            String userId = "yangxu";
+            String userId = LocalSessionUtils.getUserInfo().getId();
+            // String userId = "yangxu";
             String executorId = improvementMeasureDO.getExecutorId();
             Map<String, String> unionIdMap = innerUserPersonClient.getUnionIds(Lists.newArrayList(userId,executorId));
             if (CollectionUtils.isEmpty(unionIdMap)) {
