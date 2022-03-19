@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.ImprovementMeasureCondition;
 import com.timevale.forward.dal.entity.ImprovementMeasureDO;
 import org.apache.ibatis.annotations.Param;
 
@@ -28,19 +29,11 @@ public interface ImprovementMeasureMapper {
     int update(ImprovementMeasureDO improvementMeasureDO);
 
     /**
-     * 改进措施-根据id查询
+     * 改进措施-查询对应条件
      *
-     * @param id 改进措施 id
+     * @param condition 条件
      * @return 改进措施 List
      */
-    ImprovementMeasureDO selectById(@Param("id") Long id);
-
-    /**
-     * 改进措施-查询故障单下的改进措施
-     *
-     * @param troubleTicketId 故障单的id
-     * @return 改进措施 List
-     */
-    List<ImprovementMeasureDO> selectByTroubleTicketId(@Param("troubleTicketId") Long troubleTicketId);
+    List<ImprovementMeasureDO> selectByCondition(ImprovementMeasureCondition condition);
 
 }

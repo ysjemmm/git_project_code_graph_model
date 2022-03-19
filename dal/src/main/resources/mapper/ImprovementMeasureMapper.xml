@@ -28,18 +28,29 @@
             id = #{id}
         </where>
     </update>
-
-    <select id="selectByTroubleTicketId" resultType="com.timevale.forward.dal.entity.ImprovementMeasureDO">
-        SELECT id, name, executor, executor_id, implementation_time, todo, todo_id, status, create_man, create_man_id, modify_date
-        FROM improvement_measure
-        WHERE trouble_ticket_id = #{troubleTicketId} AND is_deleted = false
-    </select>
-
-    <select id="selectById" resultType="com.timevale.forward.dal.entity.ImprovementMeasureDO">
+    
+    <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.ImprovementMeasureDO">
         SELECT id, trouble_ticket_id, name, executor, executor_id, implementation_time, todo, todo_id, status,
                is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
         FROM improvement_measure
-        WHERE id = #{id}
+        <where>
+            <if test="id != null">AND id = #{id}</if>
+            <if test="troubleTicketId != null">AND trouble_ticket_id = #{troubleTicketId}</if>
+            <if test="name != null">AND name = #{name}</if>
+            <if test="executor != null">AND executor = #{executor}</if>
+            <if test="executorId != null">AND executor_id = #{executorId}</if>
+            <if test="implementationTime != null">AND implementation_time = #{implementationTime}</if>
+            <if test="todo != null">AND todo = #{todo}</if>
+            <if test="todoId != null">AND todo_id = #{todoId}</if>
+            <if test="status != null">AND status = #{status}</if>
+            <if test="createMan != null">AND create_man = #{createMan}</if>
+            <if test="createManId != null">AND create_man_id = #{createManId}</if>
+            <if test="createDate != null">AND create_date = #{createDate}</if>
+            <if test="modifyMan != null">AND modify_man = #{modifyMan}</if>
+            <if test="modifyManId != null">AND modify_man_id = #{modifyManId}</if>
+            <if test="modifyDate != null">AND modify_date = #{modifyDate}</if>
+            <if test="isDeleted != null">AND is_deleted = #{isDeleted}</if>
+        </where>
     </select>
 
 </mapper>

@@ -4,6 +4,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.erp.message.service.result.DingTodoTaskResponseBody;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.ImprovementMeasureCondition;
 import com.timevale.forward.dal.dao.ImprovementMeasureMapper;
 import com.timevale.forward.dal.entity.ImprovementMeasureDO;
 import com.timevale.forward.facade.api.client.ImprovementMeasureService;
@@ -35,7 +36,6 @@ import org.assertj.core.util.Lists;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -106,9 +106,12 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
         log.info("改进措施-修改 modify 参数:{}", improvementMeasureModifyReq);
 
         // 校验是否有对应数据
-        Long id = improvementMeasureModifyReq.getId();
-        ImprovementMeasureDO oldImprovementMeasureDO = improvementMeasureMapper.selectById(id);
-        if(oldImprovementMeasureDO == null){
+        ImprovementMeasureCondition condition = ImprovementMeasureCondition.builder()
+                .id(improvementMeasureModifyReq.getId())
+                .isDeleted(false)
+                .build();
+        List<ImprovementMeasureDO> improvementMeasureDOList = improvementMeasureMapper.selectByCondition(condition);
+        if(CollectionUtils.isEmpty(improvementMeasureDOList)){
             throw new BaseBizRuntimeException("该事项不存在");
         }
 
@@ -126,11 +129,15 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
         log.info("改进措施-删除 delete 参数:{}", improvementMeasureDeleteReq);
 
         // 查询是否有对应事项
-        Long id = improvementMeasureDeleteReq.getId();
-        ImprovementMeasureDO improvementMeasureDO = improvementMeasureMapper.selectById(id);
-        if(improvementMeasureDO == null){
+        ImprovementMeasureCondition condition = ImprovementMeasureCondition.builder()
+                .id(improvementMeasureDeleteReq.getId())
+                .isDeleted(false)
+                .build();
+        List<ImprovementMeasureDO> improvementMeasureDOList = improvementMeasureMapper.selectByCondition(condition);
+        if(CollectionUtils.isEmpty(improvementMeasureDOList)){
             throw new BaseBizRuntimeException("该事项不存在");
         }
+        ImprovementMeasureDO improvementMeasureDO = improvementMeasureDOList.get(0);
 
         // 待办处理
         if(improvementMeasureDO.getTodo()){
@@ -161,12 +168,17 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
     @Override
     public BaseResult<Boolean> complete(ImprovementMeasureCompleteReq improvementMeasureCompleteReq){
      log.info("改进措施-完成 complete 参数:{}", improvementMeasureCompleteReq);
+
         // 查询是否有对应事项
-        Long id = improvementMeasureCompleteReq.getId();
-        ImprovementMeasureDO improvementMeasureDO = improvementMeasureMapper.selectById(id);
-        if(improvementMeasureDO == null){
+        ImprovementMeasureCondition condition = ImprovementMeasureCondition.builder()
+                .id(improvementMeasureCompleteReq.getId())
+                .isDeleted(false)
+                .build();
+        List<ImprovementMeasureDO> improvementMeasureDOList = improvementMeasureMapper.selectByCondition(condition);
+        if(CollectionUtils.isEmpty(improvementMeasureDOList)){
             throw new BaseBizRuntimeException("该事项不存在");
         }
+        ImprovementMeasureDO improvementMeasureDO = improvementMeasureDOList.get(0);
 
         // 修改事项逻辑删除标志
         improvementMeasureDO.setStatus(ImprovementMeasureStatusEnum.COMPLETED.getCode());
@@ -207,11 +219,14 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
         PageHelper.startPage(improvementMeasureQueryList.pageNum, improvementMeasureQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
 
         // 读取数据
-        List<ImprovementMeasureDO> improvementMeasureDOList =
-                improvementMeasureMapper.selectByTroubleTicketId(improvementMeasureQueryList.getTroubleTicketId());
+        ImprovementMeasureCondition condition = ImprovementMeasureCondition.builder()
+                .troubleTicketId(improvementMeasureQueryList.getTroubleTicketId())
+                .isDeleted(false)
+                .build();
+        List<ImprovementMeasureDO> improvementMeasureDOList = improvementMeasureMapper.selectByCondition(condition);
 
         // 更新待办状态
-        updateTodoStatus(improvementMeasureDOList);
+        // updateTodoStatus(improvementMeasureDOList);
 
         // 转换格式
         List<ImprovementMeasureVO> improvementMeasureVOList =
