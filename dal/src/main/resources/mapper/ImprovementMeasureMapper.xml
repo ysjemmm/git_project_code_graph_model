@@ -29,20 +29,20 @@
         </where>
     </update>
     <update id="batchUpdateStatus">
-        UPDATE improvement_measure
-        <set>
-            <if test="status != null">status = #{status},</if>
-            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
-            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
-        </set>
-        <where>
-            <if test="idList != null and idList.size() > 0">
+        <if test="idList != null and idList.size() > 0">
+            UPDATE improvement_measure
+            <set>
+                <if test="status != null">status = #{status},</if>
+                <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+                <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            </set>
+            <where>
                 AND id IN
                 <foreach collection="idList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
-            </if>
-        </where>
+            </where>
+        </if>
     </update>
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.ImprovementMeasureDO">
