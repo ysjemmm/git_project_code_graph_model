@@ -19,4 +19,10 @@ public interface BugStatusOperatorMapper {
      */
     List<BugStatusOperatorDO> batchSelectByBugIds(@Param("bugIds") List<Integer> bugIds);
 
+    /**
+     * 插入单条数据
+     *
+     * @param bugStatusOperatorDO 参数
+     * */
+    void insert(@Param("bugStatusOperatorDO") BugStatusOperatorDO bugStatusOperatorDO);
 }

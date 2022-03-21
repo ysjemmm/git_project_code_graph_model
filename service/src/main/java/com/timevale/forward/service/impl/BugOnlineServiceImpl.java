@@ -1,23 +1,24 @@
 package com.timevale.forward.service.impl;
 
-import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BugOfflineService;
 import com.timevale.forward.facade.api.client.BugOnlineService;
-import com.timevale.forward.facade.api.query.BugLogQueryList;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -54,6 +55,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Resource
     private BugOfflineService bugOfflineService;
 
+    @Resource
+    private BugLogMapper bugLogMapper;
+
+    @Resource
+    private BugStatusOperatorMapper bugStatusOperatorMapper;
+
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
         BusinessResult<ProductLineToFieldVO> businessResult = new BusinessResult<>();
@@ -67,6 +74,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> add(BugOnlineAddReq bugOnlineAddReq) {
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -74,6 +82,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> modify(BugOnlineModifyReq bugOnlineModifyReq) {
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -161,13 +170,51 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> confirm(BugOnlineReq bugOnlineReq) {
+        log.info("线上bug待确认接收参数：{}", bugOnlineReq.getId());
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        //查询线上bug
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineReq.getId());
+        if (bugOnlineDO == null) {
+            throw new BaseBizRuntimeException("线上bug不存在");
+        }
+
+        //判断当前状态是否为上报状态
+        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.PROBLEM_REPORT.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击bug确认");
+        }
+
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
+        bugOnlineMapper.update(bugOnlineDO);
+
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction(ButtonActionEnum.CONFIRM.getText());
+        bugLogDO.setOldValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
+        bugLogDO.setNewValue(BugOnlineStatusEnum.QUESTION_CONFIRM.getText());
+        bugLogDO.setMainId(bugOnlineReq.getId());
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+
+        //往bug日志表中插入一条线上bug状态变更数据
+        bugLogMapper.insert(bugLogDO);
+
+        BugStatusOperatorDO bugStatusOperatorDO = new BugStatusOperatorDO();
+        bugStatusOperatorDO.setBugLogId(bugOnlineReq.getId());
+        bugStatusOperatorDO.setOperator(userInfo.getAlias() + "-" + userInfo.getName());
+        bugStatusOperatorDO.setOperatorId(userInfo.getId());
+
+        bugStatusOperatorMapper.insert(bugStatusOperatorDO);
+
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> startRepair(BugOnlineReq bugOnlineReq) {
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -175,6 +222,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> repairFinished(BugOnlineRepairFinishedReq bugOnlineRepairFinishedReq) {
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -182,6 +230,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> confirmRepair(BugOnlineConfirmRepairReq bugOnlineConfirmRepairReq) {
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -189,6 +238,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> online(BugOnlineOnlineReq bugOnlineOnlineReq) {
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -196,6 +246,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> openAgain(BugOnlineOpenAgainReq bugOnlineOpenAgainReq) {
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -203,6 +254,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> noRepair(BugOnlineNoRepairReq bugOnlineNoRepairReq) {
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -210,6 +262,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> transfer(BugOnlineTransferReq bugOnlineTransferReq) {
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -224,6 +277,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> reject(BugOnlineReq bugOnlineReq) {
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -231,6 +285,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> reconfirm(BugOnlineReq bugOnlineReq) {
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -238,6 +293,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> temporaryNoRepair(BugOnlineReq bugOnlineReq) {
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -245,6 +301,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> repairFailed(BugOnlineRepairFailedReasonReq bugOnlineRepairFailedReasonReq) {
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);

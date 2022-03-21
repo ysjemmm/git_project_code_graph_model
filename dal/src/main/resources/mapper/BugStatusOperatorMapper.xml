@@ -8,4 +8,9 @@
         </foreach>
     </select>
 
+    <insert id="insert">
+        insert into bug_status_operator(bug_log_id,operator,operator_id,create_man,create_man_id)
+        values(#{bugStatusOperatorDO.bugLogId},#{bugStatusOperatorDO.operator},#{bugStatusOperatorDO.operatorId}
+        ,#{createMan},#{createManId})
+    </insert>
 </mapper>

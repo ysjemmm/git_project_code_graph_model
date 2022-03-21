@@ -4,4 +4,113 @@
         select * from bug_online
     </select>
 
+    <update id="update">
+        update bug_online
+        <set>
+            <if test="bugOnlineDO.name != null">
+                name = #{bugOnlineDO.name},
+            </if>
+            <if test="bugOnlineDO.operator != null">
+                operator = #{bugOnlineDO.operator},
+            </if>
+            <if test="bugOnlineDO.operatorId != null">
+                operator_id = #{bugOnlineDO.operatorId},
+            </if>
+            <if test="bugOnlineDO.lastOperator != null">
+                last_operator = #{bugOnlineDO.lastOperator},
+            </if>
+            <if test="bugOnlineDO.lastOperatorId != null">
+                last_operator_id = #{bugOnlineDO.lastOperatorId},
+            </if>
+            <if test="bugOnlineDO.proposer != null">
+                proposer = #{bugOnlineDO.proposer},
+            </if>
+            <if test="bugOnlineDO.proposerId != null">
+                proposer_id = #{bugOnlineDO.proposerId},
+            </if>
+            <if test="bugOnlineDO.customerName != null">
+                customer_name = #{bugOnlineDO.customerName},
+            </if>
+            <if test="bugOnlineDO.bizDemandId != null">
+                biz_demand_id = #{bugOnlineDO.bizDemandId},
+            </if>
+            <if test="bugOnlineDO.env != null">
+                env = #{bugOnlineDO.env},
+            </if>
+            <if test="bugOnlineDO.belong != null">
+                belong = #{bugOnlineDO.belong},
+            </if>
+            <if test="bugOnlineDO.priority != null">
+                priority = #{bugOnlineDO.priority},
+            </if>
+            <if test="bugOnlineDO.recurrent != null">
+                recurrent = #{bugOnlineDO.recurrent},
+            </if>
+            <if test="bugOnlineDO.reason != null">
+                reason = #{bugOnlineDO.reason},
+            </if>
+            <if test="bugOnlineDO.expectDate != null">
+                expect_date = #{bugOnlineDO.expectDate},
+            </if>
+            <if test="bugOnlineDO.business != null">
+                business = #{bugOnlineDO.business},
+            </if>
+            <if test="bugOnlineDO.describe != null">
+                describe = #{bugOnlineDO.describe},
+            </if>
+            <if test="bugOnlineDO.status != null">
+                status = #{bugOnlineDO.status},
+            </if>
+            <if test="bugOnlineDO.dismissCause != null">
+                dismiss_cause = #{bugOnlineDO.dismissCause},
+            </if>
+            <if test="bugOnlineDO.problemReason != null">
+                problem_reason = #{bugOnlineDO.problemReason},
+            </if>
+            <if test="bugOnlineDO.solveScheme != null">
+                solve_scheme = #{bugOnlineDO.solveScheme},
+            </if>
+            <if test="bugOnlineDO.repairFailReason != null">
+                repair_fail_reason = #{bugOnlineDO.repairFailReason},
+            </if>
+            <if test="bugOnlineDO.openAgainReason != null">
+                open_again_reason = #{bugOnlineDO.openAgainReason},
+            </if>
+            <if test="bugOnlineDO.isDeleted != null">
+                is_deleted = #{bugOnlineDO.isDeleted},
+            </if>
+            <if test="true">
+                modify_man_id = #{modifyManId},
+                modify_man = #{modifyMan}
+            </if>
+        </set>
+        <where>
+            id = #{bugOnlineDO.id}
+        </where>
+    </update>
+
 </mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

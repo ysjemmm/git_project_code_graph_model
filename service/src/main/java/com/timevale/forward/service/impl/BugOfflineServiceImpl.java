@@ -1066,12 +1066,13 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
                     .map(BugStatusOperatorCopier.INSTANCE::convert).collect(Collectors.toList());
 
             //Map(线上bug的id  ->  状态经办人)
-            Map<Integer, List<BugStatusOperatorVO>> map = bugStatusOperatorVOList.stream()
+            Map<Long, List<BugStatusOperatorVO>> map = bugStatusOperatorVOList.stream()
                     .collect(Collectors.groupingBy(BugStatusOperatorVO::getBugLogId));
 
             //给每个状态变更记录赋值，把状态经办人集合赋给她
             bugLogVOList.forEach(bugLogVO -> {
-                bugLogVO.setBugStatusOperatorVOList(map.get(bugLogVO.getId()));
+                long bugLogId = bugLogVO.getId().longValue();
+                bugLogVO.setBugStatusOperatorVOList(map.get(bugLogId));
             });
         }
 

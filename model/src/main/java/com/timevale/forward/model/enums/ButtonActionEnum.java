@@ -61,7 +61,42 @@ public enum ButtonActionEnum {
     /**
      * 提交
      */
-    SUBMIT("提交");
+    SUBMIT("提交"),
+
+    /**
+     * bug确认
+     * */
+    CONFIRM("bug确认"),
+
+    /**
+     * 开始修复
+     * */
+    START_REPAIR("开始修复"),
+
+    /**
+     * 修复完毕
+     * */
+    REPAIR_FINISH("修复完毕"),
+
+    /**
+     * 已上线
+     * */
+    ONLINE("已上线"),
+
+    /**
+     * 重新确认
+     * */
+    REPEAT_CONFIRM("重新确认"),
+
+    /**
+     * 暂不修复
+     * */
+    TEMPORARY_NO_REPAIR("暂不修复"),
+
+    /**
+     * 修复失败
+     * */
+    REPAIR_FAIL("修复失败");
 
     private final String text;
 
@@ -69,3 +104,30 @@ public enum ButtonActionEnum {
         this.text = text;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

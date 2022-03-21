@@ -15,4 +15,12 @@ public interface BugOnlineMapper {
      * @return 返回值
      */
     BugOnlineDO selectById(@Param("id") Long id);
+
+    /**
+     * 更新线上bug
+     *
+     * bugOnlineDO 参数
+     *
+     * */
+    void update(@Param("bugOnlineDO") BugOnlineDO bugOnlineDO);
 }

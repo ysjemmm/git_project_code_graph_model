@@ -24,5 +24,5 @@ public class BugStatusOperatorVO extends ToString {
     private String createDate;
 
     @ApiModelProperty("bug变更的id")
-    private Integer bugLogId;
+    private Long bugLogId;
 }

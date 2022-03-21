@@ -13,7 +13,7 @@ public class BugStatusOperatorDO extends BaseDO {
     /**
      * bug变更id
      */
-    private Integer bugLogId;
+    private Long bugLogId;
 
     /**
      * 经办人
