@@ -26,7 +26,8 @@ public enum MessageTitleEnum {
     BUG_OFFLINE_TRANS("线下bug转交通知"),
     BUG_OFFLINE_REJECT("线下bug被拒绝通知"),
     BUG_OFFLINE_OPEN_AGAIN("线下bug重新打开通知"),
-    BUG_ONLINE_REPAIR_FINISHED("线上bug修复完毕通知");
+    BUG_ONLINE_REPAIR_FINISHED("线上bug修复完毕通知"),
+    BUG_ONLINE_ONLINE("线上bug已上线通知");
 
     private String text;
 

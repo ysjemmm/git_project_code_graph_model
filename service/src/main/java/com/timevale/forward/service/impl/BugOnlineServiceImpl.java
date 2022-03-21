@@ -11,6 +11,7 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.BugOnlineOnlineMsgEvent;
 import com.timevale.forward.service.observer.event.BugOnlineRepairFinishedMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -19,6 +20,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.request.AccountRequest;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -28,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -374,14 +377,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             throw new BaseBizRuntimeException("当前状态不允许点击确认修复");
         }
 
-        ArrayList<String> operatorIds = Lists.newArrayList(bugOnlineDO.getOperatorId());
-        //校验当前经办人职能是否为测试
-        List<BaseInfoResponse> personByAccountNew = innerUserPersonClient.getPersonByAccountNew(operatorIds);
-        BaseInfoResponse baseInfoResponse = personByAccountNew.get(0);
-        if (baseInfoResponse != null) {
-            if (!JobFunctionEnum.QA.getName().equals(baseInfoResponse.getJobFunction())) {
-                throw new BaseBizRuntimeException("您的职能没有权限点击此按钮");
-            }
+        //校验当前操作人职能是否为测试
+        Boolean result = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
+        if (result == false) {
+            throw new BaseBizRuntimeException("您的职能没有权限点击此按钮");
         }
 
         //保存老的状态
@@ -419,6 +418,67 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> online(BugOnlineOnlineReq bugOnlineOnlineReq) {
+        log.info("线上bug已上线接收参数：{}", bugOnlineOnlineReq.getId());
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        //查询线上bug
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineOnlineReq.getId());
+        if (bugOnlineDO == null) {
+            throw new BaseBizRuntimeException("线上bug不存在");
+        }
+
+        //判断当前状态是否为“待上线”状态
+        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.ONLINE.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击已上线");
+        }
+
+        //校验点击按钮的人是否为测试角色或者是经办人&提出人及其上级
+        Boolean jobFunctionResult = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
+        Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
+        Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
+        if (jobFunctionResult != false && operatorResult != false && proposerResult != false) {
+            throw new BaseBizRuntimeException("您没有权限点击此按钮");
+        }
+
+        //保存老的状态
+        String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.COMPLETE.getCode());
+        if (bugOnlineOnlineReq.getReason() != null) {
+            bugOnlineDO.setReason(bugOnlineOnlineReq.getReason());
+        }
+        //线上bug表更新
+        bugOnlineMapper.update(bugOnlineDO);
+
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction(ButtonActionEnum.ONLINE.getText());
+        bugLogDO.setOldValue(oldStatus);
+        bugLogDO.setNewValue(BugOnlineStatusEnum.COMPLETE.getText());
+        bugLogDO.setMainId(bugOnlineOnlineReq.getId());
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+        //往bug日志表中插入一条线上bug状态变更数据
+        bugLogMapper.insert(bugLogDO);
+
+        BugStatusOperatorDO bugStatusOperatorDO = new BugStatusOperatorDO();
+        bugStatusOperatorDO.setBugLogId(bugOnlineOnlineReq.getId());
+        bugStatusOperatorDO.setOperator(userInfo.getAlias() + "-" + userInfo.getName());
+        bugStatusOperatorDO.setOperatorId(userInfo.getId());
+        //往状态人员处理表里面插入一条数据记录
+        bugStatusOperatorMapper.insert(bugStatusOperatorDO);
+
+        //发送消息
+        messageEventPublisher.publish(
+                new BugOnlineOnlineMsgEvent(
+                        this,
+                        bugOnlineDO.getName(),
+                        //bugOnlineDO.getProposerId(),
+                        "wangxuan",
+                        bugOnlineOnlineReq.getId()
+                )
+        );
+
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
@@ -485,6 +545,40 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
+    }
+
+    //判断当前操作人是否为personId或者personId的上级
+    Boolean isPermission(String personId) {
+        //得到当前操作人账户
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String account = userInfo.getId();
+
+        //如果当前操作人是权限人员，直接返回true
+        if (personId.equals(account)) {
+            return true;
+        }
+
+        //如果当前操作人不是直接权限人，看看是不是直接权限人的上级
+        AccountRequest accountRequest = new AccountRequest();
+        accountRequest.setAccount(personId);
+        Set<String> higherLevels = innerUserPersonClient.getAllSuperiorByAccount(accountRequest).getData();
+
+        //判断当前操作人账户是否有权限
+        return higherLevels.contains(account);
+    }
+
+    //判断用户是否为某个职能
+    Boolean jobFunctionMatch(String personId, String jobFunction) {
+        ArrayList<String> operatorIds = Lists.newArrayList(personId);
+        //校验当前经办人职能是否为测试
+        List<BaseInfoResponse> personByAccountNew = innerUserPersonClient.getPersonByAccountNew(operatorIds);
+        BaseInfoResponse baseInfoResponse = personByAccountNew.get(0);
+        if (baseInfoResponse != null) {
+            if (!jobFunction.equals(baseInfoResponse.getJobFunction())) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
