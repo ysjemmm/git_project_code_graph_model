@@ -37,6 +37,6 @@ public class ImprovementMeasureModifyReq extends BaseReq {
 
     @ApiModelProperty("落实日期")
     @NotNull(message = "落实日期不能为空")
-    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd")
     private Date implementationTime;
 }
