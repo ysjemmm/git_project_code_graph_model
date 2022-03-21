@@ -24,7 +24,6 @@ public class ImprovementMeasureAddReq extends BaseReq {
     private String name;
 
     @ApiModelProperty("故障工单id")
-    @NotNull(message = "故障工单id不能为空")
     private Long troubleTicketId;
 
     @ApiModelProperty("执行人")
