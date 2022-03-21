@@ -29,6 +29,14 @@ public interface ImprovementMeasureMapper {
     int update(ImprovementMeasureDO improvementMeasureDO);
 
     /**
+     * 改进措施-批量更新状态
+     *
+     * @param idList 改进措施id列表
+     * @return int
+     */
+    int batchUpdateStatus(@Param("idList") List<Long> idList, @Param("status")Integer status);
+
+    /**
      * 改进措施-查询对应条件
      *
      * @param condition 条件

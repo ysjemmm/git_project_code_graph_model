@@ -28,7 +28,23 @@
             id = #{id}
         </where>
     </update>
-    
+    <update id="batchUpdateStatus">
+        UPDATE improvement_measure
+        <set>
+            <if test="status != null">status = #{status},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            <if test="idList != null and idList.size() > 0">
+                AND id in
+                <foreach collection="idList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </update>
+
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.ImprovementMeasureDO">
         SELECT id, trouble_ticket_id, name, executor, executor_id, implementation_time, todo, todo_id, status,
                is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date

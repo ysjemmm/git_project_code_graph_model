@@ -1,8 +1,8 @@
 package com.timevale.forward.service.component.impl;
 
 import com.timevale.erp.message.service.result.DingTodoTaskResponseBody;
-import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ImprovementMeasureMapper;
+import com.timevale.forward.dal.entity.BaseDO;
 import com.timevale.forward.dal.entity.ImprovementMeasureDO;
 import com.timevale.forward.facade.api.request.ImprovementMeasureAddReq;
 import com.timevale.forward.model.enums.ImprovementMeasureStatusEnum;
@@ -71,6 +71,13 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
             boolean done = todoTaskResponseBodyMap.get(e.getTodoId()).getDone();
             e.setStatus(done ? 1 : 0);
         });
+
+        // 更新已完成状态
+        List<Long> idList = createdTodoList.stream()
+                .filter(e -> ImprovementMeasureStatusEnum.COMPLETED.getCode().equals(e.getStatus()))
+                .map(BaseDO::getId)
+                .collect(Collectors.toList());
+        improvementMeasureMapper.batchUpdateStatus(idList, ImprovementMeasureStatusEnum.COMPLETED.getCode());
     }
 
     @Override
