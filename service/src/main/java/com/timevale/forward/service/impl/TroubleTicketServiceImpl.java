@@ -71,6 +71,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
         // 添加改进措施
         List<ImprovementMeasureAddReq> improvementMeasureAddReqList = troubleTicketAddReq.getImprovementMeasureAddReqList();
+        improvementMeasureAddReqList.forEach(e -> e.setTroubleTicketId(troubleTicketDO.getId()));
         improvementMeasureAddReqList.forEach(e -> improvementMeasureComponent.add(e));
 
         // 添加附件
