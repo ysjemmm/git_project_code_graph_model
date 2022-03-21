@@ -9,10 +9,7 @@ import com.timevale.forward.dal.dao.TroubleTicketMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TroubleTicketService;
 import com.timevale.forward.facade.api.query.TroubleTicketQueryList;
-import com.timevale.forward.facade.api.request.FileAddReq;
-import com.timevale.forward.facade.api.request.TroubleTicketAddReq;
-import com.timevale.forward.facade.api.request.TroubleTicketDeleteReq;
-import com.timevale.forward.facade.api.request.TroubleTicketModifyReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.FileVO;
 import com.timevale.forward.facade.api.result.TroubleTicketDetailVO;
@@ -20,6 +17,7 @@ import com.timevale.forward.facade.api.result.TroubleTicketVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.ImprovementMeasureComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.TroubleTicketCopier;
@@ -55,6 +53,9 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
     private FileComponent fileComponent;
 
     @Resource
+    private ImprovementMeasureComponent improvementMeasureComponent;
+
+    @Resource
     private ProductLineMapper productLineMapper;
 
     @Resource
@@ -67,6 +68,10 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         // 转换后行插入数据
         TroubleTicketDO troubleTicketDO = TroubleTicketCopier.INSTANCE.convert(troubleTicketAddReq);
         troubleTicketMapper.insert(troubleTicketDO);
+
+        // 添加改进措施
+        List<ImprovementMeasureAddReq> improvementMeasureAddReqList = troubleTicketAddReq.getImprovementMeasureAddReqList();
+        improvementMeasureAddReqList.forEach(e -> improvementMeasureComponent.add(e));
 
         // 添加附件
         List<FileAddReq> fileList = troubleTicketAddReq.getFileList();

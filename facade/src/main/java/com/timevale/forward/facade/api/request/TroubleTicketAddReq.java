@@ -108,6 +108,9 @@ public class TroubleTicketAddReq extends BaseReq {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long dutyTeam;
 
+    @ApiModelProperty("改进措施列表")
+    private List<ImprovementMeasureAddReq> improvementMeasureAddReqList;
+
     @ApiModelProperty("附件列表")
     private List<FileAddReq> fileList;
 
