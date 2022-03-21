@@ -19,7 +19,9 @@ public enum BugFieldEnum {
 
     DELAY_HANDLE_REASON("延期修复原因"),
 
-    OPERATOR("经办人");
+    OPERATOR("经办人"),
+
+    REPAIR_FAIL_REASON("修复失败原因");
 
     private final String text;
 }

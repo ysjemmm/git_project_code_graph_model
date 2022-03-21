@@ -10,6 +10,8 @@ import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.observer.event.BugOnlineRepairFinishedMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -60,6 +62,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Resource
     private BugStatusOperatorMapper bugStatusOperatorMapper;
+
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
 
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
@@ -269,7 +274,75 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> repairFinished(BugOnlineRepairFinishedReq bugOnlineRepairFinishedReq) {
+        log.info("线上bug修复完毕接收参数：{}", bugOnlineRepairFinishedReq.getId());
 
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        //查询线上bug
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineRepairFinishedReq.getId());
+        if (bugOnlineDO == null) {
+            throw new BaseBizRuntimeException("线上bug不存在");
+        }
+
+        //判断当前状态是否为“问题修复”状态
+        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_REPAIR.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击bug确认");
+        }
+
+        //保存老的状态
+        String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+
+        //保存当前经办人
+        String operator = bugOnlineDO.getOperator();
+        String operatorId = bugOnlineDO.getOperatorId();
+
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.REPAIR_CONFIRM.getCode());
+        bugOnlineDO.setRepairFailReason(null);
+        bugOnlineDO.setLastOperator(operator);
+        bugOnlineDO.setLastOperatorId(operatorId);
+        bugOnlineDO.setOperator(bugOnlineRepairFinishedReq.getOperator());
+        bugOnlineDO.setOperatorId(bugOnlineRepairFinishedReq.getOperatorId());
+        //线上bug表更新
+        bugOnlineMapper.update(bugOnlineDO);
+
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction(ButtonActionEnum.REPAIR_FINISH.getText());
+        bugLogDO.setOldValue(oldStatus);
+        bugLogDO.setNewValue(BugOnlineStatusEnum.REPAIR_CONFIRM.getText());
+        bugLogDO.setMainId(bugOnlineRepairFinishedReq.getId());
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+        //往bug日志表中插入一条线上bug状态变更数据
+        bugLogMapper.insert(bugLogDO);
+
+        //如果此时修复失败原因有值，则需要插入一条bug内容变更记录，因为需要把修复失败原因清空
+        if (bugOnlineDO.getRepairFailReason() != null) {
+            BugLogDO bugLog = new BugLogDO();
+            bugLog.setField(BugFieldEnum.REPAIR_FAIL_REASON.getText());
+            bugLog.setOldValue(bugOnlineDO.getRepairFailReason());
+            bugLog.setMainId(bugOnlineRepairFinishedReq.getId());
+            bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
+            //插入bug日志内容变更记录
+            bugLogMapper.insert(bugLog);
+        }
+
+        BugStatusOperatorDO bugStatusOperatorDO = new BugStatusOperatorDO();
+        bugStatusOperatorDO.setBugLogId(bugOnlineRepairFinishedReq.getId());
+        bugStatusOperatorDO.setOperator(userInfo.getAlias() + "-" + userInfo.getName());
+        bugStatusOperatorDO.setOperatorId(userInfo.getId());
+        //往状态人员处理表里面插入一条数据记录
+        bugStatusOperatorMapper.insert(bugStatusOperatorDO);
+
+        //发送消息
+        messageEventPublisher.publish(
+                new BugOnlineRepairFinishedMsgEvent(
+                        this,
+                        userInfo.getAlias() + "-" + userInfo.getName(),
+                        bugOnlineDO.getName(),
+                        bugOnlineDO.getOperatorId(),
+                        bugOnlineRepairFinishedReq.getId()
+                )
+        );
 
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
