@@ -37,7 +37,7 @@
         </set>
         <where>
             <if test="idList != null and idList.size() > 0">
-                AND id in
+                AND id IN
                 <foreach collection="idList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
