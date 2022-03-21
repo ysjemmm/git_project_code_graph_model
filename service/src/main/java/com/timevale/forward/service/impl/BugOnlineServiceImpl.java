@@ -9,8 +9,11 @@ import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.BugOnlineAddMsgEvent;
 import com.timevale.forward.service.observer.event.BugOnlineOnlineMsgEvent;
 import com.timevale.forward.service.observer.event.BugOnlineRepairFinishedMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
@@ -76,6 +79,13 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Resource
     private InnerUserPersonClient innerUserPersonClient;
 
+    @Resource
+    private FileComponent fileComponent;
+
+    @Resource
+    private PersonComponent personComponent;
+
+
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
         BusinessResult<ProductLineToFieldVO> businessResult = new BusinessResult<>();
@@ -93,6 +103,69 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> add(BugOnlineAddReq bugOnlineAddReq) {
+        log.info("线上bug新增");
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        //将BugOnlineAddReq转化为BugOnlineDO
+        BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.transfer(bugOnlineAddReq);
+
+        //往线上bug表里面插入数据
+        bugOnlineMapper.insert(bugOnlineDO);
+
+        List<Long> productLineIdList = bugOnlineAddReq.getProductLineIdList();
+        List<BugOnlineProductLineDO> bugOnlineProductLineDOList = new ArrayList<>();
+        //如果产品线id不为空往线上bug和产品线的映射表中插入信息
+        if (CollectionUtils.isNotEmpty(productLineIdList)) {
+            productLineIdList.forEach(productLineId -> {
+                BugOnlineProductLineDO bugOnlineProductLineDO = new BugOnlineProductLineDO();
+                bugOnlineProductLineDO.setBugOnlineId(bugOnlineDO.getId());
+                bugOnlineProductLineDO.setProductLineId(productLineId);
+                bugOnlineProductLineDOList.add(bugOnlineProductLineDO);
+            });
+        }
+        bugOnlineProductLineMapper.batchInsert(bugOnlineProductLineDOList);
+
+        //如果有附件往附件表里存放数据
+        List<FileAddReq> files = bugOnlineAddReq.getFiles();
+        if (CollectionUtils.isNotEmpty(files)) {
+            fileComponent.add(files, bugOnlineDO.getId(), FileTypeEnum.BUG_ONLINE.getCode());
+        }
+
+        //如果有抄送人往抄送人表里面添加数据
+        List<PersonAddReq> recipients = bugOnlineAddReq.getRecipients();
+        if (CollectionUtils.isNotEmpty(recipients)) {
+            personComponent.add(recipients, bugOnlineDO.getId(), PersonTypeEnum.BUG_ONLINE_CC.getCode());
+        }
+
+        //bug日志表记录一条新增数据
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setMainId(bugOnlineDO.getId());
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setOldValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
+        bugLogDO.setNewValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+        bugLogDO.setAction(ButtonActionEnum.SUBMIT.getText());
+        bugLogMapper.insert(bugLogDO);
+
+        //bug状态处理人员表插入数据
+        BugStatusOperatorDO bugStatusOperatorDO = new BugStatusOperatorDO();
+        bugStatusOperatorDO.setBugLogId(bugOnlineDO.getId());
+        bugStatusOperatorDO.setOperator(userInfo.getAlias() + "-" + userInfo.getName());
+        bugStatusOperatorDO.setOperatorId(userInfo.getId());
+        //插入一条记录
+        bugStatusOperatorMapper.insert(bugStatusOperatorDO);
+
+        //发送消息
+        messageEventPublisher.publish(
+                new BugOnlineAddMsgEvent(
+                        this,
+                        bugOnlineDO.getName(),
+                        bugOnlineDO.getOperatorId(),
+                        bugOnlineDO.getId()
+                )
+        );
+
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;

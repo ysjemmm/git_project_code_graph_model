@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.entity.BugOnlineProductLineDO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -17,4 +18,11 @@ public interface BugOnlineProductLineMapper {
      * @return 返回值
      */
     List<Long> selectProductLineIds(@Param("id") Long id);
+
+    /**
+     * 批量插入数据
+     *
+     * @param bugOnlineProductLineDOList 参数
+     */
+    void batchInsert(@Param("bugOnlineProductLineDOList") List<BugOnlineProductLineDO> bugOnlineProductLineDOList);
 }

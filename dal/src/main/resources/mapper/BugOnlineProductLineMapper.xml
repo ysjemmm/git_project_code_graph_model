@@ -5,4 +5,10 @@
         where bug_online_id = #{id}
     </select>
 
+    <insert id="batchInsert">
+        insert into bug_online_product_line(bug_online_id,product_line_id,create_man,create_man_id) values
+        <foreach collection="bugOnlineProductLineDOList" item="bugOnlineProductLineDO" separator=",">
+            (#{bugOnlineProductLineDO.bugOnlineId},#{bugOnlineProductLineDO.productLineId},#{createMan},#{createManId})
+        </foreach>
+    </insert>
 </mapper>

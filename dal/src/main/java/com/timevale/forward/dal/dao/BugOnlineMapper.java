@@ -19,8 +19,15 @@ public interface BugOnlineMapper {
     /**
      * 更新线上bug
      *
-     * bugOnlineDO 参数
-     *
-     * */
+     * @param bugOnlineDO 参数
+     */
     void update(@Param("bugOnlineDO") BugOnlineDO bugOnlineDO);
+
+    /**
+     * 插入线上bug
+     *
+     * @param bugOnlineDO 参数
+     * @return Long
+     */
+    Long insert(@Param("bugOnlineDO") BugOnlineDO bugOnlineDO);
 }

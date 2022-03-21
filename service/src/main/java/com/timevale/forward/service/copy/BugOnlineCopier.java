@@ -1,6 +1,7 @@
 package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.entity.BugOnlineDO;
+import com.timevale.forward.facade.api.request.BugOnlineAddReq;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -20,4 +21,12 @@ public interface BugOnlineCopier {
      * @return BugOfflineListCondition
      */
     BugOnlineDetailVO convert(BugOnlineDO bugOnlineDO);
+
+    /**
+     * BugOnlineAddReq --> BugOnlineDO
+     *
+     * @param bugOnlineAddReq 对象
+     * @return BugOnlineDO
+     */
+    BugOnlineDO transfer(BugOnlineAddReq bugOnlineAddReq);
 }

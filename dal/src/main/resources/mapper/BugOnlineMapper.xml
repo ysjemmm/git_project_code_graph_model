@@ -4,6 +4,16 @@
         select * from bug_online
     </select>
 
+    <insert id="insert" useGeneratedKeys="true" keyProperty="bugOnlineDO.id">
+        insert into bug_online(name,operator,operator_id,last_operator,last_operator_id,proposer
+        ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business
+        ,create_man,create_man_id)
+        values(#{bugOnlineDO.name},#{bugOnlineDO.operator},#{bugOnlineDO.operatorId},#{bugOnlineDO.lastOperator}
+        ,#{bugOnlineDO.lastOperatorId},#{bugOnlineDO.proposer},#{bugOnlineDO.proposerId},#{bugOnlineDO.customerName}
+        ,#{bugOnlineDO.env},#{bugOnlineDO.belong},#{bugOnlineDO.priority},#{bugOnlineDO.recurrent}
+        ,#{bugOnlineDO.reason},#{bugOnlineDO.expectDate},#{bugOnlineDO.business},#{createMan},#{createManId})
+    </insert>
+
     <update id="update">
         update bug_online
         <set>

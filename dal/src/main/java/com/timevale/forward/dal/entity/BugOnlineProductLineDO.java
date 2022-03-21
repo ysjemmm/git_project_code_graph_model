@@ -10,5 +10,13 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class BugOnlineProductLineDO extends BaseDO {
+    /**
+     * 线上bug id
+     */
+    private Long bugOnlineId;
 
+    /**
+     * 产品线id
+     */
+    private Long productLineId;
 }
