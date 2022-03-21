@@ -40,12 +40,7 @@ public class TroubleTicketModifyReq extends BaseReq {
     private Integer type;
 
     @ApiModelProperty("处理人")
-    @NotBlank(message = "处理人不能为空")
-    private String handler;
-
-    @ApiModelProperty("处理人id")
-    @NotBlank(message = "处理人id不能为空")
-    private String handlerId;
+    private List<PersonAddReq> handlerList;
 
     @ApiModelProperty("产品线id")
     @NotNull(message = "产品线不能为空")

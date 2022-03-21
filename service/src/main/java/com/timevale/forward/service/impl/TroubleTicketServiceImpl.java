@@ -4,22 +4,22 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.TroubleTicketCondition;
+import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.TroubleTicketMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TroubleTicketService;
 import com.timevale.forward.facade.api.query.TroubleTicketQueryList;
 import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.facade.api.result.FileVO;
-import com.timevale.forward.facade.api.result.TroubleTicketDetailVO;
-import com.timevale.forward.facade.api.result.TroubleTicketVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.ImprovementMeasureComponent;
+import com.timevale.forward.service.component.impl.PersonComponentImpl;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
+import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.TroubleTicketCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -56,6 +56,12 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
     private ImprovementMeasureComponent improvementMeasureComponent;
 
     @Resource
+    private PersonComponentImpl personComponent;
+
+    @Resource
+    private PersonMapper personMapper;
+
+    @Resource
     private ProductLineMapper productLineMapper;
 
     @Resource
@@ -73,6 +79,10 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         List<ImprovementMeasureAddReq> improvementMeasureAddReqList = troubleTicketAddReq.getImprovementMeasureAddReqList();
         improvementMeasureAddReqList.forEach(e -> e.setTroubleTicketId(troubleTicketDO.getId()));
         improvementMeasureAddReqList.forEach(e -> improvementMeasureComponent.add(e));
+
+        // 添加处理人
+        List<PersonAddReq> handlerList = troubleTicketAddReq.getHandlerList();
+        personComponent.add(handlerList, troubleTicketDO.getId(), PersonTypeEnum.TROUBLE_TICKET_HANDLER.getCode());
 
         // 添加附件
         List<FileAddReq> fileList = troubleTicketAddReq.getFileList();
@@ -94,6 +104,10 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         // 故障单信息
         TroubleTicketDO newTroubleTicketDO = TroubleTicketCopier.INSTANCE.convert(troubleTicketModifyReq);
         troubleTicketMapper.update(newTroubleTicketDO);
+
+        // 修改处理人
+        List<PersonAddReq> handlerList = troubleTicketModifyReq.getHandlerList();
+        personComponent.update(handlerList, newTroubleTicketDO.getId(), PersonTypeEnum.TROUBLE_TICKET_HANDLER.getCode());
 
         // 更新附件信息
         List<FileAddReq> fileIdList = troubleTicketModifyReq.getFileList();
@@ -130,6 +144,11 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         // 获取部门链，获得部门完整链名
         String deptChainName = bizDemandComponent.getDeptChainName(ticketDetailVO.getDutyTeam());
         ticketDetailVO.setDutyTeamName(deptChainName);
+
+        // 添加处理人信息
+        List<PersonDO> handlerDOList = personComponent.select(troubleTicketId, PersonTypeEnum.TROUBLE_TICKET_HANDLER.getCode());
+        List<PersonVO> handlerVOList = PersonCopier.INSTANCE.transform(handlerDOList);
+        ticketDetailVO.setHandlerList(handlerVOList);
 
         // 添加附件信息
         List<FileDO> fileDOList = fileComponent.select(troubleTicketId, FileTypeEnum.TROUBLE_TICKET.getCode());
@@ -179,11 +198,21 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
         // 分页查询
         PageHelper.startPage(troubleTicketQueryList.pageNum, troubleTicketQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
-        List<TroubleTicketListDO> troubleTicketListDOList = troubleTicketMapper.selectList(troubleTicketCondition);
+        List<TroubleTicketListDO> troubleTicketDOList = troubleTicketMapper.selectList(troubleTicketCondition);
 
         // 结果集转换
-        List<TroubleTicketVO> troubleTicketVOList = troubleTicketListDOList.stream()
+        List<TroubleTicketVO> troubleTicketVOList = troubleTicketDOList.stream()
                 .map(TroubleTicketCopier.INSTANCE::convert).collect(Collectors.toList());
+
+        // 查询处理人
+        List<Long> mainIdList = troubleTicketDOList.stream().map(TroubleTicketListDO::getId).collect(Collectors.toList());
+        List<PersonDO> personDOList = personMapper.get(mainIdList, PersonTypeEnum.TROUBLE_TICKET_HANDLER.getCode());
+        Map<Long, List<PersonDO>> personMap = personDOList.stream().collect(Collectors.groupingBy(PersonDO::getMainId));
+        troubleTicketVOList.forEach(e -> {
+            List<PersonDO> handlerDOList = personMap.get(e.getId());
+            List<PersonVO> handlerVOList = PersonCopier.INSTANCE.transform(handlerDOList);
+            e.setHandlerList(handlerVOList);
+        });
 
         // 描述数据填充
         troubleTicketVOList.forEach(e -> {
@@ -191,7 +220,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         });
 
         // 返回分页数据
-        PageInfo<TroubleTicketListDO> pageInfo = new PageInfo<>(troubleTicketListDOList);
+        PageInfo<TroubleTicketListDO> pageInfo = new PageInfo<>(troubleTicketDOList);
         PageQueryResult<TroubleTicketVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(troubleTicketVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);

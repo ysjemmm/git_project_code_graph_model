@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -45,10 +46,7 @@ public class TroubleTicketVO extends ToString {
     private String createManId;
 
     @ApiModelProperty("处理人")
-    private String handler;
-
-    @ApiModelProperty("处理人id")
-    private String handlerId;
+    private List<PersonVO> handlerList;
 
     @ApiModelProperty("故障发生时间")
     private Date occurrenceTime;

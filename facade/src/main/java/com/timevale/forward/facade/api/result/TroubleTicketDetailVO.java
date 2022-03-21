@@ -56,10 +56,7 @@ public class TroubleTicketDetailVO extends ToString {
     private String typeName;
 
     @ApiModelProperty("处理人")
-    private String handler;
-
-    @ApiModelProperty("处理人id")
-    private String handlerId;
+    private List<PersonVO> handlerList;
 
     @ApiModelProperty("产品线id")
     private Long productLineId;
