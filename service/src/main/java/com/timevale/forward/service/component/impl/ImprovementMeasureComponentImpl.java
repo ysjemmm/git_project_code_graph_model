@@ -45,7 +45,7 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
 
     @Override
     public void updateTodoStatus(List<ImprovementMeasureDO> improvementMeasureDOList) {
-        log.info("同步改进措施钉钉待办状态，输入参数={}",improvementMeasureDOList);
+        log.info("同步改进措施钉钉待办状态，输入参数={}", improvementMeasureDOList);
 
         // 筛选出，已创建待办 并且 状态为待处理的事项
         List<ImprovementMeasureDO> createdTodoList = improvementMeasureDOList.stream()
@@ -60,20 +60,17 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
         List<String> executorIdList = createdTodoList.stream().map(ImprovementMeasureDO::getExecutorId).collect(Collectors.toList());
         Map<String, String> unionIdMap = innerUserPersonClient.getUnionIds(executorIdList);
 
-        // 遍历查询钉钉待办状态
-        GetTodoTaskMsg getTodoTaskMsg = GetTodoTaskMsg.builder().build();
-        createdTodoList.forEach(e -> {
-            getTodoTaskMsg.setRecordId(e.getTodoId());
-            getTodoTaskMsg.setUnionId(unionIdMap.get(e.getExecutorId()));
-            DingTodoTaskResponseBody task = dingWorkRecordClient.getTask(getTodoTaskMsg);
-            if(task.getDone()){
-                e.setStatus(ImprovementMeasureStatusEnum.COMPLETED.getCode());
-            }
-        });
+        // 批量查询钉钉待办状态
+        List<GetTodoTaskMsg> getTodoTaskMsgList = createdTodoList.stream()
+                .map(e -> new GetTodoTaskMsg(e.getTodoId(), unionIdMap.get(e.getExecutorId())))
+                .collect(Collectors.toList());
+        Map<String, DingTodoTaskResponseBody> todoTaskResponseBodyMap = dingWorkRecordClient.batchGetTask(getTodoTaskMsgList);
 
         // 更新状态 （暂未更新入数据区，调试使用）
-        Map<Long, Integer> statusMap = createdTodoList.stream().collect(Collectors.toMap(ImprovementMeasureDO::getId, ImprovementMeasureDO::getStatus));
-        improvementMeasureDOList.forEach(e -> e.setStatus(statusMap.get(e.getId())));
+        createdTodoList.forEach(e -> {
+            boolean done = todoTaskResponseBodyMap.get(e.getTodoId()).getDone();
+            e.setStatus(done ? 1 : 0);
+        });
     }
 
     @Override

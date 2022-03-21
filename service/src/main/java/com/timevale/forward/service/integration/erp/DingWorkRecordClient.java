@@ -6,6 +6,9 @@ import com.timevale.forward.service.integration.erp.model.DeleteTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.GetTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * 钉钉待办消息
  *
@@ -35,8 +38,17 @@ public interface DingWorkRecordClient {
     /**
      * 获取待办详情
      *
-     * @param getTodoTaskMsg 得到todo任务味精
+     * @param getTodoTaskMsg 待办请求类型
      * @return 待办详情
      */
     DingTodoTaskResponseBody getTask(GetTodoTaskMsg getTodoTaskMsg);
+
+    /**
+     * 批量获取待办详情
+     *
+     * @param getTodoTaskMsgList 待办请求类型-列表
+     * @return 待办详情Map（待办id，待办详情）
+     */
+    Map<String, DingTodoTaskResponseBody> batchGetTask(List<GetTodoTaskMsg> getTodoTaskMsgList);
+
 }

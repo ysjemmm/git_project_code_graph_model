@@ -1,5 +1,6 @@
 package com.timevale.forward.service.integration.erp.impl;
 
+import com.google.common.collect.Maps;
 import com.timevale.erp.message.service.api.DingWorkRecordService;
 import com.timevale.erp.message.service.model.DingCreateTodoTaskInput;
 import com.timevale.erp.message.service.model.DingDeleteTodoTaskInput;
@@ -15,9 +16,13 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.result.QueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * 钉钉待办消息
@@ -32,6 +37,8 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
     @Resource
     private DingWorkRecordService dingWorkRecordService;
 
+    @Resource(name = "improvementMeasureThreadPoolTaskExecutor")
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Override
     public String addTask(CreateTodoTaskMsg createTodoTaskMsg) {
@@ -91,5 +98,22 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
             log.error("[erpMessage]获取待办失败  error: " + e.getMessage() + " 发送通知信息：" + getTodoTaskMsg);
         }
         throw new BaseBizRuntimeException("获取待办信息失败");
+    }
+
+    @Override
+    public Map<String, DingTodoTaskResponseBody> batchGetTask(List<GetTodoTaskMsg> getTodoTaskMsgList) {
+        Map<String, DingTodoTaskResponseBody> result = Maps.newConcurrentMap();
+        try {
+            CountDownLatch countDownLatch = new CountDownLatch(getTodoTaskMsgList.size());
+            getTodoTaskMsgList.forEach(e -> threadPoolTaskExecutor.execute(() -> {
+                DingTodoTaskResponseBody task = getTask(e);
+                result.put(task.getId(), task);
+                countDownLatch.countDown();
+            }));
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            log.error("[erpMessage]批量获取待办失败  error: " + e.getMessage());
+        }
+        return result;
     }
 }

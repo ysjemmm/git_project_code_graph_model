@@ -1,5 +1,6 @@
 package com.timevale.forward.service.integration.erp.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,6 +12,7 @@ import lombok.Data;
  */
 @Data
 @Builder
+@AllArgsConstructor
 public class GetTodoTaskMsg {
     /**
      * 待办id
