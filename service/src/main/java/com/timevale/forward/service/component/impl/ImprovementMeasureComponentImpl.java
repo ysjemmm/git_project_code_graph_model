@@ -77,7 +77,10 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
                 .filter(e -> ImprovementMeasureStatusEnum.COMPLETED.getCode().equals(e.getStatus()))
                 .map(BaseDO::getId)
                 .collect(Collectors.toList());
-        improvementMeasureMapper.batchUpdateStatus(idList, ImprovementMeasureStatusEnum.COMPLETED.getCode());
+        if(!CollectionUtils.isEmpty(idList)){
+            improvementMeasureMapper.batchUpdateStatus(idList, ImprovementMeasureStatusEnum.COMPLETED.getCode());
+        }
+
     }
 
     @Override
