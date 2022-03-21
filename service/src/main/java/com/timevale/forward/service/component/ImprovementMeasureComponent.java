@@ -25,4 +25,12 @@ public interface ImprovementMeasureComponent {
      */
     void add(ImprovementMeasureAddReq improvementMeasureAddReq);
 
+
+    /**
+     * 添加待办任务
+     *
+     * @param improvementMeasureDO 改进测量DO
+     * @return 待办Id
+     */
+    String addTodoTask(ImprovementMeasureDO improvementMeasureDO);
 }

@@ -80,6 +80,14 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
         // 转换后新增数据
         ImprovementMeasureDO newImprovementMeasureDO = ImprovementMeasureCopier.INSTANCE.convert(improvementMeasureModifyReq);
 
+        // 添加了待办事项
+        Boolean oldTodo = improvementMeasureDOList.get(0).getTodo();
+        Boolean newTodo = newImprovementMeasureDO.getTodo();
+        if(newTodo && !oldTodo){
+            String todoId = improvementMeasureComponent.addTodoTask(newImprovementMeasureDO);
+            newImprovementMeasureDO.setTodoId(todoId);
+        }
+
         // 更新到数据库
         improvementMeasureMapper.update(newImprovementMeasureDO);
 

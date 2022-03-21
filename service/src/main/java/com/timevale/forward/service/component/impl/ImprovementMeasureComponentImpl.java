@@ -87,6 +87,17 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
         // 转换后新增数据
         ImprovementMeasureDO improvementMeasureDO = ImprovementMeasureCopier.INSTANCE.convert(improvementMeasureAddReq);
 
+        // 待办任务
+        String todoId = addTodoTask(improvementMeasureDO);
+        improvementMeasureDO.setTodoId(todoId);
+
+        // 保存到数据库
+        improvementMeasureDO.setStatus(ImprovementMeasureStatusEnum.PENDING.getCode());
+        improvementMeasureMapper.insert(improvementMeasureDO);
+    }
+
+    @Override
+    public String addTodoTask(ImprovementMeasureDO improvementMeasureDO){
         // 查看是否创建待办
         if(improvementMeasureDO.getTodo()){
             // 获取 unionId
@@ -114,12 +125,9 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
                 log.info("新增待办异常,createTodoTaskMsg :{}", todoTaskMsg);
                 improvementMeasureDO.setTodo(false);
             }
-            improvementMeasureDO.setTodoId(todoId);
+            return todoId;
         }
-
-        // 保存到数据库
-        improvementMeasureDO.setStatus(ImprovementMeasureStatusEnum.PENDING.getCode());
-        improvementMeasureMapper.insert(improvementMeasureDO);
+        return StringUtils.EMPTY;
     }
 
 }
