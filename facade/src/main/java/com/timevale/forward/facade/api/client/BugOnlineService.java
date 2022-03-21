@@ -1,10 +1,8 @@
 package com.timevale.forward.facade.api.client;
 
 import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.query.BugLogQueryList;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.BugLogVO;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
 import com.timevale.forward.facade.api.result.ProductLineToFieldVO;
@@ -69,10 +67,10 @@ public interface BugOnlineService {
     /**
      * 开始修复
      *
-     * @param bugOnlineReq 参数
+     * @param bugOnlineStartRepairReq 参数
      * @return 返回值
      */
-    BusinessResult<Boolean> startRepair(BugOnlineReq bugOnlineReq);
+    BusinessResult<Boolean> startRepair(BugOnlineStartRepairReq bugOnlineStartRepairReq);
 
     /**
      * 修复完毕
