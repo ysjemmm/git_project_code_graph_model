@@ -66,7 +66,7 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
                 .collect(Collectors.toList());
         Map<String, DingTodoTaskResponseBody> todoTaskResponseBodyMap = dingWorkRecordClient.batchGetTask(getTodoTaskMsgList);
 
-        // 更新状态 （暂未更新入数据区，调试使用）
+        // 更新状态
         createdTodoList.forEach(e -> {
             boolean done = todoTaskResponseBodyMap.get(e.getTodoId()).getDone();
             e.setStatus(done ? 1 : 0);

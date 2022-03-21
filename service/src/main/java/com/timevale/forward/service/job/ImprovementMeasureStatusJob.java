@@ -9,6 +9,7 @@ import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.List;

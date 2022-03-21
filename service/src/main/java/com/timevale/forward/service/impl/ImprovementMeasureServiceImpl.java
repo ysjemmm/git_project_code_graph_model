@@ -21,6 +21,7 @@ import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
 import com.timevale.forward.service.integration.erp.model.DeleteTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.job.ImprovementMeasureStatusJob;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
@@ -53,7 +54,6 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
 
     @Resource
     private ImprovementMeasureComponent improvementMeasureComponent;
-
 
     public static final String TITLE = "您收到了一条任务：%s";
 
