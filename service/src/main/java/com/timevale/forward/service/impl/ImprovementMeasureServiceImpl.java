@@ -64,45 +64,7 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
 
     @Override
     public BaseResult<Boolean> add(ImprovementMeasureAddReq improvementMeasureAddReq) {
-        log.info("改进措施-新增 add 参数:{}", improvementMeasureAddReq);
-
-        // 转换后新增数据
-        ImprovementMeasureDO improvementMeasureDO = ImprovementMeasureCopier.INSTANCE.convert(improvementMeasureAddReq);
-
-        // 查看是否创建待办
-        if(improvementMeasureDO.getTodo()){
-            // 获取 unionId
-            String userId = LocalSessionUtils.getUserInfo().getId();
-            // String userId = "yangxu";
-            String executorId = improvementMeasureDO.getExecutorId();
-            Map<String, String> unionIdMap = innerUserPersonClient.getUnionIds(Lists.newArrayList(userId,executorId));
-            if (CollectionUtils.isEmpty(unionIdMap)) {
-                log.info("新增待办时,查询用户中心所属用户无unionId");
-            }
-            String userUnionId = unionIdMap.get(userId);
-            String executorUnionId = unionIdMap.get(executorId);
-
-            // 发送待办
-            CreateTodoTaskMsg todoTaskMsg = CreateTodoTaskMsg.builder()
-                    .title(String.format(TITLE, improvementMeasureDO.getName()))
-                    .unionId(userUnionId)
-                    .executorIds(Lists.newArrayList(executorUnionId))
-                    .dueTime(improvementMeasureDO.getImplementationTime().getTime())
-                    .build();
-            String todoId = dingWorkRecordClient.addTask(todoTaskMsg);
-
-            // 保存待办id
-            if (StringUtils.isEmpty(todoId)) {
-                log.info("新增待办异常,createTodoTaskMsg :{}", todoTaskMsg);
-                improvementMeasureDO.setTodo(false);
-            }
-            improvementMeasureDO.setTodoId(todoId);
-        }
-
-        // 保存到数据库
-        improvementMeasureDO.setStatus(ImprovementMeasureStatusEnum.PENDING.getCode());
-        improvementMeasureMapper.insert(improvementMeasureDO);
-
+        improvementMeasureComponent.add(improvementMeasureAddReq);
         return BaseResult.success(true);
     }
 

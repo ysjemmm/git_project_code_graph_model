@@ -99,7 +99,7 @@ public class HomePageServiceImpl implements HomePageService {
         int bugOfflineCount = 0;
 
         // 获取我及所有下属
-        List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+        List<String> allMyStaffWithSelf = Lists.newArrayList(userInfo.getId());
 
         // 进行中的项目
         List<ProjectDO> projectDOList = projectMapper.selectByTeamMember(allMyStaffWithSelf);
