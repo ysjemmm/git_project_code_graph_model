@@ -32,17 +32,7 @@ public class TroubleTicketDO extends BaseDO {
      * 产品线id
      */
     private Long productLineId;
-    
-    /**
-     * 处理人
-     */
-    private String handler;
-    
-    /**
-     * 处理人id
-     */
-    private String handlerId;
-    
+
     /**
      * 故障发生时间
      */

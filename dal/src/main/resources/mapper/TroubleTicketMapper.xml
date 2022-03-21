@@ -4,12 +4,12 @@
 
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO trouble_ticket(name, influence, type, product_line_id, handler, handler_id, occurrence_time,
+        INSERT INTO trouble_ticket(name, influence, type, product_line_id, occurrence_time,
                                    influence_count, influence_client, during_time, failure_time, influence_scope, reason,
                                    restore_time, replay_time, asset_loss, amount_loss, time_line, reason_analysis, trouble_rank,
                                    prime_principal, prime_principal_id, minor_principal, minor_principal_id, duty_team,
                                    create_man_id, create_man)
-        VALUES (#{name}, #{influence}, #{type}, #{productLineId}, #{handler}, #{handlerId}, #{occurrenceTime},
+        VALUES (#{name}, #{influence}, #{type}, #{productLineId}, #{occurrenceTime},
                 #{influenceCount}, #{influenceClient}, #{duringTime}, #{failureTime}, #{influenceScope}, #{reason},
                 #{restoreTime}, #{replayTime}, #{assetLoss}, #{amountLoss}, #{timeLine}, #{reasonAnalysis}, #{troubleRank},
                 #{primePrincipal}, #{primePrincipalId}, #{minorPrincipal}, #{minorPrincipalId}, #{dutyTeam},
@@ -23,8 +23,6 @@
             <if test="influence != null">influence = #{influence},</if>
             <if test="type != null">type = #{type},</if>
             <if test="productLineId != null">product_line_id = #{productLineId},</if>
-            <if test="handler != null">handler = #{handler},</if>
-            <if test="handlerId != null">handler_id = #{handlerId},</if>
             <if test="occurrenceTime != null">occurrence_time = #{occurrenceTime},</if>
             <if test="influenceCount != null">influence_count = #{influenceCount},</if>
             <if test="influenceClient != null">influence_client = #{influenceClient},</if>
@@ -54,7 +52,7 @@
     </update>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.TroubleTicketDO">
-        SELECT id, name, influence, type, product_line_id, handler, handler_id, occurrence_time, influence_count,
+        SELECT id, name, influence, type, product_line_id, occurrence_time, influence_count,
                influence_client, during_time, failure_time, influence_scope, reason, restore_time, replay_time, asset_loss,
                amount_loss, time_line, reason_analysis, trouble_rank, prime_principal, prime_principal_id, minor_principal,
                minor_principal_id, duty_team, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
@@ -63,7 +61,7 @@
     </select>
 
     <select id="selectList" resultType="com.timevale.forward.dal.entity.TroubleTicketListDO">
-        SELECT tt.id, tt.name, tt.trouble_rank, tt.create_man, tt.create_man_id, tt.handler, tt.handler_id, tt.occurrence_time,
+        SELECT tt.id, tt.name, tt.trouble_rank, tt.create_man, tt.create_man_id, tt.occurrence_time,
                tt.create_date, tt.modify_date,
                pl.name productLineName,
                bd.name bizDomainName

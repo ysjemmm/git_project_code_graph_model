@@ -25,16 +25,6 @@ public class TroubleTicketListDO extends BaseDO {
     private Integer troubleRank;
 
     /**
-     * 处理人
-     */
-    private String handler;
-
-    /**
-     * 处理人id
-     */
-    private String handlerId;
-
-    /**
      * 发生时间
      */
     private Date occurrenceTime;
