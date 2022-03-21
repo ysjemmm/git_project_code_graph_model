@@ -10,6 +10,7 @@ import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.BugOnlineRepairFinishedMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -18,11 +19,14 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -65,6 +69,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Resource
     private MessageEventPublisher messageEventPublisher;
+
+    @Resource
+    private InnerUserPersonClient innerUserPersonClient;
 
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
@@ -236,7 +243,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //判断当前状态是否为“问题确认”，“挂起”状态
         if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode())
                 && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.HANG_UP.getCode())) {
-            throw new BaseBizRuntimeException("当前状态不允许点击bug确认");
+            throw new BaseBizRuntimeException("当前状态不允许点击开始修复");
         }
 
         //保存老的状态
@@ -286,7 +293,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //判断当前状态是否为“问题修复”状态
         if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_REPAIR.getCode())) {
-            throw new BaseBizRuntimeException("当前状态不允许点击bug确认");
+            throw new BaseBizRuntimeException("当前状态不允许点击修复完毕");
         }
 
         //保存老的状态
@@ -352,6 +359,58 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> confirmRepair(BugOnlineConfirmRepairReq bugOnlineConfirmRepairReq) {
+        log.info("线上bug确认修复接收参数：{}", bugOnlineConfirmRepairReq.getId());
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        //查询线上bug
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineConfirmRepairReq.getId());
+        if (bugOnlineDO == null) {
+            throw new BaseBizRuntimeException("线上bug不存在");
+        }
+
+        //判断当前状态是否为“QA修复确认”状态
+        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.REPAIR_CONFIRM.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击确认修复");
+        }
+
+        ArrayList<String> operatorIds = Lists.newArrayList(bugOnlineDO.getOperatorId());
+        //校验当前经办人职能是否为测试
+        List<BaseInfoResponse> personByAccountNew = innerUserPersonClient.getPersonByAccountNew(operatorIds);
+        BaseInfoResponse baseInfoResponse = personByAccountNew.get(0);
+        if (baseInfoResponse != null) {
+            if (!JobFunctionEnum.QA.getName().equals(baseInfoResponse.getJobFunction())) {
+                throw new BaseBizRuntimeException("您的职能没有权限点击此按钮");
+            }
+        }
+
+        //保存老的状态
+        String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.ONLINE.getCode());
+        if (bugOnlineConfirmRepairReq.getReason() != null) {
+            bugOnlineDO.setReason(bugOnlineConfirmRepairReq.getReason());
+        }
+        //线上bug表更新
+        bugOnlineMapper.update(bugOnlineDO);
+
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction(ButtonActionEnum.CONFIRM_REPAIR.getText());
+        bugLogDO.setOldValue(oldStatus);
+        bugLogDO.setNewValue(BugOnlineStatusEnum.ONLINE.getText());
+        bugLogDO.setMainId(bugOnlineConfirmRepairReq.getId());
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+        //往bug日志表中插入一条线上bug状态变更数据
+        bugLogMapper.insert(bugLogDO);
+
+        BugStatusOperatorDO bugStatusOperatorDO = new BugStatusOperatorDO();
+        bugStatusOperatorDO.setBugLogId(bugOnlineConfirmRepairReq.getId());
+        bugStatusOperatorDO.setOperator(userInfo.getAlias() + "-" + userInfo.getName());
+        bugStatusOperatorDO.setOperatorId(userInfo.getId());
+        //往状态人员处理表里面插入一条数据记录
+        bugStatusOperatorMapper.insert(bugStatusOperatorDO);
+
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
