@@ -210,7 +210,7 @@
         <where>
             <if test="true">is_deleted = false</if>
             <if test="userIds != null and userIds.size() > 0">
-                and operator_id in
+                and (operator_id in
                 <foreach collection="userIds" separator="," item="item" open="(" close=")">
                     #{item}
                 </foreach>
@@ -218,6 +218,7 @@
                 <foreach collection="userIds" separator="," item="item" open="(" close=")">
                     #{item}
                 </foreach>
+                )
             </if>
         </where>
     </select>
