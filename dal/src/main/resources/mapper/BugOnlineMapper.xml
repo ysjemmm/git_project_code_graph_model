@@ -5,15 +5,9 @@
     </select>
 
     <select id="selectListByCondition" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
-        select bo.id, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env, bo.reason, bo.belong,
-        bo.create_date, bo.modify_date,
-        bo.name bugName,
-        pl.name productLineName,
-        bd.name bizDomainName
+        select bo.id, bo.name, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env, bo.reason, bo.belong,
+        bo.create_date, bo.modify_date
         from bug_online bo
-        left join bug_online_product_line bopl on bo.id = bopl.bug_online_id
-        left join product_line pl on bopl.product_line_id = pl.id
-        left join biz_domain bd on pl.biz_domain_id = bd.id
         <where>
             <if test="name != null and name != '' ">
                 and bo.name like concat('%',#{name},'%')
@@ -33,18 +27,6 @@
             <if test="proposerIdList != null and proposerIdList.size() > 0">
                 and bo.proposer_id in
                 <foreach collection="proposerIdList" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="productLineIdList != null and productLineIdList.size() > 0">
-                and pl.id in
-                <foreach collection="productLineIdList" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="bizDomainIdList != null and bizDomainIdList.size() > 0">
-                and bd.id in
-                <foreach collection="bizDomainIdList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>

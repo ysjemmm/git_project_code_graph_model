@@ -20,6 +20,14 @@ public interface BugOnlineProductLineMapper {
     List<Long> selectProductLineIds(@Param("id") Long id);
 
     /**
+     * 选择通过id列表
+     *
+     * @param bugOnlineIdList 错误在线id列表
+     * @return BugOnlineProductLineDO 列表
+     */
+    List<BugOnlineProductLineDO> selectByBugOnlineIdList(@Param("bugOnlineIdList") List<Long> bugOnlineIdList);
+
+    /**
      * 批量插入数据
      *
      * @param bugOnlineProductLineDOList 参数

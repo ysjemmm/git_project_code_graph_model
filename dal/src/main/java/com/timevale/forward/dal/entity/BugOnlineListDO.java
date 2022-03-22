@@ -14,22 +14,12 @@ public class BugOnlineListDO extends BaseDO {
     /**
      * 名称
      */
-    private String bugName;
+    private String name;
 
     /**
      * 状态 0bug打开、1待修复、2待验收、3待确认、4延期修复、5完成、6关闭
      */
     private Integer status;
-
-    /**
-     * 产品线名称
-     */
-    private String productLineName;
-
-    /**
-     * 业务域名称
-     */
-    private String bizDomainName;
 
     /**
      * bug优先级: 0紧急,10高,20中,30低

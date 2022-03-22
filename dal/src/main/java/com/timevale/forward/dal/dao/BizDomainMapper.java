@@ -25,4 +25,12 @@ public interface BizDomainMapper {
      * @return 业务域DO
      */
     BizDomainDO selectById(@Param("id") Long id);
+
+    /**
+     * 通过id选择
+     *
+     * @param idList id列表
+     * @return 业务域DO 列表
+     */
+    List<BizDomainDO> selectByIdList(@Param("idList") List<Long> idList);
 }

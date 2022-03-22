@@ -41,7 +41,9 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -59,6 +61,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Resource
     private ProductLineMapper productLineMapper;
+
+    @Resource
+    private BizDomainMapper bizDomainMapper;
 
     @Resource
     private BizDemandMapper bizDemandMapper;
@@ -153,12 +158,65 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<BugOnlineListDO> bugOnlineDOList = bugOnlineMapper.selectListByCondition(condition);
         List<BugOnlineVO> bugOnlineVOList = bugOnlineDOList.stream().map(BugOnlineCopier.INSTANCE::convert).collect(Collectors.toList());
 
+        // 查询对应产品线和业务域
+        List<Long> bugOnlineIdList = bugOnlineVOList.stream().map(BugOnlineVO::getId).collect(Collectors.toList());
+        List<BugOnlineProductLineDO> bugOnlineProductLineDOList = bugOnlineProductLineMapper.selectByBugOnlineIdList(bugOnlineIdList);
+
+        List<Long> productLineIdList = bugOnlineProductLineDOList.stream().map(BugOnlineProductLineDO::getProductLineId).collect(Collectors.toList());
+        List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIdList);
+
+        List<Long> bizDomainIdList = productLineDOList.stream().map(ProductLineDO::getBizDomainId).collect(Collectors.toList());
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByIdList(bizDomainIdList);
+
+        Map<Long, ProductLineDO> productLineMap = productLineDOList.stream().collect(Collectors.toMap(ProductLineDO::getId, Function.identity()));
+        Map<Long, BizDomainDO> bizDomainDOMap = bizDomainDOList.stream().collect(Collectors.toMap(BizDomainDO::getId, Function.identity()));
+        Map<Long, List<BugOnlineProductLineDO>> bugOnlineProductLineMap =
+                bugOnlineProductLineDOList.stream().collect(Collectors.groupingBy(BugOnlineProductLineDO::getBugOnlineId));
+
+        for (BugOnlineVO e : bugOnlineVOList) {
+            // 关联的产品线id
+            List<Long> eProductLineIdList = bugOnlineProductLineMap.get(e.getId())
+                    .stream()
+                    .map(BugOnlineProductLineDO::getProductLineId)
+                    .collect(Collectors.toList());
+
+            // 关联的产品线
+            List<ProductLineDO> eProductLineDOList = eProductLineIdList
+                    .stream()
+                    .map(productLineMap::get)
+                    .collect(Collectors.toList());
+
+            // 关联的产品线名称
+            List<String> eProductLineNameList = eProductLineDOList
+                    .stream()
+                    .map(ProductLineDO::getName)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            // 关联的业务域
+            List<Long> eBizDomainIdList = eProductLineDOList
+                    .stream()
+                    .map(ProductLineDO::getBizDomainId)
+                    .collect(Collectors.toList());
+
+            // 关联的业务域名称
+            List<String> eBizDomainNameList = eBizDomainIdList
+                    .stream()
+                    .map(i -> bizDomainDOMap.get(i).getName())
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            e.setProductLineNameList(eProductLineNameList);
+            e.setBizDomainNameList(eBizDomainNameList);
+        }
+
         // 信息填充
         bugOnlineVOList.forEach(e -> {
             e.setEnvName(BugOnlineEnvStatus.getTextByCode(e.getEnv()));
+            e.setStatusName(BugOnlineStatusEnum.getTextByCode(e.getStatus()));
             e.setBelongName(BugOnlineBeloneEnum.getTextByCode(e.getBelong()));
-            e.setPriorityName(BugPriorityEnum.getTextByCode(e.getPriority()));
-            e.setReasonName(BugReasonEnum.getTextByCode(e.getReason()));
+            e.setReasonName(BugOnlineReasonEnum.getTextByCode(e.getReason()));
+            e.setPriorityName(BugOnlinePriorityEnum.getTextByCode(e.getPriority()));
         });
 
         // 返回分页数据

@@ -5,6 +5,17 @@
         where bug_online_id = #{id}
     </select>
 
+    <select id="selectByBugOnlineIdList" resultType="com.timevale.forward.dal.entity.BugOnlineProductLineDO">
+        SELECT bug_online_id, product_line_id
+        FROM bug_online_product_line
+        <where>
+            AND bug_online_id IN
+            <foreach collection="bugOnlineIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </select>
+
     <insert id="batchInsert">
         insert into bug_online_product_line(bug_online_id,product_line_id,create_man,create_man_id) values
         <foreach collection="bugOnlineProductLineDOList" item="bugOnlineProductLineDO" separator=",">
