@@ -26,6 +26,7 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.stereotype.Component;
@@ -108,7 +109,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         Set<Long> queryDeptIdSet = Sets.newHashSet(queryDeptIdList);
         GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
         for (GroupResponse childNode : rootNode.getChildNode()) {
-            dfsGroupListTree(childNode, deptMap, queryDeptIdSet, "", false);
+            dfsGroupListTree(childNode, deptMap, queryDeptIdSet, StringUtils.EMPTY, false);
         }
         return deptMap;
     }

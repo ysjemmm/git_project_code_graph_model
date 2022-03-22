@@ -49,7 +49,7 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
 
         // 筛选出，已创建待办 并且 状态为待处理的事项
         List<ImprovementMeasureDO> createdTodoList = improvementMeasureDOList.stream()
-                .filter(e -> e.getTodo() && ImprovementMeasureStatusEnum.PENDING.getCode().equals(e.getStatus()) &&  e.getName().contains("待办") )
+                .filter(e -> e.getTodo() && ImprovementMeasureStatusEnum.PENDING.getCode().equals(e.getStatus()))
                 .collect(Collectors.toList());
 
         if(createdTodoList.isEmpty()){
@@ -69,7 +69,7 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
         // 更新状态
         createdTodoList.forEach(e -> {
             boolean done = todoTaskResponseBodyMap.get(e.getTodoId()).getDone();
-            e.setStatus(done ? 1 : 0);
+            e.setStatus(done ? ImprovementMeasureStatusEnum.COMPLETED.getCode(): ImprovementMeasureStatusEnum.PENDING.getCode());
         });
 
         // 更新已完成状态
