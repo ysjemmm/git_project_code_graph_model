@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.query;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.timevale.mandarin.common.query.QueryBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -48,15 +49,19 @@ public class BugOnlineQueryList extends QueryBase {
     private List<Integer> belongs;
 
     @ApiModelProperty("创建时间左区间")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd")
     private Date createDateLeft;
 
     @ApiModelProperty("创建时间右区间")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd")
     private Date createDateRight;
 
     @ApiModelProperty("更新时间左区间")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd")
     private Date modifyDateLeft;
 
     @ApiModelProperty("更新时间右区间")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd")
     private Date modifyDateRight;
 
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
