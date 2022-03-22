@@ -33,4 +33,11 @@ public interface BugOnlineProductLineMapper {
      * @param bugOnlineProductLineDOList 参数
      */
     void batchInsert(@Param("bugOnlineProductLineDOList") List<BugOnlineProductLineDO> bugOnlineProductLineDOList);
+
+    /**
+     * 更新数据
+     *
+     * @param bugOnlineProductLineDO 参数
+     */
+    void update(@Param("bugOnlineProductLineDO") BugOnlineProductLineDO bugOnlineProductLineDO);
 }

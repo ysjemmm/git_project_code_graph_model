@@ -13,6 +13,8 @@ import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.middle.BugOnlineMD;
+import com.timevale.forward.service.component.BugOnlineProductLineComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -23,6 +25,7 @@ import com.timevale.forward.service.observer.event.BugOnlineOnlineMsgEvent;
 import com.timevale.forward.service.observer.event.BugOnlineRepairFinishedMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.compare.BugCompareUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -98,6 +101,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Resource
     private PersonComponent personComponent;
 
+    @Resource
+    private BugCompareUtil bugCompareUtil;
+
+    @Resource
+    private BugOnlineProductLineComponent bugOnlineProductLineComponent;
 
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
@@ -158,7 +166,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<BugOnlineListDO> bugOnlineDOList = bugOnlineMapper.selectListByCondition(condition);
         List<BugOnlineVO> bugOnlineVOList = bugOnlineDOList.stream().map(BugOnlineCopier.INSTANCE::convert).collect(Collectors.toList());
 
-        if(CollectionUtils.isEmpty(bugOnlineVOList)){
+        if (CollectionUtils.isEmpty(bugOnlineVOList)) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
 
@@ -216,7 +224,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         // 信息填充
         bugOnlineVOList.forEach(e -> {
-            e.setEnvName(BugOnlineEnvStatus.getTextByCode(e.getEnv()));
+            e.setEnvName(BugOnlineEnvEnum.getTextByCode(e.getEnv()));
             e.setStatusName(BugOnlineStatusEnum.getTextByCode(e.getStatus()));
             e.setBelongName(BugOnlineBeloneEnum.getTextByCode(e.getBelong()));
             e.setReasonName(BugOnlineReasonEnum.getTextByCode(e.getReason()));
@@ -255,8 +263,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 bugOnlineProductLineDO.setProductLineId(productLineId);
                 bugOnlineProductLineDOList.add(bugOnlineProductLineDO);
             });
+            bugOnlineProductLineMapper.batchInsert(bugOnlineProductLineDOList);
         }
-        bugOnlineProductLineMapper.batchInsert(bugOnlineProductLineDOList);
 
         //如果有附件往附件表里存放数据
         List<FileAddReq> files = bugOnlineAddReq.getFiles();
@@ -306,6 +314,75 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> modify(BugOnlineModifyReq bugOnlineModifyReq) {
+        log.info("线上bug修改");
+
+        //查询线上bug
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineModifyReq.getId());
+        if (bugOnlineDO == null) {
+            throw new BaseBizRuntimeException("线上bug不存在");
+        }
+
+        //老的线上bug比较对象
+        BugOnlineMD oldBugOnlineMD = BugOnlineCopier.INSTANCE.change(bugOnlineDO);
+
+        //是否为经办人&提出人及其上级
+        Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
+        Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
+        if (operatorResult != true && proposerResult != true) {
+            throw new BaseBizRuntimeException("您没有修改权限");
+        }
+
+        //BugOnlineModifyReq -->  BugOnlineDO
+        BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(bugOnlineModifyReq);
+        //更新线上bug
+        bugOnlineMapper.update(bugOnlineConvert);
+
+        //更新附件表
+        List<FileAddReq> files = bugOnlineModifyReq.getFiles();
+        if (CollectionUtils.isNotEmpty(files)) {
+            fileComponent.update(files, bugOnlineModifyReq.getId(), FileTypeEnum.BUG_ONLINE.getCode());
+        }
+
+        //更新抄送人表
+        List<PersonAddReq> recipients = bugOnlineModifyReq.getRecipients();
+        if (CollectionUtils.isNotEmpty(recipients)) {
+            personComponent.update(recipients, bugOnlineModifyReq.getId(), PersonTypeEnum.BUG_ONLINE_CC.getCode());
+        }
+
+        List<Long> productLineIdList = bugOnlineModifyReq.getProductLineIdList();
+        //更新线上bug和产品线映射表
+        bugOnlineProductLineComponent.update(productLineIdList, bugOnlineModifyReq.getId());
+
+        //新的线上bug比较对象
+        BugOnlineMD newBugOnlineMD = BugOnlineCopier.INSTANCE.convert(bugOnlineModifyReq);
+        BugOnlineDO newBugOnlineDO = BugOnlineCopier.INSTANCE.change(bugOnlineModifyReq);
+
+        //比较编辑修改的一般字段，生成结果集合
+        List<BugLogDO> bugLogDOList = bugCompareUtil.commonCompare(oldBugOnlineMD, newBugOnlineMD);
+        //额外判断产品线和产品线业务
+        bugLogDOList.addAll(bugCompareUtil.compareExtraIfNecessary(bugOnlineDO, newBugOnlineDO));
+
+        if (!CollectionUtils.isEmpty(bugLogDOList)) {
+            //填充线上bug的id和type信息
+            bugLogDOList.forEach(bugLogDO -> {
+                bugLogDO.setMainId(bugOnlineModifyReq.getId());
+                bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+            });
+
+            bugLogMapper.batchInsert(bugLogDOList);
+        }
+
+        //如果经办人变了，但是状态没有变化，需要往状态人员处理表中插入一条数据
+        if (!bugOnlineDO.getOperatorId().equals(newBugOnlineDO.getOperatorId())) {
+            BugLogDO bugLogDO = new BugLogDO();
+            bugLogDO.setField(BugFieldEnum.OPERATOR.getText());
+            bugLogDO.setOldValue(bugOnlineDO.getOperator());
+            bugLogDO.setNewValue(newBugOnlineDO.getOperator());
+            bugLogDO.setMainId(bugOnlineModifyReq.getId());
+            bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+            bugLogMapper.insert(bugLogDO);
+        }
+
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
@@ -380,7 +457,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //信息填充
         bugOnlineDetailVO.setStatusName(BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()));
         bugOnlineDetailVO.setDismissCauseName(BugOnlineDismissCauseEnum.getTextByCode(bugOnlineDO.getDismissCause()));
-        bugOnlineDetailVO.setEnvName(BugOnlineEnvStatus.getTextByCode(bugOnlineDO.getEnv()));
+        bugOnlineDetailVO.setEnvName(BugOnlineEnvEnum.getTextByCode(bugOnlineDO.getEnv()));
         bugOnlineDetailVO.setBelongName(BugOnlineBeloneEnum.getTextByCode(bugOnlineDO.getBelong()));
         bugOnlineDetailVO.setPriorityName(BugOnlinePriorityEnum.getTextByCode(bugOnlineDO.getPriority()));
         bugOnlineDetailVO.setReasonName(BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason()));

@@ -2,7 +2,7 @@
 <mapper namespace="com.timevale.forward.dal.dao.BugOnlineProductLineMapper">
     <select id="selectProductLineIds" resultType="Long">
         select product_line_id from bug_online_product_line
-        where bug_online_id = #{id}
+        where bug_online_id = #{id} and is_deleted = 0
     </select>
 
     <select id="selectByBugOnlineIdList" resultType="com.timevale.forward.dal.entity.BugOnlineProductLineDO">
@@ -22,4 +22,22 @@
             (#{bugOnlineProductLineDO.bugOnlineId},#{bugOnlineProductLineDO.productLineId},#{createMan},#{createManId})
         </foreach>
     </insert>
+
+    <update id="update">
+        update bug_online_product_line
+        <set>
+            <if test="bugOnlineProductLineDO.productLineId != null">
+                product_line_id = #{bugOnlineProductLineDO.productLineId},
+            </if>
+            <if test="bugOnlineProductLineDO.bugOnlineId != null">
+                bug_online_id = #{bugOnlineProductLineDO.bugOnlineId},
+            </if>
+            <if test="true">
+                is_deleted = #{bugOnlineProductLineDO.isDeleted},
+                modify_man_id = #{bugOnlineProductLineDO.modifyManId},
+                modify_man = #{bugOnlineProductLineDO.modifyMan},
+            </if>
+        </set>
+        where bug_online_id = #{bugOnlineProductLineDO.bugOnlineId}
+    </update>
 </mapper>

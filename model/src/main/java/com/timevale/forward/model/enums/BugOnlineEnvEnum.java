@@ -9,7 +9,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum BugOnlineEnvStatus {
+public enum BugOnlineEnvEnum {
     /**
      * 生产环境
      */
@@ -24,7 +24,7 @@ public enum BugOnlineEnvStatus {
     private final String text;
 
     public static String getTextByCode(Integer code) {
-        for (BugOnlineEnvStatus e : BugOnlineEnvStatus.values()) {
+        for (BugOnlineEnvEnum e : BugOnlineEnvEnum.values()) {
             if (e.code.equals(code)) {
                 return e.text;
             }

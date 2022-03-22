@@ -2,6 +2,7 @@
 <mapper namespace="com.timevale.forward.dal.dao.BugOnlineMapper">
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
         select * from bug_online
+        where id = #{id} and is_deleted = 0
     </select>
 
     <select id="selectListByCondition" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
