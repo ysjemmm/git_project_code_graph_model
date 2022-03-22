@@ -32,6 +32,7 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -69,6 +70,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
     private BizDemandComponent bizDemandComponent;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(TroubleTicketAddReq troubleTicketAddReq) {
         log.info("故障工单-新增 add 参数:{}", troubleTicketAddReq);
 
@@ -93,6 +95,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(TroubleTicketModifyReq troubleTicketModifyReq) {
         log.info("故障工单-修改 modify 参数:{}", troubleTicketModifyReq);
 
