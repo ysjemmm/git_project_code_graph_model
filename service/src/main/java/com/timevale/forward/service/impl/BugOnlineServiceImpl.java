@@ -25,6 +25,7 @@ import com.timevale.forward.service.observer.event.BugOnlineOnlineMsgEvent;
 import com.timevale.forward.service.observer.event.BugOnlineRepairFinishedMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.SpringContextUtil;
 import com.timevale.forward.service.utils.compare.BugCompareUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -109,6 +110,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
+        String business = SpringContextUtil.getProperty("business");
+        log.info(business);
+
         BusinessResult<ProductLineToFieldVO> businessResult = new BusinessResult<>();
         ProductLineToFieldVO productLineToFieldVO = new ProductLineToFieldVO();
         businessResult.setData(productLineToFieldVO);
@@ -339,15 +343,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //更新附件表
         List<FileAddReq> files = bugOnlineModifyReq.getFiles();
-        if (CollectionUtils.isNotEmpty(files)) {
-            fileComponent.update(files, bugOnlineModifyReq.getId(), FileTypeEnum.BUG_ONLINE.getCode());
-        }
+        fileComponent.update(files, bugOnlineModifyReq.getId(), FileTypeEnum.BUG_ONLINE.getCode());
 
         //更新抄送人表
         List<PersonAddReq> recipients = bugOnlineModifyReq.getRecipients();
-        if (CollectionUtils.isNotEmpty(recipients)) {
-            personComponent.update(recipients, bugOnlineModifyReq.getId(), PersonTypeEnum.BUG_ONLINE_CC.getCode());
-        }
+        personComponent.update(recipients, bugOnlineModifyReq.getId(), PersonTypeEnum.BUG_ONLINE_CC.getCode());
 
         List<Long> productLineIdList = bugOnlineModifyReq.getProductLineIdList();
         //更新线上bug和产品线映射表
