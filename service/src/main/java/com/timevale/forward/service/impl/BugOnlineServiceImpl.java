@@ -158,6 +158,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<BugOnlineListDO> bugOnlineDOList = bugOnlineMapper.selectListByCondition(condition);
         List<BugOnlineVO> bugOnlineVOList = bugOnlineDOList.stream().map(BugOnlineCopier.INSTANCE::convert).collect(Collectors.toList());
 
+        if(CollectionUtils.isEmpty(bugOnlineVOList)){
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+
         // 查询对应产品线和业务域
         List<Long> bugOnlineIdList = bugOnlineVOList.stream().map(BugOnlineVO::getId).collect(Collectors.toList());
         List<BugOnlineProductLineDO> bugOnlineProductLineDOList = bugOnlineProductLineMapper.selectByBugOnlineIdList(bugOnlineIdList);
