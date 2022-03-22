@@ -95,6 +95,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     protected BugLogMapper bugLogMapper;
 
+    @Resource
+    private BugOfflineComponent bugOfflineComponent;
+
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -249,6 +252,8 @@ public class ProjectServiceImpl implements ProjectService {
 
         taskComponent.containProductLineInTask(projectDO.getId(), projectDO.getProductLineIds());
 
+        bugOfflineComponent.containProductLineInBugOffline(projectDO.getId(), projectDO.getProductLineIds());
+
         // 产品线
         projectProductLineComponent.update(projectDO.getProductLineIds(), projectDO.getId());
 
@@ -272,7 +277,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (CollectionUtils.isNotEmpty(projectNodeDOList)) {
             boolean match = projectNodeDOList.stream().anyMatch(e ->
                     ProjectNodeEnum.PUBLISH_OFFICIAL.getProjectNodeName().equals(e.getName()) && e.getActualDate() != null);
-            if(match && !checkProductRelease(projectModifyReq.getId())){
+            if (match && !checkProductRelease(projectModifyReq.getId())) {
                 throw new BaseBizRuntimeException("该项目还有bug未关闭，请关闭后再发布");
             }
             projectNodeComponent.add(projectNodeDOList, projectDO.getId());
@@ -421,7 +426,7 @@ public class ProjectServiceImpl implements ProjectService {
                         || BugStatusEnum.POSTPONE_REPAIR.getCode().equals(e.getStatus()))
                 .collect(Collectors.toList());
         // 如果不仅为完成、关闭、延期修复，返回报错
-        if(releaseList.size() != bugOfflineDOList.size()){
+        if (releaseList.size() != bugOfflineDOList.size()) {
             return false;
         }
 
@@ -430,7 +435,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .collect(Collectors.toList());
 
         // 断开关联关系，并且记录bug日志
-        if(!CollectionUtils.isEmpty(postponeList)){
+        if (!CollectionUtils.isEmpty(postponeList)) {
             ProjectDO projectDO = projectMapper.get(projectId);
 
             List<BugLogDO> bugLogDOList = Lists.newArrayList();
@@ -461,10 +466,11 @@ public class ProjectServiceImpl implements ProjectService {
                 && nodeMap.get(ProjectStageEnum.DEMAND_ANALYSE.getText()) == null;
         if (checkTask) {
             //删除需求规划阶段时需要校验是否有关联任务,若有关联待执行&进行中&已完成&已暂停的任务,不能删除
-            Integer taskStatus = taskMapper.getByProjectId(projectDO.getId())
-                    .stream().filter(a -> TaskStageEnum.DEMAND.getCode().equals(a.getStage()))
-                    .map(TaskDO::getStatus).max(Comparator.comparingInt(o -> o)).orElse(TaskStatusEnum.INVALID.getCode());
-            if (taskStatus > TaskStatusEnum.INVALID.getCode()) {
+            List<TaskDO> taskDOList = taskMapper.getByProjectId(projectDO.getId())
+                    .stream()
+                    .filter(a -> TaskStageEnum.DEMAND.getCode().equals(a.getStage())
+                            && !TaskStatusEnum.INVALID.getCode().equals(a.getStatus())).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(taskDOList)) {
                 throw new BaseBizRuntimeException("需求规划阶段已关联任务，不可删除");
             }
         }

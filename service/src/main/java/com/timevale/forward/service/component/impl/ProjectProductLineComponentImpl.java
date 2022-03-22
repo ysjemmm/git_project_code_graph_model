@@ -3,14 +3,11 @@ package com.timevale.forward.service.component.impl;
 import com.timevale.forward.dal.dao.BugOfflineMapper;
 import com.timevale.forward.dal.dao.ProjectProductLineMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
-import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.dal.entity.ProjectProductLineDO;
-import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.service.component.ProjectProductLineComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
-import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
@@ -55,19 +52,6 @@ public class ProjectProductLineComponentImpl implements ProjectProductLineCompon
         List<ProjectProductLineDO> existProductLines = projectProductLineMapper.get(projectId);
         List<Long> existProductLineIds = existProductLines.stream().map(ProjectProductLineDO::getProductLineId).collect(Collectors.toList());
         log.info("已存在项目-产品线:existProductLines={}", existProductLines);
-
-        // 是否可以切换
-        List<Long> unLinkProductLineIdList = existProductLineIds.stream().filter(e -> !list.contains(e)).collect(Collectors.toList());
-        List<TaskDO> taskDOList = taskMapper.getByProjectId(projectId);
-        List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);
-        for (Long productLineId : unLinkProductLineIdList) {
-            boolean result = taskDOList.stream().anyMatch(e -> productLineId.equals(e.getProductLineId()))
-                    || bugOfflineDOList.stream().anyMatch(e -> productLineId.equals(e.getProductLineId()));
-            if(result){
-                throw new BaseBizRuntimeException("关联的产品线已关联任务或线下bug，无法修改");
-            }
-        }
-
         List<ProjectProductLineDO> needAddProductLines=new ArrayList<>();
         projectProductLineDO.forEach((f)->{
             if(!existProductLineIds.contains(f.getProductLineId())){
