@@ -26,6 +26,7 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
@@ -199,6 +200,10 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         // 分页查询
         PageHelper.startPage(troubleTicketQueryList.pageNum, troubleTicketQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
         List<TroubleTicketListDO> troubleTicketDOList = troubleTicketMapper.selectList(troubleTicketCondition);
+
+        if(CollectionUtils.isEmpty(troubleTicketDOList)){
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
 
         // 结果集转换
         List<TroubleTicketVO> troubleTicketVOList = troubleTicketDOList.stream()

@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.query;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.timevale.mandarin.common.query.QueryBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -37,9 +38,11 @@ public class TroubleTicketQueryList extends QueryBase {
     private List<Long> productLineIdList;
 
     @ApiModelProperty("故障发生时间-起始")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd")
     private Date occurrenceTimeStart;
 
     @ApiModelProperty("故障发生时间-结束")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd")
     private Date occurrenceTimeEnd;
 
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")

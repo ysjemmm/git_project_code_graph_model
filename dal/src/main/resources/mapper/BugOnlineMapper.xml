@@ -4,6 +4,94 @@
         select * from bug_online
     </select>
 
+    <select id="selectListByCondition" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
+        select bo.id, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env, bo.reason, bo.belong,
+        bo.create_date, bo.modify_date,
+        bo.name bugName,
+        pl.name productLineName,
+        bd.name bizDomainName
+        from bug_online bo
+        left join bug_online_product_line bopl on bo.id = bopl.bug_online_id
+        left join product_line pl on bopl.product_line_id = pl.id
+        left join biz_domain bd on pl.biz_domain_id = bd.id
+        <where>
+            <if test="name != null and name != '' ">
+                and bo.name like concat('%',#{name},'%')
+            </if>
+            <if test="status != null and status.size() > 0">
+                and bo.status in
+                <foreach collection="status" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="operatorIdList != null and operatorIdList.size() > 0">
+                and bo.operator_id in
+                <foreach collection="operatorIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="proposerIdList != null and proposerIdList.size() > 0">
+                and bo.proposer_id in
+                <foreach collection="proposerIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="productLineIdList != null and productLineIdList.size() > 0">
+                and pl.id in
+                <foreach collection="productLineIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="bizDomainIdList != null and bizDomainIdList.size() > 0">
+                and bd.id in
+                <foreach collection="bizDomainIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="priorities != null and priorities.size() > 0">
+                and bo.priority in
+                <foreach collection="priorities" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="envs != null and envs.size() > 0">
+                and bo.env in
+                <foreach collection="envs" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="reasons != null and reasons.size() > 0">
+                and bo.reason in
+                <foreach collection="reasons" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="belongs != null and belongs.size() > 0">
+                and bo.belong in
+                <foreach collection="belongs" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="createDateLeft != null and createDateRight != null">
+                and bo.create_date &gt;= #{createDateLeft} and bo.create_date &lt;= #{createDateRight}
+            </if>
+            <if test="modifyDateLeft != null and modifyDateRight != null">
+                and bo.modify_date &gt;= #{modifyDateLeft} and bo.modify_date &lt;= #{modifyDateRight}
+            </if>
+            <if test="copier!=null and copier!='' ">
+                and bo.id IN (
+                select p.main_id
+                from person p
+                where p.user_id = #{copier}
+                and p.type = 50
+                )
+            </if>
+            <if test="true">
+                and bo.is_deleted = false
+            </if>
+        </where>
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="bugOnlineDO.id">
         insert into bug_online(name,operator,operator_id,last_operator,last_operator_id,proposer
         ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business

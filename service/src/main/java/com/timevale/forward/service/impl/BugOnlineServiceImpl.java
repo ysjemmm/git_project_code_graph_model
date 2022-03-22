@@ -1,5 +1,9 @@
 package com.timevale.forward.service.impl;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.BugOnlineListCondition;
 import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -11,12 +15,15 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.BugOnlineAddMsgEvent;
 import com.timevale.forward.service.observer.event.BugOnlineOnlineMsgEvent;
 import com.timevale.forward.service.observer.event.BugOnlineRepairFinishedMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
+import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -28,6 +35,7 @@ import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -95,9 +103,71 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
-    public BusinessResult<PageQueryResult<BugOnlineVO>> list(BugOnlineQueryList bugOnlineQueryList) {
-        BusinessResult<PageQueryResult<BugOnlineVO>> businessResult = new BusinessResult<>();
-        return businessResult;
+    public BaseResult<PageQueryResult<BugOnlineVO>> list(BugOnlineQueryList bugOnlineQueryList) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        // 转换查询条件
+        BugOnlineListCondition condition = BugOnlineCopier.INSTANCE.convert(bugOnlineQueryList);
+        // 时间处理
+        condition.setCreateDateLeft(DateUtil.getStartOfDay(condition.getCreateDateLeft()));
+        condition.setCreateDateRight(DateUtil.getEndOfDay(condition.getCreateDateRight()));
+        condition.setModifyDateLeft(DateUtil.getStartOfDay(condition.getModifyDateLeft()));
+        condition.setModifyDateRight(DateUtil.getEndOfDay(condition.getModifyDateRight()));
+
+        // 标志是否有对应数据
+        boolean resultIsEmpty = false;
+        // 根据tabs添加不同的效果
+        String ascription = bugOnlineQueryList.getAscription();
+        if (AscriptionEnum.CURRENT_USER.toString().equals(ascription)) {
+            condition.setProposerIdList(Lists.newArrayList(userInfo.getId()));
+        } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
+            condition.setOperatorIdList(Lists.newArrayList(userInfo.getId()));
+        } else if (AscriptionEnum.COPIER.toString().equals(ascription)) {
+            condition.setCopier(userInfo.getId());
+        } else {
+            List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(LocalSessionUtils.getUserInfo().getId(), true);
+            if (AscriptionEnum.TEAM_SUBMIT.toString().equals(ascription)) {
+                Set<String> createIdSet = Sets.newHashSet(condition.getProposerIdList());
+                if (!createIdSet.isEmpty()) {
+                    teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
+                    resultIsEmpty = teamMemberIdList.isEmpty();
+                }
+                condition.setProposerIdList(teamMemberIdList);
+            } else if (AscriptionEnum.TEAM_RECEIVE.toString().equals(ascription)) {
+                Set<String> operatorSet = Sets.newHashSet(condition.getOperatorIdList());
+                if (!operatorSet.isEmpty()) {
+                    teamMemberIdList = teamMemberIdList.stream().filter(operatorSet::contains).collect(Collectors.toList());
+                    resultIsEmpty = teamMemberIdList.isEmpty();
+                }
+                condition.setOperatorIdList(teamMemberIdList);
+            }
+        }
+        if (resultIsEmpty) {
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+
+        // 开始分页
+        PageHelper.startPage(bugOnlineQueryList.pageNum, bugOnlineQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+
+        // 查询并转换
+        List<BugOnlineListDO> bugOnlineDOList = bugOnlineMapper.selectListByCondition(condition);
+        List<BugOnlineVO> bugOnlineVOList = bugOnlineDOList.stream().map(BugOnlineCopier.INSTANCE::convert).collect(Collectors.toList());
+
+        // 信息填充
+        bugOnlineVOList.forEach(e -> {
+            e.setEnvName(BugOnlineEnvStatus.getTextByCode(e.getEnv()));
+            e.setBelongName(BugOnlineBeloneEnum.getTextByCode(e.getBelong()));
+            e.setPriorityName(BugPriorityEnum.getTextByCode(e.getPriority()));
+            e.setReasonName(BugReasonEnum.getTextByCode(e.getReason()));
+        });
+
+        // 返回分页数据
+        PageInfo<BugOnlineListDO> pageInfo = new PageInfo<>(bugOnlineDOList);
+        PageQueryResult<BugOnlineVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(bugOnlineVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
+        return BaseResult.success(pageQueryResult);
     }
 
     @Override

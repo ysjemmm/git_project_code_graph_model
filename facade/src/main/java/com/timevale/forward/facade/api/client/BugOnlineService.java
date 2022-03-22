@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.client;
 
+import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.*;
@@ -30,7 +31,7 @@ public interface BugOnlineService {
      * @param bugOnlineQueryList 查询参数
      * @return 返回值
      */
-    BusinessResult<PageQueryResult<BugOnlineVO>> list(BugOnlineQueryList bugOnlineQueryList);
+    BaseResult<PageQueryResult<BugOnlineVO>> list(BugOnlineQueryList bugOnlineQueryList);
 
     /**
      * 新增线上bug
