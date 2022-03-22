@@ -12,7 +12,6 @@ import lombok.Data;
  */
 @Data
 @Builder
-@AllArgsConstructor
 public class GetTodoTaskMsg {
     /**
      * 待办id

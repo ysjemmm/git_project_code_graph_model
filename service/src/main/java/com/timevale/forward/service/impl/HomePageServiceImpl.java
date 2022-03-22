@@ -117,10 +117,10 @@ public class HomePageServiceImpl implements HomePageService {
             taskCount = (int) taskDOList.stream().filter(e -> TaskStatusEnum.ongoing(e.getStatus())).count();
 
             /*
-                添加待验证bug
-                用户身份为研发：我的-待解决线下bug = （ bug打开 +待修复）且（经办人=我）
-                用户身份为测试：我的-待验证线下bug = （待验收 + 待确认）且（提出人=我）
-            */
+            * 添加待验证bug
+            * 用户身份为研发：我的-待解决线下bug = （ bug打开 +待修复）且（经办人=我）
+            * 用户身份为测试：我的-待验证线下bug = （待验收 + 待确认）且（提出人=我）
+            * */
             List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByMembers(allMyStaffWithSelf);
             if(UserTypeEnum.RD.getCode().equals(homePageBaseReq.getUserType())){
                 bugOfflineCount = (int)bugOfflineDOList.stream()
