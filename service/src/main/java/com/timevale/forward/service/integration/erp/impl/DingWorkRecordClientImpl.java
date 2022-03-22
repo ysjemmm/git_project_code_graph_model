@@ -23,6 +23,7 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 钉钉待办消息
@@ -110,7 +111,11 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
                 result.put(task.getId(), task);
                 countDownLatch.countDown();
             }));
-            countDownLatch.await();
+            boolean await = countDownLatch.await(20, TimeUnit.SECONDS);
+            if(!await){
+                log.error("[erpMessage]批量获取待办超时 参数{} ",getTodoTaskMsgList);
+                return Maps.newHashMap();
+            }
         } catch (InterruptedException e) {
             log.error("[erpMessage]批量获取待办失败  error: " + e.getMessage());
         }
