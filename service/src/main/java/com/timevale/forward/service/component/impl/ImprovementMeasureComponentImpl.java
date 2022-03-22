@@ -77,10 +77,13 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
         Map<String, DingTodoTaskResponseBody> todoTaskResponseBodyMap = dingWorkRecordClient.batchGetTask(getTodoTaskMsgList);
 
         // 更新状态
-        createdTodoList.forEach(e -> {
-            boolean done = todoTaskResponseBodyMap.get(e.getTodoId()).getDone();
-            e.setStatus(done ? ImprovementMeasureStatusEnum.COMPLETED.getCode(): ImprovementMeasureStatusEnum.PENDING.getCode());
-        });
+        for (ImprovementMeasureDO e : createdTodoList) {
+            Boolean done = todoTaskResponseBodyMap.get(e.getTodoId()).getDone();
+            if(done == null || !done) {
+                continue;
+            }
+            e.setStatus(ImprovementMeasureStatusEnum.COMPLETED.getCode());
+        }
 
         // 更新已完成状态
         List<Long> idList = createdTodoList.stream()
