@@ -30,7 +30,8 @@ public enum MessageTitleEnum {
     BUG_ONLINE_ONLINE("线上bug已上线通知"),
     BUG_ONLINE_SUBMIT("线上bug提交通知"),
     BUG_ONLINE_MODIFY_OPERATOR("线上bug修改经办人通知"),
-    BUG_ONLINE_OPEN_AGAIN("线上bug重新打开通知");
+    BUG_ONLINE_OPEN_AGAIN("线上bug重新打开通知"),
+    BUG_ONLINE_NO_REPAIR("线上bug不用修复通知");
 
     private String text;
 

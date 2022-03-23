@@ -354,11 +354,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineMD oldBugOnlineMD = BugOnlineCopier.INSTANCE.change(bugOnlineDO);
 
         //是否为经办人&提出人及其上级
-        /*Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
+        Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
         Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
         if (operatorResult != true && proposerResult != true) {
             throw new BaseBizRuntimeException("您没有修改权限");
-        }*/
+        }
 
         //BugOnlineModifyReq -->  BugOnlineDO
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(bugOnlineModifyReq);
@@ -832,7 +832,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugLog.setMainId(bugOnlineOpenAgainReq.getId());
             bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
             //往bug日志表中插入一条线上bug内容变更数据
-            bugLogMapper.insert(bugLogDO);
+            bugLogMapper.insert(bugLog);
         }
 
         //bug状态处理人员表插入数据
@@ -857,7 +857,66 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> noRepair(BugOnlineNoRepairReq bugOnlineNoRepairReq) {
+        log.info("线上bug-不用修复接收参数：{}", bugOnlineNoRepairReq.getId());
 
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        //查询线上bug
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineNoRepairReq.getId());
+        if (bugOnlineDO == null) {
+            throw new BaseBizRuntimeException("线上bug不存在");
+        }
+
+        //判断当前状态是否为“问题上报”或者“问题确认”状态
+        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.PROBLEM_REPORT.getCode())
+                && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击不用修复");
+        }
+
+        //保存老的状态
+        String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.BE_CONFIRM.getCode());
+        bugOnlineDO.setLastOperatorId(bugOnlineDO.getOperatorId());
+        bugOnlineDO.setLastOperator(bugOnlineDO.getOperator());
+        bugOnlineDO.setOperatorId(bugOnlineDO.getProposerId());
+        bugOnlineDO.setOperator(bugOnlineDO.getOperator());
+        bugOnlineDO.setDismissCause(bugOnlineNoRepairReq.getDismissCause());
+        //线上bug表更新
+        bugOnlineMapper.update(bugOnlineDO);
+
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction(ButtonActionEnum.NO_REPAIR.getText());
+        bugLogDO.setOldValue(oldStatus);
+        bugLogDO.setNewValue(BugOnlineStatusEnum.BE_CONFIRM.getText());
+        bugLogDO.setMainId(bugOnlineNoRepairReq.getId());
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+        //往bug日志表中插入一条线上bug状态变更数据
+        bugLogMapper.insert(bugLogDO);
+
+        //因为新增了驳回原因所以这里需要加入一条内容变更记录
+        BugLogDO bugLog = new BugLogDO();
+        bugLog.setField(BugFieldEnum.DISMISS_CAUSE.getText());
+        bugLog.setNewValue(BugOnlineDismissCauseEnum.getTextByCode(bugOnlineDO.getDismissCause()));
+        bugLog.setMainId(bugOnlineNoRepairReq.getId());
+        bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
+        //往bug日志表中插入一条线上bug内容变更数据
+        bugLogMapper.insert(bugLog);
+
+        //bug状态处理人员表插入数据
+        insertToBugStatusOperator(bugOnlineDO.getId());
+
+        //发送消息
+        messageEventPublisher.publish(
+                new BugOnlineNoRepairMsgEvent(
+                        this,
+                        userInfo.getAlias() + "-" + userInfo.getName(),
+                        bugOnlineDO.getName(),
+                        bugOnlineDO.getOperatorId(),
+                        bugOnlineDO.getId()
+                )
+        );
 
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
