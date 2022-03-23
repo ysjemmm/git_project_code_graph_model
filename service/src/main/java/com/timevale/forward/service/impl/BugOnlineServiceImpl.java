@@ -1039,6 +1039,80 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> reject(BugOnlineReq bugOnlineReq) {
+        log.info("线上bug-拒绝");
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        //查询线上bug
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineReq.getId());
+        if (bugOnlineDO == null) {
+            throw new BaseBizRuntimeException("线上bug不存在");
+        }
+
+        //判断当前状态是否为“待确认”状态
+        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.BE_CONFIRM.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击拒绝");
+        }
+
+        //判断操作人是否有点击权限
+        Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
+        Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
+        if (!operatorResult && !proposerResult) {
+            throw new BaseBizRuntimeException("您没有点击同意按钮的权限");
+        }
+
+        //保存老的状态
+        String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+        //保存老的驳回原因
+        String oldDismissCause = BugOnlineDismissCauseEnum.getTextByCode(bugOnlineDO.getDismissCause());
+        //保存老的经办人和老的上一阶段经办人
+        String operatorId = bugOnlineDO.getOperatorId();
+        String operator = bugOnlineDO.getOperator();
+        String lastOperatorId = bugOnlineDO.getLastOperatorId();
+        String lastOperator = bugOnlineDO.getLastOperator();
+
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.PROBLEM_REPORT.getCode());
+        bugOnlineDO.setLastOperatorId(operatorId);
+        bugOnlineDO.setLastOperator(operator);
+        bugOnlineDO.setOperatorId(lastOperatorId);
+        bugOnlineDO.setOperator(lastOperator);
+        bugOnlineDO.setDismissCause(null);
+        //线上bug表更新
+        bugOnlineMapper.update(bugOnlineDO);
+
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction(ButtonActionEnum.REFUSED.getText());
+        bugLogDO.setOldValue(oldStatus);
+        bugLogDO.setNewValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
+        bugLogDO.setMainId(bugOnlineReq.getId());
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+        //往bug日志表中插入一条线上bug状态变更数据
+        bugLogMapper.insert(bugLogDO);
+
+        //因为清空了驳回原因所以这里需要加入一条内容变更记录
+        BugLogDO bugLog = new BugLogDO();
+        bugLog.setField(BugFieldEnum.DISMISS_CAUSE.getText());
+        bugLog.setOldValue(oldDismissCause);
+        bugLog.setMainId(bugOnlineReq.getId());
+        bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
+        //往bug日志表中插入一条线上bug内容变更数据
+        bugLogMapper.insert(bugLog);
+
+        //bug状态处理人员表插入数据
+        insertToBugStatusOperator(bugOnlineDO.getId());
+
+        //发送消息
+        messageEventPublisher.publish(
+                new BugOnlineRejectMsgEvent(
+                        this,
+                        userInfo.getAlias() + "-" + userInfo.getName(),
+                        bugOnlineDO.getName(),
+                        bugOnlineDO.getOperatorId(),
+                        bugOnlineDO.getId()
+                )
+        );
+
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
