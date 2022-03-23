@@ -1121,6 +1121,40 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> reconfirm(BugOnlineReq bugOnlineReq) {
+        log.info("线上bug-重新确认");
+
+        //查询线上bug
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineReq.getId());
+        if (bugOnlineDO == null) {
+            throw new BaseBizRuntimeException("线上bug不存在");
+        }
+
+        //判断当前状态是否为“问题确认”或者“问题修复”状态
+        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode())
+                && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_REPAIR.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击重新确认");
+        }
+
+        //保存老的状态
+        String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.PROBLEM_REPORT.getCode());
+        //线上bug表更新
+        bugOnlineMapper.update(bugOnlineDO);
+
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction(ButtonActionEnum.REPEAT_CONFIRM.getText());
+        bugLogDO.setOldValue(oldStatus);
+        bugLogDO.setNewValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
+        bugLogDO.setMainId(bugOnlineReq.getId());
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+        //往bug日志表中插入一条线上bug状态变更数据
+        bugLogMapper.insert(bugLogDO);
+
+        //bug状态处理人员表插入数据
+        insertToBugStatusOperator(bugOnlineDO.getId());
+
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
@@ -1129,6 +1163,40 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> temporaryNoRepair(BugOnlineReq bugOnlineReq) {
+        log.info("线上bug-暂不修复");
+
+        //查询线上bug
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineReq.getId());
+        if (bugOnlineDO == null) {
+            throw new BaseBizRuntimeException("线上bug不存在");
+        }
+
+        //判断当前状态是否为“问题确认”或者“问题修复”状态
+        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode())
+                && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_REPAIR.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击重新确认");
+        }
+
+        //保存老的状态
+        String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.HANG_UP.getCode());
+        //线上bug表更新
+        bugOnlineMapper.update(bugOnlineDO);
+
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction(ButtonActionEnum.TEMPORARY_NO_REPAIR.getText());
+        bugLogDO.setOldValue(oldStatus);
+        bugLogDO.setNewValue(BugOnlineStatusEnum.HANG_UP.getText());
+        bugLogDO.setMainId(bugOnlineReq.getId());
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+        //往bug日志表中插入一条线上bug状态变更数据
+        bugLogMapper.insert(bugLogDO);
+
+        //bug状态处理人员表插入数据
+        insertToBugStatusOperator(bugOnlineDO.getId());
+
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
@@ -1142,7 +1210,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         return businessResult;
     }
 
-    //判断当前操作人是否为personId或者personId的上级
+    /**
+     * 判断当前操作人是否为personId或者personId的上级
+     */
     Boolean isPermission(String personId) {
         //得到当前操作人账户
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -1162,7 +1232,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         return higherLevels.contains(account);
     }
 
-    //判断用户是否为某个职能
+    /**
+     * 判断用户是否为某个职能
+     */
     Boolean jobFunctionMatch(String personId, String jobFunction) {
         ArrayList<String> operatorIds = Lists.newArrayList(personId);
         //校验当前经办人职能是否为测试
@@ -1176,7 +1248,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         return true;
     }
 
-    //根据线上bug的id，往bug状态人员处理表中插入一条数据
+    /**
+     * 根据线上bug的id，往bug状态人员处理表中插入一条数据
+     */
     public void insertToBugStatusOperator(Long bugOnlineId) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
