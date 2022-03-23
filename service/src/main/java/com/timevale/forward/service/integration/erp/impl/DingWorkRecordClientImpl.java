@@ -111,7 +111,7 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
                 result.put(task.getId(), task);
                 countDownLatch.countDown();
             }));
-            boolean await = countDownLatch.await(20, TimeUnit.SECONDS);
+            boolean await = countDownLatch.await(60, TimeUnit.SECONDS);
             if(!await){
                 log.error("[erpMessage]批量获取待办超时 参数{} ",getTodoTaskMsgList);
                 return Maps.newHashMap();
