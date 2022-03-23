@@ -111,11 +111,12 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
                 result.put(task.getId(), task);
                 countDownLatch.countDown();
             }));
-            boolean await = countDownLatch.await(60, TimeUnit.SECONDS);
-            if(!await){
-                log.error("[erpMessage]批量获取待办超时 参数{} ",getTodoTaskMsgList);
-                return Maps.newHashMap();
-            }
+            countDownLatch.await();
+            // boolean await = countDownLatch.await(60, TimeUnit.SECONDS);
+            // if(!await){
+            //     log.error("[erpMessage]批量获取待办超时 参数{} ",getTodoTaskMsgList);
+            //     return Maps.newHashMap();
+            // }
         } catch (InterruptedException e) {
             log.error("[erpMessage]批量获取待办失败  error: " + e.getMessage());
         }
