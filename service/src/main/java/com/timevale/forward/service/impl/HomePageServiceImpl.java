@@ -325,25 +325,26 @@ public class HomePageServiceImpl implements HomePageService {
     public List<HomePageProjectBoardDTO> filterByDate(UserTypeEnum userType, Date startDate, Date endDate, List<HomePageProjectBoardDTO> list) {
         if (userType.equals(UserTypeEnum.PD)) {
             return list.stream().filter(e -> {
-                boolean  filter =  DateUtil.inInterval(e.getStartPlan(), startDate, endDate);
-                filter = filter || DateUtil.inInterval(e.getDemandInternalAudit(), startDate, endDate);
-                filter = filter || DateUtil.inInterval(e.getDemandConstrue(), startDate, endDate);
-                return filter;
+                Date nodeStart = DateUtil.min(e.getPlanEndDate(), e.getDemandInternalAudit(), e.getDemandConstrue());
+                Date nodeEnd = DateUtil.max(e.getPlanEndDate(), e.getDemandInternalAudit(), e.getDemandConstrue());
+                return DateUtil.haveOverlap(nodeStart, nodeEnd, startDate, endDate);
             }).collect(Collectors.toList());
         } else if (userType.equals(UserTypeEnum.RD)) {
             return list.stream().filter(e -> {
-                boolean  filter =  DateUtil.inInterval(e.getTechnicalDetailReview(), startDate, endDate);
-                filter = filter || DateUtil.inInterval(e.getDevelopStart(), startDate, endDate);
-                filter = filter || DateUtil.inInterval(e.getSubmitTest(), startDate, endDate);
-                return filter;
+                Date nodeStart = DateUtil.min(e.getTechnicalDetailReview(), e.getDevelopStart(), e.getSubmitTest());
+                Date nodeEnd = DateUtil.max(e.getTechnicalDetailReview(), e.getDevelopStart(), e.getSubmitTest());
+                return DateUtil.haveOverlap(nodeStart, nodeEnd, startDate, endDate);
             }).collect(Collectors.toList());
         } else if(userType.equals(UserTypeEnum.QA)){
             return list.stream().filter(e -> {
-                boolean  filter =  DateUtil.inInterval(e.getWriteTestCases(), startDate, endDate);
-                filter = filter || DateUtil.inInterval(e.getUseCaseReview(), startDate, endDate);
-                filter = filter || DateUtil.inInterval(e.getTestStart(), startDate, endDate);
-                filter = filter || DateUtil.inInterval(e.getPublishSimulate(), startDate, endDate);
-                filter = filter || DateUtil.inInterval(e.getPublishOfficial(), startDate, endDate);
+                Date nodeStart = DateUtil.min(e.getWriteTestCases(), e.getUseCaseReview());
+                Date nodeEnd = DateUtil.max(e.getWriteTestCases(), e.getUseCaseReview());
+                boolean filter = DateUtil.haveOverlap(nodeStart, nodeEnd, startDate, endDate);
+
+                nodeStart = DateUtil.min(e.getTestStart(), e.getPublishSimulate(), e.getPublishOfficial());
+                nodeEnd = DateUtil.max(e.getTestStart(), e.getPublishSimulate(), e.getPublishOfficial());
+                filter = filter ||  DateUtil.haveOverlap(nodeStart, nodeEnd, startDate, endDate);
+
                 return filter;
             }).collect(Collectors.toList());
         } else{
