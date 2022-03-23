@@ -17,7 +17,7 @@ import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOnlineMD;
-import com.timevale.forward.model.middle.BusinessBeanMD;
+
 import com.timevale.forward.service.component.BugOnlineProductLineComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
@@ -120,7 +120,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         JSONArray businessJsonArray = JSONUtil.parseArray(business);
         //List<BusinessBeanMD> businessBeanMDList = JSONUtil.toList(businessJsonArray, BusinessBeanMD.class);
 
-        List<BusinessBeanMD> businessBeanMDS = JSON.parseArray(business, BusinessBeanMD.class);
+        // List<BusinessBeanMD> businessBeanMDS = JSON.parseArray(business, BusinessBeanMD.class);
         BusinessResult<ProductLineToFieldVO> businessResult = new BusinessResult<>();
         ProductLineToFieldVO productLineToFieldVO = new ProductLineToFieldVO();
         businessResult.setData(productLineToFieldVO);
