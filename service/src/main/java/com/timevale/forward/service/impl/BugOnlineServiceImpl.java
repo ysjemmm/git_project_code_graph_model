@@ -926,6 +926,63 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> transfer(BugOnlineTransferReq bugOnlineTransferReq) {
+        log.info("线上bug-转交接收参数：{}", bugOnlineTransferReq.getId());
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        //查询线上bug
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineTransferReq.getId());
+        if (bugOnlineDO == null) {
+            throw new BaseBizRuntimeException("线上bug不存在");
+        }
+
+        //判断操作人是否有点击权限
+        Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
+        Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
+        Boolean testJobFunctionResult = false;
+        if (bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.REPAIR_CONFIRM.getCode())) {
+            testJobFunctionResult = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
+        }
+        if (!operatorResult && !proposerResult && !testJobFunctionResult) {
+            throw new BaseBizRuntimeException("您没有点击转交按钮的权限");
+        }
+
+        //保存老的经办人
+        String oldOperator = bugOnlineDO.getOperator();
+
+        bugOnlineDO.setLastOperatorId(bugOnlineDO.getOperatorId());
+        bugOnlineDO.setLastOperator(bugOnlineDO.getOperator());
+        bugOnlineDO.setOperatorId(bugOnlineTransferReq.getUserId());
+        bugOnlineDO.setOperator(bugOnlineTransferReq.getUserName());
+        //线上bug表更新
+        bugOnlineMapper.update(bugOnlineDO);
+
+        BugLogDO bugLog = new BugLogDO();
+        bugLog.setField(BugFieldEnum.OPERATOR.getText());
+        bugLog.setOldValue(oldOperator);
+        bugLog.setNewValue(bugOnlineTransferReq.getUserName());
+        bugLog.setMainId(bugOnlineTransferReq.getId());
+        bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
+        //往bug日志表中插入一条线上bug内容变更数据
+        bugLogMapper.insert(bugLog);
+
+        //如果不是自己转交给自己，bug状态处理人员表插入数据
+        if (!oldOperator.equals(bugOnlineTransferReq.getUserName())) {
+            insertToBugStatusOperator(bugOnlineDO.getId());
+        }
+
+        //发送消息
+        messageEventPublisher.publish(
+                new BugOnlineTransferMsgEvent(
+                        this,
+                        userInfo.getAlias() + "-" + userInfo.getName(),
+                        bugOnlineDO.getName(),
+                        BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()),
+                        bugOnlineTransferReq.getUserId(),
+                        bugOnlineDO.getId()
+                )
+        );
+
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
