@@ -944,7 +944,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             testJobFunctionResult = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
         }
         if (!operatorResult && !proposerResult && !testJobFunctionResult) {
-            throw new BaseBizRuntimeException("您没有点击转交按钮的权限");
+            throw new BaseBizRuntimeException("您没有点击此按钮的权限");
         }
 
         //保存老的经办人
@@ -1009,7 +1009,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
         Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
         if (!operatorResult && !proposerResult) {
-            throw new BaseBizRuntimeException("您没有点击同意按钮的权限");
+            throw new BaseBizRuntimeException("您没有点击此按钮的权限");
         }
 
         //保存老的经办人
@@ -1058,7 +1058,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
         Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
         if (!operatorResult && !proposerResult) {
-            throw new BaseBizRuntimeException("您没有点击同意按钮的权限");
+            throw new BaseBizRuntimeException("您没有点击此按钮的权限");
         }
 
         //保存老的状态
@@ -1174,7 +1174,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //判断当前状态是否为“问题确认”或者“问题修复”状态
         if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode())
                 && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_REPAIR.getCode())) {
-            throw new BaseBizRuntimeException("当前状态不允许点击重新确认");
+            throw new BaseBizRuntimeException("当前状态不允许点击暂不修复");
         }
 
         //保存老的状态
@@ -1205,6 +1205,76 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> repairFailed(BugOnlineRepairFailedReasonReq bugOnlineRepairFailedReasonReq) {
+        log.info("线上bug-修复失败");
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        //查询线上bug
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineRepairFailedReasonReq.getId());
+        if (bugOnlineDO == null) {
+            throw new BaseBizRuntimeException("线上bug不存在");
+        }
+
+        //判断当前状态是否为“QA修复确认”状态
+        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.REPAIR_CONFIRM.getCode())) {
+            throw new BaseBizRuntimeException("当前状态不允许点击修复失败");
+        }
+
+        //判断操作人是否有点击权限
+        Boolean result = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
+        if (!result) {
+            throw new BaseBizRuntimeException("您没有点击此按钮的权限");
+        }
+
+        //保存老的状态
+        String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+        //保存老的经办人和老的上一阶段经办人
+        String operatorId = bugOnlineDO.getOperatorId();
+        String operator = bugOnlineDO.getOperator();
+        String lastOperatorId = bugOnlineDO.getLastOperatorId();
+        String lastOperator = bugOnlineDO.getLastOperator();
+
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.QUESTION_REPAIR.getCode());
+        bugOnlineDO.setLastOperatorId(operatorId);
+        bugOnlineDO.setLastOperator(operator);
+        bugOnlineDO.setOperatorId(lastOperatorId);
+        bugOnlineDO.setOperator(lastOperator);
+        bugOnlineDO.setRepairFailReason(bugOnlineRepairFailedReasonReq.getRepairFailReason());
+        //线上bug表更新
+        bugOnlineMapper.update(bugOnlineDO);
+
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction(ButtonActionEnum.REPAIR_FAIL.getText());
+        bugLogDO.setOldValue(oldStatus);
+        bugLogDO.setNewValue(BugOnlineStatusEnum.QUESTION_REPAIR.getText());
+        bugLogDO.setMainId(bugOnlineRepairFailedReasonReq.getId());
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+        //往bug日志表中插入一条线上bug状态变更数据
+        bugLogMapper.insert(bugLogDO);
+
+        //因为增加了修复失败原因所以这里需要加入一条内容变更记录
+        BugLogDO bugLog = new BugLogDO();
+        bugLog.setField(BugFieldEnum.REPAIR_FAIL_REASON.getText());
+        bugLog.setNewValue(bugOnlineRepairFailedReasonReq.getRepairFailReason());
+        bugLog.setMainId(bugOnlineRepairFailedReasonReq.getId());
+        bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
+        //往bug日志表中插入一条线上bug内容变更数据
+        bugLogMapper.insert(bugLog);
+
+        //bug状态处理人员表插入数据
+        insertToBugStatusOperator(bugOnlineDO.getId());
+
+        //发送消息
+        messageEventPublisher.publish(
+                new BugOnlineRepairFailedMsgEvent(
+                        this,
+                        bugOnlineDO.getName(),
+                        bugOnlineDO.getOperatorId(),
+                        bugOnlineDO.getId()
+                )
+        );
+
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;

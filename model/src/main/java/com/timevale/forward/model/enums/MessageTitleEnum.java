@@ -33,7 +33,8 @@ public enum MessageTitleEnum {
     BUG_ONLINE_OPEN_AGAIN("线上bug重新打开通知"),
     BUG_ONLINE_NO_REPAIR("线上bug不用修复通知"),
     BUG_ONLINE_TRANSFER("线上bug转交通知"),
-    BUG_ONLINE_REJECT("线上bug拒绝通知");
+    BUG_ONLINE_REJECT("线上bug拒绝通知"),
+    BUG_ONLINE_REPAIR_FAIL("线上bug修复失败通知");
 
     private String text;
 
