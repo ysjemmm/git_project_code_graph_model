@@ -1926,5 +1926,59 @@ public class DateUtil implements DateFormatConst {
         return !date.before(startDate) && !date.after(endDate);
     }
 
+    /**
+     * 获取最大日期
+     *
+     * @param dates 日期
+     * @return 最大日期
+     */
+    public static Date max(Date... dates){
+        Date maxDate = null;
+        for (Date date : dates) {
+            if(date == null){
+                continue;
+            }
+            if(maxDate == null){
+                maxDate = date;
+            }
+            maxDate = date.after(maxDate) ? date : maxDate;
+        }
+        return maxDate;
+    }
 
+    /**
+     * 获取最小日期
+     *
+     * @param dates 日期
+     * @return 最小日期
+     */
+    public static Date min(Date... dates){
+        Date minDate = null;
+        for (Date date : dates) {
+            if(date == null){
+                continue;
+            }
+            if(minDate == null){
+                minDate = date;
+            }
+            minDate = date.before(minDate) ? date : minDate;
+        }
+        return minDate;
+    }
+
+    /**
+     * 两端日期是否有重叠
+     *
+     * @param aStart a开始
+     * @param aEnd   a结束
+     * @param bStart b开始
+     * @param bEnd   b结束
+     * @return 是否有重叠
+     */
+    public static Boolean haveOverlap(Date aStart, Date aEnd, Date bStart, Date bEnd){
+        if(aStart == null || aEnd == null || bStart == null || bEnd == null){
+            return false;
+        }
+        return !(aStart.after(bEnd) || bStart.after(aEnd));
+    }
 }
