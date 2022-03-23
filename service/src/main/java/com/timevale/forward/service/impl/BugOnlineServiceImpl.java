@@ -17,7 +17,7 @@ import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOnlineMD;
-
+import com.timevale.forward.model.middle.BusinessBeanMD;
 import com.timevale.forward.service.component.BugOnlineProductLineComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
@@ -50,6 +50,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.naming.ldap.HasControls;
+import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -117,14 +118,40 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
-        JSONArray businessJsonArray = JSONUtil.parseArray(business);
-        //List<BusinessBeanMD> businessBeanMDList = JSONUtil.toList(businessJsonArray, BusinessBeanMD.class);
-
-        // List<BusinessBeanMD> businessBeanMDS = JSON.parseArray(business, BusinessBeanMD.class);
-        BusinessResult<ProductLineToFieldVO> businessResult = new BusinessResult<>();
+        List<BusinessBeanMD> businessBeanMDList = JSON.parseArray(business, BusinessBeanMD.class);
+        List<Long> productLineIdList = bugOnlineGetFieldReq.getProductLineIdList();
+        Map<Integer, String> fieldMap = getFieldMap();
         ProductLineToFieldVO productLineToFieldVO = new ProductLineToFieldVO();
+        List<String> fieldList = new ArrayList<>();
+        productLineIdList.forEach(productLineId->{
+            for(int i =0; i<businessBeanMDList.size();i++){
+                BusinessBeanMD businessBeanMD = businessBeanMDList.get(i);
+                if(businessBeanMD.getFieldValue().contains(productLineId)){
+                    fieldList.add(fieldMap.get(i));
+                }
+            }
+        });
+
+        //属性字段集合去重
+        List<String> distinctFieldList = fieldList.stream().distinct().collect(Collectors.toList());
+
+        BusinessResult<ProductLineToFieldVO> businessResult = new BusinessResult<>();
+        productLineToFieldVO.setField(distinctFieldList);
         businessResult.setData(productLineToFieldVO);
         return businessResult;
+    }
+
+    //获取下标与字段属性之间的映射关系
+    public Map<Integer,String> getFieldMap(){
+        Map<Integer,String> map = new HashMap<>();
+        map.put(0,"flowId");
+        map.put(1,"mainOId");
+        map.put(2,"templateId");
+        map.put(3,"appId");
+        map.put(4,"sealId");
+        map.put(5,"operatorNameAccount");
+        map.put(6,"loginAccount");
+        return map;
     }
 
     @Override
