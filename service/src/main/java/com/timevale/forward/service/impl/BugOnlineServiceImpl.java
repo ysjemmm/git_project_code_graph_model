@@ -1,5 +1,8 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -14,6 +17,7 @@ import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOnlineMD;
+import com.timevale.forward.model.middle.BusinessBeanMD;
 import com.timevale.forward.service.component.BugOnlineProductLineComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
@@ -40,13 +44,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import javax.naming.ldap.HasControls;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -105,14 +109,18 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Resource
     private BugCompareUtil bugCompareUtil;
 
+    @Value("${business}")
+    private String business;
+
     @Resource
     private BugOnlineProductLineComponent bugOnlineProductLineComponent;
 
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
-        String business = SpringContextUtil.getProperty("business");
-        log.info(business);
+        JSONArray businessJsonArray = JSONUtil.parseArray(business);
+        //List<BusinessBeanMD> businessBeanMDList = JSONUtil.toList(businessJsonArray, BusinessBeanMD.class);
 
+        List<BusinessBeanMD> businessBeanMDS = JSON.parseArray(business, BusinessBeanMD.class);
         BusinessResult<ProductLineToFieldVO> businessResult = new BusinessResult<>();
         ProductLineToFieldVO productLineToFieldVO = new ProductLineToFieldVO();
         businessResult.setData(productLineToFieldVO);

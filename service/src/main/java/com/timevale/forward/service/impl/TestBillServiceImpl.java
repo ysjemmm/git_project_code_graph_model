@@ -71,6 +71,8 @@ public class TestBillServiceImpl implements TestBillService {
 
     @Override
     public BaseResult<CreateTestBillVO> addTestBill(Long projectId) {
+        log.info("创建提测单");
+
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String alias = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
 
@@ -79,9 +81,13 @@ public class TestBillServiceImpl implements TestBillService {
         List<ProjectNodeDO> projectNodeDOList = projectNodeMapper.get(projectId);
         if (CollectionUtils.isNotEmpty(projectNodeDOList)) {
             //获取提测的计划时间
-            Date planDate = projectNodeDOList.stream().filter(e -> e.getName()
+            List<Date> dateList = projectNodeDOList.stream().filter(e -> e.getName()
                     .equals(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName())).map(ProjectNodeDO::getPlanDate)
-                    .collect(Collectors.toList()).get(0);
+                    .collect(Collectors.toList());
+            if(CollectionUtils.isEmpty(dateList)){
+                throw new BaseBizRuntimeException("提测单计划时间不存在");
+            }
+            Date planDate = dateList.get(0);
 
             //该项目对应的提测单
             TestBillDO testBillDO = testBillMapper.selectByProjectId(projectId);
@@ -100,6 +106,8 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitTestBill(TestBillAddReq testBillAddReq) {
+        log.info("提交提测单");
+
         //判断该项目是否已经有提测单了，有的话则显示提示信息
         TestBillDO testBill = testBillMapper.selectByProjectId(testBillAddReq.getProjectId());
         if (testBill != null) {
@@ -144,6 +152,8 @@ public class TestBillServiceImpl implements TestBillService {
 
     @Override
     public BaseResult<TestBillVO> getTestBill(Long projectId) {
+        log.info("获取提测单详情");
+
         TestBillDO testBillDO = testBillMapper.selectByProjectId(projectId);
         if (testBillDO == null) {
             throw new BaseBizRuntimeException("该项目id没有对应的提测单");
@@ -198,6 +208,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitSmokeTesting(TestBillModifyReq testBillModifyReq) {
+        log.info("提交提测单");
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
@@ -247,6 +258,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modifyTestMan(TestBillModifyReq testBillModifyReq) {
+        log.info("提测单-修改测试人");
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
@@ -297,6 +309,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> selfTestPass(TestBillModifyReq testBillModifyReq) {
+        log.info("提测单-自测通过");
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
@@ -351,6 +364,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitTestPass(TestBillModifyReq testBillModifyReq) {
+        log.info("提测单-提测通过");
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
@@ -390,6 +404,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitTestBack(TestBillModifyReq testBillModifyReq) {
+        log.info("提测单-提测打回");
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
