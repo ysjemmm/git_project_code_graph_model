@@ -113,4 +113,10 @@ public class BugOnlineMD {
      */
     @FieldCompare(fieldName = "修复失败原因")
     private String repairFailReason;
+
+    /**
+     * 重新打开原因
+     */
+    @FieldCompare(fieldName = "重新打开原因")
+    private String openAgainReason;
 }
