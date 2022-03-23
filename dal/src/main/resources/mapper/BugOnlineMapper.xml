@@ -137,7 +137,7 @@
                 business = #{bugOnlineDO.business},
             </if>
             <if test="bugOnlineDO.describe != null">
-                describe = #{bugOnlineDO.describe},
+                `describe` = #{bugOnlineDO.describe},
             </if>
             <if test="bugOnlineDO.status != null">
                 status = #{bugOnlineDO.status},

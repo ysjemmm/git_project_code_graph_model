@@ -150,16 +150,16 @@ public class BugCompareUtil {
             bugLogDOList.add(bugLogDO);
         }
 
-        String oldBusiness = oldObj.getBusiness();
-        String newBusiness = newObj.getBusiness();
+        String oldBusiness = oldObj.getBusiness().replace("'","");
+        String newBusiness = newObj.getBusiness().replace("'","");
         //如果产品线业务这个json字符串变了，要记录一条或多条内容变更日志
         if (!oldBusiness.equals(newBusiness)) {
             BusinessMD oldBusinessMD = new BusinessMD();
             BusinessMD newBusinessMD = new BusinessMD();
-            if(!oldBusiness.equals("''")){
+            if(!"".equals(oldBusiness)){
                 oldBusinessMD = JSONUtil.toBean(oldBusiness, BusinessMD.class);
             }
-            if(!newBusiness.equals("''")){
+            if(!"".equals(newBusiness)){
                 newBusinessMD = JSONUtil.toBean(newBusiness, BusinessMD.class);
             }
             List<BugLogDO> bugLogList = commonCompare(oldBusinessMD, newBusinessMD);
