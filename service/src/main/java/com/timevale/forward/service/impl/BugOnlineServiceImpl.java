@@ -25,6 +25,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.BugOnlineAddMsgEvent;
+import com.timevale.forward.service.observer.event.BugOnlineModifyMsgEvent;
 import com.timevale.forward.service.observer.event.BugOnlineOnlineMsgEvent;
 import com.timevale.forward.service.observer.event.BugOnlineRepairFinishedMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
@@ -407,7 +408,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugLogMapper.batchInsert(bugLogDOList);
         }
 
-        //如果经办人变了，但是状态没有变化，需要往状态人员处理表中插入一条数据
+        //如果经办人变了，但是状态没有变化，需要往状态人员处理表中插入一条数据，并且需要发送钉钉消息
         if (!bugOnlineDO.getOperatorId().equals(newBugOnlineDO.getOperatorId())) {
             BugLogDO bugLogDO = new BugLogDO();
             bugLogDO.setField(BugFieldEnum.OPERATOR.getText());
@@ -416,6 +417,17 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugLogDO.setMainId(bugOnlineModifyReq.getId());
             bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
             bugLogMapper.insert(bugLogDO);
+
+            //发送钉钉消息
+            messageEventPublisher.publish(
+                    new BugOnlineModifyMsgEvent(
+                            this,
+                            bugOnlineDO.getName(),
+                            BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()),
+                            bugOnlineModifyReq.getOperatorId(),
+                            bugOnlineDO.getId()
+                    )
+            );
         }
 
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
