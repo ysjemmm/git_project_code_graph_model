@@ -18,11 +18,11 @@ import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
-import com.timevale.forward.service.handler.AbstractFieldCompareHandler;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.compare.BugCompareUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
  **/
 @Slf4j
 @RestService
-public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflineDO> implements BugOfflineService {
+public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Resource
     MessageEventPublisher messageEventPublisher;
@@ -79,6 +79,9 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
 
     @Resource
     private BugStatusOperatorMapper bugStatusOperatorMapper;
+
+    @Resource
+    private BugCompareUtil bugCompareUtil;
 
     @Override
     public BaseResult<PageQueryResult<BugOfflineVO>> list(BugOfflineQueryList bugOfflineQueryList) {
@@ -229,7 +232,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         //4.bug_log记录
         BugOfflineMD oldBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(oldBugOfflineDO);
         BugOfflineMD newBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(newBugOfflineDO);
-        List<BugLogDO> bugLogDOList = commonCompare(oldBugOfflineMD, newBugOfflineMD);
+        List<BugLogDO> bugLogDOList = bugCompareUtil.commonCompare(oldBugOfflineMD, newBugOfflineMD);
         // 额外判断项目与产品
         bugLogDOList.addAll(compareExtraIfNecessary(oldBugOfflineDO, newBugOfflineDO));
         bugLogDOList.forEach(e -> {
@@ -1101,8 +1104,7 @@ public class BugOfflineServiceImpl extends AbstractFieldCompareHandler<BugOfflin
         return higherLevels.contains(account);
     }
 
-    @Override
-    protected List<BugLogDO> compareExtraIfNecessary(BugOfflineDO oldBugOfflineDO, BugOfflineDO newBugOfflineDO) {
+    private List<BugLogDO> compareExtraIfNecessary(BugOfflineDO oldBugOfflineDO, BugOfflineDO newBugOfflineDO) {
         List<BugLogDO> bugLogDOList = new ArrayList<>();
         if (!Objects.equals(oldBugOfflineDO.getProjectId(), newBugOfflineDO.getProjectId())) {
             List<ProjectDO> projectDOList = projectMapper
