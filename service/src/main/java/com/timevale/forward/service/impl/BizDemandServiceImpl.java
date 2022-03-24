@@ -4,10 +4,8 @@ import com.github.pagehelper.PageHelper;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.BizDomainMapper;
-import com.timevale.forward.dal.dao.ProductBizDemandMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.condition.BugOnlineListCondition;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
@@ -58,31 +56,34 @@ import java.util.stream.Collectors;
 public class BizDemandServiceImpl implements BizDemandService {
 
     @Resource
-    BizDemandMapper bizDemandMapper;
+    private BizDemandMapper bizDemandMapper;
 
     @Resource
-    ProductLineMapper productLineMapper;
+    private ProductLineMapper productLineMapper;
 
     @Resource
-    BizDomainMapper bizDomainMapper;
+    private BizDomainMapper bizDomainMapper;
 
     @Resource
-    ProductBizDemandMapper productBizDemandMapper;
+    private ProductBizDemandMapper productBizDemandMapper;
 
     @Resource
-    InnerUserPersonClient innerUserPersonClient;
+    private InnerUserPersonClient innerUserPersonClient;
 
     @Resource
-    PersonComponent personComponent;
+    private PersonComponent personComponent;
 
     @Resource
-    FileComponent fileComponent;
+    private FileComponent fileComponent;
 
     @Resource
-    MessageEventPublisher messageEventPublisher;
+    private MessageEventPublisher messageEventPublisher;
 
     @Resource
-    BizDemandComponent bizDemandComponent;
+    private BizDemandComponent bizDemandComponent;
+
+    @Resource
+    private BugOnlineMapper bugOnlineMapper;
 
     @Override
     public BaseResult<PageQueryResult<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
@@ -175,11 +176,22 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<FileAddReq> fileIdList = bizDemandAddReq.getFileList();
         fileComponent.add(fileIdList, bizDemandDO.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
 
-
         // 添加抄送人
         List<PersonAddReq> recipientInfoList = bizDemandAddReq.getRecipientInfoList();
         if (!recipientInfoList.isEmpty()) {
             personComponent.add(recipientInfoList, bizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
+        }
+
+        // 判断是否为线上bug转换
+        Long bugOnlineId = bizDemandAddReq.getBugOnlineId();
+        if(bugOnlineId != null){
+            BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineId);
+            if(bugOnlineDO == null){
+                throw new BaseBizRuntimeException("转换需求失败，原线上bug不存在");
+            }
+            // bugOnlineDO.setBizDemandId(bizDemandDO.getId());
+            // bugOnlineDO.setStatus(BugOnlineStatusEnum.REQUIRED.getCode());
+            // bugOnlineMapper.update(bugOnlineDO);
         }
 
         // 通知需求接收人
@@ -236,8 +248,16 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizDemandDetailVO.setDeptName(response.getGroupName());
             bizDemandDetailVO.setDeptDeleteFlag(response.getDeleteFlag());
         }
+
         //获取项目发布时间
         bizDemandDetailVO.setEndDate(bizDemandComponent.getProjectEndDate(bizDemandId));
+
+        // 查看是否为线上bug转换
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectByBizDemandId(bizDemandId);
+        if(bugOnlineDO != null){
+            bizDemandDetailVO.setBugOnlineId(bugOnlineDO.getId());
+            bizDemandDetailVO.setBugOnlineName(bugOnlineDO.getName());
+        }
 
         return BaseResult.success(bizDemandDetailVO);
     }

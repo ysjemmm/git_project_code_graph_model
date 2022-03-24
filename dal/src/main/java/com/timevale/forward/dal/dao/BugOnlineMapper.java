@@ -42,4 +42,12 @@ public interface BugOnlineMapper {
      * @return Long
      */
     Long insert(@Param("bugOnlineDO") BugOnlineDO bugOnlineDO);
+
+    /**
+     * 根据线上bug的业务需求id查询线上bug
+     *
+     * @param bizDemandId 业务需求id
+     * @return 返回值
+     */
+    BugOnlineDO selectByBizDemandId(@Param("bizDemandId") Long bizDemandId);
 }

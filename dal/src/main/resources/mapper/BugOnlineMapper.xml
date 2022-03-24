@@ -74,6 +74,11 @@
             </if>
         </where>
     </select>
+    <select id="selectByBizDemandId" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+        SELECT id, name
+        FROM bug_online
+        WHERE biz_demand_id = #{bizDemandId}
+    </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="bugOnlineDO.id">
         insert into bug_online(name,operator,operator_id,last_operator,last_operator_id,proposer

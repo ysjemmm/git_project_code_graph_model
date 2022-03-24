@@ -59,4 +59,7 @@ public class BizDemandAddReq extends BaseReq {
 
     @ApiModelProperty("附件列表")
     private List<FileAddReq> fileList;
+
+    @ApiModelProperty("线上bug id")
+    private Long bugOnlineId;
 }

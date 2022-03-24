@@ -52,4 +52,11 @@ public class BizDemandDetailVO extends BizDemandVO {
 
     @ApiModelProperty("驳回理由文本")
     private String reasonText;
+
+    @ApiModelProperty("线上bug id")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long bugOnlineId;
+
+    @ApiModelProperty("线上bug 名称")
+    private String bugOnlineName;
 }
