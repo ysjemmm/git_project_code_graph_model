@@ -13,4 +13,13 @@
         values(#{bugStatusOperatorDO.bugLogId},#{bugStatusOperatorDO.operator},#{bugStatusOperatorDO.operatorId}
         ,#{createMan},#{createManId})
     </insert>
+
+    <update id="deleteByBugLogId">
+        update bug_status_operator
+        set is_deleted = 1
+        where bug_log_id in
+        <foreach collection="bugLogStatusIdList" item="bugLogStatusId" separator="," open="(" close=")">
+            #{bugLogStatusId}
+        </foreach>
+    </update>
 </mapper>

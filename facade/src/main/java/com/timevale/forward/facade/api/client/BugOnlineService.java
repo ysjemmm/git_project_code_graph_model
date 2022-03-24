@@ -42,6 +42,14 @@ public interface BugOnlineService {
     BusinessResult<Boolean> add(BugOnlineAddReq bugOnlineAddReq);
 
     /**
+     * 删除线上bug
+     *
+     * @param bugOnlineReq 参数
+     * @return 返回值
+     * */
+    BusinessResult<Boolean> delete(BugOnlineReq bugOnlineReq);
+
+    /**
      * 编辑线上bug
      *
      * @param bugOnlineModifyReq 参数
