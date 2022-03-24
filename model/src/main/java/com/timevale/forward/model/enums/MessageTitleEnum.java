@@ -11,14 +11,14 @@ public enum MessageTitleEnum {
     // 业务需求状态变更通知标题
     BIZDEMAND_FEEDBACK("业务需求反馈通知"),
     BIZDEMAND_STATUS_CHANGE("业务需求进度变更通知"),
-    BIZDEMAND_RECEIVE("业务需求接收通知"),
+    BIZDEMAND_RECEIVE("您收到一条新的业务需求"),
     BIZDEMAND_INVALID("业务需求作废通知"),
     // 评论区@通知标题
     COMMENT("评论通知"),
     TEST_BILL("提测单消息通知"),
     TASK_DONE("任务完成通知"),
     // 线下BUG通知标题
-    BUG_OFFLINE_ADD("线下bug接收通知"),
+    BUG_OFFLINE_ADD("您收到一条新线下bug"),
     BUG_OFFLINE_CHECK("线下bug待验收通知"),
     BUG_OFFLINE_CHECK_FAIL("线下bug验收失败通知"),
     BUG_OFFLINE_DELAY_REPAIR("线下bug延期修复通知"),
