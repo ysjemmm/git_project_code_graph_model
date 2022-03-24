@@ -18,7 +18,7 @@ public enum MessageTitleEnum {
     TEST_BILL("提测单消息通知"),
     TASK_DONE("任务完成通知"),
     // 线下BUG通知标题
-    BUG_OFFLINE_ADD("您收到一条新线下bug"),
+    BUG_OFFLINE_ADD("您收到一条新的线下bug"),
     BUG_OFFLINE_CHECK("线下bug待验收通知"),
     BUG_OFFLINE_CHECK_FAIL("线下bug验收失败通知"),
     BUG_OFFLINE_DELAY_REPAIR("线下bug延期修复通知"),
