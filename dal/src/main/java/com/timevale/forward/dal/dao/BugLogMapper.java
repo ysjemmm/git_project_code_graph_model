@@ -23,10 +23,11 @@ public interface BugLogMapper {
     /**
      * 通过线下bug的id删除对应的操作日志
      *
-     * @param bugOfflineId 线下bug的id
+     * @param bugId bug的id
+     * @param type  变更类型
      * @return Boolean 返回值
      */
-    Boolean deleteByBugOfflineId(@Param("bugOfflineId") Long bugOfflineId);
+    Boolean deleteByBugId(@Param("bugId") Long bugId, @Param("type") Integer type);
 
     /**
      * 往bug日志表中插入数据

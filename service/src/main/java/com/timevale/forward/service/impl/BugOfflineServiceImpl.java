@@ -1008,7 +1008,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugOfflineMapper.deleteById(bugOfflineReq.getId());
 
         //删除bug日志表中的数据
-        bugLogMapper.deleteByBugOfflineId(bugOfflineReq.getId());
+        bugLogMapper.deleteByBugId(bugOfflineReq.getId(), BugLogTypeEnum.OFFLINE.getCode());
 
         //删除抄送人表person中的数据
         PersonDO personDO = new PersonDO();

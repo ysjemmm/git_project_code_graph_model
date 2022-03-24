@@ -8,7 +8,6 @@ import com.timevale.forward.dal.condition.BugOnlineListCondition;
 import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
-import com.timevale.forward.facade.api.client.BugOfflineService;
 import com.timevale.forward.facade.api.client.BugOnlineService;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.*;
@@ -79,7 +78,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     private CommentMapper commentMapper;
 
     @Resource
-    private BugOfflineService bugOfflineService;
+    private BugOfflineMapper bugOfflineMapper;
 
     @Resource
     private BugLogMapper bugLogMapper;
@@ -331,6 +330,58 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                         bugOnlineDO.getId()
                 )
         );
+
+        BusinessResult<Boolean> businessResult = new BusinessResult<>();
+        businessResult.setData(true);
+        return businessResult;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BusinessResult<Boolean> delete(BugOnlineReq bugOnlineReq) {
+        log.info("线上bug删除");
+
+        BugOnlineDO bugOnlineDO = new BugOnlineDO();
+        bugOnlineDO.setId(bugOnlineReq.getId());
+        bugOnlineDO.setIsDeleted(true);
+
+        //删除线上bug
+        bugOnlineMapper.update(bugOnlineDO);
+
+        //删除bug日志表中的数据
+        bugLogMapper.deleteByBugId(bugOnlineReq.getId(), BugLogTypeEnum.ONLINE.getCode());
+
+        BugOnlineProductLineDO bugOnlineProductLineDO = new BugOnlineProductLineDO();
+        bugOnlineProductLineDO.setBugOnlineId(bugOnlineReq.getId());
+        bugOnlineProductLineDO.setIsDeleted(true);
+        //删除线上bug产品线映射表里面的数据
+        bugOnlineProductLineMapper.update(bugOnlineProductLineDO);
+
+        //删除抄送人表person中的数据
+        PersonDO personDO = new PersonDO();
+        personDO.setMainId(bugOnlineReq.getId());
+        personDO.setType(PersonTypeEnum.BUG_ONLINE_CC.getCode());
+        personDO.setIsDeleted(true);
+        personMapper.update(personDO);
+
+        //删除评论数据
+        commentMapper.deleteByToIdAndType(bugOnlineReq.getId(), CommentTypeEnum.BUG_ONLINE.getCode());
+
+        //删除附件数据
+        FileDO fileDO = new FileDO();
+        fileDO.setIsDeleted(true);
+        fileDO.setAttacheId(bugOnlineReq.getId());
+        fileDO.setType(FileTypeEnum.BUG_ONLINE.getCode());
+        fileMapper.update(fileDO);
+
+        //查询所有的状态变更id
+        List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugOnlineDO.getId(), BugLogTypeEnum.ONLINE.getCode(), true);
+        List<Long> bugLogStatusIdList = bugLogDOList.stream().map(BugLogDO::getId).collect(Collectors.toList());
+
+        //删除bug状态人员处理表里面的数据
+        if (CollectionUtils.isNotEmpty(bugLogStatusIdList)) {
+            bugStatusOperatorMapper.deleteByBugLogId(bugLogStatusIdList);
+        }
 
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);

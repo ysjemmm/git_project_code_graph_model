@@ -23,6 +23,13 @@ public interface BugStatusOperatorMapper {
      * 插入单条数据
      *
      * @param bugStatusOperatorDO 参数
-     * */
+     */
     void insert(@Param("bugStatusOperatorDO") BugStatusOperatorDO bugStatusOperatorDO);
+
+    /**
+     * 根据日志状态变更集合批量删除数据
+     *
+     * @param bugLogStatusIdList
+     */
+    void deleteByBugLogId(@Param("bugLogStatusIdList") List<Long> bugLogStatusIdList);
 }
