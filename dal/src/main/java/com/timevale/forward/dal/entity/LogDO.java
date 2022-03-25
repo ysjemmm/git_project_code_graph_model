@@ -17,7 +17,7 @@ public class LogDO extends BaseDO {
     private Long mainId;
 
     /**
-     * 内容变更记录类型:0线下bug,1线上bug
+     * 内容变更记录类型:线下bug,线上bug,项目,产品需求,业务需求等
      */
     private Integer type;
 

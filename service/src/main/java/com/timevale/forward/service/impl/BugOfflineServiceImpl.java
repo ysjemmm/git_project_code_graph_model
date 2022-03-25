@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -229,7 +230,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //4.bug_log记录
         BugOfflineMD oldBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(oldBugOfflineDO);
         BugOfflineMD newBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(newBugOfflineDO);
-        List<BugLogDO> bugLogDOList = FieldCompareUtil.commonCompare(oldBugOfflineMD, newBugOfflineMD);
+        List<BugLogDO> bugLogDOList = BeanUtil.copyToList(FieldCompareUtil.commonCompare(oldBugOfflineMD, newBugOfflineMD), BugLogDO.class);
         // 额外判断项目与产品
         bugLogDOList.addAll(compareExtraIfNecessary(oldBugOfflineDO, newBugOfflineDO));
         // 特殊判断null和空字符串‘’

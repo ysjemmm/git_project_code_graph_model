@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
@@ -432,8 +433,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<BugLogDO> bugLogDOList = FieldCompareUtil.commonCompare(oldBugOnlineMD, newBugOnlineMD);
         //额外判断产品线和产品线业务
         bugLogDOList.addAll(compareExtraIfNecessary(bugOnlineDO, newBugOnlineDO));
-
         if (!CollectionUtils.isEmpty(bugLogDOList)) {
+            bugLogDOList = BeanUtil.copyToList(bugLogDOList, BugLogDO.class);
             bugLogMapper.batchInsert(bugLogDOList);
         }
 
