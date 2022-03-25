@@ -430,11 +430,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDO newBugOnlineDO = BugOnlineCopier.INSTANCE.change(bugOnlineModifyReq);
 
         //比较编辑修改的一般字段，生成结果集合
-        List<BugLogDO> bugLogDOList = FieldCompareUtil.commonCompare(oldBugOnlineMD, newBugOnlineMD);
+        List<BugLogDO> bugLogDOList = BeanUtil.copyToList(FieldCompareUtil.commonCompare(oldBugOnlineMD, newBugOnlineMD),BugLogDO.class);
         //额外判断产品线和产品线业务
         bugLogDOList.addAll(compareExtraIfNecessary(bugOnlineDO, newBugOnlineDO));
         if (!CollectionUtils.isEmpty(bugLogDOList)) {
-            bugLogDOList = BeanUtil.copyToList(bugLogDOList, BugLogDO.class);
             bugLogMapper.batchInsert(bugLogDOList);
         }
 
