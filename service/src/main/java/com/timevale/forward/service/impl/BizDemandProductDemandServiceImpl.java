@@ -32,6 +32,7 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.BizDemandStatusChangeMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -52,6 +53,7 @@ import java.util.stream.Collectors;
  * @date 2021/12/23 18:03
  */
 @Slf4j
+@LogPoint
 @RestService
 public class BizDemandProductDemandServiceImpl implements BizDemandProductDemandService {
 

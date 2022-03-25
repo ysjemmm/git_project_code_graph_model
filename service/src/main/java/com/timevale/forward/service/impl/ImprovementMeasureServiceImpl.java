@@ -23,6 +23,7 @@ import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.job.ImprovementMeasureStatusJob;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -40,6 +41,7 @@ import java.util.stream.Collectors;
  * @date 2022/03/16 17:54
  */
 @Slf4j
+@LogPoint
 @RestService
 public class ImprovementMeasureServiceImpl implements ImprovementMeasureService {
 
@@ -65,7 +67,6 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
 
     @Override
     public BaseResult<Boolean> modify(ImprovementMeasureModifyReq improvementMeasureModifyReq) {
-        log.info("改进措施-修改 modify 参数:{}", improvementMeasureModifyReq);
 
         // 校验是否有对应数据
         ImprovementMeasureCondition condition = ImprovementMeasureCondition.builder()
@@ -96,7 +97,6 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
 
     @Override
     public BaseResult<Boolean> delete(ImprovementMeasureDeleteReq improvementMeasureDeleteReq) {
-        log.info("改进措施-删除 delete 参数:{}", improvementMeasureDeleteReq);
 
         // 查询是否有对应事项
         ImprovementMeasureCondition condition = ImprovementMeasureCondition.builder()
@@ -137,8 +137,6 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
 
     @Override
     public BaseResult<Boolean> complete(ImprovementMeasureCompleteReq improvementMeasureCompleteReq){
-     log.info("改进措施-完成 complete 参数:{}", improvementMeasureCompleteReq);
-
         // 查询是否有对应事项
         ImprovementMeasureCondition condition = ImprovementMeasureCondition.builder()
                 .id(improvementMeasureCompleteReq.getId())
@@ -184,8 +182,6 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
 
     @Override
     public BaseResult<PageQueryResult<ImprovementMeasureVO>> list(ImprovementMeasureQueryList improvementMeasureQueryList) {
-        log.info("改进措施-列表 list 参数:{}", improvementMeasureQueryList);
-
         PageHelper.startPage(improvementMeasureQueryList.pageNum, improvementMeasureQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
 
         // 读取数据

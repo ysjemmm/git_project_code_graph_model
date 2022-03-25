@@ -25,6 +25,7 @@ import com.timevale.forward.service.copy.HomePageProjectOnlineLatelyCopier;
 import com.timevale.forward.service.copy.HomePageRiskWarningCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.integration.superset.model.base.PageResult;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
  * @date 2022/01/11 17:43
  */
 @Slf4j
+@LogPoint
 @RestService
 public class HomePageServiceImpl implements HomePageService {
 

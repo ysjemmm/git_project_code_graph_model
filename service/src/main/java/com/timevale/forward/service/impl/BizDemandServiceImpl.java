@@ -29,6 +29,7 @@ import com.timevale.forward.service.observer.event.BizDemandRejectMsgEvent;
 import com.timevale.forward.service.observer.event.BizDemandToReceiveMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -52,6 +53,7 @@ import java.util.stream.Collectors;
  * @date 2021/12/14 15:05
  */
 @Slf4j
+@LogPoint
 @RestService
 public class BizDemandServiceImpl implements BizDemandService {
 

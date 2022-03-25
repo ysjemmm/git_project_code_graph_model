@@ -13,6 +13,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.CommentCopier;
 import com.timevale.forward.service.observer.event.CommentMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
  * @date 2021-12-13 13:58
  **/
 @Slf4j
+@LogPoint
 @RestService
 public class CommentServiceImpl implements CommentService {
 
@@ -56,7 +58,6 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public BaseResult<List<CommentVO>> list(CommentQueryList commentQueryList) {
-        log.info("评论列表接收参数:{}", commentQueryList);
 
         Long toId = commentQueryList.getToId();
         Integer type = commentQueryList.getType();

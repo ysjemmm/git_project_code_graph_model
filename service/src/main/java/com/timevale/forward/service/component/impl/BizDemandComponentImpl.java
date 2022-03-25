@@ -19,6 +19,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -41,6 +42,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @Slf4j
+@LogPoint
 public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Resource

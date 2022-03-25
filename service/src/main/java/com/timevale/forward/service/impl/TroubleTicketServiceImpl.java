@@ -24,6 +24,7 @@ import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.TroubleTicketCopier;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
  * @date 2022/03/16 17:54
  */
 @Slf4j
+@LogPoint
 @RestService
 public class TroubleTicketServiceImpl implements TroubleTicketService {
 
@@ -73,7 +75,6 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(TroubleTicketAddReq troubleTicketAddReq) {
-        log.info("故障工单-新增 add 参数:{}", troubleTicketAddReq);
 
         // 转换后行插入数据
         TroubleTicketDO troubleTicketDO = TroubleTicketCopier.INSTANCE.convert(troubleTicketAddReq);
@@ -98,7 +99,6 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(TroubleTicketModifyReq troubleTicketModifyReq) {
-        log.info("故障工单-修改 modify 参数:{}", troubleTicketModifyReq);
 
         Long id = troubleTicketModifyReq.getId();
         TroubleTicketDO oldTroubleTicketDO = troubleTicketMapper.selectById(id);
@@ -123,8 +123,6 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
     @Override
     public BaseResult<TroubleTicketDetailVO> get(Long troubleTicketId) {
-        log.info("故障工单-查看 get 参数:{}", troubleTicketId);
-
         // 读取数据，判断是否存在
         TroubleTicketDO troubleTicketDO = troubleTicketMapper.selectById(troubleTicketId);
         if(troubleTicketDO == null){
@@ -165,8 +163,6 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
     @Override
     public BaseResult<Boolean> delete(TroubleTicketDeleteReq troubleTicketDeleteReq) {
-        log.info("故障工单-删除 delete 参数:{}", troubleTicketDeleteReq);
-
         Long id = troubleTicketDeleteReq.getId();
         TroubleTicketDO troubleTicketDO = troubleTicketMapper.selectById(id);
         if(troubleTicketDO == null){
@@ -182,8 +178,6 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
     @Override
     public BaseResult<PageQueryResult<TroubleTicketVO>> list(TroubleTicketQueryList troubleTicketQueryList) {
-        log.info("故障工单-列表 list 参数:{}", troubleTicketQueryList);
-
         String userId = LocalSessionUtils.getUserInfo().getId();
 
         // 条件转换
