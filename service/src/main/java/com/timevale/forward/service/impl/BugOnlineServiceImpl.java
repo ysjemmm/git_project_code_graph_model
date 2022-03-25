@@ -78,9 +78,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     private CommentMapper commentMapper;
 
     @Resource
-    private BugOfflineMapper bugOfflineMapper;
-
-    @Resource
     private BugLogMapper bugLogMapper;
 
     @Resource
@@ -109,6 +106,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
+        log.info("线上bug-从配置中心获取信息，接收参数：{}", bugOnlineGetFieldReq.getProductLineIdList());
+
         List<BusinessBeanMD> businessBeanMDList = JSON.parseArray(business, BusinessBeanMD.class);
         List<Long> productLineIdList = bugOnlineGetFieldReq.getProductLineIdList();
         Map<Integer, String> fieldMap = getFieldMap();
@@ -147,6 +146,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
     public BaseResult<PageQueryResult<BugOnlineVO>> list(BugOnlineQueryList bugOnlineQueryList) {
+        log.info("线上bug-获取线上bug列表，接收参数：{}", bugOnlineQueryList);
+
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 转换查询条件
@@ -273,9 +274,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> add(BugOnlineAddReq bugOnlineAddReq) {
-        log.info("线上bug新增");
-
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        log.info("线上bug-新增:接收参数{}", bugOnlineAddReq);
 
         //将BugOnlineAddReq转化为BugOnlineDO
         BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.transfer(bugOnlineAddReq);
@@ -339,7 +338,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> delete(BugOnlineReq bugOnlineReq) {
-        log.info("线上bug删除");
+        log.info("线上bug-删除,接收参数：{}", bugOnlineReq);
 
         BugOnlineDO bugOnlineDO = new BugOnlineDO();
         bugOnlineDO.setId(bugOnlineReq.getId());
@@ -391,9 +390,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> modify(BugOnlineModifyReq bugOnlineModifyReq) {
-        log.info("线上bug修改");
-
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        log.info("线上bug-修改,接收参数：{}", bugOnlineModifyReq);
 
         //查询线上bug
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineModifyReq.getId());
@@ -407,7 +404,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //是否为经办人&提出人及其上级
         Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
         Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
-        if (operatorResult != true && proposerResult != true) {
+        if (!operatorResult && !proposerResult) {
             throw new BaseBizRuntimeException("您没有修改权限");
         }
 
@@ -471,6 +468,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
     public BusinessResult<BugOnlineDetailVO> get(BugOnlineDetailReq bugOnlineDetailReq) {
+        log.info("线上bug-得到线上bug详情，接收参数:{}", bugOnlineDetailReq);
+
         //查询线上bug
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineDetailReq.getId());
         if (bugOnlineDO == null) {
@@ -554,8 +553,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     public BusinessResult<Boolean> confirm(BugOnlineReq bugOnlineReq) {
         log.info("线上bug待确认接收参数：{}", bugOnlineReq.getId());
 
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         //查询线上bug
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineReq.getId());
         if (bugOnlineDO == null) {
@@ -593,8 +590,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> startRepair(BugOnlineStartRepairReq bugOnlineStartRepairReq) {
         log.info("线上bug开始修复接收参数：{}", bugOnlineStartRepairReq.getId());
-
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         //查询线上bug
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineStartRepairReq.getId());
@@ -730,7 +725,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //校验当前操作人职能是否为测试
         Boolean result = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
-        if (result == false) {
+        if (!result) {
             throw new BaseBizRuntimeException("您的职能没有权限点击此按钮");
         }
 
@@ -784,7 +779,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         Boolean jobFunctionResult = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
         Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
         Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
-        if (jobFunctionResult != false && operatorResult != false && proposerResult != false) {
+        if (jobFunctionResult && operatorResult && proposerResult) {
             throw new BaseBizRuntimeException("您没有权限点击此按钮");
         }
 
@@ -1043,8 +1038,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     public BusinessResult<Boolean> agree(BugOnlineReq bugOnlineReq) {
         log.info("线上bug-同意接收参数：{}", bugOnlineReq.getId());
 
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         //查询线上bug
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineReq.getId());
         if (bugOnlineDO == null) {
@@ -1090,7 +1083,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> reject(BugOnlineReq bugOnlineReq) {
-        log.info("线上bug-拒绝");
+        log.info("线上bug-拒绝,接收参数：{}", bugOnlineReq.getId());
 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
@@ -1172,7 +1165,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> reconfirm(BugOnlineReq bugOnlineReq) {
-        log.info("线上bug-重新确认");
+        log.info("线上bug-重新确认,接收参数:{}", bugOnlineReq.getId());
 
         //查询线上bug
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineReq.getId());
@@ -1214,7 +1207,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> temporaryNoRepair(BugOnlineReq bugOnlineReq) {
-        log.info("线上bug-暂不修复");
+        log.info("线上bug-暂不修复,接收参数:{}", bugOnlineReq.getId());
 
         //查询线上bug
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineReq.getId());
@@ -1256,7 +1249,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> repairFailed(BugOnlineRepairFailedReasonReq bugOnlineRepairFailedReasonReq) {
-        log.info("线上bug-修复失败");
+        log.info("线上bug-修复失败,接收参数：{}", bugOnlineRepairFailedReasonReq.getId());
 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
@@ -1333,7 +1326,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
     public BusinessResult<BugOnlineShiftBusinessVO> shiftBusiness(BugOnlineReq bugOnlineReq) {
-        log.info("线上bug-转业务需求");
+        log.info("线上bug-转业务需求,接收参数：{}", bugOnlineReq.getId());
 
         BugOnlineShiftBusinessVO bugOnlineShiftBusinessVO = new BugOnlineShiftBusinessVO();
 
@@ -1417,9 +1410,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<BaseInfoResponse> personByAccountNew = innerUserPersonClient.getPersonByAccountNew(operatorIds);
         BaseInfoResponse baseInfoResponse = personByAccountNew.get(0);
         if (baseInfoResponse != null) {
-            if (!jobFunction.equals(baseInfoResponse.getJobFunction())) {
-                return false;
-            }
+            return jobFunction.equals(baseInfoResponse.getJobFunction());
         }
         return true;
     }

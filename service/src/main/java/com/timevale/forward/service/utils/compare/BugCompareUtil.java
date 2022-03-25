@@ -13,7 +13,6 @@ import com.timevale.forward.model.middle.BusinessMD;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 
 import javax.annotation.Resource;
@@ -107,7 +106,7 @@ public class BugCompareUtil {
      * @param oldObj 老的线上bug对象
      * @param newObj 新的线上bug对象
      * @return 返回结果集合
-     * */
+     */
     public List<BugLogDO> compareExtraIfNecessary(BugOnlineDO oldObj, BugOnlineDO newObj) {
         List<BugLogDO> bugLogDOList = new ArrayList<>();
 
@@ -115,7 +114,7 @@ public class BugCompareUtil {
         List<Long> newProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(newObj.getId());
         boolean result = CollectionUtils.isEqualCollection(oldProductLineIdList, newProductLineIdList);
         //如果产品线变了记录一条bug内容变更日志
-        if (result == false) {
+        if (!result) {
             StringBuilder oldNames = new StringBuilder();
             StringBuilder newNames = new StringBuilder();
             List<ProductLineDO> oldProductLineDOList = productLineMapper.selectByIds(oldProductLineIdList);
@@ -150,16 +149,16 @@ public class BugCompareUtil {
             bugLogDOList.add(bugLogDO);
         }
 
-        String oldBusiness = oldObj.getBusiness().replace("'","");
-        String newBusiness = newObj.getBusiness().replace("'","");
+        String oldBusiness = oldObj.getBusiness().replace("'", "");
+        String newBusiness = newObj.getBusiness().replace("'", "");
         //如果产品线业务这个json字符串变了，要记录一条或多条内容变更日志
         if (!oldBusiness.equals(newBusiness)) {
             BusinessMD oldBusinessMD = new BusinessMD();
             BusinessMD newBusinessMD = new BusinessMD();
-            if(!"".equals(oldBusiness)){
+            if (!"".equals(oldBusiness)) {
                 oldBusinessMD = JSONUtil.toBean(oldBusiness, BusinessMD.class);
             }
-            if(!"".equals(newBusiness)){
+            if (!"".equals(newBusiness)) {
                 newBusinessMD = JSONUtil.toBean(newBusiness, BusinessMD.class);
             }
             List<BugLogDO> bugLogList = commonCompare(oldBusinessMD, newBusinessMD);
