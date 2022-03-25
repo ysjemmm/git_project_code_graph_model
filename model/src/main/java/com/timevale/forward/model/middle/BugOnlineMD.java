@@ -11,7 +11,7 @@ import java.util.Date;
  * @Author 望轩
  */
 @Data
-public class BugOnlineMD {
+public class BugOnlineMD extends BaseMD{
     /**
      * bug标题
      */

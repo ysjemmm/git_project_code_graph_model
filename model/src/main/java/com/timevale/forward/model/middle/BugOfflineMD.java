@@ -9,7 +9,7 @@ import lombok.Data;
  * @date 2022/02/25 16:16
  */
 @Data
-public class BugOfflineMD{
+public class BugOfflineMD extends BaseMD{
     /**
      * 名称
      */

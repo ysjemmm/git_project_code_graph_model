@@ -8,7 +8,7 @@ import lombok.Data;
  * @Author 望轩
  */
 @Data
-public class BusinessMD {
+public class BusinessMD extends BaseMD{
     /**
      * 流程flow id
      */

@@ -22,7 +22,7 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
-import com.timevale.forward.service.utils.compare.BugCompareUtil;
+import com.timevale.forward.service.utils.compare.FieldCompareUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -79,9 +79,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Resource
     private BugStatusOperatorMapper bugStatusOperatorMapper;
-
-    @Resource
-    private BugCompareUtil bugCompareUtil;
 
     @Override
     public BaseResult<PageQueryResult<BugOfflineVO>> list(BugOfflineQueryList bugOfflineQueryList) {
@@ -232,14 +229,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //4.bug_log记录
         BugOfflineMD oldBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(oldBugOfflineDO);
         BugOfflineMD newBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(newBugOfflineDO);
-        List<BugLogDO> bugLogDOList = bugCompareUtil.commonCompare(oldBugOfflineMD, newBugOfflineMD);
+        List<BugLogDO> bugLogDOList = FieldCompareUtil.commonCompare(oldBugOfflineMD, newBugOfflineMD);
         // 额外判断项目与产品
         bugLogDOList.addAll(compareExtraIfNecessary(oldBugOfflineDO, newBugOfflineDO));
-        bugLogDOList.forEach(e -> {
-            e.setMainId(bugOfflineModifyReq.getId());
-            e.setType(BugLogTypeEnum.OFFLINE.getCode());
-        });
-
         // 特殊判断null和空字符串‘’
         bugLogDOList.removeIf(e -> {
             if (e.getField().equals(BugFieldEnum.DELAY_HANDLE_REASON.getText())) {

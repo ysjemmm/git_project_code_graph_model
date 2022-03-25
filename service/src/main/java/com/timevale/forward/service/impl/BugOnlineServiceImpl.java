@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -15,6 +16,7 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOnlineMD;
 import com.timevale.forward.model.middle.BusinessBeanMD;
+import com.timevale.forward.model.middle.BusinessMD;
 import com.timevale.forward.service.component.BugOnlineProductLineComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
@@ -24,7 +26,7 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
-import com.timevale.forward.service.utils.compare.BugCompareUtil;
+import com.timevale.forward.service.utils.compare.FieldCompareUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -94,9 +96,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Resource
     private PersonComponent personComponent;
-
-    @Resource
-    private BugCompareUtil bugCompareUtil;
 
     @Value("${business}")
     private String business;
@@ -430,17 +429,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDO newBugOnlineDO = BugOnlineCopier.INSTANCE.change(bugOnlineModifyReq);
 
         //比较编辑修改的一般字段，生成结果集合
-        List<BugLogDO> bugLogDOList = bugCompareUtil.commonCompare(oldBugOnlineMD, newBugOnlineMD);
+        List<BugLogDO> bugLogDOList = FieldCompareUtil.commonCompare(oldBugOnlineMD, newBugOnlineMD);
         //额外判断产品线和产品线业务
-        bugLogDOList.addAll(bugCompareUtil.compareExtraIfNecessary(bugOnlineDO, newBugOnlineDO));
+        bugLogDOList.addAll(compareExtraIfNecessary(bugOnlineDO, newBugOnlineDO));
 
         if (!CollectionUtils.isEmpty(bugLogDOList)) {
-            //填充线上bug的id和type信息
-            bugLogDOList.forEach(bugLogDO -> {
-                bugLogDO.setMainId(bugOnlineModifyReq.getId());
-                bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
-            });
-
             bugLogMapper.batchInsert(bugLogDOList);
         }
 
@@ -1436,6 +1429,75 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugStatusOperatorDO.setOperatorId(userInfo.getId());
         //往状态人员处理表里面插入一条数据记录
         bugStatusOperatorMapper.insert(bugStatusOperatorDO);
+    }
+
+    /**
+     * 线上bug特殊字段比较
+     *
+     * @param oldObj 老的线上bug对象
+     * @param newObj 新的线上bug对象
+     * @return 返回结果集合
+     */
+    private List<BugLogDO> compareExtraIfNecessary(BugOnlineDO oldObj, BugOnlineDO newObj) {
+        List<BugLogDO> bugLogDOList = new ArrayList<>();
+
+        List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(oldObj.getId());
+        List<Long> newProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(newObj.getId());
+        boolean result = CollectionUtils.isEqualCollection(oldProductLineIdList, newProductLineIdList);
+        //如果产品线变了记录一条bug内容变更日志
+        if (!result) {
+            StringBuilder oldNames = new StringBuilder();
+            StringBuilder newNames = new StringBuilder();
+            List<ProductLineDO> oldProductLineDOList = productLineMapper.selectByIds(oldProductLineIdList);
+            List<ProductLineDO> newProductLineDOList = productLineMapper.selectByIds(newProductLineIdList);
+            if (CollectionUtils.isNotEmpty(oldProductLineDOList)) {
+                Integer count = 0;
+                for (ProductLineDO productLineDO : oldProductLineDOList) {
+                    oldNames.append(productLineDO.getName());
+                    count++;
+                    if (!count.equals(oldProductLineDOList.size())) {
+                        oldNames.append("&");
+                    }
+                }
+            }
+            if (CollectionUtils.isNotEmpty(newProductLineIdList)) {
+                Integer tally = 0;
+                for (ProductLineDO productLine : newProductLineDOList) {
+                    newNames.append(productLine.getName());
+                    tally++;
+                    if (!tally.equals(newProductLineDOList.size())) {
+                        newNames.append("&");
+                    }
+                }
+            }
+
+            BugLogDO bugLogDO = new BugLogDO();
+            bugLogDO.setField(BugFieldEnum.PRODUCT_LINE.getText());
+            bugLogDO.setOldValue(oldNames.toString());
+            bugLogDO.setNewValue(newNames.toString());
+            bugLogDO.setMainId(oldObj.getId());
+            bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+            bugLogDOList.add(bugLogDO);
+        }
+
+        String oldBusiness = oldObj.getBusiness().replace("'", "");
+        String newBusiness = newObj.getBusiness().replace("'", "");
+        //如果产品线业务这个json字符串变了，要记录一条或多条内容变更日志
+        if (!oldBusiness.equals(newBusiness)) {
+            BusinessMD oldBusinessMD = new BusinessMD();
+            BusinessMD newBusinessMD = new BusinessMD();
+            if (!"".equals(oldBusiness)) {
+                oldBusinessMD = JSONUtil.toBean(oldBusiness, BusinessMD.class);
+            }
+            if (!"".equals(newBusiness)) {
+                newBusinessMD = JSONUtil.toBean(newBusiness, BusinessMD.class);
+            }
+            oldBusinessMD.setId(oldObj.getId());
+            List<BugLogDO> bugLogList = FieldCompareUtil.commonCompare(oldBusinessMD, newBusinessMD);
+            bugLogDOList.addAll(bugLogList);
+        }
+
+        return bugLogDOList;
     }
 }
 
