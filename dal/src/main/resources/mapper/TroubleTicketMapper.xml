@@ -70,9 +70,9 @@
         LEFT JOIN biz_domain bd ON pl.biz_domain_id = bd.id
         <where>
             <if test="name!=null and name!='' ">and tt.name like concat('%',#{name},'%')</if>
-            <if test="handlerIdList != null and handlerIdList.size() > 0">
-                and tt.handler_id in
-                <foreach collection="handlerIdList" item="item" separator="," open="(" close=")">
+            <if test="troubleTicketIdList != null and troubleTicketIdList.size() > 0">
+                and tt.id in
+                <foreach collection="troubleTicketIdList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>

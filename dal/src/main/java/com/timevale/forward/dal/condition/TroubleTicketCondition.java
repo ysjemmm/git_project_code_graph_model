@@ -22,6 +22,11 @@ public class TroubleTicketCondition {
     private String name;
 
     /**
+     * 故障单id-列表
+     */
+    private List<Long> troubleTicketIdList;
+
+    /**
      * 处理人id-列表
      */
     private List<String> handlerIdList;

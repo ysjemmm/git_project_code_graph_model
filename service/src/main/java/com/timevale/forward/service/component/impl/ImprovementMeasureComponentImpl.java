@@ -12,6 +12,7 @@ import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
 import com.timevale.forward.service.integration.erp.model.CreateTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.GetTodoTaskMsg;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
@@ -42,7 +43,7 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
     @Resource
     private DingWorkRecordClient dingWorkRecordClient;
 
-    public static final String TITLE = "您收到了一条任务：%s";
+    public static final String TITLE = "您收到了一条故障改进事项：%s";
 
     @Override
     public void updateTodoStatus(List<ImprovementMeasureDO> improvementMeasureDOList) {

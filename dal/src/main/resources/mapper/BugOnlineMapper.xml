@@ -66,7 +66,7 @@
                 select p.main_id
                 from person p
                 where p.user_id = #{copier}
-                and p.type = 50
+                and p.type = 60
                 )
             </if>
             <if test="true">

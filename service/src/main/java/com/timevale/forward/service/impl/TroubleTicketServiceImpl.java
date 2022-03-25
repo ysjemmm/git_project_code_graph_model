@@ -3,6 +3,7 @@ package com.timevale.forward.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.condition.TroubleTicketCondition;
 import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
@@ -21,6 +22,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.TroubleTicketCopier;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -32,12 +34,11 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -200,6 +201,23 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
             troubleTicketCondition.setHandlerIdList(Lists.newArrayList(userId));
         }
 
+        // 添加处理人判断
+        List<PersonDO> personDOList = personMapper.select(PersonListCondition.builder()
+                .type(PersonTypeEnum.TROUBLE_TICKET_HANDLER.getCode())
+                .build());
+
+        List<String> handlerIdList = troubleTicketQueryList.getHandlerIdList();
+        if(!CollectionUtils.isEmpty(handlerIdList)){
+            Set<String> handlerIdSet = new HashSet<>(handlerIdList);
+            List<Long> troubleTicketIdList = personDOList.stream()
+                    .filter(e -> handlerIdSet.contains(e.getUserId()))
+                    .map(PersonDO::getMainId)
+                    .distinct()
+                    .collect(Collectors.toList());
+            troubleTicketCondition.setTroubleTicketIdList(troubleTicketIdList);
+        }
+
+
         // 分页查询
         PageHelper.startPage(troubleTicketQueryList.pageNum, troubleTicketQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
         List<TroubleTicketListDO> troubleTicketDOList = troubleTicketMapper.selectList(troubleTicketCondition);
@@ -213,8 +231,6 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
                 .map(TroubleTicketCopier.INSTANCE::convert).collect(Collectors.toList());
 
         // 查询处理人
-        List<Long> mainIdList = troubleTicketDOList.stream().map(TroubleTicketListDO::getId).collect(Collectors.toList());
-        List<PersonDO> personDOList = personMapper.get(mainIdList, PersonTypeEnum.TROUBLE_TICKET_HANDLER.getCode());
         Map<Long, List<PersonDO>> personMap = personDOList.stream().collect(Collectors.groupingBy(PersonDO::getMainId));
         troubleTicketVOList.forEach(e -> {
             List<PersonDO> handlerDOList = personMap.get(e.getId());
