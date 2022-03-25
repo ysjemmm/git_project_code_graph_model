@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
+
 /**
  * @Date 2022/3/17 15:16
  * @Author 望轩
@@ -21,7 +23,7 @@ public class BugStatusOperatorVO extends ToString {
     private String operatorId;
 
     @ApiModelProperty("创建时间")
-    private String createDate;
+    private Date createDate;
 
     @ApiModelProperty("bug变更的id")
     private Long bugLogId;
