@@ -5,6 +5,7 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
+import com.timevale.forward.facade.api.result.BugOnlineShiftBusinessVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
 import com.timevale.forward.facade.api.result.ProductLineToFieldVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -46,7 +47,7 @@ public interface BugOnlineService {
      *
      * @param bugOnlineReq 参数
      * @return 返回值
-     * */
+     */
     BusinessResult<Boolean> delete(BugOnlineReq bugOnlineReq);
 
     /**
@@ -168,6 +169,14 @@ public interface BugOnlineService {
      * @return 返回值
      */
     BusinessResult<Boolean> repairFailed(BugOnlineRepairFailedReasonReq bugOnlineRepairFailedReasonReq);
+
+    /**
+     * 转业务需求
+     *
+     * @param bugOnlineReq 参数
+     * @return 返回值
+     */
+    BusinessResult<BugOnlineShiftBusinessVO> shiftBusiness(BugOnlineReq bugOnlineReq);
 }
 
 
