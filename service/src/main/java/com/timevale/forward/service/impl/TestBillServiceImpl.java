@@ -71,7 +71,7 @@ public class TestBillServiceImpl implements TestBillService {
 
     @Override
     public BaseResult<CreateTestBillVO> addTestBill(Long projectId) {
-        log.info("提测单-创建提测单");
+        log.info("提测单-创建提测单,参数:{}",projectId);
 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String alias = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
@@ -107,7 +107,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitTestBill(TestBillAddReq testBillAddReq) {
-        log.info("提测单-提交提测单");
+        log.info("提测单-提交提测单,参数:{}",testBillAddReq);
 
         //判断该项目是否已经有提测单了，有的话则显示提示信息
         TestBillDO testBill = testBillMapper.selectByProjectId(testBillAddReq.getProjectId());
@@ -153,7 +153,7 @@ public class TestBillServiceImpl implements TestBillService {
 
     @Override
     public BaseResult<TestBillVO> getTestBill(Long projectId) {
-        log.info("提测单-提测单详情");
+        log.info("提测单-提测单详情,参数:{}",projectId);
 
         TestBillDO testBillDO = testBillMapper.selectByProjectId(projectId);
         if (testBillDO == null) {
@@ -209,7 +209,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitSmokeTesting(TestBillModifyReq testBillModifyReq) {
-        log.info("提测单-提测冒烟用例");
+        log.info("提测单-提测冒烟用例,参数:{}",testBillModifyReq);
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
@@ -259,7 +259,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modifyTestMan(TestBillModifyReq testBillModifyReq) {
-        log.info("提测单-修改测试人");
+        log.info("提测单-修改测试人,参数:{}",testBillModifyReq);
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
@@ -310,7 +310,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> selfTestPass(TestBillModifyReq testBillModifyReq) {
-        log.info("提测单-自测通过");
+        log.info("提测单-自测通过,参数:{}",testBillModifyReq);
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
@@ -365,7 +365,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitTestPass(TestBillModifyReq testBillModifyReq) {
-        log.info("提测单-提测通过");
+        log.info("提测单-提测通过,参数:{}",testBillModifyReq);
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
@@ -405,7 +405,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitTestBack(TestBillModifyReq testBillModifyReq) {
-        log.info("提测单-提测打回");
+        log.info("提测单-提测打回,参数:{}",testBillModifyReq);
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
