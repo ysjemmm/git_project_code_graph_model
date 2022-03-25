@@ -91,7 +91,6 @@ public class HomePageServiceImpl implements HomePageService {
     @Override
     public BaseResult<HomePageTodoCardVO> getTodoCard(HomePageBaseReq homePageBaseReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        userInfo.setId("yanxiao");
         int taskCount = 0;
         int projectCount = 0;
         int bizDemandCount = 0;
