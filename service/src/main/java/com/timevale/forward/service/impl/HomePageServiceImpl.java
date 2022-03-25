@@ -141,10 +141,9 @@ public class HomePageServiceImpl implements HomePageService {
                 .build());
         bugOnLineCount = (int)bugOnlineListDOList.stream()
                 .filter(e -> {
-                    boolean filter;
-                    filter = Objects.equals(BugOnlineStatusEnum.COMPLETE.getCode(), e.getStatus());
-                    filter |= Objects.equals(BugOnlineStatusEnum.CLOSE.getCode(), e.getStatus());
-                    filter |= Objects.equals(BugOnlineStatusEnum.REQUIRED.getCode(), e.getStatus());
+                    boolean filter = Objects.equals(BugOnlineStatusEnum.COMPLETE.getCode(), e.getStatus())
+                            || Objects.equals(BugOnlineStatusEnum.CLOSE.getCode(), e.getStatus())
+                            || Objects.equals(BugOnlineStatusEnum.REQUIRED.getCode(), e.getStatus());
                     return !filter;
                 })
                 .count();
