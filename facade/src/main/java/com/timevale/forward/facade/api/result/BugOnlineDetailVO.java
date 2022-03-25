@@ -18,6 +18,9 @@ import java.util.List;
 @ApiModel("线上bug详情")
 public class BugOnlineDetailVO extends ToString {
 
+    @ApiModelProperty("id")
+    private Long id;
+
     @ApiModelProperty("bug标题")
     private String name;
 
