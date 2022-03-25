@@ -1105,6 +1105,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             Map<Long, String> projectMap = projectDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getName));
 
             BugLogDO bugLogDO = new BugLogDO();
+            bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+            bugLogDO.setMainId(oldBugOfflineDO.getId());
             bugLogDO.setField(BugFieldEnum.PROJECTS.getText());
             bugLogDO.setOldValue(projectMap.get(oldBugOfflineDO.getProjectId()));
             bugLogDO.setNewValue(projectMap.get(newBugOfflineDO.getProjectId()));
@@ -1116,6 +1118,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             Map<Long, String> productLineMap = productLineDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProductLineDO::getName));
 
             BugLogDO bugLogDO = new BugLogDO();
+            bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+            bugLogDO.setMainId(oldBugOfflineDO.getId());
             bugLogDO.setField(BugFieldEnum.PRODUCT_LINE.getText());
             bugLogDO.setOldValue(productLineMap.get(oldBugOfflineDO.getProductLineId()));
             bugLogDO.setNewValue(productLineMap.get(newBugOfflineDO.getProductLineId()));
