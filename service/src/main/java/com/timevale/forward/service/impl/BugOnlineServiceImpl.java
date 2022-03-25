@@ -1318,61 +1318,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         return businessResult;
     }
 
-    @Override
-    public BusinessResult<BugOnlineShiftBusinessVO> shiftBusiness(BugOnlineReq bugOnlineReq) {
-        log.info("线上bug-转业务需求,接收参数：{}", bugOnlineReq.getId());
-
-        BugOnlineShiftBusinessVO bugOnlineShiftBusinessVO = new BugOnlineShiftBusinessVO();
-
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
-        //查询线上bug
-        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineReq.getId());
-        if (bugOnlineDO == null) {
-            throw new BaseBizRuntimeException("线上bug不存在");
-        }
-
-        //判断当前状态是否为“挂起”，“问题上报”，“问题确认”状态
-        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.HANG_UP.getCode())
-                && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.PROBLEM_REPORT.getCode())
-                && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode())) {
-            throw new BaseBizRuntimeException("当前状态不允许点击转交业务需求");
-        }
-
-        //判断操作人是否有点击权限
-        Boolean result = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.PD.getName());
-        if (!result) {
-            throw new BaseBizRuntimeException("您没有点击此按钮的权限");
-        }
-
-        //保存老的状态
-        String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
-        bugOnlineShiftBusinessVO.setPrevStatus(bugOnlineDO.getStatus());
-
-        bugOnlineDO.setStatus(BugOnlineStatusEnum.REQUIRED.getCode());
-        //线上bug表更新
-        bugOnlineMapper.update(bugOnlineDO);
-
-        BugLogDO bugLogDO = new BugLogDO();
-        bugLogDO.setAction(ButtonActionEnum.SHIFT_BUSINESS.getText());
-        bugLogDO.setOldValue(oldStatus);
-        bugLogDO.setNewValue(BugOnlineStatusEnum.REQUIRED.getText());
-        bugLogDO.setMainId(bugOnlineReq.getId());
-        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
-        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
-        //往bug日志表中插入一条线上bug状态变更数据
-        bugLogMapper.insert(bugLogDO);
-
-        //bug状态处理人员表插入数据
-        insertToBugStatusOperator(bugOnlineDO.getId());
-
-        bugOnlineShiftBusinessVO.setBugOnlineId(bugOnlineDO.getId());
-        bugOnlineShiftBusinessVO.setBugOnlineName(bugOnlineDO.getName());
-        BusinessResult<BugOnlineShiftBusinessVO> businessResult = new BusinessResult<>();
-        businessResult.setData(bugOnlineShiftBusinessVO);
-        return businessResult;
-    }
-
     /**
      * 判断当前操作人是否为personId或者personId的上级
      */
@@ -1456,7 +1401,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 for (ProductLineDO productLineDO : oldProductLineDOList) {
                     oldNames.append(productLineDO.getName());
                     count++;
-                    if (!count.equals(oldProductLineDOList.size())) {
+                    if (!count.equals(oldProductLineDOList.size())){
                         oldNames.append("&");
                     }
                 }

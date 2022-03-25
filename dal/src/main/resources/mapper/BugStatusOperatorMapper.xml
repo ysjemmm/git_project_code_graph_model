@@ -6,6 +6,7 @@
         <foreach collection="bugIds" separator="," item="bugLogId" open="(" close=")">
             #{bugLogId}
         </foreach>
+        order by `create_date` desc,`id` DESC
     </select>
 
     <insert id="insert">
