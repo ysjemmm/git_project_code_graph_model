@@ -144,6 +144,9 @@
             <if test="bugOnlineDO.describe != null">
                 `describe` = #{bugOnlineDO.describe},
             </if>
+            <if test="bugOnlineDO.prevStatus != null">
+                prev_status = #{bugOnlineDO.prevStatus},
+            </if>
             <if test="bugOnlineDO.status != null">
                 status = #{bugOnlineDO.status},
             </if>
