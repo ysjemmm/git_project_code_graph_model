@@ -5,6 +5,7 @@ import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.facade.api.client.BizDomainService;
 import com.timevale.forward.facade.api.result.BizDomainVO;
 import com.timevale.forward.service.copy.BizDomainCopier;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,6 +17,7 @@ import java.util.List;
  * @date 2021/12/13 17:10
  */
 @Slf4j
+@LogPoint
 @RestService
 public class BizDomainServiceImpl implements BizDomainService {
 
