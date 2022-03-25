@@ -100,6 +100,11 @@ public class BugOnlineDO extends BaseDO {
     private String describe;
 
     /**
+     * bug的上个状态：0问题上报，1待确认，2关闭，3问题确认，4问题修复，5QA修复确认，6待上线，7挂起，8完成，9已转需求
+     */
+    private Integer prevStatus;
+
+    /**
      * bug状态：0问题上报，1待确认，2关闭，3问题确认，4问题修复，5QA修复确认，6待上线，7挂起，8完成，9已转需求
      */
     private Integer status;

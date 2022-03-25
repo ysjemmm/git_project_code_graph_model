@@ -3,15 +3,10 @@ package com.timevale.forward.service.impl;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.BugOfflineMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.dao.TaskMapper;
+import com.timevale.forward.dal.condition.BugOnlineListCondition;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.dto.*;
-import com.timevale.forward.dal.entity.BizDemandListDO;
-import com.timevale.forward.dal.entity.BugOfflineDO;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.TaskDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.HomePageService;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
 import com.timevale.forward.facade.api.request.HomePageBaseReq;
@@ -52,37 +47,40 @@ import java.util.stream.Collectors;
 public class HomePageServiceImpl implements HomePageService {
 
     @Resource
-    HomePageDataIndicatorComponent homePageDataIndicatorComponent;
+    private HomePageDataIndicatorComponent homePageDataIndicatorComponent;
 
     @Resource
-    HomePageProjectOnlineLatelyComponent homePageProjectOnlineLatelyComponent;
+    private HomePageProjectOnlineLatelyComponent homePageProjectOnlineLatelyComponent;
 
     @Resource
-    HomePageProjectBoardComponent homePageProjectBoardComponent;
+    private HomePageProjectBoardComponent homePageProjectBoardComponent;
 
     @Resource
-    HomePageRiskWarningComponent homePageRiskWarningComponent;
+    private HomePageRiskWarningComponent homePageRiskWarningComponent;
 
     @Resource
-    HomePageRiskWarningSubmitTestComponent homePageRiskWarningSubmitTestComponent;
+    private HomePageRiskWarningSubmitTestComponent homePageRiskWarningSubmitTestComponent;
 
     @Resource
-    HomePageRiskWarningTaskComponent homePageRiskWarningTaskComponent;
+    private HomePageRiskWarningTaskComponent homePageRiskWarningTaskComponent;
 
     @Resource
-    InnerUserPersonClient innerUserPersonClient;
+    private InnerUserPersonClient innerUserPersonClient;
 
     @Resource
-    ProjectMapper projectMapper;
+    private ProjectMapper projectMapper;
 
     @Resource
-    BizDemandMapper bizDemandMapper;
+    private BizDemandMapper bizDemandMapper;
 
     @Resource
-    TaskMapper taskMapper;
+    private TaskMapper taskMapper;
 
     @Resource
-    BugOfflineMapper bugOfflineMapper;
+    private BugOfflineMapper bugOfflineMapper;
+
+    @Resource
+    private BugOnlineMapper bugOnlineMapper;
 
     @Override
     public BaseResult<HomePageDataIndicatorVO> getDataIndicator(HomePageBaseReq homePageBaseReq) {
@@ -93,7 +91,7 @@ public class HomePageServiceImpl implements HomePageService {
     @Override
     public BaseResult<HomePageTodoCardVO> getTodoCard(HomePageBaseReq homePageBaseReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
+        userInfo.setId("yanxiao");
         int taskCount = 0;
         int projectCount = 0;
         int bizDemandCount = 0;
@@ -136,6 +134,20 @@ public class HomePageServiceImpl implements HomePageService {
                         .count();
             }
         }
+
+        // 待处理线上bug
+        List<BugOnlineListDO> bugOnlineListDOList = bugOnlineMapper.selectListByCondition(BugOnlineListCondition.builder()
+                .operatorIdList(Lists.newArrayList(userInfo.getId()))
+                .build());
+        bugOnLineCount = (int)bugOnlineListDOList.stream()
+                .filter(e -> {
+                    boolean filter;
+                    filter = Objects.equals(BugOnlineStatusEnum.COMPLETE.getCode(), e.getStatus());
+                    filter |= Objects.equals(BugOnlineStatusEnum.CLOSE.getCode(), e.getStatus());
+                    filter |= Objects.equals(BugOnlineStatusEnum.REQUIRED.getCode(), e.getStatus());
+                    return !filter;
+                })
+                .count();
 
         HomePageTodoCardVO todoCardVO = new HomePageTodoCardVO();
         todoCardVO.setTaskCount(taskCount);
