@@ -136,6 +136,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Override
     public String getDeptChainName(Long deptId) {
+        if(deptId == null){
+            return StringUtils.EMPTY;
+        }
         StringBuilder deptName = new StringBuilder();
         List<GroupResponse> groupChain = innerGroupClient.getGroupChain(deptId);
         groupChain.remove(groupChain.size() - 1);
