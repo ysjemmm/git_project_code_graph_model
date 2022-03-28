@@ -2,7 +2,6 @@ package com.timevale.forward.service.utils.compare;
 
 import com.google.common.collect.Maps;
 import com.timevale.forward.dal.annotation.FieldCompare;
-import com.timevale.forward.dal.entity.LogDO;
 import com.timevale.forward.model.enums.BugLogTypeEnum;
 import com.timevale.forward.model.middle.BaseMD;
 import com.timevale.forward.model.middle.BugOfflineMD;
@@ -11,6 +10,7 @@ import com.timevale.forward.model.middle.BusinessMD;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -26,12 +26,20 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class FieldCompareUtil {
-    private static Map<Class<?>, Integer> clazzMap = Maps.newHashMap();
+
+    private static final String MAIN_ID = "mainId";
+    private static final String TYPE = "type";
+    private static final String OLD_VALUE = "oldValue";
+    private static final String NEW_VALUE = "newValue";
+    private static final String FIELD = "field";
+    private static final String METHOD = "getTextByCode";
+
+    private static final Map<Class<?>, Integer> CLAZZ_MAP = Maps.newHashMap();
 
     static {
-        clazzMap.put(BugOfflineMD.class, BugLogTypeEnum.OFFLINE.getCode());
-        clazzMap.put(BugOnlineMD.class, BugLogTypeEnum.ONLINE.getCode());
-        clazzMap.put(BusinessMD.class, BugLogTypeEnum.ONLINE.getCode());
+        CLAZZ_MAP.put(BugOfflineMD.class, BugLogTypeEnum.OFFLINE.getCode());
+        CLAZZ_MAP.put(BugOnlineMD.class, BugLogTypeEnum.ONLINE.getCode());
+        CLAZZ_MAP.put(BusinessMD.class, BugLogTypeEnum.ONLINE.getCode());
     }
 
     /**
@@ -41,7 +49,7 @@ public class FieldCompareUtil {
      * @param newObj newObj
      * @return 结果
      */
-    public static <T extends BaseMD, E extends LogDO> List<E> commonCompare(T oldObj, T newObj) {
+    public static <T extends BaseMD, E> List<E> commonCompare(T oldObj, T newObj, Class<E> clazz) {
         Field[] oldFields = oldObj.getClass().getDeclaredFields();
         Field[] newFields = newObj.getClass().getDeclaredFields();
 
@@ -80,21 +88,31 @@ public class FieldCompareUtil {
                         oldString = (String) oldField.get(oldObj);
                         newString = (String) newField.get(newObj);
                     } else if (fieldType == Integer.class) {
-                        Method method = annotation.enumClass().getMethod("getTextByCode", Integer.class);
+                        Method method = annotation.enumClass().getMethod(METHOD, Integer.class);
                         oldString = (String) method.invoke(null, oldValue);
                         newString = (String) method.invoke(null, newValue);
                     }
-                    E logDO = (E) new LogDO();
-                    logDO.setMainId(oldObj.getId());
-                    logDO.setType(clazzMap.get(oldObj.getClass()));
-                    logDO.setField(fieldName);
-                    logDO.setOldValue(oldString);
-                    logDO.setNewValue(newString);
-                    result.add(logDO);
+                    Constructor<E> constructor = clazz.getConstructor();
+                    E e = constructor.newInstance();
+                    for (Field field : clazz.getDeclaredFields()) {
+                        field.setAccessible(true);
+                        if (MAIN_ID.equals(field.getName())) {
+                            field.set(e, oldObj.getId() == null ? newObj.getId() : oldObj.getId());
+                        } else if (TYPE.equals(field.getName())) {
+                            field.set(e, CLAZZ_MAP.get(oldObj.getClass()));
+                        } else if (FIELD.equals(field.getName())) {
+                            field.set(e, fieldName);
+                        } else if (OLD_VALUE.equals(field.getName())) {
+                            field.set(e, oldString);
+                        } else if (NEW_VALUE.equals(field.getName())) {
+                            field.set(e, newString);
+                        }
+                    }
+                    result.add(e);
                 }
             }
         } catch (Exception e) {
-            log.error("字段对比异常e:{},msg:{}", e,e.getMessage());
+            log.error("字段对比异常e:{},msg:{}", e, e.getMessage());
             return result;
         }
         log.info("字段对比完成后,返回结果:{}", result);
