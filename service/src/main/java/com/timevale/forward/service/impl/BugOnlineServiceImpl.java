@@ -429,7 +429,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDO newBugOnlineDO = BugOnlineCopier.INSTANCE.change(bugOnlineModifyReq);
 
         //比较编辑修改的一般字段，生成结果集合
-        List<BugLogDO> bugLogDOList =FieldCompareUtil.commonCompare(oldBugOnlineMD, newBugOnlineMD,BugLogDO.class);
+        List<BugLogDO> bugLogDOList = FieldCompareUtil.commonCompare(oldBugOnlineMD, newBugOnlineMD, BugLogDO.class);
         //额外判断产品线和产品线业务
         bugLogDOList.addAll(compareExtraIfNecessary(bugOnlineDO, newBugOnlineDO));
         if (!CollectionUtils.isEmpty(bugLogDOList)) {
@@ -528,11 +528,18 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //信息填充
         bugOnlineDetailVO.setStatusName(BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()));
-        bugOnlineDetailVO.setDismissCauseName(BugOnlineDismissCauseEnum.getTextByCode(bugOnlineDO.getDismissCause()));
+        if (bugOnlineDO.getDismissCause() != null) {
+            bugOnlineDetailVO.setDismissCauseName(BugOnlineDismissCauseEnum.getTextByCode(bugOnlineDO.getDismissCause()));
+        }
+        if (bugOnlineDO.getRepairFailReason() != null) {
+            bugOnlineDetailVO.setRepairFailReason(bugOnlineDO.getRepairFailReason());
+        }
         bugOnlineDetailVO.setEnvName(BugOnlineEnvEnum.getTextByCode(bugOnlineDO.getEnv()));
         bugOnlineDetailVO.setBelongName(BugOnlineBeloneEnum.getTextByCode(bugOnlineDO.getBelong()));
         bugOnlineDetailVO.setPriorityName(BugOnlinePriorityEnum.getTextByCode(bugOnlineDO.getPriority()));
-        bugOnlineDetailVO.setReasonName(BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason()));
+        if (bugOnlineDO.getReason() != null) {
+            bugOnlineDetailVO.setReasonName(BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason()));
+        }
         bugOnlineDetailVO.setRecurrentName(BugOnlineRecurrentEnum.getTextByCode(bugOnlineDO.getRecurrent()));
 
         BusinessResult<BugOnlineDetailVO> businessResult = new BusinessResult<>();
@@ -1399,7 +1406,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 for (ProductLineDO productLineDO : oldProductLineDOList) {
                     oldNames.append(productLineDO.getName());
                     count++;
-                    if (!count.equals(oldProductLineDOList.size())){
+                    if (!count.equals(oldProductLineDOList.size())) {
                         oldNames.append("&");
                     }
                 }
@@ -1437,7 +1444,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 newBusinessMD = JSONUtil.toBean(newBusiness, BusinessMD.class);
             }
             oldBusinessMD.setId(oldObj.getId());
-            List<BugLogDO> bugLogList = FieldCompareUtil.commonCompare(oldBusinessMD, newBusinessMD,BugLogDO.class);
+            List<BugLogDO> bugLogList = FieldCompareUtil.commonCompare(oldBusinessMD, newBusinessMD, BugLogDO.class);
             bugLogDOList.addAll(bugLogList);
         }
 
