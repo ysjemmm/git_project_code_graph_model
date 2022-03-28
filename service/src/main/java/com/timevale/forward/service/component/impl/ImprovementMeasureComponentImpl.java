@@ -12,7 +12,6 @@ import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
 import com.timevale.forward.service.integration.erp.model.CreateTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.GetTodoTaskMsg;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
@@ -22,6 +21,8 @@ import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -102,6 +103,14 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
 
         // 转换后新增数据
         ImprovementMeasureDO improvementMeasureDO = ImprovementMeasureCopier.INSTANCE.convert(improvementMeasureAddReq);
+
+        // 时间配置
+        Date implementationTime = improvementMeasureDO.getImplementationTime();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(implementationTime);
+        calendar.set(Calendar.HOUR_OF_DAY,18);
+        calendar.set(Calendar.MINUTE,30);
+        improvementMeasureDO.setImplementationTime(calendar.getTime());
 
         // 待办任务
         String todoId = addTodoTask(improvementMeasureDO);
