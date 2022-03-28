@@ -69,53 +69,56 @@
         LEFT JOIN product_line pl ON tt.product_line_id = pl.id
         LEFT JOIN biz_domain bd ON pl.biz_domain_id = bd.id
         <where>
-            <if test="name!=null and name!='' ">and tt.name like concat('%',#{name},'%')</if>
+            <if test="name!=null and name!='' ">AND tt.name LIKE concat('%',#{name},'%')</if>
             <if test="troubleTicketIdList != null and troubleTicketIdList.size() > 0">
-                and tt.id in
+                AND tt.id IN
                 <foreach collection="troubleTicketIdList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
             <if test="createMandIdList != null and createMandIdList.size() > 0">
-                and tt.create_man_id in
+                AND tt.create_man_id IN
                 <foreach collection="createMandIdList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
             <if test="troubleRankList != null and troubleRankList.size() > 0">
-                and tt.trouble_rank in
+                AND tt.trouble_rank IN
                 <foreach collection="troubleRankList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
             <if test="bizDomainIdList != null and bizDomainIdList.size() > 0">
-                and bd.id in
+                AND bd.id IN
                 <foreach collection="bizDomainIdList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
             <if test="productLineIdList != null and productLineIdList.size() > 0">
-                and pl.id in
+                AND pl.id IN
                 <foreach collection="productLineIdList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
             <choose>
                 <when test="occurrenceTimeStart != null and occurrenceTimeEnd != null">
-                    and tt.occurrence_time &gt;= #{occurrenceTimeStart}
-                    and tt.occurrence_time &lt;= #{occurrenceTimeEnd}
+                    AND tt.occurrence_time &gt;= #{occurrenceTimeStart}
+                    AND tt.occurrence_time &lt;= #{occurrenceTimeEnd}
                 </when>
                 <otherwise>
                     <choose>
                         <when test="occurrenceTimeStart != null">
-                            and tt.occurrence_time &gt;= #{occurrenceTimeStart}
+                            AND tt.occurrence_time &gt;= #{occurrenceTimeStart}
                         </when>
                         <when test="occurrenceTimeEnd != null">
-                            and tt.occurrence_time &lt;= #{occurrenceTimeEnd}
+                            AND tt.occurrence_time &lt;= #{occurrenceTimeEnd}
                         </when>
                     </choose>
                 </otherwise>
             </choose>
+            <if test="true">
+                AND tt.is_deleted = false
+            </if>
         </where>
     </select>
 </mapper>
