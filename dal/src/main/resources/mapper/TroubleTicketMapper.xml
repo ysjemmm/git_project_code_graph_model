@@ -19,29 +19,29 @@
     <update id="update">
         UPDATE trouble_ticket
         <set>
-            <if test="name != null">name = #{name},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
             <if test="influence != null">influence = #{influence},</if>
-            <if test="type != null">type = #{type},</if>
             <if test="productLineId != null">product_line_id = #{productLineId},</if>
             <if test="occurrenceTime != null">occurrence_time = #{occurrenceTime},</if>
-            <if test="influenceCount != null">influence_count = #{influenceCount},</if>
             <if test="influenceClient != null">influence_client = #{influenceClient},</if>
-            <if test="duringTime != null">during_time = #{duringTime},</if>
-            <if test="failureTime != null">failure_time = #{failureTime},</if>
-            <if test="influenceScope != null">influence_scope = #{influenceScope},</if>
-            <if test="reason != null">reason = #{reason},</if>
-            <if test="restoreTime != null">restore_time = #{restoreTime},</if>
-            <if test="replayTime != null">replay_time = #{replayTime},</if>
-            <if test="assetLoss != null">asset_loss = #{assetLoss},</if>
-            <if test="amountLoss != null">amount_loss = #{amountLoss},</if>
+            <if test="type != null">type = #{type},</if>
             <if test="timeLine != null">time_line = #{timeLine},</if>
             <if test="reasonAnalysis != null">reason_analysis = #{reasonAnalysis},</if>
-            <if test="troubleRank != null">trouble_rank = #{troubleRank},</if>
             <if test="primePrincipal != null">prime_principal = #{primePrincipal},</if>
             <if test="primePrincipalId != null">prime_principal_id = #{primePrincipalId},</if>
             <if test="minorPrincipal != null">minor_principal = #{minorPrincipal},</if>
             <if test="minorPrincipalId != null">minor_principal_id = #{minorPrincipalId},</if>
-            <if test="dutyTeam != null">duty_team = #{dutyTeam},</if>
+            <if test="true">influence_count = #{influenceCount},</if>
+            <if test="true">during_time = #{duringTime},</if>
+            <if test="true">failure_time = #{failureTime},</if>
+            <if test="true">influence_scope = #{influenceScope},</if>
+            <if test="true">reason = #{reason},</if>
+            <if test="true">restore_time = #{restoreTime},</if>
+            <if test="true">replay_time = #{replayTime},</if>
+            <if test="true">asset_loss = #{assetLoss},</if>
+            <if test="true">amount_loss = #{amountLoss},</if>
+            <if test="true">trouble_rank = #{troubleRank},</if>
+            <if test="true">duty_team = #{dutyTeam},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
