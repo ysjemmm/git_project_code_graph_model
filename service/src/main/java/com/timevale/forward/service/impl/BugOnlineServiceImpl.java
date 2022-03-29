@@ -655,6 +655,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         String operator = bugOnlineDO.getOperator();
         String operatorId = bugOnlineDO.getOperatorId();
 
+        //保存老的修复失败原因
+        String repairFailReason = bugOnlineDO.getRepairFailReason();
+
         bugOnlineDO.setStatus(BugOnlineStatusEnum.REPAIR_CONFIRM.getCode());
         bugOnlineDO.setRepairFailReason(null);
         bugOnlineDO.setLastOperator(operator);
@@ -675,7 +678,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         //如果此时修复失败原因有值，则需要插入一条bug内容变更记录，因为需要把修复失败原因清空
-        if (bugOnlineDO.getRepairFailReason() != null) {
+        if (repairFailReason != null) {
             BugLogDO bugLog = new BugLogDO();
             bugLog.setField(BugFieldEnum.REPAIR_FAIL_REASON.getText());
             bugLog.setOldValue(bugOnlineDO.getRepairFailReason());
