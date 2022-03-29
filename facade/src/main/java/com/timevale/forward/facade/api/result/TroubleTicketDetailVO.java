@@ -20,7 +20,6 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("故障工单详情")
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TroubleTicketDetailVO extends ToString {
 
     @ApiModelProperty("id")

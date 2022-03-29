@@ -189,9 +189,9 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
         // tab页面条件
         String ascription = troubleTicketQueryList.getAscription();
-        if(AscriptionEnum.CURRENT_USER.getText().equals(ascription)){
+        if(AscriptionEnum.CURRENT_USER.toString().equals(ascription)){
             troubleTicketCondition.setCreateMandIdList(Lists.newArrayList(userId));
-        }else if(AscriptionEnum.RECEIVE.getText().equals(ascription)){
+        }else if(AscriptionEnum.RECEIVE.toString().equals(ascription)){
             troubleTicketCondition.setHandlerIdList(Lists.newArrayList(userId));
         }
 

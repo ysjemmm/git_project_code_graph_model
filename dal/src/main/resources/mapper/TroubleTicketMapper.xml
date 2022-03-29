@@ -69,7 +69,7 @@
         LEFT JOIN product_line pl ON tt.product_line_id = pl.id
         LEFT JOIN biz_domain bd ON pl.biz_domain_id = bd.id
         <where>
-            <if test="name!=null and name!='' ">AND tt.name LIKE concat('%',#{name},'%')</if>
+            <if test="name != null and name!='' ">AND tt.name LIKE concat('%',#{name},'%')</if>
             <if test="troubleTicketIdList != null and troubleTicketIdList.size() > 0">
                 AND tt.id IN
                 <foreach collection="troubleTicketIdList" item="item" separator="," open="(" close=")">
