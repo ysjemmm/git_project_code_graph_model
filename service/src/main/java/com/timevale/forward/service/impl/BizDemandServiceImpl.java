@@ -419,17 +419,18 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         //保存老的状态
-        String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+        String oldStatusName = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+        Integer oldStatus = bugOnlineDO.getStatus();
 
         bugOnlineDO.setStatus(BugOnlineStatusEnum.REQUIRED.getCode());
-        bugOnlineDO.setPrevStatus(bugOnlineDO.getStatus());
+        bugOnlineDO.setPrevStatus(oldStatus);
         bugOnlineDO.setBizDemandId(bizDemandId);
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.SHIFT_BUSINESS.getText());
-        bugLogDO.setOldValue(oldStatus);
+        bugLogDO.setOldValue(oldStatusName);
         bugLogDO.setNewValue(BugOnlineStatusEnum.REQUIRED.getText());
         bugLogDO.setMainId(bugOnlineId);
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
