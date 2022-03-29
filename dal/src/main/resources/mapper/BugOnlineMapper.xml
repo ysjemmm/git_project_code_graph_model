@@ -88,6 +88,7 @@
                 and bo.is_deleted = false
             </if>
         </where>
+        group by bo.id
     </select>
 
     <select id="selectByBizDemandId" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
