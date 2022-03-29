@@ -166,7 +166,7 @@
             <if test="bugOnlineDO.status != null">
                 status = #{bugOnlineDO.status},
             </if>
-            <if test="bugOnlineDO.dismissCause != null">
+            <if test="true">
                 dismiss_cause = #{bugOnlineDO.dismissCause},
             </if>
             <if test="bugOnlineDO.problemReason != null">
@@ -175,7 +175,7 @@
             <if test="bugOnlineDO.solveScheme != null">
                 solve_scheme = #{bugOnlineDO.solveScheme},
             </if>
-            <if test="bugOnlineDO.repairFailReason != null">
+            <if test="true">
                 repair_fail_reason = #{bugOnlineDO.repairFailReason},
             </if>
             <if test="bugOnlineDO.openAgainReason != null">
