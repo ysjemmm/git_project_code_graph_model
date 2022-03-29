@@ -83,6 +83,7 @@ public class TroubleTicketDetailVO extends ToString {
     private String duringTimeName;
 
     @ApiModelProperty("不可用时长（分钟）")
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal failureTime;
 
     @ApiModelProperty("故障影响面分布 0 全网，1 单业务域，2 跨多个业务域")
@@ -104,6 +105,7 @@ public class TroubleTicketDetailVO extends ToString {
     private Boolean assetLoss;
 
     @ApiModelProperty("损失金额（元）")
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal amountLoss;
 
     @ApiModelProperty("时间线")
