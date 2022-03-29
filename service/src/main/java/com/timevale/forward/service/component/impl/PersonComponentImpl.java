@@ -54,20 +54,7 @@ public class PersonComponentImpl implements PersonComponent {
             return;
         }
         List<PersonDO> personDO = PersonCopier.INSTANCE.convert(list);
-        fillInfo(mainId, type, personDO);
-        List<PersonDO> existPersons = select(mainId, type);
-        log.info("已存在人员:existPersons={}", existPersons);
-        Set<String> existUserIds = existPersons.stream().map(PersonDO::getUserId).collect(Collectors.toSet());
-        List<PersonDO> needAddPersons = new ArrayList<>();
-        personDO.forEach((p) -> {
-            if (!existUserIds.contains(p.getUserId())) {
-                needAddPersons.add(p);
-            }
-        });
-        if(CollectionUtils.isNotEmpty(needAddPersons)){
-            personMapper.inserts(needAddPersons);
-            log.info("编辑时,新增人员:needAddPersons={},type={}", needAddPersons, type);
-        }
+        List<PersonDO> existPersons = addIfNotExisted(list, mainId, type);
         Set<String> reqPersonIds = personDO.stream().map(PersonDO::getUserId).collect(Collectors.toSet());
         existPersons.forEach((p) -> {
             if (!reqPersonIds.contains(p.getUserId())) {
@@ -87,6 +74,26 @@ public class PersonComponentImpl implements PersonComponent {
         condition.setType(type);
         condition.setMainId(mainId);
         return personMapper.select(condition);
+    }
+
+    @Override
+    public List<PersonDO> addIfNotExisted(List<PersonAddReq> list, Long mainId, Integer type) {
+        List<PersonDO> personDO = PersonCopier.INSTANCE.convert(list);
+        fillInfo(mainId, type, personDO);
+        List<PersonDO> existPersons = select(mainId, type);
+        log.info("已存在人员:existPersons={}", existPersons);
+        Set<String> existUserIds = existPersons.stream().map(PersonDO::getUserId).collect(Collectors.toSet());
+        List<PersonDO> needAddPersons = new ArrayList<>();
+        personDO.forEach((p) -> {
+            if (!existUserIds.contains(p.getUserId())) {
+                needAddPersons.add(p);
+            }
+        });
+        if(CollectionUtils.isNotEmpty(needAddPersons)){
+            personMapper.inserts(needAddPersons);
+            log.info("新增人员:needAddPersons={},type={}", needAddPersons, type);
+        }
+        return existPersons;
     }
 
 

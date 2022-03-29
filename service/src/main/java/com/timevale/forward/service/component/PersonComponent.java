@@ -31,4 +31,12 @@ public interface PersonComponent {
      */
     List<PersonDO> select(Long mainId, Integer type);
 
+    /**
+     *
+     * @param list 人员列表
+     * @param mainId 所属主体id
+     * @param type 所属主体类型
+     */
+    List<PersonDO> addIfNotExisted(List<PersonAddReq> list, Long mainId, Integer type);
+
 }

@@ -176,6 +176,8 @@ public class TaskServiceImpl implements TaskService {
         fileComponent.add(taskAddReq.getFiles(), taskDO.getId(), FileTypeEnum.TASK.getCode());
         //执行人
         personComponent.add(taskAddReq.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
+        // 若执行人不在项目成员中,需新增
+        personComponent.addIfNotExisted(taskAddReq.getExecutors(), taskDO.getProjectId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
         //关联产品需求
         taskProductDemandComponent.batchInsert(taskDO.getId(), taskAddReq.getProductDemandIds());
 
@@ -215,6 +217,9 @@ public class TaskServiceImpl implements TaskService {
         fileComponent.update(taskModifyReq.getFiles(), taskDO.getId(), FileTypeEnum.TASK.getCode());
 
         personComponent.update(taskModifyReq.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
+
+        // 若执行人不在项目成员中,需新增
+        personComponent.addIfNotExisted(taskModifyReq.getExecutors(), taskDO.getProjectId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         sendDingMsg(taskDO, executorIds);
         return BaseResult.success(true);
