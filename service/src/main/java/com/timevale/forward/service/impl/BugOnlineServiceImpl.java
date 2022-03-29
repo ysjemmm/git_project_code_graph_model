@@ -1072,7 +1072,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //保存老的经办人
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
 
-        bugOnlineDO.setStatus(BugStatusEnum.CLOSE.getCode());
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.CLOSE.getCode());
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
 
