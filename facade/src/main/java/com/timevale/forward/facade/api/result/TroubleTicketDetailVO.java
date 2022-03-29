@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.result;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.timevale.mandarin.common.result.ToString;
@@ -19,6 +20,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("故障工单详情")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TroubleTicketDetailVO extends ToString {
 
     @ApiModelProperty("id")
