@@ -9,6 +9,9 @@
         select bo.id, bo.name, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env, bo.reason, bo.belong,
         bo.create_date, bo.modify_date
         from bug_online bo
+        left join bug_online_product_line bopl on bo.id = bopl.bug_online_id
+        left join product_line pl on bopl.product_line_id = pl.id
+        left join biz_domain bdm on pl.biz_domain_id = bdm.id
         <where>
             <if test="name != null and name != '' ">
                 and bo.name like concat('%',#{name},'%')
@@ -55,6 +58,18 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="productLineIdList != null and productLineIdList.size() > 0">
+                and pl.id in
+                <foreach collection="productLineIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="bizDomainIdList != null and bizDomainIdList.size() > 0">
+                and bdm.id in
+                <foreach collection="bizDomainIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="createDateLeft != null and createDateRight != null">
                 and bo.create_date &gt;= #{createDateLeft} and bo.create_date &lt;= #{createDateRight}
             </if>
@@ -74,6 +89,7 @@
             </if>
         </where>
     </select>
+
     <select id="selectByBizDemandId" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
         SELECT id, name
         FROM bug_online
