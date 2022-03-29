@@ -233,6 +233,7 @@ public class TaskServiceImpl implements TaskService {
         taskDetailVO.setStageName(TaskStageEnum.getTextByCode(taskDetailVO.getStage()));
         //项目
         ProjectDO projectDO = projectMapper.get(taskDO.getProjectId());
+        taskDetailVO.setProjectId(projectDO.getId());
         taskDetailVO.setProjectName(projectDO.getName());
         taskDetailVO.setPmId(projectDO.getPmId());
 
