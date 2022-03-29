@@ -1013,7 +1013,21 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //如果不是自己转交给自己，bug状态处理人员表插入数据
         if (!oldOperator.equals(bugOnlineTransferReq.getUserName())) {
-            insertToBugStatusOperator(bugOnlineDO.getId());
+            //查询当前线上bug对应的所有状态变更记录
+            List<BugLogDO> bugLogDOS = bugLogMapper.selectByBugOfflineIdAndType(bugOnlineDO.getId()
+                    , BugLogTypeEnum.ONLINE.getCode(), true);
+
+            //按创建时间逆序排列，筛选出最后一条状态变更记录
+            List<BugLogDO> collect = bugLogDOS.stream()
+                    .sorted(Comparator.comparing(BugLogDO::getCreateDate).reversed()).collect(Collectors.toList());
+            BugLogDO lastStatusBugLogDO = collect.get(0);
+
+            BugStatusOperatorDO bugStatusOperatorDO = new BugStatusOperatorDO();
+            bugStatusOperatorDO.setBugLogId(lastStatusBugLogDO.getId());
+            bugStatusOperatorDO.setOperator(bugOnlineTransferReq.getUserName());
+            bugStatusOperatorDO.setOperatorId(bugOnlineTransferReq.getUserId());
+            //往状态人员处理表里面插入一条数据记录
+            bugStatusOperatorMapper.insert(bugStatusOperatorDO);
         }
 
         //发送消息
