@@ -1195,7 +1195,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //保存老的状态
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
 
-        bugOnlineDO.setStatus(BugOnlineStatusEnum.PROBLEM_REPORT.getCode());
+        //判断是从哪个状态点击的重新确认按钮
+        if(oldStatus.equals(BugOnlineStatusEnum.QUESTION_REPAIR.getText())){
+            bugOnlineDO.setStatus(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
+        } else {
+            bugOnlineDO.setStatus(BugOnlineStatusEnum.PROBLEM_REPORT.getCode());
+        }
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
 
