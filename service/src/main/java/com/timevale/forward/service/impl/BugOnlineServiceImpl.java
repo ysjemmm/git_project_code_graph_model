@@ -921,10 +921,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         //判断当前状态是否为“问题上报”或者“问题确认”状态
-        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.PROBLEM_REPORT.getCode())
+        /*if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.PROBLEM_REPORT.getCode())
                 && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode())) {
             throw new BaseBizRuntimeException("当前状态不允许点击不用修复");
-        }
+        }*/
 
         //保存老的状态
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
@@ -935,6 +935,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setOperatorId(bugOnlineDO.getProposerId());
         bugOnlineDO.setOperator(bugOnlineDO.getOperator());
         bugOnlineDO.setDismissCause(bugOnlineNoRepairReq.getDismissCause());
+        if(bugOnlineDO.getRepairFailReason() != null && !"".equals(bugOnlineDO.getRepairFailReason())){
+            bugOnlineDO.setRepairFailReason("");
+        }
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
 
