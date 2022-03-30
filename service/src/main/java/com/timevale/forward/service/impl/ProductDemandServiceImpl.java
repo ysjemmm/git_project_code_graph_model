@@ -102,7 +102,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Resource
     private TaskProductDemandComponent taskProductDemandComponent;
 
-    private static final Integer MAX_LENGTH = 64 * 1000;
+    private static final Integer MAX_LENGTH = 50 * 1000;
 
 
     @Override
@@ -396,9 +396,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     private void checkDescLength(String desc) {
-        log.info("图片大小:{}",desc.getBytes().length);
-        if (StringUtils.isNotEmpty(desc) && desc.getBytes().length * 0.75 > MAX_LENGTH) {
-            throw new BaseBizRuntimeException("需求描述超过最大限制(64kb),若有大图片请选择附件上传");
+        log.info("图片大小:{}", desc.getBytes().length);
+        if (StringUtils.isNotEmpty(desc) && desc.getBytes().length > MAX_LENGTH) {
+            throw new BaseBizRuntimeException("需求描述超过最大限制,若有大图片请选择附件上传");
         }
     }
 }
