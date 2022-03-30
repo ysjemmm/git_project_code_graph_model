@@ -933,7 +933,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setLastOperatorId(bugOnlineDO.getOperatorId());
         bugOnlineDO.setLastOperator(bugOnlineDO.getOperator());
         bugOnlineDO.setOperatorId(bugOnlineDO.getProposerId());
-        bugOnlineDO.setOperator(bugOnlineDO.getOperator());
+        bugOnlineDO.setOperator(bugOnlineDO.getProposer());
         bugOnlineDO.setDismissCause(bugOnlineNoRepairReq.getDismissCause());
         if(bugOnlineDO.getRepairFailReason() != null && !"".equals(bugOnlineDO.getRepairFailReason())){
             bugOnlineDO.setRepairFailReason("");
