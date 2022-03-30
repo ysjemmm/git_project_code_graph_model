@@ -59,4 +59,7 @@ public class BizDemandDetailVO extends BizDemandVO {
 
     @ApiModelProperty("线上bug 名称")
     private String bugOnlineName;
+
+    @ApiModelProperty("创建时间")
+    private Date createDate;
 }

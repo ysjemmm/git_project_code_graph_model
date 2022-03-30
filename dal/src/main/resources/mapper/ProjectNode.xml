@@ -29,5 +29,15 @@
         where project_id=#{projectId} and name="提测"
     </update>
 
-
+    <select id="getByProjectIds" resultType="com.timevale.forward.dal.entity.ProjectNodeDO">
+        select id,project_id,name, plan_date, actual_date ,create_man_id, create_man
+        from project_node
+        <where>
+            and project_id in
+            <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            and is_deleted=false
+        </where>
+    </select>
 </mapper>

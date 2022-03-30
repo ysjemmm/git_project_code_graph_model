@@ -96,7 +96,7 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
 
         BaseResult<PageQueryResult<ProjectVO>> baseResult = new BaseResult<>();
         baseResult.setMessage("成功");
-        when(projectComponent.page(any(), any())).thenReturn(baseResult);
+        when(projectComponent.page(any(), any(),false)).thenReturn(baseResult);
 
         ProjectQueryList projectQueryList = new ProjectQueryList();
         projectQueryList.setPageNum(1);

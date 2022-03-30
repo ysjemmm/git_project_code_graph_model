@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -58,5 +59,8 @@ public class ProductDemandDetailVO extends ToString {
 
     @ApiModelProperty("附件")
     private List<FileVO> files;
+
+    @ApiModelProperty("创建时间")
+    private Date createDate;
     
 }

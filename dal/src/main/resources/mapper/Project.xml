@@ -120,6 +120,9 @@
             <if test="actualEndDateLeft != null and actualEndDateRight != null">
                 and a.actual_end_date &gt;= #{actualEndDateLeft} and a.actual_end_date &lt;= #{actualEndDateRight}
             </if>
+            <if test="createDateLeft != null and createDateRight != null">
+                and a.create_date &gt;= #{createDateLeft} and a.create_date &lt;= #{createDateRight}
+            </if>
             <if test="priorities!=null and priorities.size()>0">
                 and a.priority in
                 <foreach collection="priorities" item="item" separator="," open="(" close=")">

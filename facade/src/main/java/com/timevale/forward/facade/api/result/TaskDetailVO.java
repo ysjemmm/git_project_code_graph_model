@@ -76,5 +76,10 @@ public class TaskDetailVO extends ToString {
     @ApiModelProperty("人员耗时")
     private List<TaskTimeVO> taskTimeVO;
 
+    @ApiModelProperty("创建时间")
+    private Date createDate;
+
+    @ApiModelProperty("创建时间")
+    private String createMan;
 
 }

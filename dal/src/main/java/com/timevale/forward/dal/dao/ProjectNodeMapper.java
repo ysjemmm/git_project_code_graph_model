@@ -41,4 +41,12 @@ public interface ProjectNodeMapper {
      * @param actualDate 实际提测时间
      */
     void updateSubmitTestActualDate(@Param("projectId") Long projectId, @Param("actualDate") Date actualDate);
+
+    /**
+     * 删除
+     *
+     * @param projectIds 项目id
+     * @return ProjectNodeDO
+     */
+    List<ProjectNodeDO> getByProjectIds(@Param("projectIds") List<Long> projectIds);
 }

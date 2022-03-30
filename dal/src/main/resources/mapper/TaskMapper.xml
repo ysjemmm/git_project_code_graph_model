@@ -73,6 +73,9 @@
             <if test="actualEndDateLeft != null and actualEndDateRight != null">
                 and a.actual_end_date &gt;= #{actualEndDateLeft} and a.actual_end_date &lt;= #{actualEndDateRight}
             </if>
+            <if test="createDateLeft != null and createDateRight != null">
+                and a.create_date &gt;= #{createDateLeft} and a.create_date &lt;= #{createDateRight}
+            </if>
             <if test="createManIds!=null and createManIds.size()>0">
                 and a.create_man_id in
                 <foreach collection="createManIds" item="item" separator="," open="(" close=")">

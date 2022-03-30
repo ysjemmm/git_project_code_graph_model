@@ -28,7 +28,6 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
-import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -80,9 +79,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private BizDemandMapper bizDemandMapper;
-
-    @Resource
-    private InnerGroupClient innerGroupClient;
 
     @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
@@ -294,7 +290,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     , ProjectStatusEnum.DEVING.getCode()
                     , ProjectStatusEnum.TESTING.getCode()));
         }
-        return projectCmponent.page(condition, Lists.newArrayList());
+        return projectCmponent.page(condition, Lists.newArrayList(),false);
     }
 
     @Override

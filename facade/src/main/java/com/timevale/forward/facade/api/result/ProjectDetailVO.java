@@ -81,4 +81,10 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("当前时间")
     private Date currentDate;
 
+    @ApiModelProperty("创建时间")
+    private Date createDate;
+
+    @ApiModelProperty("创建人")
+    private String createMan;
+
 }

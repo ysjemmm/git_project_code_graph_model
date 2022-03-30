@@ -333,5 +333,7 @@ public class TaskComponentImpl implements TaskComponent {
         condition.setActualStartDateRight(DateUtil.getEndOfDay(condition.getActualStartDateRight()));
         condition.setActualEndDateLeft(DateUtil.getStartOfDay(condition.getActualEndDateLeft()));
         condition.setActualEndDateRight(DateUtil.getEndOfDay(condition.getActualEndDateRight()));
+        condition.setCreateDateLeft(DateUtil.getStartOfDay(condition.getCreateDateLeft()));
+        condition.setCreateDateRight(DateUtil.getEndOfDay(condition.getCreateDateRight()));
     }
 }

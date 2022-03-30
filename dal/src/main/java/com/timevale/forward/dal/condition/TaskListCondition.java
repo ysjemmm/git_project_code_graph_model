@@ -96,4 +96,14 @@ public class TaskListCondition extends QueryBase {
      */
     private Date actualEndDateRight;
 
+    /**
+     * 创建时间左区间
+     */
+    private Date createDateLeft;
+
+    /**
+     * 创建时间右区间
+     */
+    private Date createDateRight;
+
 }

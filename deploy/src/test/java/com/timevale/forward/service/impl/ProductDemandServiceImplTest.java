@@ -177,7 +177,7 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
 
         BaseResult<PageQueryResult<ProjectVO>> baseResult = new BaseResult<>();
         baseResult.setMessage("成功");
-        when(projectCmponent.page(any(), any())).thenReturn(baseResult);
+        when(projectCmponent.page(any(), any(),false)).thenReturn(baseResult);
 
         ProductDemandLinkProjectQueryList productDemandLinkProjectQueryList = new ProductDemandLinkProjectQueryList();
         productDemandLinkProjectQueryList.setProductDemandId(1L);

@@ -122,7 +122,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
-        return projectComponent.page(condition, projectIds);
+        return projectComponent.page(condition, projectIds,true);
     }
 
     @Override
@@ -461,9 +461,9 @@ public class ProjectServiceImpl implements ProjectService {
                 .stream()
                 .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
         // 检查任务
-        boolean checkTask = nodeMap.get(ProjectStageEnum.DEMAND_START.getText()) == null
-                && nodeMap.get(ProjectStageEnum.DEMAND_CHECK.getText()) == null
-                && nodeMap.get(ProjectStageEnum.DEMAND_ANALYSE.getText()) == null;
+        boolean checkTask = nodeMap.get(ProjectNodeEnum.START_PLAN.getProjectNodeName()) == null
+                && nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getProjectNodeName()) == null
+                && nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getProjectNodeName()) == null;
         if (checkTask) {
             //删除需求规划阶段时需要校验是否有关联任务,若有关联待执行&进行中&已完成&已暂停的任务,不能删除
             List<TaskDO> taskDOList = taskMapper.getByProjectId(projectDO.getId())
@@ -477,7 +477,7 @@ public class ProjectServiceImpl implements ProjectService {
         // 计算项目状态
         ProjectNodeDO node = null;
         Integer oriStatus = projectDO.getStatus();
-        if ((node = nodeMap.get(ProjectStageEnum.TEST_RELEASE.getText())) != null && node.getActualDate() != null) {
+        if ((node = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getProjectNodeName())) != null && node.getActualDate() != null) {
             if (ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
                 // 编辑项目
                 throw new BaseBizRuntimeException("项目状态为暂停时,不能填写发布正式的实际时间");
