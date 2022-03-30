@@ -99,7 +99,7 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="bugOnlineDO.id">
         insert into bug_online(name,operator,operator_id,last_operator,last_operator_id,proposer
-        ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business
+        ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`
         ,create_man,create_man_id)
         values(#{bugOnlineDO.name},#{bugOnlineDO.operator},#{bugOnlineDO.operatorId},#{bugOnlineDO.lastOperator}
         ,#{bugOnlineDO.lastOperatorId},#{bugOnlineDO.proposer},#{bugOnlineDO.proposerId},#{bugOnlineDO.customerName}
