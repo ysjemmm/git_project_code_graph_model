@@ -683,7 +683,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         //如果此时修复失败原因有值，则需要插入一条bug内容变更记录，因为需要把修复失败原因清空
-        if (repairFailReason != null) {
+        if (repairFailReason != null && !"".equals(repairFailReason)) {
             BugLogDO bugLog = new BugLogDO();
             bugLog.setField(BugFieldEnum.REPAIR_FAIL_REASON.getText());
             bugLog.setOldValue(bugOnlineDO.getRepairFailReason());
@@ -933,7 +933,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setLastOperatorId(bugOnlineDO.getOperatorId());
         bugOnlineDO.setLastOperator(bugOnlineDO.getOperator());
         bugOnlineDO.setOperatorId(bugOnlineDO.getProposerId());
-        bugOnlineDO.setOperator(bugOnlineDO.getOperator());
+        bugOnlineDO.setOperator(bugOnlineDO.getProposer());
         bugOnlineDO.setDismissCause(bugOnlineNoRepairReq.getDismissCause());
         if(bugOnlineDO.getRepairFailReason() != null && !"".equals(bugOnlineDO.getRepairFailReason())){
             bugOnlineDO.setRepairFailReason("");
