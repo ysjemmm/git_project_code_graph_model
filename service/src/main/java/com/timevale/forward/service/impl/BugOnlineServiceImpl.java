@@ -683,7 +683,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         //如果此时修复失败原因有值，则需要插入一条bug内容变更记录，因为需要把修复失败原因清空
-        if (repairFailReason != null) {
+        if (repairFailReason != null && !"".equals(repairFailReason)) {
             BugLogDO bugLog = new BugLogDO();
             bugLog.setField(BugFieldEnum.REPAIR_FAIL_REASON.getText());
             bugLog.setOldValue(bugOnlineDO.getRepairFailReason());
