@@ -401,11 +401,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineMD oldBugOnlineMD = BugOnlineCopier.INSTANCE.change(bugOnlineDO);
 
         //是否为经办人&提出人及其上级
-        Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
+       /* Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
         Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
         if (!operatorResult && !proposerResult) {
             throw new BaseBizRuntimeException("您没有修改权限");
-        }
+        }*/
 
         //BugOnlineModifyReq -->  BugOnlineDO
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(bugOnlineModifyReq);
