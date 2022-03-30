@@ -317,7 +317,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         //bug状态处理人员表插入数据
-        insertToBugStatusOperator(bugOnlineDO.getId());
+        insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
         //发送消息
         messageEventPublisher.publish(
@@ -444,7 +444,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //如果经办人变了，但是状态没有变化，需要往状态人员处理表中插入一条数据，并且需要发送钉钉消息
         if (!bugOnlineDO.getOperatorId().equals(newBugOnlineDO.getOperatorId())) {
             //往bug状态人员处理表中插入一条记录
-            insertToBugStatusOperator(bugOnlineModifyReq.getId());
+            insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
             //发送钉钉消息
             messageEventPublisher.publish(
@@ -583,7 +583,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         //bug状态处理人员表插入数据
-        insertToBugStatusOperator(bugOnlineDO.getId());
+        insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -628,7 +628,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         //bug状态处理人员表插入数据
-        insertToBugStatusOperator(bugOnlineDO.getId());
+        insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -694,7 +694,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         //bug状态处理人员表插入数据
-        insertToBugStatusOperator(bugOnlineDO.getId());
+        insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
         //发送消息
         messageEventPublisher.publish(
@@ -757,7 +757,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         //bug状态处理人员表插入数据
-        insertToBugStatusOperator(bugOnlineDO.getId());
+        insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -811,7 +811,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         //bug状态处理人员表插入数据
-        insertToBugStatusOperator(bugOnlineDO.getId());
+        insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
         //发送消息
         messageEventPublisher.publish(
@@ -889,7 +889,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         //bug状态处理人员表插入数据
-        insertToBugStatusOperator(bugOnlineDO.getId());
+        insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
         //发送消息
         messageEventPublisher.publish(
@@ -935,7 +935,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setOperatorId(bugOnlineDO.getProposerId());
         bugOnlineDO.setOperator(bugOnlineDO.getProposer());
         bugOnlineDO.setDismissCause(bugOnlineNoRepairReq.getDismissCause());
-        if(bugOnlineDO.getRepairFailReason() != null && !"".equals(bugOnlineDO.getRepairFailReason())){
+        if (bugOnlineDO.getRepairFailReason() != null && !"".equals(bugOnlineDO.getRepairFailReason())) {
             bugOnlineDO.setRepairFailReason("");
         }
         //线上bug表更新
@@ -961,7 +961,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLog);
 
         //bug状态处理人员表插入数据
-        insertToBugStatusOperator(bugOnlineDO.getId());
+        insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
         //发送消息
         messageEventPublisher.publish(
@@ -1024,21 +1024,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //如果不是自己转交给自己，bug状态处理人员表插入数据
         if (!oldOperator.equals(bugOnlineTransferReq.getUserName())) {
-            //查询当前线上bug对应的所有状态变更记录
-            List<BugLogDO> bugLogDOS = bugLogMapper.selectByBugOfflineIdAndType(bugOnlineDO.getId()
-                    , BugLogTypeEnum.ONLINE.getCode(), true);
-
-            //按创建时间逆序排列，筛选出最后一条状态变更记录
-            List<BugLogDO> collect = bugLogDOS.stream()
-                    .sorted(Comparator.comparing(BugLogDO::getCreateDate).reversed()).collect(Collectors.toList());
-            BugLogDO lastStatusBugLogDO = collect.get(0);
-
-            BugStatusOperatorDO bugStatusOperatorDO = new BugStatusOperatorDO();
-            bugStatusOperatorDO.setBugLogId(lastStatusBugLogDO.getId());
-            bugStatusOperatorDO.setOperator(bugOnlineTransferReq.getUserName());
-            bugStatusOperatorDO.setOperatorId(bugOnlineTransferReq.getUserId());
-            //往状态人员处理表里面插入一条数据记录
-            bugStatusOperatorMapper.insert(bugStatusOperatorDO);
+            insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
         }
 
         //发送消息
@@ -1097,7 +1083,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //往bug日志表中插入一条线上bug状态变更数据
         bugLogMapper.insert(bugLogDO);
 
-        insertToBugStatusOperator(bugOnlineDO.getId());
+        insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -1168,7 +1154,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLog);
 
         //bug状态处理人员表插入数据
-        insertToBugStatusOperator(bugOnlineDO.getId());
+        insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
         //发送消息
         messageEventPublisher.publish(
@@ -1226,7 +1212,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         //bug状态处理人员表插入数据
-        insertToBugStatusOperator(bugOnlineDO.getId());
+        insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -1268,7 +1254,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         //bug状态处理人员表插入数据
-        insertToBugStatusOperator(bugOnlineDO.getId());
+        insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -1336,7 +1322,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLog);
 
         //bug状态处理人员表插入数据
-        insertToBugStatusOperator(bugOnlineDO.getId());
+        insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
         //发送消息
         messageEventPublisher.publish(
@@ -1392,9 +1378,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     /**
      * 根据线上bug的id，往bug状态人员处理表中插入一条数据
      */
-    public void insertToBugStatusOperator(Long bugOnlineId) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
+    public void insertToBugStatusOperator(Long bugOnlineId, String userId, String userName) {
         //查询当前线上bug对应的所有状态变更记录
         List<BugLogDO> bugLogDOS = bugLogMapper.selectByBugOfflineIdAndType(bugOnlineId
                 , BugLogTypeEnum.ONLINE.getCode(), true);
@@ -1406,8 +1390,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         BugStatusOperatorDO bugStatusOperatorDO = new BugStatusOperatorDO();
         bugStatusOperatorDO.setBugLogId(lastStatusBugLogDO.getId());
-        bugStatusOperatorDO.setOperator(userInfo.getAlias() + "-" + userInfo.getName());
-        bugStatusOperatorDO.setOperatorId(userInfo.getId());
+        bugStatusOperatorDO.setOperator(userName);
+        bugStatusOperatorDO.setOperatorId(userId);
         //往状态人员处理表里面插入一条数据记录
         bugStatusOperatorMapper.insert(bugStatusOperatorDO);
     }
