@@ -19,7 +19,7 @@ public class BusinessMD extends BaseMD{
      * 实名主体oid
      */
     @FieldCompare(fieldName = "实名主体oid")
-    private String mainOid;
+    private String mainOId;
 
     /**
      * 模板id
