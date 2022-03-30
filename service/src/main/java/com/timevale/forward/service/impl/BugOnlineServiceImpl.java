@@ -400,6 +400,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //老的线上bug比较对象
         BugOnlineMD oldBugOnlineMD = BugOnlineCopier.INSTANCE.change(bugOnlineDO);
 
+        //保存老的产品线列表
+        List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineModifyReq.getId());
+
         //是否为经办人&提出人及其上级
        /* Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
         Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
@@ -431,6 +434,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //比较编辑修改的一般字段，生成结果集合
         List<BugLogDO> bugLogDOList = FieldCompareUtil.commonCompare(oldBugOnlineMD, newBugOnlineMD, BugLogDO.class);
         //额外判断产品线和产品线业务
+        bugLogDOList.addAll(compareProductLine(oldProductLineIdList, bugOnlineModifyReq.getProductLineIdList()
+                , bugOnlineDO.getId()));
         bugLogDOList.addAll(compareExtraIfNecessary(bugOnlineDO, newBugOnlineDO));
         if (!CollectionUtils.isEmpty(bugLogDOList)) {
             bugLogMapper.batchInsert(bugLogDOList);
@@ -1199,7 +1204,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
 
         //判断是从哪个状态点击的重新确认按钮
-        if(oldStatus.equals(BugOnlineStatusEnum.QUESTION_REPAIR.getText())){
+        if (oldStatus.equals(BugOnlineStatusEnum.QUESTION_REPAIR.getText())) {
             bugOnlineDO.setStatus(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
         } else {
             bugOnlineDO.setStatus(BugOnlineStatusEnum.PROBLEM_REPORT.getCode());
@@ -1414,8 +1419,31 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     private List<BugLogDO> compareExtraIfNecessary(BugOnlineDO oldObj, BugOnlineDO newObj) {
         List<BugLogDO> bugLogDOList = new ArrayList<>();
 
-        List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(oldObj.getId());
-        List<Long> newProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(newObj.getId());
+        String oldBusiness = oldObj.getBusiness().replace("'", "");
+        String newBusiness = newObj.getBusiness().replace("'", "");
+        //如果产品线业务这个json字符串变了，要记录一条或多条内容变更日志
+        if (!oldBusiness.equals(newBusiness)) {
+            BusinessMD oldBusinessMD = new BusinessMD();
+            BusinessMD newBusinessMD = new BusinessMD();
+            if (!"".equals(oldBusiness)) {
+                oldBusinessMD = JSONUtil.toBean(oldBusiness, BusinessMD.class);
+            }
+            if (!"".equals(newBusiness)) {
+                newBusinessMD = JSONUtil.toBean(newBusiness, BusinessMD.class);
+            }
+            oldBusinessMD.setId(oldObj.getId());
+            List<BugLogDO> bugLogList = FieldCompareUtil.commonCompare(oldBusinessMD, newBusinessMD, BugLogDO.class);
+            bugLogDOList.addAll(bugLogList);
+        }
+
+        return bugLogDOList;
+    }
+
+    private Collection<? extends BugLogDO> compareProductLine(List<Long> oldProductLineIdList
+            , List<Long> newProductLineIdList, Long bugOnlineId) {
+
+        List<BugLogDO> bugLogDOList = new ArrayList<>();
+
         boolean result = CollectionUtils.isEqualCollection(oldProductLineIdList, newProductLineIdList);
         //如果产品线变了记录一条bug内容变更日志
         if (!result) {
@@ -1448,31 +1476,15 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugLogDO.setField(BugFieldEnum.PRODUCT_LINE.getText());
             bugLogDO.setOldValue(oldNames.toString());
             bugLogDO.setNewValue(newNames.toString());
-            bugLogDO.setMainId(oldObj.getId());
+            bugLogDO.setMainId(bugOnlineId);
             bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
             bugLogDOList.add(bugLogDO);
         }
-
-        String oldBusiness = oldObj.getBusiness().replace("'", "");
-        String newBusiness = newObj.getBusiness().replace("'", "");
-        //如果产品线业务这个json字符串变了，要记录一条或多条内容变更日志
-        if (!oldBusiness.equals(newBusiness)) {
-            BusinessMD oldBusinessMD = new BusinessMD();
-            BusinessMD newBusinessMD = new BusinessMD();
-            if (!"".equals(oldBusiness)) {
-                oldBusinessMD = JSONUtil.toBean(oldBusiness, BusinessMD.class);
-            }
-            if (!"".equals(newBusiness)) {
-                newBusinessMD = JSONUtil.toBean(newBusiness, BusinessMD.class);
-            }
-            oldBusinessMD.setId(oldObj.getId());
-            List<BugLogDO> bugLogList = FieldCompareUtil.commonCompare(oldBusinessMD, newBusinessMD, BugLogDO.class);
-            bugLogDOList.addAll(bugLogList);
-        }
-
         return bugLogDOList;
     }
 }
+
+
 
 
 
