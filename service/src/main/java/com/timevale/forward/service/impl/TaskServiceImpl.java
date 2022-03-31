@@ -652,7 +652,8 @@ public class TaskServiceImpl implements TaskService {
                     operator,
                     executorIds,
                     taskDO.getName(),
-                    taskDO.getId()
+                    taskDO.getId(),
+                    taskDO.getProjectId()
             ));
         }
     }
