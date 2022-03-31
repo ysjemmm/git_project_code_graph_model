@@ -107,14 +107,14 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
         log.info("线上bug-从配置中心获取信息，接收参数：{}", bugOnlineGetFieldReq.getProductLineIdList());
 
-        List<BusinessBeanMD> businessBeanMDList = JSON.parseArray(business, BusinessBeanMD.class);
+        List<BusinessBeanMD> businessBeanList = JSON.parseArray(business, BusinessBeanMD.class);
         List<Long> productLineIdList = bugOnlineGetFieldReq.getProductLineIdList();
         Map<Integer, String> fieldMap = getFieldMap();
         ProductLineToFieldVO productLineToFieldVO = new ProductLineToFieldVO();
         List<String> fieldList = new ArrayList<>();
         productLineIdList.forEach(productLineId -> {
-            for (int i = 0; i < businessBeanMDList.size(); i++) {
-                BusinessBeanMD businessBeanMD = businessBeanMDList.get(i);
+            for (int i = 0; i < businessBeanList.size(); i++) {
+                BusinessBeanMD businessBeanMD = businessBeanList.get(i);
                 if (businessBeanMD.getFieldValue().contains(productLineId)) {
                     fieldList.add(fieldMap.get(i));
                 }
@@ -404,11 +404,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineModifyReq.getId());
 
         //是否为经办人&提出人及其上级
-       /* Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
+        Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
         Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
         if (!operatorResult && !proposerResult) {
             throw new BaseBizRuntimeException("您没有修改权限");
-        }*/
+        }
 
         //BugOnlineModifyReq -->  BugOnlineDO
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(bugOnlineModifyReq);
@@ -963,7 +963,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLog);
 
         //如果修复失败原因有值还需要记录一条日志内容记录
-        if(oldRepairFailReason != null && !"".equals(oldRepairFailReason)){
+        if (oldRepairFailReason != null && !"".equals(oldRepairFailReason)) {
             BugLogDO bug = new BugLogDO();
             bug.setField(BugFieldEnum.REPAIR_FAIL_REASON.getText());
             bug.setOldValue(oldRepairFailReason);
