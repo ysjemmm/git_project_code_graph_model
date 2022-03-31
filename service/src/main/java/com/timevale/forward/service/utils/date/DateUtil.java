@@ -1981,4 +1981,20 @@ public class DateUtil implements DateFormatConst {
         }
         return !(aStart.after(bEnd) || bStart.after(aEnd));
     }
+
+
+    /**
+     * 获取下班时间
+     *
+     * @param date 日期
+     * @return date
+     */
+    public static Date getEndOfWork(Date date){
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.HOUR_OF_DAY,18);
+        calendar.set(Calendar.MINUTE,30);
+        return calendar.getTime();
+    }
+
 }

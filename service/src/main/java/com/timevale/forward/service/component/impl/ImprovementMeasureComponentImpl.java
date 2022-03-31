@@ -14,6 +14,7 @@ import com.timevale.forward.service.integration.erp.model.DeleteTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.GetTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
@@ -104,12 +105,8 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
         ImprovementMeasureDO improvementMeasureDO = ImprovementMeasureCopier.INSTANCE.convert(improvementMeasureAddReq);
 
         // 时间配置
-        Date implementationTime = improvementMeasureDO.getImplementationTime();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(implementationTime);
-        calendar.set(Calendar.HOUR_OF_DAY,18);
-        calendar.set(Calendar.MINUTE,30);
-        improvementMeasureDO.setImplementationTime(calendar.getTime());
+        Date endOfWork = DateUtil.getEndOfWork(improvementMeasureDO.getImplementationTime());
+        improvementMeasureDO.setImplementationTime(endOfWork);
 
         // 待办任务
         String todoId = addTodoTask(improvementMeasureDO);

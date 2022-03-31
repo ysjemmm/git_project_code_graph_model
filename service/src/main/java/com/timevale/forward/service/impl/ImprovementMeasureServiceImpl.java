@@ -24,6 +24,7 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.job.ImprovementMeasureStatusJob;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -32,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -82,6 +84,10 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
         // 转换后新增数据
         ImprovementMeasureDO oldImprovementMeasureDO = improvementMeasureDOList.get(0);
         ImprovementMeasureDO newImprovementMeasureDO = ImprovementMeasureCopier.INSTANCE.convert(improvementMeasureModifyReq);
+
+        // 日期修改
+        Date endOfWork = DateUtil.getEndOfWork(newImprovementMeasureDO.getImplementationTime());
+        newImprovementMeasureDO.setImplementationTime(endOfWork);
 
         // 添加了待办事项
         Boolean oldTodo = oldImprovementMeasureDO.getTodo();
