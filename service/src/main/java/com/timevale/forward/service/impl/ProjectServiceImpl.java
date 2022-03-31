@@ -154,16 +154,16 @@ public class ProjectServiceImpl implements ProjectService {
         if (CollectionUtils.isNotEmpty(existProductDemandIds)) {
             if (ProjectStatusEnum.SUSPEND.getCode().equals(type)) {
                 //暂停  更新产品需求状态
-                productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode());
+                productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode(),false);
 
             } else {
                 // 作废解除关联
                 projectProductDemandComponent.update(projectId, null);
                 //作废  更新产品需求状态
-                productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.WAITING.getCode());
+                productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.WAITING.getCode(),false);
             }
             //更新业务需求状态
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds, false);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds, false,false);
 
         }
         // 更新任务状态
@@ -365,7 +365,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
             projectProductDemandComponent.batchInsert(projectDO.getId(), productDemandIds);
 
-            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus(),false);
         } else {
             projectProductDemandComponent.update(null, productDemandIds.get(0));
 
@@ -375,7 +375,7 @@ public class ProjectServiceImpl implements ProjectService {
             productDemandComponent.update(productDemandDO);
 
             // 一个产品需求下的业务需求
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false,false);
 
             // 取消产品需求和任务的关联
             productDemandIds.forEach(a -> taskProductDemandComponent.update(null, a));
@@ -496,7 +496,7 @@ public class ProjectServiceImpl implements ProjectService {
         projectMapper.update(projectDO);
         if (!ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
             //当状态不是暂停,更新产品需求状态
-            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus(),false);
         }
         log.info("更新项目信息完成");
     }
@@ -504,6 +504,6 @@ public class ProjectServiceImpl implements ProjectService {
     private void fillInfoWhenEnable(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
         projectComponent.fillInfo(projectNodes, projectDO);
         projectMapper.update(projectDO);
-        productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
+        productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus(),false);
     }
 }

@@ -16,6 +16,7 @@ import com.timevale.forward.service.component.ProductDemandComponent;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
 
 import javax.annotation.Resource;
 import java.util.Comparator;
@@ -58,15 +59,16 @@ public class DataCorrectServiceImpl implements DataCorrectService {
                 if (!ProjectStatusEnum.SUSPEND.getCode().equals(a.getStatus())) {
                     List<ProjectNodeDO> projectNodes = projectNodeMapper.get(a.getId());
                     projectComponent.fillInfo(projectNodes, a);
+                    a.setRetainModifyDate(true);
                     projectMapper.update(a);
-                    productDemandComponent.updateProductDemandStatus(a.getId(), a.getStatus());
+                    productDemandComponent.updateProductDemandStatus(a.getId(), a.getStatus(),true);
                 }
             });
             log.info("数据订正,更新项目完成");
         } else if (DataCorrectTypeEnum.PRODUCT_DEMAND.getCode().equals(dataModifyReq.getType())) {
             List<ProjectDO> projectDOList = projectMapper.selectByProductDemandIdList(dataModifyReq.getIds());
             projectDOList.forEach(a -> {
-                productDemandComponent.updateProductDemandStatus(a.getId(), a.getStatus());
+                productDemandComponent.updateProductDemandStatus(a.getId(), a.getStatus(),true);
             });
             log.info("数据订正,更新产品需求完成");
         } else if (DataCorrectTypeEnum.BIZ_DEMAND.getCode().equals(dataModifyReq.getType())) {
@@ -79,10 +81,25 @@ public class DataCorrectServiceImpl implements DataCorrectService {
             });
             condition.forEach((k, v) -> {
                 //更新产品需求下的所有业务需求状态
-                bizDemandMapper.updateByIds(v, k);
+                bizDemandMapper.updateByIds(v, k,true);
             });
             log.info("数据订正,更新业务需求完成");
         }
+        return BaseResult.success();
+    }
+
+    @Override
+    public BaseResult<Boolean> calculateStatus() {
+        List<Integer> status = Lists.newArrayList(ProjectStatusEnum.DEVING.getCode(), ProjectStatusEnum.TESTING.getCode());
+        List<ProjectDO> list = projectMapper.getByStatus(status);
+        list.forEach(a->{
+            List<ProjectNodeDO> projectNodes = projectNodeMapper.get(a.getId());
+            projectComponent.fillInfo(projectNodes, a);
+            a.setRetainModifyDate(true);
+            projectMapper.update(a);
+            productDemandComponent.updateProductDemandStatus(a.getId(), a.getStatus(),true);
+        });
+        log.info("数据订正,状态变更完成");
         return BaseResult.success();
     }
 }

@@ -32,6 +32,7 @@
             <if test="desc != null">`desc` = #{desc},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            <if test="retainModifyDate">modify_date = modify_date,</if>
             actual_start_date = #{actualStartDate},
             actual_end_date = #{actualEndDate}
         </set>
@@ -201,5 +202,15 @@
             and ppl.product_line_id = #{productLineId}
     </select>
 
-
+    <select id="getByStatus" resultType="com.timevale.forward.dal.entity.ProjectDO">
+        select id,name, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date,
+        actual_start_date,actual_end_date,`desc`, create_man_id, create_man,create_date,modify_date
+        from project
+        <where>
+            status in
+            <foreach collection="status" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </select>
 </mapper>

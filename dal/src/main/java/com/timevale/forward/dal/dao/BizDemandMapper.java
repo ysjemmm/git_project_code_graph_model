@@ -68,7 +68,7 @@ public interface BizDemandMapper {
      * @param ids 产品需求DO
      * @return int
      */
-    int updateByIds(@Param("ids") List<Long> ids,@Param("status") Integer status);
+    int updateByIds(@Param("ids") List<Long> ids,@Param("status") Integer status,@Param("retainModifyDate") boolean retainModifyDate);
 
     /**
      * 更新业务需求

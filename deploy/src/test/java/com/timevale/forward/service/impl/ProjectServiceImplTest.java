@@ -119,11 +119,11 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
         projectProductDemandDO.setProductDemandId(1L);
         when(projectProductDemandMapper.getByProjectId(any())).thenReturn(Collections.singletonList(projectProductDemandDO));
 
-        when(productDemandMapper.updateByIds(any(), any())).thenReturn(1);
+        when(productDemandMapper.updateByIds(any(), any(),any())).thenReturn(1);
 
         List<Long> list = new ArrayList<>();
         list.add(1L);
-        doNothing().when(productDemandComponent).updateBizDemandStatusAsProductStatusChange(list, false);
+        doNothing().when(productDemandComponent).updateBizDemandStatusAsProductStatusChange(list, false,false);
 
         doNothing().when(taskComponent).updateStatusAsProjectStatusChange(any(), any(), any());
 

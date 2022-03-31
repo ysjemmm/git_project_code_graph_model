@@ -18,4 +18,11 @@ public interface DataCorrectService {
      * @return Boolean
      */
     BaseResult<Boolean> modify(DataModifyReq dataModifyReq);
+
+    /**
+     * 修改
+     *
+     * @return Boolean
+     */
+    BaseResult<Boolean> calculateStatus();
 }

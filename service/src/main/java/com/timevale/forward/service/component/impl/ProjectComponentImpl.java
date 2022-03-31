@@ -237,35 +237,35 @@ public class ProjectComponentImpl implements ProjectComponent {
 //            if (nodeMap.containsKey(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.START_PLAN.getProjectNodeName())) {
 //                //开始规划有实际时间,需求内审无实际时间
 //                nodeName = ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getProjectNodeName();
-//            }else if (nodeMap.containsKey(ProjectNodeEnum.DEMAND_CONSTRUE.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getProjectNodeName())) {
+//            } else if (nodeMap.containsKey(ProjectNodeEnum.DEMAND_CONSTRUE.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getProjectNodeName())) {
 //                //需求内审有实际时间,需求串讲无实际时间
 //                nodeName = ProjectNodeEnum.DEMAND_CONSTRUE.getProjectNodeName();
-//            }else if (nodeMap.containsKey(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.DEMAND_CONSTRUE.getProjectNodeName())) {
+//            } else if (nodeMap.containsKey(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.DEMAND_CONSTRUE.getProjectNodeName())) {
 //                //需求串讲有实际时间,详设无实际时间
 //                nodeName = ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getProjectNodeName();
-//            }else if (nodeMap.containsKey(ProjectNodeEnum.DEVELOP_START.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getProjectNodeName())) {
+//            } else if (nodeMap.containsKey(ProjectNodeEnum.DEVELOP_START.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getProjectNodeName())) {
 //                //详设有实际时间,开发开始无实际时间
 //                nodeName = ProjectNodeEnum.DEVELOP_START.getProjectNodeName();
-//            }else if (nodeMap.containsKey(ProjectNodeEnum.WRITE_TEST_CASES.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.DEVELOP_START.getProjectNodeName())) {
+//            } else if (nodeMap.containsKey(ProjectNodeEnum.WRITE_TEST_CASES.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.DEVELOP_START.getProjectNodeName())) {
 //                //开发开始有实际时间,编写测试用例无实际时间
 //                nodeName = ProjectNodeEnum.WRITE_TEST_CASES.getProjectNodeName();
-//            }else if (nodeMap.containsKey(ProjectNodeEnum.USE_CASE_REVIEW.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.WRITE_TEST_CASES.getProjectNodeName())) {
+//            } else if (nodeMap.containsKey(ProjectNodeEnum.USE_CASE_REVIEW.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.WRITE_TEST_CASES.getProjectNodeName())) {
 //                //编写测试用例有实际时间,用例评审无实际时间
 //                nodeName = ProjectNodeEnum.USE_CASE_REVIEW.getProjectNodeName();
-//            }else if (nodeMap.containsKey(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.USE_CASE_REVIEW.getProjectNodeName())) {
+//            } else if (nodeMap.containsKey(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.USE_CASE_REVIEW.getProjectNodeName())) {
 //                //用例评审有实际时间,提测无实际时间
 //                nodeName = ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName();
-//            }else if (nodeMap.containsKey(ProjectNodeEnum.TEST_START.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName())) {
+//            } else if (nodeMap.containsKey(ProjectNodeEnum.TEST_START.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName())) {
 //                //提测有实际时间,测试开始无实际时间
 //                nodeName = ProjectNodeEnum.TEST_START.getProjectNodeName();
-//            }else if (nodeMap.containsKey(ProjectNodeEnum.PUBLISH_SIMULATE.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.TEST_START.getProjectNodeName())) {
+//            } else if (nodeMap.containsKey(ProjectNodeEnum.PUBLISH_SIMULATE.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.TEST_START.getProjectNodeName())) {
 //                //测试开始有实际时间,发布模拟无实际时间
 //                nodeName = ProjectNodeEnum.PUBLISH_SIMULATE.getProjectNodeName();
-//            }else if (!nodeMap.containsKey(ProjectNodeEnum.PUBLISH_SIMULATE.getProjectNodeName())) {
+//            } else if (!nodeMap.containsKey(ProjectNodeEnum.PUBLISH_SIMULATE.getProjectNodeName())) {
 //                //发布模拟有实际时间
 //                nodeName = ProjectNodeEnum.PUBLISH_OFFICIAL.getProjectNodeName();
 //            }
-//            displayNode.put(pid,nodeName);
+//            displayNode.put(pid, nodeName);
 //        }
 //        return displayNode;
 //    }

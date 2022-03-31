@@ -96,4 +96,11 @@ public interface ProjectMapper {
      */
     List<ProjectDO> selectByProductLine(@Param("productLineId") Long productLineId, @Param("userId") String userId);
 
+    /**
+     * 查询
+     * @param status status
+     * @return 项目信息
+     */
+    List<ProjectDO>  getByStatus(@Param("status") List<Integer> status);
+
 }

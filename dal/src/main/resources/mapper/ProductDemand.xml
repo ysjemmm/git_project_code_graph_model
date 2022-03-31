@@ -204,7 +204,10 @@
 
     <update id="updateByIds">
         update product_demand
-        set status =#{status}
+        <set>
+            <if test="retainModifyDate">modify_date = modify_date,</if>
+            status =#{status}
+        </set>
         <where>
             and id IN
             <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">

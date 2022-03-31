@@ -34,14 +34,14 @@ public interface ProductDemandComponent {
      * @param projectId 项目id
      * @param status 项目状态
      */
-    void updateProductDemandStatus(Long projectId,Integer status);
+    void updateProductDemandStatus(Long projectId,Integer status,boolean retainModifyDate);
 
     /**
      *
      * @param productDemandIds 产品需求id
      * @param bizProductDemandUnLink 产品需求与关联业务需求取消关联,
      */
-    void updateBizDemandStatusAsProductStatusChange(List<Long> productDemandIds,boolean bizProductDemandUnLink);
+    void updateBizDemandStatusAsProductStatusChange(List<Long> productDemandIds,boolean bizProductDemandUnLink,boolean retainModifyDate);
 
     /**
      *
