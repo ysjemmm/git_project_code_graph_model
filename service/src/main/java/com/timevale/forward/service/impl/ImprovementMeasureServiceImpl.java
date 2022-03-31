@@ -96,6 +96,7 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
         if(oldTodo){
             // 新旧执行人是否相同
             if(Objects.equals(oldImprovementMeasureDO.getExecutorId(), newImprovementMeasureDO.getExecutorId())){
+                newImprovementMeasureDO.setTodoId(oldImprovementMeasureDO.getTodoId());
                 improvementMeasureComponent.updateTodoTask(newImprovementMeasureDO);
             }else{
                 improvementMeasureComponent.deleteTodoTask(oldImprovementMeasureDO);
