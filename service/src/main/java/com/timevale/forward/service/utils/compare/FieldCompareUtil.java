@@ -7,16 +7,15 @@ import com.timevale.forward.model.middle.BaseMD;
 import com.timevale.forward.model.middle.BugOfflineMD;
 import com.timevale.forward.model.middle.BugOnlineMD;
 import com.timevale.forward.model.middle.BusinessMD;
+import com.timevale.forward.service.utils.date.DateFormatConst;
+import com.timevale.forward.service.utils.date.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -87,6 +86,9 @@ public class FieldCompareUtil {
                     if (fieldType == String.class) {
                         oldString = (String) oldField.get(oldObj);
                         newString = (String) newField.get(newObj);
+                    } else if (fieldType == Date.class) {
+                        oldString = DateUtil.parseToString((Date) oldField.get(oldObj),DateFormatConst.DATE_FORMAT) ;
+                        newString = DateUtil.parseToString((Date) newField.get(newObj),DateFormatConst.DATE_FORMAT) ;
                     } else if (fieldType == Integer.class) {
                         Method method = annotation.enumClass().getMethod(METHOD, Integer.class);
                         oldString = (String) method.invoke(null, oldValue);
