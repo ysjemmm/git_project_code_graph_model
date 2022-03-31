@@ -34,6 +34,7 @@ import org.assertj.core.util.Lists;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -79,12 +80,24 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
         }
 
         // 转换后新增数据
+        ImprovementMeasureDO oldImprovementMeasureDO = improvementMeasureDOList.get(0);
         ImprovementMeasureDO newImprovementMeasureDO = ImprovementMeasureCopier.INSTANCE.convert(improvementMeasureModifyReq);
 
         // 添加了待办事项
-        Boolean oldTodo = improvementMeasureDOList.get(0).getTodo();
+        Boolean oldTodo = oldImprovementMeasureDO.getTodo();
         Boolean newTodo = newImprovementMeasureDO.getTodo();
-        if(newTodo && !oldTodo){
+
+        if(oldTodo){
+            // 新旧执行人是否相同
+            if(Objects.equals(oldImprovementMeasureDO.getExecutorId(), newImprovementMeasureDO.getExecutorId())){
+                improvementMeasureComponent.updateTodoTask(newImprovementMeasureDO);
+            }else{
+                improvementMeasureComponent.deleteTodoTask(oldImprovementMeasureDO);
+
+                String todoId = improvementMeasureComponent.addTodoTask(newImprovementMeasureDO);
+                newImprovementMeasureDO.setTodoId(todoId);
+            }
+        }else if(newTodo){
             String todoId = improvementMeasureComponent.addTodoTask(newImprovementMeasureDO);
             newImprovementMeasureDO.setTodoId(todoId);
         }
@@ -110,23 +123,7 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
         ImprovementMeasureDO improvementMeasureDO = improvementMeasureDOList.get(0);
 
         // 待办处理
-        if(improvementMeasureDO.getTodo()){
-            // 获取 用户 unionId
-            String executorId = improvementMeasureDO.getExecutorId();
-            Map<String, String> unionIdMap = innerUserPersonClient.getUnionIds(Lists.newArrayList(executorId));
-            if (CollectionUtils.isEmpty(unionIdMap)) {
-                log.info("删除待办时,查询用户中心所属用户无unionId");
-            }
-            String unionId = unionIdMap.get(executorId);
-
-            DeleteTodoTaskMsg deleteTodoTaskMsg = DeleteTodoTaskMsg.builder()
-                    .recordId(improvementMeasureDO.getTodoId())
-                    .unionId(unionId)
-                    .build();
-            dingWorkRecordClient.deleteTask(deleteTodoTaskMsg);
-
-            log.info("删除待办,deleteTodoTaskMsg:{}", deleteTodoTaskMsg);
-        }
+        improvementMeasureComponent.deleteTodoTask(improvementMeasureDO);
 
         // 修改事项逻辑删除标志
         improvementMeasureDO.setIsDeleted(true);

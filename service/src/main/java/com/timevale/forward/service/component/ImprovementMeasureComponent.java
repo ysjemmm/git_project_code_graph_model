@@ -29,8 +29,22 @@ public interface ImprovementMeasureComponent {
     /**
      * 添加待办任务
      *
-     * @param improvementMeasureDO 改进测量DO
+     * @param improvementMeasureDO 改进措施DO
      * @return 待办Id
      */
     String addTodoTask(ImprovementMeasureDO improvementMeasureDO);
+
+    /**
+     * 更新待办任务
+     *
+     * @param improvementMeasureDO 改进措施DO
+     */
+    void updateTodoTask(ImprovementMeasureDO improvementMeasureDO);
+
+    /**
+     * 删除待办任务
+     *
+     * @param improvementMeasureDO 改进措施DO
+     */
+    void deleteTodoTask(ImprovementMeasureDO improvementMeasureDO);
 }
