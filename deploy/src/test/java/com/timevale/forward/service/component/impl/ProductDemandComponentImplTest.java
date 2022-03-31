@@ -133,7 +133,7 @@ public class ProductDemandComponentImplTest extends AbstractTestNGSpringContextT
         bizDemandStatusChangeMsgEventMock.constructed();
         doNothing().when(messageEventPublisher).publish(any());
 
-        productDemandComponent.updateProductDemandStatus(1L, 0,false);
+        productDemandComponent.updateProductDemandStatus(1L, 0);
 
         bizDemandStatusChangeMsgEventMock.close();
     }
@@ -151,7 +151,7 @@ public class ProductDemandComponentImplTest extends AbstractTestNGSpringContextT
 
         List<Long> list = new ArrayList<>();
         list.add(1L);
-        productDemandComponent.updateBizDemandStatusAsProductStatusChange(list, false,false);
+        productDemandComponent.updateBizDemandStatusAsProductStatusChange(list, false);
 
         bizDemandStatusChangeMsgEventMock.close();
     }

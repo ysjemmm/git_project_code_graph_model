@@ -112,7 +112,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     }
 
     @Override
-    public void updateProductDemandStatus(Long projectId, Integer status,boolean retainModifyDate) {
+    public void updateProductDemandStatus(Long projectId, Integer status) {
         List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectId);
         if (CollectionUtils.isEmpty(exists)) {
             log.info("更新产品需求,没有找到产品需求");
@@ -122,19 +122,19 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                 .collect(Collectors.toList());
         if (ProjectStatusEnum.WAITING.getCode().equals(status)
                 || ProjectStatusEnum.SUSPEND.getCode().equals(status)) {
-            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode(),retainModifyDate);
+            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode(),false);
         } else if (ProjectStatusEnum.PLANING.getCode().equals(status)
                 || ProjectStatusEnum.DEVING.getCode().equals(status)
                 || ProjectStatusEnum.TESTING.getCode().equals(status)) {
-            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.PROGRESS.getCode(),retainModifyDate);
+            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.PROGRESS.getCode(),false);
         } else if (ProjectStatusEnum.RELEASED.getCode().equals(status)) {
-            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.ONLINE.getCode(),retainModifyDate);
+            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.ONLINE.getCode(),false);
         }
-        updateBizDemandStatusAsProductStatusChange(existProductDemandIds, false,retainModifyDate);
+        updateBizDemandStatusAsProductStatusChange(existProductDemandIds, false);
     }
 
     @Override
-    public void updateBizDemandStatusAsProductStatusChange(List<Long> productDemandIds, boolean bizProductDemandUnLink,boolean retainModifyDate) {
+    public void updateBizDemandStatusAsProductStatusChange(List<Long> productDemandIds, boolean bizProductDemandUnLink) {
         if (CollectionUtils.isEmpty(productDemandIds)) {
             log.info("产品需求变化-更新业务需求,产品需求id不存在");
             return;
@@ -142,15 +142,15 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         if (bizProductDemandUnLink) {
             //解除产品需求和业务需求关系(含作废情况)
             productDemandIds.forEach(p -> {
-                buildConditionBeforeUpdate(Lists.newArrayList(p), bizProductDemandUnLink,retainModifyDate);
+                buildConditionBeforeUpdate(Lists.newArrayList(p), bizProductDemandUnLink);
             });
         } else {
-            buildConditionBeforeUpdate(productDemandIds, bizProductDemandUnLink,retainModifyDate);
+            buildConditionBeforeUpdate(productDemandIds, bizProductDemandUnLink);
         }
     }
 
 
-    private void buildConditionBeforeUpdate(List<Long> productDemandIds, boolean bizProductDemandUnLink,boolean retainModifyDate) {
+    private void buildConditionBeforeUpdate(List<Long> productDemandIds, boolean bizProductDemandUnLink) {
         log.info("产品需求变化-更新业务需求,产品需求id={},解除二者关联={}", productDemandIds, bizProductDemandUnLink);
         // 产品需求下的所有业务需求
         List<ProductBizDemandDO> bizDemands = productBizDemandMapper.getByProductDemandId(productDemandIds);
@@ -187,7 +187,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         });
         condition.forEach((k, v) -> {
             //更新产品需求下的所有业务需求状态
-            bizDemandMapper.updateByIds(v, k,retainModifyDate);
+            bizDemandMapper.updateByIds(v, k,false);
         });
         log.info("产品需求变化-更新业务需求:产品需求id={},需要更新的业务需求状态和id={}", productDemandIds, condition);
         sendDingMsg(condition, bizDemandMap);

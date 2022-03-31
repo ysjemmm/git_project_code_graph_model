@@ -176,13 +176,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         if (ProductDemandStatusEnum.SUSPEND.getCode().equals(type)) {
             // 暂停,更新业务需求状态
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), false,false);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), false);
         }
 
         // 暂停or作废解除项目关联
         projectProductDemandComponent.update(null, productDemandId);
         if (ProductDemandStatusEnum.INVALID.getCode().equals(type)) {
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), true,false);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), true);
             // 作废解业务需求关联
             ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
             productBizDemandDO.setProductDemandId(productDemandId);
@@ -208,7 +208,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
         productDemandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
         productDemandComponent.update(productDemandDO);
-        productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), false,false);
+        productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), false);
 
         return BaseResult.success(true);
     }
@@ -238,7 +238,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 throw new BaseBizRuntimeException("找不到该项目");
             }
             projectProductDemandComponent.batchInsert(productDemandAddReq.getProjectId(), Lists.newArrayList(productDemand.getId()));
-            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus(),false);
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
         }
         return BaseResult.success(true);
     }
@@ -340,9 +340,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (LinkOrUnLinkEnum.LINK.getCode().equals(bizDemandLinkReq.getType())) {
             productBizDemandComponent.batchInsert(bizDemandLinkReq.getProductDemandId(), bizDemandIds);
 
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false,false);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false);
         } else {
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, true,false);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, true);
 
             ProductBizDemandDO productDemandDO = new ProductBizDemandDO();
             productDemandDO.setIsDeleted(true);
