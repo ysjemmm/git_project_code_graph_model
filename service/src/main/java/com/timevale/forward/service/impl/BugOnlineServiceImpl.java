@@ -921,13 +921,15 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         //判断当前状态是否为“问题上报”或者“问题确认”状态
-        /*if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.PROBLEM_REPORT.getCode())
+        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.PROBLEM_REPORT.getCode())
                 && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode())) {
             throw new BaseBizRuntimeException("当前状态不允许点击不用修复");
-        }*/
+        }
 
         //保存老的状态
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+        //保存老的修复失败原因
+        String oldRepairFailReason = bugOnlineDO.getRepairFailReason();
 
         bugOnlineDO.setStatus(BugOnlineStatusEnum.BE_CONFIRM.getCode());
         bugOnlineDO.setLastOperatorId(bugOnlineDO.getOperatorId());
@@ -959,6 +961,17 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
         //往bug日志表中插入一条线上bug内容变更数据
         bugLogMapper.insert(bugLog);
+
+        //如果修复失败原因有值还需要记录一条日志内容记录
+        if(oldRepairFailReason != null && !"".equals(oldRepairFailReason)){
+            BugLogDO bug = new BugLogDO();
+            bug.setField(BugFieldEnum.REPAIR_FAIL_REASON.getText());
+            bug.setOldValue(oldRepairFailReason);
+            bug.setMainId(bugOnlineNoRepairReq.getId());
+            bug.setType(BugLogTypeEnum.ONLINE.getCode());
+            //往bug日志表中插入一条线上bug内容变更数据
+            bugLogMapper.insert(bug);
+        }
 
         //bug状态处理人员表插入数据
         insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
