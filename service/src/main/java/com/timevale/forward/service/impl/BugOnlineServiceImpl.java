@@ -1006,8 +1006,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //保存老的经办人
         String oldOperator = bugOnlineDO.getOperator();
 
-        bugOnlineDO.setLastOperatorId(bugOnlineDO.getOperatorId());
-        bugOnlineDO.setLastOperator(bugOnlineDO.getOperator());
         bugOnlineDO.setOperatorId(bugOnlineTransferReq.getUserId());
         bugOnlineDO.setOperator(bugOnlineTransferReq.getUserName());
         //线上bug表更新
