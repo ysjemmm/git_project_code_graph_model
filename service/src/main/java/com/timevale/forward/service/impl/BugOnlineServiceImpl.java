@@ -1444,7 +1444,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                     oldNames.append(productLineDO.getName());
                     count++;
                     if (!count.equals(oldProductLineDOList.size())) {
-                        oldNames.append("&");
+                        oldNames.append(",");
                     }
                 }
             }
@@ -1454,7 +1454,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                     newNames.append(productLine.getName());
                     tally++;
                     if (!tally.equals(newProductLineDOList.size())) {
-                        newNames.append("&");
+                        newNames.append(",");
                     }
                 }
             }
