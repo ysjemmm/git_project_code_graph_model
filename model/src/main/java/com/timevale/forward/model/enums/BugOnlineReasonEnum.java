@@ -109,6 +109,6 @@ public enum BugOnlineReasonEnum {
                 return e.text;
             }
         }
-        return "error code";
+        return "";
     }
 }
