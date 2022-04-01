@@ -11,6 +11,10 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum TroubleTicketRankEnum {
     /**
+     * 未定级
+     */
+    UN_CERTAIN(-20, "未定级"),
+    /**
      * 未达到级别
      */
     UN_RATINGS(-10, "未达到级别"),
