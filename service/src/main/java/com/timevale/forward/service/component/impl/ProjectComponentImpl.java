@@ -17,7 +17,6 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
-import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +24,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.math.BigDecimal;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -54,7 +53,7 @@ public class ProjectComponentImpl implements ProjectComponent {
 
 
     @Override
-    public BaseResult<PageQueryResult<ProjectVO>> page(ProjectListCondition condition, List<Long> projectIds, boolean isList) {
+    public BaseResult<PageQueryResult<ProjectVO>> page(ProjectListCondition condition, List<Long> projectIds) {
         // 查找产品经理
         if (CollectionUtils.isNotEmpty(condition.getPds())) {
             projectIds = personMapper.getMainIds(condition.getPds(), projectIds, PersonTypeEnum.PROJECT_PD.getCode());
@@ -96,7 +95,6 @@ public class ProjectComponentImpl implements ProjectComponent {
                 .stream().collect(Collectors.groupingBy(ProjectProductLineBizDomain::getProjectId));
 
         List<ProjectVO> projectVO = ProjectCopier.INSTANCE.convert(projectDO);
-        Map<Long, Boolean> warning = isNeedWarningOnProject(projectVO, isList);
         projectVO.forEach(a -> {
             List<PersonDO> pds = pdMap.get(a.getId());
             if (CollectionUtils.isNotEmpty(pds)) {
@@ -120,7 +118,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             a.setTypeName(ProjectTypeEnum.getTextByCode(a.getType()));
             a.setStatusName(ProjectStatusEnum.getTextByCode(a.getStatus()));
             a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
-            a.setWarning(warning.get(a.getId()));
+//            a.setWarning(warning.get(a.getId()));
         });
         PageQueryResult<ProjectVO> pageQueryResult = new PageQueryResult<>();
         PageInfo<ProjectListDO> pageInfo = new PageInfo<>(projectDO);
@@ -184,43 +182,43 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
     }
 
-    private Map<Long, Boolean> isNeedWarningOnProject(List<ProjectVO> projectVOList, boolean isList) {
-        Map<Long, Boolean> warning = new HashMap<>();
-        if (!isList) {
-            return warning;
-        }
-        List<Integer> filterStatus = Arrays.asList(ProjectStatusEnum.WAITING.getCode(), ProjectStatusEnum.PLANING.getCode()
-                , ProjectStatusEnum.DEVING.getCode(), ProjectStatusEnum.TESTING.getCode());
-        List<Long> ids = projectVOList.stream().filter(a -> filterStatus.contains(a.getStatus())).map(ProjectVO::getId).collect(Collectors.toList());
-        Map<Long, List<ProjectNodeDO>> nodeMapping = projectNodeMapper.getByProjectIds(ids).stream().collect(Collectors.groupingBy(ProjectNodeDO::getProjectId));
-        for (Long pid : nodeMapping.keySet()) {
-            // 1若延期时长=实际时间(取最大时间)-计划完成时间＞0,节点逾期预警
-            ProjectNodeDO node = nodeMapping.get(pid).stream().filter(a -> a.getPlanDate() != null && a.getActualDate() != null)
-                    .max(Comparator.comparing(ProjectNodeDO::getActualDate)).orElse(null);
-            if (node != null && node.getActualDate().after(node.getPlanDate())) {
-                warning.put(pid, true);
-                continue;
-            }
-
-            node = nodeMapping.get(pid).stream().filter(a -> a.getActualDate() == null && a.getPlanDate() != null)
-                    .min(Comparator.comparing(ProjectNodeDO::getPlanDate)).orElse(null);
-            // 2节点没有实际时间，延期时长=当前时间-计划完成时间≥2个工作日,逾期未录入预警
-            if (node != null) {
-                Date currentDate = DateUtil.parseToDate(DateUtil.parseToString(new Date(), DateFormatConst.DATE_FORMAT));
-                Date planDate = DateUtil.parseToDate(DateUtil.parseToString(node.getPlanDate(), DateFormatConst.DATE_FORMAT));
-                log.info("无实际时间,计划时间最小的节点,node:{}", node);
-                if (currentDate.after(planDate)) {
-                    BigDecimal elapsedTime = taskComponent.getElapsedTime(planDate, currentDate);
-                    if (elapsedTime.compareTo(new BigDecimal("16")) >= 0) {
-                        warning.put(pid, true);
-                        continue;
-                    }
-                }
-            }
-            warning.put(pid, false);
-        }
-        return warning;
-    }
+//    private Map<Long, Boolean> isNeedWarningOnProject(List<ProjectVO> projectVOList, boolean isList) {
+//        Map<Long, Boolean> warning = new HashMap<>();
+//        if (!isList) {
+//            return warning;
+//        }
+//        List<Integer> filterStatus = Arrays.asList(ProjectStatusEnum.WAITING.getCode(), ProjectStatusEnum.PLANING.getCode()
+//                , ProjectStatusEnum.DEVING.getCode(), ProjectStatusEnum.TESTING.getCode());
+//        List<Long> ids = projectVOList.stream().filter(a -> filterStatus.contains(a.getStatus())).map(ProjectVO::getId).collect(Collectors.toList());
+//        Map<Long, List<ProjectNodeDO>> nodeMapping = projectNodeMapper.getByProjectIds(ids).stream().collect(Collectors.groupingBy(ProjectNodeDO::getProjectId));
+//        for (Long pid : nodeMapping.keySet()) {
+//            // 1若延期时长=实际时间(取最大时间)-计划完成时间＞0,节点逾期预警
+//            ProjectNodeDO node = nodeMapping.get(pid).stream().filter(a -> a.getPlanDate() != null && a.getActualDate() != null)
+//                    .max(Comparator.comparing(ProjectNodeDO::getActualDate)).orElse(null);
+//            if (node != null && node.getActualDate().after(node.getPlanDate())) {
+//                warning.put(pid, true);
+//                continue;
+//            }
+//
+//            node = nodeMapping.get(pid).stream().filter(a -> a.getActualDate() == null && a.getPlanDate() != null)
+//                    .min(Comparator.comparing(ProjectNodeDO::getPlanDate)).orElse(null);
+//            // 2节点没有实际时间，延期时长=当前时间-计划完成时间≥2个工作日,逾期未录入预警
+//            if (node != null) {
+//                Date currentDate = DateUtil.parseToDate(DateUtil.parseToString(new Date(), DateFormatConst.DATE_FORMAT));
+//                Date planDate = DateUtil.parseToDate(DateUtil.parseToString(node.getPlanDate(), DateFormatConst.DATE_FORMAT));
+//                log.info("无实际时间,计划时间最小的节点,node:{}", node);
+//                if (currentDate.after(planDate)) {
+//                    BigDecimal elapsedTime = taskComponent.getElapsedTime(planDate, currentDate);
+//                    if (elapsedTime.compareTo(new BigDecimal("16")) >= 0) {
+//                        warning.put(pid, true);
+//                        continue;
+//                    }
+//                }
+//            }
+//            warning.put(pid, false);
+//        }
+//        return warning;
+//    }
 
 //    private Map<Long, String> displayNodeOnEachProject(List<ProjectVO> projectVOList, boolean isList) {
 //        Map<Long, String> displayNode = new HashMap<>();
@@ -231,41 +229,19 @@ public class ProjectComponentImpl implements ProjectComponent {
 //        Map<Long, List<ProjectNodeDO>> nodeMapping = projectNodeMapper.getByProjectIds(ids)
 //                .stream().collect(Collectors.groupingBy(ProjectNodeDO::getProjectId));
 //        for (Long pid : nodeMapping.keySet()) {
-//            Map<String, ProjectNodeDO> nodeMap = nodeMapping.get(pid).stream().filter(a -> a.getActualDate() == null)
-//                    .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
-//            String nodeName = null;
-//            if (nodeMap.containsKey(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.START_PLAN.getProjectNodeName())) {
-//                //开始规划有实际时间,需求内审无实际时间
-//                nodeName = ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getProjectNodeName();
-//            } else if (nodeMap.containsKey(ProjectNodeEnum.DEMAND_CONSTRUE.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getProjectNodeName())) {
-//                //需求内审有实际时间,需求串讲无实际时间
-//                nodeName = ProjectNodeEnum.DEMAND_CONSTRUE.getProjectNodeName();
-//            } else if (nodeMap.containsKey(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.DEMAND_CONSTRUE.getProjectNodeName())) {
-//                //需求串讲有实际时间,详设无实际时间
-//                nodeName = ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getProjectNodeName();
-//            } else if (nodeMap.containsKey(ProjectNodeEnum.DEVELOP_START.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getProjectNodeName())) {
-//                //详设有实际时间,开发开始无实际时间
-//                nodeName = ProjectNodeEnum.DEVELOP_START.getProjectNodeName();
-//            } else if (nodeMap.containsKey(ProjectNodeEnum.WRITE_TEST_CASES.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.DEVELOP_START.getProjectNodeName())) {
-//                //开发开始有实际时间,编写测试用例无实际时间
-//                nodeName = ProjectNodeEnum.WRITE_TEST_CASES.getProjectNodeName();
-//            } else if (nodeMap.containsKey(ProjectNodeEnum.USE_CASE_REVIEW.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.WRITE_TEST_CASES.getProjectNodeName())) {
-//                //编写测试用例有实际时间,用例评审无实际时间
-//                nodeName = ProjectNodeEnum.USE_CASE_REVIEW.getProjectNodeName();
-//            } else if (nodeMap.containsKey(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.USE_CASE_REVIEW.getProjectNodeName())) {
-//                //用例评审有实际时间,提测无实际时间
-//                nodeName = ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName();
-//            } else if (nodeMap.containsKey(ProjectNodeEnum.TEST_START.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName())) {
-//                //提测有实际时间,测试开始无实际时间
-//                nodeName = ProjectNodeEnum.TEST_START.getProjectNodeName();
-//            } else if (nodeMap.containsKey(ProjectNodeEnum.PUBLISH_SIMULATE.getProjectNodeName()) && !nodeMap.containsKey(ProjectNodeEnum.TEST_START.getProjectNodeName())) {
-//                //测试开始有实际时间,发布模拟无实际时间
-//                nodeName = ProjectNodeEnum.PUBLISH_SIMULATE.getProjectNodeName();
-//            } else if (!nodeMap.containsKey(ProjectNodeEnum.PUBLISH_SIMULATE.getProjectNodeName())) {
-//                //发布模拟有实际时间
-//                nodeName = ProjectNodeEnum.PUBLISH_OFFICIAL.getProjectNodeName();
+//            List<ProjectNodeDO> projectNodes = nodeMapping.get(pid);
+//            for (int i = 0; i < projectNodes.size(); i++) {
+//                ProjectNodeDO current = projectNodes.get(i);
+//                if (current.getName().equals(ProjectNodeEnum.START_PLAN.getProjectNodeName())) {
+//                    if (current.getActualDate() != null && projectNodes.get(i + 1).getActualDate() == null) {
+//                        displayNode.put(pid, current.getName());
+//                        break;
+//                    }
+//                } else if (projectNodes.get(i - 1).getActualDate() != null && current.getActualDate() == null) {
+//                    displayNode.put(pid, current.getName());
+//                    break;
+//                }
 //            }
-//            displayNode.put(pid, nodeName);
 //        }
 //        return displayNode;
 //    }

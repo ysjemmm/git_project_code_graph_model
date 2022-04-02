@@ -1,17 +1,22 @@
 package com.timevale.forward.service.copy;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.timevale.forward.dal.condition.ProjectListCondition;
+import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
 import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
+import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.result.ProjectBaseVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.model.middle.ProjectMD;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
@@ -34,6 +39,7 @@ public interface ProjectCopier {
      * @param projectModifyReq 对象
      * @return ProjectDO
      */
+    @Mapping(source = "pds", target = "pds", qualifiedByName = "mapping")
     ProjectDO convert(ProjectModifyReq projectModifyReq);
     
     /**
@@ -93,5 +99,20 @@ public interface ProjectCopier {
      * @return ProjectVO
      */
     ProjectVO transform(ProjectDO projectDO);
+
+
+    /**
+     * 转换转换DO
+     *
+     * @param projectDO 对象
+     * @return ProjectDO
+     */
+    ProjectMD change(ProjectDO projectDO);
+
+
+    @Named("mapping")
+    default List<PersonDO> change(List<PersonAddReq> list){
+        return BeanUtil.copyToList(list, PersonDO.class);
+    }
 
 }

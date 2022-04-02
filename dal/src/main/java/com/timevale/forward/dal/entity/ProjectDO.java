@@ -41,7 +41,7 @@ public class ProjectDO extends BaseDO {
      * 产品线
      */
     private List<Long> productLineIds;
-    
+
     /**
      * pm名称
      */
@@ -51,7 +51,7 @@ public class ProjectDO extends BaseDO {
      * pm
      */
     private String pmId;
-    
+
     /**
      * 项目计划开始时间
      */
@@ -79,5 +79,10 @@ public class ProjectDO extends BaseDO {
      * 更新时间保持不变
      */
     private Boolean retainModifyDate;
+
+    /**
+     * 产品经理
+     */
+    private List<PersonDO> pds;
 
 }

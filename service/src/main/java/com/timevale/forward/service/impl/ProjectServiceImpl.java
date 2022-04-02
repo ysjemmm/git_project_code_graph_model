@@ -98,6 +98,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private BugOfflineComponent bugOfflineComponent;
 
+    @Resource
+    private BizChangeLogComponent<ProjectDO> changeLogComponent;
+
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -122,7 +125,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
-        return projectComponent.page(condition, projectIds,true);
+        return projectComponent.page(condition, projectIds);
     }
 
     @Override
@@ -238,40 +241,39 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(ProjectModifyReq projectModifyReq) {
         log.info("项目修改接收参数:{}", projectModifyReq);
-        ProjectDO project = projectMapper.getByName(projectModifyReq.getName());
-        if (project != null && !project.getId().equals(projectModifyReq.getId())) {
+        ProjectDO oldProject = projectMapper.getByName(projectModifyReq.getName());
+        if (oldProject != null && !oldProject.getId().equals(projectModifyReq.getId())) {
             throw new BaseBizRuntimeException("该项目名称已存在,请修改后重试");
         }
-        ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectModifyReq);
-        projectDO.setPmName(projectModifyReq.getPm().getUserName());
-        projectDO.setPmId(projectModifyReq.getPm().getUserId());
+        ProjectDO newProject = ProjectCopier.INSTANCE.convert(projectModifyReq);
+        newProject.setPmName(projectModifyReq.getPm().getUserName());
+        newProject.setPmId(projectModifyReq.getPm().getUserId());
         List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
         Integer status = projectMapper.get(projectModifyReq.getId()).getStatus();
-        projectDO.setStatus(status);
-        fillInfoWhenModify(projectNodeDOList, projectDO);
+        newProject.setStatus(status);
+        fillInfoWhenModify(projectNodeDOList, newProject);
 
-        taskComponent.containProductLineInTask(projectDO.getId(), projectDO.getProductLineIds());
+        taskComponent.containProductLineInTask(newProject.getId(), newProject.getProductLineIds());
 
-        bugOfflineComponent.containProductLineInBugOffline(projectDO.getId(), projectDO.getProductLineIds());
+        bugOfflineComponent.containProductLineInBugOffline(newProject.getId(), newProject.getProductLineIds());
 
         // 产品线
-        projectProductLineComponent.update(projectDO.getProductLineIds(), projectDO.getId());
+        projectProductLineComponent.update(newProject.getProductLineIds(), newProject.getId());
 
         // 产品经理
-        personComponent.update(projectModifyReq.getPds(), projectDO.getId(), PersonTypeEnum.PROJECT_PD.getCode());
+        personComponent.update(projectModifyReq.getPds(), newProject.getId(), PersonTypeEnum.PROJECT_PD.getCode());
         List<String> pdUserIds = projectModifyReq.getPds().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
-
         // 团队成员
         List<PersonAddReq> teamMembers = projectModifyReq.getTeamMembers();
         //过滤掉重复选择的项目经理,产品经理
-        teamMembers = teamMembers.stream().filter(a -> !a.getUserId().equals(projectDO.getPmId()) && !pdUserIds.contains(a.getUserId()))
+        teamMembers = teamMembers.stream().filter(a -> !a.getUserId().equals(newProject.getPmId()) && !pdUserIds.contains(a.getUserId()))
                 .collect(Collectors.toList());
         teamMembers.addAll(projectModifyReq.getPds());
         if (!pdUserIds.contains(projectModifyReq.getPm().getUserId())) {
             //产品经理不包含项目经理时,将项目经理加入团队中
             teamMembers.add(projectModifyReq.getPm());
         }
-        personComponent.update(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
+        personComponent.update(teamMembers, newProject.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         // 节点信息
         if (CollectionUtils.isNotEmpty(projectNodeDOList)) {
@@ -280,8 +282,10 @@ public class ProjectServiceImpl implements ProjectService {
             if (match && !checkProductRelease(projectModifyReq.getId())) {
                 throw new BaseBizRuntimeException("该项目还有bug未关闭，请关闭后再发布");
             }
-            projectNodeComponent.add(projectNodeDOList, projectDO.getId());
+            projectNodeComponent.add(projectNodeDOList, newProject.getId());
         }
+
+        changeLogComponent.addLogWhenModifyData(oldProject,newProject);
         return BaseResult.success(true);
     }
 
@@ -467,8 +471,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (checkTask) {
             //删除需求规划阶段时需要校验是否有关联任务,若有关联待执行&进行中&已完成&已暂停的任务,不能删除
             List<TaskDO> taskDOList = taskMapper.getByProjectId(projectDO.getId())
-                    .stream()
-                    .filter(a -> TaskStageEnum.DEMAND.getCode().equals(a.getStage())
+                    .stream().filter(a -> TaskStageEnum.DEMAND.getCode().equals(a.getStage())
                             && !TaskStatusEnum.INVALID.getCode().equals(a.getStatus())).collect(Collectors.toList());
             if (CollectionUtils.isNotEmpty(taskDOList)) {
                 throw new BaseBizRuntimeException("需求规划阶段已关联任务，不可删除");
@@ -506,4 +509,5 @@ public class ProjectServiceImpl implements ProjectService {
         projectMapper.update(projectDO);
         productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
     }
+
 }

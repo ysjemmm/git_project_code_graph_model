@@ -290,7 +290,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     , ProjectStatusEnum.DEVING.getCode()
                     , ProjectStatusEnum.TESTING.getCode()));
         }
-        return projectCmponent.page(condition, Lists.newArrayList(),false);
+        return projectCmponent.page(condition, Lists.newArrayList());
     }
 
     @Override

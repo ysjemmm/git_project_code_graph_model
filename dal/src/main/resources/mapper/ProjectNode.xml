@@ -20,7 +20,6 @@
         <where>
             <if test="projectId!=null">and project_id = #{projectId}</if>
         </where>
-        order by plan_date asc
     </select>
 
     <update id="updateSubmitTestActualDate">
@@ -37,7 +36,7 @@
             <foreach collection="projectIds" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
-            and is_deleted=false
+            and is_deleted=false order by id asc
         </where>
     </select>
 </mapper>
