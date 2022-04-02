@@ -702,7 +702,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         if (repairFailReason != null && !"".equals(repairFailReason)) {
             BugLogDO bugLog = new BugLogDO();
             bugLog.setField(BugFieldEnum.REPAIR_FAIL_REASON.getText());
-            bugLog.setOldValue(bugOnlineDO.getRepairFailReason());
+            bugLog.setOldValue(repairFailReason);
             bugLog.setMainId(bugOnlineRepairFinishedReq.getId());
             bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
             //插入bug日志内容变更记录
