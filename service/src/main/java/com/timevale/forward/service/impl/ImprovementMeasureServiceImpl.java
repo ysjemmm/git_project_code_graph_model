@@ -130,7 +130,9 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
         ImprovementMeasureDO improvementMeasureDO = improvementMeasureDOList.get(0);
 
         // 待办处理
-        improvementMeasureComponent.deleteTodoTask(improvementMeasureDO);
+        if(Objects.equals(ImprovementMeasureStatusEnum.PENDING.getCode(),improvementMeasureDO.getStatus())){
+            improvementMeasureComponent.deleteTodoTask(improvementMeasureDO);
+        }
 
         // 修改事项逻辑删除标志
         improvementMeasureDO.setIsDeleted(true);
