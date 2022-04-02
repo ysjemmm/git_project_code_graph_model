@@ -44,9 +44,6 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="true">
-                and is_deleted = false
-            </if>
         </where>
     </select>
 
