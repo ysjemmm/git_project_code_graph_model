@@ -38,6 +38,7 @@ import com.timevale.security.facade.request.AccountRequest;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.beans.factory.annotation.Value;
@@ -404,11 +405,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineModifyReq.getId());
 
         //是否为经办人&提出人及其上级
-        Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
+        /*Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
         Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
         if (!operatorResult && !proposerResult) {
             throw new BaseBizRuntimeException("您没有修改权限");
-        }
+        }*/
 
         //BugOnlineModifyReq -->  BugOnlineDO
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(bugOnlineModifyReq);
@@ -434,9 +435,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //比较编辑修改的一般字段，生成结果集合
         List<BugLogDO> bugLogDOList = FieldCompareUtil.commonCompare(oldBugOnlineMD, newBugOnlineMD, BugLogDO.class);
         //额外判断产品线和产品线业务
-        bugLogDOList.addAll(compareProductLine(oldProductLineIdList, bugOnlineModifyReq.getProductLineIdList()
-                , bugOnlineDO.getId()));
-        bugLogDOList.addAll(compareExtraIfNecessary(bugOnlineDO, newBugOnlineDO));
+        bugLogDOList.addAll(compareProductLine(oldProductLineIdList, bugOnlineModifyReq.getProductLineIdList(),bugOnlineDO.getId()));
+        bugLogDOList.addAll(compareExtField(bugOnlineDO, newBugOnlineDO));
         if (!CollectionUtils.isEmpty(bugLogDOList)) {
             bugLogMapper.batchInsert(bugLogDOList);
         }
@@ -677,7 +677,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         String repairFailReason = bugOnlineDO.getRepairFailReason();
 
         bugOnlineDO.setStatus(BugOnlineStatusEnum.REPAIR_CONFIRM.getCode());
-        bugOnlineDO.setRepairFailReason(null);
+        bugOnlineDO.setRepairFailReason("");
         bugOnlineDO.setLastOperator(operator);
         bugOnlineDO.setLastOperatorId(operatorId);
         bugOnlineDO.setOperator(bugOnlineRepairFinishedReq.getOperator());
@@ -784,7 +784,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         //如果前端传递的有bug原因，那么就存放一条内容记录
-        if (bugOnlineConfirmRepairReq.getReason() != null){
+        if (bugOnlineConfirmRepairReq.getReason() != null) {
             BugLogDO bugLog = new BugLogDO();
             bugLog.setField(BugFieldEnum.REASON.getText());
             bugLog.setNewValue(BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason()));
@@ -851,7 +851,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         //如果前端传递的有bug原因，那么就存放一条内容记录
-        if (bugOnlineOnlineReq.getReason() != null){
+        if (bugOnlineOnlineReq.getReason() != null) {
             BugLogDO bugLog = new BugLogDO();
             bugLog.setField(BugFieldEnum.REASON.getText());
             bugLog.setNewValue(BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason()));
@@ -1516,66 +1516,38 @@ public class BugOnlineServiceImpl implements BugOnlineService {
      * @param newObj 新的线上bug对象
      * @return 返回结果集合
      */
-    private List<BugLogDO> compareExtraIfNecessary(BugOnlineDO oldObj, BugOnlineDO newObj) {
+    private List<BugLogDO> compareExtField(BugOnlineDO oldObj, BugOnlineDO newObj) {
         List<BugLogDO> bugLogDOList = new ArrayList<>();
-
-        String oldBusiness = oldObj.getBusiness().replace("'", "");
-        String newBusiness = newObj.getBusiness().replace("'", "");
+        String oldBusiness = oldObj.getBusiness();
+        String newBusiness = newObj.getBusiness();
         //如果产品线业务这个json字符串变了，要记录一条或多条内容变更日志
-        if (!oldBusiness.equals(newBusiness)) {
-            BusinessMD oldBusinessMD = new BusinessMD();
-            BusinessMD newBusinessMD = new BusinessMD();
-            if (!"".equals(oldBusiness)) {
-                oldBusinessMD = JSONUtil.toBean(oldBusiness, BusinessMD.class);
-            }
-            if (!"".equals(newBusiness)) {
-                newBusinessMD = JSONUtil.toBean(newBusiness, BusinessMD.class);
-            }
+        if (!Objects.equals(oldBusiness, newBusiness)) {
+            BusinessMD oldBusinessMD = StringUtils.isEmpty(oldBusiness) ? new BusinessMD() : JSONUtil.toBean(oldBusiness, BusinessMD.class);
+            BusinessMD newBusinessMD = StringUtils.isEmpty(newBusiness) ? new BusinessMD() : JSONUtil.toBean(newBusiness, BusinessMD.class);
             oldBusinessMD.setId(oldObj.getId());
             List<BugLogDO> bugLogList = FieldCompareUtil.commonCompare(oldBusinessMD, newBusinessMD, BugLogDO.class);
             bugLogDOList.addAll(bugLogList);
         }
-
         return bugLogDOList;
     }
 
-    private Collection<? extends BugLogDO> compareProductLine(List<Long> oldProductLineIdList
-            , List<Long> newProductLineIdList, Long bugOnlineId) {
 
+    private List<BugLogDO>compareProductLine(List<Long> oldProductLineIdList, List<Long> newProductLineIdList, Long bugOnlineId) {
         List<BugLogDO> bugLogDOList = new ArrayList<>();
-
         boolean result = CollectionUtils.isEqualCollection(oldProductLineIdList, newProductLineIdList);
         //如果产品线变了记录一条bug内容变更日志
         if (!result) {
-            StringBuilder oldNames = new StringBuilder();
-            StringBuilder newNames = new StringBuilder();
-            List<ProductLineDO> oldProductLineDOList = productLineMapper.selectByIds(oldProductLineIdList);
-            List<ProductLineDO> newProductLineDOList = productLineMapper.selectByIds(newProductLineIdList);
-            if (CollectionUtils.isNotEmpty(oldProductLineDOList)) {
-                Integer count = 0;
-                for (ProductLineDO productLineDO : oldProductLineDOList) {
-                    oldNames.append(productLineDO.getName());
-                    count++;
-                    if (!count.equals(oldProductLineDOList.size())) {
-                        oldNames.append(",");
-                    }
-                }
-            }
-            if (CollectionUtils.isNotEmpty(newProductLineIdList)) {
-                Integer tally = 0;
-                for (ProductLineDO productLine : newProductLineDOList) {
-                    newNames.append(productLine.getName());
-                    tally++;
-                    if (!tally.equals(newProductLineDOList.size())) {
-                        newNames.append(",");
-                    }
-                }
-            }
-
+            List<Long> mergeProductLineIds=new ArrayList<>();
+            mergeProductLineIds.addAll(oldProductLineIdList);
+            mergeProductLineIds.addAll(newProductLineIdList);
+            Map<Long, String> mergeProductLines = productLineMapper.selectByIds(mergeProductLineIds).stream()
+                    .collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName));
+            String oldValue = oldProductLineIdList.stream().map(mergeProductLines::get).collect(Collectors.joining(","));
+            String newValue = newProductLineIdList.stream().map(mergeProductLines::get).collect(Collectors.joining(","));
             BugLogDO bugLogDO = new BugLogDO();
             bugLogDO.setField(BugFieldEnum.PRODUCT_LINE.getText());
-            bugLogDO.setOldValue(oldNames.toString());
-            bugLogDO.setNewValue(newNames.toString());
+            bugLogDO.setOldValue(oldValue);
+            bugLogDO.setNewValue(newValue);
             bugLogDO.setMainId(bugOnlineId);
             bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
             bugLogDOList.add(bugLogDO);
