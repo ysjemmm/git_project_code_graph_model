@@ -447,7 +447,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //如果经办人变了，但是状态没有变化，需要往状态人员处理表中插入一条数据，并且需要发送钉钉消息
         if (!bugOnlineDO.getOperatorId().equals(newBugOnlineDO.getOperatorId())) {
             //往bug状态人员处理表中插入一条记录
-            insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
+            insertToBugStatusOperator(bugOnlineDO.getId(), newBugOnlineDO.getOperatorId(), newBugOnlineDO.getOperator());
 
             //发送钉钉消息
             messageEventPublisher.publish(
