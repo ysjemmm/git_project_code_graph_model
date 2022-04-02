@@ -50,7 +50,7 @@ public class CommentMsgEvent extends MessageEvent {
         } else if(CommentTypeEnum.BUG_ONLINE.getText().equals(type)){
             singleUrl = domainName + String.format(PARAM, TabEnum.BUG_ONLINE_MANAGEMENT.getText(), mainId);
         } else{
-            singleUrl = domainName + String.format(PARAM, TabEnum.TROUBLE_MANAGEMENT, mainId);
+            singleUrl = domainName + String.format(PARAM, TabEnum.TROUBLE_MANAGEMENT.getText(), mainId);
         }
         String markdown = String.format(COMMENT_MSG, title, operator, type, name, content, singleUrl);
 
