@@ -149,7 +149,7 @@
             <if test="bugOnlineDO.recurrent != null">
                 recurrent = #{bugOnlineDO.recurrent},
             </if>
-            <if test="bugOnlineDO.reason != null">
+            <if test="true">
                 reason = #{bugOnlineDO.reason},
             </if>
             <if test="bugOnlineDO.expectDate != null">
