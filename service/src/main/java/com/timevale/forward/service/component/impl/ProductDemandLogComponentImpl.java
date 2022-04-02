@@ -1,12 +1,17 @@
 package com.timevale.forward.service.component.impl;
 
-import com.timevale.forward.dal.dao.BugLogMapper;
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
+import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
-import com.timevale.forward.service.component.BizChangeLogComponent;
+import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
+import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.service.component.ProductDemandLogComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Map;
 
 /**
  * @author xingyun
@@ -14,14 +19,25 @@ import javax.annotation.Resource;
  **/
 @Component
 @Slf4j
-public class ProductDemandLogComponentImpl implements BizChangeLogComponent<ProductDemandDO> {
+public class ProductDemandLogComponentImpl implements ProductDemandLogComponent {
 
     @Resource
-    private BugLogMapper bugLogMapper;
+    private BizChangeLogMapper bizChangeLogMapper;
 
     @Override
     public void addLogWhenModifyData(ProductDemandDO oldObj, ProductDemandDO newObj) {
 
+    }
 
+    @Override
+    public void addLogWhenStatusChange(Map<Long, Integer> oldStautsMap, Integer newStauts) {
+        oldStautsMap.forEach((id, oldStatus) -> {
+            BizChangeLogDO logDO = new BizChangeLogDO();
+            logDO.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+            logDO.setMainId(id);
+            logDO.setField(BizChangeLogFieldEnum.PRODUCT_DEMAND_STATUS.getText());
+            logDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
+            logDO.setNewValue(BizDemandStatusEnum.getTextByCode(newStauts));
+        });
     }
 }

@@ -252,13 +252,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             throw new BaseBizRuntimeException("该产品需求名称已存在,请修改后重试");
         }
         checkDescLength(productDemandModifyReq.getDesc());
-        ProductDemandDO demandDO = ProductDemandCopier.INSTANCE.convert(productDemandModifyReq);
-        demandDO.setType(JSON.toJSONString(productDemandModifyReq.getTypes()));
-        productDemandMapper.update(demandDO);
+        ProductDemandDO newProductDemand = ProductDemandCopier.INSTANCE.convert(productDemandModifyReq);
+        newProductDemand.setType(JSON.toJSONString(productDemandModifyReq.getTypes()));
+        productDemandMapper.update(newProductDemand);
         // 附件
-        fileComponent.update(productDemandModifyReq.getFiles(), demandDO.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
+        fileComponent.update(productDemandModifyReq.getFiles(), newProductDemand.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
         // 抄送人
-        personComponent.update(productDemandModifyReq.getRecipients(), demandDO.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+        personComponent.update(productDemandModifyReq.getRecipients(), newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
 
         return BaseResult.success(true);
     }

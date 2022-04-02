@@ -99,7 +99,10 @@ public class ProjectServiceImpl implements ProjectService {
     private BugOfflineComponent bugOfflineComponent;
 
     @Resource
-    private BizChangeLogComponent<ProjectDO> changeLogComponent;
+    private ProjectLogComponent projectLogComponent;
+
+    @Resource
+    private ProductDemandLogComponent productDemandLogComponent;
 
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -150,24 +153,31 @@ public class ProjectServiceImpl implements ProjectService {
         projectMapper.update(projectDO);
         //所有关联的产品需求
         List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectId);
+
         List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
                 .collect(Collectors.toList());
+
+        Map<Long, Integer> oldStautsMap = productDemandMapper.selectByIdList(existProductDemandIds).stream()
+                .collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getStatus));
 
         //修改产品需求状态
         if (CollectionUtils.isNotEmpty(existProductDemandIds)) {
             if (ProjectStatusEnum.SUSPEND.getCode().equals(type)) {
                 //暂停  更新产品需求状态
-                productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode(),false);
+                productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode(), false);
 
             } else {
                 // 作废解除关联
                 projectProductDemandComponent.update(projectId, null);
                 //作废  更新产品需求状态
-                productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.WAITING.getCode(),false);
+                productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.WAITING.getCode(), false);
             }
             //更新业务需求状态
             productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds, false);
 
+            Integer newStatus = ProjectStatusEnum.SUSPEND.getCode().equals(type)
+                    ? ProductDemandStatusEnum.INCLUDED.getCode() : ProductDemandStatusEnum.WAITING.getCode();
+            productDemandLogComponent.addLogWhenStatusChange(oldStautsMap, newStatus);
         }
         // 更新任务状态
         taskComponent.updateStatusAsProjectStatusChange(projectId, type, false);
@@ -251,6 +261,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
         Integer status = projectMapper.get(projectModifyReq.getId()).getStatus();
         newProject.setStatus(status);
+
         fillInfoWhenModify(projectNodeDOList, newProject);
 
         taskComponent.containProductLineInTask(newProject.getId(), newProject.getProductLineIds());
@@ -285,7 +296,7 @@ public class ProjectServiceImpl implements ProjectService {
             projectNodeComponent.add(projectNodeDOList, newProject.getId());
         }
 
-        changeLogComponent.addLogWhenModifyData(oldProject,newProject);
+        projectLogComponent.addLogWhenModifyData(oldProject, newProject);
         return BaseResult.success(true);
     }
 

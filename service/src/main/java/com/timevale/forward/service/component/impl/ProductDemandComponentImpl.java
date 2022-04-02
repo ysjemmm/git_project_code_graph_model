@@ -14,12 +14,11 @@ import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProductLineCopier;
 import com.timevale.forward.service.observer.event.BizDemandStatusChangeMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
-import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.StringUtil;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.Lists;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -66,6 +65,9 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
 
     //    @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+    @Resource
+    private BizDemandLogComponent bizDemandLogComponent;
 
     @Override
     public List<ProductDemandListDO> list(ProductDemandListCondition condition) {
@@ -139,14 +141,8 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             log.info("产品需求变化-更新业务需求,产品需求id不存在");
             return;
         }
-        if (bizProductDemandUnLink) {
-            //解除产品需求和业务需求关系(含作废情况)
-            productDemandIds.forEach(p -> {
-                buildConditionBeforeUpdate(Lists.newArrayList(p), bizProductDemandUnLink);
-            });
-        } else {
-            buildConditionBeforeUpdate(productDemandIds, bizProductDemandUnLink);
-        }
+        //bizProductDemandUnLink为true时:解除产品需求和业务需求关系(含产品需求作废情况)
+         buildConditionBeforeUpdate(productDemandIds, bizProductDemandUnLink);
     }
 
 
@@ -161,7 +157,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         // 业务需求id去重
         Map<Long, ProductBizDemandDO> bizDemandMap = bizDemands.stream()
                 .collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, k -> k, (v1, v2) -> v2));
-        Map<Integer, List<Long>> condition = new HashMap<>();
+        Map<Integer, List<Long>> newStautsMap = new HashMap<>();
         bizDemandMap.forEach((k, v) -> {
             //被驳回和作废的业务需求不处理
             if (!BizDemandStatusEnum.REJECT.getCode().equals(v.getStatus()) && !BizDemandStatusEnum.INVALID.getCode().equals(v.getStatus())) {
@@ -173,24 +169,30 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                             .min(Comparator.comparingInt(o -> o)).orElse(null);
                     if (minStatus == null) {
                         //业务需求只关联一个产品需求后且被解除
-                        condition.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), value -> new ArrayList<>()).add(k);
+                        newStautsMap.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), value -> new ArrayList<>()).add(k);
                     } else {
-                        processBizDemandStatus(condition, minStatus, k);
+                        processBizDemandStatus(newStautsMap, minStatus, k);
                     }
                 } else {
                     Integer minStauts = productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
                     if (minStauts != null) {
-                        processBizDemandStatus(condition, minStauts, k);
+                        processBizDemandStatus(newStautsMap, minStauts, k);
                     }
                 }
             }
         });
-        condition.forEach((k, v) -> {
+        newStautsMap.forEach((status, ids) -> {
             //更新产品需求下的所有业务需求状态
-            bizDemandMapper.updateByIds(v, k,false);
+            bizDemandMapper.updateByIds(ids, status,false);
         });
-        log.info("产品需求变化-更新业务需求:产品需求id={},需要更新的业务需求状态和id={}", productDemandIds, condition);
-        sendDingMsg(condition, bizDemandMap);
+        log.info("产品需求变化-更新业务需求:产品需求id={},需要更新的业务需求状态和id={}", productDemandIds, newStautsMap);
+
+        Map<Long, Integer> oldStautsMap = bizDemands.stream()
+                .collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, ProductBizDemandDO::getStatus));
+
+        bizDemandLogComponent.addLogWhenStatusChange(oldStautsMap,newStautsMap);
+
+        sendDingMsg(newStautsMap, bizDemandMap);
     }
 
     private void sendDingMsg(Map<Integer, List<Long>> condition, Map<Long, ProductBizDemandDO> bizDemandMap) {
