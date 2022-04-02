@@ -756,10 +756,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         //校验当前操作人职能是否为测试
-        Boolean result = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
+        /*Boolean result = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
         if (!result) {
             throw new BaseBizRuntimeException("您的职能没有权限点击此按钮");
-        }
+        }*/
 
         //保存老的状态
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
@@ -783,11 +783,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //往bug日志表中插入一条线上bug状态变更数据
         bugLogMapper.insert(bugLogDO);
 
-        //如果bug原因变了，存放一条日志内容记录
-        if (!oldReason.equals(bugOnlineDO.getReason())) {
+        //如果前端传递的有bug原因，那么就存放一条内容记录
+        if (bugOnlineConfirmRepairReq.getReason() != null){
             BugLogDO bugLog = new BugLogDO();
             bugLog.setField(BugFieldEnum.REASON.getText());
-            bugLog.setOldValue(BugOnlineReasonEnum.getTextByCode(oldReason));
             bugLog.setNewValue(BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason()));
             bugLog.setMainId(bugOnlineConfirmRepairReq.getId());
             bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
@@ -851,11 +850,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //往bug日志表中插入一条线上bug状态变更数据
         bugLogMapper.insert(bugLogDO);
 
-        //如果bug原因变了，存放一条日志内容记录
-        if (!oldReason.equals(bugOnlineDO.getReason())) {
+        //如果前端传递的有bug原因，那么就存放一条内容记录
+        if (bugOnlineOnlineReq.getReason() != null){
             BugLogDO bugLog = new BugLogDO();
             bugLog.setField(BugFieldEnum.REASON.getText());
-            bugLog.setOldValue(BugOnlineReasonEnum.getTextByCode(oldReason));
             bugLog.setNewValue(BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason()));
             bugLog.setMainId(bugOnlineOnlineReq.getId());
             bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
