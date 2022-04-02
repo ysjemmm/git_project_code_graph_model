@@ -152,7 +152,7 @@
             <if test="true">
                 reason = #{bugOnlineDO.reason},
             </if>
-            <if test="bugOnlineDO.expectDate != null">
+            <if test="true">
                 expect_date = #{bugOnlineDO.expectDate},
             </if>
             <if test="bugOnlineDO.business != null">
