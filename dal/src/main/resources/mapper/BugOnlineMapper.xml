@@ -131,7 +131,7 @@
             <if test="bugOnlineDO.proposerId != null">
                 proposer_id = #{bugOnlineDO.proposerId},
             </if>
-            <if test="bugOnlineDO.customerName != null">
+            <if test="true">
                 customer_name = #{bugOnlineDO.customerName},
             </if>
             <if test="bugOnlineDO.bizDemandId != null">
