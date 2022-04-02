@@ -83,10 +83,15 @@
                 </foreach>
             </if>
             <if test="troubleRankList != null and troubleRankList.size() > 0">
-                AND tt.trouble_rank IN
-                <foreach collection="troubleRankList" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
+                <trim prefix="(" suffix=")" prefixOverrides="AND">
+                    AND tt.trouble_rank IN
+                    <foreach collection="troubleRankList" item="item" separator="," open="(" close=")">
+                       #{item}
+                    </foreach>
+                    <if test="troubleRankIsNull != null and troubleRankIsNull = true">
+                        OR tt.trouble_rank IS NULL
+                    </if>
+                </trim>
             </if>
             <if test="bizDomainIdList != null and bizDomainIdList.size() > 0">
                 AND bd.id IN

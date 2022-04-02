@@ -214,6 +214,9 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
             troubleTicketCondition.setTroubleTicketIdList(troubleTicketIdList);
         }
 
+        // 故障定级-未定级,特殊处理
+        boolean contain = troubleTicketCondition.getTroubleRankList().contains(TroubleTicketRankEnum.UN_CERTAIN.getCode());
+        troubleTicketCondition.setTroubleRankIsNull(contain);
 
         // 分页查询
         PageHelper.startPage(troubleTicketQueryList.pageNum, troubleTicketQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);

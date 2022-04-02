@@ -42,6 +42,11 @@ public class TroubleTicketCondition {
     private List<Integer> troubleRankList;
 
     /**
+     * 故障定级-是否可以为空
+     */
+    private Boolean troubleRankIsNull;
+
+    /**
      * 业务域id-列表
      */
     private List<Long> bizDomainIdList;
