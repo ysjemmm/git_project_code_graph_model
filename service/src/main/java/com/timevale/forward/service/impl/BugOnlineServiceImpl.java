@@ -404,11 +404,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineModifyReq.getId());
 
         //是否为经办人&提出人及其上级
-        Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
+        /*Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
         Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
         if (!operatorResult && !proposerResult) {
             throw new BaseBizRuntimeException("您没有修改权限");
-        }
+        }*/
 
         //BugOnlineModifyReq -->  BugOnlineDO
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(bugOnlineModifyReq);
@@ -677,7 +677,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         String repairFailReason = bugOnlineDO.getRepairFailReason();
 
         bugOnlineDO.setStatus(BugOnlineStatusEnum.REPAIR_CONFIRM.getCode());
-        bugOnlineDO.setRepairFailReason(null);
+        bugOnlineDO.setRepairFailReason("");
         bugOnlineDO.setLastOperator(operator);
         bugOnlineDO.setLastOperatorId(operatorId);
         bugOnlineDO.setOperator(bugOnlineRepairFinishedReq.getOperator());
