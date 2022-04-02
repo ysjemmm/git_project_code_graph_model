@@ -392,6 +392,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     public BusinessResult<Boolean> modify(BugOnlineModifyReq bugOnlineModifyReq) {
         log.info("线上bug-修改,接收参数：{}", bugOnlineModifyReq);
 
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         //查询线上bug
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineModifyReq.getId());
         if (bugOnlineDO == null) {
@@ -404,12 +406,13 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //保存老的产品线列表
         List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineModifyReq.getId());
 
-        //是否为经办人&提出人及其上级
-        /*Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
+        //是否为经办人&提出人及其上级，或者是测试角色
+        Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
         Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
-        if (!operatorResult && !proposerResult) {
+        Boolean result = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
+        if (!result && !operatorResult && !proposerResult) {
             throw new BaseBizRuntimeException("您没有修改权限");
-        }*/
+        }
 
         //BugOnlineModifyReq -->  BugOnlineDO
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(bugOnlineModifyReq);
@@ -435,7 +438,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //比较编辑修改的一般字段，生成结果集合
         List<BugLogDO> bugLogDOList = FieldCompareUtil.commonCompare(oldBugOnlineMD, newBugOnlineMD, BugLogDO.class);
         //额外判断产品线和产品线业务
-        bugLogDOList.addAll(compareProductLine(oldProductLineIdList, bugOnlineModifyReq.getProductLineIdList(),bugOnlineDO.getId()));
+        bugLogDOList.addAll(compareProductLine(oldProductLineIdList, bugOnlineModifyReq.getProductLineIdList(), bugOnlineDO.getId()));
         bugLogDOList.addAll(compareExtField(bugOnlineDO, newBugOnlineDO));
         if (!CollectionUtils.isEmpty(bugLogDOList)) {
             bugLogMapper.batchInsert(bugLogDOList);
@@ -756,15 +759,13 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         //校验当前操作人职能是否为测试
-        /*Boolean result = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
+        Boolean result = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
         if (!result) {
             throw new BaseBizRuntimeException("您的职能没有权限点击此按钮");
-        }*/
+        }
 
         //保存老的状态
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
-        //存放老的bug原因
-        Integer oldReason = bugOnlineDO.getReason();
 
         bugOnlineDO.setStatus(BugOnlineStatusEnum.ONLINE.getCode());
         if (bugOnlineConfirmRepairReq.getReason() != null) {
@@ -830,8 +831,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //保存老的状态
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
-        //保存老的bug原因
-        Integer oldReason = bugOnlineDO.getReason();
 
         bugOnlineDO.setStatus(BugOnlineStatusEnum.COMPLETE.getCode());
         if (bugOnlineOnlineReq.getReason() != null) {
@@ -1532,12 +1531,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
 
-    private List<BugLogDO>compareProductLine(List<Long> oldProductLineIdList, List<Long> newProductLineIdList, Long bugOnlineId) {
+    private List<BugLogDO> compareProductLine(List<Long> oldProductLineIdList, List<Long> newProductLineIdList, Long bugOnlineId) {
         List<BugLogDO> bugLogDOList = new ArrayList<>();
         boolean result = CollectionUtils.isEqualCollection(oldProductLineIdList, newProductLineIdList);
         //如果产品线变了记录一条bug内容变更日志
         if (!result) {
-            List<Long> mergeProductLineIds=new ArrayList<>();
+            List<Long> mergeProductLineIds = new ArrayList<>();
             mergeProductLineIds.addAll(oldProductLineIdList);
             mergeProductLineIds.addAll(newProductLineIdList);
             Map<Long, String> mergeProductLines = productLineMapper.selectByIds(mergeProductLineIds).stream()
