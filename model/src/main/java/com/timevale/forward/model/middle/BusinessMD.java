@@ -36,7 +36,7 @@ public class BusinessMD extends BaseMD{
     /**
      * sealId
      */
-    @FieldCompare(fieldName = "sealId")
+    @FieldCompare(fieldName = "sealid")
     private String sealId;
 
     /**
