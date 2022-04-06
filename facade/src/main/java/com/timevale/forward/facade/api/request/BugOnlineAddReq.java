@@ -76,4 +76,7 @@ public class BugOnlineAddReq extends BaseReq {
 
     @ApiModelProperty("抄送人")
     private List<PersonAddReq> recipients;
+
+    @ApiModelProperty("系统菜单名称")
+    private String systemMenuName;
 }

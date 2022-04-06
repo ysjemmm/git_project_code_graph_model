@@ -138,6 +138,11 @@ public class BugOnlineDO extends BaseDO {
      * 重新打开原因
      */
     private String openAgainReason;
+
+    /**
+     * 系统菜单名称
+     */
+    private String systemMenuName;
 }
 
 
