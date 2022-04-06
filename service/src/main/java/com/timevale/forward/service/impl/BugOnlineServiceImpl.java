@@ -930,17 +930,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //往bug日志表中插入一条线上bug状态变更数据
         bugLogMapper.insert(bugLogDO);
 
-        //如果原来的驳回原因不为空，要加入一条内容记录
-        if (oldDismissCause != null) {
-            BugLogDO bugLog = new BugLogDO();
-            bugLog.setField(BugFieldEnum.DISMISS_CAUSE.getText());
-            bugLog.setOldValue(BugOnlineDismissCauseEnum.getTextByCode(oldDismissCause));
-            bugLog.setMainId(bugOnlineOpenAgainReq.getId());
-            bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
-            //往bug日志表中插入一条线上bug内容变更数据
-            bugLogMapper.insert(bugLog);
-        }
-
         //得到新的对象
         BugOnlineMD newBugOnlineMD = BugOnlineCopier.INSTANCE.change(bugOnlineDO);
 
