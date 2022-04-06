@@ -82,6 +82,7 @@
                 from person p
                 where p.user_id = #{copier}
                 and p.type = 60
+                and p.is_deleted = false
                 )
             </if>
             <if test="true">

@@ -156,6 +156,7 @@
                 FROM person p
                 WHERE p.user_id = #{copier}
                 AND p.type = 30
+                AND p.is_deleted = false
                 )
             </if>
             <choose>
