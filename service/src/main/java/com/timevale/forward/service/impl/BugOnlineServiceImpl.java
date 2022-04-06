@@ -825,7 +825,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         Boolean jobFunctionResult = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
         Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
         Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
-        if (jobFunctionResult && operatorResult && proposerResult) {
+        if (!jobFunctionResult && !operatorResult && !proposerResult) {
             throw new BaseBizRuntimeException("您没有权限点击此按钮");
         }
 
