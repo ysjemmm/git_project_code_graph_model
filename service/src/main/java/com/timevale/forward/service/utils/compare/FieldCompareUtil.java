@@ -87,12 +87,16 @@ public class FieldCompareUtil {
                         oldString = (String) oldField.get(oldObj);
                         newString = (String) newField.get(newObj);
                     } else if (fieldType == Date.class) {
-                        oldString = DateUtil.parseToString((Date) oldField.get(oldObj),DateFormatConst.DATE_FORMAT) ;
-                        newString = DateUtil.parseToString((Date) newField.get(newObj),DateFormatConst.DATE_FORMAT) ;
+                        oldString = DateUtil.parseToString((Date) oldField.get(oldObj), DateFormatConst.DATE_FORMAT);
+                        newString = DateUtil.parseToString((Date) newField.get(newObj), DateFormatConst.DATE_FORMAT);
                     } else if (fieldType == Integer.class) {
                         Method method = annotation.enumClass().getMethod(METHOD, Integer.class);
-                        oldString = (String) method.invoke(null, oldValue);
-                        newString = (String) method.invoke(null, newValue);
+                        if (oldValue != null) {
+                            oldString = (String) method.invoke(null, oldValue);
+                        }
+                        if (newValue != null) {
+                            newString = (String) method.invoke(null, newValue);
+                        }
                     }
                     Constructor<E> constructor = clazz.getConstructor();
                     E e = constructor.newInstance();
