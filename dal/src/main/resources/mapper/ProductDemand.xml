@@ -122,7 +122,7 @@
                 and pd.id = #{productDemandId}
             </if>
             <if test="name!=null and name!=''">
-                and pd.name = #{name}
+                and pd.name like concat('%',#{name},'%')
             </if>
             <if test="status!=null">
                 and pd.status = #{status}
