@@ -926,7 +926,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.OPEN_AGAIN.getText());
         bugLogDO.setOldValue(oldStatus);
-        bugLogDO.setNewValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
+        if(oldStatus.equals(BugOnlineStatusEnum.CLOSE.getText())){
+            bugLogDO.setNewValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
+        }
+        if(oldStatus.equals(BugOnlineStatusEnum.COMPLETE.getText())){
+            bugLogDO.setNewValue(BugOnlineStatusEnum.QUESTION_CONFIRM.getText());
+        }
         bugLogDO.setMainId(bugOnlineOpenAgainReq.getId());
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
         bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
