@@ -6,7 +6,8 @@
     </select>
 
     <select id="selectListByCondition" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
-        select bo.id, bo.name, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env, bo.reason, bo.belong,
+        select bo.id, bo.name, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env,
+        bo.reason, bo.belong,
         bo.create_date, bo.modify_date
         from bug_online bo
         left join bug_online_product_line bopl on bo.id = bopl.bug_online_id
@@ -165,6 +166,9 @@
             </if>
             <if test="bugOnlineDO.prevStatus != null">
                 prev_status = #{bugOnlineDO.prevStatus},
+            </if>
+            <if test="bugOnlineDO.hangUp != null">
+                hang_up = #{bugOnlineDO.hangUp},
             </if>
             <if test="bugOnlineDO.status != null">
                 status = #{bugOnlineDO.status},

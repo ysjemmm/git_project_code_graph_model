@@ -102,6 +102,9 @@ public class BugOnlineDetailVO extends ToString {
     @ApiModelProperty("bug上次状态：0问题上报，1待确认，2关闭，3问题确认，4问题修复，5QA修复确认，6待上线，7挂起，8完成，9已转需求")
     private Integer prevStatus;
 
+    @ApiModelProperty("是否含挂起节点")
+    private Boolean hangUp;
+
     @ApiModelProperty("bug状态：0问题上报，1待确认，2关闭，3问题确认，4问题修复，5QA修复确认，6待上线，7挂起，8完成，9已转需求")
     private Integer status;
 

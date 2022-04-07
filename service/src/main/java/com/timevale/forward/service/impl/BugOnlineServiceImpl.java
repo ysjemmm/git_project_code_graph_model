@@ -908,10 +908,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //得到老的对象
         BugOnlineMD oldBugOnlineMD = BugOnlineCopier.INSTANCE.change(bugOnlineDO);
 
-        if(bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.CLOSE.getCode())){
+        if (bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.CLOSE.getCode())) {
             bugOnlineDO.setStatus(BugOnlineStatusEnum.PROBLEM_REPORT.getCode());
         }
-        if(bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.COMPLETE.getCode())){
+        if (bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.COMPLETE.getCode())) {
             bugOnlineDO.setStatus(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
         }
         bugOnlineDO.setLastOperatorId(operatorId);
@@ -926,10 +926,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.OPEN_AGAIN.getText());
         bugLogDO.setOldValue(oldStatus);
-        if(oldStatus.equals(BugOnlineStatusEnum.CLOSE.getText())){
+        if (oldStatus.equals(BugOnlineStatusEnum.CLOSE.getText())) {
             bugLogDO.setNewValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
         }
-        if(oldStatus.equals(BugOnlineStatusEnum.COMPLETE.getText())){
+        if (oldStatus.equals(BugOnlineStatusEnum.COMPLETE.getText())) {
             bugLogDO.setNewValue(BugOnlineStatusEnum.QUESTION_CONFIRM.getText());
         }
         bugLogDO.setMainId(bugOnlineOpenAgainReq.getId());
@@ -1337,6 +1337,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
 
         bugOnlineDO.setStatus(BugOnlineStatusEnum.HANG_UP.getCode());
+        bugOnlineDO.setHangUp(true);
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
 
