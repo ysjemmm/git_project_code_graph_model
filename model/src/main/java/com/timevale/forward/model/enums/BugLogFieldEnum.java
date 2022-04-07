@@ -23,7 +23,12 @@ public enum BugLogFieldEnum {
     /**
      * 状态
      */
-    STATUS("状态");
+    STATUS("状态"),
+
+    /**
+     * 原因
+     */
+    REASON("bug原因");
 
     private final String text;
 

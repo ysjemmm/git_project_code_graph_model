@@ -422,7 +422,11 @@ public class BizDemandServiceImpl implements BizDemandService {
         String oldStatusName = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
         Integer oldStatus = bugOnlineDO.getStatus();
 
+        // 保存旧的bug原因
+        String oldReasonName = BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason());
+
         bugOnlineDO.setStatus(BugOnlineStatusEnum.REQUIRED.getCode());
+        bugOnlineDO.setReason(BugOnlineReasonEnum.DEMAND_QUESTION.getCode());
         bugOnlineDO.setPrevStatus(oldStatus);
         bugOnlineDO.setBizDemandId(bizDemandId);
         //线上bug表更新
@@ -435,6 +439,15 @@ public class BizDemandServiceImpl implements BizDemandService {
         bugLogDO.setMainId(bugOnlineId);
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
         bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+        //往bug日志表中插入一条线上bug状态变更数据
+        bugLogMapper.insert(bugLogDO);
+
+        bugLogDO.setAction(ButtonActionEnum.SHIFT_BUSINESS.getText());
+        bugLogDO.setOldValue(oldReasonName);
+        bugLogDO.setNewValue(BugOnlineReasonEnum.DEMAND_QUESTION.getText());
+        bugLogDO.setMainId(bugOnlineId);
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.REASON.getText());
         //往bug日志表中插入一条线上bug状态变更数据
         bugLogMapper.insert(bugLogDO);
 
