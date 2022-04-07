@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 钉钉待办消息
@@ -37,9 +38,6 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
 
     @Resource
     private DingWorkRecordService dingWorkRecordService;
-
-    @Resource(name = "improvementMeasureThreadPoolTaskExecutor")
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Override
     public String addTask(CreateTodoTaskMsg createTodoTaskMsg) {
@@ -104,17 +102,11 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
     @Override
     public Map<String, DingTodoTaskResponseBody> batchGetTask(List<GetTodoTaskMsg> getTodoTaskMsgList) {
         Map<String, DingTodoTaskResponseBody> result = Maps.newConcurrentMap();
-        try {
-            CountDownLatch countDownLatch = new CountDownLatch(getTodoTaskMsgList.size());
-            getTodoTaskMsgList.forEach(e -> threadPoolTaskExecutor.execute(() -> {
-                DingTodoTaskResponseBody task = getTask(e);
-                result.put(task.getId(), task);
-                countDownLatch.countDown();
-            }));
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            log.error("[erpMessage]批量获取待办失败  error: " + e.getMessage());
-        }
+        getTodoTaskMsgList.parallelStream()
+                .forEach(e -> {
+                    DingTodoTaskResponseBody task = getTask(e);
+                    result.put(task.getId(), task);
+                });
         return result;
     }
 }
