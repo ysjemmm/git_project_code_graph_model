@@ -912,7 +912,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugOnlineDO.setStatus(BugOnlineStatusEnum.PROBLEM_REPORT.getCode());
         }
         if(bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.COMPLETE.getCode())){
-            bugOnlineDO.setStatus(BugOnlineStatusEnum.QUESTION_REPAIR.getCode());
+            bugOnlineDO.setStatus(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
         }
         bugOnlineDO.setLastOperatorId(operatorId);
         bugOnlineDO.setLastOperator(operator);
