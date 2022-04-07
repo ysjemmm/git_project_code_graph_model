@@ -904,13 +904,16 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         String operator = bugOnlineDO.getOperator();
         String lastOperator = bugOnlineDO.getLastOperator();
         String lastOperatorId = bugOnlineDO.getLastOperatorId();
-        //保存老的驳回原因
-        Integer oldDismissCause = bugOnlineDO.getDismissCause();
 
         //得到老的对象
         BugOnlineMD oldBugOnlineMD = BugOnlineCopier.INSTANCE.change(bugOnlineDO);
 
-        bugOnlineDO.setStatus(BugOnlineStatusEnum.PROBLEM_REPORT.getCode());
+        if(bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.CLOSE.getCode())){
+            bugOnlineDO.setStatus(BugOnlineStatusEnum.PROBLEM_REPORT.getCode());
+        }
+        if(bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.COMPLETE.getCode())){
+            bugOnlineDO.setStatus(BugOnlineStatusEnum.QUESTION_REPAIR.getCode());
+        }
         bugOnlineDO.setLastOperatorId(operatorId);
         bugOnlineDO.setLastOperator(operator);
         bugOnlineDO.setOperatorId(lastOperatorId);
