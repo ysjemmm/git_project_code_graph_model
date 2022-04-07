@@ -14,6 +14,7 @@ import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author xingyun
@@ -31,15 +32,15 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
     }
 
     @Override
-    public void addLogWhenStatusChange(Map<Long, Integer> oldStautsMap, Map<Integer, List<Long>> newStautsMap) {
-        Map<Long, Integer> newStautsChangeMap=new HashMap<>();
-        newStautsMap.forEach((status,ids)->{
-            ids.forEach(id->{
-                newStautsChangeMap.put(id,status);
+    public void addLogAsProductDemandStatusChange(Map<Long, Integer> oldStautsMap, Map<Integer, List<Long>> newStautsMap) {
+        Map<Long, Integer> newStautsChangeMap = new HashMap<>();
+        newStautsMap.forEach((status, ids) -> {
+            ids.forEach(id -> {
+                newStautsChangeMap.put(id, status);
             });
         });
-        oldStautsMap.forEach((id,oldStatus)->{
-            if(newStautsChangeMap.containsKey(id)){
+        oldStautsMap.forEach((id, oldStatus) -> {
+            if (newStautsChangeMap.containsKey(id) && !Objects.equals(oldStatus, newStautsChangeMap.get(id))) {
                 BizChangeLogDO logDO = new BizChangeLogDO();
                 logDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
                 logDO.setMainId(id);

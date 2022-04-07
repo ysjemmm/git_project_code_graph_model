@@ -101,7 +101,33 @@ public enum ButtonActionEnum {
     /**
      * 转业务需求
      */
-    SHIFT_BUSINESS("转业务需求");
+    SHIFT_BUSINESS("转业务需求"),
+
+    /**
+     * 关联
+     */
+    LINK("关联"),
+
+    /**
+     * 删除关联
+     */
+    UN_LINK("删除关联"),
+
+    /**
+     * 暂停
+     */
+    SUSPEND("暂停"),
+    /**
+     * 开启
+     */
+    ENABLE("开启"),
+
+    /**
+     * 作废
+     */
+    INVALID("作废");
+
+
 
     private final String text;
 

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author xingyun
@@ -30,14 +31,17 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
     }
 
     @Override
-    public void addLogWhenStatusChange(Map<Long, Integer> oldStautsMap, Integer newStauts) {
-        oldStautsMap.forEach((id, oldStatus) -> {
-            BizChangeLogDO logDO = new BizChangeLogDO();
-            logDO.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
-            logDO.setMainId(id);
-            logDO.setField(BizChangeLogFieldEnum.PRODUCT_DEMAND_STATUS.getText());
-            logDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
-            logDO.setNewValue(BizDemandStatusEnum.getTextByCode(newStauts));
+    public void addLogAsProjectStatusChange(Map<Long, Integer> statusMap, Integer newStauts) {
+        //系统 把{xx状态字段名称xx}从{原状态} 改为{新状态}
+        statusMap.forEach((id,status) -> {
+            if(!Objects.equals(status,newStauts)){
+                BizChangeLogDO logDO = new BizChangeLogDO();
+                logDO.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+                logDO.setMainId(id);
+                logDO.setField(BizChangeLogFieldEnum.PRODUCT_DEMAND_STATUS.getText());
+                logDO.setOldValue(BizDemandStatusEnum.getTextByCode(status));
+                logDO.setNewValue(BizDemandStatusEnum.getTextByCode(newStauts));
+            }
         });
     }
 }

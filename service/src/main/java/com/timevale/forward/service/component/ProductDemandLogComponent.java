@@ -8,5 +8,5 @@ public interface ProductDemandLogComponent {
 
     void addLogWhenModifyData(ProductDemandDO oldObj, ProductDemandDO newObj) ;
 
-    void addLogWhenStatusChange(Map<Long, Integer> oldStautsMap,  Integer newStauts) ;
+    void addLogAsProjectStatusChange(Map<Long, Integer> statusMap,  Integer newStauts) ;
 }

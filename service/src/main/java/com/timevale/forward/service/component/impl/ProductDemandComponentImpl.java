@@ -69,6 +69,15 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     @Resource
     private BizDemandLogComponent bizDemandLogComponent;
 
+    @Resource
+    private ProductDemandLogComponent productDemandLogComponent;
+
+    @Resource
+    private ProjectLogComponent projectLogComponent;
+
+    @Resource
+    private ProjectMapper projectMapper;
+
     @Override
     public List<ProductDemandListDO> list(ProductDemandListCondition condition) {
         condition.setName(StringUtil.toLikeStr(condition.getName()));
@@ -120,18 +129,32 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             log.info("更新产品需求,没有找到产品需求");
             return;
         }
-        List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
-                .collect(Collectors.toList());
-        if (ProjectStatusEnum.WAITING.getCode().equals(status)
-                || ProjectStatusEnum.SUSPEND.getCode().equals(status)) {
-            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode(),false);
+        List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
+        List<ProductDemandDO> productDemands = productDemandMapper.selectByIdList(existProductDemandIds);
+
+        Map<Long, Integer> statusMap=productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getStatus, (v1, v2) -> v2));
+        Map<Long, String> nameMap=productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getName, (v1, v2) -> v2));
+
+        Integer pdStatus=ProductDemandStatusEnum.WAITING.getCode();
+        if (ProjectStatusEnum.WAITING.getCode().equals(status) || ProjectStatusEnum.SUSPEND.getCode().equals(status)) {
+            pdStatus=ProductDemandStatusEnum.INCLUDED.getCode();
+            productDemandMapper.updateByIds(existProductDemandIds, pdStatus,false);
         } else if (ProjectStatusEnum.PLANING.getCode().equals(status)
                 || ProjectStatusEnum.DEVING.getCode().equals(status)
                 || ProjectStatusEnum.TESTING.getCode().equals(status)) {
-            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.PROGRESS.getCode(),false);
+            pdStatus=ProductDemandStatusEnum.PROGRESS.getCode();
+            productDemandMapper.updateByIds(existProductDemandIds, pdStatus,false);
         } else if (ProjectStatusEnum.RELEASED.getCode().equals(status)) {
-            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.ONLINE.getCode(),false);
+            pdStatus=ProductDemandStatusEnum.ONLINE.getCode();
+            productDemandMapper.updateByIds(existProductDemandIds, pdStatus,false);
+        } else if (ProjectStatusEnum.INVALID.getCode().equals(status)) {
+            productDemandMapper.updateByIds(existProductDemandIds, pdStatus,false);
+            // unlink log
+            String projectName = projectMapper.get(projectId).getName();
+            projectLogComponent.addLogWhenLinkOrUnlink(nameMap, projectName, projectId,ButtonActionEnum.UN_LINK.getText());
         }
+
+        productDemandLogComponent.addLogAsProjectStatusChange(statusMap, pdStatus);
         updateBizDemandStatusAsProductStatusChange(existProductDemandIds, false);
     }
 
@@ -190,7 +213,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         Map<Long, Integer> oldStautsMap = bizDemands.stream()
                 .collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, ProductBizDemandDO::getStatus));
 
-        bizDemandLogComponent.addLogWhenStatusChange(oldStautsMap,newStautsMap);
+        bizDemandLogComponent.addLogAsProductDemandStatusChange(oldStautsMap,newStautsMap);
 
         sendDingMsg(newStautsMap, bizDemandMap);
     }

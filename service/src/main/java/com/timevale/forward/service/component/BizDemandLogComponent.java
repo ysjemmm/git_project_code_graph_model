@@ -9,5 +9,5 @@ public interface BizDemandLogComponent{
 
     void addLogWhenModifyData(BizDemandDO oldObj, BizDemandDO newObj) ;
 
-    void addLogWhenStatusChange(Map<Long, Integer> oldStautsMap,  Map<Integer, List<Long>> newStautsMap) ;
+    void addLogAsProductDemandStatusChange(Map<Long, Integer> oldStautsMap,  Map<Integer, List<Long>> newStautsMap) ;
 }

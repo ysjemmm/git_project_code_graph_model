@@ -1,5 +1,6 @@
 package com.timevale.forward.service.interceptor;
 
+import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -42,13 +43,15 @@ public class AuditInterceptor implements Interceptor {
         String id = userInfo.getId();
         String name = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
 
-        // 填充字段
-        if(sqlCommandType == SqlCommandType.INSERT){
-            setProperty(parameter, AuditEnum.CREATE_MAN.getText(), name);
-            setProperty(parameter, AuditEnum.CREATE_MAN_ID.getText(), id);
-        }else{
-            setProperty(parameter, AuditEnum.MODIFY_MAN.getText(), name);
-            setProperty(parameter, AuditEnum.MODIFY_MAN_ID.getText(), id);
+        if (!BizChangeLogDO.class.isAssignableFrom(parameter.getClass())) {
+            // 填充字段,日志操作人单独赋值为SYSTEM-SYSTEM
+            if(sqlCommandType == SqlCommandType.INSERT){
+                setProperty(parameter, AuditEnum.CREATE_MAN.getText(), name);
+                setProperty(parameter, AuditEnum.CREATE_MAN_ID.getText(), id);
+            }else{
+                setProperty(parameter, AuditEnum.MODIFY_MAN.getText(), name);
+                setProperty(parameter, AuditEnum.MODIFY_MAN_ID.getText(), id);
+            }
         }
 
         return invocation.proceed();

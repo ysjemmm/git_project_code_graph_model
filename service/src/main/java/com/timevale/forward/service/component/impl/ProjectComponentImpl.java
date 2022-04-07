@@ -182,44 +182,6 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
     }
 
-//    private Map<Long, Boolean> isNeedWarningOnProject(List<ProjectVO> projectVOList, boolean isList) {
-//        Map<Long, Boolean> warning = new HashMap<>();
-//        if (!isList) {
-//            return warning;
-//        }
-//        List<Integer> filterStatus = Arrays.asList(ProjectStatusEnum.WAITING.getCode(), ProjectStatusEnum.PLANING.getCode()
-//                , ProjectStatusEnum.DEVING.getCode(), ProjectStatusEnum.TESTING.getCode());
-//        List<Long> ids = projectVOList.stream().filter(a -> filterStatus.contains(a.getStatus())).map(ProjectVO::getId).collect(Collectors.toList());
-//        Map<Long, List<ProjectNodeDO>> nodeMapping = projectNodeMapper.getByProjectIds(ids).stream().collect(Collectors.groupingBy(ProjectNodeDO::getProjectId));
-//        for (Long pid : nodeMapping.keySet()) {
-//            // 1若延期时长=实际时间(取最大时间)-计划完成时间＞0,节点逾期预警
-//            ProjectNodeDO node = nodeMapping.get(pid).stream().filter(a -> a.getPlanDate() != null && a.getActualDate() != null)
-//                    .max(Comparator.comparing(ProjectNodeDO::getActualDate)).orElse(null);
-//            if (node != null && node.getActualDate().after(node.getPlanDate())) {
-//                warning.put(pid, true);
-//                continue;
-//            }
-//
-//            node = nodeMapping.get(pid).stream().filter(a -> a.getActualDate() == null && a.getPlanDate() != null)
-//                    .min(Comparator.comparing(ProjectNodeDO::getPlanDate)).orElse(null);
-//            // 2节点没有实际时间，延期时长=当前时间-计划完成时间≥2个工作日,逾期未录入预警
-//            if (node != null) {
-//                Date currentDate = DateUtil.parseToDate(DateUtil.parseToString(new Date(), DateFormatConst.DATE_FORMAT));
-//                Date planDate = DateUtil.parseToDate(DateUtil.parseToString(node.getPlanDate(), DateFormatConst.DATE_FORMAT));
-//                log.info("无实际时间,计划时间最小的节点,node:{}", node);
-//                if (currentDate.after(planDate)) {
-//                    BigDecimal elapsedTime = taskComponent.getElapsedTime(planDate, currentDate);
-//                    if (elapsedTime.compareTo(new BigDecimal("16")) >= 0) {
-//                        warning.put(pid, true);
-//                        continue;
-//                    }
-//                }
-//            }
-//            warning.put(pid, false);
-//        }
-//        return warning;
-//    }
-
 //    private Map<Long, String> displayNodeOnEachProject(List<ProjectVO> projectVOList, boolean isList) {
 //        Map<Long, String> displayNode = new HashMap<>();
 //        if (!isList) {

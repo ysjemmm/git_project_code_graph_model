@@ -143,42 +143,23 @@ public class ProjectServiceImpl implements ProjectService {
         if (projectDO == null) {
             throw new BaseBizRuntimeException("找不到该项目");
         }
-        if (!ProjectStatusEnum.WAITING.getCode().equals(projectDO.getStatus())
-                && !ProjectStatusEnum.PLANING.getCode().equals(projectDO.getStatus())
-                && !ProjectStatusEnum.DEVING.getCode().equals(projectDO.getStatus())
-                && !ProjectStatusEnum.TESTING.getCode().equals(projectDO.getStatus())) {
+        Integer oldStatus = projectDO.getStatus();
+        if (!ProjectStatusEnum.WAITING.getCode().equals(oldStatus)
+                && !ProjectStatusEnum.PLANING.getCode().equals(oldStatus)
+                && !ProjectStatusEnum.DEVING.getCode().equals(oldStatus)
+                && !ProjectStatusEnum.TESTING.getCode().equals(oldStatus)) {
             throw new BaseBizRuntimeException("項目状态不是待启动、规划中、研发中、测试中,不能修改状态");
         }
         projectDO.setStatus(type);
         projectMapper.update(projectDO);
-        //所有关联的产品需求
-        List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectId);
-
-        List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
-                .collect(Collectors.toList());
-
-        Map<Long, Integer> oldStautsMap = productDemandMapper.selectByIdList(existProductDemandIds).stream()
-                .collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getStatus));
-
         //修改产品需求状态
-        if (CollectionUtils.isNotEmpty(existProductDemandIds)) {
-            if (ProjectStatusEnum.SUSPEND.getCode().equals(type)) {
-                //暂停  更新产品需求状态
-                productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode(), false);
-
-            } else {
-                // 作废解除关联
-                projectProductDemandComponent.update(projectId, null);
-                //作废  更新产品需求状态
-                productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.WAITING.getCode(), false);
-            }
-            //更新业务需求状态
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(existProductDemandIds, false);
-
-            Integer newStatus = ProjectStatusEnum.SUSPEND.getCode().equals(type)
-                    ? ProductDemandStatusEnum.INCLUDED.getCode() : ProductDemandStatusEnum.WAITING.getCode();
-            productDemandLogComponent.addLogWhenStatusChange(oldStautsMap, newStatus);
+        productDemandComponent.updateProductDemandStatus(projectId, type);
+        if (ProjectStatusEnum.INVALID.getCode().equals(type)) {
+            // 作废解除关联
+            projectProductDemandComponent.update(projectId, null);
         }
+        String action = ProjectStatusEnum.SUSPEND.getCode().equals(type) ? ButtonActionEnum.SUSPEND.getText() : ButtonActionEnum.INVALID.getText();
+        projectLogComponent.addLogWhenStatusChange(oldStatus, type, projectId, action);
         // 更新任务状态
         taskComponent.updateStatusAsProjectStatusChange(projectId, type, false);
         return BaseResult.success(true);
@@ -196,6 +177,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (!ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus())) {
             throw new BaseBizRuntimeException("项目状态不是暂停,不能开启");
         }
+        Integer oldStatus = projectDO.getStatus();
         List<ProjectNodeDO> projectNode = projectNodeComponent.get(projectId);
         log.info("项目开启,节点信息:projectNode={}", projectNode);
         if (CollectionUtils.isEmpty(projectNode)) {
@@ -206,6 +188,8 @@ public class ProjectServiceImpl implements ProjectService {
         }
         // 更新任务状态
         taskComponent.updateStatusAsProjectStatusChange(projectId, projectDO.getStatus(), enableTask);
+
+        projectLogComponent.addLogWhenStatusChange(oldStatus, projectDO.getStatus(), projectId, ButtonActionEnum.ENABLE.getText());
         return BaseResult.success(true);
     }
 
@@ -244,6 +228,9 @@ public class ProjectServiceImpl implements ProjectService {
         personComponent.add(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
         //生成节点信息
         projectNodeComponent.buildDefaultNode(projectDO.getPlanStartDate(), projectDO.getPlanEndDate(), projectDO.getId());
+
+        Integer status=ProjectStatusEnum.WAITING.getCode();
+        projectLogComponent.addLogWhenStatusChange(status, status, projectDO.getId(), ButtonActionEnum.SUBMIT.getText());
         return BaseResult.success(true);
     }
 
@@ -372,6 +359,8 @@ public class ProjectServiceImpl implements ProjectService {
             throw new BaseBizRuntimeException("找不到该项目");
         }
         List<Long> productDemandIds = productDemandLinkReq.getProductDemandIds();
+        List<ProductDemandDO> productDemands = productDemandMapper.selectByIdList(productDemandIds);
+        Map<Long, String> pdNameMap=productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getName, (v1, v2) -> v2));
         if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
             List<ProjectProductDemandDO> productDemand = projectProductDemandMapper.getLinkedProductDemand(productDemandIds);
             if (CollectionUtils.isNotEmpty(productDemand)) {
@@ -381,6 +370,8 @@ public class ProjectServiceImpl implements ProjectService {
             projectProductDemandComponent.batchInsert(projectDO.getId(), productDemandIds);
 
             productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
+
+            projectLogComponent.addLogWhenLinkOrUnlink(pdNameMap, projectDO.getName(), projectDO.getId(),ButtonActionEnum.LINK.getText());
         } else {
             projectProductDemandComponent.update(null, productDemandIds.get(0));
 
@@ -389,6 +380,7 @@ public class ProjectServiceImpl implements ProjectService {
             productDemandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
             productDemandComponent.update(productDemandDO);
 
+            projectLogComponent.addLogWhenLinkOrUnlink(pdNameMap, projectDO.getName(), projectDO.getId(),ButtonActionEnum.UN_LINK.getText());
             // 一个产品需求下的业务需求
             productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false);
 
@@ -490,9 +482,9 @@ public class ProjectServiceImpl implements ProjectService {
         }
         // 计算项目状态
         ProjectNodeDO node = null;
-        Integer oriStatus = projectDO.getStatus();
+        Integer oldStatus = projectDO.getStatus();
         if ((node = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getProjectNodeName())) != null && node.getActualDate() != null) {
-            if (ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
+            if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
                 // 编辑项目
                 throw new BaseBizRuntimeException("项目状态为暂停时,不能填写发布正式的实际时间");
             }
@@ -503,14 +495,15 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
         projectComponent.fillInfo(projectNodes, projectDO);
-        if (ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
+        if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
             // 编辑项目时，当状态是暂停,不修改项目状态
-            projectDO.setStatus(oriStatus);
+            projectDO.setStatus(oldStatus);
         }
         projectMapper.update(projectDO);
-        if (!ProjectStatusEnum.SUSPEND.getCode().equals(oriStatus)) {
+        if (!ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
             //当状态不是暂停,更新产品需求状态
             productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
+            projectLogComponent.addLogWhenStatusChange(oldStatus, projectDO.getStatus(), projectDO.getId(), null);
         }
         log.info("更新项目信息完成");
     }
@@ -519,6 +512,7 @@ public class ProjectServiceImpl implements ProjectService {
         projectComponent.fillInfo(projectNodes, projectDO);
         projectMapper.update(projectDO);
         productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
+        projectLogComponent.addLogWhenStatusChange(ProjectStatusEnum.SUSPEND.getCode(), projectDO.getStatus(), projectDO.getId(), ButtonActionEnum.ENABLE.getText());
     }
 
 }
