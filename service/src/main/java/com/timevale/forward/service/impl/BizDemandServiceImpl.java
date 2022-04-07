@@ -442,7 +442,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         //往bug日志表中插入一条线上bug状态变更数据
         bugLogMapper.insert(bugLogDO);
 
-        bugLogDO.setAction(ButtonActionEnum.SHIFT_BUSINESS.getText());
         bugLogDO.setOldValue(oldReasonName);
         bugLogDO.setNewValue(BugOnlineReasonEnum.DEMAND_QUESTION.getText());
         bugLogDO.setMainId(bugOnlineId);
