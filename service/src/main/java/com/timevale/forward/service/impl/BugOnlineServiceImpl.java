@@ -919,6 +919,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setOperatorId(lastOperatorId);
         bugOnlineDO.setOperator(lastOperator);
         bugOnlineDO.setDismissCause(null);
+        bugOnlineDO.setHangUp(false);
         bugOnlineDO.setOpenAgainReason(bugOnlineOpenAgainReq.getOpenAgainReason());
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
