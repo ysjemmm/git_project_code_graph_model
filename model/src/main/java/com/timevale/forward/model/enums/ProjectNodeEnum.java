@@ -1,35 +1,58 @@
 package com.timevale.forward.model.enums;
 
+import com.timevale.forward.dal.entity.ProjectNodeDO;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @date 2022/1/24 15:13
  * @author 望轩
  */
 @Getter
+@AllArgsConstructor
 public enum ProjectNodeEnum {
     /**
      * 节点阶段
      */
-    START_PLAN("开始规划"),
-    DEMAND_INTERNAL_AUDIT("需求内审"),
-    DEMAND_CONSTRUE("需求串讲"),
-    TECHNICAL_DETAIL_REVIEW("技术详设评审"),
-    DEVELOP_START("开发开始"),
-    WRITE_TEST_CASES("编写测试用例"),
-    USE_CASE_REVIEW("用例评审"),
-    SUBMIT_TEST("提测"),
-    TEST_START("测试开始"),
-    PUBLISH_SIMULATE("发布模拟"),
-    PUBLISH_OFFICIAL("发布正式");
+    START_PLAN(0,"开始规划"),
+    DEMAND_INTERNAL_AUDIT(1,"需求内审"),
+    DEMAND_CONSTRUE(2,"需求串讲"),
+    TECHNICAL_DETAIL_REVIEW(3,"技术详设评审"),
+    DEVELOP_START(4,"开发开始"),
+    WRITE_TEST_CASES(5,"编写测试用例"),
+    USE_CASE_REVIEW(6,"用例评审"),
+    SUBMIT_TEST(7,"提测"),
+    TEST_START(8,"测试开始"),
+    PUBLISH_SIMULATE(9,"发布模拟"),
+    PUBLISH_OFFICIAL(10,"发布正式");
 
+    private final Integer code;
     private final String projectNodeName;
 
-    ProjectNodeEnum(String projectNodeName) {
-        this.projectNodeName = projectNodeName;
+    public static String getStage(List<ProjectNodeDO> projectNodeDOList){
+
+        projectNodeDOList.sort(Comparator.comparing(a -> getCodeByName(a.getName())));
+
+        for (ProjectNodeDO e : projectNodeDOList) {
+            if(e.getActualDate() == null){
+                return e.getName();
+            }
+        }
+        return PUBLISH_OFFICIAL.projectNodeName;
+    }
+
+    public static Integer getCodeByName(String name){
+        for (ProjectNodeEnum e : ProjectNodeEnum.values()) {
+            if(Objects.equals(e.projectNodeName, name)){
+                return e.code;
+            }
+        }
+        return -1;
     }
 
     public final static Map<Integer, String> DEFAULT_NODE = new HashMap<Integer, String>() {{

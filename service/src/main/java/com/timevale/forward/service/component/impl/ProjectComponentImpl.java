@@ -12,6 +12,7 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ProjectComponent;
+import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.component.TaskComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
@@ -24,6 +25,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -50,6 +52,9 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Resource
     private TaskComponent taskComponent;
+
+    @Resource
+    private ProjectNodeComponent projectNodeComponent;
 
 
     @Override
@@ -94,8 +99,8 @@ public class ProjectComponentImpl implements ProjectComponent {
         Map<Long, List<ProjectProductLineBizDomain>> productLineMap = productLineMapper.getByProjectIds(projectIds)
                 .stream().collect(Collectors.groupingBy(ProjectProductLineBizDomain::getProjectId));
 
-        List<ProjectVO> projectVO = ProjectCopier.INSTANCE.convert(projectDO);
-        projectVO.forEach(a -> {
+        List<ProjectVO> projectVOList = ProjectCopier.INSTANCE.convert(projectDO);
+        projectVOList.forEach(a -> {
             List<PersonDO> pds = pdMap.get(a.getId());
             if (CollectionUtils.isNotEmpty(pds)) {
                 String pdName = pds.stream().map(PersonDO::getUserName).collect(Collectors.joining(","));
@@ -120,9 +125,21 @@ public class ProjectComponentImpl implements ProjectComponent {
             a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
 //            a.setWarning(warning.get(a.getId()));
         });
+
+        // 4.节点透出
+        Map<Long, String> nodeNameMap = new HashMap<>();
+        Map<Long, List<ProjectNodeDO>> projectNodeMap = projectNodeComponent.get(projectIds);
+        for (Map.Entry<Long, List<ProjectNodeDO>> e : projectNodeMap.entrySet()) {
+            String stage = ProjectNodeEnum.getStage(e.getValue());
+            nodeNameMap.put(e.getKey(), stage);
+        }
+        for (ProjectVO e : projectVOList) {
+            e.setNodeName(nodeNameMap.get(e.getId()));
+        }
+
         PageQueryResult<ProjectVO> pageQueryResult = new PageQueryResult<>();
         PageInfo<ProjectListDO> pageInfo = new PageInfo<>(projectDO);
-        pageQueryResult.setResultList(projectVO);
+        pageQueryResult.setResultList(projectVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);
 

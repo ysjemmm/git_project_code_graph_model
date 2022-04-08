@@ -4,6 +4,7 @@ import com.timevale.forward.dal.entity.ProjectNodeDO;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public interface ProjectNodeComponent {
     /**
@@ -20,6 +21,12 @@ public interface ProjectNodeComponent {
      */
     List<ProjectNodeDO> get(Long projectId);
 
+    /**
+     * 批量获取节点信息
+     * @param projectIdList 项目id
+     * @return ProjectNodeDO
+     */
+    Map<Long,List<ProjectNodeDO>> get(List<Long> projectIdList);
 
     /**
      *

@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component.impl;
 
+import com.google.common.collect.Maps;
 import com.timevale.forward.dal.dao.ProjectNodeMapper;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
@@ -8,10 +9,13 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author xingyun
@@ -36,6 +40,24 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
     @Override
     public List<ProjectNodeDO> get(Long projectId) {
         return projectNodeMapper.get(projectId);
+    }
+
+    @Override
+    public Map<Long, List<ProjectNodeDO>> get(List<Long> projectIdList) {
+        log.info("节点查询接收参数:projectIdList={}", projectIdList);
+
+        Map<Long, List<ProjectNodeDO>> result = Maps.newHashMap();
+
+        // 入参判空
+        if(CollectionUtils.isEmpty(projectIdList)){
+            return result;
+        }
+
+        // 查询数据
+        List<ProjectNodeDO> projectNodeDOList = projectNodeMapper.selectByProjectIdList(projectIdList);
+        result.putAll(projectNodeDOList.stream().collect(Collectors.groupingBy(ProjectNodeDO::getProjectId)));
+
+        return result;
     }
 
     @Override

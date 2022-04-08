@@ -136,7 +136,7 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
         projectDO.setStatus(-10);
         when(projectMapper.get(any())).thenReturn(projectDO);
 
-        when(projectNodeComponent.get(any())).thenReturn(null);
+        when(projectNodeComponent.get((Long) any())).thenReturn(null);
 
         when(projectMapper.update(any())).thenReturn(1);
 
@@ -211,7 +211,7 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
 
         ProjectNodeDO projectNodeDO = new ProjectNodeDO();
         projectNodeDO.setName("www");
-        when(projectNodeComponent.get(any())).thenReturn(Collections.singletonList(projectNodeDO));
+        when(projectNodeComponent.get((Long) any())).thenReturn(Collections.singletonList(projectNodeDO));
 
         assert projectService.get(1L).ifSuccess();
     }

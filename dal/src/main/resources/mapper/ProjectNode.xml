@@ -22,10 +22,21 @@
         </where>
     </select>
 
+    <select id="selectByProjectIdList" resultType="com.timevale.forward.dal.entity.ProjectNodeDO">
+        SELECT id,project_id,name, plan_date, actual_date ,create_man_id, create_man
+        FROM project_node
+        <where>
+            project_id IN
+            <foreach collection="projectIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </select>
+
     <update id="updateSubmitTestActualDate">
         update project_node
         set actual_date=#{actualDate}
-        where project_id=#{projectId} and name="提测"
+        where project_id=#{projectId} and name= '提测'
     </update>
 
     <select id="getByProjectIds" resultType="com.timevale.forward.dal.entity.ProjectNodeDO">
