@@ -1099,18 +1099,18 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
 
-        BugLogDO bugLog = new BugLogDO();
-        bugLog.setField(BugFieldEnum.OPERATOR.getText());
-        bugLog.setOldValue(oldOperator);
-        bugLog.setNewValue(bugOnlineTransferReq.getUserName());
-        bugLog.setMainId(bugOnlineTransferReq.getId());
-        bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
-        //往bug日志表中插入一条线上bug内容变更数据
-        bugLogMapper.insert(bugLog);
-
-        //如果不是自己转交给自己，bug状态处理人员表插入数据
+        //如果不是自己转交给自己
         if (!oldOperator.equals(bugOnlineTransferReq.getUserName())) {
             insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
+
+            //往bug日志表中插入一条线上bug内容变更数据
+            BugLogDO bugLog = new BugLogDO();
+            bugLog.setField(BugFieldEnum.OPERATOR.getText());
+            bugLog.setOldValue(oldOperator);
+            bugLog.setNewValue(bugOnlineTransferReq.getUserName());
+            bugLog.setMainId(bugOnlineTransferReq.getId());
+            bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
+            bugLogMapper.insert(bugLog);
         }
 
         //发送消息
