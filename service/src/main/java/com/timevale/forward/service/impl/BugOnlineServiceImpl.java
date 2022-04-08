@@ -1296,6 +1296,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         } else {
             bugOnlineDO.setStatus(BugOnlineStatusEnum.PROBLEM_REPORT.getCode());
         }
+
+        bugOnlineDO.setHangUp(false);
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
 
