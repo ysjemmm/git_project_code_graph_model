@@ -1,16 +1,20 @@
 package com.timevale.forward.service.component.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
 import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.ProductDemandLogComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -43,5 +47,50 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
                 logDO.setNewValue(BizDemandStatusEnum.getTextByCode(newStauts));
             }
         });
+    }
+
+    @Override
+    public void addLogWhenStatusChange(Integer oldStatus, Integer newStatus, Long id, String action) {
+        //{操作人}点击 {按钮名称} ,状态改为{操作后状态},
+        if(!Objects.equals(oldStatus,newStatus)){
+            BizChangeLogDO logDO = new BizChangeLogDO();
+            logDO.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+            logDO.setMainId(id);
+            logDO.setField(BizChangeLogFieldEnum.PRODUCT_DEMAND_STATUS.getText());
+            logDO.setAction(action);
+            logDO.setOldValue(ProjectStatusEnum.getTextByCode(oldStatus));
+            logDO.setNewValue(ProjectStatusEnum.getTextByCode(newStatus));
+//        bizChangeLogMapper.insert(logDO);
+        }
+    }
+
+    @Override
+    public void addLogWhenLinkOrUnlink(String name, Long id,Map<Long, String> bdNameMap,String linkOrUnlink) {
+        List<BizChangeLogDO> logs = new ArrayList<>();
+        bdNameMap.forEach((bId, bName) -> {
+            //1.产品需求记录日志:{操作人}添加/删除 {业务需求}:{业务需求A}
+            BizChangeLogDO productLog = new BizChangeLogDO();
+            productLog.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+            productLog.setMainId(id);
+            productLog.setField(BizChangeLogTypeEnum.BIZ_DEMAND.getText());
+            productLog.setAction(linkOrUnlink);
+            productLog.setOldValue(bName);
+            productLog.setNewValue(bName);
+            logs.add(productLog);
+
+            //1.业务需求记录日志:{操作人}添加/删除 {产品需求}:{产品需求A}
+            BizChangeLogDO bizLog = new BizChangeLogDO();
+            bizLog.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+            bizLog.setMainId(bId);
+            bizLog.setField(BizChangeLogTypeEnum.PRODUCT_DEMAND.getText());
+            bizLog.setAction(linkOrUnlink);
+            bizLog.setOldValue(name);
+            bizLog.setNewValue(name);
+            logs.add(bizLog);
+
+        });
+        if (CollectionUtil.isNotEmpty(logs)) {
+//            bizChangeLogMapper.batchInsert(logs);
+        }
     }
 }

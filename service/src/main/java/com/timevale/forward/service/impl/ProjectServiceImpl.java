@@ -361,6 +361,8 @@ public class ProjectServiceImpl implements ProjectService {
         List<Long> productDemandIds = productDemandLinkReq.getProductDemandIds();
         List<ProductDemandDO> productDemands = productDemandMapper.selectByIdList(productDemandIds);
         Map<Long, String> pdNameMap=productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getName, (v1, v2) -> v2));
+        Map<Long, Integer> statusMap=productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getStatus, (v1, v2) -> v2));
+
         if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
             List<ProjectProductDemandDO> productDemand = projectProductDemandMapper.getLinkedProductDemand(productDemandIds);
             if (CollectionUtils.isNotEmpty(productDemand)) {
@@ -371,7 +373,7 @@ public class ProjectServiceImpl implements ProjectService {
 
             productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
 
-            projectLogComponent.addLogWhenLinkOrUnlink(pdNameMap, projectDO.getName(), projectDO.getId(),ButtonActionEnum.LINK.getText());
+            projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(),pdNameMap, ButtonActionEnum.LINK.getText());
         } else {
             projectProductDemandComponent.update(null, productDemandIds.get(0));
 
@@ -380,9 +382,11 @@ public class ProjectServiceImpl implements ProjectService {
             productDemandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
             productDemandComponent.update(productDemandDO);
 
-            projectLogComponent.addLogWhenLinkOrUnlink(pdNameMap, projectDO.getName(), projectDO.getId(),ButtonActionEnum.UN_LINK.getText());
             // 一个产品需求下的业务需求
             productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false);
+
+            projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(),pdNameMap, ButtonActionEnum.UN_LINK.getText());
+            productDemandLogComponent.addLogAsProjectStatusChange(statusMap, productDemandDO.getStatus());
 
             // 取消产品需求和任务的关联
             productDemandIds.forEach(a -> taskProductDemandComponent.update(null, a));

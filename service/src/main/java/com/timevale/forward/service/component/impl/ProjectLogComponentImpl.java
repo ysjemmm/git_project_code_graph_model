@@ -95,19 +95,10 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
     }
 
     @Override
-    public void addLogWhenLinkOrUnlink(Map<Long, String> pdNameMap, String name, Long id,String linkOrUnlink) {
+    public void addLogWhenLinkOrUnlink(String name, Long id,Map<Long, String> pdNameMap,String linkOrUnlink) {
         List<BizChangeLogDO> logs = new ArrayList<>();
         pdNameMap.forEach((pId, pName) -> {
-            //1.产品需求记录日志:{操作人}删除 {项目}:{项目A}
-            BizChangeLogDO productLog = new BizChangeLogDO();
-            productLog.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
-            productLog.setMainId(pId);
-            productLog.setField(BizChangeLogTypeEnum.PROJECT.getText());
-            productLog.setAction(linkOrUnlink);
-            productLog.setOldValue(name);
-            productLog.setNewValue(name);
-            logs.add(productLog);
-            //2.项目记录日志:{操作人}删除 {产品需求}:{产品需求A}
+            //1.项目记录日志:{操作人}添加/删除 {产品需求}:{产品需求A}
             BizChangeLogDO projectLog = new BizChangeLogDO();
             projectLog.setType(BizChangeLogTypeEnum.PROJECT.getCode());
             projectLog.setMainId(id);
@@ -116,6 +107,15 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             projectLog.setOldValue(pName);
             projectLog.setNewValue(pName);
             logs.add(projectLog);
+            //2.产品需求记录日志:{操作人}添加/删除  {项目}:{项目A}
+            BizChangeLogDO productLog = new BizChangeLogDO();
+            productLog.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+            productLog.setMainId(pId);
+            productLog.setField(BizChangeLogTypeEnum.PROJECT.getText());
+            productLog.setAction(linkOrUnlink);
+            productLog.setOldValue(name);
+            productLog.setNewValue(name);
+            logs.add(productLog);
         });
         if (CollectionUtil.isNotEmpty(logs)) {
 //            bizChangeLogMapper.batchInsert(logs);

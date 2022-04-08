@@ -79,4 +79,12 @@ public interface BizDemandMapper {
      */
     int updateReason(@Param("bizDemandId")Long bizDemandId, @Param("reason") Integer reason);
 
+    /**
+     * 选择id获取对应业务需求信息
+     *
+     * @param ids id
+     * @return 业务需求DO
+     */
+    List<BizDemandDO> selectByIds(@Param("ids") List<Long> ids);
+
 }

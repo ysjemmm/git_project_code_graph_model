@@ -44,6 +44,7 @@ import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -97,6 +98,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private TaskProductDemandComponent taskProductDemandComponent;
+
+    @Resource
+    private ProductDemandLogComponent productDemandLogComponent;
+
+    @Resource
+    private ProjectLogComponent projectLogComponent;
 
     private static final Integer MAX_LENGTH = 64 * 1000;
 
@@ -231,7 +238,16 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         personComponent.add(productDemandAddReq.getRecipients(), productDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
 
-        productBizDemandComponent.batchInsert(productDemand.getId(), productDemandAddReq.getBizDemandIds());
+        List<Long> bizDemandIds = productDemandAddReq.getBizDemandIds();
+        if (CollectionUtils.isNotEmpty(bizDemandIds)) {
+            productBizDemandComponent.batchInsert(productDemand.getId(), bizDemandIds);
+            Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
+            productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, ButtonActionEnum.LINK.getText());
+            if(productDemandAddReq.getProjectId() == null){
+                //如果只关联业务需求,没关联项目,需要计算业务状态
+                productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemand.getId()), false);
+            }
+        }
         if (productDemandAddReq.getProjectId() != null) {
             ProjectDO projectDO = projectMapper.get(productDemandAddReq.getProjectId());
             if (projectDO == null) {
@@ -239,7 +255,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             }
             projectProductDemandComponent.batchInsert(productDemandAddReq.getProjectId(), Lists.newArrayList(productDemand.getId()));
             productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
+
+            Map<Long, String> pdNameMap = new HashMap<>();
+            pdNameMap.put(productDemand.getId(), productDemand.getName());
+            projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.LINK.getText());
         }
+        productDemandLogComponent.addLogWhenStatusChange(productDemand.getStatus(), productDemand.getStatus(), productDemand.getId(), ButtonActionEnum.SUBMIT.getText());
         return BaseResult.success(true);
     }
 
