@@ -29,11 +29,21 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
 
+    /**
+     * 编辑时,记录日志
+     * @param oldObj oldObj
+     * @param newObj newObj
+     */
     @Override
     public void addLogWhenModifyData(ProductDemandDO oldObj, ProductDemandDO newObj) {
 
     }
 
+    /**
+     * 项目状态改变时引起的产品需求状态变化
+     * @param statusMap statusMap
+     * @param newStauts newStauts
+     */
     @Override
     public void addLogAsProjectStatusChange(Map<Long, Integer> statusMap, Integer newStauts) {
         //系统 把{xx状态字段名称xx}从{原状态} 改为{新状态}
@@ -49,6 +59,13 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
         });
     }
 
+    /**
+     * 按钮点击时引起的产品需求状态变化
+     * @param oldStatus oldStatus
+     * @param newStatus  newStatus
+     * @param id  id
+     * @param action action
+     */
     @Override
     public void addLogWhenStatusChange(Integer oldStatus, Integer newStatus, Long id, String action) {
         //{操作人}点击 {按钮名称} ,状态改为{操作后状态},
@@ -64,6 +81,13 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
         }
     }
 
+    /**
+     * 关联/删除关联/作废产品需求时,双向记录日志
+     * @param name name
+     * @param id id
+     * @param bdNameMap bdNameMap
+     * @param linkOrUnlink linkOrUnlink
+     */
     @Override
     public void addLogWhenLinkOrUnlink(String name, Long id,Map<Long, String> bdNameMap,String linkOrUnlink) {
         List<BizChangeLogDO> logs = new ArrayList<>();

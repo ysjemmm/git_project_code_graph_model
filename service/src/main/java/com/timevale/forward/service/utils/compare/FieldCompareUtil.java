@@ -2,11 +2,9 @@ package com.timevale.forward.service.utils.compare;
 
 import com.google.common.collect.Maps;
 import com.timevale.forward.dal.annotation.FieldCompare;
+import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 import com.timevale.forward.model.enums.BugLogTypeEnum;
-import com.timevale.forward.model.middle.BaseMD;
-import com.timevale.forward.model.middle.BugOfflineMD;
-import com.timevale.forward.model.middle.BugOnlineMD;
-import com.timevale.forward.model.middle.BusinessMD;
+import com.timevale.forward.model.middle.*;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +37,7 @@ public class FieldCompareUtil {
         CLAZZ_MAP.put(BugOfflineMD.class, BugLogTypeEnum.OFFLINE.getCode());
         CLAZZ_MAP.put(BugOnlineMD.class, BugLogTypeEnum.ONLINE.getCode());
         CLAZZ_MAP.put(BusinessMD.class, BugLogTypeEnum.ONLINE.getCode());
+        CLAZZ_MAP.put(ProjectMD.class, BizChangeLogTypeEnum.PROJECT.getCode());
     }
 
     /**

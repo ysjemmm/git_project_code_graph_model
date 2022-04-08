@@ -172,7 +172,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     private void buildConditionBeforeUpdate(List<Long> productDemandIds, boolean bizProductDemandUnLink) {
         log.info("产品需求变化-更新业务需求,产品需求id={},解除二者关联={}", productDemandIds, bizProductDemandUnLink);
         // 产品需求下的所有业务需求
-        List<ProductBizDemandDO> bizDemands = productBizDemandMapper.getByProductDemandId(productDemandIds);
+        List<ProductBizDemandDO> bizDemands = productBizDemandMapper.getByProductDemandIds(productDemandIds);
         if (CollectionUtils.isEmpty(bizDemands)) {
             log.info("产品需求变化-更新业务需求,业务需求不存在");
             return;

@@ -37,6 +37,11 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
     @Resource
     private PersonComponent personComponent;
 
+    /**
+     * 编辑时,记录日志
+     * @param oldObj oldObj
+     * @param newObj newObj
+     */
     @Override
     public void addLogWhenModifyData(ProjectDO oldObj, ProjectDO newObj) {
         //{操作人} 把{字段名称} 从{原内容}改为{最新内容}
@@ -77,7 +82,13 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
 //            bizChangeLogMapper.batchInsert(logs);
         }
     }
-
+    /**
+     * 按钮点击时引起的项目状态变化
+     * @param oldStatus oldStatus
+     * @param newStatus  newStatus
+     * @param id  id
+     * @param action action
+     */
     @Override
     public void addLogWhenStatusChange(Integer oldStatus, Integer newStatus, Long id, String action) {
         //{操作人}点击 {按钮名称} ,状态改为{操作后状态},
@@ -93,7 +104,13 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
         }
 
     }
-
+    /**
+     * 关联/删除关联/作废项目时,双向记录日志
+     * @param name name
+     * @param id id
+     * @param pdNameMap pdNameMap
+     * @param linkOrUnlink linkOrUnlink
+     */
     @Override
     public void addLogWhenLinkOrUnlink(String name, Long id,Map<Long, String> pdNameMap,String linkOrUnlink) {
         List<BizChangeLogDO> logs = new ArrayList<>();
