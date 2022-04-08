@@ -238,8 +238,10 @@ public class TaskServiceImpl implements TaskService {
         taskDetailVO.setStageName(TaskStageEnum.getTextByCode(taskDetailVO.getStage()));
         //项目
         ProjectDO projectDO = projectMapper.get(taskDO.getProjectId());
+        taskDetailVO.setProjectId(projectDO.getId());
         taskDetailVO.setProjectName(projectDO.getName());
         taskDetailVO.setPmId(projectDO.getPmId());
+        taskDetailVO.setProjectId(projectDO.getId());
 
         //产品线
         ProductLineDO productLineDO = productLineMapper.selectById(taskDO.getProductLineId());
@@ -656,7 +658,8 @@ public class TaskServiceImpl implements TaskService {
                     operator,
                     executorIds,
                     taskDO.getName(),
-                    taskDO.getId()
+                    taskDO.getId(),
+                    taskDO.getProjectId()
             ));
         }
     }

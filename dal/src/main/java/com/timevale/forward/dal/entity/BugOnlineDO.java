@@ -105,6 +105,11 @@ public class BugOnlineDO extends BaseDO {
     private Integer prevStatus;
 
     /**
+     * 是否含挂起节点
+     */
+    private Boolean hangUp;
+
+    /**
      * bug状态：0问题上报，1待确认，2关闭，3问题确认，4问题修复，5QA修复确认，6待上线，7挂起，8完成，9已转需求
      */
     private Integer status;
@@ -138,6 +143,11 @@ public class BugOnlineDO extends BaseDO {
      * 重新打开原因
      */
     private String openAgainReason;
+
+    /**
+     * 系统菜单名称
+     */
+    private String systemMenuName;
 }
 
 

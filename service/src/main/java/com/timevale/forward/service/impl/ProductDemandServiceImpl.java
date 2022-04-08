@@ -28,6 +28,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
+import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -44,7 +45,6 @@ import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -106,6 +106,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     private ProjectLogComponent projectLogComponent;
 
     private static final Integer MAX_LENGTH = 64 * 1000;
+    private static final Integer MAX_LENGTH = 50 * 1000;
 
 
     @Override
@@ -255,12 +256,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             }
             projectProductDemandComponent.batchInsert(productDemandAddReq.getProjectId(), Lists.newArrayList(productDemand.getId()));
             productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
-
-            Map<Long, String> pdNameMap = new HashMap<>();
-            pdNameMap.put(productDemand.getId(), productDemand.getName());
-            projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.LINK.getText());
         }
-        productDemandLogComponent.addLogWhenStatusChange(productDemand.getStatus(), productDemand.getStatus(), productDemand.getId(), ButtonActionEnum.SUBMIT.getText());
         return BaseResult.success(true);
     }
 
@@ -273,13 +269,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             throw new BaseBizRuntimeException("该产品需求名称已存在,请修改后重试");
         }
         checkDescLength(productDemandModifyReq.getDesc());
-        ProductDemandDO newProductDemand = ProductDemandCopier.INSTANCE.convert(productDemandModifyReq);
-        newProductDemand.setType(JSON.toJSONString(productDemandModifyReq.getTypes()));
-        productDemandMapper.update(newProductDemand);
+        ProductDemandDO demandDO = ProductDemandCopier.INSTANCE.convert(productDemandModifyReq);
+        demandDO.setType(JSON.toJSONString(productDemandModifyReq.getTypes()));
+        productDemandMapper.update(demandDO);
         // 附件
-        fileComponent.update(productDemandModifyReq.getFiles(), newProductDemand.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
+        fileComponent.update(productDemandModifyReq.getFiles(), demandDO.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
         // 抄送人
-        personComponent.update(productDemandModifyReq.getRecipients(), newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
+        personComponent.update(productDemandModifyReq.getRecipients(), demandDO.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
 
         return BaseResult.success(true);
     }
@@ -357,13 +353,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     public BaseResult<Boolean> linkOrUnLinkBizDemand(ProductBizDemandLinkReq bizDemandLinkReq) {
         log.info("关联or取消关联接收参数:bizDemandLinkReq={}", bizDemandLinkReq);
         List<Long> bizDemandIds = bizDemandLinkReq.getBizDemandIds();
-        List<Long> productDemandIds = Lists.newArrayList(bizDemandLinkReq.getProductDemandId());
         if (LinkOrUnLinkEnum.LINK.getCode().equals(bizDemandLinkReq.getType())) {
             productBizDemandComponent.batchInsert(bizDemandLinkReq.getProductDemandId(), bizDemandIds);
 
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(bizDemandLinkReq.getProductDemandId()), false);
         } else {
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, true);
+            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(bizDemandLinkReq.getProductDemandId()), true);
 
             ProductBizDemandDO productDemandDO = new ProductBizDemandDO();
             productDemandDO.setIsDeleted(true);

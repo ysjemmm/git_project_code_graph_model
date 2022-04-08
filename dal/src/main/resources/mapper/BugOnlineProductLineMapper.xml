@@ -9,10 +9,15 @@
         SELECT bug_online_id, product_line_id
         FROM bug_online_product_line
         <where>
-            AND bug_online_id IN
-            <foreach collection="bugOnlineIdList" item="item" separator="," open="(" close=")">
-                #{item}
-            </foreach>
+            <if test="bugOnlineIdList != null and bugOnlineIdList.size() > 0">
+                AND bug_online_id IN
+                <foreach collection="bugOnlineIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="true">
+                AND is_deleted = false
+            </if>
         </where>
     </select>
 

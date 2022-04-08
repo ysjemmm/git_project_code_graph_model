@@ -192,7 +192,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         if(AscriptionEnum.CURRENT_USER.toString().equals(ascription)){
             troubleTicketCondition.setCreateMandIdList(Lists.newArrayList(userId));
         }else if(AscriptionEnum.RECEIVE.toString().equals(ascription)){
-            troubleTicketCondition.setHandlerIdList(Lists.newArrayList(userId));
+            troubleTicketQueryList.getHandlerIdList().add(userId);
         }
 
         // 添加处理人判断
@@ -208,9 +208,15 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
                     .map(PersonDO::getMainId)
                     .distinct()
                     .collect(Collectors.toList());
+            if(CollectionUtils.isEmpty(troubleTicketIdList)){
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
             troubleTicketCondition.setTroubleTicketIdList(troubleTicketIdList);
         }
 
+        // 故障定级-未定级,特殊处理
+        boolean contain = troubleTicketCondition.getTroubleRankList().contains(TroubleTicketRankEnum.UN_CERTAIN.getCode());
+        troubleTicketCondition.setTroubleRankIsNull(contain);
 
         // 分页查询
         PageHelper.startPage(troubleTicketQueryList.pageNum, troubleTicketQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);

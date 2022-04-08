@@ -10,8 +10,11 @@ import com.timevale.forward.service.component.ImprovementMeasureComponent;
 import com.timevale.forward.service.copy.ImprovementMeasureCopier;
 import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
 import com.timevale.forward.service.integration.erp.model.CreateTodoTaskMsg;
+import com.timevale.forward.service.integration.erp.model.DeleteTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.GetTodoTaskMsg;
+import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
@@ -21,10 +24,7 @@ import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -105,12 +105,8 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
         ImprovementMeasureDO improvementMeasureDO = ImprovementMeasureCopier.INSTANCE.convert(improvementMeasureAddReq);
 
         // 时间配置
-        Date implementationTime = improvementMeasureDO.getImplementationTime();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(implementationTime);
-        calendar.set(Calendar.HOUR_OF_DAY,18);
-        calendar.set(Calendar.MINUTE,30);
-        improvementMeasureDO.setImplementationTime(calendar.getTime());
+        Date endOfWork = DateUtil.getEndOfWork(improvementMeasureDO.getImplementationTime());
+        improvementMeasureDO.setImplementationTime(endOfWork);
 
         // 待办任务
         String todoId = addTodoTask(improvementMeasureDO);
@@ -153,6 +149,57 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
             return todoId;
         }
         return StringUtils.EMPTY;
+    }
+
+    @Override
+    public void updateTodoTask(ImprovementMeasureDO improvementMeasureDO) {
+        // 待办处理
+        if(!improvementMeasureDO.getTodo()){
+            return;
+        }
+        // 获取 unionId
+        String executorId = improvementMeasureDO.getExecutorId();
+        Map<String, String> unionIdMap = innerUserPersonClient.getUnionIds(Lists.newArrayList(executorId));
+        if (CollectionUtils.isEmpty(unionIdMap)) {
+            log.info("更新待办时,查询用户中心所属用户无unionId");
+        }
+        String unionId = unionIdMap.get(executorId);
+
+        UpdateTodoTaskMsg updateTodoTaskMsg = UpdateTodoTaskMsg.builder()
+                .recordId(improvementMeasureDO.getTodoId())
+                .title(String.format(TITLE, improvementMeasureDO.getName()))
+                .unionId(unionId)
+                .executorIds(Lists.newArrayList(unionId))
+                .participantIds(Lists.newArrayList(unionId))
+                .done(Objects.equals(ImprovementMeasureStatusEnum.COMPLETED.getCode(),improvementMeasureDO.getStatus()))
+                .dueTime(improvementMeasureDO.getImplementationTime().getTime())
+                .build();
+        dingWorkRecordClient.updateTask(updateTodoTaskMsg);
+
+        log.info("更新待办信息,improvementMeasureDO:{}", improvementMeasureDO);
+    }
+
+    @Override
+    public void deleteTodoTask(ImprovementMeasureDO improvementMeasureDO) {
+        // 待办处理
+        if(!improvementMeasureDO.getTodo()){
+            return;
+        }
+        // 获取 用户 unionId
+        String executorId = improvementMeasureDO.getExecutorId();
+        Map<String, String> unionIdMap = innerUserPersonClient.getUnionIds(Lists.newArrayList(executorId));
+        if (CollectionUtils.isEmpty(unionIdMap)) {
+            log.info("删除待办时,查询用户中心所属用户无unionId");
+        }
+        String unionId = unionIdMap.get(executorId);
+
+        DeleteTodoTaskMsg deleteTodoTaskMsg = DeleteTodoTaskMsg.builder()
+                .recordId(improvementMeasureDO.getTodoId())
+                .unionId(unionId)
+                .build();
+        dingWorkRecordClient.deleteTask(deleteTodoTaskMsg);
+
+        log.info("删除待办,deleteTodoTaskMsg:{}", deleteTodoTaskMsg);
     }
 
 }

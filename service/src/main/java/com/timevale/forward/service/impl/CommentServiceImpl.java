@@ -48,6 +48,9 @@ public class CommentServiceImpl implements CommentService {
     private BugOfflineMapper bugOfflineMapper;
 
     @Resource
+    private BugOnlineMapper bugOnlineMapper;
+
+    @Resource
     private TroubleTicketMapper troubleTicketMapper;
 
     @Resource
@@ -95,7 +98,7 @@ public class CommentServiceImpl implements CommentService {
         }else if(CommentTypeEnum.BUG_OFFLINE.getCode().equals(type)) {
             name = bugOfflineMapper.selectById(toId).getName();
         }else if(CommentTypeEnum.BUG_ONLINE.getCode().equals(type)){
-            name = "线上bug";
+            name = bugOnlineMapper.selectById(toId).getName();
         }else if(CommentTypeEnum.TROUBLE_TICKET.getCode().equals(type)){
             name = troubleTicketMapper.selectById(toId).getName();
         }

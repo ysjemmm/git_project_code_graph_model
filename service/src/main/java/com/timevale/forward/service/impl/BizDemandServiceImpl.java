@@ -419,23 +419,37 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         //保存老的状态
-        String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+        String oldStatusName = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+        Integer oldStatus = bugOnlineDO.getStatus();
+
+        // 保存旧的bug原因
+        String oldReasonName = BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason());
 
         bugOnlineDO.setStatus(BugOnlineStatusEnum.REQUIRED.getCode());
-        bugOnlineDO.setPrevStatus(bugOnlineDO.getStatus());
+        bugOnlineDO.setReason(BugOnlineReasonEnum.DEMAND_QUESTION.getCode());
+        bugOnlineDO.setPrevStatus(oldStatus);
         bugOnlineDO.setBizDemandId(bizDemandId);
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.SHIFT_BUSINESS.getText());
-        bugLogDO.setOldValue(oldStatus);
+        bugLogDO.setOldValue(oldStatusName);
         bugLogDO.setNewValue(BugOnlineStatusEnum.REQUIRED.getText());
         bugLogDO.setMainId(bugOnlineId);
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
         bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
         //往bug日志表中插入一条线上bug状态变更数据
         bugLogMapper.insert(bugLogDO);
+
+        BugLogDO reasonBugLogDO = new BugLogDO();
+        reasonBugLogDO.setOldValue(oldReasonName);
+        reasonBugLogDO.setNewValue(BugOnlineReasonEnum.DEMAND_QUESTION.getText());
+        reasonBugLogDO.setMainId(bugOnlineId);
+        reasonBugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        reasonBugLogDO.setField(BugLogFieldEnum.REASON.getText());
+        //往bug日志表中插入一条线上bug状态变更数据
+        bugLogMapper.insert(reasonBugLogDO);
 
         //bug状态处理人员表插入数据
         insertToBugStatusOperator(bugOnlineDO.getId());

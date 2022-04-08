@@ -121,6 +121,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         Long deptId = Long.valueOf(node.getGroupId());
         if (isInsert || queryDeptIdSet.contains(deptId)) {
             isInsert = true;
+            node.setGroupName(name);
             deptMap.put(deptId, node);
         }
         // 如果为叶节点直接返回

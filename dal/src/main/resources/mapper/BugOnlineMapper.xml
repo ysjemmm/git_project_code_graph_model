@@ -6,9 +6,13 @@
     </select>
 
     <select id="selectListByCondition" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
-        select bo.id, bo.name, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env, bo.reason, bo.belong,
+        select bo.id, bo.name, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env,
+        bo.reason, bo.belong,
         bo.create_date, bo.modify_date
         from bug_online bo
+        left join bug_online_product_line bopl on bo.id = bopl.bug_online_id
+        left join product_line pl on bopl.product_line_id = pl.id
+        left join biz_domain bdm on pl.biz_domain_id = bdm.id
         <where>
             <if test="name != null and name != '' ">
                 and bo.name like concat('%',#{name},'%')
@@ -55,6 +59,18 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="productLineIdList != null and productLineIdList.size() > 0">
+                and pl.id in
+                <foreach collection="productLineIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="bizDomainIdList != null and bizDomainIdList.size() > 0">
+                and bdm.id in
+                <foreach collection="bizDomainIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="createDateLeft != null and createDateRight != null">
                 and bo.create_date &gt;= #{createDateLeft} and bo.create_date &lt;= #{createDateRight}
             </if>
@@ -67,13 +83,16 @@
                 from person p
                 where p.user_id = #{copier}
                 and p.type = 60
+                and p.is_deleted = false
                 )
             </if>
             <if test="true">
                 and bo.is_deleted = false
             </if>
         </where>
+        group by bo.id
     </select>
+
     <select id="selectByBizDemandId" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
         SELECT id, name
         FROM bug_online
@@ -82,12 +101,13 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="bugOnlineDO.id">
         insert into bug_online(name,operator,operator_id,last_operator,last_operator_id,proposer
-        ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business
+        ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
         ,create_man,create_man_id)
         values(#{bugOnlineDO.name},#{bugOnlineDO.operator},#{bugOnlineDO.operatorId},#{bugOnlineDO.lastOperator}
         ,#{bugOnlineDO.lastOperatorId},#{bugOnlineDO.proposer},#{bugOnlineDO.proposerId},#{bugOnlineDO.customerName}
         ,#{bugOnlineDO.env},#{bugOnlineDO.belong},#{bugOnlineDO.priority},#{bugOnlineDO.recurrent}
-        ,#{bugOnlineDO.reason},#{bugOnlineDO.expectDate},#{bugOnlineDO.business},#{createMan},#{createManId})
+        ,#{bugOnlineDO.reason},#{bugOnlineDO.expectDate},#{bugOnlineDO.business},#{bugOnlineDO.describe},#{bugOnlineDO.systemMenuName}
+        ,#{createMan},#{createManId})
     </insert>
 
     <update id="update">
@@ -114,7 +134,7 @@
             <if test="bugOnlineDO.proposerId != null">
                 proposer_id = #{bugOnlineDO.proposerId},
             </if>
-            <if test="bugOnlineDO.customerName != null">
+            <if test="true">
                 customer_name = #{bugOnlineDO.customerName},
             </if>
             <if test="bugOnlineDO.bizDemandId != null">
@@ -132,10 +152,10 @@
             <if test="bugOnlineDO.recurrent != null">
                 recurrent = #{bugOnlineDO.recurrent},
             </if>
-            <if test="bugOnlineDO.reason != null">
+            <if test="true">
                 reason = #{bugOnlineDO.reason},
             </if>
-            <if test="bugOnlineDO.expectDate != null">
+            <if test="true">
                 expect_date = #{bugOnlineDO.expectDate},
             </if>
             <if test="bugOnlineDO.business != null">
@@ -147,10 +167,13 @@
             <if test="bugOnlineDO.prevStatus != null">
                 prev_status = #{bugOnlineDO.prevStatus},
             </if>
+            <if test="bugOnlineDO.hangUp != null">
+                hang_up = #{bugOnlineDO.hangUp},
+            </if>
             <if test="bugOnlineDO.status != null">
                 status = #{bugOnlineDO.status},
             </if>
-            <if test="bugOnlineDO.dismissCause != null">
+            <if test="true">
                 dismiss_cause = #{bugOnlineDO.dismissCause},
             </if>
             <if test="bugOnlineDO.problemReason != null">
@@ -159,7 +182,7 @@
             <if test="bugOnlineDO.solveScheme != null">
                 solve_scheme = #{bugOnlineDO.solveScheme},
             </if>
-            <if test="bugOnlineDO.repairFailReason != null">
+            <if test="true">
                 repair_fail_reason = #{bugOnlineDO.repairFailReason},
             </if>
             <if test="bugOnlineDO.openAgainReason != null">
