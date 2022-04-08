@@ -1111,19 +1111,19 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugLog.setMainId(bugOnlineTransferReq.getId());
             bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
             bugLogMapper.insert(bugLog);
-        }
 
-        //发送消息
-        messageEventPublisher.publish(
-                new BugOnlineTransferMsgEvent(
-                        this,
-                        userInfo.getAlias() + "-" + userInfo.getName(),
-                        bugOnlineDO.getName(),
-                        BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()),
-                        bugOnlineTransferReq.getUserId(),
-                        bugOnlineDO.getId()
-                )
-        );
+            //发送消息
+            messageEventPublisher.publish(
+                    new BugOnlineTransferMsgEvent(
+                            this,
+                            userInfo.getAlias() + "-" + userInfo.getName(),
+                            bugOnlineDO.getName(),
+                            BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()),
+                            bugOnlineTransferReq.getUserId(),
+                            bugOnlineDO.getId()
+                    )
+            );
+        }
 
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
