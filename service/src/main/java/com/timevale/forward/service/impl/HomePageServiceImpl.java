@@ -35,6 +35,7 @@ import org.assertj.core.util.Sets;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -332,6 +333,25 @@ public class HomePageServiceImpl implements HomePageService {
                 result.add(homePageProjectBoardVO);
             }
         });
+
+        // 填充数据
+        Map<String, BaseInfoResponse> baseInfoResponseMap = allMyStaffInfoWithSelfInfo
+                .stream().collect(Collectors.toMap(BaseInfoResponse::getUserId, Function.identity()));
+        for (String userId : allMyStaffNameWithSelf) {
+            if(homePageProjectBoardDTOGroup.containsKey(userId)){
+                continue;
+            }
+            BaseInfoResponse baseInfo = baseInfoResponseMap.get(userId);
+
+            UserTypeEnum userType = JobFunctionEnum.getType(baseInfo.getJobFunction());
+
+            HomePageProjectBoardVO homePageProjectBoardVO = new HomePageProjectBoardVO();
+            homePageProjectBoardVO.setUserId(baseInfo.getUserId());
+            homePageProjectBoardVO.setUserName(baseInfo.getName());
+            homePageProjectBoardVO.setUserType(userType.toString());
+            homePageProjectBoardVO.setHomePageProjectDateVOList(Lists.emptyList());
+            result.add(homePageProjectBoardVO);
+        }
 
         return BaseResult.success(result);
     }
