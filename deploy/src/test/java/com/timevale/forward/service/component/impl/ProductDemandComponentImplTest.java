@@ -125,7 +125,7 @@ public class ProductDemandComponentImplTest extends AbstractTestNGSpringContextT
         ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
         productBizDemandDO.setBizDemandId(1L);
         productBizDemandDO.setStatus(1);
-        when(productBizDemandMapper.getByProductDemandId(any())).thenReturn(Collections.singletonList(productBizDemandDO));
+        when(productBizDemandMapper.getByProductDemandIds(any())).thenReturn(Collections.singletonList(productBizDemandDO));
 
         when(productBizDemandMapper.getByBizDemandId(any())).thenReturn(Collections.singletonList(productBizDemandDO));
 
@@ -143,7 +143,7 @@ public class ProductDemandComponentImplTest extends AbstractTestNGSpringContextT
         ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
         productBizDemandDO.setBizDemandId(1L);
         productBizDemandDO.setStatus(1);
-        when(productBizDemandMapper.getByProductDemandId(any())).thenReturn(Collections.singletonList(productBizDemandDO));
+        when(productBizDemandMapper.getByProductDemandIds(any())).thenReturn(Collections.singletonList(productBizDemandDO));
 
         MockedConstruction<BizDemandStatusChangeMsgEvent> bizDemandStatusChangeMsgEventMock = mockConstruction(BizDemandStatusChangeMsgEvent.class);
         bizDemandStatusChangeMsgEventMock.constructed();
