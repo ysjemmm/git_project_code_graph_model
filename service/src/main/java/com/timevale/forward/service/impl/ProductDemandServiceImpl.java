@@ -235,7 +235,14 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         personComponent.add(productDemandAddReq.getRecipients(), productDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
 
-        productBizDemandComponent.batchInsert(productDemand.getId(), productDemandAddReq.getBizDemandIds());
+        List<Long> bizDemandIds = productDemandAddReq.getBizDemandIds();
+        if (CollectionUtils.isNotEmpty(bizDemandIds)) {
+            productBizDemandComponent.batchInsert(productDemand.getId(), bizDemandIds);
+            if(productDemandAddReq.getProjectId() == null){
+                //如果只关联业务需求,没关联项目,需要计算业务状态
+                productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemand.getId()), false);
+            }
+        }
         if (productDemandAddReq.getProjectId() != null) {
             ProjectDO projectDO = projectMapper.get(productDemandAddReq.getProjectId());
             if (projectDO == null) {
