@@ -151,7 +151,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             productDemandMapper.updateByIds(existProductDemandIds, pdStatus,false);
             // unlink log
             String projectName = projectMapper.get(projectId).getName();
-            projectLogComponent.addLogWhenLinkOrUnlink( projectName, projectId,nameMap,ButtonActionEnum.UN_LINK.getText());
+            projectLogComponent.addLogWhenLinkOrUnlink( projectName, projectId,nameMap,null);
         }
 
         productDemandLogComponent.addLogAsProjectStatusChange(statusMap, pdStatus);

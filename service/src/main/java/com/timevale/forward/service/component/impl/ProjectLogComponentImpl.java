@@ -3,14 +3,21 @@ package com.timevale.forward.service.component.impl;
 import cn.hutool.core.collection.CollectionUtil;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.entity.BizChangeLogDO;
+import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
+import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.ProjectMD;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.ProjectLogComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.compare.FieldCompareUtil;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -39,11 +46,13 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
 
     /**
      * 编辑时,记录日志
+     *
      * @param oldObj oldObj
      * @param newObj newObj
      */
     @Override
     public void addLogWhenModifyData(ProjectDO oldObj, ProjectDO newObj) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         //{操作人} 把{字段名称} 从{原内容}改为{最新内容}
         ProjectMD oldProject = ProjectCopier.INSTANCE.change(oldObj);
         ProjectMD newProject = ProjectCopier.INSTANCE.change(newObj);
@@ -62,6 +71,8 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             String newValue = newObj.getProductLineIds().stream().map(productLineMap::get).collect(Collectors.joining(","));
             logDO.setOldValue(oldValue);
             logDO.setNewValue(newValue);
+            logDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            logDO.setCreateManId(userInfo.getId());
             logs.add(logDO);
         }
 
@@ -76,23 +87,28 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             logDO.setField(BizChangeLogFieldEnum.PD.getText());
             logDO.setOldValue(String.join(",", oldPds.values()));
             logDO.setNewValue(String.join(",", newPds.values()));
+            logDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            logDO.setCreateManId(userInfo.getId());
             logs.add(logDO);
         }
         if (CollectionUtil.isNotEmpty(logs)) {
 //            bizChangeLogMapper.batchInsert(logs);
         }
     }
+
     /**
      * 按钮点击时引起的项目状态变化
+     *
      * @param oldStatus oldStatus
-     * @param newStatus  newStatus
-     * @param id  id
-     * @param action action
+     * @param newStatus newStatus
+     * @param id        id
+     * @param action    action
      */
     @Override
     public void addLogWhenStatusChange(Integer oldStatus, Integer newStatus, Long id, String action) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         //{操作人}点击 {按钮名称} ,状态改为{操作后状态},
-        if(!Objects.equals(oldStatus,newStatus)){
+        if (!Objects.equals(oldStatus, newStatus)) {
             BizChangeLogDO logDO = new BizChangeLogDO();
             logDO.setType(BizChangeLogTypeEnum.PROJECT.getCode());
             logDO.setMainId(id);
@@ -100,19 +116,29 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             logDO.setAction(action);
             logDO.setOldValue(ProjectStatusEnum.getTextByCode(oldStatus));
             logDO.setNewValue(ProjectStatusEnum.getTextByCode(newStatus));
+            logDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            logDO.setCreateManId(userInfo.getId());
 //        bizChangeLogMapper.insert(logDO);
         }
 
     }
+
     /**
      * 关联/删除关联/作废项目时,双向记录日志
-     * @param name name
-     * @param id id
-     * @param pdNameMap pdNameMap
+     *
+     * @param name         name
+     * @param id           id
+     * @param pdNameMap    pdNameMap
      * @param linkOrUnlink linkOrUnlink
      */
     @Override
-    public void addLogWhenLinkOrUnlink(String name, Long id,Map<Long, String> pdNameMap,String linkOrUnlink) {
+    public void addLogWhenLinkOrUnlink(String name, Long id, Map<Long, String> pdNameMap, String linkOrUnlink) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        //为空表示非主动点击删除按钮,赋值SYSTEM-SYSTEM
+        String result =StringUtils.isEmpty(linkOrUnlink) ? ButtonActionEnum.UN_LINK.getText() : linkOrUnlink;
+        String createMan =StringUtils.isEmpty(linkOrUnlink) ? CommonConstant.SYSTEM : userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
+        String createManId =StringUtils.isEmpty(linkOrUnlink) ? CommonConstant.SYSTEM : userInfo.getId();
+
         List<BizChangeLogDO> logs = new ArrayList<>();
         pdNameMap.forEach((pId, pName) -> {
             //1.项目记录日志:{操作人}添加/删除 {产品需求}:{产品需求A}
@@ -120,18 +146,23 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             projectLog.setType(BizChangeLogTypeEnum.PROJECT.getCode());
             projectLog.setMainId(id);
             projectLog.setField(BizChangeLogTypeEnum.PRODUCT_DEMAND.getText());
-            projectLog.setAction(linkOrUnlink);
+            projectLog.setAction(result);
             projectLog.setOldValue(pName);
             projectLog.setNewValue(pName);
+            projectLog.setCreateMan(createMan);
+            projectLog.setCreateManId(createManId);
             logs.add(projectLog);
+
             //2.产品需求记录日志:{操作人}添加/删除  {项目}:{项目A}
             BizChangeLogDO productLog = new BizChangeLogDO();
             productLog.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
             productLog.setMainId(pId);
             productLog.setField(BizChangeLogTypeEnum.PROJECT.getText());
-            productLog.setAction(linkOrUnlink);
+            productLog.setAction(result);
             productLog.setOldValue(name);
             productLog.setNewValue(name);
+            projectLog.setCreateMan(createMan);
+            projectLog.setCreateManId(createManId);
             logs.add(productLog);
         });
         if (CollectionUtil.isNotEmpty(logs)) {

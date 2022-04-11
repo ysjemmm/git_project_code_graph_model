@@ -187,7 +187,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             ProjectDO projectDO = projectMapper.get(relation.getProjectId());
             Map<Long, String> pdNameMap = new HashMap<>();
             pdNameMap.put(productDemand.getId(), productDemand.getName());
-            projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.UN_LINK.getText());
+            projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, null);
             // 暂停or作废解除项目关联
             projectProductDemandComponent.update(null, productDemandId);
         }
@@ -201,7 +201,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             List<Long> bizDemandIds = productBizDemandMapper.select(c).stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
             if(CollectionUtils.isNotEmpty(bizDemandIds)){
                 Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
-                productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
+                productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, null);
                 // 作废解业务需求关联
                 ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
                 productBizDemandDO.setProductDemandId(productDemandId);

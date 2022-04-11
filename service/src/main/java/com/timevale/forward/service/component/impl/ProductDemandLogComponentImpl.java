@@ -4,12 +4,13 @@ import cn.hutool.core.collection.CollectionUtil;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
-import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
-import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
-import com.timevale.forward.model.enums.BizDemandStatusEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ProductDemandLogComponent;
+import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -47,6 +48,7 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
     @Override
     public void addLogAsProjectStatusChange(Map<Long, Integer> statusMap, Integer newStauts) {
         //系统 把{xx状态字段名称xx}从{原状态} 改为{新状态}
+        List<BizChangeLogDO> logs = new ArrayList<>();
         statusMap.forEach((id,status) -> {
             if(!Objects.equals(status,newStauts)){
                 BizChangeLogDO logDO = new BizChangeLogDO();
@@ -55,8 +57,14 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
                 logDO.setField(BizChangeLogFieldEnum.PRODUCT_DEMAND_STATUS.getText());
                 logDO.setOldValue(BizDemandStatusEnum.getTextByCode(status));
                 logDO.setNewValue(BizDemandStatusEnum.getTextByCode(newStauts));
+                logDO.setCreateMan(CommonConstant.SYSTEM);
+                logDO.setCreateManId(CommonConstant.SYSTEM);
+                logs.add(logDO);
             }
         });
+        if (CollectionUtil.isNotEmpty(logs)) {
+//            bizChangeLogMapper.batchInsert(logs);
+        }
     }
 
     /**
@@ -77,6 +85,9 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
             logDO.setAction(action);
             logDO.setOldValue(ProjectStatusEnum.getTextByCode(oldStatus));
             logDO.setNewValue(ProjectStatusEnum.getTextByCode(newStatus));
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
+            logDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            logDO.setCreateManId(userInfo.getId());
 //        bizChangeLogMapper.insert(logDO);
         }
     }
@@ -90,6 +101,12 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
      */
     @Override
     public void addLogWhenLinkOrUnlink(String name, Long id,Map<Long, String> bdNameMap,String linkOrUnlink) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        //为空表示非主动点击删除按钮,赋值SYSTEM-SYSTEM
+        String result = StringUtils.isEmpty(linkOrUnlink) ? ButtonActionEnum.UN_LINK.getText() : linkOrUnlink;
+        String createMan =StringUtils.isEmpty(linkOrUnlink) ? CommonConstant.SYSTEM : userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
+        String createManId =StringUtils.isEmpty(linkOrUnlink) ? CommonConstant.SYSTEM : userInfo.getId();
+
         List<BizChangeLogDO> logs = new ArrayList<>();
         bdNameMap.forEach((bId, bName) -> {
             //1.产品需求记录日志:{操作人}添加/删除 {业务需求}:{业务需求A}
@@ -97,9 +114,11 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
             productLog.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
             productLog.setMainId(id);
             productLog.setField(BizChangeLogTypeEnum.BIZ_DEMAND.getText());
-            productLog.setAction(linkOrUnlink);
+            productLog.setAction(result);
             productLog.setOldValue(bName);
             productLog.setNewValue(bName);
+            productLog.setCreateMan(createMan);
+            productLog.setCreateManId(createManId);
             logs.add(productLog);
 
             //1.业务需求记录日志:{操作人}添加/删除 {产品需求}:{产品需求A}
@@ -107,9 +126,11 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
             bizLog.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
             bizLog.setMainId(bId);
             bizLog.setField(BizChangeLogTypeEnum.PRODUCT_DEMAND.getText());
-            bizLog.setAction(linkOrUnlink);
+            bizLog.setAction(result);
             bizLog.setOldValue(name);
             bizLog.setNewValue(name);
+            bizLog.setCreateMan(createMan);
+            bizLog.setCreateManId(createManId);
             logs.add(bizLog);
 
         });
