@@ -94,8 +94,8 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
                 logDO.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
                 logDO.setMainId(id);
                 logDO.setField(BizChangeLogFieldEnum.PRODUCT_DEMAND_STATUS.getText());
-                logDO.setOldValue(BizDemandStatusEnum.getTextByCode(status));
-                logDO.setNewValue(BizDemandStatusEnum.getTextByCode(newStauts));
+                logDO.setOldValue(ProductDemandStatusEnum.getTextByCode(status));
+                logDO.setNewValue(ProductDemandStatusEnum.getTextByCode(newStauts));
                 logDO.setCreateMan(CommonConstant.SYSTEM);
                 logDO.setCreateManId(CommonConstant.SYSTEM);
                 logs.add(logDO);
@@ -122,8 +122,8 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
         logDO.setMainId(id);
         logDO.setField(BizChangeLogFieldEnum.PRODUCT_DEMAND_STATUS.getText());
         logDO.setAction(action);
-        logDO.setOldValue(ProjectStatusEnum.getTextByCode(oldStatus));
-        logDO.setNewValue(ProjectStatusEnum.getTextByCode(newStatus));
+        logDO.setOldValue(ProductDemandStatusEnum.getTextByCode(oldStatus));
+        logDO.setNewValue(ProductDemandStatusEnum.getTextByCode(newStatus));
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         logDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         logDO.setCreateManId(userInfo.getId());
