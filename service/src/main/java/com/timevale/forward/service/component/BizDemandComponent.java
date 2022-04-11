@@ -62,10 +62,11 @@ public interface BizDemandComponent {
     BaseResult<PageQueryResult<BizDemandVO>> page(BizDemandListCondition bizDemandListCondition);
 
     /**
-     * 创建业务关联的日志DO
+     * 创建日志DO
      *
      * @param isUser 是否为用户类型
+     * @param type 日志类型
      * @return {@code BizChangeLogDO}
      */
-    BizChangeLogDO newBizChangeLogDO(Boolean isUser);
+    BizChangeLogDO newBizChangeLogDO(Boolean isUser, Integer type);
 }

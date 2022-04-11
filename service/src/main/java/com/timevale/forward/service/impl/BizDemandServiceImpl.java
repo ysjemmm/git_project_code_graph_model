@@ -166,7 +166,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         ));
 
         // 日志, 状态改为作废
-        BizChangeLogDO bizChangeLogDO = bizDemandComponent.newBizChangeLogDO(true);
+        BizChangeLogDO bizChangeLogDO = bizDemandComponent.newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
         bizChangeLogDO.setMainId(bizDemandDO.getId());
 
         bizChangeLogDO.setAction(BizDemandActionEnum.INVALID.getText());
@@ -181,14 +181,25 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<BizChangeLogDO> bizChangeLogDOList = new ArrayList<>();
 
         for (BizDemandLinkProductDemandListDO e : bizDemandLinkProductDemandListDOList) {
-            BizChangeLogDO logDO = bizDemandComponent.newBizChangeLogDO(false);
-            logDO.setMainId(bizDemandId);
+            // 业务需求方
+            BizChangeLogDO bizDemandLogDO = bizDemandComponent.newBizChangeLogDO(false, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+            bizDemandLogDO.setMainId(bizDemandId);
 
-            logDO.setAction(BizDemandActionEnum.UNLINK.getText());
-            logDO.setField(BizChangeLogTypeEnum.PRODUCT_DEMAND.getText());
-            logDO.setOldValue(e.getName());
+            bizDemandLogDO.setAction(BizDemandActionEnum.UNLINK.getText());
+            bizDemandLogDO.setField(BizChangeLogTypeEnum.PRODUCT_DEMAND.getText());
+            bizDemandLogDO.setOldValue(e.getName());
 
-            bizChangeLogDOList.add(logDO);
+            bizChangeLogDOList.add(bizDemandLogDO);
+
+            // 产品需求方
+            BizChangeLogDO productDemandLogDO = bizDemandComponent.newBizChangeLogDO(false, BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+            productDemandLogDO.setMainId(e.getId());
+
+            productDemandLogDO.setAction(BizDemandActionEnum.UNLINK.getText());
+            productDemandLogDO.setField(BizChangeLogTypeEnum.BIZ_DEMAND.getText());
+            productDemandLogDO.setOldValue(bizDemandDO.getName());
+
+            bizChangeLogDOList.add(productDemandLogDO);
         }
 
         bizChangeLogMapper.batchInsert(bizChangeLogDOList);
@@ -242,11 +253,12 @@ public class BizDemandServiceImpl implements BizDemandService {
         ));
 
         // 日志, 状态改为待评估
-        BizChangeLogDO bizChangeLogDO = bizDemandComponent.newBizChangeLogDO(true);
+        BizChangeLogDO bizChangeLogDO = bizDemandComponent.newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
         bizChangeLogDO.setMainId(bizDemandDO.getId());
 
         bizChangeLogDO.setAction(BizDemandActionEnum.SUBMIT.getText());
         bizChangeLogDO.setField(BizDemandFieldEnum.STATUS.getText());
+        bizChangeLogDO.setOldValue(BizDemandStatusEnum.EVALUATE.getText());
         bizChangeLogDO.setNewValue(BizDemandStatusEnum.EVALUATE.getText());
 
         bizChangeLogMapper.insert(bizChangeLogDO);
@@ -393,7 +405,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         BizDemandDO newBizDemandDO = bizDemandMapper.selectById(bizDemandId);
         Integer newStatus = newBizDemandDO.getStatus();
 
-        BizChangeLogDO bizChangeLogDO = bizDemandComponent.newBizChangeLogDO(true);
+        BizChangeLogDO bizChangeLogDO = bizDemandComponent.newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
         bizChangeLogDO.setMainId(bizDemandDO.getId());
 
         bizChangeLogDO.setAction(BizDemandActionEnum.RECEIVE.getText());
@@ -438,7 +450,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         ));
 
         // 日志, 状态改为驳回
-        BizChangeLogDO bizChangeLogDO = bizDemandComponent.newBizChangeLogDO(true);
+        BizChangeLogDO bizChangeLogDO = bizDemandComponent.newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
         bizChangeLogDO.setMainId(bizDemandDO.getId());
 
         bizChangeLogDO.setAction(BizDemandActionEnum.REJECT.getText());
@@ -471,10 +483,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 新旧接受人是否相同
         if(!Objects.equal(oldReceiveMan,newReceiveMan)){
             // 日志记录
-            BizChangeLogDO bizChangeLogDO = bizDemandComponent.newBizChangeLogDO(true);
+            BizChangeLogDO bizChangeLogDO = bizDemandComponent.newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
             bizChangeLogDO.setMainId(bizDemandDO.getId());
 
-            bizChangeLogDO.setAction(BizDemandActionEnum.REJECT.getText());
+            bizChangeLogDO.setAction(BizDemandActionEnum.TRANSFER.getText());
             bizChangeLogDO.setField(BizDemandFieldEnum.RECEIVE_MAN.getText());
             bizChangeLogDO.setOldValue(oldReceiveMan);
             bizChangeLogDO.setNewValue(newReceiveMan);
@@ -570,24 +582,4 @@ public class BizDemandServiceImpl implements BizDemandService {
         bugStatusOperatorMapper.insert(bugStatusOperatorDO);
     }
 
-    /**
-     * 创建业务关联的日志DO
-     *
-     * @param isUser 是否为用户类型
-     * @return {@code BizChangeLogDO}
-     */
-    private BizChangeLogDO newBizChangeLogDO(Boolean isUser){
-        BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
-        bizChangeLogDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
-
-        if(isUser){
-            UserInfo userInfo = LocalSessionUtils.getUserInfo();
-            bizChangeLogDO.setCreateManId(userInfo.getId());
-            bizChangeLogDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        }else{
-            bizChangeLogDO.setCreateManId(CommonConstant.SYSTEM);
-            bizChangeLogDO.setCreateMan(CommonConstant.SYSTEM);
-        }
-        return bizChangeLogDO;
-    }
 }

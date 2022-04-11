@@ -228,17 +228,17 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     }
 
     @Override
-    public BizChangeLogDO newBizChangeLogDO(Boolean isUser){
+    public BizChangeLogDO newBizChangeLogDO(Boolean isUser, Integer type){
         BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
-        bizChangeLogDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+        bizChangeLogDO.setType(type);
 
         if(isUser){
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
             bizChangeLogDO.setCreateManId(userInfo.getId());
             bizChangeLogDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         }else{
-            bizChangeLogDO.setCreateManId(LocalSessionUtils.SYSTEM);
-            bizChangeLogDO.setCreateMan(LocalSessionUtils.SYSTEM_ALIAS);
+            bizChangeLogDO.setCreateManId(CommonConstant.SYSTEM);
+            bizChangeLogDO.setCreateMan(CommonConstant.SYSTEM);
         }
         return bizChangeLogDO;
     }
