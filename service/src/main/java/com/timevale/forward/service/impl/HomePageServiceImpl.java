@@ -336,7 +336,7 @@ public class HomePageServiceImpl implements HomePageService {
 
         // 填充数据
         Map<String, BaseInfoResponse> baseInfoResponseMap = allMyStaffInfoWithSelfInfo
-                .stream().collect(Collectors.toMap(BaseInfoResponse::getUserId, Function.identity()));
+                .stream().collect(Collectors.toMap(BaseInfoResponse::getAccount, Function.identity()));
         for (String userId : allMyStaffNameWithSelf) {
             if(homePageProjectBoardDTOGroup.containsKey(userId)){
                 continue;
