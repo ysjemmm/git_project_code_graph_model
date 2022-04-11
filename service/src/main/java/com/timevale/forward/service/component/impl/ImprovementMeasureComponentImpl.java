@@ -79,6 +79,9 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
                         .build());
             }
         });
+        if(CollectionUtils.isEmpty(getTodoTaskMsgList)){
+            return;
+        }
         Map<String, DingTodoTaskResponseBody> todoTaskResponseBodyMap = dingWorkRecordClient.batchGetTask(getTodoTaskMsgList);
 
         // 更新状态
