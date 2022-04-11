@@ -17,7 +17,7 @@ public enum BizDemandFieldEnum {
     PRIORITY("优先级"),
     RECEIVE_MAN("接收人"),
     PLAN_RELEASE_DATE("计划发布日期"),
-    REASON("驳回原因")
+    REASON("驳回原因"),
     ;
 
     private final String text;

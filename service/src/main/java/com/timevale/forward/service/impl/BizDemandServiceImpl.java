@@ -55,6 +55,9 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Resource
     private BizDemandMapper bizDemandMapper;
+    
+    @Resource
+    private ProductDemandMapper productDemandMapper;
 
     @Resource
     private ProductLineMapper productLineMapper;
@@ -163,7 +166,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         ));
 
         // 日志, 状态改为作废
-        BizChangeLogDO bizChangeLogDO = newBizChangeLogDO(true);
+        BizChangeLogDO bizChangeLogDO = bizDemandComponent.newBizChangeLogDO(true);
         bizChangeLogDO.setMainId(bizDemandDO.getId());
 
         bizChangeLogDO.setAction(BizDemandActionEnum.INVALID.getText());
@@ -172,6 +175,23 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizChangeLogDO.setNewValue(BizDemandStatusEnum.EVALUATE.getText());
 
         bizChangeLogMapper.insert(bizChangeLogDO);
+
+        // 日志，产品关联断开
+        List<BizDemandLinkProductDemandListDO> bizDemandLinkProductDemandListDOList = productDemandMapper.selectByBizDemandId(bizDemandId);
+        List<BizChangeLogDO> bizChangeLogDOList = new ArrayList<>();
+
+        for (BizDemandLinkProductDemandListDO e : bizDemandLinkProductDemandListDOList) {
+            BizChangeLogDO logDO = bizDemandComponent.newBizChangeLogDO(false);
+            logDO.setMainId(bizDemandId);
+
+            logDO.setAction(BizDemandActionEnum.UNLINK.getText());
+            logDO.setField(BizChangeLogTypeEnum.PRODUCT_DEMAND.getText());
+            logDO.setOldValue(e.getName());
+
+            bizChangeLogDOList.add(logDO);
+        }
+
+        bizChangeLogMapper.batchInsert(bizChangeLogDOList);
 
         return BaseResult.success(true);
     }
@@ -222,7 +242,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         ));
 
         // 日志, 状态改为待评估
-        BizChangeLogDO bizChangeLogDO = newBizChangeLogDO(true);
+        BizChangeLogDO bizChangeLogDO = bizDemandComponent.newBizChangeLogDO(true);
         bizChangeLogDO.setMainId(bizDemandDO.getId());
 
         bizChangeLogDO.setAction(BizDemandActionEnum.SUBMIT.getText());
@@ -373,7 +393,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         BizDemandDO newBizDemandDO = bizDemandMapper.selectById(bizDemandId);
         Integer newStatus = newBizDemandDO.getStatus();
 
-        BizChangeLogDO bizChangeLogDO = newBizChangeLogDO(true);
+        BizChangeLogDO bizChangeLogDO = bizDemandComponent.newBizChangeLogDO(true);
         bizChangeLogDO.setMainId(bizDemandDO.getId());
 
         bizChangeLogDO.setAction(BizDemandActionEnum.RECEIVE.getText());
@@ -418,7 +438,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         ));
 
         // 日志, 状态改为驳回
-        BizChangeLogDO bizChangeLogDO = newBizChangeLogDO(true);
+        BizChangeLogDO bizChangeLogDO = bizDemandComponent.newBizChangeLogDO(true);
         bizChangeLogDO.setMainId(bizDemandDO.getId());
 
         bizChangeLogDO.setAction(BizDemandActionEnum.REJECT.getText());
@@ -451,7 +471,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 新旧接受人是否相同
         if(!Objects.equal(oldReceiveMan,newReceiveMan)){
             // 日志记录
-            BizChangeLogDO bizChangeLogDO = newBizChangeLogDO(true);
+            BizChangeLogDO bizChangeLogDO = bizDemandComponent.newBizChangeLogDO(true);
             bizChangeLogDO.setMainId(bizDemandDO.getId());
 
             bizChangeLogDO.setAction(BizDemandActionEnum.REJECT.getText());
@@ -548,26 +568,5 @@ public class BizDemandServiceImpl implements BizDemandService {
         bugStatusOperatorDO.setOperatorId(userInfo.getId());
         //往状态人员处理表里面插入一条数据记录
         bugStatusOperatorMapper.insert(bugStatusOperatorDO);
-    }
-
-    /**
-     * 创建业务关联的日志DO
-     *
-     * @param isUser 是否为用户类型
-     * @return {@code BizChangeLogDO}
-     */
-    private BizChangeLogDO newBizChangeLogDO(Boolean isUser){
-        BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
-        bizChangeLogDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
-
-        if(isUser){
-            UserInfo userInfo = LocalSessionUtils.getUserInfo();
-            bizChangeLogDO.setCreateManId(userInfo.getId());
-            bizChangeLogDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        }else{
-            bizChangeLogDO.setCreateManId(LocalSessionUtils.SYSTEM);
-            bizChangeLogDO.setCreateMan(LocalSessionUtils.SYSTEM_ALIAS);
-        }
-        return bizChangeLogDO;
     }
 }

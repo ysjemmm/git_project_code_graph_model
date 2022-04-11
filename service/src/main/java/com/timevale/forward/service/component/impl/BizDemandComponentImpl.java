@@ -10,10 +10,7 @@ import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.model.enums.BizDemandStatusEnum;
-import com.timevale.forward.model.enums.PlanReleaseDateEnum;
-import com.timevale.forward.model.enums.PriorityEnum;
-import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
@@ -228,5 +225,21 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
         return BaseResult.success(pageQueryResult);
+    }
+
+    @Override
+    public BizChangeLogDO newBizChangeLogDO(Boolean isUser){
+        BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
+        bizChangeLogDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+
+        if(isUser){
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
+            bizChangeLogDO.setCreateManId(userInfo.getId());
+            bizChangeLogDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        }else{
+            bizChangeLogDO.setCreateManId(LocalSessionUtils.SYSTEM);
+            bizChangeLogDO.setCreateMan(LocalSessionUtils.SYSTEM_ALIAS);
+        }
+        return bizChangeLogDO;
     }
 }

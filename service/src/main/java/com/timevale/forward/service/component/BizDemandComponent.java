@@ -2,7 +2,12 @@ package com.timevale.forward.service.component;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
+import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
+import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 
@@ -55,4 +60,12 @@ public interface BizDemandComponent {
      * @return 列表
      */
     BaseResult<PageQueryResult<BizDemandVO>> page(BizDemandListCondition bizDemandListCondition);
+
+    /**
+     * 创建业务关联的日志DO
+     *
+     * @param isUser 是否为用户类型
+     * @return {@code BizChangeLogDO}
+     */
+    BizChangeLogDO newBizChangeLogDO(Boolean isUser);
 }
