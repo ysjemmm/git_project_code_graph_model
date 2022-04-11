@@ -1304,7 +1304,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.REPEAT_CONFIRM.getText());
         bugLogDO.setOldValue(oldStatus);
-        bugLogDO.setNewValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
+        bugLogDO.setNewValue(BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()));
         bugLogDO.setMainId(bugOnlineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
         bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
