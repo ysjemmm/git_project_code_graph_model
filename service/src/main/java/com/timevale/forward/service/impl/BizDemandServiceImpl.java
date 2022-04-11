@@ -167,7 +167,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizChangeLogDO.setMainId(bizDemandDO.getId());
 
         bizChangeLogDO.setAction(BizDemandActionEnum.INVALID.getText());
-        bizChangeLogDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
+        bizChangeLogDO.setField(BizDemandFieldEnum.STATUS.getText());
         bizChangeLogDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
         bizChangeLogDO.setNewValue(BizDemandStatusEnum.EVALUATE.getText());
 
@@ -226,7 +226,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizChangeLogDO.setMainId(bizDemandDO.getId());
 
         bizChangeLogDO.setAction(BizDemandActionEnum.SUBMIT.getText());
-        bizChangeLogDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
+        bizChangeLogDO.setField(BizDemandFieldEnum.STATUS.getText());
         bizChangeLogDO.setNewValue(BizDemandStatusEnum.EVALUATE.getText());
 
         bizChangeLogMapper.insert(bizChangeLogDO);
@@ -377,7 +377,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizChangeLogDO.setMainId(bizDemandDO.getId());
 
         bizChangeLogDO.setAction(BizDemandActionEnum.RECEIVE.getText());
-        bizChangeLogDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
+        bizChangeLogDO.setField(BizDemandFieldEnum.STATUS.getText());
         bizChangeLogDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
         bizChangeLogDO.setNewValue(BizDemandStatusEnum.getTextByCode(newStatus));
 
@@ -422,7 +422,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizChangeLogDO.setMainId(bizDemandDO.getId());
 
         bizChangeLogDO.setAction(BizDemandActionEnum.REJECT.getText());
-        bizChangeLogDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
+        bizChangeLogDO.setField(BizDemandFieldEnum.STATUS.getText());
         bizChangeLogDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
         bizChangeLogDO.setNewValue(BizDemandStatusEnum.REJECT.getText());
 
@@ -439,18 +439,36 @@ public class BizDemandServiceImpl implements BizDemandService {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
 
-        bizDemandDO.setReceiveMan(bizDemandTransferReq.getReceiveMan());
-        bizDemandDO.setReceiveManId(bizDemandTransferReq.getReceiveManId());
+        // 新旧接收人
+        String oldReceiveMan = bizDemandDO.getReceiveMan();
+        String newReceiveMan = bizDemandTransferReq.getReceiveMan();
+        String newReceiveManId = bizDemandTransferReq.getReceiveManId();
+
+        bizDemandDO.setReceiveMan(newReceiveMan);
+        bizDemandDO.setReceiveManId(newReceiveManId);
         bizDemandMapper.update(bizDemandDO);
 
-        // 转交人通知
-        messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
-                this,
-                bizDemandDO.getId(),
-                bizDemandDO.getCreateMan(),
-                bizDemandDO.getReceiveManId(),
-                bizDemandDO.getName()
-        ));
+        // 新旧接受人是否相同
+        if(!Objects.equal(oldReceiveMan,newReceiveMan)){
+            // 日志记录
+            BizChangeLogDO bizChangeLogDO = newBizChangeLogDO(true);
+            bizChangeLogDO.setMainId(bizDemandDO.getId());
+
+            bizChangeLogDO.setAction(BizDemandActionEnum.REJECT.getText());
+            bizChangeLogDO.setField(BizDemandFieldEnum.RECEIVE_MAN.getText());
+            bizChangeLogDO.setOldValue(oldReceiveMan);
+            bizChangeLogDO.setNewValue(newReceiveMan);
+
+            // 转交人通知
+            messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
+                    this,
+                    bizDemandDO.getId(),
+                    bizDemandDO.getCreateMan(),
+                    bizDemandDO.getReceiveManId(),
+                    bizDemandDO.getName()
+            ));
+        }
+
 
         return BaseResult.success(true);
     }
