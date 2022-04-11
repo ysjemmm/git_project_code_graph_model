@@ -118,7 +118,7 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
 
         when(bizDemandMapper.update(any())).thenReturn(1);
 
-        when(productBizDemandMapper.deleteByBizDemandId(any(), any(), any())).thenReturn(1);
+        when(productBizDemandMapper.deleteByBizDemandId(any())).thenReturn(1);
 
         MockedConstruction<BizDemandInvalidMsgEvent> bizDemandInvalidMsgEventMocked = mockConstruction(BizDemandInvalidMsgEvent.class);
         bizDemandInvalidMsgEventMocked.constructed();

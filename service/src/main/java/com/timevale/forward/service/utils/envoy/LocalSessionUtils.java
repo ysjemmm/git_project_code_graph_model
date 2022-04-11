@@ -22,6 +22,7 @@ public class LocalSessionUtils {
 
     public final static String ADMIN = "admin";
     public final static String SYSTEM = "SYSTEM";
+    public final static String SYSTEM_ALIAS = "系统";
 
     public static UserInfo getUserInfo() throws BaseRuntimeException {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder

@@ -84,6 +84,9 @@ public class BizDemandServiceImpl implements BizDemandService {
     private BugLogMapper bugLogMapper;
 
     @Resource
+    private BizChangeLogMapper bizChangeLogMapper;
+
+    @Resource
     private BugStatusOperatorMapper bugStatusOperatorMapper;
 
     @Override
@@ -132,8 +135,6 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateStatus(BizDemandUpdateStatusReq bizDemandUpdateStatusReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         // 修改业务需求状态 —— 作废
         Long bizDemandId = bizDemandUpdateStatusReq.getBizDemandId();
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
@@ -141,22 +142,36 @@ public class BizDemandServiceImpl implements BizDemandService {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
 
+        // 记录旧状态
+        Integer oldStatus = bizDemandDO.getStatus();
+
         // 修改业务需求状态
         bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
         bizDemandDO.setStatus(BizDemandStatusEnum.INVALID.getCode());
         bizDemandMapper.update(bizDemandDO);
 
         // 取消产品关联
-        productBizDemandMapper.deleteByBizDemandId(bizDemandId, userInfo.getAlias(), userInfo.getId());
+        productBizDemandMapper.deleteByBizDemandId(bizDemandId);
 
         // 接收人通知
         messageEventPublisher.publish(new BizDemandInvalidMsgEvent(
                 this,
                 bizDemandDO.getId(),
-                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
+                bizDemandDO.getReceiveMan(),
                 bizDemandDO.getReceiveManId(),
                 bizDemandDO.getName()
         ));
+
+        // 日志, 状态改为作废
+        BizChangeLogDO bizChangeLogDO = newBizChangeLogDO(true);
+        bizChangeLogDO.setMainId(bizDemandDO.getId());
+
+        bizChangeLogDO.setAction(BizDemandActionEnum.INVALID.getText());
+        bizChangeLogDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
+        bizChangeLogDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
+        bizChangeLogDO.setNewValue(BizDemandStatusEnum.EVALUATE.getText());
+
+        bizChangeLogMapper.insert(bizChangeLogDO);
 
         return BaseResult.success(true);
     }
@@ -190,9 +205,6 @@ public class BizDemandServiceImpl implements BizDemandService {
             if (bugOnlineDO == null) {
                 throw new BaseBizRuntimeException("转换需求失败，原线上bug不存在");
             }
-            // bugOnlineDO.setBizDemandId(bizDemandDO.getId());
-            // bugOnlineDO.setStatus(BugOnlineStatusEnum.REQUIRED.getCode());
-            // bugOnlineMapper.update(bugOnlineDO);
         }
 
         //判断线上bug id是否有值，如果有值的话需要进行和线上bug相关的一些列操作
@@ -208,6 +220,16 @@ public class BizDemandServiceImpl implements BizDemandService {
                 bizDemandDO.getReceiveManId(),
                 bizDemandDO.getName()
         ));
+
+        // 日志, 状态改为待评估
+        BizChangeLogDO bizChangeLogDO = newBizChangeLogDO(true);
+        bizChangeLogDO.setMainId(bizDemandDO.getId());
+
+        bizChangeLogDO.setAction(BizDemandActionEnum.SUBMIT.getText());
+        bizChangeLogDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
+        bizChangeLogDO.setNewValue(BizDemandStatusEnum.EVALUATE.getText());
+
+        bizChangeLogMapper.insert(bizChangeLogDO);
 
         return BaseResult.success(true);
     }
@@ -314,7 +336,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> agree(BizDemandAgreeReq bizDemandAgreeReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
@@ -326,6 +348,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
+
+        // 保存旧状态
+        Integer oldStatus = bizDemandDO.getStatus();
+
         bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
         bizDemandDO.setPlanReleaseDate(planReleaseDate);
         bizDemandMapper.update(bizDemandDO);
@@ -343,6 +369,20 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
 
+        // 日志, 状态改为同意
+        BizDemandDO newBizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        Integer newStatus = newBizDemandDO.getStatus();
+
+        BizChangeLogDO bizChangeLogDO = newBizChangeLogDO(true);
+        bizChangeLogDO.setMainId(bizDemandDO.getId());
+
+        bizChangeLogDO.setAction(BizDemandActionEnum.RECEIVE.getText());
+        bizChangeLogDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
+        bizChangeLogDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
+        bizChangeLogDO.setNewValue(BizDemandStatusEnum.getTextByCode(newStatus));
+
+        bizChangeLogMapper.insert(bizChangeLogDO);
+
         return BaseResult.success(true);
     }
 
@@ -359,6 +399,9 @@ public class BizDemandServiceImpl implements BizDemandService {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
 
+        // 保存旧状态
+        Integer oldStatus = bizDemandDO.getStatus();
+
         bizDemandDO.setReason(reason);
         bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
         bizDemandDO.setStatus(BizDemandStatusEnum.REJECT.getCode());
@@ -373,6 +416,17 @@ public class BizDemandServiceImpl implements BizDemandService {
                 bizDemandDO.getName(),
                 BizDemandReasonEnum.getTextByCode(bizDemandDO.getReason())
         ));
+
+        // 日志, 状态改为驳回
+        BizChangeLogDO bizChangeLogDO = newBizChangeLogDO(true);
+        bizChangeLogDO.setMainId(bizDemandDO.getId());
+
+        bizChangeLogDO.setAction(BizDemandActionEnum.REJECT.getText());
+        bizChangeLogDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
+        bizChangeLogDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
+        bizChangeLogDO.setNewValue(BizDemandStatusEnum.REJECT.getText());
+
+        bizChangeLogMapper.insert(bizChangeLogDO);
 
         return BaseResult.success(true);
     }
@@ -476,5 +530,26 @@ public class BizDemandServiceImpl implements BizDemandService {
         bugStatusOperatorDO.setOperatorId(userInfo.getId());
         //往状态人员处理表里面插入一条数据记录
         bugStatusOperatorMapper.insert(bugStatusOperatorDO);
+    }
+
+    /**
+     * 创建业务关联的日志DO
+     *
+     * @param isUser 是否为用户类型
+     * @return {@code BizChangeLogDO}
+     */
+    private BizChangeLogDO newBizChangeLogDO(Boolean isUser){
+        BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
+        bizChangeLogDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+
+        if(isUser){
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
+            bizChangeLogDO.setCreateManId(userInfo.getId());
+            bizChangeLogDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        }else{
+            bizChangeLogDO.setCreateManId(LocalSessionUtils.SYSTEM);
+            bizChangeLogDO.setCreateMan(LocalSessionUtils.SYSTEM_ALIAS);
+        }
+        return bizChangeLogDO;
     }
 }

@@ -43,7 +43,7 @@ public interface ProductBizDemandMapper {
      * @param bizDemandId 业务需求id
      * @return int
      */
-    int deleteByBizDemandId(@Param("bizDemandId") Long bizDemandId, @Param("modifyMan")String modifyMan, @Param("modifyManId") String modifyManId);
+    int deleteByBizDemandId(@Param("bizDemandId") Long bizDemandId);
 
 
     /**
