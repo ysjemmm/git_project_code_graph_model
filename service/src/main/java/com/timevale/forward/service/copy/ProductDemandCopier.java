@@ -10,6 +10,7 @@ import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
+import com.timevale.forward.model.middle.ProductDemandMD;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -80,6 +81,8 @@ public interface ProductDemandCopier {
      * @return ProductDemandListCondition
      */
     ProductDemandListCondition convert(TaskLinkProductDemandQueryList taskLinkProductDemandQueryList);
+
+    ProductDemandMD change(ProductDemandDO productDemandDO);
 
 
 }

@@ -284,8 +284,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(ProductDemandModifyReq productDemandModifyReq) {
         log.info("产品需求修改接收参数:{}", productDemandModifyReq);
-        ProductDemandDO productDemandDO = productDemandMapper.getByName(productDemandModifyReq.getName());
-        if (productDemandDO != null && !productDemandDO.getId().equals(productDemandModifyReq.getId())) {
+        ProductDemandDO oldProductDemand = productDemandMapper.getByName(productDemandModifyReq.getName());
+        if (oldProductDemand != null && !oldProductDemand.getId().equals(productDemandModifyReq.getId())) {
             throw new BaseBizRuntimeException("该产品需求名称已存在,请修改后重试");
         }
         checkDescLength(productDemandModifyReq.getDesc());
@@ -297,6 +297,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         // 抄送人
         personComponent.update(productDemandModifyReq.getRecipients(), newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
 
+        productDemandLogComponent.addLogWhenModifyData(oldProductDemand, newProductDemand);
         return BaseResult.success(true);
     }
 

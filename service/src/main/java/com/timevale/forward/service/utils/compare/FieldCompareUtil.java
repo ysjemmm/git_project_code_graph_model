@@ -38,6 +38,7 @@ public class FieldCompareUtil {
         CLAZZ_MAP.put(BugOnlineMD.class, BugLogTypeEnum.ONLINE.getCode());
         CLAZZ_MAP.put(BusinessMD.class, BugLogTypeEnum.ONLINE.getCode());
         CLAZZ_MAP.put(ProjectMD.class, BizChangeLogTypeEnum.PROJECT.getCode());
+        CLAZZ_MAP.put(ProductDemandMD.class, BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
     }
 
     /**

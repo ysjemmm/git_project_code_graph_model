@@ -55,7 +55,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Resource
     private BizDemandMapper bizDemandMapper;
-    
+
     @Resource
     private ProductDemandMapper productDemandMapper;
 
@@ -568,5 +568,26 @@ public class BizDemandServiceImpl implements BizDemandService {
         bugStatusOperatorDO.setOperatorId(userInfo.getId());
         //往状态人员处理表里面插入一条数据记录
         bugStatusOperatorMapper.insert(bugStatusOperatorDO);
+    }
+
+    /**
+     * 创建业务关联的日志DO
+     *
+     * @param isUser 是否为用户类型
+     * @return {@code BizChangeLogDO}
+     */
+    private BizChangeLogDO newBizChangeLogDO(Boolean isUser){
+        BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
+        bizChangeLogDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+
+        if(isUser){
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
+            bizChangeLogDO.setCreateManId(userInfo.getId());
+            bizChangeLogDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        }else{
+            bizChangeLogDO.setCreateManId(CommonConstant.SYSTEM);
+            bizChangeLogDO.setCreateMan(CommonConstant.SYSTEM);
+        }
+        return bizChangeLogDO;
     }
 }

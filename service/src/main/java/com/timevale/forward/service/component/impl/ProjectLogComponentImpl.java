@@ -24,7 +24,6 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -57,6 +56,8 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
         ProjectMD oldProject = ProjectCopier.INSTANCE.change(oldObj);
         ProjectMD newProject = ProjectCopier.INSTANCE.change(newObj);
         List<BizChangeLogDO> logs = FieldCompareUtil.commonCompare(oldProject, newProject, BizChangeLogDO.class);
+
+        //产品线
         if (!CollectionUtil.isEqualList(oldObj.getProductLineIds(), newObj.getProductLineIds())) {
             List<Long> productLineIds = new ArrayList<>(oldObj.getProductLineIds());
             productLineIds.addAll(newObj.getProductLineIds());
@@ -71,12 +72,10 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             String newValue = newObj.getProductLineIds().stream().map(productLineMap::get).collect(Collectors.joining(","));
             logDO.setOldValue(oldValue);
             logDO.setNewValue(newValue);
-            logDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-            logDO.setCreateManId(userInfo.getId());
             logs.add(logDO);
         }
 
-
+        //产品经理
         Map<String, String> oldPds = personComponent.select(oldObj.getId(), PersonTypeEnum.PROJECT_PD.getCode())
                 .stream().collect(Collectors.toMap(PersonDO::getUserId, PersonDO::getUserName));
         Map<String, String> newPds = newObj.getPds().stream().collect(Collectors.toMap(PersonDO::getUserId, PersonDO::getUserName, (v1, v2) -> v2));
@@ -87,12 +86,15 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             logDO.setField(BizChangeLogFieldEnum.PD.getText());
             logDO.setOldValue(String.join(",", oldPds.values()));
             logDO.setNewValue(String.join(",", newPds.values()));
-            logDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-            logDO.setCreateManId(userInfo.getId());
             logs.add(logDO);
         }
+
+        logs.forEach(a -> {
+            a.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            a.setCreateManId(userInfo.getId());
+        });
         if (CollectionUtil.isNotEmpty(logs)) {
-//            bizChangeLogMapper.batchInsert(logs);
+            bizChangeLogMapper.batchInsert(logs);
         }
     }
 
@@ -107,19 +109,17 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
     @Override
     public void addLogWhenStatusChange(Integer oldStatus, Integer newStatus, Long id, String action) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        //{操作人}点击 {按钮名称} ,状态改为{操作后状态},
-        if (!Objects.equals(oldStatus, newStatus)) {
-            BizChangeLogDO logDO = new BizChangeLogDO();
-            logDO.setType(BizChangeLogTypeEnum.PROJECT.getCode());
-            logDO.setMainId(id);
-            logDO.setField(BizChangeLogFieldEnum.PROJECT_STATUS.getText());
-            logDO.setAction(action);
-            logDO.setOldValue(ProjectStatusEnum.getTextByCode(oldStatus));
-            logDO.setNewValue(ProjectStatusEnum.getTextByCode(newStatus));
-            logDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-            logDO.setCreateManId(userInfo.getId());
-//        bizChangeLogMapper.insert(logDO);
-        }
+        //1){操作人}点击 {按钮名称} ,状态改为{操作后状态},2)编辑项目时:把{项目状态}从{原状态} 改为{新状态}
+        BizChangeLogDO logDO = new BizChangeLogDO();
+        logDO.setType(BizChangeLogTypeEnum.PROJECT.getCode());
+        logDO.setMainId(id);
+        logDO.setField(BizChangeLogFieldEnum.PROJECT_STATUS.getText());
+        logDO.setAction(action);
+        logDO.setOldValue(ProjectStatusEnum.getTextByCode(oldStatus));
+        logDO.setNewValue(ProjectStatusEnum.getTextByCode(newStatus));
+        logDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        logDO.setCreateManId(userInfo.getId());
+        bizChangeLogMapper.insert(logDO);
 
     }
 
@@ -135,9 +135,10 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
     public void addLogWhenLinkOrUnlink(String name, Long id, Map<Long, String> pdNameMap, String linkOrUnlink) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         //为空表示非主动点击删除按钮,赋值SYSTEM-SYSTEM
-        String result =StringUtils.isEmpty(linkOrUnlink) ? ButtonActionEnum.UN_LINK.getText() : linkOrUnlink;
-        String createMan =StringUtils.isEmpty(linkOrUnlink) ? CommonConstant.SYSTEM : userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
-        String createManId =StringUtils.isEmpty(linkOrUnlink) ? CommonConstant.SYSTEM : userInfo.getId();
+        boolean empty = StringUtils.isEmpty(linkOrUnlink);
+        String action = empty ? ButtonActionEnum.UN_LINK.getText() : linkOrUnlink;
+        String createMan = empty ? CommonConstant.SYSTEM : userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
+        String createManId = empty ? CommonConstant.SYSTEM : userInfo.getId();
 
         List<BizChangeLogDO> logs = new ArrayList<>();
         pdNameMap.forEach((pId, pName) -> {
@@ -146,7 +147,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             projectLog.setType(BizChangeLogTypeEnum.PROJECT.getCode());
             projectLog.setMainId(id);
             projectLog.setField(BizChangeLogTypeEnum.PRODUCT_DEMAND.getText());
-            projectLog.setAction(result);
+            projectLog.setAction(action);
             projectLog.setOldValue(pName);
             projectLog.setNewValue(pName);
             projectLog.setCreateMan(createMan);
@@ -158,7 +159,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             productLog.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
             productLog.setMainId(pId);
             productLog.setField(BizChangeLogTypeEnum.PROJECT.getText());
-            productLog.setAction(result);
+            productLog.setAction(action);
             productLog.setOldValue(name);
             productLog.setNewValue(name);
             projectLog.setCreateMan(createMan);
@@ -166,7 +167,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             logs.add(productLog);
         });
         if (CollectionUtil.isNotEmpty(logs)) {
-//            bizChangeLogMapper.batchInsert(logs);
+            bizChangeLogMapper.batchInsert(logs);
         }
     }
 }
