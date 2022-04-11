@@ -71,7 +71,7 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
             String todoId = e.getTodoId();
             String unionId = unionIdMap.get(e.getExecutorId());
             if(StringUtils.isEmpty(todoId) || StringUtils.isEmpty(unionId)){
-                log.error("待办信息不全,无法同步,事项id:{},执行人unionId:{}",e.getId(),unionId);
+                log.info("待办信息不全,无法同步,事项id:{},执行人unionId:{}",e.getId(),unionId);
             }else{
                 getTodoTaskMsgList.add(GetTodoTaskMsg.builder()
                         .recordId(todoId)
