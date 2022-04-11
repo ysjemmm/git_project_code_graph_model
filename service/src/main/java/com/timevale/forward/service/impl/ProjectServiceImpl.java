@@ -504,8 +504,8 @@ public class ProjectServiceImpl implements ProjectService {
             projectDO.setStatus(oldStatus);
         }
         projectMapper.update(projectDO);
-        if (!ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
-            //当状态不是暂停,更新产品需求状态
+        if (!Objects.equals(projectDO.getStatus(),oldStatus)) {
+            //状态不一致时,更新产品需求状态
             productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
             projectLogComponent.addLogWhenStatusChange(oldStatus, projectDO.getStatus(), projectDO.getId(), null);
         }

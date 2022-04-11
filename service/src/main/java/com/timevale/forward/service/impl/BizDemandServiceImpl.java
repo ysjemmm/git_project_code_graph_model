@@ -565,8 +565,8 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizChangeLogDO.setCreateManId(userInfo.getId());
             bizChangeLogDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         }else{
-            bizChangeLogDO.setCreateManId(LocalSessionUtils.SYSTEM);
-            bizChangeLogDO.setCreateMan(LocalSessionUtils.SYSTEM_ALIAS);
+            bizChangeLogDO.setCreateManId(CommonConstant.SYSTEM);
+            bizChangeLogDO.setCreateMan(CommonConstant.SYSTEM);
         }
         return bizChangeLogDO;
     }

@@ -134,14 +134,9 @@ public class DataCorrectServiceImpl implements DataCorrectService {
             log.info("产品需求变化-更新业务需求,产品需求id不存在");
             return;
         }
-        if (bizProductDemandUnLink) {
-            //解除产品需求和业务需求关系(含作废情况)
-            productDemandIds.forEach(p -> {
-                buildConditionBeforeUpdate(Lists.newArrayList(p), bizProductDemandUnLink);
-            });
-        } else {
-            buildConditionBeforeUpdate(productDemandIds, bizProductDemandUnLink);
-        }
+        //解除产品需求和业务需求关系(含作废情况)
+        buildConditionBeforeUpdate(productDemandIds, bizProductDemandUnLink);
+
     }
 
 
