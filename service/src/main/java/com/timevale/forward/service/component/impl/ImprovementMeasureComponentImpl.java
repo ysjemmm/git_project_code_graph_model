@@ -16,7 +16,6 @@ import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
-import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -24,7 +23,10 @@ import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -69,12 +71,13 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
             String todoId = e.getTodoId();
             String unionId = unionIdMap.get(e.getExecutorId());
             if(StringUtils.isEmpty(todoId) || StringUtils.isEmpty(unionId)){
-                throw new BaseBizRuntimeException("待办信息不全，无法同步");
+                log.error("待办信息不全,无法同步,事项id:{},执行人unionId:{}",e.getId(),unionId);
+            }else{
+                getTodoTaskMsgList.add(GetTodoTaskMsg.builder()
+                        .recordId(todoId)
+                        .unionId(unionId)
+                        .build());
             }
-            getTodoTaskMsgList.add(GetTodoTaskMsg.builder()
-                            .recordId(todoId)
-                            .unionId(unionId)
-                            .build());
         });
         Map<String, DingTodoTaskResponseBody> todoTaskResponseBodyMap = dingWorkRecordClient.batchGetTask(getTodoTaskMsgList);
 
