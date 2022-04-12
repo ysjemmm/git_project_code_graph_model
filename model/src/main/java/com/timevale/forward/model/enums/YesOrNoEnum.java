@@ -38,4 +38,8 @@ public enum YesOrNoEnum {
         return "errorCode";
     }
 
+    public static String getTextByCode(Boolean code){
+        return code ? YES.text : NO.text;
+    }
+
 }

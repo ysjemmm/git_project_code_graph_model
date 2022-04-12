@@ -229,16 +229,18 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //4.bug_log记录
         BugOfflineMD oldBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(oldBugOfflineDO);
         BugOfflineMD newBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(newBugOfflineDO);
-        List<BugLogDO> bugLogDOList=FieldCompareUtil.commonCompare(oldBugOfflineMD, newBugOfflineMD, BugLogDO.class);
+        List<BugLogDO> bugLogDOList = FieldCompareUtil.commonCompare(oldBugOfflineMD, newBugOfflineMD, BugLogDO.class);
+
         // 额外判断项目与产品
         bugLogDOList.addAll(compareExtraIfNecessary(oldBugOfflineDO, newBugOfflineDO));
-        // 特殊判断null和空字符串‘’
+
+        // 特殊判断null和空字符串
         bugLogDOList.removeIf(e -> {
             if (e.getField().equals(BugFieldEnum.DELAY_HANDLE_REASON.getText())) {
                 String oldValue = e.getOldValue();
                 String newValue = e.getNewValue();
-                oldValue = StringUtils.isEmpty(oldValue) ? "" : oldValue;
-                newValue = StringUtils.isEmpty(newValue) ? "" : newValue;
+                oldValue = StringUtils.isEmpty(oldValue) ? StringUtils.EMPTY : oldValue;
+                newValue = StringUtils.isEmpty(newValue) ? StringUtils.EMPTY : newValue;
                 return Objects.equals(oldValue, newValue);
             }
             return false;

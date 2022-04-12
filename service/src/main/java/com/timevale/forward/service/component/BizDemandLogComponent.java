@@ -10,9 +10,9 @@ public interface BizDemandLogComponent{
 
     void addLogWhenModifyData(BizDemandDO oldObj, BizDemandDO newObj) ;
 
-    void addLogWhenModifyData(String oldValue, String newValue, Long id, String filed, Boolean active);
+    void addLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active);
 
-    void addLogWhenModifyData(String oldValue, String newValue, Long id, String filed, Boolean active, String action);
+    void addLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active, String action);
 
     void addLogWhenBizDemandInvalid(Long bizDemandId);
 

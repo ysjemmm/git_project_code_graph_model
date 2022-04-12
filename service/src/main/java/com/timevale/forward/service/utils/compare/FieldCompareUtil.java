@@ -5,6 +5,7 @@ import com.timevale.forward.dal.annotation.FieldCompare;
 import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 import com.timevale.forward.model.enums.BugLogTypeEnum;
 import com.timevale.forward.model.middle.*;
+import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ public class FieldCompareUtil {
         CLAZZ_MAP.put(BugOfflineMD.class, BugLogTypeEnum.OFFLINE.getCode());
         CLAZZ_MAP.put(BugOnlineMD.class, BugLogTypeEnum.ONLINE.getCode());
         CLAZZ_MAP.put(BusinessMD.class, BugLogTypeEnum.ONLINE.getCode());
+        CLAZZ_MAP.put(BizDemandMD.class, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
         CLAZZ_MAP.put(ProjectMD.class, BizChangeLogTypeEnum.PROJECT.getCode());
         CLAZZ_MAP.put(ProductDemandMD.class, BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
     }
@@ -89,7 +91,7 @@ public class FieldCompareUtil {
                     } else if (fieldType == Date.class) {
                         oldString = DateUtil.parseToString((Date) oldField.get(oldObj), DateFormatConst.DATE_FORMAT);
                         newString = DateUtil.parseToString((Date) newField.get(newObj), DateFormatConst.DATE_FORMAT);
-                    } else if (fieldType == Integer.class) {
+                    } else if (fieldType == Integer.class || fieldType == Boolean.class) {
                         Method method = annotation.enumClass().getMethod(METHOD, Integer.class);
                         if (oldValue != null) {
                             oldString = (String) method.invoke(null, oldValue);
