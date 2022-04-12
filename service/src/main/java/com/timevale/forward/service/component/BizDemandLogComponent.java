@@ -1,17 +1,18 @@
 package com.timevale.forward.service.component;
 
 import com.timevale.forward.dal.entity.BizDemandDO;
+import org.apache.el.parser.BooleanNode;
 
 import java.util.List;
 import java.util.Map;
 
 public interface BizDemandLogComponent{
 
-    void addLogWhenStatusChange(Integer oldStatus, Integer newStatus, Long id, String action) ;
-
     void addLogWhenModifyData(BizDemandDO oldObj, BizDemandDO newObj) ;
 
-    void addLogWhenModifyData(String oldValue, String newValue, Long id, String action, String filed) ;
+    void addLogWhenModifyData(String oldValue, String newValue, Long id, String filed, Boolean active);
+
+    void addLogWhenModifyData(String oldValue, String newValue, Long id, String filed, Boolean active, String action);
 
     void addLogWhenBizDemandInvalid(Long bizDemandId);
 

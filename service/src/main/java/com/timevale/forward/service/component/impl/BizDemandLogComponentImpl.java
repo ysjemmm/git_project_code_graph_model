@@ -8,13 +8,16 @@ import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
+import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
+import com.timevale.forward.model.enums.BizDemandActionEnum;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -38,31 +41,25 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
     private BizDemandMapper bizDemandMapper;
 
     @Override
-    public void addLogWhenStatusChange(Integer oldStatus, Integer newStatus, Long id, String action) {
-        BizChangeLogDO logDO = newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
-
-        logDO.setMainId(id);
-        logDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
-        logDO.setAction(action);
-        logDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
-        logDO.setNewValue(BizDemandStatusEnum.getTextByCode(newStatus));
-
-        bizChangeLogMapper.insert(logDO);
-    }
-
-    @Override
     public void addLogWhenModifyData(BizDemandDO oldObj, BizDemandDO newObj) {
     }
 
     @Override
-    public void addLogWhenModifyData(String oldValue, String newValue, Long id, String action, String filed) {
-        BizChangeLogDO logDO = newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+    public void addLogWhenModifyData(String oldValue, String newValue, Long id, String filed, Boolean active) {
+        addLogWhenModifyData(oldValue, newValue, id, filed, active, StringUtils.EMPTY);
+    }
+
+    @Override
+    public void addLogWhenModifyData(String oldValue, String newValue, Long id, String filed, Boolean active, String action) {
+        BizChangeLogDO logDO = newBizChangeLogDO(active, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
 
         logDO.setMainId(id);
         logDO.setField(filed);
-        logDO.setAction(action);
         logDO.setOldValue(oldValue);
         logDO.setNewValue(newValue);
+        if(StringUtils.isNotEmpty(action)){
+            logDO.setAction(action);
+        }
 
         bizChangeLogMapper.insert(logDO);
     }
