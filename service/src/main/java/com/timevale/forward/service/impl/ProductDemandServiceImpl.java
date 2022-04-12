@@ -199,7 +199,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
             ProductBizDemandCondition c = ProductBizDemandCondition.builder().productDemandId(productDemandId).build();
             List<Long> bizDemandIds = productBizDemandMapper.select(c).stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
-            if(CollectionUtils.isNotEmpty(bizDemandIds)){
+            if (CollectionUtils.isNotEmpty(bizDemandIds)) {
                 Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
                 productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, null);
                 // 作废解业务需求关联
@@ -287,6 +287,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         ProductDemandDO oldProductDemand = productDemandMapper.getByName(productDemandModifyReq.getName());
         if (oldProductDemand != null && !oldProductDemand.getId().equals(productDemandModifyReq.getId())) {
             throw new BaseBizRuntimeException("该产品需求名称已存在,请修改后重试");
+        }
+        if (oldProductDemand == null) {
+            oldProductDemand = productDemandMapper.get(productDemandModifyReq.getId());
         }
         checkDescLength(productDemandModifyReq.getDesc());
         ProductDemandDO newProductDemand = ProductDemandCopier.INSTANCE.convert(productDemandModifyReq);

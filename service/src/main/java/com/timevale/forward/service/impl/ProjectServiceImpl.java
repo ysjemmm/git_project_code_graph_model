@@ -229,7 +229,7 @@ public class ProjectServiceImpl implements ProjectService {
         //生成节点信息
         projectNodeComponent.buildDefaultNode(projectDO.getPlanStartDate(), projectDO.getPlanEndDate(), projectDO.getId());
 
-        Integer status=ProjectStatusEnum.WAITING.getCode();
+        Integer status = ProjectStatusEnum.WAITING.getCode();
         projectLogComponent.addLogWhenStatusChange(status, status, projectDO.getId(), ButtonActionEnum.SUBMIT.getText());
         return BaseResult.success(true);
     }
@@ -241,6 +241,9 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO oldProject = projectMapper.getByName(projectModifyReq.getName());
         if (oldProject != null && !oldProject.getId().equals(projectModifyReq.getId())) {
             throw new BaseBizRuntimeException("该项目名称已存在,请修改后重试");
+        }
+        if (oldProject == null) {
+            oldProject = projectMapper.get(projectModifyReq.getId());
         }
         ProjectDO newProject = ProjectCopier.INSTANCE.convert(projectModifyReq);
         newProject.setPmName(projectModifyReq.getPm().getUserName());
@@ -360,8 +363,8 @@ public class ProjectServiceImpl implements ProjectService {
         }
         List<Long> productDemandIds = productDemandLinkReq.getProductDemandIds();
         List<ProductDemandDO> productDemands = productDemandMapper.selectByIdList(productDemandIds);
-        Map<Long, String> pdNameMap=productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getName, (v1, v2) -> v2));
-        Map<Long, Integer> statusMap=productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getStatus, (v1, v2) -> v2));
+        Map<Long, String> pdNameMap = productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getName, (v1, v2) -> v2));
+        Map<Long, Integer> statusMap = productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getStatus, (v1, v2) -> v2));
 
         if (LinkOrUnLinkEnum.LINK.getCode().equals(productDemandLinkReq.getType())) {
             List<ProjectProductDemandDO> productDemand = projectProductDemandMapper.getLinkedProductDemand(productDemandIds);
@@ -373,7 +376,7 @@ public class ProjectServiceImpl implements ProjectService {
 
             productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
 
-            projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(),pdNameMap, ButtonActionEnum.LINK.getText());
+            projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.LINK.getText());
         } else {
             projectProductDemandComponent.update(null, productDemandIds.get(0));
 
@@ -385,7 +388,7 @@ public class ProjectServiceImpl implements ProjectService {
             // 一个产品需求下的业务需求
             productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false);
 
-            projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(),pdNameMap, ButtonActionEnum.UN_LINK.getText());
+            projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.UN_LINK.getText());
             productDemandLogComponent.addLogAsProjectStatusChange(statusMap, productDemandDO.getStatus());
 
             // 取消产品需求和任务的关联
@@ -504,7 +507,7 @@ public class ProjectServiceImpl implements ProjectService {
             projectDO.setStatus(oldStatus);
         }
         projectMapper.update(projectDO);
-        if (!Objects.equals(projectDO.getStatus(),oldStatus)) {
+        if (!Objects.equals(projectDO.getStatus(), oldStatus)) {
             //状态不一致时,更新产品需求状态
             productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
             projectLogComponent.addLogWhenStatusChange(oldStatus, projectDO.getStatus(), projectDO.getId(), null);
