@@ -12,10 +12,14 @@ import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
 import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 import com.timevale.forward.model.enums.BizDemandActionEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.middle.BizDemandMD;
 import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.service.copy.BizDemandCopier;
+import com.timevale.forward.service.utils.compare.FieldCompareUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.util.FieldUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -42,19 +46,22 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
 
     @Override
     public void addLogWhenModifyData(BizDemandDO oldObj, BizDemandDO newObj) {
+        BizDemandMD oldMD = BizDemandCopier.INSTANCE.transform(oldObj);
+        BizDemandMD newMD = BizDemandCopier.INSTANCE.transform(newObj);
+        List<BizChangeLogDO> bizChangeLogDOList = FieldCompareUtil.commonCompare(oldMD, newMD, BizChangeLogDO.class);
     }
 
     @Override
-    public void addLogWhenModifyData(String oldValue, String newValue, Long id, String filed, Boolean active) {
-        addLogWhenModifyData(oldValue, newValue, id, filed, active, StringUtils.EMPTY);
+    public void addLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active) {
+        addLogWhenModifyData(oldValue, newValue, id, field, active, StringUtils.EMPTY);
     }
 
     @Override
-    public void addLogWhenModifyData(String oldValue, String newValue, Long id, String filed, Boolean active, String action) {
+    public void addLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active, String action) {
         BizChangeLogDO logDO = newBizChangeLogDO(active, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
 
         logDO.setMainId(id);
-        logDO.setField(filed);
+        logDO.setField(field);
         logDO.setOldValue(oldValue);
         logDO.setNewValue(newValue);
         if(StringUtils.isNotEmpty(action)){

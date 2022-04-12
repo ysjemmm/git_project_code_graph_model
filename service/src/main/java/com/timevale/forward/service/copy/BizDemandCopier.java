@@ -14,6 +14,7 @@ import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.model.middle.BizDemandMD;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -151,6 +152,16 @@ public interface BizDemandCopier {
     @Mapping(source = "createManInfoList", target = "createManIdList", qualifiedByName = "getInfoId")
     @Mapping(source = "receiveManInfoList", target = "receiveManIdList", qualifiedByName = "getInfoId")
     BizDemandListCondition convert(ProductDemandLinkBizDemandQueryList demandQueryList);
+
+
+    /**
+     * 变换
+     *
+     * @param bizDemandDO 业务需求 DO
+     * @return {@code BizDemandMD}
+     */
+    BizDemandMD transform(BizDemandDO bizDemandDO);
+
 
     /**
      * 信息id
