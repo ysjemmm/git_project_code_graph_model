@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.BizDemandDO;
@@ -12,10 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author xingyun
@@ -40,6 +38,7 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
                 newStautsChangeMap.put(id, status);
             });
         });
+        List<BizChangeLogDO> logs = new ArrayList<>();
         oldStautsMap.forEach((id, oldStatus) -> {
             if (newStautsChangeMap.containsKey(id) && !Objects.equals(oldStatus, newStautsChangeMap.get(id))) {
                 BizChangeLogDO logDO = new BizChangeLogDO();
@@ -50,7 +49,11 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
                 logDO.setNewValue(BizDemandStatusEnum.getTextByCode(newStautsChangeMap.get(id)));
                 logDO.setCreateMan(CommonConstant.SYSTEM);
                 logDO.setCreateManId(CommonConstant.SYSTEM);
+                logs.add(logDO);
             }
         });
+        if (CollectionUtil.isNotEmpty(logs)) {
+            bizChangeLogMapper.batchInsert(logs);
+        }
     }
 }
