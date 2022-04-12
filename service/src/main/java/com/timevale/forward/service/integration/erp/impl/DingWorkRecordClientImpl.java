@@ -96,7 +96,7 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
         }catch (Exception e){
             log.error("[erpMessage]获取待办失败  error: " + e.getMessage() + " 发送通知信息：" + getTodoTaskMsg);
         }
-        throw new BaseBizRuntimeException("获取待办信息失败");
+        return null;
     }
 
     @Override
@@ -105,7 +105,9 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
         getTodoTaskMsgList.parallelStream()
                 .forEach(e -> {
                     DingTodoTaskResponseBody task = getTask(e);
-                    result.put(task.getId(), task);
+                    if(task != null){
+                        result.put(task.getId(), task);
+                    }
                 });
         return result;
     }
