@@ -11,10 +11,9 @@ import java.util.List;
  */
 public interface BizChangeLogMapper {
 
-
     List<BizChangeLogDO> list(@Param("mainId") Long mainId, @Param("type") Integer type);
 
-    Integer insert(BizChangeLogDO bugLogDO);
+    Integer insert(BizChangeLogDO bizChangeLogDO);
 
-    int batchInsert(List<BizChangeLogDO> bugLogDOList);
+    int batchInsert(List<BizChangeLogDO> bizChangeLogs);
 }

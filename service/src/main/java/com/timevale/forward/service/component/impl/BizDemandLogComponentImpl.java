@@ -7,6 +7,7 @@ import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
 import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.service.component.BizDemandLogComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -47,6 +48,8 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
                 logDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
                 logDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
                 logDO.setNewValue(BizDemandStatusEnum.getTextByCode(newStautsChangeMap.get(id)));
+                logDO.setCreateMan(CommonConstant.SYSTEM);
+                logDO.setCreateManId(CommonConstant.SYSTEM);
             }
         });
     }
