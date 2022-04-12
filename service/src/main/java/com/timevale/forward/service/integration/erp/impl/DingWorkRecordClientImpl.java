@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -96,16 +97,18 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
         }catch (Exception e){
             log.error("[erpMessage]获取待办失败  error: " + e.getMessage() + " 发送通知信息：" + getTodoTaskMsg);
         }
-        throw new BaseBizRuntimeException("获取待办信息失败");
+        return null;
     }
 
     @Override
     public Map<String, DingTodoTaskResponseBody> batchGetTask(List<GetTodoTaskMsg> getTodoTaskMsgList) {
-        Map<String, DingTodoTaskResponseBody> result = Maps.newConcurrentMap();
+        Map<String, DingTodoTaskResponseBody> result = new ConcurrentHashMap<>();
         getTodoTaskMsgList.parallelStream()
                 .forEach(e -> {
                     DingTodoTaskResponseBody task = getTask(e);
-                    result.put(task.getId(), task);
+                    if(task != null){
+                        result.put(task.getId(), task);
+                    }
                 });
         return result;
     }
