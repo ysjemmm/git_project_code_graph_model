@@ -58,9 +58,6 @@ public class BizDemandServiceImpl implements BizDemandService {
     private BizDemandMapper bizDemandMapper;
 
     @Resource
-    private ProductDemandMapper productDemandMapper;
-
-    @Resource
     private ProductLineMapper productLineMapper;
 
     @Resource
@@ -167,12 +164,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         ));
 
         // 日志, 状态改为作废
-        bizDemandLogComponent.addLogWhenStatusChange(
-                oldStatus,
-                BizDemandStatusEnum.INVALID.getCode(),
+        bizDemandLogComponent.addLogWhenModifyData(
+                BizDemandStatusEnum.getTextByCode(oldStatus),
+                BizDemandStatusEnum.INVALID.getText(),
                 bizDemandId,
-                BizDemandActionEnum.INVALID.getText()
-        );
+                BizDemandFieldEnum.STATUS.getText(),
+                true,
+                BizDemandActionEnum.INVALID.getText());
 
         // 日志，产品关联断开
         bizDemandLogComponent.addLogWhenBizDemandInvalid(bizDemandId);
@@ -226,10 +224,12 @@ public class BizDemandServiceImpl implements BizDemandService {
         ));
 
         // 日志, 状态改为待评估
-        bizDemandLogComponent.addLogWhenStatusChange(
-                BizDemandStatusEnum.EVALUATE.getCode(),
-                BizDemandStatusEnum.EVALUATE.getCode(),
+        bizDemandLogComponent.addLogWhenModifyData(
+                BizDemandStatusEnum.EVALUATE.getText(),
+                BizDemandStatusEnum.EVALUATE.getText(),
                 bizDemandDO.getId(),
+                BizDemandFieldEnum.STATUS.getText(),
+                true,
                 BizDemandActionEnum.SUBMIT.getText());
 
         return BaseResult.success(true);
@@ -333,6 +333,9 @@ public class BizDemandServiceImpl implements BizDemandService {
             ));
         }
 
+        // 变更日志
+        bizDemandLogComponent.addLogWhenModifyData(oldBizDemandDO, newBizDemandDO);
+
         return BaseResult.success(true);
     }
 
@@ -373,10 +376,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 日志, 状态改为同意
         BizDemandDO newBizDemandDO = bizDemandMapper.selectById(bizDemandId);
         Integer newStatus = newBizDemandDO.getStatus();
-        bizDemandLogComponent.addLogWhenStatusChange(
-                oldStatus,
-                newStatus,
+
+        bizDemandLogComponent.addLogWhenModifyData(
+                BizDemandStatusEnum.getTextByCode(oldStatus),
+                BizDemandStatusEnum.getTextByCode(newStatus),
                 bizDemandId,
+                BizDemandFieldEnum.STATUS.getText(),
+                true,
                 BizDemandActionEnum.RECEIVE.getText());
 
         return BaseResult.success(true);
@@ -414,10 +420,12 @@ public class BizDemandServiceImpl implements BizDemandService {
         ));
 
         // 日志, 状态改为驳回
-        bizDemandLogComponent.addLogWhenStatusChange(
-                oldStatus,
-                BizDemandStatusEnum.RECEIVED.getCode(),
+        bizDemandLogComponent.addLogWhenModifyData(
+                BizDemandStatusEnum.getTextByCode(oldStatus),
+                BizDemandStatusEnum.REJECT.getText(),
                 bizDemandId,
+                BizDemandFieldEnum.STATUS.getText(),
+                true,
                 BizDemandActionEnum.REJECT.getText());
 
         return BaseResult.success(true);
@@ -447,8 +455,9 @@ public class BizDemandServiceImpl implements BizDemandService {
                     oldReceiveMan,
                     newReceiveMan,
                     bizDemandDO.getId(),
-                    BizDemandActionEnum.TRANSFER.getText(),
-                    BizDemandFieldEnum.RECEIVE_MAN.getText());
+                    BizDemandFieldEnum.RECEIVE_MAN.getText(),
+                    true,
+                    BizDemandActionEnum.TRANSFER.getText());
 
             // 转交人通知
             messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(

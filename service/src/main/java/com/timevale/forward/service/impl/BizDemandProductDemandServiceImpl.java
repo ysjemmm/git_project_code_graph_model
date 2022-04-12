@@ -21,9 +21,7 @@ import com.timevale.forward.facade.api.request.BizDemandUnlinkProductDemandReq;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
 import com.timevale.forward.facade.api.result.BizDemandStatusVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
-import com.timevale.forward.model.enums.BizDemandStatusEnum;
-import com.timevale.forward.model.enums.PriorityEnum;
-import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -155,10 +153,12 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
 
+        BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bizDemandDO);
+
         // 日志
         bizDemandLogComponent.addLogWhenBizDemandLinkProductDemand(bizDemandId, productDemandIdList);
 
-        return BaseResult.success(compareBizDemandStatus(bizDemandDO));
+        return BaseResult.success(bizDemandStatusVO);
     }
 
     @Override
@@ -205,16 +205,28 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         String statusText = BizDemandStatusEnum.getTextByCode(newStatus);
         Date projectEndDate = bizDemandComponent.getProjectEndDate(bizDemandId);
 
-        // 如果新旧状态不同，且当前状态需要发送通知
-        if(!oldStatus.equals(newStatus) && BizDemandStatusEnum.statusNeedNotice(newStatus)){
-            messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
-                    this,
-                    newBizDemandDO.getId(),
-                    newBizDemandDO.getReceiveManId(),
-                    newBizDemandDO.getName(),
-                    statusText,
-                    projectEndDate
-            ));
+        // 如果新旧状态不同
+        if(!oldStatus.equals(newStatus)){
+            // 当前状态需要发送通知
+            if(BizDemandStatusEnum.statusNeedNotice(newStatus)){
+                messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
+                        this,
+                        newBizDemandDO.getId(),
+                        newBizDemandDO.getReceiveManId(),
+                        newBizDemandDO.getName(),
+                        statusText,
+                        projectEndDate
+                ));
+            }
+
+            // 日志
+            bizDemandLogComponent.addLogWhenModifyData(
+                    BizDemandStatusEnum.getTextByCode(oldStatus),
+                    BizDemandStatusEnum.getTextByCode(newStatus),
+                    bizDemandId,
+                    BizDemandFieldEnum.STATUS.getText(),
+                    false
+            );
         }
 
         // 返回当前状态
