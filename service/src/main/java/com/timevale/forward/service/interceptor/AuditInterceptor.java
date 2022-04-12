@@ -1,5 +1,6 @@
 package com.timevale.forward.service.interceptor;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -10,6 +11,7 @@ import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.plugin.*;
+import org.apache.ibatis.session.defaults.DefaultSqlSession;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
@@ -30,7 +32,7 @@ public class AuditInterceptor implements Interceptor {
     public Object intercept(Invocation invocation) throws Throwable {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        if(invocation.getArgs().length == 1){
+        if (invocation.getArgs().length == 1) {
             return invocation.proceed();
         }
         Object parameter = invocation.getArgs()[1];
@@ -38,20 +40,23 @@ public class AuditInterceptor implements Interceptor {
         // 获取对应sql属性
         MappedStatement mappedStatement = (MappedStatement) invocation.getArgs()[0];
         SqlCommandType sqlCommandType = mappedStatement.getSqlCommandType();
-
+        // 填充字段,日志操作人单独赋值为SYSTEM-SYSTEM
+        if (parameter instanceof BizChangeLogDO
+                // 批量插入
+                || (parameter instanceof DefaultSqlSession.StrictMap
+                && BeanUtil.getProperty(parameter, "list[0]") instanceof BizChangeLogDO)) {
+            return invocation.proceed();
+        }
         // 根据sql类型进行审计填充
         String id = userInfo.getId();
         String name = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
 
-        if (!BizChangeLogDO.class.isAssignableFrom(parameter.getClass())) {
-            // 填充字段,日志操作人单独赋值为SYSTEM-SYSTEM
-            if(sqlCommandType == SqlCommandType.INSERT){
-                setProperty(parameter, AuditEnum.CREATE_MAN.getText(), name);
-                setProperty(parameter, AuditEnum.CREATE_MAN_ID.getText(), id);
-            }else{
-                setProperty(parameter, AuditEnum.MODIFY_MAN.getText(), name);
-                setProperty(parameter, AuditEnum.MODIFY_MAN_ID.getText(), id);
-            }
+        if (sqlCommandType == SqlCommandType.INSERT) {
+            setProperty(parameter, AuditEnum.CREATE_MAN.getText(), name);
+            setProperty(parameter, AuditEnum.CREATE_MAN_ID.getText(), id);
+        } else {
+            setProperty(parameter, AuditEnum.MODIFY_MAN.getText(), name);
+            setProperty(parameter, AuditEnum.MODIFY_MAN_ID.getText(), id);
         }
 
         return invocation.proceed();
@@ -93,7 +98,8 @@ public class AuditInterceptor implements Interceptor {
         MODIFY_MAN_ID("modifyManId");
 
         private final String text;
-        AuditEnum(String text){
+
+        AuditEnum(String text) {
             this.text = text;
         }
     }
