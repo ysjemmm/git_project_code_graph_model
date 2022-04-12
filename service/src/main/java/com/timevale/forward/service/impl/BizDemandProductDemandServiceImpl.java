@@ -25,6 +25,7 @@ import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
@@ -77,6 +78,9 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
     @Resource
     MessageEventPublisher messageEventPublisher;
+
+    @Resource
+    BizDemandLogComponent bizDemandLogComponent;
 
     @Override
     public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> linkedProductDemandList(BizDemandProductDemandQueryList bizDemandProductDemandQueryList) {
@@ -151,6 +155,9 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
 
+        // 日志
+        bizDemandLogComponent.addLogWhenBizDemandLinkProductDemand(bizDemandId, productDemandIdList);
+
         return BaseResult.success(compareBizDemandStatus(bizDemandDO));
     }
 
@@ -181,6 +188,9 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         productBizDemandMapper.delete(productBizDemandDO);
 
         bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
+
+        // 日志
+        bizDemandLogComponent.addLogWhenBizDemandUnLinkProductDemand(bizDemandId, productDemandId);
 
         return BaseResult.success(compareBizDemandStatus(bizDemandDO));
     }

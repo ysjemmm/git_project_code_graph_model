@@ -7,7 +7,17 @@ import java.util.Map;
 
 public interface BizDemandLogComponent{
 
+    void addLogWhenStatusChange(Integer oldStatus, Integer newStatus, Long id, String action) ;
+
     void addLogWhenModifyData(BizDemandDO oldObj, BizDemandDO newObj) ;
 
-    void addLogAsProductDemandStatusChange(Map<Long, Integer> oldStautsMap,  Map<Integer, List<Long>> newStautsMap) ;
+    void addLogWhenModifyData(String oldValue, String newValue, Long id, String action, String filed) ;
+
+    void addLogWhenBizDemandInvalid(Long bizDemandId);
+
+    void addLogWhenBizDemandLinkProductDemand(Long bizDemandId, List<Long> productDemandIdList);
+
+    void addLogWhenBizDemandUnLinkProductDemand(Long bizDemandId, Long productDemandId);
+
+    void addLogAsProductDemandStatusChange(Map<Long, Integer> oldStatusMap,  Map<Integer, List<Long>> newStatusMap) ;
 }
