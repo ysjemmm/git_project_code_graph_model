@@ -155,16 +155,16 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             logs.add(projectLog);
 
             //2.产品需求记录日志:{操作人}添加/删除  {项目}:{项目A}
-            BizChangeLogDO productLog = new BizChangeLogDO();
-            productLog.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
-            productLog.setMainId(pId);
-            productLog.setField(BizChangeLogTypeEnum.PROJECT.getText());
-            productLog.setAction(action);
-            productLog.setOldValue(name);
-            productLog.setNewValue(name);
-            projectLog.setCreateMan(createMan);
-            projectLog.setCreateManId(createManId);
-            logs.add(productLog);
+            BizChangeLogDO pdLog = new BizChangeLogDO();
+            pdLog.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+            pdLog.setMainId(pId);
+            pdLog.setField(BizChangeLogTypeEnum.PROJECT.getText());
+            pdLog.setAction(action);
+            pdLog.setOldValue(name);
+            pdLog.setNewValue(name);
+            pdLog.setCreateMan(createMan);
+            pdLog.setCreateManId(createManId);
+            logs.add(pdLog);
         });
         if (CollectionUtil.isNotEmpty(logs)) {
             bizChangeLogMapper.batchInsert(logs);

@@ -150,28 +150,28 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
         List<BizChangeLogDO> logs = new ArrayList<>();
         bdNameMap.forEach((bId, bName) -> {
             //1.产品需求记录日志:{操作人}添加/删除 {业务需求}:{业务需求A}
-            BizChangeLogDO productLog = new BizChangeLogDO();
-            productLog.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
-            productLog.setMainId(id);
-            productLog.setField(BizChangeLogTypeEnum.BIZ_DEMAND.getText());
-            productLog.setAction(action);
-            productLog.setOldValue(bName);
-            productLog.setNewValue(bName);
-            productLog.setCreateMan(createMan);
-            productLog.setCreateManId(createManId);
-            logs.add(productLog);
+            BizChangeLogDO pdLog = new BizChangeLogDO();
+            pdLog.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+            pdLog.setMainId(id);
+            pdLog.setField(BizChangeLogTypeEnum.BIZ_DEMAND.getText());
+            pdLog.setAction(action);
+            pdLog.setOldValue(bName);
+            pdLog.setNewValue(bName);
+            pdLog.setCreateMan(createMan);
+            pdLog.setCreateManId(createManId);
+            logs.add(pdLog);
 
             //1.业务需求记录日志:{操作人}添加/删除 {产品需求}:{产品需求A}
-            BizChangeLogDO bizLog = new BizChangeLogDO();
-            bizLog.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
-            bizLog.setMainId(bId);
-            bizLog.setField(BizChangeLogTypeEnum.PRODUCT_DEMAND.getText());
-            bizLog.setAction(action);
-            bizLog.setOldValue(name);
-            bizLog.setNewValue(name);
-            bizLog.setCreateMan(createMan);
-            bizLog.setCreateManId(createManId);
-            logs.add(bizLog);
+            BizChangeLogDO bdLog = new BizChangeLogDO();
+            bdLog.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+            bdLog.setMainId(bId);
+            bdLog.setField(BizChangeLogTypeEnum.PRODUCT_DEMAND.getText());
+            bdLog.setAction(action);
+            bdLog.setOldValue(name);
+            bdLog.setNewValue(name);
+            bdLog.setCreateMan(createMan);
+            bdLog.setCreateManId(createManId);
+            logs.add(bdLog);
 
         });
         if (CollectionUtil.isNotEmpty(logs)) {
