@@ -32,7 +32,6 @@
             <if test="desc != null">`desc` = #{desc},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
-            <if test="retainModifyDate">modify_date = modify_date,</if>
             actual_start_date = #{actualStartDate},
             actual_end_date = #{actualEndDate}
         </set>
@@ -213,4 +212,15 @@
             </foreach>
         </where>
     </select>
+
+    <update id="updateStatus" parameterType="com.timevale.forward.dal.entity.ProjectDO">
+        update project
+        <set>
+            <if test="status != null">status = #{status},</if>
+            modify_date = modify_date
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
 </mapper>

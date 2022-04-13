@@ -103,4 +103,12 @@ public interface ProjectMapper {
      */
     List<ProjectDO>  getByStatus(@Param("status") List<Integer> status);
 
+    /**
+     * 状态重算时使用
+     *
+     * @param projectDO 项目
+     * @return int
+     */
+    int updateStatus(ProjectDO projectDO);
+
 }

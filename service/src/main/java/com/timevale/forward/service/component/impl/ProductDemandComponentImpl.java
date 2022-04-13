@@ -63,7 +63,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     @Resource
     private MessageEventPublisher messageEventPublisher;
 
-    //    @Resource
+    @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Resource
@@ -214,8 +214,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                 .collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, ProductBizDemandDO::getStatus));
 
         bizDemandLogComponent.addLogAsProductDemandStatusChange(oldStautsMap,newStautsMap);
-
-        sendDingMsg(newStautsMap, bizDemandMap);
+        threadPoolTaskExecutor.execute((()-> sendDingMsg(newStautsMap, bizDemandMap)));
     }
 
     private void sendDingMsg(Map<Integer, List<Long>> condition, Map<Long, ProductBizDemandDO> bizDemandMap) {

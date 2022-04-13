@@ -64,8 +64,7 @@ public class DataCorrectServiceImpl implements DataCorrectService {
                 if (!ProjectStatusEnum.SUSPEND.getCode().equals(a.getStatus())) {
                     List<ProjectNodeDO> projectNodes = projectNodeMapper.get(a.getId());
                     projectComponent.fillInfo(projectNodes, a);
-                    a.setRetainModifyDate(true);
-                    projectMapper.update(a);
+                    projectMapper.updateStatus(a);
                     updateProductDemandStatus(a.getId(), a.getStatus());
                 }
             });
@@ -100,8 +99,7 @@ public class DataCorrectServiceImpl implements DataCorrectService {
         list.forEach(a->{
             List<ProjectNodeDO> projectNodes = projectNodeMapper.get(a.getId());
             projectComponent.fillInfo(projectNodes, a);
-            a.setRetainModifyDate(true);
-            projectMapper.update(a);
+            projectMapper.updateStatus(a);
             updateProductDemandStatus(a.getId(), a.getStatus());
         });
         log.info("数据订正,状态变更完成");
