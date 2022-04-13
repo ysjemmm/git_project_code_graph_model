@@ -64,4 +64,10 @@ public class ProjectMD extends BaseMD{
      */
     @FieldCompare(fieldName = "项目经理")
     private String pmName;
+
+    /**
+     * 项目描述
+     */
+    @FieldCompare(fieldName = "项目描述")
+    private String desc;
 }

@@ -1,6 +1,7 @@
 package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
+import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
@@ -53,6 +54,20 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
         ProductDemandMD oldPdm = ProductDemandCopier.INSTANCE.change(oldObj);
         ProductDemandMD newPdm = ProductDemandCopier.INSTANCE.change(newObj);
         List<BizChangeLogDO> logs = FieldCompareUtil.commonCompare(oldPdm, newPdm, BizChangeLogDO.class);
+
+        List<Integer> oldTypes = JSON.parseArray(oldObj.getType(), Integer.class);
+        List<Integer> newTypes = JSON.parseArray(newObj.getType(), Integer.class);
+        if(!CollectionUtil.isEqualList(oldTypes, newTypes)){
+            BizChangeLogDO logDO = new BizChangeLogDO();
+            logDO.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+            logDO.setMainId(oldObj.getId());
+            logDO.setField(BizChangeLogFieldEnum.PRODUCT_DEMAND_TYPE.getText());
+            String oldValue = oldTypes.stream().map(ProductDemandTypeEnum::getTextByCode).collect(Collectors.joining(","));
+            String newValue = newTypes.stream().map(ProductDemandTypeEnum::getTextByCode).collect(Collectors.joining(","));
+            logDO.setOldValue(oldValue);
+            logDO.setNewValue(newValue);
+            logs.add(logDO);
+        }
 
         //产品线
         if (!Objects.equals(oldObj.getProductLineId(), newObj.getProductLineId())) {

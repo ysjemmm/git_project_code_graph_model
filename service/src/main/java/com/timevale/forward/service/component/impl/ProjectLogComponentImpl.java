@@ -71,7 +71,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             logDO.setType(BizChangeLogTypeEnum.PROJECT.getCode());
             logDO.setMainId(oldObj.getId());
             logDO.setField(BizChangeLogFieldEnum.PRODUCT_LINE.getText());
-            String oldValue = oldObj.getProductLineIds().stream().map(productLineMap::get).collect(Collectors.joining(","));
+            String oldValue = oldProductLineIds.stream().map(productLineMap::get).collect(Collectors.joining(","));
             String newValue = newObj.getProductLineIds().stream().map(productLineMap::get).collect(Collectors.joining(","));
             logDO.setOldValue(oldValue);
             logDO.setNewValue(newValue);

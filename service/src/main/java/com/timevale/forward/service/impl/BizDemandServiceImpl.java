@@ -168,9 +168,9 @@ public class BizDemandServiceImpl implements BizDemandService {
                 BizDemandStatusEnum.getTextByCode(oldStatus),
                 BizDemandStatusEnum.INVALID.getText(),
                 bizDemandId,
-                BizDemandFieldEnum.STATUS.getText(),
+                BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                 true,
-                BizDemandActionEnum.INVALID.getText());
+                ButtonActionEnum.INVALID.getText());
 
         // 日志，产品关联断开
         bizDemandLogComponent.addLogWhenBizDemandInvalid(bizDemandId);
@@ -228,9 +228,9 @@ public class BizDemandServiceImpl implements BizDemandService {
                 BizDemandStatusEnum.EVALUATE.getText(),
                 BizDemandStatusEnum.EVALUATE.getText(),
                 bizDemandDO.getId(),
-                BizDemandFieldEnum.STATUS.getText(),
+                BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                 true,
-                BizDemandActionEnum.SUBMIT.getText());
+                ButtonActionEnum.SUBMIT.getText());
 
         return BaseResult.success(true);
     }
@@ -381,9 +381,9 @@ public class BizDemandServiceImpl implements BizDemandService {
                 BizDemandStatusEnum.getTextByCode(oldStatus),
                 BizDemandStatusEnum.getTextByCode(newStatus),
                 bizDemandId,
-                BizDemandFieldEnum.STATUS.getText(),
+                BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                 true,
-                BizDemandActionEnum.RECEIVE.getText());
+                ButtonActionEnum.RECEIVE.getText());
 
         return BaseResult.success(true);
     }
@@ -424,9 +424,9 @@ public class BizDemandServiceImpl implements BizDemandService {
                 BizDemandStatusEnum.getTextByCode(oldStatus),
                 BizDemandStatusEnum.REJECT.getText(),
                 bizDemandId,
-                BizDemandFieldEnum.STATUS.getText(),
+                BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                 true,
-                BizDemandActionEnum.REJECT.getText());
+                ButtonActionEnum.REJECT.getText());
 
         return BaseResult.success(true);
     }
@@ -455,9 +455,9 @@ public class BizDemandServiceImpl implements BizDemandService {
                     oldReceiveMan,
                     newReceiveMan,
                     bizDemandDO.getId(),
-                    BizDemandFieldEnum.RECEIVE_MAN.getText(),
+                    BizChangeLogFieldEnum.RECEIVE_MAN.getText(),
                     true,
-                    BizDemandActionEnum.TRANSFER.getText());
+                    ButtonActionEnum.TRANSFER.getText());
 
             // 转交人通知
             messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
