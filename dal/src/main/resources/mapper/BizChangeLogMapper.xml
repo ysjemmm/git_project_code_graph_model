@@ -4,7 +4,7 @@
     <select id="list" resultType="com.timevale.forward.dal.entity.BizChangeLogDO">
         select * from biz_change_log
         <where>
-            <if test="mainId != null">and main_id=#{bugOfflineId}</if>
+            <if test="mainId != null">and main_id=#{mainId}</if>
             <if test="type != null">and `type`=#{type}</if>
             and is_deleted = false
         </where>
