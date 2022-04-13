@@ -60,5 +60,5 @@ public class HomePageProjectDateVO extends ToString {
     private Date publishOfficial;
 
     @ApiModelProperty("项目状态")
-    private String status;
+    private Integer status;
 }

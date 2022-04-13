@@ -112,5 +112,5 @@ public class HomePageProjectBoardDTO {
      * 项目状态
      */
     @JSONField(name = "status")
-    private String status;
+    private Integer status;
 }
