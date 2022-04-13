@@ -108,4 +108,9 @@ public class HomePageProjectBoardDTO {
     @JSONField(name = "plan_end_date")
     private Date planEndDate;
 
+    /**
+     * 项目状态
+     */
+    @JSONField(name = "status")
+    private String status;
 }

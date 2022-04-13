@@ -259,6 +259,7 @@ public class HomePageServiceImpl implements HomePageService {
     @Override
     public BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardReq homePageProjectBoardReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        userInfo.setId("yangxu");
 
         // 取出查询参数
         Date startDate = DateUtil.getStartOfDay(homePageProjectBoardReq.getStartDate());
