@@ -226,9 +226,9 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                     ProductBizDemandDO bizDemand = bizDemandMap.get(a);
                     if(!Objects.equals(bizDemand.getStatus(),k)){
                         // 业务需求状态发生变化,发送消息
-                        log.info("发送钉钉消息,更新前状态={},更新后状态={},业务需求id={}", bizDemand.getStatus(), k, a);
                         Date projectEndDate = bizDemandComponent.getProjectEndDate(a);
-                        
+                        log.info("发送钉钉消息,项目发布时间={},更新前状态={},更新后状态={},业务需求id={}",projectEndDate, bizDemand.getStatus(), k, a);
+
                         messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
                                 this,
                                 a,

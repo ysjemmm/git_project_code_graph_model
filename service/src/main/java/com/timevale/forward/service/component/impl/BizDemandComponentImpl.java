@@ -149,6 +149,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     public Date getProjectEndDate(Long bizDemandId) {
         // 获取该业务需求所关联的产品需求
         List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByBizDemandId(bizDemandId);
+        log.info("获取项目发布时间,productBizDemandDOList:{}",productBizDemandDOList);
         if (productBizDemandDOList.isEmpty()) {
             return null;
         }
@@ -156,6 +157,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         // 获取关联的产品需求相关的项目
         List<Long> productDemandIdList = productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList());
         List<ProjectDO> projectDOList = projectMapper.selectByProductDemandIdList(productDemandIdList);
+        log.info("获取项目发布时间,projectDOList:{}",projectDOList);
         if (projectDOList.isEmpty()) {
             return null;
         }
