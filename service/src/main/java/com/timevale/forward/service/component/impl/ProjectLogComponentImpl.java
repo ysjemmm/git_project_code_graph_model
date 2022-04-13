@@ -3,10 +3,8 @@ package com.timevale.forward.service.component.impl;
 import cn.hutool.core.collection.CollectionUtil;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.entity.BizChangeLogDO;
-import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.dal.entity.ProductLineDO;
-import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.dao.ProjectProductLineMapper;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.ProjectMD;
 import com.timevale.forward.service.component.PersonComponent;
@@ -43,6 +41,9 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
     @Resource
     private PersonComponent personComponent;
 
+    @Resource
+    private ProjectProductLineMapper projectProductLineMapper;
+
     /**
      * 编辑时,记录日志
      *
@@ -58,8 +59,10 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
         List<BizChangeLogDO> logs = FieldCompareUtil.commonCompare(oldProject, newProject, BizChangeLogDO.class);
 
         //产品线
-        if (!CollectionUtil.isEqualList(oldObj.getProductLineIds(), newObj.getProductLineIds())) {
-            List<Long> productLineIds = new ArrayList<>(oldObj.getProductLineIds());
+        List<Long> oldProductLineIds = projectProductLineMapper.get(oldObj.getId())
+                .stream().map(ProjectProductLineDO::getProductLineId).collect(Collectors.toList());
+        if (!CollectionUtil.isEqualList(oldProductLineIds, newObj.getProductLineIds())) {
+            List<Long> productLineIds = new ArrayList<>(oldProductLineIds);
             productLineIds.addAll(newObj.getProductLineIds());
 
             Map<Long, String> productLineMap = productLineMapper.selectByIds(productLineIds)
