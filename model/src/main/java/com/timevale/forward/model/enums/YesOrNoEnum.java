@@ -20,14 +20,7 @@ public enum YesOrNoEnum {
 
 
     final private Integer code;
-
     final private String text;
-
-
-    YesOrNoEnum(Integer code, String text, String textChinese){
-        this.code = code;
-        this.text = text;
-    }
 
     public static String getTextByCode(Integer code){
         for (YesOrNoEnum e : YesOrNoEnum.values()){

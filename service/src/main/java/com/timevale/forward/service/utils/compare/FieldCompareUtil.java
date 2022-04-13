@@ -91,8 +91,16 @@ public class FieldCompareUtil {
                     } else if (fieldType == Date.class) {
                         oldString = DateUtil.parseToString((Date) oldField.get(oldObj), DateFormatConst.DATE_FORMAT);
                         newString = DateUtil.parseToString((Date) newField.get(newObj), DateFormatConst.DATE_FORMAT);
-                    } else if (fieldType == Integer.class || fieldType == Boolean.class) {
+                    } else if (fieldType == Integer.class) {
                         Method method = annotation.enumClass().getMethod(METHOD, Integer.class);
+                        if (oldValue != null) {
+                            oldString = (String) method.invoke(null, oldValue);
+                        }
+                        if (newValue != null) {
+                            newString = (String) method.invoke(null, newValue);
+                        }
+                    } else if(fieldType == Boolean.class){
+                        Method method = annotation.enumClass().getMethod(METHOD, Boolean.class);
                         if (oldValue != null) {
                             oldString = (String) method.invoke(null, oldValue);
                         }

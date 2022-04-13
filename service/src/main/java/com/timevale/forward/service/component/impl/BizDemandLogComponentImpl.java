@@ -65,7 +65,14 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
             String newProductLineName = productLineMapper.selectById(newObj.getProductLineId()).getName();
             addLogWhenModifyData(oldProductLineName, newProductLineName, id, BizChangeLogFieldEnum.PRODUCT_LINE.getText(), true);
         }
-        bizChangeLogMapper.batchInsert(bizChangeLogDOList);
+        if(CollectionUtil.isNotEmpty(bizChangeLogDOList)){
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
+            for (BizChangeLogDO bizChangeLogDO : bizChangeLogDOList) {
+                bizChangeLogDO.setCreateManId(userInfo.getId());
+                bizChangeLogDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            }
+            bizChangeLogMapper.batchInsert(bizChangeLogDOList);
+        }
     }
 
     @Override
