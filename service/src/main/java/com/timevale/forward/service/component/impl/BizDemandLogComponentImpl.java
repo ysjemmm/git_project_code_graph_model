@@ -4,15 +4,14 @@ import cn.hutool.core.collection.CollectionUtil;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.entity.BizChangeLogDO;
-import com.timevale.forward.dal.entity.BizDemandDO;
-import com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO;
-import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
 import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.ButtonActionEnum;
 import com.timevale.forward.model.middle.BizDemandMD;
+import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
@@ -38,16 +37,35 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
     private BizChangeLogMapper bizChangeLogMapper;
 
     @Resource
+    private BizDemandComponent bizDemandComponent;
+
+    @Resource
     private ProductDemandMapper productDemandMapper;
+
+    @Resource
+    private ProductLineMapper productLineMapper;
 
     @Resource
     private BizDemandMapper bizDemandMapper;
 
     @Override
     public void addLogWhenModifyData(BizDemandDO oldObj, BizDemandDO newObj) {
+        Long id = oldObj.getId();
         BizDemandMD oldMD = BizDemandCopier.INSTANCE.transform(oldObj);
         BizDemandMD newMD = BizDemandCopier.INSTANCE.transform(newObj);
         List<BizChangeLogDO> bizChangeLogDOList = FieldCompareUtil.commonCompare(oldMD, newMD, BizChangeLogDO.class);
+        // 部门，产品线 判断
+        if(!Objects.equals(oldObj.getDeptId(), newObj.getDeptId())){
+            String oldDeptName = bizDemandComponent.getDeptChainName(oldObj.getDeptId());
+            String newDeptName = bizDemandComponent.getDeptChainName(newObj.getDeptId());
+            addLogWhenModifyData(oldDeptName, newDeptName, id, BizChangeLogFieldEnum.DEPARTMENT.getText(), true);
+        }
+        if(!Objects.equals(oldObj.getProductLineId(), newObj.getProductLineId())){
+            String oldProductLineName = productLineMapper.selectById(oldObj.getProductLineId()).getName();
+            String newProductLineName = productLineMapper.selectById(newObj.getProductLineId()).getName();
+            addLogWhenModifyData(oldProductLineName, newProductLineName, id, BizChangeLogFieldEnum.PRODUCT_LINE.getText(), true);
+        }
+        bizChangeLogMapper.batchInsert(bizChangeLogDOList);
     }
 
     @Override

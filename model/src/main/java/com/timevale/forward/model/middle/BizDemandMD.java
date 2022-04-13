@@ -37,6 +37,9 @@ public class BizDemandMD extends BaseMD {
     @FieldCompare(fieldName = "目标客户/用户/项目")
     private String targetCustomer;
 
+    @FieldCompare(fieldName = "接收人")
+    private String receiveMan;
+
     @ApiModelProperty("是否共创用户")
     @NotNull(message = "共创用户不能为空")
     @FieldCompare(fieldName = "共创用户", enumClass = YesOrNoEnum.class)
