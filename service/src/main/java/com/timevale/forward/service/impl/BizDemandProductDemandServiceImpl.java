@@ -224,7 +224,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                     BizDemandStatusEnum.getTextByCode(oldStatus),
                     BizDemandStatusEnum.getTextByCode(newStatus),
                     bizDemandId,
-                    BizDemandFieldEnum.STATUS.getText(),
+                    BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                     false
             );
         }

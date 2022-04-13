@@ -258,11 +258,6 @@ public class ProjectServiceImpl implements ProjectService {
 
         bugOfflineComponent.containProductLineInBugOffline(newProject.getId(), newProject.getProductLineIds());
 
-        // 产品线
-        projectProductLineComponent.update(newProject.getProductLineIds(), newProject.getId());
-
-        // 产品经理
-        personComponent.update(projectModifyReq.getPds(), newProject.getId(), PersonTypeEnum.PROJECT_PD.getCode());
         List<String> pdUserIds = projectModifyReq.getPds().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
         // 团队成员
         List<PersonAddReq> teamMembers = projectModifyReq.getTeamMembers();
@@ -285,8 +280,13 @@ public class ProjectServiceImpl implements ProjectService {
             }
             projectNodeComponent.add(projectNodeDOList, newProject.getId());
         }
-
+        // log
         projectLogComponent.addLogWhenModifyData(oldProject, newProject);
+        // 产品线
+        projectProductLineComponent.update(newProject.getProductLineIds(), newProject.getId());
+        // 产品经理
+        personComponent.update(projectModifyReq.getPds(), newProject.getId(), PersonTypeEnum.PROJECT_PD.getCode());
+
         return BaseResult.success(true);
     }
 

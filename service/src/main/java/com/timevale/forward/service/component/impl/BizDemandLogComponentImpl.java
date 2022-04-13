@@ -10,8 +10,8 @@ import com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
 import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
-import com.timevale.forward.model.enums.BizDemandActionEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.ButtonActionEnum;
 import com.timevale.forward.model.middle.BizDemandMD;
 import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -19,7 +19,6 @@ import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.utils.compare.FieldCompareUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
-import com.timevale.mandarin.base.util.FieldUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -82,7 +81,7 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
             // 业务需求方
             BizChangeLogDO bizDemandLogDO = newBizChangeLogDO(false, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
             bizDemandLogDO.setMainId(bizDemandId);
-            bizDemandLogDO.setAction(BizDemandActionEnum.UNLINK.getText());
+            bizDemandLogDO.setAction(ButtonActionEnum.UN_LINK.getText());
             bizDemandLogDO.setField(BizChangeLogTypeEnum.PRODUCT_DEMAND.getText());
             bizDemandLogDO.setOldValue(e.getName());
             bizDemandLogDO.setNewValue(e.getName());
@@ -92,7 +91,7 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
             // 产品需求方
             BizChangeLogDO productDemandLogDO = newBizChangeLogDO(false, BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
             productDemandLogDO.setMainId(e.getId());
-            productDemandLogDO.setAction(BizDemandActionEnum.UNLINK.getText());
+            productDemandLogDO.setAction(ButtonActionEnum.UN_LINK.getText());
             productDemandLogDO.setField(BizChangeLogTypeEnum.BIZ_DEMAND.getText());
             productDemandLogDO.setOldValue(bizDemandDO.getName());
             productDemandLogDO.setNewValue(bizDemandDO.getName());
@@ -100,7 +99,9 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
             bizChangeLogDOList.add(productDemandLogDO);
         }
 
-        bizChangeLogMapper.batchInsert(bizChangeLogDOList);
+        if (CollectionUtil.isNotEmpty(bizChangeLogDOList)) {
+            bizChangeLogMapper.batchInsert(bizChangeLogDOList);
+        }
     }
 
     @Override
@@ -115,7 +116,7 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
             BizChangeLogDO bizDemandLogDO = newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
 
             bizDemandLogDO.setMainId(bizDemandId);
-            bizDemandLogDO.setAction(BizDemandActionEnum.LINK.getText());
+            bizDemandLogDO.setAction(ButtonActionEnum.LINK.getText());
             bizDemandLogDO.setField(BizChangeLogTypeEnum.PRODUCT_DEMAND.getText());
             bizDemandLogDO.setOldValue(e.getName());
             bizDemandLogDO.setNewValue(e.getName());
@@ -123,7 +124,7 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
             // 产品需求方
             BizChangeLogDO productDemandLogDO = newBizChangeLogDO(true, BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
             productDemandLogDO.setMainId(e.getId());
-            productDemandLogDO.setAction(BizDemandActionEnum.LINK.getText());
+            productDemandLogDO.setAction(ButtonActionEnum.LINK.getText());
             productDemandLogDO.setField(BizChangeLogTypeEnum.BIZ_DEMAND.getText());
             productDemandLogDO.setOldValue(bizDemandDO.getName());
             productDemandLogDO.setNewValue(bizDemandDO.getName());
@@ -131,7 +132,9 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
             bizChangeLogDOList.add(productDemandLogDO);
         }
 
-        bizChangeLogMapper.batchInsert(bizChangeLogDOList);
+        if (CollectionUtil.isNotEmpty(bizChangeLogDOList)) {
+            bizChangeLogMapper.batchInsert(bizChangeLogDOList);
+        }
     }
 
     @Override
@@ -143,7 +146,7 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
         BizChangeLogDO bizDemandLogDO = newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
 
         bizDemandLogDO.setMainId(bizDemandId);
-        bizDemandLogDO.setAction(BizDemandActionEnum.UNLINK.getText());
+        bizDemandLogDO.setAction(ButtonActionEnum.UN_LINK.getText());
         bizDemandLogDO.setField(BizChangeLogTypeEnum.PRODUCT_DEMAND.getText());
         bizDemandLogDO.setOldValue(productDemandDO.getName());
         bizDemandLogDO.setNewValue(productDemandDO.getName());
@@ -151,7 +154,7 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
         // 产品需求方
         BizChangeLogDO productDemandLogDO = newBizChangeLogDO(true, BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
         productDemandLogDO.setMainId(productDemandId);
-        productDemandLogDO.setAction(BizDemandActionEnum.UNLINK.getText());
+        productDemandLogDO.setAction(ButtonActionEnum.UN_LINK.getText());
         productDemandLogDO.setField(BizChangeLogTypeEnum.BIZ_DEMAND.getText());
         productDemandLogDO.setOldValue(bizDemandDO.getName());
         productDemandLogDO.setNewValue(bizDemandDO.getName());
@@ -161,7 +164,9 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
         bizChangeLogDOList.add(bizDemandLogDO);
         bizChangeLogDOList.add(productDemandLogDO);
 
-        bizChangeLogMapper.batchInsert(bizChangeLogDOList);
+        if (CollectionUtil.isNotEmpty(bizChangeLogDOList)) {
+            bizChangeLogMapper.batchInsert(bizChangeLogDOList);
+        }
     }
 
 

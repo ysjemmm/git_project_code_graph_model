@@ -125,7 +125,20 @@ public enum ButtonActionEnum {
     /**
      * 作废
      */
-    INVALID("作废");
+    INVALID("作废"),
+
+    /**
+     * 接收
+     */
+    RECEIVE("接收"),
+    /**
+     * 驳回
+     */
+    REJECT("驳回"),
+    /**
+     * 转交
+     */
+    TRANSFER("转交");
 
 
 

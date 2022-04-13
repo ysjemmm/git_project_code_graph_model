@@ -11,17 +11,35 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum BizChangeLogFieldEnum {
     /**
-     * 产品线
+     * 项目
      */
-    PRODUCT_LINE("产品线"),
-
     PROJECT_STATUS("项目状态"),
+
+    PD("产品经理"),
+
+    /**
+     * 产品需求
+     */
 
     PRODUCT_DEMAND_STATUS("产品需求状态"),
 
+    PRODUCT_DEMAND_TYPE("产品需求类型"),
+
+    /**
+     * 业务需求
+     */
     BIZ_DEMAND_STATUS("业务需求状态"),
 
-    PD("产品经理");
+    RECEIVE_MAN("接收人"),
+
+    REASON("驳回原因"),
+
+    PLAN_RELEASE_DATE("计划发布日期"),
+
+    /**
+     * 其他
+     */
+    PRODUCT_LINE("产品线");
 
     private final String text;
 
