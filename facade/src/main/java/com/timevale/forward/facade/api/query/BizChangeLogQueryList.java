@@ -21,7 +21,7 @@ import javax.validation.constraints.NotNull;
 public class BizChangeLogQueryList extends QueryBase {
     @ApiModelProperty("主体id")
     @NotNull(message = "主体id不能为空")
-    private Long id;
+    private Long mainId;
 
     @ApiModelProperty("内容变更记录类型:2项目，3产品需求，4业务需求")
     @NotNull(message = "内容变更记录类型不能为空")
