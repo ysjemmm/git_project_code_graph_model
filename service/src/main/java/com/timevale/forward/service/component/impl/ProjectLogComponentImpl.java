@@ -67,15 +67,10 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
 
             Map<Long, String> productLineMap = productLineMapper.selectByIds(productLineIds)
                     .stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (v1, v2) -> v2));
-            BizChangeLogDO logDO = new BizChangeLogDO();
-            logDO.setType(BizChangeLogTypeEnum.PROJECT.getCode());
-            logDO.setMainId(oldObj.getId());
-            logDO.setField(BizChangeLogFieldEnum.PRODUCT_LINE.getText());
+
             String oldValue = oldProductLineIds.stream().map(productLineMap::get).collect(Collectors.joining(","));
             String newValue = newObj.getProductLineIds().stream().map(productLineMap::get).collect(Collectors.joining(","));
-            logDO.setOldValue(oldValue);
-            logDO.setNewValue(newValue);
-            logs.add(logDO);
+            logs.add(createLog(oldObj.getId(), BizChangeLogFieldEnum.PRODUCT_LINE.getText(), oldValue, newValue, null));
         }
 
         //产品经理
@@ -83,13 +78,9 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 .stream().collect(Collectors.toMap(PersonDO::getUserId, PersonDO::getUserName));
         Map<String, String> newPds = newObj.getPds().stream().collect(Collectors.toMap(PersonDO::getUserId, PersonDO::getUserName, (v1, v2) -> v2));
         if (!CollectionUtil.isEqualList(oldPds.keySet(), newPds.keySet())) {
-            BizChangeLogDO logDO = new BizChangeLogDO();
-            logDO.setType(BizChangeLogTypeEnum.PROJECT.getCode());
-            logDO.setMainId(oldObj.getId());
-            logDO.setField(BizChangeLogFieldEnum.PD.getText());
-            logDO.setOldValue(String.join(",", oldPds.values()));
-            logDO.setNewValue(String.join(",", newPds.values()));
-            logs.add(logDO);
+            String oldValue = String.join(",", oldPds.values());
+            String newValue = String.join(",", newPds.values());
+            logs.add(createLog(oldObj.getId(), BizChangeLogFieldEnum.PD.getText(), oldValue, newValue, null));
         }
 
         logs.forEach(a -> {
@@ -111,15 +102,11 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
      */
     @Override
     public void addLogWhenStatusChange(Integer oldStatus, Integer newStatus, Long id, String action) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         //1){操作人}点击 {按钮名称} ,状态改为{操作后状态},2)编辑项目时:把{项目状态}从{原状态} 改为{新状态}
-        BizChangeLogDO logDO = new BizChangeLogDO();
-        logDO.setType(BizChangeLogTypeEnum.PROJECT.getCode());
-        logDO.setMainId(id);
-        logDO.setField(BizChangeLogFieldEnum.PROJECT_STATUS.getText());
-        logDO.setAction(action);
-        logDO.setOldValue(ProjectStatusEnum.getTextByCode(oldStatus));
-        logDO.setNewValue(ProjectStatusEnum.getTextByCode(newStatus));
+        String oldValue = ProjectStatusEnum.getTextByCode(oldStatus);
+        String newValue = ProjectStatusEnum.getTextByCode(newStatus);
+        BizChangeLogDO logDO = createLog(id, BizChangeLogFieldEnum.PROJECT_STATUS.getText(), oldValue, newValue, action);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         logDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         logDO.setCreateManId(userInfo.getId());
         bizChangeLogMapper.insert(logDO);
@@ -172,5 +159,16 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
         if (CollectionUtil.isNotEmpty(logs)) {
             bizChangeLogMapper.batchInsert(logs);
         }
+    }
+
+    private BizChangeLogDO createLog(Long mainId, String field, String oldValue, String newValue, String action) {
+        BizChangeLogDO logDO = new BizChangeLogDO();
+        logDO.setType(BizChangeLogTypeEnum.PROJECT.getCode());
+        logDO.setMainId(mainId);
+        logDO.setField(field);
+        logDO.setOldValue(oldValue);
+        logDO.setNewValue(newValue);
+        logDO.setAction(action);
+        return logDO;
     }
 }

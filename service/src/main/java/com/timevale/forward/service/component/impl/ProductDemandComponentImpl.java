@@ -19,7 +19,6 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -62,9 +61,6 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
 
     @Resource
     private MessageEventPublisher messageEventPublisher;
-
-    @Resource
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Resource
     private BizDemandLogComponent bizDemandLogComponent;
@@ -214,7 +210,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                 .collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, ProductBizDemandDO::getStatus));
 
         bizDemandLogComponent.addLogAsProductDemandStatusChange(oldStautsMap,newStautsMap);
-        threadPoolTaskExecutor.execute((()-> sendDingMsg(newStautsMap, bizDemandMap)));
+        sendDingMsg(newStautsMap, bizDemandMap);
     }
 
     private void sendDingMsg(Map<Integer, List<Long>> condition, Map<Long, ProductBizDemandDO> bizDemandMap) {
@@ -226,9 +222,9 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                     ProductBizDemandDO bizDemand = bizDemandMap.get(a);
                     if(!Objects.equals(bizDemand.getStatus(),k)){
                         // 业务需求状态发生变化,发送消息
-                        log.info("发送钉钉消息,更新前状态={},更新后状态={},业务需求id={}", bizDemand.getStatus(), k, a);
                         Date projectEndDate = bizDemandComponent.getProjectEndDate(a);
-                        
+                        log.info("发送钉钉消息,项目发布时间={},更新前状态={},更新后状态={},业务需求id={}",projectEndDate, bizDemand.getStatus(), k, a);
+
                         messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
                                 this,
                                 a,
