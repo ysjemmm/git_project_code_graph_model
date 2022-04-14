@@ -117,27 +117,7 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
 
     @Override
     public BaseResult<Boolean> delete(ImprovementMeasureDeleteReq improvementMeasureDeleteReq) {
-
-        // 查询是否有对应事项
-        ImprovementMeasureCondition condition = ImprovementMeasureCondition.builder()
-                .id(improvementMeasureDeleteReq.getId())
-                .isDeleted(false)
-                .build();
-        List<ImprovementMeasureDO> improvementMeasureDOList = improvementMeasureMapper.selectByCondition(condition);
-        if(CollectionUtils.isEmpty(improvementMeasureDOList)){
-            throw new BaseBizRuntimeException("该事项不存在");
-        }
-        ImprovementMeasureDO improvementMeasureDO = improvementMeasureDOList.get(0);
-
-        // 待办处理
-        if(Objects.equals(ImprovementMeasureStatusEnum.PENDING.getCode(),improvementMeasureDO.getStatus())){
-            improvementMeasureComponent.deleteTodoTask(improvementMeasureDO);
-        }
-
-        // 修改事项逻辑删除标志
-        improvementMeasureDO.setIsDeleted(true);
-        improvementMeasureMapper.update(improvementMeasureDO);
-
+        improvementMeasureComponent.delete(improvementMeasureDeleteReq.getId());
         return BaseResult.success(true);
     }
 

@@ -1,6 +1,7 @@
 package com.timevale.forward.service.component.impl;
 
 import com.timevale.erp.message.service.result.DingTodoTaskResponseBody;
+import com.timevale.forward.dal.condition.ImprovementMeasureCondition;
 import com.timevale.forward.dal.dao.ImprovementMeasureMapper;
 import com.timevale.forward.dal.entity.BaseDO;
 import com.timevale.forward.dal.entity.ImprovementMeasureDO;
@@ -16,6 +17,7 @@ import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -121,6 +123,29 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
         // 保存到数据库
         improvementMeasureDO.setStatus(ImprovementMeasureStatusEnum.PENDING.getCode());
         improvementMeasureMapper.insert(improvementMeasureDO);
+    }
+
+    @Override
+    public void delete(Long id) {
+        // 查询是否有对应事项
+        ImprovementMeasureCondition condition = ImprovementMeasureCondition.builder()
+                .id(id)
+                .isDeleted(false)
+                .build();
+        List<ImprovementMeasureDO> improvementMeasureDOList = improvementMeasureMapper.selectByCondition(condition);
+        if(CollectionUtils.isEmpty(improvementMeasureDOList)){
+            throw new BaseBizRuntimeException("该事项不存在");
+        }
+        ImprovementMeasureDO improvementMeasureDO = improvementMeasureDOList.get(0);
+
+        // 待办处理
+        if(Objects.equals(ImprovementMeasureStatusEnum.PENDING.getCode(),improvementMeasureDO.getStatus())){
+            deleteTodoTask(improvementMeasureDO);
+        }
+
+        // 修改事项逻辑删除标志
+        improvementMeasureDO.setIsDeleted(true);
+        improvementMeasureMapper.update(improvementMeasureDO);
     }
 
     @Override
