@@ -42,7 +42,7 @@ public class BusinessMD extends BaseMD{
     /**
      * 操作人姓名账号对应的属性
      */
-    @FieldCompare(fieldName = "操作人姓名账号对应的属性")
+    @FieldCompare(fieldName = "操作人姓名账号")
     private String operatorNameAccount;
 
     /**
