@@ -519,7 +519,6 @@ public class ProjectServiceImpl implements ProjectService {
         projectComponent.fillInfo(projectNodes, projectDO);
         projectMapper.update(projectDO);
         productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
-        projectLogComponent.addLogWhenStatusChange(ProjectStatusEnum.SUSPEND.getCode(), projectDO.getStatus(), projectDO.getId(), ButtonActionEnum.ENABLE.getText());
     }
 
 }

@@ -102,13 +102,17 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
      */
     @Override
     public void addLogWhenStatusChange(Integer oldStatus, Integer newStatus, Long id, String action) {
-        //1){操作人}点击 {按钮名称} ,状态改为{操作后状态},2)编辑项目时:把{项目状态}从{原状态} 改为{新状态}
+        //1){操作人}点击 {按钮名称} ,状态改为{操作后状态}
         String oldValue = ProjectStatusEnum.getTextByCode(oldStatus);
         String newValue = ProjectStatusEnum.getTextByCode(newStatus);
         BizChangeLogDO logDO = createLog(id, BizChangeLogFieldEnum.PROJECT_STATUS.getText(), oldValue, newValue, action);
+        //,2)编辑项目时:把{项目状态}从{原状态} 改为{新状态}
+        boolean empty = StringUtils.isEmpty(action);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        logDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        logDO.setCreateManId(userInfo.getId());
+        String createMan = empty ? CommonConstant.SYSTEM : userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
+        String createManId = empty ? CommonConstant.SYSTEM : userInfo.getId();
+        logDO.setCreateMan(createMan);
+        logDO.setCreateManId(createManId);
         bizChangeLogMapper.insert(logDO);
 
     }

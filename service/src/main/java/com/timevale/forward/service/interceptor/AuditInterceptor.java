@@ -1,7 +1,5 @@
 package com.timevale.forward.service.interceptor;
 
-import cn.hutool.core.bean.BeanUtil;
-import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -11,9 +9,10 @@ import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.plugin.*;
-import org.apache.ibatis.session.defaults.DefaultSqlSession;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -28,6 +27,10 @@ import java.util.Properties;
         )
 })
 public class AuditInterceptor implements Interceptor {
+
+    private static final List<String> FILTER_METHD= Arrays.asList("com.timevale.forward.dal.dao.BizChangeLogMapper.batchInsert"
+            ,"com.timevale.forward.dal.dao.BizChangeLogMapper.insert");
+
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -40,11 +43,9 @@ public class AuditInterceptor implements Interceptor {
         // 获取对应sql属性
         MappedStatement mappedStatement = (MappedStatement) invocation.getArgs()[0];
         SqlCommandType sqlCommandType = mappedStatement.getSqlCommandType();
-        // 填充字段,日志操作人单独赋值为SYSTEM-SYSTEM
-        if (parameter instanceof BizChangeLogDO
-                // 批量插入
-                || (parameter instanceof DefaultSqlSession.StrictMap
-                && BeanUtil.getProperty(parameter, "list[0]") instanceof BizChangeLogDO)) {
+
+        if(FILTER_METHD.contains(mappedStatement.getId())){
+            // 填充字段,日志操作人单独赋值为SYSTEM-SYSTEM
             return invocation.proceed();
         }
         // 根据sql类型进行审计填充
