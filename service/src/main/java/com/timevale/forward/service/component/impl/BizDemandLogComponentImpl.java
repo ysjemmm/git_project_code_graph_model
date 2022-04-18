@@ -146,6 +146,8 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
             bizDemandLogDO.setOldValue(e.getName());
             bizDemandLogDO.setNewValue(e.getName());
 
+            bizChangeLogDOList.add(bizDemandLogDO);
+
             // 产品需求方
             BizChangeLogDO productDemandLogDO = newBizChangeLogDO(true, BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
             productDemandLogDO.setMainId(e.getId());

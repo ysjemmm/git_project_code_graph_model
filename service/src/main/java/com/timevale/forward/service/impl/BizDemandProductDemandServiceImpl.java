@@ -189,10 +189,13 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
 
-        // 日志
+        // 判断当前状态
+        BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bizDemandDO);
+
+        // 产品需求关联日志
         bizDemandLogComponent.addLogWhenBizDemandUnLinkProductDemand(bizDemandId, productDemandId);
 
-        return BaseResult.success(compareBizDemandStatus(bizDemandDO));
+        return BaseResult.success(bizDemandStatusVO);
     }
 
     private BizDemandStatusVO compareBizDemandStatus(BizDemandDO oldBizDemandDO){
