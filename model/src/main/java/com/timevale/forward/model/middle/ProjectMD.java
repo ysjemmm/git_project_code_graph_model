@@ -2,7 +2,6 @@ package com.timevale.forward.model.middle;
 
 import com.timevale.forward.dal.annotation.FieldCompare;
 import com.timevale.forward.model.enums.PriorityEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.ProjectTypeEnum;
 import com.timevale.forward.model.enums.YesOrNoEnum;
 import lombok.Data;
@@ -34,12 +33,6 @@ public class ProjectMD extends BaseMD{
 
     @FieldCompare(fieldName = "项目实际结束时间")
     private Date actualEndDate;
-
-    /**
-     * 0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废
-     */
-    @FieldCompare(fieldName = "项目状态",enumClass = ProjectStatusEnum.class)
-    private Integer status;
 
     /**
      * 是否为客户开发项目：0否，1是

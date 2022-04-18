@@ -18,11 +18,9 @@ import com.timevale.forward.facade.api.request.TestBillModifyReq;
 import com.timevale.forward.facade.api.result.CreateTestBillVO;
 import com.timevale.forward.facade.api.result.FileVO;
 import com.timevale.forward.facade.api.result.TestBillVO;
-import com.timevale.forward.model.enums.FileTypeEnum;
-import com.timevale.forward.model.enums.ProjectNodeEnum;
-import com.timevale.forward.model.enums.TestBillProgressEnum;
-import com.timevale.forward.model.enums.TestBillStatusEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.ProjectLogComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.TestBillCopier;
@@ -69,9 +67,12 @@ public class TestBillServiceImpl implements TestBillService {
     @Resource
     private FileComponent fileComponent;
 
+    @Resource
+    private ProjectLogComponent projectLogComponent;
+
     @Override
     public BaseResult<CreateTestBillVO> addTestBill(Long projectId) {
-        log.info("提测单-创建提测单,参数:{}",projectId);
+        log.info("提测单-创建提测单,参数:{}", projectId);
 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String alias = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
@@ -84,7 +85,7 @@ public class TestBillServiceImpl implements TestBillService {
             List<Date> dateList = projectNodeDOList.stream().filter(e -> e.getName()
                     .equals(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName())).map(ProjectNodeDO::getPlanDate)
                     .collect(Collectors.toList());
-            if(CollectionUtils.isEmpty(dateList)){
+            if (CollectionUtils.isEmpty(dateList)) {
                 throw new BaseBizRuntimeException("提测单的计划时间不能为空");
             }
             Date planDate = dateList.get(0);
@@ -107,7 +108,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitTestBill(TestBillAddReq testBillAddReq) {
-        log.info("提测单-提交提测单,参数:{}",testBillAddReq);
+        log.info("提测单-提交提测单,参数:{}", testBillAddReq);
 
         //判断该项目是否已经有提测单了，有的话则显示提示信息
         TestBillDO testBill = testBillMapper.selectByProjectId(testBillAddReq.getProjectId());
@@ -153,7 +154,7 @@ public class TestBillServiceImpl implements TestBillService {
 
     @Override
     public BaseResult<TestBillVO> getTestBill(Long projectId) {
-        log.info("提测单-提测单详情,参数:{}",projectId);
+        log.info("提测单-提测单详情,参数:{}", projectId);
 
         TestBillDO testBillDO = testBillMapper.selectByProjectId(projectId);
         if (testBillDO == null) {
@@ -209,7 +210,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitSmokeTesting(TestBillModifyReq testBillModifyReq) {
-        log.info("提测单-提测冒烟用例,参数:{}",testBillModifyReq);
+        log.info("提测单-提测冒烟用例,参数:{}", testBillModifyReq);
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
@@ -259,7 +260,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modifyTestMan(TestBillModifyReq testBillModifyReq) {
-        log.info("提测单-修改测试人,参数:{}",testBillModifyReq);
+        log.info("提测单-修改测试人,参数:{}", testBillModifyReq);
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
@@ -310,7 +311,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> selfTestPass(TestBillModifyReq testBillModifyReq) {
-        log.info("提测单-自测通过,参数:{}",testBillModifyReq);
+        log.info("提测单-自测通过,参数:{}", testBillModifyReq);
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
@@ -365,16 +366,17 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitTestPass(TestBillModifyReq testBillModifyReq) {
-        log.info("提测单-提测通过,参数:{}",testBillModifyReq);
+        log.info("提测单-提测通过,参数:{}", testBillModifyReq);
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
         //获取提测单名称
         ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
         String testBillName = "";
-        if (projectDO != null) {
-            testBillName = projectDO.getName() + CommonConstant.TESTBILL_SUFFIX;
+        if (projectDO == null) {
+            throw new BaseBizRuntimeException("该提测单" + testBillDO.getId() + ",无对应项目");
         }
+        testBillName = projectDO.getName() + CommonConstant.TESTBILL_SUFFIX;
 
         //接收人设置成提测人
         List<String> receivers = new ArrayList<>();
@@ -389,6 +391,13 @@ public class TestBillServiceImpl implements TestBillService {
 
         //更新项目节点表
         projectNodeMapper.updateSubmitTestActualDate(testBillModifyReq.getProjectId(), testBillModifyReq.getActualDate());
+        Integer oldStatus = projectDO.getStatus();
+        if (!ProjectStatusEnum.INVALID.getCode().equals(oldStatus) && !ProjectStatusEnum.RELEASED.getCode().equals(oldStatus)) {
+            // 项目进入测试中
+            projectDO.setStatus(ProjectStatusEnum.TESTING.getCode());
+            projectMapper.update(projectDO);
+        }
+        projectLogComponent.addLogWhenStatusChange(oldStatus, projectDO.getStatus(), projectDO.getId(), ButtonActionEnum.TEST_PASS.getText());
 
         messageEventPublisher.publish(
                 new BillTestSubmitTestSuccessMsgEvent(
@@ -405,7 +414,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitTestBack(TestBillModifyReq testBillModifyReq) {
-        log.info("提测单-提测打回,参数:{}",testBillModifyReq);
+        log.info("提测单-提测打回,参数:{}", testBillModifyReq);
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
