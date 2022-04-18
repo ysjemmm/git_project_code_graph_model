@@ -64,6 +64,16 @@ public enum ButtonActionEnum {
     SUBMIT("提交"),
 
     /**
+     * 提交
+     */
+    MODIFY("编辑"),
+
+    /**
+     * 提测通过
+     */
+    TEST_PASS("提测通过"),
+
+    /**
      * bug确认
      */
     CONFIRM("bug确认"),

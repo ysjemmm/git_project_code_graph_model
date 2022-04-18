@@ -510,7 +510,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (!Objects.equals(projectDO.getStatus(), oldStatus)) {
             //状态不一致时,更新产品需求状态
             productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
-            projectLogComponent.addLogWhenStatusChange(oldStatus, projectDO.getStatus(), projectDO.getId(), null);
+            projectLogComponent.addLogWhenStatusChange(oldStatus,projectDO.getStatus(),projectDO.getId(),ButtonActionEnum.MODIFY.getText());
         }
         log.info("更新项目信息完成");
     }

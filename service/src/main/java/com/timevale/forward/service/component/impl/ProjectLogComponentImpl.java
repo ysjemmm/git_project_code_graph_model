@@ -106,11 +106,9 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
         String oldValue = ProjectStatusEnum.getTextByCode(oldStatus);
         String newValue = ProjectStatusEnum.getTextByCode(newStatus);
         BizChangeLogDO logDO = createLog(id, BizChangeLogFieldEnum.PROJECT_STATUS.getText(), oldValue, newValue, action);
-        //,2)编辑项目时:把{项目状态}从{原状态} 改为{新状态}
-        boolean empty = StringUtils.isEmpty(action);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        String createMan = empty ? CommonConstant.SYSTEM : userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
-        String createManId = empty ? CommonConstant.SYSTEM : userInfo.getId();
+        String createMan = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
+        String createManId = userInfo.getId();
         logDO.setCreateMan(createMan);
         logDO.setCreateManId(createManId);
         bizChangeLogMapper.insert(logDO);
