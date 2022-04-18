@@ -34,7 +34,7 @@ public enum BizChangeLogFieldEnum {
 
     REASON("驳回原因"),
 
-    PLAN_RELEASE_DATE("计划发布日期"),
+    PLAN_RELEASE_DATE("预期上线时间"),
 
     DEPARTMENT("部门"),
 

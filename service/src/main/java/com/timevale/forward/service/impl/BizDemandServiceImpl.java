@@ -38,6 +38,7 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -223,7 +224,14 @@ public class BizDemandServiceImpl implements BizDemandService {
                 bizDemandDO.getName()
         ));
 
-        // 日志, 状态改为待评估
+        // 日志, 状态改为待评估，更改预期上线时间
+        bizDemandLogComponent.addLogWhenModifyData(
+                StringUtils.EMPTY,
+                PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate()),
+                bizDemandDO.getId(),
+                BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
+                true
+        );
         bizDemandLogComponent.addLogWhenModifyData(
                 BizDemandStatusEnum.EVALUATE.getText(),
                 BizDemandStatusEnum.EVALUATE.getText(),
