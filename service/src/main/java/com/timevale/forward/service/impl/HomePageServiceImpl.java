@@ -35,7 +35,6 @@ import org.assertj.core.util.Sets;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -334,27 +333,27 @@ public class HomePageServiceImpl implements HomePageService {
             }
         });
 
-
-        if(HomePageTabEnum.TEAM.getCode().equals(homePageProjectBoardReq.getTabType())){
-            // 团队面板,团队成员无项目信息时,也需要展示人员信息
-            Map<String, BaseInfoResponse> baseInfoResponseMap = allMyStaffInfoWithSelfInfo
-                    .stream().collect(Collectors.toMap(BaseInfoResponse::getAccount, Function.identity()));
-            List<String> containProjectInfo = result.stream().map(HomePageProjectBoardVO::getUserId).collect(Collectors.toList());
-            allMyStaffNameWithSelf.removeAll(containProjectInfo);
-
-            for (String userId : allMyStaffNameWithSelf) {
-                BaseInfoResponse baseInfo = baseInfoResponseMap.get(userId);
-
-                UserTypeEnum userType = JobFunctionEnum.getType(baseInfo.getJobFunction());
-
-                HomePageProjectBoardVO homePageProjectBoardVO = new HomePageProjectBoardVO();
-                homePageProjectBoardVO.setUserId(baseInfo.getAccount());
-                homePageProjectBoardVO.setUserName(baseInfo.getName());
-                homePageProjectBoardVO.setUserType(userType.toString());
-                homePageProjectBoardVO.setHomePageProjectDateVOList(Lists.emptyList());
-                result.add(homePageProjectBoardVO);
-            }
-        }
+            //二期做
+//        if(HomePageTabEnum.TEAM.getCode().equals(homePageProjectBoardReq.getTabType())){
+//            // 团队面板,团队成员无项目信息时,也需要展示人员信息
+//            Map<String, BaseInfoResponse> baseInfoResponseMap = allMyStaffInfoWithSelfInfo
+//                    .stream().collect(Collectors.toMap(BaseInfoResponse::getAccount, Function.identity()));
+//            List<String> containProjectInfo = result.stream().map(HomePageProjectBoardVO::getUserId).collect(Collectors.toList());
+//            allMyStaffNameWithSelf.removeAll(containProjectInfo);
+//
+//            for (String userId : allMyStaffNameWithSelf) {
+//                BaseInfoResponse baseInfo = baseInfoResponseMap.get(userId);
+//
+//                UserTypeEnum userType = JobFunctionEnum.getType(baseInfo.getJobFunction());
+//
+//                HomePageProjectBoardVO homePageProjectBoardVO = new HomePageProjectBoardVO();
+//                homePageProjectBoardVO.setUserId(baseInfo.getAccount());
+//                homePageProjectBoardVO.setUserName(baseInfo.getName());
+//                homePageProjectBoardVO.setUserType(userType.toString());
+//                homePageProjectBoardVO.setHomePageProjectDateVOList(Lists.emptyList());
+//                result.add(homePageProjectBoardVO);
+//            }
+//        }
 
         return BaseResult.success(result);
     }

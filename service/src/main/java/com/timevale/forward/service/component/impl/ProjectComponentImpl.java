@@ -147,86 +147,56 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Override
     public void fillInfo(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
-
-
-        // 老逻辑
-        Map<String, ProjectNodeDO> nodeMap = projectNodes
-                .stream()
-                .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
+        // 计算项目状态,新逻辑
+        Map<String, ProjectNodeDO> nodeMap = projectNodes.stream().collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
         log.info("nodeMap={},,projectDO={}", nodeMap, projectDO);
-        ProjectNodeDO node = null;
-        if ((node = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getProjectNodeName())) != null && node.getActualDate() != null) {
-            projectDO.setStatus(ProjectStatusEnum.RELEASED.getCode());
-            projectDO.setActualEndDate(node.getActualDate());
-        } else if ((node = nodeMap.get(ProjectNodeEnum.TEST_START.getProjectNodeName())) != null && node.getActualDate() != null) {
-            projectDO.setStatus(ProjectStatusEnum.TESTING.getCode());
-        } else if ((node = nodeMap.get(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getProjectNodeName())) != null && node.getActualDate() != null) {
-            projectDO.setStatus(ProjectStatusEnum.DEVING.getCode());
-        } else if ((node = nodeMap.get(ProjectNodeEnum.DEVELOP_START.getProjectNodeName())) != null && node.getActualDate() != null) {
-            projectDO.setStatus(ProjectStatusEnum.DEVING.getCode());
-        } else if ((node = nodeMap.get(ProjectNodeEnum.START_PLAN.getProjectNodeName())) != null && node.getActualDate() != null) {
-            projectDO.setStatus(ProjectStatusEnum.PLANING.getCode());
-        } else {
-            projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
+        ProjectNodeDO demandStart = nodeMap.get(ProjectNodeEnum.START_PLAN.getProjectNodeName());
+        ProjectNodeDO demandAudit = nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getProjectNodeName());
+        ProjectNodeDO demandConstrue = nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getProjectNodeName());
+        Integer status = ProjectStatusEnum.WAITING.getCode();
+        //规划中
+        if (demandStart != null && demandStart.getActualDate() != null) {
+            status = ProjectStatusEnum.PLANING.getCode();
         }
+        // 研发中
+        boolean dev = (demandStart == null || demandStart.getActualDate() != null)
+                && (demandAudit == null || demandAudit.getActualDate() != null)
+                && (demandConstrue == null || demandConstrue.getActualDate() != null);
+        if (dev) {
+            status = ProjectStatusEnum.DEVING.getCode();
+        }
+        //测试中
+        ProjectNodeDO review = nodeMap.get(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getProjectNodeName());
+        ProjectNodeDO devStart = nodeMap.get(ProjectNodeEnum.DEVELOP_START.getProjectNodeName());
+        ProjectNodeDO writeCase = nodeMap.get(ProjectNodeEnum.WRITE_TEST_CASES.getProjectNodeName());
+        ProjectNodeDO reviewCase = nodeMap.get(ProjectNodeEnum.USE_CASE_REVIEW.getProjectNodeName());
+        ProjectNodeDO submitTest = nodeMap.get(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName());
+        boolean test = (review == null || review.getActualDate() != null)
+                && (devStart == null || devStart.getActualDate() != null)
+                && (writeCase == null || writeCase.getActualDate() != null)
+                && (reviewCase == null || reviewCase.getActualDate() != null)
+                && (submitTest == null || submitTest.getActualDate() != null);
+        if (test) {
+            status = ProjectStatusEnum.TESTING.getCode();
+        }
+
+        //已发布
+        ProjectNodeDO publishOfficial = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getProjectNodeName());
+        if (publishOfficial != null && publishOfficial.getActualDate() != null) {
+            status = ProjectStatusEnum.RELEASED.getCode();
+            //项目的实际完成时间
+            projectDO.setActualEndDate(publishOfficial.getActualDate());
+        }
+        projectDO.setStatus(status);
+
         //计算项目实际开始时间：优先取需求阶段实际时间作为项目实际开始时间,若无,则取开发阶段第一个节点实际时间做为作为项目实际开始时间
-        if ((node = nodeMap.get(ProjectNodeEnum.START_PLAN.getProjectNodeName())) != null) {
-            projectDO.setActualStartDate(node.getActualDate());
-        } else if ((node = nodeMap.get(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getProjectNodeName())) != null) {
-            projectDO.setActualStartDate(node.getActualDate());
-        } else if ((node = nodeMap.get(ProjectNodeEnum.DEVELOP_START.getProjectNodeName())) != null) {
-            projectDO.setActualStartDate(node.getActualDate());
+        if (demandStart != null && demandStart.getActualDate() != null) {
+            projectDO.setActualStartDate(demandStart.getActualDate());
+        } else if (review != null && review.getActualDate() != null) {
+            projectDO.setActualStartDate(review.getActualDate());
+        } else if (devStart != null) {
+            projectDO.setActualStartDate(devStart.getActualDate());
         }
-//        // 计算项目状态,新逻辑
-//        Map<String, ProjectNodeDO> nodeMap = projectNodes.stream().collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
-//        log.info("nodeMap={},,projectDO={}", nodeMap, projectDO);
-//        ProjectNodeDO demandStart = nodeMap.get(ProjectNodeEnum.START_PLAN.getProjectNodeName());
-//        ProjectNodeDO demandAudit = nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getProjectNodeName());
-//        ProjectNodeDO demandConstrue = nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getProjectNodeName());
-//        Integer status = ProjectStatusEnum.WAITING.getCode();
-//        //规划中
-//        if (demandStart != null && demandStart.getActualDate() != null) {
-//            status = ProjectStatusEnum.PLANING.getCode();
-//        }
-//        // 研发中
-//        boolean dev = (demandStart == null || demandStart.getActualDate() != null)
-//                && (demandAudit == null || demandAudit.getActualDate() != null)
-//                && (demandConstrue == null || demandConstrue.getActualDate() != null);
-//        if (dev) {
-//            status = ProjectStatusEnum.DEVING.getCode();
-//        }
-//        //测试中
-//        ProjectNodeDO review = nodeMap.get(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getProjectNodeName());
-//        ProjectNodeDO devStart = nodeMap.get(ProjectNodeEnum.DEVELOP_START.getProjectNodeName());
-//        ProjectNodeDO writeCase = nodeMap.get(ProjectNodeEnum.WRITE_TEST_CASES.getProjectNodeName());
-//        ProjectNodeDO reviewCase = nodeMap.get(ProjectNodeEnum.USE_CASE_REVIEW.getProjectNodeName());
-//        ProjectNodeDO submitTest = nodeMap.get(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName());
-//        boolean test = (review == null || review.getActualDate() != null)
-//                && (devStart == null || devStart.getActualDate() != null)
-//                && (writeCase == null || writeCase.getActualDate() != null)
-//                && (reviewCase == null || reviewCase.getActualDate() != null)
-//                && (submitTest == null || submitTest.getActualDate() != null);
-//        if (test) {
-//            status = ProjectStatusEnum.TESTING.getCode();
-//        }
-//
-//        //已发布
-//        ProjectNodeDO publishOfficial = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getProjectNodeName());
-//        if (publishOfficial != null && publishOfficial.getActualDate() != null) {
-//            status = ProjectStatusEnum.RELEASED.getCode();
-//            //项目的实际完成时间
-//            projectDO.setActualEndDate(publishOfficial.getActualDate());
-//        }
-//        projectDO.setStatus(status);
-//
-//        //计算项目实际开始时间：优先取需求阶段实际时间作为项目实际开始时间,若无,则取开发阶段第一个节点实际时间做为作为项目实际开始时间
-//        if (demandStart != null && demandStart.getActualDate() != null) {
-//            projectDO.setActualStartDate(demandStart.getActualDate());
-//        } else if (review != null && review.getActualDate() != null) {
-//            projectDO.setActualStartDate(review.getActualDate());
-//        } else {
-//            projectDO.setActualStartDate(devStart.getActualDate());
-//        }
     }
 
 

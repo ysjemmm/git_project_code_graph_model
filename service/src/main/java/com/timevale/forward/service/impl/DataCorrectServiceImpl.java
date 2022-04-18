@@ -17,6 +17,7 @@ import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -57,6 +58,7 @@ public class DataCorrectServiceImpl implements DataCorrectService {
 
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(DataModifyReq dataModifyReq) {
         if (DataCorrectTypeEnum.PROJECT.getCode().equals(dataModifyReq.getType())) {
             List<ProjectDO> projectDOList = projectMapper.getByIds(dataModifyReq.getIds());
@@ -93,6 +95,7 @@ public class DataCorrectServiceImpl implements DataCorrectService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> calculateStatus() {
         List<Integer> status = Lists.newArrayList(ProjectStatusEnum.DEVING.getCode(), ProjectStatusEnum.TESTING.getCode());
         List<ProjectDO> list = projectMapper.getByStatus(status);
