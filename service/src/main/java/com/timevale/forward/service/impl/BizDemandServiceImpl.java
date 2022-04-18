@@ -356,6 +356,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 保存旧状态
         Integer oldStatus = bizDemandDO.getStatus();
+        Integer oldReason = bizDemandDO.getReason();
         Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
 
         bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
@@ -395,6 +396,14 @@ public class BizDemandServiceImpl implements BizDemandService {
                 true
         );
 
+        bizDemandLogComponent.addLogWhenModifyData(
+                BizDemandReasonEnum.getTextByCode(oldReason),
+                StringUtils.EMPTY,
+                bizDemandDO.getId(),
+                BizChangeLogFieldEnum.REASON.getText(),
+                false
+        );
+
         return BaseResult.success(true);
     }
 
@@ -413,6 +422,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 保存旧状态
         Integer oldStatus = bizDemandDO.getStatus();
+        Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
 
         bizDemandDO.setReason(reason);
         bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
@@ -429,7 +439,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 BizDemandReasonEnum.getTextByCode(bizDemandDO.getReason())
         ));
 
-        // 日志, 状态改为驳回
+        // 日志
         bizDemandLogComponent.addLogWhenModifyData(
                 BizDemandStatusEnum.getTextByCode(oldStatus),
                 BizDemandStatusEnum.REJECT.getText(),
@@ -437,6 +447,14 @@ public class BizDemandServiceImpl implements BizDemandService {
                 BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                 true,
                 ButtonActionEnum.REJECT.getText());
+
+        bizDemandLogComponent.addLogWhenModifyData(
+                PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
+                StringUtils.EMPTY,
+                bizDemandId,
+                BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
+                false
+        );
 
         return BaseResult.success(true);
     }
