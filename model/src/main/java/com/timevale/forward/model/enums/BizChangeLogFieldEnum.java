@@ -36,6 +36,8 @@ public enum BizChangeLogFieldEnum {
 
     PLAN_RELEASE_DATE("预期上线时间"),
 
+    PROJECT_RELEASE_DATE("项目发布时间"),
+
     DEPARTMENT("部门"),
 
     /**
