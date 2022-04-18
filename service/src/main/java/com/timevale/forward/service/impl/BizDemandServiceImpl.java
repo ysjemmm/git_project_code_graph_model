@@ -224,14 +224,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 bizDemandDO.getName()
         ));
 
-        // 日志, 状态改为待评估，更改预期上线时间
-        bizDemandLogComponent.addLogWhenModifyData(
-                StringUtils.EMPTY,
-                PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate()),
-                bizDemandDO.getId(),
-                BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
-                true
-        );
+        // 日志, 状态改为待评估
         bizDemandLogComponent.addLogWhenModifyData(
                 BizDemandStatusEnum.EVALUATE.getText(),
                 BizDemandStatusEnum.EVALUATE.getText(),
@@ -392,6 +385,14 @@ public class BizDemandServiceImpl implements BizDemandService {
                 BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                 true,
                 ButtonActionEnum.RECEIVE.getText());
+
+        bizDemandLogComponent.addLogWhenModifyData(
+                StringUtils.EMPTY,
+                PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate()),
+                bizDemandDO.getId(),
+                BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
+                true
+        );
 
         return BaseResult.success(true);
     }
