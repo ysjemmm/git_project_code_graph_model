@@ -356,6 +356,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 保存旧状态
         Integer oldStatus = bizDemandDO.getStatus();
+        Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
 
         bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
         bizDemandDO.setPlanReleaseDate(planReleaseDate);
@@ -387,8 +388,8 @@ public class BizDemandServiceImpl implements BizDemandService {
                 ButtonActionEnum.RECEIVE.getText());
 
         bizDemandLogComponent.addLogWhenModifyData(
-                StringUtils.EMPTY,
-                PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate()),
+                PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
+                PlanReleaseDateEnum.getTextByCode(planReleaseDate),
                 bizDemandDO.getId(),
                 BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
                 true
