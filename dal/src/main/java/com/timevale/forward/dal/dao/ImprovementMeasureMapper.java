@@ -37,6 +37,14 @@ public interface ImprovementMeasureMapper {
     int batchUpdateStatus(@Param("idList") List<Long> idList, @Param("status")Integer status);
 
     /**
+     * 改进措施-查询 by 故障单id
+     *
+     * @param troubleTicketId 故障单id
+     * @return 改进措施 List
+     */
+    List<ImprovementMeasureDO> selectByTroubleTicketId(@Param("troubleTicketId")Long troubleTicketId);
+
+    /**
      * 改进措施-查询对应条件
      *
      * @param condition 条件

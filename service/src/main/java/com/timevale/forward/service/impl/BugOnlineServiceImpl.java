@@ -1099,31 +1099,31 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
 
-        BugLogDO bugLog = new BugLogDO();
-        bugLog.setField(BugFieldEnum.OPERATOR.getText());
-        bugLog.setOldValue(oldOperator);
-        bugLog.setNewValue(bugOnlineTransferReq.getUserName());
-        bugLog.setMainId(bugOnlineTransferReq.getId());
-        bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
-        //往bug日志表中插入一条线上bug内容变更数据
-        bugLogMapper.insert(bugLog);
-
-        //如果不是自己转交给自己，bug状态处理人员表插入数据
+        //如果不是自己转交给自己
         if (!oldOperator.equals(bugOnlineTransferReq.getUserName())) {
             insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
-        }
 
-        //发送消息
-        messageEventPublisher.publish(
-                new BugOnlineTransferMsgEvent(
-                        this,
-                        userInfo.getAlias() + "-" + userInfo.getName(),
-                        bugOnlineDO.getName(),
-                        BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()),
-                        bugOnlineTransferReq.getUserId(),
-                        bugOnlineDO.getId()
-                )
-        );
+            //往bug日志表中插入一条线上bug内容变更数据
+            BugLogDO bugLog = new BugLogDO();
+            bugLog.setField(BugFieldEnum.OPERATOR.getText());
+            bugLog.setOldValue(oldOperator);
+            bugLog.setNewValue(bugOnlineTransferReq.getUserName());
+            bugLog.setMainId(bugOnlineTransferReq.getId());
+            bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
+            bugLogMapper.insert(bugLog);
+
+            //发送消息
+            messageEventPublisher.publish(
+                    new BugOnlineTransferMsgEvent(
+                            this,
+                            userInfo.getAlias() + "-" + userInfo.getName(),
+                            bugOnlineDO.getName(),
+                            BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()),
+                            bugOnlineTransferReq.getUserId(),
+                            bugOnlineDO.getId()
+                    )
+            );
+        }
 
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -1304,7 +1304,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.REPEAT_CONFIRM.getText());
         bugLogDO.setOldValue(oldStatus);
-        bugLogDO.setNewValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
+        bugLogDO.setNewValue(BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()));
         bugLogDO.setMainId(bugOnlineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
         bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
