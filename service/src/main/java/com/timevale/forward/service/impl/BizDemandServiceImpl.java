@@ -396,13 +396,16 @@ public class BizDemandServiceImpl implements BizDemandService {
                 true
         );
 
-        bizDemandLogComponent.addLogWhenModifyData(
-                BizDemandReasonEnum.getTextByCode(oldReason),
-                StringUtils.EMPTY,
-                bizDemandDO.getId(),
-                BizChangeLogFieldEnum.REASON.getText(),
-                false
-        );
+        String oldReasonText = BizDemandReasonEnum.getTextByCode(oldReason);
+        if(!Objects.equal(oldReasonText, StringUtils.EMPTY)){
+            bizDemandLogComponent.addLogWhenModifyData(
+                    oldReasonText,
+                    StringUtils.EMPTY,
+                    bizDemandDO.getId(),
+                    BizChangeLogFieldEnum.REASON.getText(),
+                    false
+            );
+        }
 
         return BaseResult.success(true);
     }
@@ -453,6 +456,14 @@ public class BizDemandServiceImpl implements BizDemandService {
                 StringUtils.EMPTY,
                 bizDemandId,
                 BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
+                false
+        );
+
+        bizDemandLogComponent.addLogWhenModifyData(
+                StringUtils.EMPTY,
+                BizDemandReasonEnum.getTextByCode(reason),
+                bizDemandDO.getId(),
+                BizChangeLogFieldEnum.REASON.getText(),
                 false
         );
 
