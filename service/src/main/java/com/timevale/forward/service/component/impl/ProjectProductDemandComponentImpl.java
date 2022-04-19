@@ -59,6 +59,7 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
         Map<Long, Date> publishDateMap = new HashMap<>();
         List<Long> bizDemandIds = new ArrayList<>();
         before(productDemandIds, publishDateMap, bizDemandIds);
+        log.info("bizDemandId,publishDate:{}",publishDateMap);
         // unlink
         ProjectProductDemandDO projectProductDemandDO = new ProjectProductDemandDO();
         projectProductDemandDO.setProjectId(projectId);
@@ -71,15 +72,16 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
 
     @Override
     public void batchInsert(Long projectId, List<Long> productDemandIds) {
+        log.info("新增项目与产品需求关系,projectId={},productDemandId={}", projectId, productDemandIds);
         List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectId);
         List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
                 .collect(Collectors.toList());
-        log.info("关联产品需求,existProductDemandIds={}", existProductDemandIds);
         productDemandIds.removeAll(existProductDemandIds);
         // link before
         Map<Long, Date> publishDateMap = new HashMap<>();
         List<Long> bizDemandIds = new ArrayList<>();
         before(productDemandIds, publishDateMap, bizDemandIds);
+        log.info("bizDemandId,publishDate:{}",publishDateMap);
         // link
         if (!CollectionUtils.isEmpty(productDemandIds)) {
             Set<Long> set = new HashSet<>(productDemandIds);
@@ -98,8 +100,9 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
 
     private void before(List<Long> productDemandIds, Map<Long, Date> publishDateMap, List<Long> bizDemandIds) {
         if (!CollectionUtils.isEmpty(productDemandIds)) {
-            bizDemandIds = productBizDemandMapper.getByProductDemandIds(productDemandIds)
+            List<Long>bids = productBizDemandMapper.getByProductDemandIds(productDemandIds)
                     .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
+            bizDemandIds.addAll(bids);
             bizDemandIds.forEach(bid -> {
                 Date publishDate = bizDemandComponent.getProjectEndDate(bid);
                 publishDateMap.put(bid, publishDate);

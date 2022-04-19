@@ -104,6 +104,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                         .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
                 bizDemandIds.forEach(bid -> {
                     Date publishDate = bizDemandComponent.getProjectEndDate(bid);
+                    log.info("bid={},planEndDate={},publishDate={}",bid,newObj.getPlanEndDate(),publishDate);
                     if (Objects.equals(newObj.getPlanEndDate(),publishDate)) {
                         //发布时间已变为当前需要更新的时间
                         String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);

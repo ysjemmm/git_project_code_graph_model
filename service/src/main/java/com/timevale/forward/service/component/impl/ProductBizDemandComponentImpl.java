@@ -54,6 +54,7 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
         }
         Map<Long, Date> publishDateMap = new HashMap<>();
         before(publishDateMap, bizDemandIds);
+        log.info("bizDemandId,publishDate:{}",publishDateMap);
         // unlink
         ProductBizDemandDO productDemandDO = new ProductBizDemandDO();
         productDemandDO.setIsDeleted(true);
@@ -66,6 +67,7 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
 
     @Override
     public void batchInsert(Long productDemandId, List<Long> bizDemandIds) {
+        log.info("新增产品与业务需求关系,productDemandId={},bizDemandId={}", productDemandId, bizDemandIds);
         if (CollectionUtils.isEmpty(bizDemandIds)) {
             return;
         }
@@ -75,12 +77,11 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
                 .build());
         List<Long> existBizDemandIds = exists.stream().map(ProductBizDemandDO::getBizDemandId)
                 .collect(Collectors.toList());
-        log.info("关联业务需求,existBizDemandIds={}", existBizDemandIds);
         bizDemandIds.removeAll(existBizDemandIds);
-
         // link before
         Map<Long, Date> publishDateMap = new HashMap<>();
         before(publishDateMap, bizDemandIds);
+        log.info("bizDemandId,publishDate:{}",publishDateMap);
         // link
         if (!CollectionUtils.isEmpty(bizDemandIds)) {
             Set<Long> set = new HashSet<>(bizDemandIds);
