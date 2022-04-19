@@ -69,7 +69,7 @@ public class BaseDistributeClientImpl<T> implements BaseDistributeClient<T> {
 
         DistributeResult<T> o = JSON.parseObject(result, type);
         if (!Integer.valueOf(0).equals(o.getCode())) {
-            log.error("数据分发返回code={},message={},data={},", o.getCode(), o.getMessage(), o.getData());
+            log.error("数据分发返回code={},message={},data={},result={}", o.getCode(), o.getMessage(), o.getData(), result);
         }
         return o.getData();
     }

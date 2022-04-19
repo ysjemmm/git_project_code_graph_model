@@ -54,7 +54,7 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
         }
         Map<Long, Date> publishDateMap = new HashMap<>();
         before(publishDateMap, bizDemandIds);
-        log.info("bizDemandId,publishDate:{}",publishDateMap);
+        log.info("bizDemandId,publishDate:{}", publishDateMap);
         // unlink
         ProductBizDemandDO productDemandDO = new ProductBizDemandDO();
         productDemandDO.setIsDeleted(true);
@@ -71,17 +71,14 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
         if (CollectionUtils.isEmpty(bizDemandIds)) {
             return;
         }
-        List<ProductBizDemandDO> exists = productBizDemandMapper.select(ProductBizDemandCondition.builder()
-                .productDemandId(productDemandId)
-                .isDeleted(false)
-                .build());
-        List<Long> existBizDemandIds = exists.stream().map(ProductBizDemandDO::getBizDemandId)
-                .collect(Collectors.toList());
+        ProductBizDemandCondition c = ProductBizDemandCondition.builder().productDemandId(productDemandId).isDeleted(false).build();
+        List<ProductBizDemandDO> exists = productBizDemandMapper.select(c);
+        List<Long> existBizDemandIds = exists.stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
         bizDemandIds.removeAll(existBizDemandIds);
         // link before
         Map<Long, Date> publishDateMap = new HashMap<>();
         before(publishDateMap, bizDemandIds);
-        log.info("bizDemandId,publishDate:{}",publishDateMap);
+        log.info("bizDemandId,publishDate:{}", publishDateMap);
         // link
         if (!CollectionUtils.isEmpty(bizDemandIds)) {
             Set<Long> set = new HashSet<>(bizDemandIds);
