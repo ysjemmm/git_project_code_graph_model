@@ -1,16 +1,14 @@
 package com.timevale.forward.service.component;
 
-import com.timevale.forward.dal.entity.ProductBizDemandDO;
-
 import java.util.List;
 
 public interface ProductBizDemandComponent {
 
     /**
      *
-     * @param productBizDemandDO 项目id
+     * @param bizDemandId 项目id
      */
-    void update(ProductBizDemandDO productBizDemandDO);
+    void update(Long productDemandId,Long bizDemandId);
 
     /**
      * 新增项目-产品需求

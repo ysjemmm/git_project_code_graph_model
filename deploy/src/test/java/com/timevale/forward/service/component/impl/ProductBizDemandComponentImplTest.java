@@ -1,7 +1,10 @@
 package com.timevale.forward.service.component.impl;
 
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.ProductBizDemandMapper;
 import com.timevale.forward.dal.entity.ProductBizDemandDO;
+import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import org.mockito.InjectMocks;
@@ -32,6 +35,15 @@ public class ProductBizDemandComponentImplTest extends AbstractTestNGSpringConte
     @Mock
     private ProductBizDemandMapper productBizDemandMapper;
 
+    @Mock
+    private BizDemandComponent bizDemandComponent;
+
+    @Mock
+    private BizDemandLogComponent bizDemandLogComponent;
+
+    @Mock
+    private BizChangeLogMapper bizChangeLogMapper;
+
     @Test
     public void testUpdate() {
         UserInfo userInfo = new UserInfo();
@@ -40,10 +52,7 @@ public class ProductBizDemandComponentImplTest extends AbstractTestNGSpringConte
         userInfo.setName("www");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
         localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
-
-        ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
-        productBizDemandDO.setProductDemandId(1L);
-        productBizDemandComponent.update(productBizDemandDO);
+        productBizDemandComponent.update(any(),null);
         localSessionUtilsMockedStatic.close();
     }
 
