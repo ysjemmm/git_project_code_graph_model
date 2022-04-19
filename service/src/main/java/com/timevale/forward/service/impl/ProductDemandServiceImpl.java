@@ -203,10 +203,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
                 productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, null);
                 // 作废解业务需求关联
-                ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
-                productBizDemandDO.setProductDemandId(productDemandId);
-                productBizDemandDO.setIsDeleted(true);
-                productBizDemandComponent.update(productBizDemandDO);
+                productBizDemandComponent.update(productDemandId,null);
             }
         }
         String action = ProductDemandStatusEnum.SUSPEND.getCode().equals(type) ? ButtonActionEnum.SUSPEND.getText() : ButtonActionEnum.INVALID.getText();
@@ -390,11 +387,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         } else {
             productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, true);
 
-            ProductBizDemandDO productDemandDO = new ProductBizDemandDO();
-            productDemandDO.setIsDeleted(true);
-            productDemandDO.setProductDemandId(bizDemandLinkReq.getProductDemandId());
-            productDemandDO.setBizDemandId(bizDemandIds.get(0));
-            productBizDemandComponent.update(productDemandDO);
+            productBizDemandComponent.update(bizDemandLinkReq.getProductDemandId(),bizDemandIds.get(0));
 
             productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
         }

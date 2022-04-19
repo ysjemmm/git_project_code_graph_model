@@ -148,7 +148,7 @@ public class ProjectServiceImpl implements ProjectService {
                 && !ProjectStatusEnum.PLANING.getCode().equals(oldStatus)
                 && !ProjectStatusEnum.DEVING.getCode().equals(oldStatus)
                 && !ProjectStatusEnum.TESTING.getCode().equals(oldStatus)) {
-            throw new BaseBizRuntimeException("項目状态不是待启动、规划中、研发中、测试中,不能修改状态");
+            throw new BaseBizRuntimeException("项目状态不是待启动、规划中、研发中、测试中,不能修改状态");
         }
         projectDO.setStatus(type);
         projectMapper.update(projectDO);

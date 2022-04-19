@@ -1,27 +1,28 @@
 package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
-import com.timevale.forward.dal.dao.BizChangeLogMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.dao.ProjectProductLineMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.ProjectMD;
+import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.ProjectLogComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.compare.FieldCompareUtil;
+import com.timevale.forward.service.utils.date.DateStyle;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -43,6 +44,18 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
 
     @Resource
     private ProjectProductLineMapper projectProductLineMapper;
+
+    @Resource
+    private ProjectProductDemandMapper projectProductDemandMapper;
+
+    @Resource
+    private ProductBizDemandMapper productBizDemandMapper;
+
+    @Resource
+    private BizDemandComponent bizDemandComponent;
+
+    @Resource
+    private BizDemandLogComponent bizDemandLogComponent;
 
     /**
      * 编辑时,记录日志
@@ -81,6 +94,24 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             String oldValue = String.join(",", oldPds.values());
             String newValue = String.join(",", newPds.values());
             logs.add(createLog(oldObj.getId(), BizChangeLogFieldEnum.PD.getText(), oldValue, newValue, null));
+        }
+        //
+        if (!Objects.equals(oldObj.getPlanEndDate(),newObj.getPlanEndDate())) {
+            List<Long> productDemandIds = projectProductDemandMapper.getByProjectId(oldObj.getId())
+                    .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(productDemandIds)) {
+                List<Long> bizDemandIds = productBizDemandMapper.getByProductDemandIds(productDemandIds)
+                        .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
+                bizDemandIds.forEach(bid -> {
+                    Date publishDate = bizDemandComponent.getProjectEndDate(bid);
+                    if (Objects.equals(newObj.getPlanEndDate(),publishDate)) {
+                        //发布时间已变为当前需要更新的时间
+                        String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
+                        String newValue = DateUtil.parseToString(newObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
+                        logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, bid));
+                    }
+                });
+            }
         }
 
         logs.forEach(a -> {
