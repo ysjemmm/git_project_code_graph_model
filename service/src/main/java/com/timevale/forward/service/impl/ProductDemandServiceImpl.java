@@ -197,7 +197,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         } else {
             productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), true);
 
-            ProductBizDemandCondition c = ProductBizDemandCondition.builder().productDemandId(productDemandId).build();
+            ProductBizDemandCondition c = ProductBizDemandCondition.builder().productDemandId(productDemandId).isDeleted(false).build();
             List<Long> bizDemandIds = productBizDemandMapper.select(c).stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
             if (CollectionUtils.isNotEmpty(bizDemandIds)) {
                 Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
