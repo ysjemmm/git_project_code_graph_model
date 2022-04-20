@@ -152,6 +152,9 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setStatus(BizDemandStatusEnum.INVALID.getCode());
         bizDemandMapper.update(bizDemandDO);
 
+        // 产品关联断开日志
+        bizDemandLogComponent.addLogWhenBizDemandInvalid(bizDemandId);
+
         // 取消产品关联
         productBizDemandMapper.deleteByBizDemandId(bizDemandId);
 
@@ -172,9 +175,6 @@ public class BizDemandServiceImpl implements BizDemandService {
                 BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                 true,
                 ButtonActionEnum.INVALID.getText());
-
-        // 日志，产品关联断开
-        bizDemandLogComponent.addLogWhenBizDemandInvalid(bizDemandId);
 
         return BaseResult.success(true);
     }
