@@ -464,7 +464,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 BizDemandReasonEnum.getTextByCode(reason),
                 bizDemandDO.getId(),
                 BizChangeLogFieldEnum.REASON.getText(),
-                false
+                true
         );
 
         return BaseResult.success(true);
