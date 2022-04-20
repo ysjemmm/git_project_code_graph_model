@@ -1,6 +1,7 @@
 package com.timevale.forward.service.component.impl;
 
 import com.timevale.erp.message.service.result.DingTodoTaskResponseBody;
+import com.timevale.forward.dal.condition.ImprovementMeasureCondition;
 import com.timevale.forward.dal.dao.ImprovementMeasureMapper;
 import com.timevale.forward.dal.entity.BaseDO;
 import com.timevale.forward.dal.entity.ImprovementMeasureDO;
@@ -24,7 +25,10 @@ import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -55,7 +59,7 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
                 .filter(e -> e.getTodo() && ImprovementMeasureStatusEnum.PENDING.getCode().equals(e.getStatus()))
                 .collect(Collectors.toList());
 
-        if(createdTodoList.isEmpty()){
+        if (createdTodoList.isEmpty()) {
             return;
         }
 
@@ -68,20 +72,24 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
         createdTodoList.forEach(e -> {
             String todoId = e.getTodoId();
             String unionId = unionIdMap.get(e.getExecutorId());
-            if(StringUtils.isEmpty(todoId) || StringUtils.isEmpty(unionId)){
-                throw new BaseBizRuntimeException("待办信息不全，无法同步");
+            if (StringUtils.isEmpty(todoId) || StringUtils.isEmpty(unionId)) {
+                log.info("待办信息不全,无法同步,事项id:{},执行人unionId:{}", e.getId(), unionId);
+            } else {
+                getTodoTaskMsgList.add(GetTodoTaskMsg.builder()
+                        .recordId(todoId)
+                        .unionId(unionId)
+                        .build());
             }
-            getTodoTaskMsgList.add(GetTodoTaskMsg.builder()
-                            .recordId(todoId)
-                            .unionId(unionId)
-                            .build());
         });
+        if (CollectionUtils.isEmpty(getTodoTaskMsgList)) {
+            return;
+        }
         Map<String, DingTodoTaskResponseBody> todoTaskResponseBodyMap = dingWorkRecordClient.batchGetTask(getTodoTaskMsgList);
 
         // 更新状态
         for (ImprovementMeasureDO e : createdTodoList) {
-            Boolean done = todoTaskResponseBodyMap.get(e.getTodoId()).getDone();
-            if(done == null || !done) {
+            DingTodoTaskResponseBody responseBody = todoTaskResponseBodyMap.get(e.getTodoId());
+            if (responseBody == null || responseBody.getDone() == null || !responseBody.getDone()) {
                 continue;
             }
             e.setStatus(ImprovementMeasureStatusEnum.COMPLETED.getCode());
@@ -92,7 +100,7 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
                 .filter(e -> ImprovementMeasureStatusEnum.COMPLETED.getCode().equals(e.getStatus()))
                 .map(BaseDO::getId)
                 .collect(Collectors.toList());
-        if(!CollectionUtils.isEmpty(idList)){
+        if (!CollectionUtils.isEmpty(idList)) {
             improvementMeasureMapper.batchUpdateStatus(idList, ImprovementMeasureStatusEnum.COMPLETED.getCode());
         }
     }
@@ -118,43 +126,70 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
     }
 
     @Override
-    public String addTodoTask(ImprovementMeasureDO improvementMeasureDO){
-        // 查看是否创建待办
-        if(improvementMeasureDO.getTodo()){
-            // 获取 unionId
-            String userId = LocalSessionUtils.getUserInfo().getId();
-            // String userId = "yangxu";
-            String executorId = improvementMeasureDO.getExecutorId();
-            Map<String, String> unionIdMap = innerUserPersonClient.getUnionIds(Lists.newArrayList(userId,executorId));
-            if (CollectionUtils.isEmpty(unionIdMap)) {
-                log.info("新增待办时,查询用户中心所属用户无unionId");
-            }
-            String userUnionId = unionIdMap.get(userId);
-            String executorUnionId = unionIdMap.get(executorId);
-
-            // 发送待办
-            CreateTodoTaskMsg todoTaskMsg = CreateTodoTaskMsg.builder()
-                    .title(String.format(TITLE, improvementMeasureDO.getName()))
-                    .unionId(userUnionId)
-                    .executorIds(Lists.newArrayList(executorUnionId))
-                    .dueTime(improvementMeasureDO.getImplementationTime().getTime())
-                    .build();
-            String todoId = dingWorkRecordClient.addTask(todoTaskMsg);
-
-            // 保存待办id
-            if (StringUtils.isEmpty(todoId)) {
-                log.info("新增待办异常,createTodoTaskMsg :{}", todoTaskMsg);
-                improvementMeasureDO.setTodo(false);
-            }
-            return todoId;
+    public void delete(Long id) {
+        // 查询是否有对应事项
+        ImprovementMeasureCondition condition = ImprovementMeasureCondition.builder()
+                .id(id)
+                .isDeleted(false)
+                .build();
+        List<ImprovementMeasureDO> improvementMeasureDOList = improvementMeasureMapper.selectByCondition(condition);
+        if(CollectionUtils.isEmpty(improvementMeasureDOList)){
+            throw new BaseBizRuntimeException("该事项不存在");
         }
-        return StringUtils.EMPTY;
+        ImprovementMeasureDO improvementMeasureDO = improvementMeasureDOList.get(0);
+
+        // 待办处理
+        if(Objects.equals(ImprovementMeasureStatusEnum.PENDING.getCode(),improvementMeasureDO.getStatus())){
+            deleteTodoTask(improvementMeasureDO);
+        }
+
+        // 修改事项逻辑删除标志
+        improvementMeasureDO.setIsDeleted(true);
+        improvementMeasureMapper.update(improvementMeasureDO);
+    }
+
+    @Override
+    public String addTodoTask(ImprovementMeasureDO improvementMeasureDO) {
+        // 查看是否创建待办
+        if(!improvementMeasureDO.getTodo()){
+            return StringUtils.EMPTY;
+        }
+
+        // String userId = "yangxu";
+        String userId = LocalSessionUtils.getUserInfo().getId();
+        String executorId = improvementMeasureDO.getExecutorId();
+        Map<String, String> unionIdMap = innerUserPersonClient.getUnionIds(Lists.newArrayList(userId,executorId));
+
+        if (CollectionUtils.isEmpty(unionIdMap)) {
+            log.info("新增待办时,查询用户中心所属用户无unionId");
+            improvementMeasureDO.setTodo(false);
+            return StringUtils.EMPTY;
+        }
+
+        String userUnionId = unionIdMap.get(userId);
+        String executorUnionId = unionIdMap.get(executorId);
+
+        // 发送待办
+        CreateTodoTaskMsg todoTaskMsg = CreateTodoTaskMsg.builder()
+                .title(String.format(TITLE, improvementMeasureDO.getName()))
+                .unionId(userUnionId)
+                .executorIds(Lists.newArrayList(executorUnionId))
+                .dueTime(improvementMeasureDO.getImplementationTime().getTime())
+                .build();
+        String todoId = dingWorkRecordClient.addTask(todoTaskMsg);
+
+        // 保存待办id
+        if (StringUtils.isEmpty(todoId)) {
+            log.info("新增待办异常,createTodoTaskMsg :{}", todoTaskMsg);
+            improvementMeasureDO.setTodo(false);
+        }
+        return todoId;
     }
 
     @Override
     public void updateTodoTask(ImprovementMeasureDO improvementMeasureDO) {
         // 待办处理
-        if(!improvementMeasureDO.getTodo()){
+        if (!improvementMeasureDO.getTodo()) {
             return;
         }
         // 获取 unionId
@@ -171,7 +206,7 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
                 .unionId(unionId)
                 .executorIds(Lists.newArrayList(unionId))
                 .participantIds(Lists.newArrayList(unionId))
-                .done(Objects.equals(ImprovementMeasureStatusEnum.COMPLETED.getCode(),improvementMeasureDO.getStatus()))
+                .done(Objects.equals(ImprovementMeasureStatusEnum.COMPLETED.getCode(), improvementMeasureDO.getStatus()))
                 .dueTime(improvementMeasureDO.getImplementationTime().getTime())
                 .build();
         dingWorkRecordClient.updateTask(updateTodoTaskMsg);
@@ -182,7 +217,7 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
     @Override
     public void deleteTodoTask(ImprovementMeasureDO improvementMeasureDO) {
         // 待办处理
-        if(!improvementMeasureDO.getTodo()){
+        if (!improvementMeasureDO.getTodo()) {
             return;
         }
         // 获取 用户 unionId

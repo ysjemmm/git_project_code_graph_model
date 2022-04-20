@@ -84,6 +84,6 @@
 
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.TestBillDO">
         select * from test_bill
-        where project_id=#{projectId}
+        where project_id=#{projectId}  and is_deleted = false
     </select>
 </mapper>

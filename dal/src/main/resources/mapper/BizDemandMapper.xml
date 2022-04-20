@@ -175,6 +175,7 @@
                     </choose>
                 </otherwise>
             </choose>
+            and bd.is_deleted = false
         </where>
     </select>
 

@@ -69,4 +69,11 @@
         </where>
     </select>
 
+    <select id="selectByTroubleTicketId" resultType="com.timevale.forward.dal.entity.ImprovementMeasureDO">
+        SELECT id, executor, executor_id, todo, todo_id
+        FROM improvement_measure
+        WHERE trouble_ticket_id = #{troubleTicketId}
+        AND is_deleted = false
+    </select>
+
 </mapper>

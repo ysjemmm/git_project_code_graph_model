@@ -5,6 +5,7 @@ import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.condition.TroubleTicketCondition;
+import com.timevale.forward.dal.dao.ImprovementMeasureMapper;
 import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.dao.TroubleTicketMapper;
@@ -12,7 +13,10 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TroubleTicketService;
 import com.timevale.forward.facade.api.query.TroubleTicketQueryList;
 import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.facade.api.result.FileVO;
+import com.timevale.forward.facade.api.result.PersonVO;
+import com.timevale.forward.facade.api.result.TroubleTicketDetailVO;
+import com.timevale.forward.facade.api.result.TroubleTicketVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.FileComponent;
@@ -22,24 +26,23 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.TroubleTicketCopier;
-import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
-import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
-import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
-import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -56,6 +59,9 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
     @Resource
     private FileComponent fileComponent;
+
+    @Resource
+    private ImprovementMeasureMapper improvementMeasureMapper;
 
     @Resource
     private ImprovementMeasureComponent improvementMeasureComponent;
@@ -168,6 +174,13 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         if(troubleTicketDO == null){
             throw new BaseBizRuntimeException("不存在对应的故障工单");
         }
+
+        // 删除对应的改进措施和待办
+        List<ImprovementMeasureDO> improvementMeasureDOList = improvementMeasureMapper.selectByTroubleTicketId(id);
+        improvementMeasureDOList.parallelStream().forEach(e -> {
+            improvementMeasureComponent.delete(e.getId());
+            improvementMeasureComponent.deleteTodoTask(e);
+        });
 
         // 逻辑删除
         troubleTicketDO.setIsDeleted(true);

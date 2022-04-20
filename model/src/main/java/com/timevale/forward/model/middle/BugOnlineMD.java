@@ -57,7 +57,7 @@ public class BugOnlineMD extends BaseMD{
     /**
      * 是否复现：0是，1否
      */
-    @FieldCompare(fieldName = "是否复现", enumClass = BugOnlineRecurrentEnum.class)
+    @FieldCompare(fieldName = "能否复现", enumClass = BugOnlineRecurrentEnum.class)
     private Integer recurrent;
 
     /**
