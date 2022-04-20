@@ -27,6 +27,9 @@ public class BizDemandVO extends ToString {
     @ApiModelProperty("需求主题")
     private String name;
 
+    @ApiModelProperty("目标客户/用户/项目")
+    private String targetCustomer;
+
     @ApiModelProperty("优先级： 0-紧急，10-高，20-中，30低")
     private Integer priority;
 

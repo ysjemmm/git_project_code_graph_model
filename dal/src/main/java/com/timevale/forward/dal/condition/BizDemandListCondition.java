@@ -27,6 +27,12 @@ public class BizDemandListCondition {
     private Long id;
 
     /**
+     * 目标客户/用户/项目
+     */
+    @WildcardEscape
+    private String targetCustomer;
+
+    /**
      * 起始时间
      */
     private Date createDateStart;

@@ -22,6 +22,11 @@ public class BizDemandListDO extends BaseDO {
     private Integer priority;
 
     /**
+     * 目标客户
+     */
+    private String targetCustomer;
+
+    /**
      * 业务域id
      */
     private String bizDomainId;

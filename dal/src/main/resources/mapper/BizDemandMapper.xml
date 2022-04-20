@@ -82,7 +82,7 @@
     </select>
 
     <select id="selectList" resultType="com.timevale.forward.dal.entity.BizDemandListDO">
-        select bd.id, bd.name, bd.dept_id, bd.status, bd.priority, bd.receive_man,  bd.receive_man_id,
+        select bd.id, bd.name, bd.dept_id, bd.status, bd.priority, bd.receive_man,  bd.receive_man_id, bd.target_customer,
                bd.plan_release_date, bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date,
                pl.id productLineId, pl.name productLineName,
                b.id bizDomainId , b.name bizDomainName
@@ -95,6 +95,9 @@
             </if>
             <if test="name!=null and name!='' ">
                 and bd.name like concat('%',#{name},'%')
+            </if>
+            <if test="targetCustomer!=null and targetCustomer!='' ">
+                and bd.target_customer like concat('%',#{targetCustomer},'%')
             </if>
             <if test="priorityList!=null and priorityList.size()>0">
                 and bd.priority in

@@ -1,5 +1,6 @@
 package com.timevale.forward.model.enums;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -7,6 +8,7 @@ import lombok.Getter;
  * @date 2021/12/15 18:54
  */
 @Getter
+@AllArgsConstructor
 public enum BizDemandReasonEnum {
     /**
      * 驳回理由
@@ -16,15 +18,11 @@ public enum BizDemandReasonEnum {
     DESCRIPTION_NOT_CLEAR(2,"需求描述不清"),
     ALREADY_SUPPORT(3,"产品已支持"),
     REPEAT_SUBMIT(4,"重复提交"),
-    ISSUER_ONLINE(5,"线上问题，请提交线上bug");
+    ISSUER_ONLINE(5,"线上问题，请提交线上bug"),
+    UNREASONABLE(6,"需求不合理");
 
     private final Integer code;
     private final String text;
-
-    BizDemandReasonEnum(Integer code, String text){
-        this.code = code;
-        this.text = text;
-    }
 
     public static String getTextByCode(Integer code){
         for (BizDemandReasonEnum e : BizDemandReasonEnum.values()){
