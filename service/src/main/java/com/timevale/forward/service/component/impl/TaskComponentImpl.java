@@ -309,11 +309,11 @@ public class TaskComponentImpl implements TaskComponent {
 
     @Override
     public void deleteTodoTask(String todoId) {
-        threadPoolTaskExecutor.execute(()->{
+        String id = LocalSessionUtils.getUserInfo().getId();
+        threadPoolTaskExecutor.execute(() -> {
             if (StringUtils.isEmpty(todoId)) {
                 return;
             }
-            String id = LocalSessionUtils.getUserInfo().getId();
             Map<String, String> map = innerUserPersonClient.getUnionIds(Lists.newArrayList(id));
             if (map.isEmpty()) {
                 log.info("删除待办时,查询用户中心所属用户无unionId");
