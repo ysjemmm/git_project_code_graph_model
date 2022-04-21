@@ -294,6 +294,9 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<ProjectDetailVO> get(Long projectId) {
         log.info("项目查看接收参数:projectId={}", projectId);
         ProjectDO projectDO = projectMapper.get(projectId);
+        if (projectDO == null) {
+            throw new BaseBizRuntimeException("该项目不存在");
+        }
         ProjectDetailVO projectDetailVO = ProjectCopier.INSTANCE.convert(projectDO);
         projectDetailVO.setStatusName(ProjectStatusEnum.getTextByCode(projectDetailVO.getStatus()));
         projectDetailVO.setPriorityName(PriorityEnum.getTextByCode(projectDetailVO.getPriority()));

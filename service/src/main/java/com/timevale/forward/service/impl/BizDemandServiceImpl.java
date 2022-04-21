@@ -240,7 +240,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     public BaseResult<BizDemandDetailVO> getBizDemandById(Long bizDemandId) {
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
         if (bizDemandDO == null) {
-            throw new BaseBizRuntimeException("不存在该业务需求");
+            throw new BaseBizRuntimeException("该业务需求不存在");
         }
 
         // 获取对应附件列表

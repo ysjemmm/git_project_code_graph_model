@@ -910,7 +910,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //校验线下bug是否存在
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
         if (bugOfflineDO == null) {
-            throw new BaseBizRuntimeException("您要查询的线下bug不存在。");
+            throw new BaseBizRuntimeException("该线下bug不存在");
         }
 
         //转化线下bug
