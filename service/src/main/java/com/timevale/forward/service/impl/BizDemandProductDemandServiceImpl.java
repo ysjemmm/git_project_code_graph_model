@@ -40,6 +40,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -172,7 +173,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                 .isDeleted(false)
                 .build());
 
-        if(list == null){
+        if(CollectionUtils.isEmpty(list)){
             throw new BaseBizRuntimeException("不存在对应的关联关系");
         }
 
