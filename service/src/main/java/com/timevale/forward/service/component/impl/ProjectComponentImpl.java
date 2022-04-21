@@ -171,7 +171,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         ProjectNodeDO writeCase = nodeMap.get(ProjectNodeEnum.WRITE_TEST_CASES.getProjectNodeName());
         ProjectNodeDO reviewCase = nodeMap.get(ProjectNodeEnum.USE_CASE_REVIEW.getProjectNodeName());
         ProjectNodeDO submitTest = nodeMap.get(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName());
-        boolean test = (review == null || review.getActualDate() != null)
+        boolean test = dev && (review == null || review.getActualDate() != null)
                 && (devStart == null || devStart.getActualDate() != null)
                 && (writeCase == null || writeCase.getActualDate() != null)
                 && (reviewCase == null || reviewCase.getActualDate() != null)
