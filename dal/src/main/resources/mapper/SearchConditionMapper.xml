@@ -2,8 +2,8 @@
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
 <mapper namespace="com.timevale.forward.dal.dao.SearchConditionMapper">
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO search_condition(model, tab_type, content, belong_man, belong_man_id, create_man_id, create_man)
-        VALUES (#{model}, #{tabType}, #{content}, #{createMan}, #{createManId}, #{createManId}, #{createMan})
+        INSERT INTO search_condition(name, model, tab_type, content, belong_man, belong_man_id, create_man_id, create_man)
+        VALUES (#{name}, #{model}, #{tabType}, #{content}, #{createMan}, #{createManId}, #{createManId}, #{createMan})
     </insert>
 
     <update id="update">
@@ -23,13 +23,13 @@
     </update>
 
     <select id="select" resultType="com.timevale.forward.dal.entity.SearchConditionDO">
-        SELECT id, model, tab_type, content, belong_man, belong_man_id
+        SELECT id, name, model, tab_type, content, belong_man, belong_man_id
         FROM search_condition
         WHERE belong_man_id = #{belongManId} AND model = #{model} AND tab_type = #{tabType} AND is_deleted = false
     </select>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.SearchConditionDO">
-        SELECT id, model, tab_type, content, belong_man, belong_man_id
+        SELECT id, name, model, tab_type, content, belong_man, belong_man_id
         FROM search_condition
         WHERE id = #{id}
     </select>
