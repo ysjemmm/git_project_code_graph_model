@@ -100,11 +100,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Value("${business}")
     private String business;
-    /**
-     * 默认经办人,来自运营支撑提报bug
-     */
-    @Value("${default.operator:shifeng;释沣-余文杰}")
-    private String defaultOperator;
 
     @Resource
     private BugOnlineProductLineComponent bugOnlineProductLineComponent;
@@ -280,11 +275,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> add(BugOnlineAddReq bugOnlineAddReq) {
         log.info("线上bug-新增:接收参数{}", bugOnlineAddReq);
-        if(StringUtils.isEmpty(bugOnlineAddReq.getSystemMenuName())){
-            String[] defaultOperators = defaultOperator.split(";");
-            bugOnlineAddReq.setOperatorId(defaultOperators[0]);
-            bugOnlineAddReq.setOperator(defaultOperators[1]);
-        }
         //将BugOnlineAddReq转化为BugOnlineDO
         BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.transfer(bugOnlineAddReq);
 
