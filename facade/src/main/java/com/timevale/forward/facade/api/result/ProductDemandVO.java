@@ -68,5 +68,6 @@ public class ProductDemandVO extends ToString {
     @ApiModelProperty("抄送人")
     private String copier;
 
-
+    @ApiModelProperty("关联任务数")
+    private Integer taskCount;
 }

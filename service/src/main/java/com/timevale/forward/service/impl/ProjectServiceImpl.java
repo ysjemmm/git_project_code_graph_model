@@ -90,6 +90,9 @@ public class ProjectServiceImpl implements ProjectService {
     private TaskProductDemandComponent taskProductDemandComponent;
 
     @Resource
+    private TaskProductDemandMapper taskProductDemandMapper;
+
+    @Resource
     private BugOfflineMapper bugOfflineMapper;
 
     @Resource
@@ -407,16 +410,31 @@ public class ProjectServiceImpl implements ProjectService {
         //产品需求
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(productDemandQueryList.getProjectId());
-        List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
-        productDemandVO.forEach(p -> {
+        List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
+
+        productDemandVOList.forEach(p -> {
             p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
             p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
         });
 
-        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
+        //查询产品需求关联任务
+        List<Long> productDemandIdList = productDemandVOList.stream().map(ProductDemandVO::getId).collect(Collectors.toList());
+        if(!CollectionUtils.isEmpty(productDemandIdList)){
+            List<TaskProductDemandDO> taskProductDemandDOList = taskProductDemandMapper.selectByProductDemandId(productDemandIdList);
+            Map<Long, List<TaskProductDemandDO>> taskProductDemandMap =
+                    taskProductDemandDOList.stream().collect(Collectors.groupingBy(TaskProductDemandDO::getProductDemandId));
+            // 填充任务数
+            for (ProductDemandVO e : productDemandVOList) {
+                List<TaskProductDemandDO> doList = taskProductDemandMap.get(e.getId());
+                int taskCount = CollectionUtils.isEmpty(doList) ? 0 : doList.size();
+                e.setTaskCount(taskCount);
+            }
+        }
 
+
+        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
-        pageQueryResult.setResultList(productDemandVO);
+        pageQueryResult.setResultList(productDemandVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);
     }
