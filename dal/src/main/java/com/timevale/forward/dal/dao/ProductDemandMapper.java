@@ -76,6 +76,15 @@ public interface ProductDemandMapper {
     int update(ProductDemandDO productDemandDO);
 
     /**
+     * 更新负责人 by id列表
+     *
+     * @param idList  id列表
+     * @param owner   负责人
+     * @param ownerId 负责人id
+     */
+    int updateOwner(@Param("idList") List<Long>idList, @Param("owner") String owner, @Param("ownerId") String ownerId);
+
+    /**
      * 查询
      * @param id id
      * @return 产品需求DO

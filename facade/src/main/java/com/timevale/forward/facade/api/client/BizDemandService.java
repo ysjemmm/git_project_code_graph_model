@@ -73,10 +73,18 @@ public interface BizDemandService {
     BaseResult<Boolean> reject(BizDemandRejectReq bizDemandRejectReq);
 
     /**
-     * 转移
+     * 转交
      *
      * @param bizDemandTransferReq 业务需求转交请求
      * @return 成功与否
      */
     BaseResult<Boolean> transfer(BizDemandTransferReq bizDemandTransferReq);
+
+    /**
+     * 批量转交
+     *
+     * @param batchTransferReq 业务需求批量转交请求
+     * @return 成功与否
+     */
+    BaseResult<Boolean> bizDemandBatchTransfer(BatchTransferReq batchTransferReq);
 }

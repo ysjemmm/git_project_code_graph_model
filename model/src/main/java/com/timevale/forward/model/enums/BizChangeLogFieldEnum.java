@@ -20,6 +20,7 @@ public enum BizChangeLogFieldEnum {
     /**
      * 产品需求
      */
+    OWNER("需求负责人"),
 
     PRODUCT_DEMAND_STATUS("产品需求状态"),
 

@@ -483,8 +483,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         String newReceiveMan = bizDemandTransferReq.getReceiveMan();
         String newReceiveManId = bizDemandTransferReq.getReceiveManId();
 
-        bizDemandDO.setReceiveMan(newReceiveMan);
-        bizDemandDO.setReceiveManId(newReceiveManId);
+        BizDemandDO newBizDemandDO = new BizDemandDO();
+        newBizDemandDO.setId(bizDemandDO.getId());
+        newBizDemandDO.setReceiveMan(newReceiveMan);
+        newBizDemandDO.setReceiveManId(newReceiveManId);
         bizDemandMapper.update(bizDemandDO);
 
         // 新旧接受人是否相同
@@ -508,6 +510,24 @@ public class BizDemandServiceImpl implements BizDemandService {
             ));
         }
 
+        return BaseResult.success(true);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> bizDemandBatchTransfer(BatchTransferReq batchTransferReq) {
+        // 参数
+        BizDemandTransferReq transferReq = new BizDemandTransferReq();
+        transferReq.setReceiveMan(batchTransferReq.getReceiveMan());
+        transferReq.setReceiveManId(batchTransferReq.getReceiveManId());
+
+        List<Long> bizDemandIdList = batchTransferReq.getIdList();
+
+        // 批量转交
+        bizDemandIdList.parallelStream().forEach(e -> {
+            transferReq.setId(e);
+            transfer(transferReq);
+        });
 
         return BaseResult.success(true);
     }

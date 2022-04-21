@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -15,9 +16,7 @@ import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
-import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
-import com.timevale.forward.facade.api.request.ProductDemandAddReq;
-import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
@@ -44,9 +43,7 @@ import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -431,6 +428,34 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         pageQueryResult.setResultList(bizDemandVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> productDemandBatchTransfer(BatchTransferReq batchTransferReq) {
+        // 参数
+        List<Long> idList = batchTransferReq.getIdList();
+        String owner = batchTransferReq.getReceiveMan();
+        String ownerId = batchTransferReq.getReceiveManId();
+
+        // 批量更新
+        if(!CollectionUtils.isEmpty(idList)){
+            // 日志
+            List<BizChangeLogDO> bizChangeLogDOList = new ArrayList<>();
+            List<ProductDemandDO> productDemandDOList = productDemandMapper.selectByIdList(idList);
+            for (ProductDemandDO e : productDemandDOList) {
+                if(Objects.equals(e.getOwner(), owner)){
+                    continue;
+                }
+                BizChangeLogDO log = productDemandLogComponent.getLog(e.getOwner(), owner, e.getId(), BizChangeLogFieldEnum.OWNER.getText(), true, ButtonActionEnum.TRANSFER.getText());
+                bizChangeLogDOList.add(log);
+            }
+            productDemandLogComponent.batchAddLog(bizChangeLogDOList);
+
+            productDemandMapper.updateOwner(idList, owner, ownerId);
+        }
+
+        return BaseResult.success(true);
     }
 
     private void checkDescLength(String desc) {

@@ -216,6 +216,16 @@
         </where>
     </update>
 
+    <update id="updateOwner">
+        UPDATE product_demand
+        SET owner = #{owner},
+            owner_id = #{ownerId}
+        WHERE id IN
+        <foreach collection="idList" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </update>
+
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
          select  a.id,a.name,a.priority,a.type,a.owner,a.owner_id,a.status,a.create_man,a.create_man_id
          ,a.create_date,a.modify_date, a.product_line_id,`desc`

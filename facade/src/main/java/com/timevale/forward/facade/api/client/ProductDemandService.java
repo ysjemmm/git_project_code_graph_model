@@ -6,6 +6,7 @@ import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
+import com.timevale.forward.facade.api.request.BatchTransferReq;
 import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
@@ -113,5 +114,13 @@ public interface ProductDemandService {
      * @return 列表
      */
     BaseResult<PageQueryResult<BizDemandVO>> linkBizDemandList(ProductBizDemandQueryList productBizDemandQueryList);
+
+    /**
+     * 产品需求-批量转交
+     *
+     * @param batchTransferReq 产品需求批量转交请求
+     * @return 成功与否
+     */
+    BaseResult<Boolean> productDemandBatchTransfer(BatchTransferReq batchTransferReq);
 
 }

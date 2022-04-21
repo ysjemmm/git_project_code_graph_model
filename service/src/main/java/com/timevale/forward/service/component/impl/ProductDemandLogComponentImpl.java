@@ -90,6 +90,25 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
         }
     }
 
+    @Override
+    public BizChangeLogDO getLog(String oldValue, String newValue, Long id, String field, Boolean active, String action) {
+        BizChangeLogDO log = createLog(id, field, oldValue, newValue, action);
+        if(active){
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
+            log.setCreateManId(userInfo.getId());
+            log.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        }else{
+            log.setCreateManId(CommonConstant.SYSTEM);
+            log.setCreateMan(CommonConstant.SYSTEM);
+        }
+        return log;
+    }
+
+    @Override
+    public void batchAddLog(List<BizChangeLogDO> bizChangeLogDOList) {
+        bizChangeLogMapper.batchInsert(bizChangeLogDOList);
+    }
+
     /**
      * 项目状态改变时引起的产品需求状态变化
      *
