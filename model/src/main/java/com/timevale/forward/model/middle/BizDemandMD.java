@@ -1,21 +1,10 @@
 package com.timevale.forward.model.middle;
 
 import com.timevale.forward.dal.annotation.FieldCompare;
-import com.timevale.forward.facade.api.request.BaseReq;
-import com.timevale.forward.facade.api.request.FileAddReq;
-import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.model.enums.BizDemandPriorityEnum;
-import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.PlanReleaseDateEnum;
 import com.timevale.forward.model.enums.YesOrNoEnum;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import java.util.List;
 
 
 /**
@@ -45,4 +34,7 @@ public class BizDemandMD extends BaseMD {
 
     @FieldCompare(fieldName = "需求描述")
     private String desc;
+
+    @FieldCompare(fieldName = "预期上线时间", enumClass = PlanReleaseDateEnum.class)
+    private Integer planReleaseDate;
 }

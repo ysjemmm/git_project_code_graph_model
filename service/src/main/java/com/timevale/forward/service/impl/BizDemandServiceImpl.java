@@ -302,6 +302,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (oldBizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
+        if (!Objects.equal(oldBizDemandDO.getPlanReleaseDate(), bizDemandModifyReq.getPlanReleaseDate())
+                && !BizDemandStatusEnum.RECEIVED.getCode().equals(oldBizDemandDO.getStatus())) {
+            throw new BaseBizRuntimeException("状态不是已接收,不能修改预期上线时间");
+        }
 
         // 判断主题是否唯一
         BizDemandDO checkUniqueName = bizDemandMapper.selectByName(bizDemandModifyReq.getName());
@@ -397,7 +401,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         );
 
         String oldReasonText = BizDemandReasonEnum.getTextByCode(oldReason);
-        if(!Objects.equal(oldReasonText, StringUtils.EMPTY)){
+        if (!Objects.equal(oldReasonText, StringUtils.EMPTY)) {
             bizDemandLogComponent.addLogWhenModifyData(
                     oldReasonText,
                     StringUtils.EMPTY,
@@ -488,7 +492,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandMapper.update(bizDemandDO);
 
         // 新旧接受人是否相同
-        if(!Objects.equal(oldReceiveMan,newReceiveMan)){
+        if (!Objects.equal(oldReceiveMan, newReceiveMan)) {
             // 日志记录
             bizDemandLogComponent.addLogWhenModifyData(
                     oldReceiveMan,

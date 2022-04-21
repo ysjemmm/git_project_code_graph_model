@@ -11,18 +11,18 @@ public enum PlanReleaseDateEnum {
     /**
      * 预期上线时间
      */
-    Q1_EARLY(0, "Q1上旬"),
-    Q1_MIDDLE(1, "Q1中旬"),
-    Q1_LATE(2, "Q1下旬"),
-    Q2_EARLY(3, "Q2上旬"),
-    Q2_MIDDLE(4, "Q2中旬"),
-    Q2_LATE(5, "Q2下旬"),
-    Q3_EARLY(6, "Q3上旬"),
-    Q3_MIDDLE(7, "Q3中旬"),
-    Q3_LATE(8, "Q3下旬"),
-    Q4_EARLY(9, "Q4上旬"),
-    Q4_MIDDLE(10, "Q4中旬"),
-    Q4_LATE(11, "Q4下旬"),
+    Q1_EARLY(0, "1月"),
+    Q1_MIDDLE(1, "2月"),
+    Q1_LATE(2, "3月"),
+    Q2_EARLY(3, "4月"),
+    Q2_MIDDLE(4, "5月"),
+    Q2_LATE(5, "6月"),
+    Q3_EARLY(6, "7月"),
+    Q3_MIDDLE(7, "8月"),
+    Q3_LATE(8, "9月"),
+    Q4_EARLY(9, "10月"),
+    Q4_MIDDLE(10, "11月"),
+    Q4_LATE(11, "12月"),
     UNABLE_EVALUATE(20, "暂时无法评估");
 
     Integer code;

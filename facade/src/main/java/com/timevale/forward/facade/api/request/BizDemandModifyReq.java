@@ -62,4 +62,8 @@ public class BizDemandModifyReq extends BaseReq {
 
     @ApiModelProperty("附件列表")
     private List<FileAddReq> fileList;
+
+    @ApiModelProperty("预期上线时间")
+    @NotNull(message = "预期上线时间不能为空")
+    private Integer planReleaseDate;
 }
