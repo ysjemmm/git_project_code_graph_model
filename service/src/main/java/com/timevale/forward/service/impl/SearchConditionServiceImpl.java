@@ -6,11 +6,14 @@ import com.timevale.forward.dal.entity.SearchConditionDO;
 import com.timevale.forward.facade.api.client.SearchConditionService;
 import com.timevale.forward.facade.api.query.SearchConditionQueryList;
 import com.timevale.forward.facade.api.request.SearchConditionAddReq;
+import com.timevale.forward.facade.api.request.SearchConditionDeleteReq;
+import com.timevale.forward.facade.api.request.SearchConditionModifyReq;
 import com.timevale.forward.facade.api.result.SearchConditionVO;
 import com.timevale.forward.service.copy.SearchConditionCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,10 +36,12 @@ public class SearchConditionServiceImpl implements SearchConditionService {
 
     @Override
     public BaseResult<List<SearchConditionVO>> list(SearchConditionQueryList searchConditionQueryList) {
+        // 参数
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         Integer model = searchConditionQueryList.getModel();
         Integer tabType = searchConditionQueryList.getTabType();
 
+        // 查询并转换
         List<SearchConditionDO> select = searchConditionMapper.select(model, tabType, userInfo.getId());
         List<SearchConditionVO> searchConditionVOList = select.stream().map(SearchConditionCopier.INSTANCE::convert).collect(Collectors.toList());
 
@@ -45,8 +50,31 @@ public class SearchConditionServiceImpl implements SearchConditionService {
 
     @Override
     public BaseResult<Boolean> add(SearchConditionAddReq searchConditionAddReq) {
+        // 转换后插入
         SearchConditionDO searchConditionDO = SearchConditionCopier.INSTANCE.convert(searchConditionAddReq);
         searchConditionMapper.insert(searchConditionDO);
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> update(SearchConditionModifyReq searchConditionModifyReq) {
+        // 转换后更新
+        SearchConditionDO searchConditionDO = SearchConditionCopier.INSTANCE.convert(searchConditionModifyReq);
+        searchConditionMapper.update(searchConditionDO);
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> delete(SearchConditionDeleteReq searchConditionDeleteReq) {
+        Long id = searchConditionDeleteReq.getId();
+
+        // 修改删除标记,更新
+        SearchConditionDO searchConditionDO = new SearchConditionDO();
+        searchConditionDO.setId(id);
+        searchConditionDO.setIsDeleted(true);
+        searchConditionMapper.update(searchConditionDO);
 
         return BaseResult.success(true);
     }

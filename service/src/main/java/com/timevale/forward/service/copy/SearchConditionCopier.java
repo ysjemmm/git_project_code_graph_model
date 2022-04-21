@@ -2,6 +2,7 @@ package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.entity.SearchConditionDO;
 import com.timevale.forward.facade.api.request.SearchConditionAddReq;
+import com.timevale.forward.facade.api.request.SearchConditionModifyReq;
 import com.timevale.forward.facade.api.result.SearchConditionVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -22,6 +23,14 @@ public interface SearchConditionCopier {
      * @param searchConditionAddReq 搜索条件添加请求
      */
     SearchConditionDO convert(SearchConditionAddReq searchConditionAddReq);
+
+    /**
+     * 转换
+     *
+     * @param searchConditionModifyReq 搜索条件修改请求
+     */
+    SearchConditionDO convert(SearchConditionModifyReq searchConditionModifyReq);
+
 
     /**
      * 转换

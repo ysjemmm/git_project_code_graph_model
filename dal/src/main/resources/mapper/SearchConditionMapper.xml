@@ -3,12 +3,34 @@
 <mapper namespace="com.timevale.forward.dal.dao.SearchConditionMapper">
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO search_condition(model, tab_type, content, belong_man, belong_man_id, create_man_id, create_man)
-        VALUES (#{model}, #{tabType}, #{content}, #{belongMan}, #{belongManId}, #{createManId}, #{createMan})
+        VALUES (#{model}, #{tabType}, #{content}, #{createMan}, #{createManId}, #{createManId}, #{createMan})
     </insert>
+
+    <update id="update">
+        UPDATE search_condition
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="content != null and content != ''">
+                content = #{content},
+            </if>
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
 
     <select id="select" resultType="com.timevale.forward.dal.entity.SearchConditionDO">
         SELECT id, model, tab_type, content, belong_man, belong_man_id
         FROM search_condition
         WHERE belong_man_id = #{belongManId} AND model = #{model} AND tab_type = #{tabType} AND is_deleted = false
+    </select>
+
+    <select id="selectById" resultType="com.timevale.forward.dal.entity.SearchConditionDO">
+        SELECT id, model, tab_type, content, belong_man, belong_man_id
+        FROM search_condition
+        WHERE id = #{id}
     </select>
 </mapper>

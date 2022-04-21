@@ -20,6 +20,20 @@ public interface SearchConditionMapper {
     int insert(SearchConditionDO searchConditionDO);
 
     /**
+     * 查询 by id
+     *
+     * @param id id
+     */
+    SearchConditionDO selectById(@Param("id") Long id);
+
+    /**
+     * 更新
+     *
+     * @param searchConditionDO 搜索条件DO
+     */
+    int update(SearchConditionDO searchConditionDO);
+
+    /**
      * 查询搜索条件
      *
      * @param model    模型
