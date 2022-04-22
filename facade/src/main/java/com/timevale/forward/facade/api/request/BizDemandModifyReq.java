@@ -65,4 +65,10 @@ public class BizDemandModifyReq extends BaseReq {
 
     @ApiModelProperty("预期上线时间")
     private Integer planReleaseDate;
+
+    @ApiModelProperty("需求提交人")
+    private String createMan;
+
+    @ApiModelProperty("需求提交人id")
+    private String createManId;
 }

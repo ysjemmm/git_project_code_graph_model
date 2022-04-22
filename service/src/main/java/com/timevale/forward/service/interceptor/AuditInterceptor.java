@@ -27,10 +27,15 @@ import java.util.*;
 public class AuditInterceptor implements Interceptor {
 
     private static final Set<String> FILTER_METHOD = new HashSet<>();
+    private static final Set<String> SPECIAL_METHOD = new HashSet<>();
 
     static {
         FILTER_METHOD.add("com.timevale.forward.dal.dao.BizChangeLogMapper.insert");
         FILTER_METHOD.add("com.timevale.forward.dal.dao.BizChangeLogMapper.batchInsert");
+    }
+
+    static {
+        SPECIAL_METHOD.add("com.timevale.forward.dal.dao.BizDemandMapper.insert");
     }
 
     @Override
@@ -45,18 +50,26 @@ public class AuditInterceptor implements Interceptor {
         // 获取对应sql属性
         MappedStatement mappedStatement = (MappedStatement) invocation.getArgs()[0];
         SqlCommandType sqlCommandType = mappedStatement.getSqlCommandType();
+        String mappedStatementId = mappedStatement.getId();
 
-        if(FILTER_METHOD.contains(mappedStatement.getId())){
-            // 填充字段,日志操作人单独赋值为SYSTEM-SYSTEM
+        // 填充字段,日志操作人单独赋值为SYSTEM-SYSTEM
+        if(FILTER_METHOD.contains(mappedStatementId)){
             return invocation.proceed();
         }
+
         // 根据sql类型进行审计填充
         String id = userInfo.getId();
         String name = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
 
         if (sqlCommandType == SqlCommandType.INSERT) {
-            setProperty(parameter, AuditEnum.CREATE_MAN.getText(), name);
-            setProperty(parameter, AuditEnum.CREATE_MAN_ID.getText(), id);
+            // 日志特殊判断
+            if(SPECIAL_METHOD.contains(mappedStatementId)){
+                setProperty(parameter, AuditEnum.AUDIT_CREATE_MAN.getText(), name);
+                setProperty(parameter, AuditEnum.AUDIT_CREATE_MAN_ID.getText(), id);
+            }else{
+                setProperty(parameter, AuditEnum.CREATE_MAN.getText(), name);
+                setProperty(parameter, AuditEnum.CREATE_MAN_ID.getText(), id);
+            }
         } else {
             setProperty(parameter, AuditEnum.MODIFY_MAN.getText(), name);
             setProperty(parameter, AuditEnum.MODIFY_MAN_ID.getText(), id);
@@ -98,7 +111,12 @@ public class AuditInterceptor implements Interceptor {
         // 修改人
         MODIFY_MAN("modifyMan"),
         // 修改人Id
-        MODIFY_MAN_ID("modifyManId");
+        MODIFY_MAN_ID("modifyManId"),
+
+        // 审计创建人
+        AUDIT_CREATE_MAN("auditCreateMan"),
+        // 审计创建人id
+        AUDIT_CREATE_MAN_ID("auditCreateManId");
 
         private final String text;
 

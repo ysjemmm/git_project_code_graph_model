@@ -4,62 +4,71 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into biz_demand (name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status,
-                                priority, receive_man, receive_man_id, create_man_id, create_man)
+                                priority, receive_man, receive_man_id, create_man_id, create_man, audit_create_man_id, audit_create_man)
         values (#{name}, #{productLineId}, #{dataIndicators}, #{targetCustomer}, #{createCustomer}, #{deptId}, #{desc}, #{status},
-                #{priority}, #{receiveMan}, #{receiveManId}, #{createManId}, #{createMan})
+                #{priority}, #{receiveMan}, #{receiveManId}, #{createManId}, #{createMan}, #{auditCreateManId}, #{auditCreateMan})
     </insert>
 
     <update id="update">
         update biz_demand
-        set
-        <if test="name!=null  and name!='' ">
-            name = #{name},
-        </if>
-        <if test="productLineId!=null">
-            product_line_id = #{productLineId},
-        </if>
-        <if test="dataIndicators!=null">
-            data_indicators = #{dataIndicators},
-        </if>
-        <if test="targetCustomer!=null and targetCustomer!='' ">
-            target_customer = #{targetCustomer},
-        </if>
-        <if test="createCustomer!=null">
-            create_customer = #{createCustomer},
-        </if>
-        <if test="deptId!=null">
-            dept_id = #{deptId},
-        </if>
-        <if test="desc!=null">
-            `desc` = #{desc},
-        </if>
-        <if test="status!=null">
-            status = #{status},
-        </if>
-        <if test="priority!=null">
-            priority = #{priority},
-        </if>
-        <if test="receiveMan!=null">
-            receive_man = #{receiveMan},
-        </if>
-        <if test="receiveManId!=null">
-            receive_man_id = #{receiveManId},
-        </if>
-        <if test="reason!=null">
-            reason = #{reason},
-        </if>
-        <if test="planReleaseDate!=null">
-            <choose>
-                <when test="planReleaseDate lt 0">
-                    plan_release_date = null,
-                </when>
-                <otherwise>
-                    plan_release_date = #{planReleaseDate},
-                </otherwise>
-            </choose>
-        </if>
-        modify_man_id = #{modifyManId},
-        modify_man = #{modifyMan}
+        <set>
+            <if test="name!=null  and name!='' ">
+                name = #{name},
+            </if>
+            <if test="productLineId!=null">
+                product_line_id = #{productLineId},
+            </if>
+            <if test="dataIndicators!=null">
+                data_indicators = #{dataIndicators},
+            </if>
+            <if test="targetCustomer!=null and targetCustomer!='' ">
+                target_customer = #{targetCustomer},
+            </if>
+            <if test="createCustomer!=null">
+                create_customer = #{createCustomer},
+            </if>
+            <if test="deptId!=null">
+                dept_id = #{deptId},
+            </if>
+            <if test="desc!=null">
+                `desc` = #{desc},
+            </if>
+            <if test="status!=null">
+                status = #{status},
+            </if>
+            <if test="priority!=null">
+                priority = #{priority},
+            </if>
+            <if test="receiveMan!=null">
+                receive_man = #{receiveMan},
+            </if>
+            <if test="receiveManId!=null">
+                receive_man_id = #{receiveManId},
+            </if>
+            <if test="reason!=null">
+                reason = #{reason},
+            </if>
+            <if test="createMan != null and createMan != ''">
+                create_man = #{createMan},
+            </if>
+            <if test="createManId != null and createManId != ''">
+                create_man_id = #{createManId},
+            </if>
+            <if test="planReleaseDate!=null">
+                <choose>
+                    <when test="planReleaseDate lt 0">
+                        plan_release_date = null,
+                    </when>
+                    <otherwise>
+                        plan_release_date = #{planReleaseDate},
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="true">
+                modify_man_id = #{modifyManId},
+                modify_man = #{modifyMan},
+            </if>
+        </set>
         where id = #{id}
     </update>
 
