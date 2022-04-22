@@ -83,8 +83,16 @@ public interface BizDemandService {
     /**
      * 批量转交
      *
-     * @param batchTransferReq 业务需求批量转交请求
+     * @param batchTransferReq 业务需求批量转交请求 - 接收人
      * @return 成功与否
      */
-    BaseResult<Boolean> bizDemandBatchTransfer(BatchTransferReq batchTransferReq);
+    BaseResult<Boolean> bizDemandBatchTransferReceiveMan(BatchTransferReq batchTransferReq);
+
+    /**
+     * 批量转交
+     *
+     * @param batchTransferReq 业务需求批量转交请求 - 提交人
+     * @return 成功与否
+     */
+    BaseResult<Boolean> bizDemandBatchTransferCreateMan(BatchTransferReq batchTransferReq);
 }

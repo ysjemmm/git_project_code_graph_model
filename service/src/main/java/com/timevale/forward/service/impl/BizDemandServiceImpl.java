@@ -519,7 +519,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> bizDemandBatchTransfer(BatchTransferReq batchTransferReq) {
+    public BaseResult<Boolean> bizDemandBatchTransferReceiveMan(BatchTransferReq batchTransferReq) {
         // 参数
         BizDemandTransferReq transferReq = new BizDemandTransferReq();
         transferReq.setReceiveMan(batchTransferReq.getReceiveMan());
@@ -532,6 +532,12 @@ public class BizDemandServiceImpl implements BizDemandService {
             transferReq.setId(e);
             transfer(transferReq);
         });
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> bizDemandBatchTransferCreateMan(BatchTransferReq batchTransferReq) {
 
         return BaseResult.success(true);
     }

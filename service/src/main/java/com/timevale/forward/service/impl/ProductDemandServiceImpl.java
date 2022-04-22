@@ -432,7 +432,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> productDemandBatchTransfer(BatchTransferReq batchTransferReq) {
+    public BaseResult<Boolean> productDemandBatchTransferReceiveMan(BatchTransferReq batchTransferReq) {
         // 参数
         List<Long> idList = batchTransferReq.getIdList();
         String owner = batchTransferReq.getReceiveMan();
@@ -454,6 +454,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
             productDemandMapper.updateOwner(idList, owner, ownerId);
         }
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> productDemandBatchTransferCreateMan(BatchTransferReq batchTransferReq) {
 
         return BaseResult.success(true);
     }
