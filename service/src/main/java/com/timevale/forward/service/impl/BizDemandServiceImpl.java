@@ -392,16 +392,18 @@ public class BizDemandServiceImpl implements BizDemandService {
                 true,
                 ButtonActionEnum.RECEIVE.getText());
 
-        bizDemandLogComponent.addLogWhenModifyData(
-                PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
-                PlanReleaseDateEnum.getTextByCode(planReleaseDate),
-                bizDemandDO.getId(),
-                BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
-                true
-        );
+        if(!Objects.equal(oldPlanReleaseDate, planReleaseDate)){
+            bizDemandLogComponent.addLogWhenModifyData(
+                    PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
+                    PlanReleaseDateEnum.getTextByCode(planReleaseDate),
+                    bizDemandDO.getId(),
+                    BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
+                    true
+            );
+        }
 
         String oldReasonText = BizDemandReasonEnum.getTextByCode(oldReason);
-        if (!Objects.equal(oldReasonText, StringUtils.EMPTY)) {
+        if (StringUtils.isNotEmpty(oldReasonText)) {
             bizDemandLogComponent.addLogWhenModifyData(
                     oldReasonText,
                     StringUtils.EMPTY,
@@ -455,13 +457,16 @@ public class BizDemandServiceImpl implements BizDemandService {
                 true,
                 ButtonActionEnum.REJECT.getText());
 
-        bizDemandLogComponent.addLogWhenModifyData(
-                PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
-                StringUtils.EMPTY,
-                bizDemandId,
-                BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
-                false
-        );
+        String oldPlanReleaseDateTxt = PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate);
+        if(StringUtils.isNotEmpty(oldPlanReleaseDateTxt)){
+            bizDemandLogComponent.addLogWhenModifyData(
+                    oldPlanReleaseDateTxt,
+                    StringUtils.EMPTY,
+                    bizDemandId,
+                    BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
+                    false
+            );
+        }
 
         bizDemandLogComponent.addLogWhenModifyData(
                 StringUtils.EMPTY,
