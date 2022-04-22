@@ -37,6 +37,7 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -183,7 +184,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                 .isDeleted(false)
                 .build());
 
-        if(list == null){
+        if(CollectionUtils.isEmpty(list)){
             throw new BaseBizRuntimeException("不存在对应的关联关系");
         }
 
@@ -279,7 +280,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         // 仅展示自己及其下属负责的产品需求
         List<String> allMyStaffWithSelfList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
         Set<String> ownerIdSet = new HashSet<>(condition.getOwnerIdList());
-        if(!ownerIdSet.isEmpty()){
+        if(!CollectionUtils.isEmpty(ownerIdSet)){
             allMyStaffWithSelfList = allMyStaffWithSelfList.stream().filter(ownerIdSet::contains).collect(Collectors.toList());
             if(allMyStaffWithSelfList.isEmpty()){
                 return BaseResult.success(ResultUtil.pageEmpty());

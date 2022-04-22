@@ -32,6 +32,7 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -83,6 +84,9 @@ public class TaskComponentImpl implements TaskComponent {
 
     @Resource
     private PersonComponent personComponent;
+
+    @Resource
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     public static final String TITLE = "您收到了一条任务：%s";
 
@@ -305,21 +309,23 @@ public class TaskComponentImpl implements TaskComponent {
 
     @Override
     public void deleteTodoTask(String todoId) {
-        if (StringUtils.isEmpty(todoId)) {
-            return;
-        }
         String id = LocalSessionUtils.getUserInfo().getId();
-        Map<String, String> map = innerUserPersonClient.getUnionIds(com.google.common.collect.Lists.newArrayList(id));
-        if (map.isEmpty()) {
-            log.info("删除待办时,查询用户中心所属用户无unionId");
-            return;
-        }
-        DeleteTodoTaskMsg deleteTodoTaskMsg = DeleteTodoTaskMsg.builder()
-                .recordId(todoId)
-                .unionId(map.get(id))
-                .build();
-        dingWorkRecordClient.deleteTask(deleteTodoTaskMsg);
-        log.info("删除待办,deleteTodoTaskMsg:{}", deleteTodoTaskMsg);
+        threadPoolTaskExecutor.execute(() -> {
+            if (StringUtils.isEmpty(todoId)) {
+                return;
+            }
+            Map<String, String> map = innerUserPersonClient.getUnionIds(Lists.newArrayList(id));
+            if (map.isEmpty()) {
+                log.info("删除待办时,查询用户中心所属用户无unionId");
+                return;
+            }
+            DeleteTodoTaskMsg deleteTodoTaskMsg = DeleteTodoTaskMsg.builder()
+                    .recordId(todoId)
+                    .unionId(map.get(id))
+                    .build();
+            dingWorkRecordClient.deleteTask(deleteTodoTaskMsg);
+            log.info("删除待办,deleteTodoTaskMsg:{}", deleteTodoTaskMsg);
+        });
     }
 
 

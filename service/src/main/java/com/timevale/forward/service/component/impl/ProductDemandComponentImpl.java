@@ -18,6 +18,7 @@ import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -85,6 +86,9 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     @Override
     public ProductDemandDetailVO get(Long id) {
         ProductDemandDO demandDO = productDemandMapper.get(id);
+        if (demandDO == null) {
+            throw new BaseBizRuntimeException("该产品需求不存在");
+        }
         ProductDemandDetailVO demandDetailVO = ProductDemandCopier.INSTANCE.convert(demandDO);
         demandDetailVO.setStatusName(ProductDemandStatusEnum.getTextByCode(demandDetailVO.getStatus()));
         demandDetailVO.setPriorityName(PriorityEnum.getTextByCode(demandDetailVO.getPriority()));

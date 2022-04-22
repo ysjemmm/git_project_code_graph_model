@@ -231,7 +231,7 @@ public class TaskServiceImpl implements TaskService {
         TaskCondition condition = TaskCondition.builder().id(taskId).build();
         TaskDO taskDO = taskMapper.get(condition);
         if (taskDO == null) {
-            throw new BaseBizRuntimeException("找不到该任务");
+            throw new BaseBizRuntimeException("该任务不存在");
         }
         TaskDetailVO taskDetailVO = TaskCopier.INSTANCE.convert(taskDO);
         taskDetailVO.setStatusName(TaskStatusEnum.getTextByCode(taskDetailVO.getStatus()));
