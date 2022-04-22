@@ -28,9 +28,9 @@ public enum BizChangeLogFieldEnum {
     /**
      * 业务需求
      */
-    BIZ_DEMAND_STATUS("业务需求状态"),
+    BIZ_DEMAND_STATUS("需求解决状态"),
 
-    RECEIVE_MAN("接收人"),
+    RECEIVE_MAN("需求接收人"),
 
     REASON("驳回原因"),
 
@@ -38,7 +38,7 @@ public enum BizChangeLogFieldEnum {
 
     PROJECT_RELEASE_DATE("项目发布时间"),
 
-    DEPARTMENT("部门"),
+    DEPARTMENT("需求部门"),
 
     /**
      * 其他
