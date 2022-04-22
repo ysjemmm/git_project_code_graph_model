@@ -21,6 +21,7 @@ public class CommentMsgEvent extends MessageEvent {
     private final String name;
     private final String content;
 
+    private static final String COMMENT_ANCHOR = "&anchor=comment";
     private static final String COMMENT_MSG = "### %s  \n  **%s**评论了%s **%s**  \n  > %s  \n\n  ***  \n  [查看详情](%s)";
 
     public CommentMsgEvent(Object source, Long mainId, String operator, List<String> receivers, String type, String name, String content) {
@@ -52,6 +53,10 @@ public class CommentMsgEvent extends MessageEvent {
         } else{
             singleUrl = domainName + String.format(PARAM, TabEnum.TROUBLE_MANAGEMENT.getText(), mainId);
         }
+
+        // 评论添加定位
+        singleUrl += COMMENT_ANCHOR;
+
         String markdown = String.format(COMMENT_MSG, title, operator, type, name, content, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
