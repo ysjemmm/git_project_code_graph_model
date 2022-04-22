@@ -11,9 +11,7 @@ import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.plugin.*;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * @author by YangXu
@@ -28,8 +26,12 @@ import java.util.Properties;
 })
 public class AuditInterceptor implements Interceptor {
 
-    private static final List<String> FILTER_METHD= Arrays.asList("com.timevale.forward.dal.dao.BizChangeLogMapper.batchInsert"
-            ,"com.timevale.forward.dal.dao.BizChangeLogMapper.insert");
+    private static final Set<String> FILTER_METHOD = new HashSet<>();
+
+    static {
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.BizChangeLogMapper.insert");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.BizChangeLogMapper.batchInsert");
+    }
 
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
@@ -44,7 +46,7 @@ public class AuditInterceptor implements Interceptor {
         MappedStatement mappedStatement = (MappedStatement) invocation.getArgs()[0];
         SqlCommandType sqlCommandType = mappedStatement.getSqlCommandType();
 
-        if(FILTER_METHD.contains(mappedStatement.getId())){
+        if(FILTER_METHOD.contains(mappedStatement.getId())){
             // 填充字段,日志操作人单独赋值为SYSTEM-SYSTEM
             return invocation.proceed();
         }

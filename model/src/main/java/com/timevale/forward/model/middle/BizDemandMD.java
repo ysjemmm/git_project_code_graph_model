@@ -26,7 +26,7 @@ public class BizDemandMD extends BaseMD {
     @FieldCompare(fieldName = "目标客户/用户/项目")
     private String targetCustomer;
 
-    @FieldCompare(fieldName = "接收人")
+    @FieldCompare(fieldName = "需求接收人")
     private String receiveMan;
 
     @FieldCompare(fieldName = "共创用户", enumClass = YesOrNoEnum.class)
