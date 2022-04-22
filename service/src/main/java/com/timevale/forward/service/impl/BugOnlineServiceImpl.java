@@ -281,7 +281,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> add(BugOnlineAddReq bugOnlineAddReq) {
         log.info("线上bug-新增:接收参数{}", bugOnlineAddReq);
-        if(!StringUtils.isEmpty(bugOnlineAddReq.getSystemMenuName())){
+        if(Objects.equals(bugOnlineAddReq.getSource(),"support")){
             log.info("默认经办人:{}", defaultOperator);
             String[] defaultOperators = defaultOperator.split(";");
             bugOnlineAddReq.setOperatorId(defaultOperators[0]);
