@@ -33,6 +33,8 @@ public enum BizChangeLogFieldEnum {
 
     RECEIVE_MAN("需求接收人"),
 
+    CREATE_MAN("需求提交人"),
+
     REASON("驳回原因"),
 
     PLAN_RELEASE_DATE("预期上线时间"),

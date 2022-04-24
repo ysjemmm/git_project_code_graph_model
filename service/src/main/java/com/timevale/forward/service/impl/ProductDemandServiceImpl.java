@@ -439,7 +439,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         String ownerId = batchTransferReq.getReceiveManId();
 
         // 批量更新
-        if(!CollectionUtils.isEmpty(idList)){
+        if(CollectionUtils.isNotEmpty(idList)){
             // 日志
             List<BizChangeLogDO> bizChangeLogDOList = new ArrayList<>();
             List<ProductDemandDO> productDemandDOList = productDemandMapper.selectByIdList(idList);
@@ -458,11 +458,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         return BaseResult.success(true);
     }
 
-    @Override
-    public BaseResult<Boolean> productDemandBatchTransferCreateMan(BatchTransferReq batchTransferReq) {
-
-        return BaseResult.success(true);
-    }
 
     private void checkDescLength(String desc) {
         if (StringUtils.isNotEmpty(desc) && desc.getBytes().length * 0.75 > MAX_LENGTH) {

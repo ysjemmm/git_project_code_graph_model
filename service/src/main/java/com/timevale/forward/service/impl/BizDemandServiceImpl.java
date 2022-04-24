@@ -537,7 +537,30 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> bizDemandBatchTransferCreateMan(BatchTransferReq batchTransferReq) {
+        // 参数
+        String createMan = batchTransferReq.getReceiveMan();
+        String createManId = batchTransferReq.getReceiveMan();
+
+        List<Long> bizDemandIdList = batchTransferReq.getIdList();
+
+        if(CollectionUtils.isNotEmpty(bizDemandIdList)){
+            // 日志处理
+            List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(bizDemandIdList);
+            for (BizDemandDO e : bizDemandDOList) {
+                bizDemandLogComponent.addLogWhenModifyData(
+                        e.getCreateMan(),
+                        createMan,
+                        e.getId(),
+                        BizChangeLogFieldEnum.CREATE_MAN.getText(),
+                        true
+                );
+            }
+            // 批量转交
+            bizDemandMapper.updateCreateMan(bizDemandIdList, createMan, createManId);
+        }
+
 
         return BaseResult.success(true);
     }

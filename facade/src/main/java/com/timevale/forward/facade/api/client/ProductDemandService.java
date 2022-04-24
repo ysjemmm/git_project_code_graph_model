@@ -122,12 +122,4 @@ public interface ProductDemandService {
      * @return 成功与否
      */
     BaseResult<Boolean> productDemandBatchTransferReceiveMan(BatchTransferReq batchTransferReq);
-
-    /**
-     * 产品需求-批量转交-提交人
-     *
-     * @param batchTransferReq 产品需求批量转交请求
-     * @return 成功与否
-     */
-    BaseResult<Boolean> productDemandBatchTransferCreateMan(BatchTransferReq batchTransferReq);
 }

@@ -80,6 +80,15 @@ public interface BizDemandMapper {
     int updateReason(@Param("bizDemandId")Long bizDemandId, @Param("reason") Integer reason);
 
     /**
+     * 更新业务需求
+     *
+     * @param idList      业务需求id 列表
+     * @param createMan   提交人
+     * @param createManId 提交人id
+     */
+    int updateCreateMan(@Param("idList") List<Long> idList, @Param("createMan") String createMan,@Param("createManId") String createManId);
+
+    /**
      * 选择id获取对应业务需求信息
      *
      * @param ids id
