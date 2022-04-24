@@ -27,6 +27,6 @@ public class ProjectRiskModifyReq extends BaseReq{
     private String name;
 
     @NotNull(message = "风险状态不能为空")
-    @ApiModelProperty("状态")
+    @ApiModelProperty("状态: -1 作废 0 待处理, 1 已处理")
     private Integer state;
 }

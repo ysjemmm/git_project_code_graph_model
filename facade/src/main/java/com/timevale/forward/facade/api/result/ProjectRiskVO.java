@@ -40,7 +40,7 @@ public class ProjectRiskVO extends ToString {
     @ApiModelProperty("风险标志")
     private String sign;
 
-    @ApiModelProperty("状态：0 待处理, 1 已处理")
+    @ApiModelProperty("状态：-1 作废 0 待处理, 1 已处理")
     private Integer state;
 
     @ApiModelProperty("状态描述")
