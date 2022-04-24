@@ -105,7 +105,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Resource
     private ProjectLogComponent projectLogComponent;
 
-    private static final Integer MAX_LENGTH = 2 * 1000;
+    private static final Integer MAX_LENGTH = 20 * 1000;
 
 
     @Override
