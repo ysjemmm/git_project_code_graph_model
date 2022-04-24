@@ -1,0 +1,59 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.ProjectRiskMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO project_risk(project_id, type, name, sign, submit_man, submit_man_id, create_man_id, create_man)
+        VALUES (#{projectId}, #{type}, #{name}, #{sign}, #{createMan}, #{createManId}, #{createManId}, #{createMan})
+    </insert>
+
+    <insert id="batchInsert">
+        INSERT INTO project_risk(project_id, type, name, sign, submit_man, submit_man_id, create_man_id, create_man)
+        VALUES
+        <foreach collection = "projectRiskDOList" item = "item" separator = ",">
+            (#{item.projectId},#{item.type},#{item.name},#{item.sign},#{item.submitMan},#{item.submitManId},#{item.createManId},#{item.createMan})
+        </foreach>
+    </insert>
+
+    <update id="update">
+        UPDATE project_risk
+        <set>
+            <if test="sign != null and sign != ''">sign = #{sign},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="state != null">state = #{state},</if>
+            <if test="modifyDate != null">modify_date = #{modifyDate},</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <update id="updateState">
+        UPDATE project_risk
+        SET state = #{state}
+        WHERE id IN
+        <foreach collection = "idList" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
+        SELECT id, project_id, type, name, sign, state, submit_man, submit_man_id, create_date, modify_date
+        FROM project_risk
+        WHERE project_id = #{projectId} AND is_deleted = false
+    </select>
+
+    <select id="selectByState" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
+        SELECT id, project_id, type, name
+        FROM project_risk
+        WHERE state = #{state} AND is_deleted = false
+    </select>
+
+    <select id="selectById" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
+        SELECT id, project_id, type, name, sign, state, submit_man, submit_man_id, create_date, modify_date
+        FROM project_risk
+        WHERE id = #{id}
+    </select>
+
+
+</mapper>

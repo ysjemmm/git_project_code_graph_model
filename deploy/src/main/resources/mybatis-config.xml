@@ -77,5 +77,6 @@
         <mapper resource="mapper/BugStatusOperatorMapper.xml"/>
         <mapper resource="mapper/BizChangeLogMapper.xml"/>
         <mapper resource="mapper/SearchConditionMapper.xml"/>
+        <mapper resource="mapper/ProjectRiskMapper.xml"/>
     </mappers>
 </configuration>

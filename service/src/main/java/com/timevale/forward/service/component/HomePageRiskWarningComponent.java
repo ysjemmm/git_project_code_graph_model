@@ -17,4 +17,11 @@ public interface HomePageRiskWarningComponent {
      * @return 列表
      */
     List<HomePageRiskWarningDTO> getRiskWarning(HomePageBaseReq homePageBaseReq);
+
+    /**
+     * 查询全部风险预警
+     *
+     * @return 列表
+     */
+    List<HomePageRiskWarningDTO> getRiskWarningAll();
 }

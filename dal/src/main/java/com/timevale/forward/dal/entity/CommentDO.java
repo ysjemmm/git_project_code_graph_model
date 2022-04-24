@@ -1,6 +1,5 @@
 package com.timevale.forward.dal.entity;
 
-import com.timevale.mandarin.common.result.ToString;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

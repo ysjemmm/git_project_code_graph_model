@@ -16,7 +16,10 @@ import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author by YangXu
@@ -53,6 +56,9 @@ public class HomePageRiskWarningTaskComponentImpl extends BaseDistributeClientIm
                 .distributeConfigVO(distributeConfig.getRiskWarningTask())
                 .build();
 
-        return doGet(params);
+        // 去重返回
+        Set<HomePageRiskWarningTaskDTO> resultSet = new HashSet<>(doGet(params));
+
+        return new ArrayList<>(resultSet);
     }
 }

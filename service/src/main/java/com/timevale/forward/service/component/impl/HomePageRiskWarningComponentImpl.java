@@ -20,7 +20,10 @@ import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -86,5 +89,30 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
         }
 
         return result;
+    }
+
+    @Override
+    public List<HomePageRiskWarningDTO> getRiskWarningAll() {
+        Set<HomePageRiskWarningDTO> resultSet = new HashSet<>();
+
+        ParamHelper paramHelper = ParamHelper.newInstance()
+                .offset(0)
+                .page(Integer.MAX_VALUE)
+                .equals("user_id", "");
+
+        DistributePageQueryVO paramQA = DistributePageQueryVO.builder()
+                .params(paramHelper.params())
+                .distributeConfigVO(distributeConfig.getRiskWarningQA())
+                .build();
+        DistributePageQueryVO paramRD = DistributePageQueryVO.builder()
+                .params(paramHelper.params())
+                .distributeConfigVO(distributeConfig.getRiskWarningQA())
+                .build();
+
+        resultSet.addAll(doGet(paramQA));
+        resultSet.addAll(doGet(paramRD));
+
+        // 去重返回
+        return new ArrayList<>(resultSet);
     }
 }

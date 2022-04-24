@@ -184,18 +184,15 @@ public class HomePageServiceImpl implements HomePageService {
     @Override
     public BaseResult<List<HomePageRiskWarningVO>> getRiskWarning(HomePageBaseReq homePageBaseReq) {
         // 查询数据，同时转换为Set去重
-        Set<HomePageRiskWarningDTO> riskWarningDTOSet =
-                Sets.newHashSet(homePageRiskWarningComponent.getRiskWarning(homePageBaseReq));
-        Set<HomePageRiskWarningTaskDTO> riskWarningTaskDTOSet =
-                Sets.newHashSet(homePageRiskWarningTaskComponent.getRiskWarningTask(homePageBaseReq));
-        Set<HomePageRiskWarningSubmitTestDTO> riskWarningSubmitTestDTOSet =
-                Sets.newHashSet(homePageRiskWarningSubmitTestComponent.getRiskWarningSubmitTest(homePageBaseReq));
+        List<HomePageRiskWarningDTO> riskWarningDTOList = homePageRiskWarningComponent.getRiskWarning(homePageBaseReq);
+        List<HomePageRiskWarningTaskDTO> warningTaskDTOList = homePageRiskWarningTaskComponent.getRiskWarningTask(homePageBaseReq);
+        List<HomePageRiskWarningSubmitTestDTO> submitTestDTOList = homePageRiskWarningSubmitTestComponent.getRiskWarningSubmitTest(homePageBaseReq);
 
         // 查询结果中所有的项目id
         Set<Long> projectIdSet = Sets.newHashSet();
-        projectIdSet.addAll(riskWarningDTOSet.stream().map(HomePageRiskWarningDTO::getProjectId).collect(Collectors.toSet()));
-        projectIdSet.addAll(riskWarningTaskDTOSet.stream().map(HomePageRiskWarningTaskDTO::getProjectId).collect(Collectors.toSet()));
-        projectIdSet.addAll(riskWarningSubmitTestDTOSet.stream().map(HomePageRiskWarningSubmitTestDTO::getProjectId).collect(Collectors.toSet()));
+        projectIdSet.addAll(riskWarningDTOList.stream().map(HomePageRiskWarningDTO::getProjectId).collect(Collectors.toSet()));
+        projectIdSet.addAll(warningTaskDTOList.stream().map(HomePageRiskWarningTaskDTO::getProjectId).collect(Collectors.toSet()));
+        projectIdSet.addAll(submitTestDTOList.stream().map(HomePageRiskWarningSubmitTestDTO::getProjectId).collect(Collectors.toSet()));
 
         // 初始化结果集
         Map<Long, HomePageRiskWarningVO> resultMap = Maps.newHashMap();
@@ -207,11 +204,11 @@ public class HomePageServiceImpl implements HomePageService {
         });
 
         // 按项目id分类
-        Map<Long, List<HomePageRiskWarningDTO>> riskWarningGroup = riskWarningDTOSet.stream()
+        Map<Long, List<HomePageRiskWarningDTO>> riskWarningGroup = riskWarningDTOList.stream()
                 .collect(Collectors.groupingBy(HomePageRiskWarningDTO::getProjectId));
-        Map<Long, List<HomePageRiskWarningTaskDTO>> riskWarningTaskGroup = riskWarningTaskDTOSet.stream()
+        Map<Long, List<HomePageRiskWarningTaskDTO>> riskWarningTaskGroup = warningTaskDTOList.stream()
                 .collect(Collectors.groupingBy(HomePageRiskWarningTaskDTO::getProjectId));
-        Map<Long, List<HomePageRiskWarningSubmitTestDTO>> riskWarningSubmitTestGroup = riskWarningSubmitTestDTOSet.stream()
+        Map<Long, List<HomePageRiskWarningSubmitTestDTO>> riskWarningSubmitTestGroup = submitTestDTOList.stream()
                 .collect(Collectors.groupingBy(HomePageRiskWarningSubmitTestDTO::getProjectId));
 
         // 节点排序
