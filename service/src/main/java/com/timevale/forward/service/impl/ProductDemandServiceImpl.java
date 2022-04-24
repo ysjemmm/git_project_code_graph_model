@@ -435,7 +435,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     private void checkDescLength(String desc) {
         if (StringUtils.isNotEmpty(desc) && desc.getBytes().length > MAX_LENGTH) {
-            throw new BaseBizRuntimeException("需求描述过大,请重新输入");
+            throw new BaseBizRuntimeException("需求描述字数过大,请重新输入");
         }
     }
 }
