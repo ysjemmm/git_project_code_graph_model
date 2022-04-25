@@ -15,7 +15,7 @@ import javax.validation.constraints.NotNull;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("项目风险新增请求")
+@ApiModel("项目风险说明新增请求")
 public class ProjectRiskExplanationAddReq extends BaseReq{
 
     @NotNull(message = "项目风险id不能为空")
