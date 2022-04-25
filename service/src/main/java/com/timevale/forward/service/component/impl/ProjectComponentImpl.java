@@ -25,7 +25,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -83,17 +82,19 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
         buildConditionBeforeQuery(projectIds, condition);
 
+        // 开始分页
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProjectListDO> projectDO = projectMapper.list(condition);
 
+        // 筛选判空
         projectIds = projectDO.stream().map(ProjectListDO::getId).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(projectIds)) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
+
         //2.填充人员信息
         Map<Long, List<PersonDO>> pdMap = personMapper.get(projectIds, PersonTypeEnum.PROJECT_PD.getCode())
                 .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
-
         Map<Long, List<PersonDO>> teamMemberMap = personMapper.get(projectIds, PersonTypeEnum.PROJECT_MEMBER.getCode())
                 .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
 
@@ -129,22 +130,16 @@ public class ProjectComponentImpl implements ProjectComponent {
         });
 
         // 4.节点透出
-        Map<Long, String> nodeNameMap = new HashMap<>();
-        Map<Long, List<ProjectNodeDO>> projectNodeMap = projectNodeComponent.get(projectIds);
-        for (Map.Entry<Long, List<ProjectNodeDO>> e : projectNodeMap.entrySet()) {
-            String stage = ProjectNodeEnum.getStage(e.getValue());
-            nodeNameMap.put(e.getKey(), stage);
-        }
         for (ProjectVO e : projectVOList) {
-            e.setNodeName(nodeNameMap.get(e.getId()));
+            e.setNodeName(ProjectNodeEnum.getNameByCode(e.getNodeStatus()));
         }
 
+        // 返回分页数据
         PageQueryResult<ProjectVO> pageQueryResult = new PageQueryResult<>();
         PageInfo<ProjectListDO> pageInfo = new PageInfo<>(projectDO);
         pageQueryResult.setResultList(projectVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);
-
     }
 
     @Override
@@ -199,6 +194,19 @@ public class ProjectComponentImpl implements ProjectComponent {
         } else if (devStart != null) {
             projectDO.setActualStartDate(devStart.getActualDate());
         }
+    }
+
+    @Override
+    public void updateNodeStatus(Long projectId) {
+        // 查询项目节点
+        List<ProjectNodeDO> nodeDOList = projectNodeComponent.get(projectId);
+        Integer nodeStatus = ProjectNodeEnum.getStageCode(nodeDOList);
+
+        // 更新项目节点状态
+        ProjectDO projectDO = new ProjectDO();
+        projectDO.setId(projectId);
+        projectDO.setNodeStatus(nodeStatus);
+        projectMapper.update(projectDO);
     }
 
 

@@ -39,6 +39,11 @@ public class ProjectListDO extends BaseDO {
     private Integer status;
 
     /**
+     * 节点状态
+     */
+    private Integer nodeStatus;
+
+    /**
      * 项目计划开始时间
      */
     private Date planStartDate;

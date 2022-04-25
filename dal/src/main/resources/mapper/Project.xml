@@ -26,6 +26,7 @@
             <if test="type != null">type = #{type},</if>
             <if test="pmName != null">pm = #{pmName},</if>
             <if test="status != null">status = #{status},</if>
+            <if test="nodeStatus != null">node_status = #{nodeStatus},</if>
             <if test="pmId != null">pm_id = #{pmId},</if>
             <if test="planStartDate != null">plan_start_date = #{planStartDate},</if>
             <if test="planEndDate != null">plan_end_date = #{planEndDate},</if>
@@ -94,7 +95,7 @@
     </select>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProjectListDO">
-        select a.id,a.name, a.customer_dev,  a.priority, a.type ,a.status,a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
+        select a.id,a.name, a.customer_dev,  a.priority, a.type ,a.status,a.node_status, a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
         a.actual_start_date,a.actual_end_date,a.`desc`,
         a.create_man_id, a.create_man,a.create_date,a.modify_date
         from project a

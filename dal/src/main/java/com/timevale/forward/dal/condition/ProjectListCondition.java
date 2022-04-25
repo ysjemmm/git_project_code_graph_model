@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.mandarin.common.query.QueryBase;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -63,6 +64,11 @@ public class ProjectListCondition extends QueryBase {
      * 项目状态:0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废
      */
     private List<Integer> status;
+
+    /**
+     * 项目节点状态：0 开始规划,10 需求内审,20 需求串讲,30 技术详设评审,40 开发开始,50 编写测试用例,60 用例评审,70 提测,80 测试开始,90 发布模拟,100 发布正式
+     */
+    private List<Long> nodeStatusList;
 
     /**
      * 项目经理

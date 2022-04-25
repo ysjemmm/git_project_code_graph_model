@@ -168,7 +168,6 @@ public class ProjectServiceImpl implements ProjectService {
         return BaseResult.success(true);
     }
 
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> enable(Long projectId, Boolean enableTask) {
@@ -282,6 +281,8 @@ public class ProjectServiceImpl implements ProjectService {
                 throw new BaseBizRuntimeException("该项目还有bug未关闭，请关闭后再发布");
             }
             projectNodeComponent.add(projectNodeDOList, newProject.getId());
+            // 更新节点状态
+            projectComponent.updateNodeStatus(projectModifyReq.getId());
         }
         // log
         projectLogComponent.addLogWhenModifyData(oldProject, newProject);

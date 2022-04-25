@@ -23,4 +23,11 @@ public interface ProjectComponent {
      * @param projectDO projectDO
      */
     void fillInfo(List<ProjectNodeDO> projectNodes, ProjectDO projectDO);
+
+    /**
+     * 更新项目节点状态
+     *
+     * @param projectId 项目id
+     */
+    void updateNodeStatus(Long projectId);
 }

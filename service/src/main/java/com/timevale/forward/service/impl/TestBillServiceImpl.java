@@ -20,6 +20,7 @@ import com.timevale.forward.facade.api.result.FileVO;
 import com.timevale.forward.facade.api.result.TestBillVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectLogComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
@@ -60,6 +61,9 @@ public class TestBillServiceImpl implements TestBillService {
 
     @Resource
     private ProjectMapper projectMapper;
+
+    @Resource
+    private ProjectComponent projectComponent;
 
     @Resource
     private MessageEventPublisher messageEventPublisher;
@@ -129,6 +133,9 @@ public class TestBillServiceImpl implements TestBillService {
 
         //创建一个项目的提测单之后需要清空项目原本的提测节点的实际时间
         projectNodeMapper.updateSubmitTestActualDate(testBillAddReq.getProjectId(), null);
+
+        // 更新项目节点
+        projectComponent.updateNodeStatus(testBillAddReq.getProjectId());
 
         //获取提测单名称
         ProjectDO projectDO = projectMapper.get(testBillAddReq.getProjectId());
@@ -391,6 +398,10 @@ public class TestBillServiceImpl implements TestBillService {
 
         //更新项目节点表
         projectNodeMapper.updateSubmitTestActualDate(testBillModifyReq.getProjectId(), testBillModifyReq.getActualDate());
+
+        // 更新项目节点
+        projectComponent.updateNodeStatus(testBillModifyReq.getProjectId());
+
         Integer oldStatus = projectDO.getStatus();
         if (!ProjectStatusEnum.INVALID.getCode().equals(oldStatus) && !ProjectStatusEnum.RELEASED.getCode().equals(oldStatus)) {
             // 项目进入测试中

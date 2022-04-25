@@ -38,6 +38,11 @@ public class ProjectDO extends BaseDO {
     private Integer status;
 
     /**
+     * 0 开始规划,10 需求内审,20 需求串讲,30 技术详设评审,40 开发开始,50 编写测试用例,60 用例评审,70 提测,80 测试开始,90 发布模拟,100 发布正式
+     */
+    private Integer nodeStatus;
+
+    /**
      * 产品线
      */
     private List<Long> productLineIds;

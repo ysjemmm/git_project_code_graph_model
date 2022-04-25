@@ -3,6 +3,7 @@ package com.timevale.forward.model.enums;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
@@ -20,30 +21,47 @@ public enum ProjectNodeEnum {
      * 节点阶段
      */
     START_PLAN(0,"开始规划"),
-    DEMAND_INTERNAL_AUDIT(1,"需求内审"),
-    DEMAND_CONSTRUE(2,"需求串讲"),
-    TECHNICAL_DETAIL_REVIEW(3,"技术详设评审"),
-    DEVELOP_START(4,"开发开始"),
-    WRITE_TEST_CASES(5,"编写测试用例"),
-    USE_CASE_REVIEW(6,"用例评审"),
-    SUBMIT_TEST(7,"提测"),
-    TEST_START(8,"测试开始"),
-    PUBLISH_SIMULATE(9,"发布模拟"),
-    PUBLISH_OFFICIAL(10,"发布正式");
+    DEMAND_INTERNAL_AUDIT(10,"需求内审"),
+    DEMAND_CONSTRUE(20,"需求串讲"),
+    TECHNICAL_DETAIL_REVIEW(30,"技术详设评审"),
+    DEVELOP_START(40,"开发开始"),
+    WRITE_TEST_CASES(50,"编写测试用例"),
+    USE_CASE_REVIEW(60,"用例评审"),
+    SUBMIT_TEST(70,"提测"),
+    TEST_START(80,"测试开始"),
+    PUBLISH_SIMULATE(90,"发布模拟"),
+    PUBLISH_OFFICIAL(100,"发布正式");
 
     private final Integer code;
     private final String projectNodeName;
 
     public static String getStage(List<ProjectNodeDO> projectNodeDOList){
-
         projectNodeDOList.sort(Comparator.comparing(a -> getCodeByName(a.getName())));
-
         for (ProjectNodeDO e : projectNodeDOList) {
             if(e.getActualDate() == null){
                 return e.getName();
             }
         }
         return PUBLISH_OFFICIAL.projectNodeName;
+    }
+
+    public static Integer getStageCode(List<ProjectNodeDO> projectNodeDOList){
+        projectNodeDOList.sort(Comparator.comparing(a -> getCodeByName(a.getName())));
+        for (ProjectNodeDO e : projectNodeDOList) {
+            if(e.getActualDate() == null){
+                return getCodeByName(e.getName());
+            }
+        }
+        return PUBLISH_OFFICIAL.code;
+    }
+
+    public static String getNameByCode(Integer code){
+        for (ProjectNodeEnum e : ProjectNodeEnum.values()) {
+            if(Objects.equals(e.code, code)){
+                return e.projectNodeName;
+            }
+        }
+        return "";
     }
 
     public static Integer getCodeByName(String name){
