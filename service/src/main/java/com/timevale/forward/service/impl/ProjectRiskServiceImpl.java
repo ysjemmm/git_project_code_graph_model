@@ -16,9 +16,11 @@ import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
 import com.timevale.forward.service.component.HomePageRiskWarningComponent;
 import com.timevale.forward.service.component.HomePageRiskWarningSubmitTestComponent;
 import com.timevale.forward.service.component.HomePageRiskWarningTaskComponent;
+import com.timevale.forward.service.component.ProjectRiskExplanationComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectRiskCopier;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -29,6 +31,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
+@LogPoint
 @RestService
 public class ProjectRiskServiceImpl implements ProjectRiskService {
 
@@ -36,7 +39,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
     ProjectRiskMapper projectRiskMapper;
 
     @Resource
-    ProjectRiskExplanationMapper projectRiskExplanationMapper;
+    ProjectRiskExplanationComponent projectRiskExplanationComponent;
 
     @Resource
     HomePageRiskWarningComponent homePageRiskWarningComponent;
@@ -55,6 +58,9 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         riskDO.setType(ProjectRiskTypeEnum.OTHER.getCode());
         riskDO.setSign("");
         projectRiskMapper.insert(riskDO);
+
+        // 添加项目说明
+        projectRiskExplanationComponent.add(riskDO.getId(), projectRiskAddReq.getExplanation());
 
         return BaseResult.success(true);
     }

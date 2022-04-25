@@ -4,14 +4,17 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectRiskExplanationMapper;
+import com.timevale.forward.dal.dao.ProjectRiskMapper;
 import com.timevale.forward.dal.entity.ProjectRiskExplanationDO;
 import com.timevale.forward.facade.api.client.ProjectRiskExplanationService;
 import com.timevale.forward.facade.api.query.ProjectRiskExplanationQueryList;
 import com.timevale.forward.facade.api.request.ProjectRiskExplanationAddReq;
 import com.timevale.forward.facade.api.result.ProjectRiskExplanationVO;
+import com.timevale.forward.service.component.ProjectRiskExplanationComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectRiskExplanationCopier;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -21,16 +24,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
+@LogPoint
 @RestService
 public class ProjectRiskExplanationServiceImpl implements ProjectRiskExplanationService {
 
     @Resource
     ProjectRiskExplanationMapper projectRiskExplanationMapper;
 
+    @Resource
+    ProjectRiskExplanationComponent projectRiskExplanationComponent;
+
     @Override
     public BaseResult<Boolean> add(ProjectRiskExplanationAddReq explanationAddReq) {
-        ProjectRiskExplanationDO explanationDO = ProjectRiskExplanationCopier.INSTANCE.convert(explanationAddReq);
-        projectRiskExplanationMapper.insert(explanationDO);
+        projectRiskExplanationComponent.add(explanationAddReq.getProjectRiskId(), explanationAddReq.getExplanation());
 
         return BaseResult.success(true);
     }
