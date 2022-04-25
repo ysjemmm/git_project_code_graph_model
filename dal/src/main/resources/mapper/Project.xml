@@ -136,9 +136,9 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="nodeStatus!=null and nodeStatus.size()>0">
+            <if test="nodeStatusList!=null and nodeStatusList.size()>0">
                 and a.node_status in
-                <foreach collection="nodeStatus" item="item" separator="," open="(" close=")">
+                <foreach collection="nodeStatusList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
