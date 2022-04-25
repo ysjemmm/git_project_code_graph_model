@@ -28,5 +28,5 @@ public class ProjectRiskAddReq extends BaseReq{
 
     @NotBlank(message = "风险说明不能为空")
     @ApiModelProperty("项目风险说明")
-    private String projectRiskExplanation;
+    private String explanation;
 }
