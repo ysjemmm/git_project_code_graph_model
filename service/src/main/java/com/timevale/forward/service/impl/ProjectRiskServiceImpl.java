@@ -6,14 +6,10 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectRiskExplanationMapper;
 import com.timevale.forward.dal.dao.ProjectRiskMapper;
 import com.timevale.forward.dal.entity.ProjectRiskDO;
-import com.timevale.forward.dal.entity.ProjectRiskExplanationDO;
 import com.timevale.forward.facade.api.client.ProjectRiskService;
-import com.timevale.forward.facade.api.query.ProjectRiskExplanationQueryList;
 import com.timevale.forward.facade.api.query.ProjectRiskQueryList;
 import com.timevale.forward.facade.api.request.ProjectRiskAddReq;
-import com.timevale.forward.facade.api.request.ProjectRiskExplanationAddReq;
 import com.timevale.forward.facade.api.request.ProjectRiskModifyReq;
-import com.timevale.forward.facade.api.result.ProjectRiskExplanationVO;
 import com.timevale.forward.facade.api.result.ProjectRiskVO;
 import com.timevale.forward.model.enums.ProjectRiskStateEnum;
 import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
@@ -22,7 +18,6 @@ import com.timevale.forward.service.component.HomePageRiskWarningSubmitTestCompo
 import com.timevale.forward.service.component.HomePageRiskWarningTaskComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectRiskCopier;
-import com.timevale.forward.service.copy.ProjectRiskExplanationCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -112,7 +107,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
     }
 
     @Override
-    public BaseResult<Boolean> riskSync() {
+    public BaseResult<Boolean> sync() {
 
         return BaseResult.success(true);
     }

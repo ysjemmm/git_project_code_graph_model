@@ -19,7 +19,7 @@ public interface ProjectRiskService {
     /**
      * 项目风险-数据同步
      */
-    BaseResult<Boolean> riskSync();
+    BaseResult<Boolean> sync();
 
     /**
      * 添加
