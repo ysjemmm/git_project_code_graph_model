@@ -50,6 +50,9 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("团队成员")
     private List<String> teamMembers;
 
+    @ApiModelProperty("节点状态")
+    private List<Long> nodeStatusList;
+
     @ApiModelProperty("项目计划开始时间左区间")
     private Date planStartDateLeft;
 

@@ -82,8 +82,10 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         }
         buildConditionBeforeQuery(projectIds, condition);
+
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProjectListDO> projectDO = projectMapper.list(condition);
+
         projectIds = projectDO.stream().map(ProjectListDO::getId).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(projectIds)) {
             return BaseResult.success(ResultUtil.pageEmpty());
