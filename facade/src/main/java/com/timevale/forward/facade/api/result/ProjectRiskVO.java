@@ -10,6 +10,7 @@ import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 /**
  * @author by YangXu
@@ -46,10 +47,15 @@ public class ProjectRiskVO extends ToString {
     @ApiModelProperty("状态描述")
     private String stateName;
 
-    @ApiModelProperty("提交人")
-    private String submitMan;
+    @ApiModelProperty("创建人")
+    private String createMan;
 
-    @ApiModelProperty("提交人id")
-    private String submitManId;
+    @ApiModelProperty("创建人id")
+    private String createManId;
 
+    @ApiModelProperty("创建时间")
+    private Date createDate;
+
+    @ApiModelProperty("修改时间")
+    private Date modifyDate;
 }

@@ -78,5 +78,6 @@
         <mapper resource="mapper/BizChangeLogMapper.xml"/>
         <mapper resource="mapper/SearchConditionMapper.xml"/>
         <mapper resource="mapper/ProjectRiskMapper.xml"/>
+        <mapper resource="mapper/ProjectRiskExplanationMapper.xml"/>
     </mappers>
 </configuration>

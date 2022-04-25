@@ -3,15 +3,15 @@
 <mapper namespace="com.timevale.forward.dal.dao.ProjectRiskMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO project_risk(project_id, type, name, sign, submit_man, submit_man_id, create_man_id, create_man)
-        VALUES (#{projectId}, #{type}, #{name}, #{sign}, #{createMan}, #{createManId}, #{createManId}, #{createMan})
+        INSERT INTO project_risk(project_id, type, name, sign, create_man_id, create_man)
+        VALUES (#{projectId}, #{type}, #{name}, #{sign}, #{createManId}, #{createMan})
     </insert>
 
     <insert id="batchInsert">
-        INSERT INTO project_risk(project_id, type, name, sign, submit_man, submit_man_id, create_man_id, create_man)
+        INSERT INTO project_risk(project_id, type, name, sign, create_man_id, create_man)
         VALUES
         <foreach collection = "projectRiskDOList" item = "item" separator = ",">
-            (#{item.projectId},#{item.type},#{item.name},#{item.sign},#{item.submitMan},#{item.submitManId},#{item.createManId},#{item.createMan})
+            (#{item.projectId},#{item.type},#{item.name},#{item.sign},#{item.createManId},#{item.createMan})
         </foreach>
     </insert>
 
@@ -38,7 +38,7 @@
     </update>
 
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
-        SELECT id, project_id, type, name, sign, state, submit_man, submit_man_id, create_date, modify_date
+        SELECT id, project_id, type, name, sign, state, create_man_id, create_man, create_date, modify_date
         FROM project_risk
         WHERE project_id = #{projectId} AND is_deleted = false
     </select>
@@ -50,7 +50,7 @@
     </select>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
-        SELECT id, project_id, type, name, sign, state, submit_man, submit_man_id, create_date, modify_date
+        SELECT id, project_id, type, name, sign, state,create_man, create_man_id, create_date, modify_date
         FROM project_risk
         WHERE id = #{id}
     </select>

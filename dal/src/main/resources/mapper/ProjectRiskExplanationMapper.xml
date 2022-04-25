@@ -1,0 +1,17 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.ProjectRiskExplanationMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO project_risk_explanation(project_risk_id, explanation, create_man_id, create_man)
+        VALUES (#{projectRiskId}, #{explanation}, #{createManId}, #{createMan})
+    </insert>
+
+    <select id="selectByProjectRiskId" resultType="com.timevale.forward.dal.entity.ProjectRiskExplanationDO">
+        SELECT id, project_risk_id, explanation, create_man_id, create_man, create_date
+        FROM project_risk_explanation
+        WHERE project_risk_id = #{projectRiskId} AND is_deleted = false
+    </select>
+
+
+</mapper>

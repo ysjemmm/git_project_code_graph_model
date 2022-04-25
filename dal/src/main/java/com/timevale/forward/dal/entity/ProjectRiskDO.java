@@ -36,15 +36,4 @@ public class ProjectRiskDO extends BaseDO {
      * 状态：0 待处理, 1 已处理
      */
     private Integer state;
-
-    /**
-     * 提交人
-     */
-    private String submitMan;
-
-    /**
-     * 提交人id
-     */
-    private String submitManId;
-
 }

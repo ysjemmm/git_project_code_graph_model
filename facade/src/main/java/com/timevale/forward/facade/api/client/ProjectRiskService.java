@@ -2,10 +2,7 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
-import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
-import com.timevale.forward.facade.api.query.ProjectQueryList;
-import com.timevale.forward.facade.api.query.ProjectRiskQueryList;
+import com.timevale.forward.facade.api.query.*;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
