@@ -12,12 +12,14 @@ import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.dto.TaskTimeDTO;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TaskService;
+import com.timevale.forward.facade.api.query.ProductDemandLinkTaskQueryList;
 import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.TaskDetailVO;
+import com.timevale.forward.facade.api.result.TaskListVO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
@@ -25,6 +27,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.integration.superset.model.base.PageResult;
 import com.timevale.forward.service.observer.event.TaskDoneMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -41,12 +44,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.timevale.forward.service.constant.CommonConstant.SECONDS_PER_HOUR;
 
@@ -447,6 +448,33 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public BaseResult<BigDecimal> getElapsedTime(ElapsedTimeQueryReq elapsedTimeQueryReq) {
         return BaseResult.success(taskComponent.getElapsedTime(elapsedTimeQueryReq.getStartTime(), elapsedTimeQueryReq.getEndTime()));
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<TaskListVO>> listTask(ProductDemandLinkTaskQueryList productDemandLinkTaskQueryList) {
+        // 开始分页
+        PageHelper.startPage(productDemandLinkTaskQueryList.pageNum, productDemandLinkTaskQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+
+        List<TaskDO> taskDOList = taskMapper.getByProductDemandId(productDemandLinkTaskQueryList.getProductDemandId());
+        List<TaskListVO> taskListVOList = taskDOList.stream().map(TaskCopier.INSTANCE::tansfer).collect(Collectors.toList());
+
+        // 任务执行人
+        List<Long> taskIdList = taskDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
+        Map<Long, List<PersonDO>> executorMap = personMapper.get(taskIdList, PersonTypeEnum.TASK_EXECUTOR.getCode())
+                .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
+
+        for (TaskListVO e : taskListVOList) {
+            List<PersonDO> personDOList = executorMap.get(e.getId());
+            String executors = personDOList.stream().map(PersonDO::getUserName).collect(Collectors.joining(","));
+            e.setExecutor(executors);
+        }
+
+        PageInfo<TaskDO> pageInfo = new PageInfo<>(taskDOList);
+        PageQueryResult<TaskListVO> pageResult = new PageQueryResult<>();
+        pageResult.setResultList(taskListVOList);
+        ResultUtil.fillPageInfo(pageResult, pageInfo);
+
+        return BaseResult.success(pageResult);
     }
 
     /**

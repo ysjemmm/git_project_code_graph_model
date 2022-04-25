@@ -2,6 +2,7 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.query.ProductDemandLinkTaskQueryList;
 import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskQueryList;
@@ -11,6 +12,7 @@ import com.timevale.forward.facade.api.request.TaskModifyReq;
 import com.timevale.forward.facade.api.request.TaskProductDemandLinkReq;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.TaskDetailVO;
+import com.timevale.forward.facade.api.result.TaskListVO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -121,4 +123,9 @@ public interface TaskService {
      */
     BaseResult<BigDecimal> getElapsedTime(ElapsedTimeQueryReq elapsedTimeQueryReq);
 
+    /**
+     * @param productDemandLinkTaskQueryList 查询条件
+     * @return 任务需求清单
+     */
+    BaseResult<PageQueryResult<TaskListVO>> listTask(ProductDemandLinkTaskQueryList productDemandLinkTaskQueryList);
 }

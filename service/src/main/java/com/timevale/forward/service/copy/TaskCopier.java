@@ -6,6 +6,7 @@ import com.timevale.forward.facade.api.query.TaskQueryList;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
 import com.timevale.forward.facade.api.result.TaskDetailVO;
+import com.timevale.forward.facade.api.result.TaskListVO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -57,5 +58,7 @@ public interface TaskCopier {
      */
     TaskDetailVO convert(TaskDO taskDO);
 
+
+    TaskListVO tansfer(TaskDO taskDO);
 
 }
