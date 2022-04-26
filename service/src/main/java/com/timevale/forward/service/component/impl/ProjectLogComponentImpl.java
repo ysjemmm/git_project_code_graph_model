@@ -88,7 +88,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
 
         //产品经理
         Map<String, String> oldPds = personComponent.select(oldObj.getId(), PersonTypeEnum.PROJECT_PD.getCode())
-                .stream().collect(Collectors.toMap(PersonDO::getUserId, PersonDO::getUserName));
+                .stream().collect(Collectors.toMap(PersonDO::getUserId, PersonDO::getUserName,(v1, v2) -> v2));
         Map<String, String> newPds = newObj.getPds().stream().collect(Collectors.toMap(PersonDO::getUserId, PersonDO::getUserName, (v1, v2) -> v2));
         if (!CollectionUtil.isEqualList(oldPds.keySet(), newPds.keySet())) {
             String oldValue = String.join(",", oldPds.values());

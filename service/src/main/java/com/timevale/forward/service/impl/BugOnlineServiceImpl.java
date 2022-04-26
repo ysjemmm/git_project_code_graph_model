@@ -1552,7 +1552,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             mergeProductLineIds.addAll(oldProductLineIdList);
             mergeProductLineIds.addAll(newProductLineIdList);
             Map<Long, String> mergeProductLines = productLineMapper.selectByIds(mergeProductLineIds).stream()
-                    .collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName));
+                    .collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName,(v1, v2) -> v2));
             String oldValue = oldProductLineIdList.stream().map(mergeProductLines::get).collect(Collectors.joining(","));
             String newValue = newProductLineIdList.stream().map(mergeProductLines::get).collect(Collectors.joining(","));
             BugLogDO bugLogDO = new BugLogDO();
