@@ -10,6 +10,8 @@ public class CommonConstant {
 
     public static final String DEFAULT_ORDER_BY = " modify_date desc ";
 
+    public static final String CREATE_ORDER_BY = " create_date desc ";
+
     public static final Integer INVALID = Integer.MIN_VALUE;
 
     public static final String SECONDS_PER_HOUR = "3600";
