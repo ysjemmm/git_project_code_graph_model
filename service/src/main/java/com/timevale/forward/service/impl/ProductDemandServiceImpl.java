@@ -102,7 +102,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Resource
     private ProjectLogComponent projectLogComponent;
 
-    private static final Integer MAX_LENGTH = 50 * 1000;
+    private static final Integer MAX_LENGTH = 20 * 1000;
 
 
     @Override
@@ -460,8 +460,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
 
     private void checkDescLength(String desc) {
-        if (StringUtils.isNotEmpty(desc) && desc.getBytes().length * 0.75 > MAX_LENGTH) {
-            throw new BaseBizRuntimeException("需求描述超过最大限制(64kb),若有大图片请选择附件上传");
+        if (StringUtils.isNotEmpty(desc) && desc.getBytes().length > MAX_LENGTH) {
+            throw new BaseBizRuntimeException("需求描述字数过大,请重新输入");
         }
     }
 }

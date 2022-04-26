@@ -13,34 +13,47 @@ public enum JobFunctionEnum {
      * 产品
      */
     PD("产品",UserTypeEnum.PD),
+
+    /**
+     * 商业分析
+     */
+    BUSINESS_ANALYSIS("商业分析", UserTypeEnum.PD),
+
     /**
      * 测试
      */
     QA("测试",UserTypeEnum.QA),
+
     /**
      * 后端开发
      */
     BACK_RD("后端开发",UserTypeEnum.RD),
+
     /**
      * 前端开发
      */
     FRONT_RD("前端开发",UserTypeEnum.RD),
+
     /**
      * 运维
      */
     OP("运维",UserTypeEnum.RD),
+
     /**
      * DBA
      */
     DBA("DBA",UserTypeEnum.RD),
+
     /**
      * 安全
      */
     SAFE("安全",UserTypeEnum.RD),
+
     /**
      * 大数据
      */
     BIG_DATA("大数据",UserTypeEnum.RD),
+
     /**
      * 技术支持
      */
@@ -51,6 +64,7 @@ public enum JobFunctionEnum {
      * 经营管理
      */
     Manager("经营管理",UserTypeEnum.MANAGER),
+
 
     /**
      * 技术专家
