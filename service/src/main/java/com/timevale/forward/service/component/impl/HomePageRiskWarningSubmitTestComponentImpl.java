@@ -63,4 +63,19 @@ public class HomePageRiskWarningSubmitTestComponentImpl extends BaseDistributeCl
 
         return new ArrayList<>(resultSet);
     }
+
+    @Override
+    public List<HomePageRiskWarningSubmitTestDTO> getRiskWarningSubmitTestAll() {
+        ParamHelper paramHelper = ParamHelper.newInstance()
+                .offset(0)
+                .page(Integer.MAX_VALUE);
+        DistributePageQueryVO params = DistributePageQueryVO.builder()
+                .params(paramHelper.params())
+                .distributeConfigVO(distributeConfig.getRiskWarningSubmitTest())
+                .build();
+
+        // 去重返回
+        Set<HomePageRiskWarningSubmitTestDTO> resultSet = new HashSet<>(doGet(params));
+        return new ArrayList<>(resultSet);
+    }
 }

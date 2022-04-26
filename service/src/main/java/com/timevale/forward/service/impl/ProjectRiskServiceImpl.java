@@ -3,14 +3,17 @@ package com.timevale.forward.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.ProjectRiskExplanationMapper;
 import com.timevale.forward.dal.dao.ProjectRiskMapper;
+import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
+import com.timevale.forward.dal.dto.HomePageRiskWarningSubmitTestDTO;
+import com.timevale.forward.dal.dto.HomePageRiskWarningTaskDTO;
 import com.timevale.forward.dal.entity.ProjectRiskDO;
 import com.timevale.forward.facade.api.client.ProjectRiskService;
 import com.timevale.forward.facade.api.query.ProjectRiskQueryList;
 import com.timevale.forward.facade.api.request.ProjectRiskAddReq;
 import com.timevale.forward.facade.api.request.ProjectRiskModifyReq;
 import com.timevale.forward.facade.api.result.ProjectRiskVO;
+import com.timevale.forward.model.enums.ProjectRiskSignEnum;
 import com.timevale.forward.model.enums.ProjectRiskStateEnum;
 import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
 import com.timevale.forward.service.component.HomePageRiskWarningComponent;
@@ -25,10 +28,15 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,13 +51,13 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
     ProjectRiskExplanationComponent projectRiskExplanationComponent;
 
     @Resource
-    HomePageRiskWarningComponent homePageRiskWarningComponent;
+    HomePageRiskWarningComponent riskWarningComponent;
 
     @Resource
-    HomePageRiskWarningSubmitTestComponent homePageRiskWarningSubmitTestComponent;
+    HomePageRiskWarningSubmitTestComponent riskWarningSubmitTestComponent;
 
     @Resource
-    HomePageRiskWarningTaskComponent homePageRiskWarningTaskComponent;
+    HomePageRiskWarningTaskComponent riskWarningTaskComponent;
 
 
     @Override
@@ -59,6 +67,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         // 类型为其它
         riskDO.setType(ProjectRiskTypeEnum.OTHER.getCode());
         riskDO.setSign("");
+        riskDO.setMainId(0L);
         projectRiskMapper.insert(riskDO);
 
         // 添加项目说明
@@ -115,8 +124,84 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> sync() {
+        // 数据分发端
+        List<HomePageRiskWarningDTO> nodeDTOList = riskWarningComponent.getRiskWarningAll();
+        List<HomePageRiskWarningTaskDTO> taskDTOList = riskWarningTaskComponent.getRiskWarningTaskAll();
+        List<HomePageRiskWarningSubmitTestDTO> testDTOList = riskWarningSubmitTestComponent.getRiskWarningSubmitTestAll();
+
+        // sql 端
+        List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByState(ProjectRiskStateEnum.PENDING.getCode());
+
+        // 唯一id
+        Map<String, Object> newRiskMap = new HashMap<>();
+        newRiskMap.putAll(nodeDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity())));
+        newRiskMap.putAll(taskDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity())));
+        newRiskMap.putAll(testDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity())));
+
+        Map<String, ProjectRiskDO> oldRiskMap = riskDOList.stream().collect(Collectors.toMap(e -> e.getType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity()));
+
+        // 判断去重
+        List<Long> completeList = new ArrayList<>();
+        oldRiskMap.forEach((k, v) -> {
+            if(!newRiskMap.containsKey(k)){
+                completeList.add(v.getId());
+                // 任务、节点 计算逾期时间
+            }
+        });
+
+        if(CollectionUtils.isNotEmpty(completeList)){
+            projectRiskMapper.updateState(completeList, ProjectRiskStateEnum.COMPLETE.getCode());
+        }
+
+        // 增加新风险
+        List<ProjectRiskDO> addRiskDOList = new ArrayList<>();
+        newRiskMap.forEach((k, v) -> {
+            if(!oldRiskMap.containsKey(k)){
+                addRiskDOList.add(syncAdd(v));
+            }
+        });
+        projectRiskMapper.batchInsert(addRiskDOList);
 
         return BaseResult.success(true);
     }
+
+
+    private ProjectRiskDO syncAdd(Object object){
+        ProjectRiskDO riskDO = new ProjectRiskDO();
+        riskDO.setState(ProjectRiskStateEnum.PENDING.getCode());
+
+        if(object instanceof HomePageRiskWarningDTO){
+            HomePageRiskWarningDTO nodeRisk = (HomePageRiskWarningDTO) object;
+            riskDO.setProjectId(nodeRisk.getProjectId());
+            riskDO.setMainId(nodeRisk.getMainId());
+            riskDO.setType(nodeRisk.getRiskType());
+            riskDO.setName(nodeRisk.getNodeName());
+            riskDO.setSign(String.format(ProjectRiskSignEnum.SUBMIT_FAILURE.getText(), nodeRisk.getOverdueDay()));
+
+        }else if(object instanceof HomePageRiskWarningTaskDTO){
+            HomePageRiskWarningTaskDTO taskRisk = (HomePageRiskWarningTaskDTO) object;
+            riskDO.setProjectId(taskRisk.getProjectId());
+            riskDO.setMainId(taskRisk.getMainId());
+            riskDO.setType(taskRisk.getRiskType());
+            riskDO.setName(taskRisk.getTaskName());
+
+            double totalHour = Double.parseDouble(taskRisk.getOverdueTime());
+            int day = (int)totalHour / 24;
+            double hour = totalHour - 24 * day;
+            riskDO.setSign(String.format(ProjectRiskSignEnum.SUBMIT_FAILURE.getText(), day, hour));
+
+        }else if(object instanceof HomePageRiskWarningSubmitTestDTO){
+            HomePageRiskWarningSubmitTestDTO testRisk = (HomePageRiskWarningSubmitTestDTO) object;
+            riskDO.setProjectId(testRisk.getProjectId());
+            riskDO.setMainId(testRisk.getMainId());
+            riskDO.setType(testRisk.getRiskType());
+            riskDO.setName(testRisk.getTestBillName());
+            riskDO.setSign(ProjectRiskSignEnum.SUBMIT_FAILURE.getText());
+        }
+
+        return riskDO;
+    }
+
 }

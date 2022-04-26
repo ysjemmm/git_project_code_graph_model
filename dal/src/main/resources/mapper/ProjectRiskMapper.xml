@@ -3,8 +3,8 @@
 <mapper namespace="com.timevale.forward.dal.dao.ProjectRiskMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO project_risk(project_id, type, name, sign, create_man_id, create_man)
-        VALUES (#{projectId}, #{type}, #{name}, #{sign}, #{createManId}, #{createMan})
+        INSERT INTO project_risk(project_id, main_id, type, name, sign, create_man_id, create_man)
+        VALUES (#{projectId}, #{mainId}, #{type}, #{name}, #{sign}, #{createManId}, #{createMan})
     </insert>
 
     <insert id="batchInsert">
@@ -54,6 +54,7 @@
         SELECT id, project_id, type, name
         FROM project_risk
         WHERE state = #{state} AND
+              type != 0 AND
               is_deleted = false
     </select>
 

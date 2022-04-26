@@ -97,8 +97,7 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
 
         ParamHelper paramHelper = ParamHelper.newInstance()
                 .offset(0)
-                .page(Integer.MAX_VALUE)
-                .equals("user_id", "");
+                .page(Integer.MAX_VALUE);
 
         DistributePageQueryVO paramQA = DistributePageQueryVO.builder()
                 .params(paramHelper.params())

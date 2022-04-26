@@ -18,6 +18,11 @@ public class ProjectRiskDO extends BaseDO {
     private Long projectId;
 
     /**
+     * 主体id
+     */
+    private Long mainId;
+
+    /**
      * 风险类型 0 其它， 10 项目关键节点逾期 20 提测质量不达标 30 任务逾期
      */
     private Integer type;

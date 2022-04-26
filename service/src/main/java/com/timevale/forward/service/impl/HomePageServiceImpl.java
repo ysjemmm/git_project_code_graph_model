@@ -183,7 +183,7 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Override
     public BaseResult<List<HomePageRiskWarningVO>> getRiskWarning(HomePageBaseReq homePageBaseReq) {
-        // 查询数据，同时转换为Set去重
+        // 查询数据
         List<HomePageRiskWarningDTO> riskWarningDTOList = homePageRiskWarningComponent.getRiskWarning(homePageBaseReq);
         List<HomePageRiskWarningTaskDTO> warningTaskDTOList = homePageRiskWarningTaskComponent.getRiskWarningTask(homePageBaseReq);
         List<HomePageRiskWarningSubmitTestDTO> submitTestDTOList = homePageRiskWarningSubmitTestComponent.getRiskWarningSubmitTest(homePageBaseReq);

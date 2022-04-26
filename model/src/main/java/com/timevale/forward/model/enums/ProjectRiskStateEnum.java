@@ -15,7 +15,7 @@ public enum ProjectRiskStateEnum {
 
     PENDING(0, "待处理"),
 
-    PROCESSED(1, "已处理");
+    COMPLETE(1, "已处理");
 
     private Integer code;
     private String text;

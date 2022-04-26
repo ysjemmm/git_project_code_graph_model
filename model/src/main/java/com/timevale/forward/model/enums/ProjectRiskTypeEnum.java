@@ -32,4 +32,13 @@ public enum ProjectRiskTypeEnum {
         }
         return "";
     }
+
+    public static Integer getCodeByText(String text){
+        for (ProjectRiskTypeEnum e : ProjectRiskTypeEnum.values()){
+            if(e.getText().equals(text)){
+                return e.code;
+            }
+        }
+        return -1;
+    }
 }

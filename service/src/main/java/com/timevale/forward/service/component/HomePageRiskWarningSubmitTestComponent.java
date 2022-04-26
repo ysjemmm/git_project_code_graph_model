@@ -16,4 +16,9 @@ public interface HomePageRiskWarningSubmitTestComponent {
      * @return 列表
      */
     List<HomePageRiskWarningSubmitTestDTO> getRiskWarningSubmitTest(HomePageBaseReq homePageBaseReq);
+
+    /**
+     * 预警 全部
+     */
+    List<HomePageRiskWarningSubmitTestDTO> getRiskWarningSubmitTestAll();
 }

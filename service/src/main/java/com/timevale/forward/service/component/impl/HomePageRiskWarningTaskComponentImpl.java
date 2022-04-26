@@ -9,6 +9,7 @@ import com.timevale.forward.service.integration.superset.client.impl.BaseDistrib
 import com.timevale.forward.service.integration.superset.config.DistributeConfig;
 import com.timevale.forward.service.integration.superset.model.base.DistributePageQueryVO;
 import com.timevale.forward.service.integration.superset.util.ParamHelper;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ import java.util.Set;
  * @date 2022/01/24 10:10
  */
 @Slf4j
+@LogPoint
 @Component
 public class HomePageRiskWarningTaskComponentImpl extends BaseDistributeClientImpl<HomePageRiskWarningTaskDTO> implements HomePageRiskWarningTaskComponent {
 
@@ -50,6 +52,24 @@ public class HomePageRiskWarningTaskComponentImpl extends BaseDistributeClientIm
                 .offset(0)
                 .page(Integer.MAX_VALUE)
                 .in("user_id", allMyStaffWithSelf);
+
+        DistributePageQueryVO params = DistributePageQueryVO.builder()
+                .params(paramHelper.params())
+                .distributeConfigVO(distributeConfig.getRiskWarningTask())
+                .build();
+
+        // 去重返回
+        Set<HomePageRiskWarningTaskDTO> resultSet = new HashSet<>(doGet(params));
+
+        return new ArrayList<>(resultSet);
+    }
+
+    @Override
+    public List<HomePageRiskWarningTaskDTO> getRiskWarningTaskAll() {
+
+        ParamHelper paramHelper = ParamHelper.newInstance()
+                .offset(0)
+                .page(Integer.MAX_VALUE);
 
         DistributePageQueryVO params = DistributePageQueryVO.builder()
                 .params(paramHelper.params())
