@@ -22,11 +22,9 @@ public class ProjectRiskModifyReq extends BaseReq{
     @ApiModelProperty("id")
     private Long id;
 
-    @NotBlank(message = "标记风险名称不能为空")
     @ApiModelProperty("名称")
     private String name;
 
-    @NotNull(message = "风险状态不能为空")
     @ApiModelProperty("状态: -1 作废 0 待处理, 1 已处理")
     private Integer state;
 }
