@@ -459,14 +459,21 @@ public class TaskServiceImpl implements TaskService {
         List<TaskListVO> taskListVOList = taskDOList.stream().map(TaskCopier.INSTANCE::tansfer).collect(Collectors.toList());
 
         // 任务执行人
+        Map<Long, List<PersonDO>> executorMap = new HashMap<>();
         List<Long> taskIdList = taskDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
-        Map<Long, List<PersonDO>> executorMap = personMapper.get(taskIdList, PersonTypeEnum.TASK_EXECUTOR.getCode())
-                .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
+        if(CollectionUtils.isNotEmpty(taskIdList)){
+            List<PersonDO> executorList = personMapper.get(taskIdList, PersonTypeEnum.TASK_EXECUTOR.getCode());
+            executorMap = executorList.stream().collect(Collectors.groupingBy(PersonDO::getMainId));
+        }
 
+        // 填充数据
         for (TaskListVO e : taskListVOList) {
+            // 执行人
             List<PersonDO> personDOList = executorMap.get(e.getId());
             String executors = personDOList.stream().map(PersonDO::getUserName).collect(Collectors.joining(","));
             e.setExecutor(executors);
+            // 状态
+            e.setStatusName(TaskStatusEnum.getTextByCode(e.getStatus()));
         }
 
         PageInfo<TaskDO> pageInfo = new PageInfo<>(taskDOList);
