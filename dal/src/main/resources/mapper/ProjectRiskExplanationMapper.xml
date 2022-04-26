@@ -16,7 +16,7 @@
     <select id="selectById" resultType="com.timevale.forward.dal.entity.ProjectRiskExplanationDO">
         SELECT id, modify_date
         FROM project_risk_explanation
-        WHERE project_risk_id = #{projectRiskId}
+        WHERE id = #{id}
     </select>
 
 

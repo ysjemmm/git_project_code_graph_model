@@ -21,7 +21,7 @@
             <if test="sign != null and sign != ''">sign = #{sign},</if>
             <if test="name != null and name != ''">name = #{name},</if>
             <if test="state != null">state = #{state},</if>
-            <if test="modifyDate != null">modify_date = #{modifyDate}</if>
+            <if test="modifyDate != null">modify_date = #{modifyDate},</if>
             <if test="true">
                 modify_man = #{modifyMan},
                 modify_man_id = #{modifyManId},

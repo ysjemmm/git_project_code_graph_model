@@ -25,6 +25,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -52,6 +53,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
 
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(ProjectRiskAddReq projectRiskAddReq) {
         ProjectRiskDO riskDO = ProjectRiskCopier.INSTANCE.convert(projectRiskAddReq);
         // 类型为其它
