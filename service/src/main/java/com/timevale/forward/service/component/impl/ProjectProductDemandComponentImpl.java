@@ -112,7 +112,7 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
 
     private void after(Map<Long, Date> publishDateMap, List<Long> bizDemandIds) {
         List<BizChangeLogDO> logs = new ArrayList<>();
-        bizDemandIds.forEach(bid -> {
+        bizDemandIds.stream().distinct().forEach(bid -> {
             Date publishDate = bizDemandComponent.getProjectEndDate(bid);
             if (!Objects.equals(publishDateMap.get(bid), publishDate)) {
                 String oldValue = DateUtil.parseToString(publishDateMap.get(bid), DateStyle.YYYY_MM_DD);
