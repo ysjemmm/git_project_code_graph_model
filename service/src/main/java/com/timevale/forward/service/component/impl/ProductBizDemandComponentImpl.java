@@ -50,7 +50,7 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
         } else {
             //产品需求作废
             bizDemandIds = productBizDemandMapper.getByProductDemandIds(Lists.newArrayList(productDemandId))
-                    .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
+                    .stream().map(ProductBizDemandDO::getBizDemandId).distinct().collect(Collectors.toList());
         }
         Map<Long, Date> publishDateMap = new HashMap<>();
         before(publishDateMap, bizDemandIds);
@@ -105,7 +105,7 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
 
     private void after(Map<Long, Date> publishDateMap, List<Long> bizDemandIds) {
         List<BizChangeLogDO> logs = new ArrayList<>();
-        bizDemandIds.stream().distinct().forEach(bid -> {
+        bizDemandIds.forEach(bid -> {
             Date publishDate = bizDemandComponent.getProjectEndDate(bid);
             if (!Objects.equals(publishDateMap.get(bid), publishDate)) {
                 String oldValue = DateUtil.parseToString(publishDateMap.get(bid), DateStyle.YYYY_MM_DD);
