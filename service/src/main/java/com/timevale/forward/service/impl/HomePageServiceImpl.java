@@ -113,7 +113,7 @@ public class HomePageServiceImpl implements HomePageService {
                     .receiveManIdList(allMyStaffWithSelf)
                     .build());
             dataIndicatorVO.setBizDemandReadyDealWithCount((int)bizdemandDOList.stream().filter(e -> BizDemandStatusEnum.EVALUATE.getCode().equals(e.getStatus())).count());
-            dataIndicatorVO.setBizDemandReadyDealWithCount((int)bizdemandDOList.stream().filter(e -> BizDemandStatusEnum.RECEIVED.getCode().equals(e.getStatus())).count());
+            dataIndicatorVO.setBizDemandReadyScheduleCount((int)bizdemandDOList.stream().filter(e -> BizDemandStatusEnum.RECEIVED.getCode().equals(e.getStatus())).count());
         }
 
         return BaseResult.success(dataIndicatorVO);
