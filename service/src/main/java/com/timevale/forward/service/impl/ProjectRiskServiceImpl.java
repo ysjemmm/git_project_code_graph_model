@@ -136,9 +136,9 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
 
         // 唯一id
         Map<String, Object> newRiskMap = new HashMap<>();
-        newRiskMap.putAll(nodeDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity())));
         newRiskMap.putAll(taskDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity())));
         newRiskMap.putAll(testDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity())));
+        newRiskMap.putAll(nodeDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getNodeName(), Function.identity())));
 
         Map<String, ProjectRiskDO> oldRiskMap = riskDOList.stream().collect(Collectors.toMap(e -> e.getType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity()));
 
