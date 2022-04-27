@@ -281,7 +281,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> add(BugOnlineAddReq bugOnlineAddReq) {
         log.info("线上bug-新增:接收参数{}", bugOnlineAddReq);
-        if(!StringUtils.isEmpty(bugOnlineAddReq.getSystemMenuName())){
+        if(Objects.equals(bugOnlineAddReq.getSource(),"support")){
             log.info("默认经办人:{}", defaultOperator);
             String[] defaultOperators = defaultOperator.split(";");
             bugOnlineAddReq.setOperatorId(defaultOperators[0]);
@@ -1552,7 +1552,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             mergeProductLineIds.addAll(oldProductLineIdList);
             mergeProductLineIds.addAll(newProductLineIdList);
             Map<Long, String> mergeProductLines = productLineMapper.selectByIds(mergeProductLineIds).stream()
-                    .collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName));
+                    .collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName,(v1, v2) -> v2));
             String oldValue = oldProductLineIdList.stream().map(mergeProductLines::get).collect(Collectors.joining(","));
             String newValue = newProductLineIdList.stream().map(mergeProductLines::get).collect(Collectors.joining(","));
             BugLogDO bugLogDO = new BugLogDO();

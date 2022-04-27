@@ -211,7 +211,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         log.info("产品需求变化-更新业务需求:产品需求id={},需要更新的业务需求状态和id={}", productDemandIds, newStautsMap);
 
         Map<Long, Integer> oldStautsMap = bizDemands.stream()
-                .collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, ProductBizDemandDO::getStatus));
+                .collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, ProductBizDemandDO::getStatus, (v1, v2) -> v2));
 
         bizDemandLogComponent.addLogAsProductDemandStatusChange(oldStautsMap,newStautsMap);
         sendDingMsg(newStautsMap, bizDemandMap);

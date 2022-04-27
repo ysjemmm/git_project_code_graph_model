@@ -148,6 +148,11 @@ public class BugOnlineDO extends BaseDO {
      * 系统菜单名称
      */
     private String systemMenuName;
+
+    /**
+     * bug来源:产研(forward),运营支撑(support)
+     */
+    private String source;
 }
 
 
