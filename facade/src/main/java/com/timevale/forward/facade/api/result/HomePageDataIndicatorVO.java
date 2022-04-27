@@ -39,4 +39,34 @@ public class HomePageDataIndicatorVO extends ToString {
     @ApiModelProperty("已上线需求占比")
     private String onlineProductDemandRate;
 
+    @ApiModelProperty("待启动项目数")
+    private Integer projectReadyStartCount;
+
+    @ApiModelProperty("待内审项目数")
+    private Integer projectReadyInternalAuditCount;
+
+    @ApiModelProperty("待串讲项目数")
+    private Integer projectReadyConstrueCount;
+
+    @ApiModelProperty("待详设内审项目数")
+    private Integer projectReadyTechnicalDetailReviewCount;
+
+    @ApiModelProperty("待开发项目数")
+    private Integer projectReadyDevelopCount;
+
+    @ApiModelProperty("开发中项目数")
+    private Integer projectDevelopingCount;
+
+    @ApiModelProperty("待测试项目数")
+    private Integer projectReadyTestCount;
+
+    @ApiModelProperty("测试中项目数")
+    private Integer projectTestingCount;
+
+    @ApiModelProperty("待处理业务需求")
+    private Integer bizDemandReadyDealWithCount;
+
+    @ApiModelProperty("已接收待排期业务需求")
+    private Integer bizDemandReadyScheduleCount;
+
 }
