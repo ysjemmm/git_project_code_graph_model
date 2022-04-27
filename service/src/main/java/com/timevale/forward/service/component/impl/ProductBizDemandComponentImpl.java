@@ -50,7 +50,7 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
         } else {
             //产品需求作废
             bizDemandIds = productBizDemandMapper.getByProductDemandIds(Lists.newArrayList(productDemandId))
-                    .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
+                    .stream().map(ProductBizDemandDO::getBizDemandId).distinct().collect(Collectors.toList());
         }
         Map<Long, Date> publishDateMap = new HashMap<>();
         before(publishDateMap, bizDemandIds);

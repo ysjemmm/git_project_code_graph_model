@@ -97,7 +97,7 @@ public class DataCorrectServiceImpl implements DataCorrectService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> calculateStatus() {
-        List<Integer> status = Lists.newArrayList(ProjectStatusEnum.DEVING.getCode(), ProjectStatusEnum.TESTING.getCode());
+        List<Integer> status = Lists.newArrayList(ProjectStatusEnum.PLANING.getCode(),ProjectStatusEnum.DEVING.getCode(), ProjectStatusEnum.TESTING.getCode());
         List<ProjectDO> list = projectMapper.getByStatus(status);
         list.forEach(a->{
             List<ProjectNodeDO> projectNodes = projectNodeMapper.get(a.getId());

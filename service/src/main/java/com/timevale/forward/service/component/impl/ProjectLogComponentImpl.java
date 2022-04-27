@@ -101,7 +101,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                     .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(productDemandIds)) {
                 List<Long> bizDemandIds = productBizDemandMapper.getByProductDemandIds(productDemandIds)
-                        .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
+                        .stream().map(ProductBizDemandDO::getBizDemandId).distinct().collect(Collectors.toList());
                 bizDemandIds.forEach(bid -> {
                     Date publishDate = bizDemandComponent.getProjectEndDate(bid);
                     log.info("bid={},planEndDate={},publishDate={}",bid,newObj.getPlanEndDate(),publishDate);

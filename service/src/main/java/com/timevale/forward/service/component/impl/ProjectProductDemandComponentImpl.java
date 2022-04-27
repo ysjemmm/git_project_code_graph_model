@@ -101,7 +101,7 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
     private void before(List<Long> productDemandIds, Map<Long, Date> publishDateMap, List<Long> bizDemandIds) {
         if (!CollectionUtils.isEmpty(productDemandIds)) {
             List<Long>bids = productBizDemandMapper.getByProductDemandIds(productDemandIds)
-                    .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
+                    .stream().map(ProductBizDemandDO::getBizDemandId).distinct().collect(Collectors.toList());
             bizDemandIds.addAll(bids);
             bizDemandIds.forEach(bid -> {
                 Date publishDate = bizDemandComponent.getProjectEndDate(bid);
