@@ -87,4 +87,9 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("创建人")
     private String createMan;
 
+    @ApiModelProperty("节点状态")
+    private Integer nodeStatus;
+
+    @ApiModelProperty("节点状态名称")
+    private String nodeStatusName;
 }

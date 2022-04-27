@@ -92,6 +92,6 @@ public class ProjectVO extends ToString {
     @ApiModelProperty("节点状态")
     private Integer nodeStatus;
 
-    @ApiModelProperty("节点名称")
-    private String nodeName;
+    @ApiModelProperty("节点状态名称")
+    private String nodeStatusName;
 }

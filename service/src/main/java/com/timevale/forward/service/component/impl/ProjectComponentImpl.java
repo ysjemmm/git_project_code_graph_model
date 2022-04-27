@@ -131,7 +131,7 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         // 4.节点透出
         for (ProjectVO e : projectVOList) {
-            e.setNodeName(ProjectNodeStatusEnum.getNameByCode(e.getNodeStatus()));
+            e.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(e.getNodeStatus()));
         }
 
         // 返回分页数据

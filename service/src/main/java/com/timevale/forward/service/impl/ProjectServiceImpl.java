@@ -329,6 +329,9 @@ public class ProjectServiceImpl implements ProjectService {
         Date currentDate = new Date();
         projectDetailVO.setCurrentDate(currentDate);
 
+        // 节点状态
+        projectDetailVO.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(projectDetailVO.getNodeStatus()));
+
         return BaseResult.success(projectDetailVO);
     }
 

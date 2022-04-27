@@ -11,7 +11,7 @@
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select id,name, customer_dev, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date,
+        select id,name, customer_dev, priority, type ,status, node_status, pm_id,pm pmName ,plan_start_date,plan_end_date,
         actual_start_date,actual_end_date,`desc`, create_man_id, create_man,create_date,modify_date
         from project
         where id = #{id} and is_deleted=false
