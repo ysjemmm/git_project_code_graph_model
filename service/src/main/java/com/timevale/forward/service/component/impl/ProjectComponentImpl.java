@@ -131,7 +131,7 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         // 4.节点透出
         for (ProjectVO e : projectVOList) {
-            e.setNodeName(ProjectNodeEnum.getNameByCode(e.getNodeStatus()));
+            e.setNodeName(ProjectNodeStatusEnum.getNameByCode(e.getNodeStatus()));
         }
 
         // 返回分页数据
@@ -147,9 +147,9 @@ public class ProjectComponentImpl implements ProjectComponent {
         // 计算项目状态,新逻辑
         Map<String, ProjectNodeDO> nodeMap = projectNodes.stream().collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
         log.info("nodeMap={},,projectDO={}", nodeMap, projectDO);
-        ProjectNodeDO demandStart = nodeMap.get(ProjectNodeEnum.START_PLAN.getProjectNodeName());
-        ProjectNodeDO demandAudit = nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getProjectNodeName());
-        ProjectNodeDO demandConstrue = nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getProjectNodeName());
+        ProjectNodeDO demandStart = nodeMap.get(ProjectNodeEnum.START_PLAN.getText());
+        ProjectNodeDO demandAudit = nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText());
+        ProjectNodeDO demandConstrue = nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getText());
         Integer status = ProjectStatusEnum.WAITING.getCode();
         //规划中
         if (demandStart != null && demandStart.getActualDate() != null) {
@@ -163,11 +163,11 @@ public class ProjectComponentImpl implements ProjectComponent {
             status = ProjectStatusEnum.DEVING.getCode();
         }
         //测试中
-        ProjectNodeDO review = nodeMap.get(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getProjectNodeName());
-        ProjectNodeDO devStart = nodeMap.get(ProjectNodeEnum.DEVELOP_START.getProjectNodeName());
-        ProjectNodeDO writeCase = nodeMap.get(ProjectNodeEnum.WRITE_TEST_CASES.getProjectNodeName());
-        ProjectNodeDO reviewCase = nodeMap.get(ProjectNodeEnum.USE_CASE_REVIEW.getProjectNodeName());
-        ProjectNodeDO submitTest = nodeMap.get(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName());
+        ProjectNodeDO review = nodeMap.get(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText());
+        ProjectNodeDO devStart = nodeMap.get(ProjectNodeEnum.DEVELOP_START.getText());
+        ProjectNodeDO writeCase = nodeMap.get(ProjectNodeEnum.WRITE_TEST_CASES.getText());
+        ProjectNodeDO reviewCase = nodeMap.get(ProjectNodeEnum.USE_CASE_REVIEW.getText());
+        ProjectNodeDO submitTest = nodeMap.get(ProjectNodeEnum.SUBMIT_TEST.getText());
         boolean test = dev && (review == null || review.getActualDate() != null)
                 && (devStart == null || devStart.getActualDate() != null)
                 && (writeCase == null || writeCase.getActualDate() != null)
@@ -178,7 +178,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
 
         //已发布
-        ProjectNodeDO publishOfficial = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getProjectNodeName());
+        ProjectNodeDO publishOfficial = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText());
         if (publishOfficial != null && publishOfficial.getActualDate() != null) {
             status = ProjectStatusEnum.RELEASED.getCode();
             //项目的实际完成时间
@@ -200,7 +200,7 @@ public class ProjectComponentImpl implements ProjectComponent {
     public void updateNodeStatus(Long projectId) {
         // 查询项目节点
         List<ProjectNodeDO> nodeDOList = projectNodeComponent.get(projectId);
-        Integer nodeStatus = ProjectNodeEnum.getStageCode(nodeDOList);
+        Integer nodeStatus = ProjectNodeStatusEnum.getStatus(nodeDOList);
 
         // 更新项目节点状态
         ProjectDO projectDO = new ProjectDO();

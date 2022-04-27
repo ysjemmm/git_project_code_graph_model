@@ -276,7 +276,7 @@ public class ProjectServiceImpl implements ProjectService {
         // 节点信息
         if (CollectionUtils.isNotEmpty(projectNodeDOList)) {
             boolean match = projectNodeDOList.stream().anyMatch(e ->
-                    ProjectNodeEnum.PUBLISH_OFFICIAL.getProjectNodeName().equals(e.getName()) && e.getActualDate() != null);
+                    ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(e.getName()) && e.getActualDate() != null);
             if (match && !checkProductRelease(projectModifyReq.getId())) {
                 throw new BaseBizRuntimeException("该项目还有bug未关闭，请关闭后再发布");
             }
@@ -497,9 +497,9 @@ public class ProjectServiceImpl implements ProjectService {
                 .stream()
                 .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
         // 检查任务
-        boolean checkTask = nodeMap.get(ProjectNodeEnum.START_PLAN.getProjectNodeName()) == null
-                && nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getProjectNodeName()) == null
-                && nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getProjectNodeName()) == null;
+        boolean checkTask = nodeMap.get(ProjectNodeEnum.START_PLAN.getText()) == null
+                && nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText()) == null
+                && nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getText()) == null;
         if (checkTask) {
             //删除需求规划阶段时需要校验是否有关联任务,若有关联待执行&进行中&已完成&已暂停的任务,不能删除
             List<TaskDO> taskDOList = taskMapper.getByProjectId(projectDO.getId())
@@ -512,7 +512,7 @@ public class ProjectServiceImpl implements ProjectService {
         // 计算项目状态
         ProjectNodeDO node = null;
         Integer oldStatus = projectDO.getStatus();
-        if ((node = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getProjectNodeName())) != null && node.getActualDate() != null) {
+        if ((node = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText())) != null && node.getActualDate() != null) {
             if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
                 // 编辑项目
                 throw new BaseBizRuntimeException("项目状态为暂停时,不能填写发布正式的实际时间");

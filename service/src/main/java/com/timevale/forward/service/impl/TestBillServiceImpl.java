@@ -87,7 +87,7 @@ public class TestBillServiceImpl implements TestBillService {
         if (CollectionUtils.isNotEmpty(projectNodeDOList)) {
             //获取提测的计划时间
             List<Date> dateList = projectNodeDOList.stream().filter(e -> e.getName()
-                    .equals(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName())).map(ProjectNodeDO::getPlanDate)
+                    .equals(ProjectNodeEnum.SUBMIT_TEST.getText())).map(ProjectNodeDO::getPlanDate)
                     .collect(Collectors.toList());
             if (CollectionUtils.isEmpty(dateList)) {
                 throw new BaseBizRuntimeException("提测单的计划时间不能为空");
@@ -184,7 +184,7 @@ public class TestBillServiceImpl implements TestBillService {
 
         //实际提测时间
         List<ProjectNodeDO> projectNodeDOList = projectNodeMapper.get(projectId).stream().filter(e -> e.getName()
-                .equals(ProjectNodeEnum.SUBMIT_TEST.getProjectNodeName())).collect(Collectors.toList());
+                .equals(ProjectNodeEnum.SUBMIT_TEST.getText())).collect(Collectors.toList());
         Date actualDate = projectNodeDOList.get(0).getActualDate();
         testBillVO.setActualDate(actualDate);
 
