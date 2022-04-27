@@ -31,6 +31,11 @@ public class SearchConditionDO extends BaseDO{
     private String content;
 
     /**
+     * 是否为默认查询条件默认
+     */
+    private Boolean isDefault;
+
+    /**
      * 属于人
      */
     private String belongMan;

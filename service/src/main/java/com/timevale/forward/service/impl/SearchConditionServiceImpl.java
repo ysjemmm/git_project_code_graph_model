@@ -2,10 +2,12 @@ package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.SearchConditionMapper;
+import com.timevale.forward.dal.entity.BaseDO;
 import com.timevale.forward.dal.entity.SearchConditionDO;
 import com.timevale.forward.facade.api.client.SearchConditionService;
 import com.timevale.forward.facade.api.query.SearchConditionQueryList;
 import com.timevale.forward.facade.api.request.SearchConditionAddReq;
+import com.timevale.forward.facade.api.request.SearchConditionDefaultReq;
 import com.timevale.forward.facade.api.request.SearchConditionDeleteReq;
 import com.timevale.forward.facade.api.request.SearchConditionModifyReq;
 import com.timevale.forward.facade.api.result.SearchConditionVO;
@@ -13,12 +15,12 @@ import com.timevale.forward.service.copy.SearchConditionCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
-import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -75,6 +77,37 @@ public class SearchConditionServiceImpl implements SearchConditionService {
         searchConditionDO.setId(id);
         searchConditionDO.setIsDeleted(true);
         searchConditionMapper.update(searchConditionDO);
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> setDefault(SearchConditionDefaultReq searchConditionDefaultReq) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        Long id = searchConditionDefaultReq.getId();
+        Integer model = searchConditionDefaultReq.getModel();
+        Integer tabType = searchConditionDefaultReq.getTabType();
+
+        // 取消原有默认条件
+        List<SearchConditionDO> conditionDOList = searchConditionMapper.select(model, tabType, userInfo.getId());
+
+        Optional<Long> first = conditionDOList.stream().filter(SearchConditionDO::getIsDefault).map(BaseDO::getId).findFirst();
+        if(first.isPresent()){
+            Long cancelId = first.get();
+
+            SearchConditionDO conditionDO = new SearchConditionDO();
+            conditionDO.setId(cancelId);
+            conditionDO.setIsDefault(false);
+            searchConditionMapper.update(conditionDO);
+        }
+
+        // 更新原有数据
+        SearchConditionDO conditionDO = new SearchConditionDO();
+        conditionDO.setId(id);
+        conditionDO.setIsDefault(true);
+        searchConditionMapper.update(conditionDO);
+
 
         return BaseResult.success(true);
     }

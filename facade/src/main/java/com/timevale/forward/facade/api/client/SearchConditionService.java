@@ -4,6 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.SearchConditionQueryList;
 import com.timevale.forward.facade.api.request.SearchConditionAddReq;
+import com.timevale.forward.facade.api.request.SearchConditionDefaultReq;
 import com.timevale.forward.facade.api.request.SearchConditionDeleteReq;
 import com.timevale.forward.facade.api.request.SearchConditionModifyReq;
 import com.timevale.forward.facade.api.result.SearchConditionVO;
@@ -40,9 +41,16 @@ public interface SearchConditionService {
     BaseResult<Boolean> update(SearchConditionModifyReq searchConditionModifyReq);
 
     /**
-     * 新增
+     * 删除
      *
      * @param searchConditionDeleteReq 搜索条件-删除请求
      */
     BaseResult<Boolean> delete(SearchConditionDeleteReq searchConditionDeleteReq);
+
+    /**
+     * 设为默认
+     *
+     * @param searchConditionDefaultReq 搜索条件-设为默认请求
+     */
+    BaseResult<Boolean> setDefault(SearchConditionDefaultReq searchConditionDefaultReq);
 }
