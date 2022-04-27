@@ -54,6 +54,13 @@ public interface ProjectRiskMapper {
     List<ProjectRiskDO> selectByProjectId(@Param("projectId") Long projectId);
 
     /**
+     * 查询 by 项目id列表
+     *
+     * @param projectIdList 项目id列表
+     */
+    List<ProjectRiskDO> selectByProjectIdList(@Param("projectIdList") List<Long>projectIdList);
+
+    /**
      * 查询 by 状态, 不包含类型：其它
      *
      * @param state 项目id

@@ -4,10 +4,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProjectListCondition;
-import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.dao.ProjectNodeMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.model.enums.*;
@@ -27,6 +24,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +43,9 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Resource
     private ProductLineMapper productLineMapper;
+
+    @Resource
+    private ProjectRiskMapper projectRiskMapper;
 
     @Resource
     private ProjectNodeMapper projectNodeMapper;
@@ -132,6 +133,16 @@ public class ProjectComponentImpl implements ProjectComponent {
         // 4.节点透出
         for (ProjectVO e : projectVOList) {
             e.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(e.getNodeStatus()));
+        }
+
+        // 5.是否需要预警
+        List<Long> projectIdList = projectVOList.stream().map(ProjectVO::getId).collect(Collectors.toList());
+        if(CollectionUtils.isNotEmpty(projectIdList)) {
+            List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectIdList(projectIdList);
+            Set<Long> riskSet = riskDOList.stream().map(ProjectRiskDO::getProjectId).collect(Collectors.toSet());
+            for (ProjectVO e : projectVOList) {
+                e.setContainRisk(riskSet.contains(e.getId()));
+            }
         }
 
         // 返回分页数据

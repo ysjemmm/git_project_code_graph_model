@@ -64,5 +64,19 @@
         WHERE id = #{id}
     </select>
 
+    <select id="selectByProjectIdList" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
+        SELECT id, project_id, state
+        FROM project_risk
+        <where>
+            <if test="projectIdList != null and projectIdList.size() > 0">
+                AND project_id IN
+                <foreach collection="projectIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            AND is_deleted = false
+        </where>
+    </select>
+
 
 </mapper>

@@ -87,7 +87,7 @@ public class ProjectVO extends ToString {
     private String statusName;
 
     @ApiModelProperty("是否需要预警")
-    private Boolean warning;
+    private Boolean containRisk;
 
     @ApiModelProperty("节点状态")
     private Integer nodeStatus;
