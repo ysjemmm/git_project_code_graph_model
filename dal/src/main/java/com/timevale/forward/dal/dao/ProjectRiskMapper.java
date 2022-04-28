@@ -31,13 +31,21 @@ public interface ProjectRiskMapper {
      */
     int update(ProjectRiskDO projectRiskDO);
 
+
+    /**
+     * 批量更新
+     *
+     * @param projectRiskDOList 项目风险DO 列表
+     */
+    int batchUpdate(@Param("projectRiskDOList") List<ProjectRiskDO> projectRiskDOList);
+
     /**
      * 批量更新状态
      *
      * @param idList id列表
-     * @param state  状态
+     * @param status  状态
      */
-    int updateState(@Param("idList") List<Long> idList, @Param("state") Integer state);
+    int updateStatus(@Param("idList") List<Long> idList, @Param("status") Integer status);
 
     /**
      * 查询 by id
@@ -63,8 +71,8 @@ public interface ProjectRiskMapper {
     /**
      * 查询 by 状态, 不包含类型：其它
      *
-     * @param state 项目id
+     * @param status 项目id
      */
-    List<ProjectRiskDO> selectByState(@Param("state") Integer state);
+    List<ProjectRiskDO> selectByStatus(@Param("status") Integer status);
 
 }

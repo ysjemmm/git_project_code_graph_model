@@ -43,6 +43,10 @@
         </foreach>
     </update>
 
+    <update id="batchUpdate">
+
+    </update>
+
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
         SELECT id, project_id, type, name, sign, status, create_man_id, create_man, create_date, modify_date
         FROM project_risk

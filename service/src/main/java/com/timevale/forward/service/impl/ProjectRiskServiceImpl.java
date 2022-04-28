@@ -4,6 +4,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectRiskMapper;
+import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
 import com.timevale.forward.dal.dto.HomePageRiskWarningSubmitTestDTO;
 import com.timevale.forward.dal.dto.HomePageRiskWarningTaskDTO;
@@ -22,6 +23,7 @@ import com.timevale.forward.service.component.HomePageRiskWarningTaskComponent;
 import com.timevale.forward.service.component.ProjectRiskExplanationComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectRiskCopier;
+import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -46,6 +48,12 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
 
     @Resource
     ProjectRiskMapper projectRiskMapper;
+
+    @Resource
+    ElapsedTimeClient elapsedTimeClient;
+
+    @Resource
+    TaskMapper taskMapper;
 
     @Resource
     ProjectRiskExplanationComponent projectRiskExplanationComponent;
@@ -132,7 +140,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         List<HomePageRiskWarningSubmitTestDTO> testDTOList = riskWarningSubmitTestComponent.getRiskWarningSubmitTestAll();
 
         // sql 端
-        List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByState(ProjectRiskStatusEnum.PENDING.getCode());
+        List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByStatus(ProjectRiskStatusEnum.PENDING.getCode());
 
         // 唯一id
         Map<String, Object> newRiskMap = new HashMap<>();
@@ -145,24 +153,24 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         // 判断去重，更新状态
         List<ProjectRiskDO> completeList = new ArrayList<>();
         oldRiskMap.forEach((k, v) -> {
-            if(!newRiskMap.containsKey(k)){
-                ProjectRiskDO riskDO = new ProjectRiskDO();
-                riskDO.setId(v.getId());
-                // 任务、节点 计算逾期时间
-                if(ProjectRiskTypeEnum.TASK_OVERDUE.getCode().equals(v.getType())){
-
-                }else if(ProjectRiskTypeEnum.PROJECT_NODE_OVERDUE.getCode().equals(v.getType())){
-
-                }else if(ProjectRiskTypeEnum.PROJECT_NODE_ENTRY_OVERDUE.getCode().equals(v.getType())){
-
-                }
+            // 如果还能查询到，则风险状态不变
+            if(newRiskMap.containsKey(k)){
+               return;
             }
+
+            // 如果查询不到，则说明风险已经处理
+            ProjectRiskDO riskDO = new ProjectRiskDO();
+            riskDO.setId(v.getId());
+            riskDO.setStatus(ProjectRiskStatusEnum.COMPLETE.getCode());
+            riskDO.setSign(updateRiskSign(v));
         });
+
+        // 更新完成处理的风险
         if(CollectionUtils.isNotEmpty(completeList)){
-            // projectRiskMapper.updateState(completeList, ProjectRiskStatusEnum.COMPLETE.getCode());
+            projectRiskMapper.batchUpdate(completeList);
         }
 
-        // 增加新风险，风险说明
+        // 增加新风险，同时添加风险说明
         List<ProjectRiskDO> addRiskDOList = new ArrayList<>();
         newRiskMap.forEach((k, v) -> {
             if(!oldRiskMap.containsKey(k)){
@@ -209,6 +217,21 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         }
 
         return riskDO;
+    }
+
+    public String updateRiskSign(ProjectRiskDO riskDO){
+        String riskSign = "";
+
+        // 任务、节点 计算逾期时间
+        if(ProjectRiskTypeEnum.TASK_OVERDUE.getCode().equals(riskDO.getType())){
+
+
+        }else if(ProjectRiskTypeEnum.PROJECT_NODE_OVERDUE.getCode().equals(riskDO.getType())
+                || ProjectRiskTypeEnum.PROJECT_NODE_ENTRY_OVERDUE.getCode().equals(riskDO.getType())){
+
+        }
+
+        return riskSign;
     }
 
 }

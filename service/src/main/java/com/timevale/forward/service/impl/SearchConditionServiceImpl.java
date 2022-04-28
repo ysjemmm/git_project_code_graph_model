@@ -48,15 +48,15 @@ public class SearchConditionServiceImpl implements SearchConditionService {
         List<SearchConditionDO> select = searchConditionMapper.select(model, tabType, userInfo.getId());
         List<SearchConditionVO> searchConditionVOList = select.stream().map(SearchConditionCopier.INSTANCE::convert).collect(Collectors.toList());
 
-        // 系统默认
+        // 系统默认条件
         SearchConditionVO systemDefault = new SearchConditionVO();
         systemDefault.setId(0L);
         systemDefault.setContent("");
         systemDefault.setModel(model);
-        systemDefault.setTabType(tabType);
         systemDefault.setNotDelete(true);
-        systemDefault.setIsDefault(searchConditionVOList.stream().noneMatch(SearchConditionVO::getIsDefault));
+        systemDefault.setTabType(tabType);
         systemDefault.setName(CommonConstant.SYSTEM_DEFAULT);
+        systemDefault.setIsDefault(searchConditionVOList.stream().noneMatch(SearchConditionVO::getIsDefault));
 
         searchConditionVOList.add(systemDefault);
 
