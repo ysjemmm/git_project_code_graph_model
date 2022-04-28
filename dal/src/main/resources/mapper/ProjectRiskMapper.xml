@@ -20,7 +20,7 @@
         <set>
             <if test="sign != null and sign != ''">sign = #{sign},</if>
             <if test="name != null and name != ''">name = #{name},</if>
-            <if test="state != null">state = #{state},</if>
+            <if test="status != null">status = #{status},</if>
             <if test="modifyDate != null">modify_date = #{modifyDate},</if>
             <if test="true">
                 modify_man = #{modifyMan},
@@ -32,9 +32,9 @@
         </where>
     </update>
 
-    <update id="updateState">
+    <update id="updateStatus">
         UPDATE project_risk
-        SET state = #{state},
+        SET status = #{status},
             modify_man = #{modifyMan},
             modify_man_id = #{modifyManId}
         WHERE id IN
@@ -44,28 +44,28 @@
     </update>
 
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
-        SELECT id, project_id, type, name, sign, state, create_man_id, create_man, create_date, modify_date
+        SELECT id, project_id, type, name, sign, status, create_man_id, create_man, create_date, modify_date
         FROM project_risk
         WHERE project_id = #{projectId} AND
               is_deleted = false
     </select>
 
-    <select id="selectByState" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
+    <select id="selectByStatus" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
         SELECT id, project_id, type, name
         FROM project_risk
-        WHERE state = #{state} AND
+        WHERE status = #{status} AND
               type != 0 AND
               is_deleted = false
     </select>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
-        SELECT id, project_id, type, name, sign, state,create_man, create_man_id, create_date, modify_date
+        SELECT id, project_id, type, name, sign, status,create_man, create_man_id, create_date, modify_date
         FROM project_risk
         WHERE id = #{id}
     </select>
 
     <select id="selectByProjectIdList" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
-        SELECT id, project_id, state
+        SELECT id, project_id, status
         FROM project_risk
         <where>
             <if test="projectIdList != null and projectIdList.size() > 0">

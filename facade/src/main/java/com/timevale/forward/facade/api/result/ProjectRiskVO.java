@@ -42,10 +42,10 @@ public class ProjectRiskVO extends ToString {
     private String sign;
 
     @ApiModelProperty("状态：-1 作废 0 待处理, 1 已处理")
-    private Integer state;
+    private Integer status;
 
     @ApiModelProperty("状态描述")
-    private String stateName;
+    private String statusName;
 
     @ApiModelProperty("创建人")
     private String createMan;

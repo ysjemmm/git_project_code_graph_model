@@ -9,7 +9,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum ProjectRiskStateEnum {
+public enum ProjectRiskStatusEnum {
 
     INVALID(-1, "作废"),
 
@@ -21,7 +21,7 @@ public enum ProjectRiskStateEnum {
     private String text;
 
     public static String getTextByCode(Integer code){
-        for (ProjectRiskStateEnum e : ProjectRiskStateEnum.values()){
+        for (ProjectRiskStatusEnum e : ProjectRiskStatusEnum.values()){
             if(e.getCode().equals(code)){
                 return e.text;
             }

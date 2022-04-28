@@ -40,5 +40,5 @@ public class ProjectRiskDO extends BaseDO {
     /**
      * 状态：0 待处理, 1 已处理
      */
-    private Integer state;
+    private Integer status;
 }
