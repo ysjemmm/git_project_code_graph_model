@@ -219,7 +219,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
                 this,
                 bizDemandDO.getId(),
-                bizDemandDO.getCreateMan(),
+                bizDemandDO.getSubmitMan(),
                 bizDemandDO.getReceiveManId(),
                 bizDemandDO.getName()
         ));
@@ -332,7 +332,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
                     this,
                     oldBizDemandDO.getId(),
-                    oldBizDemandDO.getCreateMan(),
+                    oldBizDemandDO.getSubmitMan(),
                     newBizDemandDO.getReceiveManId(),
                     newBizDemandDO.getName()
             ));
@@ -373,7 +373,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 this,
                 bizDemandDO.getId(),
                 userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
-                bizDemandDO.getCreateManId(),
+                bizDemandDO.getSubmitManId(),
                 bizDemandDO.getName(),
                 PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
         ));
@@ -443,7 +443,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 this,
                 bizDemandDO.getId(),
                 userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
-                bizDemandDO.getCreateManId(),
+                bizDemandDO.getSubmitManId(),
                 bizDemandDO.getName(),
                 BizDemandReasonEnum.getTextByCode(bizDemandDO.getReason())
         ));
@@ -513,7 +513,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
                     this,
                     bizDemandDO.getId(),
-                    bizDemandDO.getCreateMan(),
+                    bizDemandDO.getSubmitMan(),
                     bizDemandDO.getReceiveManId(),
                     bizDemandDO.getName()
             ));
@@ -545,8 +545,8 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> bizDemandBatchTransferCreateMan(BatchTransferReq batchTransferReq) {
         // 参数
-        String createMan = batchTransferReq.getReceiveMan();
-        String createManId = batchTransferReq.getReceiveMan();
+        String submitMan = batchTransferReq.getReceiveMan();
+        String submitManId = batchTransferReq.getReceiveMan();
 
         List<Long> bizDemandIdList = batchTransferReq.getIdList();
 
@@ -555,17 +555,16 @@ public class BizDemandServiceImpl implements BizDemandService {
             List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(bizDemandIdList);
             for (BizDemandDO e : bizDemandDOList) {
                 bizDemandLogComponent.addLogWhenModifyData(
-                        e.getCreateMan(),
-                        createMan,
+                        e.getSubmitMan(),
+                        submitMan,
                         e.getId(),
                         BizChangeLogFieldEnum.CREATE_MAN.getText(),
                         true
                 );
             }
             // 批量转交
-            bizDemandMapper.updateCreateMan(bizDemandIdList, createMan, createManId);
+            bizDemandMapper.updateCreateMan(bizDemandIdList, submitMan, submitManId);
         }
-
 
         return BaseResult.success(true);
     }

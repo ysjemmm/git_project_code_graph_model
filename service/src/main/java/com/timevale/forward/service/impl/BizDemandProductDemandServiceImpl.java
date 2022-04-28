@@ -223,7 +223,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                 messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
                         this,
                         newBizDemandDO.getId(),
-                        newBizDemandDO.getCreateManId(),
+                        newBizDemandDO.getSubmitManId(),
                         newBizDemandDO.getName(),
                         statusText,
                         projectEndDate

@@ -4,6 +4,7 @@ import com.timevale.forward.dal.annotation.FieldCompare;
 import com.timevale.forward.model.enums.BizDemandPriorityEnum;
 import com.timevale.forward.model.enums.PlanReleaseDateEnum;
 import com.timevale.forward.model.enums.YesOrNoEnum;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 
@@ -28,6 +29,9 @@ public class BizDemandMD extends BaseMD {
 
     @FieldCompare(fieldName = "需求接收人")
     private String receiveMan;
+
+    @FieldCompare(fieldName = "需求提交人")
+    private String submitMan;
 
     @FieldCompare(fieldName = "共创用户", enumClass = YesOrNoEnum.class)
     private Boolean createCustomer;

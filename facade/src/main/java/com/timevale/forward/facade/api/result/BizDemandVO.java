@@ -80,4 +80,10 @@ public class BizDemandVO extends ToString {
 
     @ApiModelProperty("创建人信息")
     private PersonVO createManInfo;
+
+    @ApiModelProperty("需求提交人")
+    private String submitMan;
+
+    @ApiModelProperty("需求提交人id")
+    private String submitManId;
 }

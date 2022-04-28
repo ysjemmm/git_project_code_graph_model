@@ -77,12 +77,12 @@ public class BizDemandDO extends BaseDO {
     private Integer reason;
 
     /**
-     * 审计-创建人
+     * 需求提交人
      */
-    private String auditCreateMan;
+    private String submitMan;
 
     /**
-     * 审计-创建人id
+     * 需求提交人id
      */
-    private String auditCreateManId;
+    private String submitManId;
 }
