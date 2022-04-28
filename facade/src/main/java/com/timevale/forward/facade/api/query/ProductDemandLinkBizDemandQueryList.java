@@ -42,8 +42,11 @@ public class ProductDemandLinkBizDemandQueryList extends QueryBase {
     @ApiModelProperty("需求解决状态")
     private List<Integer> statusList;
 
-    @ApiModelProperty("需求提交人")
+    @ApiModelProperty("提交人")
     private List<PersonQuery> createManInfoList;
+
+    @ApiModelProperty("需求提交人")
+    private List<PersonQuery> submitManInfoList;
 
     @ApiModelProperty("需求接收人")
     private List<PersonQuery> receiveManInfoList;

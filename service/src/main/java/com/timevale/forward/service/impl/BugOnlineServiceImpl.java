@@ -508,7 +508,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         if (bizDemandId != null) {
             BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
             //bizDemandDO --> bizDemandVO
-            BizDemandVO bizDemandVO = BizDemandCopier.INSTANCE.convert(bizDemandDO);
+            BizDemandVO bizDemandVO = BizDemandCopier.INSTANCE.transfer(bizDemandDO);
             //业务需求信息存储到详情参数里面
             bugOnlineDetailVO.setBizDemandVO(bizDemandVO);
         }

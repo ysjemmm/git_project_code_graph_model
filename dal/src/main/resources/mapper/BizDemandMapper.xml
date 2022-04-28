@@ -143,6 +143,12 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="submitManIdList!=null and submitManIdList.size()>0">
+                and bd.submit_man_id in
+                <foreach collection="submitManIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="createManIdList!=null and createManIdList.size()>0">
                 and bd.create_man_id in
                 <foreach collection="createManIdList" item="item" separator="," open="(" close=")">

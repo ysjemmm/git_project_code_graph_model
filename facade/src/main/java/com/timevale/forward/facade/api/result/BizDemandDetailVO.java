@@ -2,6 +2,7 @@ package com.timevale.forward.facade.api.result;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -16,24 +17,61 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@ApiModel("业务需求详细行信息")
-public class BizDemandDetailVO extends BizDemandVO {
+@ApiModel("业务需求详细信息")
+public class BizDemandDetailVO extends ToString {
+
+    @ApiModelProperty("业务需求id")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long id;
+
+    @ApiModelProperty("需求主题")
+    private String name;
+
+    @ApiModelProperty("目标客户/用户/项目")
+    private String targetCustomer;
+
+    @ApiModelProperty("优先级： 0-紧急，10-高，20-中，30低")
+    private Integer priority;
+
+    @ApiModelProperty("优先级名称")
+    private String priorityText;
+
+    @ApiModelProperty("产品线id")
+    private Long productLineId;
+
+    @ApiModelProperty("产品线名称")
+    private String productLineName;
 
     @ApiModelProperty("需求部门id")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long deptId;
 
+    @ApiModelProperty("需求部门名称")
+    private String deptName;
+
+    @ApiModelProperty("是否为已删除部门：0-未删除;1-已删除")
+    private Integer deptDeleteFlag;
+
+    @ApiModelProperty("创建时间")
+    private Date createDate;
+
+    @ApiModelProperty("预计上线时间 12月份")
+    private Integer planReleaseDate;
+
+    @ApiModelProperty("预计上线时间名称")
+    private String planReleaseDateText;
+
+    @ApiModelProperty("需求解决状态:0待评估，10已接收，20已列入项目，30项目进行中，40已完成上线，-10被驳回，-20已作废")
+    private Integer status;
+
+    @ApiModelProperty("需求解决状态名称")
+    private String statusText;
+
     @ApiModelProperty("影响数据指标")
     private String dataIndicators;
 
-    @ApiModelProperty("目标客户/用户/项目")
-    private String targetCustomer;
-
     @ApiModelProperty("是否共创用户")
     private Boolean createCustomer;
-
-    @ApiModelProperty("接收人")
-    private PersonVO receiveManInfo;
 
     @ApiModelProperty("需求描述")
     private String desc;
@@ -60,6 +98,21 @@ public class BizDemandDetailVO extends BizDemandVO {
     @ApiModelProperty("线上bug 名称")
     private String bugOnlineName;
 
-    @ApiModelProperty("创建时间")
-    private Date createDate;
+    @ApiModelProperty("接收人信息")
+    private PersonVO receiveManInfo;
+
+    @ApiModelProperty("需求接收人")
+    private String receiveMan;
+
+    @ApiModelProperty("需求接收人id")
+    private String receiveManId;
+
+    @ApiModelProperty("创建人信息")
+    private PersonVO createManInfo;
+
+    @ApiModelProperty("需求提交人")
+    private String submitMan;
+
+    @ApiModelProperty("需求提交人id")
+    private String submitManId;
 }

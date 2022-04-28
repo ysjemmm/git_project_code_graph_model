@@ -48,6 +48,16 @@ public class BizDemandVO extends ToString {
     @ApiModelProperty("产品线名称")
     private String productLineName;
 
+    @ApiModelProperty("需求部门Id")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long deptId;
+
+    @ApiModelProperty("需求部门名称")
+    private String deptName;
+
+    @ApiModelProperty("是否为已删除部门：0-未删除;1-已删除")
+    private Integer deptDeleteFlag;
+
     @ApiModelProperty("创建时间")
     private Date createDate;
 
@@ -69,14 +79,11 @@ public class BizDemandVO extends ToString {
     @ApiModelProperty("接收人信息")
     private PersonVO receiveManInfo;
 
-    @ApiModelProperty("需求部门Id")
-    private Long deptId;
+    @ApiModelProperty("需求接收人")
+    private String receiveMan;
 
-    @ApiModelProperty("需求部门")
-    private String deptName;
-
-    @ApiModelProperty("是否为已删除部门：0-未删除;1-已删除")
-    private Integer deptDeleteFlag;
+    @ApiModelProperty("需求接收人id")
+    private String receiveManId;
 
     @ApiModelProperty("创建人信息")
     private PersonVO createManInfo;
