@@ -55,7 +55,7 @@ public class SearchConditionServiceImpl implements SearchConditionService {
         systemDefault.setModel(model);
         systemDefault.setTabType(tabType);
         systemDefault.setNotDelete(true);
-        systemDefault.setIsDefault(false);
+        systemDefault.setIsDefault(searchConditionVOList.stream().noneMatch(SearchConditionVO::getIsDefault));
         systemDefault.setName(CommonConstant.SYSTEM_DEFAULT);
 
         searchConditionVOList.add(systemDefault);
