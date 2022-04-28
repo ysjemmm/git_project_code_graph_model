@@ -11,6 +11,7 @@ import com.timevale.forward.facade.api.request.SearchConditionDefaultReq;
 import com.timevale.forward.facade.api.request.SearchConditionDeleteReq;
 import com.timevale.forward.facade.api.request.SearchConditionModifyReq;
 import com.timevale.forward.facade.api.result.SearchConditionVO;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.SearchConditionCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -46,6 +47,18 @@ public class SearchConditionServiceImpl implements SearchConditionService {
         // 查询并转换
         List<SearchConditionDO> select = searchConditionMapper.select(model, tabType, userInfo.getId());
         List<SearchConditionVO> searchConditionVOList = select.stream().map(SearchConditionCopier.INSTANCE::convert).collect(Collectors.toList());
+
+        // 系统默认
+        SearchConditionVO systemDefault = new SearchConditionVO();
+        systemDefault.setId(0L);
+        systemDefault.setContent("");
+        systemDefault.setModel(model);
+        systemDefault.setTabType(tabType);
+        systemDefault.setNotDelete(true);
+        systemDefault.setIsDefault(false);
+        systemDefault.setName(CommonConstant.SYSTEM_DEFAULT);
+
+        searchConditionVOList.add(systemDefault);
 
         return BaseResult.success(searchConditionVOList);
     }

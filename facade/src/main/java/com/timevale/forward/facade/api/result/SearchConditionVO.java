@@ -36,4 +36,7 @@ public class SearchConditionVO extends ToString {
 
     @ApiModelProperty("是否默认")
     private Boolean isDefault;
+
+    @ApiModelProperty("不可删除")
+    private Boolean notDelete = false;
 }
