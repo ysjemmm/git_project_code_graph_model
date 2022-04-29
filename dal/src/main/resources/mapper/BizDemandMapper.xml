@@ -149,12 +149,6 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="createManIdList!=null and createManIdList.size()>0">
-                and bd.create_man_id in
-                <foreach collection="createManIdList" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
             <if test="receiveManIdList!=null and receiveManIdList.size()>0">
                 and bd.receive_man_id in
                 <foreach collection="receiveManIdList" item="item" separator="," open="(" close=")">
