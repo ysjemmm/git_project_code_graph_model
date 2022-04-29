@@ -496,7 +496,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         newBizDemandDO.setId(bizDemandDO.getId());
         newBizDemandDO.setReceiveMan(newReceiveMan);
         newBizDemandDO.setReceiveManId(newReceiveManId);
-        bizDemandMapper.update(bizDemandDO);
+        bizDemandMapper.update(newBizDemandDO);
 
         // 新旧接受人是否相同
         if (!Objects.equal(oldReceiveMan, newReceiveMan)) {
