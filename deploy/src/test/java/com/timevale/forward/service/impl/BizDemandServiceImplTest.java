@@ -91,8 +91,6 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         bizDemandQueryList.setPageSize(5);
         PersonQuery personQuery = new PersonQuery();
         personQuery.setUserId("www");
-        bizDemandQueryList.setCreateManInfoList(Collections.singletonList(personQuery));
-        bizDemandQueryList.setReceiveManInfoList(Collections.singletonList(personQuery));
         bizDemandQueryList.setBizDomainIdList(Collections.singletonList(1L));
         bizDemandQueryList.setCreateDateEnd(new Date());
         bizDemandQueryList.setCreateDateStart(new Date());

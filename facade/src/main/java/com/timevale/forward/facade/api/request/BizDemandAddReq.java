@@ -59,17 +59,11 @@ public class BizDemandAddReq extends BaseReq {
     @ApiModelProperty("线上bug id")
     private Long bugOnlineId;
 
-    @ApiModelProperty("接收人信息")
-    private PersonAddReq receiveManInfo;
-
     @ApiModelProperty("需求接收人")
     private String receiveMan;
 
     @ApiModelProperty("需求接收人id")
     private String receiveManId;
-
-    @ApiModelProperty("提交人信息")
-    private PersonAddReq createManInfo;
 
     @ApiModelProperty("需求提交人")
     private String submitMan;

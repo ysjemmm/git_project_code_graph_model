@@ -111,12 +111,11 @@ public class BizDemandServiceImpl implements BizDemandService {
         } else {
             List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
             if (ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())) {
-                Set<String> createIdSet = new HashSet<>(bizDemandListCondition.getCreateManIdList());
+                Set<String> createIdSet = new HashSet<>(bizDemandListCondition.getSubmitManIdList());
                 if (!createIdSet.isEmpty()) {
                     teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
                     resultIsEmpty = teamMemberIdList.isEmpty();
                 }
-                bizDemandListCondition.setCreateManIdList(teamMemberIdList);
                 bizDemandListCondition.setSubmitManIdList(teamMemberIdList);
             } else if (ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())) {
                 Set<String> receiveIdSet = new HashSet<>(bizDemandListCondition.getReceiveManIdList());

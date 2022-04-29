@@ -38,8 +38,6 @@ public interface BizDemandCopier {
      * @param bizDemandQueryList 业务需求查询条件
      * @return 查询条件
      */
-    @Mapping(source = "createManInfoList", target = "createManIdList", qualifiedByName = "getInfoId")
-    @Mapping(source = "receiveManInfoList", target = "receiveManIdList", qualifiedByName = "getInfoId")
     BizDemandListCondition convert(BizDemandQueryList bizDemandQueryList);
 
 
@@ -49,8 +47,6 @@ public interface BizDemandCopier {
      * @param bizDemandAddReq 业务需求添加
      * @return 业务需求DO
      */
-    @Mapping(source = "receiveManInfo.userName", target = "receiveMan")
-    @Mapping(source = "receiveManInfo.userId", target = "receiveManId")
     BizDemandDO convert(BizDemandAddReq bizDemandAddReq);
 
 
@@ -60,8 +56,6 @@ public interface BizDemandCopier {
      * @param bizDemandModifyReq 业务需求修改要求的事情
      * @return DO
      */
-    @Mapping(source = "receiveManInfo.userName", target = "receiveMan")
-    @Mapping(source = "receiveManInfo.userId", target = "receiveManId")
     BizDemandDO convert(BizDemandModifyReq bizDemandModifyReq);
 
     /**
@@ -70,10 +64,6 @@ public interface BizDemandCopier {
      * @param bizDemandDO 业务需求DO
      * @return 业务需求详细VO
      */
-    @Mapping(source = "receiveMan", target = "receiveManInfo.userName")
-    @Mapping(source = "receiveManId", target = "receiveManInfo.userId")
-    @Mapping(source = "createMan", target = "createManInfo.userName")
-    @Mapping(source = "createManId", target = "createManInfo.userId")
     BizDemandDetailVO convert(BizDemandDO bizDemandDO);
 
     /**
@@ -82,10 +72,6 @@ public interface BizDemandCopier {
      * @param bizDemandDO 业务需求DO
      * @return 业务需求详细VO
      */
-    @Mapping(source = "receiveMan", target = "receiveManInfo.userName")
-    @Mapping(source = "receiveManId", target = "receiveManInfo.userId")
-    @Mapping(source = "createMan", target = "createManInfo.userName")
-    @Mapping(source = "createManId", target = "createManInfo.userId")
     BizDemandVO transfer(BizDemandDO bizDemandDO);
 
 
@@ -95,10 +81,6 @@ public interface BizDemandCopier {
      * @param bizDemandListDO 业务需求列表DO
      * @return VO
      */
-    @Mapping(source = "receiveMan", target = "receiveManInfo.userName")
-    @Mapping(source = "receiveManId", target = "receiveManInfo.userId")
-    @Mapping(source = "createMan", target = "createManInfo.userName")
-    @Mapping(source = "createManId", target = "createManInfo.userId")
     BizDemandVO convert(BizDemandListDO bizDemandListDO);
 
     /**
@@ -161,8 +143,6 @@ public interface BizDemandCopier {
      * @param demandQueryList 列表
      * @return Condition
      */
-    @Mapping(source = "createManInfoList", target = "createManIdList", qualifiedByName = "getInfoId")
-    @Mapping(source = "receiveManInfoList", target = "receiveManIdList", qualifiedByName = "getInfoId")
     BizDemandListCondition convert(ProductDemandLinkBizDemandQueryList demandQueryList);
 
 

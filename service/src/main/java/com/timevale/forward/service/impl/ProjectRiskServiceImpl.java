@@ -193,7 +193,8 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
             riskDO.setMainId(nodeRisk.getMainId());
             riskDO.setType(nodeRisk.getRiskType());
             riskDO.setName(nodeRisk.getNodeName());
-            riskDO.setSign(nodeRisk.getOverdueDay());
+
+
             // riskDO.setSign(String.format(ProjectRiskSignEnum.SUBMIT_FAILURE.getText(), nodeRisk.getOverdueDay()));
 
         }else if(object instanceof HomePageRiskWarningTaskDTO){
@@ -202,11 +203,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
             riskDO.setMainId(taskRisk.getMainId());
             riskDO.setType(taskRisk.getRiskType());
             riskDO.setName(taskRisk.getTaskName());
-
-            double totalHour = Double.parseDouble(taskRisk.getOverdueTime());
-            int day = (int)totalHour / 24;
-            double hour = totalHour - 24 * day;
-            riskDO.setSign(String.format(ProjectRiskSignEnum.SUBMIT_FAILURE.getText(), day, hour));
+            // riskDO.setSign(String.format(ProjectRiskSignEnum.SUBMIT_FAILURE.getText(), day, hour));
 
         }else if(object instanceof HomePageRiskWarningSubmitTestDTO){
             HomePageRiskWarningSubmitTestDTO testRisk = (HomePageRiskWarningSubmitTestDTO) object;
@@ -214,7 +211,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
             riskDO.setMainId(testRisk.getMainId());
             riskDO.setType(testRisk.getRiskType());
             riskDO.setName(testRisk.getTestBillName());
-            riskDO.setSign(ProjectRiskSignEnum.SUBMIT_FAILURE.getText());
+            // riskDO.setSign(ProjectRiskSignEnum.SUBMIT_FAILURE.getText());
         }
 
         return riskDO;

@@ -98,17 +98,11 @@ public class BizDemandDetailVO extends ToString {
     @ApiModelProperty("线上bug 名称")
     private String bugOnlineName;
 
-    @ApiModelProperty("接收人信息")
-    private PersonVO receiveManInfo;
-
     @ApiModelProperty("需求接收人")
     private String receiveMan;
 
     @ApiModelProperty("需求接收人id")
     private String receiveManId;
-
-    @ApiModelProperty("创建人信息")
-    private PersonVO createManInfo;
 
     @ApiModelProperty("需求提交人")
     private String submitMan;

@@ -61,11 +61,6 @@ public class BizDemandModifyReq extends BaseReq {
     @ApiModelProperty("预期上线时间")
     private Integer planReleaseDate;
 
-    @ApiModelProperty("接收人")
-    @Valid
-    @NotNull(message = "接收人信息不能为空")
-    private PersonAddReq receiveManInfo;
-
     @ApiModelProperty("需求接收人")
     private String receiveMan;
 

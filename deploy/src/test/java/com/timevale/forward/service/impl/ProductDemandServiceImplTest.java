@@ -206,7 +206,6 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
         productDemandLinkBizDemandQueryList.setPageSize(5);
         PersonQuery personQuery = new PersonQuery();
         personQuery.setUserId("www");
-        productDemandLinkBizDemandQueryList.setReceiveManInfoList(Collections.singletonList(personQuery));
         productDemandLinkBizDemandQueryList.setProductDemandId(1L);
         productDemandLinkBizDemandQueryList.setBizDomainIdList(Collections.singletonList(1L));
 

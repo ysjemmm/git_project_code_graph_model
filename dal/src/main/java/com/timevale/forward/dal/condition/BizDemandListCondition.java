@@ -78,6 +78,11 @@ public class BizDemandListCondition {
     private List<String> receiveManIdList;
 
     /**
+     * 需求提交人id列表
+     */
+    private List<String> submitManIdList;
+
+    /**
      * 部门id列表
      */
     private List<Long> deptIdList;
@@ -95,9 +100,4 @@ public class BizDemandListCondition {
      * 业务需求id
      */
     private List<Long> bizDemandIds;
-
-    /**
-     * 需求提交人id列表
-     */
-    private List<String> submitManIdList;
 }
