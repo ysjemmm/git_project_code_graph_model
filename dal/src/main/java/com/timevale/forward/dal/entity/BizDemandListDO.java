@@ -67,6 +67,17 @@ public class BizDemandListDO extends BaseDO {
     private String receiveManId;
 
     /**
+     * 提交人
+     */
+    private String submitMan;
+
+    /**
+     * 提交人id
+     */
+    private String submitManId;
+
+
+    /**
      * 部门id
      */
     private Long deptId;

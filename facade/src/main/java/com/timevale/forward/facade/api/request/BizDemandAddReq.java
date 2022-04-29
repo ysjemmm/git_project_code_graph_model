@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.request;
 
+import com.timevale.forward.facade.api.result.PersonVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -52,22 +53,23 @@ public class BizDemandAddReq extends BaseReq {
     @ApiModelProperty("抄送人")
     private List<PersonAddReq> recipientInfoList;
 
-    @ApiModelProperty("接收人")
-    @Valid
-    @NotNull(message = "接收人信息不能为空")
-    private PersonAddReq receiveManInfo;
-
     @ApiModelProperty("附件列表")
     private List<FileAddReq> fileList;
 
     @ApiModelProperty("线上bug id")
     private Long bugOnlineId;
 
+    @ApiModelProperty("接收人信息")
+    private PersonVO receiveManInfo;
+
     @ApiModelProperty("需求接收人")
     private String receiveMan;
 
     @ApiModelProperty("需求接收人id")
     private String receiveManId;
+
+    @ApiModelProperty("提交人信息")
+    private PersonVO createManInfo;
 
     @ApiModelProperty("需求提交人")
     private String submitMan;

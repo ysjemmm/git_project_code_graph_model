@@ -117,6 +117,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                     resultIsEmpty = teamMemberIdList.isEmpty();
                 }
                 bizDemandListCondition.setCreateManIdList(teamMemberIdList);
+                bizDemandListCondition.setSubmitManIdList(teamMemberIdList);
             } else if (ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())) {
                 Set<String> receiveIdSet = new HashSet<>(bizDemandListCondition.getReceiveManIdList());
                 if (!receiveIdSet.isEmpty()) {
