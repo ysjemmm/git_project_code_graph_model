@@ -115,12 +115,13 @@ public class SearchConditionServiceImpl implements SearchConditionService {
             searchConditionMapper.update(conditionDO);
         }
 
-        // 更新原有数据
-        SearchConditionDO conditionDO = new SearchConditionDO();
-        conditionDO.setId(id);
-        conditionDO.setIsDefault(true);
-        searchConditionMapper.update(conditionDO);
-
+        // 更新原有数据,id == 0 则为系统默认，无需更新
+        if(id != 0){
+            SearchConditionDO conditionDO = new SearchConditionDO();
+            conditionDO.setId(id);
+            conditionDO.setIsDefault(true);
+            searchConditionMapper.update(conditionDO);
+        }
 
         return BaseResult.success(true);
     }

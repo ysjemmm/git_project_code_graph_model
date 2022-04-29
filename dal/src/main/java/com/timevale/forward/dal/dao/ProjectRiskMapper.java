@@ -3,6 +3,7 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.entity.ProjectRiskDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -31,14 +32,6 @@ public interface ProjectRiskMapper {
      */
     int update(ProjectRiskDO projectRiskDO);
 
-
-    /**
-     * 批量更新
-     *
-     * @param projectRiskDOList 项目风险DO 列表
-     */
-    int batchUpdate(@Param("projectRiskDOList") List<ProjectRiskDO> projectRiskDOList);
-
     /**
      * 批量更新状态
      *
@@ -46,6 +39,14 @@ public interface ProjectRiskMapper {
      * @param status  状态
      */
     int updateStatus(@Param("idList") List<Long> idList, @Param("status") Integer status);
+
+    /**
+     * 批量更新修改时间
+     *
+     * @param idList id列表
+     * @param modifyDate  修改时间
+     */
+    int updateModifyDate(@Param("idList") List<Long> idList, @Param("modifyDate") Date modifyDate);
 
     /**
      * 查询 by id

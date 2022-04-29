@@ -7,6 +7,14 @@
         VALUES (#{projectRiskId}, #{explanation}, #{createManId}, #{createMan})
     </insert>
 
+    <insert id="batchInsert" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.List">
+        INSERT INTO project_risk_explanation(project_risk_id, explanation, create_man_id, create_man)
+        VALUES
+        <foreach collection="projectRiskExplanationDOList" item="item" separator=",">
+            (#{item.projectRiskId}, #{item.explanation}, #{createManId}, #{createMan})
+        </foreach>
+    </insert>
+
     <select id="selectByProjectRiskId" resultType="com.timevale.forward.dal.entity.ProjectRiskExplanationDO">
         SELECT id, project_risk_id, explanation, create_man_id, create_man, create_date
         FROM project_risk_explanation

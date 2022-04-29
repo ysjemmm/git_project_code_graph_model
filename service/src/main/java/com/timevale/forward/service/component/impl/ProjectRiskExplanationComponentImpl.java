@@ -7,9 +7,14 @@ import com.timevale.forward.dal.entity.ProjectRiskExplanationDO;
 import com.timevale.forward.service.component.ProjectRiskExplanationComponent;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -37,5 +42,23 @@ public class ProjectRiskExplanationComponentImpl implements ProjectRiskExplanati
         riskDO.setId(projectRiskId);
         riskDO.setModifyDate(explanationDO.getModifyDate());
         projectRiskMapper.update(riskDO);
+    }
+
+    @Override
+    public void batchAdd(List<ProjectRiskExplanationDO> explanationDOList) {
+        if(CollectionUtils.isEmpty(explanationDOList)){
+            return;
+        }
+        // 批量新增
+        projectRiskExplanationMapper.batchInsert(explanationDOList);
+
+        // 插入后取最新值
+        Optional<ProjectRiskExplanationDO> any = explanationDOList.stream().findAny();
+        ProjectRiskExplanationDO explanationDO = projectRiskExplanationMapper.selectById(any.get().getId());
+
+        // 批量更新项目风险修改时间
+        Date modifyDate = explanationDO.getModifyDate();
+        List<Long> projectRiskIdList = explanationDOList.stream().map(ProjectRiskExplanationDO::getProjectRiskId).distinct().collect(Collectors.toList());
+        projectRiskMapper.updateModifyDate(projectRiskIdList, modifyDate);
     }
 }

@@ -103,7 +103,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 根据tabs添加不同的效果
         String ascription = bizDemandQueryList.getAscription();
         if (ascription.equals(AscriptionEnum.CURRENT_USER.toString())) {
-            bizDemandListCondition.setCreateManIdList(Lists.newArrayList(userInfo.getId()));
+            bizDemandListCondition.setSubmitManIdList(Lists.newArrayList(userInfo.getId()));
         } else if (ascription.equals(AscriptionEnum.RECEIVE.toString())) {
             bizDemandListCondition.setReceiveManIdList(Lists.newArrayList(userInfo.getId()));
         } else if (ascription.equals(AscriptionEnum.COPIER.toString())) {
@@ -563,7 +563,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 );
             }
             // 批量转交
-            bizDemandMapper.updateCreateMan(bizDemandIdList, submitMan, submitManId);
+            bizDemandMapper.updateSubmitMan(bizDemandIdList, submitMan, submitManId);
         }
 
         return BaseResult.success(true);

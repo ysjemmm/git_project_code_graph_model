@@ -13,7 +13,7 @@ public enum ProjectRiskSignEnum {
 
     SUBMIT_FAILURE("提测失败"),
 
-    TASK_OVERDUE("逾期时间%s天%小时"),
+    TASK_OVERDUE("逾期时间%小时"),
 
     NODE_OVERDUE("逾期时间%s天");
 

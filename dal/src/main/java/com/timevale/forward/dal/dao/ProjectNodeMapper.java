@@ -42,6 +42,14 @@ public interface ProjectNodeMapper {
      */
     List<ProjectNodeDO> selectByProjectIdList(@Param("projectIdList") List<Long> projectIdList);
 
+    /**
+     * 查询 by 项目id-名字
+     *
+     * @param projectId 项目id
+     * @param name      名字
+     */
+    ProjectNodeDO getByName(@Param("projectId") Long projectId, @Param("name") String name);
+
 
     /**
      * 更新实际提测时间

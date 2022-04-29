@@ -28,7 +28,7 @@ public class HomePageRiskWarningTaskDTO {
     /**
      * 风险类型
      */
-    @JSONField(name = "risk_type")
+    @JSONField(name = "judge_type")
     private Integer riskType;
 
     /**

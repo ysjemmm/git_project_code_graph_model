@@ -27,15 +27,10 @@ import java.util.*;
 public class AuditInterceptor implements Interceptor {
 
     private static final Set<String> FILTER_METHOD = new HashSet<>();
-    private static final Set<String> SPECIAL_METHOD = new HashSet<>();
 
     static {
         FILTER_METHOD.add("com.timevale.forward.dal.dao.BizChangeLogMapper.insert");
         FILTER_METHOD.add("com.timevale.forward.dal.dao.BizChangeLogMapper.batchInsert");
-    }
-
-    static {
-        SPECIAL_METHOD.add("com.timevale.forward.dal.dao.BizDemandMapper.insert");
     }
 
     @Override
@@ -62,14 +57,8 @@ public class AuditInterceptor implements Interceptor {
         String name = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
 
         if (sqlCommandType == SqlCommandType.INSERT) {
-            // 日志特殊判断
-            if(SPECIAL_METHOD.contains(mappedStatementId)){
-                setProperty(parameter, AuditEnum.AUDIT_CREATE_MAN.getText(), name);
-                setProperty(parameter, AuditEnum.AUDIT_CREATE_MAN_ID.getText(), id);
-            }else{
-                setProperty(parameter, AuditEnum.CREATE_MAN.getText(), name);
-                setProperty(parameter, AuditEnum.CREATE_MAN_ID.getText(), id);
-            }
+            setProperty(parameter, AuditEnum.CREATE_MAN.getText(), name);
+            setProperty(parameter, AuditEnum.CREATE_MAN_ID.getText(), id);
         } else {
             setProperty(parameter, AuditEnum.MODIFY_MAN.getText(), name);
             setProperty(parameter, AuditEnum.MODIFY_MAN_ID.getText(), id);

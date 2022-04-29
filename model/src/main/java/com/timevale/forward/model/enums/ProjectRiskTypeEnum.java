@@ -17,9 +17,9 @@ public enum ProjectRiskTypeEnum {
 
     TASK_OVERDUE(20, "任务逾期"),
 
-    PROJECT_NODE_OVERDUE(30, "项目关键节点逾期"),
+    NODE_OVERDUE(30, "项目关键节点逾期"),
 
-    PROJECT_NODE_ENTRY_OVERDUE(40, "项目节点逾期未录入");
+    NODE_ENTRY_OVERDUE(40, "项目节点逾期未录入");
 
     private Integer code;
     private String text;

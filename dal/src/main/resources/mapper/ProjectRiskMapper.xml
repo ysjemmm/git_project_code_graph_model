@@ -11,7 +11,7 @@
         INSERT INTO project_risk(project_id, type, name, sign, create_man_id, create_man)
         VALUES
         <foreach collection = "projectRiskDOList" item = "item" separator = ",">
-            (#{item.projectId},#{item.type},#{item.name},#{item.sign},#{item.createManId},#{item.createMan})
+            (#{item.projectId},#{item.type},#{item.name},#{item.sign},#{createManId},#{createMan})
         </foreach>
     </insert>
 
@@ -42,9 +42,15 @@
             #{item}
         </foreach>
     </update>
-
-    <update id="batchUpdate">
-
+    <update id="updateModifyDate">
+        UPDATE project_risk
+        SET modify_date = #{modifyDate},
+        modify_man = #{modifyMan},
+        modify_man_id = #{modifyManId}
+        WHERE id IN
+        <foreach collection = "idList" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
     </update>
 
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
