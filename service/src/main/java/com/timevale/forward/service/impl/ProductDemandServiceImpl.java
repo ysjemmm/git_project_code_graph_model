@@ -332,6 +332,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     public BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(ProductDemandLinkBizDemandQueryList productDemandLinkBizDemandQueryList) {
         log.info("产品需求-业务需求匹配接收参数:bizDemandQueryList={}", productDemandLinkBizDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         List<String> receiveManIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
         log.info("我和我的下属:receiveManIdList={}", receiveManIdList);
         BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(productDemandLinkBizDemandQueryList);
@@ -343,6 +344,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             //所选人员不在我和我的下属中
             return BaseResult.success(ResultUtil.pageEmpty());
         }
+
         condition.setReceiveManIdList(receiveManIdList);
         List<Integer> status = productDemandLinkBizDemandQueryList.getStatusList();
         if (CollectionUtils.isEmpty(status)) {

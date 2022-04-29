@@ -22,7 +22,7 @@ public interface ProjectRiskExplanationMapper {
      *
      * @param projectRiskExplanationDOList 项目风险说明DO 列表
      */
-    int batchInsert(@Param("projectRiskExplanationDOList") List<ProjectRiskExplanationDO> projectRiskExplanationDOList);
+    int batchInsert(List<ProjectRiskExplanationDO> projectRiskExplanationDOList);
 
     /**
      * 查询 by id

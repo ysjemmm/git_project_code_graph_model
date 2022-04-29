@@ -10,7 +10,7 @@
     <insert id="batchInsert" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.List">
         INSERT INTO project_risk_explanation(project_risk_id, explanation, create_man_id, create_man)
         VALUES
-        <foreach collection="projectRiskExplanationDOList" item="item" separator=",">
+        <foreach collection="list" item="item" separator=",">
             (#{item.projectRiskId}, #{item.explanation}, #{createManId}, #{createMan})
         </foreach>
     </insert>
