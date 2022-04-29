@@ -60,7 +60,7 @@ public class BizDemandAddReq extends BaseReq {
     private Long bugOnlineId;
 
     @ApiModelProperty("接收人信息")
-    private PersonVO receiveManInfo;
+    private PersonAddReq receiveManInfo;
 
     @ApiModelProperty("需求接收人")
     private String receiveMan;
@@ -69,7 +69,7 @@ public class BizDemandAddReq extends BaseReq {
     private String receiveManId;
 
     @ApiModelProperty("提交人信息")
-    private PersonVO createManInfo;
+    private PersonAddReq createManInfo;
 
     @ApiModelProperty("需求提交人")
     private String submitMan;

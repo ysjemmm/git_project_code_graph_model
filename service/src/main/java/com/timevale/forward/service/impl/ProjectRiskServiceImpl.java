@@ -193,7 +193,8 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
             riskDO.setMainId(nodeRisk.getMainId());
             riskDO.setType(nodeRisk.getRiskType());
             riskDO.setName(nodeRisk.getNodeName());
-            riskDO.setSign(String.format(ProjectRiskSignEnum.SUBMIT_FAILURE.getText(), nodeRisk.getOverdueDay()));
+            riskDO.setSign(nodeRisk.getOverdueDay());
+            // riskDO.setSign(String.format(ProjectRiskSignEnum.SUBMIT_FAILURE.getText(), nodeRisk.getOverdueDay()));
 
         }else if(object instanceof HomePageRiskWarningTaskDTO){
             HomePageRiskWarningTaskDTO taskRisk = (HomePageRiskWarningTaskDTO) object;
