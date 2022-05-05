@@ -177,21 +177,36 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                           || ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(e.getType()))
                 .collect(Collectors.toMap(e -> e.getType() + "-" + e.getProjectId() + "-" + e.getName(), Function.identity())));
 
-
         // 判断去重，更新完成处理的风险
+        List<ProjectRiskDO> updateList = new ArrayList<>();
         List<ProjectRiskDO> completeList = new ArrayList<>();
         oldRiskMap.forEach((k, v) -> {
-            // 如果还能查询到，则风险状态不变
-            if(newRiskMap.containsKey(k)){
-               return;
-            }
-            // 如果查询不到，则说明风险已经处理
+            // 如果还能查询到，则风险状态不变,更新逾期时间
             ProjectRiskDO riskDO = new ProjectRiskDO();
             riskDO.setId(v.getId());
-            riskDO.setStatus(ProjectRiskStatusEnum.COMPLETE.getCode());
-            riskDO.setSign(updateRiskSign(v));
-            completeList.add(riskDO);
+
+            if(newRiskMap.containsKey(k)){
+                Object object = newRiskMap.get(k);
+                if(object instanceof HomePageRiskWarningSubmitTestDTO){
+                    return;
+                } else if(object instanceof HomePageRiskWarningDTO){
+                    HomePageRiskWarningDTO nodeRisk = (HomePageRiskWarningDTO) object;
+                    riskDO.setSign(nodeRisk.getOverdueDay());
+                }else if(object instanceof HomePageRiskWarningTaskDTO){
+                    HomePageRiskWarningTaskDTO taskRisk = (HomePageRiskWarningTaskDTO) object;
+                    riskDO.setSign(taskRisk.getOverdueTime());
+                }
+                updateList.add(riskDO);
+            }else{
+                // 如果查询不到，则说明风险已经处理
+                riskDO.setStatus(ProjectRiskStatusEnum.COMPLETE.getCode());
+                riskDO.setSign(updateRiskSign(v));
+                completeList.add(riskDO);
+            }
         });
+        if(CollectionUtils.isNotEmpty(updateList)){
+            updateList.forEach(e -> projectRiskMapper.update(e));
+        }
         if(CollectionUtils.isNotEmpty(completeList)){
             completeList.forEach(e -> projectRiskMapper.update(e));
         }
