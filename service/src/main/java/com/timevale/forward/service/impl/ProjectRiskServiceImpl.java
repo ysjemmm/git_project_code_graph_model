@@ -181,10 +181,10 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         List<ProjectRiskDO> updateList = new ArrayList<>();
         List<ProjectRiskDO> completeList = new ArrayList<>();
         oldRiskMap.forEach((k, v) -> {
-            // 如果还能查询到，则风险状态不变,更新逾期时间
             ProjectRiskDO riskDO = new ProjectRiskDO();
             riskDO.setId(v.getId());
 
+            // 如果还能查询到，则风险状态不变,更新逾期时间
             if(newRiskMap.containsKey(k)){
                 Object object = newRiskMap.get(k);
                 if(object instanceof HomePageRiskWarningSubmitTestDTO){

@@ -23,7 +23,6 @@ public class BatchTransferReq extends BaseReq{
     private List<Long> idList;
 
     @ApiModelProperty("转交类型: 0 转交需求接收人, 1 转交需求提交人")
-    @NotNull(message = "转交类型不能为空")
     private Integer type;
 
     @ApiModelProperty("接收人")
