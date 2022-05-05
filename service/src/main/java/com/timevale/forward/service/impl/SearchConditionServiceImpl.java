@@ -20,6 +20,7 @@ import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -45,8 +46,13 @@ public class SearchConditionServiceImpl implements SearchConditionService {
         Integer tabType = searchConditionQueryList.getTabType();
 
         // 查询并转换
-        List<SearchConditionDO> select = searchConditionMapper.select(model, tabType, userInfo.getId());
-        List<SearchConditionVO> searchConditionVOList = select.stream().map(SearchConditionCopier.INSTANCE::convert).collect(Collectors.toList());
+        List<SearchConditionDO> searchConditionDOList = searchConditionMapper.select(model, tabType, userInfo.getId());
+        List<SearchConditionVO> searchConditionVOList = searchConditionDOList.stream().map(SearchConditionCopier.INSTANCE::convert).collect(Collectors.toList());
+
+        boolean isDefault = searchConditionVOList.stream().anyMatch(SearchConditionVO::getIsDefault);
+        if(isDefault){
+            searchConditionVOList.sort((a, b) -> b.getIsDefault().compareTo(a.getIsDefault()));
+        }
 
         // 系统默认条件
         SearchConditionVO systemDefault = new SearchConditionVO();
@@ -56,9 +62,11 @@ public class SearchConditionServiceImpl implements SearchConditionService {
         systemDefault.setNotDelete(true);
         systemDefault.setTabType(tabType);
         systemDefault.setName(CommonConstant.SYSTEM_DEFAULT);
-        systemDefault.setIsDefault(searchConditionVOList.stream().noneMatch(SearchConditionVO::getIsDefault));
+        systemDefault.setIsDefault(isDefault);
 
-        searchConditionVOList.add(systemDefault);
+        // 如果有默认条件，则排在默认条件之后
+        int index = isDefault ? 1 : 0;
+        searchConditionVOList.add(index, systemDefault);
 
         return BaseResult.success(searchConditionVOList);
     }
