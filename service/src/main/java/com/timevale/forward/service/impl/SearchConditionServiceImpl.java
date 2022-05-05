@@ -16,11 +16,11 @@ import com.timevale.forward.service.copy.SearchConditionCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -73,6 +73,26 @@ public class SearchConditionServiceImpl implements SearchConditionService {
 
     @Override
     public BaseResult<Boolean> add(SearchConditionAddReq searchConditionAddReq) {
+        // 参数
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        Integer model = searchConditionAddReq.getModel();
+        Integer tabType = searchConditionAddReq.getTabType();
+        String name = searchConditionAddReq.getName();
+
+        // 查询
+        List<SearchConditionDO> searchConditionDOList = searchConditionMapper.select(model, tabType, userInfo.getId());
+
+        // 限制10条
+        if(searchConditionDOList.size() == 10){
+            throw new BaseBizRuntimeException("查询条件限制10条");
+        }
+
+        // 名称唯一
+        boolean match = searchConditionDOList.stream().anyMatch(e -> e.getName().equals(name));
+        if(match){
+            throw new BaseBizRuntimeException("名称重复");
+        }
+
         // 转换后插入
         SearchConditionDO searchConditionDO = SearchConditionCopier.INSTANCE.convert(searchConditionAddReq);
         searchConditionMapper.insert(searchConditionDO);
