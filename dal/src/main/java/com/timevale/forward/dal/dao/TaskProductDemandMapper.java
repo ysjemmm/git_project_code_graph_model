@@ -24,14 +24,12 @@ public interface TaskProductDemandMapper {
     int batchInsert(List<TaskProductDemandDO> taskProductDemandDO);
 
     /**
-     *
      * @param taskProductDemandCondition taskProductDemandCondition
      * @return TaskProductDemandDO
      */
     List<TaskProductDemandDO> get(TaskProductDemandCondition taskProductDemandCondition);
 
     /**
-     *
      * @param taskId 查询条件
      * @return 项目产品需求清单
      */
@@ -44,12 +42,11 @@ public interface TaskProductDemandMapper {
      * @return int
      */
     int update(TaskProductDemandUpdateDO taskProductDemandUpdateDO);
-    
+
     /**
      * 查询 by 产品线id 列表
      *
      * @param productDemandIdList 产品需求id列表
      */
     List<TaskProductDemandDO> selectByProductDemandId(@Param("productDemandIdList") List<Long> productDemandIdList);
-
 }

@@ -210,12 +210,10 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
             // 如果库中不包含，则是新的风险
             if(!pendingRiskMap.containsKey(k)){
                 addRiskDOList.add(syncAddRisk(v));
-                addExplainDOList.add(syncAddExplain(v));
             }
         });
         if(CollectionUtils.isNotEmpty(addRiskDOList)){
             projectRiskMapper.batchInsert(addRiskDOList);
-            projectRiskExplanationComponent.batchAdd(addExplainDOList);
         }
 
         return BaseResult.success(true);
@@ -306,20 +304,25 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         }else if(ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(riskDO.getType())
                 || ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(riskDO.getType())){
             ProjectNodeDO nodeDO = projectNodeMapper.getByName(riskDO.getProjectId(), riskDO.getName());
-            Date planDate = nodeDO.getPlanDate();
-            Date actualDate = nodeDO.getActualDate();
+            if(nodeDO == null){
+               sign = "0";
+            }else {
+                Date planDate = nodeDO.getPlanDate();
+                Date actualDate = nodeDO.getActualDate();
 
-            // 逾期时间可以为负数
-            Long result;
-            if(planDate.after(actualDate)){
-                result = - elapsedTimeClient.getElapsedTime(actualDate, planDate);
-            } else{
-                result = elapsedTimeClient.getElapsedTime(planDate, actualDate);
+                // 逾期时间可以为负数
+                Long result;
+                if(planDate.after(actualDate)){
+                    result = - elapsedTimeClient.getElapsedTime(actualDate, planDate);
+                } else{
+                    result = elapsedTimeClient.getElapsedTime(planDate, actualDate);
+                }
+                BigDecimal elapsedTime = new BigDecimal(result.toString());
+                elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_DAY), 0, RoundingMode.HALF_UP);
+
+                sign = elapsedTime.toString();
             }
-            BigDecimal elapsedTime = new BigDecimal(result.toString());
-            elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_DAY), 0, RoundingMode.HALF_UP);
 
-            sign = elapsedTime.toString();
         }
 
         ProjectRiskDO result = new ProjectRiskDO();
@@ -356,34 +359,4 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         return result;
     }
 
-    /**
-     * 系统同步添加解释
-     *
-     * @param object 风险对象
-     */
-    private ProjectRiskExplanationDO syncAddExplain(Object object){
-        ProjectRiskExplanationDO explanationDO = new ProjectRiskExplanationDO();
-
-        if(object instanceof HomePageRiskWarningDTO){
-            HomePageRiskWarningDTO nodeRisk = (HomePageRiskWarningDTO) object;
-            explanationDO.setProjectRiskId(nodeRisk.getProjectId());
-            if(ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(nodeRisk.getRiskType())){
-                explanationDO.setExplanation(String.format(ProjectRiskExplanationEnum.NODE_OVERDUE.getText(), nodeRisk.getOverdueDay()));
-            }else{
-                explanationDO.setExplanation(String.format(ProjectRiskExplanationEnum.NODE_ENTRY_OVERDUE.getText(), nodeRisk.getOverdueDay()));
-            }
-
-        }else if(object instanceof HomePageRiskWarningTaskDTO){
-            HomePageRiskWarningTaskDTO taskRisk = (HomePageRiskWarningTaskDTO) object;
-            explanationDO.setProjectRiskId(taskRisk.getProjectId());
-            explanationDO.setExplanation(String.format(ProjectRiskExplanationEnum.TASK_OVERDUE.getText(), taskRisk.getOverdueTime()));
-
-        }else if(object instanceof HomePageRiskWarningSubmitTestDTO){
-            HomePageRiskWarningSubmitTestDTO testRisk = (HomePageRiskWarningSubmitTestDTO) object;
-            explanationDO.setProjectRiskId(testRisk.getProjectId());
-            explanationDO.setExplanation(ProjectRiskExplanationEnum.SUBMIT_FAILURE.getText());
-        }
-
-        return explanationDO;
-    }
 }

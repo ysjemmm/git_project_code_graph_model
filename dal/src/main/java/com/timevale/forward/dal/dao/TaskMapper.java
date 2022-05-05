@@ -90,6 +90,12 @@ public interface TaskMapper {
     TaskDO getById(@Param("id") Long id);
 
     /**
+     * @param idList id 列表
+     * @return TaskDO
+     */
+    List<TaskDO> getByIdList(@Param("idList") List<Long> idList);
+
+    /**
      * @param projectId 项目id
      * @return 项目id
      */

@@ -195,7 +195,6 @@ public class ProjectServiceImpl implements ProjectService {
         return BaseResult.success(true);
     }
 
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(ProjectAddReq projectAddReq) {
@@ -414,8 +413,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> linkProductDemandList(ProjectProductDemandQueryList productDemandQueryList) {
-        //产品需求
+        // 开始分页
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+
+        // 查询产品需求
         List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(productDemandQueryList.getProjectId());
         List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
 
@@ -428,6 +429,14 @@ public class ProjectServiceImpl implements ProjectService {
         List<Long> productDemandIdList = productDemandVOList.stream().map(ProductDemandVO::getId).collect(Collectors.toList());
         if(!CollectionUtils.isEmpty(productDemandIdList)){
             List<TaskProductDemandDO> taskProductDemandDOList = taskProductDemandMapper.selectByProductDemandId(productDemandIdList);
+            List<Long> taskIdList = taskProductDemandDOList.stream().map(TaskProductDemandDO::getTaskId).collect(Collectors.toList());
+            List<TaskDO> taskDOList = taskMapper.getByIdList(taskIdList);
+            Set<Long> taskIdSet = taskDOList.stream()
+                    .filter(e -> e.getProjectId().equals(productDemandQueryList.getProjectId()))
+                    .map(TaskDO::getId)
+                    .collect(Collectors.toSet());
+            taskProductDemandDOList = taskProductDemandDOList.stream().filter(e -> taskIdSet.contains(e.getTaskId())).collect(Collectors.toList());
+
             Map<Long, List<TaskProductDemandDO>> taskProductDemandMap =
                     taskProductDemandDOList.stream().collect(Collectors.groupingBy(TaskProductDemandDO::getProductDemandId));
             // 填充任务数
@@ -437,7 +446,6 @@ public class ProjectServiceImpl implements ProjectService {
                 e.setTaskCount(taskCount);
             }
         }
-
 
         PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
