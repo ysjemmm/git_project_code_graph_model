@@ -75,7 +75,7 @@
     </select>
 
     <select id="selectByProjectIdList" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
-        SELECT id, project_id, status
+        SELECT id, project_id, status, modify_date
         FROM project_risk
         <where>
             <if test="projectIdList != null and projectIdList.size() > 0">

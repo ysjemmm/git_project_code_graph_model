@@ -3,16 +3,14 @@ package com.timevale.forward.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectNodeMapper;
 import com.timevale.forward.dal.dao.ProjectRiskMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
 import com.timevale.forward.dal.dto.HomePageRiskWarningSubmitTestDTO;
 import com.timevale.forward.dal.dto.HomePageRiskWarningTaskDTO;
-import com.timevale.forward.dal.entity.ProjectNodeDO;
-import com.timevale.forward.dal.entity.ProjectRiskDO;
-import com.timevale.forward.dal.entity.ProjectRiskExplanationDO;
-import com.timevale.forward.dal.entity.TaskDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectRiskService;
 import com.timevale.forward.facade.api.query.ProjectRiskQueryList;
 import com.timevale.forward.facade.api.request.ProjectRiskAddReq;
@@ -21,6 +19,7 @@ import com.timevale.forward.facade.api.result.ProjectRiskVO;
 import com.timevale.forward.model.enums.ProjectRiskExplanationEnum;
 import com.timevale.forward.model.enums.ProjectRiskStatusEnum;
 import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.HomePageRiskWarningComponent;
 import com.timevale.forward.service.component.HomePageRiskWarningSubmitTestComponent;
 import com.timevale.forward.service.component.HomePageRiskWarningTaskComponent;
@@ -60,6 +59,9 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
 
     @Resource
     ProjectNodeMapper projectNodeMapper;
+
+    @Resource
+    ProjectMapper projectMapper;
 
     @Resource
     TaskMapper taskMapper;
@@ -151,13 +153,24 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> sync() {
+        // 需要更新项目风险的项目
+        List<Integer> statusList = new ArrayList<>();
+        statusList.add(ProjectStatusEnum.WAITING.getCode());
+        statusList.add(ProjectStatusEnum.PLANING.getCode());
+        statusList.add(ProjectStatusEnum.DEVING.getCode());
+        statusList.add(ProjectStatusEnum.TESTING.getCode());
+        List<ProjectDO> projectDOList = projectMapper.getByStatus(statusList);
+        List<Long> projectIdList = projectDOList.stream().map(ProjectDO::getId).collect(Collectors.toList());
+
+        // sql 端
+        List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectIdList(projectIdList);
+        List<ProjectRiskDO> pendingRiskList = riskDOList.stream().filter(e -> ProjectRiskStatusEnum.PENDING.getCode().equals(e.getStatus())).collect(Collectors.toList());
+        List<ProjectRiskDO> completeRiskList = riskDOList.stream().filter(e -> ProjectRiskStatusEnum.COMPLETE.getCode().equals(e.getStatus())).collect(Collectors.toList());
+
         // 数据分发端
         List<HomePageRiskWarningDTO> nodeDTOList = riskWarningComponent.getRiskWarningAll();
         List<HomePageRiskWarningTaskDTO> taskDTOList = riskWarningTaskComponent.getRiskWarningTaskAll();
         List<HomePageRiskWarningSubmitTestDTO> testDTOList = riskWarningSubmitTestComponent.getRiskWarningSubmitTestAll();
-
-        // sql 端
-        List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByStatus(ProjectRiskStatusEnum.PENDING.getCode());
 
         // 数据分发端 唯一id
         Map<String, Object> newRiskMap = new HashMap<>();
@@ -166,49 +179,28 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         newRiskMap.putAll(nodeDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getNodeName(), Function.identity())));
 
         // sql端 唯一id
-        Map<String, ProjectRiskDO> oldRiskMap = new HashMap<>();
-        oldRiskMap.putAll(riskDOList.stream()
-                .filter(e -> ProjectRiskTypeEnum.SUBMIT_FAILURE.getCode().equals(e.getType())
-                          || ProjectRiskTypeEnum.TASK_OVERDUE.getCode().equals(e.getType()))
-                .collect(Collectors.toMap(e -> e.getType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity())));
-
-        oldRiskMap.putAll(riskDOList.stream()
-                .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getType())
-                          || ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(e.getType()))
-                .collect(Collectors.toMap(e -> e.getType() + "-" + e.getProjectId() + "-" + e.getName(), Function.identity())));
+        Map<String, ProjectRiskDO> pendingRiskMap = createUniqueMap(pendingRiskList);
+        Map<String, ProjectRiskDO> completeRiskMap = createUniqueMap(completeRiskList);
 
         // 判断去重，更新完成处理的风险
         List<ProjectRiskDO> updateList = new ArrayList<>();
-        List<ProjectRiskDO> completeList = new ArrayList<>();
-        oldRiskMap.forEach((k, v) -> {
-            ProjectRiskDO riskDO = new ProjectRiskDO();
-            riskDO.setId(v.getId());
 
-            // 如果还能查询到，则风险状态不变,更新逾期时间
+        // 待处理风险 - 如果还能查询到，则风险状态不变,更新逾期时间；否则说明风险已经处理
+        pendingRiskMap.forEach((k, v) -> {
             if(newRiskMap.containsKey(k)){
-                Object object = newRiskMap.get(k);
-                if(object instanceof HomePageRiskWarningSubmitTestDTO){
-                    return;
-                } else if(object instanceof HomePageRiskWarningDTO){
-                    HomePageRiskWarningDTO nodeRisk = (HomePageRiskWarningDTO) object;
-                    riskDO.setSign(nodeRisk.getOverdueDay());
-                }else if(object instanceof HomePageRiskWarningTaskDTO){
-                    HomePageRiskWarningTaskDTO taskRisk = (HomePageRiskWarningTaskDTO) object;
-                    riskDO.setSign(taskRisk.getOverdueTime());
-                }
-                updateList.add(riskDO);
+                updateList.add(syncUpdateRisk(v, newRiskMap.get(k)));
             }else{
-                // 如果查询不到，则说明风险已经处理
-                riskDO.setStatus(ProjectRiskStatusEnum.COMPLETE.getCode());
-                riskDO.setSign(updateRiskSign(v));
-                completeList.add(riskDO);
+                updateList.add(syncCompleteRisk(v));
+            }
+        });
+        // 已完成风险 - 如果还能查询到，则又成为了风险
+        completeRiskMap.forEach((k, v) -> {
+            if(newRiskMap.containsKey(k)){
+                updateList.add(syncUpdateRisk(v, newRiskMap.get(k)));
             }
         });
         if(CollectionUtils.isNotEmpty(updateList)){
             updateList.forEach(e -> projectRiskMapper.update(e));
-        }
-        if(CollectionUtils.isNotEmpty(completeList)){
-            completeList.forEach(e -> projectRiskMapper.update(e));
         }
 
         // 增加新风险，同时添加风险说明
@@ -216,7 +208,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         List<ProjectRiskExplanationDO> addExplainDOList = new ArrayList<>();
         newRiskMap.forEach((k, v) -> {
             // 如果库中不包含，则是新的风险
-            if(!oldRiskMap.containsKey(k)){
+            if(!pendingRiskMap.containsKey(k)){
                 addRiskDOList.add(syncAddRisk(v));
                 addExplainDOList.add(syncAddExplain(v));
             }
@@ -229,6 +221,25 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         return BaseResult.success(true);
     }
 
+    /**
+     * 创建项目风险- <唯一id，本身>
+     *
+     * @param riskDOList 风险dolist
+     */
+    private Map<String, ProjectRiskDO> createUniqueMap(List<ProjectRiskDO> riskDOList){
+        Map<String, ProjectRiskDO> result = new HashMap<>();
+        result.putAll(riskDOList.stream()
+                .filter(e -> ProjectRiskTypeEnum.SUBMIT_FAILURE.getCode().equals(e.getType())
+                        || ProjectRiskTypeEnum.TASK_OVERDUE.getCode().equals(e.getType()))
+                .collect(Collectors.toMap(e -> e.getType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity())));
+
+        result.putAll(riskDOList.stream()
+                .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getType())
+                        || ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(e.getType()))
+                .collect(Collectors.toMap(e -> e.getType() + "-" + e.getProjectId() + "-" + e.getName(), Function.identity())));
+
+        return result;
+    }
 
     /**
      * 系统添加风险
@@ -268,6 +279,84 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
     }
 
     /**
+     * 项目风险完成 - 任务、节点 计算逾期时间
+     *
+     * @param riskDO 风险DO
+     */
+    public ProjectRiskDO syncCompleteRisk(ProjectRiskDO riskDO){
+        String sign = "";
+
+        if(ProjectRiskTypeEnum.TASK_OVERDUE.getCode().equals(riskDO.getType())){
+            TaskDO taskDO = taskMapper.getById(riskDO.getMainId());
+            Date planEndDate = taskDO.getPlanEndDate();
+            Date actualEndDate = taskDO.getActualEndDate();
+
+            // 逾期时间可以为负数
+            Long result;
+            if(planEndDate.after(actualEndDate)){
+                result = - elapsedTimeClient.getElapsedTime(actualEndDate, planEndDate);
+            } else{
+                result = elapsedTimeClient.getElapsedTime(planEndDate, actualEndDate);
+            }
+            BigDecimal elapsedTime = new BigDecimal(result.toString());
+            elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_HOUR), 2, RoundingMode.HALF_UP);
+
+            sign = elapsedTime.toString();
+
+        }else if(ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(riskDO.getType())
+                || ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(riskDO.getType())){
+            ProjectNodeDO nodeDO = projectNodeMapper.getByName(riskDO.getProjectId(), riskDO.getName());
+            Date planDate = nodeDO.getPlanDate();
+            Date actualDate = nodeDO.getActualDate();
+
+            // 逾期时间可以为负数
+            Long result;
+            if(planDate.after(actualDate)){
+                result = - elapsedTimeClient.getElapsedTime(actualDate, planDate);
+            } else{
+                result = elapsedTimeClient.getElapsedTime(planDate, actualDate);
+            }
+            BigDecimal elapsedTime = new BigDecimal(result.toString());
+            elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_DAY), 0, RoundingMode.HALF_UP);
+
+            sign = elapsedTime.toString();
+        }
+
+        ProjectRiskDO result = new ProjectRiskDO();
+        result.setId(riskDO.getId());
+        result.setSign(sign);
+        result.setStatus(ProjectRiskStatusEnum.COMPLETE.getCode());
+
+        return result;
+    }
+
+    /**
+     * 项目风险更新
+     *
+     * @param object 风险DTO
+     */
+    private ProjectRiskDO syncUpdateRisk(ProjectRiskDO riskDO, Object object){
+        ProjectRiskDO result = new ProjectRiskDO();
+        result.setId(riskDO.getId());
+        result.setStatus(ProjectRiskStatusEnum.PENDING.getCode());
+
+        // 如果产生状态变化，则修改更新时间
+        if(ProjectRiskStatusEnum.COMPLETE.getCode().equals(riskDO.getStatus())){
+            result.setModifyDate(riskDO.getModifyDate());
+        }
+
+        if(object instanceof HomePageRiskWarningDTO){
+            HomePageRiskWarningDTO nodeRisk = (HomePageRiskWarningDTO) object;
+            result.setSign(nodeRisk.getOverdueDay());
+        }else if(object instanceof HomePageRiskWarningTaskDTO){
+            HomePageRiskWarningTaskDTO taskRisk = (HomePageRiskWarningTaskDTO) object;
+            result.setSign(taskRisk.getOverdueTime());
+        }
+
+        return result;
+    }
+
+    /**
      * 系统同步添加解释
      *
      * @param object 风险对象
@@ -297,52 +386,4 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
 
         return explanationDO;
     }
-
-    /**
-     * 任务、节点 计算逾期时间
-     *
-     * @param riskDO 风险DO
-     */
-    public String updateRiskSign(ProjectRiskDO riskDO){
-        String riskSign = "";
-
-        if(ProjectRiskTypeEnum.TASK_OVERDUE.getCode().equals(riskDO.getType())){
-            TaskDO taskDO = taskMapper.getById(riskDO.getMainId());
-            Date planEndDate = taskDO.getPlanEndDate();
-            Date actualEndDate = taskDO.getActualEndDate();
-
-            // 逾期时间可以为负数
-            Long result;
-            if(planEndDate.after(actualEndDate)){
-                result = - elapsedTimeClient.getElapsedTime(actualEndDate, planEndDate);
-            } else{
-                result = elapsedTimeClient.getElapsedTime(planEndDate, actualEndDate);
-            }
-            BigDecimal elapsedTime = new BigDecimal(result.toString());
-            elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_HOUR), 2, RoundingMode.HALF_UP);
-
-            riskSign = elapsedTime.toString();
-
-        }else if(ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(riskDO.getType())
-                || ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(riskDO.getType())){
-            ProjectNodeDO nodeDO = projectNodeMapper.getByName(riskDO.getProjectId(), riskDO.getName());
-            Date planDate = nodeDO.getPlanDate();
-            Date actualDate = nodeDO.getActualDate();
-
-            // 逾期时间可以为负数
-            Long result;
-            if(planDate.after(actualDate)){
-                result = - elapsedTimeClient.getElapsedTime(actualDate, planDate);
-            } else{
-                result = elapsedTimeClient.getElapsedTime(planDate, actualDate);
-            }
-            BigDecimal elapsedTime = new BigDecimal(result.toString());
-            elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_DAY), 0, RoundingMode.HALF_UP);
-
-            riskSign = elapsedTime.toString();
-        }
-
-        return riskSign;
-    }
-
 }
