@@ -106,6 +106,9 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
 
     @Override
     public void batchAddLog(List<BizChangeLogDO> bizChangeLogDOList) {
+        if(CollectionUtil.isEmpty(bizChangeLogDOList)){
+            return;
+        }
         bizChangeLogMapper.batchInsert(bizChangeLogDOList);
     }
 
