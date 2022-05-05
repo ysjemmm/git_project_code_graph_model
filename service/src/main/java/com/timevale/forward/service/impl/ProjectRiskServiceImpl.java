@@ -16,6 +16,7 @@ import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.client.ProjectRiskService;
 import com.timevale.forward.facade.api.query.ProjectRiskQueryList;
 import com.timevale.forward.facade.api.request.ProjectRiskAddReq;
+import com.timevale.forward.facade.api.request.ProjectRiskInvalidReq;
 import com.timevale.forward.facade.api.request.ProjectRiskModifyReq;
 import com.timevale.forward.facade.api.result.ProjectRiskVO;
 import com.timevale.forward.model.enums.ProjectRiskExplanationEnum;
@@ -31,6 +32,8 @@ import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateFormatConst;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -95,6 +98,24 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
     public BaseResult<Boolean> modify(ProjectRiskModifyReq projectRiskModifyReq) {
         ProjectRiskDO riskDO = ProjectRiskCopier.INSTANCE.convert(projectRiskModifyReq);
         projectRiskMapper.update(riskDO);
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> invalid(ProjectRiskInvalidReq projectRiskInvalidReq) {
+        Long id = projectRiskInvalidReq.getId();
+
+        // 更新状态
+        ProjectRiskDO riskDO = new ProjectRiskDO();
+        riskDO.setId(id);
+        riskDO.setStatus(ProjectRiskStatusEnum.INVALID.getCode());
+        projectRiskMapper.update(riskDO);
+
+        // 新增风险说明
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String explanation = String.format(ProjectRiskExplanationEnum.INVALID.getText(), userInfo.getAlias() + "-" + userInfo.getName());
+        projectRiskExplanationComponent.add(id, explanation);
 
         return BaseResult.success(true);
     }
