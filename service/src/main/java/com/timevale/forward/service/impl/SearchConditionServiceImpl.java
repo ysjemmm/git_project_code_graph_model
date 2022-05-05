@@ -62,7 +62,7 @@ public class SearchConditionServiceImpl implements SearchConditionService {
         systemDefault.setNotDelete(true);
         systemDefault.setTabType(tabType);
         systemDefault.setName(CommonConstant.SYSTEM_DEFAULT);
-        systemDefault.setIsDefault(isDefault);
+        systemDefault.setIsDefault(!isDefault);
 
         // 如果有默认条件，则排在默认条件之后
         int index = isDefault ? 1 : 0;
