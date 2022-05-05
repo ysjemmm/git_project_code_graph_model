@@ -4,7 +4,6 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.ProjectRiskQueryList;
 import com.timevale.forward.facade.api.request.ProjectRiskAddReq;
-import com.timevale.forward.facade.api.request.ProjectRiskInvalidReq;
 import com.timevale.forward.facade.api.request.ProjectRiskModifyReq;
 import com.timevale.forward.facade.api.result.ProjectRiskVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -34,14 +33,6 @@ public interface ProjectRiskService {
      * @param projectRiskModifyReq 项目风险-修改请求
      */
     BaseResult<Boolean> modify(ProjectRiskModifyReq projectRiskModifyReq);
-
-    /**
-     * 作废
-     *
-     * @param projectRiskInvalidReq 项目风险-作废请求
-     */
-    BaseResult<Boolean> invalid(ProjectRiskInvalidReq projectRiskInvalidReq);
-
     /**
      * 单个查询
      *
