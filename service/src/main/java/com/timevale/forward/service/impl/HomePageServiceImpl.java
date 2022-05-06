@@ -96,6 +96,7 @@ public class HomePageServiceImpl implements HomePageService {
 
             // 项目信息
             List<ProjectDO> projectDOList = projectMapper.selectByTeamMember(allMyStaffWithSelf);
+            projectDOList = projectDOList.stream().filter(e -> !ProjectStatusEnum.INVALID.getCode().equals(e.getStatus())).collect(Collectors.toList());
 
             dataIndicatorVO.setProjectReadyStartCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_START.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyInternalAuditCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_INTERNAL_AUDIT.getCode().equals(e.getNodeStatus())).count());
