@@ -56,9 +56,9 @@ public enum ProjectNodeStatusEnum {
         // 配置节点和节点状态的映射关系
         nodeStatusMap.put(ProjectNodeEnum.START_PLAN.getText(),              ProjectNodeStatusEnum.READY_START.code);
         nodeStatusMap.put(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText(),   ProjectNodeStatusEnum.READY_INTERNAL_AUDIT.code);
-        nodeStatusMap.put(ProjectNodeEnum.DEMAND_CONSTRUE.getText(),         ProjectNodeStatusEnum.READY_START.code);
-        nodeStatusMap.put(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText(), ProjectNodeStatusEnum.READY_CONSTRUE.code);
-        nodeStatusMap.put(ProjectNodeEnum.DEVELOP_START.getText(),           ProjectNodeStatusEnum.READY_TECHNICAL_DETAIL_REVIEW.code);
+        nodeStatusMap.put(ProjectNodeEnum.DEMAND_CONSTRUE.getText(),         ProjectNodeStatusEnum.READY_CONSTRUE.code);
+        nodeStatusMap.put(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText(), ProjectNodeStatusEnum.READY_TECHNICAL_DETAIL_REVIEW.code);
+        nodeStatusMap.put(ProjectNodeEnum.DEVELOP_START.getText(),           ProjectNodeStatusEnum.READY_DEVELOP.code);
         nodeStatusMap.put(ProjectNodeEnum.WRITE_TEST_CASES.getText(),        ProjectNodeStatusEnum.DEVELOPING.code);
         nodeStatusMap.put(ProjectNodeEnum.USE_CASE_REVIEW.getText(),         ProjectNodeStatusEnum.DEVELOPING.code);
         nodeStatusMap.put(ProjectNodeEnum.SUBMIT_TEST.getText(),             ProjectNodeStatusEnum.DEVELOPING.code);
