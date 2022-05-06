@@ -20,4 +20,8 @@ public class ProductDemandLinkTaskQueryList extends QueryBase {
     @ApiModelProperty("产品需求id")
     @NotNull(message = "产品需求id不能为空")
     private Long productDemandId;
+
+    @ApiModelProperty("项目id")
+    @NotNull(message = "项目id不能为空")
+    private Long productId;
 }
