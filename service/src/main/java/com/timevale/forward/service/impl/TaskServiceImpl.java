@@ -455,10 +455,10 @@ public class TaskServiceImpl implements TaskService {
         // 开始分页
         PageHelper.startPage(productDemandLinkTaskQueryList.pageNum, productDemandLinkTaskQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
 
-        Long productId = productDemandLinkTaskQueryList.getProductId();
+        Long projectId = productDemandLinkTaskQueryList.getProjectId();
         Long productDemandId = productDemandLinkTaskQueryList.getProductDemandId();
 
-        List<TaskDO> taskDOList = taskMapper.getByProductDemandId(productDemandId, productId);
+        List<TaskDO> taskDOList = taskMapper.getByProductDemandId(productDemandId, projectId);
         List<TaskListVO> taskListVOList = taskDOList.stream().map(TaskCopier.INSTANCE::tansfer).collect(Collectors.toList());
 
         // 任务执行人

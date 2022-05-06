@@ -23,5 +23,5 @@ public class ProductDemandLinkTaskQueryList extends QueryBase {
 
     @ApiModelProperty("项目id")
     @NotNull(message = "项目id不能为空")
-    private Long productId;
+    private Long projectId;
 }
