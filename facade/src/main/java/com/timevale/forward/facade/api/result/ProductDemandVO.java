@@ -70,4 +70,8 @@ public class ProductDemandVO extends ToString {
 
     @ApiModelProperty("关联任务数")
     private Integer taskCount;
+
+    @ApiModelProperty("项目id")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long projectId;
 }

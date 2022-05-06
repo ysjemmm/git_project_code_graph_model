@@ -421,6 +421,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
 
         productDemandVOList.forEach(p -> {
+            p.setProjectId(productDemandQueryList.getProjectId());
             p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
             p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
         });
