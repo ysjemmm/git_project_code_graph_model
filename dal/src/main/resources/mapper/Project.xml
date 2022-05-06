@@ -179,7 +179,7 @@
 
     <select id="selectByTeamMember" resultType="com.timevale.forward.dal.entity.ProjectDO">
         select  pj.id, pj.name, pj.customer_dev, pj.priority, pj.type, pj.status, pj.pm, pj.pm_id, pj.plan_start_date,
-                pj.plan_end_date, pj.actual_start_date, pj.actual_end_date, pj.`desc`, pj.is_deleted,
+                pj.plan_end_date, pj.actual_start_date, pj.actual_end_date, pj.`desc`, pj.node_status, pj.is_deleted,
                 pj.create_man_id, pj.create_man, pj.create_date, pj.modify_man_id, pj.modify_man, pj.modify_date
         from person p
         join project pj on pj.id = p.main_id
