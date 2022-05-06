@@ -92,7 +92,6 @@ public class HomePageServiceImpl implements HomePageService {
         if(HomePageTabEnum.TEAM.getCode().equals(homePageBaseReq.getTabType())){
             // 成员信息
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
-            userInfo.setId("xingyun");
             List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), false);
 
             // 项目信息
