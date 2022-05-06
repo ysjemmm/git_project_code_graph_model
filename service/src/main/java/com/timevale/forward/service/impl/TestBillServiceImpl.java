@@ -134,9 +134,6 @@ public class TestBillServiceImpl implements TestBillService {
         //创建一个项目的提测单之后需要清空项目原本的提测节点的实际时间
         projectNodeMapper.updateSubmitTestActualDate(testBillAddReq.getProjectId(), null);
 
-        // 更新项目节点
-        projectComponent.updateNodeStatus(testBillAddReq.getProjectId());
-
         //获取提测单名称
         ProjectDO projectDO = projectMapper.get(testBillAddReq.getProjectId());
         String testBillName = projectDO.getName() + CommonConstant.TESTBILL_SUFFIX;
