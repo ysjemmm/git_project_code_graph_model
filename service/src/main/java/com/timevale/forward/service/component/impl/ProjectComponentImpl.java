@@ -211,7 +211,14 @@ public class ProjectComponentImpl implements ProjectComponent {
     public void updateNodeStatus(Long projectId) {
         // 查询项目节点
         List<ProjectNodeDO> nodeDOList = projectNodeComponent.get(projectId);
-        Integer nodeStatus = ProjectNodeStatusEnum.getStatus(nodeDOList);
+
+        // 如果节点为空则状态设为待启动
+        Integer nodeStatus;
+        if(CollectionUtils.isEmpty(nodeDOList)){
+            nodeStatus = ProjectNodeStatusEnum.READY_START.getCode();
+        }else {
+            nodeStatus = ProjectNodeStatusEnum.getStatus(nodeDOList);
+        }
 
         // 更新项目节点状态
         ProjectDO projectDO = new ProjectDO();
