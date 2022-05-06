@@ -49,7 +49,7 @@ public enum ProjectNodeStatusEnum {
                 return nodeStatusMap.get(e.getName());
             }
         }
-        return nodeStatusMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText());
+        return PUBLISHED.code;
     }
 
     static {
@@ -64,7 +64,7 @@ public enum ProjectNodeStatusEnum {
         nodeStatusMap.put(ProjectNodeEnum.SUBMIT_TEST.getText(),             ProjectNodeStatusEnum.DEVELOPING.code);
         nodeStatusMap.put(ProjectNodeEnum.TEST_START.getText(),              ProjectNodeStatusEnum.READY_TEST.code);
         nodeStatusMap.put(ProjectNodeEnum.PUBLISH_SIMULATE.getText(),        ProjectNodeStatusEnum.TESTING.code);
-        nodeStatusMap.put(ProjectNodeEnum.PUBLISH_OFFICIAL.getText(),        ProjectNodeStatusEnum.PUBLISHED.code);
+        nodeStatusMap.put(ProjectNodeEnum.PUBLISH_OFFICIAL.getText(),        ProjectNodeStatusEnum.TESTING.code);
     }
 
 }
