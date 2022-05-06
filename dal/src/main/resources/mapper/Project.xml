@@ -228,7 +228,7 @@
         update project
         <set>
             <if test="status != null">status = #{status},</if>
-            modify_date = modify_date
+            <if test="nodeStatus != null">node_status = #{nodeStatus},</if>
         </set>
         <where>
             id = #{id}
