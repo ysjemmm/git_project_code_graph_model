@@ -172,15 +172,16 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         List<HomePageRiskWarningTaskDTO> taskDTOList = riskWarningTaskComponent.getRiskWarningTaskAll();
         List<HomePageRiskWarningSubmitTestDTO> testDTOList = riskWarningSubmitTestComponent.getRiskWarningSubmitTestAll();
 
+        // sql端 唯一id
+        Map<String, ProjectRiskDO> pendingRiskMap = createUniqueMap(pendingRiskList);
+        Map<String, ProjectRiskDO> completeRiskMap = createUniqueMap(completeRiskList);
+
         // 数据分发端 唯一id
         Map<String, Object> newRiskMap = new HashMap<>();
         newRiskMap.putAll(taskDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity())));
         newRiskMap.putAll(testDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity())));
         newRiskMap.putAll(nodeDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getNodeName(), Function.identity())));
 
-        // sql端 唯一id
-        Map<String, ProjectRiskDO> pendingRiskMap = createUniqueMap(pendingRiskList);
-        Map<String, ProjectRiskDO> completeRiskMap = createUniqueMap(completeRiskList);
 
         // 判断去重，更新完成处理的风险
         List<ProjectRiskDO> updateList = new ArrayList<>();
@@ -203,12 +204,10 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
             updateList.forEach(e -> projectRiskMapper.update(e));
         }
 
-        // 增加新风险，同时添加风险说明
+        // 增加新风险 - 如果库中不包含，则是新的风险
         List<ProjectRiskDO> addRiskDOList = new ArrayList<>();
-        List<ProjectRiskExplanationDO> addExplainDOList = new ArrayList<>();
         newRiskMap.forEach((k, v) -> {
-            // 如果库中不包含，则是新的风险
-            if(!pendingRiskMap.containsKey(k)){
+            if(!pendingRiskMap.containsKey(k) && !completeRiskMap.containsKey(k)){
                 addRiskDOList.add(syncAddRisk(v));
             }
         });
@@ -304,8 +303,10 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         }else if(ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(riskDO.getType())
                 || ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(riskDO.getType())){
             ProjectNodeDO nodeDO = projectNodeMapper.getByName(riskDO.getProjectId(), riskDO.getName());
+
             if(nodeDO == null){
-               sign = "0";
+                // 如果节点被删除则设定为0
+                sign = "0";
             }else {
                 Date planDate = nodeDO.getPlanDate();
                 Date actualDate = nodeDO.getActualDate();
