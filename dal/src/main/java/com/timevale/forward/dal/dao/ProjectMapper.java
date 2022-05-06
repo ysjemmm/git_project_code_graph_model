@@ -23,6 +23,10 @@ public interface ProjectMapper {
      */
     ProjectDO get(@Param("id") Long id);
 
+    /**
+     * 得到项目所有id
+     */
+    List<Long> getAllId();
 
     /**
      * 新增单条项目

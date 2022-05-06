@@ -25,4 +25,9 @@ public interface DataCorrectService {
      * @return Boolean
      */
     BaseResult<Boolean> calculateStatus();
+
+    /**
+     * 节点状态更新
+     */
+    BaseResult<Boolean> nodeStatusUpdate();
 }

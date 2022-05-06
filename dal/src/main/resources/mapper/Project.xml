@@ -220,6 +220,10 @@
         </where>
     </select>
 
+    <select id="getAllId" resultType="java.lang.Long">
+        SELECT id FROM project
+    </select>
+
     <update id="updateStatus" parameterType="com.timevale.forward.dal.entity.ProjectDO">
         update project
         <set>

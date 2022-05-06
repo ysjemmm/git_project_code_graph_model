@@ -109,6 +109,16 @@ public class DataCorrectServiceImpl implements DataCorrectService {
         return BaseResult.success();
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> nodeStatusUpdate() {
+        List<Long> projectIdList = projectMapper.getAllId();
+        for (Long e : projectIdList) {
+            projectComponent.updateNodeStatus(e);
+        }
+        return BaseResult.success(true);
+    }
+
     private void updateProductDemandStatus(Long projectId, Integer status) {
         List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectId);
         if (CollectionUtils.isEmpty(exists)) {
@@ -182,4 +192,6 @@ public class DataCorrectServiceImpl implements DataCorrectService {
         });
         log.info("产品需求变化-更新业务需求:产品需求id={},需要更新的业务需求状态和id={}", productDemandIds, condition);
     }
+
+
 }
