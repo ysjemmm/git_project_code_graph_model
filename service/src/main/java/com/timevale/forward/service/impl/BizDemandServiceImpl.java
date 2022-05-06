@@ -547,13 +547,16 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 参数
         String submitMan = batchTransferReq.getReceiveMan();
         String submitManId = batchTransferReq.getReceiveMan();
-
         List<Long> bizDemandIdList = batchTransferReq.getIdList();
 
         if(CollectionUtils.isNotEmpty(bizDemandIdList)){
             // 日志处理
             List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(bizDemandIdList);
-            for (BizDemandDO e : bizDemandDOList) {
+            bizDemandDOList.parallelStream().forEach(e -> {
+                // 新旧相同则不记录日志
+                if(Objects.equal(submitMan, e.getSubmitMan())){
+                    return;
+                }
                 bizDemandLogComponent.addLogWhenModifyData(
                         e.getSubmitMan(),
                         submitMan,
@@ -561,7 +564,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                         BizChangeLogFieldEnum.CREATE_MAN.getText(),
                         true
                 );
-            }
+            });
             // 批量转交
             bizDemandMapper.updateSubmitMan(bizDemandIdList, submitMan, submitManId);
         }
