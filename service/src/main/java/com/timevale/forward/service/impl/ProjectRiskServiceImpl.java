@@ -289,11 +289,12 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
             Date actualEndDate = taskDO.getActualEndDate();
 
             // 逾期时间可以为负数
-            Long result;
-            if(planEndDate.after(actualEndDate)){
-                result = - elapsedTimeClient.getElapsedTime(actualEndDate, planEndDate);
-            } else{
+            Long result = 0L;
+            int compare = actualEndDate.compareTo(planEndDate);
+            if(compare > 0){
                 result = elapsedTimeClient.getElapsedTime(planEndDate, actualEndDate);
+            }else if(compare < 0){
+                result = - elapsedTimeClient.getElapsedTime(actualEndDate, planEndDate);
             }
             BigDecimal elapsedTime = new BigDecimal(result.toString());
             elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_HOUR), 2, RoundingMode.HALF_UP);
@@ -304,6 +305,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                 || ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(riskDO.getType())){
             ProjectNodeDO nodeDO = projectNodeMapper.getByName(riskDO.getProjectId(), riskDO.getName());
 
+
             if(nodeDO == null){
                 // 如果节点被删除则设定为0
                 sign = "0";
@@ -312,11 +314,12 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                 Date actualDate = nodeDO.getActualDate();
 
                 // 逾期时间可以为负数
-                Long result;
-                if(planDate.after(actualDate)){
-                    result = - elapsedTimeClient.getElapsedTime(actualDate, planDate);
-                } else{
+                Long result = 0L;
+                int compare = actualDate.compareTo(planDate);
+                if(compare > 0){
                     result = elapsedTimeClient.getElapsedTime(planDate, actualDate);
+                }else if(compare < 0){
+                    result = - elapsedTimeClient.getElapsedTime(actualDate, planDate);
                 }
                 BigDecimal elapsedTime = new BigDecimal(result.toString());
                 elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_DAY), 0, RoundingMode.HALF_UP);
