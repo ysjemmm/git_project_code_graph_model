@@ -98,14 +98,13 @@ public class HomePageServiceImpl implements HomePageService {
             List<ProjectDO> projectDOList = projectMapper.selectByTeamMember(allMyStaffWithSelf);
 
             dataIndicatorVO.setProjectReadyStartCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_START.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectReadyStartCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_INTERNAL_AUDIT.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectReadyInternalAuditCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_CONSTRUE.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectReadyConstrueCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_TECHNICAL_DETAIL_REVIEW.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectReadyTechnicalDetailReviewCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_DEVELOP.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectReadyDevelopCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.DEVELOPING.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectDevelopingCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_TEST.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectReadyTestCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.TESTING.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectTestingCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.PUBLISHED.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyInternalAuditCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_INTERNAL_AUDIT.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyConstrueCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_CONSTRUE.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyTechnicalDetailReviewCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_TECHNICAL_DETAIL_REVIEW.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyDevelopCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_DEVELOP.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectDevelopingCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.DEVELOPING.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyTestCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_TEST.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectTestingCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.TESTING.getCode().equals(e.getNodeStatus())).count());
 
             // 需求信息
             List<BizDemandListDO> bizdemandDOList = bizDemandMapper.selectList(BizDemandListCondition
