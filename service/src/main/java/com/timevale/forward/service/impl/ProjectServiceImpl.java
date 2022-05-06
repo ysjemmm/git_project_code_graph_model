@@ -423,31 +423,23 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(projectId);
         List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
 
-        productDemandVOList.forEach(p -> {
-            p.setProjectId(projectId);
-            p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
-            p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
-        });
-
-        //查询产品需求关联任务
-        List<Long> productDemandIdList = productDemandVOList.stream().map(ProductDemandVO::getId).collect(Collectors.toList());
-        if(!CollectionUtils.isEmpty(productDemandIdList)){
+        if(CollectionUtils.isNotEmpty(productDemandVOList)){
+            //查询产品需求关联任务
+            List<Long> productDemandIdList = productDemandVOList.stream().map(ProductDemandVO::getId).collect(Collectors.toList());
             List<TaskProductDemandDO> taskProductDemandDOList = taskProductDemandMapper.selectByProductDemandId(productDemandIdList);
-            List<Long> taskIdList = taskProductDemandDOList.stream().map(TaskProductDemandDO::getTaskId).collect(Collectors.toList());
-            List<TaskDO> taskDOList = taskMapper.getByIdList(taskIdList);
-            Set<Long> taskIdSet = taskDOList.stream()
-                    .filter(e -> e.getProjectId().equals(productDemandQueryList.getProjectId()))
-                    .map(TaskDO::getId)
-                    .collect(Collectors.toSet());
-            taskProductDemandDOList = taskProductDemandDOList.stream().filter(e -> taskIdSet.contains(e.getTaskId())).collect(Collectors.toList());
 
+            // 根据产品id分类
             Map<Long, List<TaskProductDemandDO>> taskProductDemandMap =
                     taskProductDemandDOList.stream().collect(Collectors.groupingBy(TaskProductDemandDO::getProductDemandId));
+
             // 填充任务数
             for (ProductDemandVO e : productDemandVOList) {
-                List<TaskProductDemandDO> doList = taskProductDemandMap.get(e.getId());
-                int taskCount = CollectionUtils.isEmpty(doList) ? 0 : doList.size();
+                int taskCount = taskProductDemandMap.containsKey(e.getId()) ? taskProductDemandMap.get(e.getId()).size() : 0;
                 e.setTaskCount(taskCount);
+
+                e.setProjectId(projectId);
+                e.setStatusName(ProductDemandStatusEnum.getTextByCode(e.getStatus()));
+                e.setPriorityName(PriorityEnum.getTextByCode(e.getPriority()));
             }
         }
 

@@ -49,12 +49,11 @@
     <select id="selectByProductDemandId" resultType="com.timevale.forward.dal.entity.TaskProductDemandDO">
         SELECT task_id, product_demand_id
         FROM task_product_demand
-        <if test="productDemandIdList != null and productDemandIdList.size() > 0">
-            WHERE product_demand_id IN
-            <foreach collection="productDemandIdList" item="item" separator="," open="(" close=")">
-                #{item}
-            </foreach>
-        </if>
+        WHERE product_demand_id IN
+        <foreach collection="productDemandIdList" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        AND is_deleted = false
     </select>
 
 </mapper>

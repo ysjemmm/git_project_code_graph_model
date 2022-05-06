@@ -130,19 +130,19 @@ public class ProjectComponentImpl implements ProjectComponent {
 //            a.setWarning(warning.get(a.getId()));
         });
 
-        // 4.节点透出
+        // 4.枚举值填充
         for (ProjectVO e : projectVOList) {
             e.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(e.getNodeStatus()));
         }
 
         // 5.是否需要预警
-        List<Long> projectIdList = projectVOList.stream().map(ProjectVO::getId).collect(Collectors.toList());
-        if(CollectionUtils.isNotEmpty(projectIdList)) {
-            List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectIdList(projectIdList);
-            Set<Long> riskSet = riskDOList.stream().map(ProjectRiskDO::getProjectId).collect(Collectors.toSet());
-            for (ProjectVO e : projectVOList) {
-                e.setContainRisk(riskSet.contains(e.getId()));
-            }
+        List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectIdList(projectIds);
+        Set<Long> riskSet = riskDOList.stream()
+                .filter(e -> ProjectRiskStatusEnum.PENDING.getCode().equals(e.getStatus()))
+                .map(ProjectRiskDO::getProjectId)
+                .collect(Collectors.toSet());
+        for (ProjectVO e : projectVOList) {
+            e.setContainRisk(riskSet.contains(e.getId()));
         }
 
         // 返回分页数据
