@@ -345,7 +345,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         result.setStatus(ProjectRiskStatusEnum.PENDING.getCode());
 
         // 如果产生状态变化，则修改更新时间
-        if(ProjectRiskStatusEnum.COMPLETE.getCode().equals(riskDO.getStatus())){
+        if(ProjectRiskStatusEnum.PENDING.getCode().equals(riskDO.getStatus())){
             result.setModifyDate(riskDO.getModifyDate());
         }
 

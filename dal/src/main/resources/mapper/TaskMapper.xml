@@ -165,7 +165,7 @@
                plan_use_time, actual_start_date, actual_end_date, task_use_time, is_deleted, create_man_id, create_man,
                create_date, modify_man_id, modify_man, modify_date
         from task
-        where id = #{id} and is_deleted=false
+        where id = #{id}
     </select>
 
     <select id="getByIdList" resultType="com.timevale.forward.dal.entity.TaskDO">
