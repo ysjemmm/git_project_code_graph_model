@@ -8,12 +8,10 @@ import com.timevale.forward.dal.entity.ProjectNodeDO;
 import com.timevale.forward.dal.entity.ProjectProductDemandDO;
 import com.timevale.forward.facade.api.client.DataCorrectService;
 import com.timevale.forward.facade.api.request.DataModifyReq;
-import com.timevale.forward.model.enums.BizDemandStatusEnum;
-import com.timevale.forward.model.enums.DataCorrectTypeEnum;
-import com.timevale.forward.model.enums.ProductDemandStatusEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ProductDemandComponent;
 import com.timevale.forward.service.component.ProjectComponent;
+import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
@@ -55,6 +53,9 @@ public class DataCorrectServiceImpl implements DataCorrectService {
 
     @Resource
     private ProductDemandMapper productDemandMapper;
+
+    @Resource
+    private ProjectNodeComponent projectNodeComponent;
 
 
     @Override
@@ -113,9 +114,26 @@ public class DataCorrectServiceImpl implements DataCorrectService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> nodeStatusUpdate() {
         List<Long> projectIdList = projectMapper.getAllId();
-        for (Long e : projectIdList) {
-            projectComponent.updateNodeStatus(e);
-        }
+
+        projectIdList.parallelStream().forEach(e -> {
+            // 查询项目节点
+            List<ProjectNodeDO> nodeDOList = projectNodeComponent.get(e);
+
+            // 如果节点为空则状态设为待启动
+            Integer nodeStatus;
+            if(org.apache.commons.collections.CollectionUtils.isEmpty(nodeDOList)){
+                nodeStatus = ProjectNodeStatusEnum.READY_START.getCode();
+            }else {
+                nodeStatus = ProjectNodeStatusEnum.getStatus(nodeDOList);
+            }
+
+            // 更新项目节点状态
+            ProjectDO projectDO = new ProjectDO();
+            projectDO.setId(e);
+            projectDO.setNodeStatus(nodeStatus);
+            projectMapper.updateNodeStatus(projectDO);
+        });
+
         return BaseResult.success(true);
     }
 

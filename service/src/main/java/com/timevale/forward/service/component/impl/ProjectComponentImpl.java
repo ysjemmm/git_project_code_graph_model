@@ -224,7 +224,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         ProjectDO projectDO = new ProjectDO();
         projectDO.setId(projectId);
         projectDO.setNodeStatus(nodeStatus);
-        projectMapper.updateStatus(projectDO);
+        projectMapper.update(projectDO);
     }
 
 

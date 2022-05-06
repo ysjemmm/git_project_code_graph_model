@@ -178,9 +178,9 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
 
         // 数据分发端 唯一id
         Map<String, Object> newRiskMap = new HashMap<>();
-        newRiskMap.putAll(taskDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity())));
-        newRiskMap.putAll(testDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity())));
-        newRiskMap.putAll(nodeDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getNodeName(), Function.identity())));
+        newRiskMap.putAll(taskDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity(), (a, b) -> a)));
+        newRiskMap.putAll(testDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity(), (a, b) -> a)));
+        newRiskMap.putAll(nodeDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getNodeName(), Function.identity(), (a, b) -> a)));
 
 
         // 判断去重，更新完成处理的风险
@@ -226,14 +226,12 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
     private Map<String, ProjectRiskDO> createUniqueMap(List<ProjectRiskDO> riskDOList){
         Map<String, ProjectRiskDO> result = new HashMap<>();
         result.putAll(riskDOList.stream()
-                .filter(e -> ProjectRiskTypeEnum.SUBMIT_FAILURE.getCode().equals(e.getType())
-                        || ProjectRiskTypeEnum.TASK_OVERDUE.getCode().equals(e.getType()))
-                .collect(Collectors.toMap(e -> e.getType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity())));
+                .filter(e -> ProjectRiskTypeEnum.SUBMIT_FAILURE.getCode().equals(e.getType()) || ProjectRiskTypeEnum.TASK_OVERDUE.getCode().equals(e.getType()))
+                .collect(Collectors.toMap(e -> e.getType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity(), (a, b) -> a)));
 
         result.putAll(riskDOList.stream()
-                .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getType())
-                        || ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(e.getType()))
-                .collect(Collectors.toMap(e -> e.getType() + "-" + e.getProjectId() + "-" + e.getName(), Function.identity())));
+                .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getType()) || ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(e.getType()))
+                .collect(Collectors.toMap(e -> e.getType() + "-" + e.getProjectId() + "-" + e.getName(), Function.identity(), (a, b) -> a)));
 
         return result;
     }

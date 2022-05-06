@@ -115,4 +115,10 @@ public interface ProjectMapper {
      */
     int updateStatus(ProjectDO projectDO);
 
+    /**
+     * 节点状态计算-不修改更新时间
+     *
+     * @param projectDO 项目DO
+     */
+    int updateNodeStatus(ProjectDO projectDO);
 }
