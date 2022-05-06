@@ -34,7 +34,7 @@
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             <if test="actualStartDate != null">actual_start_date = #{actualStartDate},</if>
-            <if test="actual_end_date != null">actual_end_date = #{actualEndDate},</if>
+            <if test="actualEndDate != null">actual_end_date = #{actualEndDate},</if>
         </set>
         <where>
             id = #{id}

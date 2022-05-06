@@ -413,15 +413,18 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> linkProductDemandList(ProjectProductDemandQueryList productDemandQueryList) {
+        // 参数
+        Long projectId = productDemandQueryList.getProjectId();
+
         // 开始分页
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
 
         // 查询产品需求
-        List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(productDemandQueryList.getProjectId());
+        List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(projectId);
         List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
 
         productDemandVOList.forEach(p -> {
-            p.setProjectId(productDemandQueryList.getProjectId());
+            p.setProjectId(projectId);
             p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
             p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
         });
