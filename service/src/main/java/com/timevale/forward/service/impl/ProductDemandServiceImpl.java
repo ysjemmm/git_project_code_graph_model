@@ -449,7 +449,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 if(Objects.equals(e.getOwner(), owner)){
                     continue;
                 }
-                BizChangeLogDO log = productDemandLogComponent.getLog(e.getOwner(), owner, e.getId(), BizChangeLogFieldEnum.OWNER.getText(), true, ButtonActionEnum.TRANSFER.getText());
+                BizChangeLogDO log = productDemandLogComponent.getLog(e.getOwner(), owner, e.getId(), BizChangeLogFieldEnum.OWNER.getText(), true);
                 bizChangeLogDOList.add(log);
             }
             productDemandLogComponent.batchAddLog(bizChangeLogDOList);

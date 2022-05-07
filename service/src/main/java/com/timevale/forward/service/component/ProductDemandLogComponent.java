@@ -10,7 +10,7 @@ public interface ProductDemandLogComponent {
 
     void addLogWhenModifyData(ProductDemandDO oldObj, ProductDemandDO newObj) ;
 
-    BizChangeLogDO getLog(String oldValue, String newValue, Long id, String field, Boolean active, String action);
+    BizChangeLogDO getLog(String oldValue, String newValue, Long id, String field, Boolean active);
 
     void batchAddLog(List<BizChangeLogDO> bizChangeLogDOList);
 

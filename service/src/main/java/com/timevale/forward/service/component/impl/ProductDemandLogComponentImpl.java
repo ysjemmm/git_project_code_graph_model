@@ -91,8 +91,8 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
     }
 
     @Override
-    public BizChangeLogDO getLog(String oldValue, String newValue, Long id, String field, Boolean active, String action) {
-        BizChangeLogDO log = createLog(id, field, oldValue, newValue, action);
+    public BizChangeLogDO getLog(String oldValue, String newValue, Long id, String field, Boolean active) {
+        BizChangeLogDO log = createLog(id, field, oldValue, newValue, "");
         if(active){
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
             log.setCreateManId(userInfo.getId());
