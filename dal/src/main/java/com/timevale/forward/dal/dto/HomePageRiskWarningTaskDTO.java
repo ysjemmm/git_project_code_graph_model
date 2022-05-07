@@ -20,12 +20,6 @@ public class HomePageRiskWarningTaskDTO {
     private Long projectId;
 
     /**
-     * 主体id
-     */
-    @JSONField(name = "main_id")
-    private Long mainId;
-
-    /**
      * 风险类型
      */
     @JSONField(name = "judge_type")

@@ -15,14 +15,14 @@ public class HomePageRiskWarningDTO {
     /**
      * 项目id
      */
-    @JSONField(name = "id")
+    @JSONField(name = "project_id")
     private Long projectId;
 
     /**
-     * 主体id
+     * 节点id
      */
-    @JSONField(name = "main_id")
-    private Long mainId;
+    @JSONField(name = "node_id")
+    private Long nodeId;
 
     /**
      * 风险类型
@@ -33,7 +33,7 @@ public class HomePageRiskWarningDTO {
     /**
      * 项目名称
      */
-    @JSONField(name = "name")
+    @JSONField(name = "project_name")
     private String projectName;
 
     /**
@@ -45,7 +45,7 @@ public class HomePageRiskWarningDTO {
     /**
      * 节点名称
      */
-    @JSONField(name = "node")
+    @JSONField(name = "node_name")
     private String nodeName;
 
     /**

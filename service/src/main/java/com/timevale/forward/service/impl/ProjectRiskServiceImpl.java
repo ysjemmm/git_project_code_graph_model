@@ -183,8 +183,8 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
 
         // 数据分发端 唯一id
         Map<String, Object> newRiskMap = new HashMap<>();
-        newRiskMap.putAll(taskDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity(), (a, b) -> a)));
-        newRiskMap.putAll(testDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getMainId(), Function.identity(), (a, b) -> a)));
+        newRiskMap.putAll(taskDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getTaskId(), Function.identity(), (a, b) -> a)));
+        newRiskMap.putAll(testDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getTestBillId(), Function.identity(), (a, b) -> a)));
         newRiskMap.putAll(nodeDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getNodeName(), Function.identity(), (a, b) -> a)));
 
 
@@ -209,6 +209,8 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
             updateList.forEach(e -> projectRiskMapper.update(e));
         }
 
+        log.info("项目风险同步更新完成, 当前时间{}", new Date());
+
         // 增加新风险 - 如果库中不包含，则是新的风险
         List<ProjectRiskDO> addRiskDOList = new ArrayList<>();
         newRiskMap.forEach((k, v) -> {
@@ -219,6 +221,8 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         if(CollectionUtils.isNotEmpty(addRiskDOList)){
             projectRiskMapper.batchInsert(addRiskDOList);
         }
+
+        log.info("项目风险同步新增完成, 当前时间{}", new Date());
 
         return BaseResult.success(true);
     }
@@ -253,7 +257,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         if(object instanceof HomePageRiskWarningDTO){
             HomePageRiskWarningDTO nodeRisk = (HomePageRiskWarningDTO) object;
             riskDO.setProjectId(nodeRisk.getProjectId());
-            riskDO.setMainId(nodeRisk.getMainId());
+            riskDO.setMainId(nodeRisk.getNodeId());
             riskDO.setType(nodeRisk.getRiskType());
             riskDO.setName(nodeRisk.getNodeName());
             riskDO.setSign(nodeRisk.getOverdueDay());
@@ -261,7 +265,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         }else if(object instanceof HomePageRiskWarningTaskDTO){
             HomePageRiskWarningTaskDTO taskRisk = (HomePageRiskWarningTaskDTO) object;
             riskDO.setProjectId(taskRisk.getProjectId());
-            riskDO.setMainId(taskRisk.getMainId());
+            riskDO.setMainId(taskRisk.getTaskId());
             riskDO.setType(taskRisk.getRiskType());
             riskDO.setName(taskRisk.getTaskName());
             riskDO.setSign(taskRisk.getOverdueTime());
@@ -269,7 +273,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         }else if(object instanceof HomePageRiskWarningSubmitTestDTO){
             HomePageRiskWarningSubmitTestDTO testRisk = (HomePageRiskWarningSubmitTestDTO) object;
             riskDO.setProjectId(testRisk.getProjectId());
-            riskDO.setMainId(testRisk.getMainId());
+            riskDO.setMainId(testRisk.getTestBillId());
             riskDO.setType(testRisk.getRiskType());
             riskDO.setName(testRisk.getTestBillName());
             riskDO.setSign("");
@@ -293,7 +297,15 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
 
             // 逾期时间可以为负数
             Long result = 0L;
-            int compare = actualEndDate.compareTo(planEndDate);
+
+            int compare;
+            // 保险验证
+            if(planEndDate == null || actualEndDate == null){
+                compare = 0;
+            }else{
+                compare = actualEndDate.compareTo(planEndDate);
+            }
+
             if(compare > 0){
                 result = elapsedTimeClient.getElapsedTime(planEndDate, actualEndDate);
             }else if(compare < 0){
@@ -308,7 +320,6 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                 || ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(riskDO.getType())){
             ProjectNodeDO nodeDO = projectNodeMapper.getByName(riskDO.getProjectId(), riskDO.getName());
 
-
             if(nodeDO == null){
                 // 如果节点被删除则设定为0
                 sign = "0";
@@ -318,7 +329,15 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
 
                 // 逾期时间可以为负数
                 Long result = 0L;
-                int compare = actualDate.compareTo(planDate);
+
+                int compare;
+                // 保险验证
+                if(planDate == null || actualDate == null){
+                    compare = 0;
+                }else{
+                    compare = actualDate.compareTo(planDate);
+                }
+
                 if(compare > 0){
                     result = elapsedTimeClient.getElapsedTime(planDate, actualDate);
                 }else if(compare < 0){
@@ -329,7 +348,6 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
 
                 sign = elapsedTime.toString();
             }
-
         }
 
         ProjectRiskDO result = new ProjectRiskDO();

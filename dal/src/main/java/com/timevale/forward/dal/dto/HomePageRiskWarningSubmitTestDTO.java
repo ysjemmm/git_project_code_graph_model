@@ -15,14 +15,14 @@ public class HomePageRiskWarningSubmitTestDTO {
     /**
      * 项目id
      */
-    @JSONField(name = "id")
+    @JSONField(name = "project_id")
     private Long projectId;
 
     /**
-     * 主体id
+     * 提测单id
      */
-    @JSONField(name = "main_id")
-    private Long mainId;
+    @JSONField(name = "bill_id")
+    private Long testBillId;
 
     /**
      * 风险类型
@@ -33,7 +33,7 @@ public class HomePageRiskWarningSubmitTestDTO {
     /**
      * 项目名称
      */
-    @JSONField(name = "name")
+    @JSONField(name = "project_name")
     private String projectName;
 
     /**
