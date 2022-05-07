@@ -91,6 +91,9 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Resource
     private BizDemandLogComponent bizDemandLogComponent;
 
+    @Resource
+    private BizChangeLogMapper bizChangeLogMapper;
+
     @Override
     public BaseResult<PageQueryResult<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -525,17 +528,50 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> bizDemandBatchTransferReceiveMan(BatchTransferReq batchTransferReq) {
         // 参数
-        BizDemandTransferReq transferReq = new BizDemandTransferReq();
-        transferReq.setReceiveMan(batchTransferReq.getReceiveMan());
-        transferReq.setReceiveManId(batchTransferReq.getReceiveManId());
-
+        String newReceiveMan = batchTransferReq.getReceiveMan();
+        String newReceiveManId = batchTransferReq.getReceiveManId();
         List<Long> bizDemandIdList = batchTransferReq.getIdList();
 
-        // 批量转交
-        bizDemandIdList.parallelStream().forEach(e -> {
-            transferReq.setId(e);
-            transfer(transferReq);
-        });
+        // 判空
+        if(CollectionUtils.isEmpty(bizDemandIdList)){
+            return BaseResult.success(true);
+        }
+
+        // 批处理存储
+        List<BizChangeLogDO> logDOList = new ArrayList<>();
+
+        // 获取相关业务需求
+        List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(bizDemandIdList);
+        for (BizDemandDO e : bizDemandDOList) {
+            String oldReceiveMan = e.getReceiveMan();
+
+            // 新旧接收人相同则不处理
+            if(Objects.equal(oldReceiveMan, newReceiveMan)){
+                continue;
+            }
+
+            // 日志
+            BizChangeLogDO logDO = bizDemandLogComponent.getLogWhenModifyData(
+                    oldReceiveMan,
+                    newReceiveMan,
+                    e.getId(),
+                    BizChangeLogFieldEnum.RECEIVE_MAN.getText(),
+                    true
+            );
+            logDOList.add(logDO);
+
+            // 实体
+            BizDemandDO bizDemandDO = new BizDemandDO();
+            bizDemandDO.setId(e.getId());
+            bizDemandDO.setReceiveMan(newReceiveMan);
+            bizDemandDO.setReceiveManId(newReceiveManId);
+            bizDemandMapper.update(bizDemandDO);
+        }
+
+        // 批量新增日志
+        if(CollectionUtils.isNotEmpty(logDOList)){
+            bizChangeLogMapper.batchInsert(logDOList);
+        }
 
         return BaseResult.success(true);
     }
@@ -550,20 +586,25 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         if(CollectionUtils.isNotEmpty(bizDemandIdList)){
             // 日志处理
+            List<BizChangeLogDO> bizChangeLogDOList = new ArrayList<>();
             List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(bizDemandIdList);
-            bizDemandDOList.parallelStream().forEach(e -> {
+            for (BizDemandDO e : bizDemandDOList) {
                 // 新旧相同则不记录日志
                 if(Objects.equal(submitMan, e.getSubmitMan())){
-                    return;
+                    continue;
                 }
-                bizDemandLogComponent.addLogWhenModifyData(
+                BizChangeLogDO logDO = bizDemandLogComponent.getLogWhenModifyData(
                         e.getSubmitMan(),
                         submitMan,
                         e.getId(),
                         BizChangeLogFieldEnum.CREATE_MAN.getText(),
                         true
                 );
-            });
+                bizChangeLogDOList.add(logDO);
+            }
+            if(CollectionUtils.isNotEmpty(bizChangeLogDOList)){
+                bizChangeLogMapper.batchInsert(bizChangeLogDOList);
+            }
             // 批量转交
             bizDemandMapper.updateSubmitMan(bizDemandIdList, submitMan, submitManId);
         }

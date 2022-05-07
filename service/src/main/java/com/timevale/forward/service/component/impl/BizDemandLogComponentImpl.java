@@ -225,6 +225,26 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
     }
 
     @Override
+    public BizChangeLogDO getLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active) {
+        return getLogWhenModifyData(oldValue, newValue, id, field, active, "");
+    }
+
+    @Override
+    public BizChangeLogDO getLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active, String action) {
+        BizChangeLogDO logDO = newBizChangeLogDO(active, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+
+        logDO.setMainId(id);
+        logDO.setField(field);
+        logDO.setOldValue(oldValue);
+        logDO.setNewValue(newValue);
+        if(StringUtils.isNotEmpty(action)){
+            logDO.setAction(action);
+        }
+
+        return logDO;
+    }
+
+    @Override
     public BizChangeLogDO buildLogWhenPublishDateChange(String oldValue, String newValue, Long id) {
         BizChangeLogDO logDO = newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
         logDO.setMainId(id);
