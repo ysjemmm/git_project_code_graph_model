@@ -97,6 +97,17 @@ public interface BizDemandMapper {
      */
     int updateSubmitMan(@Param("idList") List<Long> idList, @Param("submitMan") String submitMan,@Param("submitManId") String submitManId);
 
+
+    /**
+     * 修改需求接收人
+     *
+     * @param idList       业务需求id 列表
+     * @param receiveMan   接收人
+     * @param receiveManId 接收人id
+     */
+    int updateReceiveMan(@Param("idList") List<Long> idList, @Param("receiveMan") String receiveMan,@Param("receiveManId") String receiveManId);
+
+
     /**
      * 选择id获取对应业务需求信息
      *
