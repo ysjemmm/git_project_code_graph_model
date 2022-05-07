@@ -506,8 +506,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                     newReceiveMan,
                     bizDemandDO.getId(),
                     BizChangeLogFieldEnum.RECEIVE_MAN.getText(),
-                    true,
-                    ButtonActionEnum.TRANSFER.getText());
+                    true);
 
             // 转交人通知
             messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
