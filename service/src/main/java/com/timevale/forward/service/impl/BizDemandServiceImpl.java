@@ -561,13 +561,26 @@ public class BizDemandServiceImpl implements BizDemandService {
             logDOList.add(logDO);
         }
 
-        // 批量新增日志
+        // 判空
         if(CollectionUtils.isNotEmpty(logDOList)){
             // 日志
             bizChangeLogMapper.batchInsert(logDOList);
             // 实体
             bizDemandIdList =  logDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
             bizDemandMapper.updateReceiveMan(bizDemandIdList, newReceiveMan, newReceiveManId);
+
+            // 通知
+            HashSet<Long> bizDemandIdSet = new HashSet<>(bizDemandIdList);
+            bizDemandDOList = bizDemandDOList.stream().filter(e -> bizDemandIdSet.contains(e.getId())).collect(Collectors.toList());
+            bizDemandDOList.parallelStream().forEach(e -> {
+                messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
+                        this,
+                        e.getId(),
+                        e.getSubmitMan(),
+                        newReceiveMan,
+                        e.getName()
+                ));
+            });
         }
 
         return BaseResult.success(true);
@@ -605,7 +618,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizChangeLogDOList.add(logDO);
         }
 
-        // 批量处理
+        // 判空
         if(CollectionUtils.isNotEmpty(bizChangeLogDOList)){
             // 日志
             bizChangeLogMapper.batchInsert(bizChangeLogDOList);
