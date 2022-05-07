@@ -162,6 +162,11 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         List<ProjectDO> projectDOList = projectMapper.getByStatus(statusList);
         List<Long> projectIdList = projectDOList.stream().map(ProjectDO::getId).collect(Collectors.toList());
 
+        // 判空
+        if(CollectionUtils.isEmpty(projectIdList)){
+            return BaseResult.success(true);
+        }
+
         // sql 端
         List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectIdList(projectIdList);
         List<ProjectRiskDO> pendingRiskList = riskDOList.stream().filter(e -> ProjectRiskStatusEnum.PENDING.getCode().equals(e.getStatus())).collect(Collectors.toList());

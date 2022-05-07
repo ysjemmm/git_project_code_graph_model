@@ -8,10 +8,10 @@
     </insert>
 
     <insert id="batchInsert">
-        INSERT INTO project_risk(project_id, type, name, sign, create_man_id, create_man)
+        INSERT INTO project_risk(project_id, main_id, type, name, sign, create_man_id, create_man)
         VALUES
         <foreach collection = "projectRiskDOList" item = "item" separator = ",">
-            (#{item.projectId},#{item.type},#{item.name},#{item.sign},#{createManId},#{createMan})
+            (#{item.projectId}, #{item.mainId}, #{item.type},#{item.name},#{item.sign},#{createManId},#{createMan})
         </foreach>
     </insert>
 
@@ -75,7 +75,7 @@
     </select>
 
     <select id="selectByProjectIdList" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
-        SELECT id, project_id, status, modify_date
+        SELECT id, project_id, name, type, main_id, status, modify_date
         FROM project_risk
         <where>
             <if test="projectIdList != null and projectIdList.size() > 0">
