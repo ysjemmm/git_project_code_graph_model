@@ -591,7 +591,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     public BaseResult<Boolean> bizDemandBatchTransferCreateMan(BatchTransferReq batchTransferReq) {
         // 参数
         String newSubmitMan = batchTransferReq.getReceiveMan();
-        String newSubmitManId = batchTransferReq.getReceiveMan();
+        String newSubmitManId = batchTransferReq.getReceiveManId();
         List<Long> bizDemandIdList = batchTransferReq.getIdList();
 
         if(CollectionUtils.isEmpty(bizDemandIdList)){

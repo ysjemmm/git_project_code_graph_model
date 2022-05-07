@@ -454,6 +454,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             }
             productDemandLogComponent.batchAddLog(bizChangeLogDOList);
 
+            // 实体
             productDemandMapper.updateOwner(idList, owner, ownerId);
         }
 
