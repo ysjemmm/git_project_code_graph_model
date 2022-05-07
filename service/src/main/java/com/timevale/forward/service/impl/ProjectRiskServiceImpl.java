@@ -103,8 +103,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         Integer status = riskDO.getStatus();
         if (ProjectRiskStatusEnum.INVALID.getCode().equals(status)) {
             // 新增风险说明
-            UserInfo userInfo = LocalSessionUtils.getUserInfo();
-            String explanation = String.format(ProjectRiskExplanationEnum.INVALID.getText(), userInfo.getAlias() + "-" + userInfo.getName());
+            String explanation = ProjectRiskExplanationEnum.INVALID.getText();
             projectRiskExplanationComponent.add(riskDO.getId() , explanation);
         }
 

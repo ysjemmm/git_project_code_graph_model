@@ -19,7 +19,7 @@ public enum ProjectRiskExplanationEnum {
 
     NODE_ENTRY_OVERDUE("项目关键节点：逾期未录入，逾期%s天"),
 
-    INVALID("%s作废风险");
+    INVALID("作废风险");
 
     private String text;
 }
