@@ -84,7 +84,7 @@ public class SearchConditionServiceImpl implements SearchConditionService {
 
         // 限制10条
         if(searchConditionDOList.size() == 10){
-            throw new BaseBizRuntimeException("查询条件限制10条");
+            throw new BaseBizRuntimeException("您的查询条件已超过10条，不可再添加");
         }
 
         // 名称唯一

@@ -11,7 +11,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ProjectRiskStatusEnum {
 
-    INVALID(-1, "作废"),
+    INVALID(-1, "已作废"),
 
     PENDING(0, "待处理"),
 

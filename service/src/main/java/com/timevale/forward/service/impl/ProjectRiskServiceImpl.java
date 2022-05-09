@@ -16,10 +16,7 @@ import com.timevale.forward.facade.api.query.ProjectRiskQueryList;
 import com.timevale.forward.facade.api.request.ProjectRiskAddReq;
 import com.timevale.forward.facade.api.request.ProjectRiskModifyReq;
 import com.timevale.forward.facade.api.result.ProjectRiskVO;
-import com.timevale.forward.model.enums.ProjectRiskExplanationEnum;
-import com.timevale.forward.model.enums.ProjectRiskStatusEnum;
-import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.HomePageRiskWarningComponent;
 import com.timevale.forward.service.component.HomePageRiskWarningSubmitTestComponent;
 import com.timevale.forward.service.component.HomePageRiskWarningTaskComponent;
@@ -275,7 +272,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
             riskDO.setMainId(testRisk.getTestBillId());
             riskDO.setType(testRisk.getRiskType());
             riskDO.setName(testRisk.getTestBillName());
-            riskDO.setSign("");
+            riskDO.setSign(ProjectRiskSignEnum.SUBMIT_FAILURE.getText());
         }
 
         return riskDO;
