@@ -14,6 +14,7 @@ import com.timevale.forward.facade.api.request.HomePageProjectBoardReq;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.HomePageDataIndicatorCopier;
 import com.timevale.forward.service.copy.HomePageProjectBoardCopier;
 import com.timevale.forward.service.copy.HomePageProjectOnlineLatelyCopier;
@@ -376,7 +377,7 @@ public class HomePageServiceImpl implements HomePageService {
 
                HomePageProjectBoardVO homePageProjectBoardVO = new HomePageProjectBoardVO();
                homePageProjectBoardVO.setUserId(baseInfo.getAccount());
-               homePageProjectBoardVO.setUserName(baseInfo.getName());
+               homePageProjectBoardVO.setUserName(baseInfo.getAlias() + CommonConstant.JOIN_LINE + baseInfo.getName());
                homePageProjectBoardVO.setUserType(userType.toString());
                homePageProjectBoardVO.setHomePageProjectDateVOList(Lists.emptyList());
                result.add(homePageProjectBoardVO);
