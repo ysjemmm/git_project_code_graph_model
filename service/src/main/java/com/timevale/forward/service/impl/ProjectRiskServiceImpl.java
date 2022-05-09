@@ -299,7 +299,10 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
 
             int compare;
             // 保险验证
-            if(planEndDate == null || actualEndDate == null){
+            if(actualEndDate == null){
+                actualEndDate = new Date();
+            }
+            if(planEndDate == null){
                 compare = 0;
             }else{
                 compare = actualEndDate.compareTo(planEndDate);
