@@ -105,7 +105,7 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
                 .build();
         DistributePageQueryVO paramRD = DistributePageQueryVO.builder()
                 .params(paramHelper.params())
-                .distributeConfigVO(distributeConfig.getRiskWarningQA())
+                .distributeConfigVO(distributeConfig.getRiskWarningRD())
                 .build();
 
         resultSet.addAll(doGet(paramQA));
