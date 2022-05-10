@@ -8,7 +8,7 @@ public class CommonConstant {
 
     public static final String JOIN_LINE = "-";
 
-    public static final String DEFAULT_ORDER_BY = " modify_date desc ";
+    public static final String DEFAULT_ORDER_BY = " modify_date, id desc ";
 
     public static final Integer INVALID = Integer.MIN_VALUE;
 
