@@ -311,7 +311,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                 result = - elapsedTimeClient.getElapsedTime(actualEndDate, planEndDate);
             }
             BigDecimal elapsedTime = new BigDecimal(result.toString());
-            elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_HOUR), 2, RoundingMode.HALF_UP);
+            elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_HOUR  / DateFormatConst.ONE_SECOND), 2, RoundingMode.HALF_UP);
 
             sign = elapsedTime.toString();
 
@@ -321,7 +321,6 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
             if(nodeDO == null){
                 // 如果节点被删除则设定为0
                 sign = "0";
-                log.info("{}任务风险完成: {}",riskDO.getId(), sign);
             }else {
                 Date planDate = nodeDO.getPlanDate();
                 Date actualDate = nodeDO.getActualDate();
@@ -343,10 +342,9 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                     result = - elapsedTimeClient.getElapsedTime(actualDate, planDate);
                 }
                 BigDecimal elapsedTime = new BigDecimal(result.toString());
-                elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_DAY), 0, RoundingMode.HALF_UP);
+                elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.HALF_UP);
 
                 sign = elapsedTime.toString();
-                log.info("{}任务风险完成: {}",riskDO.getId(), sign);
             }
         }
 
