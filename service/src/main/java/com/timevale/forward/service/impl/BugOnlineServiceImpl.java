@@ -418,12 +418,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineModifyReq.getId());
 
         //是否为经办人&提出人及其上级，或者是测试角色
-        Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
-        Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
-        Boolean result = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
-        if (!result && !operatorResult && !proposerResult) {
-            throw new BaseBizRuntimeException("您没有修改权限");
-        }
+        // Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
+        // Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
+        // Boolean result = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
+        // if (!result && !operatorResult && !proposerResult) {
+        //     throw new BaseBizRuntimeException("您没有修改权限");
+        // }
 
         //BugOnlineModifyReq -->  BugOnlineDO
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(bugOnlineModifyReq);
