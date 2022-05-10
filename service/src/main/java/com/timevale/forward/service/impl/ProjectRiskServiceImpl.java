@@ -318,10 +318,10 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         }else if(ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(riskDO.getType())
                 || ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(riskDO.getType())){
             ProjectNodeDO nodeDO = projectNodeMapper.getByName(riskDO.getProjectId(), riskDO.getName());
-
             if(nodeDO == null){
                 // 如果节点被删除则设定为0
                 sign = "0";
+                log.info("{}任务风险完成: {}",riskDO.getId(), sign);
             }else {
                 Date planDate = nodeDO.getPlanDate();
                 Date actualDate = nodeDO.getActualDate();
@@ -346,6 +346,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                 elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_DAY), 0, RoundingMode.HALF_UP);
 
                 sign = elapsedTime.toString();
+                log.info("{}任务风险完成: {}",riskDO.getId(), sign);
             }
         }
 
