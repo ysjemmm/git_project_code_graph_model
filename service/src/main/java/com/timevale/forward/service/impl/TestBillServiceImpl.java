@@ -2,6 +2,7 @@ package com.timevale.forward.service.impl;
 
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
+import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.FileMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
@@ -396,16 +397,21 @@ public class TestBillServiceImpl implements TestBillService {
         //更新项目节点表
         projectNodeMapper.updateSubmitTestActualDate(testBillModifyReq.getProjectId(), testBillModifyReq.getActualDate());
 
-        // 更新项目节点
+        // 更新项目节点状态
         projectComponent.updateNodeStatus(testBillModifyReq.getProjectId());
 
         Integer oldStatus = projectDO.getStatus();
-        if (!ProjectStatusEnum.INVALID.getCode().equals(oldStatus) && !ProjectStatusEnum.RELEASED.getCode().equals(oldStatus)) {
+        Integer newStatus = projectComponent.getStatus(projectDO.getId());
+        if (!ProjectStatusEnum.INVALID.getCode().equals(oldStatus)
+                && !ProjectStatusEnum.RELEASED.getCode().equals(oldStatus)
+                && !Objects.equal(oldStatus, newStatus)) {
+
             // 项目进入测试中
             projectDO.setStatus(ProjectStatusEnum.TESTING.getCode());
             projectMapper.update(projectDO);
+
+            projectLogComponent.addLogWhenStatusChange(oldStatus, newStatus, projectDO.getId(), ButtonActionEnum.TEST_PASS.getText());
         }
-        projectLogComponent.addLogWhenStatusChange(oldStatus, projectDO.getStatus(), projectDO.getId(), ButtonActionEnum.TEST_PASS.getText());
 
         messageEventPublisher.publish(
                 new BillTestSubmitTestSuccessMsgEvent(

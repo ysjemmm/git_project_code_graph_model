@@ -115,7 +115,7 @@ public class DataCorrectServiceImpl implements DataCorrectService {
     public BaseResult<Boolean> nodeStatusUpdate() {
         List<Long> projectIdList = projectMapper.getAllId();
 
-        projectIdList.parallelStream().forEach(e -> {
+        projectIdList.forEach(e -> {
             // 查询项目节点
             List<ProjectNodeDO> nodeDOList = projectNodeComponent.get(e);
 

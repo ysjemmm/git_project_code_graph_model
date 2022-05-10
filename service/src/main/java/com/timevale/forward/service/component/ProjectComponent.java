@@ -25,6 +25,13 @@ public interface ProjectComponent {
     void fillInfo(List<ProjectNodeDO> projectNodes, ProjectDO projectDO);
 
     /**
+     * 根据项目节点，获取项目状态
+     *
+     * @param projectId 项目id
+     */
+    Integer getStatus(Long projectId);
+
+    /**
      * 更新项目节点状态
      *
      * @param projectId 项目id
