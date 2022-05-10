@@ -10,6 +10,8 @@ public class CommonConstant {
 
     public static final String DEFAULT_ORDER_BY = " modify_date desc, id";
 
+    public static final String PROJECT_RISK_ORDER_BY = "IF(status = 0, 0, IF(status = 1, 1, 2)), modify_date desc, id";
+
     public static final String CREATE_ORDER_BY = " create_date desc ";
 
     public static final Integer INVALID = Integer.MIN_VALUE;

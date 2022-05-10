@@ -126,7 +126,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
     @Override
     public BaseResult<PageQueryResult<ProjectRiskVO>> list(ProjectRiskQueryList projectRiskQueryList) {
         // 开始分页
-        PageHelper.startPage(projectRiskQueryList.pageNum, projectRiskQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        PageHelper.startPage(projectRiskQueryList.pageNum, projectRiskQueryList.pageSize, CommonConstant.PROJECT_RISK_ORDER_BY);
 
         List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectId(projectRiskQueryList.getProjectId());
         List<ProjectRiskVO> riskVOList = riskDOList.stream().map(ProjectRiskCopier.INSTANCE::convert).collect(Collectors.toList());
@@ -136,17 +136,6 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
             e.setTypeName(ProjectRiskTypeEnum.getTextByCode(e.getType()));
             e.setStatusName(ProjectRiskStatusEnum.getTextByCode(e.getStatus()));
         }
-
-        // 排序：待处理 > 已处理 > 已作废， 相同部分按照更新时间倒序排列
-        riskDOList.sort((a, b) -> {
-            if(Objects.equals(a.getStatus(), b.getStatus())){
-                return b.getModifyDate().compareTo(a.getModifyDate());
-            }
-            if(ProjectRiskStatusEnum.INVALID.getCode().equals(a.getStatus()) || ProjectRiskStatusEnum.PENDING.getCode().equals(b.getStatus())){
-                return -1;
-            }
-            return 1;
-        });
 
         // 返回分页数据
         PageInfo<ProjectRiskDO> pageInfo = new PageInfo<>(riskDOList);
