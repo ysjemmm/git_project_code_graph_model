@@ -146,7 +146,7 @@ public class TestBillServiceImpl implements TestBillService {
                 projectMapper.update(projectDO);
 
                 // 日志处理
-                projectLogComponent.addLogWhenStatusChange(oldStatus, newStatus, projectDO.getId(), ButtonActionEnum.SUBMIT.getText());
+                projectLogComponent.addLogWhenStatusChange(oldStatus, newStatus, projectDO.getId(), ButtonActionEnum.TEST_CREATE.getText());
             }
         }
 

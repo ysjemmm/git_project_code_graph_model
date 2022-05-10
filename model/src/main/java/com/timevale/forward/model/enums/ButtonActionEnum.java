@@ -69,6 +69,11 @@ public enum ButtonActionEnum {
     MODIFY("编辑"),
 
     /**
+     * 创建提测单
+     */
+    TEST_CREATE("创建提测单"),
+
+    /**
      * 提测通过
      */
     TEST_PASS("提测通过"),
