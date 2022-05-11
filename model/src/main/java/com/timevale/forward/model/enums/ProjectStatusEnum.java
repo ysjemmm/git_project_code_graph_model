@@ -40,7 +40,7 @@ public enum ProjectStatusEnum {
                 return e.text;
             }
         }
-        return "errorCode";
+        return "";
     }
 
     public static Boolean ongoing(Integer code){

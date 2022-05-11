@@ -2,6 +2,7 @@ package com.timevale.forward.service.impl;
 
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
+import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.FileMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
@@ -134,8 +135,26 @@ public class TestBillServiceImpl implements TestBillService {
         //创建一个项目的提测单之后需要清空项目原本的提测节点的实际时间
         projectNodeMapper.updateSubmitTestActualDate(testBillAddReq.getProjectId(), null);
 
-        //获取提测单名称
+        // 状态变更
         ProjectDO projectDO = projectMapper.get(testBillAddReq.getProjectId());
+
+        // 项目节点状态变更
+        projectComponent.updateNodeStatus(testBillAddReq.getProjectId());
+
+        Integer oldStatus = projectDO.getStatus();
+        if(!ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus) || !ProjectStatusEnum.INVALID.getCode().equals(oldStatus)) {
+            Integer newStatus = projectComponent.getStatus(projectDO.getId());
+            if(!Objects.equal(oldStatus, newStatus)){
+                projectDO.setStatus(newStatus);
+                projectMapper.update(projectDO);
+
+                // 日志处理
+                projectLogComponent.addLogWhenStatusChange(oldStatus, newStatus, projectDO.getId(), ButtonActionEnum.TEST_CREATE.getText());
+            }
+        }
+
+
+        //获取提测单名称
         String testBillName = projectDO.getName() + CommonConstant.TESTBILL_SUFFIX;
 
         //消息接收人
@@ -396,16 +415,21 @@ public class TestBillServiceImpl implements TestBillService {
         //更新项目节点表
         projectNodeMapper.updateSubmitTestActualDate(testBillModifyReq.getProjectId(), testBillModifyReq.getActualDate());
 
-        // 更新项目节点
+        // 更新项目节点状态
         projectComponent.updateNodeStatus(testBillModifyReq.getProjectId());
 
         Integer oldStatus = projectDO.getStatus();
-        if (!ProjectStatusEnum.INVALID.getCode().equals(oldStatus) && !ProjectStatusEnum.RELEASED.getCode().equals(oldStatus)) {
+        Integer newStatus = projectComponent.getStatus(projectDO.getId());
+        if (!ProjectStatusEnum.INVALID.getCode().equals(oldStatus)
+                && !ProjectStatusEnum.RELEASED.getCode().equals(oldStatus)
+                && !Objects.equal(oldStatus, newStatus)) {
+
             // 项目进入测试中
             projectDO.setStatus(ProjectStatusEnum.TESTING.getCode());
             projectMapper.update(projectDO);
+
+            projectLogComponent.addLogWhenStatusChange(oldStatus, newStatus, projectDO.getId(), ButtonActionEnum.TEST_PASS.getText());
         }
-        projectLogComponent.addLogWhenStatusChange(oldStatus, projectDO.getStatus(), projectDO.getId(), ButtonActionEnum.TEST_PASS.getText());
 
         messageEventPublisher.publish(
                 new BillTestSubmitTestSuccessMsgEvent(

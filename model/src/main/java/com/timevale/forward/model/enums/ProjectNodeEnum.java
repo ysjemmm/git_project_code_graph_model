@@ -1,11 +1,11 @@
 package com.timevale.forward.model.enums;
 
+import com.timevale.forward.dal.entity.ProjectNodeDO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 /**
@@ -42,6 +42,15 @@ public enum ProjectNodeEnum {
         return -1;
     }
 
+    public static void sort(List<ProjectNodeDO> nodeDOList){
+        Map<String, Integer> nodeMap = Arrays.stream(ProjectNodeEnum.values())
+                .collect(Collectors.toMap(ProjectNodeEnum::getText, ProjectNodeEnum::getCode, (a, b) -> a));
+        nodeDOList.sort((a, b) -> {
+            Integer aCode = nodeMap.get(a.getName());
+            Integer bCode = nodeMap.get(b.getName());
+            return aCode.compareTo(bCode);
+        });
+    }
 
     public final static Map<Integer, String> DEFAULT_NODE = new HashMap<Integer, String>() {{
         put(1, ProjectNodeEnum.START_PLAN.getText());

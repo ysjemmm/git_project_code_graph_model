@@ -126,7 +126,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
     @Override
     public BaseResult<PageQueryResult<ProjectRiskVO>> list(ProjectRiskQueryList projectRiskQueryList) {
         // 开始分页
-        PageHelper.startPage(projectRiskQueryList.pageNum, projectRiskQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        PageHelper.startPage(projectRiskQueryList.pageNum, projectRiskQueryList.pageSize, CommonConstant.PROJECT_RISK_ORDER_BY);
 
         List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectId(projectRiskQueryList.getProjectId());
         List<ProjectRiskVO> riskVOList = riskDOList.stream().map(ProjectRiskCopier.INSTANCE::convert).collect(Collectors.toList());
@@ -136,17 +136,6 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
             e.setTypeName(ProjectRiskTypeEnum.getTextByCode(e.getType()));
             e.setStatusName(ProjectRiskStatusEnum.getTextByCode(e.getStatus()));
         }
-
-        // 排序：待处理 > 已处理 > 已作废， 相同部分按照更新时间倒序排列
-        riskDOList.sort((a, b) -> {
-            if(Objects.equals(a.getStatus(), b.getStatus())){
-                return b.getModifyDate().compareTo(a.getModifyDate());
-            }
-            if(ProjectRiskStatusEnum.INVALID.getCode().equals(a.getStatus()) || ProjectRiskStatusEnum.PENDING.getCode().equals(b.getStatus())){
-                return -1;
-            }
-            return 1;
-        });
 
         // 返回分页数据
         PageInfo<ProjectRiskDO> pageInfo = new PageInfo<>(riskDOList);
@@ -322,14 +311,13 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                 result = - elapsedTimeClient.getElapsedTime(actualEndDate, planEndDate);
             }
             BigDecimal elapsedTime = new BigDecimal(result.toString());
-            elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_HOUR), 2, RoundingMode.HALF_UP);
+            elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_HOUR  / DateFormatConst.ONE_SECOND), 2, RoundingMode.HALF_UP);
 
             sign = elapsedTime.toString();
 
         }else if(ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(riskDO.getType())
                 || ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(riskDO.getType())){
             ProjectNodeDO nodeDO = projectNodeMapper.getByName(riskDO.getProjectId(), riskDO.getName());
-
             if(nodeDO == null){
                 // 如果节点被删除则设定为0
                 sign = "0";
@@ -354,7 +342,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                     result = - elapsedTimeClient.getElapsedTime(actualDate, planDate);
                 }
                 BigDecimal elapsedTime = new BigDecimal(result.toString());
-                elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_DAY), 0, RoundingMode.HALF_UP);
+                elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.HALF_UP);
 
                 sign = elapsedTime.toString();
             }

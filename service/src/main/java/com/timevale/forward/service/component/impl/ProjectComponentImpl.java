@@ -208,6 +208,42 @@ public class ProjectComponentImpl implements ProjectComponent {
     }
 
     @Override
+    public Integer getStatus(Long projectId) {
+        // 查询项目节点
+        List<ProjectNodeDO> nodeDOList = projectNodeComponent.get(projectId);
+
+        // 节点排序
+        ProjectNodeEnum.sort(nodeDOList);
+
+        // 根据填入实际实际节点，判断项目状态
+        Integer status = ProjectStatusEnum.RELEASED.getCode();
+        for (ProjectNodeDO e : nodeDOList) {
+            if(e.getActualDate() != null){continue;}
+            String name = e.getName();
+
+            if(ProjectNodeEnum.START_PLAN.getText().equals(name)){
+                status = ProjectStatusEnum.WAITING.getCode();
+
+            }else if(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText().equals(name)
+                    || ProjectNodeEnum.DEMAND_CONSTRUE.getText().equals(name)){
+                status = ProjectStatusEnum.PLANING.getCode();
+
+            }else if(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText().equals(name)
+                    || ProjectNodeEnum.DEVELOP_START.getText().equals(name)
+                    || ProjectNodeEnum.WRITE_TEST_CASES.getText().equals(name)
+                    || ProjectNodeEnum.USE_CASE_REVIEW.getText().equals(name)
+                    || ProjectNodeEnum.SUBMIT_TEST.getText().equals(name)){
+                status = ProjectStatusEnum.DEVING.getCode();
+
+            }else{
+                status = ProjectStatusEnum.TESTING.getCode();
+            }
+            break;
+        }
+        return status;
+    }
+
+    @Override
     public void updateNodeStatus(Long projectId) {
         // 查询项目节点
         List<ProjectNodeDO> nodeDOList = projectNodeComponent.get(projectId);
@@ -221,8 +257,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
 
         // 更新项目节点状态
-        ProjectDO projectDO = new ProjectDO();
-        projectDO.setId(projectId);
+        ProjectDO projectDO = projectMapper.get(projectId);
         projectDO.setNodeStatus(nodeStatus);
         projectMapper.update(projectDO);
     }

@@ -42,9 +42,9 @@ public enum ProjectNodeStatusEnum {
         return "";
     }
 
-    public static Integer getStatus(List<ProjectNodeDO> projectNodeDOList){
-        projectNodeDOList.sort(Comparator.comparing(a -> ProjectNodeEnum.getCodeByName(a.getName())));
-        for (ProjectNodeDO e : projectNodeDOList) {
+    public static Integer getStatus(List<ProjectNodeDO> nodeDOList){
+        ProjectNodeEnum.sort(nodeDOList);
+        for (ProjectNodeDO e : nodeDOList) {
             if(e.getActualDate() == null){
                 return nodeStatusMap.get(e.getName());
             }
