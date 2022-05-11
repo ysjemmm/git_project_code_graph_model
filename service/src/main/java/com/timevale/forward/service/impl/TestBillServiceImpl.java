@@ -138,6 +138,9 @@ public class TestBillServiceImpl implements TestBillService {
         // 状态变更
         ProjectDO projectDO = projectMapper.get(testBillAddReq.getProjectId());
 
+        // 项目节点状态变更
+        projectComponent.updateNodeStatus(testBillAddReq.getProjectId());
+
         Integer oldStatus = projectDO.getStatus();
         if(!ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus) || !ProjectStatusEnum.INVALID.getCode().equals(oldStatus)) {
             Integer newStatus = projectComponent.getStatus(projectDO.getId());
