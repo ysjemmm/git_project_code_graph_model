@@ -243,16 +243,29 @@ public class HomePageServiceImpl implements HomePageService {
                 .collect(Collectors.groupingBy(HomePageRiskWarningSubmitTestDTO::getProjectId));
 
         // 节点排序
-        riskWarningGroup.forEach((key, value) -> value.sort((x, y) -> {
+        riskWarningGroup.forEach((k, v) -> v.sort((x, y) -> {
             Integer xOverDueDay = Integer.valueOf(x.getOverdueDay());
             Integer yOverDueDay = Integer.valueOf(y.getOverdueDay());
             return yOverDueDay.compareTo(xOverDueDay);
         }));
-        riskWarningTaskGroup.forEach((key, value) -> value.sort((x, y) -> {
+        riskWarningTaskGroup.forEach((k, v) -> v.sort((x, y) -> {
             BigDecimal xOverTime = new BigDecimal(x.getOverdueTime());
             BigDecimal yOverTime = new BigDecimal(y.getOverdueTime());
             return yOverTime.compareTo(xOverTime);
         }));
+
+        // 节点过程逾期保留最新节点
+        riskWarningGroup.forEach((k, v) -> {
+            Optional<HomePageRiskWarningDTO> max = v.stream()
+                    .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()))
+                    .max(Comparator.comparing(HomePageRiskWarningDTO::getOverdueDay));
+            v = v.stream()
+                    .filter(e -> ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(e.getRiskType()))
+                    .collect(Collectors.toList());
+            if(max.isPresent()){
+                v.add(max.get());
+            }
+        });
 
         // 填入数据
         riskWarningGroup.forEach((key, value) -> {
