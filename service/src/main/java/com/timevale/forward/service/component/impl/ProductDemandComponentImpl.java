@@ -248,7 +248,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         if (minStauts != null && !minStauts.equals(ProductDemandStatusEnum.INVALID.getCode())) {
             if (minStauts.equals(ProductDemandStatusEnum.WAITING.getCode())
                     || minStauts.equals(ProductDemandStatusEnum.SUSPEND.getCode())) {
-                condition.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), v -> new ArrayList<>()).add(bizDemandId);
+                condition.computeIfAbsent(BizDemandStatusEnum.PD_LINKED.getCode(), v -> new ArrayList<>()).add(bizDemandId);
             } else if (minStauts.equals(ProductDemandStatusEnum.INCLUDED.getCode())) {
                 condition.computeIfAbsent(BizDemandStatusEnum.INCLUDE_PROJECT.getCode(), v -> new ArrayList<>()).add(bizDemandId);
             } else if (minStauts.equals(ProductDemandStatusEnum.PROGRESS.getCode())) {
