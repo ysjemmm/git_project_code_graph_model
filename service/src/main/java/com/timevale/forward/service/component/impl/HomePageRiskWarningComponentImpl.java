@@ -62,7 +62,7 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
         List<String> QANameList = QAList.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toList());
         List<String> RDNameList = RDList.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toList());
 
-        List<HomePageRiskWarningDTO> result = Lists.newArrayList();
+        Set<HomePageRiskWarningDTO> result = new HashSet<>();
 
         // 参数配置
         if(!CollectionUtils.isEmpty(QANameList)){
@@ -88,7 +88,7 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
             result.addAll(doGet(params));
         }
 
-        return result;
+        return new ArrayList<>(result);
     }
 
     @Override
