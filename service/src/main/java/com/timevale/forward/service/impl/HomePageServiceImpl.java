@@ -259,12 +259,8 @@ public class HomePageServiceImpl implements HomePageService {
             Optional<HomePageRiskWarningDTO> min = v.stream()
                     .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()))
                     .min(Comparator.comparing(HomePageRiskWarningDTO::getOverdueDay));
-            v = v.stream()
-                    .filter(e -> ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(e.getRiskType()))
-                    .collect(Collectors.toList());
-            if(min.isPresent()){
-                v.add(min.get());
-            }
+            v.removeIf(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()));
+            min.ifPresent(v::add);
         });
 
         // 填入数据
