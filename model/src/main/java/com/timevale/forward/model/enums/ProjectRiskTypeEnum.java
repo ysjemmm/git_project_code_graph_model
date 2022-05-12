@@ -15,11 +15,11 @@ public enum ProjectRiskTypeEnum {
 
     SUBMIT_FAILURE(10, "提测质量不达标"),
 
-    TASK_OVERDUE(20, "任务逾期"),
+    TASK_OVERDUE(20, "任务逾期未录入"),
 
-    NODE_OVERDUE(30, "项目关键节点逾期"),
+    NODE_OVERDUE(30, "项目过程逾期"),
 
-    NODE_ENTRY_OVERDUE(40, "项目节点逾期未录入");
+    NODE_ENTRY_OVERDUE(40, "项目关键节点逾期未录入");
 
     private Integer code;
     private String text;
