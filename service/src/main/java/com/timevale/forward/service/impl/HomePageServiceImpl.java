@@ -256,14 +256,14 @@ public class HomePageServiceImpl implements HomePageService {
 
         // 节点过程逾期保留最新节点
         riskWarningGroup.forEach((k, v) -> {
-            Optional<HomePageRiskWarningDTO> max = v.stream()
+            Optional<HomePageRiskWarningDTO> min = v.stream()
                     .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()))
-                    .max(Comparator.comparing(HomePageRiskWarningDTO::getOverdueDay));
+                    .min(Comparator.comparing(HomePageRiskWarningDTO::getOverdueDay));
             v = v.stream()
                     .filter(e -> ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(e.getRiskType()))
                     .collect(Collectors.toList());
-            if(max.isPresent()){
-                v.add(max.get());
+            if(min.isPresent()){
+                v.add(min.get());
             }
         });
 
