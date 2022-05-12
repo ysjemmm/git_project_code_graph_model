@@ -51,7 +51,10 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
             allMyStaffInfoWithSelf = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), true);
         }
 
-        // 区分开发和测试身份
+        // 区分身份
+        List<BaseInfoResponse> PDList = allMyStaffInfoWithSelf.stream()
+                .filter(e -> UserTypeEnum.PD.equals(JobFunctionEnum.getType(e.getJobFunction())))
+                .collect(Collectors.toList());
         List<BaseInfoResponse> QAList = allMyStaffInfoWithSelf.stream()
                 .filter(e -> UserTypeEnum.QA.equals(JobFunctionEnum.getType(e.getJobFunction())))
                 .collect(Collectors.toList());
@@ -59,12 +62,24 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
                 .filter(e -> UserTypeEnum.RD.equals(JobFunctionEnum.getType(e.getJobFunction())))
                 .collect(Collectors.toList());
 
+        List<String> PDNameList = PDList.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toList());
         List<String> QANameList = QAList.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toList());
         List<String> RDNameList = RDList.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toList());
 
         Set<HomePageRiskWarningDTO> result = new HashSet<>();
 
         // 参数配置
+        if(!CollectionUtils.isEmpty(PDNameList)){
+            ParamHelper paramHelper = ParamHelper.newInstance()
+                    .offset(0)
+                    .page(Integer.MAX_VALUE)
+                    .in("user_id", PDNameList);
+            DistributePageQueryVO params = DistributePageQueryVO.builder()
+                    .params(paramHelper.params())
+                    .distributeConfigVO(distributeConfig.getRiskWarningPD())
+                    .build();
+            result.addAll(doGet(params));
+        }
         if(!CollectionUtils.isEmpty(QANameList)){
             ParamHelper paramHelper = ParamHelper.newInstance()
                     .offset(0)
@@ -99,6 +114,10 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
                 .offset(0)
                 .page(Integer.MAX_VALUE);
 
+        DistributePageQueryVO paramPD = DistributePageQueryVO.builder()
+                .params(paramHelper.params())
+                .distributeConfigVO(distributeConfig.getRiskWarningPD())
+                .build();
         DistributePageQueryVO paramQA = DistributePageQueryVO.builder()
                 .params(paramHelper.params())
                 .distributeConfigVO(distributeConfig.getRiskWarningQA())
@@ -108,6 +127,7 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
                 .distributeConfigVO(distributeConfig.getRiskWarningRD())
                 .build();
 
+        resultSet.addAll(doGet(paramPD));
         resultSet.addAll(doGet(paramQA));
         resultSet.addAll(doGet(paramRD));
 
