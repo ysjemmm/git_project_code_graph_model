@@ -153,7 +153,12 @@ public enum ButtonActionEnum {
     /**
      * 转交
      */
-    TRANSFER("转交");
+    TRANSFER("转交"),
+
+    /**
+     * 已处理（无需开发）
+     */
+    COMPLETED_NOT_DEV("已处理（无需开发）");
 
 
 

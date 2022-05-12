@@ -23,10 +23,7 @@ import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.observer.event.BizDemandInvalidMsgEvent;
-import com.timevale.forward.service.observer.event.BizDemandReceivedMsgEvent;
-import com.timevale.forward.service.observer.event.BizDemandRejectMsgEvent;
-import com.timevale.forward.service.observer.event.BizDemandToReceiveMsgEvent;
+import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -626,6 +623,115 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizDemandIdList = bizChangeLogDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
             bizDemandMapper.updateSubmitMan(bizDemandIdList, newSubmitMan, newSubmitManId);
         }
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> completed(BizDemandCompletedReq bizDemandCompleted) {
+        // 参数
+        Long id = bizDemandCompleted.getId();
+        String solvePlan = bizDemandCompleted.getSolvePlan();
+
+        BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(id);
+        Integer oldStatus = oldBizDemandDO.getStatus();
+        Integer newStatus = BizDemandStatusEnum.TO_CONFIRM.getCode();
+
+        // 更新
+        BizDemandDO bizDemandDO = new BizDemandDO();
+        bizDemandDO.setId(id);
+        bizDemandDO.setRejectReason("");
+        bizDemandDO.setStatus(newStatus);
+        bizDemandDO.setSolvePlan(solvePlan);
+        bizDemandMapper.update(bizDemandDO);
+
+        // 日志
+        String oldValue = BizDemandStatusEnum.getTextByCode(oldStatus);
+        String newValue = BizDemandStatusEnum.getTextByCode(newStatus);
+        bizDemandLogComponent.addLogWhenModifyData(
+                oldValue,
+                newValue,
+                id,
+                BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
+                true,
+                ButtonActionEnum.COMPLETED_NOT_DEV.getText());
+
+        // 通知需求提交人
+        messageEventPublisher.publish(new BizDemandCompletedMsgEvent(
+                this,
+                bizDemandDO.getId(),
+                LocalSessionUtils.getUserInfo().getId(),
+                bizDemandDO.getSubmitManId(),
+                bizDemandDO.getName()
+        ));
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> completedAgree(BizDemandCompletedAgreeReq bizDemandCompletedAgreeReq) {
+        Long id = bizDemandCompletedAgreeReq.getId();
+
+        BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(id);
+        Integer oldStatus = oldBizDemandDO.getStatus();
+        Integer newStatus = BizDemandStatusEnum.COMPLETED.getCode();
+
+        // 更新
+        BizDemandDO bizDemandDO = new BizDemandDO();
+        bizDemandDO.setId(id);
+        bizDemandDO.setStatus(newStatus);
+        bizDemandMapper.update(bizDemandDO);
+
+        // 日志
+        String oldValue = BizDemandStatusEnum.getTextByCode(oldStatus);
+        String newValue = BizDemandStatusEnum.getTextByCode(newStatus);
+        bizDemandLogComponent.addLogWhenModifyData(
+                oldValue,
+                newValue,
+                id,
+                BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
+                true,
+                ButtonActionEnum.AGREE.getText());
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> completedReject(BizDemandCompletedRejectReq bizDemandCompletedRejectReq) {
+        Long id = bizDemandCompletedRejectReq.getId();
+        String reason = bizDemandCompletedRejectReq.getRejectReason();
+
+        BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(id);
+        Integer oldStatus = oldBizDemandDO.getStatus();
+        Integer newStatus = BizDemandStatusEnum.RECEIVED.getCode();
+
+        // 更新
+        BizDemandDO bizDemandDO = new BizDemandDO();
+        bizDemandDO.setId(id);
+        bizDemandDO.setStatus(newStatus);
+        bizDemandDO.setRejectReason(reason);
+        bizDemandMapper.update(bizDemandDO);
+
+        // 日志
+        String oldValue = BizDemandStatusEnum.getTextByCode(oldStatus);
+        String newValue = BizDemandStatusEnum.getTextByCode(newStatus);
+        bizDemandLogComponent.addLogWhenModifyData(
+                oldValue,
+                newValue,
+                id,
+                BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
+                true,
+                ButtonActionEnum.REFUSED.getText());
+
+        // 通知
+        messageEventPublisher.publish(new BizDemandCompletedRejectMsgEvent(
+                this,
+                bizDemandDO.getId(),
+                LocalSessionUtils.getUserInfo().getId(),
+                bizDemandDO.getReceiveManId(),
+                bizDemandDO.getName(),
+                bizDemandDO.getRejectReason()
+        ));
 
         return BaseResult.success(true);
     }
