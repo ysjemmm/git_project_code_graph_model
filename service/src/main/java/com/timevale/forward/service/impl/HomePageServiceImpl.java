@@ -248,7 +248,7 @@ public class HomePageServiceImpl implements HomePageService {
                 Optional<HomePageRiskWarningDTO> max = v.stream()
                         .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()))
                         .max((a, b) -> {
-                            int compare = b.getNodeActualDate().compareTo(a.getNodeActualDate());
+                            int compare = a.getNodeActualDate().compareTo(b.getNodeActualDate());
                             if(compare == 0){
                                 Integer aCode = ProjectNodeEnum.getCodeByName(a.getNodeName());
                                 Integer bCode = ProjectNodeEnum.getCodeByName(b.getNodeName());
