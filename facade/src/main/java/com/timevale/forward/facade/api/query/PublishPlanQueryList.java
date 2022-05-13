@@ -19,7 +19,7 @@ public class PublishPlanQueryList extends QueryBase {
     private String name;
 
     @ApiModelProperty("发布计划id")
-    private Long id;
+    private String id;
 
     @ApiModelProperty("应用名称")
     private String appName;

@@ -18,7 +18,7 @@ public class ProjectPublishPlanDO extends BaseDO {
     /**
      * 产品线id
      */
-    private Long productLineId;
+    private Long publishPlanId;
 
 
 }

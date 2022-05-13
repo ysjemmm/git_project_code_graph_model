@@ -1,6 +1,5 @@
 package com.timevale.forward.facade.api.query;
 
-import com.timevale.mandarin.common.query.QueryBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -15,7 +14,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("项目-发布计划列表查询")
-public class ProjectLinkPublishPlanQueryList extends QueryBase {
+public class ProjectLinkPublishPlanQueryList extends PublishPlanQueryList {
 
     @NotNull(message = "项目id不能为空")
     @ApiModelProperty("项目id")

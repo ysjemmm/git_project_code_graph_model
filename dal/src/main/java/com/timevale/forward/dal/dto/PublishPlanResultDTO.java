@@ -13,6 +13,6 @@ public class PublishPlanResultDTO {
 
     private Integer count;
 
-    private List<PublishPlanDTO> result;
+    private List<PublishPlanDTO> list;
 
 }
