@@ -252,7 +252,7 @@ public class HomePageServiceImpl implements HomePageService {
                             if(compare == 0){
                                 Integer aCode = ProjectNodeEnum.getCodeByName(a.getNodeName());
                                 Integer bCode = ProjectNodeEnum.getCodeByName(b.getNodeName());
-                                return bCode.compareTo(aCode);
+                                return aCode.compareTo(bCode);
                             }
                             return compare;
                         });
