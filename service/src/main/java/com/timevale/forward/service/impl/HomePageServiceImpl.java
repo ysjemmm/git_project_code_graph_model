@@ -254,23 +254,6 @@ public class HomePageServiceImpl implements HomePageService {
             return yOverTime.compareTo(xOverTime);
         }));
 
-        // 节点过程逾期保留实际时间最近
-        riskWarningGroup.forEach((k, v) -> {
-            Optional<HomePageRiskWarningDTO> max = v.stream()
-                    .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()))
-                    .max((a, b) -> {
-                        int compare = b.getNodeActualDate().compareTo(a.getNodeActualDate());
-                        if(compare == 0){
-                            Integer aCode = ProjectNodeEnum.getCodeByName(a.getNodeName());
-                            Integer bCode = ProjectNodeEnum.getCodeByName(b.getNodeName());
-                            return bCode.compareTo(aCode);
-                        }
-                        return compare;
-                    });
-            v.removeIf(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()));
-            max.ifPresent(v::add);
-        });
-
         // 填入数据
         riskWarningGroup.forEach((key, value) -> {
             HomePageRiskWarningVO riskWarningVO = resultMap.get(key);

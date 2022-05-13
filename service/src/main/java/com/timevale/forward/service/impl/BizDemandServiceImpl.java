@@ -629,16 +629,33 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 判空
         if(CollectionUtils.isNotEmpty(bizChangeLogDOList)){
-            // 日志
-            bizChangeLogMapper.batchInsert(bizChangeLogDOList);
-
             // 变更提交人及
             Optional<BaseInfoResponse> baseInfo = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(newSubmitManId)).stream().findAny();
-            if(baseInfo.isPresent()){
-                String groupId = baseInfo.get().getDefaultGroup().getGroupId();
-                bizDemandIdList = bizChangeLogDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
-                bizDemandMapper.updateSubmitMan(bizDemandIdList, newSubmitMan, newSubmitManId, Long.valueOf(groupId));
+            if(!baseInfo.isPresent()){
+                throw new BaseBizRuntimeException("接收人没有默认部门，无法修改");
             }
+
+            // 部门日志
+            Long groupId = Long.valueOf(baseInfo.get().getDefaultGroup().getGroupId());
+            String newDeptName = bizDemandComponent.getDeptChainName(groupId);
+            Set<Long> idSet = bizChangeLogDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toSet());
+            for (BizDemandDO e : bizDemandDOList) {
+                if(!idSet.contains(e.getId())){
+                    continue;
+                }
+                String oldDeptName = bizDemandComponent.getDeptChainName(e.getDeptId());
+                BizChangeLogDO logDO = bizDemandLogComponent.getLogWhenModifyData(
+                        oldDeptName,
+                        newDeptName,
+                        e.getId(),
+                        BizChangeLogFieldEnum.DEPARTMENT.getText(),
+                        false
+                );
+                bizChangeLogDOList.add(logDO);
+            }
+
+            bizChangeLogMapper.batchInsert(bizChangeLogDOList);
+            bizDemandMapper.updateSubmitMan(new ArrayList<>(idSet), newSubmitMan, newSubmitManId, groupId);
         }
 
         return BaseResult.success(true);
