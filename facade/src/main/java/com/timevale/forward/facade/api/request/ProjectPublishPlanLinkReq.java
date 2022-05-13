@@ -18,6 +18,7 @@ import java.util.List;
 public class ProjectPublishPlanLinkReq extends BaseReq {
 
     @ApiModelProperty("项目id不能为空")
+    @NotNull(message = "项目id不能为空")
     private Long projectId;
 
     @NotNull(message = "发布计划id不能为空")
