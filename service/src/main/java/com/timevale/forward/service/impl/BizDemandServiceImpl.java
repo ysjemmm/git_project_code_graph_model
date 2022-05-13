@@ -648,6 +648,8 @@ public class BizDemandServiceImpl implements BizDemandService {
                 if(!bizDemandIdSet.contains(e.getId())){
                     continue;
                 }
+
+                // 部门日志
                 String oldDeptName = groupListTreeMap.get(e.getDeptId()).getGroupName();
                 BizChangeLogDO logDO = bizDemandLogComponent.getLogWhenModifyData(
                         oldDeptName,
