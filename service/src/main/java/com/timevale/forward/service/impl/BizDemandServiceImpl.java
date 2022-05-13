@@ -35,6 +35,7 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -630,9 +631,14 @@ public class BizDemandServiceImpl implements BizDemandService {
         if(CollectionUtils.isNotEmpty(bizChangeLogDOList)){
             // 日志
             bizChangeLogMapper.batchInsert(bizChangeLogDOList);
-            // 实体
-            bizDemandIdList = bizChangeLogDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
-            bizDemandMapper.updateSubmitMan(bizDemandIdList, newSubmitMan, newSubmitManId);
+
+            // 变更提交人及
+            Optional<BaseInfoResponse> baseInfo = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(newSubmitManId)).stream().findAny();
+            if(baseInfo.isPresent()){
+                String groupId = baseInfo.get().getDefaultGroup().getGroupId();
+                bizDemandIdList = bizChangeLogDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
+                bizDemandMapper.updateSubmitMan(bizDemandIdList, newSubmitMan, newSubmitManId, Long.valueOf(groupId));
+            }
         }
 
         return BaseResult.success(true);

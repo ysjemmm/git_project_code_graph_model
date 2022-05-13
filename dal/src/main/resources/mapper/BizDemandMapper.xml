@@ -228,7 +228,7 @@
 
     <update id="updateSubmitMan">
         UPDATE biz_demand
-        SET submit_man = #{submitMan}, submit_man_id = #{submitManId}
+        SET submit_man = #{submitMan}, submit_man_id = #{submitManId}, dept_id = #{deptId}
         WHERE id IN
         <foreach collection="idList" item="item" separator="," open="(" close=")">
             #{item}
