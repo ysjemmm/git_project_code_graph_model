@@ -185,8 +185,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 "",
                 bizDemandId,
                 BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
-                false,
-                ButtonActionEnum.INVALID.getText());
+                false);
 
         return BaseResult.success(true);
     }
