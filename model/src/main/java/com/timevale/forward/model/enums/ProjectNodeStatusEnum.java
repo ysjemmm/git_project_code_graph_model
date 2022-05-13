@@ -17,6 +17,7 @@ public enum ProjectNodeStatusEnum {
     READY_START(0,"待启动"),
     READY_INTERNAL_AUDIT(10,"待内审"),
     READY_CONSTRUE(20,"待串讲"),
+    READY_CONSTRUE_REVERSE(25,"待反串讲"),
     READY_TECHNICAL_DETAIL_REVIEW(30,"待详设内审"),
     READY_DEVELOP(40,"待开发"),
     DEVELOPING(50,"开发中"),
@@ -57,6 +58,7 @@ public enum ProjectNodeStatusEnum {
         nodeStatusMap.put(ProjectNodeEnum.START_PLAN.getText(),              ProjectNodeStatusEnum.READY_START.code);
         nodeStatusMap.put(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText(),   ProjectNodeStatusEnum.READY_INTERNAL_AUDIT.code);
         nodeStatusMap.put(ProjectNodeEnum.DEMAND_CONSTRUE.getText(),         ProjectNodeStatusEnum.READY_CONSTRUE.code);
+        nodeStatusMap.put(ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText(), ProjectNodeStatusEnum.READY_CONSTRUE_REVERSE.code);
         nodeStatusMap.put(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText(), ProjectNodeStatusEnum.READY_TECHNICAL_DETAIL_REVIEW.code);
         nodeStatusMap.put(ProjectNodeEnum.DEVELOP_START.getText(),           ProjectNodeStatusEnum.READY_DEVELOP.code);
         nodeStatusMap.put(ProjectNodeEnum.WRITE_TEST_CASES.getText(),        ProjectNodeStatusEnum.DEVELOPING.code);
