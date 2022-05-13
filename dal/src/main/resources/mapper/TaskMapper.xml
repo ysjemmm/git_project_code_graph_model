@@ -201,7 +201,10 @@
     <select id="getByProductDemandId" resultType="com.timevale.forward.dal.entity.TaskDO">
         SELECT t.id, t.name, t.status, t.plan_start_date, t.plan_end_date, t.actual_start_date, t.actual_end_date, t.modify_date
         FROM task t JOIN task_product_demand tpd ON t.id = tpd.task_id
-        WHERE tpd.product_demand_id = #{productDemandId} AND t.project_id = #{projectId}
+        WHERE tpd.product_demand_id = #{productDemandId}
+          AND t.project_id = #{projectId}
+          AND tpd.is_deleted = false
+          AND t.is_deleted = false
     </select>
 
 
