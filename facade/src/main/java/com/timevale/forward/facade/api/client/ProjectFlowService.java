@@ -3,6 +3,7 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.request.ProjectFlowAddReq;
+import com.timevale.forward.facade.api.result.ProjectFlowDetailVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
 /**
@@ -19,5 +20,13 @@ public interface ProjectFlowService {
      */
     BaseResult<Boolean> add(ProjectFlowAddReq projectFlowAddReq);
 
+
+    /**
+     * 查看
+     *
+     * @param pid projectId
+     * @return 详情信息
+     */
+    BaseResult<ProjectFlowDetailVO> get(Long pid);
 
 }

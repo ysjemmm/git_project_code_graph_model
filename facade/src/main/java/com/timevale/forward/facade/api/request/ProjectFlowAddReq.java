@@ -18,6 +18,10 @@ import java.util.List;
 @ApiModel("项目流程新增")
 public class ProjectFlowAddReq extends BaseReq {
 
+    @ApiModelProperty("项目id")
+    @NotNull(message = "项目id不能为空")
+    private Long projectId;
+
     @ApiModelProperty("发起人")
     @NotNull(message = "发起人不能为空")
     private PersonAddReq proposer;

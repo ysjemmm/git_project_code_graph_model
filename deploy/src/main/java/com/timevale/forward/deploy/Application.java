@@ -28,7 +28,8 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
 @EnableFeignClients(basePackages = {
         "com.timevale.forward.facade.api",
         "com.timevale.security.facade.api",
-        "com.timevale.erp.message.service.api"
+        "com.timevale.erp.message.service.api",
+        "com.timevale.epeius.service.api"
 })
 @MapperScan("com.timevale.forward.dal")
 @SpringBootApplication(scanBasePackages = {"com.timevale.forward.service"})

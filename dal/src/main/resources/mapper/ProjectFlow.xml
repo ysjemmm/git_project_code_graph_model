@@ -1,0 +1,46 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.ProjectFlowMapper">
+
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectFlowDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into project_flow ( project_id, flow_id,proposer_id,proposer,review_date,review_id,review,review_url,status, create_man_id, create_man)
+        values
+        (#{projectId}, #{flowId}, #{proposerId},#{proposer}, #{reviewDate},#{reviewId},#{review},#{reviewUrl}, #{status}, #{createManId}, #{createMan})
+    </insert>
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
+        select id,project_id, flow_id,proposer_id,proposer,review_date,review_id,review ,reviewed_id,reviewed,
+        unreviewed_id,unreviewed,review_fail_id, review_fail, review_fail_reason,review_url,status,is_deleted,create_man_id,
+        create_man,create_date,modify_man_id,modify_man,modify_date
+        from project_flow
+        where id = #{id} and is_deleted=false
+    </select>
+
+    <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
+        select id,project_id, flow_id,proposer_id,proposer,review_date,review_id,review ,reviewed_id,reviewed,
+        unreviewed_id,unreviewed,review_fail_id, review_fail, review_fail_reason,review_url,status,is_deleted,create_man_id,
+        create_man,create_date,modify_man_id,modify_man,modify_date
+        from project_flow
+        where project_id = #{projectId} and is_deleted=false
+    </select>
+
+    <update id="update" parameterType="com.timevale.forward.dal.entity.ProjectFlowDO">
+        update project_flow
+        <set>
+            <if test="reviewedId != null">reviewed_id = #{reviewedId},</if>
+            <if test="reviewed != null">reviewed = #{reviewed},</if>
+            <if test="unreviewedId != null">unreviewed_id = #{unreviewedId},</if>
+            <if test="unreviewed != null">unreviewed = #{unreviewed},</if>
+            <if test="reviewFailId != null">review_fail_id = #{reviewFailId},</if>
+            <if test="reviewFail != null">review_fail = #{reviewFail},</if>
+            <if test="reviewFailReason != null">review_fail_reason = #{reviewFailReason},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+</mapper>

@@ -57,4 +57,10 @@
         WHERE project_id = #{projectId} AND
               name = #{name}
     </select>
+
+    <update id="updateActualDateById">
+        update project_node
+        set actual_date=#{actualDate}
+        where id=#{id}
+    </update>
 </mapper>
