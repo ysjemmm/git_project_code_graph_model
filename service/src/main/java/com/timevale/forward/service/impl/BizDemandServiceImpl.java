@@ -638,12 +638,17 @@ public class BizDemandServiceImpl implements BizDemandService {
             // 部门日志
             Long groupId = Long.valueOf(baseInfo.get().getDefaultGroup().getGroupId());
             String newDeptName = bizDemandComponent.getDeptChainName(groupId);
-            Set<Long> idSet = bizChangeLogDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toSet());
+
+            // 筛选真正需要变更的业务需求id
+            bizDemandIdList = bizChangeLogDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
+            Map<Long, GroupResponse> groupListTreeMap = bizDemandComponent.getGroupListTreeMap(bizDemandIdList);
+
+            Set<Long> bizDemandIdSet = new HashSet<>(bizDemandIdList);
             for (BizDemandDO e : bizDemandDOList) {
-                if(!idSet.contains(e.getId())){
+                if(!bizDemandIdSet.contains(e.getId())){
                     continue;
                 }
-                String oldDeptName = bizDemandComponent.getDeptChainName(e.getDeptId());
+                String oldDeptName = groupListTreeMap.get(e.getDeptId()).getGroupName();
                 BizChangeLogDO logDO = bizDemandLogComponent.getLogWhenModifyData(
                         oldDeptName,
                         newDeptName,
@@ -655,7 +660,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             }
 
             bizChangeLogMapper.batchInsert(bizChangeLogDOList);
-            bizDemandMapper.updateSubmitMan(new ArrayList<>(idSet), newSubmitMan, newSubmitManId, groupId);
+            bizDemandMapper.updateSubmitMan(bizDemandIdList, newSubmitMan, newSubmitManId, groupId);
         }
 
         return BaseResult.success(true);
