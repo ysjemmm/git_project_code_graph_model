@@ -342,8 +342,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                     result = - elapsedTimeClient.getElapsedTimeAllDay(actualDate, planDate);
                 }
                 BigDecimal elapsedTime = new BigDecimal(result.toString());
-                elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.HALF_UP);
-                elapsedTime = elapsedTime.setScale(0, RoundingMode.UP);
+                elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.UP);
                 sign = elapsedTime.toString();
             }
         }
