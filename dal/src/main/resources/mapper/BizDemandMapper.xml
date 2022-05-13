@@ -54,6 +54,12 @@
             <if test="submitManId != null and submitManId != ''">
                 submit_man_id = #{submitManId},
             </if>
+            <if test="solvePlan != null">
+                solve_plan = #{solvePlan},
+            </if>
+            <if test="rejectReason != null">
+                reject_reason = #{rejectReason},
+            </if>
             <if test="planReleaseDate!=null">
                 <choose>
                     <when test="planReleaseDate lt 0">
