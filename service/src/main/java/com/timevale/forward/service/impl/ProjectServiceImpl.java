@@ -107,6 +107,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private ProductDemandLogComponent productDemandLogComponent;
 
+    @Resource
+    private ProjectFlowMapper projectFlowMapper;
+
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -331,6 +334,12 @@ public class ProjectServiceImpl implements ProjectService {
         // 节点状态
         projectDetailVO.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(projectDetailVO.getNodeStatus()));
 
+        List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(projectId);
+        if(CollectionUtils.isNotEmpty(projectFlowDos)){
+            projectFlowDos.sort(Comparator.comparing(ProjectFlowDO::getModifyDate).reversed());
+            ProjectFlowDO oldFlowDo = projectFlowDos.get(0);
+            projectDetailVO.setProjectFlowId(oldFlowDo.getId());
+        }
         return BaseResult.success(projectDetailVO);
     }
 

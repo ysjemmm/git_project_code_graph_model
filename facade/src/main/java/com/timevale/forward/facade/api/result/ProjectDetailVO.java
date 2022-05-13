@@ -92,4 +92,7 @@ public class ProjectDetailVO extends ToString {
 
     @ApiModelProperty("节点状态名称")
     private String nodeStatusName;
+
+    @ApiModelProperty("项目流程id")
+    private Long projectFlowId;
 }

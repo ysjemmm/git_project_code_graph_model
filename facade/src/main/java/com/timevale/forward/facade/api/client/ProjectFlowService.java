@@ -24,9 +24,9 @@ public interface ProjectFlowService {
     /**
      * 查看
      *
-     * @param pid projectId
+     * @param projectFlowId projectFlowId
      * @return 详情信息
      */
-    BaseResult<ProjectFlowDetailVO> get(Long pid);
+    BaseResult<ProjectFlowDetailVO> get(Long projectFlowId);
 
 }

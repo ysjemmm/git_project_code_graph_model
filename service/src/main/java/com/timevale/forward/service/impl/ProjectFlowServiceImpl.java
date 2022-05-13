@@ -85,14 +85,12 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
     }
 
     @Override
-    public BaseResult<ProjectFlowDetailVO> get(Long pid) {
-        log.info("查看详设评审,参数:{}", pid);
-        List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(pid);
-        if (CollectionUtils.isEmpty(projectFlowDos)) {
-            return BaseResult.success();
+    public BaseResult<ProjectFlowDetailVO> get(Long projectFlowId) {
+        log.info("查看详设评审,参数:{}", projectFlowId);
+        ProjectFlowDO oldFlowDo = projectFlowMapper.get(projectFlowId);
+        if(oldFlowDo==null){
+            throw new BaseBizRuntimeException("找不到该审批流程");
         }
-        projectFlowDos.sort(Comparator.comparing(ProjectFlowDO::getModifyDate).reversed());
-        ProjectFlowDO oldFlowDo = projectFlowDos.get(0);
         if (ProjectFlowStatusEnum.REVIEWING.getCode().equals(oldFlowDo.getStatus())) {
             if(StringUtils.isEmpty(oldFlowDo.getFlowId())){
                 log.info("无流程id");
@@ -120,6 +118,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         }
         projectFlowDetailVO.setReviews(reviews);
         //附件
+        List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(oldFlowDo.getProjectId());
         List<FileDO> fileDO = fileComponent.select(oldFlowDo.getId(), FileTypeEnum.TECH_REVIEW.getCode());
         projectFlowDetailVO.setFiles(FileCopier.INSTANCE.transform(fileDO));
         long count = projectFlowDos.stream().filter(a -> ProjectFlowStatusEnum.REVIEW_FAIL.getCode().equals(a.getStatus())).count();
