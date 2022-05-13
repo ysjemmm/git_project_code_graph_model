@@ -242,6 +242,17 @@ public class HomePageServiceImpl implements HomePageService {
         Map<Long, List<HomePageRiskWarningSubmitTestDTO>> riskWarningSubmitTestGroup = submitTestDTOList.stream()
                 .collect(Collectors.groupingBy(HomePageRiskWarningSubmitTestDTO::getProjectId));
 
+        // TL 身份保留一个
+        if(HomePageTabEnum.TEAM.getCode().equals(homePageBaseReq.getTabType())){
+            riskWarningGroup.forEach((k, v) -> {
+                Optional<HomePageRiskWarningDTO> max = v.stream()
+                        .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()))
+                        .max(Comparator.comparing(HomePageRiskWarningDTO::getNodeActualDate));
+                v.removeIf(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()));
+                max.ifPresent(v::add);
+            });
+        }
+
         // 节点排序
         riskWarningGroup.forEach((k, v) -> v.sort((x, y) -> {
             Integer xOverDueDay = Integer.valueOf(x.getOverdueDay());
