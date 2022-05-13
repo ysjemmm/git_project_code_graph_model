@@ -149,6 +149,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 记录旧状态
         Integer oldStatus = bizDemandDO.getStatus();
+        Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
 
         // 修改业务需求状态
         bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
@@ -177,6 +178,14 @@ public class BizDemandServiceImpl implements BizDemandService {
                 bizDemandId,
                 BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                 true,
+                ButtonActionEnum.INVALID.getText());
+
+        bizDemandLogComponent.addLogWhenModifyData(
+                PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
+                "",
+                bizDemandId,
+                BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
+                false,
                 ButtonActionEnum.INVALID.getText());
 
         return BaseResult.success(true);
