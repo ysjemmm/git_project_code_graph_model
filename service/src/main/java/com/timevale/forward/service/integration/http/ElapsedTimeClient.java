@@ -8,12 +8,21 @@ import java.util.Date;
  **/
 public interface ElapsedTimeClient {
     /**
-     * 得到时间
+     * 得到时间（工作时长计算）
      *
      * @param startTime 开始时间
      * @param endTime   结束时间
      * @return 时间戳
      */
     Long getElapsedTime(Date startTime, Date endTime);
+
+    /**
+     * 得到时间(24小时计算)
+     *
+     * @param startTime 开始时间
+     * @param endTime   结束时间
+     * @return 时间戳
+     */
+    Long getElapsedTimeAllDay(Date startTime, Date endTime);
 
 }

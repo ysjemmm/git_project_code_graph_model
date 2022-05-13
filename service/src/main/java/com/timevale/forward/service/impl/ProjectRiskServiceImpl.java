@@ -311,7 +311,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                 result = - elapsedTimeClient.getElapsedTime(actualEndDate, planEndDate);
             }
             BigDecimal elapsedTime = new BigDecimal(result.toString());
-            elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_HOUR  / DateFormatConst.ONE_SECOND), 2, RoundingMode.HALF_UP);
+            elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.WORK_DAY  / DateFormatConst.ONE_SECOND), 2, RoundingMode.HALF_UP);
 
             sign = elapsedTime.toString();
 
@@ -337,13 +337,13 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                 }
 
                 if(compare > 0){
-                    result = elapsedTimeClient.getElapsedTime(planDate, actualDate);
+                    result = elapsedTimeClient.getElapsedTimeAllDay(planDate, actualDate);
                 }else if(compare < 0){
-                    result = - elapsedTimeClient.getElapsedTime(actualDate, planDate);
+                    result = - elapsedTimeClient.getElapsedTimeAllDay(actualDate, planDate);
                 }
                 BigDecimal elapsedTime = new BigDecimal(result.toString());
                 elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.HALF_UP);
-
+                elapsedTime = elapsedTime.setScale(0, RoundingMode.UP);
                 sign = elapsedTime.toString();
             }
         }
