@@ -581,7 +581,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             // 通知
             HashSet<Long> bizDemandIdSet = new HashSet<>(bizDemandIdList);
             bizDemandDOList = bizDemandDOList.stream().filter(e -> bizDemandIdSet.contains(e.getId())).collect(Collectors.toList());
-            bizDemandDOList.parallelStream().forEach(e -> {
+            bizDemandDOList.forEach(e -> {
                 messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
                         this,
                         e.getId(),
