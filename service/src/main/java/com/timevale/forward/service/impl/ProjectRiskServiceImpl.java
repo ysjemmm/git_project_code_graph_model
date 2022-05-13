@@ -174,25 +174,25 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         List<HomePageRiskWarningTaskDTO> taskDTOList = riskWarningTaskComponent.getRiskWarningTaskAll();
         List<HomePageRiskWarningSubmitTestDTO> testDTOList = riskWarningSubmitTestComponent.getRiskWarningSubmitTestAll();
 
-        Map<Long, List<HomePageRiskWarningDTO>> riskWarningGroup = nodeDTOList.stream()
-                .collect(Collectors.groupingBy(HomePageRiskWarningDTO::getProjectId));
-        nodeDTOList.clear();
-        riskWarningGroup.forEach((k, v) -> {
-            Optional<HomePageRiskWarningDTO> max = v.stream()
-                    .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()))
-                    .max((a, b) -> {
-                        int compare = b.getNodeActualDate().compareTo(a.getNodeActualDate());
-                        if(compare == 0){
-                            Integer aCode = ProjectNodeEnum.getCodeByName(a.getNodeName());
-                            Integer bCode = ProjectNodeEnum.getCodeByName(b.getNodeName());
-                            return aCode.compareTo(bCode);
-                        }
-                        return compare;
-                    });
-            v.removeIf(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()));
-            max.ifPresent(v::add);
-            nodeDTOList.addAll(v);
-        });
+        // Map<Long, List<HomePageRiskWarningDTO>> riskWarningGroup = nodeDTOList.stream()
+        //         .collect(Collectors.groupingBy(HomePageRiskWarningDTO::getProjectId));
+        // nodeDTOList.clear();
+        // riskWarningGroup.forEach((k, v) -> {
+        //     Optional<HomePageRiskWarningDTO> max = v.stream()
+        //             .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()))
+        //             .max((a, b) -> {
+        //                 int compare = b.getNodeActualDate().compareTo(a.getNodeActualDate());
+        //                 if(compare == 0){
+        //                     Integer aCode = ProjectNodeEnum.getCodeByName(a.getNodeName());
+        //                     Integer bCode = ProjectNodeEnum.getCodeByName(b.getNodeName());
+        //                     return aCode.compareTo(bCode);
+        //                 }
+        //                 return compare;
+        //             });
+        //     v.removeIf(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()));
+        //     max.ifPresent(v::add);
+        //     nodeDTOList.addAll(v);
+        // });
 
         // sql端 唯一id
         Map<String, ProjectRiskDO> pendingRiskMap = createUniqueMap(pendingRiskList);
