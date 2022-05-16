@@ -5,7 +5,7 @@
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectPublishPlanDO">
         select id,project_id,publish_plan_id,create_man_id, create_man
         from project_publish_plan
-        where project_id = #{projectId} and is_deleted = false
+        where project_id = #{projectId} and is_deleted = false order by modify_date desc
     </select>
 
     <insert id="batchInsert" parameterType="java.util.List">
