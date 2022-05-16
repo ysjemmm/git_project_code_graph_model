@@ -653,6 +653,12 @@ public class BizDemandServiceImpl implements BizDemandService {
                 BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                 true,
                 ButtonActionEnum.COMPLETED_NOT_DEV.getText());
+        bizDemandLogComponent.addLogWhenModifyData(
+                "",
+                solvePlan,
+                id,
+                BizChangeLogFieldEnum.SOLVE_PLAN.getText(),
+                true);
 
         // 通知需求提交人
         messageEventPublisher.publish(new BizDemandCompletedMsgEvent(
@@ -681,11 +687,11 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandMapper.update(bizDemandDO);
 
         // 日志
-        String oldValue = BizDemandStatusEnum.getTextByCode(oldStatus);
-        String newValue = BizDemandStatusEnum.getTextByCode(newStatus);
+        String oldStatusText = BizDemandStatusEnum.getTextByCode(oldStatus);
+        String newStatusText = BizDemandStatusEnum.getTextByCode(newStatus);
         bizDemandLogComponent.addLogWhenModifyData(
-                oldValue,
-                newValue,
+                oldStatusText,
+                newStatusText,
                 id,
                 BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                 true,
@@ -711,15 +717,23 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandMapper.update(bizDemandDO);
 
         // 日志
-        String oldValue = BizDemandStatusEnum.getTextByCode(oldStatus);
-        String newValue = BizDemandStatusEnum.getTextByCode(newStatus);
+        String oldStatusText = BizDemandStatusEnum.getTextByCode(oldStatus);
+        String newStatusText = BizDemandStatusEnum.getTextByCode(newStatus);
         bizDemandLogComponent.addLogWhenModifyData(
-                oldValue,
-                newValue,
+                oldStatusText,
+                newStatusText,
                 id,
                 BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                 true,
                 ButtonActionEnum.REFUSED.getText());
+        bizDemandLogComponent.addLogWhenModifyData(
+                "",
+                reason,
+                id,
+                BizChangeLogFieldEnum.REJECT_REASON.getText(),
+                true
+        );
+
 
         // 通知
         messageEventPublisher.publish(new BizDemandCompletedRejectMsgEvent(
