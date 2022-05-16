@@ -52,6 +52,7 @@ public class PublishPlanServiceImpl implements PublishPlanService {
         list.forEach(a -> {
             PublishPlanVO publishPlanVO = new PublishPlanVO();
             publishPlanVO.setAppNames(a.getApps());
+            publishPlanVO.setName(a.getName());
             publishPlanVO.setCreateMan(a.getCreatePerson());
             publishPlanVO.setId(a.getId());
             publishPlanVO.setEmergency(a.getEmergency());
@@ -68,6 +69,7 @@ public class PublishPlanServiceImpl implements PublishPlanService {
         pageQueryResult.setTotalItems(count);
         pageQueryResult.setTotalPages(count % pageSize == 0 ? count / pageSize : (count / pageSize) + 1);
         pageQueryResult.setCurrentPage(publishPlanQueryList.getPageNum());
+        pageQueryResult.setItemsPerPage(publishPlanQueryList.getPageSize());
         return BaseResult.success(pageQueryResult);
     }
 
@@ -96,7 +98,7 @@ public class PublishPlanServiceImpl implements PublishPlanService {
         if (CollectionUtils.isEmpty(publishPlanIds)) {
             return BaseResult.success(pageQueryResult);
         }
-        projectLinkPublishPlanQueryList.setId(StringUtils.join(",", publishPlanIds));
+        projectLinkPublishPlanQueryList.setId(StringUtils.join( publishPlanIds,","));
         return matchPublishPlan(projectLinkPublishPlanQueryList);
     }
 }
