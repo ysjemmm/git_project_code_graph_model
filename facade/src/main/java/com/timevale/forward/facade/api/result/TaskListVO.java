@@ -50,4 +50,7 @@ public class TaskListVO extends ToString {
     @ApiModelProperty("更新时间")
     private Date modifyDate;
 
+    @ApiModelProperty("项目id")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long projectId;
 }
