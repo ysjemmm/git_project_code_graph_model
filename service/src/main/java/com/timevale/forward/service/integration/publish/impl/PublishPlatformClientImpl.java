@@ -9,6 +9,7 @@ import com.timevale.forward.service.integration.publish.PublishPlatformClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -33,13 +34,13 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
 
     @Override
     public PublishPlanResultDTO list(PublishPlanQueryList publishPlanQueryList) {
-        log.info("发布计划查询: {},{},{}",publishPlanQueryList,publishPlanQueryList.getPageNum(),publishPlanQueryList.getPageSize());
+        log.info("发布计划查询: {},{},{}", publishPlanQueryList, publishPlanQueryList.getPageNum(), publishPlanQueryList.getPageSize());
         List<HttpMessageConverter<?>> messageConverters = restTemplate.getMessageConverters();
-//        for (HttpMessageConverter<?> messageConverter : messageConverters) {
-//            if(messageConverter instanceof StringHttpMessageConverter){
-//                ((StringHttpMessageConverter)messageConverter).setDefaultCharset(CharsetUtil.CHARSET_UTF_8);
-//            }
-//        }
+        for (HttpMessageConverter<?> messageConverter : messageConverters) {
+            if (messageConverter instanceof StringHttpMessageConverter) {
+                ((StringHttpMessageConverter) messageConverter).setDefaultCharset(CharsetUtil.CHARSET_UTF_8);
+            }
+        }
         int pageNum = publishPlanQueryList.getPageNum();
         int pageSize = publishPlanQueryList.getPageSize();
         Map<String, Object> paramMap = new HashMap<>();
@@ -50,10 +51,9 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
         paramMap.put("appName", publishPlanQueryList.getAppName());
         paramMap.put("offset", (pageNum - 1) * pageSize);
         paramMap.put("limit", pageSize);
-        String params = HttpUtil.toParams(paramMap, CharsetUtil.CHARSET_UTF_8,false);
-        log.info("请求url :{}", baseUrl + params);
+        String params = HttpUtil.toParams(paramMap, CharsetUtil.CHARSET_UTF_8, false);
         String result = restTemplate.getForObject(baseUrl + params, String.class);
-        log.info("请求url :{},发布平台返回结果: {}", baseUrl + params,result);
+        log.info("请求url :{},发布平台返回结果: {}", baseUrl + params, result);
         return JSONObject.parseObject(result, PublishPlanResultDTO.class);
     }
 }

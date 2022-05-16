@@ -11,7 +11,9 @@ import com.timevale.forward.facade.api.query.PublishPlanQueryList;
 import com.timevale.forward.facade.api.request.ProjectPublishPlanLinkReq;
 import com.timevale.forward.facade.api.result.PublishPlanVO;
 import com.timevale.forward.model.enums.ApproveStatusEnum;
+import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
 import com.timevale.forward.model.enums.PublishStatusEnum;
+import com.timevale.forward.service.component.ProjectPublishPlanComponent;
 import com.timevale.forward.service.integration.publish.PublishPlatformClient;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -37,6 +39,9 @@ public class PublishPlanServiceImpl implements PublishPlanService {
 
     @Resource
     private ProjectPublishPlanMapper projectPublishPlanMapper;
+
+    @Resource
+    private ProjectPublishPlanComponent projectPublishPlanComponent;
 
     @Override
     public BaseResult<PageQueryResult<PublishPlanVO>> matchPublishPlan(PublishPlanQueryList publishPlanQueryList) {
@@ -68,6 +73,13 @@ public class PublishPlanServiceImpl implements PublishPlanService {
 
     @Override
     public BaseResult<Boolean> linkOrUnLinkPublishPlan(ProjectPublishPlanLinkReq projectPublishPlanLinkReq) {
+        List<Long> publishPlanIds = projectPublishPlanLinkReq.getPublishPlanId();
+        Long projectId = projectPublishPlanLinkReq.getProjectId();
+        if (LinkOrUnLinkEnum.LINK.getCode().equals(projectPublishPlanLinkReq.getType())) {
+            projectPublishPlanComponent.add(publishPlanIds,projectId);
+        }else {
+            projectPublishPlanComponent.update(publishPlanIds.get(0),projectId);
+        }
 
         return BaseResult.success(true);
     }

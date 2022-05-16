@@ -24,7 +24,7 @@
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
         </set>
         <where>
-            id = #{id}
+            project_id = #{projectId} and publish_plan_id = #{publishPlanId}
         </where>
     </update>
 
