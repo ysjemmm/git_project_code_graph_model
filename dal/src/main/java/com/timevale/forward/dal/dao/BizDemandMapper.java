@@ -29,6 +29,13 @@ public interface BizDemandMapper {
      */
     int update(BizDemandDO bizDemandDO);
 
+    /**
+     * 更新业务需求信息-完全更新
+     *
+     * @param bizDemandDO 业务需求DO
+     * @return int
+     */
+    int fullUpdate(BizDemandDO bizDemandDO);
 
     /**
      * 选择id获取对应业务需求信息
