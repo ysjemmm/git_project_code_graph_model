@@ -633,17 +633,15 @@ public class BizDemandServiceImpl implements BizDemandService {
         Long id = bizDemandCompleted.getId();
         String solvePlan = bizDemandCompleted.getSolvePlan();
 
-        BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(id);
-        Integer oldStatus = oldBizDemandDO.getStatus();
+        BizDemandDO bizDemandDO = bizDemandMapper.selectById(id);
+        Integer oldStatus = bizDemandDO.getStatus();
         Integer newStatus = BizDemandStatusEnum.TO_CONFIRM.getCode();
 
         // 更新
-        BizDemandDO bizDemandDO = new BizDemandDO();
-        bizDemandDO.setId(id);
         bizDemandDO.setRejectReason("");
         bizDemandDO.setStatus(newStatus);
         bizDemandDO.setSolvePlan(solvePlan);
-        bizDemandMapper.update(bizDemandDO);
+        bizDemandMapper.fullUpdate(bizDemandDO);
 
         // 日志
         String oldValue = BizDemandStatusEnum.getTextByCode(oldStatus);

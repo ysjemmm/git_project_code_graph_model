@@ -12,7 +12,7 @@
     <update id="update">
         update biz_demand
         <set>
-            <if test="name!=null  and name!='' ">
+            <if test="name!=null and name!='' ">
                 name = #{name},
             </if>
             <if test="productLineId!=null">
@@ -74,6 +74,32 @@
                 modify_man_id = #{modifyManId},
                 modify_man = #{modifyMan},
             </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <update id="fullUpdate">
+        update biz_demand
+        <set>
+            name = #{name},
+            product_line_id = #{productLineId},
+            data_indicators = #{dataIndicators},
+            target_customer = #{targetCustomer},
+            create_customer = #{createCustomer},
+            dept_id = #{deptId},
+            `desc` = #{desc},
+            `status` = #{status},
+            priority = #{priority},
+            receive_man = #{receiveMan},
+            receive_man_id = #{receiveManId},
+            reason = #{reason},
+            submit_man = #{submitMan},
+            submit_man_id = #{submitManId},
+            solve_plan = #{solvePlan},
+            reject_reason = #{rejectReason},
+            plan_release_date = #{planReleaseDate},
+            modify_man_id = #{modifyManId},
+            modify_man = #{modifyMan},
         </set>
         where id = #{id}
     </update>

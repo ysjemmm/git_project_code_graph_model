@@ -21,8 +21,11 @@ public class HomePageTodoCardVO extends ToString {
     @ApiModelProperty("任务数量")
     private Integer taskCount;
 
-    @ApiModelProperty("业务需求数量")
+    @ApiModelProperty("业务需求数量-待评估")
     private Integer bizDemandCount;
+
+    @ApiModelProperty("业务需求数量-已接收")
+    private Integer bizDemandReceivedCount;
 
     @ApiModelProperty("线上bug数量")
     private Integer bugOnlineCount;

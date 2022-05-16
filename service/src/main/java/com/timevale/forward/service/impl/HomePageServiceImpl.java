@@ -129,6 +129,7 @@ public class HomePageServiceImpl implements HomePageService {
         int bizDemandCount = 0;
         int bugOnLineCount = 0;
         int bugOfflineCount = 0;
+        int bizDemandReceivedCount = 0;
 
         // 获取我及所有下属
         List<String> allMyStaffWithSelf = Lists.newArrayList(userInfo.getId());
@@ -144,6 +145,8 @@ public class HomePageServiceImpl implements HomePageService {
                     .build());
             bizDemandCount = (int) bizDemandListDOList.stream()
                     .filter(e -> e.getStatus().equals(BizDemandStatusEnum.EVALUATE.getCode())).count();
+            bizDemandReceivedCount = (int) bizDemandListDOList.stream()
+                    .filter(e -> e.getStatus().equals(BizDemandStatusEnum.RECEIVED.getCode())).count();
         } else {
             List<TaskDO> taskDOList = taskMapper.selectByExecutorList(Lists.newArrayList(allMyStaffWithSelf));
             taskCount = (int) taskDOList.stream().filter(e -> TaskStatusEnum.ongoing(e.getStatus())).count();
@@ -186,6 +189,7 @@ public class HomePageServiceImpl implements HomePageService {
         todoCardVO.setBizDemandCount(bizDemandCount);
         todoCardVO.setBugOnlineCount(bugOnLineCount);
         todoCardVO.setBugOfflineCount(bugOfflineCount);
+        todoCardVO.setBizDemandReceivedCount(bizDemandReceivedCount);
 
         return BaseResult.success(todoCardVO);
     }
