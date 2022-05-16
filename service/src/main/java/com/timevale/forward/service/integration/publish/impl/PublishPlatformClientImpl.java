@@ -28,7 +28,7 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
     @Resource
     private RestTemplate restTemplate;
 
-    @Value("${publishPlan.baseUrl:http://poseidon-master.officek8s.tsign.cn/api/release_plan?}")
+    @Value("${publishPlan.baseUrl:http://poseidon-master.esign.cn/api/release_plan?}")
     private String baseUrl;
 
     @Override
@@ -51,6 +51,7 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
         paramMap.put("offset", (pageNum - 1) * pageSize);
         paramMap.put("limit", pageSize);
         String params = HttpUtil.toParams(paramMap, CharsetUtil.CHARSET_UTF_8,false);
+        log.info("请求url :{}", baseUrl + params);
         String result = restTemplate.getForObject(baseUrl + params, String.class);
         log.info("请求url :{},发布平台返回结果: {}", baseUrl + params,result);
         return JSONObject.parseObject(result, PublishPlanResultDTO.class);
