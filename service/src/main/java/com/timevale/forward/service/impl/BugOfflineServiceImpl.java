@@ -668,7 +668,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugOfflineDO.setLastOperator(operator);
         bugOfflineDO.setLastOperatorId(operatorId);
         bugOfflineDO.setCause(bugOfflineReq.getCause());
-        bugOfflineDO.setSolvePlan(bugOfflineDO.getSolvePlan());
+        bugOfflineDO.setSolvePlan(bugOfflineReq.getSolvePlan());
 
         bugOfflineMapper.update(bugOfflineDO);
 
