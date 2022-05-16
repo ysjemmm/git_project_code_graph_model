@@ -34,7 +34,7 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
 
     @Override
     public PublishPlanResultDTO list(PublishPlanQueryList publishPlanQueryList) {
-        log.info("发布计划查询: {},{},{}", publishPlanQueryList, publishPlanQueryList.getPageNum(), publishPlanQueryList.getPageSize());
+        log.info("发布计划查询: {}", publishPlanQueryList);
         List<HttpMessageConverter<?>> messageConverters = restTemplate.getMessageConverters();
         for (HttpMessageConverter<?> messageConverter : messageConverters) {
             if (messageConverter instanceof StringHttpMessageConverter) {
