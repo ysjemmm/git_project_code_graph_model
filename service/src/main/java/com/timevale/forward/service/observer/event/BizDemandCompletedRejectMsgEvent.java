@@ -19,7 +19,6 @@ public class BizDemandCompletedRejectMsgEvent extends MessageEvent {
     private final String name;
     private final String reason;
 
-    private static final String COMMENT_ANCHOR = "&anchor=comment";
     private static final String BIZ_DEMAND_COMPLETED_REJECT_MSG = "### %s  \n  %s拒绝了您处理的业务需求 **%s**，拒绝原因：**%s**  \n\n  ***  \n  [查看详情](%s)";
 
     public BizDemandCompletedRejectMsgEvent(Object source, Long bizDemandId, String operator, String receiver, String name, String reason) {
@@ -35,7 +34,7 @@ public class BizDemandCompletedRejectMsgEvent extends MessageEvent {
     public void run() {
         List<String> receivers = Lists.newArrayList(receiver);
         String title = MessageTitleEnum.BIZDEMAND_FEEDBACK.getText();
-        String singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_MANAGEMENT.getText(), bizDemandId) + COMMENT_ANCHOR;
+        String singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_MANAGEMENT.getText(), bizDemandId);
         String markdown = String.format(BIZ_DEMAND_COMPLETED_REJECT_MSG, title, operator, name, reason, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()

@@ -632,10 +632,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         return BaseResult.success(true);
     }
 
-
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> passSelf(BugOfflineReq bugOfflineReq) {
+    public BaseResult<Boolean> passSelf(BugOfflinePassSelfReq bugOfflineReq) {
         log.info("自测通过接收参数{}", bugOfflineReq.getId());
 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -668,19 +667,41 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugOfflineDO.setStatus(BugStatusEnum.ACCEPTANCE.getCode());
         bugOfflineDO.setLastOperator(operator);
         bugOfflineDO.setLastOperatorId(operatorId);
+        bugOfflineDO.setCause(bugOfflineReq.getCause());
+        bugOfflineDO.setSolvePlan(bugOfflineDO.getSolvePlan());
 
         bugOfflineMapper.update(bugOfflineDO);
 
-        BugLogDO bugLogDO = new BugLogDO();
-        bugLogDO.setAction(ButtonActionEnum.SELF_PASS.getText());
-        bugLogDO.setOldValue(oldValue);
-        bugLogDO.setNewValue(BugStatusEnum.ACCEPTANCE.getText());
-        bugLogDO.setMainId(bugOfflineReq.getId());
-        bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+        List<BugLogDO> bugLogDOList = new ArrayList<>();
+
+        BugLogDO statusLogDO = new BugLogDO();
+        statusLogDO.setAction(ButtonActionEnum.SELF_PASS.getText());
+        statusLogDO.setOldValue(oldValue);
+        statusLogDO.setNewValue(BugStatusEnum.ACCEPTANCE.getText());
+        statusLogDO.setMainId(bugOfflineReq.getId());
+        statusLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        statusLogDO.setField(BugLogFieldEnum.STATUS.getText());
+
+        BugLogDO causeLogDO = new BugLogDO();
+        causeLogDO.setOldValue(oldValue);
+        causeLogDO.setNewValue(bugOfflineReq.getCause());
+        causeLogDO.setMainId(bugOfflineReq.getId());
+        causeLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        causeLogDO.setField(BugLogFieldEnum.CAUSE.getText());
+
+        BugLogDO solvePlanLogDO = new BugLogDO();
+        solvePlanLogDO.setOldValue("");
+        solvePlanLogDO.setNewValue(bugOfflineReq.getSolvePlan());
+        solvePlanLogDO.setMainId(bugOfflineReq.getId());
+        solvePlanLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+        solvePlanLogDO.setField(BugLogFieldEnum.SOLVE_PLAN.getText());
+
+        bugLogDOList.add(causeLogDO);
+        bugLogDOList.add(statusLogDO);
+        bugLogDOList.add(solvePlanLogDO);
 
         //往bug日志表中插入数据
-        bugLogMapper.insert(bugLogDO);
+        bugLogMapper.batchInsert(bugLogDOList);
 
         //发送消息
         messageEventPublisher.publish(
@@ -742,8 +763,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> acceptFailed(BugOfflineReq bugOfflineReq) {
         log.info("验收失败接收参数{}", bugOfflineReq.getId());
-
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         //得到当前线下bug
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());

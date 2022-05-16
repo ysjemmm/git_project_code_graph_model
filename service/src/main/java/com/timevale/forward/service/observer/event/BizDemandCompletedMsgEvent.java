@@ -18,7 +18,7 @@ public class BizDemandCompletedMsgEvent extends MessageEvent {
     private final String receiver;
     private final String name;
 
-    private static final String COMMENT_ANCHOR = "&anchor=comment";
+    private static final String COMMENT_SCHEME = "&anchor=scheme";
     private static final String BIZ_DEMAND_COMPLETED_MSG = "### %s  \n  %s已处理了您提交的业务需求 **%s**，请确认，可进入产研项目管理系统查看  \n\n  ***  \n  [查看详情](%s)";
 
     public BizDemandCompletedMsgEvent(Object source, Long bizDemandId, String operator, String receiver, String name) {
@@ -33,7 +33,7 @@ public class BizDemandCompletedMsgEvent extends MessageEvent {
     public void run() {
         List<String> receivers = Lists.newArrayList(receiver);
         String title = MessageTitleEnum.BIZDEMAND_FEEDBACK.getText();
-        String singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_MANAGEMENT.getText(), bizDemandId) + COMMENT_ANCHOR;
+        String singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_MANAGEMENT.getText(), bizDemandId) + COMMENT_SCHEME;
         String markdown = String.format(BIZ_DEMAND_COMPLETED_MSG, title, operator, name, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()

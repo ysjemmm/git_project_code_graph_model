@@ -98,7 +98,7 @@ public interface BugOfflineService {
      * @param bugOfflineReq 参数
      * @return Boolean
      */
-    BaseResult<Boolean> passSelf(BugOfflineReq bugOfflineReq);
+    BaseResult<Boolean> passSelf(BugOfflinePassSelfReq bugOfflineReq);
 
     /**
      * 验收通过

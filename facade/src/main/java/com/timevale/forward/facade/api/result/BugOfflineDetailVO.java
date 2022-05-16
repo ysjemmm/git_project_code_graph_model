@@ -122,4 +122,10 @@ public class BugOfflineDetailVO extends ToString {
 
     @ApiModelProperty("最后更新时间")
     private Date lastModifyDate;
+
+    @ApiModelProperty("bug产生原因")
+    private String cause;
+
+    @ApiModelProperty("解决方案")
+    private String solvePlan;
 }
