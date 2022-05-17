@@ -324,7 +324,7 @@ public class HomePageServiceImpl implements HomePageService {
         if(HomePageTabEnum.INDIVIDUAL.getCode().equals(homePageProjectBoardReq.getTabType())){
             allMyStaffInfoWithSelfInfo = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(userInfo.getId()));
         }else{
-            allMyStaffInfoWithSelfInfo = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), true);
+            allMyStaffInfoWithSelfInfo = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
         }
         //我和我所有下属的职能类型 Map(userid,jobFunction)
         Map<String, String> allMyStaffInfoWithSelfJobFunction = allMyStaffInfoWithSelfInfo
