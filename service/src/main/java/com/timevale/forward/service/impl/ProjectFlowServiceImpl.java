@@ -126,29 +126,4 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         return BaseResult.success(projectFlowDetailVO);
     }
 
-//    public void startWorkflow(ProjectFlowAddReq projectFlowAddReq){
-//        Map<String, Object> variables =new HashMap<>();
-//        StartProcessRequest start = new StartProcessRequest();
-//        variables.put("files", new ArrayList<>());
-//        variables.put("reviewUrl", projectFlowAddReq.getReviewUrl());
-//        variables.put("reviewDate", "2022-05-16");
-//        variables.put("reviewName","星云-敖哲");
-//        variables.put("projectName","ITM线上化一期");
-//        List<String>list=Arrays.asList("xingyun","shanluo","yangxu");
-//        variables.put("review", list);
-//        Map<String,String>file=new HashMap<>();
-//        file.put("file_key","$fa0fb506-ef38-4826-9f0b-94a729ebfa20$1618977430");
-//        file.put("file_name","产品线.png");
-//        file.put("download_url","");
-//        List<Map<String,String>>files=new ArrayList<>();
-//        files.add(file);
-//        variables.put("files", files);
-//        start.setApplicationName("forward");
-//        start.setProcessDefinitionKey("forward_techReview");
-//        start.setStartAccountId("xingyun");
-//        start.setVariables(variables);
-//        start.setEpeVirtualProcessSwitch(false);
-//        String processInstanceId = epeiusClient.start(start);
-//        System.out.println(processInstanceId);
-//    }
 }
