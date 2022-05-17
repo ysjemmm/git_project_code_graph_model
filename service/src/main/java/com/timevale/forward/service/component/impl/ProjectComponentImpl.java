@@ -161,6 +161,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         ProjectNodeDO demandStart = nodeMap.get(ProjectNodeEnum.START_PLAN.getText());
         ProjectNodeDO demandAudit = nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText());
         ProjectNodeDO demandConstrue = nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getText());
+        ProjectNodeDO demandConstrueReverse = nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText());
         Integer status = ProjectStatusEnum.WAITING.getCode();
         //规划中
         if (demandStart != null && demandStart.getActualDate() != null) {
@@ -169,7 +170,8 @@ public class ProjectComponentImpl implements ProjectComponent {
         // 研发中
         boolean dev = (demandStart == null || demandStart.getActualDate() != null)
                 && (demandAudit == null || demandAudit.getActualDate() != null)
-                && (demandConstrue == null || demandConstrue.getActualDate() != null);
+                && (demandConstrue == null || demandConstrue.getActualDate() != null)
+                && (demandConstrueReverse == null || demandConstrueReverse.getActualDate() != null);
         if (dev) {
             status = ProjectStatusEnum.DEVING.getCode();
         }
