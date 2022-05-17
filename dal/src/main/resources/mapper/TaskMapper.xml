@@ -112,7 +112,7 @@
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.TaskDO">
-        select a.id,a.project_id,product_line_id, a.name,a.todo,a.todo_id, a.stage ,a.status, a.`desc`
+        select a.id,a.project_id,product_line_id, a.name,a.todo,a.todo_id, a.stage ,a.status, a.`desc`,
         a.plan_use_time,a.task_use_time,
         a.plan_start_date,a.plan_end_date,
         a.actual_start_date,a.actual_end_date,a.is_deleted,
@@ -141,7 +141,7 @@
             <if test="planUseTime != null">plan_use_time = #{planUseTime},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
-            <if test="desc != null">`desc` = #{desc}</if>
+            <if test="desc != null">`desc` = #{desc},</if>
             actual_start_date = #{actualStartDate},
             actual_end_date = #{actualEndDate},
             todo_id = #{todoId}
