@@ -34,7 +34,7 @@ public class ElapsedTimeClientImpl implements ElapsedTimeClient {
     @Value("${elapsedTime.baseUrl:http://dingtalk-testvpc-svc.local-test:8181/workday/elapsedTimeV2/}")
     private String baseUrl;
 
-    @Value("${elapsedTime.baseUrl:http://dingtalk-testvpc-svc.local-test:8181/workday/elapsedTime/}")
+    @Value("${elapsedTime.allDay:http://dingtalk-testvpc-svc.local-test:8181/workday/elapsedTime/}")
     private String baseUrlAllDay;
 
     @Override
