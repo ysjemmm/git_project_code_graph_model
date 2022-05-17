@@ -492,14 +492,15 @@ public class BizDemandServiceImpl implements BizDemandService {
         String newReceiveMan = bizDemandTransferReq.getReceiveMan();
         String newReceiveManId = bizDemandTransferReq.getReceiveManId();
 
-        BizDemandDO newBizDemandDO = new BizDemandDO();
-        newBizDemandDO.setId(bizDemandDO.getId());
-        newBizDemandDO.setReceiveMan(newReceiveMan);
-        newBizDemandDO.setReceiveManId(newReceiveManId);
-        bizDemandMapper.update(newBizDemandDO);
-
         // 新旧接受人是否相同
         if (!Objects.equal(oldReceiveMan, newReceiveMan)) {
+            // 数据变更
+            BizDemandDO newBizDemandDO = new BizDemandDO();
+            newBizDemandDO.setId(bizDemandDO.getId());
+            newBizDemandDO.setReceiveMan(newReceiveMan);
+            newBizDemandDO.setReceiveManId(newReceiveManId);
+            bizDemandMapper.update(newBizDemandDO);
+
             // 日志记录
             bizDemandLogComponent.addLogWhenModifyData(
                     oldReceiveMan,

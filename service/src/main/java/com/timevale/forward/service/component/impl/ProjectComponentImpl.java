@@ -225,7 +225,8 @@ public class ProjectComponentImpl implements ProjectComponent {
                 status = ProjectStatusEnum.WAITING.getCode();
 
             }else if(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText().equals(name)
-                    || ProjectNodeEnum.DEMAND_CONSTRUE.getText().equals(name)){
+                    || ProjectNodeEnum.DEMAND_CONSTRUE.getText().equals(name)
+                    || ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText().equals(name)){
                 status = ProjectStatusEnum.PLANING.getCode();
 
             }else if(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText().equals(name)
