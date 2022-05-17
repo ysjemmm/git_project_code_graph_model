@@ -242,6 +242,8 @@ public class HomePageServiceImpl implements HomePageService {
         Map<Long, List<HomePageRiskWarningSubmitTestDTO>> riskWarningSubmitTestGroup = submitTestDTOList.stream()
                 .collect(Collectors.groupingBy(HomePageRiskWarningSubmitTestDTO::getProjectId));
 
+        log.info("[getRiskWarning]项目风险map：{}",riskWarningGroup);
+
         // TL 身份保留一个
         if(HomePageTabEnum.TEAM.getCode().equals(homePageBaseReq.getTabType())){
             riskWarningGroup.forEach((k, v) -> {
@@ -260,6 +262,8 @@ public class HomePageServiceImpl implements HomePageService {
                 max.ifPresent(v::add);
             });
         }
+
+        log.info("[getRiskWarning]项目风险过滤过程预期：{}",riskWarningGroup);
 
         // 节点排序
         riskWarningGroup.forEach((k, v) -> v.sort((x, y) -> {
@@ -295,6 +299,8 @@ public class HomePageServiceImpl implements HomePageService {
             riskWarningVO.setPlanEndDate(value.get(0).getPlanEndDate());
             riskWarningVO.setHomePageSubmitTestVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
         });
+
+        log.info("[getRiskWarning]项目风险结果：{}",resultMap);
 
         // 按项目计划上线时间排序
         List<HomePageRiskWarningVO> resultList = Lists.newArrayList(resultMap.values());

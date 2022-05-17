@@ -78,7 +78,9 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
                     .params(paramHelper.params())
                     .distributeConfigVO(distributeConfig.getRiskWarningPD())
                     .build();
-            result.addAll(doGet(params));
+            List<HomePageRiskWarningDTO> resultPD = doGet(params);
+            result.addAll(resultPD);
+            log.info("[getRiskWarning]PD节点风险预警{}",resultPD);
         }
         if(!CollectionUtils.isEmpty(QANameList)){
             ParamHelper paramHelper = ParamHelper.newInstance()
@@ -89,7 +91,9 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
                     .params(paramHelper.params())
                     .distributeConfigVO(distributeConfig.getRiskWarningQA())
                     .build();
-            result.addAll(doGet(params));
+            List<HomePageRiskWarningDTO> resultQA = doGet(params);
+            result.addAll(resultQA);
+            log.info("[getRiskWarning]QA节点风险预警{}",resultQA);
         }
         if(!CollectionUtils.isEmpty(RDNameList)){
             ParamHelper paramHelper = ParamHelper.newInstance()
@@ -100,9 +104,12 @@ public class HomePageRiskWarningComponentImpl extends BaseDistributeClientImpl<H
                     .params(paramHelper.params())
                     .distributeConfigVO(distributeConfig.getRiskWarningRD())
                     .build();
-            result.addAll(doGet(params));
+            List<HomePageRiskWarningDTO> resultRD = doGet(params);
+            result.addAll(resultRD);
+            log.info("[getRiskWarning]RD节点风险预警{}",resultRD);
         }
 
+        log.info("[getRiskWarning]节点风险预警{}",result);
         return new ArrayList<>(result);
     }
 
