@@ -84,7 +84,6 @@
 //
 //                } else if (FlowStatusEnum.FLOW_COMPLETE.equals(flowStatus)) {
 //                    projectFlowDO.setStatus(ProjectFlowStatusEnum.REVIEWED.getCode());
-//                    // 流程完成
 //                    messageEventPublisher.publish(new FlowCompleteMsg(
 //                            this,
 //                            Lists.newArrayList(projectFlowDO.getProposerId()),
@@ -93,20 +92,6 @@
 //                    ));
 //
 //                    Map<String, Object> flowData = flowResponse.getFlowData();
-//                    // 查询taskResult
-//                    TaskResultCondition taskResultCondition = new TaskResultCondition();
-//                    taskResultCondition.setProcessInstanceId(body.getProcessInstanceId());
-//                    taskResultCondition.setTaskId(String.valueOf(flowData.get("taskId")));
-//                    List<TaskResultPO> byCondition = taskResultDao.findByCondition(taskResultCondition);
-//
-//                    if (byCondition.isEmpty()) {
-//                        log.warn("查无此任务");
-//                        return ReceiveResult.success();
-//                    }
-//
-//                    TaskResultPO taskResultPo = byCondition.get(0);
-//                    // 完成任务
-//                    taskResultDao.completeTask(taskResultPo.getId());
 //                    Object needFollowLog = flowData.get("needFollowLog");
 //                    log.info("needFollowLog :{}", needFollowLog);
 //                    if (needFollowLog != null && !(boolean) needFollowLog) {
@@ -129,11 +114,9 @@
 //                    String supAssignee = flowData.get("supAssignee") != null ? String.valueOf(flowData.get("supAssignee")) : null;
 //                    String contactUser = flowData.get("contactUser") != null ? String.valueOf(flowData.get("contactUser")) : null;
 //
-//                } else {
-//                    log.info("[PocTestDockApprovalStrategyImpl.process()] no need to deal");
 //                }
 //            } catch (Exception e) {
-//                log.warn("[NewWorkFlowMqConsumer.receive()] mq consume fail: ", e);
+//                log.warn("消费失败", e);
 //            }
 //        }
 //
