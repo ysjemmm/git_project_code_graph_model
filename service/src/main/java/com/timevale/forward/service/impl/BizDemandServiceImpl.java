@@ -183,8 +183,15 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(BizDemandAddReq bizDemandAddReq) {
         // 判断主题是否唯一
-        if (bizDemandMapper.selectByName(bizDemandAddReq.getName()) != null) {
+        String bizDemandName = bizDemandAddReq.getName();
+        if (bizDemandMapper.selectByName(bizDemandName) != null) {
             throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
+        }
+        if(bizDemandName.contains(CommonConstant.BLANK)){
+            throw new BaseBizRuntimeException("业务需求名称中请勿包含空格");
+        }
+        if(bizDemandAddReq.getTargetCustomer().contains(CommonConstant.BLANK)){
+            throw new BaseBizRuntimeException("目标客户/用户/项目中请勿包含空格");
         }
 
         // 新增业务需求

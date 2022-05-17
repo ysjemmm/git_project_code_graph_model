@@ -234,6 +234,11 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(ProductDemandAddReq productDemandAddReq) {
         log.info("产品需求新增接收参数:{}", productDemandAddReq);
+
+        if(productDemandAddReq.getName().contains(CommonConstant.BLANK)){
+            throw new BaseBizRuntimeException("产业需求名称中请勿包含空格");
+        }
+
         ProductDemandDO productDemandDO = productDemandMapper.getByName(productDemandAddReq.getName());
         if (productDemandDO != null) {
             throw new BaseBizRuntimeException("该产品需求名称已存在,请修改后重试");

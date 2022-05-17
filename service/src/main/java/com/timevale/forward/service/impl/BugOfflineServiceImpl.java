@@ -154,6 +154,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(BugOfflineAddReq bugOfflineAddReq) {
+        if(bugOfflineAddReq.getName().contains(CommonConstant.BLANK)){
+            throw new BaseBizRuntimeException("线下bug名称中请勿包含空格");
+        }
+
         // 校验关联项目状态
         Long projectId = bugOfflineAddReq.getProjectId();
         if (projectId != 0) {
@@ -889,7 +893,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogMapper.insert(bugLogDO);
 
         //如果延期修复原因存在老的值则往bug日志表里插入一条记录
-        if (delayHandleReason != null && delayHandleReason != "") {
+        if (delayHandleReason != null && !"".equals(delayHandleReason)) {
             BugLogDO bugLog = new BugLogDO();
             bugLog.setField(BugFieldEnum.DELAY_HANDLE_REASON.getText());
             bugLog.setOldValue(delayHandleReason);

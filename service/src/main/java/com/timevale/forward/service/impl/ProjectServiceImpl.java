@@ -206,6 +206,10 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<Boolean> add(ProjectAddReq projectAddReq) {
         log.info("项目新增接收参数:{}", projectAddReq);
         ProjectDO project = projectMapper.getByName(projectAddReq.getName());
+
+        if(projectAddReq.getName().contains(CommonConstant.BLANK)){
+            throw new BaseBizRuntimeException("项目名称中请勿包含空格");
+        }
         if (project != null) {
             throw new BaseBizRuntimeException("该项目名称已存在,请修改后重试");
         }
