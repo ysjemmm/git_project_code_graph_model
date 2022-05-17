@@ -6,7 +6,6 @@ import com.timevale.forward.dal.dto.PublishPlanDTO;
 import com.timevale.forward.dal.dto.PublishPlanResultDTO;
 import com.timevale.forward.dal.entity.ProjectPublishPlanDO;
 import com.timevale.forward.facade.api.client.PublishPlanService;
-import com.timevale.forward.facade.api.query.ProjectLinkPublishPlanQueryList;
 import com.timevale.forward.facade.api.query.PublishPlanQueryList;
 import com.timevale.forward.facade.api.request.ProjectPublishPlanLinkReq;
 import com.timevale.forward.facade.api.result.PublishPlanVO;
@@ -15,6 +14,7 @@ import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
 import com.timevale.forward.model.enums.PublishStatusEnum;
 import com.timevale.forward.service.component.ProjectPublishPlanComponent;
 import com.timevale.forward.service.integration.publish.PublishPlatformClient;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -46,9 +46,13 @@ public class PublishPlanServiceImpl implements PublishPlanService {
     @Override
     public BaseResult<PageQueryResult<PublishPlanVO>> matchPublishPlan(PublishPlanQueryList publishPlanQueryList) {
         PublishPlanResultDTO resultDTO = publishPlatformClient.list(publishPlanQueryList);
-
+        List<Long> publishPlanIds = projectPublishPlanMapper.get(publishPlanQueryList.getProjectId())
+                .stream().map(ProjectPublishPlanDO::getPublishPlanId).collect(Collectors.toList());
         List<PublishPlanVO> publishPlans = Lists.newArrayList();
         List<PublishPlanDTO> list = resultDTO.getList();
+        if(CollectionUtils.isEmpty(list)){
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
         list.forEach(a -> {
             PublishPlanVO publishPlanVO = new PublishPlanVO();
             publishPlanVO.setAppNames(a.getApps());
@@ -60,6 +64,7 @@ public class PublishPlanServiceImpl implements PublishPlanService {
             publishPlanVO.setWindowEnd(a.getWindowEnd());
             publishPlanVO.setReleaseStatus(PublishStatusEnum.getTextByName(a.getReleaseStatus()));
             publishPlanVO.setStatus(ApproveStatusEnum.getTextByName(a.getStatus()));
+            publishPlanVO.setIsLinked(publishPlanIds.contains(a.getId()));
             publishPlans.add(publishPlanVO);
         });
         Integer count = resultDTO.getCount();
@@ -87,18 +92,17 @@ public class PublishPlanServiceImpl implements PublishPlanService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<PublishPlanVO>> linkPublishPlanList(ProjectLinkPublishPlanQueryList projectLinkPublishPlanQueryList) {
-        PageQueryResult<PublishPlanVO> pageQueryResult = new PageQueryResult<>();
-        Long projectId = projectLinkPublishPlanQueryList.getProjectId();
-        int pageNum = projectLinkPublishPlanQueryList.getPageNum();
-        int pageSize = projectLinkPublishPlanQueryList.getPageSize();
+    public BaseResult<PageQueryResult<PublishPlanVO>> linkPublishPlanList(PublishPlanQueryList publishPlanQueryList) {
+        Long projectId = publishPlanQueryList.getProjectId();
+        int pageNum = publishPlanQueryList.getPageNum();
+        int pageSize = publishPlanQueryList.getPageSize();
         List<Long> publishPlanIds = projectPublishPlanMapper.get(projectId)
                 .stream().skip((pageNum - 1) * pageSize).limit(pageSize)
                 .map(ProjectPublishPlanDO::getPublishPlanId).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(publishPlanIds)) {
-            return BaseResult.success(pageQueryResult);
+            return BaseResult.success(ResultUtil.pageEmpty());
         }
-        projectLinkPublishPlanQueryList.setId(StringUtils.join( publishPlanIds,","));
-        return matchPublishPlan(projectLinkPublishPlanQueryList);
+        publishPlanQueryList.setId(StringUtils.join( publishPlanIds,","));
+        return matchPublishPlan(publishPlanQueryList);
     }
 }

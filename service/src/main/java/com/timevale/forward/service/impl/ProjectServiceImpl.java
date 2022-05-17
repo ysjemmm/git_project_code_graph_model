@@ -110,6 +110,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private ProjectFlowMapper projectFlowMapper;
 
+    @Resource
+    private ProjectPublishPlanComponent projectPublishPlanComponent;
+
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -282,6 +285,14 @@ public class ProjectServiceImpl implements ProjectService {
             if (match && !checkProductRelease(projectModifyReq.getId())) {
                 throw new BaseBizRuntimeException("该项目还有bug未关闭，请关闭后再发布");
             }
+            if (match && projectModifyReq.getIsPlatformPublish()) {
+                if (!projectPublishPlanComponent.linkPublishPlan(projectModifyReq.getId())) {
+                    throw new BaseBizRuntimeException("请关联发布计划");
+                }
+                if (projectPublishPlanComponent.anyMatchNotFinished(projectModifyReq.getId())) {
+                    throw new BaseBizRuntimeException("您的发布计划还未结束，请前往发布平台处理");
+                }
+            }
             projectNodeComponent.add(projectNodeDOList, newProject.getId());
             // 更新节点状态
             projectComponent.updateNodeStatus(projectModifyReq.getId());
@@ -335,7 +346,7 @@ public class ProjectServiceImpl implements ProjectService {
         projectDetailVO.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(projectDetailVO.getNodeStatus()));
 
         List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(projectId);
-        if(CollectionUtils.isNotEmpty(projectFlowDos)){
+        if (CollectionUtils.isNotEmpty(projectFlowDos)) {
             projectFlowDos.sort(Comparator.comparing(ProjectFlowDO::getModifyDate).reversed());
             ProjectFlowDO oldFlowDo = projectFlowDos.get(0);
             projectDetailVO.setProjectFlowId(oldFlowDo.getId());
@@ -432,7 +443,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(projectId);
         List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
 
-        if(CollectionUtils.isNotEmpty(productDemandVOList)){
+        if (CollectionUtils.isNotEmpty(productDemandVOList)) {
             //查询产品需求关联任务
             List<Long> productDemandIdList = productDemandVOList.stream().map(ProductDemandVO::getId).collect(Collectors.toList());
             List<TaskProductDemandDO> taskProductDemandDOList = taskProductDemandMapper.selectByProductDemandId(productDemandIdList);
@@ -548,7 +559,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (!Objects.equals(projectDO.getStatus(), oldStatus)) {
             //状态不一致时,更新产品需求状态
             productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
-            projectLogComponent.addLogWhenStatusChange(oldStatus,projectDO.getStatus(),projectDO.getId(),ButtonActionEnum.MODIFY.getText());
+            projectLogComponent.addLogWhenStatusChange(oldStatus, projectDO.getStatus(), projectDO.getId(), ButtonActionEnum.MODIFY.getText());
         }
         log.info("更新项目信息完成");
     }

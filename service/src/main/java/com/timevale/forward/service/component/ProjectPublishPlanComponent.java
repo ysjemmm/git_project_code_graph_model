@@ -19,5 +19,19 @@ public interface ProjectPublishPlanComponent {
      */
     void update(Long publishPlanId,Long projectId);
 
+    /**
+     *
+     * @param projectId projectId
+     * @return boolean
+     */
+    boolean anyMatchNotFinished(Long projectId);
+
+
+    /**
+     *
+     * @param projectId projectId
+     * @return boolean
+     */
+    boolean linkPublishPlan(Long projectId);
 
 }

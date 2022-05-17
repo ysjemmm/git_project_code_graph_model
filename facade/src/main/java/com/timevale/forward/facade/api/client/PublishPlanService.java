@@ -2,7 +2,6 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.query.ProjectLinkPublishPlanQueryList;
 import com.timevale.forward.facade.api.query.PublishPlanQueryList;
 import com.timevale.forward.facade.api.request.ProjectPublishPlanLinkReq;
 import com.timevale.forward.facade.api.result.PublishPlanVO;
@@ -33,9 +32,9 @@ public interface PublishPlanService {
 
     /**
      *
-     * @param projectLinkPublishPlanQueryList projectLinkPublishPlanQueryList
+     * @param publishPlanQueryList publishPlanQueryList
      * @return PublishPlanVO
      */
-    BaseResult<PageQueryResult<PublishPlanVO>> linkPublishPlanList(ProjectLinkPublishPlanQueryList projectLinkPublishPlanQueryList);
+    BaseResult<PageQueryResult<PublishPlanVO>> linkPublishPlanList(PublishPlanQueryList publishPlanQueryList);
 
 }

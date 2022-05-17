@@ -18,7 +18,7 @@ public interface ProjectFlowService {
      * @param projectFlowAddReq 详设评审
      * @return Boolean
      */
-    BaseResult<Boolean> add(ProjectFlowAddReq projectFlowAddReq);
+    BaseResult<String> add(ProjectFlowAddReq projectFlowAddReq);
 
 
     /**

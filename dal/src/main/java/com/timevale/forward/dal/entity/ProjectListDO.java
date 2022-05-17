@@ -78,4 +78,9 @@ public class ProjectListDO extends BaseDO {
      */
     private Date modifyDate;
 
+    /**
+     * 是否在发布平台发布
+     */
+    private Boolean isPlatformPublish;
+
 }

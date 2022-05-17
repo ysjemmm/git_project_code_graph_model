@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * @author by YangXu
  * @date 2021/12/14 15:20
@@ -14,6 +16,10 @@ import lombok.EqualsAndHashCode;
 @Data
 @ApiModel("发布计划查询")
 public class PublishPlanQueryList extends QueryBase {
+
+    @NotNull(message = "项目id不能为空")
+    @ApiModelProperty("项目id")
+    private Long projectId;
 
     @ApiModelProperty("发布计划名称")
     private String name;

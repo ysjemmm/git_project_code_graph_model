@@ -47,4 +47,7 @@ public class PublishPlanVO extends ToString {
 
     @ApiModelProperty("是否紧急发布")
     private Boolean emergency;
+
+    @ApiModelProperty("是否已被关联")
+    private Boolean isLinked;
 }

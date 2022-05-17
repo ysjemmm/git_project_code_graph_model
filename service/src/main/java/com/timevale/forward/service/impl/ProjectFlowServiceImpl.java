@@ -53,7 +53,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> add(ProjectFlowAddReq projectFlowAddReq) {
+    public BaseResult<String> add(ProjectFlowAddReq projectFlowAddReq) {
         log.info("发起详设评审,参数:{}", projectFlowAddReq);
         ProjectFlowDO projectFlowDO = ProjectFlowCopier.INSTANCE.convert(projectFlowAddReq);
         List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(projectFlowDO.getProjectId());
@@ -81,7 +81,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         projectFlowDO.setStatus(ProjectFlowStatusEnum.REVIEWING.getCode());
         projectFlowMapper.insert(projectFlowDO);
         fileComponent.add(projectFlowAddReq.getFiles(), projectFlowDO.getId(), FileTypeEnum.TECH_REVIEW.getCode());
-        return BaseResult.success(true);
+        return BaseResult.success("1");
     }
 
     @Override
@@ -125,4 +125,30 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         projectFlowDetailVO.setReturnCount(count);
         return BaseResult.success(projectFlowDetailVO);
     }
+
+//    public void startWorkflow(ProjectFlowAddReq projectFlowAddReq){
+//        Map<String, Object> variables =new HashMap<>();
+//        StartProcessRequest start = new StartProcessRequest();
+//        variables.put("files", new ArrayList<>());
+//        variables.put("reviewUrl", projectFlowAddReq.getReviewUrl());
+//        variables.put("reviewDate", "2022-05-16");
+//        variables.put("reviewName","星云-敖哲");
+//        variables.put("projectName","ITM线上化一期");
+//        List<String>list=Arrays.asList("xingyun","shanluo","yangxu");
+//        variables.put("review", list);
+//        Map<String,String>file=new HashMap<>();
+//        file.put("file_key","$fa0fb506-ef38-4826-9f0b-94a729ebfa20$1618977430");
+//        file.put("file_name","产品线.png");
+//        file.put("download_url","");
+//        List<Map<String,String>>files=new ArrayList<>();
+//        files.add(file);
+//        variables.put("files", files);
+//        start.setApplicationName("forward");
+//        start.setProcessDefinitionKey("forward_techReview");
+//        start.setStartAccountId("xingyun");
+//        start.setVariables(variables);
+//        start.setEpeVirtualProcessSwitch(false);
+//        String processInstanceId = epeiusClient.start(start);
+//        System.out.println(processInstanceId);
+//    }
 }
