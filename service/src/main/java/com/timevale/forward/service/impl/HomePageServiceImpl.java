@@ -394,6 +394,8 @@ public class HomePageServiceImpl implements HomePageService {
                    .stream().collect(Collectors.toMap(BaseInfoResponse::getAccount, Function.identity()));
            List<String> containProjectInfo = result.stream().map(HomePageProjectBoardVO::getUserId).collect(Collectors.toList());
 
+           allMyStaffNameWithSelf = allMyStaffInfoWithSelfInfo.stream().map(BaseInfoResponse::getUserId).collect(Collectors.toSet());
+
            allMyStaffNameWithSelf.removeAll(containProjectInfo);
 
            for (String userId : allMyStaffNameWithSelf) {
