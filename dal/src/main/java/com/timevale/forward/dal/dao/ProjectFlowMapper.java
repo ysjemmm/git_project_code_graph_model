@@ -19,7 +19,7 @@ public interface ProjectFlowMapper {
      * @param id id
      * @return 项目流程信息
      */
-    ProjectFlowDO get(@Param("id") Long id);
+    ProjectFlowDO get(@Param("id") Long id,@Param("flowId") String flowId);
 
     /**
      * 查询

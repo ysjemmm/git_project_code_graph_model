@@ -5,6 +5,7 @@ import lombok.Getter;
 /**
  * @author by YangXu
  * @date 2021/12/15 17:13
+ @Getter
  */
 @Getter
 public enum ProjectFlowStatusEnum {
@@ -31,5 +32,4 @@ public enum ProjectFlowStatusEnum {
         }
         return "";
     }
-
 }

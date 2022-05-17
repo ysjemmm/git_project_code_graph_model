@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
 import com.timevale.forward.dal.dao.ProjectNodeMapper;
@@ -26,9 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -76,7 +75,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         }
         ProjectNodeDO nodeDO = list.get(0);
         projectNodeMapper.updateActualDateById(nodeDO.getId(), null);
-//        epeiusClient.start()
+//        String processInstanceId = startWorkflow(projectFlowAddReq);
         projectFlowDO.setFlowId("1");
         projectFlowDO.setStatus(ProjectFlowStatusEnum.REVIEWING.getCode());
         projectFlowMapper.insert(projectFlowDO);
@@ -87,35 +86,37 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
     @Override
     public BaseResult<ProjectFlowDetailVO> get(Long projectFlowId) {
         log.info("查看详设评审,参数:{}", projectFlowId);
-        ProjectFlowDO oldFlowDo = projectFlowMapper.get(projectFlowId);
-        if(oldFlowDo==null){
+        ProjectFlowDO oldFlowDo = projectFlowMapper.get(projectFlowId,null);
+        if (oldFlowDo == null) {
             throw new BaseBizRuntimeException("找不到该审批流程");
         }
+
+        List<String> reviewList = JSONObject.parseArray(oldFlowDo.getReview(), String.class);
+        List<String> reviewIdList = JSONObject.parseArray(oldFlowDo.getReviewId(), String.class);
+        Map<String, PersonVO> reviewMap = new HashMap<>();
+        List<PersonVO> reviews = new ArrayList<>();
+        for (int i = 0; i < reviewList.size(); i++) {
+            PersonVO personVO = new PersonVO();
+            personVO.setUserName(reviewList.get(i));
+            personVO.setUserId(reviewIdList.get(i));
+            reviews.add(personVO);
+            String account = StringUtils.substringBefore(reviewList.get(i), "-");
+//            reviewMap.put(account, personVO);
+        }
+
         if (ProjectFlowStatusEnum.REVIEWING.getCode().equals(oldFlowDo.getStatus())) {
-            if(StringUtils.isEmpty(oldFlowDo.getFlowId())){
+            if (StringUtils.isEmpty(oldFlowDo.getFlowId())) {
                 log.info("无流程id");
                 return BaseResult.success();
             }
-//            List<ProcessLogResponse> responses = epeiusClient.flowLog(oldFlowDo.getFlowId());
-//            responses.stream().map(ProcessLogResponse::getActivityStatus);
-            //若状态终止,更新审核人员,状态信息
             projectFlowMapper.update(oldFlowDo);
         }
         ProjectFlowDetailVO projectFlowDetailVO = ProjectFlowCopier.INSTANCE.convert(oldFlowDo);
         projectFlowDetailVO.setStatusName(ProjectFlowStatusEnum.getTextByCode(oldFlowDo.getStatus()));
-        PersonVO proposer=new PersonVO();
+        PersonVO proposer = new PersonVO();
         proposer.setUserName(oldFlowDo.getProposer());
         proposer.setUserId(oldFlowDo.getProposerId());
         projectFlowDetailVO.setProposerVO(proposer);
-        List<String> reviewList = JSONObject.parseArray(oldFlowDo.getReview(), String.class);
-        List<String> reviewIdList = JSONObject.parseArray(oldFlowDo.getReviewId(), String.class);
-        List<PersonVO> reviews=new ArrayList<>();
-        for (int i = 0; i < reviewList.size(); i++) {
-            PersonVO personVO=new PersonVO();
-            personVO.setUserName(reviewList.get(i));
-            personVO.setUserId(reviewIdList.get(i));
-            reviews.add(personVO);
-        }
         projectFlowDetailVO.setReviews(reviews);
         //附件
         List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(oldFlowDo.getProjectId());
@@ -126,4 +127,34 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         return BaseResult.success(projectFlowDetailVO);
     }
 
+
+    public String startWorkflow(ProjectFlowAddReq projectFlowAddReq) {
+        Map<String, Object> variables = new HashMap<>();
+        StartProcessRequest start = new StartProcessRequest();
+        variables.put("files", new ArrayList<>());
+        variables.put("reviewUrl", projectFlowAddReq.getReviewUrl());
+        variables.put("reviewDate", "2022-05-16");
+        variables.put("reviewName", "星云-敖哲");
+        variables.put("projectName", "ITM线上化一期"+System.currentTimeMillis());
+        variables.put("projectUrl", "http://forward-front-forward-optimize-v2.projectk8s.tsign.cn/projectManagement/edit?id=351&type=check");
+//        List<String> list = Arrays.asList("xingyun", "shanluo", "yangxu");
+        List<String> list = Arrays.asList("xingyun",  "shanluo");
+//        List<String> list = Arrays.asList("xingyun");
+        variables.put("review", list);
+        Map<String, String> file = new HashMap<>();
+        file.put("file_key", "$fa0fb506-ef38-4826-9f0b-94a729ebfa20$1618977430");
+        file.put("file_name", "产品线.png");
+        file.put("download_url", "");
+        List<Map<String, String>> files = new ArrayList<>();
+        files.add(file);
+        variables.put("files", files);
+        start.setApplicationName("forward");
+        start.setProcessDefinitionKey("forward_techReview");
+        start.setStartAccountId("xingyun");
+        start.setVariables(variables);
+        start.setEpeVirtualProcessSwitch(false);
+        String processInstanceId = epeiusClient.start(start);
+        System.out.println(processInstanceId);
+        return processInstanceId;
+    }
 }

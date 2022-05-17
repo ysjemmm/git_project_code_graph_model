@@ -13,7 +13,11 @@
         unreviewed_id,unreviewed,review_fail_id, review_fail, review_fail_reason,review_url,status,is_deleted,create_man_id,
         create_man,create_date,modify_man_id,modify_man,modify_date
         from project_flow
-        where id = #{id} and is_deleted=false
+        <where>
+            <if test="id != null">id = #{id}</if>
+            <if test="flowId != null">flow_id = #{flowId}</if>
+            and is_deleted=false
+        </where>
     </select>
 
     <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
