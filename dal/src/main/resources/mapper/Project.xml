@@ -239,6 +239,8 @@
         <set>
             <if test="nodeStatus != null">node_status = #{nodeStatus},</if>
             <if test="true">modify_date = modify_date,</if>
+            <if test="true">modify_man = modify_man,</if>
+            <if test="true">modify_man_id = modify_man_id,</if>
         </set>
         <where>
             id = #{id}
