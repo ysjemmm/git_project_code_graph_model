@@ -246,7 +246,7 @@ public class HomePageServiceImpl implements HomePageService {
         if(HomePageTabEnum.TEAM.getCode().equals(homePageBaseReq.getTabType())){
             riskWarningGroup.forEach((k, v) -> {
                 Optional<HomePageRiskWarningDTO> max = v.stream()
-                        .filter(e -> ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode().equals(e.getRiskType()))
+                        .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()))
                         .max((a, b) -> {
                             int compare = a.getNodeActualDate().compareTo(b.getNodeActualDate());
                             if(compare == 0){
