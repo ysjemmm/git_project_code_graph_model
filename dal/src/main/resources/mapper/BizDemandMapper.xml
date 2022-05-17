@@ -61,14 +61,7 @@
                 reject_reason = #{rejectReason},
             </if>
             <if test="planReleaseDate!=null">
-                <choose>
-                    <when test="planReleaseDate lt 0">
-                        plan_release_date = null,
-                    </when>
-                    <otherwise>
-                        plan_release_date = #{planReleaseDate},
-                    </otherwise>
-                </choose>
+                plan_release_date = #{planReleaseDate},
             </if>
             <if test="true">
                 modify_man_id = #{modifyManId},
@@ -106,11 +99,10 @@
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BizDemandDO">
         select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status, priority,
-               receive_man, receive_man_id, submit_man, submit_man_id, plan_release_date, reason, solve_plan, reject_reason,
+               receive_man, receive_man_id, processor, os, plan_release_date, reason, submit_man, submit_man_id, solve_plan, reject_reason,
                is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
         from biz_demand
         where id = #{id}
-        and is_deleted = false
     </select>
 
     <select id="selectByName" resultType="com.timevale.forward.dal.entity.BizDemandDO">
@@ -241,12 +233,6 @@
                 #{item}
             </foreach>
         </where>
-    </update>
-
-    <update id="updateReason">
-        update biz_demand
-        set reason = #{reason}
-        where id = #{bizDemandId}
     </update>
 
     <update id="updateCreateMan">

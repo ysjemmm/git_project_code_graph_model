@@ -148,9 +148,9 @@ public class BizDemandServiceImpl implements BizDemandService {
         Integer oldStatus = bizDemandDO.getStatus();
 
         // 修改业务需求状态
-        bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
+        bizDemandDO.setPlanReleaseDate(null);
         bizDemandDO.setStatus(BizDemandStatusEnum.INVALID.getCode());
-        bizDemandMapper.update(bizDemandDO);
+        bizDemandMapper.fullUpdate(bizDemandDO);
 
         // 产品关联断开日志
         bizDemandLogComponent.addLogWhenBizDemandInvalid(bizDemandId);
@@ -363,10 +363,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         Integer oldReason = bizDemandDO.getReason();
         Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
 
+        bizDemandDO.setReason(null);
         bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
         bizDemandDO.setPlanReleaseDate(planReleaseDate);
-        bizDemandMapper.update(bizDemandDO);
-        bizDemandMapper.updateReason(bizDemandId, null);
+        bizDemandMapper.fullUpdate(bizDemandDO);
 
         // 通知需求提交人
         messageEventPublisher.publish(new BizDemandReceivedMsgEvent(
@@ -434,9 +434,9 @@ public class BizDemandServiceImpl implements BizDemandService {
         Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
 
         bizDemandDO.setReason(reason);
-        bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
+        bizDemandDO.setPlanReleaseDate(null);
         bizDemandDO.setStatus(BizDemandStatusEnum.REJECT.getCode());
-        bizDemandMapper.update(bizDemandDO);
+        bizDemandMapper.fullUpdate(bizDemandDO);
 
         // 驳回通知
         messageEventPublisher.publish(new BizDemandRejectMsgEvent(
