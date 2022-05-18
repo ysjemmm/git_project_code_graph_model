@@ -52,18 +52,4 @@ public enum ProjectNodeEnum {
             return aCode.compareTo(bCode);
         });
     }
-
-    public final static Map<Integer, String> DEFAULT_NODE = new HashMap<Integer, String>() {{
-        put(1, ProjectNodeEnum.START_PLAN.getText());
-        put(2, ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText());
-        put(3, ProjectNodeEnum.DEMAND_CONSTRUE.getText());
-        put(4, ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText());
-        put(5, ProjectNodeEnum.DEVELOP_START.getText());
-        put(6, ProjectNodeEnum.WRITE_TEST_CASES.getText());
-        put(7, ProjectNodeEnum.USE_CASE_REVIEW.getText());
-        put(8, ProjectNodeEnum.SUBMIT_TEST.getText());
-        put(9, ProjectNodeEnum.TEST_START.getText());
-        put(10, ProjectNodeEnum.PUBLISH_SIMULATE.getText());
-        put(11, ProjectNodeEnum.PUBLISH_OFFICIAL.getText());
-    }};
 }

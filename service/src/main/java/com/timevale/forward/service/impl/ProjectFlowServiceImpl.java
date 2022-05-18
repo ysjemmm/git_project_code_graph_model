@@ -19,6 +19,8 @@ import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.ProjectFlowCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
+import com.timevale.lowcode.support.api.ProcessQueryRpcService;
+import com.timevale.lowcode.support.api.TaskQueryRpcService;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +51,12 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
 
     @Resource
     private FileComponent fileComponent;
+
+    @Resource
+    private ProcessQueryRpcService processQueryRpcService;
+
+    @Resource
+    private TaskQueryRpcService taskQueryRpcService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
