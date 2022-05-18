@@ -24,7 +24,9 @@ public enum CommentTypeEnum {
     // 5线上bug
     BUG_ONLINE(5,"线上bug"),
     // 6故障单
-    TROUBLE_TICKET(6,"故障单")
+    TROUBLE_TICKET(6,"故障单"),
+    // 7 线上bug跳转git链接
+    BUG_ONLINE_URL(7,"线上bug(git链接)");
     ;
 
     private final Integer code;

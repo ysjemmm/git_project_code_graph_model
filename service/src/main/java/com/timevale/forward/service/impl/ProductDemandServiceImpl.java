@@ -1,6 +1,5 @@
 package com.timevale.forward.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -16,7 +15,10 @@ import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
-import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.request.BatchTransferReq;
+import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
+import com.timevale.forward.facade.api.request.ProductDemandAddReq;
+import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
@@ -358,6 +360,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     , BizDemandStatusEnum.INCLUDE_PROJECT.getCode()
                     , BizDemandStatusEnum.PROJECTING.getCode()
                     , BizDemandStatusEnum.REJECT.getCode()
+                    , BizDemandStatusEnum.PD_LINKED.getCode()
                     , BizDemandStatusEnum.AVAILABLE.getCode()));
         }
         // 过滤掉已经关联的业务需求

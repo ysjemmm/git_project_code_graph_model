@@ -3,15 +3,20 @@ package com.timevale.forward.service.integration.epeius.impl;
 import com.alibaba.fastjson.JSON;
 import com.timevale.epeius.service.api.FlowService;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
-import com.timevale.epeius.service.model.response.ProcessLogResponse;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
+import com.timevale.lowcode.support.api.ProcessQueryRpcService;
+import com.timevale.lowcode.support.api.TaskQueryRpcService;
+import com.timevale.lowcode.support.request.process.ProcessQueryRequest;
+import com.timevale.lowcode.support.request.task.TaskHandleUserQueryRequest;
+import com.timevale.lowcode.support.response.RpcResponse;
+import com.timevale.lowcode.support.response.process.ProcessResponse;
+import com.timevale.lowcode.support.response.task.TaskHandleUserResponse;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * @author xingyun
@@ -23,6 +28,12 @@ public class EpeiusClientImpl implements EpeiusClient {
 
     @Resource
     private FlowService flowService;
+
+    @Resource
+    private ProcessQueryRpcService processQueryRpcService;
+
+    @Resource
+    private TaskQueryRpcService taskQueryRpcService;
 
     @Override
     public String start(StartProcessRequest start) {
@@ -42,19 +53,40 @@ public class EpeiusClientImpl implements EpeiusClient {
     }
 
     @Override
-    public List<ProcessLogResponse> flowLog(String processInstanceId) {
+    public ProcessResponse getProcessInfo(String processInstanceId) {
         try {
-            log.info("查询工作流日志 start: {}", JSON.toJSONString(processInstanceId));
-            BaseResult<List<ProcessLogResponse>> result = flowService.processLog(processInstanceId);
-            if (result == null || !result.ifSuccess() || result.getData() == null) {
-                log.error("查询工作流日志失败 result: {}", result);
-                throw new BaseBizRuntimeException("查询工作流日志失败");
+            log.info("查询工作流 processInstanceId: {}", processInstanceId);
+            ProcessQueryRequest request=new ProcessQueryRequest();
+            request.setProcessInstanceId(processInstanceId);
+            RpcResponse<ProcessResponse> response = processQueryRpcService.getProcessInfo(request);
+            if (response == null || response.getData()==null) {
+                log.error("查询工作流 response: {}", response);
+                throw new BaseBizRuntimeException("查询工作流失败");
             }
-            log.info("查询工作流日志 result: {}", result.getData());
-            return result.getData();
+            log.info("查询工作流 response: {}", response.getData());
+            return response.getData();
         } catch (Exception e) {
-            log.warn("查询工作流日志失败: ", e);
-            throw new BaseBizRuntimeException("查询工作流日志失败");
+            log.warn("查询工作流失败: ", e);
+            throw new BaseBizRuntimeException("查询工作流失败");
+        }
+    }
+
+    @Override
+    public TaskHandleUserResponse getTaskHandleUserList(String processInstanceId) {
+        try {
+            log.info("查询工作流人员信息 processInstanceId: {}", processInstanceId);
+            TaskHandleUserQueryRequest request=new TaskHandleUserQueryRequest();
+            request.setTaskId(processInstanceId);
+            RpcResponse<TaskHandleUserResponse> response = taskQueryRpcService.getTaskHandleUserList(request);
+            if (response == null || response.getData()==null) {
+                log.error("查询工作流人员信息 response: {}", response);
+                throw new BaseBizRuntimeException("查询工作流人员信息失败");
+            }
+            log.info("查询工作流人员信息 result: {}", response.getData());
+            return response.getData();
+        } catch (Exception e) {
+            log.warn("查询工作流人员信息失败: ", e);
+            throw new BaseBizRuntimeException("查询工作流人员信息失败");
         }
     }
 }

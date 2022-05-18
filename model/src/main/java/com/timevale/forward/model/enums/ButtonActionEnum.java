@@ -156,6 +156,11 @@ public enum ButtonActionEnum {
     TRANSFER("转交"),
 
     /**
+     * 发起详设评审
+     */
+    START_REVIEW("发起详设评审"),
+
+    /**
      * 已处理（无需开发）
      */
     COMPLETED_NOT_DEV("已处理（无需开发）");

@@ -1,9 +1,8 @@
 package com.timevale.forward.service.integration.epeius;
 
 import com.timevale.epeius.service.model.request.StartProcessRequest;
-import com.timevale.epeius.service.model.response.ProcessLogResponse;
-
-import java.util.List;
+import com.timevale.lowcode.support.response.process.ProcessResponse;
+import com.timevale.lowcode.support.response.task.TaskHandleUserResponse;
 
 /**
  * @author xingyun
@@ -19,9 +18,18 @@ public interface EpeiusClient {
     String start(StartProcessRequest start);
 
     /**
-     * 流程日志
+     * 流程
      * @param processInstanceId processInstanceId
-     * @return 流程日志信息
+     * @return 流程信息
      */
-    List<ProcessLogResponse> flowLog(String processInstanceId);
+    ProcessResponse getProcessInfo(String processInstanceId);
+
+    /**
+     *
+     * @param taskId taskId
+     * @return 人员信息
+     */
+    TaskHandleUserResponse getTaskHandleUserList(String taskId);
+
+
 }

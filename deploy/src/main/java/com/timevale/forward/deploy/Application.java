@@ -29,6 +29,7 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
         "com.timevale.forward.facade.api",
         "com.timevale.security.facade.api",
         "com.timevale.erp.message.service.api",
+        "com.timevale.lowcode.support.api",
         "com.timevale.epeius.service.api"
 })
 @MapperScan("com.timevale.forward.dal")

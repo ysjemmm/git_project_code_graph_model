@@ -14,8 +14,8 @@
         create_man,create_date,modify_man_id,modify_man,modify_date
         from project_flow
         <where>
-            <if test="id != null">id = #{id}</if>
-            <if test="flowId != null">flow_id = #{flowId}</if>
+            <if test="id != null"> id = #{id}</if>
+            <if test="flowId != null">and flow_id = #{flowId}</if>
             and is_deleted=false
         </where>
     </select>

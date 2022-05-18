@@ -7,6 +7,7 @@ import com.timevale.forward.facade.api.client.CommentService;
 import com.timevale.forward.facade.api.query.CommentQueryList;
 import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.request.CommentAddReq;
+import com.timevale.forward.facade.api.request.CommentBatchAddReq;
 import com.timevale.forward.facade.api.result.CommentVO;
 import com.timevale.forward.model.enums.CommentTypeEnum;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -68,6 +69,15 @@ public class CommentServiceImpl implements CommentService {
         List<CommentDO> commentDOList = commentMapper.select(toId, type);
         List<CommentVO> commentVOList = CommentCopier.INSTANCE.convert(commentDOList);
 
+        if (CommentTypeEnum.BUG_ONLINE.getCode().equals(type)) {
+            //线上bug的评论有2种:1.普通评论,2.gitlab url
+            List<CommentDO> commentDos = commentMapper.select(toId, CommentTypeEnum.BUG_ONLINE_URL.getCode());
+            List<CommentVO> commentVos = CommentCopier.INSTANCE.convert(commentDos);
+            commentVos.forEach(a->{
+                a.setIsGitLabUrl(true);
+            });
+            commentVOList.addAll(commentVos);
+        }
         return BaseResult.success(commentVOList);
     }
 
@@ -114,6 +124,19 @@ public class CommentServiceImpl implements CommentService {
                 commentDO.getContent()
         ));
 
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> add(CommentBatchAddReq commentBatchAddReq) {
+        List<Long> toIds = commentBatchAddReq.getToIds();
+        toIds.forEach(a->{
+            CommentDO commentDO=new CommentDO();
+            commentDO.setContent(commentBatchAddReq.getContent());
+            commentDO.setToId(a);
+            commentDO.setType(commentBatchAddReq.getType());
+            commentMapper.insert(commentDO);
+        });
         return BaseResult.success(true);
     }
 
