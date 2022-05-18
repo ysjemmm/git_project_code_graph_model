@@ -289,7 +289,7 @@ public class ProjectServiceImpl implements ProjectService {
             if (match && !checkProductRelease(projectModifyReq.getId())) {
                 throw new BaseBizRuntimeException("该项目还有bug未关闭，请关闭后再发布");
             }
-            if (match && projectModifyReq.getIsPlatformPublish()) {
+            if (match && Integer.valueOf(1).equals(projectModifyReq.getIsPlatformPublish())) {
                 if (!projectPublishPlanComponent.linkPublishPlan(projectModifyReq.getId())) {
                     throw new BaseBizRuntimeException("请关联发布计划");
                 }

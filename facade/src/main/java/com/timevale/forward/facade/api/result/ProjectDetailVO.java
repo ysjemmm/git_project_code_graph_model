@@ -97,5 +97,5 @@ public class ProjectDetailVO extends ToString {
     private Long projectFlowId;
 
     @ApiModelProperty("是否在发布平台发布")
-    private Boolean isPlatformPublish;
+    private Integer isPlatformPublish;
 }

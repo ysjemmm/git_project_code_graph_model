@@ -88,6 +88,6 @@ public class ProjectDO extends BaseDO {
     /**
      * 是否在发布平台发布
      */
-    private Boolean isPlatformPublish;
+    private Integer isPlatformPublish;
 
 }
