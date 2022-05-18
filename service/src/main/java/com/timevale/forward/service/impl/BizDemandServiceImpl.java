@@ -32,6 +32,7 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -146,6 +147,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 记录旧状态
         Integer oldStatus = bizDemandDO.getStatus();
+        Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
 
         // 修改业务需求状态
         bizDemandDO.setPlanReleaseDate(null);
@@ -175,6 +177,13 @@ public class BizDemandServiceImpl implements BizDemandService {
                 BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                 true,
                 ButtonActionEnum.INVALID.getText());
+
+        bizDemandLogComponent.addLogWhenModifyData(
+                PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
+                "",
+                bizDemandId,
+                BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
+                false);
 
         return BaseResult.success(true);
     }
@@ -577,7 +586,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             // 通知
             HashSet<Long> bizDemandIdSet = new HashSet<>(bizDemandIdList);
             bizDemandDOList = bizDemandDOList.stream().filter(e -> bizDemandIdSet.contains(e.getId())).collect(Collectors.toList());
-            bizDemandDOList.parallelStream().forEach(e -> {
+            bizDemandDOList.forEach(e -> {
                 messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
                         this,
                         e.getId(),
@@ -625,11 +634,38 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 判空
         if(CollectionUtils.isNotEmpty(bizChangeLogDOList)){
-            // 日志
-            bizChangeLogMapper.batchInsert(bizChangeLogDOList);
-            // 实体
+            // 变更提交人及
+            Optional<BaseInfoResponse> baseInfo = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(newSubmitManId)).stream().findAny();
+            if(!baseInfo.isPresent()){
+                throw new BaseBizRuntimeException("接收人没有默认部门，无法修改");
+            }
+
+            // 部门日志
+            Long groupId = Long.valueOf(baseInfo.get().getDefaultGroup().getGroupId());
+            String newDeptName = bizDemandComponent.getDeptChainName(groupId);
+
+            // 筛选真正需要变更的业务需求id
             bizDemandIdList = bizChangeLogDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
-            bizDemandMapper.updateSubmitMan(bizDemandIdList, newSubmitMan, newSubmitManId);
+            Set<Long> bizDemandIdSet = new HashSet<>(bizDemandIdList);
+            for (BizDemandDO e : bizDemandDOList) {
+                if(!bizDemandIdSet.contains(e.getId())){
+                    continue;
+                }
+
+                // 部门日志
+                String oldDeptName = bizDemandComponent.getDeptChainName(e.getDeptId());
+                BizChangeLogDO logDO = bizDemandLogComponent.getLogWhenModifyData(
+                        oldDeptName,
+                        newDeptName,
+                        e.getId(),
+                        BizChangeLogFieldEnum.DEPARTMENT.getText(),
+                        false
+                );
+                bizChangeLogDOList.add(logDO);
+            }
+
+            bizChangeLogMapper.batchInsert(bizChangeLogDOList);
+            bizDemandMapper.updateSubmitMan(bizDemandIdList, newSubmitMan, newSubmitManId, groupId);
         }
 
         return BaseResult.success(true);

@@ -56,6 +56,10 @@ public class DistributeConfig {
      * 风险预警 —— 开发RD,测试QA，提测，任务逾期
      *
      */
+    public DistributeConfigVO getRiskWarningPD() {
+        return databases.get("pd.riskWarning");
+    }
+
     public DistributeConfigVO getRiskWarningRD() {
         return databases.get("rd.riskWarning");
     }

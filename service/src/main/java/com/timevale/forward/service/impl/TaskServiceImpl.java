@@ -480,7 +480,8 @@ public class TaskServiceImpl implements TaskService {
             List<PersonDO> personDOList = executorMap.get(e.getId());
             String executors = personDOList.stream().map(PersonDO::getUserName).collect(Collectors.joining(","));
             e.setExecutor(executors);
-            // 状态
+
+            e.setProjectId(projectId);
             e.setStatusName(TaskStatusEnum.getTextByCode(e.getStatus()));
         }
 

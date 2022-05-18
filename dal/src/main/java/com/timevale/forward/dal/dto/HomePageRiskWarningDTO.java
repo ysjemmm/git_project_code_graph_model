@@ -43,6 +43,12 @@ public class HomePageRiskWarningDTO {
     private Date planEndDate;
 
     /**
+     * 项目计划上线时间
+     */
+    @JSONField(name = "node_actual_date")
+    private Date nodeActualDate;
+
+    /**
      * 节点名称
      */
     @JSONField(name = "node_name")

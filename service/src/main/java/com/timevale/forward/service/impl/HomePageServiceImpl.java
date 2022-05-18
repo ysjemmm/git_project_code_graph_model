@@ -247,13 +247,36 @@ public class HomePageServiceImpl implements HomePageService {
         Map<Long, List<HomePageRiskWarningSubmitTestDTO>> riskWarningSubmitTestGroup = submitTestDTOList.stream()
                 .collect(Collectors.groupingBy(HomePageRiskWarningSubmitTestDTO::getProjectId));
 
+        log.info("[getRiskWarning]项目风险map：{}",riskWarningGroup);
+
+        // TL 身份保留一个
+        if(HomePageTabEnum.TEAM.getCode().equals(homePageBaseReq.getTabType())){
+            riskWarningGroup.forEach((k, v) -> {
+                Optional<HomePageRiskWarningDTO> max = v.stream()
+                        .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()))
+                        .max((a, b) -> {
+                            int compare = a.getNodeActualDate().compareTo(b.getNodeActualDate());
+                            if(compare == 0){
+                                Integer aCode = ProjectNodeEnum.getCodeByName(a.getNodeName());
+                                Integer bCode = ProjectNodeEnum.getCodeByName(b.getNodeName());
+                                return aCode.compareTo(bCode);
+                            }
+                            return compare;
+                        });
+                v.removeIf(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()));
+                max.ifPresent(v::add);
+            });
+        }
+
+        log.info("[getRiskWarning]项目风险过滤过程预期：{}",riskWarningGroup);
+
         // 节点排序
-        riskWarningGroup.forEach((key, value) -> value.sort((x, y) -> {
+        riskWarningGroup.forEach((k, v) -> v.sort((x, y) -> {
             Integer xOverDueDay = Integer.valueOf(x.getOverdueDay());
             Integer yOverDueDay = Integer.valueOf(y.getOverdueDay());
             return yOverDueDay.compareTo(xOverDueDay);
         }));
-        riskWarningTaskGroup.forEach((key, value) -> value.sort((x, y) -> {
+        riskWarningTaskGroup.forEach((k, v) -> v.sort((x, y) -> {
             BigDecimal xOverTime = new BigDecimal(x.getOverdueTime());
             BigDecimal yOverTime = new BigDecimal(y.getOverdueTime());
             return yOverTime.compareTo(xOverTime);
@@ -282,6 +305,8 @@ public class HomePageServiceImpl implements HomePageService {
             riskWarningVO.setHomePageSubmitTestVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
         });
 
+        log.info("[getRiskWarning]项目风险结果：{}",resultMap);
+
         // 按项目计划上线时间排序
         List<HomePageRiskWarningVO> resultList = Lists.newArrayList(resultMap.values());
         resultList.sort(Comparator.comparing(HomePageRiskWarningVO::getPlanEndDate));
@@ -304,7 +329,7 @@ public class HomePageServiceImpl implements HomePageService {
         if(HomePageTabEnum.INDIVIDUAL.getCode().equals(homePageProjectBoardReq.getTabType())){
             allMyStaffInfoWithSelfInfo = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(userInfo.getId()));
         }else{
-            allMyStaffInfoWithSelfInfo = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), true);
+            allMyStaffInfoWithSelfInfo = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
         }
         //我和我所有下属的职能类型 Map(userid,jobFunction)
         Map<String, String> allMyStaffInfoWithSelfJobFunction = allMyStaffInfoWithSelfInfo
@@ -369,9 +394,12 @@ public class HomePageServiceImpl implements HomePageService {
 
        if(HomePageTabEnum.TEAM.getCode().equals(homePageProjectBoardReq.getTabType())){
            // 团队面板,团队成员无项目信息时,也需要展示人员信息
+           allMyStaffInfoWithSelfInfo = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
            Map<String, BaseInfoResponse> baseInfoResponseMap = allMyStaffInfoWithSelfInfo
                    .stream().collect(Collectors.toMap(BaseInfoResponse::getAccount, Function.identity()));
            List<String> containProjectInfo = result.stream().map(HomePageProjectBoardVO::getUserId).collect(Collectors.toList());
+
+           allMyStaffNameWithSelf = allMyStaffInfoWithSelfInfo.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toSet());
 
            allMyStaffNameWithSelf.removeAll(containProjectInfo);
 
@@ -395,8 +423,8 @@ public class HomePageServiceImpl implements HomePageService {
     public List<HomePageProjectBoardDTO> filterByDate(UserTypeEnum userType, Date startDate, Date endDate, List<HomePageProjectBoardDTO> list) {
         if (userType.equals(UserTypeEnum.PD)) {
             return list.stream().filter(e -> {
-                Date nodeStart = DateUtil.min(e.getPlanEndDate(), e.getDemandInternalAudit(), e.getDemandConstrue());
-                Date nodeEnd = DateUtil.max(e.getPlanEndDate(), e.getDemandInternalAudit(), e.getDemandConstrue());
+                Date nodeStart = DateUtil.min(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue());
+                Date nodeEnd = DateUtil.max(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue());
                 return DateUtil.haveOverlap(nodeStart, nodeEnd, startDate, endDate);
             }).collect(Collectors.toList());
         } else if (userType.equals(UserTypeEnum.RD)) {

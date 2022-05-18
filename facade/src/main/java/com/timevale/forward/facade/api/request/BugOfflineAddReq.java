@@ -72,4 +72,7 @@ public class BugOfflineAddReq extends BaseReq {
 
     @NotNull(message = "经办人花名拼音")
     private String operatorId;
+
+    @ApiModelProperty(value = "bug平台来源")
+    private String origin;
 }

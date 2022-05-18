@@ -118,6 +118,11 @@ public class BugOfflineDO extends BaseDO {
     private Integer unhandleReason;
 
     /**
+     * bug平台来源
+     */
+    private String origin;
+
+    /**
      * bug产生原因
      */
     private String cause;

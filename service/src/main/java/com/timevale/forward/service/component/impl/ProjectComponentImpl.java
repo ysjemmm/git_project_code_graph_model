@@ -142,7 +142,13 @@ public class ProjectComponentImpl implements ProjectComponent {
                 .map(ProjectRiskDO::getProjectId)
                 .collect(Collectors.toSet());
         for (ProjectVO e : projectVOList) {
-            e.setContainRisk(riskSet.contains(e.getId()));
+            Integer status = e.getStatus();
+            boolean warn = ProjectStatusEnum.SUSPEND.getCode().equals(status)
+                    || ProjectStatusEnum.INVALID.getCode().equals(status)
+                    || ProjectStatusEnum.RELEASED.getCode().equals(status);
+            if(!warn){
+                e.setContainRisk(riskSet.contains(e.getId()));
+            }
         }
 
         // 返回分页数据

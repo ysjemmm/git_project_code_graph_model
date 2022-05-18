@@ -10,7 +10,10 @@ import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
 import com.timevale.forward.dal.dto.HomePageRiskWarningSubmitTestDTO;
 import com.timevale.forward.dal.dto.HomePageRiskWarningTaskDTO;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectNodeDO;
+import com.timevale.forward.dal.entity.ProjectRiskDO;
+import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.client.ProjectRiskService;
 import com.timevale.forward.facade.api.query.ProjectRiskQueryList;
 import com.timevale.forward.facade.api.request.ProjectRiskAddReq;
@@ -27,8 +30,6 @@ import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateFormatConst;
-import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
-import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -173,6 +174,26 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         List<HomePageRiskWarningTaskDTO> taskDTOList = riskWarningTaskComponent.getRiskWarningTaskAll();
         List<HomePageRiskWarningSubmitTestDTO> testDTOList = riskWarningSubmitTestComponent.getRiskWarningSubmitTestAll();
 
+        // Map<Long, List<HomePageRiskWarningDTO>> riskWarningGroup = nodeDTOList.stream()
+        //         .collect(Collectors.groupingBy(HomePageRiskWarningDTO::getProjectId));
+        // nodeDTOList.clear();
+        // riskWarningGroup.forEach((k, v) -> {
+        //     Optional<HomePageRiskWarningDTO> max = v.stream()
+        //             .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()))
+        //             .max((a, b) -> {
+        //                 int compare = b.getNodeActualDate().compareTo(a.getNodeActualDate());
+        //                 if(compare == 0){
+        //                     Integer aCode = ProjectNodeEnum.getCodeByName(a.getNodeName());
+        //                     Integer bCode = ProjectNodeEnum.getCodeByName(b.getNodeName());
+        //                     return aCode.compareTo(bCode);
+        //                 }
+        //                 return compare;
+        //             });
+        //     v.removeIf(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()));
+        //     max.ifPresent(v::add);
+        //     nodeDTOList.addAll(v);
+        // });
+
         // sql端 唯一id
         Map<String, ProjectRiskDO> pendingRiskMap = createUniqueMap(pendingRiskList);
         Map<String, ProjectRiskDO> completeRiskMap = createUniqueMap(completeRiskList);
@@ -182,7 +203,6 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         newRiskMap.putAll(taskDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getTaskId(), Function.identity(), (a, b) -> a)));
         newRiskMap.putAll(testDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getTestBillId(), Function.identity(), (a, b) -> a)));
         newRiskMap.putAll(nodeDTOList.stream().collect(Collectors.toMap(e -> e.getRiskType() + "-" + e.getProjectId() + "-" + e.getNodeName(), Function.identity(), (a, b) -> a)));
-
 
         // 判断去重，更新完成处理的风险
         List<ProjectRiskDO> updateList = new ArrayList<>();
@@ -337,13 +357,12 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                 }
 
                 if(compare > 0){
-                    result = elapsedTimeClient.getElapsedTime(planDate, actualDate);
+                    result = elapsedTimeClient.getElapsedTimeAllDay(planDate, actualDate);
                 }else if(compare < 0){
-                    result = - elapsedTimeClient.getElapsedTime(actualDate, planDate);
+                    result = - elapsedTimeClient.getElapsedTimeAllDay(actualDate, planDate);
                 }
                 BigDecimal elapsedTime = new BigDecimal(result.toString());
-                elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.HALF_UP);
-
+                elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.ONE_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.UP);
                 sign = elapsedTime.toString();
             }
         }

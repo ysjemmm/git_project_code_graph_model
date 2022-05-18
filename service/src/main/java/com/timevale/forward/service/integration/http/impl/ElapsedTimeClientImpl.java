@@ -34,16 +34,30 @@ public class ElapsedTimeClientImpl implements ElapsedTimeClient {
     @Value("${elapsedTime.baseUrl:http://dingtalk-testvpc-svc.local-test:8181/workday/elapsedTimeV2/}")
     private String baseUrl;
 
+    @Value("${elapsedTime.allDay:http://dingtalk-testvpc-svc.local-test:8181/workday/elapsedTime/}")
+    private String baseUrlAllDay;
+
     @Override
     public Long getElapsedTime(Date startTime, Date endTime) {
-        log.info("startTime: {},endTime: {}", startTime, endTime);
+        log.info("workTime: startTime: {},endTime: {}", startTime, endTime);
+        return getTime(startTime, endTime, baseUrl);
+    }
+
+    @Override
+    public Long getElapsedTimeAllDay(Date startTime, Date endTime) {
+        log.info("allTime: startTime: {},endTime: {}", startTime, endTime);
+        return getTime(startTime, endTime, baseUrlAllDay);
+    }
+
+    private Long getTime(Date startTime, Date endTime, String url){
+
         JSONObject param = new JSONObject();
         param.put("startTime", DateUtil.parseToString(startTime));
         param.put("endTime", DateUtil.parseToString(endTime));
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<JSONObject> entity = new HttpEntity<>(param, httpHeaders);
-        String result = restTemplate.postForObject(baseUrl, entity, String.class);
+        String result = restTemplate.postForObject(url, entity, String.class);
         JSONObject jsonObject = JSONObject.parseObject(result);
         Integer code = jsonObject.getInteger("code");
         if (Integer.valueOf(0).equals(code)) {

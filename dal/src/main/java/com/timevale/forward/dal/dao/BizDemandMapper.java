@@ -93,7 +93,7 @@ public interface BizDemandMapper {
      * @param submitMan   提交人
      * @param submitManId 提交人id
      */
-    int updateSubmitMan(@Param("idList") List<Long> idList, @Param("submitMan") String submitMan,@Param("submitManId") String submitManId);
+    int updateSubmitMan(@Param("idList") List<Long> idList, @Param("submitMan") String submitMan,@Param("submitManId") String submitManId, @Param("deptId") Long deptId);
 
 
     /**

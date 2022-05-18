@@ -83,4 +83,9 @@ public interface DateFormatConst {
      * 一年(365天)的毫秒数
      */
     long ONE_YEAR = 365 * ONE_DAY;
+
+    /**
+     * 工作日的毫秒数
+     */
+    long WORK_DAY = ONE_HOUR * 8L;
 }
