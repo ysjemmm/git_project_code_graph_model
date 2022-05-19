@@ -666,6 +666,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         //保存老的状态
         String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
+        String oldCause = bugOfflineDO.getCause();
+        String oldPlan = bugOfflineDO.getSolvePlan();
 
         //bug状态变为"待验收",上一环节经办人变成目前经办人，目前经办人变成提出人
         bugOfflineDO.setStatus(BugStatusEnum.ACCEPTANCE.getCode());
@@ -687,14 +689,14 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         statusLogDO.setField(BugLogFieldEnum.STATUS.getText());
 
         BugLogDO causeLogDO = new BugLogDO();
-        causeLogDO.setOldValue(oldValue);
+        causeLogDO.setOldValue(oldCause);
         causeLogDO.setNewValue(bugOfflineReq.getCause());
         causeLogDO.setMainId(bugOfflineReq.getId());
         causeLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
         causeLogDO.setField(BugLogFieldEnum.CAUSE.getText());
 
         BugLogDO solvePlanLogDO = new BugLogDO();
-        solvePlanLogDO.setOldValue("");
+        solvePlanLogDO.setOldValue(oldPlan);
         solvePlanLogDO.setNewValue(bugOfflineReq.getSolvePlan());
         solvePlanLogDO.setMainId(bugOfflineReq.getId());
         solvePlanLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());

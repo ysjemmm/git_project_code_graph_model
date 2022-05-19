@@ -75,7 +75,7 @@ public class ProjectPublishPlanComponentImpl implements ProjectPublishPlanCompon
         PublishPlanQueryList publishPlanQueryList = new PublishPlanQueryList();
         publishPlanQueryList.setId(StringUtils.join(publishPlanIds, ","));
         PublishPlanResultDTO resultDTO = publishPlatformClient.list(publishPlanQueryList);
-        return resultDTO.getList().stream().anyMatch(a -> !PublishStatusEnum.FINISHED.name().equals(a.getStatus()));
+        return resultDTO.getList().stream().anyMatch(a -> !PublishStatusEnum.FINISHED.name().equals(a.getReleaseStatus()));
     }
 
     @Override

@@ -33,7 +33,7 @@ public class MqListener implements Listener {
             try {
                 WorkflowBody body = JSON.parseObject(message, WorkflowBody.class);
                 log.info("body: {}", JSON.toJSONString(body));
-//                projectFlowComponent.updateFlowInfo(body.getProcessInstanceId());
+                projectFlowComponent.updateFlowInfo(body.getProcessInstanceId());
                 log.info("消费完成");
             } catch (Exception e) {
                 log.warn("消费失败", e);

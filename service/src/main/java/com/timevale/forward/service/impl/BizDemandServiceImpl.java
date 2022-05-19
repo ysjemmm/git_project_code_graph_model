@@ -682,6 +682,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         Integer newStatus = BizDemandStatusEnum.TO_CONFIRM.getCode();
 
         // 更新
+        String oldRjectReason = bizDemandDO.getRejectReason();
         bizDemandDO.setRejectReason("");
         bizDemandDO.setStatus(newStatus);
         bizDemandDO.setSolvePlan(solvePlan);
@@ -697,6 +698,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                 true,
                 ButtonActionEnum.COMPLETED_NOT_DEV.getText());
+
         bizDemandLogComponent.addLogWhenModifyData(
                 "",
                 solvePlan,
@@ -704,11 +706,20 @@ public class BizDemandServiceImpl implements BizDemandService {
                 BizChangeLogFieldEnum.SOLVE_PLAN.getText(),
                 true);
 
+        if(StringUtils.isNotEmpty(oldRjectReason)){
+            bizDemandLogComponent.addLogWhenModifyData(
+                    oldRjectReason,
+                    "",
+                    id,
+                    BizChangeLogFieldEnum.REJECT_REASON.getText(),
+                    true);
+        }
         // 通知需求提交人
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         messageEventPublisher.publish(new BizDemandCompletedMsgEvent(
                 this,
                 bizDemandDO.getId(),
-                LocalSessionUtils.getUserInfo().getId(),
+                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 bizDemandDO.getSubmitManId(),
                 bizDemandDO.getName()
         ));
@@ -780,10 +791,11 @@ public class BizDemandServiceImpl implements BizDemandService {
 
 
         // 通知
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         messageEventPublisher.publish(new BizDemandCompletedRejectMsgEvent(
                 this,
                 bizDemandDO.getId(),
-                LocalSessionUtils.getUserInfo().getId(),
+                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 bizDemandDO.getReceiveManId(),
                 bizDemandDO.getName(),
                 bizDemandDO.getRejectReason()
