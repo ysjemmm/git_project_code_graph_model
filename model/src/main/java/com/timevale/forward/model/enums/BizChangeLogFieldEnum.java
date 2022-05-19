@@ -39,7 +39,7 @@ public enum BizChangeLogFieldEnum {
 
     REJECT_REASON("拒绝原因"),
 
-    SOLVE_PLAN("解决方案"),
+    SOLVE_PLAN("处理方案"),
 
     PLAN_RELEASE_DATE("预期上线时间"),
 

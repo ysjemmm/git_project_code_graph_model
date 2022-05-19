@@ -794,11 +794,11 @@ public class BizDemandServiceImpl implements BizDemandService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         messageEventPublisher.publish(new BizDemandCompletedRejectMsgEvent(
                 this,
-                bizDemandDO.getId(),
+                oldBizDemandDO.getId(),
                 userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
-                bizDemandDO.getReceiveManId(),
-                bizDemandDO.getName(),
-                bizDemandDO.getRejectReason()
+                oldBizDemandDO.getReceiveManId(),
+                oldBizDemandDO.getName(),
+                oldBizDemandDO.getRejectReason()
         ));
 
         return BaseResult.success(true);
