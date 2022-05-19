@@ -27,7 +27,4 @@ public class CommentVO extends ToString {
     @ApiModelProperty("创建时间")
     private Date createDate;
 
-    @ApiModelProperty("是否是链接")
-    private Boolean isGitLabUrl;
-
 }

@@ -69,15 +69,6 @@ public class CommentServiceImpl implements CommentService {
         List<CommentDO> commentDOList = commentMapper.select(toId, type);
         List<CommentVO> commentVOList = CommentCopier.INSTANCE.convert(commentDOList);
 
-        if (CommentTypeEnum.BUG_ONLINE.getCode().equals(type)) {
-            //线上bug的评论有2种:1.普通评论,2.gitlab url
-            List<CommentDO> commentDos = commentMapper.select(toId, CommentTypeEnum.BUG_ONLINE_URL.getCode());
-            List<CommentVO> commentVos = CommentCopier.INSTANCE.convert(commentDos);
-            commentVos.forEach(a->{
-                a.setIsGitLabUrl(true);
-            });
-            commentVOList.addAll(commentVos);
-        }
         return BaseResult.success(commentVOList);
     }
 

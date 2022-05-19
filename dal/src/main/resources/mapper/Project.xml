@@ -160,7 +160,7 @@
     </select>
 
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select id,name, customer_dev, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date,
+        select id,name,is_platform_publish, customer_dev, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date,
         actual_start_date,actual_end_date,`desc`, create_man_id, create_man,create_date,modify_date
         from project
         where name = #{name} and is_deleted=false

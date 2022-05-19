@@ -22,7 +22,7 @@ public class CommentBatchAddReq extends BaseReq {
     @NotNull(message = "主体id不能为空")
     private List<Long> toIds;
 
-    @ApiModelProperty("主体类型:0:项目,1产品需求,2业务需求,3任务,4线下bug,5线上bug,6故障单,7线上bug(git链接)")
+    @ApiModelProperty("主体类型:0:项目,1产品需求,2业务需求,3任务,4线下bug,5线上bug,6故障单")
     @NotNull(message = "主体类型不能为空")
     private Integer type;
 
