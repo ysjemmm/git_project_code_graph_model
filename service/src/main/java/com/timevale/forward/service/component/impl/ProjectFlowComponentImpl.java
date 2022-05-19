@@ -1,20 +1,26 @@
 package com.timevale.forward.service.component.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.base.Objects;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectNodeMapper;
+import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectFlowDO;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
+import com.timevale.forward.model.enums.ButtonActionEnum;
 import com.timevale.forward.model.enums.ProjectFlowStatusEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
+import com.timevale.forward.service.component.ProjectLogComponent;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.lowcode.support.response.task.TaskHandleUserResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -43,23 +49,36 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
     @Resource
     private ProjectComponent projectComponent;
 
+    @Resource
+    private ProjectMapper projectMapper;
+
+    @Resource
+    private ProjectLogComponent projectLogComponent;
+
     @Override
-    public void updateFlowInfo(ProcessResponse processInfo) {
+    public void updateFlowInfo(String processInstanceId) {
+        if (StringUtils.isEmpty(processInstanceId)) {
+            log.info("流程id为空");
+            return;
+        }
+        ProcessResponse processInfo = epeiusClient.getProcessInfo(processInstanceId);
         List<String> currentTaskIdList = processInfo.getCurrentTaskIdList();
         if (CollectionUtils.isEmpty(currentTaskIdList)) {
             log.info("任务id为空");
             return;
         }
         String processStatus = processInfo.getProcessStatus();
-        log.info("processInfo={}", processInfo);
-        ProjectFlowDO projectFlowDO = projectFlowMapper.get(null, processInfo.getProcessInstanceId());
+        log.info("返回流程信息 processInfo={}", processInfo);
+        ProjectFlowDO projectFlowDO = projectFlowMapper.get(null,processInstanceId);
         if (projectFlowDO == null) {
-            log.info("无详设流程, flowId={}", processInfo.getProcessInstanceId());
+            log.info("无详设流程 flowId={}", processInstanceId);
             return;
         }
         Map<String, Object> flowData = processInfo.getFlowData();
         if (FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
             projectFlowDO.setStatus(ProjectFlowStatusEnum.REVIEW_FAIL.getCode());
+            String rejectReason = flowData.get("rejectReason") == null ? "" : String.valueOf(flowData.get("rejectReason"));
+            projectFlowDO.setReviewFailReason(rejectReason);
         } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
             projectFlowDO.setStatus(ProjectFlowStatusEnum.WITHDRAW.getCode());
         } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
@@ -70,9 +89,16 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
             }
             //更新节点状态
             projectComponent.updateNodeStatus(projectFlowDO.getProjectId());
+
+            Integer newStatus = projectComponent.getStatus(projectFlowDO.getProjectId());
+            ProjectDO oldProjectDO = projectMapper.get(projectFlowDO.getProjectId());
+            if (!Objects.equal(oldProjectDO.getStatus(), newStatus)) {
+                oldProjectDO.setStatus(newStatus);
+                projectMapper.update(oldProjectDO);
+                // 日志处理
+                projectLogComponent.addLogWhenStatusChange(oldProjectDO.getStatus(), newStatus, oldProjectDO.getId(), ButtonActionEnum.START_REVIEW.getText());
+            }
         }
-        String rejectReason = flowData.get("rejectReason") == null ? "" : String.valueOf(flowData.get("rejectReason"));
-        projectFlowDO.setReviewFailReason(rejectReason);
 
         List<String> reviewList = JSONObject.parseArray(projectFlowDO.getReview(), String.class);
         List<String> reviewIdList = JSONObject.parseArray(projectFlowDO.getReviewId(), String.class);
@@ -83,6 +109,7 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
         }
 
         TaskHandleUserResponse taskHandleUserList = epeiusClient.getTaskHandleUserList(currentTaskIdList.get(0));
+        log.info("返回人员信息 taskHandleUserList={}", taskHandleUserList);
         List<String> passIds = taskHandleUserList.getPassedUserList().stream().map(TaskHandleUserResponse.TaskUser::getAccountId).collect(Collectors.toList());
         List<String> passAlias = new ArrayList<>();
         passIds.forEach(a -> {
@@ -109,7 +136,7 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
         projectFlowDO.setReviewFail(CollectionUtils.isEmpty(rejectAlias) ? "" : JSONObject.toJSONString(rejectAlias));
         projectFlowDO.setUnreviewedId(CollectionUtils.isEmpty(reviewIdList) ? "" : JSONObject.toJSONString(reviewIdList));
         projectFlowDO.setUnreviewed(CollectionUtils.isEmpty(unReviewAlias) ? "" : JSONObject.toJSONString(unReviewAlias));
-        log.info("projectFlowDO={}", projectFlowDO);
+        log.info("更新的数据 projectFlowDO={}", projectFlowDO);
         projectFlowMapper.update(projectFlowDO);
     }
 

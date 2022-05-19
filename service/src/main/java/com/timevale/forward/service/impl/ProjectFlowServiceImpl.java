@@ -32,11 +32,9 @@ import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.lowcode.support.api.ProcessQueryRpcService;
 import com.timevale.lowcode.support.api.TaskQueryRpcService;
-import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -146,12 +144,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         }
 
         if (ProjectFlowStatusEnum.REVIEWING.getCode().equals(oldFlowDo.getStatus())) {
-            if (StringUtils.isEmpty(oldFlowDo.getFlowId())) {
-                log.info("无流程id");
-                return BaseResult.success();
-            }
-            ProcessResponse processInfo = epeiusClient.getProcessInfo(oldFlowDo.getFlowId());
-            projectFlowComponent.updateFlowInfo(processInfo);
+            projectFlowComponent.updateFlowInfo(oldFlowDo.getFlowId());
             oldFlowDo = projectFlowMapper.get(projectFlowId, null);
         }
         ProjectFlowDetailVO projectFlowDetailVO = ProjectFlowCopier.INSTANCE.convert(oldFlowDo);
@@ -192,7 +185,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         String reviewName = projectFlowAddReq.getReviews().stream().map(PersonAddReq::getUserName).collect(Collectors.joining(","));
         variables.put("reviewName", reviewName);
         String projectName = projectMapper.get(projectFlowAddReq.getProjectId()).getName();
-        variables.put("projectName", projectName+System.currentTimeMillis());
+        variables.put("projectName", projectName);
         variables.put("projectUrl", String.format(baseUrl, projectFlowAddReq.getProjectId()));
         List<String> reviewIds = projectFlowAddReq.getReviews().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
         variables.put("review", reviewIds);

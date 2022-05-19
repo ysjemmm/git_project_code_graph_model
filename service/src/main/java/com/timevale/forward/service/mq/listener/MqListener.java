@@ -1,38 +1,22 @@
 package com.timevale.forward.service.mq.listener;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
-import com.timevale.epeius.service.enums.FlowStatusEnum;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectNodeMapper;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectFlowDO;
-import com.timevale.forward.dal.entity.ProjectNodeDO;
-import com.timevale.forward.model.enums.ProjectFlowStatusEnum;
-import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.mq.dto.WorkflowBody;
-import com.timevale.forward.service.observer.event.FlowCompleteMsg;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.framework.mq.client.consumer.Listener;
 import com.timevale.framework.mq.client.consumer.ReceiveResult;
 import com.timevale.framework.mq.client.producer.Msg;
-import com.timevale.lowcode.support.response.process.ProcessResponse;
-import com.timevale.lowcode.support.response.task.TaskHandleUserResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author xingyun
@@ -74,102 +58,12 @@ public class MqListener implements Listener {
             try {
                 WorkflowBody body = JSON.parseObject(message, WorkflowBody.class);
                 log.info("body: {}", JSON.toJSONString(body));
-//                if (StringUtils.isEmpty(body.getProcessInstanceId())) {
-//                    log.info("流程id为空");
-//                    return ReceiveResult.success();
-//                }
-//                ProcessResponse processInfo = epeiusClient.getProcessInfo(body.getProcessInstanceId());
-//                if (FlowStatusEnum.PENDING.getValue().equals(processInfo.getProcessStatus())) {
-//                    log.info("流程状态 processStatus:{}",processInfo.getProcessStatus());
-//                    return ReceiveResult.success();
-//                }
-//                projectFlowComponent.updateFlowInfo(processInfo);
+//                projectFlowComponent.updateFlowInfo(body.getProcessInstanceId());
+                log.info("消费完成");
             } catch (Exception e) {
                 log.warn("消费失败", e);
             }
         }
         return ReceiveResult.success();
-    }
-
-    private void  todo(String processInstanceId){
-        ProcessResponse processInfo = epeiusClient.getProcessInfo(processInstanceId);
-        List<String> currentTaskIdList = processInfo.getCurrentTaskIdList();
-        if (CollectionUtils.isEmpty(currentTaskIdList)) {
-            log.info("任务id为空");
-            return ;
-        }
-        String processStatus = processInfo.getProcessStatus();
-        log.info("processInfo={}", processInfo);
-        if (FlowStatusEnum.PENDING.getValue().equals(processStatus)) {
-            return ;
-        }
-
-        ProjectFlowDO projectFlowDO = projectFlowMapper.get(null, processInstanceId);
-        if (projectFlowDO == null) {
-            log.info("无详设流程, flowId={}", processInstanceId);
-            return ;
-        }
-        ProjectDO projectDO = projectMapper.get(projectFlowDO.getProjectId());
-        Map<String, Object> flowData = processInfo.getFlowData();
-        if (FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
-            projectFlowDO.setStatus(ProjectFlowStatusEnum.REVIEW_FAIL.getCode());
-        } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
-            projectFlowDO.setStatus(ProjectFlowStatusEnum.WITHDRAW.getCode());
-        } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
-            projectFlowDO.setStatus(ProjectFlowStatusEnum.REVIEWED.getCode());
-            messageEventPublisher.publish(new FlowCompleteMsg(
-                    this,
-                    Lists.newArrayList(projectFlowDO.getProposerId()),
-                    projectDO.getName(),
-                    projectDO.getId()
-            ));
-            ProjectNodeDO projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText());
-            if (projectNodeDo != null) {
-                projectNodeMapper.updateActualDateById(projectNodeDo.getId(), processInfo.getEndTime());
-            }
-            //更新节点状态
-            projectComponent.updateNodeStatus(projectFlowDO.getProjectId());
-        }
-        String rejectReason = String.valueOf(flowData.get("rejectReason"));
-        projectFlowDO.setReviewFailReason(rejectReason);
-
-        List<String> reviewList = JSONObject.parseArray(projectFlowDO.getReview(), String.class);
-        List<String> reviewIdList = JSONObject.parseArray(projectFlowDO.getReviewId(), String.class);
-
-        Map<String, String> reviewMap = new HashMap<>();
-        for (int i = 0; i < reviewList.size(); i++) {
-            reviewMap.put(reviewIdList.get(i), reviewList.get(i));
-        }
-
-        TaskHandleUserResponse taskHandleUserList = epeiusClient.getTaskHandleUserList(currentTaskIdList.get(0));
-        List<String> passIds = taskHandleUserList.getPassedUserList().stream().map(TaskHandleUserResponse.TaskUser::getAccountId).collect(Collectors.toList());
-        List<String> passAlias=new ArrayList<>();
-        passIds.forEach(a->{
-            passAlias.add(reviewMap.get(a));
-        });
-
-        List<String> rejectIds = taskHandleUserList.getRejectUserList().stream().map(TaskHandleUserResponse.TaskUser::getAccountId).collect(Collectors.toList());
-        List<String> rejectAlias=new ArrayList<>();
-        rejectIds.forEach(a->{
-            rejectAlias.add(reviewMap.get(a));
-        });
-
-        reviewIdList.removeAll(passIds);
-        reviewIdList.removeAll(rejectIds);
-
-        List<String> unReviewAlias=new ArrayList<>();
-        reviewIdList.forEach(a->{
-            unReviewAlias.add(reviewMap.get(a));
-        });
-
-        projectFlowDO.setReviewedId(JSONObject.toJSONString(passIds));
-        projectFlowDO.setReviewed(JSONObject.toJSONString(passIds));
-        projectFlowDO.setReviewFailId(JSONObject.toJSONString(rejectIds));
-        projectFlowDO.setReviewFail(JSONObject.toJSONString(rejectAlias));
-        projectFlowDO.setUnreviewedId(JSONObject.toJSONString(reviewIdList));
-        projectFlowDO.setUnreviewed(JSONObject.toJSONString(unReviewAlias));
-        log.info("projectFlowDO={}", projectFlowDO);
-        projectFlowMapper.update(projectFlowDO);
-        return ;
     }
 }
