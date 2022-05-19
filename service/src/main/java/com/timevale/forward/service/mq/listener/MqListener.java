@@ -1,14 +1,8 @@
 package com.timevale.forward.service.mq.listener;
 
 import com.alibaba.fastjson.JSON;
-import com.timevale.forward.dal.dao.ProjectFlowMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.dao.ProjectNodeMapper;
-import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
-import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.mq.dto.WorkflowBody;
-import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.framework.mq.client.consumer.Listener;
 import com.timevale.framework.mq.client.consumer.ReceiveResult;
 import com.timevale.framework.mq.client.producer.Msg;
@@ -27,26 +21,7 @@ import java.util.List;
 public class MqListener implements Listener {
 
     @Resource
-    private EpeiusClient epeiusClient;
-
-    @Resource
-    MessageEventPublisher messageEventPublisher;
-
-    @Resource
-    private ProjectFlowMapper projectFlowMapper;
-
-    @Resource
-    private ProjectMapper projectMapper;
-
-    @Resource
-    private ProjectNodeMapper projectNodeMapper;
-
-    @Resource
-    private ProjectComponent projectComponent;
-
-    @Resource
     private ProjectFlowComponent projectFlowComponent;
-
 
     @Override
     public ReceiveResult receive(List<Msg> list) {
@@ -59,7 +34,7 @@ public class MqListener implements Listener {
                 WorkflowBody body = JSON.parseObject(message, WorkflowBody.class);
                 log.info("body: {}", JSON.toJSONString(body));
 //                projectFlowComponent.updateFlowInfo(body.getProcessInstanceId());
-                log.info("消费完成");
+//                log.info("消费完成");
             } catch (Exception e) {
                 log.warn("消费失败", e);
             }

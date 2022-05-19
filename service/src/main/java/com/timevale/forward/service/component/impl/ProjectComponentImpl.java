@@ -165,11 +165,41 @@ public class ProjectComponentImpl implements ProjectComponent {
         Map<String, ProjectNodeDO> nodeMap = projectNodes.stream().collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
         log.info("nodeMap={},,projectDO={}", nodeMap, projectDO);
         ProjectNodeDO demandStart = nodeMap.get(ProjectNodeEnum.START_PLAN.getText());
-        Integer status = getStatus(projectDO.getId());
+        ProjectNodeDO demandAudit = nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText());
+        ProjectNodeDO demandConstrue = nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getText());
+        ProjectNodeDO demandConstrueReverse = nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText());
+        Integer status = ProjectStatusEnum.WAITING.getCode();
+        //规划中
+        if (demandStart != null && demandStart.getActualDate() != null) {
+            status = ProjectStatusEnum.PLANING.getCode();
+        }
+        // 研发中
+        boolean dev = (demandStart == null || demandStart.getActualDate() != null)
+                && (demandAudit == null || demandAudit.getActualDate() != null)
+                && (demandConstrue == null || demandConstrue.getActualDate() != null)
+                && (demandConstrueReverse == null || demandConstrueReverse.getActualDate() != null);
+        if (dev) {
+            status = ProjectStatusEnum.DEVING.getCode();
+        }
+        //测试中
         ProjectNodeDO review = nodeMap.get(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText());
         ProjectNodeDO devStart = nodeMap.get(ProjectNodeEnum.DEVELOP_START.getText());
+        ProjectNodeDO writeCase = nodeMap.get(ProjectNodeEnum.WRITE_TEST_CASES.getText());
+        ProjectNodeDO reviewCase = nodeMap.get(ProjectNodeEnum.USE_CASE_REVIEW.getText());
+        ProjectNodeDO submitTest = nodeMap.get(ProjectNodeEnum.SUBMIT_TEST.getText());
+        boolean test = dev && (review == null || review.getActualDate() != null)
+                && (devStart == null || devStart.getActualDate() != null)
+                && (writeCase == null || writeCase.getActualDate() != null)
+                && (reviewCase == null || reviewCase.getActualDate() != null)
+                && (submitTest == null || submitTest.getActualDate() != null);
+        if (test) {
+            status = ProjectStatusEnum.TESTING.getCode();
+        }
+
+        //已发布
         ProjectNodeDO publishOfficial = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText());
         if (publishOfficial != null && publishOfficial.getActualDate() != null) {
+            status = ProjectStatusEnum.RELEASED.getCode();
             //项目的实际完成时间
             projectDO.setActualEndDate(publishOfficial.getActualDate());
         }

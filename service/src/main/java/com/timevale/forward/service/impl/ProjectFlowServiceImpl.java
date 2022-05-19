@@ -32,6 +32,7 @@ import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.lowcode.support.api.ProcessQueryRpcService;
 import com.timevale.lowcode.support.api.TaskQueryRpcService;
+import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
@@ -160,6 +161,11 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         projectFlowDetailVO.setFiles(FileCopier.INSTANCE.transform(fileDO));
         long count = projectFlowDos.stream().filter(a -> ProjectFlowStatusEnum.REVIEW_FAIL.getCode().equals(a.getStatus())).count();
         projectFlowDetailVO.setReturnCount(count);
+        ProcessResponse processInfo = epeiusClient.getProcessInfo(oldFlowDo.getFlowId());
+        List<String> currentTaskIdList = processInfo.getCurrentTaskIdList();
+        if(!CollectionUtils.isEmpty(currentTaskIdList)){
+            projectFlowDetailVO.setFlowId(currentTaskIdList.get(0));
+        }
         return BaseResult.success(projectFlowDetailVO);
     }
 
