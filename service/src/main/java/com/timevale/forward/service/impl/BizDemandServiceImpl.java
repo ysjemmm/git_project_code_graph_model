@@ -530,7 +530,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                     this,
                     bizDemandDO.getId(),
                     bizDemandDO.getSubmitMan(),
-                    bizDemandDO.getReceiveManId(),
+                    newReceiveManId,
                     bizDemandDO.getName()
             ));
         }
