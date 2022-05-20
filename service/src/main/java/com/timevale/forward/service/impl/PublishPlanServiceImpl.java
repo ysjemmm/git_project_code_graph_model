@@ -94,10 +94,8 @@ public class PublishPlanServiceImpl implements PublishPlanService {
     @Override
     public BaseResult<PageQueryResult<PublishPlanVO>> linkPublishPlanList(PublishPlanQueryList publishPlanQueryList) {
         Long projectId = publishPlanQueryList.getProjectId();
-        int pageNum = publishPlanQueryList.getPageNum();
-        int pageSize = publishPlanQueryList.getPageSize();
         List<Long> publishPlanIds = projectPublishPlanMapper.get(projectId)
-                .stream().skip((pageNum - 1) * pageSize).limit(pageSize)
+                .stream()
                 .map(ProjectPublishPlanDO::getPublishPlanId).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(publishPlanIds)) {
             return BaseResult.success(ResultUtil.pageEmpty());
