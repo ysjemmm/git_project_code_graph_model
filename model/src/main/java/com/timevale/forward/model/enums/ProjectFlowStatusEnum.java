@@ -12,7 +12,7 @@ public enum ProjectFlowStatusEnum {
     /**
      * 项目流程状态
      */
-    WITHDRAW(-1, "撤回"),
+    WITHDRAW(-1, "已撤回"),
     REVIEWING(0, "审核中"),
     REVIEWED(1, "审核通过"),
     REVIEW_FAIL(2, "审核不通过");

@@ -799,7 +799,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 oldBizDemandDO.getReceiveManId(),
                 oldBizDemandDO.getName(),
-                oldBizDemandDO.getRejectReason()
+                reason
         ));
 
         return BaseResult.success(true);

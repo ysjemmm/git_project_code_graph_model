@@ -19,7 +19,7 @@ public class BizDemandCompletedMsgEvent extends MessageEvent {
     private final String name;
 
     private static final String COMMENT_SCHEME = "&anchor=scheme";
-    private static final String BIZ_DEMAND_COMPLETED_MSG = "### %s  \n  **%s**已处理了您提交的业务需求 **%s**，请确认，可进入产研项目管理系统查看  \n\n  ***  \n  [查看详情](%s)";
+    private static final String BIZ_DEMAND_COMPLETED_MSG = "### %s  \n  **%s**已处理了您提交的业务需求 **%s**  \n\n  ***  \n  [查看详情](%s)";
 
     public BizDemandCompletedMsgEvent(Object source, Long bizDemandId, String operator, String receiver, String name) {
         super(source);
