@@ -19,7 +19,7 @@ public class BizDemandCompletedRejectMsgEvent extends MessageEvent {
     private final String name;
     private final String reason;
 
-    private static final String BIZ_DEMAND_COMPLETED_REJECT_MSG = "### %s  \n  %s拒绝了您处理的业务需求 **%s**，拒绝原因：**%s**  \n\n  ***  \n  [查看详情](%s)";
+    private static final String BIZ_DEMAND_COMPLETED_REJECT_MSG = "### %s  \n  **%s**拒绝了您处理的业务需求 **%s**，拒绝原因：**%s**  \n\n  ***  \n  [查看详情](%s)";
 
     public BizDemandCompletedRejectMsgEvent(Object source, Long bizDemandId, String operator, String receiver, String name, String reason) {
         super(source);

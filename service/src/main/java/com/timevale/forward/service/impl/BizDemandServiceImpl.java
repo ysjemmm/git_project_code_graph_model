@@ -683,6 +683,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 更新
         String oldRjectReason = bizDemandDO.getRejectReason();
+        String oldSolvePlan = bizDemandDO.getSolvePlan();
         bizDemandDO.setRejectReason("");
         bizDemandDO.setStatus(newStatus);
         bizDemandDO.setSolvePlan(solvePlan);
@@ -700,7 +701,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 ButtonActionEnum.COMPLETED_NOT_DEV.getText());
 
         bizDemandLogComponent.addLogWhenModifyData(
-                "",
+                oldSolvePlan,
                 solvePlan,
                 id,
                 BizChangeLogFieldEnum.SOLVE_PLAN.getText(),
