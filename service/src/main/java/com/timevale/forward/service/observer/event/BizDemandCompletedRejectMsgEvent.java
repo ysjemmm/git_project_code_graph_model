@@ -17,17 +17,15 @@ public class BizDemandCompletedRejectMsgEvent extends MessageEvent {
     private final String operator;
     private final String receiver;
     private final String name;
-    private final String reason;
 
-    private static final String BIZ_DEMAND_COMPLETED_REJECT_MSG = "### %s  \n  **%s**拒绝了您处理的业务需求 **%s**，拒绝原因：**%s**  \n\n  ***  \n  [查看详情](%s)";
+    private static final String BIZ_DEMAND_COMPLETED_REJECT_MSG = "### %s  \n  **%s**拒绝了您处理的业务需求 **%s**  \n\n  ***  \n  [查看详情](%s)";
 
-    public BizDemandCompletedRejectMsgEvent(Object source, Long bizDemandId, String operator, String receiver, String name, String reason) {
+    public BizDemandCompletedRejectMsgEvent(Object source, Long bizDemandId, String operator, String receiver, String name) {
         super(source);
         this.bizDemandId = bizDemandId;
         this.operator = operator;
         this.receiver = receiver;
         this.name = name;
-        this.reason = reason;
     }
 
     @Override
@@ -35,7 +33,7 @@ public class BizDemandCompletedRejectMsgEvent extends MessageEvent {
         List<String> receivers = Lists.newArrayList(receiver);
         String title = MessageTitleEnum.BIZDEMAND_FEEDBACK.getText();
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_MANAGEMENT.getText(), bizDemandId);
-        String markdown = String.format(BIZ_DEMAND_COMPLETED_REJECT_MSG, title, operator, name, reason, singleUrl);
+        String markdown = String.format(BIZ_DEMAND_COMPLETED_REJECT_MSG, title, operator, name, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(title)

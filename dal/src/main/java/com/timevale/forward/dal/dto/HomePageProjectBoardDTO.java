@@ -55,6 +55,12 @@ public class HomePageProjectBoardDTO {
     private Date demandConstrue;
 
     /**
+     * 需求反串讲
+     */
+    @JSONField(name = "xqfcj")
+    private Date demandConstrueReverse;
+
+    /**
      * 技术详设评审
      */
     @JSONField(name = "jsxsps")

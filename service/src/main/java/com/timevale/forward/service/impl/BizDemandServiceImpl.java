@@ -798,8 +798,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 oldBizDemandDO.getId(),
                 userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 oldBizDemandDO.getReceiveManId(),
-                oldBizDemandDO.getName(),
-                reason
+                oldBizDemandDO.getName()
         ));
 
         return BaseResult.success(true);

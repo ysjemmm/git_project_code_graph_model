@@ -423,8 +423,8 @@ public class HomePageServiceImpl implements HomePageService {
     public List<HomePageProjectBoardDTO> filterByDate(UserTypeEnum userType, Date startDate, Date endDate, List<HomePageProjectBoardDTO> list) {
         if (userType.equals(UserTypeEnum.PD)) {
             return list.stream().filter(e -> {
-                Date nodeStart = DateUtil.min(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue());
-                Date nodeEnd = DateUtil.max(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue());
+                Date nodeStart = DateUtil.min(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(),e.getDemandConstrueReverse());
+                Date nodeEnd = DateUtil.max(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(),e.getDemandConstrueReverse());
                 return DateUtil.haveOverlap(nodeStart, nodeEnd, startDate, endDate);
             }).collect(Collectors.toList());
         } else if (userType.equals(UserTypeEnum.RD)) {
