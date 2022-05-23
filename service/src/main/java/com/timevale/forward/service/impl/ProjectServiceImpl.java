@@ -351,7 +351,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(projectId);
         if (CollectionUtils.isNotEmpty(projectFlowDos)) {
-            projectFlowDos.sort(Comparator.comparing(ProjectFlowDO::getModifyDate).reversed());
+            projectFlowDos.sort(Comparator.comparing(ProjectFlowDO::getCreateDate).reversed());
             ProjectFlowDO oldFlowDo = projectFlowDos.get(0);
             projectDetailVO.setProjectFlowId(oldFlowDo.getId());
         }

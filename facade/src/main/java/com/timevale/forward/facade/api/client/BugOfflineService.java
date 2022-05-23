@@ -31,9 +31,9 @@ public interface BugOfflineService {
      * 修改
      *
      * @param bugOfflineAddReq bug信息
-     * @return Boolean
+     * @return Long
      */
-    BaseResult<Boolean> add(BugOfflineAddReq bugOfflineAddReq);
+    BaseResult<Long> add(BugOfflineAddReq bugOfflineAddReq);
 
 
     /**

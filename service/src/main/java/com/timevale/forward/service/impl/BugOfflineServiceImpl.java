@@ -153,7 +153,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> add(BugOfflineAddReq bugOfflineAddReq) {
+    public BaseResult<Long> add(BugOfflineAddReq bugOfflineAddReq) {
         if(bugOfflineAddReq.getName().contains(CommonConstant.BLANK)){
             throw new BaseBizRuntimeException("线下bug名称中请勿包含空格");
         }
@@ -205,7 +205,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                 bugOfflineDO.getOperatorId(),
                 bugOfflineDO.getName()
         ));
-        return BaseResult.success(true);
+        return BaseResult.success(bugOfflineDO.getId());
     }
 
     @Override

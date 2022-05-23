@@ -319,8 +319,10 @@ public class BizDemandServiceImpl implements BizDemandService {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
         if (!Objects.equal(oldBizDemandDO.getPlanReleaseDate(), bizDemandModifyReq.getPlanReleaseDate())
-                && !BizDemandStatusEnum.RECEIVED.getCode().equals(oldBizDemandDO.getStatus())) {
-            throw new BaseBizRuntimeException("状态不是已接收,不能修改预期上线时间");
+                && !BizDemandStatusEnum.RECEIVED.getCode().equals(oldBizDemandDO.getStatus())
+                && !BizDemandStatusEnum.TO_CONFIRM.getCode().equals(oldBizDemandDO.getStatus())
+                && !BizDemandStatusEnum.PD_LINKED.getCode().equals(oldBizDemandDO.getStatus())) {
+            throw new BaseBizRuntimeException("状态不是已接收,待确认和已关联产品需求时,不能修改预期上线时间");
         }
 
         // 判断主题是否唯一

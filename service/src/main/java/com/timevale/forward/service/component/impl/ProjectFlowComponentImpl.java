@@ -130,12 +130,12 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
             unReviewAlias.add(reviewMap.get(a));
         });
 
-        projectFlowDO.setReviewedId(CollectionUtils.isEmpty(passIds) ? "" : JSONObject.toJSONString(passIds));
-        projectFlowDO.setReviewed(CollectionUtils.isEmpty(passAlias) ? "" : JSONObject.toJSONString(passAlias));
-        projectFlowDO.setReviewFailId(CollectionUtils.isEmpty(rejectIds) ? "" : JSONObject.toJSONString(rejectIds));
-        projectFlowDO.setReviewFail(CollectionUtils.isEmpty(rejectAlias) ? "" : JSONObject.toJSONString(rejectAlias));
-        projectFlowDO.setUnreviewedId(CollectionUtils.isEmpty(reviewIdList) ? "" : JSONObject.toJSONString(reviewIdList));
-        projectFlowDO.setUnreviewed(CollectionUtils.isEmpty(unReviewAlias) ? "" : JSONObject.toJSONString(unReviewAlias));
+        projectFlowDO.setReviewedId(CollectionUtils.isEmpty(passIds) ? StringUtils.EMPTY : JSONObject.toJSONString(passIds));
+        projectFlowDO.setReviewed(CollectionUtils.isEmpty(passAlias) ? StringUtils.EMPTY : JSONObject.toJSONString(passAlias));
+        projectFlowDO.setReviewFailId(CollectionUtils.isEmpty(rejectIds) ? StringUtils.EMPTY : JSONObject.toJSONString(rejectIds));
+        projectFlowDO.setReviewFail(CollectionUtils.isEmpty(rejectAlias) ? StringUtils.EMPTY : JSONObject.toJSONString(rejectAlias));
+        projectFlowDO.setUnreviewedId(CollectionUtils.isEmpty(reviewIdList) ? StringUtils.EMPTY : JSONObject.toJSONString(reviewIdList));
+        projectFlowDO.setUnreviewed(CollectionUtils.isEmpty(unReviewAlias) ? StringUtils.EMPTY : JSONObject.toJSONString(unReviewAlias));
         log.info("更新的数据 projectFlowDO={}", projectFlowDO);
         projectFlowMapper.update(projectFlowDO);
     }
