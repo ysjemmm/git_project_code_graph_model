@@ -39,9 +39,9 @@ public interface ProductDemandComponent {
     /**
      *
      * @param productDemandIds 产品需求id
-     * @param bizProductDemandUnLink 产品需求与关联业务需求取消关联,
+     * @param invalid 产品需求与关联业务需求取消关联,
      */
-    void updateBizDemandStatusAsProductStatusChange(List<Long> productDemandIds,boolean bizProductDemandUnLink);
+    void updateBizDemandStatusAsProductStatusChange(List<Long> productDemandIds,boolean invalid);
 
     /**
      *
@@ -50,5 +50,12 @@ public interface ProductDemandComponent {
      * @param bizDemandId bizDemandId
      */
     void processBizDemandStatus(Map<Integer, List<Long>> condition, Integer minStauts, Long bizDemandId);
+
+    /**
+     *
+     * @param bizDemandId bizDemandId
+     * @param productDemandId productDemandId
+     */
+    void updateBizDemandStatusWhenUnlink(Long bizDemandId,Long productDemandId);
 
 }
