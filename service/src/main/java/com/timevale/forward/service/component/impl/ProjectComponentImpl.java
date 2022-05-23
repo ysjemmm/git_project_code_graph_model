@@ -10,12 +10,12 @@ import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
-import com.timevale.forward.service.component.TaskComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -49,9 +49,6 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Resource
     private ProjectNodeMapper projectNodeMapper;
-
-    @Resource
-    private TaskComponent taskComponent;
 
     @Resource
     private ProjectNodeComponent projectNodeComponent;
@@ -146,7 +143,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             boolean warn = ProjectStatusEnum.SUSPEND.getCode().equals(status)
                     || ProjectStatusEnum.INVALID.getCode().equals(status)
                     || ProjectStatusEnum.RELEASED.getCode().equals(status);
-            if(!warn){
+            if (!warn) {
                 e.setContainRisk(riskSet.contains(e.getId()));
             }
         }
@@ -211,6 +208,12 @@ public class ProjectComponentImpl implements ProjectComponent {
         } else if (devStart != null) {
             projectDO.setActualStartDate(devStart.getActualDate());
         }
+        if (submitTest != null && submitTest.getActualDate() == null) {
+            ProjectNodeDO oldSubmitTest = projectNodeMapper.getByName(projectDO.getId(), ProjectNodeEnum.SUBMIT_TEST.getText());
+            if (oldSubmitTest != null && oldSubmitTest.getActualDate() != null) {
+                throw new BaseBizRuntimeException("当前页面数据发生变化,请刷新后重试");
+            }
+        }
     }
 
     @Override
@@ -224,24 +227,26 @@ public class ProjectComponentImpl implements ProjectComponent {
         // 根据填入实际实际节点，判断项目状态
         Integer status = ProjectStatusEnum.RELEASED.getCode();
         for (ProjectNodeDO e : nodeDOList) {
-            if(e.getActualDate() != null){continue;}
+            if (e.getActualDate() != null) {
+                continue;
+            }
             String name = e.getName();
 
-            if(ProjectNodeEnum.START_PLAN.getText().equals(name)){
+            if (ProjectNodeEnum.START_PLAN.getText().equals(name)) {
                 status = ProjectStatusEnum.WAITING.getCode();
 
-            }else if(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText().equals(name)
-                    || ProjectNodeEnum.DEMAND_CONSTRUE.getText().equals(name)){
+            } else if (ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText().equals(name)
+                    || ProjectNodeEnum.DEMAND_CONSTRUE.getText().equals(name)) {
                 status = ProjectStatusEnum.PLANING.getCode();
 
-            }else if(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText().equals(name)
+            } else if (ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText().equals(name)
                     || ProjectNodeEnum.DEVELOP_START.getText().equals(name)
                     || ProjectNodeEnum.WRITE_TEST_CASES.getText().equals(name)
                     || ProjectNodeEnum.USE_CASE_REVIEW.getText().equals(name)
-                    || ProjectNodeEnum.SUBMIT_TEST.getText().equals(name)){
+                    || ProjectNodeEnum.SUBMIT_TEST.getText().equals(name)) {
                 status = ProjectStatusEnum.DEVING.getCode();
 
-            }else{
+            } else {
                 status = ProjectStatusEnum.TESTING.getCode();
             }
             break;
@@ -256,9 +261,9 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         // 如果节点为空则状态设为待启动
         Integer nodeStatus;
-        if(CollectionUtils.isEmpty(nodeDOList)){
+        if (CollectionUtils.isEmpty(nodeDOList)) {
             nodeStatus = ProjectNodeStatusEnum.READY_START.getCode();
-        }else {
+        } else {
             nodeStatus = ProjectNodeStatusEnum.getStatus(nodeDOList);
         }
 
