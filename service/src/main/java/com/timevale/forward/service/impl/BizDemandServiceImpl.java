@@ -180,7 +180,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         bizDemandLogComponent.addLogWhenModifyData(
                 PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
-                "",
+                StringUtils.EMPTY,
                 bizDemandId,
                 BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
                 false);
@@ -196,10 +196,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (bizDemandMapper.selectByName(bizDemandName) != null) {
             throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
         }
-        if(bizDemandName.contains(CommonConstant.BLANK)){
+        if (bizDemandName.contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("业务需求名称中请勿包含空格");
         }
-        if(bizDemandAddReq.getTargetCustomer().contains(CommonConstant.BLANK)){
+        if (bizDemandAddReq.getTargetCustomer().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("目标客户/用户/项目中请勿包含空格");
         }
 
@@ -410,7 +410,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 true,
                 ButtonActionEnum.RECEIVE.getText());
 
-        if(!Objects.equal(oldPlanReleaseDate, planReleaseDate)){
+        if (!Objects.equal(oldPlanReleaseDate, planReleaseDate)) {
             bizDemandLogComponent.addLogWhenModifyData(
                     PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
                     PlanReleaseDateEnum.getTextByCode(planReleaseDate),
@@ -476,7 +476,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 ButtonActionEnum.REJECT.getText());
 
         String oldPlanReleaseDateTxt = PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate);
-        if(StringUtils.isNotEmpty(oldPlanReleaseDateTxt)){
+        if (StringUtils.isNotEmpty(oldPlanReleaseDateTxt)) {
             bizDemandLogComponent.addLogWhenModifyData(
                     oldPlanReleaseDateTxt,
                     StringUtils.EMPTY,
@@ -549,7 +549,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<Long> bizDemandIdList = batchTransferReq.getIdList();
 
         // 判空
-        if(CollectionUtils.isEmpty(bizDemandIdList)){
+        if (CollectionUtils.isEmpty(bizDemandIdList)) {
             return BaseResult.success(true);
         }
 
@@ -562,7 +562,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             String oldReceiveMan = e.getReceiveMan();
 
             // 新旧接收人相同则不处理
-            if(Objects.equal(oldReceiveMan, newReceiveMan)){
+            if (Objects.equal(oldReceiveMan, newReceiveMan)) {
                 continue;
             }
 
@@ -578,11 +578,11 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 判空
-        if(CollectionUtils.isNotEmpty(logDOList)){
+        if (CollectionUtils.isNotEmpty(logDOList)) {
             // 日志
             bizChangeLogMapper.batchInsert(logDOList);
             // 实体
-            bizDemandIdList =  logDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
+            bizDemandIdList = logDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
             bizDemandMapper.updateReceiveMan(bizDemandIdList, newReceiveMan, newReceiveManId);
 
             // 通知
@@ -610,7 +610,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         String newSubmitManId = batchTransferReq.getReceiveManId();
         List<Long> bizDemandIdList = batchTransferReq.getIdList();
 
-        if(CollectionUtils.isEmpty(bizDemandIdList)){
+        if (CollectionUtils.isEmpty(bizDemandIdList)) {
             return BaseResult.success(true);
         }
 
@@ -621,7 +621,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             String oldSubmitMan = e.getSubmitMan();
 
             // 新旧相同则不记录日志
-            if(Objects.equal(newSubmitMan, oldSubmitMan)){
+            if (Objects.equal(newSubmitMan, oldSubmitMan)) {
                 continue;
             }
             BizChangeLogDO logDO = bizDemandLogComponent.getLogWhenModifyData(
@@ -635,10 +635,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 判空
-        if(CollectionUtils.isNotEmpty(bizChangeLogDOList)){
+        if (CollectionUtils.isNotEmpty(bizChangeLogDOList)) {
             // 变更提交人及
             Optional<BaseInfoResponse> baseInfo = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(newSubmitManId)).stream().findAny();
-            if(!baseInfo.isPresent()){
+            if (!baseInfo.isPresent()) {
                 throw new BaseBizRuntimeException("接收人没有默认部门，无法修改");
             }
 
@@ -650,7 +650,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizDemandIdList = bizChangeLogDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
             Set<Long> bizDemandIdSet = new HashSet<>(bizDemandIdList);
             for (BizDemandDO e : bizDemandDOList) {
-                if(!bizDemandIdSet.contains(e.getId())){
+                if (!bizDemandIdSet.contains(e.getId())) {
                     continue;
                 }
 
@@ -677,7 +677,8 @@ public class BizDemandServiceImpl implements BizDemandService {
     public BaseResult<Boolean> completed(BizDemandCompletedReq bizDemandCompleted) {
         // 参数
         Long id = bizDemandCompleted.getId();
-        String solvePlan = bizDemandCompleted.getSolvePlan();
+        //页面未刷新时为null
+        String solvePlan = bizDemandCompleted.getSolvePlan() == null ? StringUtils.EMPTY : bizDemandCompleted.getSolvePlan();
 
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(id);
         Integer oldStatus = bizDemandDO.getStatus();
@@ -686,7 +687,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 更新
         String oldRjectReason = bizDemandDO.getRejectReason();
         String oldSolvePlan = bizDemandDO.getSolvePlan();
-        bizDemandDO.setRejectReason("");
+        bizDemandDO.setRejectReason(StringUtils.EMPTY);
         bizDemandDO.setStatus(newStatus);
         bizDemandDO.setSolvePlan(solvePlan);
         bizDemandMapper.fullUpdate(bizDemandDO);
@@ -709,10 +710,10 @@ public class BizDemandServiceImpl implements BizDemandService {
                 BizChangeLogFieldEnum.SOLVE_PLAN.getText(),
                 true);
 
-        if(StringUtils.isNotEmpty(oldRjectReason)){
+        if (StringUtils.isNotEmpty(oldRjectReason)) {
             bizDemandLogComponent.addLogWhenModifyData(
                     oldRjectReason,
-                    "",
+                    StringUtils.EMPTY,
                     id,
                     BizChangeLogFieldEnum.REJECT_REASON.getText(),
                     true);
@@ -785,7 +786,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 true,
                 ButtonActionEnum.REFUSED.getText());
         bizDemandLogComponent.addLogWhenModifyData(
-                "",
+                StringUtils.EMPTY,
                 reason,
                 id,
                 BizChangeLogFieldEnum.REJECT_REASON.getText(),
