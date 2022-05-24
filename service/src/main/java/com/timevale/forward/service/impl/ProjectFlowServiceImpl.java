@@ -18,7 +18,6 @@ import com.timevale.forward.facade.api.result.ProjectFlowDetailVO;
 import com.timevale.forward.model.enums.ButtonActionEnum;
 import com.timevale.forward.model.enums.ProjectFlowStatusEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
-import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.component.ProjectLogComponent;
@@ -26,8 +25,6 @@ import com.timevale.forward.service.copy.ProjectFlowCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
-import com.timevale.lowcode.support.api.ProcessQueryRpcService;
-import com.timevale.lowcode.support.api.TaskQueryRpcService;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
@@ -57,15 +54,6 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
     private ProjectFlowMapper projectFlowMapper;
 
     @Resource
-    private FileComponent fileComponent;
-
-    @Resource
-    private ProcessQueryRpcService processQueryRpcService;
-
-    @Resource
-    private TaskQueryRpcService taskQueryRpcService;
-
-    @Resource
     private ProjectComponent projectComponent;
 
     @Resource
@@ -85,6 +73,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
     public BaseResult<String> add(ProjectFlowAddReq projectFlowAddReq) {
         log.info("发起详设评审,参数:{}", projectFlowAddReq);
         ProjectFlowDO projectFlowDO = ProjectFlowCopier.INSTANCE.convert(projectFlowAddReq);
+        ProjectDO oldProjectDO = projectMapper.get(projectFlowDO.getProjectId());
         List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(projectFlowDO.getProjectId());
         if (!CollectionUtils.isEmpty(projectFlowDos)) {
             projectFlowDos.sort(Comparator.comparing(ProjectFlowDO::getCreateDate).reversed());
@@ -104,8 +93,14 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         //更新节点状态
         projectComponent.updateNodeStatus(projectFlowDO.getProjectId());
 
+        projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), ProjectNodeEnum.START_PLAN.getText());
+        if (projectNodeDo == null) {
+            //需求规划阶段被删除,详设评审为第一个节点,需要清空项目实际开始时间
+            oldProjectDO.setActualStartDate(null);
+            projectMapper.update(oldProjectDO);
+        }
+
         Integer newStatus = projectComponent.getStatus(projectFlowDO.getProjectId());
-        ProjectDO oldProjectDO = projectMapper.get(projectFlowDO.getProjectId());
         if (!Objects.equal(oldProjectDO.getStatus(), newStatus)) {
             oldProjectDO.setStatus(newStatus);
             projectMapper.update(oldProjectDO);
