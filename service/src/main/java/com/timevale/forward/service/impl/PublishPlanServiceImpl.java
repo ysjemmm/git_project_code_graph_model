@@ -65,6 +65,7 @@ public class PublishPlanServiceImpl implements PublishPlanService {
             publishPlanVO.setReleaseStatus(PublishStatusEnum.getTextByName(a.getReleaseStatus()));
             publishPlanVO.setStatus(ApproveStatusEnum.getTextByName(a.getStatus()));
             publishPlanVO.setIsLinked(publishPlanIds.contains(a.getId()));
+            publishPlanVO.setLinkedIds(publishPlanIds);
             publishPlans.add(publishPlanVO);
         });
         Integer count = resultDTO.getCount();

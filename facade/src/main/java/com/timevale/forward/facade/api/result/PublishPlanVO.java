@@ -50,4 +50,7 @@ public class PublishPlanVO extends ToString {
 
     @ApiModelProperty("是否已被关联")
     private Boolean isLinked;
+
+    @ApiModelProperty("所有被关联的发布计划id")
+    private List<Long> linkedIds;
 }
