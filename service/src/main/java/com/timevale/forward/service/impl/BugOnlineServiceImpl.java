@@ -290,6 +290,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //将BugOnlineAddReq转化为BugOnlineDO
         BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.transfer(bugOnlineAddReq);
 
+        // 校验
+        if(bugOnlineDO.getModelId() == null){
+            bugOnlineDO.setModelId(0L);
+        }
+
         //往线上bug表里面插入数据
         bugOnlineMapper.insert(bugOnlineDO);
 
