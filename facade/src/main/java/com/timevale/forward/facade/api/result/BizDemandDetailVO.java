@@ -112,4 +112,10 @@ public class BizDemandDetailVO extends ToString {
 
     @ApiModelProperty("需求提交人id")
     private String submitManId;
+
+    @ApiModelProperty("处理方案")
+    private String solvePlan;
+
+    @ApiModelProperty("拒绝原因")
+    private String RejectReason;
 }

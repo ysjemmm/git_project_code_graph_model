@@ -17,6 +17,7 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 @ApiModel("评论列表")
 public class CommentVO extends ToString {
+
     @ApiModelProperty("内容")
     private String content;
 

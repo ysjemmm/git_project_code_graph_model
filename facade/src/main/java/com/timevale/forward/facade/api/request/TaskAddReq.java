@@ -71,4 +71,7 @@ public class TaskAddReq extends BaseReq {
     @ApiModelProperty("是否创建待办")
     @NotNull(message = "是否创建不能为空")
     private Boolean todo;
+
+    @ApiModelProperty("任务描述")
+    private String desc;
 }

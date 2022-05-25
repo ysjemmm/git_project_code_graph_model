@@ -21,6 +21,7 @@ public enum ProjectNodeEnum {
     START_PLAN(0,"开始规划"),
     DEMAND_INTERNAL_AUDIT(10,"需求内审"),
     DEMAND_CONSTRUE(20,"需求串讲"),
+    DEMAND_CONSTRUE_REVERSE(25,"需求反串讲"),
     TECHNICAL_DETAIL_REVIEW(30,"技术详设评审"),
     DEVELOP_START(40,"开发开始"),
     WRITE_TEST_CASES(50,"编写测试用例"),
@@ -51,18 +52,4 @@ public enum ProjectNodeEnum {
             return aCode.compareTo(bCode);
         });
     }
-
-    public final static Map<Integer, String> DEFAULT_NODE = new HashMap<Integer, String>() {{
-        put(1, ProjectNodeEnum.START_PLAN.getText());
-        put(2, ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText());
-        put(3, ProjectNodeEnum.DEMAND_CONSTRUE.getText());
-        put(4, ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText());
-        put(5, ProjectNodeEnum.DEVELOP_START.getText());
-        put(6, ProjectNodeEnum.WRITE_TEST_CASES.getText());
-        put(7, ProjectNodeEnum.USE_CASE_REVIEW.getText());
-        put(8, ProjectNodeEnum.SUBMIT_TEST.getText());
-        put(9, ProjectNodeEnum.TEST_START.getText());
-        put(10, ProjectNodeEnum.PUBLISH_SIMULATE.getText());
-        put(11, ProjectNodeEnum.PUBLISH_OFFICIAL.getText());
-    }};
 }

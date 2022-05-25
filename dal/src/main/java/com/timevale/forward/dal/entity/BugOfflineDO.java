@@ -122,4 +122,14 @@ public class BugOfflineDO extends BaseDO {
      */
     private String origin;
 
+    /**
+     * bug产生原因
+     */
+    private String cause;
+
+    /**
+     * 解决方案
+     */
+    private String solvePlan;
+
 }

@@ -2,10 +2,7 @@ package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.ProductBizDemandDO;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectNodeDO;
-import com.timevale.forward.dal.entity.ProjectProductDemandDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.DataCorrectService;
 import com.timevale.forward.facade.api.request.DataModifyReq;
 import com.timevale.forward.model.enums.*;
@@ -126,7 +123,6 @@ public class DataCorrectServiceImpl implements DataCorrectService {
             }else {
                 nodeStatus = ProjectNodeStatusEnum.getStatus(nodeDOList);
             }
-
             // 更新项目节点状态
             ProjectDO projectDO = new ProjectDO();
             projectDO.setId(e);
@@ -134,6 +130,31 @@ public class DataCorrectServiceImpl implements DataCorrectService {
             projectMapper.updateNodeStatus(projectDO);
         });
 
+        return BaseResult.success(true);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> updateBizDemandStatus() {
+        List<Integer> status = Lists.newArrayList(BizDemandStatusEnum.RECEIVED.getCode());
+        List<BizDemandDO> bizDemandDos = bizDemandMapper.selectByStatus(status);
+        Map<Integer, List<Long>> condition = new HashMap<>();
+        bizDemandDos.forEach(a -> {
+            //被驳回和作废的业务需求不处理
+            if (!BizDemandStatusEnum.REJECT.getCode().equals(a.getStatus()) && !BizDemandStatusEnum.INVALID.getCode().equals(a.getStatus())) {
+                //当前业务需求下的所有产品需求
+                List<ProductBizDemandDO> productDemands = productBizDemandMapper.getByBizDemandId(a.getId());
+                Integer minStauts = productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
+                if (minStauts != null) {
+                    productDemandComponent.processBizDemandStatus(condition, minStauts, a.getId());
+                }
+            }
+        });
+        condition.forEach((k, v) -> {
+            //更新产品需求下的所有业务需求状态
+            bizDemandMapper.updateByIds(v, k,true);
+        });
+        log.info("数据订正,业务需求状态变更完成,更新的数据 :{}",condition);
         return BaseResult.success(true);
     }
 
@@ -155,22 +176,20 @@ public class DataCorrectServiceImpl implements DataCorrectService {
         } else if (ProjectStatusEnum.RELEASED.getCode().equals(status)) {
             productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.ONLINE.getCode(),true);
         }
-        updateBizDemandStatusAsProductStatusChange(existProductDemandIds, false);
+        updateBizDemandStatusAsProductStatusChange(existProductDemandIds);
     }
 
-    public void updateBizDemandStatusAsProductStatusChange(List<Long> productDemandIds, boolean bizProductDemandUnLink) {
+    private void updateBizDemandStatusAsProductStatusChange(List<Long> productDemandIds) {
         if (CollectionUtils.isEmpty(productDemandIds)) {
             log.info("产品需求变化-更新业务需求,产品需求id不存在");
             return;
         }
         //解除产品需求和业务需求关系(含作废情况)
-        buildConditionBeforeUpdate(productDemandIds, bizProductDemandUnLink);
+        buildConditionBeforeUpdate(productDemandIds);
 
     }
-
-
-    private void buildConditionBeforeUpdate(List<Long> productDemandIds, boolean bizProductDemandUnLink) {
-        log.info("产品需求变化-更新业务需求,产品需求id={},解除二者关联={}", productDemandIds, bizProductDemandUnLink);
+    private void buildConditionBeforeUpdate(List<Long> productDemandIds) {
+        log.info("产品需求变化-更新业务需求,产品需求id={}", productDemandIds);
         // 产品需求下的所有业务需求
         List<ProductBizDemandDO> bizDemands = productBizDemandMapper.getByProductDemandIds(productDemandIds);
         if (CollectionUtils.isEmpty(bizDemands)) {
@@ -186,22 +205,10 @@ public class DataCorrectServiceImpl implements DataCorrectService {
             if (!BizDemandStatusEnum.REJECT.getCode().equals(v.getStatus()) && !BizDemandStatusEnum.INVALID.getCode().equals(v.getStatus())) {
                 //当前业务需求下的所有产品需求
                 List<ProductBizDemandDO> productDemands = productBizDemandMapper.getByBizDemandId(k);
-                if (bizProductDemandUnLink) {
-                    //如果是解除关联:计算业务需求状态时需要过滤掉本次被解除的产品需求
-                    Integer minStatus = productDemands.stream().filter(i -> !productDemandIds.get(0).equals(i.getProductDemandId())).map(ProductBizDemandDO::getStatus)
-                            .min(Comparator.comparingInt(o -> o)).orElse(null);
-                    if (minStatus == null) {
-                        //业务需求只关联一个产品需求后且被解除
-                        condition.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), value -> new ArrayList<>()).add(k);
-                    } else {
-                        productDemandComponent.processBizDemandStatus(condition, minStatus, k);
-                    }
-                } else {
                     Integer minStauts = productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
                     if (minStauts != null) {
                         productDemandComponent.processBizDemandStatus(condition, minStauts, k);
                     }
-                }
             }
         });
         condition.forEach((k, v) -> {

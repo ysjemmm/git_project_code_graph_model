@@ -12,7 +12,7 @@
     <update id="update">
         update biz_demand
         <set>
-            <if test="name!=null  and name!='' ">
+            <if test="name!=null and name!='' ">
                 name = #{name},
             </if>
             <if test="productLineId!=null">
@@ -54,15 +54,14 @@
             <if test="submitManId != null and submitManId != ''">
                 submit_man_id = #{submitManId},
             </if>
+            <if test="solvePlan != null">
+                solve_plan = #{solvePlan},
+            </if>
+            <if test="rejectReason != null">
+                reject_reason = #{rejectReason},
+            </if>
             <if test="planReleaseDate!=null">
-                <choose>
-                    <when test="planReleaseDate lt 0">
-                        plan_release_date = null,
-                    </when>
-                    <otherwise>
-                        plan_release_date = #{planReleaseDate},
-                    </otherwise>
-                </choose>
+                plan_release_date = #{planReleaseDate},
             </if>
             <if test="projectEndDate != null">
                 project_end_date = #{projectEndDate},
@@ -75,13 +74,40 @@
         where id = #{id}
     </update>
 
+    <update id="fullUpdate">
+        update biz_demand
+        <set>
+            name = #{name},
+            product_line_id = #{productLineId},
+            data_indicators = #{dataIndicators},
+            target_customer = #{targetCustomer},
+            create_customer = #{createCustomer},
+            dept_id = #{deptId},
+            `desc` = #{desc},
+            `status` = #{status},
+            priority = #{priority},
+            receive_man = #{receiveMan},
+            receive_man_id = #{receiveManId},
+            reason = #{reason},
+            submit_man = #{submitMan},
+            submit_man_id = #{submitManId},
+            solve_plan = #{solvePlan},
+            reject_reason = #{rejectReason},
+            plan_release_date = #{planReleaseDate},
+            modify_man_id = #{modifyManId},
+            modify_man = #{modifyMan},
+        </set>
+        where id = #{id}
+    </update>
+
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BizDemandDO">
         select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status, priority,
                receive_man, receive_man_id, submit_man, submit_man_id, plan_release_date, reason, project_end_date,
                is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+               receive_man, receive_man_id, processor, os, plan_release_date, reason, submit_man, submit_man_id, solve_plan, reject_reason,
+               is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
         from biz_demand
         where id = #{id}
-        and is_deleted = false
     </select>
 
     <select id="selectByName" resultType="com.timevale.forward.dal.entity.BizDemandDO">
@@ -207,12 +233,6 @@
         </where>
     </update>
 
-    <update id="updateReason">
-        update biz_demand
-        set reason = #{reason}
-        where id = #{bizDemandId}
-    </update>
-
     <update id="updateCreateMan">
         UPDATE biz_demand
         SET create_man = #{createMan}, create_man_id = #{createManId}
@@ -251,6 +271,20 @@
                 #{item}
             </foreach>
               and is_deleted = false
+        </where>
+    </select>
+
+    <select id="selectByStatus" resultType="com.timevale.forward.dal.entity.BizDemandDO">
+        select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status, priority,
+        receive_man, receive_man_id, submit_man, submit_man_id, plan_release_date, reason,
+        is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        from biz_demand
+        <where>
+            status in
+            <foreach collection="status" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            and is_deleted = false
         </where>
     </select>
 

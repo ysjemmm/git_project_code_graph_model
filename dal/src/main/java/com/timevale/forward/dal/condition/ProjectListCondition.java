@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.condition;
 
+import com.timevale.forward.dal.annotation.WildcardEscape;
 import com.timevale.mandarin.common.query.QueryBase;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;

@@ -25,4 +25,10 @@ public class BugOfflineModifyReq extends BugOfflineAddReq {
 
     @ApiModelProperty("不用修复原因")
     private Integer unhandleReason;
+
+    @ApiModelProperty("bug产生原因")
+    private String cause;
+
+    @ApiModelProperty("解决方案")
+    private String solvePlan;
 }

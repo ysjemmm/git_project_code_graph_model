@@ -150,9 +150,9 @@ public class BizDemandServiceImpl implements BizDemandService {
         Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
 
         // 修改业务需求状态
-        bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
+        bizDemandDO.setPlanReleaseDate(null);
         bizDemandDO.setStatus(BizDemandStatusEnum.INVALID.getCode());
-        bizDemandMapper.update(bizDemandDO);
+        bizDemandMapper.fullUpdate(bizDemandDO);
 
         // 产品关联断开日志
         bizDemandLogComponent.addLogWhenBizDemandInvalid(bizDemandId);
@@ -180,7 +180,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         bizDemandLogComponent.addLogWhenModifyData(
                 PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
-                "",
+                StringUtils.EMPTY,
                 bizDemandId,
                 BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
                 false);
@@ -192,8 +192,15 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(BizDemandAddReq bizDemandAddReq) {
         // 判断主题是否唯一
-        if (bizDemandMapper.selectByName(bizDemandAddReq.getName()) != null) {
+        String bizDemandName = bizDemandAddReq.getName();
+        if (bizDemandMapper.selectByName(bizDemandName) != null) {
             throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
+        }
+        if (bizDemandName.contains(CommonConstant.BLANK)) {
+            throw new BaseBizRuntimeException("业务需求名称中请勿包含空格");
+        }
+        if (bizDemandAddReq.getTargetCustomer().contains(CommonConstant.BLANK)) {
+            throw new BaseBizRuntimeException("目标客户/用户/项目中请勿包含空格");
         }
 
         // 新增业务需求
@@ -312,8 +319,10 @@ public class BizDemandServiceImpl implements BizDemandService {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
         if (!Objects.equal(oldBizDemandDO.getPlanReleaseDate(), bizDemandModifyReq.getPlanReleaseDate())
-                && !BizDemandStatusEnum.RECEIVED.getCode().equals(oldBizDemandDO.getStatus())) {
-            throw new BaseBizRuntimeException("状态不是已接收,不能修改预期上线时间");
+                && !BizDemandStatusEnum.RECEIVED.getCode().equals(oldBizDemandDO.getStatus())
+                && !BizDemandStatusEnum.TO_CONFIRM.getCode().equals(oldBizDemandDO.getStatus())
+                && !BizDemandStatusEnum.PD_LINKED.getCode().equals(oldBizDemandDO.getStatus())) {
+            throw new BaseBizRuntimeException("状态不是已接收,待确认和已关联产品需求时,不能修改预期上线时间");
         }
 
         // 判断主题是否唯一
@@ -384,10 +393,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         Integer oldReason = bizDemandDO.getReason();
         Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
 
+        bizDemandDO.setReason(null);
         bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
         bizDemandDO.setPlanReleaseDate(planReleaseDate);
-        bizDemandMapper.update(bizDemandDO);
-        bizDemandMapper.updateReason(bizDemandId, null);
+        bizDemandMapper.fullUpdate(bizDemandDO);
 
         // 通知需求提交人
         messageEventPublisher.publish(new BizDemandReceivedMsgEvent(
@@ -413,7 +422,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 true,
                 ButtonActionEnum.RECEIVE.getText());
 
-        if(!Objects.equal(oldPlanReleaseDate, planReleaseDate)){
+        if (!Objects.equal(oldPlanReleaseDate, planReleaseDate)) {
             bizDemandLogComponent.addLogWhenModifyData(
                     PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
                     PlanReleaseDateEnum.getTextByCode(planReleaseDate),
@@ -455,9 +464,9 @@ public class BizDemandServiceImpl implements BizDemandService {
         Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
 
         bizDemandDO.setReason(reason);
-        bizDemandDO.setPlanReleaseDate(CommonConstant.INVALID);
+        bizDemandDO.setPlanReleaseDate(null);
         bizDemandDO.setStatus(BizDemandStatusEnum.REJECT.getCode());
-        bizDemandMapper.update(bizDemandDO);
+        bizDemandMapper.fullUpdate(bizDemandDO);
 
         // 驳回通知
         messageEventPublisher.publish(new BizDemandRejectMsgEvent(
@@ -479,7 +488,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 ButtonActionEnum.REJECT.getText());
 
         String oldPlanReleaseDateTxt = PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate);
-        if(StringUtils.isNotEmpty(oldPlanReleaseDateTxt)){
+        if (StringUtils.isNotEmpty(oldPlanReleaseDateTxt)) {
             bizDemandLogComponent.addLogWhenModifyData(
                     oldPlanReleaseDateTxt,
                     StringUtils.EMPTY,
@@ -513,14 +522,15 @@ public class BizDemandServiceImpl implements BizDemandService {
         String newReceiveMan = bizDemandTransferReq.getReceiveMan();
         String newReceiveManId = bizDemandTransferReq.getReceiveManId();
 
-        BizDemandDO newBizDemandDO = new BizDemandDO();
-        newBizDemandDO.setId(bizDemandDO.getId());
-        newBizDemandDO.setReceiveMan(newReceiveMan);
-        newBizDemandDO.setReceiveManId(newReceiveManId);
-        bizDemandMapper.update(newBizDemandDO);
-
         // 新旧接受人是否相同
         if (!Objects.equal(oldReceiveMan, newReceiveMan)) {
+            // 数据变更
+            BizDemandDO newBizDemandDO = new BizDemandDO();
+            newBizDemandDO.setId(bizDemandDO.getId());
+            newBizDemandDO.setReceiveMan(newReceiveMan);
+            newBizDemandDO.setReceiveManId(newReceiveManId);
+            bizDemandMapper.update(newBizDemandDO);
+
             // 日志记录
             bizDemandLogComponent.addLogWhenModifyData(
                     oldReceiveMan,
@@ -534,7 +544,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                     this,
                     bizDemandDO.getId(),
                     bizDemandDO.getSubmitMan(),
-                    bizDemandDO.getReceiveManId(),
+                    newReceiveManId,
                     bizDemandDO.getName()
             ));
         }
@@ -551,7 +561,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<Long> bizDemandIdList = batchTransferReq.getIdList();
 
         // 判空
-        if(CollectionUtils.isEmpty(bizDemandIdList)){
+        if (CollectionUtils.isEmpty(bizDemandIdList)) {
             return BaseResult.success(true);
         }
 
@@ -564,7 +574,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             String oldReceiveMan = e.getReceiveMan();
 
             // 新旧接收人相同则不处理
-            if(Objects.equal(oldReceiveMan, newReceiveMan)){
+            if (Objects.equal(oldReceiveMan, newReceiveMan)) {
                 continue;
             }
 
@@ -580,11 +590,11 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 判空
-        if(CollectionUtils.isNotEmpty(logDOList)){
+        if (CollectionUtils.isNotEmpty(logDOList)) {
             // 日志
             bizChangeLogMapper.batchInsert(logDOList);
             // 实体
-            bizDemandIdList =  logDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
+            bizDemandIdList = logDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
             bizDemandMapper.updateReceiveMan(bizDemandIdList, newReceiveMan, newReceiveManId);
 
             // 通知
@@ -612,7 +622,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         String newSubmitManId = batchTransferReq.getReceiveManId();
         List<Long> bizDemandIdList = batchTransferReq.getIdList();
 
-        if(CollectionUtils.isEmpty(bizDemandIdList)){
+        if (CollectionUtils.isEmpty(bizDemandIdList)) {
             return BaseResult.success(true);
         }
 
@@ -623,7 +633,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             String oldSubmitMan = e.getSubmitMan();
 
             // 新旧相同则不记录日志
-            if(Objects.equal(newSubmitMan, oldSubmitMan)){
+            if (Objects.equal(newSubmitMan, oldSubmitMan)) {
                 continue;
             }
             BizChangeLogDO logDO = bizDemandLogComponent.getLogWhenModifyData(
@@ -637,10 +647,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 判空
-        if(CollectionUtils.isNotEmpty(bizChangeLogDOList)){
+        if (CollectionUtils.isNotEmpty(bizChangeLogDOList)) {
             // 变更提交人及
             Optional<BaseInfoResponse> baseInfo = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(newSubmitManId)).stream().findAny();
-            if(!baseInfo.isPresent()){
+            if (!baseInfo.isPresent()) {
                 throw new BaseBizRuntimeException("接收人没有默认部门，无法修改");
             }
 
@@ -652,7 +662,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizDemandIdList = bizChangeLogDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
             Set<Long> bizDemandIdSet = new HashSet<>(bizDemandIdList);
             for (BizDemandDO e : bizDemandDOList) {
-                if(!bizDemandIdSet.contains(e.getId())){
+                if (!bizDemandIdSet.contains(e.getId())) {
                     continue;
                 }
 
@@ -671,6 +681,142 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizChangeLogMapper.batchInsert(bizChangeLogDOList);
             bizDemandMapper.updateSubmitMan(bizDemandIdList, newSubmitMan, newSubmitManId, groupId);
         }
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> completed(BizDemandCompletedReq bizDemandCompleted) {
+        // 参数
+        Long id = bizDemandCompleted.getId();
+        //页面未刷新时为null
+        String solvePlan = bizDemandCompleted.getSolvePlan() == null ? StringUtils.EMPTY : bizDemandCompleted.getSolvePlan();
+
+        BizDemandDO bizDemandDO = bizDemandMapper.selectById(id);
+        Integer oldStatus = bizDemandDO.getStatus();
+        Integer newStatus = BizDemandStatusEnum.TO_CONFIRM.getCode();
+
+        // 更新
+        String oldRjectReason = bizDemandDO.getRejectReason();
+        String oldSolvePlan = bizDemandDO.getSolvePlan();
+        bizDemandDO.setRejectReason(StringUtils.EMPTY);
+        bizDemandDO.setStatus(newStatus);
+        bizDemandDO.setSolvePlan(solvePlan);
+        bizDemandMapper.fullUpdate(bizDemandDO);
+
+        // 日志
+        String oldValue = BizDemandStatusEnum.getTextByCode(oldStatus);
+        String newValue = BizDemandStatusEnum.getTextByCode(newStatus);
+        bizDemandLogComponent.addLogWhenModifyData(
+                oldValue,
+                newValue,
+                id,
+                BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
+                true,
+                ButtonActionEnum.COMPLETED_NOT_DEV.getText());
+
+        if(!Objects.equal(oldSolvePlan,bizDemandCompleted.getSolvePlan())){
+            bizDemandLogComponent.addLogWhenModifyData(
+                    oldSolvePlan,
+                    bizDemandCompleted.getSolvePlan(),
+                    id,
+                    BizChangeLogFieldEnum.SOLVE_PLAN.getText(),
+                    true);
+        }
+
+        if (StringUtils.isNotEmpty(oldRjectReason)) {
+            bizDemandLogComponent.addLogWhenModifyData(
+                    oldRjectReason,
+                    StringUtils.EMPTY,
+                    id,
+                    BizChangeLogFieldEnum.REJECT_REASON.getText(),
+                    true);
+        }
+        // 通知需求提交人
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        messageEventPublisher.publish(new BizDemandCompletedMsgEvent(
+                this,
+                bizDemandDO.getId(),
+                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
+                bizDemandDO.getSubmitManId(),
+                bizDemandDO.getName()
+        ));
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> completedAgree(BizDemandCompletedAgreeReq bizDemandCompletedAgreeReq) {
+        Long id = bizDemandCompletedAgreeReq.getId();
+
+        BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(id);
+        Integer oldStatus = oldBizDemandDO.getStatus();
+        Integer newStatus = BizDemandStatusEnum.COMPLETED.getCode();
+
+        // 更新
+        BizDemandDO bizDemandDO = new BizDemandDO();
+        bizDemandDO.setId(id);
+        bizDemandDO.setStatus(newStatus);
+        bizDemandMapper.update(bizDemandDO);
+
+        // 日志
+        String oldStatusText = BizDemandStatusEnum.getTextByCode(oldStatus);
+        String newStatusText = BizDemandStatusEnum.getTextByCode(newStatus);
+        bizDemandLogComponent.addLogWhenModifyData(
+                oldStatusText,
+                newStatusText,
+                id,
+                BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
+                true,
+                ButtonActionEnum.AGREE.getText());
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> completedReject(BizDemandCompletedRejectReq bizDemandCompletedRejectReq) {
+        Long id = bizDemandCompletedRejectReq.getId();
+        String reason = bizDemandCompletedRejectReq.getRejectReason();
+
+        BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(id);
+        Integer oldStatus = oldBizDemandDO.getStatus();
+        Integer newStatus = BizDemandStatusEnum.RECEIVED.getCode();
+
+        // 更新
+        BizDemandDO bizDemandDO = new BizDemandDO();
+        bizDemandDO.setId(id);
+        bizDemandDO.setStatus(newStatus);
+        bizDemandDO.setRejectReason(reason);
+        bizDemandMapper.update(bizDemandDO);
+
+        // 日志
+        String oldStatusText = BizDemandStatusEnum.getTextByCode(oldStatus);
+        String newStatusText = BizDemandStatusEnum.getTextByCode(newStatus);
+        bizDemandLogComponent.addLogWhenModifyData(
+                oldStatusText,
+                newStatusText,
+                id,
+                BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
+                true,
+                ButtonActionEnum.REFUSED.getText());
+        bizDemandLogComponent.addLogWhenModifyData(
+                StringUtils.EMPTY,
+                reason,
+                id,
+                BizChangeLogFieldEnum.REJECT_REASON.getText(),
+                true
+        );
+
+
+        // 通知
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        messageEventPublisher.publish(new BizDemandCompletedRejectMsgEvent(
+                this,
+                oldBizDemandDO.getId(),
+                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
+                oldBizDemandDO.getReceiveManId(),
+                oldBizDemandDO.getName()
+        ));
 
         return BaseResult.success(true);
     }

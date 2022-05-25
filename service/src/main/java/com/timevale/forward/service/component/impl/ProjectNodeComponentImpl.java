@@ -62,27 +62,28 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
 
     @Override
     public void buildDefaultNode(Date projectStartDate, Date projectEndDate, Long projectId) {
-        List<ProjectNodeDO> list = new ArrayList<>();
-        for (int i = 1; i <= 11; i++) {
+        List<ProjectNodeDO> nodeDOList = new ArrayList<>();
+
+        // 遍历
+        ProjectNodeEnum[] nodeEnums = ProjectNodeEnum.values();
+        for (ProjectNodeEnum e : nodeEnums) {
             ProjectNodeDO nodeDO = new ProjectNodeDO();
-            nodeDO.setName(ProjectNodeEnum.DEFAULT_NODE.get(i));
-            if (i == 1) {
+
+            nodeDO.setName(e.getText());
+            if(ProjectNodeEnum.START_PLAN.equals(e)){
                 nodeDO.setPlanDate(projectStartDate);
             }
-            if (i == 11) {
+            if(ProjectNodeEnum.PUBLISH_OFFICIAL.equals(e)){
                 nodeDO.setPlanDate(projectEndDate);
             }
-            list.add(nodeDO);
+            nodeDOList.add(nodeDO);
         }
-        add(list, projectId);
+        add(nodeDOList, projectId);
     }
 
     private void fillValue(Long projectId, List<ProjectNodeDO> projectNodeDO) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         projectNodeDO.forEach(t -> {
             t.setProjectId(projectId);
-            t.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-            t.setCreateManId(userInfo.getId());
         });
     }
 }

@@ -25,7 +25,9 @@ public enum FileTypeEnum {
     // 线上bug
     BUG_ONLINE(7),
     // 故障单
-    TROUBLE_TICKET(8)
+    TROUBLE_TICKET(8),
+    // 详设评审
+    TECH_REVIEW(9)
     ;
 
     private Integer code;

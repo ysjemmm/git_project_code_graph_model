@@ -30,4 +30,9 @@ public class ProductBizDemandDO extends BaseDO {
      * 需求名称
      */
     private String name;
+
+    /**
+     * 提交人
+     */
+    private String submitManId;
 }
