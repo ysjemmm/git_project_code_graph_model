@@ -23,10 +23,7 @@ import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.observer.event.BizDemandInvalidMsgEvent;
-import com.timevale.forward.service.observer.event.BizDemandReceivedMsgEvent;
-import com.timevale.forward.service.observer.event.BizDemandRejectMsgEvent;
-import com.timevale.forward.service.observer.event.BizDemandToReceiveMsgEvent;
+import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -339,14 +336,26 @@ public class BizDemandServiceImpl implements BizDemandService {
         fileComponent.update(fileIdList, bizDemandModifyReq.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
 
 
+        // 产品线变更带来的接收人变更
         if (!Objects.equal(oldBizDemandDO.getReceiveManId(), newBizDemandDO.getReceiveManId())) {
-            // 产品线变更带来的接收人变更
             messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
                     this,
                     oldBizDemandDO.getId(),
                     oldBizDemandDO.getSubmitMan(),
                     newBizDemandDO.getReceiveManId(),
                     newBizDemandDO.getName()
+            ));
+        }
+
+        // 预期上线时间变更带来的通知
+        if(!Objects.equal(oldBizDemandDO.getPlanReleaseDate(), newBizDemandDO.getPlanReleaseDate())){
+            messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
+                    this,
+                    oldBizDemandDO.getId(),
+                    oldBizDemandDO.getSubmitManId(),
+                    newBizDemandDO.getName(),
+                    BizDemandStatusEnum.getTextByCode(newBizDemandDO.getStatus()),
+                    PlanReleaseDateEnum.getTextByCode(newBizDemandDO.getPlanReleaseDate())
             ));
         }
 
