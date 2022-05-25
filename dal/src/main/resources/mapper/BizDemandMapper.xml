@@ -64,6 +64,9 @@
                     </otherwise>
                 </choose>
             </if>
+            <if test="projectEndDate != null">
+                project_end_date = #{projectEndDate},
+            </if>
             <if test="true">
                 modify_man_id = #{modifyManId},
                 modify_man = #{modifyMan},
