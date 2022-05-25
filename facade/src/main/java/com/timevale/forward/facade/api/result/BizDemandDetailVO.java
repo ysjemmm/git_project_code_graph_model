@@ -85,6 +85,9 @@ public class BizDemandDetailVO extends ToString {
     @ApiModelProperty("项目发布时间")
     private Date endDate;
 
+    @ApiModelProperty("项目发布时间（新）")
+    private Date projectEndDate;
+
     @ApiModelProperty("驳回理由")
     private Integer reason;
 
