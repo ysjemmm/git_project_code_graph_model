@@ -90,8 +90,8 @@
 
     <select id="selectList" resultType="com.timevale.forward.dal.entity.BizDemandListDO">
         select bd.id, bd.name, bd.dept_id, bd.status, bd.priority, bd.receive_man,  bd.receive_man_id, bd.target_customer,
-               bd.submit_man, bd.submit_man_id,
-               bd.plan_release_date, bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date,
+               bd.submit_man, bd.submit_man_id, bd.plan_release_date, bd.project_end_date
+               bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date,
                pl.id productLineId, pl.name productLineName,
                b.id bizDomainId , b.name bizDomainName
         from biz_demand bd
@@ -170,22 +170,14 @@
                 AND p.is_deleted = false
                 )
             </if>
-            <choose>
-                <when test="createDateStart!=null and createDateEnd!=null">
-                    and bd.create_date &gt;= #{createDateStart}
-                    and bd.create_date &lt;= #{createDateEnd}
-                </when>
-                <otherwise>
-                    <choose>
-                        <when test="createDateStart!=null">
-                            and bd.create_date &gt;= #{createDateStart}
-                        </when>
-                        <when test="createDateEnd!=null">
-                            and bd.create_date &lt;= #{createDateEnd}
-                        </when>
-                    </choose>
-                </otherwise>
-            </choose>
+            <if test="createDateStart!=null and createDateEnd!=null">
+                and bd.create_date &gt;= #{createDateStart}
+                and bd.create_date &lt;= #{createDateEnd}
+            </if>
+            <if test="projectEndDateStart != null and projectEndDateEnd != null">
+                and bd.project_end_date &gt;= #{projectEndDate}
+                and bd.project_end_date &lt;= #{projectEndDate}
+            </if>
             and bd.is_deleted = false
         </where>
     </select>

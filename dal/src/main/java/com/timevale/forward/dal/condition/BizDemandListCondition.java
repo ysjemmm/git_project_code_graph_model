@@ -100,4 +100,14 @@ public class BizDemandListCondition {
      * 业务需求id
      */
     private List<Long> bizDemandIds;
+
+    /**
+     * 项目发布时间-起始时间
+     */
+    private Date projectEndDateStart;
+
+    /**
+     * 项目发布时间-结束时间
+     */
+    private Date projectEndDateEnd;
 }
