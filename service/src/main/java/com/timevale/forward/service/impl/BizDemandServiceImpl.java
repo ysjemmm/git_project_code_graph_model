@@ -354,7 +354,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                     oldBizDemandDO.getId(),
                     oldBizDemandDO.getSubmitManId(),
                     newBizDemandDO.getName(),
-                    BizDemandStatusEnum.getTextByCode(newBizDemandDO.getStatus()),
+                    BizDemandStatusEnum.getTextByCode(oldBizDemandDO.getStatus()),
                     PlanReleaseDateEnum.getTextByCode(newBizDemandDO.getPlanReleaseDate())
             ));
         }
