@@ -19,6 +19,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -52,6 +53,12 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Resource
     private ProjectNodeComponent projectNodeComponent;
+
+    @Resource
+    private ProjectProductDemandMapper projectProductDemandMapper;
+
+    @Resource
+    private ProductBizDemandMapper productBizDemandMapper;
 
 
     @Override
@@ -273,6 +280,23 @@ public class ProjectComponentImpl implements ProjectComponent {
         ProjectDO projectDO = projectMapper.get(projectId);
         projectDO.setNodeStatus(nodeStatus);
         projectMapper.update(projectDO);
+    }
+
+    @Override
+    public List<Long> getLinkBizDemandIds(Long projectId) {
+        if(projectId==null){
+            return Lists.emptyList();
+        }
+        List<Long> productDemandIds = projectProductDemandMapper.getByProjectId(projectId)
+                .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
+        if(CollectionUtils.isEmpty(productDemandIds)){
+            return Lists.emptyList();
+        }
+
+        List<Long> bizDemandIds = productBizDemandMapper.selectByProductDemandIds(productDemandIds)
+                .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
+        log.info("项目:{},关联的有业务需求:{}",projectId,bizDemandIds);
+        return bizDemandIds;
     }
 
 

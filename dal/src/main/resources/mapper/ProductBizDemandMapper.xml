@@ -93,4 +93,16 @@
             and a.biz_demand_id = #{bizDemandId} and a.is_deleted=false
         </where>
     </select>
+
+    <select id="selectByProductDemandIds" resultType="com.timevale.forward.dal.entity.ProductBizDemandDO">
+        select a.id, a.product_demand_id, a.biz_demand_id, a.is_deleted
+        from product_biz_demand a
+        <where>
+            and a.product_demand_id IN
+            <foreach item="item" index="index" collection="productDemandIds" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            and a.is_deleted=false
+        </where>
+    </select>
 </mapper>

@@ -113,6 +113,12 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private ProjectPublishPlanComponent projectPublishPlanComponent;
 
+    @Resource
+    private BizDemandComponent bizDemandComponent;
+
+    @Resource
+    private ProductBizDemandMapper productBizDemandMapper;
+
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -204,7 +210,7 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("项目新增接收参数:{}", projectAddReq);
         ProjectDO project = projectMapper.getByName(projectAddReq.getName());
 
-        if(projectAddReq.getName().contains(CommonConstant.BLANK)){
+        if (projectAddReq.getName().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("项目名称中请勿包含空格");
         }
         if (project != null) {
@@ -407,6 +413,10 @@ public class ProjectServiceImpl implements ProjectService {
             productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
 
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.LINK.getText());
+
+            List<Long> bizDemandIds = productBizDemandMapper.selectByProductDemandIds(productDemandIds)
+                    .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
+            bizDemandComponent.updateProjectEndDate(bizDemandIds);
         } else {
             projectProductDemandComponent.update(null, productDemandIds.get(0));
 
@@ -520,7 +530,7 @@ public class ProjectServiceImpl implements ProjectService {
         return true;
     }
 
-    private void fillInfoWhenModify(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
+    private void fillInfoWhenModify(List<ProjectNodeDO> projectNodes, ProjectDO newProject) {
         Map<String, ProjectNodeDO> nodeMap = projectNodes
                 .stream()
                 .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
@@ -530,7 +540,7 @@ public class ProjectServiceImpl implements ProjectService {
                 && nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getText()) == null;
         if (checkTask) {
             //删除需求规划阶段时需要校验是否有关联任务,若有关联待执行&进行中&已完成&已暂停的任务,不能删除
-            List<TaskDO> taskDOList = taskMapper.getByProjectId(projectDO.getId())
+            List<TaskDO> taskDOList = taskMapper.getByProjectId(newProject.getId())
                     .stream().filter(a -> TaskStageEnum.DEMAND.getCode().equals(a.getStage())
                             && !TaskStatusEnum.INVALID.getCode().equals(a.getStatus())).collect(Collectors.toList());
             if (CollectionUtils.isNotEmpty(taskDOList)) {
@@ -539,7 +549,7 @@ public class ProjectServiceImpl implements ProjectService {
         }
         // 计算项目状态
         ProjectNodeDO node = null;
-        Integer oldStatus = projectDO.getStatus();
+        Integer oldStatus = newProject.getStatus();
         if ((node = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText())) != null && node.getActualDate() != null) {
             if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
                 // 编辑项目
@@ -551,16 +561,22 @@ public class ProjectServiceImpl implements ProjectService {
                 throw new BaseBizRuntimeException("请填写完其他节点的实际时间后,再填写发布正式的实际时间");
             }
         }
-        projectComponent.fillInfo(projectNodes, projectDO);
+        projectComponent.fillInfo(projectNodes, newProject);
         if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
             // 编辑项目时，当状态是暂停,不修改项目状态
-            projectDO.setStatus(oldStatus);
+            newProject.setStatus(oldStatus);
         }
-        projectMapper.update(projectDO);
-        if (!Objects.equals(projectDO.getStatus(), oldStatus)) {
+        ProjectDO oldProject = projectMapper.get(newProject.getId());
+        projectMapper.update(newProject);
+        if (!Objects.equals(newProject.getStatus(), oldStatus)) {
             //状态不一致时,更新产品需求状态
-            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
-            projectLogComponent.addLogWhenStatusChange(oldStatus, projectDO.getStatus(), projectDO.getId(), ButtonActionEnum.MODIFY.getText());
+            productDemandComponent.updateProductDemandStatus(newProject.getId(), newProject.getStatus());
+            projectLogComponent.addLogWhenStatusChange(oldStatus, newProject.getStatus(), newProject.getId(), ButtonActionEnum.MODIFY.getText());
+        }
+        if (!Objects.equals(oldProject.getPlanEndDate(), newProject.getPlanEndDate())
+                || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
+            List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProject.getId());
+            bizDemandComponent.updateProjectEndDate(bizDemandIds);
         }
         log.info("更新项目信息完成");
     }

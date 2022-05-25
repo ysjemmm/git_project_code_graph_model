@@ -87,9 +87,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             result = BizDemandStatusEnum.PROJECTING.getCode();
         } else if (ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
             result = BizDemandStatusEnum.AVAILABLE.getCode();
-        }else if (ProductDemandStatusEnum.WAITING.getCode().equals(status)||ProductDemandStatusEnum.SUSPEND.getCode().equals(status)) {
+        } else if (ProductDemandStatusEnum.WAITING.getCode().equals(status) || ProductDemandStatusEnum.SUSPEND.getCode().equals(status)) {
             result = BizDemandStatusEnum.PD_LINKED.getCode();
-        }else {
+        } else {
             result = BizDemandStatusEnum.RECEIVED.getCode();
         }
 
@@ -136,7 +136,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Override
     public String getDeptChainName(Long deptId) {
-        if(deptId == null){
+        if (deptId == null) {
             return StringUtils.EMPTY;
         }
         StringBuilder deptName = new StringBuilder();
@@ -227,5 +227,20 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
         return BaseResult.success(pageQueryResult);
+    }
+
+    @Override
+    public void updateProjectEndDate(List<Long> bizDemandIds) {
+        bizDemandIds.forEach(a -> {
+            BizDemandDO bizDemandDO = bizDemandMapper.selectById(a);
+            Date projectEndDate = getProjectEndDate(a);
+            if (projectEndDate != null && !projectEndDate.equals(bizDemandDO.getProjectEndDate())) {
+                int dayOfMonth = DateUtil.getDayOfMonth(projectEndDate);
+                bizDemandDO.setPlanReleaseDate(dayOfMonth - 1);
+                bizDemandDO.setProjectEndDate(projectEndDate);
+                bizDemandMapper.update(bizDemandDO);
+                log.info("业务需求id:{},更新前发布时间:{},更新后发布时间:{}",a,bizDemandDO.getProjectEndDate(),projectEndDate);
+            }
+        });
     }
 }
