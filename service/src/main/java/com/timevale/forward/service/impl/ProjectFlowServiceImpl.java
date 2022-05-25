@@ -65,8 +65,8 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
     @Resource
     private ProjectFlowComponent projectFlowComponent;
 
-    @Value("${flow.baseUrl:http://forward-front-forward-itm-v1.projectk8s.tsign.cn/projectManagement/edit?id=%s&type=check}")
-    private String baseUrl;
+    @Value("${domain_name:http://forward-front-forward-itm-v1.projectk8s.tsign.cn/}")
+    private String domainName;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -162,6 +162,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         variables.put("reviewName", reviewName);
         String projectName = projectMapper.get(projectFlowAddReq.getProjectId()).getName();
         variables.put("projectName", projectName);
+        String baseUrl=domainName+ "projectManagement/edit?id=%d&type=check";
         variables.put("projectUrl", String.format(baseUrl, projectFlowAddReq.getProjectId()));
         List<String> reviewIds = projectFlowAddReq.getReviews().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
         variables.put("review", reviewIds);
