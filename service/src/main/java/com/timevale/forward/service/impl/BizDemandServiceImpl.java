@@ -703,12 +703,14 @@ public class BizDemandServiceImpl implements BizDemandService {
                 true,
                 ButtonActionEnum.COMPLETED_NOT_DEV.getText());
 
-        bizDemandLogComponent.addLogWhenModifyData(
-                oldSolvePlan,
-                solvePlan,
-                id,
-                BizChangeLogFieldEnum.SOLVE_PLAN.getText(),
-                true);
+        if(!Objects.equal(oldSolvePlan,bizDemandCompleted.getSolvePlan())){
+            bizDemandLogComponent.addLogWhenModifyData(
+                    oldSolvePlan,
+                    bizDemandCompleted.getSolvePlan(),
+                    id,
+                    BizChangeLogFieldEnum.SOLVE_PLAN.getText(),
+                    true);
+        }
 
         if (StringUtils.isNotEmpty(oldRjectReason)) {
             bizDemandLogComponent.addLogWhenModifyData(

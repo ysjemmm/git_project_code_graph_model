@@ -240,10 +240,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             }else if(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText().equals(name)
                     || ProjectNodeEnum.DEMAND_CONSTRUE.getText().equals(name)
                     || ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText().equals(name)){
-            } else if (ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText().equals(name)
-                    || ProjectNodeEnum.DEMAND_CONSTRUE.getText().equals(name)) {
                 status = ProjectStatusEnum.PLANING.getCode();
-
             } else if (ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText().equals(name)
                     || ProjectNodeEnum.DEVELOP_START.getText().equals(name)
                     || ProjectNodeEnum.WRITE_TEST_CASES.getText().equals(name)

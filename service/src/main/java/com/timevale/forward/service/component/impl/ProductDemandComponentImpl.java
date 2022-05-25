@@ -296,7 +296,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         if (pdStauts != null && !pdStauts.equals(ProductDemandStatusEnum.INVALID.getCode())) {
             if (pdStauts.equals(ProductDemandStatusEnum.WAITING.getCode())
                     || pdStauts.equals(ProductDemandStatusEnum.SUSPEND.getCode())) {
-                return BizDemandStatusEnum.RECEIVED.getCode();
+                return BizDemandStatusEnum.PD_LINKED.getCode();
             }
             if (pdStauts.equals(ProductDemandStatusEnum.INCLUDED.getCode())) {
                 return BizDemandStatusEnum.INCLUDE_PROJECT.getCode();

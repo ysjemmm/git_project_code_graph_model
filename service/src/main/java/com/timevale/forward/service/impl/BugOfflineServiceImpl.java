@@ -688,23 +688,27 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         statusLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
         statusLogDO.setField(BugLogFieldEnum.STATUS.getText());
 
-        BugLogDO causeLogDO = new BugLogDO();
-        causeLogDO.setOldValue(oldCause);
-        causeLogDO.setNewValue(bugOfflineReq.getCause());
-        causeLogDO.setMainId(bugOfflineReq.getId());
-        causeLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        causeLogDO.setField(BugLogFieldEnum.CAUSE.getText());
+        if(!Objects.equals(oldCause,bugOfflineReq.getCause())){
+            BugLogDO causeLogDO = new BugLogDO();
+            causeLogDO.setOldValue(oldCause);
+            causeLogDO.setNewValue(bugOfflineReq.getCause());
+            causeLogDO.setMainId(bugOfflineReq.getId());
+            causeLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+            causeLogDO.setField(BugLogFieldEnum.CAUSE.getText());
+            bugLogDOList.add(causeLogDO);
+        }
 
-        BugLogDO solvePlanLogDO = new BugLogDO();
-        solvePlanLogDO.setOldValue(oldPlan);
-        solvePlanLogDO.setNewValue(bugOfflineReq.getSolvePlan());
-        solvePlanLogDO.setMainId(bugOfflineReq.getId());
-        solvePlanLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
-        solvePlanLogDO.setField(BugLogFieldEnum.SOLVE_PLAN.getText());
+        if(!Objects.equals(oldPlan,bugOfflineReq.getSolvePlan())){
+            BugLogDO solvePlanLogDO = new BugLogDO();
+            solvePlanLogDO.setOldValue(oldPlan);
+            solvePlanLogDO.setNewValue(bugOfflineReq.getSolvePlan());
+            solvePlanLogDO.setMainId(bugOfflineReq.getId());
+            solvePlanLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+            solvePlanLogDO.setField(BugLogFieldEnum.SOLVE_PLAN.getText());
+            bugLogDOList.add(solvePlanLogDO);
+        }
 
-        bugLogDOList.add(causeLogDO);
         bugLogDOList.add(statusLogDO);
-        bugLogDOList.add(solvePlanLogDO);
 
         //往bug日志表中插入数据
         bugLogMapper.batchInsert(bugLogDOList);
