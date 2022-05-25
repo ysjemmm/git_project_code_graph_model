@@ -153,11 +153,8 @@ public class ProjectServiceImpl implements ProjectService {
             throw new BaseBizRuntimeException("找不到该项目");
         }
         Integer oldStatus = projectDO.getStatus();
-        if (!ProjectStatusEnum.WAITING.getCode().equals(oldStatus)
-                && !ProjectStatusEnum.PLANING.getCode().equals(oldStatus)
-                && !ProjectStatusEnum.DEVING.getCode().equals(oldStatus)
-                && !ProjectStatusEnum.TESTING.getCode().equals(oldStatus)) {
-            throw new BaseBizRuntimeException("项目状态不是待启动、规划中、研发中、测试中,不能修改状态");
+        if (ProjectStatusEnum.INVALID.getCode().equals(oldStatus) || ProjectStatusEnum.RELEASED.getCode().equals(oldStatus)) {
+            throw new BaseBizRuntimeException("项目状态为已作废或已发布时,不能修改状态");
         }
         projectDO.setStatus(type);
         projectMapper.update(projectDO);

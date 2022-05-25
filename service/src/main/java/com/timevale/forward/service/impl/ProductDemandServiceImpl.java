@@ -178,10 +178,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (productDemand == null) {
             throw new BaseBizRuntimeException("找不到该产品需求");
         }
-        if (!ProductDemandStatusEnum.WAITING.getCode().equals(productDemand.getStatus())
-                && !ProductDemandStatusEnum.INCLUDED.getCode().equals(productDemand.getStatus())
-                && !ProductDemandStatusEnum.PROGRESS.getCode().equals(productDemand.getStatus())) {
-            throw new BaseBizRuntimeException("产品需求状态不是待排期、已列入项目、项目进行中,不能修改状态");
+        if (ProductDemandStatusEnum.INVALID.getCode().equals(productDemand.getStatus())
+                || ProductDemandStatusEnum.ONLINE.getCode().equals(productDemand.getStatus())) {
+            throw new BaseBizRuntimeException("产品需求状态为已作废或已完成上线时,不能修改状态");
         }
         Integer oldStatus = productDemand.getStatus();
         // 更新需求状态
