@@ -76,9 +76,6 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         BigDecimal completedTime = new BigDecimal(0);
         BigDecimal planUseTime = new BigDecimal(0);
         for (TaskDO e : taskDOList) {
-            if(e.getPlanUseTime() == null){
-                continue;
-            }
             planUseTime = planUseTime.add(e.getPlanUseTime());
             if(TaskStatusEnum.DONE.getCode().equals(e.getStatus())){
                 completedTime = completedTime.add(e.getPlanUseTime());
@@ -105,6 +102,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         result.setTaskCount(taskDOList.size());
         result.setBugOfflineCount(bugOfflineDOList.size());
 
+        // 逾期任务数
 
 
 

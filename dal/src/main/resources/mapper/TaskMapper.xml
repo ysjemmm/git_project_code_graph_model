@@ -153,7 +153,7 @@
 
     <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.TaskDO">
         select a.id,a.project_id,product_line_id, a.name, a.stage ,a.status,a.todo, a.todo_id,
-            a.plan_start_date,a.plan_end_date,
+            a.plan_start_date,a.plan_end_date, a.plan_use_time,
             a.actual_start_date,a.actual_end_date,
             a.create_man_id, a.create_man,a.create_date,a.modify_date
         from task a
