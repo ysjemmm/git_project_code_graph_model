@@ -83,4 +83,16 @@ public class BugOfflineMD extends BaseMD{
     @FieldCompare(fieldName = "不用修复原因", enumClass = BugUnHandleReasonEnum.class)
     private Integer unhandleReason;
 
+    /**
+     * bug产生原因
+     */
+    @FieldCompare(fieldName = "bug产生原因")
+    private String cause;
+
+    /**
+     * 解决方案
+     */
+    @FieldCompare(fieldName = "解决方案")
+    private String solvePlan;
+
 }

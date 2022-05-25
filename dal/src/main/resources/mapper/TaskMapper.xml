@@ -100,19 +100,19 @@
 
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.TaskDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        insert into task (project_id,product_line_id, name, stage ,status,todo,todo_id
+        insert into task (project_id,product_line_id, name, stage ,status,todo,todo_id, `desc`
         , plan_start_date, plan_end_date, plan_use_time
         ,actual_start_date,actual_end_date,task_use_time
         ,create_man,create_man_id)
         values
-        (#{projectId},#{productLineId}, #{name}, #{stage}, #{status}, #{todo}, #{todoId}
+        (#{projectId},#{productLineId}, #{name}, #{stage}, #{status}, #{todo}, #{todoId}, #{desc}
         , #{planStartDate}, #{planEndDate}, #{planUseTime}
         , #{actualStartDate}, #{actualEndDate}, #{taskUseTime}
         ,#{createMan},#{createManId})
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.TaskDO">
-        select a.id,a.project_id,product_line_id, a.name,a.todo,a.todo_id, a.stage ,a.status,
+        select a.id,a.project_id,product_line_id, a.name,a.todo,a.todo_id, a.stage ,a.status, a.`desc`,
         a.plan_use_time,a.task_use_time,
         a.plan_start_date,a.plan_end_date,
         a.actual_start_date,a.actual_end_date,a.is_deleted,
@@ -141,6 +141,7 @@
             <if test="planUseTime != null">plan_use_time = #{planUseTime},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            <if test="desc != null">`desc` = #{desc},</if>
             actual_start_date = #{actualStartDate},
             actual_end_date = #{actualEndDate},
             todo_id = #{todoId}
@@ -151,9 +152,10 @@
     </update>
 
     <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.TaskDO">
-        select a.id,a.project_id,product_line_id, a.name, a.stage ,a.status,a.todo, a.todo_id,a.plan_start_date,a.plan_end_date,
-        a.actual_start_date,a.actual_end_date,
-        a.create_man_id, a.create_man,a.create_date,a.modify_date
+        select a.id,a.project_id,product_line_id, a.name, a.stage ,a.status,a.todo, a.todo_id,
+            a.plan_start_date,a.plan_end_date,
+            a.actual_start_date,a.actual_end_date,
+            a.create_man_id, a.create_man,a.create_date,a.modify_date
         from task a
         <where>
             a.project_id = #{projectId} and a.is_deleted=false

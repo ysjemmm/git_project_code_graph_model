@@ -144,6 +144,11 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(TaskAddReq taskAddReq) {
         log.info("任务新增接收参数:{}", taskAddReq);
+
+        if(taskAddReq.getName().contains(CommonConstant.BLANK)){
+            throw new BaseBizRuntimeException("任务名称中请勿包含空格");
+        }
+
         TaskDO taskDO = TaskCopier.INSTANCE.convert(taskAddReq);
         //名称查重
         checkNameExisted(taskDO);

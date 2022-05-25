@@ -85,4 +85,9 @@ public class ProjectDO extends BaseDO {
      */
     private List<PersonDO> pds;
 
+    /**
+     * 是否在发布平台发布
+     */
+    private Integer isPlatformPublish;
+
 }

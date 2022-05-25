@@ -102,6 +102,7 @@ public class HomePageServiceImpl implements HomePageService {
             dataIndicatorVO.setProjectReadyStartCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_START.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyInternalAuditCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_INTERNAL_AUDIT.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyConstrueCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_CONSTRUE.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyConstrueReverseCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_CONSTRUE_REVERSE.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyTechnicalDetailReviewCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_TECHNICAL_DETAIL_REVIEW.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyDevelopCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_DEVELOP.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectDevelopingCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.DEVELOPING.getCode().equals(e.getNodeStatus())).count());
@@ -128,6 +129,7 @@ public class HomePageServiceImpl implements HomePageService {
         int bizDemandCount = 0;
         int bugOnLineCount = 0;
         int bugOfflineCount = 0;
+        int bizDemandReceivedCount = 0;
 
         // 获取我及所有下属
         List<String> allMyStaffWithSelf = Lists.newArrayList(userInfo.getId());
@@ -143,6 +145,8 @@ public class HomePageServiceImpl implements HomePageService {
                     .build());
             bizDemandCount = (int) bizDemandListDOList.stream()
                     .filter(e -> e.getStatus().equals(BizDemandStatusEnum.EVALUATE.getCode())).count();
+            bizDemandReceivedCount = (int) bizDemandListDOList.stream()
+                    .filter(e -> e.getStatus().equals(BizDemandStatusEnum.RECEIVED.getCode())).count();
         } else {
             List<TaskDO> taskDOList = taskMapper.selectByExecutorList(Lists.newArrayList(allMyStaffWithSelf));
             taskCount = (int) taskDOList.stream().filter(e -> TaskStatusEnum.ongoing(e.getStatus())).count();
@@ -185,6 +189,7 @@ public class HomePageServiceImpl implements HomePageService {
         todoCardVO.setBizDemandCount(bizDemandCount);
         todoCardVO.setBugOnlineCount(bugOnLineCount);
         todoCardVO.setBugOfflineCount(bugOfflineCount);
+        todoCardVO.setBizDemandReceivedCount(bizDemandReceivedCount);
 
         return BaseResult.success(todoCardVO);
     }
@@ -389,12 +394,9 @@ public class HomePageServiceImpl implements HomePageService {
 
        if(HomePageTabEnum.TEAM.getCode().equals(homePageProjectBoardReq.getTabType())){
            // 团队面板,团队成员无项目信息时,也需要展示人员信息
-           allMyStaffInfoWithSelfInfo = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
            Map<String, BaseInfoResponse> baseInfoResponseMap = allMyStaffInfoWithSelfInfo
                    .stream().collect(Collectors.toMap(BaseInfoResponse::getAccount, Function.identity()));
            List<String> containProjectInfo = result.stream().map(HomePageProjectBoardVO::getUserId).collect(Collectors.toList());
-
-           allMyStaffNameWithSelf = allMyStaffInfoWithSelfInfo.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toSet());
 
            allMyStaffNameWithSelf.removeAll(containProjectInfo);
 
@@ -418,8 +420,8 @@ public class HomePageServiceImpl implements HomePageService {
     public List<HomePageProjectBoardDTO> filterByDate(UserTypeEnum userType, Date startDate, Date endDate, List<HomePageProjectBoardDTO> list) {
         if (userType.equals(UserTypeEnum.PD)) {
             return list.stream().filter(e -> {
-                Date nodeStart = DateUtil.min(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue());
-                Date nodeEnd = DateUtil.max(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue());
+                Date nodeStart = DateUtil.min(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(),e.getDemandConstrueReverse());
+                Date nodeEnd = DateUtil.max(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(),e.getDemandConstrueReverse());
                 return DateUtil.haveOverlap(nodeStart, nodeEnd, startDate, endDate);
             }).collect(Collectors.toList());
         } else if (userType.equals(UserTypeEnum.RD)) {

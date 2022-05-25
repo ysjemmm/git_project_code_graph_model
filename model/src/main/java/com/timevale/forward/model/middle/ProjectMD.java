@@ -63,4 +63,10 @@ public class ProjectMD extends BaseMD{
      */
     @FieldCompare(fieldName = "项目描述")
     private String desc;
+
+    /**
+     * 是否发布平台发布
+     */
+    @FieldCompare(fieldName = "是否需要在发布平台发布",enumClass = YesOrNoEnum.class)
+    private Integer isPlatformPublish;
 }

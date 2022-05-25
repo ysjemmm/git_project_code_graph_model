@@ -30,4 +30,9 @@ public interface DataCorrectService {
      * 节点状态更新
      */
     BaseResult<Boolean> nodeStatusUpdate();
+
+    /**
+     * 业务需求更新
+     */
+    BaseResult<Boolean> updateBizDemandStatus();
 }

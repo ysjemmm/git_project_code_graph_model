@@ -72,4 +72,10 @@ public class BizDemandModifyReq extends BaseReq {
 
     @ApiModelProperty("需求提交人id")
     private String submitManId;
+
+    @ApiModelProperty("解决方案")
+    private String solvePlan;
+
+    @ApiModelProperty("拒绝原因")
+    private String rejectReason;
 }

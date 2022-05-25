@@ -26,4 +26,10 @@ public class FileAddReq extends BaseReq {
 
     @ApiModelProperty(value = "文件类型(选填):-1产品线图片上传")
     private Integer type;
+
+    @ApiModelProperty(value = "文件key")
+    private String fileKey;
+
+    @ApiModelProperty(value = "文件下载地址")
+    private String downloadUrl;
 }

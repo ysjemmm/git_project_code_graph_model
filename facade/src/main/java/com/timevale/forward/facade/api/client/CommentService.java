@@ -4,6 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.CommentQueryList;
 import com.timevale.forward.facade.api.request.CommentAddReq;
+import com.timevale.forward.facade.api.request.CommentBatchAddReq;
 import com.timevale.forward.facade.api.result.CommentVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
@@ -30,5 +31,13 @@ public interface CommentService {
      * @return 数量
      */
     BaseResult<Boolean> add(CommentAddReq commentAddReq);
+
+    /**
+     * 新增
+     *
+     * @param commentBatchAddReq 评论信息
+     * @return 数量
+     */
+    BaseResult<Boolean> add(CommentBatchAddReq commentBatchAddReq);
 
 }

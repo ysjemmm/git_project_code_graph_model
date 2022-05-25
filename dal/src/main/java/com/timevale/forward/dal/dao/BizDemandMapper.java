@@ -29,6 +29,13 @@ public interface BizDemandMapper {
      */
     int update(BizDemandDO bizDemandDO);
 
+    /**
+     * 更新业务需求信息-完全更新
+     *
+     * @param bizDemandDO 业务需求DO
+     * @return int
+     */
+    int fullUpdate(BizDemandDO bizDemandDO);
 
     /**
      * 选择id获取对应业务需求信息
@@ -73,15 +80,6 @@ public interface BizDemandMapper {
     /**
      * 更新业务需求
      *
-     * @param bizDemandId 业务需求id
-     * @param reason      原因
-     * @return int
-     */
-    int updateReason(@Param("bizDemandId")Long bizDemandId, @Param("reason") Integer reason);
-
-    /**
-     * 更新业务需求
-     *
      * @param idList      业务需求id 列表
      * @param createMan   提交人
      * @param createManId 提交人id
@@ -115,5 +113,13 @@ public interface BizDemandMapper {
      * @return 业务需求DO
      */
     List<BizDemandDO> selectByIds(@Param("ids") List<Long> ids);
+
+    /**
+     * 选择id获取对应业务需求信息
+     *
+     * @param status status
+     * @return 业务需求DO
+     */
+    List<BizDemandDO> selectByStatus(@Param("status") List<Integer> status);
 
 }

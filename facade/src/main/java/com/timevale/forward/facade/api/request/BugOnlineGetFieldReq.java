@@ -4,8 +4,6 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.beans.factory.ObjectFactory;
-import org.springframework.beans.factory.config.Scope;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -21,33 +19,4 @@ public class BugOnlineGetFieldReq extends BaseReq {
     @ApiModelProperty("产品线id集合")
     @NotNull(message = "产品线id不能为空")
     private List<Long> productLineIdList;
-}
-
-
-class ThreadScope implements Scope{
-
-    @Override
-    public Object get(String name, ObjectFactory<?> objectFactory) {
-        return null;
-    }
-
-    @Override
-    public Object remove(String name) {
-        return null;
-    }
-
-    @Override
-    public void registerDestructionCallback(String name, Runnable callback) {
-
-    }
-
-    @Override
-    public Object resolveContextualObject(String key) {
-        return null;
-    }
-
-    @Override
-    public String getConversationId() {
-        return null;
-    }
 }

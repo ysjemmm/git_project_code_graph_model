@@ -6,7 +6,7 @@
         insert into project_node (project_id,name, plan_date, actual_date ,create_man_id, create_man)
         values
         <foreach collection="list" item="i" open="" separator="," close="">
-            (#{i.projectId}, #{i.name}, #{i.planDate}, #{i.actualDate},#{i.createManId},#{i.createMan})
+            (#{i.projectId}, #{i.name}, #{i.planDate}, #{i.actualDate},#{createManId},#{createMan})
         </foreach>
     </insert>
 
@@ -57,4 +57,10 @@
         WHERE project_id = #{projectId} AND
               name = #{name}
     </select>
+
+    <update id="updateActualDateById">
+        update project_node
+        set actual_date=#{actualDate}
+        where id=#{id}
+    </update>
 </mapper>

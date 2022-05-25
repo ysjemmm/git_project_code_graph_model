@@ -82,6 +82,10 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(TroubleTicketAddReq troubleTicketAddReq) {
 
+        if(troubleTicketAddReq.getName().contains(CommonConstant.BLANK)){
+            throw new BaseBizRuntimeException("故障单名称中请勿包含空格");
+        }
+
         // 转换后行插入数据
         TroubleTicketDO troubleTicketDO = TroubleTicketCopier.INSTANCE.convert(troubleTicketAddReq);
         troubleTicketMapper.insert(troubleTicketDO);

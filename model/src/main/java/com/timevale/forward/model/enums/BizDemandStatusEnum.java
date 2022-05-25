@@ -13,6 +13,9 @@ public enum BizDemandStatusEnum {
      */
     EVALUATE(0, "待评估"),
     RECEIVED(10, "已接收"),
+    TO_CONFIRM(13, "待确认"),
+    COMPLETED(15, "已完成无需开发"),
+    PD_LINKED(17, "已关联产品需求"),
     INCLUDE_PROJECT(20, "已列入项目"),
     PROJECTING(30, "项目进行中"),
     AVAILABLE(40, "已完成上线"),

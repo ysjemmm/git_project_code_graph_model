@@ -66,4 +66,12 @@ public interface ProjectNodeMapper {
      * @return ProjectNodeDO
      */
     List<ProjectNodeDO> getByProjectIds(@Param("projectIds") List<Long> projectIds);
+
+    /**
+     * 更新实际时间
+     *
+     * @param id  id
+     * @param actualDate 实际时间
+     */
+    void updateActualDateById(@Param("id") Long id, @Param("actualDate") Date actualDate);
 }

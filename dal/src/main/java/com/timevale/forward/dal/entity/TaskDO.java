@@ -80,4 +80,9 @@ public class TaskDO extends BaseDO {
      */
     private String todoId;
 
+    /**
+     * 任务描述
+     */
+    private String desc;
+
 }

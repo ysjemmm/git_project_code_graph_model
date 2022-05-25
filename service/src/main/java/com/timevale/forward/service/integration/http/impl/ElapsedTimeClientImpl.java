@@ -61,9 +61,7 @@ public class ElapsedTimeClientImpl implements ElapsedTimeClient {
         JSONObject jsonObject = JSONObject.parseObject(result);
         Integer code = jsonObject.getInteger("code");
         if (Integer.valueOf(0).equals(code)) {
-            Long resultTime = jsonObject.getJSONObject("data").getLong("elapsedtime");
-            log.info("获取工作日工作时长返回结果： result{}", resultTime);
-            return resultTime;
+            return jsonObject.getJSONObject("data").getLong("elapsedtime");
         }
         log.info("获取工作日工作时长返回结果: result :{}", result);
         throw new BaseBizRuntimeException("计算工作日工作时长失败！" );

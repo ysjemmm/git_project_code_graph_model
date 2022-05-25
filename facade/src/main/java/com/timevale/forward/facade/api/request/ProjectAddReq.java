@@ -58,4 +58,7 @@ public class ProjectAddReq extends BaseReq {
     @ApiModelProperty("描述")
     private String desc;
 
+    @ApiModelProperty("是否在发布平台发布：0否，1是")
+    private Integer isPlatformPublish;
+
 }

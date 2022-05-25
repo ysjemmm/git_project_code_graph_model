@@ -1,8 +1,6 @@
 package com.timevale.forward.service.component.impl;
 
-import com.timevale.forward.dal.dao.BugOfflineMapper;
 import com.timevale.forward.dal.dao.ProjectProductLineMapper;
-import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.entity.ProjectProductLineDO;
 import com.timevale.forward.service.component.ProjectProductLineComponent;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -27,12 +25,6 @@ public class ProjectProductLineComponentImpl implements ProjectProductLineCompon
 
     @Resource
     private ProjectProductLineMapper projectProductLineMapper;
-
-    @Resource
-    private TaskMapper taskMapper;
-
-    @Resource
-    private BugOfflineMapper bugOfflineMapper;
 
     @Override
     public void add(List<Long> list,Long projectId) {

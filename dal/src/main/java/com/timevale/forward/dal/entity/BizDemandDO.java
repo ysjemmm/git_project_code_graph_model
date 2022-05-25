@@ -89,6 +89,16 @@ public class BizDemandDO extends BaseDO {
     private String submitManId;
 
     /**
+     * 解决方案
+     */
+    private String solvePlan;
+
+    /**
+     * 拒绝原因
+     */
+    private String rejectReason;
+
+    /**
      * 项目发布时间
      */
     private Date projectEndDate;

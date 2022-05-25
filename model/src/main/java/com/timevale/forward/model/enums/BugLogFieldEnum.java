@@ -28,7 +28,19 @@ public enum BugLogFieldEnum {
     /**
      * 原因
      */
-    REASON("bug原因");
+    REASON("bug原因"),
+
+    /**
+     * bug产生原因
+     */
+    CAUSE("bug产生原因"),
+
+    /**
+     * 解决方案
+     */
+    SOLVE_PLAN("解决方案")
+    ;
+
 
     private final String text;
 

@@ -95,4 +95,26 @@ public interface BizDemandService {
      * @return 成功与否
      */
     BaseResult<Boolean> bizDemandBatchTransferCreateMan(BatchTransferReq batchTransferReq);
+
+    /**
+     * 已处理（无需开发）
+     *
+     * @param bizDemandCompleted 业务需求完成
+     */
+    BaseResult<Boolean> completed(BizDemandCompletedReq bizDemandCompleted);
+
+    /**
+     * 已处理（无需开发）同意
+     *
+     * @param bizDemandCompletedAgreeReq 业务需求完成同意要求事情
+     */
+    BaseResult<Boolean> completedAgree(BizDemandCompletedAgreeReq bizDemandCompletedAgreeReq);
+
+    /**
+     * 已处理（无需开发）拒绝
+     *
+     * @param bizDemandCompletedRejectReq 业务需求完成拒绝要求事情
+     */
+    BaseResult<Boolean> completedReject(BizDemandCompletedRejectReq bizDemandCompletedRejectReq);
+
 }
