@@ -394,12 +394,9 @@ public class HomePageServiceImpl implements HomePageService {
 
        if(HomePageTabEnum.TEAM.getCode().equals(homePageProjectBoardReq.getTabType())){
            // 团队面板,团队成员无项目信息时,也需要展示人员信息
-           allMyStaffInfoWithSelfInfo = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
            Map<String, BaseInfoResponse> baseInfoResponseMap = allMyStaffInfoWithSelfInfo
                    .stream().collect(Collectors.toMap(BaseInfoResponse::getAccount, Function.identity()));
            List<String> containProjectInfo = result.stream().map(HomePageProjectBoardVO::getUserId).collect(Collectors.toList());
-
-           allMyStaffNameWithSelf = allMyStaffInfoWithSelfInfo.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toSet());
 
            allMyStaffNameWithSelf.removeAll(containProjectInfo);
 

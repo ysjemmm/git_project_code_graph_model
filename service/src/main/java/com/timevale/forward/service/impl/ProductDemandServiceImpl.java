@@ -30,6 +30,7 @@ import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -103,6 +104,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private ProjectLogComponent projectLogComponent;
+
+    @Resource
+    private BizDemandLogComponent bizDemandLogComponent;
+
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
 
     private static final Integer MAX_LENGTH = 20 * 1000;
 
@@ -202,7 +209,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
                 productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, null);
                 // 作废解业务需求关联
-                productBizDemandComponent.update(productDemandId,null);
+                productBizDemandComponent.update(productDemandId, null);
             }
         }
         String action = ProductDemandStatusEnum.SUSPEND.getCode().equals(type) ? ButtonActionEnum.SUSPEND.getText() : ButtonActionEnum.INVALID.getText();
@@ -382,7 +389,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         log.info("关联or取消关联接收参数:bizDemandLinkReq={}", bizDemandLinkReq);
         List<Long> bizDemandIds = bizDemandLinkReq.getBizDemandIds();
         List<Long> productDemandIds = Lists.newArrayList(bizDemandLinkReq.getProductDemandId());
-        ProductDemandDO productDemand = productDemandMapper.selectById(bizDemandLinkReq.getProductDemandId());
+        ProductDemandDO productDemandDO = productDemandMapper.selectById(bizDemandLinkReq.getProductDemandId());
         Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
 
         if (LinkOrUnLinkEnum.LINK.getCode().equals(bizDemandLinkReq.getType())) {
@@ -390,13 +397,16 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
             productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false);
 
-            productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, ButtonActionEnum.LINK.getText());
+            productDemandLogComponent.addLogWhenLinkOrUnlink(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.LINK.getText());
         } else {
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, true);
+            //当前业务需求下的所有产品需求
+            Long bizDemandId = bizDemandIds.get(0);
 
-            productBizDemandComponent.update(bizDemandLinkReq.getProductDemandId(),bizDemandIds.get(0));
+            productDemandComponent.updateBizDemandStatusWhenUnlink(bizDemandId,productDemandDO.getId());
 
-            productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
+            productBizDemandComponent.update(bizDemandLinkReq.getProductDemandId(), bizDemandId);
+
+            productDemandLogComponent.addLogWhenLinkOrUnlink(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
         }
         return BaseResult.success(true);
     }
@@ -449,12 +459,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         String ownerId = batchTransferReq.getReceiveManId();
 
         // 批量更新
-        if(CollectionUtils.isNotEmpty(idList)){
+        if (CollectionUtils.isNotEmpty(idList)) {
             // 日志
             List<BizChangeLogDO> bizChangeLogDOList = new ArrayList<>();
             List<ProductDemandDO> productDemandDOList = productDemandMapper.selectByIdList(idList);
             for (ProductDemandDO e : productDemandDOList) {
-                if(Objects.equals(e.getOwner(), owner)){
+                if (Objects.equals(e.getOwner(), owner)) {
                     continue;
                 }
                 BizChangeLogDO log = productDemandLogComponent.getLog(e.getOwner(), owner, e.getId(), BizChangeLogFieldEnum.OWNER.getText(), true);
@@ -468,7 +478,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         return BaseResult.success(true);
     }
-
 
     private void checkDescLength(String desc) {
         if (StringUtils.isNotEmpty(desc) && desc.getBytes().length > MAX_LENGTH) {

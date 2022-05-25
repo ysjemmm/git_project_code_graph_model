@@ -22,6 +22,8 @@ public interface BizDemandLogComponent{
 
     void addLogAsProductDemandStatusChange(Map<Long, Integer> oldStatusMap,  Map<Integer, List<Long>> newStatusMap) ;
 
+    void addLogAsProductDemandStatusChange(Long id,Integer oldStatus, Integer newStatus);
+
     BizChangeLogDO getLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active);
 
     BizChangeLogDO getLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active, String action);
