@@ -94,6 +94,16 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="isDelay!=null and isDelay==true">
+                and (
+                actual_end_date &gt; plan_end_date or (actual_end_date is null and now() &gt; plan_end_date)
+                    )
+            </if>
+            <if test="isDelay!=null and isDelay==false">
+                and (
+                actual_end_date &lt;= plan_end_date or (actual_end_date is null and now() &lt;= plan_end_date)
+                )
+            </if>
             and a.is_deleted =false
         </where>
     </select>

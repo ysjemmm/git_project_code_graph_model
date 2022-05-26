@@ -70,7 +70,7 @@ public interface TestBillMapper {
      * @param returnCount returnCount
      * @return
      */
-    List<Long> getByProjectIds(@Param("projectIds") List<Long> projectIds,@Param("returnCountType") Integer returnCountType,@Param("returnCount") Integer returnCount);
+    List<Long> getProjectIds(@Param("projectIds") List<Long> projectIds,@Param("returnCountType") Integer returnCountType,@Param("returnCount") Integer returnCount);
 
 }
 

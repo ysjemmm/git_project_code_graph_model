@@ -74,5 +74,5 @@ public interface ProjectNodeMapper {
      * @param name 节点名称
      * @return list
      */
-    List<Long> getByProjectIds(@Param("projectIds") List<Long> projectIds,@Param("isDelay") Boolean isDelay,@Param("name") String name);
+    List<Long> getProjectIds(@Param("projectIds") List<Long> projectIds,@Param("isDelay") Boolean isDelay,@Param("name") String name);
 }

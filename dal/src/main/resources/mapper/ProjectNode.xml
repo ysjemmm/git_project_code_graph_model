@@ -52,7 +52,7 @@
         where id=#{id}
     </update>
 
-    <select id="getByProjectIds" resultType="long">
+    <select id="getProjectIds" resultType="long">
         select distinct project_id
         from project_node
         <where>

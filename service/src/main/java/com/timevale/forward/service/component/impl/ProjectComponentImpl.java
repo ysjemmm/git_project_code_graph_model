@@ -88,13 +88,13 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         }
         if (condition.getReturnCountType() != null && condition.getReturnCount() != null) {
-            projectIds = testBillMapper.getByProjectIds(projectIds, condition.getReturnCountType(), condition.getReturnCount());
+            projectIds = testBillMapper.getProjectIds(projectIds, condition.getReturnCountType(), condition.getReturnCount());
             if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
         if (condition.getIsDelay() != null) {
-            projectIds = projectNodeMapper.getByProjectIds(projectIds, condition.getIsDelay(), ProjectNodeEnum.SUBMIT_TEST.getText());
+            projectIds = projectNodeMapper.getProjectIds(projectIds, condition.getIsDelay(), ProjectNodeEnum.SUBMIT_TEST.getText());
         }
         if (CollectionUtils.isEmpty(projectIds)) {
             return BaseResult.success(ResultUtil.pageEmpty());

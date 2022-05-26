@@ -87,7 +87,7 @@
         where project_id=#{projectId}  and is_deleted = false
     </select>
 
-    <select id="getByProjectIds" resultType="long">
+    <select id="getProjectIds" resultType="long">
         select distinct project_id
         from test_bill
         <where>
