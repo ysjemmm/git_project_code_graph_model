@@ -9,9 +9,9 @@ import com.timevale.forward.dal.dao.ProjectNodeMapper;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectFlowDO;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
-import com.timevale.forward.model.enums.ButtonActionEnum;
 import com.timevale.forward.model.enums.ProjectFlowStatusEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.component.ProjectLogComponent;
@@ -69,7 +69,7 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
         }
         String processStatus = processInfo.getProcessStatus();
         log.info("返回流程信息 processInfo={}", processInfo);
-        ProjectFlowDO projectFlowDO = projectFlowMapper.get(null,processInstanceId);
+        ProjectFlowDO projectFlowDO = projectFlowMapper.get(null, processInstanceId);
         if (projectFlowDO == null) {
             log.info("无详设流程 flowId={}", processInstanceId);
             return;
@@ -98,11 +98,11 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
             }
 
             Integer newStatus = projectComponent.getStatus(projectFlowDO.getProjectId());
-            if (!Objects.equal(oldProjectDO.getStatus(), newStatus)) {
+            if (!Objects.equal(oldProjectDO.getStatus(), newStatus)
+                    && !ProjectStatusEnum.INVALID.getCode().equals(oldProjectDO.getStatus())
+                    && !ProjectStatusEnum.RELEASED.getCode().equals(oldProjectDO.getStatus())) {
                 oldProjectDO.setStatus(newStatus);
                 projectMapper.update(oldProjectDO);
-                // 日志处理
-                projectLogComponent.addLogWhenStatusChange(oldProjectDO.getStatus(), newStatus, oldProjectDO.getId(), ButtonActionEnum.START_REVIEW.getText());
             }
         }
 
