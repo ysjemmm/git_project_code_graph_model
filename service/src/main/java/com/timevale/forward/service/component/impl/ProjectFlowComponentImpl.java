@@ -100,7 +100,7 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
             Integer newStatus = projectComponent.getStatus(projectFlowDO.getProjectId());
             if (!Objects.equal(oldProjectDO.getStatus(), newStatus)
                     && !ProjectStatusEnum.INVALID.getCode().equals(oldProjectDO.getStatus())
-                    && !ProjectStatusEnum.RELEASED.getCode().equals(oldProjectDO.getStatus())) {
+                    && !ProjectStatusEnum.SUSPEND.getCode().equals(oldProjectDO.getStatus())) {
                 oldProjectDO.setStatus(newStatus);
                 projectMapper.update(oldProjectDO);
             }
