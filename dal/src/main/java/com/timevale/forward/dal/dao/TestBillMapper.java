@@ -3,6 +3,8 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.entity.TestBillDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * @Date 2022/1/21 14:34
  * @Author 望轩
@@ -60,6 +62,16 @@ public interface TestBillMapper {
      * @return boolean 返回结果
      */
     TestBillDO selectByProjectId(@Param("projectId") Long projectId);
+
+    /**
+     *
+     * @param projectIds projectIds
+     * @param returnCountType returnCountType
+     * @param returnCount returnCount
+     * @return
+     */
+    List<Long> getByProjectIds(@Param("projectIds") List<Long> projectIds,@Param("returnCountType") Integer returnCountType,@Param("returnCount") Integer returnCount);
+
 }
 
 

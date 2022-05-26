@@ -86,4 +86,13 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
     private String ascription;
 
+    @ApiModelProperty("提测打回次数判断类型:0=,1>,2>=,3<,4<=")
+    private Integer returnCountType;
+
+    @ApiModelProperty("提测打回次数")
+    private Integer returnCount;
+
+    @ApiModelProperty("提测是否延期")
+    private Boolean isDelay;
+
 }

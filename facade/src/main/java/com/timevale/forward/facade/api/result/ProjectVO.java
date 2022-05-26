@@ -94,4 +94,10 @@ public class ProjectVO extends ToString {
 
     @ApiModelProperty("节点状态名称")
     private String nodeStatusName;
+
+    @ApiModelProperty("提测打回次数")
+    private Integer returnCount;
+
+    @ApiModelProperty("提测是否延期")
+    private Boolean isDelay;
 }

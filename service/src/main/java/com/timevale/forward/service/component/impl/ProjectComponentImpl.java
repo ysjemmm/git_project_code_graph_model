@@ -60,6 +60,8 @@ public class ProjectComponentImpl implements ProjectComponent {
     @Resource
     private ProductBizDemandMapper productBizDemandMapper;
 
+    @Resource
+    private TestBillMapper testBillMapper;
 
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -85,14 +87,26 @@ public class ProjectComponentImpl implements ProjectComponent {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
+        if (condition.getReturnCountType() != null && condition.getReturnCount() != null) {
+            projectIds = testBillMapper.getByProjectIds(projectIds, condition.getReturnCountType(), condition.getReturnCount());
+            if (CollectionUtils.isEmpty(projectIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+        }
+        if (condition.getIsDelay() != null) {
+            projectIds = projectNodeMapper.getByProjectIds(projectIds, condition.getIsDelay(), ProjectNodeEnum.SUBMIT_TEST.getText());
+        }
+        if (CollectionUtils.isEmpty(projectIds)) {
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
         buildConditionBeforeQuery(projectIds, condition);
 
         // 开始分页
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
-        List<ProjectListDO> projectDO = projectMapper.list(condition);
+        List<ProjectListDO> projectDos = projectMapper.list(condition);
 
         // 筛选判空
-        projectIds = projectDO.stream().map(ProjectListDO::getId).collect(Collectors.toList());
+        projectIds = projectDos.stream().map(ProjectListDO::getId).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(projectIds)) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
@@ -107,7 +121,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         Map<Long, List<ProjectProductLineBizDomain>> productLineMap = productLineMapper.getByProjectIds(projectIds)
                 .stream().collect(Collectors.groupingBy(ProjectProductLineBizDomain::getProjectId));
 
-        List<ProjectVO> projectVOList = ProjectCopier.INSTANCE.convert(projectDO);
+        List<ProjectVO> projectVOList = ProjectCopier.INSTANCE.convert(projectDos);
         projectVOList.forEach(a -> {
             List<PersonDO> pds = pdMap.get(a.getId());
             if (CollectionUtils.isNotEmpty(pds)) {
@@ -131,7 +145,8 @@ public class ProjectComponentImpl implements ProjectComponent {
             a.setTypeName(ProjectTypeEnum.getTextByCode(a.getType()));
             a.setStatusName(ProjectStatusEnum.getTextByCode(a.getStatus()));
             a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
-//            a.setWarning(warning.get(a.getId()));
+            a.setReturnCount(condition.getReturnCount());
+            a.setIsDelay(condition.getIsDelay());
         });
 
         // 4.枚举值填充
@@ -157,7 +172,7 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         // 返回分页数据
         PageQueryResult<ProjectVO> pageQueryResult = new PageQueryResult<>();
-        PageInfo<ProjectListDO> pageInfo = new PageInfo<>(projectDO);
+        PageInfo<ProjectListDO> pageInfo = new PageInfo<>(projectDos);
         pageQueryResult.setResultList(projectVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);
@@ -244,9 +259,9 @@ public class ProjectComponentImpl implements ProjectComponent {
             if (ProjectNodeEnum.START_PLAN.getText().equals(name)) {
                 status = ProjectStatusEnum.WAITING.getCode();
 
-            }else if(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText().equals(name)
+            } else if (ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText().equals(name)
                     || ProjectNodeEnum.DEMAND_CONSTRUE.getText().equals(name)
-                    || ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText().equals(name)){
+                    || ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText().equals(name)) {
                 status = ProjectStatusEnum.PLANING.getCode();
             } else if (ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText().equals(name)
                     || ProjectNodeEnum.DEVELOP_START.getText().equals(name)
@@ -284,18 +299,18 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Override
     public List<Long> getLinkBizDemandIds(Long projectId) {
-        if(projectId==null){
+        if (projectId == null) {
             return Lists.emptyList();
         }
         List<Long> productDemandIds = projectProductDemandMapper.getByProjectId(projectId)
                 .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
-        if(CollectionUtils.isEmpty(productDemandIds)){
+        if (CollectionUtils.isEmpty(productDemandIds)) {
             return Lists.emptyList();
         }
 
         List<Long> bizDemandIds = productBizDemandMapper.selectByProductDemandIds(productDemandIds)
                 .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
-        log.info("项目:{},关联的有业务需求:{}",projectId,bizDemandIds);
+        log.info("项目:{},关联的有业务需求:{}", projectId, bizDemandIds);
         return bizDemandIds;
     }
 

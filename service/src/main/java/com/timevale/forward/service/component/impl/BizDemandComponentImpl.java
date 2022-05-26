@@ -10,11 +10,16 @@ import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.PlanReleaseDateEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
+import com.timevale.forward.service.observer.event.BizDemandPlanReleaseDateMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -56,6 +61,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Resource
     InnerGroupClient innerGroupClient;
+
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
 
     @Override
     public void updateBizDemandStatusByLinkedProductDemand(Long bizDemandId) {
@@ -230,16 +238,29 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     }
 
     @Override
-    public void updateProjectEndDate(List<Long> bizDemandIds) {
+    public void updateProjectEndDate(List<Long> bizDemandIds,boolean updatePlanReleaseDate) {
         bizDemandIds.forEach(a -> {
             BizDemandDO bizDemandDO = bizDemandMapper.selectById(a);
-            Date projectEndDate = getProjectEndDate(a);
-            if (projectEndDate != null && !projectEndDate.equals(bizDemandDO.getProjectEndDate())) {
-                int dayOfMonth = DateUtil.getDayOfMonth(projectEndDate);
-                bizDemandDO.setPlanReleaseDate(dayOfMonth - 1);
-                bizDemandDO.setProjectEndDate(projectEndDate);
+            Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
+            Date newProjectEndDate = getProjectEndDate(a);
+            if (newProjectEndDate != null && !newProjectEndDate.equals(bizDemandDO.getProjectEndDate())) {
+                if(updatePlanReleaseDate){
+                    int dayOfMonth = DateUtil.getDayOfMonth(newProjectEndDate);
+                    bizDemandDO.setPlanReleaseDate(dayOfMonth - 1);
+                }
+                bizDemandDO.setProjectEndDate(newProjectEndDate);
                 bizDemandMapper.update(bizDemandDO);
-                log.info("业务需求id:{},更新前发布时间:{},更新后发布时间:{}",a,bizDemandDO.getProjectEndDate(),projectEndDate);
+                log.info("业务需求id:{},更新前发布时间:{},更新后发布时间:{}",a,bizDemandDO.getProjectEndDate(),newProjectEndDate);
+                if(!Objects.equals(bizDemandDO.getPlanReleaseDate(),oldPlanReleaseDate)){
+                    messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
+                            this,
+                            bizDemandDO.getId(),
+                            bizDemandDO.getSubmitManId(),
+                            bizDemandDO.getName(),
+                            BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
+                            PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
+                    ));
+                }
             }
         });
     }

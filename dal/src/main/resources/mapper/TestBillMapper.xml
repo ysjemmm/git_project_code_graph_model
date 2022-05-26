@@ -86,4 +86,23 @@
         select * from test_bill
         where project_id=#{projectId}  and is_deleted = false
     </select>
+
+    <select id="getByProjectIds" resultType="long">
+        select distinct project_id
+        from test_bill
+        <where>
+            <if test="projectIds!=null and projectIds.size()>0">
+                and project_id in
+                <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="returnCountType == 0">and return_count = #{returnCount}</if>
+            <if test="returnCountType == 1">and return_count &gt; #{returnCount}</if>
+            <if test="returnCountType == 2">and return_count &gt;= #{returnCount}</if>
+            <if test="returnCountType == 3">and return_count &lt; #{returnCount}</if>
+            <if test="returnCountType == 4">and return_count &lt;= #{returnCount}</if>
+             and is_deleted=false
+        </where>
+    </select>
 </mapper>

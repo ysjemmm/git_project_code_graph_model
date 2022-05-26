@@ -60,18 +60,19 @@ public interface ProjectNodeMapper {
     void updateSubmitTestActualDate(@Param("projectId") Long projectId, @Param("actualDate") Date actualDate);
 
     /**
-     * 删除
-     *
-     * @param projectIds 项目id
-     * @return ProjectNodeDO
-     */
-    List<ProjectNodeDO> getByProjectIds(@Param("projectIds") List<Long> projectIds);
-
-    /**
      * 更新实际时间
      *
      * @param id  id
      * @param actualDate 实际时间
      */
     void updateActualDateById(@Param("id") Long id, @Param("actualDate") Date actualDate);
+
+    /**
+     *
+     * @param projectIds 项目id
+     * @param isDelay 是否提测延期
+     * @param name 节点名称
+     * @return list
+     */
+    List<Long> getByProjectIds(@Param("projectIds") List<Long> projectIds,@Param("isDelay") Boolean isDelay,@Param("name") String name);
 }

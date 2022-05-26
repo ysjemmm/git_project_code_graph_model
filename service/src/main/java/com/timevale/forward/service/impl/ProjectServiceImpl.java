@@ -416,7 +416,7 @@ public class ProjectServiceImpl implements ProjectService {
 
             List<Long> bizDemandIds = productBizDemandMapper.selectByProductDemandIds(productDemandIds)
                     .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
-            bizDemandComponent.updateProjectEndDate(bizDemandIds);
+            bizDemandComponent.updateProjectEndDate(bizDemandIds,true);
         } else {
             projectProductDemandComponent.update(null, productDemandIds.get(0));
 
@@ -430,6 +430,10 @@ public class ProjectServiceImpl implements ProjectService {
 
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.UN_LINK.getText());
             productDemandLogComponent.addLogAsProjectStatusChange(statusMap, productDemandDO.getStatus());
+
+            List<Long> bizDemandIds = productBizDemandMapper.selectByProductDemandIds(productDemandIds)
+                    .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
+            bizDemandComponent.updateProjectEndDate(bizDemandIds,false);
 
             // 取消产品需求和任务的关联
             productDemandIds.forEach(a -> taskProductDemandComponent.update(null, a));
@@ -576,7 +580,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (!Objects.equals(oldProject.getPlanEndDate(), newProject.getPlanEndDate())
                 || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
             List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProject.getId());
-            bizDemandComponent.updateProjectEndDate(bizDemandIds);
+            bizDemandComponent.updateProjectEndDate(bizDemandIds,true);
         }
         log.info("更新项目信息完成");
     }
