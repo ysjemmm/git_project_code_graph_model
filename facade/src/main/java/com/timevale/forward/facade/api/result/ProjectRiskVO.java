@@ -29,6 +29,10 @@ public class ProjectRiskVO extends ToString {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long projectId;
 
+    @ApiModelProperty("主体id")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long mainId;
+
     @ApiModelProperty("风险类型 0 其它， 10 项目关键节点逾期 20 提测质量不达标 30 任务逾期")
     private Integer type;
 
