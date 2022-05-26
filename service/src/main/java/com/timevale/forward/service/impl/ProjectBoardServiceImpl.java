@@ -2,23 +2,22 @@ package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.BugOfflineDO;
-import com.timevale.forward.dal.entity.ProjectProductDemandDO;
-import com.timevale.forward.dal.entity.TaskDO;
-import com.timevale.forward.dal.entity.TestBillDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectBoardService;
 import com.timevale.forward.facade.api.request.ProjectBoardReq;
 import com.timevale.forward.facade.api.result.ProjectBoardDataIndicatorVO;
-import com.timevale.forward.model.enums.TaskStatusEnum;
-import com.timevale.forward.model.enums.TestBillResultEnum;
-import com.timevale.forward.model.enums.TestBillStatusEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,29 +44,37 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
     @Resource
     BugOfflineMapper bugOfflineMapper;
 
+    @Resource
+    ProjectRiskMapper projectRiskMapper;
+
     @Override
     public BaseResult<ProjectBoardDataIndicatorVO> getDataIndicator(ProjectBoardReq projectBoardReq) {
         Long projectId = projectBoardReq.getProjectId();
 
-        // 项目关联的产品需求
         List<Long> productDemandIdList = projectProductDemandMapper.getByProjectId(projectId)
                 .stream()
                 .map(ProjectProductDemandDO::getProductDemandId)
                 .collect(Collectors.toList());
         log.info("[getDataIndicator]项目关联的产品需求数: {}", productDemandIdList.size());
 
-        // 项目关联的任务
         List<TaskDO> taskDOList = taskMapper.getByProjectId(projectId);
         taskDOList = taskDOList.stream().filter(e -> !TaskStatusEnum.INVALID.getCode().equals(e.getStatus())).collect(Collectors.toList());
         log.info("[getDataIndicator]项目关联的任务数: {}", taskDOList.size());
 
-        // 项目关联的线下bug
         List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);
         log.info("[getDataIndicator]项目关联的线下bug: {}", bugOfflineDOList.size());
 
-        // 项目的提测单
         TestBillDO testBillDO = testBillMapper.selectByProjectId(projectId);
         log.info("[getDataIndicator]项目的提测单: {}", testBillDO);
+
+        List<TaskProductDemandDO> taskProductDemandDOList = new ArrayList<>();
+        if(CollectionUtils.isNotEmpty(productDemandIdList)){
+            taskProductDemandDOList = taskProductDemandMapper.selectByProductDemandId(productDemandIdList);
+        }
+        log.info("[getDataIndicator]任务-产品需求关联关系: {}", taskProductDemandDOList);
+
+        List<ProjectRiskDO> projectRiskDOList = projectRiskMapper.selectByProjectId(projectId);
+        log.info("[getDataIndicator]项目风险: {}", projectRiskDOList);
 
         // 结果
         ProjectBoardDataIndicatorVO result = new ProjectBoardDataIndicatorVO();
@@ -84,8 +91,13 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         if(completedTime.equals(planUseTime)){
             result.setTaskProgress(new BigDecimal(100));
         }else{
-            result.setTaskProgress(completedTime.divide(planUseTime, RoundingMode.DOWN));
+            result.setTaskProgress(completedTime.divide(planUseTime, 2, RoundingMode.DOWN));
         }
+
+        // 总产品需求数、总任务数、总线下bug数
+        result.setProductDemandCount(productDemandIdList.size());
+        result.setTaskCount(taskDOList.size());
+        result.setBugOfflineCount(bugOfflineDOList.size());
 
         // 提测结果
         if(testBillDO == null){
@@ -98,12 +110,37 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             result.setSubmitTestResult(TestBillResultEnum.TESTING.getText());
         }
 
-        result.setProductDemandCount(productDemandIdList.size());
-        result.setTaskCount(taskDOList.size());
-        result.setBugOfflineCount(bugOfflineDOList.size());
+        // 今日Date
+        Date today = new Date();
 
-        // 逾期任务数
+        // 逾期任务数、待完成任务数
+        List<TaskDO> undoneTaskList = taskDOList.stream().filter(e -> !TaskStatusEnum.DONE.getCode().equals(e.getStatus())).collect(Collectors.toList());
+        result.setOverdueTaskCount((int)undoneTaskList.stream().filter(e -> today.after(e.getPlanEndDate())).count());
+        result.setWaitingTaskCount(undoneTaskList.size());
 
+        // 今日应完成任务数、今日待完成任务数
+        List<TaskDO> todayTaskList = taskDOList.stream().filter(e -> DateUtil.getIntervalDays(e.getPlanEndDate(), today) == 0).collect(Collectors.toList());
+        result.setCompleteTaskToday(todayTaskList.size());
+        result.setCompleteTaskTodayRemain((int)todayTaskList.stream().filter(e -> !TaskStatusEnum.DONE.getCode().equals(e.getStatus())).count());
+
+        // 未拆解任务需求数
+        int dismantleDemandCount = (int)taskProductDemandDOList.stream().map(TaskProductDemandDO::getProductDemandId).distinct().count();
+        int productDemandCount = productDemandIdList.size();
+        result.setNotDismantleDemand(productDemandCount - dismantleDemandCount);
+
+        // 待处理项目风险数
+        result.setWaitingRiskCount((int) projectRiskDOList.stream().filter(e -> ProjectRiskStatusEnum.PENDING.getCode().equals(e.getStatus())).count());
+
+        // 待开发解决线下bug数、待验证线下bug数、延期修复bug数
+        int waitingSolve = (int) bugOfflineDOList.stream().filter(e -> BugStatusEnum.OPEN.getCode().equals(e.getStatus())
+                || BugStatusEnum.REPAIR.getCode().equals(e.getStatus())).count();
+        int waitingCheck = (int) bugOfflineDOList.stream().filter(e -> BugStatusEnum.ACCEPTANCE.getCode().equals(e.getStatus())
+                || BugStatusEnum.CONFIRM.getCode().equals(e.getStatus())).count();
+        int postRepair = (int)bugOfflineDOList.stream().filter(e -> BugStatusEnum.POSTPONE_REPAIR.getCode().equals(e.getStatus())).count();
+
+        result.setWaitingSolveBugOfflineCount(waitingSolve);
+        result.setWaitingCheckBugOfflineCount(waitingCheck);
+        result.setPostponeRepairBugOfflineCount(postRepair);
 
 
         return BaseResult.success(result);
