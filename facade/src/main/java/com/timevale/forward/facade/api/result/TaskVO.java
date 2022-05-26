@@ -84,4 +84,7 @@ public class TaskVO extends ToString {
     @ApiModelProperty("产品线id")
     private Long productLineId;
 
+    @ApiModelProperty("是否延期")
+    private Boolean isDelay;
+
 }
