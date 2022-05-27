@@ -9,12 +9,12 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class ProductLineDO extends BaseDO {
+public class ModelDO extends BaseDO {
 
     /**
      * 业务域id
      */
-    private Long bizDomainId;
+    private Long productLineId;
 
     /**
      * 产品线名称
@@ -30,14 +30,4 @@ public class ProductLineDO extends BaseDO {
      * 负责人id
      */
     private String ownerId;
-
-    /**
-     * 产品线bug负责人
-     */
-    private String bugOnlineOwner;
-
-    /**
-     * 产品线bug负责人id
-     */
-    private String bugOnlineOwnerId;
 }

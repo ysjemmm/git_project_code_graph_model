@@ -81,5 +81,6 @@
         <mapper resource="mapper/ProjectRiskExplanationMapper.xml"/>
         <mapper resource="mapper/ProjectFlow.xml"/>
         <mapper resource="mapper/ProjectPublishPlan.xml"/>
+        <mapper resource="mapper/ModelMapper.xml"/>
     </mappers>
 </configuration>
