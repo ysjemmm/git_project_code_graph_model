@@ -1,10 +1,12 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.io.unit.DataUnit;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectBoardService;
 import com.timevale.forward.facade.api.request.ProjectBoardReq;
+import com.timevale.forward.facade.api.result.ProjectBoardBugOfflineTrendVO;
 import com.timevale.forward.facade.api.result.ProjectBoardDataIndicatorVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -16,9 +18,7 @@ import org.apache.commons.collections.CollectionUtils;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -46,6 +46,9 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
     @Resource
     ProjectRiskMapper projectRiskMapper;
+
+    @Resource
+    BugLogMapper bugLogMapper;
 
     @Override
     public BaseResult<ProjectBoardDataIndicatorVO> getDataIndicator(ProjectBoardReq projectBoardReq) {
@@ -144,5 +147,53 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
 
         return BaseResult.success(result);
+    }
+
+    @Override
+    public BaseResult<ProjectBoardBugOfflineTrendVO> getBoardBugOfflineTrend(ProjectBoardReq projectBoardReq) {
+        Long projectId = projectBoardReq.getProjectId();
+
+        ProjectDO projectDO = projectMapper.get(projectId);
+
+        // 线下bug
+        List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);
+        List<Long> bugOfflineIdList = bugOfflineDOList.stream().map(BugOfflineDO::getId).collect(Collectors.toList());
+
+        // 结果
+        List<ProjectBoardBugOfflineTrendVO> result = new ArrayList<>();
+
+
+        // 线下bug日志
+        List<BugLogDO> newLogList = new ArrayList<>();
+        List<BugLogDO> bugLogDOList = bugLogMapper.selectBugStatusLog(bugOfflineIdList, BugLogTypeEnum.OFFLINE.getCode());
+
+        // 日志分组 by id
+        Map<Long, List<BugLogDO>> logMap = bugLogDOList.stream().collect(Collectors.groupingBy(BugLogDO::getMainId));
+        logMap.forEach((k, v) -> {
+            Map<Date, List<BugLogDO>> logMapDate = v.stream().collect(Collectors.groupingBy(e -> DateUtil.getStartOfDay(e.getCreateDate())));
+
+            logMapDate.forEach((sk, sv) -> {
+                sv.sort((a, b) -> b.getCreateDate().compareTo(a.getCreateDate()));
+                sv.stream().findFirst().ifPresent(newLogList::add);
+            });
+        });
+
+        // 项目开始和结束时间
+        Date startDate = projectDO.getActualStartDate() == null ? projectDO.getPlanStartDate() : projectDO.getActualStartDate();
+        Date endDate = projectDO.getActualEndDate() == null ? projectDO.getPlanEndDate() : projectDO.getActualEndDate();
+
+        startDate = DateUtil.getEndOfDay(startDate);
+        endDate = DateUtil.getEndOfDay(endDate);
+
+        Date pointDate = startDate;
+        while(pointDate.before(endDate)){
+
+
+
+            pointDate = DateUtil.addDay(pointDate, 1);
+        }
+
+
+        return null;
     }
 }

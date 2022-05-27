@@ -12,12 +12,27 @@
         order by `create_date` desc,`id` DESC
     </select>
 
+    <select id="selectBugStatusLog" resultType="com.timevale.forward.dal.entity.BugLogDO">
+        SELECT * FROM bug_log
+        <where>
+            <if test="mainIdList != null and mainIdList.size() > 0">
+                and main_id in
+                <foreach collection="mainIdList" separator="," item="item" open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="type != null">and `type`=#{type}</if>
+        </where>
+    </select>
+
     <update id="deleteByBugId">
         update bug_log
         <set>
             <if test="true ">is_deleted = true,</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            <if test="true">and `action` is not null</if>
+            <if test="true">and is_deleted = false</if>
         </set>
         where main_id = #{bugId} and `type` = #{type}
     </update>

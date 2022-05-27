@@ -21,6 +21,14 @@ public interface BugLogMapper {
     List<BugLogDO> selectByBugOfflineIdAndType(@Param("bugOfflineId") Long bugOfflineId, @Param("type") Integer type, @Param("statusChange") Boolean statusChange);
 
     /**
+     * 查询bug日志
+     *
+     * @param mainIdList 主要id列表
+     * @param type       类型
+     */
+    List<BugLogDO> selectBugStatusLog(@Param("mainIdList") List<Long> mainIdList, @Param("type") Integer type);
+
+    /**
      * 通过线下bug的id删除对应的操作日志
      *
      * @param bugId bug的id
