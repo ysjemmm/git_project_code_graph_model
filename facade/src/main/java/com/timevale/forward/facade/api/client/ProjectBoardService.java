@@ -18,15 +18,15 @@ public interface ProjectBoardService {
     /**
      * 获取项目数据指标
      *
-     * @param projectBoardReq 项目数据看板请求
+     * @param projectId 项目id
      */
-    BaseResult<ProjectBoardDataIndicatorVO> getDataIndicator(ProjectBoardReq projectBoardReq);
+    BaseResult<ProjectBoardDataIndicatorVO> getDataIndicator(Long projectId);
 
 
     /**
      * 获取线下bug趋势图
      *
-     * @param projectBoardReq 项目数据看板请求
+     * @param projectId 项目id
      */
-    BaseResult<ProjectBoardBugOfflineTrendVO> getBoardBugOfflineTrend(ProjectBoardReq projectBoardReq);
+    BaseResult<ProjectBoardBugOfflineTrendVO> getBoardBugOfflineTrend(Long projectId);
 }

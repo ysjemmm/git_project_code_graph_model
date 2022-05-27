@@ -51,8 +51,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
     BugLogMapper bugLogMapper;
 
     @Override
-    public BaseResult<ProjectBoardDataIndicatorVO> getDataIndicator(ProjectBoardReq projectBoardReq) {
-        Long projectId = projectBoardReq.getProjectId();
+    public BaseResult<ProjectBoardDataIndicatorVO> getDataIndicator(Long projectId) {
 
         List<Long> productDemandIdList = projectProductDemandMapper.getByProjectId(projectId)
                 .stream()
@@ -150,9 +149,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
     }
 
     @Override
-    public BaseResult<ProjectBoardBugOfflineTrendVO> getBoardBugOfflineTrend(ProjectBoardReq projectBoardReq) {
-        Long projectId = projectBoardReq.getProjectId();
-
+    public BaseResult<ProjectBoardBugOfflineTrendVO> getBoardBugOfflineTrend(Long projectId) {
         ProjectDO projectDO = projectMapper.get(projectId);
 
         // 线下bug
