@@ -54,7 +54,7 @@
     </update>
 
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
-        SELECT id, project_id, type, name, sign, status, create_man_id, create_man, create_date, modify_date
+        SELECT id, project_id, main_id, type, name, sign, status, create_man_id, create_man, create_date, modify_date
         FROM project_risk
         WHERE project_id = #{projectId} AND
               is_deleted = false

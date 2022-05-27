@@ -18,6 +18,7 @@ import com.timevale.forward.facade.api.result.ProjectFlowDetailVO;
 import com.timevale.forward.model.enums.ButtonActionEnum;
 import com.timevale.forward.model.enums.ProjectFlowStatusEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.component.ProjectLogComponent;
@@ -101,7 +102,9 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         }
 
         Integer newStatus = projectComponent.getStatus(projectFlowDO.getProjectId());
-        if (!Objects.equal(oldProjectDO.getStatus(), newStatus)) {
+        if (!Objects.equal(oldProjectDO.getStatus(), newStatus)
+                && !ProjectStatusEnum.INVALID.getCode().equals(oldProjectDO.getStatus())
+                && !ProjectStatusEnum.SUSPEND.getCode().equals(oldProjectDO.getStatus())) {
             oldProjectDO.setStatus(newStatus);
             projectMapper.update(oldProjectDO);
             // 日志处理
@@ -162,7 +165,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         variables.put("reviewName", reviewName);
         String projectName = projectMapper.get(projectFlowAddReq.getProjectId()).getName();
         variables.put("projectName", projectName);
-        String baseUrl=domainName+ "projectManagement/edit?id=%d&type=check";
+        String baseUrl = domainName + "projectManagement/edit?id=%d&type=check";
         variables.put("projectUrl", String.format(baseUrl, projectFlowAddReq.getProjectId()));
         List<String> reviewIds = projectFlowAddReq.getReviews().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
         variables.put("review", reviewIds);
