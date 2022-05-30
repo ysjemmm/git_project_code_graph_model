@@ -252,14 +252,21 @@ public class BizDemandComponentImpl implements BizDemandComponent {
                 bizDemandMapper.update(bizDemandDO);
                 log.info("业务需求id:{},更新前发布时间:{},更新后发布时间:{}",a,bizDemandDO.getProjectEndDate(),newProjectEndDate);
                 if(!Objects.equals(bizDemandDO.getPlanReleaseDate(),oldPlanReleaseDate)){
-                    messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
-                            this,
-                            bizDemandDO.getId(),
-                            bizDemandDO.getSubmitManId(),
-                            bizDemandDO.getName(),
-                            BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
-                            PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
-                    ));
+                    Integer status = bizDemandDO.getStatus();
+                    boolean notice=BizDemandStatusEnum.RECEIVED.getCode().equals(status)
+                            || BizDemandStatusEnum.TO_CONFIRM.getCode().equals(status)
+                            || BizDemandStatusEnum.INCLUDE_PROJECT.getCode().equals(status);
+                    if(notice){
+                        messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
+                                this,
+                                bizDemandDO.getId(),
+                                bizDemandDO.getSubmitManId(),
+                                bizDemandDO.getName(),
+                                BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
+                                PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
+                        ));
+                    }
+
                 }
             }
         });
