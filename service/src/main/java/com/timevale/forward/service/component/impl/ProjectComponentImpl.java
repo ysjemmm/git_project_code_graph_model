@@ -95,10 +95,11 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
         if (condition.getIsDelay() != null) {
             projectIds = projectNodeMapper.getProjectIds(projectIds, condition.getIsDelay(), ProjectNodeEnum.SUBMIT_TEST.getText());
+            if (CollectionUtils.isEmpty(projectIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
         }
-        if (CollectionUtils.isEmpty(projectIds)) {
-            return BaseResult.success(ResultUtil.pageEmpty());
-        }
+
         buildConditionBeforeQuery(projectIds, condition);
 
         // 开始分页
