@@ -238,13 +238,24 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         Date oldEndDate = oldBizDemandDO.getProjectEndDate();
         if(!Objects.equals(oldEndDate, newEndDate)){
+            //更新项目发布时间
+            BizDemandDO updateBizDemandDO = new BizDemandDO();
+            updateBizDemandDO.setId(bizDemandId);
+            updateBizDemandDO.setProjectEndDate(newEndDate);
+
+            bizDemandLogComponent.addLogWhenModifyData(
+                    oldEndDate == null ? StringUtils.EMPTY : DateUtil.parseToString(oldEndDate, DateStyle.YYYY_MM_DD),
+                    newEndDate == null ? StringUtils.EMPTY : DateUtil.parseToString(newEndDate, DateStyle.YYYY_MM_DD),
+                    bizDemandId,
+                    BizChangeLogFieldEnum.PROJECT_RELEASE_DATE.getText(),
+                    false
+            );
+
 
             // 更新预期上线时间
             if(newEndDate != null){
                 int month = DateUtil.getMonth(newEndDate) - 1;
-                BizDemandDO planReleaseDateDO = new BizDemandDO();
-                planReleaseDateDO.setPlanReleaseDate(month);
-                bizDemandMapper.update(planReleaseDateDO);
+                updateBizDemandDO.setPlanReleaseDate(month);
 
                 // 发送通知
                 messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
@@ -265,15 +276,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                         false
                 );
             }
-
-            // 日志
-            bizDemandLogComponent.addLogWhenModifyData(
-                    oldEndDate == null ? StringUtils.EMPTY : DateUtil.parseToString(oldEndDate, DateStyle.YYYY_MM_DD),
-                    newEndDate == null ? StringUtils.EMPTY : DateUtil.parseToString(newEndDate, DateStyle.YYYY_MM_DD),
-                    bizDemandId,
-                    BizChangeLogFieldEnum.PROJECT_RELEASE_DATE.getText(),
-                    false
-            );
+            bizDemandMapper.update(updateBizDemandDO);
         }
 
         // 返回当前状态
