@@ -251,7 +251,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
                     bizDemandDO.setPlanReleaseDate(month - 1);
                 }
                 bizDemandDO.setProjectEndDate(newProjectEndDate);
-                bizDemandMapper.update(bizDemandDO);
+                bizDemandMapper.fullUpdate(bizDemandDO);
                 log.info("业务需求id:{},更新前发布时间:{},更新后发布时间:{}",a,oldProjectEndDate,newProjectEndDate);
                 if(!Objects.equals(oldPlanReleaseDate,bizDemandDO.getPlanReleaseDate())){
                     Integer status = bizDemandDO.getStatus();
