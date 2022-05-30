@@ -245,6 +245,15 @@ public class ProjectServiceImpl implements ProjectService {
 
         Integer status = ProjectStatusEnum.WAITING.getCode();
         projectLogComponent.addLogWhenStatusChange(status, status, projectDO.getId(), ButtonActionEnum.SUBMIT.getText());
+
+        List<Long> productDemandIds = projectAddReq.getProductDemandIds();
+        if(CollectionUtils.isNotEmpty(productDemandIds)){
+            ProjectProductDemandLinkReq req=new ProjectProductDemandLinkReq();
+            req.setProductDemandIds(productDemandIds);
+            req.setProjectId(projectDO.getId());
+            req.setType(LinkOrUnLinkEnum.LINK.getCode());
+            linkOrUnLinkProductDemand(req);
+        }
         return BaseResult.success(true);
     }
 
