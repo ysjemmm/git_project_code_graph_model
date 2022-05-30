@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.math.BigDecimal;
 import java.util.Date;
 
 
@@ -17,10 +16,14 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("项目维度看板-线下bug趋势图")
-public class ProjectBoardBugOfflineTrendVO extends ToString {
+public class BugOfflineTrendVO extends ToString {
+
+    @ApiModelProperty("日期")
     private Date date;
 
+    @ApiModelProperty("累积创建bug")
     private Integer createdBug;
 
+    @ApiModelProperty("累积解决bug")
     private Integer solvedBug;
 }

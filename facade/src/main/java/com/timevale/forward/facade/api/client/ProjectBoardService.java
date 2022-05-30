@@ -2,7 +2,7 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.result.ProjectBoardBugOfflineTrendVO;
+import com.timevale.forward.facade.api.result.BugOfflineTrendVO;
 import com.timevale.forward.facade.api.result.ProjectBoardDataIndicatorVO;
 import com.timevale.forward.facade.api.result.ProjectBoardSinglelWorkTimeVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -30,7 +30,7 @@ public interface ProjectBoardService {
      *
      * @param projectId 项目id
      */
-    BaseResult<ProjectBoardBugOfflineTrendVO> getBoardBugOfflineTrend(Long projectId);
+    BaseResult<List<BugOfflineTrendVO>> getBoardBugOfflineTrend(Long projectId);
 
 
     /**

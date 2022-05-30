@@ -5,6 +5,8 @@ import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectBoardService;
 import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.facade.api.result.BugOfflineTrendVO;
+import com.timevale.forward.facade.api.result.ProjectBoardDataIndicatorVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -70,7 +72,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         log.info("[getDataIndicator]项目的提测单: {}", testBillDO);
 
         List<TaskProductDemandDO> taskProductDemandDOList = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(productDemandIdList)) {
+        if(CollectionUtils.isNotEmpty(productDemandIdList)){
             taskProductDemandDOList = taskProductDemandMapper.selectByProductDemandId(productDemandIdList);
         }
         log.info("[getDataIndicator]任务-产品需求关联关系: {}", taskProductDemandDOList);
@@ -86,13 +88,13 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         BigDecimal planUseTime = new BigDecimal(0);
         for (TaskDO e : taskDOList) {
             planUseTime = planUseTime.add(e.getPlanUseTime());
-            if (TaskStatusEnum.DONE.getCode().equals(e.getStatus())) {
+            if(TaskStatusEnum.DONE.getCode().equals(e.getStatus())){
                 completedTime = completedTime.add(e.getPlanUseTime());
             }
         }
-        if (completedTime.equals(planUseTime)) {
+        if(completedTime.equals(planUseTime)){
             result.setTaskProgress(new BigDecimal(100));
-        } else {
+        }else{
             result.setTaskProgress(completedTime.divide(planUseTime, 2, RoundingMode.DOWN));
         }
 
@@ -102,13 +104,13 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         result.setBugOfflineCount(bugOfflineDOList.size());
 
         // 提测结果
-        if (testBillDO == null) {
+        if(testBillDO == null){
             result.setSubmitTestResult(TestBillResultEnum.NO_START.getText());
-        } else if (TestBillStatusEnum.TEST_SUCCESS.getCode().equals(testBillDO.getStatus())) {
+        }else if(TestBillStatusEnum.TEST_SUCCESS.getCode().equals(testBillDO.getStatus())){
             result.setSubmitTestResult(TestBillResultEnum.SUCCESS.getText());
-        } else if (testBillDO.getReturnCount() > 0) {
+        }else if(testBillDO.getReturnCount() > 0){
             result.setSubmitTestResult(TestBillResultEnum.FAIL.getText());
-        } else {
+        }else{
             result.setSubmitTestResult(TestBillResultEnum.TESTING.getText());
         }
 
@@ -117,16 +119,16 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
         // 逾期任务数、待完成任务数
         List<TaskDO> undoneTaskList = taskDOList.stream().filter(e -> !TaskStatusEnum.DONE.getCode().equals(e.getStatus())).collect(Collectors.toList());
-        result.setOverdueTaskCount((int) undoneTaskList.stream().filter(e -> today.after(e.getPlanEndDate())).count());
+        result.setOverdueTaskCount((int)undoneTaskList.stream().filter(e -> today.after(e.getPlanEndDate())).count());
         result.setWaitingTaskCount(undoneTaskList.size());
 
         // 今日应完成任务数、今日待完成任务数
         List<TaskDO> todayTaskList = taskDOList.stream().filter(e -> DateUtil.getIntervalDays(e.getPlanEndDate(), today) == 0).collect(Collectors.toList());
         result.setCompleteTaskToday(todayTaskList.size());
-        result.setCompleteTaskTodayRemain((int) todayTaskList.stream().filter(e -> !TaskStatusEnum.DONE.getCode().equals(e.getStatus())).count());
+        result.setCompleteTaskTodayRemain((int)todayTaskList.stream().filter(e -> !TaskStatusEnum.DONE.getCode().equals(e.getStatus())).count());
 
         // 未拆解任务需求数
-        int dismantleDemandCount = (int) taskProductDemandDOList.stream().map(TaskProductDemandDO::getProductDemandId).distinct().count();
+        int dismantleDemandCount = (int)taskProductDemandDOList.stream().map(TaskProductDemandDO::getProductDemandId).distinct().count();
         int productDemandCount = productDemandIdList.size();
         result.setNotDismantleDemand(productDemandCount - dismantleDemandCount);
 
@@ -138,7 +140,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
                 || BugStatusEnum.REPAIR.getCode().equals(e.getStatus())).count();
         int waitingCheck = (int) bugOfflineDOList.stream().filter(e -> BugStatusEnum.ACCEPTANCE.getCode().equals(e.getStatus())
                 || BugStatusEnum.CONFIRM.getCode().equals(e.getStatus())).count();
-        int postRepair = (int) bugOfflineDOList.stream().filter(e -> BugStatusEnum.POSTPONE_REPAIR.getCode().equals(e.getStatus())).count();
+        int postRepair = (int)bugOfflineDOList.stream().filter(e -> BugStatusEnum.POSTPONE_REPAIR.getCode().equals(e.getStatus())).count();
 
         result.setWaitingSolveBugOfflineCount(waitingSolve);
         result.setWaitingCheckBugOfflineCount(waitingCheck);
@@ -149,16 +151,12 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
     }
 
     @Override
-    public BaseResult<ProjectBoardBugOfflineTrendVO> getBoardBugOfflineTrend(Long projectId) {
+    public BaseResult<List<BugOfflineTrendVO>> getBoardBugOfflineTrend(Long projectId) {
         ProjectDO projectDO = projectMapper.get(projectId);
 
         // 线下bug
         List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);
         List<Long> bugOfflineIdList = bugOfflineDOList.stream().map(BugOfflineDO::getId).collect(Collectors.toList());
-
-        // 结果
-        List<ProjectBoardBugOfflineTrendVO> result = new ArrayList<>();
-
 
         // 线下bug日志
         List<BugLogDO> newLogList = new ArrayList<>();
@@ -175,22 +173,60 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             });
         });
 
+        // 结果
+        List<BugOfflineTrendVO> result = new ArrayList<>();
+
         // 项目开始和结束时间
-        Date startDate = projectDO.getActualStartDate() == null ? projectDO.getPlanStartDate() : projectDO.getActualStartDate();
         Date endDate = projectDO.getActualEndDate() == null ? projectDO.getPlanEndDate() : projectDO.getActualEndDate();
+        Date startDate = projectDO.getActualStartDate() == null ? projectDO.getPlanStartDate() : projectDO.getActualStartDate();
 
-        startDate = DateUtil.getEndOfDay(startDate);
+        // 当前时间和结束时间取小值
+        endDate = DateUtil.min(endDate, new Date());
+
+        // 当天的最大和最小
         endDate = DateUtil.getEndOfDay(endDate);
+        startDate = DateUtil.getStartOfDay(startDate);
 
-        Date pointDate = startDate;
-        while (pointDate.before(endDate)) {
+        // 线下bug完成和关闭的数量
+        HashSet<Long> completedBugSet = new HashSet<>();
 
+        // 时间指针
+        Date pointStart = startDate;
+        Date pointEnd = DateUtil.getEndOfDay(startDate);
 
-            pointDate = DateUtil.addDay(pointDate, 1);
+        while(pointStart.before(endDate)){
+            Date finalPointEnd = pointEnd;
+            Date finalPointStart = pointStart;
+
+            BugOfflineTrendVO trendVO = new BugOfflineTrendVO();
+
+            // 日期
+            trendVO.setDate(finalPointStart);
+
+            // 累积创建数量
+            trendVO.setCreatedBug((int) bugOfflineDOList.stream().filter(e -> finalPointEnd.after(e.getCreateDate())).count());
+
+            // 累积解决数量
+            List<BugLogDO> todayBugLogDOList = newLogList.stream()
+                    .filter(e -> DateUtil.inInterval(e.getCreateDate(), finalPointStart, finalPointEnd))
+                    .collect(Collectors.toList());
+
+            todayBugLogDOList.forEach(e -> {
+                if(BugStatusEnum.COMPLETE.getText().equals(e.getNewValue()) || BugStatusEnum.CLOSE.getText().equals(e.getNewValue())) {
+                    completedBugSet.add(e.getMainId());
+                }else{
+                    completedBugSet.remove(e.getMainId());
+                }
+            });
+            trendVO.setSolvedBug(completedBugSet.size());
+
+            result.add(trendVO);
+
+            pointEnd = DateUtil.addDay(pointEnd, 1);
+            pointStart = DateUtil.addDay(pointStart, 1);
         }
 
-
-        return null;
+        return BaseResult.success(result);
     }
 
     @Override
