@@ -245,7 +245,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             Date oldProjectEndDate = bizDemandDO.getProjectEndDate();
 
             Date newProjectEndDate = getProjectEndDate(a);
-            if (newProjectEndDate != null && !newProjectEndDate.equals(oldProjectEndDate)) {
+            if (!Objects.equals(newProjectEndDate,oldProjectEndDate)) {
                 if(updatePlanReleaseDate){
                     int month = DateUtil.getMonth(newProjectEndDate);
                     bizDemandDO.setPlanReleaseDate(month - 1);
