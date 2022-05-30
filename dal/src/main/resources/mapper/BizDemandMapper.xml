@@ -94,6 +94,7 @@
             solve_plan = #{solvePlan},
             reject_reason = #{rejectReason},
             plan_release_date = #{planReleaseDate},
+            project_end_date = #{projectEndDate},
             modify_man_id = #{modifyManId},
             modify_man = #{modifyMan},
         </set>
