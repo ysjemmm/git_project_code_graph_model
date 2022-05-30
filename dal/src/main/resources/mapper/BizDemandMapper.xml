@@ -101,10 +101,9 @@
     </update>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BizDemandDO">
-        select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status, priority,
-               receive_man, receive_man_id, submit_man, submit_man_id, plan_release_date, reason, project_end_date,
-               is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
-               receive_man, receive_man_id, processor, os, plan_release_date, reason, submit_man, submit_man_id, solve_plan, reject_reason,
+        select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status,
+               priority, receive_man, receive_man_id, processor, os, plan_release_date, reason, submit_man, submit_man_id,
+               solve_plan, reject_reason, project_end_date,
                is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
         from biz_demand
         where id = #{id}

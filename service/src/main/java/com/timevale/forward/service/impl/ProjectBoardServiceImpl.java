@@ -160,7 +160,10 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
         // 线下bug日志
         List<BugLogDO> newLogList = new ArrayList<>();
-        List<BugLogDO> bugLogDOList = bugLogMapper.selectBugStatusLog(bugOfflineIdList, BugLogTypeEnum.OFFLINE.getCode());
+        List<BugLogDO> bugLogDOList = new ArrayList<>();
+        if(CollectionUtils.isNotEmpty(bugOfflineIdList)){
+            bugLogDOList = bugLogMapper.selectBugStatusLog(bugOfflineIdList, BugLogTypeEnum.OFFLINE.getCode());
+        }
 
         // 日志分组 by id
         Map<Long, List<BugLogDO>> logMap = bugLogDOList.stream().collect(Collectors.groupingBy(BugLogDO::getMainId));
