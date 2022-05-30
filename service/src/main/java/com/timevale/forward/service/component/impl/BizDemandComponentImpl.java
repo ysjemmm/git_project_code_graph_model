@@ -242,16 +242,18 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         bizDemandIds.forEach(a -> {
             BizDemandDO bizDemandDO = bizDemandMapper.selectById(a);
             Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
+            Date oldProjectEndDate = bizDemandDO.getProjectEndDate();
+
             Date newProjectEndDate = getProjectEndDate(a);
-            if (newProjectEndDate != null && !newProjectEndDate.equals(bizDemandDO.getProjectEndDate())) {
+            if (newProjectEndDate != null && !newProjectEndDate.equals(oldProjectEndDate)) {
                 if(updatePlanReleaseDate){
-                    int dayOfMonth = DateUtil.getDayOfMonth(newProjectEndDate);
-                    bizDemandDO.setPlanReleaseDate(dayOfMonth - 1);
+                    int month = DateUtil.getMonth(newProjectEndDate);
+                    bizDemandDO.setPlanReleaseDate(month - 1);
                 }
                 bizDemandDO.setProjectEndDate(newProjectEndDate);
                 bizDemandMapper.update(bizDemandDO);
-                log.info("业务需求id:{},更新前发布时间:{},更新后发布时间:{}",a,bizDemandDO.getProjectEndDate(),newProjectEndDate);
-                if(!Objects.equals(bizDemandDO.getPlanReleaseDate(),oldPlanReleaseDate)){
+                log.info("业务需求id:{},更新前发布时间:{},更新后发布时间:{}",a,oldProjectEndDate,newProjectEndDate);
+                if(!Objects.equals(oldPlanReleaseDate,bizDemandDO.getPlanReleaseDate())){
                     Integer status = bizDemandDO.getStatus();
                     boolean notice=BizDemandStatusEnum.RECEIVED.getCode().equals(status)
                             || BizDemandStatusEnum.TO_CONFIRM.getCode().equals(status)
