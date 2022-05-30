@@ -192,6 +192,9 @@
             <if test="bugOnlineDO.isDeleted != null">
                 is_deleted = #{bugOnlineDO.isDeleted},
             </if>
+            <if test="bugOnlineDO.modelId != null">
+                model_id = #{bugOnlineDO.modelId},
+            </if>
             <if test="true">
                 modify_man_id = #{modifyManId},
                 modify_man = #{modifyMan}

@@ -1,13 +1,10 @@
 package com.timevale.forward.service.impl;
 
-import cn.hutool.core.io.unit.DataUnit;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectBoardService;
-import com.timevale.forward.facade.api.request.ProjectBoardReq;
-import com.timevale.forward.facade.api.result.ProjectBoardBugOfflineTrendVO;
-import com.timevale.forward.facade.api.result.ProjectBoardDataIndicatorVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -50,6 +47,9 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
     @Resource
     BugLogMapper bugLogMapper;
 
+    @Resource
+    PersonMapper personMapper;
+
     @Override
     public BaseResult<ProjectBoardDataIndicatorVO> getDataIndicator(Long projectId) {
 
@@ -70,7 +70,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         log.info("[getDataIndicator]项目的提测单: {}", testBillDO);
 
         List<TaskProductDemandDO> taskProductDemandDOList = new ArrayList<>();
-        if(CollectionUtils.isNotEmpty(productDemandIdList)){
+        if (CollectionUtils.isNotEmpty(productDemandIdList)) {
             taskProductDemandDOList = taskProductDemandMapper.selectByProductDemandId(productDemandIdList);
         }
         log.info("[getDataIndicator]任务-产品需求关联关系: {}", taskProductDemandDOList);
@@ -86,13 +86,13 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         BigDecimal planUseTime = new BigDecimal(0);
         for (TaskDO e : taskDOList) {
             planUseTime = planUseTime.add(e.getPlanUseTime());
-            if(TaskStatusEnum.DONE.getCode().equals(e.getStatus())){
+            if (TaskStatusEnum.DONE.getCode().equals(e.getStatus())) {
                 completedTime = completedTime.add(e.getPlanUseTime());
             }
         }
-        if(completedTime.equals(planUseTime)){
+        if (completedTime.equals(planUseTime)) {
             result.setTaskProgress(new BigDecimal(100));
-        }else{
+        } else {
             result.setTaskProgress(completedTime.divide(planUseTime, 2, RoundingMode.DOWN));
         }
 
@@ -102,13 +102,13 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         result.setBugOfflineCount(bugOfflineDOList.size());
 
         // 提测结果
-        if(testBillDO == null){
+        if (testBillDO == null) {
             result.setSubmitTestResult(TestBillResultEnum.NO_START.getText());
-        }else if(TestBillStatusEnum.TEST_SUCCESS.getCode().equals(testBillDO.getStatus())){
+        } else if (TestBillStatusEnum.TEST_SUCCESS.getCode().equals(testBillDO.getStatus())) {
             result.setSubmitTestResult(TestBillResultEnum.SUCCESS.getText());
-        }else if(testBillDO.getReturnCount() > 0){
+        } else if (testBillDO.getReturnCount() > 0) {
             result.setSubmitTestResult(TestBillResultEnum.FAIL.getText());
-        }else{
+        } else {
             result.setSubmitTestResult(TestBillResultEnum.TESTING.getText());
         }
 
@@ -117,16 +117,16 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
         // 逾期任务数、待完成任务数
         List<TaskDO> undoneTaskList = taskDOList.stream().filter(e -> !TaskStatusEnum.DONE.getCode().equals(e.getStatus())).collect(Collectors.toList());
-        result.setOverdueTaskCount((int)undoneTaskList.stream().filter(e -> today.after(e.getPlanEndDate())).count());
+        result.setOverdueTaskCount((int) undoneTaskList.stream().filter(e -> today.after(e.getPlanEndDate())).count());
         result.setWaitingTaskCount(undoneTaskList.size());
 
         // 今日应完成任务数、今日待完成任务数
         List<TaskDO> todayTaskList = taskDOList.stream().filter(e -> DateUtil.getIntervalDays(e.getPlanEndDate(), today) == 0).collect(Collectors.toList());
         result.setCompleteTaskToday(todayTaskList.size());
-        result.setCompleteTaskTodayRemain((int)todayTaskList.stream().filter(e -> !TaskStatusEnum.DONE.getCode().equals(e.getStatus())).count());
+        result.setCompleteTaskTodayRemain((int) todayTaskList.stream().filter(e -> !TaskStatusEnum.DONE.getCode().equals(e.getStatus())).count());
 
         // 未拆解任务需求数
-        int dismantleDemandCount = (int)taskProductDemandDOList.stream().map(TaskProductDemandDO::getProductDemandId).distinct().count();
+        int dismantleDemandCount = (int) taskProductDemandDOList.stream().map(TaskProductDemandDO::getProductDemandId).distinct().count();
         int productDemandCount = productDemandIdList.size();
         result.setNotDismantleDemand(productDemandCount - dismantleDemandCount);
 
@@ -138,7 +138,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
                 || BugStatusEnum.REPAIR.getCode().equals(e.getStatus())).count();
         int waitingCheck = (int) bugOfflineDOList.stream().filter(e -> BugStatusEnum.ACCEPTANCE.getCode().equals(e.getStatus())
                 || BugStatusEnum.CONFIRM.getCode().equals(e.getStatus())).count();
-        int postRepair = (int)bugOfflineDOList.stream().filter(e -> BugStatusEnum.POSTPONE_REPAIR.getCode().equals(e.getStatus())).count();
+        int postRepair = (int) bugOfflineDOList.stream().filter(e -> BugStatusEnum.POSTPONE_REPAIR.getCode().equals(e.getStatus())).count();
 
         result.setWaitingSolveBugOfflineCount(waitingSolve);
         result.setWaitingCheckBugOfflineCount(waitingCheck);
@@ -183,8 +183,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         endDate = DateUtil.getEndOfDay(endDate);
 
         Date pointDate = startDate;
-        while(pointDate.before(endDate)){
-
+        while (pointDate.before(endDate)) {
 
 
             pointDate = DateUtil.addDay(pointDate, 1);
@@ -193,4 +192,68 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
         return null;
     }
+
+    @Override
+    public BaseResult<List<ProjectBoardSinglelWorkTimeVO>> getWorkTime(Long projectId) {
+        log.info("人员工时,参数:{}", projectId);
+        List<ProjectBoardSinglelWorkTimeVO> result = new ArrayList<>();
+        List<TaskDO> taskDos = taskMapper.getByProjectId(projectId);
+        List<TaskDO> filtered = taskDos.stream().filter(a -> !TaskStatusEnum.INVALID.getCode().equals(a.getStatus())).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(filtered)) {
+            return BaseResult.success(result);
+        }
+
+        ProjectDO projectDO = projectMapper.get(projectId);
+        Date projectStartDate = projectDO.getActualStartDate() == null ? projectDO.getPlanStartDate() : projectDO.getActualStartDate();
+        Date projectEndDate = projectDO.getActualEndDate() == null ? projectDO.getPlanEndDate() : projectDO.getActualEndDate();
+
+        List<Long> taskIds = filtered.stream().map(TaskDO::getId).collect(Collectors.toList());
+        Map<Long, TaskDO> taskMap = filtered.stream().collect(Collectors.toMap(TaskDO::getId, k -> k, (v1, v2) -> v2));
+
+        List<PersonDO> personDos = personMapper.get(taskIds, PersonTypeEnum.TASK_EXECUTOR.getCode());
+
+        Map<String, List<ProjectBoardTaskVO>> projectBoardTaskVoMap = new HashMap<>();
+        personDos.forEach(a -> {
+            ProjectBoardTaskVO projectBoardTaskVO = new ProjectBoardTaskVO();
+            TaskDO taskDO = taskMap.get(a.getMainId());
+            projectBoardTaskVO.setPlanStartDate(taskDO.getPlanStartDate());
+            projectBoardTaskVO.setPlanEndDate(taskDO.getPlanEndDate());
+            projectBoardTaskVO.setActualStartDate(taskDO.getActualStartDate());
+            projectBoardTaskVO.setActualEndDate(taskDO.getActualEndDate());
+            projectBoardTaskVO.setId(taskDO.getId());
+            projectBoardTaskVO.setName(taskDO.getName());
+            projectBoardTaskVO.setStatus(taskDO.getStatus());
+            projectBoardTaskVO.setStatusName(TaskStatusEnum.getTextByCode(taskDO.getStatus()));
+            projectBoardTaskVO.setPlanUseTime(taskDO.getPlanUseTime());
+            projectBoardTaskVO.setExecutor(a.getUserName());
+            projectBoardTaskVO.setExecutorId(a.getUserId());
+            boolean delay = (taskDO.getActualEndDate() == null && new Date().after(taskDO.getPlanEndDate())) ||
+                    (taskDO.getActualEndDate() != null && taskDO.getActualEndDate().after(taskDO.getPlanEndDate()));
+            projectBoardTaskVO.setIsDelay(delay);
+            projectBoardTaskVoMap.computeIfAbsent(a.getUserId(), v -> new ArrayList<>()).add(projectBoardTaskVO);
+        });
+        log.info("人员工时,任务:{}", projectBoardTaskVoMap);
+        projectBoardTaskVoMap.forEach((k, v) -> {
+            ProjectBoardSinglelWorkTimeVO singlelWorkTimeVO = new ProjectBoardSinglelWorkTimeVO();
+
+            Optional<ProjectBoardTaskVO> min = v.stream().min(Comparator.comparing(ProjectBoardTaskVO::getPlanStartDate));
+            min.ifPresent(projectBoardTaskVO -> singlelWorkTimeVO.setMinPlanStartDate(projectBoardTaskVO.getPlanStartDate()));
+
+            Optional<ProjectBoardTaskVO> max = v.stream().max(Comparator.comparing(ProjectBoardTaskVO::getPlanEndDate));
+            max.ifPresent(projectBoardTaskVO -> singlelWorkTimeVO.setMaxPlanEndDate(projectBoardTaskVO.getPlanEndDate()));
+
+            BigDecimal bigDecimal = v.stream().map(ProjectBoardTaskVO::getPlanUseTime).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+            singlelWorkTimeVO.setExecutor(v.get(0).getExecutor());
+            singlelWorkTimeVO.setExecutorId(v.get(0).getExecutorId());
+            singlelWorkTimeVO.setIsPm(Objects.equals(v.get(0).getExecutorId(), projectDO.getPmId()));
+            singlelWorkTimeVO.setTaskCount(v.size());
+            singlelWorkTimeVO.setProjectStartDate(projectStartDate);
+            singlelWorkTimeVO.setProjectEndDate(projectEndDate);
+            singlelWorkTimeVO.setTotalPlanUseTime(bigDecimal);
+            singlelWorkTimeVO.setProjectBoardTaskVos(v);
+            result.add(singlelWorkTimeVO);
+        });
+        return BaseResult.success(result);
+    }
+
 }
