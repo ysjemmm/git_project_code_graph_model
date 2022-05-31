@@ -19,7 +19,7 @@ import java.math.BigDecimal;
 public class ProjectBoardDataIndicatorVO extends ToString {
 
     @ApiModelProperty("项目任务进展")
-    private BigDecimal taskProgress;
+    private String taskProgress;
 
     @ApiModelProperty("总产品需求数")
     private Integer productDemandCount;

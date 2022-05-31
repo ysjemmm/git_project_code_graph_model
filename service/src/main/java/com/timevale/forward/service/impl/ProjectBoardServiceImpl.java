@@ -93,9 +93,9 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             }
         }
         if(completedTime.compareTo(planUseTime) == 0){
-            result.setTaskProgress(new BigDecimal("100.00"));
+            result.setTaskProgress(new BigDecimal("100.00").toString());
         }else{
-            result.setTaskProgress(completedTime.divide(planUseTime, 2, RoundingMode.DOWN));
+            result.setTaskProgress(completedTime.divide(planUseTime, 2, RoundingMode.DOWN).toString());
         }
 
         // 总产品需求数、总任务数、总线下bug数
