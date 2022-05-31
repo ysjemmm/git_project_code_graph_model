@@ -92,7 +92,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
                 completedTime = completedTime.add(e.getPlanUseTime());
             }
         }
-        if(completedTime.equals(planUseTime)){
+        if(completedTime.compareTo(planUseTime) == 0){
             result.setTaskProgress(new BigDecimal(100));
         }else{
             result.setTaskProgress(completedTime.divide(planUseTime, 2, RoundingMode.DOWN));
