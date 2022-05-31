@@ -84,8 +84,8 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         ProjectBoardDataIndicatorVO result = new ProjectBoardDataIndicatorVO();
 
         // 项目任务进度
-        BigDecimal completedTime = new BigDecimal(0);
-        BigDecimal planUseTime = new BigDecimal(0);
+        BigDecimal completedTime = new BigDecimal("0");
+        BigDecimal planUseTime = new BigDecimal("0");
         for (TaskDO e : taskDOList) {
             planUseTime = planUseTime.add(e.getPlanUseTime());
             if(TaskStatusEnum.DONE.getCode().equals(e.getStatus())){
@@ -93,7 +93,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             }
         }
         if(completedTime.compareTo(planUseTime) == 0){
-            result.setTaskProgress(new BigDecimal(100));
+            result.setTaskProgress(new BigDecimal("100.00"));
         }else{
             result.setTaskProgress(completedTime.divide(planUseTime, 2, RoundingMode.DOWN));
         }
