@@ -271,7 +271,9 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             projectBoardTaskVO.setIsDelay(delay);
             projectBoardTaskVoMap.computeIfAbsent(a.getUserId(), v -> new ArrayList<>()).add(projectBoardTaskVO);
         });
+
         log.info("人员工时,任务:{}", projectBoardTaskVoMap);
+
         projectBoardTaskVoMap.forEach((k, v) -> {
             ProjectBoardSinglelWorkTimeVO singlelWorkTimeVO = new ProjectBoardSinglelWorkTimeVO();
 
@@ -292,6 +294,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             singlelWorkTimeVO.setProjectBoardTaskVos(v);
             result.add(singlelWorkTimeVO);
         });
+
         return BaseResult.success(result);
     }
 
