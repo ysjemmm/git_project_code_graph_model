@@ -239,9 +239,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         Date oldEndDate = oldBizDemandDO.getProjectEndDate();
         if(!Objects.equals(oldEndDate, newEndDate)){
             //更新项目发布时间
-            BizDemandDO updateBizDemandDO = new BizDemandDO();
-            updateBizDemandDO.setId(bizDemandId);
-            updateBizDemandDO.setProjectEndDate(newEndDate);
+            newBizDemandDO.setProjectEndDate(newEndDate);
 
             bizDemandLogComponent.addLogWhenModifyData(
                     oldEndDate == null ? StringUtils.EMPTY : DateUtil.parseToString(oldEndDate, DateStyle.YYYY_MM_DD),
@@ -255,7 +253,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
             // 更新预期上线时间
             if(newEndDate != null){
                 int month = DateUtil.getMonth(newEndDate) - 1;
-                updateBizDemandDO.setPlanReleaseDate(month);
+                newBizDemandDO.setPlanReleaseDate(month);
 
                 // 发送通知
                 messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
@@ -276,7 +274,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                         false
                 );
             }
-            bizDemandMapper.update(updateBizDemandDO);
+            bizDemandMapper.fullUpdate(newBizDemandDO);
         }
 
         // 返回当前状态
