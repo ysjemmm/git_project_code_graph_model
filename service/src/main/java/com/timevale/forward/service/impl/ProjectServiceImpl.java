@@ -116,9 +116,6 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private BizDemandComponent bizDemandComponent;
 
-    @Resource
-    private ProductBizDemandMapper productBizDemandMapper;
-
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -596,7 +593,9 @@ public class ProjectServiceImpl implements ProjectService {
         if (!Objects.equals(oldProject.getPlanEndDate(), newProject.getPlanEndDate())
                 || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
             List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProject.getId());
-            bizDemandComponent.updateProjectEndDate(bizDemandIds, true);
+            bizDemandIds.forEach(a->{
+                bizDemandComponent.updateProjectEndDate(a, true);
+            });
         }
         log.info("更新项目信息完成");
     }
