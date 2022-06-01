@@ -205,8 +205,8 @@
             </if>
             <if test="projectEndDateStart != null and projectEndDateEnd != null">
                 and bd.project_end_date is not null
-                and bd.project_end_date &gt;= #{projectEndDate}
-                and bd.project_end_date &lt;= #{projectEndDate}
+                and bd.project_end_date &gt;= #{projectEndDateStart}
+                and bd.project_end_date &lt;= #{projectEndDateEnd}
             </if>
             and bd.is_deleted = false
         </where>
