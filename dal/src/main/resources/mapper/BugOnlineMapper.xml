@@ -195,6 +195,9 @@
             <if test="bugOnlineDO.modelId != null">
                 model_id = #{bugOnlineDO.modelId},
             </if>
+            <if test="bugOnlineDO.detailVersionId != null">
+                detail_version_id = #{bugOnlineDO.detailVersionId},
+            </if>
             <if test="true">
                 modify_man_id = #{modifyManId},
                 modify_man = #{modifyMan}

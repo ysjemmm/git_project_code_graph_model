@@ -238,37 +238,30 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     }
 
     @Override
-    public void updateProjectEndDate(List<Long> bizDemandIds,boolean updatePlanReleaseDate) {
+    public void updateProjectEndDate(List<Long> bizDemandIds, boolean updatePlanReleaseDate) {
         bizDemandIds.forEach(a -> {
             BizDemandDO bizDemandDO = bizDemandMapper.selectById(a);
             Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
             Date oldProjectEndDate = bizDemandDO.getProjectEndDate();
 
             Date newProjectEndDate = getProjectEndDate(a);
-            if (!Objects.equals(newProjectEndDate,oldProjectEndDate)) {
-                if(updatePlanReleaseDate){
+            if (!Objects.equals(newProjectEndDate, oldProjectEndDate)) {
+                if (updatePlanReleaseDate) {
                     int month = DateUtil.getMonth(newProjectEndDate);
                     bizDemandDO.setPlanReleaseDate(month - 1);
                 }
                 bizDemandDO.setProjectEndDate(newProjectEndDate);
                 bizDemandMapper.fullUpdate(bizDemandDO);
-                log.info("业务需求id:{},更新前发布时间:{},更新后发布时间:{}",a,oldProjectEndDate,newProjectEndDate);
-                if(!Objects.equals(oldPlanReleaseDate,bizDemandDO.getPlanReleaseDate())){
-                    Integer status = bizDemandDO.getStatus();
-                    boolean notice=BizDemandStatusEnum.RECEIVED.getCode().equals(status)
-                            || BizDemandStatusEnum.TO_CONFIRM.getCode().equals(status)
-                            || BizDemandStatusEnum.INCLUDE_PROJECT.getCode().equals(status);
-                    if(notice){
-                        messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
-                                this,
-                                bizDemandDO.getId(),
-                                bizDemandDO.getSubmitManId(),
-                                bizDemandDO.getName(),
-                                BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
-                                PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
-                        ));
-                    }
-
+                log.info("业务需求id:{},更新前发布时间:{},更新后发布时间:{}", a, oldProjectEndDate, newProjectEndDate);
+                if (!Objects.equals(oldPlanReleaseDate, bizDemandDO.getPlanReleaseDate())) {
+                    messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
+                            this,
+                            bizDemandDO.getId(),
+                            bizDemandDO.getSubmitManId(),
+                            bizDemandDO.getName(),
+                            BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
+                            PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
+                    ));
                 }
             }
         });
