@@ -398,7 +398,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
             productDemandLogComponent.addLogWhenLinkOrUnlink(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.LINK.getText());
 
-            bizDemandComponent.updateProjectEndDate(bizDemandIds,true);
         } else {
             //当前业务需求下的所有产品需求
             Long bizDemandId = bizDemandIds.get(0);
@@ -409,7 +408,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
             productDemandLogComponent.addLogWhenLinkOrUnlink(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
 
-            bizDemandComponent.updateProjectEndDate(bizDemandIds,false);
         }
         return BaseResult.success(true);
     }

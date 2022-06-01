@@ -2,8 +2,10 @@ package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.condition.ProductBizDemandCondition;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
+import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProductBizDemandMapper;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
+import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.ProductBizDemandDO;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
@@ -39,6 +41,9 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
 
+    @Resource
+    private BizDemandMapper bizDemandMapper;
+
     @Override
     public void update(Long productDemandId, Long bizDemandId) {
         log.info("删除产品与业务需求关系,productDemandId={},bizDemandId={}", productDemandId, bizDemandId);
@@ -62,7 +67,7 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
         productDemandDO.setBizDemandId(bizDemandId);
         productBizDemandMapper.update(productDemandDO);
         // unlink after
-        after(publishDateMap, bizDemandIds);
+        after(publishDateMap, bizDemandIds, false);
     }
 
     @Override
@@ -91,7 +96,7 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
             productBizDemandMapper.batchInsert(list);
         }
         // link after
-        after(publishDateMap, bizDemandIds);
+        after(publishDateMap, bizDemandIds, true);
     }
 
     private void before(Map<Long, Date> publishDateMap, List<Long> bizDemandIds) {
@@ -103,7 +108,7 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
         }
     }
 
-    private void after(Map<Long, Date> publishDateMap, List<Long> bizDemandIds) {
+    private void after(Map<Long, Date> publishDateMap, List<Long> bizDemandIds, boolean updatePlanReleaseDate) {
         List<BizChangeLogDO> logs = new ArrayList<>();
         bizDemandIds.forEach(bid -> {
             Date publishDate = bizDemandComponent.getProjectEndDate(bid);
@@ -111,6 +116,14 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
                 String oldValue = DateUtil.parseToString(publishDateMap.get(bid), DateStyle.YYYY_MM_DD);
                 String newValue = DateUtil.parseToString(publishDate, DateStyle.YYYY_MM_DD);
                 logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, bid));
+
+                BizDemandDO bizDemandDO = bizDemandMapper.selectById(bid);
+                if (updatePlanReleaseDate) {
+                    int month = DateUtil.getMonth(publishDate);
+                    bizDemandDO.setPlanReleaseDate(month - 1);
+                }
+                bizDemandDO.setProjectEndDate(publishDate);
+                bizDemandMapper.fullUpdate(bizDemandDO);
             }
         });
         if (CollectionUtils.isNotEmpty(logs)) {

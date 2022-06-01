@@ -247,8 +247,8 @@ public class ProjectServiceImpl implements ProjectService {
         projectLogComponent.addLogWhenStatusChange(status, status, projectDO.getId(), ButtonActionEnum.SUBMIT.getText());
 
         List<Long> productDemandIds = projectAddReq.getProductDemandIds();
-        if(CollectionUtils.isNotEmpty(productDemandIds)){
-            ProjectProductDemandLinkReq req=new ProjectProductDemandLinkReq();
+        if (CollectionUtils.isNotEmpty(productDemandIds)) {
+            ProjectProductDemandLinkReq req = new ProjectProductDemandLinkReq();
             req.setProductDemandIds(productDemandIds);
             req.setProjectId(projectDO.getId());
             req.setType(LinkOrUnLinkEnum.LINK.getCode());
@@ -423,9 +423,6 @@ public class ProjectServiceImpl implements ProjectService {
 
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.LINK.getText());
 
-            List<Long> bizDemandIds = productBizDemandMapper.selectByProductDemandIds(productDemandIds)
-                    .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
-            bizDemandComponent.updateProjectEndDate(bizDemandIds,true);
         } else {
             projectProductDemandComponent.update(null, productDemandIds.get(0));
 
@@ -439,10 +436,6 @@ public class ProjectServiceImpl implements ProjectService {
 
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.UN_LINK.getText());
             productDemandLogComponent.addLogAsProjectStatusChange(statusMap, productDemandDO.getStatus());
-
-            List<Long> bizDemandIds = productBizDemandMapper.selectByProductDemandIds(productDemandIds)
-                    .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
-            bizDemandComponent.updateProjectEndDate(bizDemandIds,false);
 
             // 取消产品需求和任务的关联
             productDemandIds.forEach(a -> taskProductDemandComponent.update(null, a));
@@ -485,6 +478,11 @@ public class ProjectServiceImpl implements ProjectService {
                 e.setStatusName(ProductDemandStatusEnum.getTextByCode(e.getStatus()));
                 e.setPriorityName(PriorityEnum.getTextByCode(e.getPriority()));
             }
+        }
+        if (Integer.valueOf(0).equals(productDemandQueryList.getType())) {
+            productDemandVOList = productDemandVOList.stream().filter(a -> a.getTaskCount() == 0).collect(Collectors.toList());
+        } else if (Integer.valueOf(1).equals(productDemandQueryList.getType())) {
+            productDemandVOList = productDemandVOList.stream().filter(a -> a.getTaskCount() >= 1).collect(Collectors.toList());
         }
 
         PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
@@ -589,7 +587,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (!Objects.equals(oldProject.getPlanEndDate(), newProject.getPlanEndDate())
                 || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
             List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProject.getId());
-            bizDemandComponent.updateProjectEndDate(bizDemandIds,true);
+            bizDemandComponent.updateProjectEndDate(bizDemandIds, true);
         }
         log.info("更新项目信息完成");
     }

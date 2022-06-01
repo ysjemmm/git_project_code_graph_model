@@ -1,9 +1,11 @@
 package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
+import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProductBizDemandMapper;
 import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
+import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.ProductBizDemandDO;
 import com.timevale.forward.dal.entity.ProjectProductDemandDO;
 import com.timevale.forward.service.component.BizDemandComponent;
@@ -42,6 +44,9 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
 
+    @Resource
+    private BizDemandMapper bizDemandMapper;
+
 
     @Override
     public void update(Long projectId, Long productDemandId) {
@@ -59,7 +64,7 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
         Map<Long, Date> publishDateMap = new HashMap<>();
         List<Long> bizDemandIds = new ArrayList<>();
         before(productDemandIds, publishDateMap, bizDemandIds);
-        log.info("bizDemandId,publishDate:{}",publishDateMap);
+        log.info("bizDemandId,publishDate:{}", publishDateMap);
         // unlink
         ProjectProductDemandDO projectProductDemandDO = new ProjectProductDemandDO();
         projectProductDemandDO.setProjectId(projectId);
@@ -67,7 +72,7 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
         projectProductDemandDO.setIsDeleted(true);
         projectProductDemandMapper.update(projectProductDemandDO);
         // unlink after
-        after(publishDateMap, bizDemandIds);
+        after(publishDateMap, bizDemandIds, false);
     }
 
     @Override
@@ -81,7 +86,7 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
         Map<Long, Date> publishDateMap = new HashMap<>();
         List<Long> bizDemandIds = new ArrayList<>();
         before(productDemandIds, publishDateMap, bizDemandIds);
-        log.info("bizDemandId,publishDate:{}",publishDateMap);
+        log.info("bizDemandId,publishDate:{}", publishDateMap);
         // link
         if (!CollectionUtils.isEmpty(productDemandIds)) {
             Set<Long> set = new HashSet<>(productDemandIds);
@@ -94,13 +99,13 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
             projectProductDemandMapper.batchInsert(list);
         }
         // link after
-        after(publishDateMap, bizDemandIds);
+        after(publishDateMap, bizDemandIds, true);
     }
 
 
     private void before(List<Long> productDemandIds, Map<Long, Date> publishDateMap, List<Long> bizDemandIds) {
         if (!CollectionUtils.isEmpty(productDemandIds)) {
-            List<Long>bids = productBizDemandMapper.getByProductDemandIds(productDemandIds)
+            List<Long> bids = productBizDemandMapper.getByProductDemandIds(productDemandIds)
                     .stream().map(ProductBizDemandDO::getBizDemandId).distinct().collect(Collectors.toList());
             bizDemandIds.addAll(bids);
             bizDemandIds.forEach(bid -> {
@@ -110,7 +115,7 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
         }
     }
 
-    private void after(Map<Long, Date> publishDateMap, List<Long> bizDemandIds) {
+    private void after(Map<Long, Date> publishDateMap, List<Long> bizDemandIds, boolean updatePlanReleaseDate) {
         List<BizChangeLogDO> logs = new ArrayList<>();
         bizDemandIds.forEach(bid -> {
             Date publishDate = bizDemandComponent.getProjectEndDate(bid);
@@ -118,6 +123,14 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
                 String oldValue = DateUtil.parseToString(publishDateMap.get(bid), DateStyle.YYYY_MM_DD);
                 String newValue = DateUtil.parseToString(publishDate, DateStyle.YYYY_MM_DD);
                 logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, bid));
+
+                BizDemandDO bizDemandDO = bizDemandMapper.selectById(bid);
+                if (updatePlanReleaseDate) {
+                    int month = DateUtil.getMonth(publishDate);
+                    bizDemandDO.setPlanReleaseDate(month - 1);
+                }
+                bizDemandDO.setProjectEndDate(publishDate);
+                bizDemandMapper.fullUpdate(bizDemandDO);
             }
         });
         if (CollectionUtils.isNotEmpty(logs)) {
