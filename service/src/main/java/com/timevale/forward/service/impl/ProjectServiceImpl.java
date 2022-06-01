@@ -454,7 +454,7 @@ public class ProjectServiceImpl implements ProjectService {
         Long projectId = productDemandQueryList.getProjectId();
 
         // 开始分页
-        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        PageHelper.startPage(productDemandQueryList.getPageNum(), 100, CommonConstant.DEFAULT_ORDER_BY);
 
         // 查询产品需求
         List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(projectId);
@@ -479,16 +479,25 @@ public class ProjectServiceImpl implements ProjectService {
                 e.setPriorityName(PriorityEnum.getTextByCode(e.getPriority()));
             }
         }
+
         if (Integer.valueOf(0).equals(productDemandQueryList.getType())) {
             productDemandVOList = productDemandVOList.stream().filter(a -> a.getTaskCount() == 0).collect(Collectors.toList());
         } else if (Integer.valueOf(1).equals(productDemandQueryList.getType())) {
             productDemandVOList = productDemandVOList.stream().filter(a -> a.getTaskCount() >= 1).collect(Collectors.toList());
         }
 
-        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
+        int count = productDemandVOList.size();
+        int pageSize = productDemandQueryList.getPageSize();
+        if (count > pageSize) {
+            productDemandVOList = productDemandVOList.subList(0, pageSize);
+        }
+
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(productDemandVOList);
-        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        pageQueryResult.setTotalItems(count);
+        pageQueryResult.setTotalPages(count % pageSize == 0 ? count / pageSize : (count / pageSize) + 1);
+        pageQueryResult.setCurrentPage(productDemandQueryList.getPageNum());
+        pageQueryResult.setItemsPerPage(productDemandQueryList.getPageSize());
         return BaseResult.success(pageQueryResult);
     }
 
