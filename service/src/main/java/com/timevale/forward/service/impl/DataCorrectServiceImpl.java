@@ -6,9 +6,11 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.DataCorrectService;
 import com.timevale.forward.facade.api.request.DataModifyReq;
 import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.ProductDemandComponent;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
@@ -44,6 +46,9 @@ public class DataCorrectServiceImpl implements DataCorrectService {
 
     @Resource
     private BizDemandMapper bizDemandMapper;
+
+    @Resource
+    private BizDemandComponent bizDemandComponent;
 
     @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
@@ -132,6 +137,23 @@ public class DataCorrectServiceImpl implements DataCorrectService {
 
         return BaseResult.success(true);
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> bizDemandProjectEndDateUpdate() {
+        List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectAll();
+        bizDemandDOList = bizDemandDOList.stream().filter(e -> !e.getIsDeleted()).collect(Collectors.toList());
+
+        for (BizDemandDO e : bizDemandDOList) {
+            Date projectEndDate = bizDemandComponent.getProjectEndDate(e.getId());
+            if(projectEndDate != null){
+                bizDemandMapper.updateDate(e.getId(), projectEndDate, DateUtil.getMonth(projectEndDate) - 1);
+            }
+        }
+
+        return BaseResult.success(true);
+    }
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)

@@ -241,6 +241,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
             //更新项目发布时间
             newBizDemandDO.setProjectEndDate(newEndDate);
 
+            // 日志
             bizDemandLogComponent.addLogWhenModifyData(
                     oldEndDate == null ? StringUtils.EMPTY : DateUtil.parseToString(oldEndDate, DateStyle.YYYY_MM_DD),
                     newEndDate == null ? StringUtils.EMPTY : DateUtil.parseToString(newEndDate, DateStyle.YYYY_MM_DD),

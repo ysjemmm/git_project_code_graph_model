@@ -5,6 +5,7 @@ import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.BizDemandListDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -62,6 +63,12 @@ public interface BizDemandMapper {
     List<BizDemandListDO> selectList(BizDemandListCondition bizDemandListCondition);
 
     /**
+     * 查询全部
+     * @return 业务需求DO
+     */
+    List<BizDemandDO> selectAll();
+
+    /**
      * 根据条件查询对应需求，查询列表使用
      *
      * @param productDemandId 查询条件
@@ -105,6 +112,13 @@ public interface BizDemandMapper {
      */
     int updateReceiveMan(@Param("idList") List<Long> idList, @Param("receiveMan") String receiveMan,@Param("receiveManId") String receiveManId);
 
+    /**
+     * 更新项目发布时间数据
+     *
+     * @param projectEndDate  项目结束日期
+     * @param planReleaseDate 计划发布日期
+     */
+    int updateDate(@Param("id") Long id, @Param("projectEndDate")Date projectEndDate, @Param("planReleaseDate") Integer planReleaseDate);
 
     /**
      * 选择id获取对应业务需求信息

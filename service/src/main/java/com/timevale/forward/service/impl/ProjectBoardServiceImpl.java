@@ -168,6 +168,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         // 日志分组 by id
         Map<Long, List<BugLogDO>> logMap = bugLogDOList.stream().collect(Collectors.groupingBy(BugLogDO::getMainId));
         logMap.forEach((k, v) -> {
+            // 日志分组 by 日期
             Map<Date, List<BugLogDO>> logMapDate = v.stream().collect(Collectors.groupingBy(e -> DateUtil.getStartOfDay(e.getCreateDate())));
 
             logMapDate.forEach((sk, sv) -> {
