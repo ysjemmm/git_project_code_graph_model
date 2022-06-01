@@ -116,9 +116,6 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private BizDemandComponent bizDemandComponent;
 
-    @Resource
-    private ProductBizDemandMapper productBizDemandMapper;
-
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -247,8 +244,8 @@ public class ProjectServiceImpl implements ProjectService {
         projectLogComponent.addLogWhenStatusChange(status, status, projectDO.getId(), ButtonActionEnum.SUBMIT.getText());
 
         List<Long> productDemandIds = projectAddReq.getProductDemandIds();
-        if(CollectionUtils.isNotEmpty(productDemandIds)){
-            ProjectProductDemandLinkReq req=new ProjectProductDemandLinkReq();
+        if (CollectionUtils.isNotEmpty(productDemandIds)) {
+            ProjectProductDemandLinkReq req = new ProjectProductDemandLinkReq();
             req.setProductDemandIds(productDemandIds);
             req.setProjectId(projectDO.getId());
             req.setType(LinkOrUnLinkEnum.LINK.getCode());
@@ -423,9 +420,6 @@ public class ProjectServiceImpl implements ProjectService {
 
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.LINK.getText());
 
-            List<Long> bizDemandIds = productBizDemandMapper.selectByProductDemandIds(productDemandIds)
-                    .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
-            bizDemandComponent.updateProjectEndDate(bizDemandIds,true);
         } else {
             projectProductDemandComponent.update(null, productDemandIds.get(0));
 
@@ -439,10 +433,6 @@ public class ProjectServiceImpl implements ProjectService {
 
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.UN_LINK.getText());
             productDemandLogComponent.addLogAsProjectStatusChange(statusMap, productDemandDO.getStatus());
-
-            List<Long> bizDemandIds = productBizDemandMapper.selectByProductDemandIds(productDemandIds)
-                    .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
-            bizDemandComponent.updateProjectEndDate(bizDemandIds,false);
 
             // 取消产品需求和任务的关联
             productDemandIds.forEach(a -> taskProductDemandComponent.update(null, a));
@@ -461,7 +451,7 @@ public class ProjectServiceImpl implements ProjectService {
         Long projectId = productDemandQueryList.getProjectId();
 
         // 开始分页
-        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        PageHelper.startPage(productDemandQueryList.getPageNum(), 100, CommonConstant.DEFAULT_ORDER_BY);
 
         // 查询产品需求
         List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(projectId);
@@ -487,10 +477,24 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
-        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
+        if (Integer.valueOf(0).equals(productDemandQueryList.getType())) {
+            productDemandVOList = productDemandVOList.stream().filter(a -> a.getTaskCount() == 0).collect(Collectors.toList());
+        } else if (Integer.valueOf(1).equals(productDemandQueryList.getType())) {
+            productDemandVOList = productDemandVOList.stream().filter(a -> a.getTaskCount() >= 1).collect(Collectors.toList());
+        }
+
+        int count = productDemandVOList.size();
+        int pageSize = productDemandQueryList.getPageSize();
+        if (count > pageSize) {
+            productDemandVOList = productDemandVOList.subList(0, pageSize);
+        }
+
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(productDemandVOList);
-        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        pageQueryResult.setTotalItems(count);
+        pageQueryResult.setTotalPages(count % pageSize == 0 ? count / pageSize : (count / pageSize) + 1);
+        pageQueryResult.setCurrentPage(productDemandQueryList.getPageNum());
+        pageQueryResult.setItemsPerPage(productDemandQueryList.getPageSize());
         return BaseResult.success(pageQueryResult);
     }
 
@@ -589,7 +593,9 @@ public class ProjectServiceImpl implements ProjectService {
         if (!Objects.equals(oldProject.getPlanEndDate(), newProject.getPlanEndDate())
                 || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
             List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProject.getId());
-            bizDemandComponent.updateProjectEndDate(bizDemandIds,true);
+            bizDemandIds.forEach(a->{
+                bizDemandComponent.updateProjectEndDate(a, true);
+            });
         }
         log.info("更新项目信息完成");
     }
