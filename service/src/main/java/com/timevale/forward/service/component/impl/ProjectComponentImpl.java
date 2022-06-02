@@ -118,6 +118,7 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         //4.填充打回次,填充是否逾期
         Map<Long, List<TestBillDO>> testMap = testBillMapper.list(projectIds).stream().collect(Collectors.groupingBy(TestBillDO::getProjectId));
+
         // 6.是否需要预警
         List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectIdList(projectIds);
         Set<Long> riskSet = riskDOList.stream()
