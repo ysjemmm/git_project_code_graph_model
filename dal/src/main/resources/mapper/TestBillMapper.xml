@@ -103,9 +103,21 @@
             <if test="returnCountType!=null and returnCountType == 2">and return_count &gt;= #{returnCount}</if>
             <if test="returnCountType!=null and returnCountType == 3">and return_count &lt; #{returnCount}</if>
             <if test="returnCountType!=null and returnCountType == 4">and return_count &lt;= #{returnCount}</if>
-            <if test="isDelay!=null and isDelay=true ">and delay_day  &gt; 0</if>
-            <if test="isDelay!=null and isDelay=false ">and delay_day  = 0</if>
              and is_deleted=false
+        </where>
+    </select>
+
+    <select id="getProjectIdsOfDelay" resultType="long">
+        select distinct project_id
+        from test_bill
+        <where>
+            <if test="projectIds!=null and projectIds.size()>0">
+                and project_id in
+                <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and delay_day  &gt; 0 and is_deleted=false
         </where>
     </select>
 

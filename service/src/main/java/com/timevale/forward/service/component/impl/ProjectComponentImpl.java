@@ -89,8 +89,24 @@ public class ProjectComponentImpl implements ProjectComponent {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
-        if ((condition.getReturnCountType() != null && condition.getReturnCount() != null) || condition.getIsDelay() != null) {
-            projectIds = testBillMapper.getProjectIds(projectIds, condition.getReturnCountType(), condition.getReturnCount(), condition.getIsDelay());
+
+        if (condition.getReturnCountType() != null && condition.getReturnCount() != null) {
+            projectIds = testBillMapper.getProjectIds(projectIds, condition.getReturnCountType(), condition.getReturnCount());
+            if (CollectionUtils.isEmpty(projectIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+        }
+
+        if (condition.getIsDelay() != null) {
+            List<Long>tmpProjectIds = testBillMapper.getProjectIdsOfDelay(projectIds);
+            if(condition.getIsDelay()){
+                projectIds=tmpProjectIds;
+            }else if(CollectionUtils.isEmpty(projectIds)){
+                projectIds = projectMapper.getAllId();
+                projectIds.removeAll(tmpProjectIds);
+            }else{
+                projectIds.removeAll(tmpProjectIds);
+            }
             if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }

@@ -68,11 +68,17 @@ public interface TestBillMapper {
      * @param projectIds projectIds
      * @param returnCountType returnCountType
      * @param returnCount returnCount
-     * @param isDelay isDelay
-     * @return
+     * @return return
      */
-    List<Long> getProjectIds(@Param("projectIds") List<Long> projectIds,@Param("returnCountType") Integer returnCountType
-            ,@Param("returnCount") Integer returnCount,@Param("isDelay")Boolean isDelay);
+    List<Long> getProjectIds(@Param("projectIds") List<Long> projectIds,@Param("returnCountType") Integer returnCountType,@Param("returnCount") Integer returnCount);
+
+    /**
+     *
+     * @param projectIds projectIds
+     * @return return
+     */
+    List<Long> getProjectIdsOfDelay(@Param("projectIds") List<Long> projectIds);
+
 
     /**
      *
