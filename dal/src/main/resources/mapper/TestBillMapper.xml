@@ -126,7 +126,7 @@
         update test_bill
         <set>
             <if test="testBillDO.delayDay != null">delay_day=#{testBillDO.delayDay},</if>
-            <if test="true">modify_date=modify_date</if>
+            <if test="retainModifyDate">modify_date=modify_date</if>
         </set>
         <where>
             and project_id=#{testBillDO.projectId}

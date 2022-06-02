@@ -86,7 +86,7 @@ public interface TestBillMapper {
      *
      * @param testBillDO 提测单修改信息
      */
-    void updateDelayDay(@Param("testBillDO") TestBillDO testBillDO);
+    void updateDelayDay(@Param("testBillDO") TestBillDO testBillDO,@Param("retainModifyDate") boolean retainModifyDate);
 
 }
 

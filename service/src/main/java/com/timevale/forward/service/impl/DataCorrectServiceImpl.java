@@ -162,7 +162,8 @@ public class DataCorrectServiceImpl implements DataCorrectService {
     @Override
     public BaseResult<Boolean> updateDelayDays() {
         List<ProjectNodeDO> projectNodeDos = projectNodeMapper.listByName(ProjectNodeEnum.SUBMIT_TEST.getText())
-                .stream().filter(a -> a.getActualDate() != null && a.getPlanDate() != null).collect(Collectors.toList());
+                .stream().filter(a -> a.getActualDate() != null && a.getPlanDate() != null && a.getActualDate().after(a.getPlanDate()))
+                .collect(Collectors.toList());
         projectNodeDos.forEach(a -> {
             TestBillDO testBillDO = new TestBillDO();
 
@@ -172,7 +173,7 @@ public class DataCorrectServiceImpl implements DataCorrectService {
             testBillDO.setDelayDay(DateUtil.getIntervalDays(planDate, actualDate));
 
             testBillDO.setProjectId(a.getProjectId());
-            testBillMapper.updateDelayDay(testBillDO);
+            testBillMapper.updateDelayDay(testBillDO,true);
         });
         log.info("数据订正,逾期时间更新完成");
         return BaseResult.success(true);

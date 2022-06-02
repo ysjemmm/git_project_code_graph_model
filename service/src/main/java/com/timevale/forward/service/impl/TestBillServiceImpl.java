@@ -142,9 +142,9 @@ public class TestBillServiceImpl implements TestBillService {
         projectComponent.updateNodeStatus(testBillAddReq.getProjectId());
 
         Integer oldStatus = projectDO.getStatus();
-        if(!ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus) || !ProjectStatusEnum.INVALID.getCode().equals(oldStatus)) {
+        if (!ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus) || !ProjectStatusEnum.INVALID.getCode().equals(oldStatus)) {
             Integer newStatus = projectComponent.getStatus(projectDO.getId());
-            if(!Objects.equal(oldStatus, newStatus)){
+            if (!Objects.equal(oldStatus, newStatus)) {
                 projectDO.setStatus(newStatus);
                 projectMapper.update(projectDO);
 
@@ -210,7 +210,7 @@ public class TestBillServiceImpl implements TestBillService {
 
         //是否延期以及延期天数
         Integer delayDay = testBillDO.getDelayDay();
-        testBillVO.setIsDelay(delayDay>0);
+        testBillVO.setIsDelay(delayDay > 0);
         testBillVO.setDelayDay(delayDay);
         //提测人
         testBillVO.setTestBillMan(testBillDO.getCreateMan());
@@ -402,10 +402,11 @@ public class TestBillServiceImpl implements TestBillService {
         List<Date> planDates = projectNodeMapper.get(testBillModifyReq.getProjectId()).stream().filter(e -> e.getName()
                 .equals(ProjectNodeEnum.SUBMIT_TEST.getText())).map(ProjectNodeDO::getPlanDate).collect(Collectors.toList());
 
-        String planDate = com.timevale.forward.service.utils.date.DateUtil.parseToString(planDates.get(0), DateFormatConst.DATE_FORMAT);
-        String actualDate = com.timevale.forward.service.utils.date.DateUtil.parseToString(testBillModifyReq.getActualDate(), DateFormatConst.DATE_FORMAT);
-        testBillDO.setDelayDay(DateUtil.getIntervalDays(planDate, actualDate));
-
+        if (!CollectionUtils.isEmpty(planDates) && testBillModifyReq.getActualDate().after(planDates.get(0))) {
+            String planDate = com.timevale.forward.service.utils.date.DateUtil.parseToString(planDates.get(0), DateFormatConst.DATE_FORMAT);
+            String actualDate = com.timevale.forward.service.utils.date.DateUtil.parseToString(testBillModifyReq.getActualDate(), DateFormatConst.DATE_FORMAT);
+            testBillDO.setDelayDay(DateUtil.getIntervalDays(planDate, actualDate));
+        }
         testBillDO.setReason(null);
         //更新提测表信息
         testBillMapper.submitTestPass(testBillDO);

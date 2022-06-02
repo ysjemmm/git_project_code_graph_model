@@ -14,6 +14,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
+import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -87,8 +89,8 @@ public class ProjectComponentImpl implements ProjectComponent {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
-        if ((condition.getReturnCountType() != null && condition.getReturnCount() != null)||condition.getIsDelay()!=null) {
-            projectIds = testBillMapper.getProjectIds(projectIds, condition.getReturnCountType(), condition.getReturnCount(),condition.getIsDelay());
+        if ((condition.getReturnCountType() != null && condition.getReturnCount() != null) || condition.getIsDelay() != null) {
+            projectIds = testBillMapper.getProjectIds(projectIds, condition.getReturnCountType(), condition.getReturnCount(), condition.getIsDelay());
             if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
@@ -152,12 +154,12 @@ public class ProjectComponentImpl implements ProjectComponent {
             a.setStatusName(ProjectStatusEnum.getTextByCode(a.getStatus()));
             a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
             List<TestBillDO> testBillDos = testMap.get(a.getId());
-            if(CollectionUtils.isEmpty(testBillDos)){
+            if (CollectionUtils.isEmpty(testBillDos)) {
                 a.setReturnCount(0);
                 a.setIsDelay(false);
-            }else{
+            } else {
                 a.setReturnCount(testBillDos.get(0).getReturnCount());
-                a.setIsDelay(testBillDos.get(0).getDelayDay()>0);
+                a.setIsDelay(testBillDos.get(0).getDelayDay() > 0);
             }
             a.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(a.getNodeStatus()));
 
@@ -232,10 +234,27 @@ public class ProjectComponentImpl implements ProjectComponent {
         } else if (devStart != null) {
             projectDO.setActualStartDate(devStart.getActualDate());
         }
-        if (submitTest != null && submitTest.getActualDate() == null) {
+        //提测节点
+        if (submitTest != null) {
             ProjectNodeDO oldSubmitTest = projectNodeMapper.getByName(projectDO.getId(), ProjectNodeEnum.SUBMIT_TEST.getText());
-            if (oldSubmitTest != null && oldSubmitTest.getActualDate() != null) {
+            if (submitTest.getActualDate() == null && oldSubmitTest != null && oldSubmitTest.getActualDate() != null) {
                 throw new BaseBizRuntimeException("当前页面数据发生变化,请刷新后重试");
+            }
+
+            TestBillDO oldTestBillDO = testBillMapper.selectByProjectId(projectDO.getId());
+            if (oldTestBillDO != null && TestBillStatusEnum.TEST_SUCCESS.getCode().equals(oldTestBillDO.getStatus())
+                    && oldSubmitTest != null && !Objects.equals(submitTest.getPlanDate(), oldSubmitTest.getPlanDate())) {
+                //提测已经通过,修改计划时间,重算逾期时长
+                TestBillDO testBillDO = new TestBillDO();
+                if (submitTest.getActualDate().after(submitTest.getPlanDate())) {
+                    String planDate = DateUtil.parseToString(submitTest.getPlanDate(), DateFormatConst.DATE_FORMAT);
+                    String actualDate = DateUtil.parseToString(submitTest.getActualDate(), DateFormatConst.DATE_FORMAT);
+                    testBillDO.setDelayDay(DateUtil.getIntervalDays(planDate, actualDate));
+                } else {
+                    testBillDO.setDelayDay(0);
+                }
+                testBillDO.setProjectId(projectDO.getId());
+                testBillMapper.updateDelayDay(testBillDO, false);
             }
         }
     }
