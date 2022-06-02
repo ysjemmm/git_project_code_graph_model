@@ -1,6 +1,8 @@
 package com.timevale.forward.service.copy;
 
+import com.timevale.forward.dal.condition.ProjectRiskCondition;
 import com.timevale.forward.dal.entity.ProjectRiskDO;
+import com.timevale.forward.facade.api.query.ProjectRiskQueryList;
 import com.timevale.forward.facade.api.request.ProjectRiskAddReq;
 import com.timevale.forward.facade.api.request.ProjectRiskModifyReq;
 import com.timevale.forward.facade.api.result.ProjectRiskVO;
@@ -20,4 +22,6 @@ public interface ProjectRiskCopier {
     ProjectRiskDO convert(ProjectRiskModifyReq projectRiskModifyReq);
 
     ProjectRiskVO convert(ProjectRiskDO projectRiskDO);
+
+    ProjectRiskCondition convert(ProjectRiskQueryList projectRiskQueryList);
 }

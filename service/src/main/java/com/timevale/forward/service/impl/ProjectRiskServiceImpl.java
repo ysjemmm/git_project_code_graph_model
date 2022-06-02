@@ -3,6 +3,7 @@ package com.timevale.forward.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.ProjectRiskCondition;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectNodeMapper;
 import com.timevale.forward.dal.dao.ProjectRiskMapper;
@@ -129,7 +130,8 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         // 开始分页
         PageHelper.startPage(projectRiskQueryList.pageNum, projectRiskQueryList.pageSize, CommonConstant.PROJECT_RISK_ORDER_BY);
 
-        List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectId(projectRiskQueryList.getProjectId());
+        ProjectRiskCondition condition = ProjectRiskCopier.INSTANCE.convert(projectRiskQueryList);
+        List<ProjectRiskDO> riskDOList = projectRiskMapper.select(condition);
         List<ProjectRiskVO> riskVOList = riskDOList.stream().map(ProjectRiskCopier.INSTANCE::convert).collect(Collectors.toList());
 
         // 枚举描述

@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.ProjectRiskCondition;
 import com.timevale.forward.dal.entity.ProjectRiskDO;
 import org.apache.ibatis.annotations.Param;
 
@@ -54,6 +55,14 @@ public interface ProjectRiskMapper {
      * @param id 项目id
      */
     ProjectRiskDO selectById(@Param("id") Long id);
+
+    /**
+     * 查询 by 条件
+     *
+     * @param condition 条件
+     * @return {@link List}<{@link ProjectRiskDO}>
+     */
+    List<ProjectRiskDO> select(ProjectRiskCondition condition);
 
     /**
      * 查询 by 项目id
