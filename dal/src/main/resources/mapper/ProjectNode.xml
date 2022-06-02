@@ -55,7 +55,15 @@
     <select id="listByName" resultType="com.timevale.forward.dal.entity.ProjectNodeDO">
         SELECT id,project_id,name, plan_date, actual_date
         FROM project_node
-        WHERE name = #{name}
+        <where>
+            <if test="projectIds!=null and projectIds.size()>0">
+                and project_id in
+                <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and name = #{name}
+        </where>
     </select>
 
 </mapper>

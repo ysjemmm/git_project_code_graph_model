@@ -24,10 +24,7 @@ import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -89,7 +86,7 @@ public class ProjectComponentImpl implements ProjectComponent {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
-
+        //打回次数
         if (condition.getReturnCountType() != null && condition.getReturnCount() != null) {
             projectIds = testBillMapper.getProjectIds(projectIds, condition.getReturnCountType(), condition.getReturnCount());
             if (CollectionUtils.isEmpty(projectIds)) {
@@ -97,6 +94,18 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         }
 
+        //提测实际时间
+        if (condition.getActualTestDateLeft() != null && condition.getActualTestDateRight() != null) {
+            List<ProjectNodeDO> projectNodeDos = projectNodeMapper.listByName(projectIds, ProjectNodeEnum.SUBMIT_TEST.getText());
+            Date startOfDay = DateUtil.getStartOfDay(condition.getActualTestDateLeft());
+            Date endOfDay = DateUtil.getEndOfDay(condition.getActualTestDateRight());
+            projectIds = projectNodeDos.stream().filter(a -> a.getActualDate() != null && a.getActualDate().after(startOfDay) && a.getActualDate().before(endOfDay))
+                    .map(ProjectNodeDO::getProjectId).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(projectIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+        }
+        //是否逾期
         if (condition.getIsDelay() != null) {
             List<Long>tmpProjectIds = testBillMapper.getProjectIdsOfDelay(projectIds);
             if(condition.getIsDelay()){

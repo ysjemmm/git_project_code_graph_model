@@ -161,7 +161,7 @@ public class DataCorrectServiceImpl implements DataCorrectService {
 
     @Override
     public BaseResult<Boolean> updateDelayDays() {
-        List<ProjectNodeDO> projectNodeDos = projectNodeMapper.listByName(ProjectNodeEnum.SUBMIT_TEST.getText())
+        List<ProjectNodeDO> projectNodeDos = projectNodeMapper.listByName(null,ProjectNodeEnum.SUBMIT_TEST.getText())
                 .stream().filter(a -> a.getActualDate() != null && a.getPlanDate() != null && a.getActualDate().after(a.getPlanDate()))
                 .collect(Collectors.toList());
         projectNodeDos.forEach(a -> {

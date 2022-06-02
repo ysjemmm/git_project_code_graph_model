@@ -68,6 +68,6 @@ public interface ProjectNodeMapper {
     void updateActualDateById(@Param("id") Long id, @Param("actualDate") Date actualDate);
 
 
-    List<ProjectNodeDO> listByName(@Param("name") String name);
+    List<ProjectNodeDO> listByName(@Param("projectIds") List<Long> projectIds,@Param("name") String name);
 
 }

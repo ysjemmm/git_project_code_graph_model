@@ -146,4 +146,14 @@ public class ProjectListCondition extends QueryBase {
      */
     private Boolean isDelay;
 
+    /**
+     * 提测时间左区间
+     */
+    private Date actualTestDateLeft;
+
+    /**
+     * 提测时间右区间
+     */
+    private Date actualTestDateRight;
+
 }

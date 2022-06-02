@@ -95,4 +95,10 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("提测是否延期")
     private Boolean isDelay;
 
+    @ApiModelProperty("提测时间左区间")
+    private Date actualTestDateLeft;
+
+    @ApiModelProperty("提测时间右区间")
+    private Date actualTestDateRight;
+
 }
