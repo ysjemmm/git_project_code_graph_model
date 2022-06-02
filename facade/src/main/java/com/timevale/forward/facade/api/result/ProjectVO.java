@@ -100,4 +100,7 @@ public class ProjectVO extends ToString {
 
     @ApiModelProperty("提测是否延期")
     private Boolean isDelay;
+
+    @ApiModelProperty("提测实际时间")
+    private Date actualTestDate;
 }

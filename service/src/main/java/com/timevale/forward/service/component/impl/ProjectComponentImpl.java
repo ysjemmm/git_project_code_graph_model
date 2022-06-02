@@ -95,8 +95,8 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
 
         //提测实际时间
+        List<ProjectNodeDO> projectNodeDos = projectNodeMapper.listByName(projectIds, ProjectNodeEnum.SUBMIT_TEST.getText());
         if (condition.getActualTestDateLeft() != null && condition.getActualTestDateRight() != null) {
-            List<ProjectNodeDO> projectNodeDos = projectNodeMapper.listByName(projectIds, ProjectNodeEnum.SUBMIT_TEST.getText());
             Date startOfDay = DateUtil.getStartOfDay(condition.getActualTestDateLeft());
             Date endOfDay = DateUtil.getEndOfDay(condition.getActualTestDateRight());
             projectIds = projectNodeDos.stream().filter(a -> a.getActualDate() != null && a.getActualDate().after(startOfDay) && a.getActualDate().before(endOfDay))
@@ -107,13 +107,13 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
         //是否逾期
         if (condition.getIsDelay() != null) {
-            List<Long>tmpProjectIds = testBillMapper.getProjectIdsOfDelay(projectIds);
-            if(condition.getIsDelay()){
-                projectIds=tmpProjectIds;
-            }else if(CollectionUtils.isEmpty(projectIds)){
+            List<Long> tmpProjectIds = testBillMapper.getProjectIdsOfDelay(projectIds);
+            if (condition.getIsDelay()) {
+                projectIds = tmpProjectIds;
+            } else if (CollectionUtils.isEmpty(projectIds)) {
                 projectIds = projectMapper.getAllId();
                 projectIds.removeAll(tmpProjectIds);
-            }else{
+            } else {
                 projectIds.removeAll(tmpProjectIds);
             }
             if (CollectionUtils.isEmpty(projectIds)) {
@@ -133,20 +133,23 @@ public class ProjectComponentImpl implements ProjectComponent {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
 
-        //2.填充人员信息
+        //填充人员信息
         Map<Long, List<PersonDO>> pdMap = personMapper.get(projectIds, PersonTypeEnum.PROJECT_PD.getCode())
                 .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
         Map<Long, List<PersonDO>> teamMemberMap = personMapper.get(projectIds, PersonTypeEnum.PROJECT_MEMBER.getCode())
                 .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
 
-        //3.填充产品线/业务域信息
+        //填充产品线/业务域信息
         Map<Long, List<ProjectProductLineBizDomain>> productLineMap = productLineMapper.getByProjectIds(projectIds)
                 .stream().collect(Collectors.groupingBy(ProjectProductLineBizDomain::getProjectId));
 
-        //4.填充打回次,填充是否逾期
+        //提测实际时间
+        Map<Long, List<ProjectNodeDO>> testNodeMap = projectNodeDos.stream().collect(Collectors.groupingBy(ProjectNodeDO::getProjectId));
+
+        //填充打回次,填充是否逾期
         Map<Long, List<TestBillDO>> testMap = testBillMapper.list(projectIds).stream().collect(Collectors.groupingBy(TestBillDO::getProjectId));
 
-        // 6.是否需要预警
+        //是否需要预警
         List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectIdList(projectIds);
         Set<Long> riskSet = riskDOList.stream()
                 .filter(e -> ProjectRiskStatusEnum.PENDING.getCode().equals(e.getStatus()))
@@ -178,6 +181,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             a.setTypeName(ProjectTypeEnum.getTextByCode(a.getType()));
             a.setStatusName(ProjectStatusEnum.getTextByCode(a.getStatus()));
             a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
+
             List<TestBillDO> testBillDos = testMap.get(a.getId());
             if (CollectionUtils.isEmpty(testBillDos)) {
                 a.setReturnCount(0);
@@ -186,6 +190,7 @@ public class ProjectComponentImpl implements ProjectComponent {
                 a.setReturnCount(testBillDos.get(0).getReturnCount());
                 a.setIsDelay(testBillDos.get(0).getDelayDay() > 0);
             }
+            a.setActualTestDate(CollectionUtils.isEmpty(testNodeMap.get(a.getId())) ? null : testNodeMap.get(a.getId()).get(0).getActualDate());
             a.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(a.getNodeStatus()));
 
             Integer status = a.getStatus();
