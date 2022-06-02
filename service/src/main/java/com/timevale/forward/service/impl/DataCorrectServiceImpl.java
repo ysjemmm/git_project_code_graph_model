@@ -1,6 +1,5 @@
 package com.timevale.forward.service.impl;
 
-import cn.hutool.core.date.DatePattern;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -11,6 +10,7 @@ import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.ProductDemandComponent;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
+import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
@@ -165,9 +165,12 @@ public class DataCorrectServiceImpl implements DataCorrectService {
                 .stream().filter(a -> a.getActualDate() != null && a.getPlanDate() != null).collect(Collectors.toList());
         projectNodeDos.forEach(a -> {
             TestBillDO testBillDO = new TestBillDO();
-            Integer planDate = Integer.parseInt(cn.hutool.core.date.DateUtil.format(a.getPlanDate(), DatePattern.NORM_DATE_PATTERN));
-            Integer actualDate = Integer.parseInt(cn.hutool.core.date.DateUtil.format(a.getActualDate(), DatePattern.NORM_DATE_PATTERN));
-            testBillDO.setDelayDay(actualDate-planDate);
+
+            String planDate = DateUtil.parseToString(a.getPlanDate(), DateFormatConst.DATE_FORMAT);
+            String actualDate = DateUtil.parseToString(a.getActualDate(), DateFormatConst.DATE_FORMAT);
+
+            testBillDO.setDelayDay(DateUtil.getIntervalDays(planDate, actualDate));
+
             testBillDO.setProjectId(a.getProjectId());
             testBillMapper.updateDelayDay(testBillDO);
         });

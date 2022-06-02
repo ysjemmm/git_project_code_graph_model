@@ -1,7 +1,5 @@
 package com.timevale.forward.service.impl;
 
-import cn.hutool.core.date.DatePattern;
-import cn.hutool.core.date.DateUtil;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.FileMapper;
@@ -28,6 +26,8 @@ import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.TestBillCopier;
 import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
+import com.timevale.forward.service.utils.date.DateFormatConst;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -401,9 +401,11 @@ public class TestBillServiceImpl implements TestBillService {
 
         List<Date> planDates = projectNodeMapper.get(testBillModifyReq.getProjectId()).stream().filter(e -> e.getName()
                 .equals(ProjectNodeEnum.SUBMIT_TEST.getText())).map(ProjectNodeDO::getPlanDate).collect(Collectors.toList());
-        Integer planDate = Integer.parseInt(DateUtil.format(planDates.get(0), DatePattern.NORM_DATE_PATTERN));
-        Integer actualDate = Integer.parseInt(DateUtil.format(testBillModifyReq.getActualDate(), DatePattern.NORM_DATE_PATTERN));
-        testBillDO.setDelayDay(actualDate-planDate);
+
+        String planDate = com.timevale.forward.service.utils.date.DateUtil.parseToString(planDates.get(0), DateFormatConst.DATE_FORMAT);
+        String actualDate = com.timevale.forward.service.utils.date.DateUtil.parseToString(testBillModifyReq.getActualDate(), DateFormatConst.DATE_FORMAT);
+        testBillDO.setDelayDay(DateUtil.getIntervalDays(planDate, actualDate));
+
         testBillDO.setReason(null);
         //更新提测表信息
         testBillMapper.submitTestPass(testBillDO);
