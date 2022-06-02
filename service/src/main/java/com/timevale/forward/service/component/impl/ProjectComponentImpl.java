@@ -87,14 +87,8 @@ public class ProjectComponentImpl implements ProjectComponent {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
-        if (condition.getReturnCountType() != null && condition.getReturnCount() != null) {
-            projectIds = testBillMapper.getProjectIds(projectIds, condition.getReturnCountType(), condition.getReturnCount());
-            if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
-            }
-        }
-        if (condition.getIsDelay() != null) {
-            projectIds = projectNodeMapper.getProjectIds(projectIds, condition.getIsDelay(), ProjectNodeEnum.SUBMIT_TEST.getText());
+        if ((condition.getReturnCountType() != null && condition.getReturnCount() != null)||condition.getIsDelay()!=null) {
+            projectIds = testBillMapper.getProjectIds(projectIds, condition.getReturnCountType(), condition.getReturnCount(),condition.getIsDelay());
             if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
@@ -122,8 +116,18 @@ public class ProjectComponentImpl implements ProjectComponent {
         Map<Long, List<ProjectProductLineBizDomain>> productLineMap = productLineMapper.getByProjectIds(projectIds)
                 .stream().collect(Collectors.groupingBy(ProjectProductLineBizDomain::getProjectId));
 
+        //4.填充打回次,填充是否逾期
+        Map<Long, List<TestBillDO>> testMap = testBillMapper.list(projectIds).stream().collect(Collectors.groupingBy(TestBillDO::getProjectId));
+        // 6.是否需要预警
+        List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectIdList(projectIds);
+        Set<Long> riskSet = riskDOList.stream()
+                .filter(e -> ProjectRiskStatusEnum.PENDING.getCode().equals(e.getStatus()))
+                .map(ProjectRiskDO::getProjectId)
+                .collect(Collectors.toSet());
+
         List<ProjectVO> projectVOList = ProjectCopier.INSTANCE.convert(projectDos);
-        projectVOList.forEach(a -> {
+
+        for (ProjectVO a : projectVOList) {
             List<PersonDO> pds = pdMap.get(a.getId());
             if (CollectionUtils.isNotEmpty(pds)) {
                 String pdName = pds.stream().map(PersonDO::getUserName).collect(Collectors.joining(","));
@@ -146,28 +150,22 @@ public class ProjectComponentImpl implements ProjectComponent {
             a.setTypeName(ProjectTypeEnum.getTextByCode(a.getType()));
             a.setStatusName(ProjectStatusEnum.getTextByCode(a.getStatus()));
             a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
-            a.setReturnCount(condition.getReturnCount());
-            a.setIsDelay(condition.getIsDelay());
-        });
+            List<TestBillDO> testBillDos = testMap.get(a.getId());
+            if(CollectionUtils.isEmpty(testBillDos)){
+                a.setReturnCount(0);
+                a.setIsDelay(false);
+            }else{
+                a.setReturnCount(testBillDos.get(0).getReturnCount());
+                a.setIsDelay(testBillDos.get(0).getDelayDay()>0);
+            }
+            a.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(a.getNodeStatus()));
 
-        // 4.枚举值填充
-        for (ProjectVO e : projectVOList) {
-            e.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(e.getNodeStatus()));
-        }
-
-        // 5.是否需要预警
-        List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectIdList(projectIds);
-        Set<Long> riskSet = riskDOList.stream()
-                .filter(e -> ProjectRiskStatusEnum.PENDING.getCode().equals(e.getStatus()))
-                .map(ProjectRiskDO::getProjectId)
-                .collect(Collectors.toSet());
-        for (ProjectVO e : projectVOList) {
-            Integer status = e.getStatus();
+            Integer status = a.getStatus();
             boolean warn = ProjectStatusEnum.SUSPEND.getCode().equals(status)
                     || ProjectStatusEnum.INVALID.getCode().equals(status)
                     || ProjectStatusEnum.RELEASED.getCode().equals(status);
             if (!warn) {
-                e.setContainRisk(riskSet.contains(e.getId()));
+                a.setContainRisk(riskSet.contains(a.getId()));
             }
         }
 

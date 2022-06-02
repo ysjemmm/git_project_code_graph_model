@@ -1,6 +1,6 @@
 package com.timevale.forward.service.impl;
 
-import cn.hutool.core.date.DateUnit;
+import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -209,18 +209,9 @@ public class TestBillServiceImpl implements TestBillService {
         testBillVO.setPlanDate(planDate);
 
         //是否延期以及延期天数
-        if (planDate != null && actualDate != null) {
-            int compare = DateUtil.compare(planDate, actualDate);
-            boolean result = DateUtil.isSameDay(planDate, actualDate);
-            if (compare < 0 && !result) {
-                testBillVO.setIsDelay(true);
-                Integer delayDay = (int) DateUtil.between(planDate, actualDate, DateUnit.DAY);
-                testBillVO.setDelayDay(delayDay);
-            }
-        } else {
-            testBillVO.setIsDelay(false);
-        }
-
+        Integer delayDay = testBillDO.getDelayDay();
+        testBillVO.setIsDelay(delayDay>0);
+        testBillVO.setDelayDay(delayDay);
         //提测人
         testBillVO.setTestBillMan(testBillDO.getCreateMan());
 
@@ -408,6 +399,11 @@ public class TestBillServiceImpl implements TestBillService {
             receivers.add(testBill.getCreateManId());
         }
 
+        List<Date> planDates = projectNodeMapper.get(testBillModifyReq.getProjectId()).stream().filter(e -> e.getName()
+                .equals(ProjectNodeEnum.SUBMIT_TEST.getText())).map(ProjectNodeDO::getPlanDate).collect(Collectors.toList());
+        Integer planDate = Integer.parseInt(DateUtil.format(planDates.get(0), DatePattern.NORM_DATE_PATTERN));
+        Integer actualDate = Integer.parseInt(DateUtil.format(testBillModifyReq.getActualDate(), DatePattern.NORM_DATE_PATTERN));
+        testBillDO.setDelayDay(actualDate-planDate);
         testBillDO.setReason(null);
         //更新提测表信息
         testBillMapper.submitTestPass(testBillDO);

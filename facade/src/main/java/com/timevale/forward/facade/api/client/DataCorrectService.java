@@ -37,6 +37,12 @@ public interface DataCorrectService {
     BaseResult<Boolean> bizDemandProjectEndDateUpdate();
 
     /**
+     * 更新逾期天数
+     * @return return
+     */
+    BaseResult<Boolean> updateDelayDays();
+
+    /**
      * 业务需求更新
      */
     BaseResult<Boolean> updateBizDemandStatus();

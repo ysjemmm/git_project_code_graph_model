@@ -59,6 +59,7 @@
         <set>
             <if test="true">status=3,</if>
             <if test="testBillDO.passRate != null">pass_rate=#{testBillDO.passRate},</if>
+            <if test="testBillDO.delayDay != null">delay_day=#{testBillDO.delayDay},</if>
             <if test="true">modify_man=#{modifyMan},</if>
             <if test="true">modify_man_id=#{modifyManId},</if>
             <if test="true">reason=#{testBillDO.reason}</if>
@@ -97,12 +98,38 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="returnCountType == 0">and return_count = #{returnCount}</if>
-            <if test="returnCountType == 1">and return_count &gt; #{returnCount}</if>
-            <if test="returnCountType == 2">and return_count &gt;= #{returnCount}</if>
-            <if test="returnCountType == 3">and return_count &lt; #{returnCount}</if>
-            <if test="returnCountType == 4">and return_count &lt;= #{returnCount}</if>
+            <if test="returnCountType!=null and returnCountType == 0">and return_count = #{returnCount}</if>
+            <if test="returnCountType!=null and returnCountType == 1">and return_count &gt; #{returnCount}</if>
+            <if test="returnCountType!=null and returnCountType == 2">and return_count &gt;= #{returnCount}</if>
+            <if test="returnCountType!=null and returnCountType == 3">and return_count &lt; #{returnCount}</if>
+            <if test="returnCountType!=null and returnCountType == 4">and return_count &lt;= #{returnCount}</if>
+            <if test="isDelay!=null and isDelay=true ">and dalay_day  &gt; 0</if>
+            <if test="isDelay!=null and isDelay=false ">and dalay_day  = 0</if>
              and is_deleted=false
         </where>
     </select>
+
+    <select id="list" resultType="com.timevale.forward.dal.entity.TestBillDO">
+        select * from test_bill
+        <where>
+            <if test="projectIds!=null and projectIds.size()>0">
+                and project_id in
+                <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and is_deleted=false
+        </where>
+    </select>
+
+    <update id="updateDelayDay">
+        update test_bill
+        <set>
+            <if test="testBillDO.delayDay != null">delay_day=#{testBillDO.delayDay},</if>
+            <if test="true">modify_date=modify_date</if>
+        </set>
+        <where>
+            and project_id=#{testBillDO.projectId}
+        </where>
+    </update>
 </mapper>

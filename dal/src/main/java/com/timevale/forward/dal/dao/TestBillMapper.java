@@ -68,9 +68,25 @@ public interface TestBillMapper {
      * @param projectIds projectIds
      * @param returnCountType returnCountType
      * @param returnCount returnCount
+     * @param isDelay isDelay
      * @return
      */
-    List<Long> getProjectIds(@Param("projectIds") List<Long> projectIds,@Param("returnCountType") Integer returnCountType,@Param("returnCount") Integer returnCount);
+    List<Long> getProjectIds(@Param("projectIds") List<Long> projectIds,@Param("returnCountType") Integer returnCountType
+            ,@Param("returnCount") Integer returnCount,@Param("isDelay")Boolean isDelay);
+
+    /**
+     *
+     * @param projectIds projectIds
+     * @return return
+     */
+    List<TestBillDO> list(@Param("projectIds") List<Long> projectIds);
+
+    /**
+     * 提测通过
+     *
+     * @param testBillDO 提测单修改信息
+     */
+    void updateDelayDay(@Param("testBillDO") TestBillDO testBillDO);
 
 }
 

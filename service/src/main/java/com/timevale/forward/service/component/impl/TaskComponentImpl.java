@@ -136,6 +136,7 @@ public class TaskComponentImpl implements TaskComponent {
         List<Long> projectIds = taskMapper.getProjectIds(taskIds);
         Map<Long, ProjectDO> projectMap = projectMapper.getByIds(projectIds).stream()
                 .collect(Collectors.toMap(ProjectDO::getId, p -> p, (v1, v2) -> v1));
+
         List<TaskVO> taskVO = TaskCopier.INSTANCE.convert(taskDos);
         taskVO.forEach(a -> {
             List<PersonDO> executors = executorMap.get(a.getId());
@@ -148,7 +149,9 @@ public class TaskComponentImpl implements TaskComponent {
             a.setProjectName(projectMap.get(a.getProjectId()).getName());
             a.setPmId(projectMap.get(a.getProjectId()).getPmId());
             a.setStageName(TaskStageEnum.getTextByCode(a.getStage()));
-            a.setIsDelay(condition.getIsDelay());
+            boolean isDelay = (a.getActualEndDate() == null && new Date().after(a.getPlanEndDate()))
+                    || (a.getActualEndDate() != null && a.getActualEndDate().after(a.getPlanEndDate()));
+            a.setIsDelay(isDelay);
         });
         PageQueryResult<TaskVO> pageQueryResult = new PageQueryResult<>();
         PageInfo<TaskDO> pageInfo = new PageInfo<>(taskDos);

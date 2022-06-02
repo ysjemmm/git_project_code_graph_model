@@ -67,12 +67,7 @@ public interface ProjectNodeMapper {
      */
     void updateActualDateById(@Param("id") Long id, @Param("actualDate") Date actualDate);
 
-    /**
-     *
-     * @param projectIds 项目id
-     * @param isDelay 是否提测延期
-     * @param name 节点名称
-     * @return list
-     */
-    List<Long> getProjectIds(@Param("projectIds") List<Long> projectIds,@Param("isDelay") Boolean isDelay,@Param("name") String name);
+
+    List<ProjectNodeDO> listByName(@Param("name") String name);
+
 }
