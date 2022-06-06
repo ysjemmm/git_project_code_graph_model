@@ -15,6 +15,7 @@ import com.timevale.forward.facade.api.request.BizDemandLinkProductDemandReq;
 import com.timevale.forward.facade.api.request.BizDemandUnlinkProductDemandReq;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -59,6 +60,9 @@ public class BizDemandProductDemandServiceImplTest extends AbstractTestNGSpringC
 
     @Mock
     private InnerUserPersonClient innerUserPersonClient;
+
+    @Mock
+    private BizDemandLogComponent bizDemandLogComponent;
 
     @Test
     public void testLinkedProductDemandList() {
@@ -114,6 +118,8 @@ public class BizDemandProductDemandServiceImplTest extends AbstractTestNGSpringC
         BizDemandLinkProductDemandReq bizDemandLinkProductDemandReq = new BizDemandLinkProductDemandReq();
         bizDemandLinkProductDemandReq.setId(1L);
         bizDemandLinkProductDemandReq.setProductDemandIdList(Arrays.asList(1L, 2L));
+
+        doNothing().when(bizDemandLogComponent).addLogWhenModifyData(any(),any());
 
         assert bizDemandProductDemandService.linkProductDemand(bizDemandLinkProductDemandReq).ifSuccess();
     }

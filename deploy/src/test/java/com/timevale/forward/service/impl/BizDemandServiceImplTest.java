@@ -1,16 +1,14 @@
 package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.BizDomainMapper;
-import com.timevale.forward.dal.dao.ProductBizDemandMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.observer.event.BizDemandInvalidMsgEvent;
@@ -72,6 +70,12 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
     @Mock
     private BizDemandComponent bizDemandComponent;
 
+    @Mock
+    private BizDemandLogComponent bizDemandLogComponent;
+
+    @Mock
+    private BugOnlineMapper bugOnlineMapper;
+
     @Test
     public void testList() {
         UserInfo userInfo = new UserInfo();
@@ -89,8 +93,6 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         bizDemandQueryList.setAscription("CURRENT_USER");
         bizDemandQueryList.setPageNum(1);
         bizDemandQueryList.setPageSize(5);
-        PersonQuery personQuery = new PersonQuery();
-        personQuery.setUserId("www");
         bizDemandQueryList.setBizDomainIdList(Collections.singletonList(1L));
         bizDemandQueryList.setCreateDateEnd(new Date());
         bizDemandQueryList.setCreateDateStart(new Date());
@@ -145,7 +147,11 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         bizDemandToReceiveMsgEventMock.constructed();
         doNothing().when(messageEventPublisher).publish(any());
 
+        doNothing().when(bizDemandLogComponent).addLogWhenModifyData(any(),any(),any(),any(),any(),any());
+
         BizDemandAddReq bizDemandAddReq = new BizDemandAddReq();
+        bizDemandAddReq.setName("www");
+        bizDemandAddReq.setTargetCustomer("www");
         FileAddReq fileAddReq = new FileAddReq();
         fileAddReq.setFileId("www");
         bizDemandAddReq.setFileList(Collections.singletonList(fileAddReq));
@@ -193,6 +199,11 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         when(bizDemandComponent.getGroupListTreeMap(any())).thenReturn(map);
 
         when(bizDemandComponent.getProjectEndDate(any())).thenReturn(new Date());
+
+        BugOnlineDO bugOnlineDO = new BugOnlineDO();
+        bugOnlineDO.setId(1L);
+        bugOnlineDO.setName("www");
+        when(bugOnlineMapper.selectByBizDemandId(any())).thenReturn(bugOnlineDO);
 
         assert bizDemandService.getBizDemandById(1L).ifSuccess();
     }
