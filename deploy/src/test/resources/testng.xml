@@ -8,12 +8,16 @@
             <class name="com.timevale.forward.service.impl.BizDemandServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.BizDomainServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.CommentServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.FileServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.PersonServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.ProductDemandServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.ProductLineServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.ProjectFlowServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.ProjectServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.PublishPlanServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.TestBillServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.TaskServiceImplTest"/>
+
             <class name="com.timevale.forward.service.component.impl.BizDemandComponentImplTest"/>
             <class name="com.timevale.forward.service.component.impl.FileComponentImplTest"/>
             <class name="com.timevale.forward.service.component.impl.PersonComponentImplTest"/>
@@ -23,6 +27,11 @@
             <class name="com.timevale.forward.service.component.impl.ProjectNodeComponentImplTest"/>
             <class name="com.timevale.forward.service.component.impl.ProjectProductDemandComponentImplTest"/>
             <class name="com.timevale.forward.service.component.impl.ProjectProductLineComponentImplTest"/>
+            <class name="com.timevale.forward.service.component.impl.ProjectFlowComponentImplTest"/>
+            <class name="com.timevale.forward.service.component.impl.ProjectLogComponentImplTest"/>
+            <class name="com.timevale.forward.service.component.impl.ProjectPublishPlanComponentImplTest"/>
+            <class name="com.timevale.forward.service.component.impl.TaskProductDemandComponentImplTest"/>
+            <class name="com.timevale.forward.service.component.impl.TaskTimeComponentImplTest"/>
             <class name="com.timevale.forward.service.component.impl.TaskComponentImplTest"/>
         </classes>
     </test>
