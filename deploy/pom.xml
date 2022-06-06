@@ -131,6 +131,7 @@
                         <exclude>**/*Enum.class</exclude>
                         <exclude>**/integration/**</exclude>
                         <exclude>**/interceptor/**</exclude>
+                        <exclude>**/DataCorrectServiceImpl.class</exclude>
                     </excludes>
                 </configuration>
             </plugin>
