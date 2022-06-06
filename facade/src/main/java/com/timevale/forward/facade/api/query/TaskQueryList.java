@@ -71,6 +71,9 @@ public class TaskQueryList extends QueryBase {
     @ApiModelProperty("创建时间右区间")
     private Date createDateRight;
 
+    @ApiModelProperty("是否延期")
+    private Boolean isDelay;
+
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
     private String ascription;
 }

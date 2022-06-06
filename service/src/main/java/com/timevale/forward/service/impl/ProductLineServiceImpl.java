@@ -2,11 +2,16 @@ package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.BizDomainMapper;
+import com.timevale.forward.dal.dao.ModelMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.BizDomainDO;
+import com.timevale.forward.dal.entity.ModelDO;
 import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.client.ProductLineService;
+import com.timevale.forward.facade.api.result.ModelVO;
+import com.timevale.forward.facade.api.result.ProductLineModelVO;
 import com.timevale.forward.facade.api.result.ProductLineVO;
+import com.timevale.forward.service.copy.ModelCopier;
 import com.timevale.forward.service.copy.ProductLineCopier;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -32,6 +37,9 @@ public class ProductLineServiceImpl implements ProductLineService {
 
     @Resource
     BizDomainMapper bizDomainMapper;
+
+    @Resource
+    ModelMapper modelMapper;
 
     @Override
     public BaseResult<List<ProductLineVO>> productLineList() {
@@ -64,6 +72,23 @@ public class ProductLineServiceImpl implements ProductLineService {
     public BaseResult<List<ProductLineVO>> getProductLines(Long projectId) {
         List<ProductLineDO> productLineDO = productLineMapper.get(projectId);
         List<ProductLineVO> productLineVOList = ProductLineCopier.INSTANCE.convert(productLineDO);
+        return BaseResult.success(productLineVOList);
+    }
+
+    @Override
+    public BaseResult<List<ProductLineModelVO>> listProductLineModes() {
+
+        List<ProductLineDO> productLineDOList = productLineMapper.selectAllProductLine();
+
+        List<ProductLineModelVO> productLineVOList = ProductLineCopier.INSTANCE.change(productLineDOList);
+
+        List<ModelDO> modelDOList = modelMapper.selectAllModel();
+        List<ModelVO> modelVOList = ModelCopier.INSTANCE.convert(modelDOList);
+        Map<Long, List<ModelVO>> modelMap = modelVOList.stream().collect(Collectors.groupingBy(ModelVO::getProductLineId));
+
+        productLineVOList.forEach(e -> {
+            e.setModels(modelMap.get(e.getId()));
+        });
         return BaseResult.success(productLineVOList);
     }
 }

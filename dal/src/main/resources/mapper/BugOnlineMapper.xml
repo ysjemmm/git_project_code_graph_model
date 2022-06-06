@@ -103,12 +103,12 @@
     <insert id="insert" useGeneratedKeys="true" keyProperty="bugOnlineDO.id">
         insert into bug_online(name,operator,operator_id,last_operator,last_operator_id,proposer
         ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
-        ,create_man,create_man_id,source)
+        ,create_man,create_man_id,source, model_id, detail_version_id)
         values(#{bugOnlineDO.name},#{bugOnlineDO.operator},#{bugOnlineDO.operatorId},#{bugOnlineDO.lastOperator}
         ,#{bugOnlineDO.lastOperatorId},#{bugOnlineDO.proposer},#{bugOnlineDO.proposerId},#{bugOnlineDO.customerName}
         ,#{bugOnlineDO.env},#{bugOnlineDO.belong},#{bugOnlineDO.priority},#{bugOnlineDO.recurrent}
         ,#{bugOnlineDO.reason},#{bugOnlineDO.expectDate},#{bugOnlineDO.business},#{bugOnlineDO.describe},#{bugOnlineDO.systemMenuName}
-        ,#{createMan},#{createManId},#{bugOnlineDO.source})
+        ,#{createMan},#{createManId},#{bugOnlineDO.source}, #{bugOnlineDO.modelId}, #{bugOnlineDO.detailVersionId})
     </insert>
 
     <update id="update">
@@ -191,6 +191,12 @@
             </if>
             <if test="bugOnlineDO.isDeleted != null">
                 is_deleted = #{bugOnlineDO.isDeleted},
+            </if>
+            <if test="bugOnlineDO.modelId != null">
+                model_id = #{bugOnlineDO.modelId},
+            </if>
+            <if test="bugOnlineDO.detailVersionId != null">
+                detail_version_id = #{bugOnlineDO.detailVersionId},
             </if>
             <if test="true">
                 modify_man_id = #{modifyManId},

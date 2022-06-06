@@ -94,6 +94,16 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="isDelay!=null and isDelay==true">
+                and (
+                actual_end_date &gt; plan_end_date or (actual_end_date is null and now() &gt; plan_end_date)
+                    )
+            </if>
+            <if test="isDelay!=null and isDelay==false">
+                and (
+                actual_end_date &lt;= plan_end_date or (actual_end_date is null and now() &lt;= plan_end_date)
+                )
+            </if>
             and a.is_deleted =false
         </where>
     </select>
@@ -153,7 +163,7 @@
 
     <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.TaskDO">
         select a.id,a.project_id,product_line_id, a.name, a.stage ,a.status,a.todo, a.todo_id,
-            a.plan_start_date,a.plan_end_date,
+            a.plan_start_date,a.plan_end_date, a.plan_use_time,
             a.actual_start_date,a.actual_end_date,
             a.create_man_id, a.create_man,a.create_date,a.modify_date
         from task a

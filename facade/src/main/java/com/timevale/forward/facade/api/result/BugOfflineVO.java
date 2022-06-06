@@ -101,4 +101,7 @@ public class BugOfflineVO extends ToString {
 
     @ApiModelProperty("打回次数")
     private Integer returnCount;
+
+    @ApiModelProperty("打开次数")
+    private Integer openCount;
 }

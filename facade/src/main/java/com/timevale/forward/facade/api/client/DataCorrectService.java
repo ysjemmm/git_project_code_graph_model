@@ -32,6 +32,17 @@ public interface DataCorrectService {
     BaseResult<Boolean> nodeStatusUpdate();
 
     /**
+     * 业务需求项目发布时间更新
+     */
+    BaseResult<Boolean> bizDemandProjectEndDateUpdate();
+
+    /**
+     * 更新逾期天数
+     * @return return
+     */
+    BaseResult<Boolean> updateDelayDays();
+
+    /**
      * 业务需求更新
      */
     BaseResult<Boolean> updateBizDemandStatus();

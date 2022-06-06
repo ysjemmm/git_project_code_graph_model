@@ -10,11 +10,16 @@ import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.PlanReleaseDateEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
+import com.timevale.forward.service.observer.event.BizDemandPlanReleaseDateMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -57,6 +62,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     @Resource
     InnerGroupClient innerGroupClient;
 
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
+
     @Override
     public void updateBizDemandStatusByLinkedProductDemand(Long bizDemandId) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -87,9 +95,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             result = BizDemandStatusEnum.PROJECTING.getCode();
         } else if (ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
             result = BizDemandStatusEnum.AVAILABLE.getCode();
-        }else if (ProductDemandStatusEnum.WAITING.getCode().equals(status)||ProductDemandStatusEnum.SUSPEND.getCode().equals(status)) {
+        } else if (ProductDemandStatusEnum.WAITING.getCode().equals(status) || ProductDemandStatusEnum.SUSPEND.getCode().equals(status)) {
             result = BizDemandStatusEnum.PD_LINKED.getCode();
-        }else {
+        } else {
             result = BizDemandStatusEnum.RECEIVED.getCode();
         }
 
@@ -136,7 +144,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Override
     public String getDeptChainName(Long deptId) {
-        if(deptId == null){
+        if (deptId == null) {
             return StringUtils.EMPTY;
         }
         StringBuilder deptName = new StringBuilder();
@@ -228,4 +236,34 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
         return BaseResult.success(pageQueryResult);
     }
+
+    @Override
+    public void updateProjectEndDate(Long bizDemandId, boolean updatePlanReleaseDate) {
+        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
+
+        Date oldProjectEndDate = bizDemandDO.getProjectEndDate();
+        Date newProjectEndDate = getProjectEndDate(bizDemandId);
+
+        if (!Objects.equals(newProjectEndDate, oldProjectEndDate)) {
+            if (updatePlanReleaseDate) {
+                int month = DateUtil.getMonth(newProjectEndDate);
+                bizDemandDO.setPlanReleaseDate(month - 1);
+            }
+            bizDemandDO.setProjectEndDate(newProjectEndDate);
+            bizDemandMapper.fullUpdate(bizDemandDO);
+            log.info("业务需求id:{},更新前发布时间:{},更新后发布时间:{}", bizDemandId, oldProjectEndDate, newProjectEndDate);
+            if (!Objects.equals(oldPlanReleaseDate, bizDemandDO.getPlanReleaseDate())) {
+                messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
+                        this,
+                        bizDemandDO.getId(),
+                        bizDemandDO.getSubmitManId(),
+                        bizDemandDO.getName(),
+                        BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
+                        PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
+                ));
+            }
+        }
+    }
+
 }

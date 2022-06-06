@@ -3,6 +3,8 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.entity.TestBillDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * @Date 2022/1/21 14:34
  * @Author 望轩
@@ -60,6 +62,38 @@ public interface TestBillMapper {
      * @return boolean 返回结果
      */
     TestBillDO selectByProjectId(@Param("projectId") Long projectId);
+
+    /**
+     *
+     * @param projectIds projectIds
+     * @param returnCountType returnCountType
+     * @param returnCount returnCount
+     * @return return
+     */
+    List<Long> getProjectIds(@Param("projectIds") List<Long> projectIds,@Param("returnCountType") Integer returnCountType,@Param("returnCount") Integer returnCount);
+
+    /**
+     *
+     * @param projectIds projectIds
+     * @return return
+     */
+    List<Long> getProjectIdsOfDelay(@Param("projectIds") List<Long> projectIds);
+
+
+    /**
+     *
+     * @param projectIds projectIds
+     * @return return
+     */
+    List<TestBillDO> list(@Param("projectIds") List<Long> projectIds);
+
+    /**
+     * 提测通过
+     *
+     * @param testBillDO 提测单修改信息
+     */
+    void updateDelayDay(@Param("testBillDO") TestBillDO testBillDO,@Param("retainModifyDate") boolean retainModifyDate);
+
 }
 
 

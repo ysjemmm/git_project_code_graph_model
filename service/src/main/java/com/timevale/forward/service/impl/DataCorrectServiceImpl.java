@@ -6,9 +6,12 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.DataCorrectService;
 import com.timevale.forward.facade.api.request.DataModifyReq;
 import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.ProductDemandComponent;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
+import com.timevale.forward.service.utils.date.DateFormatConst;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
@@ -46,6 +49,9 @@ public class DataCorrectServiceImpl implements DataCorrectService {
     private BizDemandMapper bizDemandMapper;
 
     @Resource
+    private BizDemandComponent bizDemandComponent;
+
+    @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
 
     @Resource
@@ -53,6 +59,9 @@ public class DataCorrectServiceImpl implements DataCorrectService {
 
     @Resource
     private ProjectNodeComponent projectNodeComponent;
+
+    @Resource
+    private TestBillMapper testBillMapper;
 
 
     @Override
@@ -78,14 +87,14 @@ public class DataCorrectServiceImpl implements DataCorrectService {
         } else if (DataCorrectTypeEnum.BIZ_DEMAND.getCode().equals(dataModifyReq.getType())) {
             List<Long> bizDemandIds = dataModifyReq.getIds();
             Map<Integer, List<Long>> condition = new HashMap<>();
-            bizDemandIds.forEach(a->{
+            bizDemandIds.forEach(a -> {
                 List<ProductBizDemandDO> productDemands = productBizDemandMapper.getByBizDemandId(a);
                 productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o))
                         .ifPresent(minStauts -> productDemandComponent.processBizDemandStatus(condition, minStauts, a));
             });
             condition.forEach((k, v) -> {
                 //更新产品需求下的所有业务需求状态
-                bizDemandMapper.updateByIds(v, k,true);
+                bizDemandMapper.updateByIds(v, k, true);
             });
             log.info("数据订正,更新业务需求完成");
         }
@@ -95,9 +104,9 @@ public class DataCorrectServiceImpl implements DataCorrectService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> calculateStatus() {
-        List<Integer> status = Lists.newArrayList(ProjectStatusEnum.PLANING.getCode(),ProjectStatusEnum.DEVING.getCode(), ProjectStatusEnum.TESTING.getCode());
+        List<Integer> status = Lists.newArrayList(ProjectStatusEnum.PLANING.getCode(), ProjectStatusEnum.DEVING.getCode(), ProjectStatusEnum.TESTING.getCode());
         List<ProjectDO> list = projectMapper.getByStatus(status);
-        list.forEach(a->{
+        list.forEach(a -> {
             List<ProjectNodeDO> projectNodes = projectNodeMapper.get(a.getId());
             projectComponent.fillInfo(projectNodes, a);
             projectMapper.updateStatus(a);
@@ -118,9 +127,9 @@ public class DataCorrectServiceImpl implements DataCorrectService {
 
             // 如果节点为空则状态设为待启动
             Integer nodeStatus;
-            if(org.apache.commons.collections.CollectionUtils.isEmpty(nodeDOList)){
+            if (org.apache.commons.collections.CollectionUtils.isEmpty(nodeDOList)) {
                 nodeStatus = ProjectNodeStatusEnum.READY_START.getCode();
-            }else {
+            } else {
                 nodeStatus = ProjectNodeStatusEnum.getStatus(nodeDOList);
             }
             // 更新项目节点状态
@@ -130,6 +139,43 @@ public class DataCorrectServiceImpl implements DataCorrectService {
             projectMapper.updateNodeStatus(projectDO);
         });
 
+        return BaseResult.success(true);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> bizDemandProjectEndDateUpdate() {
+        List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectAll();
+        bizDemandDOList = bizDemandDOList.stream().filter(e -> !e.getIsDeleted()).collect(Collectors.toList());
+
+        for (BizDemandDO e : bizDemandDOList) {
+            Date projectEndDate = bizDemandComponent.getProjectEndDate(e.getId());
+            if (projectEndDate != null) {
+                bizDemandMapper.updateDate(e.getId(), projectEndDate, DateUtil.getMonth(projectEndDate) - 1);
+            }
+        }
+
+        return BaseResult.success(true);
+    }
+
+
+    @Override
+    public BaseResult<Boolean> updateDelayDays() {
+        List<ProjectNodeDO> projectNodeDos = projectNodeMapper.listByName(null,ProjectNodeEnum.SUBMIT_TEST.getText())
+                .stream().filter(a -> a.getActualDate() != null && a.getPlanDate() != null && a.getActualDate().after(a.getPlanDate()))
+                .collect(Collectors.toList());
+        projectNodeDos.forEach(a -> {
+            TestBillDO testBillDO = new TestBillDO();
+
+            String planDate = DateUtil.parseToString(a.getPlanDate(), DateFormatConst.DATE_FORMAT);
+            String actualDate = DateUtil.parseToString(a.getActualDate(), DateFormatConst.DATE_FORMAT);
+
+            testBillDO.setDelayDay(DateUtil.getIntervalDays(planDate, actualDate));
+
+            testBillDO.setProjectId(a.getProjectId());
+            testBillMapper.updateDelayDay(testBillDO,true);
+        });
+        log.info("数据订正,逾期时间更新完成");
         return BaseResult.success(true);
     }
 
@@ -152,9 +198,9 @@ public class DataCorrectServiceImpl implements DataCorrectService {
         });
         condition.forEach((k, v) -> {
             //更新产品需求下的所有业务需求状态
-            bizDemandMapper.updateByIds(v, k,true);
+            bizDemandMapper.updateByIds(v, k, true);
         });
-        log.info("数据订正,业务需求状态变更完成,更新的数据 :{}",condition);
+        log.info("数据订正,业务需求状态变更完成,更新的数据 :{}", condition);
         return BaseResult.success(true);
     }
 
@@ -168,13 +214,13 @@ public class DataCorrectServiceImpl implements DataCorrectService {
                 .collect(Collectors.toList());
         if (ProjectStatusEnum.WAITING.getCode().equals(status)
                 || ProjectStatusEnum.SUSPEND.getCode().equals(status)) {
-            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode(),true);
+            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.INCLUDED.getCode(), true);
         } else if (ProjectStatusEnum.PLANING.getCode().equals(status)
                 || ProjectStatusEnum.DEVING.getCode().equals(status)
                 || ProjectStatusEnum.TESTING.getCode().equals(status)) {
-            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.PROGRESS.getCode(),true);
+            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.PROGRESS.getCode(), true);
         } else if (ProjectStatusEnum.RELEASED.getCode().equals(status)) {
-            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.ONLINE.getCode(),true);
+            productDemandMapper.updateByIds(existProductDemandIds, ProductDemandStatusEnum.ONLINE.getCode(), true);
         }
         updateBizDemandStatusAsProductStatusChange(existProductDemandIds);
     }
@@ -188,6 +234,7 @@ public class DataCorrectServiceImpl implements DataCorrectService {
         buildConditionBeforeUpdate(productDemandIds);
 
     }
+
     private void buildConditionBeforeUpdate(List<Long> productDemandIds) {
         log.info("产品需求变化-更新业务需求,产品需求id={}", productDemandIds);
         // 产品需求下的所有业务需求
@@ -205,15 +252,15 @@ public class DataCorrectServiceImpl implements DataCorrectService {
             if (!BizDemandStatusEnum.REJECT.getCode().equals(v.getStatus()) && !BizDemandStatusEnum.INVALID.getCode().equals(v.getStatus())) {
                 //当前业务需求下的所有产品需求
                 List<ProductBizDemandDO> productDemands = productBizDemandMapper.getByBizDemandId(k);
-                    Integer minStauts = productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
-                    if (minStauts != null) {
-                        productDemandComponent.processBizDemandStatus(condition, minStauts, k);
-                    }
+                Integer minStauts = productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
+                if (minStauts != null) {
+                    productDemandComponent.processBizDemandStatus(condition, minStauts, k);
+                }
             }
         });
         condition.forEach((k, v) -> {
             //更新产品需求下的所有业务需求状态
-            bizDemandMapper.updateByIds(v, k,true);
+            bizDemandMapper.updateByIds(v, k, true);
         });
         log.info("产品需求变化-更新业务需求:产品需求id={},需要更新的业务需求状态和id={}", productDemandIds, condition);
     }

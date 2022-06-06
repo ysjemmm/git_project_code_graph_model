@@ -28,6 +28,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.BizDemandPlanReleaseDateMsgEvent;
 import com.timevale.forward.service.observer.event.BizDemandStatusChangeMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -121,8 +122,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
 
-        Date oldEndDate = bizDemandComponent.getProjectEndDate(bizDemandId);
-
         // 获取当前关联数据
         List<ProductBizDemandDO> list = productBizDemandMapper.select(ProductBizDemandCondition.builder()
                 .bizDemandId(bizDemandId)
@@ -158,7 +157,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
 
-        BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bizDemandDO, oldEndDate);
+        BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bizDemandDO);
 
         // 日志
         bizDemandLogComponent.addLogWhenBizDemandLinkProductDemand(bizDemandId, productDemandIdList);
@@ -188,9 +187,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
             throw new BaseBizRuntimeException("不存在对应的关联关系");
         }
 
-        // 保存旧预先上线日期
-        Date oldEndDate = bizDemandComponent.getProjectEndDate(bizDemandId);
-
         ProductBizDemandDO productBizDemandDO = list.get(0);
 
         productBizDemandMapper.delete(productBizDemandDO);
@@ -198,7 +194,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
 
         // 判断当前状态
-        BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bizDemandDO, oldEndDate);
+        BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bizDemandDO);
 
         // 产品需求关联日志
         bizDemandLogComponent.addLogWhenBizDemandUnLinkProductDemand(bizDemandId, productDemandId);
@@ -206,7 +202,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         return BaseResult.success(bizDemandStatusVO);
     }
 
-    private BizDemandStatusVO compareBizDemandStatus(BizDemandDO oldBizDemandDO, Date oldEndDate){
+    private BizDemandStatusVO compareBizDemandStatus(BizDemandDO oldBizDemandDO){
         Long bizDemandId = oldBizDemandDO.getId();
         BizDemandDO newBizDemandDO = bizDemandMapper.selectById(bizDemandId);
 
@@ -214,7 +210,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         Integer newStatus = newBizDemandDO.getStatus();
 
         String statusText = BizDemandStatusEnum.getTextByCode(newStatus);
-        Date projectEndDate = bizDemandComponent.getProjectEndDate(bizDemandId);
+        Date newEndDate = bizDemandComponent.getProjectEndDate(bizDemandId);
 
         // 如果新旧状态不同
         if(!oldStatus.equals(newStatus)){
@@ -226,7 +222,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                         newBizDemandDO.getSubmitManId(),
                         newBizDemandDO.getName(),
                         statusText,
-                        projectEndDate
+                        newEndDate
                 ));
             }
 
@@ -240,21 +236,53 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
             );
         }
 
-        if(!Objects.equals(oldEndDate, projectEndDate)){
+        Date oldEndDate = oldBizDemandDO.getProjectEndDate();
+        if(!Objects.equals(oldEndDate, newEndDate)){
+            //更新项目发布时间
+            newBizDemandDO.setProjectEndDate(newEndDate);
+
+            // 日志
             bizDemandLogComponent.addLogWhenModifyData(
                     oldEndDate == null ? StringUtils.EMPTY : DateUtil.parseToString(oldEndDate, DateStyle.YYYY_MM_DD),
-                    projectEndDate == null ? StringUtils.EMPTY : DateUtil.parseToString(projectEndDate, DateStyle.YYYY_MM_DD),
+                    newEndDate == null ? StringUtils.EMPTY : DateUtil.parseToString(newEndDate, DateStyle.YYYY_MM_DD),
                     bizDemandId,
                     BizChangeLogFieldEnum.PROJECT_RELEASE_DATE.getText(),
                     false
             );
+
+
+            // 更新预期上线时间
+            if(newEndDate != null){
+                int month = DateUtil.getMonth(newEndDate) - 1;
+                newBizDemandDO.setPlanReleaseDate(month);
+
+                // 发送通知
+                messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
+                        this,
+                        bizDemandId,
+                        newBizDemandDO.getSubmitManId(),
+                        newBizDemandDO.getName(),
+                        BizDemandStatusEnum.getTextByCode(newBizDemandDO.getStatus()),
+                        PlanReleaseDateEnum.getTextByCode(month)
+                ));
+
+                // 日志
+                bizDemandLogComponent.addLogWhenModifyData(
+                        PlanReleaseDateEnum.getTextByCode(oldBizDemandDO.getPlanReleaseDate()),
+                        PlanReleaseDateEnum.getTextByCode(month),
+                        bizDemandId,
+                        BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
+                        false
+                );
+            }
+            bizDemandMapper.fullUpdate(newBizDemandDO);
         }
 
         // 返回当前状态
         BizDemandStatusVO bizDemandStatusVO = new BizDemandStatusVO();
         bizDemandStatusVO.setStatus(newStatus);
         bizDemandStatusVO.setStatusText(statusText);
-        bizDemandStatusVO.setEndDate(projectEndDate);
+        bizDemandStatusVO.setEndDate(newEndDate);
         return bizDemandStatusVO;
     }
 

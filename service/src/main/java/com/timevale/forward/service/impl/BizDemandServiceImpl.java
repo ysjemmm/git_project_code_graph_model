@@ -345,14 +345,26 @@ public class BizDemandServiceImpl implements BizDemandService {
         fileComponent.update(fileIdList, bizDemandModifyReq.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
 
 
+        // 产品线变更带来的接收人变更
         if (!Objects.equal(oldBizDemandDO.getReceiveManId(), newBizDemandDO.getReceiveManId())) {
-            // 产品线变更带来的接收人变更
             messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
                     this,
                     oldBizDemandDO.getId(),
                     oldBizDemandDO.getSubmitMan(),
                     newBizDemandDO.getReceiveManId(),
                     newBizDemandDO.getName()
+            ));
+        }
+
+        // 预期上线时间变更带来的通知
+        if(!Objects.equal(oldBizDemandDO.getPlanReleaseDate(), newBizDemandDO.getPlanReleaseDate())){
+            messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
+                    this,
+                    oldBizDemandDO.getId(),
+                    oldBizDemandDO.getSubmitManId(),
+                    newBizDemandDO.getName(),
+                    BizDemandStatusEnum.getTextByCode(oldBizDemandDO.getStatus()),
+                    PlanReleaseDateEnum.getTextByCode(newBizDemandDO.getPlanReleaseDate())
             ));
         }
 
