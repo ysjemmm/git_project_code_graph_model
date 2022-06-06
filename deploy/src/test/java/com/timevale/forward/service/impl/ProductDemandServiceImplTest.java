@@ -13,6 +13,7 @@ import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -87,6 +88,20 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
     @Mock
     private TaskProductDemandComponent taskProductDemandComponent;
 
+    @Mock
+    private ProductDemandLogComponent productDemandLogComponent;
+
+    @Mock
+    private ProjectLogComponent projectLogComponent;
+
+    @Mock
+    private BizDemandLogComponent bizDemandLogComponent;
+
+    @Mock
+    private MessageEventPublisher messageEventPublisher;
+
+
+
     @Test
     public void testList() {
         UserInfo userInfo = new UserInfo();
@@ -142,6 +157,7 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
         ProductDemandAddReq productDemandAddReq = new ProductDemandAddReq();
         productDemandAddReq.setTypes(Collections.singletonList(1));
         productDemandAddReq.setProjectId(1L);
+        productDemandAddReq.setName("");
 
         assert productDemandService.add(productDemandAddReq).ifSuccess();
     }
@@ -218,7 +234,7 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
         ProductBizDemandLinkReq productBizDemandLinkReq = new ProductBizDemandLinkReq();
         productBizDemandLinkReq.setBizDemandIds(Collections.singletonList(1L));
         productBizDemandLinkReq.setType(0);
-
+        when(productDemandMapper.selectById(any())).thenReturn(new ProductDemandDO());
         assert productDemandService.linkOrUnLinkBizDemand(productBizDemandLinkReq).ifSuccess();
     }
 

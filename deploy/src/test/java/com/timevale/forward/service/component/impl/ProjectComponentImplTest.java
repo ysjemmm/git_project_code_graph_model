@@ -1,12 +1,12 @@
 package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.condition.ProjectListCondition;
-import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
 import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
+import com.timevale.forward.dal.entity.TestBillDO;
+import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.utils.ResultUtil;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -15,6 +15,7 @@ import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.Test;
+import org.testng.collections.Lists;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,6 +44,18 @@ public class ProjectComponentImplTest extends AbstractTestNGSpringContextTests {
     @Mock
     private ProductLineMapper productLineMapper;
 
+    @Mock
+    private ProjectRiskMapper projectRiskMapper;
+
+    @Mock
+    private ProjectNodeMapper projectNodeMapper;
+
+    @Mock
+    private ProjectNodeComponent projectNodeComponent;
+
+    @Mock
+    private TestBillMapper testBillMapper;
+
     @Test
     public void testPage() {
         when(personMapper.getMainIds(any(), any(), any())).thenReturn(Arrays.asList(1L, 2L));
@@ -50,6 +63,8 @@ public class ProjectComponentImplTest extends AbstractTestNGSpringContextTests {
         when(personMapper.getMainIds(any(), any(), any())).thenReturn(Arrays.asList(1L, 2L));
 
         when(projectMapper.getProjectIds(any(), any(), any())).thenReturn(Arrays.asList(1L, 2L));
+
+        when(testBillMapper.list(any())).thenReturn(Lists.newArrayList(new TestBillDO(){{setProjectId(1L);setDelayDay(1);}}));
 
         ProjectListDO projectListDO = new ProjectListDO();
         projectListDO.setId(1L);

@@ -3,10 +3,7 @@ package com.timevale.forward.service.component.impl;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
-import com.timevale.forward.service.component.BizDemandComponent;
-import com.timevale.forward.service.component.FileComponent;
-import com.timevale.forward.service.component.PersonComponent;
-import com.timevale.forward.service.component.ProjectProductDemandComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.observer.event.BizDemandStatusChangeMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -66,6 +63,18 @@ public class ProductDemandComponentImplTest extends AbstractTestNGSpringContextT
 
     @Mock
     private MessageEventPublisher messageEventPublisher;
+
+    @Mock
+    private BizDemandLogComponent bizDemandLogComponent;
+
+    @Mock
+    private ProductDemandLogComponent productDemandLogComponent;
+
+    @Mock
+    private ProjectLogComponent projectLogComponent;
+
+    @Mock
+    private ProjectMapper projectMapper;
 
     @Test
     public void testList() {
@@ -131,11 +140,12 @@ public class ProductDemandComponentImplTest extends AbstractTestNGSpringContextT
 
         MockedConstruction<BizDemandStatusChangeMsgEvent> bizDemandStatusChangeMsgEventMock = mockConstruction(BizDemandStatusChangeMsgEvent.class);
         bizDemandStatusChangeMsgEventMock.constructed();
-        doNothing().when(messageEventPublisher).publish(any());
-
-        productDemandComponent.updateProductDemandStatus(1L, 0);
-
-        bizDemandStatusChangeMsgEventMock.close();
+        try {
+            doNothing().when(messageEventPublisher).publish(any());
+            productDemandComponent.updateProductDemandStatus(1L, 0);
+        }finally {
+            bizDemandStatusChangeMsgEventMock.close();
+        }
     }
 
     @Test

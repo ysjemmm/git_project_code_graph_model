@@ -118,6 +118,7 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         taskAddReq.setTodo(true);
         taskAddReq.setActualStartDate(new Date());
         taskAddReq.setActualEndDate(new Date());
+        taskAddReq.setName("");
         when(taskMapper.get(any())).thenReturn(null);
         when(projectNodeMapper.get(any())).thenReturn(Collections.emptyList());
         when(projectProductDemandMapper.getByProjectId(any())).thenReturn(Collections.emptyList());
@@ -189,9 +190,14 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         when(projectMapper.get(any())).thenReturn(projectDO);
         MockedConstruction<TaskDoneMsgEvent> construction = mockConstruction(TaskDoneMsgEvent.class);
         doNothing().when(messageEventPublisher).publish(any());
-        BaseResult<Boolean> baseResult = taskServiceImp.modify(taskModifyReq);
-        construction.close();
-        assert baseResult.ifSuccess();
+        try {
+            BaseResult<Boolean> baseResult = taskServiceImp.modify(taskModifyReq);
+            assert baseResult.ifSuccess();
+        }finally {
+            construction.close();
+        }
+
+
     }
 
     @Test
@@ -264,10 +270,13 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         projectDO.setPmId("");
         when(projectMapper.get(any())).thenReturn(projectDO);
         MockedConstruction<TaskDoneMsgEvent> construction = mockConstruction(TaskDoneMsgEvent.class);
-        doNothing().when(messageEventPublisher).publish(any());
-        BaseResult<Boolean> baseResult = taskServiceImp.done(1L);
-        construction.close();
-        assert baseResult.ifSuccess();
+        try {
+            doNothing().when(messageEventPublisher).publish(any());
+            BaseResult<Boolean> baseResult = taskServiceImp.done(1L);
+            assert baseResult.ifSuccess();
+        }finally {
+            construction.close();
+        }
     }
 
     @Test
