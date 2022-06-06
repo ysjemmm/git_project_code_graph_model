@@ -26,7 +26,7 @@ public class BizChangeLogServiceImplTest  extends AbstractTestNGSpringContextTes
     private BizChangeLogServiceImpl bizChangeLogService;
 
     @Mock
-    BizChangeLogMapper bizChangeLogMapper;
+    private BizChangeLogMapper bizChangeLogMapper;
 
     @Test
     public void testList(){
