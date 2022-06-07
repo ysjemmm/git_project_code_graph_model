@@ -7,6 +7,7 @@
             <class name="com.timevale.forward.service.impl.BizDemandProductDemandServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.BizDemandServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.BizDomainServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.BugOnlineServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.CommentServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.FileServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.PersonServiceImplTest"/>
@@ -14,6 +15,7 @@
             <class name="com.timevale.forward.service.impl.ProductLineServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.ProjectFlowServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.ProjectServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.HomePageServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.PublishPlanServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.TestBillServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.TaskServiceImplTest"/>

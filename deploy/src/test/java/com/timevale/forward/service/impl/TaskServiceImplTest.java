@@ -3,12 +3,14 @@ package com.timevale.forward.service.impl;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.facade.api.query.ProductDemandLinkTaskQueryList;
 import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.TaskDetailVO;
+import com.timevale.forward.facade.api.result.TaskListVO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.component.*;
@@ -30,6 +32,7 @@ import org.testng.collections.Lists;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -314,6 +317,18 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         BaseResult<BigDecimal> baseResult = taskServiceImp.getElapsedTime(elapsedTimeQueryReq);
         assert baseResult.ifSuccess();
     }
+
+    @Test
+    public void testListTask() {
+        ProductDemandLinkTaskQueryList taskQueryList = new ProductDemandLinkTaskQueryList();
+        List<TaskDO> taskDOList=Lists.newArrayList(new TaskDO(){{setId(1L);}});
+        when(taskMapper.getByProductDemandId(any(),any())).thenReturn(taskDOList);
+        List<PersonDO> executorList=Lists.newArrayList(new PersonDO(){{setMainId(1L);}});
+        when(personMapper.get(any(),any())).thenReturn(executorList);
+        BaseResult<PageQueryResult<TaskListVO>> baseResult = taskServiceImp.listTask(taskQueryList);
+        assert baseResult.ifSuccess();
+    }
+
 }
 
 

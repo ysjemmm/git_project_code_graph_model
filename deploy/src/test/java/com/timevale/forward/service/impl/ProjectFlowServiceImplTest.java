@@ -8,6 +8,7 @@ import com.timevale.forward.dal.entity.ProjectFlowDO;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ProjectFlowAddReq;
+import com.timevale.forward.model.enums.ProjectFlowStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.component.ProjectLogComponent;
@@ -23,7 +24,7 @@ import org.testng.collections.Lists;
 
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 /**
@@ -74,6 +75,16 @@ public class ProjectFlowServiceImplTest extends AbstractTestNGSpringContextTests
         FieldUtils.setFieldValue("domainName", projectFlowService, "1");
         when(epeiusClient.start(any())).thenReturn("");
         assert projectFlowService.add(flowAddReq).ifSuccess();
+    }
+
+    @Test
+    public void testGet() {
+        when(projectFlowMapper.get(any(),any())).thenReturn(new ProjectFlowDO(){{
+            setReview("[\"1\"]");
+            setReviewId("[\"1\"]");
+            setStatus(ProjectFlowStatusEnum.REVIEWING.getCode());
+        }});
+        assert projectFlowService.get(1L).ifSuccess();
     }
 
 }
