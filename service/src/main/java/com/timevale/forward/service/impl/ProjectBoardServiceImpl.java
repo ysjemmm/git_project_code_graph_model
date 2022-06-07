@@ -168,12 +168,11 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         // 日志分组 by id
         Map<Long, List<BugLogDO>> logMap = bugLogDOList.stream().collect(Collectors.groupingBy(BugLogDO::getMainId));
         logMap.forEach((k, v) -> {
-            // 日志分组 by 日期
-            Map<Date, List<BugLogDO>> logMapDate = v.stream().collect(Collectors.groupingBy(e -> DateUtil.getStartOfDay(e.getCreateDate())));
-
-            logMapDate.forEach((sk, sv) -> {
-                sv.sort((a, b) -> b.getCreateDate().compareTo(a.getCreateDate()));
-                sv.stream().findFirst().ifPresent(newLogList::add);
+            v.sort((a,b) -> b.getCreateDate().compareTo(a.getCreateDate()));
+            v.stream().findFirst().ifPresent(e -> {
+                if(BugStatusEnum.COMPLETE.getText().equals(e.getNewValue()) || BugStatusEnum.CLOSE.getText().equals(e.getNewValue())) {
+                    newLogList.add(e);
+                }
             });
         });
 
@@ -187,47 +186,26 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         // 当前时间和结束时间取小值
         endDate = DateUtil.min(endDate, new Date());
 
-        // 当天的最大和最小
+        // 当天的最大
         endDate = DateUtil.getEndOfDay(endDate);
         startDate = DateUtil.getStartOfDay(startDate);
 
-        // 线下bug完成和关闭的数量
-        HashSet<Long> completedBugSet = new HashSet<>();
-
         // 时间指针
-        Date pointStart = startDate;
-        Date pointEnd = DateUtil.getEndOfDay(startDate);
-
-        while(pointStart.before(endDate)){
-            Date finalPointEnd = pointEnd;
-            Date finalPointStart = pointStart;
+        Date point = startDate;
+        while(point.compareTo(endDate) <= 0){
+            Date pointEnd = DateUtil.getEndOfDay(point);
 
             BugOfflineTrendVO trendVO = new BugOfflineTrendVO();
-
             // 日期
-            trendVO.setDate(finalPointStart);
-
+            trendVO.setDate(point);
             // 累积创建数量
-            trendVO.setCreatedBug((int) bugOfflineDOList.stream().filter(e -> finalPointEnd.after(e.getCreateDate())).count());
-
+            trendVO.setCreatedBug((int) bugOfflineDOList.stream().filter(e -> pointEnd.compareTo(e.getCreateDate()) >= 0).count());
             // 累积解决数量
-            List<BugLogDO> todayBugLogDOList = newLogList.stream()
-                    .filter(e -> DateUtil.inInterval(e.getCreateDate(), finalPointStart, finalPointEnd))
-                    .collect(Collectors.toList());
-
-            todayBugLogDOList.forEach(e -> {
-                if(BugStatusEnum.COMPLETE.getText().equals(e.getNewValue()) || BugStatusEnum.CLOSE.getText().equals(e.getNewValue())) {
-                    completedBugSet.add(e.getMainId());
-                }else{
-                    completedBugSet.remove(e.getMainId());
-                }
-            });
-            trendVO.setSolvedBug(completedBugSet.size());
+            trendVO.setSolvedBug((int)newLogList.stream().filter(e -> pointEnd.compareTo(e.getCreateDate()) >= 0).count());
 
             result.add(trendVO);
 
-            pointEnd = DateUtil.addDay(pointEnd, 1);
-            pointStart = DateUtil.addDay(pointStart, 1);
+            point = DateUtil.addDay(point, 1);
         }
 
         return BaseResult.success(result);
