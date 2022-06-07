@@ -215,7 +215,7 @@ public class HomePageServiceImplTest extends AbstractTestNGSpringContextTests {
         single.setTeamMembers(new ArrayList<>());
 
         HomePageProjectBoardReq leader = new HomePageProjectBoardReq();
-        leader.setUserType(HomePageTabEnum.TEAM.getCode());
+        leader.setTabType(HomePageTabEnum.TEAM.getCode());
         leader.setStartDate(new Date());
         leader.setEndDate(new Date());
         leader.setDeptIds(new ArrayList<>());
@@ -225,9 +225,9 @@ public class HomePageServiceImplTest extends AbstractTestNGSpringContextTests {
         BaseInfoResponse RDInfo = new BaseInfoResponse();
         BaseInfoResponse QAInfo = new BaseInfoResponse();
 
-        PDInfo.setUserId("PD");
-        RDInfo.setUserId("RD");
-        QAInfo.setUserId("QA");
+        PDInfo.setUserId("zhonggong");
+        RDInfo.setUserId("yangxu");
+        QAInfo.setUserId("nianci");
 
         PDInfo.setJobFunction("产品");
         RDInfo.setJobFunction("后端开发");
@@ -236,15 +236,21 @@ public class HomePageServiceImplTest extends AbstractTestNGSpringContextTests {
         PDInfo.setName("产品");
         RDInfo.setName("后端开发");
         QAInfo.setName("测试");
+
+        PDInfo.setAccount("zhonggong");
+        RDInfo.setAccount("yangxu");
+        QAInfo.setAccount("nianci");
+
         when(innerUserPersonClient.getPersonByAccountNew(any())).thenReturn(Lists.newArrayList(PDInfo,RDInfo,QAInfo));
+        when(innerUserPersonClient.getAllMyStaffWithSelfInfo(any(),any())).thenReturn(Lists.newArrayList(PDInfo,RDInfo,QAInfo));
 
         HomePageProjectBoardDTO PDProjectBoardDTO = new HomePageProjectBoardDTO();
         HomePageProjectBoardDTO RDProjectBoardDTO = new HomePageProjectBoardDTO();
         HomePageProjectBoardDTO QAProjectBoardDTO = new HomePageProjectBoardDTO();
-        PDProjectBoardDTO.setUserId("PD");
-        RDProjectBoardDTO.setUserId("RD");
-        QAProjectBoardDTO.setUserId("QA");
-        when(homePageProjectBoardComponent.getProjectBoard(anyList())).thenReturn(Lists.newArrayList());
+        PDProjectBoardDTO.setUserId("zhonggong");
+        RDProjectBoardDTO.setUserId("yangxu");
+        QAProjectBoardDTO.setUserId("nianci");
+        when(homePageProjectBoardComponent.getProjectBoard(anyList())).thenReturn(Lists.newArrayList(PDProjectBoardDTO,RDProjectBoardDTO,QAProjectBoardDTO));
 
         assert homePageService.getProjectBoard(single).ifSuccess();
         assert homePageService.getProjectBoard(leader).ifSuccess();
