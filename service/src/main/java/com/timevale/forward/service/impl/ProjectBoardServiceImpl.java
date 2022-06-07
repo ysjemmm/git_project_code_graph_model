@@ -92,10 +92,11 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
                 completedTime = completedTime.add(e.getPlanUseTime());
             }
         }
+        BigDecimal absolutely = new BigDecimal("100.00");
         if(completedTime.compareTo(planUseTime) == 0){
-            result.setTaskProgress(new BigDecimal("100.00").toString());
+            result.setTaskProgress(absolutely.toString());
         }else{
-            result.setTaskProgress(completedTime.divide(planUseTime, 2, RoundingMode.DOWN).toString());
+            result.setTaskProgress(completedTime.multiply(absolutely).divide(planUseTime,2, RoundingMode.DOWN).toString());
         }
 
         // 总产品需求数、总任务数、总线下bug数
