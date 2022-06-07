@@ -149,9 +149,14 @@ public class TaskComponentImpl implements TaskComponent {
             a.setProjectName(projectMap.get(a.getProjectId()).getName());
             a.setPmId(projectMap.get(a.getProjectId()).getPmId());
             a.setStageName(TaskStageEnum.getTextByCode(a.getStage()));
-            boolean isDelay = (a.getActualEndDate() == null && new Date().after(a.getPlanEndDate()))
-                    || (a.getActualEndDate() != null && a.getActualEndDate().after(a.getPlanEndDate()));
-            a.setIsDelay(isDelay);
+            if(a.getPlanEndDate()==null){
+                //老数据
+                a.setIsDelay(false);
+            }else{
+                boolean isDelay = (a.getActualEndDate() == null && new Date().after(a.getPlanEndDate()))
+                        || (a.getActualEndDate() != null && a.getActualEndDate().after(a.getPlanEndDate()));
+                a.setIsDelay(isDelay);
+            }
         });
         PageQueryResult<TaskVO> pageQueryResult = new PageQueryResult<>();
         PageInfo<TaskDO> pageInfo = new PageInfo<>(taskDos);
