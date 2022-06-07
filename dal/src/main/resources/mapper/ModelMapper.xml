@@ -6,4 +6,10 @@
         select id, product_line_id, name, owner, owner_id, is_deleted,create_man ,create_date ,modify_man ,modify_date
         from model
     </select>
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.ModelDO">
+        select id, product_line_id, name, owner, owner_id, is_deleted,create_man ,create_date ,modify_man ,modify_date
+        from model
+        where id = #{id}
+    </select>
 </mapper>

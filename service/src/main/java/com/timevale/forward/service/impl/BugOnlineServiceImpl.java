@@ -110,6 +110,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Resource
     private BugOnlineProductLineComponent bugOnlineProductLineComponent;
 
+    @Resource
+    private ModelMapper modelMapper;
+
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
         log.info("线上bug-从配置中心获取信息，接收参数：{}", bugOnlineGetFieldReq.getProductLineIdList());
@@ -282,11 +285,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     public BusinessResult<Boolean> add(BugOnlineAddReq bugOnlineAddReq) {
         log.info("线上bug-新增:接收参数{}", bugOnlineAddReq);
 
-        if(bugOnlineAddReq.getName().contains(CommonConstant.BLANK)){
+        if (bugOnlineAddReq.getName().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("线上bug名称中请勿包含空格");
         }
 
-        if(Objects.equals(bugOnlineAddReq.getSource(),"support")){
+        if (Objects.equals(bugOnlineAddReq.getSource(), "support")) {
             log.info("默认经办人:{}", defaultOperator);
             String[] defaultOperators = defaultOperator.split(";");
             bugOnlineAddReq.setOperatorId(defaultOperators[0]);
@@ -296,7 +299,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.transfer(bugOnlineAddReq);
 
         // 校验
-        if(bugOnlineDO.getModelId() == null){
+        if (bugOnlineDO.getModelId() == null) {
             bugOnlineDO.setModelId(0L);
         }
 
@@ -553,6 +556,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             List<CommentVO> commentVOList = commentDOList.stream().map(CommentCopier.INSTANCE::change)
                     .collect(Collectors.toList());
             bugOnlineDetailVO.setCommentVOList(commentVOList);
+        }
+        //模块名称
+        if (bugOnlineDO.getModelId() != 0) {
+            ModelDO modelDO = modelMapper.get(bugOnlineDO.getModelId());
+            bugOnlineDetailVO.setModelName(modelDO.getName());
         }
 
         //信息填充
@@ -1562,7 +1570,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             mergeProductLineIds.addAll(oldProductLineIdList);
             mergeProductLineIds.addAll(newProductLineIdList);
             Map<Long, String> mergeProductLines = productLineMapper.selectByIds(mergeProductLineIds).stream()
-                    .collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName,(v1, v2) -> v2));
+                    .collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (v1, v2) -> v2));
             String oldValue = oldProductLineIdList.stream().map(mergeProductLines::get).collect(Collectors.joining(","));
             String newValue = newProductLineIdList.stream().map(mergeProductLines::get).collect(Collectors.joining(","));
             BugLogDO bugLogDO = new BugLogDO();

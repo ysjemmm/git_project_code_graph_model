@@ -4,12 +4,14 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectBoardService;
-import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.facade.api.result.BugOfflineTrendVO;
 import com.timevale.forward.facade.api.result.ProjectBoardDataIndicatorVO;
+import com.timevale.forward.facade.api.result.ProjectBoardSinglelWorkTimeVO;
+import com.timevale.forward.facade.api.result.ProjectBoardTaskVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -51,6 +53,9 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
     @Resource
     PersonMapper personMapper;
+
+    @Resource
+    ProjectNodeMapper projectNodeMapper;
 
     @Override
     public BaseResult<ProjectBoardDataIndicatorVO> getDataIndicator(Long projectId) {
@@ -216,14 +221,27 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         log.info("人员工时,参数:{}", projectId);
         List<ProjectBoardSinglelWorkTimeVO> result = new ArrayList<>();
         List<TaskDO> taskDos = taskMapper.getByProjectId(projectId);
-        List<TaskDO> filtered = taskDos.stream().filter(a -> !TaskStatusEnum.INVALID.getCode().equals(a.getStatus())).collect(Collectors.toList());
+        List<TaskDO> filtered = taskDos.stream().filter(a -> !TaskStatusEnum.INVALID.getCode().equals(a.getStatus())
+                && a.getPlanStartDate() != null && a.getPlanEndDate() != null).collect(Collectors.toList());
+
         if (CollectionUtils.isEmpty(filtered)) {
             return BaseResult.success(result);
         }
 
         ProjectDO projectDO = projectMapper.get(projectId);
+        if (projectDO == null) {
+            throw new BaseBizRuntimeException("找不到该项目");
+        }
+
         Date projectStartDate = projectDO.getActualStartDate() == null ? projectDO.getPlanStartDate() : projectDO.getActualStartDate();
-        Date projectEndDate = projectDO.getActualEndDate() == null ? projectDO.getPlanEndDate() : projectDO.getActualEndDate();
+        List<Date> projectEndDate = new ArrayList<>();
+        if (projectDO.getActualEndDate() != null) {
+            List<ProjectNodeDO> projectNodeDos = projectNodeMapper.get(projectId);
+            Optional<ProjectNodeDO> max = projectNodeDos.stream().filter(a -> a.getActualDate() != null).max(Comparator.comparing(ProjectNodeDO::getActualDate));
+            max.ifPresent(a -> projectEndDate.add(a.getActualDate()));
+        } else {
+            projectEndDate.add(projectDO.getPlanEndDate());
+        }
 
         List<Long> taskIds = filtered.stream().map(TaskDO::getId).collect(Collectors.toList());
         Map<Long, TaskDO> taskMap = filtered.stream().collect(Collectors.toMap(TaskDO::getId, k -> k, (v1, v2) -> v2));
@@ -268,9 +286,10 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             singlelWorkTimeVO.setIsPm(Objects.equals(v.get(0).getExecutorId(), projectDO.getPmId()));
             singlelWorkTimeVO.setTaskCount(v.size());
             singlelWorkTimeVO.setProjectStartDate(projectStartDate);
-            singlelWorkTimeVO.setProjectEndDate(projectEndDate);
+            singlelWorkTimeVO.setProjectEndDate(projectEndDate.get(0));
             singlelWorkTimeVO.setTotalPlanUseTime(bigDecimal);
-            singlelWorkTimeVO.setProjectBoardTaskVos(v);
+            List<ProjectBoardTaskVO> sort = v.stream().sorted(Comparator.comparing(ProjectBoardTaskVO::getPlanStartDate)).collect(Collectors.toList());
+            singlelWorkTimeVO.setProjectBoardTaskVos(sort);
             result.add(singlelWorkTimeVO);
         });
 

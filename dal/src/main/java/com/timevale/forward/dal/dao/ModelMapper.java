@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.entity.ModelDO;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -16,6 +17,13 @@ public interface ModelMapper {
      * @return 列表
      */
     List<ModelDO> selectAllModel();
+
+    /**
+     * 获取产品线列表
+     *
+     * @return 列表
+     */
+    ModelDO get(@Param("id") Long id);
 
 
 }
