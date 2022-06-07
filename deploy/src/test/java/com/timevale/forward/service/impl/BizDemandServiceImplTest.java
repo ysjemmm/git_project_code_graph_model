@@ -7,19 +7,22 @@ import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.BugOnlineStatusEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
-import com.timevale.forward.service.observer.event.BizDemandInvalidMsgEvent;
-import com.timevale.forward.service.observer.event.BizDemandReceivedMsgEvent;
-import com.timevale.forward.service.observer.event.BizDemandRejectMsgEvent;
-import com.timevale.forward.service.observer.event.BizDemandToReceiveMsgEvent;
+import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.BaseInfoResponse;
+import com.timevale.security.facade.response.GroupModelResponse;
 import com.timevale.security.facade.response.GroupResponse;
+import javafx.beans.binding.When;
 import org.assertj.core.util.Lists;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -75,7 +78,16 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
     private BugOnlineMapper bugOnlineMapper;
 
     @Mock
+    private BugLogMapper bugLogMapper;
+
+    @Mock
     private BizChangeLogMapper bizChangeLogMapper;
+
+    @Mock
+    private InnerUserPersonClient innerUserPersonClient;
+
+    @Mock
+    private BugStatusOperatorMapper bugStatusOperatorMapper;
 
     @Test
     public void testList() {
@@ -159,6 +171,21 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         PersonAddReq personAddReq = new PersonAddReq();
         personAddReq.setUserId("www");
         bizDemandAddReq.setRecipientInfoList(Collections.singletonList(personAddReq));
+
+        bizDemandAddReq.setBugOnlineId(1L);
+
+        BugOnlineDO bugOnlineDO = new BugOnlineDO();
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.HANG_UP.getCode());
+        when(bugOnlineMapper.selectById(any())).thenReturn(bugOnlineDO);
+
+        doNothing().when(bugOnlineMapper).update(any());
+        when(bugLogMapper.insert(any())).thenReturn(1);
+
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setCreateDate(new Date());
+        when(bugLogMapper.selectByBugOfflineIdAndType(any(), any(), any())).thenReturn(Collections.singletonList(bugLogDO));
+
+        doNothing().when(bugStatusOperatorMapper).insert(any());
 
         assert bizDemandService.add(bizDemandAddReq).ifSuccess();
         bizDemandToReceiveMsgEventMock.close();
@@ -342,6 +369,108 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         doNothing().when(messageEventPublisher).publish(any());
         assert bizDemandService.bizDemandBatchTransferReceiveMan(batchTransferReq).ifSuccess();
         bizDemandToReceiveMsgEventMock.close();
+    }
+
+    @Test
+    public void testBizDemandBatchTransferCreateMan(){
+        BatchTransferReq same = new BatchTransferReq();
+        same.setReceiveMan("old");
+        same.setReceiveManId("old");
+        same.setIdList(Collections.singletonList(1L));
+
+        BatchTransferReq diff = new BatchTransferReq();
+        diff.setReceiveMan("new");
+        diff.setReceiveManId("new");
+        diff.setIdList(Collections.singletonList(1L));
+
+        BizDemandDO bizDemandDO = new BizDemandDO();
+        bizDemandDO.setId(1L);
+        bizDemandDO.setSubmitMan("old");
+        when(bizDemandMapper.selectByIds(any())).thenReturn(Collections.singletonList(bizDemandDO));
+
+        BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
+        bizChangeLogDO.setMainId(1L);
+        when(bizDemandLogComponent.getLogWhenModifyData(any(),any(),any(),any(),any())).thenReturn(bizChangeLogDO);
+
+
+        BaseInfoResponse baseInfoResponse = new BaseInfoResponse();
+        GroupModelResponse groupModelResponse = new GroupModelResponse();
+        groupModelResponse.setGroupId("1");
+        baseInfoResponse.setDefaultGroup(groupModelResponse);
+        when(innerUserPersonClient.getPersonByAccountNew(any())).thenReturn(Collections.singletonList(baseInfoResponse));
+
+        when(bizDemandComponent.getDeptChainName(any())).thenReturn("chainName");
+
+        when(bizChangeLogMapper.batchInsert(any())).thenReturn(1);
+        when(bizDemandMapper.updateSubmitMan(any(),any(),any(),any())).thenReturn(1);
+
+        assert bizDemandService.bizDemandBatchTransferCreateMan(same).ifSuccess();
+        assert bizDemandService.bizDemandBatchTransferCreateMan(diff).ifSuccess();
+
+    }
+
+    @Test
+    public void testCompleted(){
+        BizDemandCompletedReq req = new BizDemandCompletedReq();
+        req.setId(1L);
+        req.setSolvePlan("solvePlan");
+
+        BizDemandDO bizDemandDO = new BizDemandDO();
+        bizDemandDO.setStatus(BizDemandStatusEnum.EVALUATE.getCode());
+        bizDemandDO.setRejectReason("rejectReason");
+        when(bizDemandMapper.selectById(any())).thenReturn(bizDemandDO);
+
+        when(bizDemandMapper.fullUpdate(any())).thenReturn(1);
+
+        doNothing().when(bizDemandLogComponent).addLogWhenModifyData(any(),any(),any(),any(),any(),any());
+
+        MockedConstruction<BizDemandCompletedMsgEvent> mockedConstruction = mockConstruction(BizDemandCompletedMsgEvent.class);
+        mockedConstruction.constructed();
+        doNothing().when(messageEventPublisher).publish(any());
+
+        assert bizDemandService.completed(req).ifSuccess();
+        mockedConstruction.close();
+    }
+
+    @Test
+    public void testCompletedAgree(){
+        BizDemandCompletedAgreeReq req = new BizDemandCompletedAgreeReq();
+        req.setId(1L);
+
+        BizDemandDO bizDemandDO = new BizDemandDO();
+        bizDemandDO.setStatus(BizDemandStatusEnum.EVALUATE.getCode());
+        when(bizDemandMapper.selectById(any())).thenReturn(bizDemandDO);
+
+        when(bizDemandMapper.update(any())).thenReturn(1);
+
+        doNothing().when(bizDemandLogComponent).addLogWhenModifyData(any(),any(),any(),any(),any(),any());
+        assert bizDemandService.completedAgree(req).ifSuccess();
+    }
+
+    @Test
+    public void testCompletedReject(){
+        BizDemandCompletedRejectReq req = new BizDemandCompletedRejectReq();
+        req.setId(1L);
+        req.setRejectReason("reason");
+
+        BizDemandDO bizDemandDO = new BizDemandDO();
+        bizDemandDO.setId(1L);
+        bizDemandDO.setStatus(BizDemandStatusEnum.TO_CONFIRM.getCode());
+        when(bizDemandMapper.selectById(any())).thenReturn(bizDemandDO);
+
+        when(bizDemandMapper.update(any())).thenReturn(1);
+
+        doNothing().when(bizDemandLogComponent).addLogWhenModifyData(any(),any(),any(),any(),any());
+        doNothing().when(bizDemandLogComponent).addLogWhenModifyData(any(),any(),any(),any(),any(),any());
+
+        MockedConstruction<BizDemandCompletedRejectMsgEvent> mockConstruction = mockConstruction(BizDemandCompletedRejectMsgEvent.class);
+        mockConstruction.constructed();
+
+        doNothing().when(messageEventPublisher).publish(any());
+        assert bizDemandService.completedReject(req).ifSuccess();
+
+        mockConstruction.close();
+
     }
 }
 
