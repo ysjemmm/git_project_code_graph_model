@@ -20,6 +20,7 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
+import org.assertj.core.util.Lists;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedConstruction;
@@ -29,10 +30,7 @@ import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.Test;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -75,6 +73,9 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
 
     @Mock
     private BugOnlineMapper bugOnlineMapper;
+
+    @Mock
+    private BizChangeLogMapper bizChangeLogMapper;
 
     @Test
     public void testList() {
@@ -313,6 +314,35 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         MockedConstruction.close();
     }
 
+    @Test
+    public void testBizDemandBatchTransferReceiveMan(){
+        BatchTransferReq batchTransferReq = new BatchTransferReq();
+        batchTransferReq.setReceiveMan("new");
+        batchTransferReq.setReceiveManId("new");
+        batchTransferReq.setIdList(Collections.singletonList(1L));
+
+        BizDemandDO bizDemandDO = new BizDemandDO();
+        bizDemandDO.setId(1L);
+        bizDemandDO.setName("test");
+        bizDemandDO.setSubmitMan("test");
+        bizDemandDO.setReceiveMan("old");
+        when(bizDemandMapper.selectByIds(any())).thenReturn(Collections.singletonList(bizDemandDO));
+
+        when(bizDemandMapper.updateReceiveMan(any(),any(),any())).thenReturn(1);
+        when(bizChangeLogMapper.batchInsert(any())).thenReturn(1);
+        when(bizDemandMapper.updateReceiveMan(any(),any(),any())).thenReturn(1);
+
+        MockedConstruction<BizDemandToReceiveMsgEvent> bizDemandToReceiveMsgEventMock = mockConstruction(BizDemandToReceiveMsgEvent.class);
+        bizDemandToReceiveMsgEventMock.constructed();
+
+        BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
+        bizChangeLogDO.setMainId(1L);
+        when(bizDemandLogComponent.getLogWhenModifyData(any(),any(),any(),any(),any())).thenReturn(bizChangeLogDO);
+
+        doNothing().when(messageEventPublisher).publish(any());
+        assert bizDemandService.bizDemandBatchTransferReceiveMan(batchTransferReq).ifSuccess();
+        bizDemandToReceiveMsgEventMock.close();
+    }
 }
 
 
