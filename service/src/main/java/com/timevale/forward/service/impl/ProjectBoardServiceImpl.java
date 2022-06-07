@@ -108,7 +108,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             result.setSubmitTestResult(TestBillResultEnum.NO_START.getText());
         }else if(TestBillStatusEnum.TEST_SUCCESS.getCode().equals(testBillDO.getStatus())){
             result.setSubmitTestResult(TestBillResultEnum.SUCCESS.getText());
-        }else if(testBillDO.getReturnCount() > 0){
+        }else if(testBillDO.getReturnCount() > 0 && TestBillStatusEnum.NO_SELF_TEST.getCode().equals(testBillDO.getStatus())){
             result.setSubmitTestResult(TestBillResultEnum.FAIL.getText());
         }else{
             result.setSubmitTestResult(TestBillResultEnum.TESTING.getText());
@@ -117,10 +117,12 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         // 今日Date
         Date today = new Date();
 
-        // 逾期任务数、待完成任务数
-        List<TaskDO> undoneTaskList = taskDOList.stream().filter(e -> !TaskStatusEnum.DONE.getCode().equals(e.getStatus())).collect(Collectors.toList());
-        result.setOverdueTaskCount((int)undoneTaskList.stream().filter(e -> today.after(e.getPlanEndDate())).count());
-        result.setWaitingTaskCount(undoneTaskList.size());
+        // 待完成任务数、逾期任务数
+        result.setWaitingTaskCount((int) taskDOList.stream().filter(e -> !TaskStatusEnum.DONE.getCode().equals(e.getStatus())).count());
+        result.setOverdueTaskCount((int) taskDOList.stream().filter(e -> {
+            Date date = e.getActualEndDate() == null ? today : e.getActualEndDate();
+            return date.compareTo(e.getPlanEndDate()) > 0;
+        }).count());
 
         // 今日应完成任务数、今日待完成任务数
         List<TaskDO> todayTaskList = taskDOList.stream().filter(e -> DateUtil.getIntervalDays(e.getPlanEndDate(), today) == 0).collect(Collectors.toList());
@@ -128,8 +130,8 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         result.setCompleteTaskTodayRemain((int)todayTaskList.stream().filter(e -> !TaskStatusEnum.DONE.getCode().equals(e.getStatus())).count());
 
         // 未拆解任务需求数
-        int dismantleDemandCount = (int)taskProductDemandDOList.stream().map(TaskProductDemandDO::getProductDemandId).distinct().count();
         int productDemandCount = productDemandIdList.size();
+        int dismantleDemandCount = (int)taskProductDemandDOList.stream().map(TaskProductDemandDO::getProductDemandId).distinct().count();
         result.setNotDismantleDemand(productDemandCount - dismantleDemandCount);
 
         // 待处理项目风险数
@@ -167,14 +169,13 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
         // 日志分组 by id
         Map<Long, List<BugLogDO>> logMap = bugLogDOList.stream().collect(Collectors.groupingBy(BugLogDO::getMainId));
-        logMap.forEach((k, v) -> {
-            v.sort((a,b) -> b.getCreateDate().compareTo(a.getCreateDate()));
-            v.stream().findFirst().ifPresent(e -> {
-                if(BugStatusEnum.COMPLETE.getText().equals(e.getNewValue()) || BugStatusEnum.CLOSE.getText().equals(e.getNewValue())) {
+        logMap.forEach((k, v) -> v.stream()
+                .max(Comparator.comparing(BaseDO::getCreateDate))
+                .ifPresent(e -> {
+                    if(BugStatusEnum.COMPLETE.getText().equals(e.getNewValue()) || BugStatusEnum.CLOSE.getText().equals(e.getNewValue())) {
                     newLogList.add(e);
                 }
-            });
-        });
+        }));
 
         // 结果
         List<BugOfflineTrendVO> result = new ArrayList<>();
@@ -195,12 +196,10 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         while(point.compareTo(endDate) <= 0){
             Date pointEnd = DateUtil.getEndOfDay(point);
 
+            // 日期、累积创建数量、累积解决数量
             BugOfflineTrendVO trendVO = new BugOfflineTrendVO();
-            // 日期
             trendVO.setDate(point);
-            // 累积创建数量
-            trendVO.setCreatedBug((int) bugOfflineDOList.stream().filter(e -> pointEnd.compareTo(e.getCreateDate()) >= 0).count());
-            // 累积解决数量
+            trendVO.setCreatedBug((int)bugOfflineDOList.stream().filter(e -> pointEnd.compareTo(e.getCreateDate()) >= 0).count());
             trendVO.setSolvedBug((int)newLogList.stream().filter(e -> pointEnd.compareTo(e.getCreateDate()) >= 0).count());
 
             result.add(trendVO);
