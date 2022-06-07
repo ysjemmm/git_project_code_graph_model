@@ -138,6 +138,8 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateStatus(BizDemandUpdateStatusReq bizDemandUpdateStatusReq) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         // 修改业务需求状态 —— 作废
         Long bizDemandId = bizDemandUpdateStatusReq.getBizDemandId();
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
@@ -164,7 +166,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         messageEventPublisher.publish(new BizDemandInvalidMsgEvent(
                 this,
                 bizDemandDO.getId(),
-                bizDemandDO.getReceiveMan(),
+                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 bizDemandDO.getReceiveManId(),
                 bizDemandDO.getName()
         ));
