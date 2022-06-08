@@ -58,4 +58,12 @@ public interface BizDemandProductDemandService {
      * @return 列表
      */
     BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> matchProductDemandList(BizDemandLinkProductDemandQueryList bizDemandSubProductDemandQueryList);
+
+    /**
+     * 查询业务需求状态
+     *
+     * @param bizDemandId 业务需求id
+     * @return {@link BaseResult}<{@link BizDemandStatusVO}>
+     */
+    BaseResult<BizDemandStatusVO> getBizDemandStatus(Long bizDemandId);
 }

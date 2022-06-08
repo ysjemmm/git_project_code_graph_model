@@ -283,12 +283,11 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         BizDemandStatusVO bizDemandStatusVO = new BizDemandStatusVO();
         bizDemandStatusVO.setStatus(newStatus);
         bizDemandStatusVO.setStatusText(statusText);
-        bizDemandStatusVO.setEndDate(newEndDate);
+        bizDemandStatusVO.setProjectEndDate(newEndDate);
         bizDemandStatusVO.setPlanReleaseDate(planReleaseDate);
         bizDemandStatusVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(planReleaseDate));
         return bizDemandStatusVO;
     }
-
 
     @Override
     public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> matchProductDemandList(BizDemandLinkProductDemandQueryList bizDemandSubProductDemandQueryList) {
@@ -337,6 +336,17 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
         return BaseResult.success(pageQueryResult);
+    }
+
+    @Override
+    public BaseResult<BizDemandStatusVO> getBizDemandStatus(Long bizDemandId) {
+        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandStatusVO statusVO = BizDemandCopier.INSTANCE.change(bizDemandDO);
+
+        statusVO.setStatusText(BizDemandStatusEnum.getTextByCode(statusVO.getStatus()));
+        statusVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(statusVO.getPlanReleaseDate()));
+
+        return BaseResult.success(statusVO);
     }
 
 }
