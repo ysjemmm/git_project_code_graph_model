@@ -61,7 +61,4 @@ public class ProjectAddReq extends BaseReq {
     @ApiModelProperty("是否在发布平台发布：0否，1是")
     private Integer isPlatformPublish;
 
-    @ApiModelProperty("产品需求id")
-    private List<Long> productDemandIds;
-
 }

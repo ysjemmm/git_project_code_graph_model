@@ -60,4 +60,11 @@ public interface BizDemandComponent {
      * @param bizDemandId bizDemandIds
      */
     void updateProjectEndDate(Long bizDemandId,boolean updatePlanReleaseDate);
+
+    /**
+     *
+     * @param pdStauts pdStauts
+     * @return
+     */
+    Integer getBizDemandStatus(Integer pdStauts);
 }
