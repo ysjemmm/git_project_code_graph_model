@@ -10,11 +10,9 @@ import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.model.enums.BizDemandStatusEnum;
-import com.timevale.forward.model.enums.PlanReleaseDateEnum;
-import com.timevale.forward.model.enums.PriorityEnum;
-import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
@@ -64,6 +62,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Resource
     private MessageEventPublisher messageEventPublisher;
+
+    @Resource
+    private BizDemandLogComponent bizDemandLogComponent;
 
     @Override
     public void updateBizDemandStatusByLinkedProductDemand(Long bizDemandId) {
@@ -254,6 +255,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             bizDemandMapper.fullUpdate(bizDemandDO);
             log.info("业务需求id:{},更新前发布时间:{},更新后发布时间:{}", bizDemandId, oldProjectEndDate, newProjectEndDate);
             if (!Objects.equals(oldPlanReleaseDate, bizDemandDO.getPlanReleaseDate())) {
+
                 messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
                         this,
                         bizDemandDO.getId(),
@@ -262,6 +264,13 @@ public class BizDemandComponentImpl implements BizDemandComponent {
                         BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
                         PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
                 ));
+
+                bizDemandLogComponent.addLogWhenModifyData(
+                        PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
+                        PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate()),
+                        bizDemandId,
+                        BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
+                        false);
             }
         }
     }
