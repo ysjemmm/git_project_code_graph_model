@@ -451,8 +451,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugLogDO.setMainId(bugOnlineDO.getId());
             bugLogDO.setField(BugFieldEnum.MODEL.getText());
             bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
-            bugLogDO.setOldValue(oldModelId == null ? "" : modelMapper.get(oldModelId).getName());
-            bugLogDO.setNewValue(newModelId == null ? "" : modelMapper.get(newModelId).getName());
+            ModelDO oldModelDO = modelMapper.get(oldModelId);
+            ModelDO newModelDO = modelMapper.get(newModelId);
+            bugLogDO.setOldValue(oldModelDO == null ? "" : oldModelDO.getName());
+            bugLogDO.setNewValue(newModelDO == null ? "" : newModelDO.getName());
             bugLogMapper.insert(bugLogDO);
         }
 
