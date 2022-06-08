@@ -98,6 +98,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Resource
     private PersonComponent personComponent;
 
+    @Resource
+    private ModelMapper modelMapper;
+
     @Value("${business}")
     private String business;
 
@@ -109,9 +112,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Resource
     private BugOnlineProductLineComponent bugOnlineProductLineComponent;
-
-    @Resource
-    private ModelMapper modelMapper;
 
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
@@ -442,6 +442,19 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(bugOnlineModifyReq);
         //更新线上bug
         bugOnlineMapper.update(bugOnlineConvert);
+
+        //模块日志
+        Long oldModelId = bugOnlineDO.getModelId();
+        Long newModelId = bugOnlineConvert.getModelId();
+        if(!Objects.equals(oldModelId,newModelId)){
+            BugLogDO bugLogDO = new BugLogDO();
+            bugLogDO.setMainId(bugOnlineDO.getId());
+            bugLogDO.setField(BugFieldEnum.MODEL.getText());
+            bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+            bugLogDO.setOldValue(oldModelId == null ? "" : modelMapper.get(oldModelId).getName());
+            bugLogDO.setNewValue(newModelId == null ? "" : modelMapper.get(newModelId).getName());
+            bugLogMapper.insert(bugLogDO);
+        }
 
         //更新附件表
         List<FileAddReq> files = bugOnlineModifyReq.getFiles();

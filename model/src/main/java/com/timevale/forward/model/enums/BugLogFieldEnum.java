@@ -38,7 +38,12 @@ public enum BugLogFieldEnum {
     /**
      * 解决方案
      */
-    SOLVE_PLAN("解决方案")
+    SOLVE_PLAN("解决方案"),
+
+    /**
+     * 模块
+     */
+    MODEL("模块")
     ;
 
 
