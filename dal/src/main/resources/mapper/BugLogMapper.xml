@@ -32,8 +32,6 @@
             <if test="true ">is_deleted = true,</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
-            <if test="true">and `action` is not null</if>
-            <if test="true">and is_deleted = false</if>
         </set>
         where main_id = #{bugId} and `type` = #{type}
     </update>
