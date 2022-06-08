@@ -27,6 +27,8 @@ import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.forward.service.utils.date.DateStyle;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -138,6 +140,8 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateStatus(BizDemandUpdateStatusReq bizDemandUpdateStatusReq) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         // 修改业务需求状态 —— 作废
         Long bizDemandId = bizDemandUpdateStatusReq.getBizDemandId();
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
@@ -147,10 +151,12 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 记录旧状态
         Integer oldStatus = bizDemandDO.getStatus();
+        Date oldProjectEndDate = bizDemandDO.getProjectEndDate();
         Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
 
         // 修改业务需求状态
         bizDemandDO.setPlanReleaseDate(null);
+        bizDemandDO.setProjectEndDate(null);
         bizDemandDO.setStatus(BizDemandStatusEnum.INVALID.getCode());
         bizDemandMapper.fullUpdate(bizDemandDO);
 
@@ -164,7 +170,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         messageEventPublisher.publish(new BizDemandInvalidMsgEvent(
                 this,
                 bizDemandDO.getId(),
-                bizDemandDO.getReceiveMan(),
+                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 bizDemandDO.getReceiveManId(),
                 bizDemandDO.getName()
         ));
@@ -178,12 +184,23 @@ public class BizDemandServiceImpl implements BizDemandService {
                 true,
                 ButtonActionEnum.INVALID.getText());
 
-        bizDemandLogComponent.addLogWhenModifyData(
-                PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
-                StringUtils.EMPTY,
-                bizDemandId,
-                BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
-                false);
+        if(oldPlanReleaseDate != null){
+            bizDemandLogComponent.addLogWhenModifyData(
+                    PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
+                    StringUtils.EMPTY,
+                    bizDemandId,
+                    BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
+                    false);
+        }
+
+        if(oldProjectEndDate != null){
+            bizDemandLogComponent.addLogWhenModifyData(
+                    DateUtil.parseToString(oldProjectEndDate, DateStyle.YYYY_MM_DD),
+                    StringUtils.EMPTY,
+                    bizDemandId,
+                    BizChangeLogFieldEnum.PROJECT_RELEASE_DATE.getText(),
+                    false);
+        }
 
         return BaseResult.success(true);
     }
