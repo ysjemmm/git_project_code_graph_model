@@ -211,6 +211,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         String statusText = BizDemandStatusEnum.getTextByCode(newStatus);
         Date newEndDate = bizDemandComponent.getProjectEndDate(bizDemandId);
+        Integer planReleaseDate = newBizDemandDO.getPlanReleaseDate();
 
         // 如果新旧状态不同
         if(!oldStatus.equals(newStatus)){
@@ -253,8 +254,8 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
             // 更新预期上线时间
             if(newEndDate != null){
-                int month = DateUtil.getMonth(newEndDate) - 1;
-                newBizDemandDO.setPlanReleaseDate(month);
+                planReleaseDate = DateUtil.getMonth(newEndDate) - 1;
+                newBizDemandDO.setPlanReleaseDate(planReleaseDate);
 
                 // 发送通知
                 messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
@@ -263,13 +264,13 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                         newBizDemandDO.getSubmitManId(),
                         newBizDemandDO.getName(),
                         BizDemandStatusEnum.getTextByCode(newBizDemandDO.getStatus()),
-                        PlanReleaseDateEnum.getTextByCode(month)
+                        PlanReleaseDateEnum.getTextByCode(planReleaseDate)
                 ));
 
                 // 日志
                 bizDemandLogComponent.addLogWhenModifyData(
                         PlanReleaseDateEnum.getTextByCode(oldBizDemandDO.getPlanReleaseDate()),
-                        PlanReleaseDateEnum.getTextByCode(month),
+                        PlanReleaseDateEnum.getTextByCode(planReleaseDate),
                         bizDemandId,
                         BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
                         false
@@ -283,6 +284,8 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         bizDemandStatusVO.setStatus(newStatus);
         bizDemandStatusVO.setStatusText(statusText);
         bizDemandStatusVO.setEndDate(newEndDate);
+        bizDemandStatusVO.setPlanReleaseDate(planReleaseDate);
+        bizDemandStatusVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(planReleaseDate));
         return bizDemandStatusVO;
     }
 
