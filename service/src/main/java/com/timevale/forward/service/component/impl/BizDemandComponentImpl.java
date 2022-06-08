@@ -197,6 +197,8 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         // 日期处理
         bizDemandListCondition.setCreateDateStart(DateUtil.getStartOfDay(bizDemandListCondition.getCreateDateStart()));
         bizDemandListCondition.setCreateDateEnd(DateUtil.getEndOfDay(bizDemandListCondition.getCreateDateEnd()));
+        bizDemandListCondition.setProjectEndDateStart(DateUtil.getStartOfDay(bizDemandListCondition.getProjectEndDateStart()));
+        bizDemandListCondition.setProjectEndDateEnd(DateUtil.getStartOfDay(bizDemandListCondition.getProjectEndDateEnd()));
 
         // 查询并转换
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
