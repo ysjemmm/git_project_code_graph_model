@@ -88,27 +88,28 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         }
 
         // 根据产品需求状态判断业务需求状态
-        int result;
+        int newStatus;
         if (ProductDemandStatusEnum.INCLUDED.getCode().equals(status)) {
-            result = BizDemandStatusEnum.INCLUDE_PROJECT.getCode();
+            newStatus = BizDemandStatusEnum.INCLUDE_PROJECT.getCode();
         } else if (ProductDemandStatusEnum.PROGRESS.getCode().equals(status)) {
-            result = BizDemandStatusEnum.PROJECTING.getCode();
+            newStatus = BizDemandStatusEnum.PROJECTING.getCode();
         } else if (ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
-            result = BizDemandStatusEnum.AVAILABLE.getCode();
+            newStatus = BizDemandStatusEnum.AVAILABLE.getCode();
         } else if (ProductDemandStatusEnum.WAITING.getCode().equals(status) || ProductDemandStatusEnum.SUSPEND.getCode().equals(status)) {
-            result = BizDemandStatusEnum.PD_LINKED.getCode();
+            newStatus = BizDemandStatusEnum.PD_LINKED.getCode();
         } else {
-            result = BizDemandStatusEnum.RECEIVED.getCode();
+            newStatus = BizDemandStatusEnum.RECEIVED.getCode();
         }
 
         // 判断状态是否发生变更
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
-        if (!bizDemandDO.getStatus().equals(result)) {
+        Integer oldStatus = bizDemandDO.getStatus();
+        if (!Objects.equals(oldStatus, newStatus) && !Objects.equals(BizDemandStatusEnum.REJECT.getCode(), oldStatus)) {
             // 状态更新
-            bizDemandDO.setStatus(result);
-            bizDemandDO.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getId());
-            bizDemandDO.setModifyManId(userInfo.getId());
-            bizDemandMapper.update(bizDemandDO);
+            BizDemandDO newBizDemandDO = new BizDemandDO();
+            newBizDemandDO.setId(bizDemandId);
+            newBizDemandDO.setStatus(newStatus);
+            bizDemandMapper.update(newBizDemandDO);
         }
     }
 
