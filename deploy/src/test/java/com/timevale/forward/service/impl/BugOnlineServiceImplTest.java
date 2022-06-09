@@ -352,6 +352,8 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
             setStatus(BugOnlineStatusEnum.BE_CONFIRM.getCode());
             setRepairFailReason("2");
             setOperator("1");
+            setOperatorId("1");
+            setProposerId("1");
         }});
         when(innerUserPersonClient.getPersonByAccountNew(any())).thenReturn(Lists.newArrayList(new BaseInfoResponse(){{setJobFunction(JobFunctionEnum.QA.getName());}}));
         when(innerUserPersonClient.getAllSuperiorByAccount(any())).thenReturn(BaseResult.success(new HashSet<>()));
