@@ -2,10 +2,9 @@ package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.dal.entity.ProjectListDO;
-import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
-import com.timevale.forward.dal.entity.TestBillDO;
+import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.model.enums.ProjectNodeEnum;
+import com.timevale.forward.model.enums.TestBillStatusEnum;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.utils.ResultUtil;
 import org.mockito.InjectMocks;
@@ -17,12 +16,10 @@ import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.Test;
 import org.testng.collections.Lists;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
@@ -55,6 +52,12 @@ public class ProjectComponentImplTest extends AbstractTestNGSpringContextTests {
 
     @Mock
     private TestBillMapper testBillMapper;
+
+    @Mock
+    private ProjectProductDemandMapper projectProductDemandMapper;
+
+    @Mock
+    private ProductBizDemandMapper productBizDemandMapper;
 
     @Test
     public void testPage() {
@@ -100,6 +103,46 @@ public class ProjectComponentImplTest extends AbstractTestNGSpringContextTests {
         List<Long> projectIds = new ArrayList<>();
         projectIds.add(1L);
         assert projectComponent.page(projectListCondition, projectIds).ifSuccess();
+    }
+
+    @Test
+    public void testUpdateEndDate() {
+        ProjectNodeDO projectNodeDO=new ProjectNodeDO();
+        projectNodeDO.setActualDate(new Date(200));
+        projectNodeDO.setPlanDate(new Date(100));
+        projectNodeDO.setName(ProjectNodeEnum.SUBMIT_TEST.getText());
+        List<ProjectNodeDO> projectNodes=Lists.newArrayList(projectNodeDO);
+        ProjectDO projectDO=new ProjectDO();
+        when(projectNodeMapper.getByName(any(),any())).thenReturn(new ProjectNodeDO(){{}});
+        when(testBillMapper.selectByProjectId(any())).thenReturn(new TestBillDO(){{
+            setStatus(TestBillStatusEnum.TEST_SUCCESS.getCode());
+        }});
+         projectComponent.fillInfo(projectNodes, projectDO);
+    }
+
+    @Test
+    public void testGetStatus() {
+        ProjectNodeDO projectNodeDO=new ProjectNodeDO();
+        projectNodeDO.setName(ProjectNodeEnum.SUBMIT_TEST.getText());
+        List<ProjectNodeDO> projectNodes=Lists.newArrayList(projectNodeDO);
+        when(projectNodeComponent.get(anyLong())).thenReturn(projectNodes);
+        projectComponent.getStatus(1L);
+    }
+
+    @Test
+    public void testUpdateNodeStatus() {
+        ProjectNodeDO projectNodeDO=new ProjectNodeDO();
+        projectNodeDO.setName(ProjectNodeEnum.SUBMIT_TEST.getText());
+        List<ProjectNodeDO> projectNodes=Lists.newArrayList(projectNodeDO);
+        when(projectNodeComponent.get(anyLong())).thenReturn(projectNodes);
+        when(projectMapper.get(anyLong())).thenReturn(new ProjectDO());
+        projectComponent.updateNodeStatus(1L);
+    }
+
+    @Test
+    public void testGetLinkBizDemandIds() {
+        when(projectProductDemandMapper.getByProjectId(any())).thenReturn(Lists.newArrayList(new ProjectProductDemandDO(){{setProductDemandId(1L);}}));
+        projectComponent.getLinkBizDemandIds(1L);
     }
 }
 

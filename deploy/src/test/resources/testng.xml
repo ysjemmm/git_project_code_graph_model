@@ -8,6 +8,7 @@
             <class name="com.timevale.forward.service.impl.BizDemandServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.BizDomainServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.BugOnlineServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.BugOfflineServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.CommentServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.FileServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.PersonServiceImplTest"/>
@@ -32,6 +33,8 @@
             <class name="com.timevale.forward.service.component.impl.ProjectFlowComponentImplTest"/>
             <class name="com.timevale.forward.service.component.impl.ProjectLogComponentImplTest"/>
             <class name="com.timevale.forward.service.component.impl.ProjectPublishPlanComponentImplTest"/>
+            <class name="com.timevale.forward.service.component.impl.BugOfflineComponentImplTest"/>
+            <class name="com.timevale.forward.service.component.impl.BugOnlineProductLineComponentImplTest"/>
             <class name="com.timevale.forward.service.component.impl.TaskProductDemandComponentImplTest"/>
             <class name="com.timevale.forward.service.component.impl.TaskTimeComponentImplTest"/>
             <class name="com.timevale.forward.service.component.impl.TaskComponentImplTest"/>
