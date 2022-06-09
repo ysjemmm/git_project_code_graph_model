@@ -157,7 +157,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
 
-        BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bizDemandDO, !BizDemandStatusEnum.statusNeedNotice(bizDemandDO.getStatus()));
+        BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bizDemandDO);
 
         // 日志
         bizDemandLogComponent.addLogWhenBizDemandLinkProductDemand(bizDemandId, productDemandIdList);
@@ -194,7 +194,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
 
         // 判断当前状态
-        BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bizDemandDO, false);
+        BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bizDemandDO);
 
         // 产品需求关联日志
         bizDemandLogComponent.addLogWhenBizDemandUnLinkProductDemand(bizDemandId, productDemandId);
@@ -202,7 +202,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         return BaseResult.success(bizDemandStatusVO);
     }
 
-    private BizDemandStatusVO compareBizDemandStatus(BizDemandDO oldBizDemandDO, Boolean update){
+    private BizDemandStatusVO compareBizDemandStatus(BizDemandDO oldBizDemandDO){
         Long bizDemandId = oldBizDemandDO.getId();
         BizDemandDO newBizDemandDO = bizDemandMapper.selectById(bizDemandId);
 
@@ -253,7 +253,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
 
             // 更新预期上线时间
-            if(newEndDate != null && update){
+            if(newEndDate != null && !BizDemandStatusEnum.statusNeedNotice(oldStatus)){
                 planReleaseDate = DateUtil.getMonth(newEndDate) - 1;
                 newBizDemandDO.setPlanReleaseDate(planReleaseDate);
 
