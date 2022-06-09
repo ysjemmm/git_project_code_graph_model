@@ -208,6 +208,45 @@
         </where>
     </update>
 
+    <update id="fullUpdate">
+        update bug_online
+        <set>
+            name = #{bugOnlineDO.name},
+            operator = #{bugOnlineDO.operator},
+            operator_id = #{bugOnlineDO.operatorId},
+            last_operator = #{bugOnlineDO.lastOperator},
+            last_operator_id = #{bugOnlineDO.lastOperatorId},
+            proposer = #{bugOnlineDO.proposer},
+            proposer_id = #{bugOnlineDO.proposerId},
+            customer_name = #{bugOnlineDO.customerName},
+            biz_demand_id = #{bugOnlineDO.bizDemandId},
+            env = #{bugOnlineDO.env},
+            belong = #{bugOnlineDO.belong},
+            priority = #{bugOnlineDO.priority},
+            recurrent = #{bugOnlineDO.recurrent},
+            reason = #{bugOnlineDO.reason},
+            expect_date = #{bugOnlineDO.expectDate},
+            business = #{bugOnlineDO.business},
+            `describe` = #{bugOnlineDO.describe},
+            prev_status = #{bugOnlineDO.prevStatus},
+            hang_up = #{bugOnlineDO.hangUp},
+            `status` = #{bugOnlineDO.status},
+            dismiss_cause = #{bugOnlineDO.dismissCause},
+            problem_reason = #{bugOnlineDO.problemReason},
+            solve_scheme = #{bugOnlineDO.solveScheme},
+            repair_fail_reason = #{bugOnlineDO.repairFailReason},
+            open_again_reason = #{bugOnlineDO.openAgainReason},
+            is_deleted = #{bugOnlineDO.isDeleted},
+            model_id = #{bugOnlineDO.modelId},
+            detail_version_id = #{bugOnlineDO.detailVersionId},
+            modify_man_id = #{modifyManId},
+            modify_man = #{modifyMan}
+        </set>
+        <where>
+            id = #{bugOnlineDO.id}
+        </where>
+    </update>
+
 </mapper>
 
 

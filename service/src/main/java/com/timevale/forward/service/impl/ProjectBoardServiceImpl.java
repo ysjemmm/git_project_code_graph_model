@@ -28,34 +28,34 @@ import java.util.stream.Collectors;
 public class ProjectBoardServiceImpl implements ProjectBoardService {
 
     @Resource
-    ProjectMapper projectMapper;
+    private ProjectMapper projectMapper;
 
     @Resource
-    ProjectProductDemandMapper projectProductDemandMapper;
+    private ProjectProductDemandMapper projectProductDemandMapper;
 
     @Resource
-    TaskMapper taskMapper;
+    private TaskMapper taskMapper;
 
     @Resource
-    TaskProductDemandMapper taskProductDemandMapper;
+    private TaskProductDemandMapper taskProductDemandMapper;
 
     @Resource
-    TestBillMapper testBillMapper;
+    private TestBillMapper testBillMapper;
 
     @Resource
-    BugOfflineMapper bugOfflineMapper;
+    private BugOfflineMapper bugOfflineMapper;
 
     @Resource
-    ProjectRiskMapper projectRiskMapper;
+    private ProjectRiskMapper projectRiskMapper;
 
     @Resource
-    BugLogMapper bugLogMapper;
+    private BugLogMapper bugLogMapper;
 
     @Resource
-    PersonMapper personMapper;
+    private PersonMapper personMapper;
 
     @Resource
-    ProjectNodeMapper projectNodeMapper;
+    private ProjectNodeMapper projectNodeMapper;
 
     @Override
     public BaseResult<ProjectBoardDataIndicatorVO> getDataIndicator(Long projectId) {
