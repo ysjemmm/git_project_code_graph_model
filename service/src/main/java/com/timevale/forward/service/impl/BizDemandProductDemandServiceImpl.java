@@ -157,7 +157,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
 
-        BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bizDemandDO, BizDemandStatusEnum.statusNeedNotice(bizDemandDO.getStatus()));
+        BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bizDemandDO, !BizDemandStatusEnum.statusNeedNotice(bizDemandDO.getStatus()));
 
         // 日志
         bizDemandLogComponent.addLogWhenBizDemandLinkProductDemand(bizDemandId, productDemandIdList);

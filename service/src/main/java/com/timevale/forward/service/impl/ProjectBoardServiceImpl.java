@@ -191,7 +191,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         Date startDate = projectDO.getActualStartDate() == null ? projectDO.getPlanStartDate() : projectDO.getActualStartDate();
 
         // 当前时间和结束时间取小值
-        // endDate = DateUtil.min(endDate, new Date());
+        endDate = DateUtil.min(endDate, new Date());
 
         // 当天的最大
         endDate = DateUtil.getEndOfDay(endDate);
