@@ -439,12 +439,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> linkProductDemandList(ProjectProductDemandQueryList productDemandQueryList) {
-        // 参数
         Long projectId = productDemandQueryList.getProjectId();
-
-        // 开始分页
-        PageHelper.startPage(productDemandQueryList.getPageNum(), 100, CommonConstant.DEFAULT_ORDER_BY);
-
+        int pageSize = productDemandQueryList.getPageSize();
+        int pageNum = productDemandQueryList.getPageNum();
+        log.info("项目-产品需求清单:pageSize={},pageSize={},projectId={}", pageSize,pageNum,projectId);
         // 查询产品需求
         List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(projectId);
         List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
@@ -476,17 +474,18 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         int count = productDemandVOList.size();
-        int pageSize = productDemandQueryList.getPageSize();
         if (count > pageSize) {
-            productDemandVOList = productDemandVOList.subList(0, pageSize);
+            int fromIndex = (pageNum - 1) * pageSize;
+            int toIndex = Math.min(fromIndex + pageSize, count);
+            productDemandVOList = productDemandVOList.subList(fromIndex, toIndex);
         }
 
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(productDemandVOList);
         pageQueryResult.setTotalItems(count);
         pageQueryResult.setTotalPages(count % pageSize == 0 ? count / pageSize : (count / pageSize) + 1);
-        pageQueryResult.setCurrentPage(productDemandQueryList.getPageNum());
-        pageQueryResult.setItemsPerPage(productDemandQueryList.getPageSize());
+        pageQueryResult.setCurrentPage(pageNum);
+        pageQueryResult.setItemsPerPage(pageSize);
         return BaseResult.success(pageQueryResult);
     }
 
@@ -585,7 +584,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (!Objects.equals(oldProject.getPlanEndDate(), newProject.getPlanEndDate())
                 || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
             List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProject.getId());
-            bizDemandIds.forEach(a->{
+            bizDemandIds.forEach(a -> {
                 bizDemandComponent.updateProjectEndDate(a, true);
             });
         }
