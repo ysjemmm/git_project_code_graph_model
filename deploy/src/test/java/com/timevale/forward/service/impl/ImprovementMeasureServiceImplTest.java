@@ -2,9 +2,11 @@ package com.timevale.forward.service.impl;
 
 import com.timevale.forward.dal.dao.ImprovementMeasureMapper;
 import com.timevale.forward.dal.entity.ImprovementMeasureDO;
+import com.timevale.forward.facade.api.query.ImprovementMeasureQueryList;
 import com.timevale.forward.facade.api.request.ImprovementMeasureCompleteReq;
 import com.timevale.forward.facade.api.request.ImprovementMeasureDeleteReq;
 import com.timevale.forward.facade.api.request.ImprovementMeasureModifyReq;
+import com.timevale.forward.model.enums.ImprovementMeasureStatusEnum;
 import com.timevale.forward.service.component.ImprovementMeasureComponent;
 import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
@@ -113,6 +115,22 @@ public class ImprovementMeasureServiceImplTest extends AbstractTestNGSpringConte
         doNothing().when(dingWorkRecordClient).updateTask(any());
 
         assert improvementMeasureService.complete(req).ifSuccess();
+    }
+
+    @Test
+    public void testList(){
+        ImprovementMeasureQueryList req = new ImprovementMeasureQueryList();
+        req.setPageNum(1);
+        req.setPageSize(10);
+        req.setTroubleTicketId(1L);
+
+        ImprovementMeasureDO improvementMeasureDO = new ImprovementMeasureDO();
+        improvementMeasureDO.setStatus(ImprovementMeasureStatusEnum.PENDING.getCode());
+        when(improvementMeasureMapper.selectByCondition(any())).thenReturn(Collections.singletonList(improvementMeasureDO));
+
+        doNothing().when(improvementMeasureComponent).updateTodoStatus(any());
+
+        assert improvementMeasureService.list(req).ifSuccess();
     }
 
 }
