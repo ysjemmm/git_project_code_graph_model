@@ -211,7 +211,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         String statusText = BizDemandStatusEnum.getTextByCode(newStatus);
         Date newEndDate = bizDemandComponent.getProjectEndDate(bizDemandId);
-        Integer planReleaseDate = newBizDemandDO.getPlanReleaseDate();
 
         // 如果新旧状态不同
         if(!oldStatus.equals(newStatus)){
@@ -237,6 +236,8 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
             );
         }
 
+
+
         Date oldEndDate = oldBizDemandDO.getProjectEndDate();
         if(!Objects.equals(oldEndDate, newEndDate)){
             //更新项目发布时间
@@ -250,12 +251,17 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                     BizChangeLogFieldEnum.PROJECT_RELEASE_DATE.getText(),
                     false
             );
+        }
 
+        Integer oldPlanReleaseDate = oldBizDemandDO.getPlanReleaseDate();
+        Integer newPlanReleaseDate = newBizDemandDO.getPlanReleaseDate();
 
-            // 更新预期上线时间
-            if(newEndDate != null){
-                planReleaseDate = DateUtil.getMonth(newEndDate) - 1;
-                newBizDemandDO.setPlanReleaseDate(planReleaseDate);
+        // 更新预期上线时间
+        if(newEndDate != null){
+            newPlanReleaseDate = DateUtil.getMonth(newEndDate) - 1;
+
+            if(!Objects.equals(oldPlanReleaseDate, newPlanReleaseDate)){
+                newBizDemandDO.setPlanReleaseDate(newPlanReleaseDate);
 
                 // 发送通知
                 messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
@@ -264,28 +270,28 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                         newBizDemandDO.getSubmitManId(),
                         newBizDemandDO.getName(),
                         BizDemandStatusEnum.getTextByCode(newBizDemandDO.getStatus()),
-                        PlanReleaseDateEnum.getTextByCode(planReleaseDate)
+                        PlanReleaseDateEnum.getTextByCode(newPlanReleaseDate)
                 ));
 
                 // 日志
                 bizDemandLogComponent.addLogWhenModifyData(
                         PlanReleaseDateEnum.getTextByCode(oldBizDemandDO.getPlanReleaseDate()),
-                        PlanReleaseDateEnum.getTextByCode(planReleaseDate),
+                        PlanReleaseDateEnum.getTextByCode(newPlanReleaseDate),
                         bizDemandId,
                         BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
                         false
                 );
             }
-            bizDemandMapper.fullUpdate(newBizDemandDO);
         }
+        bizDemandMapper.fullUpdate(newBizDemandDO);
 
         // 返回当前状态
         BizDemandStatusVO bizDemandStatusVO = new BizDemandStatusVO();
         bizDemandStatusVO.setStatus(newStatus);
         bizDemandStatusVO.setStatusText(statusText);
         bizDemandStatusVO.setProjectEndDate(newEndDate);
-        bizDemandStatusVO.setPlanReleaseDate(planReleaseDate);
-        bizDemandStatusVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(planReleaseDate));
+        bizDemandStatusVO.setPlanReleaseDate(newPlanReleaseDate);
+        bizDemandStatusVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(newPlanReleaseDate));
         return bizDemandStatusVO;
     }
 
