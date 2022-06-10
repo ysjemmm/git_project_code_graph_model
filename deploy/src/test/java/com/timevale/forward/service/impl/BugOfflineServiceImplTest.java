@@ -27,6 +27,8 @@ import org.testng.annotations.Test;
 import org.testng.collections.Lists;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -298,16 +300,25 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
     @Test
     public void testAccepted() {
         BugOfflineReq bugOfflineReq = new BugOfflineReq();
-        when(bugOfflineMapper.selectById(any())).thenReturn(new BugOfflineDO(){{
-            setProposerId("1");
-            setOperatorId("1");
-            setStatus(BugStatusEnum.ACCEPTANCE.getCode());
-            setCause("1");
-            setSolvePlan("1");
-        }});
+
+        BugOfflineDO bugOfflineDO = new BugOfflineDO();
+        bugOfflineDO.setProposerId("1");
+        bugOfflineDO.setOperatorId("1");
+        bugOfflineDO.setStatus(BugStatusEnum.ACCEPTANCE.getCode());
+        bugOfflineDO.setCause("1");
+        bugOfflineDO.setSolvePlan("1");
+        when(bugOfflineMapper.selectById(any())).thenReturn(bugOfflineDO);
+
         MockedConstruction<BugOfflineSelfTestPassMsgEvent> construction = mockConstruction(BugOfflineSelfTestPassMsgEvent.class);
         construction.constructed();
         doNothing().when(messageEventPublisher).publish(any());
+
+        BaseResult<Set<String>> baseResult = new BaseResult<>();
+        HashSet<String> accounts = new HashSet<>();
+        accounts.add("SYSTEM");
+        baseResult.setData(accounts);
+
+        when(innerUserPersonClient.getAllSuperiorByAccount(any())).thenReturn(baseResult);
 
         try {
             assert bugOfflineService.accepted(bugOfflineReq).ifSuccess();
