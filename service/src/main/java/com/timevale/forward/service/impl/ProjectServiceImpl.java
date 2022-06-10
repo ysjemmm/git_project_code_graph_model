@@ -442,7 +442,7 @@ public class ProjectServiceImpl implements ProjectService {
         Long projectId = productDemandQueryList.getProjectId();
         int pageSize = productDemandQueryList.getPageSize();
         int pageNum = productDemandQueryList.getPageNum();
-        log.info("项目-产品需求清单:pageSize={},pageSize={},projectId={}", pageSize,pageNum,projectId);
+        log.info("项目-产品需求清单:pageNum={},pageSize={},projectId={}", pageNum,pageSize,projectId);
         // 查询产品需求
         List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(projectId);
         List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
