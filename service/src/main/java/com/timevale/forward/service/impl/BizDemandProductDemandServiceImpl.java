@@ -253,7 +253,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
 
             // 更新预期上线时间
-            if(newEndDate != null && !BizDemandStatusEnum.statusNeedNotice(oldStatus)){
+            if(newEndDate != null){
                 planReleaseDate = DateUtil.getMonth(newEndDate) - 1;
                 newBizDemandDO.setPlanReleaseDate(planReleaseDate);
 
