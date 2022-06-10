@@ -585,7 +585,7 @@ public class ProjectServiceImpl implements ProjectService {
                 || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
             List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProject.getId());
             bizDemandIds.forEach(a -> {
-                bizDemandComponent.updateProjectEndDate(a, true);
+                bizDemandComponent.updateProjectEndDate(a);
             });
         }
         log.info("更新项目信息完成");

@@ -242,7 +242,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     }
 
     @Override
-    public void updateProjectEndDate(Long bizDemandId, boolean updatePlanReleaseDate) {
+    public void updateProjectEndDate(Long bizDemandId) {
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
         Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
 
@@ -250,7 +250,8 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         Date newProjectEndDate = getProjectEndDate(bizDemandId);
 
         if (!Objects.equals(newProjectEndDate, oldProjectEndDate)) {
-            if (updatePlanReleaseDate) {
+            if (newProjectEndDate != null) {
+                //部分断开或关联业务需求
                 int month = DateUtil.getMonth(newProjectEndDate);
                 bizDemandDO.setPlanReleaseDate(month - 1);
             }

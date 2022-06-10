@@ -59,7 +59,7 @@ public interface BizDemandComponent {
      *
      * @param bizDemandId bizDemandIds
      */
-    void updateProjectEndDate(Long bizDemandId,boolean updatePlanReleaseDate);
+    void updateProjectEndDate(Long bizDemandId);
 
     /**
      *
