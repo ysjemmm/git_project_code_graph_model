@@ -1,17 +1,23 @@
 package com.timevale.forward.service.copy;
 
+import com.alibaba.fastjson.JSONObject;
 import com.timevale.forward.dal.condition.BugOnlineListCondition;
 import com.timevale.forward.dal.entity.BugOnlineDO;
 import com.timevale.forward.dal.entity.BugOnlineListDO;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.BugOnlineAddReq;
 import com.timevale.forward.facade.api.request.BugOnlineModifyReq;
-import com.timevale.forward.facade.api.request.BugOnlineStartRepairReq;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
 import com.timevale.forward.model.middle.BugOnlineMD;
+import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
+import org.springframework.util.CollectionUtils;
+
+import java.util.List;
 
 /**
  * @Date 2022/3/18 13:54
@@ -51,6 +57,7 @@ public interface BugOnlineCopier {
      * @param bugOnlineAddReq 对象
      * @return BugOnlineDO
      */
+    @Mapping(source = "modelIds", target = "modelId", qualifiedByName = "modelMappingStr")
     BugOnlineDO transfer(BugOnlineAddReq bugOnlineAddReq);
 
     /**
@@ -59,6 +66,7 @@ public interface BugOnlineCopier {
      * @param bugOnlineModifyReq 参数
      * @return 返回参数
      */
+    @Mapping(source = "modelIds", target = "modelId", qualifiedByName = "modelMappingStr")
     BugOnlineDO change(BugOnlineModifyReq bugOnlineModifyReq);
 
     /**
@@ -77,4 +85,16 @@ public interface BugOnlineCopier {
      */
     BugOnlineMD change(BugOnlineDO bugOnlineDO);
 
+    /**
+     *
+     * @param modelIds modelIds
+     * @return  return
+     */
+    @Named("modelMappingStr")
+    default String modelMappingStr(List<Long> modelIds){
+        if(CollectionUtils.isEmpty(modelIds)){
+            return StringUtils.EMPTY;
+        }
+        return JSONObject.toJSONString(modelIds);
+    }
 }

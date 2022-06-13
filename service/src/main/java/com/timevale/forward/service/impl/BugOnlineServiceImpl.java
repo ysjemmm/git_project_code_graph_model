@@ -299,13 +299,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //将BugOnlineAddReq转化为BugOnlineDO
         BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.transfer(bugOnlineAddReq);
 
-        if (CollectionUtils.isEmpty(bugOnlineAddReq.getModelIds())) {
-            bugOnlineDO.setModelId(StringUtils.EMPTY);
-        } else {
-            bugOnlineDO.setModelId(JSONObject.toJSONString(bugOnlineAddReq.getModelIds()));
-        }
-
-        //往线上bug表里面插入数据
         bugOnlineMapper.insert(bugOnlineDO);
 
         List<Long> productLineIdList = bugOnlineAddReq.getProductLineIdList();
