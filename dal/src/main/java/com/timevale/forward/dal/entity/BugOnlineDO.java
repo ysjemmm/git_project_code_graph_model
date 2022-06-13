@@ -157,7 +157,7 @@ public class BugOnlineDO extends BaseDO {
     /**
      * 模块id
      */
-    private Long modelId;
+    private String modelId;
 
     /**
      * 详细版本号

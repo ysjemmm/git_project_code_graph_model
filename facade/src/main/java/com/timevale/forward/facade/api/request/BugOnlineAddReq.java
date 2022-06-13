@@ -85,7 +85,7 @@ public class BugOnlineAddReq extends BaseReq {
     private String source;
 
     @ApiModelProperty("模块id")
-    private Long modelId;
+    private List<Long> modelIds;
 
     @ApiModelProperty("详细版本号")
     private String detailVersionId;

@@ -133,7 +133,7 @@ public class BugOnlineDetailVO extends ToString {
     private BizDemandVO bizDemandVO;
 
     @ApiModelProperty("模块id")
-    private Long modelId;
+    private List<Long> modelIds;
 
     @ApiModelProperty("模块名称")
     private String modelName;

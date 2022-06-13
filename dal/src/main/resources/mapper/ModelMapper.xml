@@ -12,4 +12,19 @@
         from model
         where id = #{id}
     </select>
+
+    <select id="getByIds" resultType="com.timevale.forward.dal.entity.ModelDO">
+        select id, product_line_id, name, owner, owner_id, is_deleted,create_man ,create_date ,modify_man ,modify_date
+        from model
+        <where>
+            <if test="ids!=null and ids.size()>0">
+                and id in
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
 </mapper>
+

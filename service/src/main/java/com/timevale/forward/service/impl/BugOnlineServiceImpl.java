@@ -2,6 +2,7 @@ package com.timevale.forward.service.impl;
 
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -298,9 +299,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //将BugOnlineAddReq转化为BugOnlineDO
         BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.transfer(bugOnlineAddReq);
 
-        // 校验
-        if (bugOnlineDO.getModelId() == null) {
-            bugOnlineDO.setModelId(0L);
+        if (CollectionUtils.isEmpty(bugOnlineAddReq.getModelIds())) {
+            bugOnlineDO.setModelId(StringUtils.EMPTY);
+        } else {
+            bugOnlineDO.setModelId(JSONObject.toJSONString(bugOnlineAddReq.getModelIds()));
         }
 
         //往线上bug表里面插入数据
@@ -443,21 +445,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //更新线上bug
         bugOnlineMapper.update(bugOnlineConvert);
 
-        //模块日志
-        Long oldModelId = bugOnlineDO.getModelId();
-        Long newModelId = bugOnlineConvert.getModelId();
-        if(!Objects.equals(oldModelId,newModelId)){
-            BugLogDO bugLogDO = new BugLogDO();
-            bugLogDO.setMainId(bugOnlineDO.getId());
-            bugLogDO.setField(BugFieldEnum.MODEL.getText());
-            bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
-            ModelDO oldModelDO = modelMapper.get(oldModelId);
-            ModelDO newModelDO = modelMapper.get(newModelId);
-            bugLogDO.setOldValue(oldModelDO == null ? "" : oldModelDO.getName());
-            bugLogDO.setNewValue(newModelDO == null ? "" : newModelDO.getName());
-            bugLogMapper.insert(bugLogDO);
-        }
-
         //更新附件表
         List<FileAddReq> files = bugOnlineModifyReq.getFiles();
         fileComponent.update(files, bugOnlineModifyReq.getId(), FileTypeEnum.BUG_ONLINE.getCode());
@@ -476,6 +463,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //比较编辑修改的一般字段，生成结果集合
         List<BugLogDO> bugLogDOList = FieldCompareUtil.commonCompare(oldBugOnlineMD, newBugOnlineMD, BugLogDO.class);
+
+        //模块日志
+        bugLogDOList.addAll(compareModel(JSONObject.parseArray(bugOnlineDO.getModelId(), Long.class), bugOnlineModifyReq.getModelIds(), bugOnlineDO.getId()));
         //额外判断产品线和产品线业务
         bugLogDOList.addAll(compareProductLine(oldProductLineIdList, bugOnlineModifyReq.getProductLineIdList(), bugOnlineDO.getId()));
         bugLogDOList.addAll(compareExtField(bugOnlineDO, newBugOnlineDO));
@@ -573,9 +563,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugOnlineDetailVO.setCommentVOList(commentVOList);
         }
         //模块名称
-        if (bugOnlineDO.getModelId() != 0) {
-            ModelDO modelDO = modelMapper.get(bugOnlineDO.getModelId());
-            bugOnlineDetailVO.setModelName(modelDO.getName());
+        List<Long> modelIds = JSONObject.parseArray(bugOnlineDO.getModelId(), Long.class);
+        if (!CollectionUtils.isEmpty(modelIds)) {
+            String modelName = modelMapper.getByIds(modelIds).stream().map(ModelDO::getName).collect(Collectors.joining(","));
+            bugOnlineDetailVO.setModelName(modelName);
+            bugOnlineDetailVO.setModelIds(modelIds);
         }
 
         //信息填充
@@ -1590,6 +1582,29 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             String newValue = newProductLineIdList.stream().map(mergeProductLines::get).collect(Collectors.joining(","));
             BugLogDO bugLogDO = new BugLogDO();
             bugLogDO.setField(BugFieldEnum.PRODUCT_LINE.getText());
+            bugLogDO.setOldValue(oldValue);
+            bugLogDO.setNewValue(newValue);
+            bugLogDO.setMainId(bugOnlineId);
+            bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+            bugLogDOList.add(bugLogDO);
+        }
+        return bugLogDOList;
+    }
+
+    private List<BugLogDO> compareModel(List<Long> oldModelIds, List<Long> newModelIds, Long bugOnlineId) {
+        oldModelIds = CollectionUtils.isEmpty(oldModelIds) ? new ArrayList<>() : oldModelIds;
+        List<BugLogDO> bugLogDOList = new ArrayList<>();
+        boolean result = CollectionUtils.isEqualCollection(oldModelIds, newModelIds);
+        if (!result) {
+            List<Long> mergeModelIds = new ArrayList<>();
+            mergeModelIds.addAll(oldModelIds);
+            mergeModelIds.addAll(newModelIds);
+            Map<Long, String> mergeModels = modelMapper.getByIds(mergeModelIds).stream()
+                    .collect(Collectors.toMap(ModelDO::getId, ModelDO::getName, (v1, v2) -> v2));
+            String oldValue = oldModelIds.stream().map(mergeModels::get).collect(Collectors.joining(","));
+            String newValue = newModelIds.stream().map(mergeModels::get).collect(Collectors.joining(","));
+            BugLogDO bugLogDO = new BugLogDO();
+            bugLogDO.setField(BugFieldEnum.MODEL.getText());
             bugLogDO.setOldValue(oldValue);
             bugLogDO.setNewValue(newValue);
             bugLogDO.setMainId(bugOnlineId);
