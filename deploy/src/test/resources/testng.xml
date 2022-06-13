@@ -4,22 +4,28 @@
 <suite name="Suite1" verbose="1">
     <test name="Regression11">
         <classes>
+            <class name="com.timevale.forward.service.impl.BizChangeLogServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.BizDemandProductDemandServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.BizDemandServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.BizDomainServiceImplTest"/>
-            <class name="com.timevale.forward.service.impl.BugOnlineServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.BugOfflineServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.BugOnlineServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.CommentServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.FileServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.HomePageServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.ImprovementMeasureServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.PersonServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.ProductDemandServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.ProductLineServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.ProjectFlowServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.ProjectRiskExplanationServiceImpl"/>
+            <class name="com.timevale.forward.service.impl.ProjectRiskServiceImpl"/>
             <class name="com.timevale.forward.service.impl.ProjectServiceImplTest"/>
-            <class name="com.timevale.forward.service.impl.HomePageServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.PublishPlanServiceImplTest"/>
-            <class name="com.timevale.forward.service.impl.TestBillServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.SearchConditionServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.TaskServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.TestBillServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.TroubleTicketServiceImplTest"/>
 
             <class name="com.timevale.forward.service.component.impl.BizDemandComponentImplTest"/>
             <class name="com.timevale.forward.service.component.impl.FileComponentImplTest"/>
