@@ -17,9 +17,10 @@
             <class name="com.timevale.forward.service.impl.PersonServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.ProductDemandServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.ProductLineServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.ProjectBoardImplTest"/>
             <class name="com.timevale.forward.service.impl.ProjectFlowServiceImplTest"/>
-            <class name="com.timevale.forward.service.impl.ProjectRiskExplanationServiceImpl"/>
-            <class name="com.timevale.forward.service.impl.ProjectRiskServiceImpl"/>
+            <class name="com.timevale.forward.service.impl.ProjectRiskExplanationServiceImplTest"/>
+            <class name="com.timevale.forward.service.impl.ProjectRiskServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.ProjectServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.PublishPlanServiceImplTest"/>
             <class name="com.timevale.forward.service.impl.SearchConditionServiceImplTest"/>
