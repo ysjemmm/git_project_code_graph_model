@@ -1,0 +1,27 @@
+package com.timevale.forward.facade.api.request;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import javax.validation.constraints.NotBlank;
+
+/**
+ * @author xingyun
+ * @date 2021-12-13 13:58
+ **/
+@EqualsAndHashCode(callSuper = true)
+@Data
+@ApiModel("埋点地图删除")
+public class TrackMapDeleteReq extends BaseReq {
+
+    @ApiModelProperty("菜单层级")
+    @NotBlank(message = "菜单层级不能为空")
+    private Integer level;
+
+    @ApiModelProperty("菜单id")
+    @NotBlank(message = "菜单id不能为空")
+    private Long id;
+
+}
