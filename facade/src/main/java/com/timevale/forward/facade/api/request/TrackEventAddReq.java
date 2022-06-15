@@ -43,7 +43,6 @@ public class TrackEventAddReq extends BaseReq {
     private String touchMoment;
 
     @ApiModelProperty("文件信息")
-    @NotBlank(message = "文件信息不能为空")
     private List<FileAddReq> files;
 
     @ApiModelProperty("事件属性")

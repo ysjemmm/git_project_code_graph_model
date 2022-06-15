@@ -1,0 +1,93 @@
+package com.timevale.forward.dal.dao;
+
+import com.timevale.forward.dal.condition.ProductDemandTrackEventCondition;
+import com.timevale.forward.dal.entity.ProductBizDemandDO;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+
+/**
+ * @author by YangXu
+ * @date 2021/12/16 14:06
+ */
+public interface ProductDemandTrackEventMapper {
+
+    /**
+     * 查询产品业务需求关联
+     *
+     * @param condition 产品业务需求查询条件
+     * @return 列表
+     */
+    List<ProductBizDemandDO> select(ProductDemandTrackEventCondition condition);
+
+    /**
+     * 批量插入
+     *
+     * @param productBizDemandDOList 产品业务需求list
+     * @return int
+     */
+    int inserts(@Param("productBizDemandDOList") List<ProductBizDemandDO> productBizDemandDOList);
+
+    /**
+     * 批量更新
+     *
+     * @param list        产品业务需求id list
+     * @param isDeleted   是否删除
+     * @return int
+     */
+    int updates(@Param("list") List<Long> list, @Param("isDeleted")Boolean isDeleted);
+
+    /**
+     * 逻辑删除
+     *
+     * @param bizDemandId 业务需求id
+     * @return int
+     */
+    int deleteByBizDemandId(@Param("bizDemandId") Long bizDemandId);
+
+
+    /**
+     * 删除
+     *
+     * @param productBizDemandDO 产品业务需求DO
+     * @return int
+     */
+    int delete(ProductBizDemandDO productBizDemandDO);
+
+    /**
+     * 更新单条产品需求
+     *
+     * @param productBizDemandDO 产品需求DO
+     * @return int
+     */
+    int update(ProductBizDemandDO productBizDemandDO);
+
+
+    /**
+     * 新增项目-产品需求
+     *
+     * @param projectProductLineDO 新增项目-产品需求
+     * @return int
+     */
+    int batchInsert(List<ProductBizDemandDO> projectProductLineDO);
+
+    /**
+     * 查询产品业务需求关联
+     *
+     * @param productDemandIds 产品业务需求查询条件
+     * @return 列表
+     */
+    List<ProductBizDemandDO> getByProductDemandIds(@Param("productDemandIds") List<Long> productDemandIds);
+
+
+    /**
+     * 查询产品业务需求关联
+     *
+     * @param bizDemandId 产品业务需求查询条件
+     * @return 列表
+     */
+    List<ProductBizDemandDO> getByBizDemandId(@Param("bizDemandId") Long bizDemandId);
+
+
+    List<ProductBizDemandDO> selectByProductDemandIds(@Param("productDemandIds") List<Long> productDemandIds);
+}

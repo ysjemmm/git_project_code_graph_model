@@ -1,0 +1,40 @@
+package com.timevale.forward.dal.dao;
+
+import com.timevale.forward.dal.condition.TrackEventCondition;
+import com.timevale.forward.dal.condition.TrackEventListCondition;
+import com.timevale.forward.dal.entity.TrackEventDO;
+
+import java.util.List;
+
+/**
+ * @author by YangXu
+ * @date 2021/12/15 10:41
+ */
+public interface TrackEventMapper {
+
+
+    /**
+     * 新增
+     *
+     * @param trackMapDO trackMapDO
+     * @return int
+     */
+    int insert(TrackEventDO trackMapDO);
+
+
+    /**
+     * 列表
+     *
+     * @return TrackEventDO
+     */
+    List<TrackEventDO> select(TrackEventCondition condition);
+
+
+    /**
+     * 列表
+     *
+     * @return TrackEventDO
+     */
+    List<TrackEventDO> list(TrackEventListCondition condition);
+
+}

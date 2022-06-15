@@ -11,18 +11,9 @@ import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProductDemandService;
-import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
-import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
-import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
-import com.timevale.forward.facade.api.query.ProductDemandQueryList;
-import com.timevale.forward.facade.api.request.BatchTransferReq;
-import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
-import com.timevale.forward.facade.api.request.ProductDemandAddReq;
-import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
-import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
-import com.timevale.forward.facade.api.result.ProductDemandVO;
-import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.query.*;
+import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -478,6 +469,33 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<TrackEventVO>> matchTrackEventList(ProductDemandLinkTrackEventQueryList trackEventQueryList) {
+//        TrackEventListCondition condition = TrackEventCopier.INSTANCE.convert(trackEventQueryList);
+//        // 过滤掉已经关联的业务需求
+//        if (condition.getProductDemandId() != null) {
+//            List<ProductBizDemandDO> productBizDemand = productBizDemandMapper.select(ProductBizDemandCondition.builder()
+//                    .productDemandId(condition.getProductDemandId())
+//                    .isDeleted(false)
+//                    .build());
+//            List<Long> bizDemandIds = productBizDemand.stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
+//            condition.setBizDemandIds(bizDemandIds);
+//        }
+//        PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+//        return bizDemandComponent.page(condition);
+        return null;
+    }
+
+    @Override
+    public BaseResult<Boolean> linkOrUnLinkTrackEvent(ProductDemandTrackEventLinkReq trackEventLinkReq) {
+        return null;
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<TrackEventVO>> linkTrackEventList(ProductDemandTrackEventQueryList trackEventQueryList) {
+        return null;
     }
 
     private void checkDescLength(String desc) {

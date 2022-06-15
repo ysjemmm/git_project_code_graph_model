@@ -82,5 +82,7 @@
         <mapper resource="mapper/ProjectFlow.xml"/>
         <mapper resource="mapper/ProjectPublishPlan.xml"/>
         <mapper resource="mapper/ModelMapper.xml"/>
+        <mapper resource="mapper/TrackMapMapper.xml"/>
+        <mapper resource="mapper/TrackEventMapper.xml"/>
     </mappers>
 </configuration>

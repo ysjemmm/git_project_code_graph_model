@@ -17,7 +17,7 @@ import javax.validation.constraints.NotNull;
 @ApiModel("文件查询")
 public class FileQueryList extends BaseReq {
 
-    @ApiModelProperty(value = "文件所属id不能")
+    @ApiModelProperty(value = "文件所属id")
     @NotNull(message = "文件所属id不能为空")
     private Long attachId;
 

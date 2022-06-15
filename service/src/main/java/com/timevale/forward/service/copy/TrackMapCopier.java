@@ -4,6 +4,7 @@ import com.timevale.forward.dal.entity.BizDomainDO;
 import com.timevale.forward.dal.entity.ModelDO;
 import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.dal.entity.TrackMapDO;
+import com.timevale.forward.facade.api.request.TrackMapAddReq;
 import com.timevale.forward.facade.api.result.TrackMapVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -68,5 +69,12 @@ public interface TrackMapCopier {
      * @return 列表
      */
     List<TrackMapVO> bizDomainConvert(List<BizDomainDO> bizDomainDOList);
+
+    /**
+     *
+     * @param trackMapAddReq trackMapAddReq
+     * @return return
+     */
+    TrackMapDO convert(TrackMapAddReq trackMapAddReq);
 
 }

@@ -1,21 +1,21 @@
 package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.BizDomainMapper;
-import com.timevale.forward.dal.dao.ModelMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.entity.BizDomainDO;
-import com.timevale.forward.dal.entity.ModelDO;
-import com.timevale.forward.dal.entity.ProductLineDO;
-import com.timevale.forward.dal.entity.TrackMapDO;
+import com.timevale.forward.dal.condition.TrackEventCondition;
+import com.timevale.forward.dal.condition.TrackMapCondition;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TrackMapService;
 import com.timevale.forward.facade.api.request.TrackMapAddReq;
 import com.timevale.forward.facade.api.request.TrackMapDeleteReq;
 import com.timevale.forward.facade.api.result.TrackMapVO;
+import com.timevale.forward.model.enums.TrackMapEnum;
 import com.timevale.forward.service.copy.TrackMapCopier;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.Lists;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -39,18 +39,25 @@ public class TrackMapServiceImpl implements TrackMapService {
     @Resource
     private ModelMapper modelMapper;
 
+    @Resource
+    private TrackMapMapper trackMapMapper;
+
+    @Resource
+    private TrackEventMapper trackEventMapper;
+
 
     @Override
     public BaseResult<List<TrackMapVO>> trackMapList() {
+        List<BizDomainDO> bizDomainDos = bizDomainMapper.selectAllBizDomain();
+        List<ProductLineDO> productLineDos = productLineMapper.selectAllProductLine();
+        List<ModelDO> modelDos = modelMapper.selectAllModel();
 
-        List<BizDomainDO> bizDomainDos = Lists.newArrayList(new BizDomainDO(){{setId(1L);setName("业务域");}});
-        List<ProductLineDO> productLineos = Lists.newArrayList(new ProductLineDO(){{setId(2L);setBizDomainId(1L);setName("产品线");}});
-        List<ModelDO> modelDos =Lists.newArrayList(new ModelDO(){{setId(3L);setProductLineId(2L);setName("模块");}});
-        List<TrackMapDO> pages = Lists.newArrayList(new TrackMapDO(){{setId(4L);setParentId(3L);setName("页面");}});
-        List<TrackMapDO> elements = Lists.newArrayList(new TrackMapDO(){{setId(5L);setParentId(4L);setName("元素");}});
+        List<TrackMapDO> trackMapDos = trackMapMapper.selectAllTrackMap();
+        List<TrackMapDO> pages = trackMapDos.stream().filter(a -> TrackMapEnum.PAGE.getCode().equals(a.getLevel())).collect(Collectors.toList());
+        List<TrackMapDO> elements = trackMapDos.stream().filter(a -> TrackMapEnum.ELEMENT.getCode().equals(a.getLevel())).collect(Collectors.toList());
 
         List<TrackMapVO> bizDomainVos = TrackMapCopier.INSTANCE.bizDomainConvert(bizDomainDos);
-        List<TrackMapVO> productLineVos = TrackMapCopier.INSTANCE.productLineConvert(productLineos);
+        List<TrackMapVO> productLineVos = TrackMapCopier.INSTANCE.productLineConvert(productLineDos);
         List<TrackMapVO> modelVos = TrackMapCopier.INSTANCE.modelConvert(modelDos);
         List<TrackMapVO> pageVos = TrackMapCopier.INSTANCE.convert(pages);
         List<TrackMapVO> elementVos = TrackMapCopier.INSTANCE.convert(elements);
@@ -82,17 +89,39 @@ public class TrackMapServiceImpl implements TrackMapService {
             a.setChildren(productLineMap.get(a.getId()));
             a.setLevel(1);
         });
-
         return BaseResult.success(bizDomainVos);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(TrackMapAddReq trackMapAddReq) {
-        return BaseResult.success();
+        log.info("埋点地图新增,参数:{}", trackMapAddReq);
+        TrackMapCondition c = TrackMapCondition.builder().parentId(trackMapAddReq.getParentId()).level(trackMapAddReq.getLevel()).build();
+        List<TrackMapDO> trackMapDos = trackMapMapper.select(c);
+        boolean match = trackMapDos.stream().anyMatch(a -> a.getName().equals(trackMapAddReq.getName()));
+        if(match){
+            throw new BaseBizRuntimeException("该菜单名称已存在,请修改后重试");
+        }
+        TrackMapDO trackMapDO = TrackMapCopier.INSTANCE.convert(trackMapAddReq);
+        trackMapMapper.insert(trackMapDO);
+        return BaseResult.success(true);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> delete(TrackMapDeleteReq trackMapDeleteReq) {
-        return BaseResult.success();
+        TrackMapCondition c = TrackMapCondition.builder().parentId(trackMapDeleteReq.getId()).build();
+        List<TrackMapDO> trackMapDos = trackMapMapper.select(c);
+        if(!CollectionUtils.isEmpty(trackMapDos)){
+            throw new BaseBizRuntimeException("该菜单下有子菜单不能删除");
+        }
+
+        TrackEventCondition cc = TrackEventCondition.builder().trackMapId(trackMapDeleteReq.getId()).build();
+        List<TrackEventDO> trackEventDos = trackEventMapper.select(cc);
+        if(!CollectionUtils.isEmpty(trackEventDos)){
+            throw new BaseBizRuntimeException("请联系数据产品经理删除该分类下所有事件后再删除");
+        }
+        trackMapMapper.delete(trackMapDeleteReq.getId());
+        return BaseResult.success(true);
     }
 }

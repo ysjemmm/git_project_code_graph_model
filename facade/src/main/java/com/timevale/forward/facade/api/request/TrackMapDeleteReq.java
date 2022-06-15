@@ -16,10 +16,6 @@ import javax.validation.constraints.NotBlank;
 @ApiModel("埋点地图删除")
 public class TrackMapDeleteReq extends BaseReq {
 
-    @ApiModelProperty("菜单层级")
-    @NotBlank(message = "菜单层级不能为空")
-    private Integer level;
-
     @ApiModelProperty("菜单id")
     @NotBlank(message = "菜单id不能为空")
     private Long id;

@@ -6,19 +6,21 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
- * @author xingyun
- * @date 2021-12-13 13:58
- **/
+ * @author by YangXu
+ * @date 2021/12/14 15:20
+ */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("埋点事件列表查询")
-public class TrackEventQueryList extends QueryBase {
+@ApiModel("产品需求-事件查询")
+public class ProductDemandLinkTrackEventQueryList extends QueryBase {
 
-    @ApiModelProperty("埋点地图id")
-    private Long trackMapId;
+    @ApiModelProperty("产品需求id")
+    @NotNull(message = "产品需求id不能为空")
+    private Long productDemandId;
 
     @ApiModelProperty("中文名称")
     private String cnName;
@@ -26,10 +28,6 @@ public class TrackEventQueryList extends QueryBase {
     @ApiModelProperty("英文名称")
     private String egName;
 
-    @ApiModelProperty("状态")
-    private List<Integer>status;
-
-    @ApiModelProperty("提交人")
+    @ApiModelProperty("提交人id")
     private List<String> createManIds;
-
 }

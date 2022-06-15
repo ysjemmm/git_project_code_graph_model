@@ -66,6 +66,4 @@ public class TrackEventDetailVO extends ToString {
     @ApiModelProperty("事件属性")
     private List<TrackPropVO> trackProps;
 
-    @ApiModelProperty("文件信息")
-    private List<FileVO> files;
 }
