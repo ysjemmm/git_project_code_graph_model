@@ -270,9 +270,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
         Integer oldStatus = bizDemandDO.getStatus();
         log.info("产品需求删除关联,更新前状态={},更新后状态={},产品需求id={},业务需求id={}", oldStatus, newStatus, productDemandId, bizDemandId);
-        if (!Objects.equals(newStatus, oldStatus)
-                && !BizDemandStatusEnum.REJECT.getCode().equals(oldStatus)
-                && !BizDemandStatusEnum.INVALID.getCode().equals(oldStatus)) {
+        if (!Objects.equals(newStatus, oldStatus) && !BizDemandStatusEnum.statusNoNeedTodo(oldStatus)) {
             bizDemandDO.setStatus(newStatus);
             bizDemandMapper.update(bizDemandDO);
             bizDemandLogComponent.addLogAsProductDemandStatusChange(bizDemandId, oldStatus, newStatus);
