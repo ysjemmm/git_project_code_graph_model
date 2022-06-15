@@ -39,7 +39,12 @@ public enum BugBelongEnum {
     /**
      * h5
      */
-    H5(5,"H5")
+    H5(5,"H5"),
+
+    /**
+     * 代码review
+     */
+    CODE_REVIEW(6,"代码review")
     ;
 
     private final Integer code;

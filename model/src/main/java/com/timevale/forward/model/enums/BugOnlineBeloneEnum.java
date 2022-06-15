@@ -38,7 +38,17 @@ public enum BugOnlineBeloneEnum {
     /**
      * H5
      */
-    H5(5, "H5");
+    H5(5, "H5"),
+
+    /**
+     * 微信小程序
+     */
+    WECHAT_MINI_PROGRAMS(6,"微信小程序"),
+
+    /**
+     * 支付宝小程序
+     */
+    ALIPAY_MINI_PROGRAMS(7,"支付宝小程序");
 
     private final Integer code;
     private final String text;
