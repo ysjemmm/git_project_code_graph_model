@@ -423,8 +423,8 @@ public class TestBillServiceImpl implements TestBillService {
                 && !ProjectStatusEnum.RELEASED.getCode().equals(oldStatus)
                 && !Objects.equal(oldStatus, newStatus)) {
 
-            // 项目进入测试中
-            projectDO.setStatus(ProjectStatusEnum.TESTING.getCode());
+            // 项目状态更新
+            projectDO.setStatus(newStatus);
             projectMapper.update(projectDO);
 
             projectLogComponent.addLogWhenStatusChange(oldStatus, newStatus, projectDO.getId(), ButtonActionEnum.TEST_PASS.getText());
