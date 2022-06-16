@@ -19,4 +19,6 @@ public interface ProductDemandLogComponent {
     void addLogWhenStatusChange(Integer oldStatus,Integer newStatus,Long id,String action) ;
 
     void addLogWhenLinkOrUnlink(String name, Long id,Map<Long, String> bdNameMap,String linkOrUnlink)  ;
+
+    void addLogWhenLinkOrUnlinkTrackEvent(Long id,List<String> trackEventName,String linkOrUnlink)  ;
 }

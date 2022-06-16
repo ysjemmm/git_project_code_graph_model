@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author xingyun
@@ -21,11 +22,11 @@ public class TrackMapAddReq extends BaseReq {
     private String name;
 
     @ApiModelProperty("菜单层级")
-    @NotBlank(message = "菜单层级不能为空")
+    @NotNull(message = "菜单层级不能为空")
     private Integer level;
 
     @ApiModelProperty("上级菜单id")
-    @NotBlank(message = "上级菜单id不能为空")
+    @NotNull(message = "上级菜单id不能为空")
     private Long parentId;
 
 }

@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
@@ -24,7 +24,7 @@ public class TrackEventAddReq extends BaseReq {
     private String egName;
 
     @ApiModelProperty("埋点页面id")
-    @NotBlank(message = "埋点页面id不能为空")
+    @NotNull(message = "埋点页面id不能为空")
     private Long pageId;
 
     @ApiModelProperty("埋点元素id")
@@ -46,7 +46,7 @@ public class TrackEventAddReq extends BaseReq {
     private List<FileAddReq> files;
 
     @ApiModelProperty("事件属性")
-    @NotBlank(message = "事件属性不能为空")
+    @NotNull(message = "事件属性不能为空")
     private List<TrackPropAddReq> trackProps;
 
 

@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author xingyun
@@ -17,11 +17,11 @@ import javax.validation.constraints.NotBlank;
 public class TrackEventDeleteReq extends BaseReq {
 
     @ApiModelProperty("操作类型:0删除,1撤回")
-    @NotBlank(message = "操作类型不能为空")
+    @NotNull(message = "操作类型不能为空")
     private Integer type;
 
     @ApiModelProperty("事件id")
-    @NotBlank(message = "事件id不能为空")
+    @NotNull(message = "事件id不能为空")
     private Long id;
 
 }

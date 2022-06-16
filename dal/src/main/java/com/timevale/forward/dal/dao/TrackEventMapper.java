@@ -3,6 +3,7 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.condition.TrackEventCondition;
 import com.timevale.forward.dal.condition.TrackEventListCondition;
 import com.timevale.forward.dal.entity.TrackEventDO;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -36,5 +37,14 @@ public interface TrackEventMapper {
      * @return TrackEventDO
      */
     List<TrackEventDO> list(TrackEventListCondition condition);
+
+
+    /**
+     * 列表
+     *
+     * @param ids id
+     * @return TrackEventDO
+     */
+    List<TrackEventDO> selectByIds(@Param("ids") List<Long> ids);
 
 }

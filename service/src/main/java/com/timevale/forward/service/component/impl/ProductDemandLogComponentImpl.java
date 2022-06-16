@@ -206,6 +206,32 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
         }
     }
 
+    @Override
+    public void addLogWhenLinkOrUnlinkTrackEvent(Long id, List<String> trackEventName, String linkOrUnlink) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        //为空表示非主动点击删除按钮,赋值SYSTEM-SYSTEM
+        String createMan =userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
+        String createManId =userInfo.getId();
+
+        List<BizChangeLogDO> logs = new ArrayList<>();
+        trackEventName.forEach(a -> {
+            //1.产品需求记录日志:{操作人}添加/删除 {埋点事件}:{埋点事件A}
+            BizChangeLogDO pdLog = new BizChangeLogDO();
+            pdLog.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+            pdLog.setMainId(id);
+            pdLog.setField(BizChangeLogFieldEnum.TRACK_EVENT.getText());
+            pdLog.setAction(linkOrUnlink);
+            pdLog.setOldValue(a);
+            pdLog.setNewValue(a);
+            pdLog.setCreateMan(createMan);
+            pdLog.setCreateManId(createManId);
+            logs.add(pdLog);
+        });
+        if (CollectionUtil.isNotEmpty(logs)) {
+            bizChangeLogMapper.batchInsert(logs);
+        }
+    }
+
     private BizChangeLogDO createLog(Long mainId, String field, String oldValue, String newValue, String action) {
         BizChangeLogDO logDO = new BizChangeLogDO();
         logDO.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());

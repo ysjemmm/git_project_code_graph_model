@@ -18,6 +18,21 @@ public class TrackEventCondition extends QueryBase {
      */
     private Long id;
     /**
+     * cnName
+     */
+    private String cnName;
+
+    /**
+     * egName
+     */
+    private String egName;
+
+    /**
+     * flowId
+     */
+    private String flowId;
+
+    /**
      * trackMapId
      */
     private Long trackMapId;

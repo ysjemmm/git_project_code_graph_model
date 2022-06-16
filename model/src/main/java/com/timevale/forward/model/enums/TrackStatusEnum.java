@@ -8,7 +8,7 @@ import lombok.Getter;
  @Getter
  */
 @Getter
-public enum TrackEventStatusEnum {
+public enum TrackStatusEnum {
     /**
      * 项目流程状态
      */
@@ -19,13 +19,13 @@ public enum TrackEventStatusEnum {
     private final Integer code;
     private final String text;
 
-    TrackEventStatusEnum(Integer code, String text){
+    TrackStatusEnum(Integer code, String text){
         this.code = code;
         this.text = text;
     }
 
     public static String getTextByCode(Integer code){
-        for (TrackEventStatusEnum e : TrackEventStatusEnum.values()){
+        for (TrackStatusEnum e : TrackStatusEnum.values()){
             if(e.getCode().equals(code)){
                 return e.text;
             }

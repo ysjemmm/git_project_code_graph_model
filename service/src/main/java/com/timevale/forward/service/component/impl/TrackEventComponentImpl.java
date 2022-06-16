@@ -9,7 +9,7 @@ import com.timevale.forward.dal.entity.TrackEventDO;
 import com.timevale.forward.facade.api.result.TrackEventVO;
 import com.timevale.forward.model.enums.EnvEnum;
 import com.timevale.forward.model.enums.PlatformTypeEnum;
-import com.timevale.forward.model.enums.TrackEventStatusEnum;
+import com.timevale.forward.model.enums.TrackStatusEnum;
 import com.timevale.forward.service.component.TrackEventComponent;
 import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -37,7 +37,7 @@ public class TrackEventComponentImpl implements TrackEventComponent {
         List<TrackEventDO> list = trackEventMapper.list(condition);
         List<TrackEventVO> trackEventVOList = TrackEventCopier.INSTANCE.convert(list);
         trackEventVOList.forEach(a->{
-            a.setStatusName(TrackEventStatusEnum.getTextByCode(a.getStatus()));
+            a.setStatusName(TrackStatusEnum.getTextByCode(a.getStatus()));
             a.setEnvNames(EnvEnum.getTextByCode(JSONObject.parseArray(a.getEnv(),Integer.class)));
             a.setPlatformNames(PlatformTypeEnum.getTextByCode(JSONObject.parseArray(a.getPlatform(),Integer.class)));
         });

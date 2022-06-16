@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author xingyun
@@ -17,7 +17,7 @@ import javax.validation.constraints.NotBlank;
 public class TrackMapDeleteReq extends BaseReq {
 
     @ApiModelProperty("菜单id")
-    @NotBlank(message = "菜单id不能为空")
+    @NotNull(message = "菜单id不能为空")
     private Long id;
 
 }

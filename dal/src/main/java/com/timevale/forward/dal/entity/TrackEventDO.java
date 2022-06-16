@@ -22,6 +22,16 @@ public class TrackEventDO extends BaseDO {
     private String egName;
 
     /**
+     * pageId
+     */
+    private Long pageId;
+
+    /**
+     * elementId
+     */
+    private Long elementId;
+
+    /**
      * flowId
      */
     private String flowId;
