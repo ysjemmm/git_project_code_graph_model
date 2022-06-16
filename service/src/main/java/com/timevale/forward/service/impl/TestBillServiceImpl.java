@@ -414,9 +414,6 @@ public class TestBillServiceImpl implements TestBillService {
         //更新项目节点表
         projectNodeMapper.updateSubmitTestActualDate(testBillModifyReq.getProjectId(), testBillModifyReq.getActualDate());
 
-        // 更新项目节点状态
-        projectComponent.updateNodeStatus(testBillModifyReq.getProjectId());
-
         Integer oldStatus = projectDO.getStatus();
         Integer newStatus = projectComponent.getStatus(projectDO.getId());
         if (!ProjectStatusEnum.INVALID.getCode().equals(oldStatus)
@@ -438,6 +435,9 @@ public class TestBillServiceImpl implements TestBillService {
                         testBillModifyReq.getProjectId()
                 )
         );
+
+        // 更新项目节点状态
+        projectComponent.updateNodeStatus(testBillModifyReq.getProjectId());
 
         return BaseResult.success(true);
     }
