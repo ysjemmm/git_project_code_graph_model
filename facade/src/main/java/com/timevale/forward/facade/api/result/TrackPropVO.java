@@ -1,6 +1,6 @@
 package com.timevale.forward.facade.api.result;
 
-import com.timevale.forward.facade.api.request.BaseReq;
+import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("事件属性信息")
-public class TrackPropVO extends BaseReq {
+public class TrackPropVO extends ToString {
 
     @ApiModelProperty("中文名称")
     private String cnName;
@@ -23,6 +23,12 @@ public class TrackPropVO extends BaseReq {
 
     @ApiModelProperty("属性类型:0新增属性,1已有属性,2默认属性")
     private Integer type;
+
+    @ApiModelProperty("属性类型:-1已撤回,0审核中,1审核通过,2审核不通过")
+    private Integer status;
+
+    @ApiModelProperty("状态")
+    private String statusName;
 
     @ApiModelProperty("数据类型")
     private String dataType;

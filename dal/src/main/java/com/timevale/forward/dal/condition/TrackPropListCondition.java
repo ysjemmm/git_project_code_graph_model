@@ -15,7 +15,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Builder
-public class TrackEventListCondition extends QueryBase {
+public class TrackPropListCondition extends QueryBase {
 
     /**
      * id
@@ -39,17 +39,5 @@ public class TrackEventListCondition extends QueryBase {
      * status
      */
     private List<Integer> status;
-    /**
-     * createManIds
-     */
-    private List<String> createManIds;
-    /**
-     * filterTrackEventIds
-     */
-    private List<Long> filterTrackEventIds;
-    /**
-     * trackEventIds
-     */
-    private List<Long> trackEventIds;
 
 }

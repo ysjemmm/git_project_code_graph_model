@@ -36,4 +36,7 @@ public class TrackMapVO extends ToString {
     @ApiModelProperty("子节点")
     private List<TrackMapVO> children;
 
+    @ApiModelProperty("删除标识")
+    private Boolean isDeleted;
+
 }

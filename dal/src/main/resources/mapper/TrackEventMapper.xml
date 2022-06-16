@@ -65,6 +65,12 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="trackEventIds!=null and trackEventIds.size()>0">
+                and a.id  in
+                <foreach collection="trackEventIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             and a.is_deleted=false
         </where>
     </select>

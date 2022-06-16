@@ -94,7 +94,7 @@ public class TrackMapServiceImpl implements TrackMapService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> add(TrackMapAddReq trackMapAddReq) {
+    public BaseResult<Long> add(TrackMapAddReq trackMapAddReq) {
         log.info("埋点地图新增,参数:{}", trackMapAddReq);
         TrackMapCondition c = TrackMapCondition.builder().parentId(trackMapAddReq.getParentId()).level(trackMapAddReq.getLevel()).build();
         List<TrackMapDO> trackMapDos = trackMapMapper.select(c);
@@ -104,7 +104,7 @@ public class TrackMapServiceImpl implements TrackMapService {
         }
         TrackMapDO trackMapDO = TrackMapCopier.INSTANCE.convert(trackMapAddReq);
         trackMapMapper.insert(trackMapDO);
-        return BaseResult.success(true);
+        return BaseResult.success(trackMapDO.getId());
     }
 
     @Override

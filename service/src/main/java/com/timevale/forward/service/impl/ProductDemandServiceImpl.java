@@ -476,6 +476,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Override
     public BaseResult<PageQueryResult<TrackEventVO>> matchTrackEventList(ProductDemandLinkTrackEventQueryList trackEventQueryList) {
+        log.info("产品需求-事件匹配,参数:trackEventQueryList={}", trackEventQueryList);
         TrackEventListCondition condition = TrackEventCopier.INSTANCE.convert(trackEventQueryList);
         // 过滤掉已经关联的事件
         ProductDemandTrackEventCondition c = ProductDemandTrackEventCondition.builder().productDemandId(trackEventQueryList.getProductDemandId()).isDeleted(false).build();
@@ -486,23 +487,24 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> linkOrUnLinkTrackEvent(ProductDemandTrackEventLinkReq trackEventLinkReq) {
         log.info("关联or取消关联事件,参数:trackEventLinkReq={}", trackEventLinkReq);
         List<Long> trackEventIds = trackEventLinkReq.getTrackEventIds();
-        ProductDemandDO productDemandDO = productDemandMapper.selectById(trackEventLinkReq.getProductDemandId());
+        Long productDemandId = trackEventLinkReq.getProductDemandId();
         List<String> eventNames = trackEventMapper.selectByIds(trackEventIds).stream().map(TrackEventDO::getCnName).collect(Collectors.toList());
 
         if (LinkOrUnLinkEnum.LINK.getCode().equals(trackEventLinkReq.getType())) {
 
             productDemandTrackEventComponent.batchInsert(trackEventLinkReq.getProductDemandId(), trackEventIds);
 
-            productDemandLogComponent.addLogWhenLinkOrUnlinkTrackEvent(productDemandDO.getId(), eventNames, ButtonActionEnum.LINK.getText());
+            productDemandLogComponent.addLogWhenLinkOrUnlinkTrackEvent(productDemandId, eventNames, ButtonActionEnum.LINK.getText());
 
         } else {
             Long trackEventId = trackEventIds.get(0);
             productDemandTrackEventComponent.update(trackEventLinkReq.getProductDemandId(), trackEventId);
 
-            productDemandLogComponent.addLogWhenLinkOrUnlinkTrackEvent(productDemandDO.getId(), eventNames, ButtonActionEnum.UN_LINK.getText());
+            productDemandLogComponent.addLogWhenLinkOrUnlinkTrackEvent(productDemandId, eventNames, ButtonActionEnum.UN_LINK.getText());
 
         }
         return BaseResult.success(true);
@@ -510,7 +512,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Override
     public BaseResult<PageQueryResult<TrackEventVO>> linkTrackEventList(ProductDemandTrackEventQueryList trackEventQueryList) {
-        return null;
+        log.info("产品需求-事件清单,参数:trackEventQueryList={}", trackEventQueryList);
+        ProductDemandTrackEventCondition c = ProductDemandTrackEventCondition.builder().productDemandId(trackEventQueryList.getProductDemandId()).isDeleted(false).build();
+        List<Long> trackEventIds = productDemandTrackEventMapper.select(c).stream().map(ProductDemandTrackEventDO::getTrackEventId).collect(Collectors.toList());
+        TrackEventListCondition condition = TrackEventListCondition.builder().trackEventIds(trackEventIds).build();
+        condition.setTrackEventIds(trackEventIds);
+        PageHelper.startPage(trackEventQueryList.getPageNum(), trackEventQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        return trackEventComponent.list(condition);
     }
 
     private void checkDescLength(String desc) {

@@ -30,7 +30,7 @@ public interface TrackMapService {
      * @param trackMapAddReq 埋点地图
      * @return Boolean
      */
-    BaseResult<Boolean> add(TrackMapAddReq trackMapAddReq);
+    BaseResult<Long> add(TrackMapAddReq trackMapAddReq);
 
 
     /**
