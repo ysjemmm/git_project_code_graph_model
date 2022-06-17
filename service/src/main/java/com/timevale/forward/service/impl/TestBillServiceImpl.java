@@ -414,17 +414,14 @@ public class TestBillServiceImpl implements TestBillService {
         //更新项目节点表
         projectNodeMapper.updateSubmitTestActualDate(testBillModifyReq.getProjectId(), testBillModifyReq.getActualDate());
 
-        // 更新项目节点状态
-        projectComponent.updateNodeStatus(testBillModifyReq.getProjectId());
-
         Integer oldStatus = projectDO.getStatus();
         Integer newStatus = projectComponent.getStatus(projectDO.getId());
         if (!ProjectStatusEnum.INVALID.getCode().equals(oldStatus)
                 && !ProjectStatusEnum.RELEASED.getCode().equals(oldStatus)
                 && !Objects.equal(oldStatus, newStatus)) {
 
-            // 项目进入测试中
-            projectDO.setStatus(ProjectStatusEnum.TESTING.getCode());
+            // 项目状态更新
+            projectDO.setStatus(newStatus);
             projectMapper.update(projectDO);
 
             projectLogComponent.addLogWhenStatusChange(oldStatus, newStatus, projectDO.getId(), ButtonActionEnum.TEST_PASS.getText());
@@ -438,6 +435,9 @@ public class TestBillServiceImpl implements TestBillService {
                         testBillModifyReq.getProjectId()
                 )
         );
+
+        // 更新项目节点状态
+        projectComponent.updateNodeStatus(testBillModifyReq.getProjectId());
 
         return BaseResult.success(true);
     }

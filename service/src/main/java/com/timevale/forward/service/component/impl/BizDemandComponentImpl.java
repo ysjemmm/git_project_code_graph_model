@@ -263,14 +263,16 @@ public class BizDemandComponentImpl implements BizDemandComponent {
                 //link biz
                 Integer minStatus = productBizDemandDos.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
                 Integer newStatus = getBizDemandStatus(minStatus);
-                messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
-                        this,
-                        bizDemandDO.getId(),
-                        bizDemandDO.getSubmitManId(),
-                        bizDemandDO.getName(),
-                        BizDemandStatusEnum.getTextByCode(newStatus),
-                        PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
-                ));
+                if (!BizDemandStatusEnum.statusNoNeedTodo(bizDemandDO.getStatus())) {
+                    messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
+                            this,
+                            bizDemandDO.getId(),
+                            bizDemandDO.getSubmitManId(),
+                            bizDemandDO.getName(),
+                            BizDemandStatusEnum.getTextByCode(newStatus),
+                            PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
+                    ));
+                }
 
                 bizDemandLogComponent.addLogWhenModifyData(
                         PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
@@ -284,20 +286,18 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Override
     public Integer getBizDemandStatus(Integer pdStauts) {
-        if (pdStauts != null && !pdStauts.equals(ProductDemandStatusEnum.INVALID.getCode())) {
-            if (pdStauts.equals(ProductDemandStatusEnum.WAITING.getCode())
-                    || pdStauts.equals(ProductDemandStatusEnum.SUSPEND.getCode())) {
-                return BizDemandStatusEnum.PD_LINKED.getCode();
-            }
-            if (pdStauts.equals(ProductDemandStatusEnum.INCLUDED.getCode())) {
-                return BizDemandStatusEnum.INCLUDE_PROJECT.getCode();
-            }
-            if (pdStauts.equals(ProductDemandStatusEnum.PROGRESS.getCode())) {
-                return BizDemandStatusEnum.PROJECTING.getCode();
-            }
-            if (pdStauts.equals(ProductDemandStatusEnum.ONLINE.getCode())) {
-                return BizDemandStatusEnum.AVAILABLE.getCode();
-            }
+        if (Objects.equals(ProductDemandStatusEnum.WAITING.getCode(), pdStauts)
+                || Objects.equals(ProductDemandStatusEnum.SUSPEND.getCode(), pdStauts)) {
+            return BizDemandStatusEnum.PD_LINKED.getCode();
+        }
+        if (Objects.equals(ProductDemandStatusEnum.INCLUDED.getCode(), pdStauts)) {
+            return BizDemandStatusEnum.INCLUDE_PROJECT.getCode();
+        }
+        if (Objects.equals(ProductDemandStatusEnum.PROGRESS.getCode(), pdStauts)) {
+            return BizDemandStatusEnum.PROJECTING.getCode();
+        }
+        if (Objects.equals(ProductDemandStatusEnum.ONLINE.getCode(), pdStauts)) {
+            return BizDemandStatusEnum.AVAILABLE.getCode();
         }
         log.info("产品需求状态 :{}", pdStauts);
         return BizDemandStatusEnum.RECEIVED.getCode();
