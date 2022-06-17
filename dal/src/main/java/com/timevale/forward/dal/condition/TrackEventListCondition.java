@@ -22,9 +22,9 @@ public class TrackEventListCondition extends QueryBase {
      */
     private Long id;
     /**
-     * trackMapId
+     * trackMapIds
      */
-    private Long trackMapId;
+    private List<Long> trackMapIds;
     /**
      * cnName
      */

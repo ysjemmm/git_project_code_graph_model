@@ -30,5 +30,20 @@
         where id = #{id}
     </delete>
 
+    <select id="getChildren" resultType="com.timevale.forward.dal.entity.TrackMapDO">
+        select id, parent_id, name, level, is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from track_map a
+        <where>
+            <if test="parentId!=null and parentId.size()>0">
+                and parent_id in
+                <foreach collection="parentId" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="level != null">and a.level = #{level}</if>
+            and is_deleted = false
+        </where>
+    </select>
+
 </mapper>
 

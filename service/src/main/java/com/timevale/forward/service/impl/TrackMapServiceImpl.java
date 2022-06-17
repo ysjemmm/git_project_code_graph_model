@@ -48,11 +48,11 @@ public class TrackMapServiceImpl implements TrackMapService {
 
     @Override
     public BaseResult<List<TrackMapVO>> trackMapList() {
-        List<BizDomainDO> bizDomainDos = bizDomainMapper.selectAllBizDomain();
-        List<ProductLineDO> productLineDos = productLineMapper.selectAllProductLine();
-        List<ModelDO> modelDos = modelMapper.selectAllModel();
+        List<BizDomainDO> bizDomainDos = bizDomainMapper.selectAllBizDomain().stream().filter(a -> !a.getIsDeleted()).collect(Collectors.toList());
+        List<ProductLineDO> productLineDos = productLineMapper.selectAllProductLine().stream().filter(a -> !a.getIsDeleted()).collect(Collectors.toList());
+        List<ModelDO> modelDos = modelMapper.selectAllModel().stream().filter(a -> !a.getIsDeleted()).collect(Collectors.toList());
 
-        List<TrackMapDO> trackMapDos = trackMapMapper.selectAllTrackMap();
+        List<TrackMapDO> trackMapDos = trackMapMapper.selectAllTrackMap().stream().filter(a -> !a.getIsDeleted()).collect(Collectors.toList());
         List<TrackMapDO> pages = trackMapDos.stream().filter(a -> TrackMapEnum.PAGE.getCode().equals(a.getLevel())).collect(Collectors.toList());
         List<TrackMapDO> elements = trackMapDos.stream().filter(a -> TrackMapEnum.ELEMENT.getCode().equals(a.getLevel())).collect(Collectors.toList());
 
@@ -99,7 +99,7 @@ public class TrackMapServiceImpl implements TrackMapService {
         TrackMapCondition c = TrackMapCondition.builder().parentId(trackMapAddReq.getParentId()).level(trackMapAddReq.getLevel()).build();
         List<TrackMapDO> trackMapDos = trackMapMapper.select(c);
         boolean match = trackMapDos.stream().anyMatch(a -> a.getName().equals(trackMapAddReq.getName()));
-        if(match){
+        if (match) {
             throw new BaseBizRuntimeException("该菜单名称已存在,请修改后重试");
         }
         TrackMapDO trackMapDO = TrackMapCopier.INSTANCE.convert(trackMapAddReq);
@@ -112,13 +112,13 @@ public class TrackMapServiceImpl implements TrackMapService {
     public BaseResult<Boolean> delete(TrackMapDeleteReq trackMapDeleteReq) {
         TrackMapCondition c = TrackMapCondition.builder().parentId(trackMapDeleteReq.getId()).build();
         List<TrackMapDO> trackMapDos = trackMapMapper.select(c);
-        if(!CollectionUtils.isEmpty(trackMapDos)){
+        if (!CollectionUtils.isEmpty(trackMapDos)) {
             throw new BaseBizRuntimeException("该菜单下有子菜单不能删除");
         }
 
         TrackEventCondition cc = TrackEventCondition.builder().trackMapId(trackMapDeleteReq.getId()).build();
         List<TrackEventDO> trackEventDos = trackEventMapper.select(cc);
-        if(!CollectionUtils.isEmpty(trackEventDos)){
+        if (!CollectionUtils.isEmpty(trackEventDos)) {
             throw new BaseBizRuntimeException("请联系数据产品经理删除该分类下所有事件后再删除");
         }
         trackMapMapper.delete(trackMapDeleteReq.getId());

@@ -20,6 +20,9 @@ public class TrackEventQueryList extends QueryBase {
     @ApiModelProperty("埋点地图id")
     private Long trackMapId;
 
+    @ApiModelProperty("菜单层级")
+    private Integer level;
+
     @ApiModelProperty("中文名称")
     private String cnName;
 

@@ -10,6 +10,13 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum TrackMapEnum {
+
+    // 业务域
+    BIZDOMAIN(1),
+    // 产品线
+    PRODUCTLINE(2),
+    // 模块
+    MODE(3),
     // 埋点页面
     PAGE(4),
     // 埋点元素

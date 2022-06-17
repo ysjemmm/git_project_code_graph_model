@@ -42,4 +42,12 @@ public interface TrackMapMapper {
      */
     int delete(@Param("id")Long id);
 
+    /**
+     * 获取产品线列表
+     *
+     * @return 列表
+     */
+    List<TrackMapDO> getChildren(@Param("parentId") List<Long> parentId,@Param("level")Integer level);
+
+
 }

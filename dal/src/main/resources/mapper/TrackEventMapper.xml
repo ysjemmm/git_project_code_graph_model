@@ -44,7 +44,6 @@
         from track_event a
         <where>
             <if test="id != null">and a.id = #{id}</if>
-            <if test="trackMapId != null">and a.track_map_id = #{trackMapId}</if>
             <if test="cnName != null and cnName != ''">and a.cn_name like concat('%',#{cnName},'%')</if>
             <if test="egName != null and egName != ''">and a.eg_name like concat('%',#{egName},'%')</if>
             <if test="status!=null and status.size()>0">
@@ -68,6 +67,12 @@
             <if test="trackEventIds!=null and trackEventIds.size()>0">
                 and a.id  in
                 <foreach collection="trackEventIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="trackMapIds!=null and trackMapIds.size()>0">
+                and a.track_map_id  in
+                <foreach collection="trackMapIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
