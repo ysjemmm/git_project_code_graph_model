@@ -6,6 +6,8 @@ import com.timevale.forward.dal.entity.TrackEventDO;
 import com.timevale.forward.facade.api.query.ProductDemandLinkTrackEventQueryList;
 import com.timevale.forward.facade.api.query.TrackEventQueryList;
 import com.timevale.forward.facade.api.request.TrackEventAddReq;
+import com.timevale.forward.facade.api.request.TrackEventModifyReq;
+import com.timevale.forward.facade.api.result.TrackEventDetailVO;
 import com.timevale.forward.facade.api.result.TrackEventVO;
 import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
@@ -34,6 +36,13 @@ public interface TrackEventCopier {
 
     /**
      *
+     * @param trackEventDO trackEventDO
+     * @return return
+     */
+    TrackEventDetailVO convert(TrackEventDO trackEventDO);
+
+    /**
+     *
      * @param trackEventQueryList trackEventQueryList
      * @return return
      */
@@ -55,6 +64,10 @@ public interface TrackEventCopier {
     @Mapping(source = "platforms", target = "platform", qualifiedByName = "platformMappingStr")
     @Mapping(source = "envs", target = "env", qualifiedByName = "envMappingStr")
     TrackEventDO convert(TrackEventAddReq trackEventAddReq);
+
+    @Mapping(source = "platforms", target = "platform", qualifiedByName = "platformMappingStr")
+    @Mapping(source = "envs", target = "env", qualifiedByName = "envMappingStr")
+    TrackEventDO convert(TrackEventModifyReq trackEventModifyReq);
 
     @Named("platformMappingStr")
     default String platformMappingStr(List<Integer> platforms){

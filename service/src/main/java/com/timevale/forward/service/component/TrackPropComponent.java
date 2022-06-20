@@ -27,4 +27,18 @@ public interface TrackPropComponent {
      * @return 埋点事件
      */
     BaseResult<Boolean> add(List<TrackPropDO>trackPropDOList,Long trackEventId);
+
+    /**
+     * 埋点地图
+     *
+     * @return 埋点事件
+     */
+    BaseResult<Boolean> modify(List<TrackPropDO>trackPropDOList,Long trackEventId);
+
+    /**
+     * 埋点地图
+     *
+     * @return 埋点事件
+     */
+    List<TrackPropVO> get(Long eventId);
 }

@@ -60,4 +60,12 @@ public interface TrackPropMapper {
      */
     List<TrackPropDO> selectByIds(@Param("ids") List<Long> ids);
 
+    /**
+     * 新增
+     *
+     * @param trackPropDO trackPropDO
+     * @return int
+     */
+    int update(TrackPropDO trackPropDO);
+
 }

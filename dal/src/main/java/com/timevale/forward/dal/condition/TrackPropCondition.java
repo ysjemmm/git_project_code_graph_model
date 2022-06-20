@@ -19,6 +19,7 @@ public class TrackPropCondition extends QueryBase {
      * id
      */
     private Long id;
+
     /**
      * cnName
      */

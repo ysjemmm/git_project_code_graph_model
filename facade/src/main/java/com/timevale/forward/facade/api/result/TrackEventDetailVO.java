@@ -36,11 +36,17 @@ public class TrackEventDetailVO extends ToString {
     @ApiModelProperty("状态")
     private String statusName;
 
-    @ApiModelProperty("埋点平台")
-    private String platformName;
+    @ApiModelProperty("埋点所属端")
+    private String env;
+
+    @ApiModelProperty("埋点所属端:1测试环境,2模拟环境,3生产环境")
+    private List<String> envNames;
 
     @ApiModelProperty("埋点所属端")
-    private String envName;
+    private String platform;
+
+    @ApiModelProperty("埋点平台:0IOS、1Android、2JavaScript、3小程序、4服务端、9其他")
+    private List<String> platformNames;
 
     @ApiModelProperty("事件拒绝原因")
     private String failReason;

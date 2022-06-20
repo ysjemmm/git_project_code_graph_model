@@ -9,6 +9,29 @@
         (#{cnName},#{egName}, #{flowId},#{trackMapId},#{platform},#{apiName},#{touchMoment},#{env},#{status},#{createMan},#{createManId})
     </insert>
 
+    <update id="update">
+        update track_event
+        <set>
+            <if test="cnName != null and cnName != ''">cn_name = #{cnName},</if>
+            <if test="egName != null and egName != ''">eg_name = #{egName},</if>
+            <if test="trackMapId != null">track_map_id = #{trackMapId},</if>
+            <if test="platform != null and platform != ''">platform = #{platform},</if>
+            <if test="apiName != null and apiName != ''">api_name = #{apiName},</if>
+            <if test="touchMoment != null and touchMoment != ''">touch_moment = #{touchMoment},</if>
+            <if test="env != null and env != ''">env = #{env},</if>
+            <if test="failReason != null and failReason != ''">fail_reason = #{failReason},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modify_man_id = #{modifyManId},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
     <select id="select" resultType="com.timevale.forward.dal.entity.TrackEventDO">
         select id,cn_name, eg_name, flow_id,track_map_id,platform,api_name,touch_moment,env,status,fail_reason,
          is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
@@ -77,6 +100,15 @@
                 </foreach>
             </if>
             and a.is_deleted=false
+        </where>
+    </select>
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.TrackEventDO">
+        select id,cn_name, eg_name, flow_id,track_map_id,platform,api_name,touch_moment,env,status,fail_reason,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from track_event a
+        <where>
+            id=#{id} and a.is_deleted=false
         </where>
     </select>
 </mapper>

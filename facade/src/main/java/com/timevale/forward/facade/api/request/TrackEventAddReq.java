@@ -17,6 +17,9 @@ import java.util.List;
 @ApiModel("埋点事件新增")
 public class TrackEventAddReq extends BaseReq {
 
+    @ApiModelProperty("埋点事件id")
+    private Long id;
+
     @ApiModelProperty("中文名称")
     private String cnName;
 

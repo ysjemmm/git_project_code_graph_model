@@ -72,5 +72,24 @@
             and a.is_deleted=false
         </where>
     </select>
+
+    <update id="update">
+        update track_prop
+        <set>
+            <if test="cnName != null and cnName != ''">cn_name = #{cnName},</if>
+            <if test="egName != null and egName != ''">eg_name = #{egName},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="dataType != null">data_type = #{dataType},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modify_man_id = #{modifyManId},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
 </mapper>
 

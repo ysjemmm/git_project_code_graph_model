@@ -1,16 +1,23 @@
 package com.timevale.forward.service.mq.listener;
 
 import com.alibaba.fastjson.JSON;
+import com.timevale.forward.model.enums.MessageTagEnum;
 import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.mq.dto.WorkflowBody;
+import com.timevale.forward.service.mq.handler.AbstractMessageHandler;
+import com.timevale.forward.service.mq.handler.ProjectFlowMessageHandler;
+import com.timevale.forward.service.mq.handler.TrackEventMessageHandler;
 import com.timevale.framework.mq.client.consumer.Listener;
 import com.timevale.framework.mq.client.consumer.ReceiveResult;
 import com.timevale.framework.mq.client.producer.Msg;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xingyun
@@ -22,6 +29,24 @@ public class MqListener implements Listener {
 
     @Resource
     private ProjectFlowComponent projectFlowComponent;
+
+
+    @Resource
+    private ProjectFlowMessageHandler projectFlowMessageHandler;
+
+    @Resource
+    private TrackEventMessageHandler trackEventMessageHandler;
+
+
+
+    public static Map<String, AbstractMessageHandler> MESSAGE_HANDLER_MAP = new HashMap<>();
+
+    @PostConstruct
+    public void init() {
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TECHREVIEW.getText(),projectFlowMessageHandler);
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TRACKEVENTREVIEW.getText(),trackEventMessageHandler);
+    }
+
 
     @Override
     public ReceiveResult receive(List<Msg> list) {

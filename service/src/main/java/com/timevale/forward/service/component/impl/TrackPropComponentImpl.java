@@ -18,6 +18,7 @@ import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -59,21 +60,58 @@ public class TrackPropComponentImpl implements TrackPropComponent {
         if(CollectionUtils.isEmpty(trackPropDOList)){
             return  BaseResult.success(true);
         }
+        List<TrackPropDO> filter = trackPropDOList.stream().filter(a -> TrackPropTypeEnum.NEW.getCode().equals(a.getType())).collect(Collectors.toList());
 
-        checkBeforeInsert(trackPropDOList);
+        checkBeforeInsert(filter);
 
-        trackPropMapper.batchInsert(trackPropDOList);
+        if(!CollectionUtils.isEmpty(filter)){
+            trackPropMapper.batchInsert(filter);
+        }
 
         addRelation(trackPropDOList,trackEventId);
 
         return BaseResult.success(true);
     }
 
-    private void addRelation(List<TrackPropDO> trackPropDOList,Long trackEventId) {
-        List<Long> newPropIds = trackPropDOList.stream().map(TrackPropDO::getId).collect(Collectors.toList());
+    @Override
+    public BaseResult<Boolean> modify(List<TrackPropDO> trackPropDOList,Long trackEventId) {
+
+        List<TrackPropDO> filter = trackPropDOList.stream().filter(a -> TrackPropTypeEnum.NEW.getCode().equals(a.getType())).collect(Collectors.toList());
+
+        checkBeforeInsert(filter);
+
+        if(!CollectionUtils.isEmpty(filter)){
+            trackPropMapper.batchInsert(filter);
+        }
+
+        delRelation(trackPropDOList,trackEventId);
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public List<TrackPropVO> get(Long trackEventId) {
         TrackEventPropCondition c = TrackEventPropCondition.builder().trackEventId(trackEventId).build();
         List<TrackEventPropDO> oldTrackEventPropDOList = trackEvenPropMapper.select(c);
         List<Long> oldPropIds = oldTrackEventPropDOList.stream().map(TrackEventPropDO::getTrackPropId).collect(Collectors.toList());
+        if(CollectionUtils.isEmpty(oldPropIds)){
+            return Lists.emptyList();
+        }
+        List<TrackPropDO> list = trackPropMapper.selectByIds(oldPropIds);
+        List<TrackPropVO> trackEventVOList = TrackPropCopier.INSTANCE.convert(list);
+        trackEventVOList.forEach(a->{
+            a.setStatusName(TrackStatusEnum.getTextByCode(a.getStatus()));
+        });
+        return trackEventVOList;
+    }
+
+    private List<Long>  addRelation(List<TrackPropDO> trackPropDOList,Long trackEventId) {
+        List<Long> newPropIds = trackPropDOList.stream().map(TrackPropDO::getId).collect(Collectors.toList());
+
+        TrackEventPropCondition c = TrackEventPropCondition.builder().trackEventId(trackEventId).build();
+        List<TrackEventPropDO> oldTrackEventPropDOList = trackEvenPropMapper.select(c);
+        List<Long> oldPropIds = oldTrackEventPropDOList.stream().map(TrackEventPropDO::getTrackPropId).collect(Collectors.toList());
+
         newPropIds.removeAll(oldPropIds);
         List<TrackEventPropDO> list = newPropIds.stream().map(t -> {
             TrackEventPropDO trackEventPropDO = new TrackEventPropDO();
@@ -85,12 +123,38 @@ public class TrackPropComponentImpl implements TrackPropComponent {
         if(!CollectionUtils.isEmpty(list)){
             trackEvenPropMapper.batchInsert(list);
         }
+        return oldPropIds;
+    }
+
+    private void delRelation(List<TrackPropDO> trackPropDOList,Long trackEventId) {
+        if(CollectionUtils.isEmpty(trackPropDOList)){
+            TrackEventPropDO trackEventPropDO=new TrackEventPropDO();
+            trackEventPropDO.setTrackEventId(trackEventId);
+            trackEventPropDO.setIsDeleted(true);
+            trackEvenPropMapper.update(trackEventPropDO);
+            return;
+        }
+
+        List<Long> newPropIds = trackPropDOList.stream().map(TrackPropDO::getId).collect(Collectors.toList());
+        //新增
+        List<Long> oldPropIds=addRelation(trackPropDOList,trackEventId);
+        //删除
+        oldPropIds.forEach(a->{
+            if(!newPropIds.contains(a)){
+                TrackEventPropDO trackEventPropDO=new TrackEventPropDO();
+                trackEventPropDO.setTrackEventId(trackEventId);
+                trackEventPropDO.setTrackPropId(a);
+                trackEventPropDO.setIsDeleted(true);
+                trackEvenPropMapper.update(trackEventPropDO);
+            }
+        });
     }
 
     private void checkBeforeInsert(List<TrackPropDO> trackPropDOList) {
-        List<TrackPropDO> filter = trackPropDOList.stream().filter(a -> TrackPropTypeEnum.NEW.getCode().equals(a.getType())).collect(Collectors.toList());
-
-        List<String> cnNames = filter.stream().map(TrackPropDO::getCnName).collect(Collectors.toList());
+        if(CollectionUtils.isEmpty(trackPropDOList)){
+            return;
+        }
+        List<String> cnNames = trackPropDOList.stream().map(TrackPropDO::getCnName).collect(Collectors.toList());
         TrackPropCondition c = TrackPropCondition.builder().cnNames(cnNames).build();
         List<TrackPropDO> trackPropDos = trackPropMapper.select(c);
         if(!CollectionUtils.isEmpty(trackPropDos)){
@@ -98,7 +162,7 @@ public class TrackPropComponentImpl implements TrackPropComponent {
             throw new BaseBizRuntimeException("属性中文名 "+cnName+" 已存在,请修改后重试");
         }
 
-        List<String> egNames = filter.stream().map(TrackPropDO::getEgName).collect(Collectors.toList());
+        List<String> egNames = trackPropDOList.stream().map(TrackPropDO::getEgName).collect(Collectors.toList());
         c = TrackPropCondition.builder().egNames(egNames).build();
         trackPropDos = trackPropMapper.select(c);
         if(!CollectionUtils.isEmpty(trackPropDos)){

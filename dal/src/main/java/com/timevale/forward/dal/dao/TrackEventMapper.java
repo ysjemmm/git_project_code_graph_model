@@ -22,6 +22,14 @@ public interface TrackEventMapper {
      */
     int insert(TrackEventDO trackMapDO);
 
+    /**
+     * 新增
+     *
+     * @param trackMapDO trackMapDO
+     * @return int
+     */
+    int update(TrackEventDO trackMapDO);
+
 
     /**
      * 列表
@@ -46,5 +54,13 @@ public interface TrackEventMapper {
      * @return TrackEventDO
      */
     List<TrackEventDO> selectByIds(@Param("ids") List<Long> ids);
+
+    /**
+     * 列表
+     *
+     * @param id id
+     * @return TrackEventDO
+     */
+    TrackEventDO get(@Param("id") Long id);
 
 }
