@@ -15,7 +15,11 @@ import javax.validation.constraints.Pattern;
 @Getter
 @Setter
 @ApiModel("项目目标完成情况填写请求")
-public class ProjectGoalFinishReq extends ProjectGoalIdReq {
+public class ProjectGoalFinishReq extends BaseReq {
+
+    @NotNull(message = "项目目标id必传")
+    @ApiModelProperty(name = "项目目标id")
+    private Long id;
 
     @Pattern(regexp = "^(10|30)$", message = "完成状态只能是 10-已完成 或 30-未完成")
     @NotNull(message = "完成状态必填")

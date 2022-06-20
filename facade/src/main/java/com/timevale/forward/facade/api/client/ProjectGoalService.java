@@ -4,11 +4,12 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.request.ProjectGoalAddReq;
 import com.timevale.forward.facade.api.request.ProjectGoalFinishReq;
-import com.timevale.forward.facade.api.request.ProjectGoalIdReq;
 import com.timevale.forward.facade.api.request.ProjectGoalModifyReq;
 import com.timevale.mandarin.common.annotation.RestClient;
 
 /**
+ * 项目目标RPC接口
+ *
  * @author jingchun
  * create on 2022/6/20
  */
@@ -29,12 +30,12 @@ public interface ProjectGoalService {
     /**
      * 删除项目目标
      */
-    BaseResult<Boolean> delete(ProjectGoalIdReq projectGoalIdReq);
+    BaseResult<Boolean> delete(Long projectGoalId);
 
     /**
      * 设置主目标
      */
-    BaseResult<Boolean> setMainGoal(ProjectGoalIdReq projectGoalIdReq);
+    BaseResult<Boolean> setMainGoal(Long projectGoalId);
 
     /**
      * 完成情况填写
