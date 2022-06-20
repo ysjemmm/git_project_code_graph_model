@@ -83,4 +83,10 @@ public class BugOnlineAddReq extends BaseReq {
     @ApiModelProperty("bug来源:产研(forward),运营支撑(support)")
     @NotNull(message = "bug来源不能为空")
     private String source;
+
+    @ApiModelProperty("模块id")
+    private List<Long> modelIds;
+
+    @ApiModelProperty("详细版本号")
+    private String detailVersionId;
 }

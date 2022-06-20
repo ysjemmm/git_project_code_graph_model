@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 /**
  * @author by YangXu
  * @date 2022/04/24 17:56
@@ -17,4 +19,7 @@ public class ProjectRiskQueryList extends QueryBase {
 
     @ApiModelProperty("项目id")
     private Long projectId;
+
+    @ApiModelProperty("状态")
+    private List<Integer> statusList;
 }

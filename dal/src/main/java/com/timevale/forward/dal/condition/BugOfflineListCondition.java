@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.forward.dal.annotation.WildcardEscape;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -104,6 +105,17 @@ public class BugOfflineListCondition {
      * 打回次数
      */
     private Integer returnCount;
+
+    /**
+     * 重复打开次数判断类型
+     */
+    private Integer openCountType;
+
+    /**
+     * 重复打开次数
+     */
+    private Integer openCount;
+
 
     /**
      * 用于判断是否为"抄送我的需求"tab

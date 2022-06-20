@@ -1,8 +1,6 @@
 package com.timevale.forward.dal.condition;
 
-import com.timevale.forward.dal.annotation.WildcardEscape;
 import com.timevale.mandarin.common.query.QueryBase;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -135,5 +133,27 @@ public class ProjectListCondition extends QueryBase {
      * 创建时间右区间
      */
     private Date createDateRight;
+    /**
+     * 打回次数判断类型
+     */
+    private Integer returnCountType;
+    /**
+     * 打回次数
+     */
+    private Integer returnCount;
+    /**
+     * 是否延期
+     */
+    private Boolean isDelay;
+
+    /**
+     * 提测时间左区间
+     */
+    private Date actualTestDateLeft;
+
+    /**
+     * 提测时间右区间
+     */
+    private Date actualTestDateRight;
 
 }

@@ -63,6 +63,9 @@
             <if test="planReleaseDate!=null">
                 plan_release_date = #{planReleaseDate},
             </if>
+            <if test="projectEndDate != null">
+                project_end_date = #{projectEndDate},
+            </if>
             <if test="true">
                 modify_man_id = #{modifyManId},
                 modify_man = #{modifyMan},
@@ -91,6 +94,7 @@
             solve_plan = #{solvePlan},
             reject_reason = #{rejectReason},
             plan_release_date = #{planReleaseDate},
+            project_end_date = #{projectEndDate},
             modify_man_id = #{modifyManId},
             modify_man = #{modifyMan},
         </set>
@@ -98,8 +102,9 @@
     </update>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BizDemandDO">
-        select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status, priority,
-               receive_man, receive_man_id, processor, os, plan_release_date, reason, submit_man, submit_man_id, solve_plan, reject_reason,
+        select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status,
+               priority, receive_man, receive_man_id, processor, os, plan_release_date, reason, submit_man, submit_man_id,
+               solve_plan, reject_reason, project_end_date,
                is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
         from biz_demand
         where id = #{id}
@@ -114,8 +119,8 @@
 
     <select id="selectList" resultType="com.timevale.forward.dal.entity.BizDemandListDO">
         select bd.id, bd.name, bd.dept_id, bd.status, bd.priority, bd.receive_man,  bd.receive_man_id, bd.target_customer,
-               bd.submit_man, bd.submit_man_id,
-               bd.plan_release_date, bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date,
+               bd.submit_man, bd.submit_man_id, bd.plan_release_date, bd.project_end_date,
+               bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date,
                pl.id productLineId, pl.name productLineName,
                b.id bizDomainId , b.name bizDomainName
         from biz_demand bd
@@ -194,22 +199,15 @@
                 AND p.is_deleted = false
                 )
             </if>
-            <choose>
-                <when test="createDateStart!=null and createDateEnd!=null">
-                    and bd.create_date &gt;= #{createDateStart}
-                    and bd.create_date &lt;= #{createDateEnd}
-                </when>
-                <otherwise>
-                    <choose>
-                        <when test="createDateStart!=null">
-                            and bd.create_date &gt;= #{createDateStart}
-                        </when>
-                        <when test="createDateEnd!=null">
-                            and bd.create_date &lt;= #{createDateEnd}
-                        </when>
-                    </choose>
-                </otherwise>
-            </choose>
+            <if test="createDateStart!=null and createDateEnd!=null">
+                and bd.create_date &gt;= #{createDateStart}
+                and bd.create_date &lt;= #{createDateEnd}
+            </if>
+            <if test="projectEndDateStart != null and projectEndDateEnd != null">
+                and bd.project_end_date is not null
+                and bd.project_end_date &gt;= #{projectEndDateStart}
+                and bd.project_end_date &lt;= #{projectEndDateEnd}
+            </if>
             and bd.is_deleted = false
         </where>
     </select>
@@ -262,6 +260,20 @@
         </foreach>
     </update>
 
+    <update id="updateDate">
+        UPDATE biz_demand
+        <set>
+            <if test="projectEndDate != null">project_end_date = #{projectEndDate},</if>
+            <if test="planReleaseDate != null">plan_release_date = #{planReleaseDate},</if>
+            <if test="true">modify_date = modify_date,</if>
+            <if test="true">modify_man = modify_man,</if>
+            <if test="true">modify_man_id = modify_man_id,</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
     <select id="selectByIds" resultType="com.timevale.forward.dal.entity.BizDemandDO">
         select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status, priority,
                receive_man, receive_man_id, submit_man, submit_man_id, plan_release_date, reason,
@@ -288,6 +300,11 @@
             </foreach>
             and is_deleted = false
         </where>
+    </select>
+
+    <select id="selectAll" resultType="com.timevale.forward.dal.entity.BizDemandDO">
+        SELECT *
+        FROM biz_demand;
     </select>
 
 </mapper>

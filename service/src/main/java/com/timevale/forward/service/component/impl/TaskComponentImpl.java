@@ -116,9 +116,9 @@ public class TaskComponentImpl implements TaskComponent {
         // 查任务
         buildConditionBeforeQuery(taskIds, condition);
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
-        List<TaskDO> taskDO = taskMapper.list(condition);
+        List<TaskDO> taskDos = taskMapper.list(condition);
 
-        taskIds = taskDO.stream().map(TaskDO::getId).collect(Collectors.toList());
+        taskIds = taskDos.stream().map(TaskDO::getId).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(taskIds)) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
@@ -128,7 +128,7 @@ public class TaskComponentImpl implements TaskComponent {
                 .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
 
         //2.填充产品线
-        List<Long> productLineIds = taskDO.stream().map(TaskDO::getProductLineId).collect(Collectors.toList());
+        List<Long> productLineIds = taskDos.stream().map(TaskDO::getProductLineId).collect(Collectors.toList());
         Map<Long, String> productLineMap = productLineMapper.selectByIds(productLineIds)
                 .stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (v1, v2) -> v2));
 
@@ -136,7 +136,8 @@ public class TaskComponentImpl implements TaskComponent {
         List<Long> projectIds = taskMapper.getProjectIds(taskIds);
         Map<Long, ProjectDO> projectMap = projectMapper.getByIds(projectIds).stream()
                 .collect(Collectors.toMap(ProjectDO::getId, p -> p, (v1, v2) -> v1));
-        List<TaskVO> taskVO = TaskCopier.INSTANCE.convert(taskDO);
+
+        List<TaskVO> taskVO = TaskCopier.INSTANCE.convert(taskDos);
         taskVO.forEach(a -> {
             List<PersonDO> executors = executorMap.get(a.getId());
             if (CollectionUtils.isNotEmpty(executors)) {
@@ -148,9 +149,17 @@ public class TaskComponentImpl implements TaskComponent {
             a.setProjectName(projectMap.get(a.getProjectId()).getName());
             a.setPmId(projectMap.get(a.getProjectId()).getPmId());
             a.setStageName(TaskStageEnum.getTextByCode(a.getStage()));
+            if(a.getPlanEndDate()==null){
+                //老数据
+                a.setIsDelay(false);
+            }else{
+                boolean isDelay = (a.getActualEndDate() == null && new Date().after(a.getPlanEndDate()))
+                        || (a.getActualEndDate() != null && a.getActualEndDate().after(a.getPlanEndDate()));
+                a.setIsDelay(isDelay);
+            }
         });
         PageQueryResult<TaskVO> pageQueryResult = new PageQueryResult<>();
-        PageInfo<TaskDO> pageInfo = new PageInfo<>(taskDO);
+        PageInfo<TaskDO> pageInfo = new PageInfo<>(taskDos);
         pageQueryResult.setResultList(taskVO);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);

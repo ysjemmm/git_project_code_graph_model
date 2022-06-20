@@ -119,4 +119,10 @@ public class BugOnlineMD extends BaseMD{
      */
     @FieldCompare(fieldName = "重新打开原因")
     private String openAgainReason;
+
+    /**
+     * 详细版本号
+     */
+    @FieldCompare(fieldName = "详细版本号")
+    private String detailVersionId;
 }

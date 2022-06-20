@@ -35,7 +35,7 @@ public enum BizChangeLogFieldEnum {
 
     CREATE_MAN("需求提交人"),
 
-    REASON("驳回原因"),
+    REASON("驳回理由"),
 
     REJECT_REASON("拒绝原因"),
 

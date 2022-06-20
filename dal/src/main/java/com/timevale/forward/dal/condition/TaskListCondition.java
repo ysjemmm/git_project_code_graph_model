@@ -106,4 +106,9 @@ public class TaskListCondition extends QueryBase {
      */
     private Date createDateRight;
 
+    /**
+     * 是否延期
+     */
+    private Boolean isDelay;
+
 }

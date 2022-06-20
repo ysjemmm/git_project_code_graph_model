@@ -54,4 +54,9 @@ public class TestBillDO extends BaseDO {
      * 影响范围与变更SQL
      */
     private String desc;
+
+    /**
+     * 逾期天数
+     */
+    private Integer delayDay;
 }

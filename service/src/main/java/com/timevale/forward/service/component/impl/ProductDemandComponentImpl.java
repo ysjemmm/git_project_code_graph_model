@@ -265,13 +265,12 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         //计算业务需求状态时需要过滤掉本次被解除的产品需求
         Integer minStatus = productBizDemandDos.stream().filter(i -> !productDemandId.equals(i.getProductDemandId())).map(ProductBizDemandDO::getStatus)
                 .min(Comparator.comparingInt(o -> o)).orElse(null);
+        Integer newStatus = bizDemandComponent.getBizDemandStatus(minStatus);
+
         BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
         Integer oldStatus = bizDemandDO.getStatus();
-        Integer newStatus = getBizDemandStatus(minStatus);
         log.info("产品需求删除关联,更新前状态={},更新后状态={},产品需求id={},业务需求id={}", oldStatus, newStatus, productDemandId, bizDemandId);
-        if (!Objects.equals(newStatus, oldStatus)
-                && !BizDemandStatusEnum.REJECT.getCode().equals(oldStatus)
-                && !BizDemandStatusEnum.INVALID.getCode().equals(oldStatus)) {
+        if (!Objects.equals(newStatus, oldStatus) && !BizDemandStatusEnum.statusNoNeedTodo(oldStatus)) {
             bizDemandDO.setStatus(newStatus);
             bizDemandMapper.update(bizDemandDO);
             bizDemandLogComponent.addLogAsProductDemandStatusChange(bizDemandId, oldStatus, newStatus);
@@ -290,25 +289,5 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                 );
             }
         }
-    }
-
-    private Integer getBizDemandStatus(Integer pdStauts) {
-        if (pdStauts != null && !pdStauts.equals(ProductDemandStatusEnum.INVALID.getCode())) {
-            if (pdStauts.equals(ProductDemandStatusEnum.WAITING.getCode())
-                    || pdStauts.equals(ProductDemandStatusEnum.SUSPEND.getCode())) {
-                return BizDemandStatusEnum.PD_LINKED.getCode();
-            }
-            if (pdStauts.equals(ProductDemandStatusEnum.INCLUDED.getCode())) {
-                return BizDemandStatusEnum.INCLUDE_PROJECT.getCode();
-            }
-            if (pdStauts.equals(ProductDemandStatusEnum.PROGRESS.getCode())) {
-                return BizDemandStatusEnum.PROJECTING.getCode();
-            }
-            if (pdStauts.equals(ProductDemandStatusEnum.ONLINE.getCode())) {
-                return BizDemandStatusEnum.AVAILABLE.getCode();
-            }
-        }
-        log.info("产品需求状态 :{}", pdStauts);
-        return BizDemandStatusEnum.RECEIVED.getCode();
     }
 }

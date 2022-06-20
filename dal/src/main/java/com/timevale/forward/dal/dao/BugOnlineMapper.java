@@ -36,6 +36,13 @@ public interface BugOnlineMapper {
     void update(@Param("bugOnlineDO") BugOnlineDO bugOnlineDO);
 
     /**
+     * 完整更新
+     *
+     * @param bugOnlineDO 线上bugDO
+     */
+    void fullUpdate(@Param("bugOnlineDO") BugOnlineDO bugOnlineDO);
+
+    /**
      * 插入线上bug
      *
      * @param bugOnlineDO 参数

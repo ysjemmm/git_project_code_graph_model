@@ -23,6 +23,13 @@ public class BizDemandStatusVO extends ToString {
     @ApiModelProperty("需求解决状态名称")
     private String statusText;
 
-    @ApiModelProperty("项目发布时间")
-    private Date endDate;
+    @ApiModelProperty("项目发布时间（新）")
+    private Date projectEndDate;
+
+    @ApiModelProperty("预计上线时间 12月份")
+    private Integer planReleaseDate;
+
+    @ApiModelProperty("预计上线时间名称")
+    private String planReleaseDateText;
+
 }

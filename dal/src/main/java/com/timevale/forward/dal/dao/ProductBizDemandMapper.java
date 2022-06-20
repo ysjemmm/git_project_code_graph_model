@@ -88,4 +88,6 @@ public interface ProductBizDemandMapper {
      */
     List<ProductBizDemandDO> getByBizDemandId(@Param("bizDemandId") Long bizDemandId);
 
+
+    List<ProductBizDemandDO> selectByProductDemandIds(@Param("productDemandIds") List<Long> productDemandIds);
 }

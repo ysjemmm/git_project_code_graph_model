@@ -27,6 +27,8 @@ import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.forward.service.utils.date.DateStyle;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -149,10 +151,12 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 记录旧状态
         Integer oldStatus = bizDemandDO.getStatus();
+        Date oldProjectEndDate = bizDemandDO.getProjectEndDate();
         Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
 
         // 修改业务需求状态
         bizDemandDO.setPlanReleaseDate(null);
+        bizDemandDO.setProjectEndDate(null);
         bizDemandDO.setStatus(BizDemandStatusEnum.INVALID.getCode());
         bizDemandMapper.fullUpdate(bizDemandDO);
 
@@ -180,12 +184,23 @@ public class BizDemandServiceImpl implements BizDemandService {
                 true,
                 ButtonActionEnum.INVALID.getText());
 
-        bizDemandLogComponent.addLogWhenModifyData(
-                PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
-                StringUtils.EMPTY,
-                bizDemandId,
-                BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
-                false);
+        if(oldPlanReleaseDate != null){
+            bizDemandLogComponent.addLogWhenModifyData(
+                    PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
+                    StringUtils.EMPTY,
+                    bizDemandId,
+                    BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
+                    false);
+        }
+
+        if(oldProjectEndDate != null){
+            bizDemandLogComponent.addLogWhenModifyData(
+                    DateUtil.parseToString(oldProjectEndDate, DateStyle.YYYY_MM_DD),
+                    StringUtils.EMPTY,
+                    bizDemandId,
+                    BizChangeLogFieldEnum.PROJECT_RELEASE_DATE.getText(),
+                    false);
+        }
 
         return BaseResult.success(true);
     }
@@ -347,14 +362,26 @@ public class BizDemandServiceImpl implements BizDemandService {
         fileComponent.update(fileIdList, bizDemandModifyReq.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
 
 
+        // 产品线变更带来的接收人变更
         if (!Objects.equal(oldBizDemandDO.getReceiveManId(), newBizDemandDO.getReceiveManId())) {
-            // 产品线变更带来的接收人变更
             messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
                     this,
                     oldBizDemandDO.getId(),
                     oldBizDemandDO.getSubmitMan(),
                     newBizDemandDO.getReceiveManId(),
                     newBizDemandDO.getName()
+            ));
+        }
+
+        // 预期上线时间变更带来的通知
+        if(!Objects.equal(oldBizDemandDO.getPlanReleaseDate(), newBizDemandDO.getPlanReleaseDate())){
+            messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
+                    this,
+                    oldBizDemandDO.getId(),
+                    oldBizDemandDO.getSubmitManId(),
+                    newBizDemandDO.getName(),
+                    BizDemandStatusEnum.getTextByCode(oldBizDemandDO.getStatus()),
+                    PlanReleaseDateEnum.getTextByCode(newBizDemandDO.getPlanReleaseDate())
             ));
         }
 

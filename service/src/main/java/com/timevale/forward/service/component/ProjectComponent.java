@@ -37,4 +37,11 @@ public interface ProjectComponent {
      * @param projectId 项目id
      */
     void updateNodeStatus(Long projectId);
+
+    /**
+     *
+     * @param projectId projectId
+     * @return Long
+     */
+    List<Long> getLinkBizDemandIds(Long projectId);
 }

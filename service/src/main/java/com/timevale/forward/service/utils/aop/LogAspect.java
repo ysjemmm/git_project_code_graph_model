@@ -26,6 +26,6 @@ public class LogAspect {
     public void doBefore(JoinPoint joinPoint){
         // 打印方法名, 请求入参
         Signature signature = joinPoint.getSignature();
-        log.info("方法名 : {}.{} 入参: {}", signature.getDeclaringType(), signature.getName(), JSON.toJSON(joinPoint.getArgs()));
+        log.info("[方法名]: {}.{} [入参]: {}", signature.getDeclaringType(), signature.getName(), JSON.toJSON(joinPoint.getArgs()));
     }
 }

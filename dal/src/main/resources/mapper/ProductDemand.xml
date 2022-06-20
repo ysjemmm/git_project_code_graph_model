@@ -106,6 +106,7 @@
          FROM product_demand a
          LEFT JOIN project_product_demand b ON a.id = b.product_demand_id AND b.is_deleted = false
          WHERE b.project_id = #{projectId}
+         order by modify_date desc, id
     </select>
     
     <select id="selectListOfBizDemandLink" resultType="com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO">

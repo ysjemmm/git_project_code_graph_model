@@ -153,6 +153,16 @@ public class BugOnlineDO extends BaseDO {
      * bug来源:产研(forward),运营支撑(support)
      */
     private String source;
+
+    /**
+     * 模块id
+     */
+    private String modelId;
+
+    /**
+     * 详细版本号
+     */
+    private String detailVersionId;
 }
 
 

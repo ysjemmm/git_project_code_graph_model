@@ -131,4 +131,13 @@ public class BugOnlineDetailVO extends ToString {
 
     @ApiModelProperty("关联业务需求")
     private BizDemandVO bizDemandVO;
+
+    @ApiModelProperty("模块id")
+    private List<Long> modelIds;
+
+    @ApiModelProperty("模块名称")
+    private String modelName;
+
+    @ApiModelProperty("详细版本号")
+    private String detailVersionId;
 }

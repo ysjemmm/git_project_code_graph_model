@@ -91,6 +91,11 @@ public class BugOfflineListDO extends BaseDO {
     private Integer returnCount;
 
     /**
+     * 打开次数
+     */
+    private Integer openCount;
+
+    /**
      * 不用修复原因
      */
     private Integer unHandleReason;

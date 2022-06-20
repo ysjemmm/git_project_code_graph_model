@@ -87,4 +87,7 @@ public class BizDemandVO extends ToString {
 
     @ApiModelProperty("需求提交人id")
     private String submitManId;
+
+    @ApiModelProperty("项目发布时间")
+    private Date projectEndDate;
 }

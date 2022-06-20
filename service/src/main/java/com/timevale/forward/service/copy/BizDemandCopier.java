@@ -13,6 +13,7 @@ import com.timevale.forward.facade.api.request.BizDemandAddReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
+import com.timevale.forward.facade.api.result.BizDemandStatusVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.model.middle.BizDemandMD;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -154,6 +155,13 @@ public interface BizDemandCopier {
      */
     BizDemandMD transform(BizDemandDO bizDemandDO);
 
+    /**
+     * 转换
+     *
+     * @param bizDemandDO 业务需求DO
+     * @return {@link BizDemandStatusVO}
+     */
+    BizDemandStatusVO change(BizDemandDO bizDemandDO);
 
     /**
      * 信息id

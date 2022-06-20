@@ -83,5 +83,6 @@
         <mapper resource="mapper/ProjectPublishPlan.xml"/>
         <mapper resource="mapper/ProjectGoalMapper.xml"/>
         <mapper resource="mapper/ManDayMapper.xml"/>
+        <mapper resource="mapper/ModelMapper.xml"/>
     </mappers>
 </configuration>

@@ -2,19 +2,13 @@ package com.timevale.forward.service.component;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
-import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
-import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
-import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author by YangXu
@@ -60,4 +54,17 @@ public interface BizDemandComponent {
      * @return 列表
      */
     BaseResult<PageQueryResult<BizDemandVO>> page(BizDemandListCondition bizDemandListCondition);
+
+    /**
+     *
+     * @param bizDemandId bizDemandIds
+     */
+    void updateProjectEndDate(Long bizDemandId);
+
+    /**
+     *
+     * @param pdStauts pdStauts
+     * @return
+     */
+    Integer getBizDemandStatus(Integer pdStauts);
 }

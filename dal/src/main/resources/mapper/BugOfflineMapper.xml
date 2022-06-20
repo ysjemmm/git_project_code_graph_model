@@ -100,7 +100,7 @@
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.BugOfflineListDO">
         select bo.id, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env, bo.reason, bo.source, bo.belong,
-        bo.return_count, bo.unhandle_reason,
+        bo.return_count, bo.unhandle_reason, bo.open_count,
         bo.create_date, bo.modify_date,
         bo.name bugName,
         p.name projectName, p.status projectStatus,
@@ -192,6 +192,13 @@
                 <if test="returnCountType == 2">and bo.return_count &gt;= #{returnCount}</if>
                 <if test="returnCountType == 3">and bo.return_count &lt; #{returnCount}</if>
                 <if test="returnCountType == 4">and bo.return_count &lt;= #{returnCount}</if>
+            </if>
+            <if test="openCountType != null and openCount != null">
+                <if test="openCountType == 0">and bo.open_count = #{openCount}</if>
+                <if test="openCountType == 1">and bo.open_count &gt; #{openCount}</if>
+                <if test="openCountType == 2">and bo.open_count &gt;= #{openCount}</if>
+                <if test="openCountType == 3">and bo.open_count &lt; #{openCount}</if>
+                <if test="openCountType == 4">and bo.open_count &lt;= #{openCount}</if>
             </if>
             <if test="copier!=null and copier!='' ">
                 and bo.id IN (
