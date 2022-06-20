@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
@@ -64,6 +65,7 @@ public class ProjectAddReq extends BaseReq {
     @ApiModelProperty("是否有项目目标：0否，1是")
     private Integer isWithGoal;
 
+    @Valid
     @ApiModelProperty("项目目标列表")
     private List<ProjectGoalAddReq> projectGoals;
 

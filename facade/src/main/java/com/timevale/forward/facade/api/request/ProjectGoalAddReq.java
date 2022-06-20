@@ -20,6 +20,9 @@ import java.util.Date;
 @ApiModel("项目目标新增")
 public class ProjectGoalAddReq extends BaseReq {
 
+    @ApiModelProperty("项目id(单独新增时传入)")
+    private String projectId;
+
     @NotBlank(message = "项目目标名称不能为空")
     @ApiModelProperty(value = "项目目标名称", required = true)
     private String name;
