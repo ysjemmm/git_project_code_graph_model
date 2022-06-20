@@ -90,4 +90,9 @@ public class ProjectDO extends BaseDO {
      */
     private Integer isPlatformPublish;
 
+    /**
+     * 是否有项目目标
+     */
+    private Integer isWithGoal;
+
 }

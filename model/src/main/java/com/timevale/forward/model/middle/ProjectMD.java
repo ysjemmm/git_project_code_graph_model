@@ -69,4 +69,7 @@ public class ProjectMD extends BaseMD{
      */
     @FieldCompare(fieldName = "是否需要在发布平台发布",enumClass = YesOrNoEnum.class)
     private Integer isPlatformPublish;
+
+    @FieldCompare(fieldName = "是否有项目目标",enumClass = YesOrNoEnum.class)
+    private Integer isWithGoal;
 }

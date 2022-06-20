@@ -101,4 +101,7 @@ public class ProjectDetailVO extends ToString {
 
     @ApiModelProperty("是否在发布平台发布")
     private Integer isPlatformPublish;
+
+    @ApiModelProperty("是否有项目目标")
+    private Integer isWithGoal;
 }
