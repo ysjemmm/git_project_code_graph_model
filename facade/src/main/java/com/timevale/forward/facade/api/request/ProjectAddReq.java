@@ -61,4 +61,10 @@ public class ProjectAddReq extends BaseReq {
     @ApiModelProperty("是否在发布平台发布：0否，1是")
     private Integer isPlatformPublish;
 
+    @ApiModelProperty("是否有项目目标：0否，1是")
+    private Integer isWithGoal;
+
+    @ApiModelProperty("项目目标列表")
+    private List<ProjectGoalAddReq> projectGoals;
+
 }
