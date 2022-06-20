@@ -1,5 +1,6 @@
-package com.timevale.forward.facade.api.request;
+package com.timevale.forward.facade.api.result;
 
+import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -12,15 +13,20 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 /**
+ * 项目目标展示类型
+ *
  * @author jingchun
  * create on 2022/6/20
  */
 @Getter
 @Setter
-@ApiModel("项目目标新增")
-public class ProjectGoalAddReq extends BaseReq {
+@ApiModel("项目目标展示类")
+public class ProjectGoalVO extends ToString {
 
-    @ApiModelProperty("项目id(单独新增时传入)")
+    @ApiModelProperty("项目目标id")
+    private Long id;
+
+    @ApiModelProperty("项目id")
     private Long projectId;
 
     @NotBlank(message = "项目目标名称不能为空")
