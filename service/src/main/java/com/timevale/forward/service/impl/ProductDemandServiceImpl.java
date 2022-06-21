@@ -278,6 +278,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.LINK.getText());
         }
         productDemandLogComponent.addLogWhenStatusChange(productDemand.getStatus(), productDemand.getStatus(), productDemand.getId(), ButtonActionEnum.SUBMIT.getText());
+
+        if (CollectionUtils.isNotEmpty(productDemandAddReq.getTrackEventIds())) {
+            productDemandTrackEventComponent.batchInsert(productDemand.getId(), productDemandAddReq.getTrackEventIds());
+        }
         return BaseResult.success(true);
     }
 

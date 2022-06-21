@@ -145,21 +145,17 @@ public class TrackEventServiceImpl implements TrackEventService {
             List<Long> elementIds=new ArrayList<>();
             List<String> elementNames=new ArrayList<>();
             Long parentId;
+            TrackMapDO page=null;
             if (trackMapDO.getLevel() == 5) {
-                TrackMapDO page = trackMapMapper.get(trackMapDO.getParentId());
+                page = trackMapMapper.get(trackMapDO.getParentId());
                 parentId = page.getParentId();
-                elementIds.set(3,page.getId());
-                elementIds.set(4,trackMapDO.getId());
-                elementNames.set(3,page.getName());
-                elementNames.set(4,trackMapDO.getName());
             } else {
                 parentId = trackMapDO.getParentId();
-                elementIds.set(3,trackMapDO.getId());
-                elementNames.set(3,trackMapDO.getName());
             }
             ModelDO modelDO = modelMapper.get(parentId);
             ProductLineDO productLineDO = productLineMapper.selectById(modelDO.getProductLineId());
             BizDomainDO bizDomainDO = bizDomainMapper.selectById(productLineDO.getBizDomainId());
+
             elementIds.add(bizDomainDO.getId());
             elementIds.add(productLineDO.getId());
             elementIds.add(modelDO.getId());
@@ -167,6 +163,13 @@ public class TrackEventServiceImpl implements TrackEventService {
             elementNames.add(bizDomainDO.getName());
             elementNames.add(productLineDO.getName());
             elementNames.add(modelDO.getName());
+
+            if(page!=null){
+                elementIds.add(page.getId());
+                elementNames.add(page.getName());
+            }
+            elementIds.add(trackMapDO.getId());
+            elementNames.add(trackMapDO.getName());
 
             trackEventDetailVO.setElementIds(elementIds);
             trackEventDetailVO.setElementNames(elementNames);

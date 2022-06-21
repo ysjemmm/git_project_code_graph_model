@@ -19,7 +19,7 @@ public  class TrackEventMessageHandler extends AbstractMessageHandler{
 
     @Override
     public  void handMessage(String processInstanceId){
-
+        trackEventComponent.updateTrackEventInfo(processInstanceId);
     }
 
 }

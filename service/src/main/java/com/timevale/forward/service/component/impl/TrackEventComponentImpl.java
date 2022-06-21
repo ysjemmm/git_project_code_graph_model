@@ -5,6 +5,7 @@ import com.github.pagehelper.PageInfo;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.TrackEventListCondition;
+import com.timevale.forward.dal.dao.TrackEvenPropMapper;
 import com.timevale.forward.dal.dao.TrackEventMapper;
 import com.timevale.forward.dal.entity.TrackEventDO;
 import com.timevale.forward.facade.api.result.TrackEventVO;
@@ -40,6 +41,9 @@ public class TrackEventComponentImpl implements TrackEventComponent {
 
     @Resource
     private EpeiusClient epeiusClient;
+
+    @Resource
+    private TrackEvenPropMapper trackEvenPropMapper;
 
     @Override
     public BaseResult<PageQueryResult<TrackEventVO>> list(TrackEventListCondition condition) {
@@ -81,9 +85,19 @@ public class TrackEventComponentImpl implements TrackEventComponent {
             trackEventDO.setFailReason(rejectReason);
         } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
             trackEventDO.setStatus(ProjectFlowStatusEnum.WITHDRAW.getCode());
+
         } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
 
         }
 
     }
+    private void me(TrackEventDO trackEventDO){
+//        TrackEventPropCondition c = TrackEventPropCondition.builder().trackEventId(trackEventDO.getId()).build();
+//        List<TrackEventPropDO> oldTrackEventPropDOList = trackEvenPropMapper.select(c);
+//        List<Long> oldPropIds = oldTrackEventPropDOList.stream().filter(a->).map(TrackEventPropDO::getTrackPropId).collect(Collectors.toList());
+//        if(CollectionUtils.isEmpty(oldPropIds)){
+//            return Lists.emptyList();
+//        }
+    }
+
 }
