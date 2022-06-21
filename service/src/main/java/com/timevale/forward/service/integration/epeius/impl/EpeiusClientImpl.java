@@ -2,6 +2,7 @@ package com.timevale.forward.service.integration.epeius.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.timevale.epeius.service.api.FlowService;
+import com.timevale.epeius.service.model.request.ProcessInstanceRequest;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.epeius.service.model.request.TerminateRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -107,4 +108,22 @@ public class EpeiusClientImpl implements EpeiusClient {
             throw new BaseBizRuntimeException("撤回工作流异常");
         }
     }
+
+    @Override
+    public Boolean addVariables(ProcessInstanceRequest processInstanceRequest) {
+        try {
+            log.info("添加流程变量 withdrawInstance: {}", JSON.toJSONString(processInstanceRequest));
+            BaseResult<Boolean> result = flowService.addVariables(processInstanceRequest);
+            if (result == null || !result.ifSuccess() || result.getData() == null) {
+                log.error("添加流程变量 result: {}", result);
+                throw new BaseBizRuntimeException("添加流程变量");
+            }
+            log.info("添加流程变量 result: {}", result.getData());
+            return result.getData();
+        } catch (Exception e) {
+            log.warn("添加流程变量: ", e);
+            throw new BaseBizRuntimeException("添加流程变量");
+        }
+    }
+
 }

@@ -51,6 +51,9 @@ public class TrackEventDetailVO extends ToString {
     @ApiModelProperty("事件拒绝原因")
     private String failReason;
 
+    @ApiModelProperty("接口名称")
+    private String apiName;
+
     @ApiModelProperty("提交人")
     private String createMan;
 
@@ -71,5 +74,11 @@ public class TrackEventDetailVO extends ToString {
 
     @ApiModelProperty("事件属性")
     private List<TrackPropVO> trackProps;
+
+    @ApiModelProperty("埋点元素")
+    private List<Long> elementIds;
+
+    @ApiModelProperty("埋点元素")
+    private List<String> elementNames;
 
 }

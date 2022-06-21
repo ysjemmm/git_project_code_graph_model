@@ -1,5 +1,6 @@
 package com.timevale.forward.service.integration.epeius;
 
+import com.timevale.epeius.service.model.request.ProcessInstanceRequest;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.epeius.service.model.request.TerminateRequest;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
@@ -39,5 +40,8 @@ public interface EpeiusClient {
      * @return Boolean
      */
     Boolean withdrawInstance(TerminateRequest terminateRequest);
+
+
+    Boolean addVariables(ProcessInstanceRequest processInstanceRequest);
 
 }

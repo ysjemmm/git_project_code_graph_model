@@ -16,6 +16,9 @@ import javax.validation.constraints.NotNull;
 @ApiModel("事件属性新增")
 public class TrackPropAddReq extends BaseReq {
 
+    @ApiModelProperty("id")
+    private Long id;
+
     @ApiModelProperty("中文名称")
     private String cnName;
 

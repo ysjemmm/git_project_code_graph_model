@@ -1,7 +1,10 @@
 package com.timevale.forward.service.mq.handler;
 
+import com.timevale.forward.service.component.ProjectFlowComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
 
 /**
  * @author xingyun
@@ -11,9 +14,12 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public  class ProjectFlowMessageHandler extends AbstractMessageHandler{
 
-    @Override
-    public  void handMessage(String processInstanceId){
+    @Resource
+    private ProjectFlowComponent projectFlowComponent;
 
+    @Override
+    public void handMessage(String processInstanceId){
+        projectFlowComponent.updateFlowInfo(processInstanceId);
     }
 
 }

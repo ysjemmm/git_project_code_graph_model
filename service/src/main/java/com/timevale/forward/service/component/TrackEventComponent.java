@@ -17,4 +17,11 @@ public interface TrackEventComponent {
      * @return 埋点事件
      */
     BaseResult<PageQueryResult<TrackEventVO>> list(TrackEventListCondition condition);
+
+
+    /**
+     * 埋点事件
+     * @param processInstanceId processInstanceId
+     */
+    void  updateTrackEventInfo(String processInstanceId);
 }

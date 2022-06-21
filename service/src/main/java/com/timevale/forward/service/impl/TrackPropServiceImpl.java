@@ -63,6 +63,7 @@ public class TrackPropServiceImpl implements TrackPropService {
 
     @Override
     public BaseResult<PageQueryResult<TrackPropVO>> list(TrackPropQueryList trackPropQueryList) {
+        log.info("埋点属性列表,参数:{}", trackPropQueryList);
         TrackPropListCondition condition = TrackPropCopier.INSTANCE.convert(trackPropQueryList);
         PageHelper.startPage(trackPropQueryList.getPageNum(), trackPropQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         return trackPropComponent.list(condition);
@@ -70,8 +71,13 @@ public class TrackPropServiceImpl implements TrackPropService {
 
     @Override
     public BaseResult<Boolean> modify(TrackPropModifyReq trackPropModifyReq) {
+        log.info("埋点属性修改,参数:{}", trackPropModifyReq);
         TrackPropCondition c = TrackPropCondition.builder().id(trackPropModifyReq.getId()).build();
         TrackPropDO trackPropDO = trackPropMapper.select(c).get(0);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        if (!Objects.equals(userInfo.getId(), trackReviewer) || !TrackStatusEnum.REVIEWED.getCode().equals(trackPropDO.getStatus())) {
+//            throw new BaseBizRuntimeException("状态为审核通过,且操作人为管理员才能编辑");
+        }
         trackPropDO.setCnName(trackPropModifyReq.getCnName());
         trackPropMapper.update(trackPropDO);
         return BaseResult.success(true);
@@ -79,6 +85,7 @@ public class TrackPropServiceImpl implements TrackPropService {
 
     @Override
     public BaseResult<Boolean> delete(TrackPropDeleteReq trackPropDeleteReq) {
+        log.info("埋点属性删除,参数:{}", trackPropDeleteReq);
         TrackPropCondition c = TrackPropCondition.builder().id(trackPropDeleteReq.getId()).build();
         TrackPropDO trackPropDO = trackPropMapper.select(c).get(0);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();

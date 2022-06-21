@@ -45,5 +45,14 @@
         </where>
     </select>
 
+    <select id="get" resultType="com.timevale.forward.dal.entity.TrackMapDO">
+        select id, parent_id, name, level, is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from track_map a
+        <where>
+            <if test="id != null">and a.id = #{id}</if>
+            and a.is_deleted=false
+        </where>
+    </select>
+
 </mapper>
 

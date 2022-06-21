@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotNull;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -19,7 +19,6 @@ import java.util.List;
 public class ProductDemandLinkTrackEventQueryList extends QueryBase {
 
     @ApiModelProperty("产品需求id")
-    @NotNull(message = "产品需求id不能为空")
     private Long productDemandId;
 
     @ApiModelProperty("中文名称")
@@ -30,4 +29,16 @@ public class ProductDemandLinkTrackEventQueryList extends QueryBase {
 
     @ApiModelProperty("提交人id")
     private List<String> createManIds;
+
+    @ApiModelProperty("创建时间开始")
+    private Date createDateStart;
+
+    @ApiModelProperty("创建时间结束")
+    private Date createDateEnd;
+
+    @ApiModelProperty("修改时间开始")
+    private Date modifyDateStart;
+
+    @ApiModelProperty("修改时间结束")
+    private Date modifyDateEnd;
 }

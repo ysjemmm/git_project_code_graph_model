@@ -21,9 +21,11 @@ public enum PlatformTypeEnum {
 
     JAVASCRIPT(2, "JavaScript"),
 
-    MINI_PROGRAMS(3, "小程序"),
+    WECHAT_MINI_PROGRAMS(3,"微信小程序"),
 
-    SERVER(4, "服务端"),
+    ALIPAY_MINI_PROGRAMS(4,"支付宝小程序"),
+
+    SERVER(5, "服务端"),
 
     OTHER(9, "其他");
     private final Integer code;

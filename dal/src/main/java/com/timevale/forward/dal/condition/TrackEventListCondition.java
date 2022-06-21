@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -51,5 +52,23 @@ public class TrackEventListCondition extends QueryBase {
      * trackEventIds
      */
     private List<Long> trackEventIds;
+
+    /**
+     * 创建时间
+     */
+    private Date createDateStart;
+
+    /**
+     * 创建时间
+     */
+    private Date createDateEnd;
+    /**
+     * 修改时间开始
+     */
+    private Date modifyDateStart;
+    /**
+     * 修改时间结束
+     */
+    private Date modifyDateEnd;
 
 }

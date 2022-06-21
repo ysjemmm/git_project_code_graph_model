@@ -99,6 +99,12 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="createDateStart != null and createDateEnd != null">
+                and a.create_date &gt;= #{createDateStart} and a.create_date &lt;= #{createDateEnd}
+            </if>
+            <if test="modifyDateStart != null and modifyDateEnd != null">
+                and a.modify_date &gt;= #{modifyDateStart} and a.modify_date &lt;= #{modifyDateEnd}
+            </if>
             and a.is_deleted=false
         </where>
     </select>
@@ -108,7 +114,9 @@
         is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
         from track_event a
         <where>
-            id=#{id} and a.is_deleted=false
+            <if test="id != null"> id = #{id}</if>
+            <if test="flowId != null">and flow_id = #{flowId}</if>
+            and is_deleted=false
         </where>
     </select>
 </mapper>

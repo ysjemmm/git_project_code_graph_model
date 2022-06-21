@@ -17,6 +17,9 @@ import java.util.Date;
 @ApiModel("事件属性信息")
 public class TrackPropVO extends ToString {
 
+    @ApiModelProperty("id")
+    private String id;
+
     @ApiModelProperty("中文名称")
     private String cnName;
 

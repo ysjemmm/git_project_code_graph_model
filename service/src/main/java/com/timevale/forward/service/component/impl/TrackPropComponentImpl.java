@@ -10,7 +10,6 @@ import com.timevale.forward.dal.dao.TrackPropMapper;
 import com.timevale.forward.dal.entity.TrackEventPropDO;
 import com.timevale.forward.dal.entity.TrackPropDO;
 import com.timevale.forward.facade.api.result.TrackPropVO;
-import com.timevale.forward.model.enums.TrackPropTypeEnum;
 import com.timevale.forward.model.enums.TrackStatusEnum;
 import com.timevale.forward.service.component.TrackPropComponent;
 import com.timevale.forward.service.copy.TrackPropCopier;
@@ -57,16 +56,8 @@ public class TrackPropComponentImpl implements TrackPropComponent {
 
     @Override
     public BaseResult<Boolean> add(List<TrackPropDO> trackPropDOList,Long trackEventId) {
-        if(CollectionUtils.isEmpty(trackPropDOList)){
-            return  BaseResult.success(true);
-        }
-        List<TrackPropDO> filter = trackPropDOList.stream().filter(a -> TrackPropTypeEnum.NEW.getCode().equals(a.getType())).collect(Collectors.toList());
 
-        checkBeforeInsert(filter);
-
-        if(!CollectionUtils.isEmpty(filter)){
-            trackPropMapper.batchInsert(filter);
-        }
+        checkBeforeInsert(trackPropDOList);
 
         addRelation(trackPropDOList,trackEventId);
 
@@ -76,13 +67,8 @@ public class TrackPropComponentImpl implements TrackPropComponent {
     @Override
     public BaseResult<Boolean> modify(List<TrackPropDO> trackPropDOList,Long trackEventId) {
 
-        List<TrackPropDO> filter = trackPropDOList.stream().filter(a -> TrackPropTypeEnum.NEW.getCode().equals(a.getType())).collect(Collectors.toList());
 
-        checkBeforeInsert(filter);
-
-        if(!CollectionUtils.isEmpty(filter)){
-            trackPropMapper.batchInsert(filter);
-        }
+        checkBeforeInsert(trackPropDOList);
 
         delRelation(trackPropDOList,trackEventId);
 
@@ -99,6 +85,7 @@ public class TrackPropComponentImpl implements TrackPropComponent {
         }
         List<TrackPropDO> list = trackPropMapper.selectByIds(oldPropIds);
         List<TrackPropVO> trackEventVOList = TrackPropCopier.INSTANCE.convert(list);
+
         trackEventVOList.forEach(a->{
             a.setStatusName(TrackStatusEnum.getTextByCode(a.getStatus()));
         });
@@ -151,23 +138,32 @@ public class TrackPropComponentImpl implements TrackPropComponent {
     }
 
     private void checkBeforeInsert(List<TrackPropDO> trackPropDOList) {
+
         if(CollectionUtils.isEmpty(trackPropDOList)){
             return;
         }
-        List<String> cnNames = trackPropDOList.stream().map(TrackPropDO::getCnName).collect(Collectors.toList());
-        TrackPropCondition c = TrackPropCondition.builder().cnNames(cnNames).build();
+
+        List<TrackPropDO> filter = trackPropDOList.stream().filter(a -> a.getId()==null).collect(Collectors.toList());
+
+        List<Integer>status=Lists.newArrayList(TrackStatusEnum.REVIEWING.getCode(),TrackStatusEnum.REVIEWED.getCode());
+        List<String> cnNames = filter.stream().map(TrackPropDO::getCnName).collect(Collectors.toList());
+        TrackPropCondition c = TrackPropCondition.builder().cnNames(cnNames).status(status).build();
         List<TrackPropDO> trackPropDos = trackPropMapper.select(c);
         if(!CollectionUtils.isEmpty(trackPropDos)){
             String cnName = trackPropDos.stream().map(TrackPropDO::getCnName).collect(Collectors.joining(","));
             throw new BaseBizRuntimeException("属性中文名 "+cnName+" 已存在,请修改后重试");
         }
 
-        List<String> egNames = trackPropDOList.stream().map(TrackPropDO::getEgName).collect(Collectors.toList());
-        c = TrackPropCondition.builder().egNames(egNames).build();
+        List<String> egNames = filter.stream().map(TrackPropDO::getEgName).collect(Collectors.toList());
+        c = TrackPropCondition.builder().egNames(egNames).status(status).build();
         trackPropDos = trackPropMapper.select(c);
         if(!CollectionUtils.isEmpty(trackPropDos)){
             String cnName = trackPropDos.stream().map(TrackPropDO::getEgName).collect(Collectors.joining(","));
             throw new BaseBizRuntimeException("属性英文名 "+cnName+" 已存在,请修改后重试");
+        }
+
+        if(!CollectionUtils.isEmpty(filter)){
+            trackPropMapper.batchInsert(filter);
         }
     }
 }

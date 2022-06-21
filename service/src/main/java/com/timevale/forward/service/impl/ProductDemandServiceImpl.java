@@ -478,7 +478,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     public BaseResult<PageQueryResult<TrackEventVO>> matchTrackEventList(ProductDemandLinkTrackEventQueryList trackEventQueryList) {
         log.info("产品需求-事件匹配,参数:trackEventQueryList={}", trackEventQueryList);
         TrackEventListCondition condition = TrackEventCopier.INSTANCE.convert(trackEventQueryList);
-        // 过滤掉已经关联的事件
         ProductDemandTrackEventCondition c = ProductDemandTrackEventCondition.builder().productDemandId(trackEventQueryList.getProductDemandId()).isDeleted(false).build();
         List<Long> trackEventIds = productDemandTrackEventMapper.select(c).stream().map(ProductDemandTrackEventDO::getTrackEventId).collect(Collectors.toList());
         condition.setFilterTrackEventIds(trackEventIds);
@@ -515,6 +514,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         log.info("产品需求-事件清单,参数:trackEventQueryList={}", trackEventQueryList);
         ProductDemandTrackEventCondition c = ProductDemandTrackEventCondition.builder().productDemandId(trackEventQueryList.getProductDemandId()).isDeleted(false).build();
         List<Long> trackEventIds = productDemandTrackEventMapper.select(c).stream().map(ProductDemandTrackEventDO::getTrackEventId).collect(Collectors.toList());
+        if(CollectionUtils.isEmpty(trackEventIds)){
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
         TrackEventListCondition condition = TrackEventListCondition.builder().trackEventIds(trackEventIds).build();
         condition.setTrackEventIds(trackEventIds);
         PageHelper.startPage(trackEventQueryList.getPageNum(), trackEventQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);

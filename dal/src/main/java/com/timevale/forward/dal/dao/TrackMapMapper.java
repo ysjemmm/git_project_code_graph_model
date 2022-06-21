@@ -29,25 +29,33 @@ public interface TrackMapMapper {
 
 
     /**
-     * 获取产品线列表
+     * 列表
      *
      * @return 列表
      */
     List<TrackMapDO> select(TrackMapCondition condition);
 
     /**
-     * 获取产品线列表
+     * 删除
      *
      * @return 列表
      */
     int delete(@Param("id")Long id);
 
     /**
-     * 获取产品线列表
+     * 列表
      *
      * @return 列表
      */
     List<TrackMapDO> getChildren(@Param("parentId") List<Long> parentId,@Param("level")Integer level);
+
+
+    /**
+     * 列表
+     *
+     * @return 列表
+     */
+    TrackMapDO get(@Param("id")Long id);
 
 
 }

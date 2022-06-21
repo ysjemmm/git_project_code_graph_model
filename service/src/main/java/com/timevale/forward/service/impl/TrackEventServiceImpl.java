@@ -129,7 +129,8 @@ public class TrackEventServiceImpl implements TrackEventService {
 
     @Override
     public BaseResult<TrackEventDetailVO> get(Long eventId) {
-        TrackEventDO trackEventDO = trackEventMapper.get(eventId);
+        log.info("埋点事件查看,参数:{}", eventId);
+        TrackEventDO trackEventDO = trackEventMapper.get(eventId, null);
         if (trackEventDO == null) {
             throw new BaseBizRuntimeException("不存在该事件");
         }
@@ -138,15 +139,46 @@ public class TrackEventServiceImpl implements TrackEventService {
         trackEventDetailVO.setEnvNames(EnvEnum.getTextByCode(JSONObject.parseArray(trackEventDetailVO.getEnv(), Integer.class)));
         trackEventDetailVO.setPlatformNames(PlatformTypeEnum.getTextByCode(JSONObject.parseArray(trackEventDetailVO.getPlatform(), Integer.class)));
         List<TrackPropVO> trackPropVOList = trackPropComponent.get(eventId);
-
         trackEventDetailVO.setTrackProps(trackPropVOList);
+        TrackMapDO trackMapDO = trackMapMapper.get(trackEventDO.getTrackMapId());
+        if (trackMapDO != null) {
+            List<Long> elementIds=new ArrayList<>();
+            List<String> elementNames=new ArrayList<>();
+            Long parentId;
+            if (trackMapDO.getLevel() == 5) {
+                TrackMapDO page = trackMapMapper.get(trackMapDO.getParentId());
+                parentId = page.getParentId();
+                elementIds.set(3,page.getId());
+                elementIds.set(4,trackMapDO.getId());
+                elementNames.set(3,page.getName());
+                elementNames.set(4,trackMapDO.getName());
+            } else {
+                parentId = trackMapDO.getParentId();
+                elementIds.set(3,trackMapDO.getId());
+                elementNames.set(3,trackMapDO.getName());
+            }
+            ModelDO modelDO = modelMapper.get(parentId);
+            ProductLineDO productLineDO = productLineMapper.selectById(modelDO.getProductLineId());
+            BizDomainDO bizDomainDO = bizDomainMapper.selectById(productLineDO.getBizDomainId());
+            elementIds.add(bizDomainDO.getId());
+            elementIds.add(productLineDO.getId());
+            elementIds.add(modelDO.getId());
+
+            elementNames.add(bizDomainDO.getName());
+            elementNames.add(productLineDO.getName());
+            elementNames.add(modelDO.getName());
+
+            trackEventDetailVO.setElementIds(elementIds);
+            trackEventDetailVO.setElementNames(elementNames);
+        }
         return BaseResult.success(trackEventDetailVO);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> delete(TrackEventDeleteReq trackEventDeleteReq) {
-        TrackEventDO oldTrackEventDO = trackEventMapper.get(trackEventDeleteReq.getId());
+        log.info("埋点事件删除,参数:{}", trackEventDeleteReq);
+        TrackEventDO oldTrackEventDO = trackEventMapper.get(trackEventDeleteReq.getId(), null);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         if (trackEventDeleteReq.getType() == 0) {
             if (!Objects.equals(userInfo.getId(), trackReviewer) && !TrackStatusEnum.canDelete(oldTrackEventDO.getStatus())) {

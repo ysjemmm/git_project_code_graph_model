@@ -30,4 +30,9 @@ public class TrackPropCondition extends QueryBase {
      */
     private List<String> egNames;
 
+    /**
+     * status
+     */
+    private List<Integer> status;
+
 }
