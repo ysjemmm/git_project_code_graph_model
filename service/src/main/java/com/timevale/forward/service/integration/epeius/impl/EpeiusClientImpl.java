@@ -2,6 +2,7 @@ package com.timevale.forward.service.integration.epeius.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.timevale.epeius.service.api.FlowService;
+import com.timevale.epeius.service.enums.FlowStatusEnum;
 import com.timevale.epeius.service.model.request.ProcessInstanceRequest;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.epeius.service.model.request.TerminateRequest;
@@ -95,6 +96,10 @@ public class EpeiusClientImpl implements EpeiusClient {
     @Override
     public Boolean withdrawInstance(TerminateRequest terminateRequest) {
         try {
+            ProcessResponse processInfo = getProcessInfo(terminateRequest.getProcessInstanceId());
+            if(!FlowStatusEnum.PENDING.getValue().equals(processInfo.getProcessStatus())){
+                return true;
+            }
             log.info("撤回工作流 withdrawInstance: {}", JSON.toJSONString(terminateRequest));
             BaseResult<Boolean> result = flowService.withdrawInstance(terminateRequest);
             if (result == null || !result.ifSuccess() || result.getData() == null) {

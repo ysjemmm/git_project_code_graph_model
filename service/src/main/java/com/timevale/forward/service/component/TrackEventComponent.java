@@ -2,6 +2,7 @@ package com.timevale.forward.service.component;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.TrackEventListCondition;
+import com.timevale.forward.dal.entity.TrackEventDO;
 import com.timevale.forward.facade.api.result.TrackEventVO;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
@@ -24,4 +25,10 @@ public interface TrackEventComponent {
      * @param processInstanceId processInstanceId
      */
     void  updateTrackEventInfo(String processInstanceId);
+
+    /**
+     * 更新 埋点事件-属性
+     * @param trackEventDO trackEventDO
+     */
+    void updateTrackEventProp(TrackEventDO trackEventDO);
 }

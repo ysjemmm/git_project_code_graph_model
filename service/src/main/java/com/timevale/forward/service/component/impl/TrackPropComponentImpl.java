@@ -67,7 +67,6 @@ public class TrackPropComponentImpl implements TrackPropComponent {
     @Override
     public BaseResult<Boolean> modify(List<TrackPropDO> trackPropDOList,Long trackEventId) {
 
-
         checkBeforeInsert(trackPropDOList);
 
         delRelation(trackPropDOList,trackEventId);
@@ -77,7 +76,7 @@ public class TrackPropComponentImpl implements TrackPropComponent {
 
     @Override
     public List<TrackPropVO> get(Long trackEventId) {
-        TrackEventPropCondition c = TrackEventPropCondition.builder().trackEventId(trackEventId).build();
+        TrackEventPropCondition c = TrackEventPropCondition.builder().trackEventId(trackEventId).isDeleted(false).build();
         List<TrackEventPropDO> oldTrackEventPropDOList = trackEvenPropMapper.select(c);
         List<Long> oldPropIds = oldTrackEventPropDOList.stream().map(TrackEventPropDO::getTrackPropId).collect(Collectors.toList());
         if(CollectionUtils.isEmpty(oldPropIds)){
@@ -95,7 +94,7 @@ public class TrackPropComponentImpl implements TrackPropComponent {
     private List<Long>  addRelation(List<TrackPropDO> trackPropDOList,Long trackEventId) {
         List<Long> newPropIds = trackPropDOList.stream().map(TrackPropDO::getId).collect(Collectors.toList());
 
-        TrackEventPropCondition c = TrackEventPropCondition.builder().trackEventId(trackEventId).build();
+        TrackEventPropCondition c = TrackEventPropCondition.builder().trackEventId(trackEventId).isDeleted(false).build();
         List<TrackEventPropDO> oldTrackEventPropDOList = trackEvenPropMapper.select(c);
         List<Long> oldPropIds = oldTrackEventPropDOList.stream().map(TrackEventPropDO::getTrackPropId).collect(Collectors.toList());
 

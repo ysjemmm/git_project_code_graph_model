@@ -2,7 +2,6 @@ package com.timevale.forward.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
-import com.timevale.epeius.service.model.request.TerminateRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.TrackEventCondition;
 import com.timevale.forward.dal.condition.TrackEventListCondition;
@@ -16,10 +15,8 @@ import com.timevale.forward.facade.api.request.TrackEventModifyReq;
 import com.timevale.forward.facade.api.result.TrackEventDetailVO;
 import com.timevale.forward.facade.api.result.TrackEventVO;
 import com.timevale.forward.facade.api.result.TrackPropVO;
-import com.timevale.forward.model.enums.EnvEnum;
-import com.timevale.forward.model.enums.PlatformTypeEnum;
-import com.timevale.forward.model.enums.TrackMapEnum;
-import com.timevale.forward.model.enums.TrackStatusEnum;
+import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.TrackEventComponent;
 import com.timevale.forward.service.component.TrackPropComponent;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -82,6 +79,9 @@ public class TrackEventServiceImpl implements TrackEventService {
     @Resource
     private EpeiusClient epeiusClient;
 
+    @Resource
+    private FileComponent fileComponent;
+
 
     @Override
     public BaseResult<PageQueryResult<TrackEventVO>> list(TrackEventQueryList trackEventQueryList) {
@@ -110,6 +110,9 @@ public class TrackEventServiceImpl implements TrackEventService {
 
         List<TrackPropDO> trackProps = TrackPropCopier.INSTANCE.change(trackEventAddReq.getTrackProps());
         trackPropComponent.add(trackProps, trackEventDO.getId());
+
+        fileComponent.add(trackEventAddReq.getFiles(), trackEventDO.getId(), FileTypeEnum.TRACK_EVENT.getCode());
+
         return BaseResult.success(true);
     }
 
@@ -117,13 +120,22 @@ public class TrackEventServiceImpl implements TrackEventService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(TrackEventModifyReq trackEventModifyReq) {
         log.info("埋点事件修改,参数:{}", trackEventModifyReq);
+        TrackEventDO oldTrackEventDO = trackEventMapper.get(trackEventModifyReq.getId(), null);
+        if (!TrackStatusEnum.WITHDRAW.getCode().equals(oldTrackEventDO.getStatus())
+                && !TrackStatusEnum.REVIEW_FAIL.getCode().equals(oldTrackEventDO.getStatus())) {
+            throw new BaseBizRuntimeException("状态为审核不通过,已撤回才能编辑");
+        }
         checkBeforeInsert(trackEventModifyReq);
+
         TrackEventDO trackEventDO = TrackEventCopier.INSTANCE.convert(trackEventModifyReq);
         Long trackMapId = trackEventModifyReq.getElementId() == null ? trackEventModifyReq.getPageId() : trackEventModifyReq.getElementId();
         trackEventDO.setTrackMapId(trackMapId);
         trackEventMapper.update(trackEventDO);
+
         List<TrackPropDO> trackProps = TrackPropCopier.INSTANCE.change(trackEventModifyReq.getTrackProps());
         trackPropComponent.modify(trackProps, trackEventDO.getId());
+        // 附件
+        fileComponent.update(trackEventModifyReq.getFiles(), trackEventModifyReq.getId(), FileTypeEnum.TRACK_EVENT.getCode());
         return BaseResult.success(true);
     }
 
@@ -142,10 +154,10 @@ public class TrackEventServiceImpl implements TrackEventService {
         trackEventDetailVO.setTrackProps(trackPropVOList);
         TrackMapDO trackMapDO = trackMapMapper.get(trackEventDO.getTrackMapId());
         if (trackMapDO != null) {
-            List<Long> elementIds=new ArrayList<>();
-            List<String> elementNames=new ArrayList<>();
+            List<Long> elementIds = new ArrayList<>();
+            List<String> elementNames = new ArrayList<>();
             Long parentId;
-            TrackMapDO page=null;
+            TrackMapDO page = null;
             if (trackMapDO.getLevel() == 5) {
                 page = trackMapMapper.get(trackMapDO.getParentId());
                 parentId = page.getParentId();
@@ -164,7 +176,7 @@ public class TrackEventServiceImpl implements TrackEventService {
             elementNames.add(productLineDO.getName());
             elementNames.add(modelDO.getName());
 
-            if(page!=null){
+            if (page != null) {
                 elementIds.add(page.getId());
                 elementNames.add(page.getName());
             }
@@ -183,23 +195,15 @@ public class TrackEventServiceImpl implements TrackEventService {
         log.info("埋点事件删除,参数:{}", trackEventDeleteReq);
         TrackEventDO oldTrackEventDO = trackEventMapper.get(trackEventDeleteReq.getId(), null);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        if (trackEventDeleteReq.getType() == 0) {
-            if (!Objects.equals(userInfo.getId(), trackReviewer) && !TrackStatusEnum.canDelete(oldTrackEventDO.getStatus())) {
-                //审核人任意状态可删除,其他人审核不通过or已撤回可删除
-                throw new BaseBizRuntimeException("状态为已撤回才能删除");
-            }
-            oldTrackEventDO.setIsDeleted(true);
-            trackEventMapper.update(oldTrackEventDO);
 
-        } else {
-            if (!TrackStatusEnum.REVIEWING.getCode().equals(oldTrackEventDO.getStatus())) {
-                throw new BaseBizRuntimeException("状态为审核中才能撤回");
-            }
+        if (TrackStatusEnum.REVIEWING.getCode().equals(oldTrackEventDO.getStatus())) {
+//            throw new BaseBizRuntimeException("状态为审核中不能删除");
         }
-        TerminateRequest request = new TerminateRequest();
-        request.setProcessInstanceId(oldTrackEventDO.getFlowId());
-        request.setAssignee(userInfo.getId());
-//        epeiusClient.withdrawInstance(request);
+        if (!Objects.equals(userInfo.getId(), trackReviewer) && TrackStatusEnum.REVIEWED.getCode().equals(oldTrackEventDO.getStatus())) {
+//            throw new BaseBizRuntimeException("非管理员不能删除审核通过的事件");
+        }
+        oldTrackEventDO.setIsDeleted(true);
+        trackEventMapper.update(oldTrackEventDO);
         return BaseResult.success(true);
     }
 

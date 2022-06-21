@@ -16,10 +16,6 @@ import javax.validation.constraints.NotNull;
 @ApiModel("埋点事件删除")
 public class TrackEventDeleteReq extends BaseReq {
 
-    @ApiModelProperty("操作类型:0删除,1撤回")
-    @NotNull(message = "操作类型不能为空")
-    private Integer type;
-
     @ApiModelProperty("事件id")
     @NotNull(message = "事件id不能为空")
     private Long id;

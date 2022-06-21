@@ -68,4 +68,13 @@ public interface TrackPropMapper {
      */
     int update(TrackPropDO trackPropDO);
 
+    /**
+     *
+     * @param ids ids
+     * @param status status
+     * @param type type
+     * @return
+     */
+    int batchUpdate(@Param("ids") List<Long> ids,@Param("status")Integer status,@Param("type")Integer type);
+
 }

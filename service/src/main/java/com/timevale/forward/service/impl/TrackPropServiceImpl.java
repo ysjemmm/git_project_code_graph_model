@@ -22,9 +22,11 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TrackPropCopier;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.CollectionUtils;
 
@@ -65,6 +67,8 @@ public class TrackPropServiceImpl implements TrackPropService {
     public BaseResult<PageQueryResult<TrackPropVO>> list(TrackPropQueryList trackPropQueryList) {
         log.info("埋点属性列表,参数:{}", trackPropQueryList);
         TrackPropListCondition condition = TrackPropCopier.INSTANCE.convert(trackPropQueryList);
+        List<Integer> status = Lists.newArrayList(TrackStatusEnum.REVIEWING.getCode(), TrackStatusEnum.REVIEWED.getCode());
+        condition.setStatus(status);
         PageHelper.startPage(trackPropQueryList.getPageNum(), trackPropQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         return trackPropComponent.list(condition);
     }
@@ -77,6 +81,11 @@ public class TrackPropServiceImpl implements TrackPropService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         if (!Objects.equals(userInfo.getId(), trackReviewer) || !TrackStatusEnum.REVIEWED.getCode().equals(trackPropDO.getStatus())) {
 //            throw new BaseBizRuntimeException("状态为审核通过,且操作人为管理员才能编辑");
+        }
+        c = TrackPropCondition.builder().cnNames(Lists.newArrayList(trackPropModifyReq.getCnName())).build();
+        List<TrackPropDO> trackPropDos = trackPropMapper.select(c);
+        if(!CollectionUtils.isEmpty(trackPropDos)){
+            throw new BaseBizRuntimeException("该属性中文名字已存在,不可保存");
         }
         trackPropDO.setCnName(trackPropModifyReq.getCnName());
         trackPropMapper.update(trackPropDO);

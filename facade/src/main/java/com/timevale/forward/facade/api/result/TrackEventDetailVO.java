@@ -72,6 +72,9 @@ public class TrackEventDetailVO extends ToString {
     @ApiModelProperty("更新时间")
     private Date modifyDate;
 
+    @ApiModelProperty("触发时机")
+    private String touchMoment;
+
     @ApiModelProperty("事件属性")
     private List<TrackPropVO> trackProps;
 
