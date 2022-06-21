@@ -29,7 +29,12 @@ public enum BugSourceEnum {
     /**
      * 自动化脚本执行发现bug
      */
-    SCRIPT(3,"自动化脚本执行发现bug");
+    SCRIPT(3,"自动化脚本执行发现bug"),
+
+    /**
+     * 代码review
+     */
+    CODE_REVIEW(4,"代码review");
 
     private final Integer code;
     private final String text;
