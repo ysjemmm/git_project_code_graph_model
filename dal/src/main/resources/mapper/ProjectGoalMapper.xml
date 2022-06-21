@@ -3,5 +3,23 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.timevale.forward.dal.dao.ProjectGoalMapper">
+    <insert id="insert">
+        insert into project_goal (project_id, name, type, is_main, measurement, reach_value, reach_date,
+                                  create_man_id, create_man)
+        values (#{projectId}, #{name}, #{type}, #{isMain}, #{measurement}, #{reachValue}, #{reachDate},
+                #{createManId}, #{createMan})
+    </insert>
+
+    <update id="unsetMainGoal">
+        update project_goal
+        set is_main = 0
+        where project_id = #{projectId}
+          and is_main = 1
+    </update>
+    <select id="getByName" resultType="com.timevale.forward.dal.entity.ProjectGoalDO">
+        select *
+        from project_goal
+        where name = #{name}
+    </select>
 
 </mapper>

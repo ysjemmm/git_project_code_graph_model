@@ -48,10 +48,6 @@ public class ProductDemandListDO extends BaseDO {
      */
     private String bizDomainName;
 
-    /**
-     * 修改时间
-     */
-    private Date modifyDate;
 
     /**
      * 抄送人

@@ -17,6 +17,8 @@ public enum BizChangeLogFieldEnum {
 
     PD("产品经理"),
 
+    PROJECT_GOAL("项目目标"),
+
     /**
      * 产品需求
      */
