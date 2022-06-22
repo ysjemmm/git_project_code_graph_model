@@ -5,7 +5,10 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.request.ProjectGoalAddReq;
 import com.timevale.forward.facade.api.request.ProjectGoalFinishReq;
 import com.timevale.forward.facade.api.request.ProjectGoalModifyReq;
+import com.timevale.forward.facade.api.result.ProjectGoalVO;
 import com.timevale.mandarin.common.annotation.RestClient;
+
+import java.util.List;
 
 /**
  * 项目目标RPC接口
@@ -16,6 +19,12 @@ import com.timevale.mandarin.common.annotation.RestClient;
 
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface ProjectGoalService {
+
+
+    /**
+     * 查找项目下项目目标列表
+     */
+    BaseResult<List<ProjectGoalVO>> list(Long projectId);
 
     /**
      * 新增项目目标
@@ -41,5 +50,6 @@ public interface ProjectGoalService {
      * 完成情况填写
      */
     BaseResult<Boolean> finish(ProjectGoalFinishReq projectGoalFinishReq);
+
 
 }

@@ -14,6 +14,7 @@ import com.timevale.forward.facade.api.client.ProjectGoalService;
 import com.timevale.forward.facade.api.request.ProjectGoalAddReq;
 import com.timevale.forward.facade.api.request.ProjectGoalFinishReq;
 import com.timevale.forward.facade.api.request.ProjectGoalModifyReq;
+import com.timevale.forward.facade.api.result.ProjectGoalVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.ProjectGoalMD;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -24,15 +25,13 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
+import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -54,6 +53,11 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
 
     @Resource
     private InnerUserPersonClient innerUserPersonClient;
+
+    @Override
+    public BaseResult<List<ProjectGoalVO>> list(Long projectId) {
+        return BaseResult.success(ProjectGoalCopier.INSTANCE.convert2VO(projectGoalMapper.getByProjectId(projectId)));
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -90,6 +94,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(ProjectGoalModifyReq projectGoalModifyReq) {
         ProjectGoalDO oldGoal = projectGoalMapper.get(projectGoalModifyReq.getId());
         AssertUtil.notNull(oldGoal, "您更改的项目目标不存在，请刷新后重试");
@@ -122,6 +127,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> delete(Long projectGoalId) {
         ProjectGoalDO goal = projectGoalMapper.get(projectGoalId);
         AssertUtil.notNull(goal, "您更改的项目目标不存在，请刷新后重试");
@@ -164,6 +170,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> setMainGoal(Long projectGoalId) {
         ProjectGoalDO goal = projectGoalMapper.get(projectGoalId);
         AssertUtil.notNull(goal, "您更改的项目目标不存在，请刷新后重试");
@@ -190,11 +197,11 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> finish(ProjectGoalFinishReq projectGoalFinishReq) {
         ProjectGoalDO goal = projectGoalMapper.get(projectGoalFinishReq.getId());
         AssertUtil.notNull(goal, "您更改的项目目标不存在，请刷新后重试");
-        ProjectDO project = projectMapper.get(goal.getProjectId());
-        AssertUtil.checkState(hasProjectEditPermission(getPermittedUserIds(project)), "您没有该操作权限");
+        AssertUtil.checkState(hasGoalFinishPermission(), "您没有该操作权限");
         // 更新目标
         ProjectGoalDO updateCond = new ProjectGoalDO();
         updateCond.setId(projectGoalFinishReq.getId());
@@ -224,6 +231,9 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         return BaseResult.success(true);
     }
 
+    /**
+     * 项目经理和产品经理以及他们的上级有权限编辑
+     */
     private Set<String> getPermittedUserIds(ProjectDO project) {
         Set<String> permittedUserIds = personMapper.select(PersonListCondition.builder().mainId(project.getId())
                         .type(PersonTypeEnum.PROJECT_PD.getCode()).build())
@@ -242,6 +252,21 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         for (String permittedUser : permittedUserIds) {
             Set<String> superiors = innerUserPersonClient.getAllSuperiorByAccount(permittedUser, false);
             if (superiors.contains(userId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * PMO 和 PMO 的上级才有权限编辑完成情况
+     */
+    private boolean hasGoalFinishPermission() {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        List<BaseInfoResponse> users =
+                innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
+        for (BaseInfoResponse user : users) {
+            if (CommonConstant.PMO.equalsIgnoreCase(user.getJob())) {
                 return true;
             }
         }

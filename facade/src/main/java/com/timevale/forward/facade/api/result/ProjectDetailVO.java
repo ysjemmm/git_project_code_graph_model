@@ -105,6 +105,4 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("是否有项目目标")
     private Integer isWithGoal;
 
-    @ApiModelProperty("项目目标列表")
-    private List<ProjectGoalVO> projectGoals;
 }

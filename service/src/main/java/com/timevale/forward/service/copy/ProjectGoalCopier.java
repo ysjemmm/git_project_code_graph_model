@@ -3,10 +3,13 @@ package com.timevale.forward.service.copy;
 import com.timevale.forward.dal.entity.ProjectGoalDO;
 import com.timevale.forward.facade.api.request.ProjectGoalAddReq;
 import com.timevale.forward.facade.api.request.ProjectGoalModifyReq;
+import com.timevale.forward.facade.api.result.ProjectGoalVO;
 import com.timevale.forward.model.middle.ProjectGoalMD;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author jingchun
@@ -25,5 +28,8 @@ public interface ProjectGoalCopier {
     ProjectGoalDO convert(ProjectGoalModifyReq projectGoalModifyReq);
 
     ProjectGoalMD convert(ProjectGoalDO projectGoalDO);
+
+    ProjectGoalVO convert2VO(ProjectGoalDO projectGoalDO);
+    List<ProjectGoalVO> convert2VO(List<ProjectGoalDO> projectGoalDO);
 
 }
