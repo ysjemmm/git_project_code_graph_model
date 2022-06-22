@@ -3,6 +3,8 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.entity.ProjectGoalDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
 * @author jingchun
 * description 针对表【project_goal(项目目标表)】的数据库操作Mapper
@@ -15,8 +17,12 @@ public interface ProjectGoalMapper {
     ProjectGoalDO getByName(@Param("name") String name);
 
     void insert(ProjectGoalDO projectGoal);
+
+    ProjectGoalDO get(@Param("projectId") Long id);
+
+    void update(ProjectGoalDO newGoal);
+
+    List<ProjectGoalDO> getByProjectId(@Param("projectId") Long id);
+
+    void delete(@Param("id") Long projectGoalId);
 }
-
-
-
-

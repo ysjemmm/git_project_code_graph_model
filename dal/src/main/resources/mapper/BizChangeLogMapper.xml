@@ -1,5 +1,9 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.timevale.forward.dal.dao.BizChangeLogMapper">
+    <update id="updateIdentity">
+        update biz_change_log set identity = #{newIdentity}
+                              where main_id = #{mainId} and identity = #{oldIdentity}
+    </update>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.BizChangeLogDO">
         select * from biz_change_log

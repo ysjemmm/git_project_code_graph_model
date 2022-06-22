@@ -16,4 +16,7 @@ public interface BizChangeLogMapper {
     Integer insert(BizChangeLogDO bizChangeLogDO);
 
     int batchInsert(List<BizChangeLogDO> bizChangeLogs);
+
+    void updateIdentity(@Param("mainId") Long mainId, @Param("oldIdentity") String oldIdentity,
+                        @Param("newIdentity") String newIdentity);
 }

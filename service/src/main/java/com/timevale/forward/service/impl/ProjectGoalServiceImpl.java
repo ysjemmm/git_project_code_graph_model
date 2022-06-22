@@ -15,17 +15,22 @@ import com.timevale.forward.facade.api.request.ProjectGoalAddReq;
 import com.timevale.forward.facade.api.request.ProjectGoalFinishReq;
 import com.timevale.forward.facade.api.request.ProjectGoalModifyReq;
 import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.middle.ProjectGoalMD;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectGoalCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.utils.compare.FieldCompareUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -66,17 +71,16 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         // 名称校验
         AssertUtil.checkState(Objects.isNull(projectGoalMapper.getByName(name)),
                 "项目目标名称重复，请重新修改");
-        if (YesOrNoEnum.YES.getCode().equals(projectGoalAddReq.getIsMain())) {
-            // 传入为主目标则撤销当前主目标
-            projectGoalMapper.unsetMainGoal(projectId);
-        }
         ProjectGoalDO projectGoal = ProjectGoalCopier.INSTANCE.convert(projectGoalAddReq);
+        // 新增数据默认不是主目标
+        projectGoal.setIsMain(YesOrNoEnum.NO.getCode());
         projectGoalMapper.insert(projectGoal);
         // 插入关联记录
         bizChangeLogMapper.insert(createCommonChangeLog()
                 .setType(BizChangeLogTypeEnum.PROJECT.getCode())
                 .setField(BizChangeLogFieldEnum.PROJECT_GOAL.getText())
                 .setMainId(projectId)
+                .setIdentity(name)
                 .setOldValue(name)
                 .setNewValue(name)
                 .setAction(ButtonActionEnum.LINK.getText())
@@ -87,23 +91,137 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
 
     @Override
     public BaseResult<Boolean> modify(ProjectGoalModifyReq projectGoalModifyReq) {
-        return null;
+        ProjectGoalDO oldGoal = projectGoalMapper.get(projectGoalModifyReq.getId());
+        AssertUtil.notNull(oldGoal, "您更改的项目目标不存在，请刷新后重试");
+        ProjectGoalDO newGoal = ProjectGoalCopier.INSTANCE.convert(projectGoalModifyReq);
+        // 权限校验
+        ProjectDO project = projectMapper.get(oldGoal.getProjectId());
+        AssertUtil.checkState(ProjectGoalStatusEnum.IN_PROGRESS.getCode().equals(oldGoal.getStatus()),
+                "目标只有在进行中时可以修改");
+        AssertUtil.checkState(hasProjectEditPermission(getPermittedUserIds(project)), "您没有该操作权限");
+        String identity = oldGoal.getName();
+        // 名称校验
+        if (StringUtils.isNotEmpty(newGoal.getName()) && !oldGoal.getName().equals(newGoal.getName())) {
+            AssertUtil.checkState(Objects.isNull(projectGoalMapper.getByName(newGoal.getName())),
+                    "项目目标名称重复，请重新修改");
+            identity = newGoal.getName();
+        }
+        // 更新目标
+        projectGoalMapper.update(newGoal);
+        // 生成修改记录
+        ProjectGoalMD oldMd = ProjectGoalCopier.INSTANCE.convert(oldGoal);
+        ProjectGoalMD newMd = ProjectGoalCopier.INSTANCE.convert(newGoal);
+        List<BizChangeLogDO> logs = FieldCompareUtil.commonCompare(oldMd, newMd, BizChangeLogDO.class);
+        for (BizChangeLogDO log : logs) {
+            log.setIdentity(identity);
+        }
+        bizChangeLogMapper.batchInsert(logs);
+        // 修改identity
+        bizChangeLogMapper.updateIdentity(oldGoal.getProjectId(), oldGoal.getName(), identity);
+        return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<Boolean> delete(Long projectGoalId) {
+        ProjectGoalDO goal = projectGoalMapper.get(projectGoalId);
+        AssertUtil.notNull(goal, "您更改的项目目标不存在，请刷新后重试");
+        ProjectDO project = projectMapper.get(goal.getProjectId());
+        AssertUtil.checkState(hasProjectEditPermission(getPermittedUserIds(project)), "您没有该操作权限");
+        AssertUtil.checkState(ProjectGoalStatusEnum.IN_PROGRESS.getCode().equals(goal.getStatus()),
+                "目标只有在进行中时可以删除");
+        List<ProjectGoalDO> goals = projectGoalMapper.getByProjectId(project.getId());
+        goals.removeIf(g -> g.getId().equals(projectGoalId));
         // 只有一条数据时不允许删除
-        return null;
+        AssertUtil.notEmpty(goals, "有目标的项目下至少需要保留一个项目目标");
+        // 删除
+        projectGoalMapper.delete(projectGoalId);
+        if (YesOrNoEnum.YES.getCode().equals(goal.getIsMain())) {
+            // 如果是删除主目标，重新设置一个主目标
+            ProjectGoalDO newMainGoal = goals.get(0);
+            newMainGoal.setIsMain(YesOrNoEnum.YES.getCode());
+            // 插入主目标变更记录
+            bizChangeLogMapper.insert(createCommonChangeLog()
+                    .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                    .setField(BizChangeLogFieldEnum.MAIN_GOAL.getText())
+                    .setMainId(goal.getProjectId())
+                    .setIdentity(goal.getName())
+                    .setOldValue(YesOrNoEnum.NO.getText())
+                    .setNewValue(YesOrNoEnum.YES.getText())
+            );
+            projectGoalMapper.update(newMainGoal);
+        }
+        // 插入取消关联记录
+        bizChangeLogMapper.insert(createCommonChangeLog()
+                .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                .setField(BizChangeLogFieldEnum.PROJECT_GOAL.getText())
+                .setMainId(goal.getProjectId())
+                .setIdentity(goal.getName())
+                .setOldValue(goal.getName())
+                .setNewValue(goal.getName())
+                .setAction(ButtonActionEnum.UN_LINK.getText())
+        );
+        return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<Boolean> setMainGoal(Long projectGoalId) {
-        return null;
+        ProjectGoalDO goal = projectGoalMapper.get(projectGoalId);
+        AssertUtil.notNull(goal, "您更改的项目目标不存在，请刷新后重试");
+        ProjectDO project = projectMapper.get(goal.getProjectId());
+        AssertUtil.checkState(hasProjectEditPermission(getPermittedUserIds(project)), "您没有该操作权限");
+        if (YesOrNoEnum.YES.getCode().equals(goal.getIsMain())) {
+            return BaseResult.success(true);
+        }
+        projectGoalMapper.unsetMainGoal(goal.getProjectId());
+        ProjectGoalDO updateCond = new ProjectGoalDO();
+        updateCond.setId(goal.getId());
+        updateCond.setIsMain(YesOrNoEnum.YES.getCode());
+        projectGoalMapper.update(updateCond);
+        // 插入主目标变更记录
+        bizChangeLogMapper.insert(createCommonChangeLog()
+                .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                .setField(BizChangeLogFieldEnum.MAIN_GOAL.getText())
+                .setMainId(goal.getProjectId())
+                .setIdentity(goal.getName())
+                .setOldValue(YesOrNoEnum.NO.getText())
+                .setNewValue(YesOrNoEnum.YES.getText())
+        );
+        return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<Boolean> finish(ProjectGoalFinishReq projectGoalFinishReq) {
-        return null;
+        ProjectGoalDO goal = projectGoalMapper.get(projectGoalFinishReq.getId());
+        AssertUtil.notNull(goal, "您更改的项目目标不存在，请刷新后重试");
+        ProjectDO project = projectMapper.get(goal.getProjectId());
+        AssertUtil.checkState(hasProjectEditPermission(getPermittedUserIds(project)), "您没有该操作权限");
+        // 更新目标
+        ProjectGoalDO updateCond = new ProjectGoalDO();
+        updateCond.setId(projectGoalFinishReq.getId());
+        updateCond.setStatus(projectGoalFinishReq.getStatus());
+        updateCond.setCompleteNote(projectGoalFinishReq.getCompleteNote());
+        projectGoalMapper.update(updateCond);
+        // 添加完成状态变更记录
+        bizChangeLogMapper.insert(createCommonChangeLog()
+                .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                .setField(BizChangeLogFieldEnum.GOAL_STATUS.getText())
+                .setMainId(goal.getProjectId())
+                .setIdentity(goal.getName())
+                .setOldValue(ProjectGoalStatusEnum.IN_PROGRESS.getText())
+                .setNewValue(ProjectGoalStatusEnum.FINISHED.getTextByCode(projectGoalFinishReq.getStatus()))
+        );
+        if (StringUtils.isNotBlank(projectGoalFinishReq.getCompleteNote())) {
+            // 添加完成情况变更记录
+            bizChangeLogMapper.insert(createCommonChangeLog()
+                    .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                    .setField(BizChangeLogFieldEnum.GOAL_COMPLETE_NOTE.getText())
+                    .setMainId(goal.getProjectId())
+                    .setIdentity(goal.getName())
+                    .setOldValue(CommonConstant.NULL)
+                    .setNewValue(projectGoalFinishReq.getCompleteNote())
+            );
+        }
+        return BaseResult.success(true);
     }
 
     private Set<String> getPermittedUserIds(ProjectDO project) {

@@ -10,16 +10,59 @@
                 #{createManId}, #{createMan})
     </insert>
 
+    <update id="update">
+        update project_goal
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="type != null">
+                type = #{type},
+            </if>
+            <if test="isMain != null">
+                isMain = #{isMain},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="measurement != null and measurement != ''">
+                measurement = #{measurement},
+            </if>
+            <if test="reachValue != null">
+                reach_value = #{reachValue},
+            </if>
+            <if test="reachDate != null">
+                reach_date = #{reachDate},
+            </if>
+            <if test="completeNote != null and completeNote != ''">
+                complete_note = #{completeNote},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
     <update id="unsetMainGoal">
         update project_goal
         set is_main = 0
         where project_id = #{projectId}
           and is_main = 1
     </update>
+    <delete id="delete">
+        update project_goal set is_deleted = 1 where id = #{id}
+    </delete>
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProjectGoalDO">
         select *
         from project_goal
         where name = #{name}
+        and is_deleted = 0
+    </select>
+    <select id="get" resultType="com.timevale.forward.dal.entity.ProjectGoalDO">
+        select * from project_goal
+                 where id = #{id}
+                   and is_deleted = 0
+    </select>
+    <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ProjectGoalDO">
+        select * from project_goal where project_id = #{projectId} and is_deleted = 0 order by modify_date desc
     </select>
 
 </mapper>
