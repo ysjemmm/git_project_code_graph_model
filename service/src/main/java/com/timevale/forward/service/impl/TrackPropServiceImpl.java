@@ -88,13 +88,13 @@ public class TrackPropServiceImpl implements TrackPropService {
         TrackPropCondition c = TrackPropCondition.builder().id(trackPropDeleteReq.getId()).build();
         TrackPropDO trackPropDO = trackPropMapper.select(c).get(0);
         if (!TrackStatusEnum.REVIEWED.getCode().equals(trackPropDO.getStatus())) {
-//            throw new BaseBizRuntimeException("状态审核通过时,才能删除");
+            throw new BaseBizRuntimeException("状态审核通过,才能删除");
         }
         TrackEventPropCondition cc = TrackEventPropCondition.builder().trackPropId(trackPropDeleteReq.getId()).isDeleted(false).build();
         List<Long> trackEventIds = trackEvenPropMapper.select(cc).stream().map(TrackEventPropDO::getTrackEventId).collect(Collectors.toList());
         if(!CollectionUtils.isEmpty(trackEventIds)){
             List<String> names = trackEventMapper.selectByIds(trackEventIds).stream().map(TrackEventDO::getCnName).collect(Collectors.toList());
-//            throw new BaseBizRuntimeException("该属性被事件:"+names+"引用，请删除事件后再试。");
+            throw new BaseBizRuntimeException("该属性被事件:"+names+"引用，请删除事件后再试。");
 
         }
         trackPropDO.setIsDeleted(true);

@@ -217,7 +217,7 @@ public class TrackEventServiceImpl implements TrackEventService {
         TrackEventDO oldTrackEventDO = trackEventMapper.get(trackEventDeleteReq.getId(), null);
 
         if (TrackStatusEnum.REVIEWING.getCode().equals(oldTrackEventDO.getStatus())) {
-//            throw new BaseBizRuntimeException("状态为审核中不能删除");
+            throw new BaseBizRuntimeException("状态为审核中不能删除");
         }
         oldTrackEventDO.setIsDeleted(true);
         trackEventMapper.update(oldTrackEventDO);

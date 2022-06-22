@@ -280,7 +280,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         productDemandLogComponent.addLogWhenStatusChange(productDemand.getStatus(), productDemand.getStatus(), productDemand.getId(), ButtonActionEnum.SUBMIT.getText());
 
         if (CollectionUtils.isNotEmpty(productDemandAddReq.getTrackEventIds())) {
-            productDemandTrackEventComponent.batchInsert(productDemand.getId(), productDemandAddReq.getTrackEventIds());
+            List<Long> trackEventIds = productDemandAddReq.getTrackEventIds();
+            productDemandTrackEventComponent.batchInsert(productDemand.getId(), trackEventIds);
+            List<String> eventNames = trackEventMapper.selectByIds(trackEventIds).stream().map(TrackEventDO::getCnName).collect(Collectors.toList());
+            productDemandLogComponent.addLogWhenLinkOrUnlinkTrackEvent(productDemand.getId(), eventNames, ButtonActionEnum.LINK.getText());
         }
         return BaseResult.success(true);
     }
@@ -485,6 +488,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         ProductDemandTrackEventCondition c = ProductDemandTrackEventCondition.builder().productDemandId(trackEventQueryList.getProductDemandId()).isDeleted(false).build();
         List<Long> trackEventIds = productDemandTrackEventMapper.select(c).stream().map(ProductDemandTrackEventDO::getTrackEventId).collect(Collectors.toList());
         condition.setFilterTrackEventIds(trackEventIds);
+        condition.setStatus(Lists.newArrayList(TrackStatusEnum.REVIEWED.getCode()));
         PageHelper.startPage(trackEventQueryList.getPageNum(), trackEventQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         return trackEventComponent.list(condition);
     }
