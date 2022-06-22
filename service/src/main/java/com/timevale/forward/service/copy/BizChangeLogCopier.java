@@ -5,6 +5,8 @@ import com.timevale.forward.facade.api.result.BizChangeLogVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 /**
  * @author by YangXu
  * @date 2021/12/15 10:56
@@ -20,5 +22,7 @@ public interface BizChangeLogCopier {
      * @return {@code BizChangeLogVO}
      */
     BizChangeLogVO convert(BizChangeLogDO bizChangeLogDO);
+
+    List<BizChangeLogVO> convert(List<BizChangeLogDO> list);
 
 }

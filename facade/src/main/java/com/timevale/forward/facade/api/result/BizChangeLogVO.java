@@ -45,6 +45,9 @@ public class BizChangeLogVO extends ToString {
     @ApiModelProperty("按钮动作")
     private String action;
 
+    @ApiModelProperty("唯一标识")
+    private String identity;
+
     @ApiModelProperty("操作人")
     private String createMan;
 

@@ -42,4 +42,9 @@ public class BizChangeLogDO extends BaseDO{
      */
     private String action;
 
+    /**
+     * 数据标识
+     */
+    private String identity;
+
 }
