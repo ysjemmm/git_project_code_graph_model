@@ -40,7 +40,7 @@
         insert into product_demand_track_event (product_demand_id,track_event_id,create_man_id, create_man)
         values
         <foreach collection="list" item="i" open="" separator="," close="">
-            (#{i.productDemandId}, #{i.trackEventId}, #{i.createManId},#{i.createMan})
+            (#{i.productDemandId}, #{i.trackEventId}, #{createManId},#{createMan})
         </foreach>
     </insert>
 

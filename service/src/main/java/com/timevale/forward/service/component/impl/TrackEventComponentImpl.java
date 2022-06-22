@@ -58,8 +58,8 @@ public class TrackEventComponentImpl implements TrackEventComponent {
     @Override
     public BaseResult<PageQueryResult<TrackEventVO>> list(TrackEventListCondition condition) {
         log.info("埋点事件列表,参数:{}", condition);
-        condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
-        condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
+        buildConditionBeforeQuery(condition);
+
         List<TrackEventDO> list = trackEventMapper.list(condition);
         List<TrackEventVO> trackEventVOList = TrackEventCopier.INSTANCE.convert(list);
         trackEventVOList.forEach(a -> {
@@ -147,8 +147,12 @@ public class TrackEventComponentImpl implements TrackEventComponent {
                 trackPropMapper.update(a);
             }
         });
-
     }
-
+    private void buildConditionBeforeQuery(TrackEventListCondition condition) {
+        condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
+        condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
+        condition.setModifyDateStart(DateUtil.getStartOfDay(condition.getModifyDateStart()));
+        condition.setModifyDateEnd(DateUtil.getEndOfDay(condition.getModifyDateEnd()));
+    }
 
 }

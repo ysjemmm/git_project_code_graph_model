@@ -67,8 +67,10 @@ public class TrackPropServiceImpl implements TrackPropService {
     public BaseResult<PageQueryResult<TrackPropVO>> list(TrackPropQueryList trackPropQueryList) {
         log.info("埋点属性列表,参数:{}", trackPropQueryList);
         TrackPropListCondition condition = TrackPropCopier.INSTANCE.convert(trackPropQueryList);
-        List<Integer> status = Lists.newArrayList(TrackStatusEnum.REVIEWING.getCode(), TrackStatusEnum.REVIEWED.getCode());
-        condition.setStatus(status);
+        if(CollectionUtils.isEmpty(trackPropQueryList.getStatus())){
+            List<Integer> status = Lists.newArrayList(TrackStatusEnum.REVIEWING.getCode(), TrackStatusEnum.REVIEWED.getCode());
+            condition.setStatus(status);
+        }
         PageHelper.startPage(trackPropQueryList.getPageNum(), trackPropQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         return trackPropComponent.list(condition);
     }
