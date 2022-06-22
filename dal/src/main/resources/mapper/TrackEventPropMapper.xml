@@ -44,4 +44,24 @@
         </foreach>
     </insert>
 
+    <select id="getByEventId" resultType="com.timevale.forward.dal.entity.TrackEventPropItemDO">
+        select a.id track_event_id,a.flow_id, c.id track_prop_id ,c.cn_name,c.eg_name
+        , case when c.status =-1 then '已撤回'
+        when c.status =0 then '审核中'
+        when c.status =1 then '审核通过'
+        when c.status =2 then '审核不通过'
+        end as status
+        ,case when c.type =0 then '新增属性'
+        when c.type =1 then '已有属性'
+        when c.type =2 then '默认属性'
+        end as type
+        ,c.data_type
+        from track_event a
+        join track_event_prop b on a.id=b.track_event_id  and b.is_deleted=false
+        join track_prop c on b.track_prop_id=c.id
+        <where>
+            a.id = #{eventId} and a.status=0
+        </where>
+    </select>
+
 </mapper>

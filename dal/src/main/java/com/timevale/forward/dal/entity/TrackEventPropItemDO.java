@@ -5,11 +5,20 @@ import lombok.EqualsAndHashCode;
 
 /**
  * @author by YangXu
- * @date 2021/12/15 10:17
+ * @date 2021/12/16 13:42
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class TrackPropListDO extends BaseDO {
+public class TrackEventPropItemDO extends BaseDO {
+    /**
+     * 属性id
+     */
+    private Long trackPropId;
+
+    /**
+     * 事件id
+     */
+    private Long trackEventId;
 
     /**
      * cnName
@@ -22,24 +31,19 @@ public class TrackPropListDO extends BaseDO {
     private String egName;
 
     /**
-     * status
+     * flowId
      */
-    private Integer status;
+    private String flowId;
 
     /**
      * status
      */
-    private String statusName;
+    private String status;
 
     /**
      * type
      */
-    private Integer type;
-
-    /**
-     * type
-     */
-    private String typeName;
+    private String type;
 
     /**
      * dataType

@@ -11,6 +11,8 @@ import com.timevale.forward.facade.api.result.TrackEventVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
+import java.util.List;
+
 /**
  * @author xingyun
  * @date 2021-12-13 13:58
@@ -32,7 +34,7 @@ public interface TrackEventService {
      * @param trackEventAddReq 埋点事件
      * @return Boolean
      */
-    BaseResult<Boolean> add(TrackEventAddReq trackEventAddReq);
+    BaseResult<List<Long>> add(TrackEventAddReq trackEventAddReq);
 
     /**
      * 新增

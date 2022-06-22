@@ -20,19 +20,15 @@ import com.timevale.forward.model.enums.TrackStatusEnum;
 import com.timevale.forward.service.component.TrackPropComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TrackPropCopier;
-import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
-import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -42,13 +38,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestService
 public class TrackPropServiceImpl implements TrackPropService {
-
-    /**
-     * 流程审批人
-     */
-    @Value("${default.trackReviewer:chenran}")
-    private String trackReviewer;
-
 
     @Resource
     private TrackPropComponent trackPropComponent;
@@ -80,9 +69,8 @@ public class TrackPropServiceImpl implements TrackPropService {
         log.info("埋点属性修改,参数:{}", trackPropModifyReq);
         TrackPropCondition c = TrackPropCondition.builder().id(trackPropModifyReq.getId()).build();
         TrackPropDO trackPropDO = trackPropMapper.select(c).get(0);
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        if (!Objects.equals(userInfo.getId(), trackReviewer) || !TrackStatusEnum.REVIEWED.getCode().equals(trackPropDO.getStatus())) {
-//            throw new BaseBizRuntimeException("状态为审核通过,且操作人为管理员才能编辑");
+        if (!TrackStatusEnum.REVIEWED.getCode().equals(trackPropDO.getStatus())) {
+//            throw new BaseBizRuntimeException("状态审核通过时,才能编辑");
         }
         c = TrackPropCondition.builder().cnNames(Lists.newArrayList(trackPropModifyReq.getCnName())).build();
         List<TrackPropDO> trackPropDos = trackPropMapper.select(c);
@@ -99,9 +87,8 @@ public class TrackPropServiceImpl implements TrackPropService {
         log.info("埋点属性删除,参数:{}", trackPropDeleteReq);
         TrackPropCondition c = TrackPropCondition.builder().id(trackPropDeleteReq.getId()).build();
         TrackPropDO trackPropDO = trackPropMapper.select(c).get(0);
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        if (!Objects.equals(userInfo.getId(), trackReviewer) || !TrackStatusEnum.REVIEWED.getCode().equals(trackPropDO.getStatus())) {
-//            throw new BaseBizRuntimeException("状态为审核通过,且操作人为管理员才能删除");
+        if (!TrackStatusEnum.REVIEWED.getCode().equals(trackPropDO.getStatus())) {
+//            throw new BaseBizRuntimeException("状态审核通过时,才能删除");
         }
         TrackEventPropCondition cc = TrackEventPropCondition.builder().trackPropId(trackPropDeleteReq.getId()).isDeleted(false).build();
         List<Long> trackEventIds = trackEvenPropMapper.select(cc).stream().map(TrackEventPropDO::getTrackEventId).collect(Collectors.toList());

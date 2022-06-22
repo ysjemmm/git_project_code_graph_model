@@ -2,6 +2,7 @@ package com.timevale.forward.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
+import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.TrackEventCondition;
 import com.timevale.forward.dal.condition.TrackEventListCondition;
@@ -9,9 +10,7 @@ import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TrackEventService;
 import com.timevale.forward.facade.api.query.TrackEventQueryList;
-import com.timevale.forward.facade.api.request.TrackEventAddReq;
-import com.timevale.forward.facade.api.request.TrackEventDeleteReq;
-import com.timevale.forward.facade.api.request.TrackEventModifyReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.TrackEventDetailVO;
 import com.timevale.forward.facade.api.result.TrackEventVO;
 import com.timevale.forward.facade.api.result.TrackPropVO;
@@ -30,15 +29,13 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -49,14 +46,11 @@ import java.util.stream.Collectors;
 @RestService
 public class TrackEventServiceImpl implements TrackEventService {
 
-    /**
-     * 流程审批人
-     */
-    @Value("${default.trackReviewer:chenran}")
-    private String trackReviewer;
-
     @Resource
     private TrackEventMapper trackEventMapper;
+
+    @Resource
+    private TrackEvenPropMapper trackEvenPropMapper;
 
     @Resource
     private TrackMapMapper trackMapMapper;
@@ -77,10 +71,10 @@ public class TrackEventServiceImpl implements TrackEventService {
     private ModelMapper modelMapper;
 
     @Resource
-    private EpeiusClient epeiusClient;
+    private FileComponent fileComponent;
 
     @Resource
-    private FileComponent fileComponent;
+    private EpeiusClient epeiusClient;
 
 
     @Override
@@ -98,13 +92,14 @@ public class TrackEventServiceImpl implements TrackEventService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> add(TrackEventAddReq trackEventAddReq) {
+    public BaseResult<List<Long>> add(TrackEventAddReq trackEventAddReq) {
         log.info("埋点事件新增,参数:{}", trackEventAddReq);
         checkBeforeInsert(trackEventAddReq);
         TrackEventDO trackEventDO = TrackEventCopier.INSTANCE.convert(trackEventAddReq);
         Long trackMapId = trackEventAddReq.getElementId() == null ? trackEventAddReq.getPageId() : trackEventAddReq.getElementId();
         trackEventDO.setTrackMapId(trackMapId);
-        trackEventDO.setFlowId("");
+
+        trackEventDO.setFlowId(StringUtils.EMPTY);
         trackEventDO.setStatus(TrackStatusEnum.REVIEWING.getCode());
         trackEventMapper.insert(trackEventDO);
 
@@ -113,7 +108,58 @@ public class TrackEventServiceImpl implements TrackEventService {
 
         fileComponent.add(trackEventAddReq.getFiles(), trackEventDO.getId(), FileTypeEnum.TRACK_EVENT.getCode());
 
-        return BaseResult.success(true);
+        trackEventDO.setFlowId(startFlow(trackEventAddReq));
+        trackEventMapper.update(trackEventDO);
+
+        List<Long> elementIds = new ArrayList<>();
+
+        buildTrackMapIds(trackMapId,elementIds,new ArrayList<>());
+
+        return BaseResult.success(elementIds);
+    }
+
+    private String startFlow(TrackEventAddReq trackEventAddReq) {
+        StartProcessRequest start = new StartProcessRequest();
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("files", new ArrayList<>());
+        variables.put("cnName", trackEventAddReq.getCnName());
+        variables.put("egName", trackEventAddReq.getEgName());
+        variables.put("platform", StringUtils.join(PlatformTypeEnum.getTextByCode(trackEventAddReq.getPlatforms()),","));
+        variables.put("touchMoment", trackEventAddReq.getTouchMoment());
+        variables.put("env", StringUtils.join(EnvEnum.getTextByCode(trackEventAddReq.getEnvs()),","));
+        variables.put("trackEventName", trackEventAddReq.getCnName());
+
+        List<FileAddReq> fileAddReqs = trackEventAddReq.getFiles();
+        List<Map<String, String>> files = new ArrayList<>();
+        fileAddReqs.forEach(a->{
+            Map<String, String> file = new HashMap<>();
+            file.put("file_key",a.getFileKey());
+            file.put("file_name",a.getFileName());
+            files.add(file);
+        });
+        variables.put("files", files);
+
+        List<TrackPropItemDO> trackPropItemDOList = new ArrayList<>();
+        List<TrackPropAddReq> trackProps = trackEventAddReq.getTrackProps();
+        trackProps.forEach(a->{
+            TrackPropItemDO trackPropDO=new TrackPropItemDO();
+            trackPropDO.setDataType(a.getDataType());
+            trackPropDO.setCnName(a.getCnName());
+            trackPropDO.setEgName(a.getEgName());
+            trackPropDO.setStatusName(TrackStatusEnum.getTextByCode(a.getStatus()));
+            trackPropDO.setTypeName(TrackPropTypeEnum.getTextByCode(a.getType()));
+            trackPropItemDOList.add(trackPropDO);
+        });
+        variables.put("props", trackPropItemDOList);
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        start.setApplicationName("forward");
+        start.setProcessDefinitionKey("forward_trackEventReview");
+        start.setStartAccountId(userInfo.getId());
+        start.setVariables(variables);
+        start.setEpeVirtualProcessSwitch(false);
+        String id = epeiusClient.start(start);
+        return id;
     }
 
     @Override
@@ -152,10 +198,40 @@ public class TrackEventServiceImpl implements TrackEventService {
         trackEventDetailVO.setPlatformNames(PlatformTypeEnum.getTextByCode(JSONObject.parseArray(trackEventDetailVO.getPlatform(), Integer.class)));
         List<TrackPropVO> trackPropVOList = trackPropComponent.get(eventId);
         trackEventDetailVO.setTrackProps(trackPropVOList);
-        TrackMapDO trackMapDO = trackMapMapper.get(trackEventDO.getTrackMapId());
+
+        List<Long> elementIds = new ArrayList<>();
+        List<String> elementNames = new ArrayList<>();
+
+        buildTrackMapIds(trackEventDO.getTrackMapId(),elementIds,elementNames);
+
+        trackEventDetailVO.setElementIds(elementIds);
+        trackEventDetailVO.setElementNames(elementNames);
+
+        return BaseResult.success(trackEventDetailVO);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> delete(TrackEventDeleteReq trackEventDeleteReq) {
+        log.info("埋点事件删除,参数:{}", trackEventDeleteReq);
+        TrackEventDO oldTrackEventDO = trackEventMapper.get(trackEventDeleteReq.getId(), null);
+
+        if (TrackStatusEnum.REVIEWING.getCode().equals(oldTrackEventDO.getStatus())) {
+//            throw new BaseBizRuntimeException("状态为审核中不能删除");
+        }
+        oldTrackEventDO.setIsDeleted(true);
+        trackEventMapper.update(oldTrackEventDO);
+        //删除关联关系
+        TrackEventPropDO trackEventPropDO=new TrackEventPropDO();
+        trackEventPropDO.setTrackEventId(trackEventDeleteReq.getId());
+        trackEventPropDO.setIsDeleted(true);
+        trackEvenPropMapper.update(trackEventPropDO);
+        return BaseResult.success(true);
+    }
+
+    private void buildTrackMapIds(Long trackMapId,List<Long> elementIds, List<String> elementNames) {
+        TrackMapDO trackMapDO = trackMapMapper.get(trackMapId);
         if (trackMapDO != null) {
-            List<Long> elementIds = new ArrayList<>();
-            List<String> elementNames = new ArrayList<>();
             Long parentId;
             TrackMapDO page = null;
             if (trackMapDO.getLevel() == 5) {
@@ -182,31 +258,8 @@ public class TrackEventServiceImpl implements TrackEventService {
             }
             elementIds.add(trackMapDO.getId());
             elementNames.add(trackMapDO.getName());
-
-            trackEventDetailVO.setElementIds(elementIds);
-            trackEventDetailVO.setElementNames(elementNames);
         }
-        return BaseResult.success(trackEventDetailVO);
     }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> delete(TrackEventDeleteReq trackEventDeleteReq) {
-        log.info("埋点事件删除,参数:{}", trackEventDeleteReq);
-        TrackEventDO oldTrackEventDO = trackEventMapper.get(trackEventDeleteReq.getId(), null);
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
-        if (TrackStatusEnum.REVIEWING.getCode().equals(oldTrackEventDO.getStatus())) {
-//            throw new BaseBizRuntimeException("状态为审核中不能删除");
-        }
-        if (!Objects.equals(userInfo.getId(), trackReviewer) && TrackStatusEnum.REVIEWED.getCode().equals(oldTrackEventDO.getStatus())) {
-//            throw new BaseBizRuntimeException("非管理员不能删除审核通过的事件");
-        }
-        oldTrackEventDO.setIsDeleted(true);
-        trackEventMapper.update(oldTrackEventDO);
-        return BaseResult.success(true);
-    }
-
     private void checkBeforeInsert(TrackEventAddReq trackEventAddReq) {
         TrackEventCondition c = TrackEventCondition.builder().cnName(trackEventAddReq.getCnName()).build();
         List<TrackEventDO> trackEventDos = trackEventMapper.select(c);

@@ -2,6 +2,8 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.TrackEventPropCondition;
 import com.timevale.forward.dal.entity.TrackEventPropDO;
+import com.timevale.forward.dal.entity.TrackEventPropItemDO;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -35,6 +37,14 @@ public interface TrackEvenPropMapper {
      * @return int
      */
     int batchInsert(List<TrackEventPropDO> trackEventPropDOList);
+
+    /**
+     * 查询事件-属性
+     *
+     * @param eventId eventId
+     * @return 列表
+     */
+    List<TrackEventPropItemDO> getByEventId(@Param("eventId")Long eventId);
 
 
 }

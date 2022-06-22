@@ -144,6 +144,9 @@ public class TrackPropComponentImpl implements TrackPropComponent {
 
         List<TrackPropDO> filter = trackPropDOList.stream().filter(a -> a.getId()==null).collect(Collectors.toList());
 
+        if(CollectionUtils.isEmpty(filter)){
+            return;
+        }
         List<Integer>status=Lists.newArrayList(TrackStatusEnum.REVIEWING.getCode(),TrackStatusEnum.REVIEWED.getCode());
         List<String> cnNames = filter.stream().map(TrackPropDO::getCnName).collect(Collectors.toList());
         TrackPropCondition c = TrackPropCondition.builder().cnNames(cnNames).status(status).build();

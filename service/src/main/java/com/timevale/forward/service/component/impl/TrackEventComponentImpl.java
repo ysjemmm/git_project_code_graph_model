@@ -123,31 +123,54 @@ public class TrackEventComponentImpl implements TrackEventComponent {
         if (TrackStatusEnum.REVIEWED.getCode().equals(trackEventDO.getStatus())) {
             //更新
             List<Long> filterPropIds = filterProps.stream().map(TrackPropDO::getId).collect(Collectors.toList());
-            log.info("更新事件属性 trackEventId={},filterPropIds={}", trackEventDO.getId(),filterPropIds);
-            trackPropMapper.batchUpdate(filterPropIds,trackEventDO.getStatus(),TrackPropTypeEnum.EXIST.getCode());
+            log.info("更新事件属性 trackEventId={},filterPropIds={}", trackEventDO.getId(), filterPropIds);
+            trackPropMapper.batchUpdate(filterPropIds, trackEventDO.getStatus(), TrackPropTypeEnum.EXIST.getCode());
             return;
         }
-        //撤回或拒绝 找出没有关联其他事件的属性,打上相应状态
+
+        //撤回或拒绝
         filterProps.forEach(a -> {
             TrackEventPropCondition cc = TrackEventPropCondition.builder().trackPropId(a.getId()).isDeleted(false).build();
             List<TrackEventPropDO> trackEventPropDOList = trackEvenPropMapper.select(cc);
-            List<Long> trackEventIds = trackEventPropDOList.stream().filter(b -> !Objects.equals(trackEventDO.getId(), b.getTrackEventId()))
+            List<Long> otherTrackEventIds = trackEventPropDOList.stream().filter(b -> !Objects.equals(trackEventDO.getId(), b.getTrackEventId()))
                     .map(TrackEventPropDO::getTrackEventId).collect(Collectors.toList());
-            if (CollectionUtils.isNotEmpty(trackEventIds)) {
-                List<TrackEventDO> trackEventDos = trackEventMapper.selectByIds(trackEventIds);
-                if(CollectionUtils.isNotEmpty(trackEventDos)){
-                    //被其他事件关联,不用更新状态
+            if (CollectionUtils.isNotEmpty(otherTrackEventIds)) {
+                List<Integer> status = trackEventMapper.selectByIds(otherTrackEventIds).stream().map(TrackEventDO::getStatus).collect(Collectors.toList());
+                if (status.contains(TrackStatusEnum.REVIEWING.getCode()) || status.contains(TrackStatusEnum.REVIEWED.getCode())) {
+                    //当前属性关联其他事件
                     return;
                 }
             }
-            //更新
-            if(TrackStatusEnum.REVIEWING.getCode().equals(a.getStatus())){
-                log.info("更新事件属性 trackEventId={},propIds={}", trackEventDO.getId(),a.getId());
+            //没有关联其他事件,更新为撤回或拒绝
+            if (TrackStatusEnum.REVIEWING.getCode().equals(a.getStatus())) {
+                log.info("更新事件属性 trackEventId={},propId={}", trackEventDO.getId(), a.getId());
                 a.setStatus(trackEventDO.getStatus());
                 trackPropMapper.update(a);
             }
         });
     }
+
+    //    private void updateVariables(Long trackEventId){
+//        List<TrackEventPropItemDO> items = trackEvenPropMapper.getByEventId(trackEventId);
+//        List<TrackPropListDO> updateItems = items.stream().map(a -> {
+//            TrackPropListDO trackPropListDO = new TrackPropListDO();
+//            trackPropListDO.setCnName(a.getCnName());
+//            trackPropListDO.setEgName(a.getEgName());
+//            trackPropListDO.setStatusName(a.getStatus());
+//            trackPropListDO.setTypeName(a.getType());
+//            trackPropListDO.setDataType(a.getDataType());
+//            return trackPropListDO;
+//        }).collect(Collectors.toList());
+//
+//        if(CollectionUtils.isNotEmpty(updateItems)){
+//            ProcessInstanceRequest request=new ProcessInstanceRequest();
+//            request.setProcessInstanceId(items.get(0).getFlowId());
+//            Map<String, Object> variables = new HashMap<>();
+//            variables.put("props", updateItems);
+//            request.setVariables(variables);
+//            epeiusClient.addVariables(request);
+//        }
+//    }
     private void buildConditionBeforeQuery(TrackEventListCondition condition) {
         condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
         condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
