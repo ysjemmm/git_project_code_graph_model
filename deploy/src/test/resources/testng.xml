@@ -3,27 +3,8 @@
 
 <suite name="Suite1" verbose="1">
     <test name="Regression11">
-        <classes>
-            <class name="com.timevale.forward.service.impl.BizDemandProductDemandServiceImplTest"/>
-            <class name="com.timevale.forward.service.impl.BizDemandServiceImplTest"/>
-            <class name="com.timevale.forward.service.impl.BizDomainServiceImplTest"/>
-            <class name="com.timevale.forward.service.impl.CommentServiceImplTest"/>
-            <class name="com.timevale.forward.service.impl.PersonServiceImplTest"/>
-            <class name="com.timevale.forward.service.impl.ProductDemandServiceImplTest"/>
-            <class name="com.timevale.forward.service.impl.ProductLineServiceImplTest"/>
-            <class name="com.timevale.forward.service.impl.ProjectServiceImplTest"/>
-            <class name="com.timevale.forward.service.impl.TestBillServiceImplTest"/>
-            <class name="com.timevale.forward.service.impl.TaskServiceImplTest"/>
-            <class name="com.timevale.forward.service.component.impl.BizDemandComponentImplTest"/>
-            <class name="com.timevale.forward.service.component.impl.FileComponentImplTest"/>
-            <class name="com.timevale.forward.service.component.impl.PersonComponentImplTest"/>
-            <class name="com.timevale.forward.service.component.impl.ProductBizDemandComponentImplTest"/>
-            <class name="com.timevale.forward.service.component.impl.ProductDemandComponentImplTest"/>
-            <class name="com.timevale.forward.service.component.impl.ProjectComponentImplTest"/>
-            <class name="com.timevale.forward.service.component.impl.ProjectNodeComponentImplTest"/>
-            <class name="com.timevale.forward.service.component.impl.ProjectProductDemandComponentImplTest"/>
-            <class name="com.timevale.forward.service.component.impl.ProjectProductLineComponentImplTest"/>
-            <class name="com.timevale.forward.service.component.impl.TaskComponentImplTest"/>
-        </classes>
+        <packages>
+            <package name="com.timevale.forward.service.impl" />
+        </packages>
     </test>
 </suite>

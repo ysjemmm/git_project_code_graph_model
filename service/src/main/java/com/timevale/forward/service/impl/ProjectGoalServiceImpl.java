@@ -110,6 +110,8 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
             AssertUtil.checkState(Objects.isNull(projectGoalMapper.getByName(newGoal.getName())),
                     "项目目标名称重复，请重新修改");
             identity = newGoal.getName();
+            // 修改identity
+            bizChangeLogMapper.updateIdentity(oldGoal.getProjectId(), oldGoal.getName(), identity);
         }
         // 更新目标
         projectGoalMapper.update(newGoal);
@@ -121,8 +123,6 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
             log.setIdentity(identity);
         }
         bizChangeLogMapper.batchInsert(logs);
-        // 修改identity
-        bizChangeLogMapper.updateIdentity(oldGoal.getProjectId(), oldGoal.getName(), identity);
         return BaseResult.success(true);
     }
 
