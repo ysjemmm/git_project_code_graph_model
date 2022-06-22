@@ -293,8 +293,7 @@ public class TrackEventServiceImpl implements TrackEventService {
                 return getByPageIds(Lists.newArrayList(trackMapId));
             }
             if (TrackMapEnum.ELEMENT.getCode().equals(level)) {
-                List<TrackMapDO> element = trackMapMapper.getChildren(Lists.newArrayList(trackMapId), TrackMapEnum.ELEMENT.getCode());
-                return element.stream().map(TrackMapDO::getId).collect(Collectors.toList());
+                return Lists.newArrayList(trackMapId);
             }
         }
         return Lists.emptyList();
