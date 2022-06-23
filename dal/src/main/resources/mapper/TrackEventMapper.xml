@@ -142,7 +142,7 @@
          SELECT a.id,a.cn_name,a.eg_name,a.platform,a.env,a.create_man,a.create_date,b.modify_date
          FROM track_event a
          JOIN product_demand_track_event b ON a.id = b.track_event_id AND b.is_deleted = false
-         WHERE b.product_demand_id = #{productDemandId}
+         WHERE b.product_demand_id = #{productDemandId} and a.is_deleted = false
     </select>
 </mapper>
 

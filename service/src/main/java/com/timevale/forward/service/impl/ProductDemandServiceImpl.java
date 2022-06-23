@@ -527,7 +527,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         List<TrackEventDO> list = trackEventMapper.linkTrackEventList(trackEventQueryList.getProductDemandId());
         List<TrackEventVO> trackEventVOList = TrackEventCopier.INSTANCE.convert(list);
         trackEventVOList.forEach(a -> {
-            a.setStatusName(TrackStatusEnum.getTextByCode(a.getStatus()));
             a.setEnvNames(EnvEnum.getTextByCode(JSONObject.parseArray(a.getEnv(), Integer.class)));
             a.setPlatformNames(PlatformTypeEnum.getTextByCode(JSONObject.parseArray(a.getPlatform(), Integer.class)));
         });
