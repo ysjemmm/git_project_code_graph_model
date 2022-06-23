@@ -29,7 +29,7 @@
                 type = #{type},
             </if>
             <if test="isMain != null">
-                isMain = #{isMain},
+                is_main = #{isMain},
             </if>
             <if test="status != null">
                 status = #{status},
