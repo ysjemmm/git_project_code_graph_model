@@ -11,10 +11,7 @@ import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
-import com.timevale.forward.facade.api.request.PersonAddReq;
-import com.timevale.forward.facade.api.request.ProjectAddReq;
-import com.timevale.forward.facade.api.request.ProjectModifyReq;
-import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
@@ -255,6 +252,9 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 项目目标信息插入
         if (YesOrNoEnum.YES.getCode().equals(projectAddReq.getIsWithGoal())) {
+            for (ProjectGoalAddReq goal : projectAddReq.getProjectGoals()) {
+                goal.setProjectId(projectDO.getId());
+            }
             projectGoalMapper.batchInsert(ProjectGoalCopier.INSTANCE.convert(projectAddReq.getProjectGoals()));
         }
 
