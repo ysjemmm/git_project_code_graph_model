@@ -272,6 +272,11 @@ public class ProjectServiceImpl implements ProjectService {
         if (oldProject == null) {
             oldProject = projectMapper.get(projectModifyReq.getId());
         }
+        // 校验项目目标
+        if (YesOrNoEnum.YES.getCode().equals(projectModifyReq.getIsWithGoal())) {
+            AssertUtil.notEmpty(projectGoalMapper.getByProjectId(oldProject.getId()),
+                    "项目含有项目目标，请至少添加一条项目目标数据");
+        }
         ProjectDO newProject = ProjectCopier.INSTANCE.convert(projectModifyReq);
         newProject.setPmName(projectModifyReq.getPm().getUserName());
         newProject.setPmId(projectModifyReq.getPm().getUserId());
