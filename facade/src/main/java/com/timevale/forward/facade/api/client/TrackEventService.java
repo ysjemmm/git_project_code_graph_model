@@ -34,7 +34,7 @@ public interface TrackEventService {
      * @param trackEventAddReq 埋点事件
      * @return Boolean
      */
-    BaseResult<List<Long>> add(TrackEventAddReq trackEventAddReq);
+    BaseResult<Boolean> add(TrackEventAddReq trackEventAddReq);
 
     /**
      * 新增

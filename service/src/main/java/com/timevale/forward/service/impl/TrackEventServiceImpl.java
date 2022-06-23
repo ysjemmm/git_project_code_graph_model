@@ -96,7 +96,7 @@ public class TrackEventServiceImpl implements TrackEventService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<List<Long>> add(TrackEventAddReq trackEventAddReq) {
+    public BaseResult<Boolean> add(TrackEventAddReq trackEventAddReq) {
         log.info("埋点事件新增,参数:{}", trackEventAddReq);
         checkBeforeInsert(trackEventAddReq);
         TrackEventDO trackEventDO = TrackEventCopier.INSTANCE.convert(trackEventAddReq);
@@ -115,11 +115,7 @@ public class TrackEventServiceImpl implements TrackEventService {
         trackEventDO.setFlowId(startFlow(trackEventAddReq));
         trackEventMapper.update(trackEventDO);
 
-        List<Long> elementIds = new ArrayList<>();
-
-        buildTrackMapIds(trackMapId,elementIds,new ArrayList<>());
-
-        return BaseResult.success(elementIds);
+        return BaseResult.success(true);
     }
 
     private String startFlow(TrackEventAddReq trackEventAddReq) {
