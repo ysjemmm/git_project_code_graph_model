@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 /**
  * @author xingyun
  * @date 2021-12-13 13:58
@@ -36,5 +38,10 @@ public class TrackEventCondition extends QueryBase {
      * trackMapId
      */
     private Long trackMapId;
+
+    /**
+     * status
+     */
+    private List<Integer> status;
 
 }

@@ -261,13 +261,14 @@ public class TrackEventServiceImpl implements TrackEventService {
         }
     }
     private void checkBeforeInsert(TrackEventAddReq trackEventAddReq) {
-        TrackEventCondition c = TrackEventCondition.builder().cnName(trackEventAddReq.getCnName()).build();
+        List<Integer> status = Lists.newArrayList(TrackStatusEnum.REVIEWING.getCode(), TrackStatusEnum.REVIEWED.getCode());
+        TrackEventCondition c = TrackEventCondition.builder().cnName(trackEventAddReq.getCnName()).status(status).build();
         List<TrackEventDO> trackEventDos = trackEventMapper.select(c);
         if (!CollectionUtils.isEmpty(trackEventDos) && !Objects.equals(trackEventAddReq.getId(), trackEventDos.get(0).getId())) {
             throw new BaseBizRuntimeException("该事件中文名重复,请修改后重试");
         }
 
-        c = TrackEventCondition.builder().egName(trackEventAddReq.getEgName()).build();
+        c = TrackEventCondition.builder().egName(trackEventAddReq.getEgName()).status(status).build();
         trackEventDos = trackEventMapper.select(c);
         if (!CollectionUtils.isEmpty(trackEventDos) && !Objects.equals(trackEventAddReq.getId(), trackEventDos.get(0).getId())) {
             throw new BaseBizRuntimeException("该事件英文名重复,请修改后重试");
