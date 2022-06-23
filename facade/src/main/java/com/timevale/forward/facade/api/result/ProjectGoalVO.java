@@ -5,10 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.validator.constraints.Range;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -29,29 +26,25 @@ public class ProjectGoalVO extends ToString {
     @ApiModelProperty("项目id")
     private Long projectId;
 
-    @NotBlank(message = "项目目标名称不能为空")
-    @ApiModelProperty(value = "项目目标名称", required = true)
+    @ApiModelProperty(value = "项目目标名称")
     private String name;
 
-    @NotNull(message = "目标性质必填")
-    @Range(min = 0, max = 1, message = "目标性质只能为0:定量或者1:定性")
-    @ApiModelProperty(value = "目标性质: 0定量,1定性", required = true)
+    @ApiModelProperty(value = "目标性质: 0定量,1定性")
     private Integer type;
 
-    @NotNull(message = "是否为主目标必填")
-    @Range(min = 0, max = 1, message = "是否为主目标只能为0:否或者1:是")
-    @ApiModelProperty(value = "是否主目标: 0否,1是", required = true)
+    @ApiModelProperty(value = "是否主目标: 0否,1是")
     private Integer isMain = 0;
 
-    @NotNull(message = "目标衡量标准必填")
-    @ApiModelProperty(value = "目标衡量标准", required = true)
+    @ApiModelProperty(value = "目标衡量标准")
     private String measurement;
 
     @ApiModelProperty("项目目标达标值")
     private BigDecimal reachValue;
 
-    @NotNull(message = "项目目标达成日期必填")
-    @ApiModelProperty(value = "项目目标达成日期", required = true)
+    @ApiModelProperty(value = "项目目标达成日期")
     private Date reachDate;
+
+    @ApiModelProperty(value = "项目目标状态: 0: 进行中; 10: 已完成; 30: 未完成")
+    private Integer status;
 
 }
