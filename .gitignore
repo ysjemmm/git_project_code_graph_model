@@ -8,3 +8,7 @@
 /metadata/*
 target/
 /mandarin/*
+.classpath
+.factorypath
+.project
+.settings
