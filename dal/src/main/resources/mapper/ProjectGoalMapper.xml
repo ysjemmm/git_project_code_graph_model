@@ -71,7 +71,7 @@
                    and is_deleted = 0
     </select>
     <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ProjectGoalDO">
-        select * from project_goal where project_id = #{projectId} and is_deleted = 0 order by modify_date desc
+        select * from project_goal where project_id = #{projectId} and is_deleted = 0 order by is_main desc, modify_date desc
     </select>
 
 </mapper>
