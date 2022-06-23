@@ -91,13 +91,14 @@ public class TrackEventComponentImpl implements TrackEventComponent {
         Map<String, Object> flowData = processInfo.getFlowData();
         if (FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
             trackEventDO.setStatus(TrackStatusEnum.REVIEW_FAIL.getCode());
-            String rejectReason = flowData.get("rejectReason") == null ? "" : String.valueOf(flowData.get("rejectReason"));
+            String rejectReason = flowData.get("rejectReason") == null ? StringUtils.EMPTY : String.valueOf(flowData.get("rejectReason"));
             trackEventDO.setFailReason(rejectReason);
         } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
             trackEventDO.setStatus(TrackStatusEnum.WITHDRAW.getCode());
 
         } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
             trackEventDO.setStatus(TrackStatusEnum.REVIEWED.getCode());
+            trackEventDO.setFailReason(StringUtils.EMPTY);
         }
 
         updateTrackEventProp(trackEventDO);

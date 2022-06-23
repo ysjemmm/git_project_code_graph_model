@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -485,9 +486,11 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     public BaseResult<PageQueryResult<TrackEventVO>> matchTrackEventList(ProductDemandLinkTrackEventQueryList trackEventQueryList) {
         log.info("产品需求-事件匹配,参数:trackEventQueryList={}", trackEventQueryList);
         TrackEventListCondition condition = TrackEventCopier.INSTANCE.convert(trackEventQueryList);
-        ProductDemandTrackEventCondition c = ProductDemandTrackEventCondition.builder().productDemandId(trackEventQueryList.getProductDemandId()).isDeleted(false).build();
-        List<Long> trackEventIds = productDemandTrackEventMapper.select(c).stream().map(ProductDemandTrackEventDO::getTrackEventId).collect(Collectors.toList());
-        condition.setFilterTrackEventIds(trackEventIds);
+        if(trackEventQueryList.getProductDemandId()!=null){
+            ProductDemandTrackEventCondition c = ProductDemandTrackEventCondition.builder().productDemandId(trackEventQueryList.getProductDemandId()).isDeleted(false).build();
+            List<Long> trackEventIds = productDemandTrackEventMapper.select(c).stream().map(ProductDemandTrackEventDO::getTrackEventId).collect(Collectors.toList());
+            condition.setFilterTrackEventIds(trackEventIds);
+        }
         condition.setStatus(Lists.newArrayList(TrackStatusEnum.REVIEWED.getCode()));
         PageHelper.startPage(trackEventQueryList.getPageNum(), trackEventQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         return trackEventComponent.list(condition);
@@ -520,15 +523,19 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     public BaseResult<PageQueryResult<TrackEventVO>> linkTrackEventList(ProductDemandTrackEventQueryList trackEventQueryList) {
         log.info("产品需求-事件清单,参数:trackEventQueryList={}", trackEventQueryList);
-        ProductDemandTrackEventCondition c = ProductDemandTrackEventCondition.builder().productDemandId(trackEventQueryList.getProductDemandId()).isDeleted(false).build();
-        List<Long> trackEventIds = productDemandTrackEventMapper.select(c).stream().map(ProductDemandTrackEventDO::getTrackEventId).collect(Collectors.toList());
-        if(CollectionUtils.isEmpty(trackEventIds)){
-            return BaseResult.success(ResultUtil.pageEmpty());
-        }
-        TrackEventListCondition condition = TrackEventListCondition.builder().trackEventIds(trackEventIds).build();
-        condition.setTrackEventIds(trackEventIds);
         PageHelper.startPage(trackEventQueryList.getPageNum(), trackEventQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
-        return trackEventComponent.list(condition);
+        List<TrackEventDO> list = trackEventMapper.linkTrackEventList(trackEventQueryList.getProductDemandId());
+        List<TrackEventVO> trackEventVOList = TrackEventCopier.INSTANCE.convert(list);
+        trackEventVOList.forEach(a -> {
+            a.setStatusName(TrackStatusEnum.getTextByCode(a.getStatus()));
+            a.setEnvNames(EnvEnum.getTextByCode(JSONObject.parseArray(a.getEnv(), Integer.class)));
+            a.setPlatformNames(PlatformTypeEnum.getTextByCode(JSONObject.parseArray(a.getPlatform(), Integer.class)));
+        });
+        PageInfo<TrackEventDO> pageInfo = new PageInfo<>(list);
+        PageQueryResult<TrackEventVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(trackEventVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
     }
 
     private void checkDescLength(String desc) {

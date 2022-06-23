@@ -189,7 +189,7 @@ public class TrackEventServiceImpl implements TrackEventService {
         fileComponent.update(trackEventModifyReq.getFiles(), trackEventModifyReq.getId(), FileTypeEnum.TRACK_EVENT.getCode());
 
         trackEventDO.setFlowId(startFlow(trackEventModifyReq));
-
+        trackEventDO.setStatus(TrackStatusEnum.REVIEWING.getCode());
         trackEventMapper.update(trackEventDO);
         return BaseResult.success(true);
     }
