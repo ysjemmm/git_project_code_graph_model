@@ -6,6 +6,7 @@ import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.TrackEventCondition;
 import com.timevale.forward.dal.condition.TrackEventListCondition;
+import com.timevale.forward.dal.condition.TrackPropListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TrackEventService;
@@ -76,6 +77,9 @@ public class TrackEventServiceImpl implements TrackEventService {
     @Resource
     private EpeiusClient epeiusClient;
 
+    @Resource
+    private TrackPropMapper trackPropMapper;
+
 
     @Override
     public BaseResult<PageQueryResult<TrackEventVO>> list(TrackEventQueryList trackEventQueryList) {
@@ -139,8 +143,14 @@ public class TrackEventServiceImpl implements TrackEventService {
         });
         variables.put("files", files);
 
+        List<Integer> types = Lists.newArrayList(TrackPropTypeEnum.DEFAULT.getCode());
+        TrackPropListCondition c = TrackPropListCondition.builder().types(types).build();
+        List<TrackPropDO> defaultProps = trackPropMapper.list(c);
+
+        List<TrackPropDO> trackProps = TrackPropCopier.INSTANCE.change(trackEventAddReq.getTrackProps());
+        trackProps.addAll(defaultProps);
+
         List<TrackPropItemDO> trackPropItemDOList = new ArrayList<>();
-        List<TrackPropAddReq> trackProps = trackEventAddReq.getTrackProps();
         trackProps.forEach(a->{
             TrackPropItemDO trackPropDO=new TrackPropItemDO();
             trackPropDO.setDataType(a.getDataType());
@@ -176,12 +186,15 @@ public class TrackEventServiceImpl implements TrackEventService {
         TrackEventDO trackEventDO = TrackEventCopier.INSTANCE.convert(trackEventModifyReq);
         Long trackMapId = trackEventModifyReq.getElementId() == null ? trackEventModifyReq.getPageId() : trackEventModifyReq.getElementId();
         trackEventDO.setTrackMapId(trackMapId);
-        trackEventMapper.update(trackEventDO);
 
         List<TrackPropDO> trackProps = TrackPropCopier.INSTANCE.change(trackEventModifyReq.getTrackProps());
         trackPropComponent.modify(trackProps, trackEventDO.getId());
         // 附件
         fileComponent.update(trackEventModifyReq.getFiles(), trackEventModifyReq.getId(), FileTypeEnum.TRACK_EVENT.getCode());
+
+        trackEventDO.setFlowId(startFlow(trackEventModifyReq));
+
+        trackEventMapper.update(trackEventDO);
         return BaseResult.success(true);
     }
 
