@@ -201,6 +201,9 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
     public BaseResult<Boolean> finish(ProjectGoalFinishReq projectGoalFinishReq) {
         ProjectGoalDO goal = projectGoalMapper.get(projectGoalFinishReq.getId());
         AssertUtil.notNull(goal, "您更改的项目目标不存在，请刷新后重试");
+        AssertUtil.checkState(projectGoalFinishReq.getStatus().equals(ProjectGoalStatusEnum.FINISHED.getCode()) ||
+                projectGoalFinishReq.getStatus().equals(ProjectGoalStatusEnum.UNFINISHED.getCode()),
+                "完成状态只能是 10-已完成 或 30-未完成");
         AssertUtil.checkState(hasGoalFinishPermission(), "您没有该操作权限");
         // 更新目标
         ProjectGoalDO updateCond = new ProjectGoalDO();

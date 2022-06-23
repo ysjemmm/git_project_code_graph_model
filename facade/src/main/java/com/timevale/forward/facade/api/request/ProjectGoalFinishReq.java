@@ -23,7 +23,6 @@ public class ProjectGoalFinishReq extends BaseReq {
     @ApiModelProperty(name = "项目目标id")
     private Long id;
 
-    @Pattern(regexp = "^(10|30)$", message = "完成状态只能是 10-已完成 或 30-未完成")
     @NotNull(message = "完成状态必填")
     @ApiModelProperty("10-已完成 30-未完成")
     private Integer status;
