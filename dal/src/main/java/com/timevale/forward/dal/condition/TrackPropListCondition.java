@@ -40,4 +40,9 @@ public class TrackPropListCondition extends QueryBase {
      */
     private List<Integer> status;
 
+    /**
+     * types
+     */
+    private List<Integer>types;
+
 }

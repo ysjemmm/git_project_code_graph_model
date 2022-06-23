@@ -69,6 +69,14 @@ public interface TrackPropMapper {
     int update(TrackPropDO trackPropDO);
 
     /**
+     * 新增
+     *
+     * @param trackPropDO trackPropDO
+     * @return int
+     */
+    int updateWithOutModifyMan(TrackPropDO trackPropDO);
+
+    /**
      *
      * @param ids ids
      * @param status status

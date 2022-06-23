@@ -107,7 +107,7 @@ public class TrackEventComponentImpl implements TrackEventComponent {
     @Override
     public void updateTrackEventProp(TrackEventDO trackEventDO) {
 
-        trackEventMapper.update(trackEventDO);
+        trackEventMapper.updateWithOutModifyMan(trackEventDO);
 
         TrackEventPropCondition c = TrackEventPropCondition.builder().trackEventId(trackEventDO.getId()).isDeleted(false).build();
         List<TrackEventPropDO> oldTrackEventPropDOList = trackEvenPropMapper.select(c);
@@ -145,7 +145,7 @@ public class TrackEventComponentImpl implements TrackEventComponent {
             if (TrackStatusEnum.REVIEWING.getCode().equals(a.getStatus())) {
                 log.info("更新事件属性 trackEventId={},propId={}", trackEventDO.getId(), a.getId());
                 a.setStatus(trackEventDO.getStatus());
-                trackPropMapper.update(a);
+                trackPropMapper.updateWithOutModifyMan(a);
             }
         });
     }

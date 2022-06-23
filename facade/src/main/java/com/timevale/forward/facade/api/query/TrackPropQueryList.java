@@ -24,7 +24,10 @@ public class TrackPropQueryList extends QueryBase {
     @ApiModelProperty("英文名称")
     private String egName;
 
-    @ApiModelProperty("状态")
+    @ApiModelProperty("评审状态:-1已撤回,0审核中,1审核通过,2审核不通过")
     private List<Integer>status;
+
+    @ApiModelProperty("属性类型:0新增属性,1已有属性,2默认属性")
+    private List<Integer>types;
 
 }

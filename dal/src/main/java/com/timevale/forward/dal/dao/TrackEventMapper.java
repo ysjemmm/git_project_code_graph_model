@@ -30,6 +30,14 @@ public interface TrackEventMapper {
      */
     int update(TrackEventDO trackMapDO);
 
+    /**
+     * 新增
+     *
+     * @param trackMapDO trackMapDO
+     * @return int
+     */
+    int updateWithOutModifyMan(TrackEventDO trackMapDO);
+
 
     /**
      * 列表

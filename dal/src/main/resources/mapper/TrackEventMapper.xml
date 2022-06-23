@@ -33,6 +33,17 @@
         </where>
     </update>
 
+    <update id="updateWithOutModifyMan">
+        update track_event
+        <set>
+            <if test="failReason != null and failReason != ''">fail_reason = #{failReason},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
     <select id="select" resultType="com.timevale.forward.dal.entity.TrackEventDO">
         select id,cn_name, eg_name, flow_id,track_map_id,platform,api_name,touch_moment,env,status,fail_reason,
          is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date

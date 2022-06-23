@@ -70,7 +70,7 @@ public class TrackPropServiceImpl implements TrackPropService {
         TrackPropCondition c = TrackPropCondition.builder().id(trackPropModifyReq.getId()).build();
         TrackPropDO trackPropDO = trackPropMapper.select(c).get(0);
         if (!TrackStatusEnum.REVIEWED.getCode().equals(trackPropDO.getStatus())) {
-//            throw new BaseBizRuntimeException("状态审核通过时,才能编辑");
+            throw new BaseBizRuntimeException("状态审核通过时,才能编辑");
         }
         c = TrackPropCondition.builder().cnNames(Lists.newArrayList(trackPropModifyReq.getCnName())).build();
         List<TrackPropDO> trackPropDos = trackPropMapper.select(c);

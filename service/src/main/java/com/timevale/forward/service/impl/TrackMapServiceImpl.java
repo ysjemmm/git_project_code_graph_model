@@ -100,7 +100,7 @@ public class TrackMapServiceImpl implements TrackMapService {
         List<TrackMapDO> trackMapDos = trackMapMapper.select(c);
         boolean match = trackMapDos.stream().anyMatch(a -> a.getName().equals(trackMapAddReq.getName()));
         if (match) {
-            throw new BaseBizRuntimeException("该菜单名称已存在,请修改后重试");
+            throw new BaseBizRuntimeException("该分类名称已存在");
         }
         TrackMapDO trackMapDO = TrackMapCopier.INSTANCE.convert(trackMapAddReq);
         trackMapMapper.insert(trackMapDO);
