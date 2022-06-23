@@ -19,9 +19,9 @@ public interface ProjectGoalMapper {
 
     void insert(ProjectGoalDO projectGoal);
 
-    ProjectGoalDO get(@Param("projectId") Long id);
+    ProjectGoalDO get(@Param("id") Long id);
 
-    void update(ProjectGoalDO newGoal);
+    void update(ProjectGoalDO projectGoalDO);
 
     List<ProjectGoalDO> getByProjectId(@Param("projectId") Long id);
 
