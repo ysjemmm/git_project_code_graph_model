@@ -10,6 +10,7 @@ import com.timevale.forward.dal.dao.TrackPropMapper;
 import com.timevale.forward.dal.entity.TrackEventPropDO;
 import com.timevale.forward.dal.entity.TrackPropDO;
 import com.timevale.forward.facade.api.result.TrackPropVO;
+import com.timevale.forward.model.enums.TrackPropTypeEnum;
 import com.timevale.forward.model.enums.TrackStatusEnum;
 import com.timevale.forward.service.component.TrackPropComponent;
 import com.timevale.forward.service.copy.TrackPropCopier;
@@ -83,7 +84,8 @@ public class TrackPropComponentImpl implements TrackPropComponent {
             return Lists.emptyList();
         }
         List<TrackPropDO> list = trackPropMapper.selectByIds(oldPropIds);
-        List<TrackPropVO> trackEventVOList = TrackPropCopier.INSTANCE.convert(list);
+        List<TrackPropDO> filter = list.stream().filter(a -> !TrackPropTypeEnum.DEFAULT.getCode().equals(a.getType())).collect(Collectors.toList());
+        List<TrackPropVO> trackEventVOList = TrackPropCopier.INSTANCE.convert(filter);
 
         trackEventVOList.forEach(a->{
             a.setStatusName(TrackStatusEnum.getTextByCode(a.getStatus()));
@@ -92,7 +94,7 @@ public class TrackPropComponentImpl implements TrackPropComponent {
     }
 
     private List<Long>  addRelation(List<TrackPropDO> trackPropDOList,Long trackEventId) {
-        List<Long> newPropIds = trackPropDOList.stream().map(TrackPropDO::getId).collect(Collectors.toList());
+        List<Long> newPropIds = trackPropDOList.stream().filter(a->!TrackPropTypeEnum.DEFAULT.getCode().equals(a.getType())).map(TrackPropDO::getId).collect(Collectors.toList());
 
         TrackEventPropCondition c = TrackEventPropCondition.builder().trackEventId(trackEventId).isDeleted(false).build();
         List<TrackEventPropDO> oldTrackEventPropDOList = trackEvenPropMapper.select(c);
