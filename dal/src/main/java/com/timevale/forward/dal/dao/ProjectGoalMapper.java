@@ -3,6 +3,7 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.entity.ProjectGoalDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -25,4 +26,6 @@ public interface ProjectGoalMapper {
     List<ProjectGoalDO> getByProjectId(@Param("projectId") Long id);
 
     void delete(@Param("id") Long projectGoalId);
+
+    void batchInsert(Collection<ProjectGoalDO> convert);
 }

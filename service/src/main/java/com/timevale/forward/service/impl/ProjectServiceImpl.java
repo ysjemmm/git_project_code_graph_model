@@ -25,6 +25,7 @@ import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -115,6 +116,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private BizDemandComponent bizDemandComponent;
+
+    @Resource
+    private ProjectGoalMapper projectGoalMapper;
 
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -213,6 +217,12 @@ public class ProjectServiceImpl implements ProjectService {
         if (project != null) {
             throw new BaseBizRuntimeException("该项目名称已存在,请修改后重试");
         }
+        if (YesOrNoEnum.YES.getCode().equals(projectAddReq.getIsWithGoal())) {
+            AssertUtil.notEmpty(projectAddReq.getProjectGoals(), "项目含有项目目标，请至少添加一条项目目标数据");
+            AssertUtil.checkState(projectAddReq.getProjectGoals().stream()
+                            .filter(goal -> YesOrNoEnum.YES.getCode().equals(goal.getIsMain()))
+                            .count() == 1, "项目目标主目标只能有一个，请检查参数");
+        }
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
         projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
         projectDO.setPmName(projectAddReq.getPm().getUserName());
@@ -242,6 +252,11 @@ public class ProjectServiceImpl implements ProjectService {
 
         Integer status = ProjectStatusEnum.WAITING.getCode();
         projectLogComponent.addLogWhenStatusChange(status, status, projectDO.getId(), ButtonActionEnum.SUBMIT.getText());
+
+        // 项目目标信息插入
+        if (YesOrNoEnum.YES.getCode().equals(projectAddReq.getIsWithGoal())) {
+            projectGoalMapper.batchInsert(ProjectGoalCopier.INSTANCE.convert(projectAddReq.getProjectGoals()));
+        }
 
         return BaseResult.success(true);
     }
@@ -442,7 +457,7 @@ public class ProjectServiceImpl implements ProjectService {
         Long projectId = productDemandQueryList.getProjectId();
         int pageSize = productDemandQueryList.getPageSize();
         int pageNum = productDemandQueryList.getPageNum();
-        log.info("项目-产品需求清单:pageNum={},pageSize={},projectId={}", pageNum,pageSize,projectId);
+        log.info("项目-产品需求清单:pageNum={},pageSize={},projectId={}", pageNum, pageSize, projectId);
         // 查询产品需求
         List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(projectId);
         List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
@@ -556,7 +571,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
         // 计算项目状态
-        ProjectNodeDO node = null;
+        ProjectNodeDO node;
         Integer oldStatus = newProject.getStatus();
         if ((node = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText())) != null && node.getActualDate() != null) {
             if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
@@ -584,9 +599,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (!Objects.equals(oldProject.getPlanEndDate(), newProject.getPlanEndDate())
                 || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
             List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProject.getId());
-            bizDemandIds.forEach(a -> {
-                bizDemandComponent.updateProjectEndDate(a);
-            });
+            bizDemandIds.forEach(a -> bizDemandComponent.updateProjectEndDate(a));
         }
         log.info("更新项目信息完成");
     }

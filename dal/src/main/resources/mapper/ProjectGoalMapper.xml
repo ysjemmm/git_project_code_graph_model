@@ -9,6 +9,15 @@
         values (#{projectId}, #{name}, #{type}, #{isMain}, #{measurement}, #{reachValue}, #{reachDate},
                 #{createManId}, #{createMan})
     </insert>
+    <insert id="batchInsert">
+        insert into project_goal (project_id, name, type, is_main, measurement, reach_value, reach_date,
+                                  create_man_id, create_man)
+        values
+            <foreach collection="list" item="item" separator=",">
+                (#{item.projectId}, #{item.name}, #{item.type}, #{item.isMain}, #{item.measurement}, #{item.reachValue},
+                 #{item.reachDate}, #{item.createManId}, #{item.createMan})
+            </foreach>
+    </insert>
 
     <update id="update">
         update project_goal
