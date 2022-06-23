@@ -73,7 +73,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         // 权限校验
         AssertUtil.checkState(hasProjectEditPermission(getPermittedUserIds(project)), "您没有该操作权限");
         // 名称校验
-        AssertUtil.checkState(Objects.isNull(projectGoalMapper.getByName(name)),
+        AssertUtil.checkState(Objects.isNull(projectGoalMapper.getByName(projectId, name)),
                 "项目目标名称重复，请重新修改");
         ProjectGoalDO projectGoal = ProjectGoalCopier.INSTANCE.convert(projectGoalAddReq);
         // 新增数据默认不是主目标
@@ -107,7 +107,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         String identity = oldGoal.getName();
         // 名称校验
         if (StringUtils.isNotEmpty(newGoal.getName()) && !oldGoal.getName().equals(newGoal.getName())) {
-            AssertUtil.checkState(Objects.isNull(projectGoalMapper.getByName(newGoal.getName())),
+            AssertUtil.checkState(Objects.isNull(projectGoalMapper.getByName(project.getId(), newGoal.getName())),
                     "项目目标名称重复，请重新修改");
             identity = newGoal.getName();
             // 修改identity

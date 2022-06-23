@@ -15,7 +15,7 @@ public interface ProjectGoalMapper {
 
     void unsetMainGoal(@Param("projectId") Long projectId);
 
-    ProjectGoalDO getByName(@Param("name") String name);
+    ProjectGoalDO getByName(@Param("projectId") Long projectId, @Param("name") String name);
 
     void insert(ProjectGoalDO projectGoal);
 

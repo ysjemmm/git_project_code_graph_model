@@ -63,6 +63,7 @@
         select *
         from project_goal
         where name = #{name}
+          and project_id = #{projectId}
         and is_deleted = 0
     </select>
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectGoalDO">
