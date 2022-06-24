@@ -9,6 +9,7 @@
         select *
         from man_day
         where project_id = #{projectId}
+          and is_deleted = false
     </select>
     <select id="getByMemberIdAndDateRange" resultType="com.timevale.forward.dal.entity.ManDayDO">
         select *
@@ -16,6 +17,7 @@
         where member_id = #{memberId}
           and week_start_date = #{startDate}
           and week_end_date = #{endDate}
+          and is_deleted = false
     </select>
     <select id="getByProjectIdAndDateRange" resultType="com.timevale.forward.dal.entity.ManDayDO">
         select *
@@ -23,6 +25,7 @@
         where project_id = #{projectId}
           and week_start_date = #{startDate}
           and week_end_date = #{endDate}
+          and is_deleted = false
     </select>
 
 
