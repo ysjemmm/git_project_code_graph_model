@@ -5,4 +5,25 @@
 <mapper namespace="com.timevale.forward.dal.dao.ManDayMapper">
 
 
+    <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ManDayDO">
+        select *
+        from man_day
+        where project_id = #{projectId}
+    </select>
+    <select id="getByMemberIdAndDateRange" resultType="com.timevale.forward.dal.entity.ManDayDO">
+        select *
+        from man_day
+        where member_id = #{memberId}
+          and week_start_date = #{startDate}
+          and week_end_date = #{endDate}
+    </select>
+    <select id="getByProjectIdAndDateRange" resultType="com.timevale.forward.dal.entity.ManDayDO">
+        select *
+        from man_day
+        where project_id = #{projectId}
+          and week_start_date = #{startDate}
+          and week_end_date = #{endDate}
+    </select>
+
+
 </mapper>

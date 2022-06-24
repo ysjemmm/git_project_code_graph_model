@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -15,6 +16,7 @@ import java.util.Date;
  */
 @Getter
 @Setter
+@Accessors(chain = true)
 @ApiModel("人天展示类")
 public class ManDayVO extends ToString {
 
@@ -43,6 +45,6 @@ public class ManDayVO extends ToString {
     private boolean editable = false;
 
     @ApiModelProperty("是否项目经理")
-    private boolean isPm = false;
+    private boolean pm = false;
 
 }

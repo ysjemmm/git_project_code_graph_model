@@ -23,6 +23,28 @@
         </where>
     </select>
 
+    <select id="listAllByActions" resultType="com.timevale.forward.dal.entity.BizChangeLogDO">
+        select * from biz_change_log
+        <where>
+            <if test="mainIds != null and mainIds.size() > 0">
+                and main_id in
+                 <foreach collection="mainIds" item="mainId" open="(" separator="," close=")">
+                     #{mainId}
+                 </foreach>
+            </if>
+            <if test="type != null">
+                and type = #{type}
+            </if>
+            <if test="actions != null and actions.size() > 0">
+                and action in
+                <foreach collection="actions" item="action" open="(" separator="," close=")">
+                    #{action}
+                </foreach>
+            </if>
+        </where>
+        order by create_date desc
+    </select>
+
     <insert id="insert">
         insert into biz_change_log (`main_id`,`type`,`old_value`,`new_value`,`field`,`action`,`identity`
         ,`create_man_id`,`create_man`)

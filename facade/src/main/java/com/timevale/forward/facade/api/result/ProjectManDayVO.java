@@ -31,6 +31,6 @@ public class ProjectManDayVO {
     List<ManDayVO> manDays;
 
     @ApiModelProperty("是否项目经理")
-    private boolean isPm = false;
+    private boolean pm = false;
 
 }

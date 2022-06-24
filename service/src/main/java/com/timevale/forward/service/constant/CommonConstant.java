@@ -10,6 +10,8 @@ public class CommonConstant {
 
     public static final String WIDE_COLON = "：";
 
+    public static final String TILDE = "~";
+
     public static final String BLANK = " ";
 
     public static final String DEFAULT_ORDER_BY = " modify_date desc, id";
