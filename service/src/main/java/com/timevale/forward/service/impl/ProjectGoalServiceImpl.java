@@ -123,8 +123,12 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         ProjectGoalMD oldMd = ProjectGoalCopier.INSTANCE.convert(oldGoal);
         ProjectGoalMD newMd = ProjectGoalCopier.INSTANCE.convert(newGoal);
         List<BizChangeLogDO> logs = FieldCompareUtil.commonCompare(oldMd, newMd, BizChangeLogDO.class);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         for (BizChangeLogDO log : logs) {
+            log.setMainId(project.getId());
             log.setIdentity(formIdentity(identity));
+            log.setCreateManId(userInfo.getId());
+            log.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         }
         bizChangeLogMapper.batchInsert(logs);
         return BaseResult.success(true);
