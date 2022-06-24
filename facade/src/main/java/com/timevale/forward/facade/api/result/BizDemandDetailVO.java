@@ -118,4 +118,16 @@ public class BizDemandDetailVO extends ToString {
 
     @ApiModelProperty("拒绝原因")
     private String RejectReason;
+
+    @ApiModelProperty("是否客开需求")
+    private Boolean customerDevDemand;
+
+    @ApiModelProperty("客开类型：0基于销售合同；1基于项目")
+    private Integer customerDevType;
+
+    @ApiModelProperty("销售合同编号")
+    private String customerDevSaleContract ;
+
+    @ApiModelProperty("项目名称")
+    private String customerDevProjectName;
 }

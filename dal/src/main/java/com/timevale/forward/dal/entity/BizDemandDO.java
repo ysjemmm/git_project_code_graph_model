@@ -102,4 +102,24 @@ public class BizDemandDO extends BaseDO {
      * 项目发布时间
      */
     private Date projectEndDate;
+
+    /**
+     * 是否客开需求
+     */
+    private Boolean customerDevDemand;
+
+    /**
+     * 客开类型
+     */
+    private Integer customerDevType;
+
+    /**
+     * 销售合同编号
+     */
+    private String customerDevSaleContract ;
+
+    /**
+     * 项目名称
+     */
+    private String customerDevProjectName;
 }

@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.forward.dal.annotation.WildcardEscape;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -65,4 +66,19 @@ public class TroubleTicketCondition {
      * 故障发生时间-结束
      */
     private Date occurrenceTimeEnd;
+
+    /**
+     * 主责任人id-列表
+     */
+    private List<String> primePrincipalIdList;
+
+    /**
+     * 责任团队id-列表
+     */
+    private List<Long> dutyTeamList;
+
+    /**
+     * 是否监控发现 0否， 1是
+     */
+    private Boolean isMonitorDetect;
 }

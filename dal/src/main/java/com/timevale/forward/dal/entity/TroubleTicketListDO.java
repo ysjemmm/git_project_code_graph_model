@@ -38,5 +38,15 @@ public class TroubleTicketListDO extends BaseDO {
      * 产品线
      */
     private String productLineName;
+
+    /**
+     * 责任团队
+     */
+    private Long dutyTeam;
+
+    /**
+     * 主责任人
+     */
+    private String primePrincipal;
 }
 
