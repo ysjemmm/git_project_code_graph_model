@@ -10,6 +10,7 @@ import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
+import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -61,6 +62,9 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Resource
     private TestBillMapper testBillMapper;
+
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
 
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -124,7 +128,8 @@ public class ProjectComponentImpl implements ProjectComponent {
         buildConditionBeforeQuery(projectIds, condition);
 
         // 开始分页
-        PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        String collation = sqlOrderComponent.build(condition.getOrderFiled(), condition.getOrderCollation());
+        PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), collation);
         List<ProjectListDO> projectDos = projectMapper.list(condition);
 
         // 筛选判空

@@ -14,10 +14,7 @@ import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.FileVO;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.BizDemandComponent;
-import com.timevale.forward.service.component.BizDemandLogComponent;
-import com.timevale.forward.service.component.FileComponent;
-import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.FileCopier;
@@ -94,6 +91,9 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
 
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
+
     @Override
     public BaseResult<PageQueryResult<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -133,7 +133,8 @@ public class BizDemandServiceImpl implements BizDemandService {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
         // 开始分页
-        PageHelper.startPage(bizDemandQueryList.pageNum, bizDemandQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        String collation = sqlOrderComponent.build(bizDemandQueryList.getOrderFiled(), bizDemandQueryList.getOrderCollation());
+        PageHelper.startPage(bizDemandQueryList.pageNum, bizDemandQueryList.pageSize, collation);
         return bizDemandComponent.page(bizDemandListCondition);
     }
 

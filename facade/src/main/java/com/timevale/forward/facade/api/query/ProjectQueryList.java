@@ -101,4 +101,9 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("提测时间右区间")
     private Date actualTestDateRight;
 
+    @ApiModelProperty("排序字段")
+    private String orderFiled;
+
+    @ApiModelProperty("排序规则：0正序，1逆序")
+    private Integer orderCollation;
 }
