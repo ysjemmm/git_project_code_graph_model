@@ -34,15 +34,13 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -256,8 +254,15 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         });
 
         // 描述数据填充
+        List<Long> dutyTeamIdList = troubleTicketVOList.stream().map(TroubleTicketVO::getDutyTeam).filter(Objects::nonNull).collect(Collectors.toList());
+        Map<Long, GroupResponse> groupListTreeMap = bizDemandComponent.getGroupListTreeMap(dutyTeamIdList);
         troubleTicketVOList.forEach(e -> {
             e.setTroubleRankName(TroubleTicketRankEnum.getTextByCode(e.getTroubleRank()));
+            if(e.getDutyTeam() != null){
+                e.setDutyTeamName(groupListTreeMap.get(e.getDutyTeam()).getGroupName());
+            }else{
+                e.setDutyTeamName("");
+            }
         });
 
         // 返回分页数据
