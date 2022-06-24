@@ -22,7 +22,7 @@ public class TrackEventCondition extends QueryBase {
     /**
      * cnName
      */
-    private String cnName;
+    private String fullCnName;
 
     /**
      * egName

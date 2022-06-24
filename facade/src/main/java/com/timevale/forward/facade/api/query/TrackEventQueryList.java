@@ -25,7 +25,7 @@ public class TrackEventQueryList extends QueryBase {
     private Integer level;
 
     @ApiModelProperty("中文名称")
-    private String cnName;
+    private String fullCnName;
 
     @ApiModelProperty("英文名称")
     private String egName;

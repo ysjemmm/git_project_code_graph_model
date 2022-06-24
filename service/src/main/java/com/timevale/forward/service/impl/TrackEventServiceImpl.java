@@ -11,7 +11,10 @@ import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TrackEventService;
 import com.timevale.forward.facade.api.query.TrackEventQueryList;
-import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.request.FileAddReq;
+import com.timevale.forward.facade.api.request.TrackEventAddReq;
+import com.timevale.forward.facade.api.request.TrackEventDeleteReq;
+import com.timevale.forward.facade.api.request.TrackEventModifyReq;
 import com.timevale.forward.facade.api.result.TrackEventDetailVO;
 import com.timevale.forward.facade.api.result.TrackEventVO;
 import com.timevale.forward.facade.api.result.TrackPropVO;
@@ -122,7 +125,7 @@ public class TrackEventServiceImpl implements TrackEventService {
         StartProcessRequest start = new StartProcessRequest();
         Map<String, Object> variables = new HashMap<>();
         variables.put("files", new ArrayList<>());
-        variables.put("cnName", trackEventAddReq.getCnName());
+        variables.put("fullCnName", trackEventAddReq.getFullCnName());
         variables.put("egName", trackEventAddReq.getEgName());
         variables.put("platform", StringUtils.join(PlatformTypeEnum.getTextByCode(trackEventAddReq.getPlatforms()),","));
         variables.put("touchMoment", trackEventAddReq.getTouchMoment());
@@ -271,7 +274,7 @@ public class TrackEventServiceImpl implements TrackEventService {
     }
     private void checkBeforeInsert(TrackEventAddReq trackEventAddReq) {
         List<Integer> status = Lists.newArrayList(TrackStatusEnum.REVIEWING.getCode(), TrackStatusEnum.REVIEWED.getCode());
-        TrackEventCondition c = TrackEventCondition.builder().cnName(trackEventAddReq.getCnName()).status(status).build();
+        TrackEventCondition c = TrackEventCondition.builder().fullCnName(trackEventAddReq.getFullCnName()).status(status).build();
         List<TrackEventDO> trackEventDos = trackEventMapper.select(c);
         if (!CollectionUtils.isEmpty(trackEventDos) && !Objects.equals(trackEventAddReq.getId(), trackEventDos.get(0).getId())) {
             throw new BaseBizRuntimeException("该事件中文名重复,请修改后重试");

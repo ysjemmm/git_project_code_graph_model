@@ -17,6 +17,11 @@ public class TrackEventDO extends BaseDO {
     private String cnName;
 
     /**
+     * fullCnName
+     */
+    private String fullCnName;
+
+    /**
      * egName
      */
     private String egName;

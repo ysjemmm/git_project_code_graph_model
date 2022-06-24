@@ -23,6 +23,9 @@ public class TrackEventAddReq extends BaseReq {
     @ApiModelProperty("中文名称")
     private String cnName;
 
+    @ApiModelProperty("中文名全称")
+    private String fullCnName;
+
     @ApiModelProperty("英文名称")
     private String egName;
 

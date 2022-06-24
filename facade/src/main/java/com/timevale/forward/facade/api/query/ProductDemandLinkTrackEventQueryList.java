@@ -22,7 +22,7 @@ public class ProductDemandLinkTrackEventQueryList extends QueryBase {
     private Long productDemandId;
 
     @ApiModelProperty("中文名称")
-    private String cnName;
+    private String fullCnName;
 
     @ApiModelProperty("英文名称")
     private String egName;

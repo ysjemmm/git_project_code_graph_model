@@ -26,11 +26,12 @@ public class TrackEventListCondition extends QueryBase {
      * trackMapIds
      */
     private List<Long> trackMapIds;
+
     /**
-     * cnName
+     * fullCnName
      */
     @WildcardEscape
-    private String cnName;
+    private String fullCnName;
     /**
      * egName
      */
