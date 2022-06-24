@@ -84,5 +84,6 @@
         <mapper resource="mapper/ProjectGoalMapper.xml"/>
         <mapper resource="mapper/ManDayMapper.xml"/>
         <mapper resource="mapper/ModelMapper.xml"/>
+        <mapper resource="mapper/ColumnHideMapper.xml"/>
     </mappers>
 </configuration>
