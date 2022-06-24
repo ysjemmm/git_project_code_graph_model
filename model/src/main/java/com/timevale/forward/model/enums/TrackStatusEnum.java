@@ -33,7 +33,4 @@ public enum TrackStatusEnum {
         return "";
     }
 
-    public static boolean canDelete(Integer code){
-        return WITHDRAW.getCode().equals(code)||REVIEW_FAIL.getCode().equals(code);
-    }
 }

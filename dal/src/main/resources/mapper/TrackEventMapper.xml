@@ -36,7 +36,7 @@
     <update id="updateWithOutModifyMan">
         update track_event
         <set>
-            <if test="failReason != null and failReason != ''">fail_reason = #{failReason},</if>
+            <if test="true">fail_reason = #{failReason},</if>
             <if test="status != null">status = #{status},</if>
         </set>
         <where>

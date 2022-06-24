@@ -145,7 +145,7 @@ public class TrackEventComponentImpl implements TrackEventComponent {
             //没有关联其他事件,更新为撤回或拒绝
             if (TrackStatusEnum.REVIEWING.getCode().equals(a.getStatus())) {
                 log.info("更新事件属性 trackEventId={},propId={}", trackEventDO.getId(), a.getId());
-                a.setStatus(trackEventDO.getStatus());
+                a.setStatus(TrackStatusEnum.REVIEW_FAIL.getCode());
                 trackPropMapper.updateWithOutModifyMan(a);
             }
         });
