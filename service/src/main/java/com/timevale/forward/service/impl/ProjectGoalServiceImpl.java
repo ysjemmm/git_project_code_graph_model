@@ -84,7 +84,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                 .setType(BizChangeLogTypeEnum.PROJECT.getCode())
                 .setField(BizChangeLogFieldEnum.PROJECT_GOAL.getText())
                 .setMainId(projectId)
-                .setIdentity(name)
+                .setIdentity(formIdentity(name))
                 .setOldValue(name)
                 .setNewValue(name)
                 .setAction(ButtonActionEnum.LINK.getText())
@@ -111,7 +111,11 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                     "项目目标名称重复，请重新修改");
             identity = newGoal.getName();
             // 修改identity
-            bizChangeLogMapper.updateIdentity(oldGoal.getProjectId(), oldGoal.getName(), identity);
+            bizChangeLogMapper.updateIdentity(oldGoal.getProjectId(), formIdentity(oldGoal.getName()),
+                    formIdentity(identity));
+            // 修改项目目标名称
+            bizChangeLogMapper.updateValue(oldGoal.getProjectId(), BizChangeLogFieldEnum.PROJECT_GOAL.getText(),
+                    oldGoal.getName(), newGoal.getName());
         }
         // 更新目标
         projectGoalMapper.update(newGoal);
@@ -120,7 +124,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         ProjectGoalMD newMd = ProjectGoalCopier.INSTANCE.convert(newGoal);
         List<BizChangeLogDO> logs = FieldCompareUtil.commonCompare(oldMd, newMd, BizChangeLogDO.class);
         for (BizChangeLogDO log : logs) {
-            log.setIdentity(identity);
+            log.setIdentity(formIdentity(identity));
         }
         bizChangeLogMapper.batchInsert(logs);
         return BaseResult.success(true);
@@ -150,7 +154,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                     .setType(BizChangeLogTypeEnum.PROJECT.getCode())
                     .setField(BizChangeLogFieldEnum.MAIN_GOAL.getText())
                     .setMainId(goal.getProjectId())
-                    .setIdentity(goal.getName())
+                    .setIdentity(formIdentity(goal.getName()))
                     .setOldValue(YesOrNoEnum.NO.getText())
                     .setNewValue(YesOrNoEnum.YES.getText())
             );
@@ -161,7 +165,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                 .setType(BizChangeLogTypeEnum.PROJECT.getCode())
                 .setField(BizChangeLogFieldEnum.PROJECT_GOAL.getText())
                 .setMainId(goal.getProjectId())
-                .setIdentity(goal.getName())
+                .setIdentity(formIdentity(goal.getName()))
                 .setOldValue(goal.getName())
                 .setNewValue(goal.getName())
                 .setAction(ButtonActionEnum.UN_LINK.getText())
@@ -189,7 +193,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                 .setType(BizChangeLogTypeEnum.PROJECT.getCode())
                 .setField(BizChangeLogFieldEnum.MAIN_GOAL.getText())
                 .setMainId(goal.getProjectId())
-                .setIdentity(goal.getName())
+                .setIdentity(formIdentity(goal.getName()))
                 .setOldValue(YesOrNoEnum.NO.getText())
                 .setNewValue(YesOrNoEnum.YES.getText())
         );
@@ -202,7 +206,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         ProjectGoalDO goal = projectGoalMapper.get(projectGoalFinishReq.getId());
         AssertUtil.notNull(goal, "您更改的项目目标不存在，请刷新后重试");
         AssertUtil.checkState(projectGoalFinishReq.getStatus().equals(ProjectGoalStatusEnum.FINISHED.getCode()) ||
-                projectGoalFinishReq.getStatus().equals(ProjectGoalStatusEnum.UNFINISHED.getCode()),
+                        projectGoalFinishReq.getStatus().equals(ProjectGoalStatusEnum.UNFINISHED.getCode()),
                 "完成状态只能是 10-已完成 或 30-未完成");
         AssertUtil.checkState(hasGoalFinishPermission(), "您没有该操作权限");
         // 更新目标
@@ -216,7 +220,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                 .setType(BizChangeLogTypeEnum.PROJECT.getCode())
                 .setField(BizChangeLogFieldEnum.GOAL_STATUS.getText())
                 .setMainId(goal.getProjectId())
-                .setIdentity(goal.getName())
+                .setIdentity(formIdentity(goal.getName()))
                 .setOldValue(ProjectGoalStatusEnum.IN_PROGRESS.getText())
                 .setNewValue(ProjectGoalStatusEnum.FINISHED.getTextByCode(projectGoalFinishReq.getStatus()))
         );
@@ -226,7 +230,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                     .setType(BizChangeLogTypeEnum.PROJECT.getCode())
                     .setField(BizChangeLogFieldEnum.GOAL_COMPLETE_NOTE.getText())
                     .setMainId(goal.getProjectId())
-                    .setIdentity(goal.getName())
+                    .setIdentity(formIdentity(goal.getName()))
                     .setOldValue(CommonConstant.NULL)
                     .setNewValue(projectGoalFinishReq.getCompleteNote())
             );
@@ -280,8 +284,12 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
         bizChangeLogDO.setCreateManId(userInfo.getId());
-        bizChangeLogDO.setCreateMan(userInfo.getAlias());
+        bizChangeLogDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         return bizChangeLogDO;
+    }
+
+    private String formIdentity(String name) {
+        return BizChangeLogFieldEnum.PROJECT_GOAL.getText() + CommonConstant.WIDE_COLON + name;
     }
 
 }

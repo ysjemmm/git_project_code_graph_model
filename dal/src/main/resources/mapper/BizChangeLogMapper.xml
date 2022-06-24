@@ -4,6 +4,15 @@
         update biz_change_log set identity = #{newIdentity}
                               where main_id = #{mainId} and identity = #{oldIdentity}
     </update>
+    <update id="updateValue">
+        update biz_change_log
+        set old_value = #{newValue},
+            new_value = #{newValue}
+        where main_id = #{mainId}
+          and field = #{field}
+          and old_value = #{oldValue}
+          and new_value = #{oldValue}
+    </update>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.BizChangeLogDO">
         select * from biz_change_log

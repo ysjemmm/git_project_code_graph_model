@@ -19,4 +19,10 @@ public interface BizChangeLogMapper {
 
     void updateIdentity(@Param("mainId") Long mainId, @Param("oldIdentity") String oldIdentity,
                         @Param("newIdentity") String newIdentity);
+
+    void updateValue(@Param("mainId") Long mainId,
+                     @Param("field") String field,
+                     @Param("oldValue") String oldValue,
+                     @Param("newValue") String newValue);
+
 }
