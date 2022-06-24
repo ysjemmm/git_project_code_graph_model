@@ -41,6 +41,7 @@
                     #{action}
                 </foreach>
             </if>
+                 and is_deleted = false
         </where>
         order by create_date desc
     </select>
