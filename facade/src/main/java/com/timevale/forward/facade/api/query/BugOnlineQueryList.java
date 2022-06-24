@@ -45,6 +45,9 @@ public class BugOnlineQueryList extends QueryBase {
     @ApiModelProperty("bug原因")
     private List<Integer> reasons;
 
+    @ApiModelProperty("驳回原因")
+    private List<Integer> dismissCauseList;
+
     @ApiModelProperty("bug所属端")
     private List<Integer> belongs;
 

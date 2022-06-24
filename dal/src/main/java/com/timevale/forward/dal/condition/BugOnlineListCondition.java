@@ -61,6 +61,11 @@ public class BugOnlineListCondition {
     private List<String> reasons;
 
     /**
+     * 驳回原因列表
+     */
+    private List<Integer> dismissCauseList;
+
+    /**
      * 属于
      */
     private List<Integer> belongs;

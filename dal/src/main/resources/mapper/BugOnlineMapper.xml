@@ -7,7 +7,7 @@
 
     <select id="selectListByCondition" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
         select bo.id, bo.name, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env,
-        bo.reason, bo.belong,
+        bo.reason, bo.belong, bo.dismiss_cause,
         bo.create_date, bo.modify_date
         from bug_online bo
         left join bug_online_product_line bopl on bo.id = bopl.bug_online_id
@@ -56,6 +56,12 @@
             <if test="belongs != null and belongs.size() > 0">
                 and bo.belong in
                 <foreach collection="belongs" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dismissCauseList != null and dismissCauseList.size() > 0">
+                and bo.dismiss_cause in
+                <foreach collection="dismissCauseList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>

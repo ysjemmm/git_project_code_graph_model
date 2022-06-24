@@ -52,6 +52,11 @@ public class BugOnlineListDO extends BaseDO {
     private Integer reason;
 
     /**
+     * 驳回原因
+     */
+    private Integer dismissCause;
+
+    /**
      * bug环境
      */
     private Integer env;
