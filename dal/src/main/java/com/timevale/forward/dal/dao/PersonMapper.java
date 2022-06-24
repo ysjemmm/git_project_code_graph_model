@@ -47,19 +47,21 @@ public interface PersonMapper {
 
     /**
      * 获取人员信息
+     *
      * @param userIds 花名
      * @param mainIds 项目id
-     * @param type 产品经理or团队成员or执行人
+     * @param type    产品经理or团队成员or执行人
      * @return list
      */
-    List<Long> getMainIds(@Param("userIds") List<String> userIds,@Param("mainIds") List<Long> mainIds,@Param("type") Integer type);
+    List<Long> getMainIds(@Param("userIds") List<String> userIds, @Param("mainIds") List<Long> mainIds, @Param("type") Integer type);
 
 
     /**
      * 获取人员信息
+     *
      * @param mainIds 项目id
-     * @param type 产品经理or团队成员
+     * @param type    产品经理or团队成员
      * @return list
      */
-    List<PersonDO> get(@Param("mainIds") List<Long> mainIds,@Param("type") Integer type);
+    List<PersonDO> get(@Param("mainIds") List<Long> mainIds, @Param("type") Integer type);
 }

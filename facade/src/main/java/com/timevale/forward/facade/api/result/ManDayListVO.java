@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import java.util.List;
 
@@ -16,6 +17,7 @@ import java.util.List;
 @Getter
 @Setter
 @ApiModel("人天列表展示类")
+@Accessors(chain = true)
 public class ManDayListVO extends ToString {
 
     @ApiModelProperty("项目id")

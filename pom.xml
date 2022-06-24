@@ -28,6 +28,7 @@
 
     <properties>
         <!-- Third Party -->
+        <guava.version>31.1-jre</guava.version>
         <mapstruct.version>1.4.2.Final</mapstruct.version>
         <testng.version>6.14.3</testng.version>
         <aspectj.version>1.9.4</aspectj.version>
@@ -158,6 +159,11 @@
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
                 <version>${hutool.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
             </dependency>
 
             <!-- epeius 工作流 -->
