@@ -220,8 +220,8 @@ public class ManDayServiceImpl implements ManDayService {
                 .findFirst();
         // 校验项目时间
         setProjectActualStartAndEndDate(project);
-        AssertUtil.checkState(project.getActualEndDate().before(startDate) ||
-                project.getActualStartDate().after(endDate), "您提供的开始截至时间不在项目时间范围内，请修改");
+        AssertUtil.checkState(!project.getActualEndDate().before(startDate) &&
+                !project.getActualStartDate().after(endDate), "您提供的开始截至时间不在项目时间范围内，请修改");
         // 校验项目成员
         AssertUtil.checkState(member.isPresent(), "您提交的用户id不是该项目成员，请核对");
         // 原本不存在则新增
