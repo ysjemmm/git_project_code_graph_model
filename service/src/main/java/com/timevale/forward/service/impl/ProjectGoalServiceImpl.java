@@ -75,6 +75,11 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         // 名称校验
         AssertUtil.checkState(Objects.isNull(projectGoalMapper.getByName(projectId, name)),
                 "项目目标名称重复，请重新修改");
+        if (ProjectGoalTypeEnum.QUANTIFY.getCode().equals(projectGoalAddReq.getType())) {
+            AssertUtil.notNull(projectGoalAddReq.getReachValue(), "定量项目目标的目标达标值必填");
+        } else {
+            projectGoalAddReq.setReachValue(null);
+        }
         ProjectGoalDO projectGoal = ProjectGoalCopier.INSTANCE.convert(projectGoalAddReq);
         // 新增数据默认不是主目标
         projectGoal.setIsMain(YesOrNoEnum.NO.getCode());
@@ -117,6 +122,12 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
             bizChangeLogMapper.updateValue(oldGoal.getProjectId(), BizChangeLogFieldEnum.PROJECT_GOAL.getText(),
                     oldGoal.getName(), newGoal.getName());
         }
+        // 定量、定性校验
+        if (ProjectGoalTypeEnum.QUANTIFY.getCode().equals(newGoal.getType())) {
+            AssertUtil.notNull(newGoal.getReachValue(), "定量项目目标的目标达标值必填");
+        } else {
+            newGoal.setReachValue(null);
+        }
         // 更新目标
         projectGoalMapper.update(newGoal);
         // 生成修改记录
@@ -129,6 +140,16 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
             log.setIdentity(formIdentity(identity));
             log.setCreateManId(userInfo.getId());
             log.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        }
+        if (!ProjectGoalTypeEnum.QUANTIFY.getCode().equals(newGoal.getType()) &&
+                ProjectGoalTypeEnum.QUANTIFY.getCode().equals(oldGoal.getType())) {
+            logs.add(createCommonChangeLog()
+                    .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                    .setField(BizChangeLogFieldEnum.GOAL_REACH_VALUE.getText())
+                    .setMainId(newGoal.getProjectId())
+                    .setIdentity(formIdentity(newGoal.getName()))
+                    .setOldValue(oldGoal.getReachValue().toPlainString())
+                    .setNewValue(CommonConstant.NULL));
         }
         bizChangeLogMapper.batchInsert(logs);
         return BaseResult.success(true);
@@ -148,7 +169,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         // 只有一条数据时不允许删除
         AssertUtil.notEmpty(goals, "有目标的项目下至少需要保留一个项目目标");
         // 删除
-        projectGoalMapper.delete(projectGoalId);
+        projectGoalMapper.delete(goal);
         if (YesOrNoEnum.YES.getCode().equals(goal.getIsMain())) {
             // 如果是删除主目标，重新设置一个主目标
             ProjectGoalDO newMainGoal = goals.get(0);
@@ -187,7 +208,23 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         if (YesOrNoEnum.YES.getCode().equals(goal.getIsMain())) {
             return BaseResult.success(true);
         }
-        projectGoalMapper.unsetMainGoal(goal.getProjectId());
+        List<ProjectGoalDO> oldGoals = projectGoalMapper.getByProjectId(project.getId());
+        for (ProjectGoalDO oldGoal : oldGoals) {
+            if (YesOrNoEnum.YES.getCode().equals(oldGoal.getIsMain())) {
+                oldGoal.setIsMain(YesOrNoEnum.NO.getCode());
+                projectGoalMapper.update(oldGoal);
+                // 插入主目标变更记录
+                bizChangeLogMapper.insert(createCommonChangeLog()
+                        .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                        .setField(BizChangeLogFieldEnum.MAIN_GOAL.getText())
+                        .setMainId(oldGoal.getProjectId())
+                        .setIdentity(formIdentity(oldGoal.getName()))
+                        .setOldValue(YesOrNoEnum.NO.getText())
+                        .setNewValue(YesOrNoEnum.YES.getText())
+                );
+                break;
+            }
+        }
         ProjectGoalDO updateCond = new ProjectGoalDO();
         updateCond.setId(goal.getId());
         updateCond.setIsMain(YesOrNoEnum.YES.getCode());

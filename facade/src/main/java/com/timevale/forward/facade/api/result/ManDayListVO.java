@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -25,6 +26,12 @@ public class ManDayListVO extends ToString {
 
     @ApiModelProperty("项目名称")
     private String projectName;
+
+    @ApiModelProperty("项目创建日期")
+    private Date projectCreateDate;
+
+    @ApiModelProperty("是否项目经理")
+    private boolean pm = false;
 
     @ApiModelProperty("人天列表")
     private List<ManDayVO> manDays;

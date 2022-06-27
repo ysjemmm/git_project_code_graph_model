@@ -28,6 +28,8 @@ public enum BizChangeLogFieldEnum {
 
     GOAL_COMPLETE_NOTE("完成情况"),
 
+    GOAL_REACH_VALUE("项目目标达标值"),
+
     /**
      * 产品需求
      */

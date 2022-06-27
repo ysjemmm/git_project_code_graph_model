@@ -217,8 +217,15 @@ public class ProjectServiceImpl implements ProjectService {
         if (YesOrNoEnum.YES.getCode().equals(projectAddReq.getIsWithGoal())) {
             AssertUtil.notEmpty(projectAddReq.getProjectGoals(), "项目含有项目目标，请至少添加一条项目目标数据");
             AssertUtil.checkState(projectAddReq.getProjectGoals().stream()
-                            .filter(goal -> YesOrNoEnum.YES.getCode().equals(goal.getIsMain()))
-                            .count() == 1, "项目目标主目标只能有一个，请检查参数");
+                    .filter(goal -> YesOrNoEnum.YES.getCode().equals(goal.getIsMain()))
+                    .count() == 1, "项目目标主目标只能有一个，请检查参数");
+            for (ProjectGoalAddReq projectGoal : projectAddReq.getProjectGoals()) {
+                if (ProjectGoalTypeEnum.QUANTIFY.getCode().equals(projectGoal.getType())) {
+                    AssertUtil.notNull(projectGoal.getReachValue(), "定量项目目标的目标达标值必填");
+                } else {
+                    projectGoal.setReachValue(null);
+                }
+            }
         }
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
         projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());

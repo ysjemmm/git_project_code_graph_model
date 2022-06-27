@@ -4,6 +4,7 @@ import com.timevale.forward.dal.entity.ProjectGoalDO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -12,8 +13,6 @@ import java.util.List;
 * created on 2022-06-20 14:48:55
 */
 public interface ProjectGoalMapper {
-
-    void unsetMainGoal(@Param("projectId") Long projectId);
 
     ProjectGoalDO getByName(@Param("projectId") Long projectId, @Param("name") String name);
 
@@ -25,7 +24,9 @@ public interface ProjectGoalMapper {
 
     List<ProjectGoalDO> getByProjectId(@Param("projectId") Long id);
 
-    void delete(@Param("id") Long projectGoalId);
+    void delete(ProjectGoalDO projectGoalDO);
 
     void batchInsert(Collection<ProjectGoalDO> convert);
+
+    List<ProjectGoalDO> getByDate(@Param("date") Date date);
 }

@@ -7,9 +7,9 @@ import java.util.Date;
 import java.util.List;
 
 /**
-* @author jingchun
-* created on 2022-06-20 14:51:04
-*/
+ * @author jingchun
+ * created on 2022-06-20 14:51:04
+ */
 public interface ManDayMapper {
 
     List<ManDayDO> getByProjectId(@Param("projectId") Long projectId);
@@ -21,8 +21,10 @@ public interface ManDayMapper {
     List<ManDayDO> getByMemberIdAndDateRange(@Param("memberId") String memberId,
                                              @Param("startDate") Date startDate,
                                              @Param("endDate") Date endDate);
+
+    void delete(ManDayDO manDayDO);
+
+    void updateActualManDay(ManDayDO manDayDO);
+
+    void insert(ManDayDO setWeekEndDate);
 }
-
-
-
-

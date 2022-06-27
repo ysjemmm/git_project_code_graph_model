@@ -3,6 +3,7 @@ package com.timevale.forward.dal.entity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -12,6 +13,7 @@ import java.util.Date;
  */
 @Getter
 @Setter
+@Accessors(chain = true)
 @NoArgsConstructor
 public class ManDayDO extends BaseDO {
     /**
