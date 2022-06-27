@@ -16,10 +16,10 @@ import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.facade.api.client.ManDayService;
 import com.timevale.forward.facade.api.query.ManDayQueryList;
+import com.timevale.forward.facade.api.query.ProjectManDayQueryList;
 import com.timevale.forward.facade.api.request.ManDayModifyReq;
 import com.timevale.forward.facade.api.result.ManDayListVO;
 import com.timevale.forward.facade.api.result.ManDayVO;
-import com.timevale.forward.facade.api.result.ProjectManDayVO;
 import com.timevale.forward.facade.api.result.ProjectTotalManDayVO;
 import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 import com.timevale.forward.model.enums.ButtonActionEnum;
@@ -181,7 +181,7 @@ public class ManDayServiceImpl implements ManDayService {
     }
 
     @Override
-    public BaseResult<ProjectTotalManDayVO> listProjectManDays(Long projectId) {
+    public BaseResult<ProjectTotalManDayVO> listProjectManDays(ProjectManDayQueryList projectManDayQueryList) {
         return null;
     }
 

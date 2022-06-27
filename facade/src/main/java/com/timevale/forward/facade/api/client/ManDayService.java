@@ -3,6 +3,7 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.ManDayQueryList;
+import com.timevale.forward.facade.api.query.ProjectManDayQueryList;
 import com.timevale.forward.facade.api.request.ManDayModifyReq;
 import com.timevale.forward.facade.api.result.ManDayListVO;
 import com.timevale.forward.facade.api.result.ProjectTotalManDayVO;
@@ -27,7 +28,7 @@ public interface ManDayService {
     /**
      * 使用项目id查询人天列表
      */
-    BaseResult<ProjectTotalManDayVO> listProjectManDays(Long projectId);
+    BaseResult<ProjectTotalManDayVO> listProjectManDays(ProjectManDayQueryList projectManDayQueryList);
 
     /**
      * 新增、修改、删除人天记录
