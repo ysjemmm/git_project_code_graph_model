@@ -13,7 +13,7 @@ import java.util.List;
 */
 public interface ProjectGoalMapper {
 
-    void unsetMainGoal(@Param("projectId") Long projectId);
+    void unsetMainGoal(ProjectGoalDO projectGoal);
 
     ProjectGoalDO getByName(@Param("projectId") Long projectId, @Param("name") String name);
 
@@ -25,7 +25,7 @@ public interface ProjectGoalMapper {
 
     List<ProjectGoalDO> getByProjectId(@Param("projectId") Long id);
 
-    void delete(@Param("id") Long projectGoalId);
+    void delete(ProjectGoalDO projectGoalDO);
 
     void batchInsert(Collection<ProjectGoalDO> convert);
 }

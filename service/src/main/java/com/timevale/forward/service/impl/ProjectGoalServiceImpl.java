@@ -148,7 +148,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         // 只有一条数据时不允许删除
         AssertUtil.notEmpty(goals, "有目标的项目下至少需要保留一个项目目标");
         // 删除
-        projectGoalMapper.delete(projectGoalId);
+        projectGoalMapper.delete(goal);
         if (YesOrNoEnum.YES.getCode().equals(goal.getIsMain())) {
             // 如果是删除主目标，重新设置一个主目标
             ProjectGoalDO newMainGoal = goals.get(0);
@@ -187,7 +187,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         if (YesOrNoEnum.YES.getCode().equals(goal.getIsMain())) {
             return BaseResult.success(true);
         }
-        projectGoalMapper.unsetMainGoal(goal.getProjectId());
+        projectGoalMapper.unsetMainGoal(goal);
         ProjectGoalDO updateCond = new ProjectGoalDO();
         updateCond.setId(goal.getId());
         updateCond.setIsMain(YesOrNoEnum.YES.getCode());

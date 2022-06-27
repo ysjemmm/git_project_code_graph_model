@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -95,7 +96,7 @@ public class ManDayServiceImpl implements ManDayService {
             if (project.getActualStartDate() == null) {
                 project.setActualStartDate(project.getPlanStartDate());
             }
-            if (project.getActualStartDate().compareTo(endDate) > 0) {
+            if (project.getActualStartDate().after(endDate)) {
                 continue;
             }
             // 结束时间排除
@@ -113,7 +114,7 @@ public class ManDayServiceImpl implements ManDayService {
                 logs.stream().map(BizChangeLogDO::getCreateDate)
                         .max(Date::compareTo).ifPresent(project::setActualEndDate);
             }
-            if (project.getActualEndDate().compareTo(startDate) < 0) {
+            if (project.getActualEndDate().before(startDate)) {
                 continue;
             }
             ManDayListVO manDayListVO = new ManDayListVO()
@@ -180,21 +181,53 @@ public class ManDayServiceImpl implements ManDayService {
 
     @Override
     public BaseResult<Boolean> modify(ManDayModifyReq manDayModifyReq) {
-        ProjectDO project = projectMapper.get(manDayModifyReq.getProjectId());
+        Long projectId = manDayModifyReq.getProjectId();
+        String memberId = manDayModifyReq.getMemberId();
+        ProjectDO project = projectMapper.get(projectId);
         AssertUtil.notNull(project, "更改的项目id不存在");
         AssertUtil.checkState(project.getPmId().equals(LocalSessionUtils.getUserInfo().getId()),
                 "您不是项目的项目经理，无权修改人天数据");
+        BigDecimal actualManDay = manDayModifyReq.getActualManDay();
         Pair<Date, Date> dateRange = parseAndCheckDateRange(manDayModifyReq.getWeekDateRange());
         Date startDate = dateRange.getLeft();
         Date endDate = dateRange.getRight();
         List<ManDayDO> oldManDays = manDayMapper.getByProjectIdAndDateRange(project.getId(), startDate, endDate);
-        List<PersonDO> currentPersons = personMapper.get(Collections.singletonList(project.getId()),
-                PersonTypeEnum.PROJECT_MEMBER.getCode());
-        Set<String> projectMemberIds = currentPersons.stream().map(PersonDO::getUserId).collect(Collectors.toSet());
-        projectMemberIds.addAll(oldManDays.stream().map(ManDayDO::getMemberId).collect(Collectors.toSet()));
-        AssertUtil.checkState(projectMemberIds.contains(manDayModifyReq.getMemberId()), "您提交的用户id");
-        // TODO jingchun 待完成
-        return null;
+        Optional<ManDayDO> modifiedManDay = oldManDays.stream().filter(manDay -> manDay.getMemberId().equals(memberId))
+                .findFirst();
+        if (modifiedManDay.isPresent()) {
+            // 原本已经存在的数据直接更新或者删除
+            ManDayDO oldManDay = modifiedManDay.get();
+            if (actualManDay == null || actualManDay.compareTo(BigDecimal.ZERO) == 0) {
+                manDayMapper.delete(oldManDay);
+            } else {
+                oldManDay.setActualManDay(actualManDay);
+                manDayMapper.updateActualManDay(oldManDay);
+            }
+            return BaseResult.success(true);
+        }
+        if (actualManDay == null || actualManDay.compareTo(BigDecimal.ZERO) == 0) {
+            // 不存在且入参为空或者0不做处理
+            return BaseResult.success(true);
+        }
+        Optional<PersonDO> member = personMapper.get(Collections.singletonList(project.getId()),
+                        PersonTypeEnum.PROJECT_MEMBER.getCode()).stream()
+                .filter(person -> person.getUserId().equals(memberId))
+                .findFirst();
+        // 校验项目时间
+        setProjectActualStartAndEndDate(project);
+        AssertUtil.checkState(project.getActualEndDate().before(startDate) ||
+                project.getActualStartDate().after(endDate), "您提供的开始截至时间不在项目时间范围内，请修改");
+        // 校验项目成员
+        AssertUtil.checkState(member.isPresent(), "您提交的用户id不是该项目成员，请核对");
+        // 原本不存在则新增
+        manDayMapper.insert(new ManDayDO()
+                .setProjectId(projectId)
+                .setMemberId(memberId)
+                .setMemberName(member.get().getUserName())
+                .setActualManDay(actualManDay)
+                .setWeekStartDate(startDate)
+                .setWeekEndDate(endDate));
+        return BaseResult.success(true);
     }
 
     @Override
@@ -226,6 +259,24 @@ public class ManDayServiceImpl implements ManDayService {
         List<String> dates = Splitter.on(CommonConstant.TILDE).trimResults().splitToList(dateRange);
         AssertUtil.checkState(dates.size() == 2, "时间间隔格式错误");
         return Pair.of(LocalDate.parse(dates.get(0)), LocalDate.parse(dates.get(1)));
+    }
+
+    private void setProjectActualStartAndEndDate(ProjectDO project) {
+        if (project.getActualStartDate() == null) {
+            project.setActualStartDate(project.getPlanStartDate());
+        }
+        if (project.getActualEndDate() == null) {
+            project.setActualEndDate(project.getPlanEndDate());
+        }
+        if (project.getStatus() < 0) {
+            // 项目已暂停或者作废，则拿暂停、作废时间作为完成时间
+            List<BizChangeLogDO> logs = bizChangeLogMapper.listAllByActions(Collections.singletonList(project.getId()),
+                    BizChangeLogTypeEnum.PROJECT.getCode(),
+                    Lists.newArrayList(ButtonActionEnum.SUSPEND.getText(), ButtonActionEnum.INVALID.getText()));
+            // 最新一次暂停或者作废记录的时间
+            logs.stream().map(BizChangeLogDO::getCreateDate)
+                    .max(Date::compareTo).ifPresent(project::setActualEndDate);
+        }
     }
 
 }

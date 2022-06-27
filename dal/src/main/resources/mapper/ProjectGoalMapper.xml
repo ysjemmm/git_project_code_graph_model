@@ -11,12 +11,12 @@
     </insert>
     <insert id="batchInsert">
         insert into project_goal (project_id, name, type, is_main, measurement, reach_value, reach_date,
-                                  create_man_id, create_man)
+        create_man_id, create_man)
         values
-            <foreach collection="list" item="item" separator=",">
-                (#{item.projectId}, #{item.name}, #{item.type}, #{item.isMain}, #{item.measurement}, #{item.reachValue},
-                 #{item.reachDate}, #{item.createManId}, #{item.createMan})
-            </foreach>
+        <foreach collection="list" item="item" separator=",">
+            (#{item.projectId}, #{item.name}, #{item.type}, #{item.isMain}, #{item.measurement}, #{item.reachValue},
+            #{item.reachDate}, #{item.createManId}, #{item.createMan})
+        </foreach>
     </insert>
 
     <update id="update">
@@ -46,33 +46,50 @@
             <if test="completeNote != null and completeNote != ''">
                 complete_note = #{completeNote},
             </if>
+            <if test="modifyManId != null">
+                modify_man_id = #{modifyManId},
+            </if>
+            <if test="modifyMan != null">
+                modify_man = #{modifyMan},
+            </if>
         </set>
         where id = #{id}
     </update>
 
     <update id="unsetMainGoal">
         update project_goal
-        set is_main = 0
+        set is_main       = 0,
+            modify_man_id = #{modifyManId},
+            modify_man    = #{modifyMan}
         where project_id = #{projectId}
           and is_main = 1
     </update>
     <delete id="delete">
-        update project_goal set is_deleted = 1 where id = #{id}
+        update project_goal
+        set is_deleted = true,
+            modify_man_id = #{modifyManId},
+            modify_man    = #{modifyMan}
+        where id = #{id}
     </delete>
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProjectGoalDO">
         select *
         from project_goal
         where name = #{name}
           and project_id = #{projectId}
-        and is_deleted = 0
+          and is_deleted = 0
     </select>
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectGoalDO">
-        select * from project_goal
-                 where id = #{id}
-                   and is_deleted = 0
+        select *
+        from project_goal
+        where id = #{id}
+          and is_deleted = 0
     </select>
     <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ProjectGoalDO">
-        select * from project_goal where project_id = #{projectId} and is_deleted = 0 order by is_main desc, modify_date desc
+        select *
+        from project_goal
+        where project_id = #{projectId}
+          and is_deleted = 0
+        order by is_main desc, modify_date desc
     </select>
 
 </mapper>
