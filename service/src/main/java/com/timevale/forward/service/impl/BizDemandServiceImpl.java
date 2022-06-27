@@ -302,6 +302,8 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDetailVO.setStatusText(BizDemandStatusEnum.getTextByCode(bizDemandDetailVO.getStatus()));
         bizDemandDetailVO.setPriorityText(PriorityEnum.getTextChineseByCode(bizDemandDetailVO.getPriority()));
         bizDemandDetailVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandDetailVO.getPlanReleaseDate()));
+        bizDemandDetailVO.setCustomerDevDemandText(YesOrNoEnum.getTextByCode(bizDemandDetailVO.getCustomerDevDemand()));
+        bizDemandDetailVO.setCustomerDevTypeText(CustomerDevTypeEnum.getTextByCode(bizDemandDetailVO.getCustomerDevType()));
 
         // 获取部门链，添加完整部门信息
         Map<Long, GroupResponse> deptMap = bizDemandComponent.getGroupListTreeMap(Lists.newArrayList(bizDemandDO.getDeptId()));
