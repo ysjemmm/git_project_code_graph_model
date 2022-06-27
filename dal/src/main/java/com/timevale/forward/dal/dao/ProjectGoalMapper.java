@@ -4,6 +4,7 @@ import com.timevale.forward.dal.entity.ProjectGoalDO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -26,4 +27,6 @@ public interface ProjectGoalMapper {
     void delete(ProjectGoalDO projectGoalDO);
 
     void batchInsert(Collection<ProjectGoalDO> convert);
+
+    List<ProjectGoalDO> getByDate(@Param("date") Date date);
 }

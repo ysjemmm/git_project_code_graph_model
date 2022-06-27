@@ -1,0 +1,51 @@
+package com.timevale.forward.service.job;
+
+import com.timevale.forward.dal.dao.ProjectGoalMapper;
+import com.timevale.forward.dal.entity.ProjectGoalDO;
+import com.timevale.forward.service.integration.erp.ErpMessageClient;
+import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
+import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
+import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
+import com.timevale.framework.schedulerT.core.handler.IJobHandler;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+
+import javax.annotation.Resource;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+/**
+ * @author jingchun
+ * create on 2022/6/27
+ */
+@Slf4j
+@JobHandler(value = "ProjectGoalReachDateNotifyJob ")
+public class ProjectGoalReachDateNotifyJob extends IJobHandler {
+
+    private static final String NOTIFY_PATTERN = "项目:%s目标达成时间已到期，请及时更新项目目标完成情况。";
+    private static final String TITLE = "项目目标到期提醒";
+
+    @Value("${projectGoal.receiver:zhuque}")
+    private String reachGoalReceiver;
+
+    @Resource
+    private ProjectGoalMapper projectGoalMapper;
+    @Resource
+    private ErpMessageClient erpMessageClient;
+
+    @Override
+    public ReturnT<String> execute(String s) {
+        log.info("开始项目目标达成日期通知任务");
+        List<ProjectGoalDO> projectGoals = projectGoalMapper.getByDate(new Date());
+        for (ProjectGoalDO projectGoal : projectGoals) {
+            log.info("通知项目 {} 到期", projectGoal);
+            erpMessageClient.sendMarkdownMsg(MarkdownMsg.builder()
+                    .title(TITLE)
+                    .content(String.format(NOTIFY_PATTERN, projectGoal.getName()))
+                    .receivers(Collections.singletonList(reachGoalReceiver)).build());
+        }
+        log.info("完成项目目标达成日期通知任务");
+        return ReturnT.SUCCESS;
+    }
+}
