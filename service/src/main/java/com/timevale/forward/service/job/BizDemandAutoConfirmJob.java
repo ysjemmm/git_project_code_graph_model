@@ -49,6 +49,8 @@ public class BizDemandAutoConfirmJob extends IJobHandler {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ReturnT<String> execute(String s) throws Exception {
+        log.info("[BizDemandAutoConfirmJob]业务需求更新待确认-开始");
+
         // 查询状态=待确认业务需求
         List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByStatus(Lists.newArrayList(BizDemandStatusEnum.TO_CONFIRM.getCode()));
 
@@ -88,6 +90,7 @@ public class BizDemandAutoConfirmJob extends IJobHandler {
             bizChangeLogMapper.batchInsert(logDOList);
         }
 
+        log.info("[BizDemandAutoConfirmJob]业务需求更新待确认-完成");
         return ReturnT.SUCCESS;
     }
 }
