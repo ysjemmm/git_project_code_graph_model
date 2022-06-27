@@ -119,10 +119,12 @@ public class ManDayServiceImpl implements ManDayService {
             }
             ManDayListVO manDayListVO = new ManDayListVO()
                     .setProjectId(project.getId())
-                    .setProjectName(project.getName());
+                    .setProjectName(project.getName())
+                    .setProjectCreateDate(project.getCreateDate());
             // 组装数据
             if (project.getPmId().equals(userInfo.getId())) {
                 // 项目经理
+                manDayListVO.setPm(true);
                 List<ManDayVO> resManDays = new ArrayList<>();
                 List<ManDayDO> projectManDays =
                         manDayMapper.getByProjectIdAndDateRange(project.getId(), startDate, endDate);
@@ -170,6 +172,9 @@ public class ManDayServiceImpl implements ManDayService {
             }
             res.add(manDayListVO);
         }
+        res.sort(Comparator.comparing(ManDayListVO::isPm)
+                .reversed()
+                .thenComparing(ManDayListVO::getProjectCreateDate));
 
         return BaseResult.success(res);
     }
