@@ -127,17 +127,17 @@ public class TrackEventServiceImpl implements TrackEventService {
         variables.put("files", new ArrayList<>());
         variables.put("fullCnName", trackEventAddReq.getFullCnName());
         variables.put("egName", trackEventAddReq.getEgName());
-        variables.put("platform", StringUtils.join(PlatformTypeEnum.getTextByCode(trackEventAddReq.getPlatforms()),","));
+        variables.put("platform", StringUtils.join(PlatformTypeEnum.getTextByCode(trackEventAddReq.getPlatforms()), ","));
         variables.put("touchMoment", trackEventAddReq.getTouchMoment());
-        variables.put("env", StringUtils.join(EnvEnum.getTextByCode(trackEventAddReq.getEnvs()),","));
+        variables.put("env", StringUtils.join(EnvEnum.getTextByCode(trackEventAddReq.getEnvs()), ","));
         variables.put("trackEventName", trackEventAddReq.getFullCnName());
 
         List<FileAddReq> fileAddReqs = trackEventAddReq.getFiles();
         List<Map<String, String>> files = new ArrayList<>();
-        fileAddReqs.forEach(a->{
+        fileAddReqs.forEach(a -> {
             Map<String, String> file = new HashMap<>();
-            file.put("file_key",a.getFileKey());
-            file.put("file_name",a.getFileName());
+            file.put("file_key", a.getFileKey());
+            file.put("file_name", a.getFileName());
             files.add(file);
         });
         variables.put("files", files);
@@ -150,12 +150,19 @@ public class TrackEventServiceImpl implements TrackEventService {
         trackProps.addAll(defaultProps);
 
         List<TrackPropItemDO> trackPropItemDOList = new ArrayList<>();
-        trackProps.forEach(a->{
-            TrackPropItemDO trackPropDO=new TrackPropItemDO();
+        trackProps.forEach(a -> {
+            TrackPropItemDO trackPropDO = new TrackPropItemDO();
             trackPropDO.setDataType(a.getDataType());
             trackPropDO.setCnName(a.getCnName());
             trackPropDO.setEgName(a.getEgName());
-            trackPropDO.setStatusName(TrackStatusEnum.getTextByCode(a.getStatus()));
+            if (a.getId() != null && TrackStatusEnum.REVIEW_FAIL.getCode().equals(a.getStatus())) {
+                //审核不通过的属性重新提交,变成审核中
+                trackPropDO.setStatusName(TrackStatusEnum.getTextByCode(TrackStatusEnum.REVIEWING.getCode()));
+                a.setStatus(TrackStatusEnum.REVIEWING.getCode());
+                trackPropMapper.update(a);
+            } else {
+                trackPropDO.setStatusName(TrackStatusEnum.getTextByCode(a.getStatus()));
+            }
             trackPropDO.setTypeName(TrackPropTypeEnum.getTextByCode(a.getType()));
             trackPropItemDOList.add(trackPropDO);
         });
@@ -214,7 +221,7 @@ public class TrackEventServiceImpl implements TrackEventService {
         List<Long> elementIds = new ArrayList<>();
         List<String> elementNames = new ArrayList<>();
 
-        buildTrackMapIds(trackEventDO.getTrackMapId(),elementIds,elementNames);
+        buildTrackMapIds(trackEventDO.getTrackMapId(), elementIds, elementNames);
 
         trackEventDetailVO.setElementIds(elementIds);
         trackEventDetailVO.setElementNames(elementNames);
@@ -234,14 +241,14 @@ public class TrackEventServiceImpl implements TrackEventService {
         oldTrackEventDO.setIsDeleted(true);
         trackEventMapper.update(oldTrackEventDO);
         //删除关联关系
-        TrackEventPropDO trackEventPropDO=new TrackEventPropDO();
+        TrackEventPropDO trackEventPropDO = new TrackEventPropDO();
         trackEventPropDO.setTrackEventId(trackEventDeleteReq.getId());
         trackEventPropDO.setIsDeleted(true);
         trackEvenPropMapper.update(trackEventPropDO);
         return BaseResult.success(true);
     }
 
-    private void buildTrackMapIds(Long trackMapId,List<Long> elementIds, List<String> elementNames) {
+    private void buildTrackMapIds(Long trackMapId, List<Long> elementIds, List<String> elementNames) {
         TrackMapDO trackMapDO = trackMapMapper.get(trackMapId);
         if (trackMapDO != null) {
             Long parentId;
@@ -272,6 +279,7 @@ public class TrackEventServiceImpl implements TrackEventService {
             elementNames.add(trackMapDO.getName());
         }
     }
+
     private void checkBeforeInsert(TrackEventAddReq trackEventAddReq) {
         List<Integer> status = Lists.newArrayList(TrackStatusEnum.REVIEWING.getCode(), TrackStatusEnum.REVIEWED.getCode());
         TrackEventCondition c = TrackEventCondition.builder().fullCnName(trackEventAddReq.getFullCnName()).status(status).build();
