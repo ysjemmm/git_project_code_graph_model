@@ -5,17 +5,23 @@ import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.entity.BaseDO;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
 import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
+import com.timevale.mandarin.base.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,25 +40,53 @@ public class BizDemandAutoConfirmJob extends IJobHandler {
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
 
+    @Resource
+    private BizDemandLogComponent bizDemandLogComponent;
+
+    @Value("${autoConfirmLimitDay:7}")
+    private Integer autoConfirmLimitDay;
+
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ReturnT<String> execute(String s) throws Exception {
         // 查询状态=待确认业务需求
         List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByStatus(Lists.newArrayList(BizDemandStatusEnum.TO_CONFIRM.getCode()));
 
         // 查询对应最后一次状态变更日志
         List<Long> bizDemandIdList = bizDemandDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
-        List<BizChangeLogDO> bizChangeLogDOList = bizChangeLogMapper.listAllByActions(bizDemandIdList,
-                BizChangeLogTypeEnum.BIZ_DEMAND.getCode(),
-                Lists.newArrayList(ButtonActionEnum.COMPLETED_NOT_DEV.getText()));
+        List<BizChangeLogDO> bizChangeLogDOList = new ArrayList<>();
+        if(CollectionUtils.isNotEmpty(bizDemandIdList)){
+            bizChangeLogDOList = bizChangeLogMapper.listAllByActions(bizDemandIdList,
+                    BizChangeLogTypeEnum.BIZ_DEMAND.getCode(),
+                    Lists.newArrayList(ButtonActionEnum.COMPLETED_NOT_DEV.getText()));
+        }
 
-        // 找出超出7天的
+        // 找出超出自动确认时间的，默认为7天
         Date today = new Date();
         List<Long> autoConfirmIdList = bizChangeLogDOList.stream()
-                .filter(e -> DateUtil.getIntervalDays(today, e.getCreateDate()) >= 7)
+                .filter(e -> DateUtil.getIntervalDays(today, e.getCreateDate()) >= autoConfirmLimitDay)
                 .map(BizChangeLogDO::getMainId)
                 .collect(Collectors.toList());
 
+        if(CollectionUtils.isNotEmpty(autoConfirmIdList)){
+            // 更新状态
+            bizDemandMapper.updateByIds(autoConfirmIdList, BizDemandStatusEnum.COMPLETED.getCode(), false);
 
+            // 日志记录
+            List<BizChangeLogDO> logDOList = new ArrayList<>(autoConfirmIdList.size());
+            for (Long id : autoConfirmIdList) {
+                BizChangeLogDO logDO = bizDemandLogComponent.getLogWhenModifyData(
+                        BizDemandStatusEnum.TO_CONFIRM.getText(),
+                        BizDemandStatusEnum.COMPLETED.getText(),
+                        id,
+                        BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
+                        false,
+                        ButtonActionEnum.AGREE.getText()
+                );
+                logDOList.add(logDO);
+            }
+            bizChangeLogMapper.batchInsert(logDOList);
+        }
 
         return ReturnT.SUCCESS;
     }

@@ -22,7 +22,7 @@ import java.util.List;
 public class ImprovementMeasureStatusJob extends IJobHandler {
 
     @Resource
-    ImprovementMeasureMapper improvementMeasureMapper;
+    private ImprovementMeasureMapper improvementMeasureMapper;
 
     @Resource
     private ImprovementMeasureComponent improvementMeasureComponent;
