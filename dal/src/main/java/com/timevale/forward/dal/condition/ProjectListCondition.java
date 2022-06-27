@@ -158,6 +158,16 @@ public class ProjectListCondition extends QueryBase {
     private Date actualTestDateRight;
 
     /**
+     * 项目等级：0普通 10重点
+     */
+    private Integer level;
+
+    /**
+     * 是否有项目风险
+     */
+    private Boolean includeRisk;
+
+    /**
      * 排序字段
      */
     private String orderFiled;

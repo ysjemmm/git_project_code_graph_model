@@ -4,6 +4,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProjectListCondition;
+import com.timevale.forward.dal.condition.ProjectRiskCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.ProjectVO;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -125,6 +127,24 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         }
 
+        // 是否包含风险
+        if(condition.getIncludeRisk() != null){
+            List<ProjectRiskDO> projectRiskDOList = projectRiskMapper.selectByProjectIdListStatus(projectIds, new ArrayList<>(ProjectRiskStatusEnum.PENDING.getCode()));
+            List<Long> tmpProjectIds = projectRiskDOList.stream().map(ProjectRiskDO::getProjectId).distinct().collect(Collectors.toList());
+
+            if(condition.getIncludeRisk()){
+                projectIds = tmpProjectIds;
+            }else if(CollectionUtils.isEmpty(projectIds)){
+                projectIds = projectMapper.getAllId();
+                projectIds.removeAll(tmpProjectIds);
+            } else {
+                projectIds.removeAll(tmpProjectIds);
+            }
+            if (CollectionUtils.isEmpty(projectIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+        }
+
         buildConditionBeforeQuery(projectIds, condition);
 
         // 开始分页
@@ -154,14 +174,21 @@ public class ProjectComponentImpl implements ProjectComponent {
         //填充打回次,填充是否逾期
         Map<Long, List<TestBillDO>> testMap = testBillMapper.list(projectIds).stream().collect(Collectors.groupingBy(TestBillDO::getProjectId));
 
-        //是否需要预警
+        List<ProjectVO> projectVOList = ProjectCopier.INSTANCE.convert(projectDos);
+
+        // 结果项目id
+        List<Long> projectIdList = projectVOList.stream().map(ProjectVO::getId).collect(Collectors.toList());
+
+        // 项目节点
+        List<ProjectNodeDO> nodeDOList = projectNodeMapper.selectByProjectIdList(projectIdList);
+        Map<Long, List<ProjectNodeDO>> nodeMap = nodeDOList.stream().collect(Collectors.groupingBy(ProjectNodeDO::getProjectId));
+
+        // 包含风险集合
         List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectIdList(projectIds);
         Set<Long> riskSet = riskDOList.stream()
                 .filter(e -> ProjectRiskStatusEnum.PENDING.getCode().equals(e.getStatus()))
                 .map(ProjectRiskDO::getProjectId)
                 .collect(Collectors.toSet());
-
-        List<ProjectVO> projectVOList = ProjectCopier.INSTANCE.convert(projectDos);
 
         for (ProjectVO a : projectVOList) {
             List<PersonDO> pds = pdMap.get(a.getId());
@@ -186,6 +213,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             a.setTypeName(ProjectTypeEnum.getTextByCode(a.getType()));
             a.setStatusName(ProjectStatusEnum.getTextByCode(a.getStatus()));
             a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
+            a.setLevelName(ProjectLevelEnum.getTextByCode(a.getLevel()));
 
             List<TestBillDO> testBillDos = testMap.get(a.getId());
             if (CollectionUtils.isEmpty(testBillDos)) {
@@ -196,8 +224,13 @@ public class ProjectComponentImpl implements ProjectComponent {
                 a.setIsDelay(testBillDos.get(0).getDelayDay() > 0);
             }
             a.setActualTestDate(CollectionUtils.isEmpty(testNodeMap.get(a.getId())) ? null : testNodeMap.get(a.getId()).get(0).getActualDate());
-            a.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(a.getNodeStatus()));
 
+            // 项目节点状态、节点计划时间
+            Integer nodeStatus = a.getNodeStatus();
+            a.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(nodeStatus));
+            a.setNodePlanDate(ProjectNodeStatusEnum.getDate(nodeMap.get(a.getId())));
+
+            // 是否需要预警
             Integer status = a.getStatus();
             boolean warn = ProjectStatusEnum.SUSPEND.getCode().equals(status)
                     || ProjectStatusEnum.INVALID.getCode().equals(status)
@@ -367,7 +400,6 @@ public class ProjectComponentImpl implements ProjectComponent {
         log.info("项目:{},关联的有业务需求:{}", projectId, bizDemandIds);
         return bizDemandIds;
     }
-
 
     private void buildConditionBeforeQuery(List<Long> projectIds, ProjectListCondition condition) {
         condition.setIds(projectIds);

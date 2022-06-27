@@ -78,4 +78,9 @@ public class ProjectListDO extends BaseDO {
      */
     private Integer isPlatformPublish;
 
+    /**
+     * 项目等级
+     */
+    private Integer level;
+
 }

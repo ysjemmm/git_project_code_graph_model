@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -69,4 +70,10 @@ public class ProjectAddReq extends BaseReq {
     @ApiModelProperty("项目目标列表")
     private List<ProjectGoalAddReq> projectGoals;
 
+    @ApiModelProperty("项目等级：0普通 10重点")
+    @NotNull(message = "项目等级不能为空")
+    private Integer level;
+
+    @ApiModelProperty("产品技术资源评估（人天）")
+    private BigDecimal resourceAssessment;
 }
