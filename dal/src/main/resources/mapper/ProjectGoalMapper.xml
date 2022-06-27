@@ -56,14 +56,6 @@
         where id = #{id}
     </update>
 
-    <update id="unsetMainGoal">
-        update project_goal
-        set is_main       = 0,
-            modify_man_id = #{modifyManId},
-            modify_man    = #{modifyMan}
-        where project_id = #{projectId}
-          and is_main = 1
-    </update>
     <delete id="delete">
         update project_goal
         set is_deleted = true,

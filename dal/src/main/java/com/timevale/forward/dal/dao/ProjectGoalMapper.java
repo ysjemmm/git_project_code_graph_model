@@ -13,8 +13,6 @@ import java.util.List;
 */
 public interface ProjectGoalMapper {
 
-    void unsetMainGoal(ProjectGoalDO projectGoal);
-
     ProjectGoalDO getByName(@Param("projectId") Long projectId, @Param("name") String name);
 
     void insert(ProjectGoalDO projectGoal);
