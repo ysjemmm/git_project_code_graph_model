@@ -180,6 +180,20 @@ public class ManDayServiceImpl implements ManDayService {
 
     @Override
     public BaseResult<Boolean> modify(ManDayModifyReq manDayModifyReq) {
+        ProjectDO project = projectMapper.get(manDayModifyReq.getProjectId());
+        AssertUtil.notNull(project, "更改的项目id不存在");
+        AssertUtil.checkState(project.getPmId().equals(LocalSessionUtils.getUserInfo().getId()),
+                "您不是项目的项目经理，无权修改人天数据");
+        Pair<Date, Date> dateRange = parseAndCheckDateRange(manDayModifyReq.getWeekDateRange());
+        Date startDate = dateRange.getLeft();
+        Date endDate = dateRange.getRight();
+        List<ManDayDO> oldManDays = manDayMapper.getByProjectIdAndDateRange(project.getId(), startDate, endDate);
+        List<PersonDO> currentPersons = personMapper.get(Collections.singletonList(project.getId()),
+                PersonTypeEnum.PROJECT_MEMBER.getCode());
+        Set<String> projectMemberIds = currentPersons.stream().map(PersonDO::getUserId).collect(Collectors.toSet());
+        projectMemberIds.addAll(oldManDays.stream().map(ManDayDO::getMemberId).collect(Collectors.toSet()));
+        AssertUtil.checkState(projectMemberIds.contains(manDayModifyReq.getMemberId()), "您提交的用户id");
+        // TODO jingchun 待完成
         return null;
     }
 

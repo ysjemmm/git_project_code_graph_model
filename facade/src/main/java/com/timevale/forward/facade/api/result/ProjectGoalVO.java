@@ -26,25 +26,28 @@ public class ProjectGoalVO extends ToString {
     @ApiModelProperty("项目id")
     private Long projectId;
 
-    @ApiModelProperty(value = "项目目标名称")
+    @ApiModelProperty("项目目标名称")
     private String name;
 
-    @ApiModelProperty(value = "目标性质: 0定量,1定性")
+    @ApiModelProperty("目标性质: 0定量,1定性")
     private Integer type;
 
-    @ApiModelProperty(value = "是否主目标: 0否,1是")
+    @ApiModelProperty("是否主目标: 0否,1是")
     private Integer isMain = 0;
 
-    @ApiModelProperty(value = "目标衡量标准")
+    @ApiModelProperty("目标衡量标准")
     private String measurement;
 
     @ApiModelProperty("项目目标达标值")
     private BigDecimal reachValue;
 
-    @ApiModelProperty(value = "项目目标达成日期")
+    @ApiModelProperty("项目目标达成日期")
     private Date reachDate;
 
-    @ApiModelProperty(value = "项目目标状态: 0: 进行中; 10: 已完成; 30: 未完成")
+    @ApiModelProperty("完成情况说明")
+    private String completeNote;
+
+    @ApiModelProperty("项目目标状态: 0: 进行中; 10: 已完成; 30: 未完成")
     private Integer status;
 
 }

@@ -20,7 +20,7 @@ public class ManDayModifyReq extends BaseReq {
 
     @NotNull(message = "项目id必填")
     @ApiModelProperty("项目id")
-    private String projectId;
+    private Long projectId;
 
     @NotNull(message = "项目成员必填")
     @ApiModelProperty("项目成员花名拼音")
@@ -29,7 +29,7 @@ public class ManDayModifyReq extends BaseReq {
     @ApiModelProperty("实际人天")
     private BigDecimal actualManDay;
 
-    @Pattern(regexp = "^\\s*\\d{4}-\\d{1,2}-\\d{1,2}\\s*~\\s*\\d{4}-\\d{1,2}-\\d{1,2}\\s*$",
+    @Pattern(regexp = "^\\s*\\d{4}-\\d{2}-\\d{2}\\s*~\\s*\\d{4}-\\d{2}-\\d{2}\\s*$",
             message = "日期范围输入格式不符合规则: yyyy-MM-dd ~ yyyy-MM-dd")
     @NotNull(message = "日期范围必填")
     @ApiModelProperty(value = "日期范围: yyyy-MM-dd ~ yyyy-MM-dd", required = true)
