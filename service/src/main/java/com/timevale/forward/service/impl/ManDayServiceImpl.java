@@ -286,8 +286,8 @@ public class ManDayServiceImpl implements ManDayService {
     }
 
     @Override
-    public BaseResult<List<String>> queryManDayDateRanges(Long projectId) {
-        List<String> res = new ArrayList<>();
+    public BaseResult<Set<String>> queryManDayDateRanges(Long projectId) {
+        Set<String> res = new HashSet<>();
         List<ManDayDO> manDays = manDayMapper.getByProjectId(projectId);
         for (ManDayDO manDay : manDays) {
             res.add(DateUtil.formDateRange(manDay.getWeekStartDate(), manDay.getWeekEndDate()));

@@ -10,6 +10,7 @@ import com.timevale.forward.facade.api.result.ProjectTotalManDayVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 人天RPC接口
@@ -38,6 +39,6 @@ public interface ManDayService {
     /**
      * 查询项目人天时间周期列表
      */
-    BaseResult<List<String>> queryManDayDateRanges(Long projectId);
+    BaseResult<Set<String>> queryManDayDateRanges(Long projectId);
 
 }
