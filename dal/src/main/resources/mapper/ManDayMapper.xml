@@ -41,12 +41,28 @@
           and week_end_date = #{endDate}
           and is_deleted = false
     </select>
-    <select id="getByProjectIdAndDateRange" resultType="com.timevale.forward.dal.entity.ManDayDO">
+    <select id="getByProjectIdAndStartDates" resultType="com.timevale.forward.dal.entity.ManDayDO">
         select *
         from man_day
         where project_id = #{projectId}
-          and week_start_date = #{startDate}
-          and week_end_date = #{endDate}
+        <if test="startDates != null and startDates.size() > 0">
+            and week_start_date in
+            <foreach collection="startDates" item="startDate" open="(" separator="," close=")">
+                #{startDate}
+            </foreach>
+        </if>
+        <if test="memberIds != null and memberIds.size() > 0">
+            and member_id in
+            <foreach collection="memberIds" item="memberId" open="(" separator="," close=")">
+                #{memberId}
+            </foreach>
+        </if>
+        and is_deleted = false
+    </select>
+    <select id="sumProjectActualDays" resultType="java.math.BigDecimal">
+        select sum(actual_man_day)
+        from man_day
+        where project_id = #{projectId}
           and is_deleted = false
     </select>
 

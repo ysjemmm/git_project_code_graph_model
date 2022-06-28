@@ -1,10 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import com.google.common.base.Splitter;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimaps;
+import com.google.common.collect.*;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.ManDayMapper;
@@ -20,6 +17,7 @@ import com.timevale.forward.facade.api.query.ProjectManDayQueryList;
 import com.timevale.forward.facade.api.request.ManDayModifyReq;
 import com.timevale.forward.facade.api.result.ManDayListVO;
 import com.timevale.forward.facade.api.result.ManDayVO;
+import com.timevale.forward.facade.api.result.ProjectManDayVO;
 import com.timevale.forward.facade.api.result.ProjectTotalManDayVO;
 import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 import com.timevale.forward.model.enums.ButtonActionEnum;
@@ -128,8 +126,10 @@ public class ManDayServiceImpl implements ManDayService {
                 manDayListVO.setPm(true);
                 List<ManDayVO> resManDays = new ArrayList<>();
                 List<ManDayDO> projectManDays =
-                        manDayMapper.getByProjectIdAndDateRange(project.getId(), startDate, endDate);
-                Set<String> existsMemberIds = projectManDays.stream().map(ManDayDO::getMemberId).collect(Collectors.toSet());
+                        manDayMapper.getByProjectIdAndStartDates(project.getId(), Collections.singleton(startDate),
+                                null);
+                Set<String> existsMemberIds = projectManDays.stream().map(ManDayDO::getMemberId)
+                        .collect(Collectors.toSet());
                 for (ManDayDO projectManDay : projectManDays) {
                     ManDayVO manDayVO = ManDayCopier.INSTANCE.convert(projectManDay);
                     resManDays.add(manDayVO);
@@ -182,7 +182,55 @@ public class ManDayServiceImpl implements ManDayService {
 
     @Override
     public BaseResult<ProjectTotalManDayVO> listProjectManDays(ProjectManDayQueryList projectManDayQueryList) {
-        return null;
+        Long projectId = projectManDayQueryList.getProjectId();
+        ProjectDO project = projectMapper.get(projectId);
+        AssertUtil.notNull(project, "您查询的项目不存在，无法查询人天数据");
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        boolean pm = userInfo.getId().equals(project.getPmId());
+        List<Date> startDates = null;
+        if (projectManDayQueryList.getWeekDateRanges() != null) {
+            startDates = projectManDayQueryList.getWeekDateRanges().stream()
+                    .map(ManDayServiceImpl::parseAndCheckDateRange)
+                    .map(Pair::getLeft).collect(Collectors.toList());
+        }
+        List<ManDayDO> manDays = manDayMapper.getByProjectIdAndStartDates(projectId,
+                startDates, projectManDayQueryList.getUserIds());
+        ProjectTotalManDayVO res = new ProjectTotalManDayVO();
+        if (manDays.isEmpty()) {
+            res.setProjectActualManDay(BigDecimal.ZERO);
+            res.setProjectManDays(Collections.emptyList());
+            return BaseResult.success(res);
+        }
+        res.setProjectActualManDay(manDayMapper.sumProjectActualDays(projectId));
+        res.setProjectManDays(new ArrayList<>());
+
+        List<ManDayVO> manDayVOList = ManDayCopier.INSTANCE.convert(manDays);
+        for (ManDayVO manDayVO : manDayVOList) {
+            if (pm) {
+                manDayVO.setEditable(true);
+            }
+            if (project.getPmId().equals(manDayVO.getMemberId())) {
+                manDayVO.setPm(true);
+            }
+        }
+        ListMultimap<String, ManDayVO> manDayVOListByMemberId = Multimaps.index(manDayVOList, ManDayVO::getMemberId);
+        for (String memberId : manDayVOListByMemberId.keySet()) {
+            List<ManDayVO> memberManDays = manDayVOListByMemberId.get(memberId);
+            memberManDays.sort(Comparator.comparing(ManDayVO::getWeekStartDate).reversed());
+            ManDayVO firstManDay = memberManDays.get(0);
+            ProjectManDayVO projectManDayVO = new ProjectManDayVO();
+            projectManDayVO.setManDays(memberManDays);
+            projectManDayVO.setTotalActualManDay(memberManDays.stream().map(ManDayVO::getActualManDay)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add));
+            projectManDayVO.setMemberId(firstManDay.getMemberId());
+            projectManDayVO.setMemberName(firstManDay.getMemberName());
+            projectManDayVO.setPm(firstManDay.isPm());
+            res.getProjectManDays().add(projectManDayVO);
+        }
+
+        res.getProjectManDays().sort(Comparator.comparing(ProjectManDayVO::isPm).reversed()
+                .thenComparing(ProjectManDayVO::getMemberId));
+        return BaseResult.success(res);
     }
 
     @Override
@@ -197,7 +245,8 @@ public class ManDayServiceImpl implements ManDayService {
         Pair<Date, Date> dateRange = parseAndCheckDateRange(manDayModifyReq.getWeekDateRange());
         Date startDate = dateRange.getLeft();
         Date endDate = dateRange.getRight();
-        List<ManDayDO> oldManDays = manDayMapper.getByProjectIdAndDateRange(project.getId(), startDate, endDate);
+        List<ManDayDO> oldManDays = manDayMapper.getByProjectIdAndStartDates(project.getId(),
+                Collections.singleton(startDate), null);
         Optional<ManDayDO> modifiedManDay = oldManDays.stream().filter(manDay -> manDay.getMemberId().equals(memberId))
                 .findFirst();
         if (modifiedManDay.isPresent()) {

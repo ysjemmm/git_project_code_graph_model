@@ -7,6 +7,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 /**
  * @author jingchun
  * create on 2022/6/24
@@ -20,5 +22,7 @@ public interface ManDayCopier {
     @Mapping(target = "editable", ignore = true)
     @Mapping(target = "weekDateRange", expression = "java(DateUtil.formDateRange(manDayDO.getWeekStartDate(), manDayDO.getWeekEndDate()))")
     ManDayVO convert(ManDayDO manDayDO);
+
+    List<ManDayVO> convert(List<ManDayDO> manDays);
 
 }
