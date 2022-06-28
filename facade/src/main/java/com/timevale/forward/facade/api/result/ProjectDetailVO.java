@@ -70,6 +70,9 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("项目实际结束时间")
     private Date actualEndDate;
 
+    @ApiModelProperty("项目暂停/作废时间")
+    private Date suspendDate;
+
     @ApiModelProperty("描述")
     private String desc;
 
