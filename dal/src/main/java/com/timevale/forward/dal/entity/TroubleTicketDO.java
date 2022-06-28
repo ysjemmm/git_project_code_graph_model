@@ -131,6 +131,6 @@ public class TroubleTicketDO extends BaseDO {
     /**
      * 是否监控发现
      */
-    private Boolean isMonitorDetect;
+    private Integer isMonitorDetect;
 }
 
