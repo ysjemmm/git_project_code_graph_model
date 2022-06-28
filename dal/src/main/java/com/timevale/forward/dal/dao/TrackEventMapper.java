@@ -72,5 +72,10 @@ public interface TrackEventMapper {
     TrackEventDO get(@Param("id") Long id,@Param("flowId") String flowId);
 
 
+    /**
+     *
+     * @param productDemandId productDemandId
+     * @return TrackEventDO
+     */
     List<TrackEventDO> linkTrackEventList(@Param("productDemandId")Long productDemandId);
 }

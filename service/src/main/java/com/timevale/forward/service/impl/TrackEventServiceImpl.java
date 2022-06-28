@@ -284,13 +284,16 @@ public class TrackEventServiceImpl implements TrackEventService {
         List<Integer> status = Lists.newArrayList(TrackStatusEnum.REVIEWING.getCode(), TrackStatusEnum.REVIEWED.getCode());
         TrackEventCondition c = TrackEventCondition.builder().fullCnName(trackEventAddReq.getFullCnName()).status(status).build();
         List<TrackEventDO> trackEventDos = trackEventMapper.select(c);
-        if (!CollectionUtils.isEmpty(trackEventDos) && !Objects.equals(trackEventAddReq.getId(), trackEventDos.get(0).getId())) {
+        //sql大小写不敏感,程序判断
+        boolean match = trackEventDos.stream().anyMatch(a -> Objects.equals(a.getFullCnName(), trackEventAddReq.getFullCnName()));
+        if (match && !Objects.equals(trackEventAddReq.getId(), trackEventDos.get(0).getId())) {
             throw new BaseBizRuntimeException("该事件中文名重复,请修改后重试");
         }
 
         c = TrackEventCondition.builder().egName(trackEventAddReq.getEgName()).status(status).build();
         trackEventDos = trackEventMapper.select(c);
-        if (!CollectionUtils.isEmpty(trackEventDos) && !Objects.equals(trackEventAddReq.getId(), trackEventDos.get(0).getId())) {
+        match = trackEventDos.stream().anyMatch(a -> Objects.equals(a.getEgName(), trackEventAddReq.getEgName()));
+        if (match && !Objects.equals(trackEventAddReq.getId(), trackEventDos.get(0).getId())) {
             throw new BaseBizRuntimeException("该事件英文名重复,请修改后重试");
         }
     }

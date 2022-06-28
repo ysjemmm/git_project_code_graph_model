@@ -45,7 +45,7 @@ public class TrackPropComponentImpl implements TrackPropComponent {
         log.info("埋点事件列表,参数:{}", condition);
         List<TrackPropDO> list = trackPropMapper.list(condition);
         List<TrackPropVO> trackEventVOList = TrackPropCopier.INSTANCE.convert(list);
-        trackEventVOList.forEach(a->{
+        trackEventVOList.forEach(a -> {
             a.setStatusName(TrackStatusEnum.getTextByCode(a.getStatus()));
         });
         PageInfo<TrackPropDO> pageInfo = new PageInfo<>(list);
@@ -56,21 +56,21 @@ public class TrackPropComponentImpl implements TrackPropComponent {
     }
 
     @Override
-    public BaseResult<Boolean> add(List<TrackPropDO> trackPropDOList,Long trackEventId) {
+    public BaseResult<Boolean> add(List<TrackPropDO> trackPropDOList, Long trackEventId) {
 
         checkBeforeInsert(trackPropDOList);
 
-        addRelation(trackPropDOList,trackEventId);
+        addRelation(trackPropDOList, trackEventId);
 
         return BaseResult.success(true);
     }
 
     @Override
-    public BaseResult<Boolean> modify(List<TrackPropDO> trackPropDOList,Long trackEventId) {
+    public BaseResult<Boolean> modify(List<TrackPropDO> trackPropDOList, Long trackEventId) {
 
         checkBeforeInsert(trackPropDOList);
 
-        delRelation(trackPropDOList,trackEventId);
+        delRelation(trackPropDOList, trackEventId);
 
         return BaseResult.success(true);
     }
@@ -80,21 +80,21 @@ public class TrackPropComponentImpl implements TrackPropComponent {
         TrackEventPropCondition c = TrackEventPropCondition.builder().trackEventId(trackEventId).isDeleted(false).build();
         List<TrackEventPropDO> oldTrackEventPropDOList = trackEvenPropMapper.select(c);
         List<Long> oldPropIds = oldTrackEventPropDOList.stream().map(TrackEventPropDO::getTrackPropId).collect(Collectors.toList());
-        if(CollectionUtils.isEmpty(oldPropIds)){
+        if (CollectionUtils.isEmpty(oldPropIds)) {
             return Lists.emptyList();
         }
         List<TrackPropDO> list = trackPropMapper.selectByIds(oldPropIds);
         List<TrackPropDO> filter = list.stream().filter(a -> !TrackPropTypeEnum.DEFAULT.getCode().equals(a.getType())).collect(Collectors.toList());
         List<TrackPropVO> trackEventVOList = TrackPropCopier.INSTANCE.convert(filter);
 
-        trackEventVOList.forEach(a->{
+        trackEventVOList.forEach(a -> {
             a.setStatusName(TrackStatusEnum.getTextByCode(a.getStatus()));
         });
         return trackEventVOList;
     }
 
-    private List<Long>  addRelation(List<TrackPropDO> trackPropDOList,Long trackEventId) {
-        List<Long> newPropIds = trackPropDOList.stream().filter(a->!TrackPropTypeEnum.DEFAULT.getCode().equals(a.getType())).map(TrackPropDO::getId).collect(Collectors.toList());
+    private List<Long> addRelation(List<TrackPropDO> trackPropDOList, Long trackEventId) {
+        List<Long> newPropIds = trackPropDOList.stream().filter(a -> !TrackPropTypeEnum.DEFAULT.getCode().equals(a.getType())).map(TrackPropDO::getId).collect(Collectors.toList());
 
         TrackEventPropCondition c = TrackEventPropCondition.builder().trackEventId(trackEventId).isDeleted(false).build();
         List<TrackEventPropDO> oldTrackEventPropDOList = trackEvenPropMapper.select(c);
@@ -108,15 +108,15 @@ public class TrackPropComponentImpl implements TrackPropComponent {
             return trackEventPropDO;
         }).collect(Collectors.toList());
 
-        if(!CollectionUtils.isEmpty(list)){
+        if (!CollectionUtils.isEmpty(list)) {
             trackEvenPropMapper.batchInsert(list);
         }
         return oldPropIds;
     }
 
-    private void delRelation(List<TrackPropDO> trackPropDOList,Long trackEventId) {
-        if(CollectionUtils.isEmpty(trackPropDOList)){
-            TrackEventPropDO trackEventPropDO=new TrackEventPropDO();
+    private void delRelation(List<TrackPropDO> trackPropDOList, Long trackEventId) {
+        if (CollectionUtils.isEmpty(trackPropDOList)) {
+            TrackEventPropDO trackEventPropDO = new TrackEventPropDO();
             trackEventPropDO.setTrackEventId(trackEventId);
             trackEventPropDO.setIsDeleted(true);
             trackEvenPropMapper.update(trackEventPropDO);
@@ -125,11 +125,11 @@ public class TrackPropComponentImpl implements TrackPropComponent {
 
         List<Long> newPropIds = trackPropDOList.stream().map(TrackPropDO::getId).collect(Collectors.toList());
         //新增
-        List<Long> oldPropIds=addRelation(trackPropDOList,trackEventId);
+        List<Long> oldPropIds = addRelation(trackPropDOList, trackEventId);
         //删除
-        oldPropIds.forEach(a->{
-            if(!newPropIds.contains(a)){
-                TrackEventPropDO trackEventPropDO=new TrackEventPropDO();
+        oldPropIds.forEach(a -> {
+            if (!newPropIds.contains(a)) {
+                TrackEventPropDO trackEventPropDO = new TrackEventPropDO();
                 trackEventPropDO.setTrackEventId(trackEventId);
                 trackEventPropDO.setTrackPropId(a);
                 trackEventPropDO.setIsDeleted(true);
@@ -140,33 +140,40 @@ public class TrackPropComponentImpl implements TrackPropComponent {
 
     private void checkBeforeInsert(List<TrackPropDO> trackPropDOList) {
 
-        if(CollectionUtils.isEmpty(trackPropDOList)){
+        if (CollectionUtils.isEmpty(trackPropDOList)) {
             return;
         }
 
-        List<TrackPropDO> filter = trackPropDOList.stream().filter(a -> a.getId()==null).collect(Collectors.toList());
+        //新加的属性,或不通过的属性
+        List<TrackPropDO> filter = trackPropDOList.stream().filter(a -> a.getId() == null
+                || TrackStatusEnum.REVIEW_FAIL.getCode().equals(a.getStatus())).collect(Collectors.toList());
 
-        if(CollectionUtils.isEmpty(filter)){
+        if (CollectionUtils.isEmpty(filter)) {
             return;
         }
-        List<Integer>status=Lists.newArrayList(TrackStatusEnum.REVIEWING.getCode(),TrackStatusEnum.REVIEWED.getCode());
-        List<String> cnNames = filter.stream().map(TrackPropDO::getCnName).collect(Collectors.toList());
-        TrackPropCondition c = TrackPropCondition.builder().cnNames(cnNames).status(status).build();
+        List<Integer> status = Lists.newArrayList(TrackStatusEnum.REVIEWING.getCode(), TrackStatusEnum.REVIEWED.getCode());
+
+        List<String> newCnNames = filter.stream().map(TrackPropDO::getCnName).collect(Collectors.toList());
+        //sql大小写不敏感,程序判断
+        TrackPropCondition c = TrackPropCondition.builder().cnNames(newCnNames).status(status).build();
         List<TrackPropDO> trackPropDos = trackPropMapper.select(c);
-        if(!CollectionUtils.isEmpty(trackPropDos)){
-            String cnName = trackPropDos.stream().map(TrackPropDO::getCnName).collect(Collectors.joining(","));
-            throw new BaseBizRuntimeException("属性中文名 "+cnName+" 已存在,请修改后重试");
+        List<String> oldCnName = trackPropDos.stream().map(TrackPropDO::getCnName).collect(Collectors.toList());
+        newCnNames.retainAll(oldCnName);
+        if (!CollectionUtils.isEmpty(newCnNames)) {
+            throw new BaseBizRuntimeException("属性中文名 " + newCnNames + " 已存在,请修改后重试");
         }
 
-        List<String> egNames = filter.stream().map(TrackPropDO::getEgName).collect(Collectors.toList());
-        c = TrackPropCondition.builder().egNames(egNames).status(status).build();
+        List<String> newEgNames = filter.stream().map(TrackPropDO::getEgName).collect(Collectors.toList());
+
+        c = TrackPropCondition.builder().egNames(newEgNames).status(status).build();
         trackPropDos = trackPropMapper.select(c);
-        if(!CollectionUtils.isEmpty(trackPropDos)){
-            String cnName = trackPropDos.stream().map(TrackPropDO::getEgName).collect(Collectors.joining(","));
-            throw new BaseBizRuntimeException("属性英文名 "+cnName+" 已存在,请修改后重试");
+        List<String> oldEgName = trackPropDos.stream().map(TrackPropDO::getEgName).collect(Collectors.toList());
+        newEgNames.retainAll(oldEgName);
+        if (!CollectionUtils.isEmpty(newEgNames)) {
+            throw new BaseBizRuntimeException("属性英文名 " + newEgNames + " 已存在,请修改后重试");
         }
 
-        if(!CollectionUtils.isEmpty(filter)){
+        if (!CollectionUtils.isEmpty(filter)) {
             trackPropMapper.batchInsert(filter);
         }
     }
