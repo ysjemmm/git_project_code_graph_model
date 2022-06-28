@@ -52,6 +52,9 @@ public class TroubleTicketVO extends ToString {
     @ApiModelProperty("是否监控发现")
     private Boolean isMonitorDetect;
 
+    @ApiModelProperty("是否监控发现-描述")
+    private String isMonitorDetectText;
+
     @ApiModelProperty("提出人")
     private String createMan;
 

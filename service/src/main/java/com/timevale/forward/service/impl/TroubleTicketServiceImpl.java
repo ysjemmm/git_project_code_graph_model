@@ -257,6 +257,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         List<Long> dutyTeamIdList = troubleTicketVOList.stream().map(TroubleTicketVO::getDutyTeam).filter(Objects::nonNull).collect(Collectors.toList());
         Map<Long, GroupResponse> groupListTreeMap = bizDemandComponent.getGroupListTreeMap(dutyTeamIdList);
         troubleTicketVOList.forEach(e -> {
+            e.setIsMonitorDetectText(YesOrNoEnum.getTextByCode(e.getIsMonitorDetect()));
             e.setTroubleRankName(TroubleTicketRankEnum.getTextByCode(e.getTroubleRank()));
             if(e.getDutyTeam() != null){
                 e.setDutyTeamName(groupListTreeMap.get(e.getDutyTeam()).getGroupName());
