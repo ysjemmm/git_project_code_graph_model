@@ -8,7 +8,7 @@
                                 customer_dev_demand,customer_dev_type,customer_dev_sale_contract,customer_dev_project_name)
         values (#{name}, #{productLineId}, #{dataIndicators}, #{targetCustomer}, #{createCustomer}, #{deptId}, #{desc}, #{status},
                 #{priority}, #{receiveMan}, #{receiveManId}, #{submitManId}, #{submitMan}, #{createManId}, #{createMan},
-                , #{customerDevDemand}, #{customerDevType}, #{customerDevSaleContract}, #{customerDevProjectName})
+                #{customerDevDemand}, #{customerDevType}, #{customerDevSaleContract}, #{customerDevProjectName})
     </insert>
 
     <update id="update">
