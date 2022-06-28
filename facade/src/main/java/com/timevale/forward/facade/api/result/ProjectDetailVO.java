@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -105,4 +106,9 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("是否有项目目标")
     private Integer isWithGoal;
 
+    @ApiModelProperty("项目等级：0普通 10重点")
+    private Integer level;
+
+    @ApiModelProperty("产品技术资源评估（人天）")
+    private BigDecimal resourceAssessment;
 }
