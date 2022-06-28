@@ -57,7 +57,7 @@ public class TrackPropServiceImpl implements TrackPropService {
     public BaseResult<PageQueryResult<TrackPropVO>> list(TrackPropQueryList trackPropQueryList) {
         log.info("埋点属性列表,参数:{}", trackPropQueryList);
         TrackPropListCondition condition = TrackPropCopier.INSTANCE.convert(trackPropQueryList);
-        if(CollectionUtils.isEmpty(trackPropQueryList.getStatus())){
+        if (CollectionUtils.isEmpty(trackPropQueryList.getStatus())) {
             List<Integer> status = Lists.newArrayList(TrackStatusEnum.REVIEWING.getCode(), TrackStatusEnum.REVIEWED.getCode());
             condition.setStatus(status);
         }
@@ -75,8 +75,9 @@ public class TrackPropServiceImpl implements TrackPropService {
         }
         c = TrackPropCondition.builder().cnNames(Lists.newArrayList(trackPropModifyReq.getCnName())).build();
         List<TrackPropDO> trackPropDos = trackPropMapper.select(c);
-        boolean match = trackPropDos.stream().anyMatch(a -> Objects.equals(a.getCnName(), trackPropModifyReq.getCnName()));
-        if(match){
+        boolean match = trackPropDos.stream().anyMatch(a -> Objects.equals(a.getCnName(), trackPropModifyReq.getCnName())
+                && !Objects.equals(a.getId(), trackPropModifyReq.getId()));
+        if (match) {
             throw new BaseBizRuntimeException("该属性中文名字已存在,不可保存");
         }
         trackPropDO.setCnName(trackPropModifyReq.getCnName());
@@ -94,9 +95,9 @@ public class TrackPropServiceImpl implements TrackPropService {
         }
         TrackEventPropCondition cc = TrackEventPropCondition.builder().trackPropId(trackPropDeleteReq.getId()).isDeleted(false).build();
         List<Long> trackEventIds = trackEvenPropMapper.select(cc).stream().map(TrackEventPropDO::getTrackEventId).collect(Collectors.toList());
-        if(!CollectionUtils.isEmpty(trackEventIds)){
+        if (!CollectionUtils.isEmpty(trackEventIds)) {
             List<String> names = trackEventMapper.selectByIds(trackEventIds).stream().map(TrackEventDO::getCnName).collect(Collectors.toList());
-            throw new BaseBizRuntimeException("该属性被事件:"+names+"引用，请删除事件后再试。");
+            throw new BaseBizRuntimeException("该属性被事件:" + names + "引用，请删除事件后再试。");
 
         }
         trackPropDO.setIsDeleted(true);
