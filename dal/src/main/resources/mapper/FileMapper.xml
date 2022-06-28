@@ -27,7 +27,7 @@
     <update id="update" parameterType="com.timevale.forward.dal.entity.FileDO">
         update file
         <set>
-            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="fileName != null and fileName != ''">name = #{fileName},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
