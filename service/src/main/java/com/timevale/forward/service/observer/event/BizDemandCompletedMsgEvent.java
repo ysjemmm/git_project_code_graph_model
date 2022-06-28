@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.timevale.forward.model.enums.MessageTitleEnum;
 import com.timevale.forward.model.enums.TabEnum;
 import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
+import com.timevale.forward.service.utils.SpringContextUtil;
 
 import java.util.List;
 
@@ -18,8 +19,9 @@ public class BizDemandCompletedMsgEvent extends MessageEvent {
     private final String receiver;
     private final String name;
 
+    public static final String AUTO_CONFIRM_LIMIT = "auto.confirm.limit";
     private static final String COMMENT_SCHEME = "&anchor=scheme";
-    private static final String BIZ_DEMAND_COMPLETED_MSG = "### %s  \n  **%s**已处理了您提交的业务需求 **%s**，请确认  \n\n  ***  \n  [查看详情](%s)";
+    private static final String BIZ_DEMAND_COMPLETED_MSG = "### %s  \n  **%s**已处理了您提交的业务需求 **%s**，请及时处理，若**%s**天内未处理系统将默认同意  \n\n  ***  \n  [查看详情](%s)";
 
     public BizDemandCompletedMsgEvent(Object source, Long bizDemandId, String operator, String receiver, String name) {
         super(source);
@@ -34,7 +36,8 @@ public class BizDemandCompletedMsgEvent extends MessageEvent {
         List<String> receivers = Lists.newArrayList(receiver);
         String title = MessageTitleEnum.BIZDEMAND_FEEDBACK.getText();
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_MANAGEMENT.getText(), bizDemandId) + COMMENT_SCHEME;
-        String markdown = String.format(BIZ_DEMAND_COMPLETED_MSG, title, operator, name, singleUrl);
+        String limit = SpringContextUtil.getProperty(AUTO_CONFIRM_LIMIT);
+        String markdown = String.format(BIZ_DEMAND_COMPLETED_MSG, title, operator, name, limit, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(title)
