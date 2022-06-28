@@ -213,7 +213,8 @@ public class ManDayServiceImpl implements ManDayService {
                 manDayVO.setPm(true);
             }
         }
-        ListMultimap<String, ManDayVO> manDayVOListByMemberId = Multimaps.index(manDayVOList, ManDayVO::getMemberId);
+        Map<String, List<ManDayVO>> manDayVOListByMemberId =
+                manDayVOList.stream().collect(Collectors.groupingBy(ManDayVO::getMemberId));
         for (String memberId : manDayVOListByMemberId.keySet()) {
             List<ManDayVO> memberManDays = manDayVOListByMemberId.get(memberId);
             memberManDays.sort(Comparator.comparing(ManDayVO::getWeekStartDate).reversed());
