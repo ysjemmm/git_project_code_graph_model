@@ -105,7 +105,7 @@ public class TroubleTicketAddReq extends BaseReq {
 
     @ApiModelProperty("是否监控发现")
     @NotNull(message = "是否监控发现不能为空")
-    private Boolean isMonitorDetect;
+    private Integer isMonitorDetect;
 
     @ApiModelProperty("改进措施列表")
     private List<ImprovementMeasureAddReq> improvementMeasureAddReqList;

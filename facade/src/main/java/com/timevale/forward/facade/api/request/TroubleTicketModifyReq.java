@@ -110,7 +110,7 @@ public class TroubleTicketModifyReq extends BaseReq {
 
     @ApiModelProperty("是否监控发现")
     @NotNull(message = "是否监控发现不能为空")
-    private Boolean isMonitorDetect;
+    private Integer isMonitorDetect;
 
     @ApiModelProperty("附件列表")
     private List<FileAddReq> fileList;
