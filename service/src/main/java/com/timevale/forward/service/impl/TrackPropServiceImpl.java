@@ -29,6 +29,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -74,7 +75,8 @@ public class TrackPropServiceImpl implements TrackPropService {
         }
         c = TrackPropCondition.builder().cnNames(Lists.newArrayList(trackPropModifyReq.getCnName())).build();
         List<TrackPropDO> trackPropDos = trackPropMapper.select(c);
-        if(!CollectionUtils.isEmpty(trackPropDos)){
+        boolean match = trackPropDos.stream().anyMatch(a -> Objects.equals(a.getCnName(), trackPropModifyReq.getCnName()));
+        if(match){
             throw new BaseBizRuntimeException("该属性中文名字已存在,不可保存");
         }
         trackPropDO.setCnName(trackPropModifyReq.getCnName());
