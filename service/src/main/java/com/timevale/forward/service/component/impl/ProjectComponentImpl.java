@@ -143,6 +143,20 @@ public class ProjectComponentImpl implements ProjectComponent {
             if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
+
+            //项目状态≠已暂停、已作废、已发布
+            List<Integer> status = condition.getStatus();
+            if(CollectionUtils.isEmpty(status)){
+                for (ProjectStatusEnum e : ProjectStatusEnum.values()) {
+                    status.add(e.getCode());
+                }
+            }
+            status.removeIf(e -> ProjectStatusEnum.SUSPEND.getCode().equals(e)
+                    || ProjectStatusEnum.INVALID.getCode().equals(e)
+                    || ProjectStatusEnum.RELEASED.getCode().equals(e));
+            if(CollectionUtils.isEmpty(status)){
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
         }
 
         buildConditionBeforeQuery(projectIds, condition);
