@@ -2,6 +2,7 @@ package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.Lists;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
@@ -27,7 +28,6 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -113,6 +113,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private BizDemandComponent bizDemandComponent;
+
+    @Resource
+    private BizChangeLogMapper bizChangeLogMapper;
 
     @Resource
     private ProjectGoalMapper projectGoalMapper;
@@ -382,6 +385,15 @@ public class ProjectServiceImpl implements ProjectService {
             projectFlowDos.sort(Comparator.comparing(ProjectFlowDO::getCreateDate).reversed());
             ProjectFlowDO oldFlowDo = projectFlowDos.get(0);
             projectDetailVO.setProjectFlowId(oldFlowDo.getId());
+        }
+        if (projectDO.getStatus() < 0) {
+            // 项目已暂停或者作废，则拿暂停、作废时间作为完成时间
+            List<BizChangeLogDO> logs = bizChangeLogMapper.listAllByActions(Collections.singletonList(projectDO.getId()),
+                    BizChangeLogTypeEnum.PROJECT.getCode(),
+                    Lists.newArrayList(ButtonActionEnum.SUSPEND.getText(), ButtonActionEnum.INVALID.getText()));
+            // 最新一次暂停或者作废记录的时间
+            logs.stream().map(BizChangeLogDO::getCreateDate)
+                    .max(Date::compareTo).ifPresent(projectDetailVO::setSuspendDate);
         }
         return BaseResult.success(projectDetailVO);
     }
