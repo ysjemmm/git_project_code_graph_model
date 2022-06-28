@@ -26,7 +26,7 @@ public interface ProjectRiskService {
      *
      * @return {@link BaseResult}<{@link UpdateTimeVO}>
      */
-    BaseResult<UpdateTimeVO> getUpdateTime();
+    BaseResult<UpdateTimeVO> projectRiskUpdateTime();
 
     /**
      * 添加

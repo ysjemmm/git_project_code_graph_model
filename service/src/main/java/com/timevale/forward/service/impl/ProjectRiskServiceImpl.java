@@ -249,7 +249,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
     }
 
     @Override
-    public BaseResult<UpdateTimeVO> getUpdateTime() {
+    public BaseResult<UpdateTimeVO> projectRiskUpdateTime() {
         UpdateTimeDTO updateTimeDTO = distributionComponent.getUpdateDate();
         UpdateTimeVO updateTimeVO = DistributionCopier.INSTANCE.convert(updateTimeDTO);
         return BaseResult.success(updateTimeVO);
