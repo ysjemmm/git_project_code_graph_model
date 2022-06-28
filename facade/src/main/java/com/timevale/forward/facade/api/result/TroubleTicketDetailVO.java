@@ -141,7 +141,7 @@ public class TroubleTicketDetailVO extends ToString {
     private String dutyTeamName;
 
     @ApiModelProperty("是否监控发现")
-    private Boolean isMonitorDetect;
+    private Integer isMonitorDetect;
     
     @ApiModelProperty("附件")
     private List<FileVO> fileVOList;

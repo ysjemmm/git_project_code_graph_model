@@ -52,7 +52,7 @@ public class TroubleTicketQueryList extends QueryBase {
     private List<Long> dutyTeamList;
 
     @ApiModelProperty("是否监控发现 0否， 1是")
-    private Boolean isMonitorDetect;
+    private Integer isMonitorDetect;
 
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
     private String ascription;

@@ -48,5 +48,10 @@ public class TroubleTicketListDO extends BaseDO {
      * 主责任人
      */
     private String primePrincipal;
+
+    /**
+     * 是否监控发现
+     */
+    private Integer isMonitorDetect;
 }
 

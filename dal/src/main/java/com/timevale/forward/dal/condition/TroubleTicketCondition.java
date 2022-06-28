@@ -80,5 +80,5 @@ public class TroubleTicketCondition {
     /**
      * 是否监控发现 0否， 1是
      */
-    private Boolean isMonitorDetect;
+    private Integer isMonitorDetect;
 }
