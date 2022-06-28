@@ -12,7 +12,7 @@
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectDO">
         select id,name, customer_dev, is_platform_publish, is_with_goal, priority, type ,status, node_status, pm_id,pm pmName ,plan_start_date,plan_end_date,
-        actual_start_date,actual_end_date,`desc`, level,
+        actual_start_date,actual_end_date,`desc`, level, resource_assessment,
         create_man_id, create_man,create_date,modify_date
         from project
         where id = #{id} and is_deleted=false
@@ -35,6 +35,7 @@
             <if test="planEndDate != null">plan_end_date = #{planEndDate},</if>
             <if test="desc != null">`desc` = #{desc},</if>
             <if test="level != null">level = #{level},</if>
+            <if test="resourceAssessment != null">resource_assessment = #{resourceAssessment},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             actual_start_date = #{actualStartDate},

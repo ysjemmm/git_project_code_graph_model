@@ -60,4 +60,10 @@ public interface HomePageService {
      */
     BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardReq homePageProjectBoardReq);
 
+    /**
+     * 获取更新时间
+     *
+     * @return {@link BaseResult}<{@link UpdateTimeVO}>
+     */
+    BaseResult<UpdateTimeVO> getUpdateTime();
 }

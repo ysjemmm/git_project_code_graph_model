@@ -89,4 +89,10 @@ public class DistributeConfig {
     public DistributeConfigVO getTaskUseTime() {
         return databases.get("task.useTime");
     }
+
+    /**
+     * 更新时间
+     *
+     */
+    public DistributeConfigVO getUpdateTime(){return databases.get("updateTime");}
 }

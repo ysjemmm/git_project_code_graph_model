@@ -15,12 +15,10 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.HomePageDataIndicatorCopier;
-import com.timevale.forward.service.copy.HomePageProjectBoardCopier;
-import com.timevale.forward.service.copy.HomePageProjectOnlineLatelyCopier;
-import com.timevale.forward.service.copy.HomePageRiskWarningCopier;
+import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.integration.superset.model.base.PageResult;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -65,6 +63,9 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Resource
     private HomePageRiskWarningTaskComponent homePageRiskWarningTaskComponent;
+
+    @Resource
+    private DistributionComponent distributionComponent;
 
     @Resource
     private InnerUserPersonClient innerUserPersonClient;
@@ -415,6 +416,14 @@ public class HomePageServiceImpl implements HomePageService {
        }
 
         return BaseResult.success(result);
+    }
+
+    @Override
+    public BaseResult<UpdateTimeVO> getUpdateTime() {
+        UpdateTimeDTO updateTimeDTO = distributionComponent.getUpdateDate();
+        UpdateTimeVO updateTimeVO = DistributionCopier.INSTANCE.convert(updateTimeDTO);
+
+        return BaseResult.success(updateTimeVO);
     }
 
     public List<HomePageProjectBoardDTO> filterByDate(UserTypeEnum userType, Date startDate, Date endDate, List<HomePageProjectBoardDTO> list) {
