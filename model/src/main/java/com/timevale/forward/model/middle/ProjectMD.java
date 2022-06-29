@@ -2,11 +2,13 @@ package com.timevale.forward.model.middle;
 
 import com.timevale.forward.dal.annotation.FieldCompare;
 import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.ProjectLevelEnum;
 import com.timevale.forward.model.enums.ProjectTypeEnum;
 import com.timevale.forward.model.enums.YesOrNoEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -72,4 +74,10 @@ public class ProjectMD extends BaseMD{
 
     @FieldCompare(fieldName = "是否有项目目标",enumClass = YesOrNoEnum.class)
     private Integer isWithGoal;
+
+    @FieldCompare(fieldName = "项目等级",enumClass = ProjectLevelEnum.class)
+    private Integer level;
+
+    @FieldCompare(fieldName = "产品技术资源评估（人天）")
+    private BigDecimal resourceAssessment;
 }
