@@ -173,6 +173,7 @@ public class TrackPropComponentImpl implements TrackPropComponent {
             throw new BaseBizRuntimeException("属性英文名 " + newEgNames + " 已存在,请修改后重试");
         }
 
+        filter = trackPropDOList.stream().filter(a -> a.getId() == null).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(filter)) {
             trackPropMapper.batchInsert(filter);
         }
