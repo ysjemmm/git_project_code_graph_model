@@ -149,6 +149,6 @@ public enum BugOnlineDismissCauseEnum {
                 return e.text;
             }
         }
-        return "error code";
+        return "";
     }
 }
