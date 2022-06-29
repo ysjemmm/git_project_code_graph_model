@@ -218,22 +218,20 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
             return BaseResult.success(true);
         }
         List<ProjectGoalDO> oldGoals = projectGoalMapper.getByProjectId(project.getId());
-        for (ProjectGoalDO oldGoal : oldGoals) {
-            if (YesOrNoEnum.YES.getCode().equals(oldGoal.getIsMain())) {
-                oldGoal.setIsMain(YesOrNoEnum.NO.getCode());
-                projectGoalMapper.update(oldGoal);
-                // 插入主目标变更记录
-                bizChangeLogMapper.insert(createCommonChangeLog()
-                        .setType(BizChangeLogTypeEnum.PROJECT.getCode())
-                        .setField(BizChangeLogFieldEnum.MAIN_GOAL.getText())
-                        .setMainId(oldGoal.getProjectId())
-                        .setIdentity(formIdentity(oldGoal.getName()))
-                        .setOldValue(YesOrNoEnum.NO.getText())
-                        .setNewValue(YesOrNoEnum.YES.getText())
-                );
-                break;
-            }
-        }
+        oldGoals.stream().filter(g -> YesOrNoEnum.YES.getCode().equals(g.getIsMain()))
+                .findFirst().ifPresent(g -> {
+                    g.setIsMain(YesOrNoEnum.NO.getCode());
+                    projectGoalMapper.update(g);
+                    // 插入主目标变更记录
+                    bizChangeLogMapper.insert(createCommonChangeLog()
+                            .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                            .setField(BizChangeLogFieldEnum.MAIN_GOAL.getText())
+                            .setMainId(g.getProjectId())
+                            .setIdentity(formIdentity(g.getName()))
+                            .setOldValue(YesOrNoEnum.YES.getText())
+                            .setNewValue(YesOrNoEnum.NO.getText())
+                    );
+                });
         ProjectGoalDO updateCond = new ProjectGoalDO();
         updateCond.setId(goal.getId());
         updateCond.setIsMain(YesOrNoEnum.YES.getCode());
