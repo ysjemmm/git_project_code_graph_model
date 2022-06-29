@@ -128,18 +128,10 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
 
         // 是否包含风险
-        if(condition.getIncludeRisk() != null){
+        if(condition.getIncludeRisk() != null && condition.getIncludeRisk()){
             List<ProjectRiskDO> projectRiskDOList = projectRiskMapper.selectByProjectIdListStatus(projectIds, new ArrayList<>(ProjectRiskStatusEnum.PENDING.getCode()));
-            List<Long> tmpProjectIds = projectRiskDOList.stream().map(ProjectRiskDO::getProjectId).distinct().collect(Collectors.toList());
+            projectIds = projectRiskDOList.stream().map(ProjectRiskDO::getProjectId).distinct().collect(Collectors.toList());
 
-            if(condition.getIncludeRisk()){
-                projectIds = tmpProjectIds;
-            }else if(CollectionUtils.isEmpty(projectIds)){
-                projectIds = projectMapper.getAllId();
-                projectIds.removeAll(tmpProjectIds);
-            } else {
-                projectIds.removeAll(tmpProjectIds);
-            }
             if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
