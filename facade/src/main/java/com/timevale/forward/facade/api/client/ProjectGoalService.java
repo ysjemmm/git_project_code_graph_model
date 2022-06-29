@@ -24,7 +24,7 @@ public interface ProjectGoalService {
     /**
      * 查找项目下项目目标列表
      */
-    BaseResult<List<ProjectGoalVO>> list(Long projectId);
+    BaseResult<List<ProjectGoalVO>> list(Long projectGoalProjectId);
 
     /**
      * 新增项目目标

@@ -55,8 +55,8 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
     private InnerUserPersonClient innerUserPersonClient;
 
     @Override
-    public BaseResult<List<ProjectGoalVO>> list(Long projectId) {
-        List<ProjectGoalVO> res = ProjectGoalCopier.INSTANCE.convert2VO(projectGoalMapper.getByProjectId(projectId));
+    public BaseResult<List<ProjectGoalVO>> list(Long projectGoalProjectId) {
+        List<ProjectGoalVO> res = ProjectGoalCopier.INSTANCE.convert2VO(projectGoalMapper.getByProjectId(projectGoalProjectId));
         if (hasGoalFinishPermission()) {
             for (ProjectGoalVO goal : res) {
                 goal.setPermitFinish(true);
