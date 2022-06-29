@@ -15,6 +15,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -91,15 +92,16 @@ public class FieldCompareUtil {
                         oldString = (String) oldField.get(oldObj);
                         newString = (String) newField.get(newObj);
                     } else if (fieldType == BigDecimal.class) {
+                        int scale = annotation.scale();
                         if (oldValue == null) {
                             oldString = CommonConstant.NULL;
                         } else {
-                            oldString = oldField.get(oldObj).toString();
+                            oldString = ((BigDecimal) oldField.get(oldObj)).setScale(scale,RoundingMode.DOWN).toString();
                         }
                         if (newValue == null) {
                             newString = CommonConstant.NULL;
                         } else {
-                            newString = newField.get(newObj).toString();
+                            newString = ((BigDecimal) newField.get(newObj)).setScale(scale,RoundingMode.DOWN).toString();
                         }
                     } else if (fieldType == Date.class) {
                         oldString = DateUtil.parseToString((Date) oldField.get(oldObj), DateFormatConst.DATE_FORMAT);

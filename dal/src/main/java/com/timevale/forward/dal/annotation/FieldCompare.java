@@ -15,4 +15,6 @@ public @interface FieldCompare{
     String fieldName() default "";
 
     Class<?> enumClass() default Enum.class;
+
+    int scale() default 0;
 }
