@@ -78,6 +78,6 @@ public class ProjectMD extends BaseMD{
     @FieldCompare(fieldName = "项目等级",enumClass = ProjectLevelEnum.class)
     private Integer level;
 
-    @FieldCompare(fieldName = "产品技术资源评估（人天）")
+    @FieldCompare(fieldName = "产品技术资源评估（人天）", scale = 2)
     private BigDecimal resourceAssessment;
 }
