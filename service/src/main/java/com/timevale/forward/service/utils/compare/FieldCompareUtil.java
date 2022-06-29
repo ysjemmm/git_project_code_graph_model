@@ -5,6 +5,7 @@ import com.timevale.forward.dal.annotation.FieldCompare;
 import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 import com.timevale.forward.model.enums.BugLogTypeEnum;
 import com.timevale.forward.model.middle.*;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -89,9 +90,17 @@ public class FieldCompareUtil {
                     if (fieldType == String.class) {
                         oldString = (String) oldField.get(oldObj);
                         newString = (String) newField.get(newObj);
-                    } else if(fieldType == BigDecimal.class){
-                        oldString = oldField.get(oldObj).toString();
-                        newString = newField.get(newObj).toString();
+                    } else if (fieldType == BigDecimal.class) {
+                        if (oldValue == null) {
+                            oldString = CommonConstant.NULL;
+                        } else {
+                            oldString = oldField.get(oldObj).toString();
+                        }
+                        if (newValue == null) {
+                            newString = CommonConstant.NULL;
+                        } else {
+                            newString = newField.get(newObj).toString();
+                        }
                     } else if (fieldType == Date.class) {
                         oldString = DateUtil.parseToString((Date) oldField.get(oldObj), DateFormatConst.DATE_FORMAT);
                         newString = DateUtil.parseToString((Date) newField.get(newObj), DateFormatConst.DATE_FORMAT);
@@ -103,7 +112,7 @@ public class FieldCompareUtil {
                         if (newValue != null) {
                             newString = (String) method.invoke(null, newValue);
                         }
-                    } else if(fieldType == Boolean.class){
+                    } else if (fieldType == Boolean.class) {
                         Method method = annotation.enumClass().getMethod(METHOD, Boolean.class);
                         if (oldValue != null) {
                             oldString = (String) method.invoke(null, oldValue);
