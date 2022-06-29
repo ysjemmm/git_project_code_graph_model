@@ -59,7 +59,9 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         List<ProjectGoalVO> res = ProjectGoalCopier.INSTANCE.convert2VO(projectGoalMapper.getByProjectId(projectGoalProjectId));
         if (hasGoalFinishPermission()) {
             for (ProjectGoalVO goal : res) {
-                goal.setPermitFinish(true);
+                if (ProjectGoalStatusEnum.IN_PROGRESS.getCode().equals(goal.getStatus())) {
+                    goal.setPermitFinish(true);
+                }
             }
         }
         return BaseResult.success(res);
@@ -257,6 +259,8 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                         projectGoalFinishReq.getStatus().equals(ProjectGoalStatusEnum.UNFINISHED.getCode()),
                 "完成状态只能是 10-已完成 或 30-未完成");
         AssertUtil.checkState(hasGoalFinishPermission(), "您没有该操作权限");
+        AssertUtil.checkState(ProjectGoalStatusEnum.IN_PROGRESS.getCode().equals(goal.getStatus()),
+                "目标只有在进行中时可以填写完成情况");
         // 更新目标
         ProjectGoalDO updateCond = new ProjectGoalDO();
         updateCond.setId(projectGoalFinishReq.getId());
