@@ -17,7 +17,7 @@ public enum ProjectGoalTypeEnum {
     private final Integer code;
     private final String text;
 
-    public String getTextByCode(Integer code) {
+    public static String getTextByCode(Integer code) {
         for (ProjectGoalTypeEnum value : values()) {
             if (value.getCode().equals(code)) {
                 return value.text;
