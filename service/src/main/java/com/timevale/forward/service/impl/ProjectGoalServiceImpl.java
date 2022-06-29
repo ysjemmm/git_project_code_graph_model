@@ -56,7 +56,13 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
 
     @Override
     public BaseResult<List<ProjectGoalVO>> list(Long projectId) {
-        return BaseResult.success(ProjectGoalCopier.INSTANCE.convert2VO(projectGoalMapper.getByProjectId(projectId)));
+        List<ProjectGoalVO> res = ProjectGoalCopier.INSTANCE.convert2VO(projectGoalMapper.getByProjectId(projectId));
+        if (hasGoalFinishPermission()) {
+            for (ProjectGoalVO goal : res) {
+                goal.setPermitFinish(true);
+            }
+        }
+        return BaseResult.success(res);
     }
 
     @Override
