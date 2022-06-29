@@ -13,6 +13,7 @@ import org.assertj.core.util.Lists;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -88,6 +89,9 @@ public class FieldCompareUtil {
                     if (fieldType == String.class) {
                         oldString = (String) oldField.get(oldObj);
                         newString = (String) newField.get(newObj);
+                    } else if(fieldType == BigDecimal.class){
+                        oldString = oldField.get(oldObj).toString();
+                        newString = newField.get(newObj).toString();
                     } else if (fieldType == Date.class) {
                         oldString = DateUtil.parseToString((Date) oldField.get(oldObj), DateFormatConst.DATE_FORMAT);
                         newString = DateUtil.parseToString((Date) newField.get(newObj), DateFormatConst.DATE_FORMAT);
