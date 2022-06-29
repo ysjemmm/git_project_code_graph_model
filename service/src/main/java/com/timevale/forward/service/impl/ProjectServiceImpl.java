@@ -353,6 +353,7 @@ public class ProjectServiceImpl implements ProjectService {
         projectDetailVO.setStatusName(ProjectStatusEnum.getTextByCode(projectDetailVO.getStatus()));
         projectDetailVO.setPriorityName(PriorityEnum.getTextByCode(projectDetailVO.getPriority()));
         projectDetailVO.setTypeName(ProjectTypeEnum.getTextByCode(projectDetailVO.getType()));
+        projectDetailVO.setLevelName(ProjectLevelEnum.getTextByCode(projectDetailVO.getLevel()));
 
         //产品线
         List<ProductLineDO> productLineDO = productLineMapper.get(projectId);

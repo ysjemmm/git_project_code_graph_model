@@ -112,6 +112,9 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("项目等级：0普通 10重点")
     private Integer level;
 
+    @ApiModelProperty("项目等级描述")
+    private String levelName;
+
     @ApiModelProperty("产品技术资源评估（人天）")
     private BigDecimal resourceAssessment;
 }
