@@ -24,9 +24,6 @@ public class ProjectGoalMD extends BaseMD {
     @FieldCompare(fieldName = "目标性质", enumClass = ProjectGoalTypeEnum.class)
     private Integer type;
 
-    @FieldCompare(fieldName = "是否主目标", enumClass = YesOrNoEnum.class)
-    private Integer isMain;
-
     @FieldCompare(fieldName = "目标衡量标准")
     private String measurement;
 
