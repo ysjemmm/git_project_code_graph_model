@@ -63,7 +63,8 @@ public class InnerGroupClientImpl implements InnerGroupClient {
         try{
             GroupRequest groupRequest = new GroupRequest();
             groupRequest.setGroupId(deptId.toString());
-            BaseResult<List<GroupResponse>> groupTree = rpcGroupService.getGroupTree(groupRequest);
+            groupRequest.setIsDelete(true);
+            BaseResult<List<GroupResponse>> groupTree = rpcGroupService.getWithDeleteGroupTree(groupRequest);
             if(groupTree.ifSuccess()){
                 return groupTree.getData();
             }
