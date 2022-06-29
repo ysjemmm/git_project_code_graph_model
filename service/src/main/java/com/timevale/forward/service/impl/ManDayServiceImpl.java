@@ -152,8 +152,6 @@ public class ManDayServiceImpl implements ManDayService {
                         resManDay.setPm(true);
                     }
                 }
-                resManDays.sort((o1, o2) ->
-                        Boolean.compare(o2.isPm(), o1.isPm()));
                 manDayListVO.setManDays(resManDays);
             } else {
                 // 非项目经理
@@ -171,6 +169,8 @@ public class ManDayServiceImpl implements ManDayService {
                                     .setWeekDateRange(DateUtil.formDateRange(startDate, endDate))));
                 }
             }
+            manDayListVO.getManDays().sort(Comparator.comparing(ManDayVO::isPm).reversed()
+                    .thenComparing(ManDayVO::getMemberId));
             res.add(manDayListVO);
         }
         res.sort(Comparator.comparing(ManDayListVO::isPm)
