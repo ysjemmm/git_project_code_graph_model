@@ -1,7 +1,11 @@
 package com.timevale.forward.service.job;
 
+import com.google.common.collect.Maps;
 import com.timevale.forward.dal.dao.ProjectGoalMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectGoalDO;
+import com.timevale.forward.model.enums.YesOrNoEnum;
 import com.timevale.forward.service.integration.erp.ErpMessageClient;
 import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
 import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
@@ -11,9 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.Resource;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author jingchun
@@ -32,13 +35,24 @@ public class ProjectGoalReachDateNotifyJob extends IJobHandler {
     @Resource
     private ProjectGoalMapper projectGoalMapper;
     @Resource
+    private ProjectMapper projectMapper;
+    @Resource
     private ErpMessageClient erpMessageClient;
 
     @Override
     public ReturnT<String> execute(String s) {
         log.info("开始项目目标达成日期通知任务");
         List<ProjectGoalDO> projectGoals = projectGoalMapper.getByDate(new Date());
+        Set<Long> projectIds = projectGoals.stream().map(ProjectGoalDO::getProjectId)
+                .collect(Collectors.toSet());
+        List<ProjectDO> projects = projectMapper.getByIds(projectIds);
+        Map<Long, ProjectDO> projectById = Maps.uniqueIndex(projects, ProjectDO::getId);
         for (ProjectGoalDO projectGoal : projectGoals) {
+            ProjectDO project = projectById.get(projectGoal.getProjectId());
+            if (project != null && YesOrNoEnum.NO.getCode().equals(project.getIsWithGoal())) {
+                // 无项目目标，过滤
+                continue;
+            }
             log.info("通知项目 {} 到期", projectGoal);
             erpMessageClient.sendMarkdownMsg(MarkdownMsg.builder()
                     .title(TITLE)

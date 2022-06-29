@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
 
 import javax.validation.constraints.NotBlank;
@@ -24,6 +25,7 @@ public class ProjectGoalAddReq extends BaseReq {
     private Long projectId;
 
     @NotBlank(message = "项目目标名称不能为空")
+    @Length(max = 100, message = "项目目标名称最多只能填写100字")
     @ApiModelProperty(value = "项目目标名称", required = true)
     private String name;
 
