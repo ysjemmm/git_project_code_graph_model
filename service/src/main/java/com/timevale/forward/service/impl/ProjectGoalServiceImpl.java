@@ -68,8 +68,6 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         AssertUtil.notNull(projectId, "项目id不能为空");
         ProjectDO project = projectMapper.get(projectId);
         AssertUtil.notNull(project, "对应添加的项目不存在，请刷新后重试");
-        AssertUtil.checkState(YesOrNoEnum.YES.getCode().equals(project.getIsWithGoal()),
-                "该项目无项目目标，无法新增项目目标");
         // 权限校验
         AssertUtil.checkState(hasProjectEditPermission(getPermittedUserIds(project)), "您没有该操作权限");
         // 名称校验
