@@ -26,7 +26,6 @@ public interface ProjectGoalCopier {
     List<ProjectGoalDO> convert(List<ProjectGoalAddReq> projectGoalAddReq);
 
     // 目标更新时不允许更新主目标
-    @Mapping(target = "isMain", ignore = true)
     ProjectGoalDO convert(ProjectGoalModifyReq projectGoalModifyReq);
 
     ProjectGoalMD convert(ProjectGoalDO projectGoalDO);

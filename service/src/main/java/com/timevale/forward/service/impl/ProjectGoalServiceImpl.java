@@ -270,7 +270,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                 .setMainId(goal.getProjectId())
                 .setIdentity(formIdentity(goal.getName()))
                 .setOldValue(ProjectGoalStatusEnum.IN_PROGRESS.getText())
-                .setNewValue(ProjectGoalStatusEnum.FINISHED.getTextByCode(projectGoalFinishReq.getStatus()))
+                .setNewValue(ProjectGoalStatusEnum.getTextByCode(projectGoalFinishReq.getStatus()))
         );
         if (StringUtils.isNotBlank(projectGoalFinishReq.getCompleteNote())) {
             // 添加完成情况变更记录

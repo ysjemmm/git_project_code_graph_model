@@ -27,9 +27,6 @@ public class ProjectGoalMD extends BaseMD {
     @FieldCompare(fieldName = "是否主目标", enumClass = YesOrNoEnum.class)
     private Integer isMain;
 
-    @FieldCompare(fieldName = "完成状态", enumClass = ProjectGoalStatusEnum.class)
-    private Integer status;
-
     @FieldCompare(fieldName = "目标衡量标准")
     private String measurement;
 
@@ -38,8 +35,5 @@ public class ProjectGoalMD extends BaseMD {
 
     @FieldCompare(fieldName = "项目目标达成日期")
     private Date reachDate;
-
-    @FieldCompare(fieldName = "完成情况")
-    private String completeNote;
 
 }
