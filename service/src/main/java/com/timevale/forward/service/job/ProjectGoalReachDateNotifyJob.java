@@ -53,7 +53,7 @@ public class ProjectGoalReachDateNotifyJob extends IJobHandler {
                 // 无项目目标，过滤
                 continue;
             }
-            log.info("通知项目 {} 到期", projectGoal);
+            log.info("通知项目到期: {}", projectGoal);
             erpMessageClient.sendMarkdownMsg(MarkdownMsg.builder()
                     .title(TITLE)
                     .content(String.format(NOTIFY_PATTERN, projectGoal.getName()))
