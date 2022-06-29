@@ -80,7 +80,12 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         }
         ProjectGoalDO projectGoal = ProjectGoalCopier.INSTANCE.convert(projectGoalAddReq);
         // 新增数据默认不是主目标
-        projectGoal.setIsMain(YesOrNoEnum.NO.getCode());
+        List<ProjectGoalDO> existsGoals = projectGoalMapper.getByProjectId(projectId);
+        if (existsGoals.isEmpty()) {
+            projectGoal.setIsMain(YesOrNoEnum.YES.getCode());
+        } else {
+            projectGoal.setIsMain(YesOrNoEnum.NO.getCode());
+        }
         projectGoalMapper.insert(projectGoal);
         // 插入关联记录
         bizChangeLogMapper.insert(createCommonChangeLog()
