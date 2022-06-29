@@ -150,7 +150,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
             log.setCreateManId(userInfo.getId());
             log.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         }
-        if (!ProjectGoalTypeEnum.QUANTIFY.getCode().equals(newGoal.getType()) &&
+        if (ProjectGoalTypeEnum.QUALIFY.getCode().equals(newGoal.getType()) &&
                 ProjectGoalTypeEnum.QUANTIFY.getCode().equals(oldGoal.getType())) {
             logs.add(createCommonChangeLog()
                     .setType(BizChangeLogTypeEnum.PROJECT.getCode())

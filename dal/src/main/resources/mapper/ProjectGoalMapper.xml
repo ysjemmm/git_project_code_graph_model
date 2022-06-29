@@ -37,9 +37,7 @@
             <if test="measurement != null and measurement != ''">
                 measurement = #{measurement},
             </if>
-            <if test="reachValue != null">
-                reach_value = #{reachValue},
-            </if>
+            reach_value = #{reachValue},
             <if test="reachDate != null">
                 reach_date = #{reachDate},
             </if>
