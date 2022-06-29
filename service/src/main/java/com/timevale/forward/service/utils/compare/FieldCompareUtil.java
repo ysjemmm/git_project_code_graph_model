@@ -96,12 +96,12 @@ public class FieldCompareUtil {
                         if (oldValue == null) {
                             oldString = CommonConstant.NULL;
                         } else {
-                            oldString = ((BigDecimal) oldField.get(oldObj)).setScale(scale,RoundingMode.DOWN).toString();
+                            oldString = ((BigDecimal) oldField.get(oldObj)).setScale(scale, RoundingMode.DOWN).toString();
                         }
                         if (newValue == null) {
                             newString = CommonConstant.NULL;
                         } else {
-                            newString = ((BigDecimal) newField.get(newObj)).setScale(scale,RoundingMode.DOWN).toString();
+                            newString = ((BigDecimal) newField.get(newObj)).setScale(scale, RoundingMode.DOWN).toString();
                         }
                     } else if (fieldType == Date.class) {
                         oldString = DateUtil.parseToString((Date) oldField.get(oldObj), DateFormatConst.DATE_FORMAT);

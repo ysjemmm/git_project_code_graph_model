@@ -33,7 +33,7 @@ public class ProjectGoalMD extends BaseMD {
     @FieldCompare(fieldName = "目标衡量标准")
     private String measurement;
 
-    @FieldCompare(fieldName = "项目目标达标值")
+    @FieldCompare(fieldName = "项目目标达标值", scale = 2)
     private BigDecimal reachValue;
 
     @FieldCompare(fieldName = "项目目标达成日期")
