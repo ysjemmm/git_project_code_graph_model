@@ -125,4 +125,10 @@ public class BugOnlineMD extends BaseMD{
      */
     @FieldCompare(fieldName = "详细版本号")
     private String detailVersionId;
+
+    /**
+     * 预计上线日期
+     */
+    @FieldCompare(fieldName = "预计上线日期")
+    private Date expectLaunchDate;
 }

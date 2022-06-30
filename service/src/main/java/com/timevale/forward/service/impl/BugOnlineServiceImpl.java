@@ -656,6 +656,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setReason(bugOnlineStartRepairReq.getReason());
         bugOnlineDO.setProblemReason(bugOnlineStartRepairReq.getProblemReason());
         bugOnlineDO.setSolveScheme(bugOnlineStartRepairReq.getSolveScheme());
+        bugOnlineDO.setExpectLaunchDate(bugOnlineStartRepairReq.getExpectLaunchDate());
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
 

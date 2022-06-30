@@ -109,8 +109,12 @@ public class FieldCompareUtil {
                             newString = ((BigDecimal) newField.get(newObj)).setScale(scale, RoundingMode.DOWN).toString();
                         }
                     } else if (fieldType == Date.class) {
-                        oldString = DateUtil.parseToString((Date) oldField.get(oldObj), DateFormatConst.DATE_FORMAT);
-                        newString = DateUtil.parseToString((Date) newField.get(newObj), DateFormatConst.DATE_FORMAT);
+                        if(oldValue != null){
+                            oldString = DateUtil.parseToString((Date)oldValue, DateFormatConst.DATE_FORMAT);
+                        }
+                        if(newValue != null){
+                            newString = DateUtil.parseToString((Date)newValue, DateFormatConst.DATE_FORMAT);
+                        }
                     } else if (fieldType == Integer.class) {
                         Method method = annotation.enumClass().getMethod(METHOD, Integer.class);
                         if (oldValue != null) {
