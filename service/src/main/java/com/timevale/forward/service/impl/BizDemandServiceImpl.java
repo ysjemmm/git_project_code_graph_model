@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
+import com.google.common.base.Functions;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
@@ -9,10 +10,7 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.BizDemandDetailVO;
-import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.facade.api.result.FileVO;
-import com.timevale.forward.facade.api.result.PersonVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -41,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -136,6 +135,74 @@ public class BizDemandServiceImpl implements BizDemandService {
         String collation = sqlOrderComponent.build(bizDemandQueryList.getOrderFiled(), bizDemandQueryList.getOrderCollation());
         PageHelper.startPage(bizDemandQueryList.pageNum, bizDemandQueryList.pageSize, collation);
         return bizDemandComponent.page(bizDemandListCondition);
+    }
+
+    @Override
+    public BaseResult<List<BizDemandProductLineVO>> listClassify(BizDemandQueryList bizDemandQueryList) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        // 转换查询条件
+        BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
+
+        // 标志是否有对应数据
+        boolean resultIsEmpty = false;
+        // 根据tabs添加不同的效果
+        String ascription = bizDemandQueryList.getAscription();
+        if (ascription.equals(AscriptionEnum.CURRENT_USER.toString())) {
+            condition.setSubmitManIdList(Lists.newArrayList(userInfo.getId()));
+        } else if (ascription.equals(AscriptionEnum.RECEIVE.toString())) {
+            condition.setReceiveManIdList(Lists.newArrayList(userInfo.getId()));
+        } else if (ascription.equals(AscriptionEnum.COPIER.toString())) {
+            condition.setCopier(userInfo.getId());
+        } else {
+            List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+            if (ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())) {
+                Set<String> createIdSet = new HashSet<>(condition.getSubmitManIdList());
+                if (!createIdSet.isEmpty()) {
+                    teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
+                    resultIsEmpty = teamMemberIdList.isEmpty();
+                }
+                condition.setSubmitManIdList(teamMemberIdList);
+            } else if (ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())) {
+                Set<String> receiveIdSet = new HashSet<>(condition.getReceiveManIdList());
+                if (!receiveIdSet.isEmpty()) {
+                    teamMemberIdList = teamMemberIdList.stream().filter(receiveIdSet::contains).collect(Collectors.toList());
+                    resultIsEmpty = teamMemberIdList.isEmpty();
+                }
+                condition.setReceiveManIdList(teamMemberIdList);
+            }
+        }
+        if (resultIsEmpty) {
+            return BaseResult.success(new ArrayList<>());
+        }
+
+        // 包含子部门
+        List<Long> deptIdList = condition.getDeptIdList();
+        if (CollectionUtils.isNotEmpty(deptIdList)) {
+            Map<Long, GroupResponse> groupListTreeMap = bizDemandComponent.getGroupListTreeMap(deptIdList);
+            // 替换查询部门id条件
+            condition.setDeptIdList(Lists.newArrayList(groupListTreeMap.keySet()));
+        }
+
+        // 日期处理
+        condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
+        condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
+        condition.setProjectEndDateStart(DateUtil.getStartOfDay(condition.getProjectEndDateStart()));
+        condition.setProjectEndDateEnd(DateUtil.getEndOfDay(condition.getProjectEndDateEnd()));
+
+        // 查询并转换
+        List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(condition);
+        Map<String, List<BizDemandListDO>> bizDemandListDOMap = bizDemandListDOList.stream().collect(Collectors.groupingBy(BizDemandListDO::getProductLineName));
+
+        List<BizDemandProductLineVO> result = new ArrayList<>();
+        bizDemandListDOMap.forEach((k,v) -> {
+            BizDemandProductLineVO bizDemandProductLineVO = new BizDemandProductLineVO();
+            bizDemandProductLineVO.setName(k);
+            bizDemandProductLineVO.setCount(v.size());
+            result.add(bizDemandProductLineVO);
+        });
+
+        return BaseResult.success(result);
     }
 
     @Override
