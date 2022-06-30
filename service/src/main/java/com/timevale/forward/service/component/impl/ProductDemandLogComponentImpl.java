@@ -61,7 +61,9 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
         if (!Objects.equals(oldObj.getDesc(), newObj.getDesc())) {
             String oldValue = StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(oldObj.getDesc()));
             String newValue = StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(newObj.getDesc()));
-            logs.add(createLog(oldObj.getId(), BizChangeLogFieldEnum.DESC.getText(), oldValue, newValue, null));
+            if(!Objects.equals(oldValue,newValue)){
+                logs.add(createLog(oldObj.getId(), BizChangeLogFieldEnum.DESC.getText(), oldValue, newValue, null));
+            }
         }
         //类型
         List<Integer> oldTypes = JSON.parseArray(oldObj.getType(), Integer.class);
