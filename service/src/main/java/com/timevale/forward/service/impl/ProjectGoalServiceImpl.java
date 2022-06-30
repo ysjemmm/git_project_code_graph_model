@@ -179,8 +179,8 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
             bizChangeLogMapper.insert(createCommonChangeLog()
                     .setType(BizChangeLogTypeEnum.PROJECT.getCode())
                     .setField(BizChangeLogFieldEnum.MAIN_GOAL.getText())
-                    .setMainId(goal.getProjectId())
-                    .setIdentity(formIdentity(goal.getName()))
+                    .setMainId(newMainGoal.getProjectId())
+                    .setIdentity(formIdentity(newMainGoal.getName()))
                     .setOldValue(YesOrNoEnum.NO.getText())
                     .setNewValue(YesOrNoEnum.YES.getText())
             );
@@ -224,10 +224,8 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                             .setNewValue(YesOrNoEnum.NO.getText())
                     );
                 });
-        ProjectGoalDO updateCond = new ProjectGoalDO();
-        updateCond.setId(goal.getId());
-        updateCond.setIsMain(YesOrNoEnum.YES.getCode());
-        projectGoalMapper.update(updateCond);
+        goal.setIsMain(YesOrNoEnum.YES.getCode());
+        projectGoalMapper.update(goal);
         // 插入主目标变更记录
         bizChangeLogMapper.insert(createCommonChangeLog()
                 .setType(BizChangeLogTypeEnum.PROJECT.getCode())
