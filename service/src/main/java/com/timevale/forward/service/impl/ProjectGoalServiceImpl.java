@@ -167,8 +167,6 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                 "目标只有在进行中时可以删除");
         List<ProjectGoalDO> goals = projectGoalMapper.getByProjectId(project.getId());
         goals.removeIf(g -> g.getId().equals(projectGoalId));
-        // 只有一条数据时不允许删除
-        AssertUtil.notEmpty(goals, "有目标的项目下至少需要保留一个项目目标");
         // 删除
         projectGoalMapper.delete(goal);
         if (YesOrNoEnum.YES.getCode().equals(goal.getIsMain())) {
@@ -179,8 +177,8 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
             bizChangeLogMapper.insert(createCommonChangeLog()
                     .setType(BizChangeLogTypeEnum.PROJECT.getCode())
                     .setField(BizChangeLogFieldEnum.MAIN_GOAL.getText())
-                    .setMainId(goal.getProjectId())
-                    .setIdentity(formIdentity(goal.getName()))
+                    .setMainId(newMainGoal.getProjectId())
+                    .setIdentity(formIdentity(newMainGoal.getName()))
                     .setOldValue(YesOrNoEnum.NO.getText())
                     .setNewValue(YesOrNoEnum.YES.getText())
             );
@@ -196,6 +194,11 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                 .setNewValue(goal.getName())
                 .setAction(ButtonActionEnum.UN_LINK.getText())
         );
+        if (goals.isEmpty()) {
+            // 删除最后一条记录，变更项目是否有主目标
+            project.setIsWithGoal(YesOrNoEnum.NO.getCode());
+            projectMapper.update(project);
+        }
         return BaseResult.success(true);
     }
 
@@ -224,10 +227,8 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                             .setNewValue(YesOrNoEnum.NO.getText())
                     );
                 });
-        ProjectGoalDO updateCond = new ProjectGoalDO();
-        updateCond.setId(goal.getId());
-        updateCond.setIsMain(YesOrNoEnum.YES.getCode());
-        projectGoalMapper.update(updateCond);
+        goal.setIsMain(YesOrNoEnum.YES.getCode());
+        projectGoalMapper.update(goal);
         // 插入主目标变更记录
         bizChangeLogMapper.insert(createCommonChangeLog()
                 .setType(BizChangeLogTypeEnum.PROJECT.getCode())
@@ -252,11 +253,9 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         AssertUtil.checkState(ProjectGoalStatusEnum.IN_PROGRESS.getCode().equals(goal.getStatus()),
                 "目标只有在进行中时可以填写完成情况");
         // 更新目标
-        ProjectGoalDO updateCond = new ProjectGoalDO();
-        updateCond.setId(projectGoalFinishReq.getId());
-        updateCond.setStatus(projectGoalFinishReq.getStatus());
-        updateCond.setCompleteNote(projectGoalFinishReq.getCompleteNote());
-        projectGoalMapper.update(updateCond);
+        goal.setStatus(projectGoalFinishReq.getStatus());
+        goal.setCompleteNote(projectGoalFinishReq.getCompleteNote());
+        projectGoalMapper.update(goal);
         // 添加完成状态变更记录
         bizChangeLogMapper.insert(createCommonChangeLog()
                 .setType(BizChangeLogTypeEnum.PROJECT.getCode())

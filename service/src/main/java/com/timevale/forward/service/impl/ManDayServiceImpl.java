@@ -95,7 +95,7 @@ public class ManDayServiceImpl implements ManDayService {
             if (project.getActualStartDate() == null) {
                 project.setActualStartDate(project.getPlanStartDate());
             }
-            if (project.getActualStartDate().after(endDate)) {
+            if (DateUtil.getStartOfDay(project.getActualStartDate()).after(endDate)) {
                 continue;
             }
             // 结束时间排除
@@ -113,7 +113,7 @@ public class ManDayServiceImpl implements ManDayService {
                 logs.stream().map(BizChangeLogDO::getCreateDate)
                         .max(Date::compareTo).ifPresent(project::setActualEndDate);
             }
-            if (project.getActualEndDate().before(startDate)) {
+            if (DateUtil.getStartOfDay(project.getActualEndDate()).before(startDate)) {
                 continue;
             }
             ManDayListVO manDayListVO = new ManDayListVO()
@@ -271,8 +271,8 @@ public class ManDayServiceImpl implements ManDayService {
                 .findFirst();
         // 校验项目时间
         setProjectActualStartAndEndDate(project);
-        AssertUtil.checkState(!project.getActualEndDate().before(startDate) &&
-                !project.getActualStartDate().after(endDate), "您提供的开始截至时间不在项目时间范围内，请修改");
+        AssertUtil.checkState(!DateUtil.getStartOfDay(project.getActualEndDate()).before(startDate) &&
+                !DateUtil.getStartOfDay(project.getActualStartDate()).after(endDate), "您提供的开始截至时间不在项目时间范围内，请修改");
         // 校验项目成员
         AssertUtil.checkState(member.isPresent(), "您提交的用户id不是该项目成员，请核对");
         // 原本不存在则新增
@@ -334,5 +334,6 @@ public class ManDayServiceImpl implements ManDayService {
                     .max(Date::compareTo).ifPresent(project::setActualEndDate);
         }
     }
+
 
 }

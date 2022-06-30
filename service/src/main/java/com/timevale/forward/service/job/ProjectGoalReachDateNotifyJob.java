@@ -49,14 +49,14 @@ public class ProjectGoalReachDateNotifyJob extends IJobHandler {
         Map<Long, ProjectDO> projectById = Maps.uniqueIndex(projects, ProjectDO::getId);
         for (ProjectGoalDO projectGoal : projectGoals) {
             ProjectDO project = projectById.get(projectGoal.getProjectId());
-            if (project != null && YesOrNoEnum.NO.getCode().equals(project.getIsWithGoal())) {
-                // 无项目目标，过滤
+            if (project == null || YesOrNoEnum.NO.getCode().equals(project.getIsWithGoal())) {
+                // 无项目或者无项目目标，过滤
                 continue;
             }
             log.info("通知项目到期: {}", projectGoal);
             erpMessageClient.sendMarkdownMsg(MarkdownMsg.builder()
                     .title(TITLE)
-                    .content(String.format(NOTIFY_PATTERN, projectGoal.getName()))
+                    .content(String.format(NOTIFY_PATTERN, project.getName()))
                     .receivers(Collections.singletonList(reachGoalReceiver)).build());
         }
         log.info("完成项目目标达成日期通知任务");
