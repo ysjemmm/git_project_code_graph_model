@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 /**
  * @Date 2022/2/28 17:00
@@ -27,4 +28,8 @@ public class BugOfflinePassSelfReq extends BaseReq {
     @ApiModelProperty("解决方案")
     @NotBlank(message = "解决方案不能为空")
     private String solvePlan;
+
+    @ApiModelProperty("预计解决完成日期")
+    @NotNull(message = "预计解决完成日期不能为空")
+    private Date expectSolveDate;
 }

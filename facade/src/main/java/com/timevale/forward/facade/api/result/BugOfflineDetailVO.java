@@ -128,4 +128,7 @@ public class BugOfflineDetailVO extends ToString {
 
     @ApiModelProperty("解决方案")
     private String solvePlan;
+
+    @ApiModelProperty("预计解决完成日期")
+    private Date expectSolveDate;
 }

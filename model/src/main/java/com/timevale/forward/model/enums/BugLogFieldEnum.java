@@ -41,6 +41,11 @@ public enum BugLogFieldEnum {
     SOLVE_PLAN("解决方案"),
 
     /**
+     * 预计解决完成日期
+     */
+    EXPECT_SOLVE_DATE("预计解决完成日期"),
+
+    /**
      * 模块
      */
     MODEL("模块")

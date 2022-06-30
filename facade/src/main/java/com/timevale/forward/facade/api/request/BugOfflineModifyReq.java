@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 /**
  * @author xingyun
@@ -31,4 +32,7 @@ public class BugOfflineModifyReq extends BugOfflineAddReq {
 
     @ApiModelProperty("解决方案")
     private String solvePlan;
+
+    @ApiModelProperty("预计解决完成日期")
+    private Date expectSolveDate;
 }

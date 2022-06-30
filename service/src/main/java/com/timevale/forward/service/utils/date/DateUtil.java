@@ -413,7 +413,7 @@ public class DateUtil implements DateFormatConst {
      * @return 日期字符串 string
      */
     public static String parseToString(Date date, DateStyle dateStyle) {
-        String dateString = null;
+        String dateString = "";
         if (dateStyle != null) {
             dateString = parseToString(date, dateStyle.getValue());
         }
