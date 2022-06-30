@@ -104,7 +104,7 @@ public class FieldCompareUtil {
                             newString = ((BigDecimal) newField.get(newObj)).setScale(scale, RoundingMode.DOWN).toString();
                         }
                         if(oldString.equals(newString)){
-                            break;
+                            continue;
                         }
                     } else if (fieldType == Date.class) {
                         oldString = DateUtil.parseToString((Date) oldField.get(oldObj), DateFormatConst.DATE_FORMAT);
