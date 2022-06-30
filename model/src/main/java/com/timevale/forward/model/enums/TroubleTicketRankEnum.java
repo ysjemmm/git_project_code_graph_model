@@ -37,7 +37,17 @@ public enum TroubleTicketRankEnum {
     /**
      * P3
      */
-    P3(30, "P3")
+    P3(30, "P3"),
+
+    /**
+     * P4
+     */
+    P4(40, "P4"),
+
+    /**
+     * P5
+     */
+    P5(50, "P5")
     ;
 
     private Integer code;
