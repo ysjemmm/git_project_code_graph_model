@@ -83,4 +83,6 @@ public class BugOnlineVO extends ToString {
     @ApiModelProperty("更新时间")
     private Date modifyDate;
 
+    @ApiModelProperty("客户名称")
+    private String customerName;
 }

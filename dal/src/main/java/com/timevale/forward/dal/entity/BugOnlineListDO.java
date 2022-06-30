@@ -65,4 +65,9 @@ public class BugOnlineListDO extends BaseDO {
      * bug所属端
      */
     private Integer belong;
+
+    /**
+     * 客户名称
+     */
+    private String customerName;
 }

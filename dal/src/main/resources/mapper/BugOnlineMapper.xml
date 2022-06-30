@@ -7,7 +7,7 @@
 
     <select id="selectListByCondition" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
         select bo.id, bo.name, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env,
-        bo.reason, bo.belong, bo.dismiss_cause,
+        bo.reason, bo.belong, bo.dismiss_cause, bo.customer_name
         bo.create_date, bo.modify_date
         from bug_online bo
         left join bug_online_product_line bopl on bo.id = bopl.bug_online_id
@@ -16,6 +16,9 @@
         <where>
             <if test="name != null and name != '' ">
                 and bo.name like concat('%',#{name},'%')
+            </if>
+            <if test="customerName!= null and customerName != '' ">
+                and bo.customer_name like concat('%',#{customerName},'%')
             </if>
             <if test="status != null and status.size() > 0">
                 and bo.status in
