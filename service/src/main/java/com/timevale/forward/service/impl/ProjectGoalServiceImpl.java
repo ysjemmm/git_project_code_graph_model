@@ -152,16 +152,6 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
             log.setCreateManId(userInfo.getId());
             log.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         }
-        if (ProjectGoalTypeEnum.QUALIFY.getCode().equals(newGoal.getType()) &&
-                ProjectGoalTypeEnum.QUANTIFY.getCode().equals(oldGoal.getType())) {
-            logs.add(createCommonChangeLog()
-                    .setType(BizChangeLogTypeEnum.PROJECT.getCode())
-                    .setField(BizChangeLogFieldEnum.GOAL_REACH_VALUE.getText())
-                    .setMainId(newGoal.getProjectId())
-                    .setIdentity(formIdentity(newGoal.getName()))
-                    .setOldValue(oldGoal.getReachValue().toPlainString())
-                    .setNewValue(CommonConstant.NULL));
-        }
         bizChangeLogMapper.batchInsert(logs);
         return BaseResult.success(true);
     }
