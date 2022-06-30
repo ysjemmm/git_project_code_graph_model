@@ -167,8 +167,6 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                 "目标只有在进行中时可以删除");
         List<ProjectGoalDO> goals = projectGoalMapper.getByProjectId(project.getId());
         goals.removeIf(g -> g.getId().equals(projectGoalId));
-        // 只有一条数据时不允许删除
-        AssertUtil.notEmpty(goals, "有目标的项目下至少需要保留一个项目目标");
         // 删除
         projectGoalMapper.delete(goal);
         if (YesOrNoEnum.YES.getCode().equals(goal.getIsMain())) {
@@ -196,6 +194,11 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                 .setNewValue(goal.getName())
                 .setAction(ButtonActionEnum.UN_LINK.getText())
         );
+        if (goals.isEmpty()) {
+            // 删除最后一条记录，变更项目是否有主目标
+            project.setIsWithGoal(YesOrNoEnum.NO.getCode());
+            projectMapper.update(project);
+        }
         return BaseResult.success(true);
     }
 
