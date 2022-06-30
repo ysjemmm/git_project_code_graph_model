@@ -209,7 +209,6 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
     @Override
     public void addLogWhenLinkOrUnlinkTrackEvent(Long id, List<String> trackEventName, String linkOrUnlink) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        //为空表示非主动点击删除按钮,赋值SYSTEM-SYSTEM
         String createMan =userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
         String createManId =userInfo.getId();
 

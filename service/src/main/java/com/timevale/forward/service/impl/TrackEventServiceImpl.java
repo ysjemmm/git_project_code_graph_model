@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.ProductDemandTrackEventCondition;
 import com.timevale.forward.dal.condition.TrackEventCondition;
 import com.timevale.forward.dal.condition.TrackEventListCondition;
 import com.timevale.forward.dal.condition.TrackPropListCondition;
@@ -19,9 +20,7 @@ import com.timevale.forward.facade.api.result.TrackEventDetailVO;
 import com.timevale.forward.facade.api.result.TrackEventVO;
 import com.timevale.forward.facade.api.result.TrackPropVO;
 import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.FileComponent;
-import com.timevale.forward.service.component.TrackEventComponent;
-import com.timevale.forward.service.component.TrackPropComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.copy.TrackPropCopier;
@@ -82,6 +81,16 @@ public class TrackEventServiceImpl implements TrackEventService {
 
     @Resource
     private TrackPropMapper trackPropMapper;
+
+    @Resource
+    private ProductDemandLogComponent productDemandLogComponent;
+
+    @Resource
+    private ProductDemandTrackEventMapper productDemandTrackEventMapper;
+
+    @Resource
+    private ProductDemandTrackEventComponent productDemandTrackEventComponent;
+
 
 
     @Override
@@ -245,6 +254,13 @@ public class TrackEventServiceImpl implements TrackEventService {
         trackEventPropDO.setTrackEventId(trackEventDeleteReq.getId());
         trackEventPropDO.setIsDeleted(true);
         trackEvenPropMapper.update(trackEventPropDO);
+
+        ProductDemandTrackEventCondition c = ProductDemandTrackEventCondition.builder().trackEventId(trackEventDeleteReq.getId()).isDeleted(false).build();
+        List<Long> productDemandIds = productDemandTrackEventMapper.select(c).stream().map(ProductDemandTrackEventDO::getProductDemandId).collect(Collectors.toList());
+        productDemandIds.forEach(a->{
+            productDemandTrackEventComponent.update(a,oldTrackEventDO.getId());
+            productDemandLogComponent.addLogWhenLinkOrUnlinkTrackEvent(a, Lists.newArrayList(oldTrackEventDO.getFullCnName()), ButtonActionEnum.UN_LINK.getText());
+        });
         return BaseResult.success(true);
     }
 

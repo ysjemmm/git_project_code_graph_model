@@ -283,7 +283,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (CollectionUtils.isNotEmpty(productDemandAddReq.getTrackEventIds())) {
             List<Long> trackEventIds = productDemandAddReq.getTrackEventIds();
             productDemandTrackEventComponent.batchInsert(productDemand.getId(), trackEventIds);
-            List<String> eventNames = trackEventMapper.selectByIds(trackEventIds).stream().map(TrackEventDO::getCnName).collect(Collectors.toList());
+            List<String> eventNames = trackEventMapper.selectByIds(trackEventIds).stream().map(TrackEventDO::getFullCnName).collect(Collectors.toList());
             productDemandLogComponent.addLogWhenLinkOrUnlinkTrackEvent(productDemand.getId(), eventNames, ButtonActionEnum.LINK.getText());
         }
         return BaseResult.success(true);
@@ -502,7 +502,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         log.info("关联or取消关联事件,参数:trackEventLinkReq={}", trackEventLinkReq);
         List<Long> trackEventIds = trackEventLinkReq.getTrackEventIds();
         Long productDemandId = trackEventLinkReq.getProductDemandId();
-        List<String> eventNames = trackEventMapper.selectByIds(trackEventIds).stream().map(TrackEventDO::getCnName).collect(Collectors.toList());
+        List<String> eventNames = trackEventMapper.selectByIds(trackEventIds).stream().map(TrackEventDO::getFullCnName).collect(Collectors.toList());
 
         if (LinkOrUnLinkEnum.LINK.getCode().equals(trackEventLinkReq.getType())) {
 
