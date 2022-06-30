@@ -17,12 +17,14 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.observer.event.BizDemandPlanReleaseDateMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandToReceiveMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -239,6 +241,47 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
         return BaseResult.success(pageQueryResult);
+    }
+
+    @Override
+    public Boolean transfer(Long id, String newReceiveMan, String newReceiveManId) {
+        // 转交：修改接收人
+        BizDemandDO bizDemandDO = bizDemandMapper.selectById(id);
+        if (bizDemandDO == null) {
+            throw new BaseBizRuntimeException("不存在该业务需求");
+        }
+
+        // 新旧接收人
+        String oldReceiveMan = bizDemandDO.getReceiveMan();
+
+        // 新旧接受人是否相同
+        if (!Objects.equals(oldReceiveMan, newReceiveMan)) {
+            // 数据变更
+            BizDemandDO newBizDemandDO = new BizDemandDO();
+            newBizDemandDO.setId(bizDemandDO.getId());
+            newBizDemandDO.setReceiveMan(newReceiveMan);
+            newBizDemandDO.setReceiveManId(newReceiveManId);
+            bizDemandMapper.update(newBizDemandDO);
+
+            // 日志记录
+            bizDemandLogComponent.addLogWhenModifyData(
+                    oldReceiveMan,
+                    newReceiveMan,
+                    bizDemandDO.getId(),
+                    BizChangeLogFieldEnum.RECEIVE_MAN.getText(),
+                    true);
+
+            // 转交人通知
+            messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
+                    this,
+                    bizDemandDO.getId(),
+                    bizDemandDO.getSubmitMan(),
+                    newReceiveManId,
+                    bizDemandDO.getName()
+            ));
+        }
+
+        return true;
     }
 
     @Override

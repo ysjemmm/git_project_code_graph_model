@@ -389,6 +389,12 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 变更日志
+        if(!Objects.equal(oldBizDemandDO.getReceiveManId(), newBizDemandDO.getReceiveManId())){
+            bizDemandComponent.transfer(bizDemandModifyReq.getId(), newBizDemandDO.getReceiveMan(), newBizDemandDO.getReceiveManId());
+            // 置空避免重复记录日志
+            oldBizDemandDO.setReceiveMan("");
+            newBizDemandDO.setReceiveMan("");
+        }
         bizDemandLogComponent.addLogWhenModifyData(oldBizDemandDO, newBizDemandDO);
 
         return BaseResult.success(true);
@@ -531,45 +537,8 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<Boolean> transfer(BizDemandTransferReq bizDemandTransferReq) {
-        // 转交：修改接收人
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandTransferReq.getId());
-        if (bizDemandDO == null) {
-            throw new BaseBizRuntimeException("不存在该业务需求");
-        }
-
-        // 新旧接收人
-        String oldReceiveMan = bizDemandDO.getReceiveMan();
-        String newReceiveMan = bizDemandTransferReq.getReceiveMan();
-        String newReceiveManId = bizDemandTransferReq.getReceiveManId();
-
-        // 新旧接受人是否相同
-        if (!Objects.equal(oldReceiveMan, newReceiveMan)) {
-            // 数据变更
-            BizDemandDO newBizDemandDO = new BizDemandDO();
-            newBizDemandDO.setId(bizDemandDO.getId());
-            newBizDemandDO.setReceiveMan(newReceiveMan);
-            newBizDemandDO.setReceiveManId(newReceiveManId);
-            bizDemandMapper.update(newBizDemandDO);
-
-            // 日志记录
-            bizDemandLogComponent.addLogWhenModifyData(
-                    oldReceiveMan,
-                    newReceiveMan,
-                    bizDemandDO.getId(),
-                    BizChangeLogFieldEnum.RECEIVE_MAN.getText(),
-                    true);
-
-            // 转交人通知
-            messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
-                    this,
-                    bizDemandDO.getId(),
-                    bizDemandDO.getSubmitMan(),
-                    newReceiveManId,
-                    bizDemandDO.getName()
-            ));
-        }
-
-        return BaseResult.success(true);
+        Boolean result = bizDemandComponent.transfer(bizDemandTransferReq.getId(), bizDemandTransferReq.getReceiveMan(), bizDemandTransferReq.getReceiveManId());
+        return BaseResult.success(result);
     }
 
     @Override

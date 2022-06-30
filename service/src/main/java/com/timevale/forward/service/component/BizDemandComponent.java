@@ -56,6 +56,16 @@ public interface BizDemandComponent {
     BaseResult<PageQueryResult<BizDemandVO>> page(BizDemandListCondition bizDemandListCondition);
 
     /**
+     * 转交
+     *
+     * @param id              id
+     * @param newReceiveMan   新接收人
+     * @param newReceiveManId 新接收人身份证
+     * @return {@link Boolean}
+     */
+    Boolean transfer(Long id, String newReceiveMan, String newReceiveManId);
+
+    /**
      *
      * @param bizDemandId bizDemandIds
      */
