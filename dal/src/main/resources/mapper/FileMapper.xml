@@ -34,6 +34,7 @@
         </set>
         <where>
             <if test="id!=null">and id = #{id}</if>
+            <if test="fildId!=null">and file_id = #{fileId}</if>
             <if test="attacheId!=null">and attache_id = #{attacheId}</if>
             <if test="type!=null">and type = #{type}</if>
         </where>
