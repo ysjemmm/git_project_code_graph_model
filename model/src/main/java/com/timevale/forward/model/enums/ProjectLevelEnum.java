@@ -11,9 +11,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ProjectLevelEnum {
 
-    COMMON(0,"普通"),
+    COMMON(0,"普通项目"),
 
-    IMPORTANT(10,"重点");
+    IMPORTANT(10,"重点项目");
 
     private Integer code;
     private String text;
