@@ -350,6 +350,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 new BugOnlineAddMsgEvent(
                         this,
                         bugOnlineDO.getName(),
+                        BugOnlinePriorityEnum.getTextByCode(bugOnlineDO.getPriority()),
                         bugOnlineDO.getOperatorId(),
                         bugOnlineDO.getId()
                 )
