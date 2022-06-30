@@ -54,4 +54,9 @@
         where a.id = #{id}
     </select>
 
+    <select id="getBizDomainId" resultType="com.timevale.forward.dal.entity.ProductLineDO">
+        select id, biz_domain_id, name, owner, owner_id,bug_online_owner_id,bug_online_owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        from product_line
+        where biz_domain_id = #{bizDomainId} and is_deleted = false
+    </select>
 </mapper>

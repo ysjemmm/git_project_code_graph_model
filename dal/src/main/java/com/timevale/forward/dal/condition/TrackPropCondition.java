@@ -1,0 +1,38 @@
+package com.timevale.forward.dal.condition;
+
+import com.timevale.mandarin.common.query.QueryBase;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.util.List;
+
+/**
+ * @author xingyun
+ * @date 2021-12-13 13:58
+ **/
+@EqualsAndHashCode(callSuper = true)
+@Data
+@Builder
+public class TrackPropCondition extends QueryBase {
+    /**
+     * id
+     */
+    private Long id;
+
+    /**
+     * cnName
+     */
+    private List<String> cnNames;
+
+    /**
+     * egName
+     */
+    private List<String> egNames;
+
+    /**
+     * status
+     */
+    private List<Integer> status;
+
+}

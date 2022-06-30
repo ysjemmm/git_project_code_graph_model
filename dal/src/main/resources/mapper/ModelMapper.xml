@@ -26,5 +26,20 @@
         </where>
     </select>
 
+    <select id="getByProductLineId" resultType="com.timevale.forward.dal.entity.ModelDO">
+        select id, product_line_id, name, owner, owner_id, is_deleted,create_man ,create_date ,modify_man ,modify_date
+        from model
+        <where>
+            <if test="productLineIds!=null and productLineIds.size()>0">
+                and product_line_id in
+                <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and is_deleted = false
+        </where>
+    </select>
+
+
 </mapper>
 

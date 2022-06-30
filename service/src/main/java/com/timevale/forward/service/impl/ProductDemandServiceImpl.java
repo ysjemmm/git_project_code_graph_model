@@ -1,36 +1,25 @@
 package com.timevale.forward.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.condition.BizDemandListCondition;
-import com.timevale.forward.dal.condition.ProductBizDemandCondition;
-import com.timevale.forward.dal.condition.ProductDemandListCondition;
-import com.timevale.forward.dal.condition.ProjectListCondition;
+import com.timevale.forward.dal.condition.*;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProductDemandService;
-import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
-import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
-import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
-import com.timevale.forward.facade.api.query.ProductDemandQueryList;
-import com.timevale.forward.facade.api.request.BatchTransferReq;
-import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
-import com.timevale.forward.facade.api.request.ProductDemandAddReq;
-import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
-import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
-import com.timevale.forward.facade.api.result.ProductDemandVO;
-import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.query.*;
+import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
+import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -106,10 +95,16 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     private ProjectLogComponent projectLogComponent;
 
     @Resource
-    private BizDemandLogComponent bizDemandLogComponent;
+    private ProductDemandTrackEventMapper productDemandTrackEventMapper;
 
     @Resource
-    private MessageEventPublisher messageEventPublisher;
+    private TrackEventComponent trackEventComponent;
+
+    @Resource
+    private ProductDemandTrackEventComponent productDemandTrackEventComponent;
+
+    @Resource
+    private TrackEventMapper trackEventMapper;
 
     private static final Integer MAX_LENGTH = 20 * 1000;
 
@@ -243,7 +238,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     public BaseResult<Boolean> add(ProductDemandAddReq productDemandAddReq) {
         log.info("产品需求新增接收参数:{}", productDemandAddReq);
 
-        if(productDemandAddReq.getName().contains(CommonConstant.BLANK)){
+        if (productDemandAddReq.getName().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("产业需求名称中请勿包含空格");
         }
 
@@ -284,6 +279,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.LINK.getText());
         }
         productDemandLogComponent.addLogWhenStatusChange(productDemand.getStatus(), productDemand.getStatus(), productDemand.getId(), ButtonActionEnum.SUBMIT.getText());
+
+        if (CollectionUtils.isNotEmpty(productDemandAddReq.getTrackEventIds())) {
+            List<Long> trackEventIds = productDemandAddReq.getTrackEventIds();
+            productDemandTrackEventComponent.batchInsert(productDemand.getId(), trackEventIds);
+            List<String> eventNames = trackEventMapper.selectByIds(trackEventIds).stream().map(TrackEventDO::getFullCnName).collect(Collectors.toList());
+            productDemandLogComponent.addLogWhenLinkOrUnlinkTrackEvent(productDemand.getId(), eventNames, ButtonActionEnum.LINK.getText());
+        }
         return BaseResult.success(true);
     }
 
@@ -385,7 +387,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> linkOrUnLinkBizDemand(ProductBizDemandLinkReq bizDemandLinkReq) {
-        log.info("关联or取消关联接收参数:bizDemandLinkReq={}", bizDemandLinkReq);
+        log.info("关联or取消关联业务需求,参数:bizDemandLinkReq={}", bizDemandLinkReq);
         List<Long> bizDemandIds = bizDemandLinkReq.getBizDemandIds();
         List<Long> productDemandIds = Lists.newArrayList(bizDemandLinkReq.getProductDemandId());
         ProductDemandDO productDemandDO = productDemandMapper.selectById(bizDemandLinkReq.getProductDemandId());
@@ -402,7 +404,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             //当前业务需求下的所有产品需求
             Long bizDemandId = bizDemandIds.get(0);
 
-            productDemandComponent.updateBizDemandStatusWhenUnlink(bizDemandId,productDemandDO.getId());
+            productDemandComponent.updateBizDemandStatusWhenUnlink(bizDemandId, productDemandDO.getId());
 
             productBizDemandComponent.update(bizDemandLinkReq.getProductDemandId(), bizDemandId);
 
@@ -478,6 +480,61 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<TrackEventVO>> matchTrackEventList(ProductDemandLinkTrackEventQueryList trackEventQueryList) {
+        log.info("产品需求-事件匹配,参数:trackEventQueryList={}", trackEventQueryList);
+        TrackEventListCondition condition = TrackEventCopier.INSTANCE.convert(trackEventQueryList);
+        if(trackEventQueryList.getProductDemandId()!=null){
+            ProductDemandTrackEventCondition c = ProductDemandTrackEventCondition.builder().productDemandId(trackEventQueryList.getProductDemandId()).isDeleted(false).build();
+            List<Long> trackEventIds = productDemandTrackEventMapper.select(c).stream().map(ProductDemandTrackEventDO::getTrackEventId).collect(Collectors.toList());
+            condition.setFilterTrackEventIds(trackEventIds);
+        }
+        condition.setStatus(Lists.newArrayList(TrackStatusEnum.REVIEWED.getCode()));
+        PageHelper.startPage(trackEventQueryList.getPageNum(), trackEventQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        return trackEventComponent.list(condition);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> linkOrUnLinkTrackEvent(ProductDemandTrackEventLinkReq trackEventLinkReq) {
+        log.info("关联or取消关联事件,参数:trackEventLinkReq={}", trackEventLinkReq);
+        List<Long> trackEventIds = trackEventLinkReq.getTrackEventIds();
+        Long productDemandId = trackEventLinkReq.getProductDemandId();
+        List<String> eventNames = trackEventMapper.selectByIds(trackEventIds).stream().map(TrackEventDO::getFullCnName).collect(Collectors.toList());
+
+        if (LinkOrUnLinkEnum.LINK.getCode().equals(trackEventLinkReq.getType())) {
+
+            productDemandTrackEventComponent.batchInsert(trackEventLinkReq.getProductDemandId(), trackEventIds);
+
+            productDemandLogComponent.addLogWhenLinkOrUnlinkTrackEvent(productDemandId, eventNames, ButtonActionEnum.LINK.getText());
+
+        } else {
+            Long trackEventId = trackEventIds.get(0);
+            productDemandTrackEventComponent.update(trackEventLinkReq.getProductDemandId(), trackEventId);
+
+            productDemandLogComponent.addLogWhenLinkOrUnlinkTrackEvent(productDemandId, eventNames, ButtonActionEnum.UN_LINK.getText());
+
+        }
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<TrackEventVO>> linkTrackEventList(ProductDemandTrackEventQueryList trackEventQueryList) {
+        log.info("产品需求-事件清单,参数:trackEventQueryList={}", trackEventQueryList);
+        PageHelper.startPage(trackEventQueryList.getPageNum(), trackEventQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        List<TrackEventDO> list = trackEventMapper.linkTrackEventList(trackEventQueryList.getProductDemandId());
+        List<TrackEventVO> trackEventVOList = TrackEventCopier.INSTANCE.convert(list);
+        trackEventVOList.forEach(a -> {
+            a.setEnvNames(EnvEnum.getTextByCode(JSONObject.parseArray(a.getEnv(), Integer.class)));
+            a.setPlatformNames(PlatformTypeEnum.getTextByCode(JSONObject.parseArray(a.getPlatform(), Integer.class)));
+        });
+        PageInfo<TrackEventDO> pageInfo = new PageInfo<>(list);
+        PageQueryResult<TrackEventVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(trackEventVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
     }
 
     private void checkDescLength(String desc) {

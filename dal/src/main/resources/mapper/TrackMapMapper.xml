@@ -1,0 +1,58 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.TrackMapMapper">
+
+    <select id="selectAllTrackMap" resultType="com.timevale.forward.dal.entity.TrackMapDO">
+        select id, parent_id, name, level, is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from track_map
+    </select>
+
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.TrackMapDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into track_map (parent_id, name, level,create_man ,create_man_id)
+        values
+        (#{parentId},#{name}, #{level},#{createMan},#{createManId})
+    </insert>
+
+    <select id="select" resultType="com.timevale.forward.dal.entity.TrackMapDO">
+        select id, parent_id, name, level, is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from track_map a
+        <where>
+            <if test="id != null">and a.id = #{id}</if>
+            <if test="parentId != null">and a.parent_id = #{parentId}</if>
+            <if test="level != null">and a.level = #{level}</if>
+            and a.is_deleted=false
+        </where>
+    </select>
+
+    <delete id="delete">
+        update track_map
+        set is_deleted = true, modify_man_id = #{modifyManId}, modify_man = #{modifyMan}
+        where id = #{id}
+    </delete>
+
+    <select id="getChildren" resultType="com.timevale.forward.dal.entity.TrackMapDO">
+        select id, parent_id, name, level, is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from track_map a
+        <where>
+            <if test="parentId!=null and parentId.size()>0">
+                and parent_id in
+                <foreach collection="parentId" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="level != null">and a.level = #{level}</if>
+            and is_deleted = false
+        </where>
+    </select>
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.TrackMapDO">
+        select id, parent_id, name, level, is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from track_map a
+        <where>
+            <if test="id != null">and a.id = #{id}</if>
+            and a.is_deleted=false
+        </where>
+    </select>
+
+</mapper>
+

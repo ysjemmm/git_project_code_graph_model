@@ -61,7 +61,9 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
         if (!Objects.equals(oldObj.getDesc(), newObj.getDesc())) {
             String oldValue = StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(oldObj.getDesc()));
             String newValue = StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(newObj.getDesc()));
-            logs.add(createLog(oldObj.getId(), BizChangeLogFieldEnum.DESC.getText(), oldValue, newValue, null));
+            if(!Objects.equals(oldValue,newValue)){
+                logs.add(createLog(oldObj.getId(), BizChangeLogFieldEnum.DESC.getText(), oldValue, newValue, null));
+            }
         }
         //类型
         List<Integer> oldTypes = JSON.parseArray(oldObj.getType(), Integer.class);
@@ -200,6 +202,31 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
             bdLog.setCreateManId(createManId);
             logs.add(bdLog);
 
+        });
+        if (CollectionUtil.isNotEmpty(logs)) {
+            bizChangeLogMapper.batchInsert(logs);
+        }
+    }
+
+    @Override
+    public void addLogWhenLinkOrUnlinkTrackEvent(Long id, List<String> trackEventName, String linkOrUnlink) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String createMan =userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
+        String createManId =userInfo.getId();
+
+        List<BizChangeLogDO> logs = new ArrayList<>();
+        trackEventName.forEach(a -> {
+            //1.产品需求记录日志:{操作人}添加/删除 {埋点事件}:{埋点事件A}
+            BizChangeLogDO pdLog = new BizChangeLogDO();
+            pdLog.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+            pdLog.setMainId(id);
+            pdLog.setField(BizChangeLogFieldEnum.TRACK_EVENT.getText());
+            pdLog.setAction(linkOrUnlink);
+            pdLog.setOldValue(a);
+            pdLog.setNewValue(a);
+            pdLog.setCreateMan(createMan);
+            pdLog.setCreateManId(createManId);
+            logs.add(pdLog);
         });
         if (CollectionUtil.isNotEmpty(logs)) {
             bizChangeLogMapper.batchInsert(logs);

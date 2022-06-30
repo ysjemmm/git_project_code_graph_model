@@ -84,6 +84,11 @@
         <mapper resource="mapper/ProjectGoalMapper.xml"/>
         <mapper resource="mapper/ManDayMapper.xml"/>
         <mapper resource="mapper/ModelMapper.xml"/>
+        <mapper resource="mapper/TrackMapMapper.xml"/>
+        <mapper resource="mapper/TrackEventMapper.xml"/>
+        <mapper resource="mapper/ProductDemandTrackEventMapper.xml"/>
+        <mapper resource="mapper/TrackEventPropMapper.xml"/>
+        <mapper resource="mapper/TrackPropMapper.xml"/>
         <mapper resource="mapper/ColumnHideMapper.xml"/>
     </mappers>
 </configuration>

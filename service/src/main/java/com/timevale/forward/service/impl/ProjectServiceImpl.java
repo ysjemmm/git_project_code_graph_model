@@ -317,6 +317,17 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 节点信息
         if (CollectionUtils.isNotEmpty(projectNodeDOList)) {
+            // 实际时间校验
+            Optional<ProjectNodeDO> startNode = projectNodeDOList.stream().filter(e -> ProjectNodeEnum.START_PLAN.getText().equals(e.getName())).findAny();
+            Optional<ProjectNodeDO> endNode = projectNodeDOList.stream().filter(e -> ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(e.getName())).findAny();
+            if(startNode.isPresent() && endNode.isPresent()){
+                Date startActualDate = startNode.get().getActualDate();
+                Date endActualDate = endNode.get().getActualDate();
+                if(startActualDate != null && endActualDate != null && startActualDate.compareTo(endActualDate) > 0){
+                    throw new BaseBizRuntimeException("您的实际结束时间早于实际开始时间，请检查后再录入");
+                }
+            }
+
             boolean match = projectNodeDOList.stream().anyMatch(e ->
                     ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(e.getName()) && e.getActualDate() != null);
             if (match && !checkProductRelease(projectModifyReq.getId())) {

@@ -22,7 +22,6 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -92,13 +91,9 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         ProductDemandDetailVO demandDetailVO = ProductDemandCopier.INSTANCE.convert(demandDO);
         demandDetailVO.setStatusName(ProductDemandStatusEnum.getTextByCode(demandDetailVO.getStatus()));
         demandDetailVO.setPriorityName(PriorityEnum.getTextByCode(demandDetailVO.getPriority()));
-        List<String> typeName = new ArrayList<>();
-        if (!StringUtils.isEmpty(demandDO.getType())) {
-            List<Integer> list = JSON.parseArray(demandDO.getType(), Integer.class);
-            list.forEach(t -> typeName.add(ProductDemandTypeEnum.getTextByCode(t)));
-            demandDetailVO.setTypes(list);
-        }
-        demandDetailVO.setTypeName(typeName);
+        List<Integer> list = JSON.parseArray(demandDO.getType(), Integer.class);
+        demandDetailVO.setTypes(list);
+        demandDetailVO.setTypeName(ProductDemandTypeEnum.getTextByCode(list));
 
         //产品线
         ProductLineDO productLineDO = productLineMapper.selectById(demandDO.getProductLineId());

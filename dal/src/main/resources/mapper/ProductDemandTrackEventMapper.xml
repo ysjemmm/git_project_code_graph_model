@@ -1,0 +1,47 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.ProductDemandTrackEventMapper">
+
+    <select id="select" resultType="com.timevale.forward.dal.entity.ProductDemandTrackEventDO">
+        select id, product_demand_id, track_event_id, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        from product_demand_track_event
+        <where>
+            <if test="id!=null">
+                and id = #{id}
+            </if>
+            <if test="productDemandId!=null">
+                and product_demand_id = #{productDemandId}
+            </if>
+            <if test="trackEventId!=null">
+                and track_event_id = #{trackEventId}
+            </if>
+            <if test="isDeleted!=null">
+                and is_deleted = #{isDeleted}
+            </if>
+        </where>
+    </select>
+
+
+    <update id="update" parameterType="com.timevale.forward.dal.entity.ProductDemandTrackEventDO">
+        update product_demand_track_event
+        <set>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            <if test="productDemandId!=null">and product_demand_id = #{productDemandId}</if>
+            <if test="trackEventId!=null">and track_event_id = #{trackEventId}</if>
+            and is_deleted=false
+        </where>
+    </update>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into product_demand_track_event (product_demand_id,track_event_id,create_man_id, create_man)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.productDemandId}, #{i.trackEventId}, #{createManId},#{createMan})
+        </foreach>
+    </insert>
+
+</mapper>

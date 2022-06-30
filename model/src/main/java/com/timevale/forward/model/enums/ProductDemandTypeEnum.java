@@ -2,6 +2,9 @@ package com.timevale.forward.model.enums;
 
 import lombok.Getter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author: xingyun
  * @create: 2021-12-17 11:10
@@ -19,7 +22,9 @@ public enum ProductDemandTypeEnum {
 
     TECH_DEMAND(3,"技术需求"),
 
-    SECURITY_DEMAND(4,"安全需求");
+    SECURITY_DEMAND(4,"安全需求"),
+
+    TRACK_DEMAND(5,"埋点需求");
 
 
     final private Integer code;
@@ -36,6 +41,14 @@ public enum ProductDemandTypeEnum {
                 return e.text;
             }
         }
-        return "errorCode";
+        return "";
+    }
+
+    public static List<String> getTextByCode(List<Integer> codes){
+        List<String>result=new ArrayList<>();
+        codes.forEach(a->{
+            result.add(getTextByCode(a));
+        });
+        return result;
     }
 }

@@ -27,7 +27,9 @@ public enum FileTypeEnum {
     // 故障单
     TROUBLE_TICKET(8),
     // 详设评审
-    TECH_REVIEW(9)
+    TECH_REVIEW(9),
+    // 埋点事件
+    TRACK_EVENT(10)
     ;
 
     private Integer code;

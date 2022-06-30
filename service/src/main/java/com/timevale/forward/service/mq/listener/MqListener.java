@@ -1,16 +1,22 @@
 package com.timevale.forward.service.mq.listener;
 
 import com.alibaba.fastjson.JSON;
-import com.timevale.forward.service.component.ProjectFlowComponent;
+import com.timevale.forward.model.enums.MessageTagEnum;
 import com.timevale.forward.service.mq.dto.WorkflowBody;
+import com.timevale.forward.service.mq.handler.AbstractMessageHandler;
+import com.timevale.forward.service.mq.handler.ProjectFlowMessageHandler;
+import com.timevale.forward.service.mq.handler.TrackEventMessageHandler;
 import com.timevale.framework.mq.client.consumer.Listener;
 import com.timevale.framework.mq.client.consumer.ReceiveResult;
 import com.timevale.framework.mq.client.producer.Msg;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xingyun
@@ -21,7 +27,19 @@ import java.util.List;
 public class MqListener implements Listener {
 
     @Resource
-    private ProjectFlowComponent projectFlowComponent;
+    private ProjectFlowMessageHandler projectFlowMessageHandler;
+
+    @Resource
+    private TrackEventMessageHandler trackEventMessageHandler;
+
+    public static Map<String, AbstractMessageHandler> MESSAGE_HANDLER_MAP = new HashMap<>();
+
+    @PostConstruct
+    public void init() {
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TECHREVIEW.getText(), projectFlowMessageHandler);
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TRACKEVENTREVIEW.getText(), trackEventMessageHandler);
+    }
+
 
     @Override
     public ReceiveResult receive(List<Msg> list) {
@@ -30,13 +48,18 @@ public class MqListener implements Listener {
             String message = new String(msg.getBody());
             log.info("收到消息, msgId={}, message={}", msgId, message);
 
+            WorkflowBody body = JSON.parseObject(message, WorkflowBody.class);
             try {
-                WorkflowBody body = JSON.parseObject(message, WorkflowBody.class);
                 log.info("body: {}", JSON.toJSONString(body));
-                projectFlowComponent.updateFlowInfo(body.getProcessInstanceId());
-                log.info("消费完成");
+                AbstractMessageHandler messageHandler = MESSAGE_HANDLER_MAP.get(body.getProcessDefinitionType());
+                if (messageHandler == null) {
+                    log.info("找不到消息处理器,message={}", message);
+                    return ReceiveResult.success();
+                }
+                messageHandler.handMessage(body.getProcessInstanceId());
+                log.info("消费完成,{}",body.getProcessDefinitionType());
             } catch (Exception e) {
-                log.warn("消费失败", e);
+                log.error("消费失败,流程类型={},错误信息={},{}",body.getProcessDefinitionType(),e.getMessage(),e);
             }
         }
         return ReceiveResult.success();

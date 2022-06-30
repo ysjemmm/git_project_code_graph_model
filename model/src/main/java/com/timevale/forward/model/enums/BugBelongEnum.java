@@ -39,8 +39,7 @@ public enum BugBelongEnum {
     /**
      * h5
      */
-    H5(5,"H5")
-    ;
+    H5(5,"H5");
 
     private final Integer code;
     private final String text;

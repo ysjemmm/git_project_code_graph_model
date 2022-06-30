@@ -4,6 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.FileMapper;
 import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.facade.api.client.FileService;
+import com.timevale.forward.facade.api.query.FileQueryList;
 import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.facade.api.result.FileVO;
 import com.timevale.forward.service.component.FileComponent;
@@ -48,6 +49,12 @@ public class FileServiceImpl implements FileService {
     public BaseResult<List<FileVO>> getFiles() {
         // 获取页面图片信息,非附件
         List<FileDO> list = fileComponent.select(0L, null);
+        return BaseResult.success(FileCopier.INSTANCE.transform(list));
+    }
+
+    @Override
+    public BaseResult<List<FileVO>> listFiles(FileQueryList fileQueryList) {
+        List<FileDO> list = fileComponent.select(fileQueryList.getAttachId(), fileQueryList.getType());
         return BaseResult.success(FileCopier.INSTANCE.transform(list));
     }
 

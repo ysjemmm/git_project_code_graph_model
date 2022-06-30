@@ -14,7 +14,6 @@ import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
-import com.timevale.forward.service.component.ProjectLogComponent;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.lowcode.support.response.task.TaskHandleUserResponse;
@@ -51,9 +50,6 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
 
     @Resource
     private ProjectMapper projectMapper;
-
-    @Resource
-    private ProjectLogComponent projectLogComponent;
 
     @Override
     public void updateFlowInfo(String processInstanceId) {
