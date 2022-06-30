@@ -250,11 +250,9 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         AssertUtil.checkState(ProjectGoalStatusEnum.IN_PROGRESS.getCode().equals(goal.getStatus()),
                 "目标只有在进行中时可以填写完成情况");
         // 更新目标
-        ProjectGoalDO updateCond = new ProjectGoalDO();
-        updateCond.setId(projectGoalFinishReq.getId());
-        updateCond.setStatus(projectGoalFinishReq.getStatus());
-        updateCond.setCompleteNote(projectGoalFinishReq.getCompleteNote());
-        projectGoalMapper.update(updateCond);
+        goal.setStatus(projectGoalFinishReq.getStatus());
+        goal.setCompleteNote(projectGoalFinishReq.getCompleteNote());
+        projectGoalMapper.update(goal);
         // 添加完成状态变更记录
         bizChangeLogMapper.insert(createCommonChangeLog()
                 .setType(BizChangeLogTypeEnum.PROJECT.getCode())
