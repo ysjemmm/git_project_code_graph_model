@@ -92,6 +92,11 @@ public class FieldCompareUtil {
                         oldString = (String) oldField.get(oldObj);
                         newString = (String) newField.get(newObj);
                     } else if (fieldType == BigDecimal.class) {
+                        if (oldValue != null && newValue != null) {
+                            if (((BigDecimal) oldValue).compareTo((BigDecimal) newValue) == 0) {
+                                continue;
+                            }
+                        }
                         int scale = annotation.scale();
                         if (oldValue == null) {
                             oldString = CommonConstant.NULL;
@@ -102,9 +107,6 @@ public class FieldCompareUtil {
                             newString = CommonConstant.NULL;
                         } else {
                             newString = ((BigDecimal) newField.get(newObj)).setScale(scale, RoundingMode.DOWN).toString();
-                        }
-                        if(oldString.equals(newString)){
-                            continue;
                         }
                     } else if (fieldType == Date.class) {
                         oldString = DateUtil.parseToString((Date) oldField.get(oldObj), DateFormatConst.DATE_FORMAT);
