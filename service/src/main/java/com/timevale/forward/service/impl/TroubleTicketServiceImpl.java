@@ -13,10 +13,7 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TroubleTicketService;
 import com.timevale.forward.facade.api.query.TroubleTicketQueryList;
 import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.FileVO;
-import com.timevale.forward.facade.api.result.PersonVO;
-import com.timevale.forward.facade.api.result.TroubleTicketDetailVO;
-import com.timevale.forward.facade.api.result.TroubleTicketVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.FileComponent;
@@ -37,6 +34,7 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -233,12 +231,28 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         boolean contain = troubleTicketCondition.getTroubleRankList().contains(TroubleTicketRankEnum.UN_CERTAIN.getCode());
         troubleTicketCondition.setTroubleRankIsNull(contain);
 
+        Map<Long, GroupResponse> deptNodeMap = null;
+        Set<Long> queryDeptIdSet = Sets.newHashSet(troubleTicketCondition.getDutyTeamList());
+
+        // 如果查询条件有部门id，收集子部门id及所需部门的完整名
+        if (CollectionUtils.isNotEmpty(queryDeptIdSet)) {
+            deptNodeMap = bizDemandComponent.getGroupListTreeMap(new ArrayList<>(queryDeptIdSet));
+            // 替换查询部门id条件
+            troubleTicketCondition.setDutyTeamList(Lists.newArrayList(deptNodeMap.keySet()));
+        }
+
         // 分页查询
         PageHelper.startPage(troubleTicketQueryList.pageNum, troubleTicketQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
         List<TroubleTicketListDO> troubleTicketDOList = troubleTicketMapper.selectList(troubleTicketCondition);
 
         if(CollectionUtils.isEmpty(troubleTicketDOList)){
             return BaseResult.success(ResultUtil.pageEmpty());
+        }
+
+        // 如果查询条件没有部门id，收集完整名
+        if (CollectionUtils.isEmpty(queryDeptIdSet)) {
+            queryDeptIdSet.addAll(troubleTicketDOList.stream().map(TroubleTicketListDO::getDutyTeam).collect(Collectors.toList()));
+            deptNodeMap = bizDemandComponent.getGroupListTreeMap(Lists.newArrayList(queryDeptIdSet));
         }
 
         // 结果集转换
@@ -256,15 +270,20 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         // 描述数据填充
         List<Long> dutyTeamIdList = troubleTicketVOList.stream().map(TroubleTicketVO::getDutyTeam).filter(Objects::nonNull).collect(Collectors.toList());
         Map<Long, GroupResponse> groupListTreeMap = bizDemandComponent.getGroupListTreeMap(dutyTeamIdList);
-        troubleTicketVOList.forEach(e -> {
+
+        for (TroubleTicketVO e : troubleTicketVOList) {
             e.setIsMonitorDetectText(YesOrNoEnum.getTextByCode(e.getIsMonitorDetect()));
             e.setTroubleRankName(TroubleTicketRankEnum.getTextByCode(e.getTroubleRank()));
-            if(e.getDutyTeam() != null){
-                e.setDutyTeamName(groupListTreeMap.get(e.getDutyTeam()).getGroupName());
-            }else{
+
+            GroupResponse response = deptNodeMap.get(e.getDutyTeam());
+            if (response == null) {
                 e.setDutyTeamName("");
+                log.info("没有找到部门,id为:{}", e.getDutyTeam());
+            } else {
+                e.setDutyTeamName(response.getGroupName());
+                e.setDutyTeamFlag(response.getDeleteFlag());
             }
-        });
+        }
 
         // 返回分页数据
         PageInfo<TroubleTicketListDO> pageInfo = new PageInfo<>(troubleTicketDOList);
