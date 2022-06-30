@@ -168,7 +168,31 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         List<ProjectGoalDO> goals = projectGoalMapper.getByProjectId(project.getId());
         goals.removeIf(g -> g.getId().equals(projectGoalId));
         // 删除
+        // 插入取消关联记录
+        bizChangeLogMapper.insert(createCommonChangeLog()
+                .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                .setField(BizChangeLogFieldEnum.PROJECT_GOAL.getText())
+                .setMainId(goal.getProjectId())
+                .setIdentity(formIdentity(goal.getName()))
+                .setOldValue(goal.getName())
+                .setNewValue(goal.getName())
+                .setAction(ButtonActionEnum.UN_LINK.getText())
+        );
         projectGoalMapper.delete(goal);
+        if (goals.isEmpty()) {
+            // 删除最后一条记录，变更项目是否有主目标
+            project.setIsWithGoal(YesOrNoEnum.NO.getCode());
+            projectMapper.update(project);
+            // 插入是否有主目标变更记录
+            bizChangeLogMapper.insert(createCommonChangeLog()
+                    .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                    .setField(BizChangeLogFieldEnum.WITH_GOAL.getText())
+                    .setMainId(goal.getProjectId())
+                    .setOldValue(YesOrNoEnum.YES.getText())
+                    .setNewValue(YesOrNoEnum.NO.getText())
+            );
+            return BaseResult.success(true);
+        }
         if (YesOrNoEnum.YES.getCode().equals(goal.getIsMain())) {
             // 如果是删除主目标，重新设置一个主目标
             ProjectGoalDO newMainGoal = goals.get(0);
@@ -183,21 +207,6 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
                     .setNewValue(YesOrNoEnum.YES.getText())
             );
             projectGoalMapper.update(newMainGoal);
-        }
-        // 插入取消关联记录
-        bizChangeLogMapper.insert(createCommonChangeLog()
-                .setType(BizChangeLogTypeEnum.PROJECT.getCode())
-                .setField(BizChangeLogFieldEnum.PROJECT_GOAL.getText())
-                .setMainId(goal.getProjectId())
-                .setIdentity(formIdentity(goal.getName()))
-                .setOldValue(goal.getName())
-                .setNewValue(goal.getName())
-                .setAction(ButtonActionEnum.UN_LINK.getText())
-        );
-        if (goals.isEmpty()) {
-            // 删除最后一条记录，变更项目是否有主目标
-            project.setIsWithGoal(YesOrNoEnum.NO.getCode());
-            projectMapper.update(project);
         }
         return BaseResult.success(true);
     }
