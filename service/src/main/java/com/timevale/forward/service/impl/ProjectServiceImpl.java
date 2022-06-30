@@ -31,6 +31,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -396,6 +398,9 @@ public class ProjectServiceImpl implements ProjectService {
             logs.stream().map(BizChangeLogDO::getCreateDate)
                     .max(Date::compareTo).ifPresent(projectDetailVO::setSuspendDate);
         }
+
+        BigDecimal resourceAssessment = projectDetailVO.getResourceAssessment();
+        projectDetailVO.setResourceAssessment(resourceAssessment.setScale(2, RoundingMode.DOWN));
         return BaseResult.success(projectDetailVO);
     }
 
