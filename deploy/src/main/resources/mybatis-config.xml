@@ -87,5 +87,7 @@
         <mapper resource="mapper/ProductDemandTrackEventMapper.xml"/>
         <mapper resource="mapper/TrackEventPropMapper.xml"/>
         <mapper resource="mapper/TrackPropMapper.xml"/>
+        <mapper resource="mapper/ProductDemandDescFlowMapper.xml" />
+        <mapper resource="mapper/ProductDemandDescRecordMapper.xml" />
     </mappers>
 </configuration>
