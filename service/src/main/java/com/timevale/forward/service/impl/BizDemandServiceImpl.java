@@ -1,7 +1,6 @@
 package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
-import com.google.common.base.Functions;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
@@ -39,7 +38,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -192,14 +190,19 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 查询并转换
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(condition);
-        Map<String, List<BizDemandListDO>> bizDemandListDOMap = bizDemandListDOList.stream().collect(Collectors.groupingBy(BizDemandListDO::getProductLineName));
+        Map<String, List<BizDemandListDO>> bizDemandListDOMap = bizDemandListDOList.stream().collect(Collectors.groupingBy(BizDemandListDO::getProductLineId));
+        log.info("业务查询产品线分析：{}", bizDemandListDOMap);
 
         List<BizDemandProductLineVO> result = new ArrayList<>();
         bizDemandListDOMap.forEach((k,v) -> {
             BizDemandProductLineVO bizDemandProductLineVO = new BizDemandProductLineVO();
-            bizDemandProductLineVO.setName(k);
-            bizDemandProductLineVO.setCount(v.size());
-            result.add(bizDemandProductLineVO);
+            Optional<BizDemandListDO> any = v.stream().findAny();
+            any.ifPresent(e -> {
+                bizDemandProductLineVO.setCount(v.size());
+                bizDemandProductLineVO.setProductLineId(e.getProductLineId());
+                bizDemandProductLineVO.setProductLineName(e.getProductLineName());
+                result.add(bizDemandProductLineVO);
+            });
         });
 
         return BaseResult.success(result);

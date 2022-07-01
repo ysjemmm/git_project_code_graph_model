@@ -15,8 +15,11 @@ import lombok.EqualsAndHashCode;
 @ApiModel("业务需求-产品线-信息")
 public class BizDemandProductLineVO extends ToString {
 
+    @ApiModelProperty("产品线id")
+    private String productLineId;
+
     @ApiModelProperty("产品线名称")
-    private String name;
+    private String productLineName;
 
     @ApiModelProperty("数量")
     private Integer count;
