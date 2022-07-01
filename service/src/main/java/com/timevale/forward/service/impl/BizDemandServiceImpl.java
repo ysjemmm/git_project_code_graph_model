@@ -434,8 +434,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<FileAddReq> fileIdList = bizDemandModifyReq.getFileList();
         fileComponent.update(fileIdList, bizDemandModifyReq.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
 
-
-        // 产品线变更带来的接收人变更
+        // 接收人变更
         if (!Objects.equal(oldBizDemandDO.getReceiveManId(), newBizDemandDO.getReceiveManId())) {
             messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
                     this,
@@ -459,12 +458,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 变更日志
-        if(!Objects.equal(oldBizDemandDO.getReceiveManId(), newBizDemandDO.getReceiveManId())){
-            bizDemandComponent.transfer(bizDemandModifyReq.getId(), newBizDemandDO.getReceiveMan(), newBizDemandDO.getReceiveManId());
-            // 置空避免重复记录日志
-            oldBizDemandDO.setReceiveMan("");
-            newBizDemandDO.setReceiveMan("");
-        }
         bizDemandLogComponent.addLogWhenModifyData(oldBizDemandDO, newBizDemandDO);
 
         return BaseResult.success(true);
