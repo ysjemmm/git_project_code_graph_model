@@ -12,4 +12,10 @@
           and is_deleted = false
         order by id desc
     </select>
+    <select id="countByProductDemandId" resultType="java.lang.Integer">
+        select count(*)
+        from product_demand_desc_record
+        where product_demand_id = #{productDemandId}
+          and is_deleted = false
+    </select>
 </mapper>
