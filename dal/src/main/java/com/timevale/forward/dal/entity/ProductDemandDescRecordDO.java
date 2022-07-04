@@ -28,14 +28,4 @@ public class ProductDemandDescRecordDO extends BaseDO {
      */
     private String desc;
 
-    /**
-     * 操作人id
-     */
-    private String operatorId;
-
-    /**
-     * 操作人
-     */
-    private String operator;
-
 }

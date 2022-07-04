@@ -4,7 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProductDemandDescFlowMapper;
 import com.timevale.forward.dal.entity.ProductDemandDescFlowDO;
 import com.timevale.forward.facade.api.client.ProductDemandDescFlowService;
-import com.timevale.forward.facade.api.query.ProductDemandDescFlowVO;
+import com.timevale.forward.facade.api.result.ProductDemandDescFlowVO;
 import com.timevale.forward.service.copy.ProductDemandDescFlowCopier;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.timevale.forward.facade.api.query;
+package com.timevale.forward.facade.api.result;
 
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModelProperty;

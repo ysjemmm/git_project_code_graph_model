@@ -5,4 +5,11 @@
 <mapper namespace="com.timevale.forward.dal.dao.ProductDemandDescRecordMapper">
 
 
+    <select id="listByProductDemandId" resultType="com.timevale.forward.dal.entity.ProductDemandDescRecordDO">
+        select *
+        from product_demand_desc_record
+        where product_demand_id = #{productDemandId}
+          and is_deleted = false
+        order by id desc
+    </select>
 </mapper>

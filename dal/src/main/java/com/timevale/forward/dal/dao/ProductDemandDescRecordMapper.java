@@ -1,5 +1,10 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.entity.ProductDemandDescRecordDO;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+
 /**
 * @author jingchun
 * description 针对表【product_demand_desc_record(产品需求描述记录表)】的数据库操作Mapper
@@ -8,6 +13,7 @@ package com.timevale.forward.dal.dao;
 */
 public interface ProductDemandDescRecordMapper {
 
+    List<ProductDemandDescRecordDO> listByProductDemandId(@Param("productDemandId") Long productDemandId);
 }
 
 

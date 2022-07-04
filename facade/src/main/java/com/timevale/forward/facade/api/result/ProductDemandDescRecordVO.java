@@ -27,9 +27,9 @@ public class ProductDemandDescRecordVO extends ToString {
     private String desc;
 
     @ApiModelProperty("操作人id")
-    private String operatorId;
+    private String createManId;
 
     @ApiModelProperty("操作人")
-    private String operator;
+    private String createMan;
 
 }

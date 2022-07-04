@@ -1,7 +1,7 @@
 package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.entity.ProductDemandDescFlowDO;
-import com.timevale.forward.facade.api.query.ProductDemandDescFlowVO;
+import com.timevale.forward.facade.api.result.ProductDemandDescFlowVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
