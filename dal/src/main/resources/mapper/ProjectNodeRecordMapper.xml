@@ -1,0 +1,21 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.ProjectNodeRecordMapper">
+
+
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectNodeRecordDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into project_node_record (project_id, name, plan_date,version,create_man ,create_man_id)
+        values
+        (#{projectId},#{name},#{planDate},#{version},#{createMan},#{createManId})
+    </insert>
+
+    <select id="list" resultType="com.timevale.forward.dal.entity.ProjectNodeRecordDO">
+        select id,project_id, name, plan_date,version,create_man ,create_man_id,modify_man_id,modify_man,create_date,modify_date
+        from project_node_record
+        <where>
+            <if test="projectId != null">and project_id = #{projectId}</if>
+            and is_deleted=false
+        </where>
+    </select>
+</mapper>
+

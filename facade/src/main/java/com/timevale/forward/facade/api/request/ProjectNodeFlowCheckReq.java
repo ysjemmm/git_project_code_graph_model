@@ -14,18 +14,14 @@ import java.util.List;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("项目修改")
-public class ProjectModifyReq extends ProjectAddReq {
-    
-    @ApiModelProperty("id")
-    @NotNull(message = "项目id不能为空")
-    private Long id;
+@ApiModel("项目节点延期检查")
+public class ProjectNodeFlowCheckReq extends BaseReq {
 
-    @ApiModelProperty("节点")
+    @ApiModelProperty("项目节点")
     @NotNull(message = "项目节点不能为空")
-    private List<ProjectNodeAddReq> projectNodes;
+    private List<ProjectNodeAddReq> projectNodeAddReq;
 
-    @ApiModelProperty("节点审批流程")
-    private ProjectNodeFlowAddReq projectNodeFlowAddReq;
-
+    @ApiModelProperty("项目节点")
+    @NotNull(message = "项目节点不能为空")
+    private Long projectId;
 }

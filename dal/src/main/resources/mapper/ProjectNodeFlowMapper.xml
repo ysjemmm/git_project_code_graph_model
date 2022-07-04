@@ -1,0 +1,52 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.ProjectNodeFlowMapper">
+
+
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectNodeFlowDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into project_node_flow (project_id, flow_id, last_flow_id,status,stage,reason,pd_id,pd,biz_id,biz,po_id,po,d_id,d
+        ,publish_date,change_publish_date,delay_day,unreviewed_id,unreviewed,review_fail_id,review_fail,review_fail_reason,create_man ,create_man_id)
+        values
+        (#{projectId},#{flowId}, #{lastFlowId},#{status},#{stage},#{reason},#{pdId},#{pd},#{bizId},#{biz},#{poId},#{po},#{did},#{d}
+        ,#{publishDate},#{changePublishDate},#{delayDay},#{unreviewedId},#{unreviewed},#{reviewFailId},#{reviewFail},#{reviewFailReason},#{createMan},#{createManId})
+    </insert>
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.ProjectNodeFlowDO">
+        select id,project_id, flow_id, last_flow_id,status,stage,reason,pd_id,pd,biz_id,biz,po_id,po,d_id,d
+        ,publish_date,change_publish_date,delay_day,unreviewed_id,unreviewed,review_fail_id,review_fail,review_fail_reason
+        ,create_man ,create_man_id,modify_man_id,modify_man,create_date,modify_date
+        from project_node_flow
+        <where>
+            <if test="id != null"> id = #{id}</if>
+            <if test="flowId != null">and flow_id = #{flowId}</if>
+            and is_deleted=false
+        </where>
+    </select>
+
+    <update id="update" parameterType="com.timevale.forward.dal.entity.ProjectNodeFlowDO">
+        update project_node_flow
+        <set>
+            <if test="unreviewedId != null">unreviewed_id = #{unreviewedId},</if>
+            <if test="unreviewed != null">unreviewed = #{unreviewed},</if>
+            <if test="reviewFailId != null">review_fail_id = #{reviewFailId},</if>
+            <if test="reviewFail != null">review_fail = #{reviewFail},</if>
+            <if test="reviewFailReason != null">review_fail_reason = #{reviewFailReason},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ProjectNodeFlowDO">
+        select id,project_id, flow_id, last_flow_id,status,stage,reason,pd_id,pd,biz_id,biz,po_id,po,d_id,d
+        ,publish_date,change_publish_date,delay_day,unreviewed_id,unreviewed,review_fail_id,review_fail,review_fail_reason
+        ,create_man ,create_man_id,modify_man_id,modify_man,create_date,modify_date
+        from project_node_flow
+        where project_id = #{projectId} and is_deleted=false
+    </select>
+
+</mapper>
+
