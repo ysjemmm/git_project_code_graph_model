@@ -52,6 +52,11 @@ public class ProductDemandDescFlowDO extends BaseDO {
     private String reason;
 
     /**
+     * 评审不通过原因
+     */
+    private String reviewFailReason;
+
+    /**
      * 项目经理id
      */
     private String pmId;

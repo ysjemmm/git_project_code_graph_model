@@ -29,12 +29,12 @@ public class ProductDemandDescRecordDO extends BaseDO {
     private String desc;
 
     /**
-     * 审批通过操作人id
+     * 操作人id
      */
     private String operatorId;
 
     /**
-     * 审批通过操作人
+     * 操作人
      */
     private String operator;
 
