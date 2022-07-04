@@ -21,7 +21,7 @@ public class ProjectNodeFlowCheckReq extends BaseReq {
     @NotNull(message = "项目节点不能为空")
     private List<ProjectNodeAddReq> projectNodeAddReq;
 
-    @ApiModelProperty("项目节点")
-    @NotNull(message = "项目节点不能为空")
+    @ApiModelProperty("项目id")
+    @NotNull(message = "项目id不能为空")
     private Long projectId;
 }

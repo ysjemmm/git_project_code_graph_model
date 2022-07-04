@@ -77,7 +77,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<String> withdraw(ProjectNodeFlowModifyReq projectNodeFlowModifyReq) {
+    public BaseResult<Boolean> withdraw(ProjectNodeFlowModifyReq projectNodeFlowModifyReq) {
         log.info("节点审批流程撤销,参数:{}", projectNodeFlowModifyReq);
         String flowId = projectNodeFlowModifyReq.getFlowId();
         ProjectNodeFlowDO projectNodeFlowDO = projectNodeFlowMapper.get(null, flowId);

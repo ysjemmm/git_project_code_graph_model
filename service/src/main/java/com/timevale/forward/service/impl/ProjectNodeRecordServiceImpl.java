@@ -34,7 +34,7 @@ public class ProjectNodeRecordServiceImpl implements ProjectNodeRecordService {
     }
 
     @Override
-    public BaseResult<List<ProjectNodeRecordCompareVO>> list(ProjectNodeRecordQuery projectNodeRecordQuery) {
+    public BaseResult<List<ProjectNodeRecordCompareVO>> compare(ProjectNodeRecordQuery projectNodeRecordQuery) {
         ProjectNodeRecordCompareVO vo=new ProjectNodeRecordCompareVO();
         log.info("节点版本比较,参数:{}", projectNodeRecordQuery);
         return BaseResult.success(Lists.newArrayList(vo));

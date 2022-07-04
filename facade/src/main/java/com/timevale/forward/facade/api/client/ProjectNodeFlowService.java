@@ -30,7 +30,7 @@ public interface ProjectNodeFlowService {
      * @param projectNodeFlowModifyReq projectNodeFlowModifyReq
      * @return Boolean
      */
-    BaseResult<String> withdraw(ProjectNodeFlowModifyReq projectNodeFlowModifyReq);
+    BaseResult<Boolean> withdraw(ProjectNodeFlowModifyReq projectNodeFlowModifyReq);
 
     /**
      * 修改

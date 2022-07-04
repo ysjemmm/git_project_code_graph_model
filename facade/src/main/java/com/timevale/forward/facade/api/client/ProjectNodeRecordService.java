@@ -29,6 +29,6 @@ public interface ProjectNodeRecordService {
      * @param projectNodeRecordQuery projectNodeRecordQuery
      * @return 项目节点记录列表
      */
-    BaseResult<List<ProjectNodeRecordCompareVO>> list(ProjectNodeRecordQuery projectNodeRecordQuery);
+    BaseResult<List<ProjectNodeRecordCompareVO>> compare(ProjectNodeRecordQuery projectNodeRecordQuery);
 
 }
