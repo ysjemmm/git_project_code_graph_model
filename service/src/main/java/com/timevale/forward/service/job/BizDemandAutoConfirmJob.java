@@ -24,6 +24,8 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -61,6 +63,14 @@ public class BizDemandAutoConfirmJob extends IJobHandler {
             bizChangeLogDOList = bizChangeLogMapper.listAllByActions(bizDemandIdList,
                     BizChangeLogTypeEnum.BIZ_DEMAND.getCode(),
                     Lists.newArrayList(ButtonActionEnum.COMPLETED_NOT_DEV.getText()));
+
+            // 分类取最后一条
+            Map<String, BizChangeLogDO> bizChangeLogDOMap = bizChangeLogDOList.stream()
+                    .collect(Collectors.toMap(
+                            e -> e.getMainId() + "-" + e.getType(),
+                            Function.identity(),
+                            (a, b) -> a.getCreateDate().compareTo(b.getCreateDate()) >= 0 ? a : b));
+            bizChangeLogDOList = new ArrayList<>(bizChangeLogDOMap.values());
         }
 
         // 找出超出自动确认时间的，默认为7天
