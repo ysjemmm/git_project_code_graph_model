@@ -411,7 +411,9 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         BigDecimal resourceAssessment = projectDetailVO.getResourceAssessment();
-        projectDetailVO.setResourceAssessment(resourceAssessment.setScale(2, RoundingMode.DOWN));
+        if(resourceAssessment != null){
+            projectDetailVO.setResourceAssessment(resourceAssessment.setScale(2, RoundingMode.DOWN));
+        }
         return BaseResult.success(projectDetailVO);
     }
 
