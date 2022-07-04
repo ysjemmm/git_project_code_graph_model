@@ -16,7 +16,7 @@ import com.timevale.forward.facade.api.query.TrackPropQueryList;
 import com.timevale.forward.facade.api.request.TrackPropDeleteReq;
 import com.timevale.forward.facade.api.request.TrackPropModifyReq;
 import com.timevale.forward.facade.api.result.TrackPropVO;
-import com.timevale.forward.model.enums.TrackStatusEnum;
+import com.timevale.forward.model.enums.FlowStatusEnum;
 import com.timevale.forward.service.component.TrackPropComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TrackPropCopier;
@@ -58,7 +58,7 @@ public class TrackPropServiceImpl implements TrackPropService {
         log.info("埋点属性列表,参数:{}", trackPropQueryList);
         TrackPropListCondition condition = TrackPropCopier.INSTANCE.convert(trackPropQueryList);
         if (CollectionUtils.isEmpty(trackPropQueryList.getStatus())) {
-            List<Integer> status = Lists.newArrayList(TrackStatusEnum.REVIEWING.getCode(), TrackStatusEnum.REVIEWED.getCode());
+            List<Integer> status = Lists.newArrayList(FlowStatusEnum.AUDITING.getCode(), FlowStatusEnum.COMPLETE.getCode());
             condition.setStatus(status);
         }
         PageHelper.startPage(trackPropQueryList.getPageNum(), trackPropQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
@@ -70,7 +70,7 @@ public class TrackPropServiceImpl implements TrackPropService {
         log.info("埋点属性修改,参数:{}", trackPropModifyReq);
         TrackPropCondition c = TrackPropCondition.builder().id(trackPropModifyReq.getId()).build();
         TrackPropDO trackPropDO = trackPropMapper.select(c).get(0);
-        if (!TrackStatusEnum.REVIEWED.getCode().equals(trackPropDO.getStatus())) {
+        if (!FlowStatusEnum.COMPLETE.getCode().equals(trackPropDO.getStatus())) {
             throw new BaseBizRuntimeException("状态审核通过时,才能编辑");
         }
         c = TrackPropCondition.builder().cnNames(Lists.newArrayList(trackPropModifyReq.getCnName())).build();
@@ -90,7 +90,7 @@ public class TrackPropServiceImpl implements TrackPropService {
         log.info("埋点属性删除,参数:{}", trackPropDeleteReq);
         TrackPropCondition c = TrackPropCondition.builder().id(trackPropDeleteReq.getId()).build();
         TrackPropDO trackPropDO = trackPropMapper.select(c).get(0);
-        if (!TrackStatusEnum.REVIEWED.getCode().equals(trackPropDO.getStatus())) {
+        if (!FlowStatusEnum.COMPLETE.getCode().equals(trackPropDO.getStatus())) {
             throw new BaseBizRuntimeException("状态审核通过,才能删除");
         }
         TrackEventPropCondition cc = TrackEventPropCondition.builder().trackPropId(trackPropDeleteReq.getId()).isDeleted(false).build();

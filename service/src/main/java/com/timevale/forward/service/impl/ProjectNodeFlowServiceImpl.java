@@ -10,7 +10,7 @@ import com.timevale.forward.facade.api.client.ProjectNodeFlowService;
 import com.timevale.forward.facade.api.request.ProjectNodeFlowCheckReq;
 import com.timevale.forward.facade.api.request.ProjectNodeFlowModifyReq;
 import com.timevale.forward.facade.api.result.ProjectNodeFlowDetailVO;
-import com.timevale.forward.model.enums.ProjectFlowStatusEnum;
+import com.timevale.forward.model.enums.FlowStatusEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.service.component.ProjectNodeFlowComponent;
 import com.timevale.forward.service.copy.ProjectNodeCopier;
@@ -81,7 +81,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
         log.info("节点审批流程撤销,参数:{}", projectNodeFlowModifyReq);
         String flowId = projectNodeFlowModifyReq.getFlowId();
         ProjectNodeFlowDO projectNodeFlowDO = projectNodeFlowMapper.get(null, flowId);
-        if (!ProjectFlowStatusEnum.REVIEWING.getCode().equals(projectNodeFlowDO.getStatus())) {
+        if (!FlowStatusEnum.AUDITING.getCode().equals(projectNodeFlowDO.getStatus())) {
             throw new BaseBizRuntimeException("流程状态非审核中,无法撤销");
         }
 
@@ -95,7 +95,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
         request.setAssignee(userInfo.getId());
         epeiusClient.withdrawInstance(request);
 
-        projectNodeFlowDO.setStatus(ProjectFlowStatusEnum.WITHDRAW.getCode());
+        projectNodeFlowDO.setStatus(FlowStatusEnum.WITHDRAW.getCode());
         projectNodeFlowMapper.update(projectNodeFlowDO);
         return BaseResult.success();
     }
@@ -109,7 +109,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
         List<ProjectNodeDO> oldTestNodes = oldProjectNodes.stream()
                 .filter(a -> ProjectNodeEnum.SUBMIT_TEST.getText().equals(a.getName()) && a.getPlanDate() != null).collect(Collectors.toList());
 
-        List<ProjectNodeDO> projectNodes = ProjectNodeCopier.INSTANCE.convert(projectNodeFlowCheckReq.getProjectNodeAddReq());
+        List<ProjectNodeDO> projectNodes = ProjectNodeCopier.INSTANCE.convert(projectNodeFlowCheckReq.getProjectNodes());
         List<ProjectNodeDO> publishNodes = projectNodes.stream()
                 .filter(a -> ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(a.getName()) && a.getPlanDate() != null).collect(Collectors.toList());
         List<ProjectNodeDO> testNodes = projectNodes.stream()

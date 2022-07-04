@@ -116,6 +116,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private BizDemandComponent bizDemandComponent;
 
+    @Resource
+    private ProjectNodeFlowComponent projectNodeFlowComponent;
+
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -319,6 +322,9 @@ public class ProjectServiceImpl implements ProjectService {
         projectProductLineComponent.update(newProject.getProductLineIds(), newProject.getId());
         // 产品经理
         personComponent.update(projectModifyReq.getPds(), newProject.getId(), PersonTypeEnum.PROJECT_PD.getCode());
+
+        ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
+        projectNodeFlowComponent.process(oldProject.getPlanEndDate(),newProject.getPlanEndDate(),projectNodeFlowDO);
 
         return BaseResult.success(true);
     }

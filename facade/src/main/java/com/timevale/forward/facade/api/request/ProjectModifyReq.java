@@ -26,6 +26,6 @@ public class ProjectModifyReq extends ProjectAddReq {
     private List<ProjectNodeAddReq> projectNodes;
 
     @ApiModelProperty("节点审批流程")
-    private ProjectNodeFlowAddReq projectNodeFlowAddReq;
+    private ProjectNodeFlowAddReq projectNodeFlow;
 
 }
