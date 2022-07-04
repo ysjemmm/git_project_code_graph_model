@@ -12,6 +12,19 @@ import com.timevale.mandarin.common.annotation.RestClient;
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface ProductDemandDescFlowService {
 
+    /**
+     * 查询最近一次发起的产品需求变更流程
+     * @param productDemandId 产品需求id
+     * @return 流程记录
+     */
     BaseResult<ProductDemandDescFlowVO> getLatestDescFlow(Long productDemandId);
+
+    /**
+     * 撤回最近一次发起的产品需求变更流程
+     * @param productDemandId 产品需求id
+     * @return 是否成功
+     */
+    BaseResult<Boolean> withdrawProductDemandDescFlow(Long productDemandId);
+
 
 }
