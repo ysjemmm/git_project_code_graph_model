@@ -98,6 +98,7 @@ public class ManDayServiceImpl implements ManDayService {
                         .setProjectId(project.getId())
                         .setProjectName(project.getName())
                         .setProjectCreateDate(project.getCreateDate());
+                res.add(manDayListVO);
                 if (project.getPmId().equals(userInfo.getId())) {
                     // pm时查询项目下成员
                     manDayListVO.setPm(true);
