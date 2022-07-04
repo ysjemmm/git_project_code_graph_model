@@ -4,7 +4,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.timevale.forward.dal.dao.ProductDemandDescRecordMapper">
 
-
     <select id="listByProductDemandId" resultType="com.timevale.forward.dal.entity.ProductDemandDescRecordDO">
         select *
         from product_demand_desc_record
@@ -18,4 +17,14 @@
         where product_demand_id = #{productDemandId}
           and is_deleted = false
     </select>
+    <select id="getLatestByProductDemandId"
+            resultType="com.timevale.forward.dal.entity.ProductDemandDescRecordDO">
+        select *
+        from product_demand_desc_record
+        where product_demand_id = #{productDemandId}
+          and is_deleted = false
+        order by id desc
+        limit 1
+    </select>
+
 </mapper>

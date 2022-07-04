@@ -15,6 +15,7 @@ public interface ProductDemandDescRecordMapper {
 
     List<ProductDemandDescRecordDO> listByProductDemandId(@Param("productDemandId") Long productDemandId);
 
+    ProductDemandDescRecordDO getLatestByProductDemandId(@Param("productDemandId") Long productDemandId);
 
     Integer countByProductDemandId(@Param("productDemandId") Long productDemandId);
 

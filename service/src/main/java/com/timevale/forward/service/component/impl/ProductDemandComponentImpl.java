@@ -77,6 +77,9 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     @Resource
     private ProductDemandDescRecordMapper productDemandDescRecordMapper;
 
+    @Resource
+    private ProductDemandDescFlowMapper productDemandDescFlowMapper;
+
     @Override
     public List<ProductDemandListDO> list(ProductDemandListCondition condition) {
         condition.setName(StringUtil.toLikeStr(condition.getName()));
@@ -113,6 +116,14 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         // 变更次数
         Integer changeTimes = productDemandDescRecordMapper.countByProductDemandId(demandDO.getId());
         demandDetailVO.setDescChangeTimes(changeTimes);
+
+        // 变更后描述
+        ProductDemandDescFlowDO latestDescFlow =
+                productDemandDescFlowMapper.getLastByProductDemandId(demandDO.getId());
+        if (latestDescFlow != null && FlowStatusEnum.AUDITING.getCode().equals(latestDescFlow.getStatus())) {
+            demandDetailVO.setChangeDesc(latestDescFlow.getChangeDesc());
+        }
+
         return demandDetailVO;
     }
 
