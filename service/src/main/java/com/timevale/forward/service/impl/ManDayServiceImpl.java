@@ -90,6 +90,7 @@ public class ManDayServiceImpl implements ManDayService {
                 BizChangeLogTypeEnum.PROJECT.getCode(),
                 Lists.newArrayList(ButtonActionEnum.SUSPEND.getText(), ButtonActionEnum.INVALID.getText()));
         ListMultimap<Long, BizChangeLogDO> logsById = Multimaps.index(changes, BizChangeLogDO::getMainId);
+        Date now = new Date();
         for (ProjectDO project : projects) {
             // 开始时间排除
             if (project.getActualStartDate() == null) {
@@ -100,7 +101,7 @@ public class ManDayServiceImpl implements ManDayService {
             }
             // 结束时间排除
             if (project.getActualEndDate() == null) {
-                project.setActualEndDate(project.getPlanEndDate());
+                project.setActualEndDate(now);
             }
             if (project.getStatus() < 0) {
                 // 项目已暂停或者作废，则拿暂停、作废时间作为完成时间
@@ -322,7 +323,7 @@ public class ManDayServiceImpl implements ManDayService {
             project.setActualStartDate(project.getPlanStartDate());
         }
         if (project.getActualEndDate() == null) {
-            project.setActualEndDate(project.getPlanEndDate());
+            project.setActualEndDate(new Date());
         }
         if (project.getStatus() < 0) {
             // 项目已暂停或者作废，则拿暂停、作废时间作为完成时间
