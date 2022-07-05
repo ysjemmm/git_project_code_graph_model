@@ -19,6 +19,7 @@ public interface ProductDemandDescRecordMapper {
 
     Integer countByProductDemandId(@Param("productDemandId") Long productDemandId);
 
+    void insert(ProductDemandDescRecordDO productDemandDescRecordDO);
 }
 
 

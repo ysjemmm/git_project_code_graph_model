@@ -1,28 +1,29 @@
 package com.timevale.forward.service.component.impl;
 
+import com.timevale.epeius.service.enums.FlowStatusEnum;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.ProductDemandDO;
-import com.timevale.forward.dal.entity.ProductDemandDescFlowDO;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectProductDemandDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.request.ProductDemandDescChangeReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
-import com.timevale.forward.model.enums.ProductDemandDescChangeTypeEnum;
-import com.timevale.forward.model.enums.ProductDemandDescFlowStageEnum;
-import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.service.copy.ProductDemandDescFlowCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +58,9 @@ public class ProductDemandDescFlowComponent {
 
     @Resource
     private ProductDemandDescFlowMapper productDemandDescFlowMapper;
+
+    @Resource
+    private BizChangeLogMapper bizChangeLogMapper;
 
     public void startProductDemandDescChangeFlow(ProductDemandModifyReq productDemandModifyReq) {
         ProductDemandDescChangeReq descChangeReq = productDemandModifyReq.getDescChangeReq();
@@ -96,7 +100,7 @@ public class ProductDemandDescFlowComponent {
 
         // 插入流程记录
         ProductDemandDescFlowDO flow = new ProductDemandDescFlowDO()
-                .setStage(ProductDemandDescFlowStageEnum.FIRST_STAGE.getCode())
+                .setStage(FlowStageEnum.FIRST.getCode())
                 .setFlowId(flowId)
                 .setLastFlowId(StringUtils.EMPTY)
                 .setReviewFailReason(StringUtils.EMPTY)
@@ -113,6 +117,88 @@ public class ProductDemandDescFlowComponent {
         flow.setCreateMan(userAlias);
 
         productDemandDescFlowMapper.insert(flow);
+    }
+
+    public void updateFlowInfo(String processInstanceId) {
+        if (StringUtils.isEmpty(processInstanceId)) {
+            log.info("流程id为空");
+            return;
+        }
+        ProcessResponse processInfo = epeiusClient.getProcessInfo(processInstanceId);
+        List<String> currentTaskIdList = processInfo.getCurrentTaskIdList();
+        if (CollectionUtils.isEmpty(currentTaskIdList)) {
+            log.info("任务id为空");
+            return;
+        }
+        String processStatus = processInfo.getProcessStatus();
+        log.info("返回流程信息 processInfo={}", processInfo);
+        ProductDemandDescFlowDO auditingFlow = productDemandDescFlowMapper.getAuditingByFlowId(processInstanceId);
+        if (auditingFlow == null) {
+            log.info("无审批中产品需求变更流程");
+            return;
+        }
+        Map<String, Object> flowData = processInfo.getFlowData();
+        if (FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
+            auditingFlow.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode());
+            String rejectReason = flowData.get("rejectReason") == null ? StringUtils.EMPTY : String.valueOf(flowData.get("rejectReason"));
+            auditingFlow.setReviewFailReason(rejectReason);
+            if (FlowStageEnum.FIRST.getCode().equals(auditingFlow.getStage())) {
+                // 第一阶段拒绝，发起po审核流程
+                flowData.put("pm2", flowData.get("pm"));
+                flowData.put("pmResult", "拒绝");
+                flowData.put("reviewFailReason", rejectReason);
+                flowData.put("auditUserId", flowData.get("poId"));
+                String newFlowId = startFlow(flowData);
+                ProductDemandDescFlowDO newFlow = ProductDemandDescFlowCopier.INSTANCE.clone(auditingFlow);
+                newFlow.setFlowId(newFlowId)
+                        .setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode())
+                        .setLastFlowId(auditingFlow.getFlowId())
+                        .setReviewFailReason(StringUtils.EMPTY)
+                        .setStage(FlowStageEnum.SECOND.getCode());
+                productDemandDescFlowMapper.insert(newFlow);
+            }
+        } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
+            auditingFlow.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.WITHDRAW.getCode());
+        } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
+            auditingFlow.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode());
+            // 审批成功
+            Integer count = productDemandDescRecordMapper.countByProductDemandId(auditingFlow.getProductDemandId());
+            ProductDemandDO productDemand = productDemandMapper.get(auditingFlow.getProductDemandId());
+            if (count == 0) {
+                // 首次变更，创建1.0版本
+                ProductDemandDescRecordDO oldProductDemandDesc = new ProductDemandDescRecordDO()
+                        .setProductDemandId(productDemand.getId())
+                        .setDesc(productDemand.getDesc())
+                        .setVersion(BigDecimal.ONE);
+                oldProductDemandDesc.setCreateManId(productDemand.getModifyManId());
+                oldProductDemandDesc.setCreateMan(productDemand.getModifyMan());
+                productDemandDescRecordMapper.insert(oldProductDemandDesc);
+                count = 1;
+            }
+            // 创建新版本
+            ProductDemandDescRecordDO newProductDemandDesc = new ProductDemandDescRecordDO()
+                    .setProductDemandId(productDemand.getId())
+                    .setDesc(auditingFlow.getChangeDesc())
+                    .setVersion(BigDecimal.valueOf(count + 1));
+            newProductDemandDesc.setCreateManId(auditingFlow.getCreateManId());
+            newProductDemandDesc.setCreateMan(auditingFlow.getCreateMan());
+            productDemandDescRecordMapper.insert(newProductDemandDesc);
+            productDemand.setDesc(auditingFlow.getChangeDesc());
+            productDemandMapper.update(productDemand);
+            // 创建变更记录
+            BizChangeLogDO bizChangeLogDO = new BizChangeLogDO()
+                    .setMainId(productDemand.getId())
+                    .setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode())
+                    .setField(BizChangeLogFieldEnum.DESC.getText())
+                    .setOldValue(StringEscapeUtils.unescapeHtml(auditingFlow.getDesc()))
+                    .setNewValue(StringEscapeUtils.unescapeHtml(auditingFlow.getChangeDesc()));
+            bizChangeLogDO.setCreateManId(auditingFlow.getCreateManId());
+            bizChangeLogDO.setCreateMan(auditingFlow.getCreateMan());
+            bizChangeLogDO.setContent(String.format("{\"flowId\": %s}", auditingFlow.getFlowId()));
+            bizChangeLogMapper.insert(bizChangeLogDO);
+        }
+        productDemandDescFlowMapper.update(auditingFlow);
+
     }
 
     private String startFlow(Map<String, Object> variables) {

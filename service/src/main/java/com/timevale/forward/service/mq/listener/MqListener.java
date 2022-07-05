@@ -5,6 +5,7 @@ import com.timevale.forward.model.enums.MessageTagEnum;
 import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.component.ProjectNodeFlowComponent;
 import com.timevale.forward.service.component.TrackEventComponent;
+import com.timevale.forward.service.component.impl.ProductDemandDescFlowComponent;
 import com.timevale.forward.service.mq.dto.WorkflowBody;
 import com.timevale.forward.service.mq.handler.MqMessageHandler;
 import com.timevale.framework.mq.client.consumer.Listener;
@@ -36,6 +37,9 @@ public class MqListener implements Listener {
     @Resource
     private ProjectNodeFlowComponent projectNodeFlowComponent;
 
+    @Resource
+    private ProductDemandDescFlowComponent productDemandDescFlowComponent;
+
     public static Map<String, MqMessageHandler> MESSAGE_HANDLER_MAP = new HashMap<>();
 
     @PostConstruct
@@ -43,6 +47,7 @@ public class MqListener implements Listener {
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TECHREVIEW.getText(), projectFlowComponent::updateFlowInfo);
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TRACKEVENTREVIEW.getText(), trackEventComponent::updateTrackEventInfo);
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_PUBLISHOFFICEREVIEW.getText(), projectNodeFlowComponent::updateProjectNodeInfo);
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_PRODUCT_DEMAND_CHANGE.getText(), productDemandDescFlowComponent::updateFlowInfo);
     }
 
     @Override

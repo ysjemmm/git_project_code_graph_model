@@ -11,12 +11,34 @@
                 #{reason}, #{pmId}, #{pm}, #{poId}, #{po},
                 #{reviewFailReason}, #{createManId}, #{createMan})
     </insert>
+    <update id="update">
+        update product_demand_desc_flow
+        <set>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="rejectReason != null">
+                review_fail_reason = #{reviewFailReason},
+            </if>
+        </set>
+        where id = #{id} and is_deleted = false
+    </update>
 
 
     <select id="getLastByProductDemandId" resultType="com.timevale.forward.dal.entity.ProductDemandDescFlowDO">
         select *
         from product_demand_desc_flow
         where product_demand_id = #{productDemandId}
+          and is_deleted = false
+        order by id desc
+        limit 1
+    </select>
+
+    <select id="getAuditingByFlowId" resultType="com.timevale.forward.dal.entity.ProductDemandDescFlowDO">
+        select *
+        from product_demand_desc_flow
+        where flow_id = #{flowId}
+          and `status` = 0
           and is_deleted = false
         order by id desc
         limit 1

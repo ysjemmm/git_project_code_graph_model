@@ -16,4 +16,5 @@ public interface ProductDemandDescFlowCopier {
 
     ProductDemandDescFlowVO convert(ProductDemandDescFlowDO productDemandDescFlowDO);
 
+    ProductDemandDescFlowDO clone(ProductDemandDescFlowDO auditingFlow);
 }
