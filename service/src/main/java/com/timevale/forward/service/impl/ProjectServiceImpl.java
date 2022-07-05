@@ -122,6 +122,10 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private ProjectNodeFlowMapper projectNodeFlowMapper;
 
+    @Resource
+    private ProjectNodeRecordMapper projectNodeRecordMapper;
+
+
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -270,7 +274,7 @@ public class ProjectServiceImpl implements ProjectService {
         Integer status = projectMapper.get(projectModifyReq.getId()).getStatus();
         newProject.setStatus(status);
 
-        fillInfoWhenModify(projectNodeDOList, newProject);
+        fillInfoWhenModify(projectNodeDOList, newProject,projectModifyReq.getDelayType());
 
         taskComponent.containProductLineInTask(newProject.getId(), newProject.getProductLineIds());
 
@@ -291,17 +295,6 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 节点信息
         if (CollectionUtils.isNotEmpty(projectNodeDOList)) {
-            // 实际时间校验
-            Optional<ProjectNodeDO> startNode = projectNodeDOList.stream().filter(e -> ProjectNodeEnum.START_PLAN.getText().equals(e.getName())).findAny();
-            Optional<ProjectNodeDO> endNode = projectNodeDOList.stream().filter(e -> ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(e.getName())).findAny();
-            if(startNode.isPresent() && endNode.isPresent()){
-                Date startActualDate = startNode.get().getActualDate();
-                Date endActualDate = endNode.get().getActualDate();
-                if(startActualDate != null && endActualDate != null && startActualDate.compareTo(endActualDate) > 0){
-                    throw new BaseBizRuntimeException("您的实际结束时间早于实际开始时间，请检查后再录入");
-                }
-            }
-
             boolean match = projectNodeDOList.stream().anyMatch(e ->
                     ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(e.getName()) && e.getActualDate() != null);
             if (match && !checkProductRelease(projectModifyReq.getId())) {
@@ -315,9 +308,12 @@ public class ProjectServiceImpl implements ProjectService {
                     throw new BaseBizRuntimeException("您的发布计划还未结束，请前往发布平台处理");
                 }
             }
-            projectNodeComponent.add(projectNodeDOList, newProject.getId());
-            // 更新节点状态
-            projectComponent.updateNodeStatus(projectModifyReq.getId());
+            if(!Integer.valueOf(1).equals(projectModifyReq.getDelayType())){
+                //无审批,直接更新
+                projectNodeComponent.add(projectNodeDOList, newProject.getId());
+                // 更新节点状态
+                projectComponent.updateNodeStatus(projectModifyReq.getId());
+            }
         }
         // log
         projectLogComponent.addLogWhenModifyData(oldProject, newProject);
@@ -326,10 +322,23 @@ public class ProjectServiceImpl implements ProjectService {
         // 产品经理
         personComponent.update(projectModifyReq.getPds(), newProject.getId(), PersonTypeEnum.PROJECT_PD.getCode());
 
-        ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
-        List<ProjectNodeDO> projectNodes = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
-        projectNodeFlowComponent.process(projectNodeFlowDO,projectNodes);
-
+        if(Integer.valueOf(1).equals(projectModifyReq.getDelayType())){
+            ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
+            projectNodeFlowComponent.process(projectNodeFlowDO,projectNodeDOList);
+        }else if(Integer.valueOf(0).equals(projectModifyReq.getDelayType())){
+            //版本+1
+            projectNodeFlowComponent.insertProjectNodeRecord(newProject.getId(),projectNodeDOList);
+        }else {
+            boolean match = projectNodeDOList.stream().anyMatch(e ->
+                    ProjectNodeEnum.DEVELOP_START.getText().equals(e.getName()) && e.getActualDate() != null);
+            if(match){
+                List<ProjectNodeRecordDO> list = projectNodeRecordMapper.list(newProject.getId());
+                if(CollectionUtils.isEmpty(list)){
+                    //首次生成版本
+                    projectNodeFlowComponent.insertProjectNodeRecord(newProject.getId(),projectNodeDOList);
+                }
+            }
+        }
         return BaseResult.success(true);
     }
 
@@ -569,7 +578,7 @@ public class ProjectServiceImpl implements ProjectService {
         return true;
     }
 
-    private void fillInfoWhenModify(List<ProjectNodeDO> projectNodes, ProjectDO newProject) {
+    private void fillInfoWhenModify(List<ProjectNodeDO> projectNodes, ProjectDO newProject,Integer delayType) {
         Map<String, ProjectNodeDO> nodeMap = projectNodes
                 .stream()
                 .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
@@ -606,18 +615,20 @@ public class ProjectServiceImpl implements ProjectService {
             newProject.setStatus(oldStatus);
         }
         ProjectDO oldProject = projectMapper.get(newProject.getId());
-        projectMapper.update(newProject);
-        if (!Objects.equals(newProject.getStatus(), oldStatus)) {
-            //状态不一致时,更新产品需求状态
-            productDemandComponent.updateProductDemandStatus(newProject.getId(), newProject.getStatus());
-            projectLogComponent.addLogWhenStatusChange(oldStatus, newProject.getStatus(), newProject.getId(), ButtonActionEnum.MODIFY.getText());
-        }
-        if (!Objects.equals(oldProject.getPlanEndDate(), newProject.getPlanEndDate())
-                || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
-            List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProject.getId());
-            bizDemandIds.forEach(a -> {
-                bizDemandComponent.updateProjectEndDate(a);
-            });
+        if(!Integer.valueOf(1).equals(delayType)){
+            projectMapper.update(newProject);
+            if (!Objects.equals(newProject.getStatus(), oldStatus)) {
+                //状态不一致时,更新产品需求状态
+                productDemandComponent.updateProductDemandStatus(newProject.getId(), newProject.getStatus());
+                projectLogComponent.addLogWhenStatusChange(oldStatus, newProject.getStatus(), newProject.getId(), ButtonActionEnum.MODIFY.getText());
+            }
+            if (!Objects.equals(oldProject.getPlanEndDate(), newProject.getPlanEndDate())
+                    || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
+                List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProject.getId());
+                bizDemandIds.forEach(a -> {
+                    bizDemandComponent.updateProjectEndDate(a);
+                });
+            }
         }
         log.info("更新项目信息完成");
     }

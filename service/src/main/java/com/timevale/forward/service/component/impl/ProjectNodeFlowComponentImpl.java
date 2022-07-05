@@ -3,12 +3,16 @@ package com.timevale.forward.service.component.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
+import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectNodeFlowMapper;
 import com.timevale.forward.dal.dao.ProjectNodeRecordMapper;
+import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import com.timevale.forward.dal.entity.ProjectNodeFlowDO;
 import com.timevale.forward.dal.entity.ProjectNodeRecordDO;
 import com.timevale.forward.model.enums.FlowStageEnum;
+import com.timevale.forward.service.component.ProjectComponent;
+import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.component.ProjectNodeFlowComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
@@ -26,6 +30,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -49,6 +54,15 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
     @Resource
     private ProjectNodeRecordMapper projectNodeRecordMapper;
 
+    @Resource
+    private ProjectNodeComponent projectNodeComponent;
+
+    @Resource
+    private ProjectComponent projectComponent;
+
+    @Resource
+    private ProjectMapper projectMapper;
+
 
     @Override
     public void process(ProjectNodeFlowDO projectNodeFlowDO, List<ProjectNodeDO> projectNodes) {
@@ -64,12 +78,12 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         Date oldPlanEndDate = DateUtil.getEndOfDay(projectNodeFlowDO.getPublishDate());
         Date planEndDate = DateUtil.getEndOfDay(projectNodeFlowDO.getChangePublishDate());
         if (oldPlanEndDate.before(planEndDate)) {
-//                Long seconds = elapsedTimeClient.getElapsedTime(oldPlanEndDate, planEndDate);
-//                BigDecimal elapsedTime = new BigDecimal(seconds.toString());
-//                elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.UP);
-//                if(BigDecimal.ZERO.equals(elapsedTime)){
-//                    return;
-//                }
+            Long seconds = elapsedTimeClient.getElapsedTime(oldPlanEndDate, planEndDate);
+            BigDecimal elapsedTime = new BigDecimal(seconds.toString());
+            elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.UP);
+            if (BigDecimal.ZERO.equals(elapsedTime)) {
+                return;
+            }
             projectNodeFlowDO.setDelayDay(BigDecimal.valueOf(1));
             projectNodeFlowDO.setStage(FlowStageEnum.FIRST.getCode());
             projectNodeFlowDO.setFlowId(startFlow(projectNodeFlowDO, projectNodes));
@@ -189,18 +203,41 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             projectNodeFlowMapper.insert(projectNodeFlowDO);
         }
         if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
-            BigDecimal max = projectNodeRecordMapper.list(projectNodeFlowDO.getProjectId()).stream().map(ProjectNodeRecordDO::getVersion)
-                    .max(Comparator.comparing(BigDecimal::abs)).orElse(BigDecimal.ZERO);
-            List<ProjectNodeRecordDO> recordDOList = projectNodes.stream().map(a -> {
-                ProjectNodeRecordDO p = new ProjectNodeRecordDO();
-                p.setProjectId(projectNodeFlowDO.getProjectId());
-                p.setName(a.getName());
-                p.setPlanDate(a.getPlanDate());
-                p.setVersion(max.add(BigDecimal.valueOf(1)));
-                p.setCreateMan(operator);
-                p.setCreateManId(userInfo.getId());
-                return p;
-            }).collect(Collectors.toList());
+            Long projectId = projectNodeFlowDO.getProjectId();
+            projectNodeComponent.add(projectNodes, projectId);
+
+            projectComponent.updateNodeStatus(projectId);
+
+            Integer status = projectComponent.getStatus(projectId);
+            ProjectDO projectDO = new ProjectDO();
+            projectDO.setStatus(status);
+            projectDO.setId(projectId);
+            projectMapper.updateStatus(projectDO);
+
+            insertProjectNodeRecord(projectNodeFlowDO.getProjectId(), projectNodes);
+        }
+    }
+
+    @Override
+    public void insertProjectNodeRecord(Long projectId, List<ProjectNodeDO> projectNodes) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String operator = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
+
+        BigDecimal max = projectNodeRecordMapper.list(projectId).stream().map(ProjectNodeRecordDO::getVersion)
+                .max(Comparator.comparing(BigDecimal::abs)).orElse(BigDecimal.ZERO);
+
+        List<ProjectNodeRecordDO> recordDOList = projectNodes.stream().map(a -> {
+            ProjectNodeRecordDO p = new ProjectNodeRecordDO();
+            p.setProjectId(projectId);
+            p.setName(a.getName());
+            p.setPlanDate(a.getPlanDate());
+            p.setVersion(max.add(BigDecimal.valueOf(1)));
+            p.setCreateMan(operator);
+            p.setCreateManId(userInfo.getId());
+            return p;
+        }).collect(Collectors.toList());
+
+        if (CollectionUtils.isNotEmpty(recordDOList)) {
             projectNodeRecordMapper.batchInsert(recordDOList);
         }
     }

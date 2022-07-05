@@ -24,4 +24,6 @@ public interface ProjectNodeFlowComponent {
      */
     void  updateProjectNodeInfo(String processInstanceId);
 
+    void  insertProjectNodeRecord(Long projectId,List<ProjectNodeDO> projectNodes);
+
 }

@@ -144,7 +144,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
                 }
             }
         }
-        return BaseResult.success();
+        return BaseResult.success(-1);
     }
 
     @Override
