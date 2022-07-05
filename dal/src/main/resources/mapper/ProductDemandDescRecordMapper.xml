@@ -3,6 +3,11 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.timevale.forward.dal.dao.ProductDemandDescRecordMapper">
+    <insert id="insert">
+        insert into product_demand_desc_record (product_demand_id, version, `desc`, create_man_id,
+                                                create_man)
+        values (#{productDemandId}, #{version}, #{desc}, #{createManId}, #{createMan})
+    </insert>
 
     <select id="listByProductDemandId" resultType="com.timevale.forward.dal.entity.ProductDemandDescRecordDO">
         select *
