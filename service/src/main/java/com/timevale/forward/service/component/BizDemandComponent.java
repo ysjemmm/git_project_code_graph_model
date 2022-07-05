@@ -53,7 +53,7 @@ public interface BizDemandComponent {
      * @param bizDemandListCondition 业务需求查询列表
      * @return 列表
      */
-    BaseResult<PageQueryResult<BizDemandVO>> page(BizDemandListCondition bizDemandListCondition);
+    PageQueryResult<BizDemandVO> page(BizDemandListCondition bizDemandListCondition);
 
     /**
      * 转交

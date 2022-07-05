@@ -83,7 +83,7 @@ public class CommentServiceImpl implements CommentService {
 
         // 查询评论对应附件
         List<Long> commentIdList = commentDOList.stream().map(CommentDO::getId).collect(Collectors.toList());
-        List<FileDO> fileDOList = fileComponent.select(commentIdList, type);
+        List<FileDO> fileDOList = fileComponent.select(commentIdList, FileTypeEnum.COMMENT.getCode());
         Map<Long, List<FileDO>> fileMap = fileDOList.stream().collect(Collectors.groupingBy(FileDO::getAttacheId));
 
         for (CommentVO e : commentVOList) {

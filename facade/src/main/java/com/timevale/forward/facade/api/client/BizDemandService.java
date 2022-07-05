@@ -5,7 +5,7 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
-import com.timevale.forward.facade.api.result.BizDemandProductLineVO;
+import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -31,9 +31,9 @@ public interface BizDemandService {
      * 列表分类 by 产品线
      *
      * @param bizDemandQueryList 业务需求查询列表
-     * @return {@link BaseResult}<{@link List}<{@link BizDemandProductLineVO}>>
+     * @return {@link BaseResult}<{@link List}<{@link ProductLineAnalyseVO}>>
      */
-    BaseResult<List<BizDemandProductLineVO>> listClassify(BizDemandQueryList bizDemandQueryList);
+    BaseResult<List<ProductLineAnalyseVO>> listClassify(BizDemandQueryList bizDemandQueryList);
 
     /**
      * 作废

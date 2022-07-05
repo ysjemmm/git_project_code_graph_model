@@ -132,11 +132,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 开始分页
         String collation = sqlOrderComponent.build(bizDemandQueryList.getOrderFiled(), bizDemandQueryList.getOrderCollation());
         PageHelper.startPage(bizDemandQueryList.pageNum, bizDemandQueryList.pageSize, collation);
-        return bizDemandComponent.page(bizDemandListCondition);
+        PageQueryResult<BizDemandVO> pageQueryResult = bizDemandComponent.page(bizDemandListCondition);
+
+        return BaseResult.success(pageQueryResult);
     }
 
     @Override
-    public BaseResult<List<BizDemandProductLineVO>> listClassify(BizDemandQueryList bizDemandQueryList) {
+    public BaseResult<List<ProductLineAnalyseVO>> listClassify(BizDemandQueryList bizDemandQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 转换查询条件
@@ -193,9 +195,9 @@ public class BizDemandServiceImpl implements BizDemandService {
         Map<String, List<BizDemandListDO>> bizDemandListDOMap = bizDemandListDOList.stream().collect(Collectors.groupingBy(BizDemandListDO::getProductLineId));
         log.info("业务查询产品线分析：{}", bizDemandListDOMap);
 
-        List<BizDemandProductLineVO> result = new ArrayList<>();
+        List<ProductLineAnalyseVO> result = new ArrayList<>();
         bizDemandListDOMap.forEach((k,v) -> {
-            BizDemandProductLineVO bizDemandProductLineVO = new BizDemandProductLineVO();
+            ProductLineAnalyseVO bizDemandProductLineVO = new ProductLineAnalyseVO();
             Optional<BizDemandListDO> any = v.stream().findAny();
             any.ifPresent(e -> {
                 bizDemandProductLineVO.setCount(v.size());

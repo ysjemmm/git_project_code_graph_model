@@ -2,7 +2,6 @@ package com.timevale.forward.service.component.impl;
 
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
-import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProductBizDemandMapper;
@@ -10,6 +9,8 @@ import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
@@ -187,7 +188,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     }
 
     @Override
-    public BaseResult<PageQueryResult<BizDemandVO>> page(BizDemandListCondition bizDemandListCondition) {
+    public PageQueryResult<BizDemandVO> page(BizDemandListCondition bizDemandListCondition) {
         Map<Long, GroupResponse> deptNodeMap = null;
         Set<Long> queryDeptIdSet = Sets.newHashSet(bizDemandListCondition.getDeptIdList());
 
@@ -234,13 +235,33 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             e.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(e.getPlanReleaseDate()));
         });
 
-        // 返回分页数据
+        // 分页数据
         PageInfo<BizDemandListDO> pageInfo = new PageInfo<>(bizDemandListDOList);
         PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(bizDemandVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
-        return BaseResult.success(pageQueryResult);
+        // 产品线分析信息
+        Map<String, List<BizDemandListDO>> bizDemandListDOMap = bizDemandListDOList.stream().collect(Collectors.groupingBy(BizDemandListDO::getProductLineId));
+        log.info("业务查询产品线分析：{}", bizDemandListDOMap);
+
+        List<ProductLineAnalyseVO> analyseVOList = new ArrayList<>();
+        bizDemandListDOMap.forEach((k,v) -> {
+            ProductLineAnalyseVO bizDemandProductLineVO = new ProductLineAnalyseVO();
+            Optional<BizDemandListDO> any = v.stream().findAny();
+            any.ifPresent(e -> {
+                bizDemandProductLineVO.setCount(v.size());
+                bizDemandProductLineVO.setProductLineId(e.getProductLineId());
+                bizDemandProductLineVO.setProductLineName(e.getProductLineName());
+                analyseVOList.add(bizDemandProductLineVO);
+            });
+        });
+
+        QueryResultVO<BizDemandVO> queryResultVO = new QueryResultVO<>();
+        queryResultVO.setAnalyseVOList(analyseVOList);
+        queryResultVO.setPageQueryResult(pageQueryResult);
+
+        return pageQueryResult;
     }
 
     @Override

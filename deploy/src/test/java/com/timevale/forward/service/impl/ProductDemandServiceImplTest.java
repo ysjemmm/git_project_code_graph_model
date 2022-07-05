@@ -196,9 +196,8 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
         productBizDemandDO.setBizDemandId(1L);
         when(productBizDemandMapper.select(any())).thenReturn(Collections.singletonList(productBizDemandDO));
 
-        BaseResult<PageQueryResult<BizDemandVO>> baseResult = new BaseResult<>();
-        baseResult.setMessage("成功");
-        when(bizDemandComponent.page(any())).thenReturn(baseResult);
+        PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
+        when(bizDemandComponent.page(any())).thenReturn(pageQueryResult);
 
         ProductDemandLinkBizDemandQueryList productDemandLinkBizDemandQueryList = new ProductDemandLinkBizDemandQueryList();
         productDemandLinkBizDemandQueryList.setStatusList(Collections.singletonList(1));

@@ -381,7 +381,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             condition.setBizDemandIds(bizDemandIds);
         }
         PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
-        return bizDemandComponent.page(condition);
+        return BaseResult.success(bizDemandComponent.page(condition));
     }
 
     @Override

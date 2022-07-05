@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ApiModel("业务需求-产品线-信息")
-public class BizDemandProductLineVO extends ToString {
+public class ProductLineAnalyseVO extends ToString {
 
     @ApiModelProperty("产品线id")
     private String productLineId;

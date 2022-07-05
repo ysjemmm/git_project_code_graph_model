@@ -81,9 +81,8 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
 
 
-        BaseResult<PageQueryResult<BizDemandVO>> baseResult = new BaseResult<>();
-        baseResult.setMessage("成功");
-        when(bizDemandComponent.page(any())).thenReturn(baseResult);
+        PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
+        when(bizDemandComponent.page(any())).thenReturn(pageQueryResult);
 
         BizDemandQueryList bizDemandQueryList = new BizDemandQueryList();
         bizDemandQueryList.setAscription("CURRENT_USER");
