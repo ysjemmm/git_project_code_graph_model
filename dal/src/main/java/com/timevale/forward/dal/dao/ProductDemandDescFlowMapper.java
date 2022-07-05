@@ -13,6 +13,7 @@ public interface ProductDemandDescFlowMapper {
 
     ProductDemandDescFlowDO getLastByProductDemandId(@Param("productDemandId") Long productDemandId);
 
+    void insert(ProductDemandDescFlowDO flow);
 }
 
 

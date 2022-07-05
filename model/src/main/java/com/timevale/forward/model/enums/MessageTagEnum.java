@@ -5,7 +5,6 @@ import lombok.Getter;
 /**
  * @author by YangXu
  * @date 2021/12/15 17:13
- @Getter
  */
 @Getter
 public enum MessageTagEnum {
@@ -15,6 +14,8 @@ public enum MessageTagEnum {
     FORWARD_TECHREVIEW("forward_techReview"),
 
     FORWARD_TRACKEVENTREVIEW("forward_trackEventReview"),
+
+    FORWARD_PRODUCT_DEMAND_CHANGE("forward_productDemandChange"),
 
     FORWARD_PUBLISHOFFICEREVIEW("forward_publishOfficeReview");
 

@@ -14,6 +14,7 @@ import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.component.impl.ProductDemandDescFlowComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
@@ -105,6 +106,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private TrackEventMapper trackEventMapper;
+
+    @Resource
+    private ProductDemandDescFlowComponent productDemandDescFlowComponent;
 
     private static final Integer MAX_LENGTH = 20 * 1000;
 
@@ -300,6 +304,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (oldProductDemand == null) {
             oldProductDemand = productDemandMapper.get(productDemandModifyReq.getId());
         }
+        if (productDemandModifyReq.getDescChangeReq() != null) {
+            // 发起变更记录时不直接修改产品需求描述
+            productDemandModifyReq.setDesc(oldProductDemand.getDesc());
+        }
         checkDescLength(productDemandModifyReq.getDesc());
         ProductDemandDO newProductDemand = ProductDemandCopier.INSTANCE.convert(productDemandModifyReq);
         newProductDemand.setType(JSON.toJSONString(productDemandModifyReq.getTypes()));
@@ -310,6 +318,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         personComponent.update(productDemandModifyReq.getRecipients(), newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
 
         productDemandLogComponent.addLogWhenModifyData(oldProductDemand, newProductDemand);
+
+        productDemandDescFlowComponent.startProductDemandDescChangeFlow(productDemandModifyReq);
+
         return BaseResult.success(true);
     }
 
@@ -542,4 +553,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             throw new BaseBizRuntimeException("需求描述字数过大,请重新输入");
         }
     }
+
+
+
 }

@@ -34,6 +34,7 @@ public class AuditInterceptor implements Interceptor {
         FILTER_METHOD.add("com.timevale.forward.dal.dao.ProjectNodeFlowMapper.insert");
         FILTER_METHOD.add("com.timevale.forward.dal.dao.ProjectNodeFlowMapper.update");
         FILTER_METHOD.add("com.timevale.forward.dal.dao.ProjectNodeRecordMapper.batchInsert");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.ProductDemandDescFlowMapper.insert");
     }
 
     @Override

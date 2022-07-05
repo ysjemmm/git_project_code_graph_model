@@ -2,6 +2,7 @@ package com.timevale.forward.dal.entity;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 /**
  * 产品需求描述审批流程表
@@ -9,6 +10,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@Accessors(chain = true)
 public class ProductDemandDescFlowDO extends BaseDO {
 
     /**
@@ -20,6 +22,11 @@ public class ProductDemandDescFlowDO extends BaseDO {
      * 流程id
      */
     private String flowId;
+
+    /**
+     * 上一次流程id
+     */
+    private String lastFlowId;
 
     /**
      * 评审状态:-1已撤回,0审核中,1审核通过,2审核不通过
