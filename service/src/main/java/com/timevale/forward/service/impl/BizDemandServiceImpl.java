@@ -486,7 +486,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         Integer oldStatus = bizDemandDO.getStatus();
         Integer oldReason = bizDemandDO.getReason();
         Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
-        Long OldProductLineId = bizDemandDO.getProductLineId();
+        Long oldProductLineId = bizDemandDO.getProductLineId();
 
         bizDemandDO.setReason(null);
         bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
@@ -526,11 +526,11 @@ public class BizDemandServiceImpl implements BizDemandService {
                     true
             );
         }
-        if (!Objects.equal(OldProductLineId, productLineId)) {
-            List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(Lists.newArrayList(OldProductLineId, productLineId));
+        if (!Objects.equal(oldProductLineId, productLineId)) {
+            List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(Lists.newArrayList(oldProductLineId, productLineId));
 
             log.info("变更产品线：{}", productLineDOList);
-            Optional<ProductLineDO> oldOpt = productLineDOList.stream().filter(e -> OldProductLineId.equals(e.getId())).findAny();
+            Optional<ProductLineDO> oldOpt = productLineDOList.stream().filter(e -> oldProductLineId.equals(e.getId())).findAny();
             Optional<ProductLineDO> newOpt = productLineDOList.stream().filter(e -> productLineId.equals(e.getId())).findAny();
 
             if(oldOpt.isPresent() && newOpt.isPresent()){
@@ -542,7 +542,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                         true
                 );
             } else{
-                log.error("对应产品线不存在: {},{}",OldProductLineId, productLineId);
+                log.error("对应产品线不存在: {},{}",oldProductLineId, productLineId);
             }
         }
 
@@ -677,15 +677,13 @@ public class BizDemandServiceImpl implements BizDemandService {
             // 通知
             HashSet<Long> bizDemandIdSet = new HashSet<>(bizDemandIdList);
             bizDemandDOList = bizDemandDOList.stream().filter(e -> bizDemandIdSet.contains(e.getId())).collect(Collectors.toList());
-            bizDemandDOList.forEach(e -> {
-                messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
-                        this,
-                        e.getId(),
-                        e.getSubmitMan(),
-                        newReceiveMan,
-                        e.getName()
-                ));
-            });
+            bizDemandDOList.forEach(e -> messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
+                    this,
+                    e.getId(),
+                    e.getSubmitMan(),
+                    newReceiveMan,
+                    e.getName()
+            )));
         }
 
         return BaseResult.success(true);
@@ -780,12 +778,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 旧数据
         String oldRejectReason = bizDemandDO.getRejectReason();
         String oldSolvePlan = bizDemandDO.getSolvePlan();
-        Long OldProductLineId = bizDemandDO.getProductLineId();
+        Long oldProductLineId = bizDemandDO.getProductLineId();
 
         // 更新
         bizDemandDO.setRejectReason(StringUtils.EMPTY);
         bizDemandDO.setStatus(newStatus);
         bizDemandDO.setSolvePlan(solvePlan);
+        bizDemandDO.setProductLineId(productLineId);
         bizDemandMapper.fullUpdate(bizDemandDO);
 
         // 日志
@@ -808,11 +807,11 @@ public class BizDemandServiceImpl implements BizDemandService {
                     true);
         }
 
-        if (!Objects.equal(OldProductLineId, productLineId)) {
-            List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(Lists.newArrayList(OldProductLineId, productLineId));
+        if (!Objects.equal(oldProductLineId, productLineId)) {
+            List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(Lists.newArrayList(oldProductLineId, productLineId));
 
             log.info("变更产品线：{}", productLineDOList);
-            Optional<ProductLineDO> oldOpt = productLineDOList.stream().filter(e -> OldProductLineId.equals(e.getId())).findAny();
+            Optional<ProductLineDO> oldOpt = productLineDOList.stream().filter(e -> oldProductLineId.equals(e.getId())).findAny();
             Optional<ProductLineDO> newOpt = productLineDOList.stream().filter(e -> productLineId.equals(e.getId())).findAny();
 
             if(oldOpt.isPresent() && newOpt.isPresent()){
@@ -824,7 +823,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                         true
                 );
             } else{
-                log.error("对应产品线不存在: {},{}",OldProductLineId, productLineId);
+                log.error("对应产品线不存在: {},{}",oldProductLineId, productLineId);
             }
         }
 
