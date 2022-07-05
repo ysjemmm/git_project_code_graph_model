@@ -202,7 +202,7 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         when(taskMapper.get(any())).thenReturn(taskDO);
         when(projectMapper.get(any())).thenReturn(new ProjectDO());
         when(productLineMapper.selectById(any())).thenReturn(new ProductLineDO());
-        when(fileComponent.select(any(),any())).thenReturn(Collections.emptyList());
+        when(fileComponent.select(anyLong(),any())).thenReturn(Collections.emptyList());
         when(personComponent.select(any(),any())).thenReturn(Collections.emptyList());
         when(taskTimeComponent.getUseTime(any())).thenReturn(Collections.emptyList());
         BaseResult<TaskDetailVO> baseResult = taskServiceImp.get(1L);

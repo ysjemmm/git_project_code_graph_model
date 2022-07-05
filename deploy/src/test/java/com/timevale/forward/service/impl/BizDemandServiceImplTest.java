@@ -171,7 +171,7 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
 
         FileDO fileDO = new FileDO();
         fileDO.setFileId("www");
-        when(fileComponent.select(any(), any())).thenReturn(Collections.singletonList(fileDO));
+        when(fileComponent.select(anyLong(), any())).thenReturn(Collections.singletonList(fileDO));
 
         PersonDO personDO = new PersonDO();
         personDO.setUserId("www");
