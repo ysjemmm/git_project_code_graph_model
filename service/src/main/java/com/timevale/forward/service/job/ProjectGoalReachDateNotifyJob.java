@@ -53,6 +53,10 @@ public class ProjectGoalReachDateNotifyJob extends IJobHandler {
                 // 无项目或者无项目目标，过滤
                 continue;
             }
+            if (project.getStatus() < 0) {
+                // 已作废、暂停项目，过滤
+                continue;
+            }
             log.info("通知项目到期: {}", projectGoal);
             erpMessageClient.sendMarkdownMsg(MarkdownMsg.builder()
                     .title(TITLE)
