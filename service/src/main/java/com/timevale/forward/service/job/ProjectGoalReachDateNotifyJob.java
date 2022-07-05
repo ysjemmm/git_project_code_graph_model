@@ -5,6 +5,7 @@ import com.timevale.forward.dal.dao.ProjectGoalMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectGoalDO;
+import com.timevale.forward.model.enums.ProjectGoalStatusEnum;
 import com.timevale.forward.model.enums.YesOrNoEnum;
 import com.timevale.forward.service.integration.erp.ErpMessageClient;
 import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
@@ -55,6 +56,10 @@ public class ProjectGoalReachDateNotifyJob extends IJobHandler {
             }
             if (project.getStatus() < 0) {
                 // 已作废、暂停项目，过滤
+                continue;
+            }
+            if (!ProjectGoalStatusEnum.IN_PROGRESS.getCode().equals(projectGoal.getStatus())) {
+                // 非进行中项目目标不再提醒
                 continue;
             }
             log.info("通知项目到期: {}", projectGoal);
