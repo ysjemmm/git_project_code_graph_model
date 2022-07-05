@@ -32,7 +32,7 @@ public class ProjectNodeFlowDetailVO extends ToString {
     private String pd;
 
     @ApiModelProperty("业务方")
-    private String biz;
+    private List<String> bis;
 
     @ApiModelProperty("po负责人")
     private String po;

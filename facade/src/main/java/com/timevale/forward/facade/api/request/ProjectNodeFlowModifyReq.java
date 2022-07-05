@@ -18,7 +18,7 @@ public class ProjectNodeFlowModifyReq extends BaseReq {
 
     @ApiModelProperty("流程id")
     @NotNull(message = "流程id不能为空")
-    private String flowId;
+    private Long nodeFlowId;
 
 
 }

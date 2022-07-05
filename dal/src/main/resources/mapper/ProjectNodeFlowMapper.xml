@@ -14,7 +14,7 @@
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectNodeFlowDO">
         select id,project_id, flow_id, last_flow_id,status,stage,reason,pd_id,pd,biz_id,biz,po_id,po,d_id,d
         ,publish_date,change_publish_date,delay_day,unreviewed_id,unreviewed,review_fail_id,review_fail,review_fail_reason
-        ,create_man ,create_man_id,modify_man_id,modify_man,create_date,modify_date
+        ,create_man ,create_man_id,modify_man_id,modify_man,create_date,modify_date,is_deleted
         from project_node_flow
         <where>
             <if test="id != null"> id = #{id}</if>
@@ -43,7 +43,7 @@
     <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ProjectNodeFlowDO">
         select id,project_id, flow_id, last_flow_id,status,stage,reason,pd_id,pd,biz_id,biz,po_id,po,d_id,d
         ,publish_date,change_publish_date,delay_day,unreviewed_id,unreviewed,review_fail_id,review_fail,review_fail_reason
-        ,create_man ,create_man_id,modify_man_id,modify_man,create_date,modify_date
+        ,create_man ,create_man_id,modify_man_id,modify_man,create_date,modify_date,is_deleted
         from project_node_flow
         where project_id = #{projectId} and is_deleted=false
     </select>

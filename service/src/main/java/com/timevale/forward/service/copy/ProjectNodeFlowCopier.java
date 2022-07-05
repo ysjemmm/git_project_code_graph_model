@@ -57,6 +57,7 @@ public interface ProjectNodeFlowCopier {
 
     @Mapping(source = "unreviewed", target = "unrevieweds", qualifiedByName = "unreviewedMappingList")
     @Mapping(source = "reviewFail", target = "reviewFails", qualifiedByName = "reviewFailMappingList")
+    @Mapping(source = "biz", target = "bis", qualifiedByName = "bizMappingList")
     ProjectNodeFlowDetailVO convert(ProjectNodeFlowDO projectNodeFlowDO);
 
     @Named("unreviewedMappingList")
@@ -66,11 +67,20 @@ public interface ProjectNodeFlowCopier {
         }
         return JSONObject.parseArray(unrevieweds,String.class);
     }
+
     @Named("reviewFailMappingList")
     default List<String> reviewFailMappingList(String reviewFails){
         if(StringUtils.isEmpty(reviewFails)){
             return Lists.newArrayList();
         }
         return JSONObject.parseArray(reviewFails,String.class);
+    }
+
+    @Named("bizMappingList")
+    default List<String> bizMappingList(String biz){
+        if(StringUtils.isEmpty(biz)){
+            return Lists.newArrayList();
+        }
+        return JSONObject.parseArray(biz,String.class);
     }
 }

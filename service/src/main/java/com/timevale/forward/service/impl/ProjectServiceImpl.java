@@ -324,7 +324,7 @@ public class ProjectServiceImpl implements ProjectService {
         personComponent.update(projectModifyReq.getPds(), newProject.getId(), PersonTypeEnum.PROJECT_PD.getCode());
 
         ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
-        projectNodeFlowComponent.process(oldProject.getPlanEndDate(),newProject.getPlanEndDate(),projectNodeFlowDO);
+        projectNodeFlowComponent.process(projectNodeFlowDO);
 
         return BaseResult.success(true);
     }

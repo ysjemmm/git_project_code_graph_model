@@ -10,7 +10,7 @@
     </insert>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProjectNodeRecordDO">
-        select id,project_id, name, plan_date,version,create_man ,create_man_id,modify_man_id,modify_man,create_date,modify_date
+        select id,project_id, name, plan_date,version,create_man ,create_man_id,modify_man_id,modify_man,create_date,modify_date,is_deleted
         from project_node_record
         <where>
             <if test="projectId != null">and project_id = #{projectId}</if>

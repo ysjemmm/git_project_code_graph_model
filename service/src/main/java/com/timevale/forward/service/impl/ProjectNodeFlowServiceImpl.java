@@ -7,13 +7,16 @@ import com.timevale.forward.dal.dao.ProjectNodeMapper;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import com.timevale.forward.dal.entity.ProjectNodeFlowDO;
 import com.timevale.forward.facade.api.client.ProjectNodeFlowService;
+import com.timevale.forward.facade.api.request.ProjectNodeFlowAddReq;
 import com.timevale.forward.facade.api.request.ProjectNodeFlowCheckReq;
 import com.timevale.forward.facade.api.request.ProjectNodeFlowModifyReq;
 import com.timevale.forward.facade.api.result.ProjectNodeFlowDetailVO;
+import com.timevale.forward.model.enums.FlowStageEnum;
 import com.timevale.forward.model.enums.FlowStatusEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.service.component.ProjectNodeFlowComponent;
 import com.timevale.forward.service.copy.ProjectNodeCopier;
+import com.timevale.forward.service.copy.ProjectNodeFlowCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -22,6 +25,7 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
@@ -57,30 +61,35 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
     @Override
     public BaseResult<ProjectNodeFlowDetailVO> get(Long nodeFlowId) {
         log.info("节点审批流程详情,参数:{}", nodeFlowId);
-//        ProjectNodeFlowDO oldFlowDo = projectNodeFlowMapper.get(nodeFlowId, null);
-//        if (oldFlowDo == null) {
-//            throw new BaseBizRuntimeException("找不到该审批流程");
-//        }
-//        ProjectNodeFlowDetailVO projectFlowDetailVO = ProjectNodeFlowCopier.INSTANCE.convert(oldFlowDo);
-//        projectFlowDetailVO.setStatusName(ProjectFlowStatusEnum.getTextByCode(oldFlowDo.getStatus()));
-//        List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(oldFlowDo.getProjectId());
-//        if(FlowStageEnum.SECOND.getCode().equals(oldFlowDo.getStage())){
-//            ProjectNodeFlowDO lastFlowDo = projectNodeFlowMapper.get(nodeFlowId, oldFlowDo.getLastFlowId());
-//            projectFlowDetailVO.setReviewFailReason(lastFlowDo.getReviewFailReason());
-//            projectFlowDetailVO.setPoReviewFailReason(oldFlowDo.getReviewFailReason());
-//        }
-//        long changeCount = projectFlowDos.stream().filter(a -> ProjectFlowStatusEnum.REVIEWED.getCode().equals(a.getStatus())).count();
-//        projectFlowDetailVO.setChangeCount(changeCount);
-        ProjectNodeFlowDetailVO vo = new ProjectNodeFlowDetailVO();
-        return BaseResult.success(vo);
+        ProjectNodeFlowDO currentFlowDo = projectNodeFlowMapper.get(nodeFlowId, null);
+        if (currentFlowDo == null) {
+            throw new BaseBizRuntimeException("找不到该审批流程");
+        }
+        ProjectNodeFlowDetailVO projectFlowDetailVO = ProjectNodeFlowCopier.INSTANCE.convert(currentFlowDo);
+        projectFlowDetailVO.setStatusName(FlowStatusEnum.getTextByCode(currentFlowDo.getStatus()));
+        List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(currentFlowDo.getProjectId());
+
+        if (!StringUtils.isEmpty(currentFlowDo.getLastFlowId())) {
+            //(pd||biz)&&po审批
+            ProjectNodeFlowDO lastFlowDo = projectNodeFlowMapper.get(null, currentFlowDo.getLastFlowId());
+            projectFlowDetailVO.setReviewFailReason(lastFlowDo.getReviewFailReason());
+            projectFlowDetailVO.setPoReviewFailReason(currentFlowDo.getReviewFailReason());
+        } else if (FlowStageEnum.SECOND.getCode().equals(currentFlowDo.getStage())) {
+            //pd和biz为空,只有po审批
+            projectFlowDetailVO.setReviewFailReason(StringUtils.EMPTY);
+            projectFlowDetailVO.setPoReviewFailReason(currentFlowDo.getReviewFailReason());
+        }
+        long changeCount = projectFlowDos.stream().filter(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
+        projectFlowDetailVO.setChangeCount(changeCount);
+        return BaseResult.success(projectFlowDetailVO);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> withdraw(ProjectNodeFlowModifyReq projectNodeFlowModifyReq) {
         log.info("节点审批流程撤销,参数:{}", projectNodeFlowModifyReq);
-        String flowId = projectNodeFlowModifyReq.getFlowId();
-        ProjectNodeFlowDO projectNodeFlowDO = projectNodeFlowMapper.get(null, flowId);
+        Long id = projectNodeFlowModifyReq.getNodeFlowId();
+        ProjectNodeFlowDO projectNodeFlowDO = projectNodeFlowMapper.get(id, null);
         if (!FlowStatusEnum.AUDITING.getCode().equals(projectNodeFlowDO.getStatus())) {
             throw new BaseBizRuntimeException("流程状态非审核中,无法撤销");
         }
@@ -91,7 +100,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
         }
 
         TerminateRequest request = new TerminateRequest();
-        request.setProcessInstanceId(flowId);
+        request.setProcessInstanceId(projectNodeFlowDO.getFlowId());
         request.setAssignee(userInfo.getId());
         epeiusClient.withdrawInstance(request);
 
@@ -135,6 +144,13 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
                 }
             }
         }
+        return BaseResult.success();
+    }
+
+    @Override
+    public BaseResult<Boolean> test(ProjectNodeFlowAddReq projectNodeFlowAddReq) {
+        ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectNodeFlowAddReq);
+        projectNodeFlowComponent.process(projectNodeFlowDO);
         return BaseResult.success();
     }
 

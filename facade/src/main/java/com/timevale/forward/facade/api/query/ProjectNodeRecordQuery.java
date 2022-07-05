@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 
 /**
  * @author xingyun
@@ -21,12 +22,12 @@ public class ProjectNodeRecordQuery extends BaseReq {
     @NotNull(message = "项目id不能为空")
     private Long projectId;
 
-    @ApiModelProperty("小版本号id")
-    @NotNull(message = "小版本号id不能为空")
-    private Long minId;
+    @ApiModelProperty("小版本号")
+    @NotNull(message = "小版本号不能为空")
+    private BigDecimal minVersion;
 
-    @ApiModelProperty("大版本号id")
-    @NotNull(message = "大版本号id不能为空")
-    private Long maxId;
+    @ApiModelProperty("大版本号")
+    @NotNull(message = "大版本号不能为空")
+    private BigDecimal maxVersion;
 
 }
