@@ -633,7 +633,8 @@ public class ProjectServiceImpl implements ProjectService {
             newProject.setStatus(oldStatus);
         }
         ProjectDO oldProject = projectMapper.get(newProject.getId());
-        projectMapper.update(newProject);
+        newProject.setNodeStatus(oldProject.getNodeStatus());
+        projectMapper.fullUpdateById(newProject);
         if (!Objects.equals(newProject.getStatus(), oldStatus)) {
             //状态不一致时,更新产品需求状态
             productDemandComponent.updateProductDemandStatus(newProject.getId(), newProject.getStatus());

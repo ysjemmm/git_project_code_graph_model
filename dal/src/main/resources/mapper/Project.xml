@@ -46,6 +46,34 @@
         </where>
     </update>
 
+    <update id="fullUpdateById" parameterType="com.timevale.forward.dal.entity.ProjectDO">
+        update project
+        <set>
+            name = #{name},
+            customer_dev = #{customerDev},
+            priority = #{priority},
+            type = #{type},
+            `status` = #{status},
+            node_status = #{nodeStatus},
+            pm = #{pmName},
+            pm_id = #{pmId},
+            plan_start_date = #{planStartDate},
+            plan_end_date = #{planEndDate},
+            actual_start_date = #{actualStartDate},
+            actual_end_date = #{actualEndDate},
+            `desc` = #{desc},
+            `level` = #{level},
+            is_with_goal = #{isWithGoal},
+            is_platform_publish = #{isPlatformPublish},
+            resource_assessment = #{resourceAssessment},
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId},
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
 
     <select id="getByProductDemandId" resultType="com.timevale.forward.dal.entity.ProjectDO">
         select a.id,a.name, a.customer_dev, a.priority, a.type ,a.status,a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
