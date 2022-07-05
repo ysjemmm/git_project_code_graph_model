@@ -15,6 +15,7 @@ import org.assertj.core.util.Lists;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -42,10 +43,26 @@ public class ProjectNodeRecordServiceImpl implements ProjectNodeRecordService {
         BigDecimal maxVersion = projectNodeRecordQuery.getMaxVersion();
         BigDecimal minVersion = projectNodeRecordQuery.getMinVersion();
         List<ProjectNodeRecordDO> list = projectNodeRecordMapper.list(projectNodeRecordQuery.getProjectId());
-        List<ProjectNodeRecordDO> min = list.stream().filter(a -> maxVersion.equals(a.getVersion())).collect(Collectors.toList());
+
+        Map<String, ProjectNodeRecordDO> minMap = list.stream().filter(a -> minVersion.equals(a.getVersion()))
+                .collect(Collectors.toMap(ProjectNodeRecordDO::getName, k -> k, (v1, v2) -> v2));
+
+        Map<String, ProjectNodeRecordDO> maxMap = list.stream().filter(a -> maxVersion.equals(a.getVersion()))
+                .collect(Collectors.toMap(ProjectNodeRecordDO::getName, k -> k, (v1, v2) -> v2));
+
+        minMap.forEach((k, v) -> {
+            if (v.getPlanDate() == null && (maxMap.get(k) == null || maxMap.get(k).getPlanDate() == null)) {
+                return;
+            }
+
+            if(maxMap.get(k) == null){
+
+            }
+        });
+
 //        List<ProjectNodeRecordDO> min = list.stream().filter(a -> minVersion.equals(a.getVersion())).collect(Collectors.toList());
 
-        ProjectNodeRecordCompareVO vo=new ProjectNodeRecordCompareVO();
+        ProjectNodeRecordCompareVO vo = new ProjectNodeRecordCompareVO();
         return BaseResult.success(Lists.newArrayList(vo));
     }
 }

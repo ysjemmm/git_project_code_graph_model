@@ -7,7 +7,7 @@ import com.timevale.forward.dal.dao.ProjectNodeMapper;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import com.timevale.forward.dal.entity.ProjectNodeFlowDO;
 import com.timevale.forward.facade.api.client.ProjectNodeFlowService;
-import com.timevale.forward.facade.api.request.ProjectNodeFlowAddReq;
+import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.request.ProjectNodeFlowCheckReq;
 import com.timevale.forward.facade.api.request.ProjectNodeFlowModifyReq;
 import com.timevale.forward.facade.api.result.ProjectNodeFlowDetailVO;
@@ -148,9 +148,11 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
     }
 
     @Override
-    public BaseResult<Boolean> test(ProjectNodeFlowAddReq projectNodeFlowAddReq) {
-        ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectNodeFlowAddReq);
-        projectNodeFlowComponent.process(projectNodeFlowDO);
+    public BaseResult<Boolean> test(ProjectModifyReq projectModifyReq) {
+
+        ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
+        List<ProjectNodeDO> projectNodes = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
+        projectNodeFlowComponent.process(projectNodeFlowDO,projectNodes);
         return BaseResult.success();
     }
 

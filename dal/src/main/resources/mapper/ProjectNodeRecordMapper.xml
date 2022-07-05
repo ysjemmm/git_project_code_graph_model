@@ -3,10 +3,12 @@
 <mapper namespace="com.timevale.forward.dal.dao.ProjectNodeRecordMapper">
 
 
-    <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectNodeRecordDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+    <insert id="batchInsert" parameterType="com.timevale.forward.dal.entity.ProjectNodeRecordDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         insert into project_node_record (project_id, name, plan_date,version,create_man ,create_man_id)
         values
-        (#{projectId},#{name},#{planDate},#{version},#{createMan},#{createManId})
+        <foreach collection="list" item="item" separator=",">
+            (#{item.projectId},#{item.name},#{item.planDate},#{item.version},#{item.createManId},#{item.createMan})
+        </foreach>
     </insert>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProjectNodeRecordDO">

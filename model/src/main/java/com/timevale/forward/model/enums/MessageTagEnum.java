@@ -14,7 +14,9 @@ public enum MessageTagEnum {
      */
     FORWARD_TECHREVIEW("forward_techReview"),
 
-    FORWARD_TRACKEVENTREVIEW("forward_trackEventReview");
+    FORWARD_TRACKEVENTREVIEW("forward_trackEventReview"),
+
+    FORWARD_PUBLISHOFFICEREVIEW("forward_publishOfficeReview");
 
     private final String text;
 

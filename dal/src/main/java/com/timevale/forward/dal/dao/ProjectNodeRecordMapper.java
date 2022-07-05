@@ -12,14 +12,12 @@ import java.util.List;
 public interface ProjectNodeRecordMapper {
 
 
-
     /**
-     * 新增
      *
-     * @param projectNodeRecordDO projectNodeRecordDO
+     * @param projectNodeRecordDos projectNodeRecordDos
      * @return int
      */
-    int insert(ProjectNodeRecordDO projectNodeRecordDO);
+    int batchInsert(List<ProjectNodeRecordDO> projectNodeRecordDos);
     /**
      *
      * @param projectId projectId

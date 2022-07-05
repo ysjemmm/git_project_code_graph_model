@@ -106,5 +106,8 @@ public class ProjectDetailVO extends ToString {
     private Long publishFlowId;
 
     @ApiModelProperty("发布正式流程状态")
-    private Long publishFlowStatus;
+    private Integer publishFlowStatus;
+
+    @ApiModelProperty("发布正式计划时间延期次数")
+    private Long publishChangeCount;
 }

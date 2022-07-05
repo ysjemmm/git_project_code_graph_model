@@ -72,7 +72,7 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
         Map<String, Object> flowData = processInfo.getFlowData();
         if (FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
             projectFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode());
-            String rejectReason = flowData.get("rejectReason") == null ? "" : String.valueOf(flowData.get("rejectReason"));
+            String rejectReason = flowData.get("rejectReason") == null ? StringUtils.EMPTY : String.valueOf(flowData.get("rejectReason"));
             projectFlowDO.setReviewFailReason(rejectReason);
         } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
             projectFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.WITHDRAW.getCode());

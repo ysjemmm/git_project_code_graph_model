@@ -119,6 +119,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private ProjectNodeFlowComponent projectNodeFlowComponent;
 
+    @Resource
+    private ProjectNodeFlowMapper projectNodeFlowMapper;
+
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -324,7 +327,8 @@ public class ProjectServiceImpl implements ProjectService {
         personComponent.update(projectModifyReq.getPds(), newProject.getId(), PersonTypeEnum.PROJECT_PD.getCode());
 
         ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
-        projectNodeFlowComponent.process(projectNodeFlowDO);
+        List<ProjectNodeDO> projectNodes = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
+        projectNodeFlowComponent.process(projectNodeFlowDO,projectNodes);
 
         return BaseResult.success(true);
     }
@@ -366,12 +370,22 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 节点状态
         projectDetailVO.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(projectDetailVO.getNodeStatus()));
-
+        //详设
         List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(projectId);
         if (CollectionUtils.isNotEmpty(projectFlowDos)) {
             projectFlowDos.sort(Comparator.comparing(ProjectFlowDO::getCreateDate).reversed());
             ProjectFlowDO oldFlowDo = projectFlowDos.get(0);
             projectDetailVO.setProjectFlowId(oldFlowDo.getId());
+        }
+        //发布正式
+        List<ProjectNodeFlowDO> projectNodeFlows = projectNodeFlowMapper.getByProjectId(projectId);
+        if (CollectionUtils.isNotEmpty(projectNodeFlows)) {
+            projectNodeFlows.sort(Comparator.comparing(ProjectNodeFlowDO::getCreateDate).reversed());
+            ProjectNodeFlowDO oldFlowDo = projectNodeFlows.get(0);
+            projectDetailVO.setPublishFlowId(oldFlowDo.getId());
+            projectDetailVO.setPublishFlowStatus(oldFlowDo.getStatus());
+            long count = projectNodeFlows.stream().filter(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
+            projectDetailVO.setPublishChangeCount(count);
         }
         return BaseResult.success(projectDetailVO);
     }

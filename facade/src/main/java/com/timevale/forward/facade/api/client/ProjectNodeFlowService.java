@@ -2,7 +2,7 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.request.ProjectNodeFlowAddReq;
+import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.request.ProjectNodeFlowCheckReq;
 import com.timevale.forward.facade.api.request.ProjectNodeFlowModifyReq;
 import com.timevale.forward.facade.api.result.ProjectNodeFlowDetailVO;
@@ -44,9 +44,9 @@ public interface ProjectNodeFlowService {
     /**
      * 修改
      *
-     * @param projectNodeFlowAddReq projectNodeFlowAddReq
+     * @param projectModifyReq projectModifyReq
      * @return Boolean
      */
-    BaseResult<Boolean> test(ProjectNodeFlowAddReq projectNodeFlowAddReq);
+    BaseResult<Boolean> test(ProjectModifyReq projectModifyReq);
 
 }
