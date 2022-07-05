@@ -84,7 +84,8 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             if (BigDecimal.ZERO.equals(elapsedTime)) {
                 return;
             }
-            projectNodeFlowDO.setDelayDay(BigDecimal.valueOf(1));
+            projectNodeFlowDO.setDelayDay(elapsedTime);
+//            projectNodeFlowDO.setDelayDay(BigDecimal.valueOf(1));
             projectNodeFlowDO.setStage(FlowStageEnum.FIRST.getCode());
             projectNodeFlowDO.setFlowId(startFlow(projectNodeFlowDO, projectNodes));
             projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode());
