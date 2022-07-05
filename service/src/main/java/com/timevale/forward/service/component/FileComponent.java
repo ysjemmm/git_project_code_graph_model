@@ -29,4 +29,12 @@ public interface FileComponent {
      * @return 列表
      */
     List<FileDO> select(Long attacheId, Integer type);
+
+    /**
+     *
+     * @param attacheIdList 附属id列表
+     * @param type 附属类型
+     * @return 列表
+     */
+    List<FileDO> select(List<Long> attacheIdList, Integer type);
 }

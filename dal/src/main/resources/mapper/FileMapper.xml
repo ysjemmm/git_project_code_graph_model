@@ -10,6 +10,19 @@
         <if test="type!=null">and type = #{type}</if>
     </select>
 
+    <select id="selectByAttacheIdList" resultType="com.timevale.forward.dal.entity.FileDO">
+        select id ,attache_id, type, name fileName , file_id, is_deleted,create_man ,create_date ,modify_man ,modify_date
+        from file
+        where is_deleted = false
+        <if test="attacheIdList != null and attacheIdList.size() > 0">
+            and attache_id in
+            <foreach collection="attacheIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="type!=null">and type = #{type}</if>
+    </select>
+
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.FileDO">
         insert into file (attache_id, type, name , file_id, create_man_id, create_man)
         values
