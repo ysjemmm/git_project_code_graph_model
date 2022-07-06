@@ -197,8 +197,10 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             projectNodeFlowDO.setReviewFailReason(StringUtils.EMPTY);
             projectNodeFlowDO.setReviewFail(StringUtils.EMPTY);
             projectNodeFlowDO.setReviewFailId(StringUtils.EMPTY);
-            projectNodeFlowDO.setUnreviewed(StringUtils.EMPTY);
-            projectNodeFlowDO.setUnreviewedId(StringUtils.EMPTY);
+            String unreviewed = StringUtils.isEmpty(projectNodeFlowDO.getD()) ? projectNodeFlowDO.getPo() : projectNodeFlowDO.getD();
+            String unreviewedId = StringUtils.isEmpty(projectNodeFlowDO.getDid()) ? projectNodeFlowDO.getPoId() : projectNodeFlowDO.getDid();
+            projectNodeFlowDO.setUnreviewed(unreviewed);
+            projectNodeFlowDO.setUnreviewedId(unreviewedId);
             projectNodeFlowDO.setCreateMan(operator);
             projectNodeFlowDO.setCreateManId(userInfo.getId());
             projectNodeFlowMapper.insert(projectNodeFlowDO);
@@ -209,11 +211,9 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
 
             projectComponent.updateNodeStatus(projectId);
 
-            Integer status = projectComponent.getStatus(projectId);
-            ProjectDO projectDO = new ProjectDO();
-            projectDO.setStatus(status);
-            projectDO.setId(projectId);
-            projectMapper.updateStatus(projectDO);
+            ProjectDO projectDO = projectMapper.get(projectId);
+            projectComponent.fillInfo(projectNodes, projectDO);
+            projectMapper.update(projectDO);
 
             insertProjectNodeRecord(projectNodeFlowDO.getProjectId(), projectNodes);
         }
@@ -264,15 +264,16 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())) {
             reviewIds.add(projectNodeFlowDO.getPdId());
             reviewIds.addAll(JSONObject.parseArray(projectNodeFlowDO.getBizId(), String.class));
-        } else if (StringUtils.isEmpty(projectNodeFlowDO.getPoId())) {
-            reviewIds.add(projectNodeFlowDO.getDid());
-        } else {
+        } else if (!StringUtils.isEmpty(projectNodeFlowDO.getPoId())) {
             reviewIds.add(projectNodeFlowDO.getPoId());
+        } else {
+            reviewIds.add(projectNodeFlowDO.getDid());
         }
         String lastFlowId = projectNodeFlowDO.getLastFlowId();
         if (!StringUtils.isEmpty(lastFlowId)) {
             ProjectNodeFlowDO lastFlow = projectNodeFlowMapper.get(null, lastFlowId);
-            variables.put("reviewFail", lastFlow.getReviewFail());
+            List<String> reviewFail = JSONObject.parseArray(projectNodeFlowDO.getReviewFail(), String.class);
+            variables.put("reviewFail", StringUtils.join(reviewFail, ","));
             variables.put("reviewFailReason", lastFlow.getReviewFailReason());
         }
         variables.put("reviews", reviewIds);

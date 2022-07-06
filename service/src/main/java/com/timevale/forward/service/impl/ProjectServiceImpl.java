@@ -389,7 +389,6 @@ public class ProjectServiceImpl implements ProjectService {
         //发布正式
         List<ProjectNodeFlowDO> projectNodeFlows = projectNodeFlowMapper.getByProjectId(projectId);
         if (CollectionUtils.isNotEmpty(projectNodeFlows)) {
-            projectNodeFlows.sort(Comparator.comparing(ProjectNodeFlowDO::getCreateDate).reversed());
             ProjectNodeFlowDO oldFlowDo = projectNodeFlows.get(0);
             projectDetailVO.setPublishFlowId(oldFlowDo.getId());
             projectDetailVO.setPublishFlowStatus(oldFlowDo.getStatus());

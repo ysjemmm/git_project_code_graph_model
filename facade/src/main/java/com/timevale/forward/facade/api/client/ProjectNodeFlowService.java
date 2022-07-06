@@ -4,7 +4,6 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.request.ProjectNodeFlowCheckReq;
-import com.timevale.forward.facade.api.request.ProjectNodeFlowModifyReq;
 import com.timevale.forward.facade.api.result.ProjectNodeFlowDetailVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
@@ -19,19 +18,19 @@ public interface ProjectNodeFlowService {
     /**
      * 查看
      *
-     * @param nodeFlowId  nodeFlowId
+     * @param projectId  projectId
      * @return 详情信息
      */
-    BaseResult<ProjectNodeFlowDetailVO> get(Long nodeFlowId);
+    BaseResult<ProjectNodeFlowDetailVO> get(Long projectId);
 
 
     /**
      * 修改
      *
-     * @param projectNodeFlowModifyReq projectNodeFlowModifyReq
+     * @param projectId projectId
      * @return Boolean
      */
-    BaseResult<Boolean> withdraw(ProjectNodeFlowModifyReq projectNodeFlowModifyReq);
+    BaseResult<Boolean> withdraw(Long projectId);
 
     /**
      * 修改

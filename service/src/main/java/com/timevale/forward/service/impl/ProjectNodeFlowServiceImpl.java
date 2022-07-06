@@ -9,7 +9,6 @@ import com.timevale.forward.dal.entity.ProjectNodeFlowDO;
 import com.timevale.forward.facade.api.client.ProjectNodeFlowService;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.request.ProjectNodeFlowCheckReq;
-import com.timevale.forward.facade.api.request.ProjectNodeFlowModifyReq;
 import com.timevale.forward.facade.api.result.ProjectNodeFlowDetailVO;
 import com.timevale.forward.model.enums.FlowStageEnum;
 import com.timevale.forward.model.enums.FlowStatusEnum;
@@ -59,15 +58,15 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
     private EpeiusClient epeiusClient;
 
     @Override
-    public BaseResult<ProjectNodeFlowDetailVO> get(Long nodeFlowId) {
-        log.info("节点审批流程详情,参数:{}", nodeFlowId);
-        ProjectNodeFlowDO currentFlowDo = projectNodeFlowMapper.get(nodeFlowId, null);
-        if (currentFlowDo == null) {
+    public BaseResult<ProjectNodeFlowDetailVO> get(Long projectId) {
+        log.info("节点审批流程详情,参数:{}", projectId);
+        List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(projectId);
+        if(CollectionUtils.isEmpty(projectFlowDos)){
             throw new BaseBizRuntimeException("找不到该审批流程");
         }
+        ProjectNodeFlowDO currentFlowDo = projectFlowDos.get(0);
         ProjectNodeFlowDetailVO projectFlowDetailVO = ProjectNodeFlowCopier.INSTANCE.convert(currentFlowDo);
         projectFlowDetailVO.setStatusName(FlowStatusEnum.getTextByCode(currentFlowDo.getStatus()));
-        List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(currentFlowDo.getProjectId());
 
         if (!StringUtils.isEmpty(currentFlowDo.getLastFlowId())) {
             //(pd||biz)&&po审批
@@ -86,27 +85,30 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> withdraw(ProjectNodeFlowModifyReq projectNodeFlowModifyReq) {
-        log.info("节点审批流程撤销,参数:{}", projectNodeFlowModifyReq);
-        Long id = projectNodeFlowModifyReq.getNodeFlowId();
-        ProjectNodeFlowDO projectNodeFlowDO = projectNodeFlowMapper.get(id, null);
-        if (!FlowStatusEnum.AUDITING.getCode().equals(projectNodeFlowDO.getStatus())) {
+    public BaseResult<Boolean> withdraw(Long projectId) {
+        log.info("节点审批流程撤销,参数:{}", projectId);
+        List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(projectId);
+        if(CollectionUtils.isEmpty(projectFlowDos)){
+            throw new BaseBizRuntimeException("找不到该审批流程");
+        }
+        ProjectNodeFlowDO currentFlowDo = projectFlowDos.get(0);
+        if (!FlowStatusEnum.AUDITING.getCode().equals(currentFlowDo.getStatus())) {
             throw new BaseBizRuntimeException("流程状态非审核中,无法撤销");
         }
 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        if (!Objects.equals(userInfo.getId(), projectNodeFlowDO.getCreateManId())) {
+        if (!Objects.equals(userInfo.getId(), currentFlowDo.getCreateManId())) {
             throw new BaseBizRuntimeException("操作人非流程发起人,无法撤销");
         }
 
         TerminateRequest request = new TerminateRequest();
-        request.setProcessInstanceId(projectNodeFlowDO.getFlowId());
+        request.setProcessInstanceId(currentFlowDo.getFlowId());
         request.setAssignee(userInfo.getId());
         epeiusClient.withdrawInstance(request);
 
-        projectNodeFlowDO.setStatus(FlowStatusEnum.WITHDRAW.getCode());
-        projectNodeFlowMapper.update(projectNodeFlowDO);
-        return BaseResult.success();
+        currentFlowDo.setStatus(FlowStatusEnum.WITHDRAW.getCode());
+        projectNodeFlowMapper.update(currentFlowDo);
+        return BaseResult.success(true);
     }
 
     @Override

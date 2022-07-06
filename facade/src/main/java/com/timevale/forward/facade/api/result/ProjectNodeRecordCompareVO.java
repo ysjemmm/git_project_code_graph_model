@@ -24,8 +24,11 @@ public class ProjectNodeRecordCompareVO extends ToString {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
-    @ApiModelProperty("版本")
-    private BigDecimal version;
+    @ApiModelProperty("小版本")
+    private BigDecimal minVersion;
+
+    @ApiModelProperty("大版本")
+    private BigDecimal maxVersion;
 
     @ApiModelProperty("节点名称")
     private String name;
