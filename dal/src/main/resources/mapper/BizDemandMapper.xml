@@ -109,6 +109,10 @@
             reject_reason = #{rejectReason},
             plan_release_date = #{planReleaseDate},
             project_end_date = #{projectEndDate},
+            customer_dev_demand = #{customerDevDemand},
+            customer_dev_type = #{customerDevType},
+            customer_dev_sale_contract = #{customerDevSaleContract},
+            customer_dev_project_name = #{customerDevProjectName},
             modify_man_id = #{modifyManId},
             modify_man = #{modifyMan},
         </set>
