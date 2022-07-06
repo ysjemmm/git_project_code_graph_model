@@ -82,7 +82,7 @@
         order by is_main desc, modify_date desc
     </select>
     <select id="getByDate" resultType="com.timevale.forward.dal.entity.ProjectGoalDO">
-        select * from project_goal where day(reach_date) = day(#{date})
+        select * from project_goal where day(reach_date) = day(#{date}) and is_deleted = 0
     </select>
 
 </mapper>
