@@ -212,6 +212,9 @@ public class ManDayServiceImpl implements ManDayService {
         // 项目总人天总是返回
         res.setProjectActualManDay(manDayMapper.sumProjectActualDays(projectId));
         if (manDays.isEmpty()) {
+            if (res.getProjectActualManDay() == null) {
+                res.setProjectActualManDay(BigDecimal.ZERO);
+            }
             res.setProjectManDays(Collections.emptyList());
             return BaseResult.success(res);
         }
