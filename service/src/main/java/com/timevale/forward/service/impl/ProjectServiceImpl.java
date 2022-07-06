@@ -123,7 +123,7 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectGoalMapper projectGoalMapper;
 
     @Override
-    public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
+    public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
         String currentUser = LocalSessionUtils.getUserInfo().getId();
         ProjectListCondition condition = ProjectCopier.INSTANCE.convert(projectQueryList);
@@ -134,7 +134,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (AscriptionEnum.CURRENT_USER.name().equals(projectQueryList.getAscription())) {
             projectIds = personMapper.getMainIds(Lists.newArrayList(currentUser), null, PersonTypeEnum.PROJECT_MEMBER.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return BaseResult.success(ResultUtil.queryResultEmpty());
             }
 
         } else if (AscriptionEnum.TEAM.name().equals(projectQueryList.getAscription())) {
@@ -142,11 +142,10 @@ public class ProjectServiceImpl implements ProjectService {
             log.info("我和我的下属:{}", allMyStaffWithSelf);
             projectIds = personMapper.getMainIds(allMyStaffWithSelf, null, PersonTypeEnum.PROJECT_MEMBER.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return BaseResult.success(ResultUtil.queryResultEmpty());
             }
         }
-
-        return projectComponent.page(condition, projectIds);
+        return BaseResult.success(projectComponent.page(condition, projectIds));
     }
 
     @Override

@@ -188,8 +188,8 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     }
 
     @Override
-    public PageQueryResult<BizDemandVO> page(BizDemandListCondition bizDemandListCondition) {
-        Map<Long, GroupResponse> deptNodeMap = null;
+    public QueryResultVO<BizDemandVO> page(BizDemandListCondition bizDemandListCondition) {
+        Map<Long, GroupResponse> deptNodeMap = new HashMap<>();
         Set<Long> queryDeptIdSet = Sets.newHashSet(bizDemandListCondition.getDeptIdList());
 
         // 如果查询条件有部门id，收集子部门id及所需部门的完整名
@@ -242,7 +242,8 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
         // 产品线分析信息
-        Map<String, List<BizDemandListDO>> bizDemandListDOMap = bizDemandListDOList.stream().collect(Collectors.groupingBy(BizDemandListDO::getProductLineId));
+        List<BizDemandListDO> allBizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
+        Map<Long, List<BizDemandListDO>> bizDemandListDOMap = allBizDemandListDOList.stream().collect(Collectors.groupingBy(BizDemandListDO::getProductLineId));
         log.info("业务查询产品线分析：{}", bizDemandListDOMap);
 
         List<ProductLineAnalyseVO> analyseVOList = new ArrayList<>();
@@ -260,8 +261,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         QueryResultVO<BizDemandVO> queryResultVO = new QueryResultVO<>();
         queryResultVO.setAnalyseVOList(analyseVOList);
         queryResultVO.setPageQueryResult(pageQueryResult);
-
-        return pageQueryResult;
+        return queryResultVO;
     }
 
     @Override

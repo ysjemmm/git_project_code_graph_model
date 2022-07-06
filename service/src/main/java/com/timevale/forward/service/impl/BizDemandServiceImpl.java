@@ -27,7 +27,6 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
-import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -92,7 +91,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     private SqlOrderComponent sqlOrderComponent;
 
     @Override
-    public BaseResult<PageQueryResult<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
+    public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 转换查询条件
@@ -127,14 +126,13 @@ public class BizDemandServiceImpl implements BizDemandService {
             }
         }
         if (resultIsEmpty) {
-            return BaseResult.success(ResultUtil.pageEmpty());
+            return BaseResult.success(ResultUtil.queryResultEmpty());
         }
         // 开始分页
         String collation = sqlOrderComponent.build(bizDemandQueryList.getOrderFiled(), bizDemandQueryList.getOrderCollation());
         PageHelper.startPage(bizDemandQueryList.pageNum, bizDemandQueryList.pageSize, collation);
-        PageQueryResult<BizDemandVO> pageQueryResult = bizDemandComponent.page(bizDemandListCondition);
 
-        return BaseResult.success(pageQueryResult);
+        return BaseResult.success(bizDemandComponent.page(bizDemandListCondition));
     }
 
     @Override
@@ -192,7 +190,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 查询并转换
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(condition);
-        Map<String, List<BizDemandListDO>> bizDemandListDOMap = bizDemandListDOList.stream().collect(Collectors.groupingBy(BizDemandListDO::getProductLineId));
+        Map<Long, List<BizDemandListDO>> bizDemandListDOMap = bizDemandListDOList.stream().collect(Collectors.groupingBy(BizDemandListDO::getProductLineId));
         log.info("业务查询产品线分析：{}", bizDemandListDOMap);
 
         List<ProductLineAnalyseVO> result = new ArrayList<>();

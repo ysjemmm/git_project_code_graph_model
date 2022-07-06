@@ -10,6 +10,7 @@ import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
@@ -175,9 +176,7 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
 
         when(projectProductDemandMapper.getByProductDemandId(any())).thenReturn(null);
 
-        BaseResult<PageQueryResult<ProjectVO>> baseResult = new BaseResult<>();
-        baseResult.setMessage("成功");
-        when(projectCmponent.page(any(), any())).thenReturn(baseResult);
+        when(projectCmponent.page(any(), any())).thenReturn(new QueryResultVO<>());
 
         ProductDemandLinkProjectQueryList productDemandLinkProjectQueryList = new ProductDemandLinkProjectQueryList();
         productDemandLinkProjectQueryList.setProductDemandId(1L);
@@ -196,8 +195,7 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
         productBizDemandDO.setBizDemandId(1L);
         when(productBizDemandMapper.select(any())).thenReturn(Collections.singletonList(productBizDemandDO));
 
-        PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
-        when(bizDemandComponent.page(any())).thenReturn(pageQueryResult);
+        when(bizDemandComponent.page(any())).thenReturn(new QueryResultVO<>());
 
         ProductDemandLinkBizDemandQueryList productDemandLinkBizDemandQueryList = new ProductDemandLinkBizDemandQueryList();
         productDemandLinkBizDemandQueryList.setStatusList(Collections.singletonList(1));

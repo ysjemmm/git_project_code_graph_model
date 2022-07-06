@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
 public class ProductLineAnalyseVO extends ToString {
 
     @ApiModelProperty("产品线id")
-    private String productLineId;
+    private Long productLineId;
 
     @ApiModelProperty("产品线名称")
     private String productLineName;

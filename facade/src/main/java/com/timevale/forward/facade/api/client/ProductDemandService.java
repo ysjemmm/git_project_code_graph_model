@@ -20,7 +20,7 @@ public interface ProductDemandService {
      * @param productDemandQueryList 产品需求信息
      * @return 列表
      */
-    BaseResult<PageQueryResult<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList);
+    BaseResult<QueryResultVO<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList);
 
     /**
      * 修改状态

@@ -26,7 +26,7 @@ public interface ProjectService {
      * @param projectQueryList 项目信息
      * @return 列表
      */
-    BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList);
+    BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList);
 
     /**
      * 修改状态

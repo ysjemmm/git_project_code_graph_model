@@ -1,6 +1,5 @@
 package com.timevale.forward.service.impl;
 
-import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.dao.ProductBizDemandMapper;
@@ -9,7 +8,7 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
@@ -20,7 +19,6 @@ import com.timevale.forward.service.observer.event.BizDemandToReceiveMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
-import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -80,9 +78,7 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
         localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
 
-
-        PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
-        when(bizDemandComponent.page(any())).thenReturn(pageQueryResult);
+        when(bizDemandComponent.page(any())).thenReturn(new QueryResultVO<>());
 
         BizDemandQueryList bizDemandQueryList = new BizDemandQueryList();
         bizDemandQueryList.setAscription("CURRENT_USER");
