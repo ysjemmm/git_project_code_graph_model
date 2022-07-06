@@ -194,7 +194,7 @@ public class ProductDemandDescFlowComponent {
                     .setNewValue(StringEscapeUtils.unescapeHtml(auditingFlow.getChangeDesc()));
             bizChangeLogDO.setCreateManId(auditingFlow.getCreateManId());
             bizChangeLogDO.setCreateMan(auditingFlow.getCreateMan());
-            bizChangeLogDO.setContent(String.format("{\"flowId\": %s}", auditingFlow.getFlowId()));
+            bizChangeLogDO.setContent(String.format("{\"taskId\": %s}", currentTaskIdList.get(0)));
             bizChangeLogMapper.insert(bizChangeLogDO);
         }
         productDemandDescFlowMapper.update(auditingFlow);
