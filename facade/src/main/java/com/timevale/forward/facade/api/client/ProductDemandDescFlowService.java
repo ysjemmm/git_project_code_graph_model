@@ -2,6 +2,7 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.request.ProductDemandIdReq;
 import com.timevale.forward.facade.api.result.ProductDemandDescFlowVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
@@ -24,7 +25,7 @@ public interface ProductDemandDescFlowService {
      * @param productDemandId 产品需求id
      * @return 是否成功
      */
-    BaseResult<Boolean> withdrawProductDemandDescFlow(Long productDemandId);
+    BaseResult<Boolean> withdrawProductDemandDescFlow(ProductDemandIdReq productDemandId);
 
 
 }

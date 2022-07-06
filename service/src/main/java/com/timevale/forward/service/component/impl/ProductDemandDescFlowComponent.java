@@ -8,6 +8,7 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.request.ProductDemandDescChangeReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
 import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProductDemandDescFlowCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
@@ -63,6 +64,9 @@ public class ProductDemandDescFlowComponent {
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
 
+    @Resource
+    private CommonConfig config;
+
     public void startProductDemandDescChangeFlow(ProductDemandModifyReq productDemandModifyReq) {
         ProductDemandDescChangeReq descChangeReq = productDemandModifyReq.getDescChangeReq();
         if (descChangeReq == null) {
@@ -96,6 +100,7 @@ public class ProductDemandDescFlowComponent {
         variables.put("auditUserId", project.getPmId());
         variables.put("poId", descChangeReq.getPoId());
         variables.put("po", poName);
+        variables.put("detailLink", config.getProductManagementViewUrl() + productDemand.getId());
         variables.put("descChangeTimes", productDemandDescRecordMapper.countByProductDemandId(productDemand.getId()));
         String flowId = startFlow(variables, userInfo.getId());
 

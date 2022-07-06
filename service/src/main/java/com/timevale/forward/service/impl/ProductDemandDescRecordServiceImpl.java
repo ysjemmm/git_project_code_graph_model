@@ -4,7 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProductDemandDescRecordMapper;
 import com.timevale.forward.dal.entity.ProductDemandDescRecordDO;
 import com.timevale.forward.facade.api.client.ProductDemandDescRecordService;
-import com.timevale.forward.facade.api.query.ProductDemandDescRecordQueryList;
+import com.timevale.forward.facade.api.request.ProductDemandIdReq;
 import com.timevale.forward.facade.api.result.ProductDemandDescRecordVO;
 import com.timevale.forward.service.copy.ProductDemandDescRecordCopier;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -26,9 +26,9 @@ public class ProductDemandDescRecordServiceImpl implements ProductDemandDescReco
 
     @Override
     public BaseResult<List<ProductDemandDescRecordVO>> list(
-            ProductDemandDescRecordQueryList productDemandDescRecordQueryList) {
+            ProductDemandIdReq productDemandIdReq) {
 
-        Long productDemandId = productDemandDescRecordQueryList.getProductDemandId();
+        Long productDemandId = productDemandIdReq.getProductDemandId();
         List<ProductDemandDescRecordDO> descriptions =
                 productDemandDescRecordMapper.listByProductDemandId(productDemandId);
 
