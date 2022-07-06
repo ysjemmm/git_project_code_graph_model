@@ -7,11 +7,11 @@ import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectNodeFlowMapper;
 import com.timevale.forward.dal.dao.ProjectNodeRecordMapper;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectNodeDO;
-import com.timevale.forward.dal.entity.ProjectNodeFlowDO;
-import com.timevale.forward.dal.entity.ProjectNodeRecordDO;
+import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
+import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 import com.timevale.forward.model.enums.FlowStageEnum;
+import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.component.ProjectNodeFlowComponent;
@@ -89,7 +89,9 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             }
             projectNodeFlowDO.setDelayDay(elapsedTime);
 //            projectNodeFlowDO.setDelayDay(BigDecimal.valueOf(1));
-            projectNodeFlowDO.setStage(FlowStageEnum.FIRST.getCode());
+            Integer stage = StringUtils.isEmpty(projectNodeFlowDO.getPdId()) && StringUtils.isEmpty(projectNodeFlowDO.getBizId())
+                    ? FlowStageEnum.SECOND.getCode() : FlowStageEnum.FIRST.getCode();
+            projectNodeFlowDO.setStage(stage);
             projectNodeFlowDO.setFlowId(startFlow(projectNodeFlowDO, projectNodes));
             projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode());
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -219,22 +221,29 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
 
             ProjectDO projectDO = projectMapper.get(projectId);
             Date oldValue = projectDO.getPlanEndDate();
+
             projectComponent.fillInfo(projectNodes, projectDO);
+
+            ProjectNodeEnum.sort(projectNodes);
+            ProjectNodeDO first = projectNodes.get(0);
+            ProjectNodeDO last = projectNodes.get(projectNodes.size() - 1);
+            projectDO.setPlanStartDate(first.getPlanDate());
+            projectDO.setPlanEndDate(last.getPlanDate());
             projectMapper.update(projectDO);
 
             insertProjectNodeRecord(projectNodeFlowDO.getProjectId(), projectNodes);
 
             // 创建变更记录
-//            BizChangeLogDO bizChangeLogDO = new BizChangeLogDO()
-//                    .setMainId(projectId)
-//                    .setType(BizChangeLogTypeEnum.PROJECT.getCode())
-//                    .setField(BizChangeLogFieldEnum.PLAN_END_DATE.getText())
-//                    .setOldValue(DateUtil.parseToString(oldValue,DateFormatConst.DATE_FORMAT))
-//                    .setNewValue(DateUtil.parseToString(projectDO.getPlanEndDate(),DateFormatConst.DATE_FORMAT));
-//            bizChangeLogDO.setCreateMan(operator);
-//            bizChangeLogDO.setCreateManId(userInfo.getId());
-//            bizChangeLogDO.setContent(String.format("{\"taskId\": %s}", currentTaskIdList.get(0)));
-//            bizChangeLogMapper.insert(bizChangeLogDO);
+            BizChangeLogDO bizChangeLogDO = new BizChangeLogDO()
+                    .setMainId(projectId)
+                    .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                    .setField(BizChangeLogFieldEnum.PLAN_END_DATE.getText())
+                    .setOldValue(DateUtil.parseToString(oldValue, DateFormatConst.DATE_FORMAT))
+                    .setNewValue(DateUtil.parseToString(projectDO.getPlanEndDate(), DateFormatConst.DATE_FORMAT));
+            bizChangeLogDO.setCreateMan(operator);
+            bizChangeLogDO.setCreateManId(userInfo.getId());
+            bizChangeLogDO.setContent(String.format("{\"taskId\": %s}", currentTaskIdList.get(0)));
+            bizChangeLogMapper.insert(bizChangeLogDO);
         }
     }
 

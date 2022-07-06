@@ -7,7 +7,7 @@
         insert into project_node_record (project_id, name, plan_date,version,create_man ,create_man_id)
         values
         <foreach collection="list" item="item" separator=",">
-            (#{item.projectId},#{item.name},#{item.planDate},#{item.version},#{item.createManId},#{item.createMan})
+            (#{item.projectId},#{item.name},#{item.planDate},#{item.version},#{item.createMan},#{item.createManId})
         </foreach>
     </insert>
 
