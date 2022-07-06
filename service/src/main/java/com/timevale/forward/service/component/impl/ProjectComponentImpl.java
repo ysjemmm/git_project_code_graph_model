@@ -130,7 +130,7 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         // 是否包含风险
         if(condition.getIncludeRisk() != null && condition.getIncludeRisk()){
-            List<ProjectRiskDO> projectRiskDOList = projectRiskMapper.selectByProjectIdListStatus(projectIds, new ArrayList<>(ProjectRiskStatusEnum.PENDING.getCode()));
+            List<ProjectRiskDO> projectRiskDOList = projectRiskMapper.selectByProjectIdListStatus(projectIds, Lists.newArrayList(ProjectRiskStatusEnum.PENDING.getCode()));
             projectIds = projectRiskDOList.stream().map(ProjectRiskDO::getProjectId).distinct().collect(Collectors.toList());
 
             if (CollectionUtils.isEmpty(projectIds)) {
