@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component.impl;
 
+import cn.hutool.http.HtmlUtil;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.forward.dal.dao.*;
@@ -89,14 +90,14 @@ public class ProductDemandDescFlowComponent {
         variables.put("changeType",
                 ProductDemandDescChangeTypeEnum.getTextByCode(descChangeReq.getProductDemandDescChangeType()));
         variables.put("reason", descChangeReq.getReason());
-        variables.put("previousDesc", productDemand.getDesc());
-        variables.put("changeDesc", descChangeReq.getChangeDesc());
+        variables.put("previousDesc", StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(productDemand.getDesc())));
+        variables.put("changeDesc", StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(descChangeReq.getChangeDesc())));
         variables.put("pm", project.getPmName());
         variables.put("auditUserId", project.getPmId());
         variables.put("poId", descChangeReq.getPoId());
         variables.put("po", poName);
         variables.put("descChangeTimes", productDemandDescRecordMapper.countByProductDemandId(productDemand.getId()));
-        String flowId = startFlow(variables);
+        String flowId = startFlow(variables, userInfo.getId());
 
         // 插入流程记录
         ProductDemandDescFlowDO flow = new ProductDemandDescFlowDO()
@@ -148,7 +149,7 @@ public class ProductDemandDescFlowComponent {
                 flowData.put("pmResult", "拒绝");
                 flowData.put("reviewFailReason", rejectReason);
                 flowData.put("auditUserId", flowData.get("poId"));
-                String newFlowId = startFlow(flowData);
+                String newFlowId = startFlow(flowData, auditingFlow.getCreateManId());
                 ProductDemandDescFlowDO newFlow = ProductDemandDescFlowCopier.INSTANCE.clone(auditingFlow);
                 newFlow.setFlowId(newFlowId)
                         .setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode())
@@ -190,8 +191,8 @@ public class ProductDemandDescFlowComponent {
                     .setMainId(productDemand.getId())
                     .setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode())
                     .setField(BizChangeLogFieldEnum.DESC.getText())
-                    .setOldValue(StringEscapeUtils.unescapeHtml(auditingFlow.getDesc()))
-                    .setNewValue(StringEscapeUtils.unescapeHtml(auditingFlow.getChangeDesc()));
+                    .setOldValue(StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(auditingFlow.getDesc())))
+                    .setNewValue(StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(auditingFlow.getChangeDesc())));
             bizChangeLogDO.setCreateManId(auditingFlow.getCreateManId());
             bizChangeLogDO.setCreateMan(auditingFlow.getCreateMan());
             bizChangeLogDO.setContent(String.format("{\"taskId\": %s}", currentTaskIdList.get(0)));
@@ -201,11 +202,11 @@ public class ProductDemandDescFlowComponent {
 
     }
 
-    private String startFlow(Map<String, Object> variables) {
+    private String startFlow(Map<String, Object> variables, String startAccount) {
         StartProcessRequest start = new StartProcessRequest();
         start.setApplicationName("forward");
         start.setProcessDefinitionKey("forward_productDemandChange");
-        start.setStartAccountId("jingchun");
+        start.setStartAccountId(startAccount);
         start.setVariables(variables);
         start.setEpeVirtualProcessSwitch(false);
         return epeiusClient.start(start);
