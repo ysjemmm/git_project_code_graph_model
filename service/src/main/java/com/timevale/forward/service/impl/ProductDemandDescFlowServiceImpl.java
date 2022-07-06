@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import com.timevale.epeius.service.model.request.TerminateRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProductDemandDescFlowMapper;
 import com.timevale.forward.dal.entity.ProductDemandDescFlowDO;
@@ -7,6 +8,9 @@ import com.timevale.forward.facade.api.client.ProductDemandDescFlowService;
 import com.timevale.forward.facade.api.result.ProductDemandDescFlowVO;
 import com.timevale.forward.model.enums.FlowStatusEnum;
 import com.timevale.forward.service.copy.ProductDemandDescFlowCopier;
+import com.timevale.forward.service.integration.epeius.EpeiusClient;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +30,9 @@ public class ProductDemandDescFlowServiceImpl implements ProductDemandDescFlowSe
     @Resource
     private ProductDemandDescFlowMapper productDemandDescFlowMapper;
 
+    @Resource
+    private EpeiusClient epeiusClient;
+
     @Override
     public BaseResult<ProductDemandDescFlowVO> getLatestDescFlow(Long productDemandId) {
         ProductDemandDescFlowDO flow = productDemandDescFlowMapper.getLastByProductDemandId(productDemandId);
@@ -38,7 +45,14 @@ public class ProductDemandDescFlowServiceImpl implements ProductDemandDescFlowSe
         AssertUtil.notNull(flow, "该产品需求不存在流程变更记录，无法撤回流程");
         AssertUtil.checkState(FlowStatusEnum.AUDITING.getCode().equals(flow.getStatus()), "该审批流程处于" +
                 FlowStatusEnum.getTextByCode(flow.getStatus()) + "状态，无法撤回");
-        // TODO jingchun 发起撤回
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        AssertUtil.checkState(userInfo.getId().equals(flow.getCreateManId()), "该流程不是您发起的，无法撤回");
+        TerminateRequest terminateRequest = new TerminateRequest();
+        terminateRequest.setProcessInstanceId(flow.getFlowId());
+        terminateRequest.setAssignee(userInfo.getId());
+        epeiusClient.withdrawInstance(terminateRequest);
+        flow.setStatus(FlowStatusEnum.WITHDRAW.getCode());
+        productDemandDescFlowMapper.update(flow);
         return BaseResult.success(true);
     }
 }
