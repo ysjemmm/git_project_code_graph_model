@@ -11,11 +11,13 @@ import com.timevale.forward.service.copy.ProductDemandDescFlowCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 产品需求变更流程接口
@@ -36,7 +38,17 @@ public class ProductDemandDescFlowServiceImpl implements ProductDemandDescFlowSe
     @Override
     public BaseResult<ProductDemandDescFlowVO> getLatestDescFlow(Long productDemandId) {
         ProductDemandDescFlowDO flow = productDemandDescFlowMapper.getLastByProductDemandId(productDemandId);
-        return BaseResult.success(ProductDemandDescFlowCopier.INSTANCE.convert(flow));
+        if (flow == null) {
+            return BaseResult.success();
+        }
+        ProductDemandDescFlowVO res = ProductDemandDescFlowCopier.INSTANCE.convert(flow);
+        ProcessResponse processInfo = epeiusClient.getProcessInfo(flow.getFlowId());
+        List<String> tasks = processInfo.getCurrentTaskIdList();
+        if (tasks.isEmpty()) {
+            return BaseResult.success(res);
+        }
+        res.setTaskId(tasks.get(0));
+        return BaseResult.success(res);
     }
 
     @Override

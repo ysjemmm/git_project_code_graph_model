@@ -19,6 +19,9 @@ public class ProductDemandDescFlowVO extends ToString {
     @ApiModelProperty("流程id")
     private String flowId;
 
+    @ApiModelProperty("任务id")
+    private String taskId;
+
     @ApiModelProperty("评审状态:-1已撤回,0审核中,1审核通过,2审核不通过")
     private Integer status;
 
