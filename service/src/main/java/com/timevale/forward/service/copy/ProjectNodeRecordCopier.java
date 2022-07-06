@@ -18,4 +18,11 @@ public interface ProjectNodeRecordCopier {
      */
     List<ProjectNodeRecordVO> convert(List<ProjectNodeRecordDO> projectNodeRecordDOList);
 
+    /**
+     *
+     * @param projectNodeRecordDO projectNodeRecordDO
+     * @return ProjectNodeRecordVO
+     */
+    ProjectNodeRecordVO convert(ProjectNodeRecordDO projectNodeRecordDO);
+
 }

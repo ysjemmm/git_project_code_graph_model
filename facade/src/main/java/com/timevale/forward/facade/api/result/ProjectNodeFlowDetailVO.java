@@ -25,8 +25,8 @@ public class ProjectNodeFlowDetailVO extends ToString {
     @ApiModelProperty("状态")
     private String statusName;
 
-    @ApiModelProperty("审批结果")
-    private String result;
+    @ApiModelProperty("变更事由")
+    private String reason;
 
     @ApiModelProperty("发起人")
     private String createMan;

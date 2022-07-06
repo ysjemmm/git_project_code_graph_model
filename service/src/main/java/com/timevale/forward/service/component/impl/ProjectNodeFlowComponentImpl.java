@@ -24,6 +24,7 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.lowcode.support.response.task.TaskHandleUserResponse;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -73,10 +74,15 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         if (projectNodeFlowDO == null) {
             return;
         }
+        ProjectDO projectDO = projectMapper.get(projectNodeFlowDO.getProjectId());
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        if(!Objects.equals(projectDO.getPmId(),userInfo.getId())){
+            throw new BaseBizRuntimeException("审批流程只能由PM发起");
+        }
         List<ProjectNodeFlowDO> projectNodeFlows = projectNodeFlowMapper.getByProjectId(projectNodeFlowDO.getProjectId());
         boolean match = projectNodeFlows.stream().anyMatch(a -> com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
         if (match) {
-            return;
+            throw new BaseBizRuntimeException("存在正在审核中的审批流程,请撤销后重新发起");
         }
         Date oldPlanEndDate = DateUtil.getEndOfDay(projectNodeFlowDO.getPublishDate());
         Date planEndDate = DateUtil.getEndOfDay(projectNodeFlowDO.getChangePublishDate());
@@ -94,7 +100,6 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             projectNodeFlowDO.setStage(stage);
             projectNodeFlowDO.setFlowId(startFlow(projectNodeFlowDO, projectNodes));
             projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode());
-            UserInfo userInfo = LocalSessionUtils.getUserInfo();
             String operator = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
             projectNodeFlowDO.setCreateMan(operator);
             projectNodeFlowDO.setCreateManId(userInfo.getId());

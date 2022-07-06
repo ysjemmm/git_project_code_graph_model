@@ -17,10 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -41,7 +38,13 @@ public class ProjectNodeRecordServiceImpl implements ProjectNodeRecordService {
     public BaseResult<List<ProjectNodeRecordVO>> list(Long projectId) {
         log.info("节点版本记录,参数:{}", projectId);
         List<ProjectNodeRecordDO> list = projectNodeRecordMapper.list(projectId);
-        List<ProjectNodeRecordVO> projectNodeRecords = ProjectNodeRecordCopier.INSTANCE.convert(list);
+        Map<BigDecimal, List<ProjectNodeRecordDO>> map = list.stream().collect(Collectors.groupingBy(ProjectNodeRecordDO::getVersion));
+        List<ProjectNodeRecordVO> projectNodeRecords=new ArrayList<>();
+        map.forEach((k,v)->{
+            ProjectNodeRecordVO projectNodeRecordVO = ProjectNodeRecordCopier.INSTANCE.convert(v.get(0));
+            projectNodeRecords.add(projectNodeRecordVO);
+        });
+        projectNodeRecords.sort(Comparator.comparing(ProjectNodeRecordVO::getVersion).reversed());
         return BaseResult.success(projectNodeRecords);
     }
 
