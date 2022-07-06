@@ -101,9 +101,8 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             projectNodeFlowDO.setStage(stage);
             projectNodeFlowDO.setFlowId(startFlow(projectNodeFlowDO, projectNodes));
             projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode());
-            String operator = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
-            projectNodeFlowDO.setCreateMan(operator);
-            projectNodeFlowDO.setCreateManId(userInfo.getId());
+            projectNodeFlowDO.setCreateMan(projectDO.getPmName());
+            projectNodeFlowDO.setCreateManId(projectDO.getPmId());
             projectNodeFlowMapper.insert(projectNodeFlowDO);
         }
     }
@@ -192,10 +191,8 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         projectNodeFlowDO.setUnreviewedId(CollectionUtils.isEmpty(reviewIdList) ? StringUtils.EMPTY : JSONObject.toJSONString(reviewIdList));
         projectNodeFlowDO.setUnreviewed(CollectionUtils.isEmpty(unReviewAlias) ? StringUtils.EMPTY : JSONObject.toJSONString(unReviewAlias));
 
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        String operator = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
-        projectNodeFlowDO.setModifyMan(operator);
-        projectNodeFlowDO.setModifyManId(userInfo.getId());
+        projectNodeFlowDO.setModifyMan(projectNodeFlowDO.getCreateMan());
+        projectNodeFlowDO.setModifyManId(projectNodeFlowDO.getCreateManId());
 
         log.info("更新的数据 projectNodeFlowDO={}", projectNodeFlowDO);
         projectNodeFlowMapper.update(projectNodeFlowDO);
@@ -214,8 +211,6 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             String unreviewedId = StringUtils.isEmpty(projectNodeFlowDO.getDid()) ? projectNodeFlowDO.getPoId() : projectNodeFlowDO.getDid();
             projectNodeFlowDO.setUnreviewed(JSONObject.toJSONString(Lists.newArrayList(unreviewed)));
             projectNodeFlowDO.setUnreviewedId(JSONObject.toJSONString(Lists.newArrayList(unreviewedId)));
-            projectNodeFlowDO.setCreateMan(operator);
-            projectNodeFlowDO.setCreateManId(userInfo.getId());
             projectNodeFlowMapper.insert(projectNodeFlowDO);
         }
         if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
@@ -246,8 +241,8 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
                     .setField(BizChangeLogFieldEnum.PLAN_END_DATE.getText())
                     .setOldValue(DateUtil.parseToString(oldValue, DateFormatConst.DATE_FORMAT))
                     .setNewValue(DateUtil.parseToString(projectDO.getPlanEndDate(), DateFormatConst.DATE_FORMAT));
-            bizChangeLogDO.setCreateMan(operator);
-            bizChangeLogDO.setCreateManId(userInfo.getId());
+            bizChangeLogDO.setCreateMan(projectNodeFlowDO.getCreateMan());
+            bizChangeLogDO.setCreateManId(projectNodeFlowDO.getCreateManId());
             bizChangeLogDO.setContent(String.format("{\"taskId\": %s}", currentTaskIdList.get(0)));
             bizChangeLogMapper.insert(bizChangeLogDO);
         }
