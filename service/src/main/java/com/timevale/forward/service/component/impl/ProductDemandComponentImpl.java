@@ -115,7 +115,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
 
         // 变更次数
         Integer changeTimes = productDemandDescRecordMapper.countByProductDemandId(demandDO.getId());
-        demandDetailVO.setDescChangeTimes(changeTimes);
+        demandDetailVO.setDescChangeTimes(changeTimes == 0 ? changeTimes : changeTimes - 1);
 
         // 变更后描述
         ProductDemandDescFlowDO latestDescFlow =

@@ -101,7 +101,8 @@ public class ProductDemandDescFlowComponent {
         variables.put("poId", descChangeReq.getPoId());
         variables.put("po", poName);
         variables.put("detailLink", config.getProductManagementViewUrl() + productDemand.getId());
-        variables.put("descChangeTimes", productDemandDescRecordMapper.countByProductDemandId(productDemand.getId()));
+        Integer changeTimes = productDemandDescRecordMapper.countByProductDemandId(productDemand.getId());
+        variables.put("descChangeTimes", changeTimes == 0 ? changeTimes : changeTimes - 1);
         String flowId = startFlow(variables, userInfo.getId());
 
         // 插入流程记录
