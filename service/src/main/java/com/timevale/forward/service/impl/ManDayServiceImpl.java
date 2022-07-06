@@ -209,12 +209,15 @@ public class ManDayServiceImpl implements ManDayService {
         List<ManDayDO> manDays = manDayMapper.getByProjectIdAndStartDates(projectId,
                 startDates, projectManDayQueryList.getUserIds());
         ProjectTotalManDayVO res = new ProjectTotalManDayVO();
+        // 项目总人天总是返回
+        res.setProjectActualManDay(manDayMapper.sumProjectActualDays(projectId));
         if (manDays.isEmpty()) {
-            res.setProjectActualManDay(BigDecimal.ZERO);
+            if (res.getProjectActualManDay() == null) {
+                res.setProjectActualManDay(BigDecimal.ZERO);
+            }
             res.setProjectManDays(Collections.emptyList());
             return BaseResult.success(res);
         }
-        res.setProjectActualManDay(manDayMapper.sumProjectActualDays(projectId));
         res.setProjectManDays(new ArrayList<>());
 
         List<ManDayVO> manDayVOList = ManDayCopier.INSTANCE.convert(manDays);

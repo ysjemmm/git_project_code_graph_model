@@ -201,7 +201,7 @@
     </select>
 
     <select id="getByIds" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select id,name, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date,
+        select id,name, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date, is_with_goal,
         actual_start_date,actual_end_date,`desc`, create_man_id, create_man,create_date,modify_date
         from project
         <where>
