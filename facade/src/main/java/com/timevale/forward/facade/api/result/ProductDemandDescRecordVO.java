@@ -3,10 +3,12 @@ package com.timevale.forward.facade.api.result;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * @author jingchun
@@ -31,5 +33,8 @@ public class ProductDemandDescRecordVO extends ToString {
 
     @ApiModelProperty("操作人")
     private String createMan;
+
+    @ApiModelProperty("创建时间")
+    private Date createDate;
 
 }

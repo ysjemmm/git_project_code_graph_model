@@ -17,7 +17,7 @@
             <if test="status != null">
                 status = #{status},
             </if>
-            <if test="rejectReason != null">
+            <if test="reviewFailReason != null">
                 review_fail_reason = #{reviewFailReason},
             </if>
         </set>
