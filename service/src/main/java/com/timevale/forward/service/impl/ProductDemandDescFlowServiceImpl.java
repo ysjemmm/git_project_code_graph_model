@@ -5,6 +5,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProductDemandDescFlowMapper;
 import com.timevale.forward.dal.entity.ProductDemandDescFlowDO;
 import com.timevale.forward.facade.api.client.ProductDemandDescFlowService;
+import com.timevale.forward.facade.api.request.ProductDemandIdReq;
 import com.timevale.forward.facade.api.result.ProductDemandDescFlowVO;
 import com.timevale.forward.model.enums.FlowStatusEnum;
 import com.timevale.forward.service.copy.ProductDemandDescFlowCopier;
@@ -52,8 +53,8 @@ public class ProductDemandDescFlowServiceImpl implements ProductDemandDescFlowSe
     }
 
     @Override
-    public BaseResult<Boolean> withdrawProductDemandDescFlow(Long productDemandId) {
-        ProductDemandDescFlowDO flow = productDemandDescFlowMapper.getLastByProductDemandId(productDemandId);
+    public BaseResult<Boolean> withdrawProductDemandDescFlow(ProductDemandIdReq productDemandIdReq) {
+        ProductDemandDescFlowDO flow = productDemandDescFlowMapper.getLastByProductDemandId(productDemandIdReq.getProductDemandId());
         AssertUtil.notNull(flow, "该产品需求不存在流程变更记录，无法撤回流程");
         AssertUtil.checkState(FlowStatusEnum.AUDITING.getCode().equals(flow.getStatus()), "该审批流程处于" +
                 FlowStatusEnum.getTextByCode(flow.getStatus()) + "状态，无法撤回");
