@@ -21,7 +21,7 @@ public interface ProjectNodeFlowService {
      * @param projectId  projectId
      * @return 详情信息
      */
-    BaseResult<ProjectNodeFlowDetailVO> get(Long projectId);
+    BaseResult<ProjectNodeFlowDetailVO> getFlow(Long projectId);
 
 
     /**

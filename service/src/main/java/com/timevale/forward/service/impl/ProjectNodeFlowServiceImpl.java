@@ -58,7 +58,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
     private EpeiusClient epeiusClient;
 
     @Override
-    public BaseResult<ProjectNodeFlowDetailVO> get(Long projectId) {
+    public BaseResult<ProjectNodeFlowDetailVO> getFlow(Long projectId) {
         log.info("节点审批流程详情,参数:{}", projectId);
         List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(projectId);
         if(CollectionUtils.isEmpty(projectFlowDos)){

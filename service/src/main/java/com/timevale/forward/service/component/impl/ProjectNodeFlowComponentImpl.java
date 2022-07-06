@@ -3,6 +3,7 @@ package com.timevale.forward.service.component.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectNodeFlowMapper;
 import com.timevale.forward.dal.dao.ProjectNodeRecordMapper;
@@ -63,6 +64,8 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
     @Resource
     private ProjectMapper projectMapper;
 
+    @Resource
+    private BizChangeLogMapper bizChangeLogMapper;
 
     @Override
     public void process(ProjectNodeFlowDO projectNodeFlowDO, List<ProjectNodeDO> projectNodes) {
@@ -127,6 +130,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode());
 
         }
+        //1审核人员处理
         List<String> reviewList = new ArrayList<>();
         List<String> reviewIdList = new ArrayList<>();
         if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())) {
@@ -190,6 +194,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
 
         List<ProjectNodeDO> projectNodes = JSONObject.parseArray(String.valueOf(flowData.get("projectNodes")), ProjectNodeDO.class);
         if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage()) && FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
+            //2.流程重新发起
             projectNodeFlowDO.setStage(FlowStageEnum.SECOND.getCode());
             projectNodeFlowDO.setLastFlowId(projectNodeFlowDO.getFlowId());
             projectNodeFlowDO.setFlowId(startFlow(projectNodeFlowDO, projectNodes));
@@ -206,16 +211,30 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             projectNodeFlowMapper.insert(projectNodeFlowDO);
         }
         if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
+            //3.流程通过后,更新信息
             Long projectId = projectNodeFlowDO.getProjectId();
             projectNodeComponent.add(projectNodes, projectId);
 
             projectComponent.updateNodeStatus(projectId);
 
             ProjectDO projectDO = projectMapper.get(projectId);
+            Date oldValue = projectDO.getPlanEndDate();
             projectComponent.fillInfo(projectNodes, projectDO);
             projectMapper.update(projectDO);
 
             insertProjectNodeRecord(projectNodeFlowDO.getProjectId(), projectNodes);
+
+            // 创建变更记录
+//            BizChangeLogDO bizChangeLogDO = new BizChangeLogDO()
+//                    .setMainId(projectId)
+//                    .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+//                    .setField(BizChangeLogFieldEnum.PLAN_END_DATE.getText())
+//                    .setOldValue(DateUtil.parseToString(oldValue,DateFormatConst.DATE_FORMAT))
+//                    .setNewValue(DateUtil.parseToString(projectDO.getPlanEndDate(),DateFormatConst.DATE_FORMAT));
+//            bizChangeLogDO.setCreateMan(operator);
+//            bizChangeLogDO.setCreateManId(userInfo.getId());
+//            bizChangeLogDO.setContent(String.format("{\"taskId\": %s}", currentTaskIdList.get(0)));
+//            bizChangeLogMapper.insert(bizChangeLogDO);
         }
     }
 
