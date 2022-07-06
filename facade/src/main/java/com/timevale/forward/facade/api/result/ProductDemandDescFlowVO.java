@@ -48,4 +48,10 @@ public class ProductDemandDescFlowVO extends ToString {
 
     @ApiModelProperty("项目经理")
     private String po;
+
+    @ApiModelProperty("流程发起人id")
+    private String createManId;
+
+    @ApiModelProperty("流程发起人")
+    private String createMan;
 }
