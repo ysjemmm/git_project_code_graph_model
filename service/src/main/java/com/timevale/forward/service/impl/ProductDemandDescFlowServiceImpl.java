@@ -53,8 +53,8 @@ public class ProductDemandDescFlowServiceImpl implements ProductDemandDescFlowSe
     }
 
     @Override
-    public BaseResult<Boolean> withdrawProductDemandDescFlow(ProductDemandIdReq productDemandIdReq) {
-        ProductDemandDescFlowDO flow = productDemandDescFlowMapper.getLastByProductDemandId(productDemandIdReq.getProductDemandId());
+    public BaseResult<Boolean> withdrawProductDemandDescFlow(ProductDemandIdReq productDemandId) {
+        ProductDemandDescFlowDO flow = productDemandDescFlowMapper.getLastByProductDemandId(productDemandId.getProductDemandId());
         AssertUtil.notNull(flow, "该产品需求不存在流程变更记录，无法撤回流程");
         AssertUtil.checkState(FlowStatusEnum.AUDITING.getCode().equals(flow.getStatus()), "该审批流程处于" +
                 FlowStatusEnum.getTextByCode(flow.getStatus()) + "状态，无法撤回");
