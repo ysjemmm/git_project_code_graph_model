@@ -28,6 +28,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -211,8 +212,8 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             projectNodeFlowDO.setReviewFailId(StringUtils.EMPTY);
             String unreviewed = StringUtils.isEmpty(projectNodeFlowDO.getD()) ? projectNodeFlowDO.getPo() : projectNodeFlowDO.getD();
             String unreviewedId = StringUtils.isEmpty(projectNodeFlowDO.getDid()) ? projectNodeFlowDO.getPoId() : projectNodeFlowDO.getDid();
-            projectNodeFlowDO.setUnreviewed(unreviewed);
-            projectNodeFlowDO.setUnreviewedId(unreviewedId);
+            projectNodeFlowDO.setUnreviewed(JSONObject.toJSONString(Lists.newArrayList(unreviewed)));
+            projectNodeFlowDO.setUnreviewedId(JSONObject.toJSONString(Lists.newArrayList(unreviewedId)));
             projectNodeFlowDO.setCreateMan(operator);
             projectNodeFlowDO.setCreateManId(userInfo.getId());
             projectNodeFlowMapper.insert(projectNodeFlowDO);
