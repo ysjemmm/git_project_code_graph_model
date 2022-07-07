@@ -240,7 +240,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
                     .setNewValue(DateUtil.parseToString(projectDO.getPlanEndDate(), DateFormatConst.DATE_FORMAT));
             bizChangeLogDO.setCreateMan(projectNodeFlowDO.getCreateMan());
             bizChangeLogDO.setCreateManId(projectNodeFlowDO.getCreateManId());
-            bizChangeLogDO.setContent(String.format("{\"taskId\": %s}", currentTaskIdList.get(0)));
+            bizChangeLogDO.setContent(String.format("{\"taskId\": \"%s\"}", currentTaskIdList.get(0)));
             bizChangeLogMapper.insert(bizChangeLogDO);
         }
     }
