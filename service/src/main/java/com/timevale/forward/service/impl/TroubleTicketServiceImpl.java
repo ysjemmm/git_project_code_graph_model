@@ -273,6 +273,9 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
             e.setIsMonitorDetectText(YesOrNoEnum.getTextByCode(e.getIsMonitorDetect()));
             e.setTroubleRankName(TroubleTicketRankEnum.getTextByCode(e.getTroubleRank()));
 
+            if(e.getDutyTeam() == null){
+                continue;
+            }
             GroupResponse response = deptNodeMap.get(e.getDutyTeam());
             if (response == null) {
                 e.setDutyTeamName("");
