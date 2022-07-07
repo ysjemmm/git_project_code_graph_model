@@ -228,7 +228,8 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         }
 
         // 故障定级-未定级,特殊处理
-        boolean contain = troubleTicketCondition.getTroubleRankList().contains(TroubleTicketRankEnum.UN_CERTAIN.getCode());
+        List<Integer> troubleRankList = troubleTicketCondition.getTroubleRankList();
+        boolean contain = CollectionUtils.isNotEmpty(troubleRankList) &&  troubleRankList.contains(TroubleTicketRankEnum.UN_CERTAIN.getCode());
         troubleTicketCondition.setTroubleRankIsNull(contain);
 
         Map<Long, GroupResponse> deptNodeMap = null;
