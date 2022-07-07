@@ -20,6 +20,12 @@
             <if test="reviewFailReason != null">
                 review_fail_reason = #{reviewFailReason},
             </if>
+            <if test="modifyManId != null">
+                modify_man_id = #{modifyManId},
+            </if>
+            <if test="modifyMan != null">
+                modify_man = #{modifyMan},
+            </if>
         </set>
         where id = #{id} and is_deleted = false
     </update>

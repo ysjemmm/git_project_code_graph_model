@@ -59,7 +59,6 @@ public class ProductDemandDescFlowServiceImpl implements ProductDemandDescFlowSe
         AssertUtil.checkState(FlowStatusEnum.AUDITING.getCode().equals(flow.getStatus()), "该审批流程处于" +
                 FlowStatusEnum.getTextByCode(flow.getStatus()) + "状态，无法撤回");
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        AssertUtil.checkState(userInfo.getId().equals(flow.getCreateManId()), "该流程不是您发起的，无法撤回");
         TerminateRequest terminateRequest = new TerminateRequest();
         terminateRequest.setProcessInstanceId(flow.getFlowId());
         terminateRequest.setAssignee(userInfo.getId());
