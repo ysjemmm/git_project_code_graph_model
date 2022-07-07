@@ -227,7 +227,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             projectDO.setPlanEndDate(last.getPlanDate());
             projectMapper.update(projectDO);
 
-            insertProjectNodeRecord(projectNodeFlowDO.getProjectId(), projectNodes);
+            insertProjectNodeRecord(projectNodeFlowDO.getProjectId(), projectNodes,projectNodeFlowDO);
 
             // 创建变更记录
             BizChangeLogDO bizChangeLogDO = new BizChangeLogDO()
@@ -247,7 +247,13 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
     public void insertProjectNodeRecord(Long projectId, List<ProjectNodeDO> projectNodes) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String operator = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
+        ProjectNodeFlowDO projectNodeFlowDO=new ProjectNodeFlowDO();
+        projectNodeFlowDO.setCreateMan(operator);
+        projectNodeFlowDO.setCreateManId(userInfo.getId());
+        insertProjectNodeRecord( projectId, projectNodes,projectNodeFlowDO);
+    }
 
+    private void insertProjectNodeRecord(Long projectId, List<ProjectNodeDO> projectNodes,ProjectNodeFlowDO projectNodeFlowDO) {
         BigDecimal max = projectNodeRecordMapper.list(projectId).stream().map(ProjectNodeRecordDO::getVersion)
                 .max(Comparator.comparing(BigDecimal::abs)).orElse(BigDecimal.ZERO);
 
@@ -257,16 +263,14 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             p.setName(a.getName());
             p.setPlanDate(a.getPlanDate());
             p.setVersion(max.add(BigDecimal.valueOf(1)));
-            p.setCreateMan(operator);
-            p.setCreateManId(userInfo.getId());
+            p.setCreateMan(projectNodeFlowDO.getCreateMan());
+            p.setCreateManId(projectNodeFlowDO.getCreateManId());
             return p;
         }).collect(Collectors.toList());
-
         if (CollectionUtils.isNotEmpty(recordDOList)) {
             projectNodeRecordMapper.batchInsert(recordDOList);
         }
     }
-
 
     private String startFlow(ProjectNodeFlowDO projectNodeFlowDO, List<ProjectNodeDO> projectNodes) {
         List<ProjectNodeFlowDO> projectNodeFlows = projectNodeFlowMapper.getByProjectId(projectNodeFlowDO.getProjectId());
@@ -298,8 +302,10 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             }
         } else if (!StringUtils.isEmpty(projectNodeFlowDO.getPoId())) {
             reviewIds.add(projectNodeFlowDO.getPoId());
+            reviews.add(projectNodeFlowDO.getPo());
         } else {
             reviewIds.add(projectNodeFlowDO.getDid());
+            reviews.add(projectNodeFlowDO.getD());
         }
         String lastFlowId = projectNodeFlowDO.getLastFlowId();
         if (!StringUtils.isEmpty(lastFlowId)) {

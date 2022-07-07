@@ -85,6 +85,7 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
         Map<String, ProjectNodeDO> newNodeMap = list.stream().collect(Collectors.toMap(ProjectNodeDO::getName, a -> a, (v1, v2) -> v2));
         //更新节点的实际时间,计划时间和老数据一致
         List<ProjectNodeDO> oldProjectNodes = projectNodeMapper.get(projectId);
+        log.info("新节点:{},旧节点:{}",list,oldProjectNodes);
         oldProjectNodes.forEach(a -> {
             if (newNodeMap.containsKey(a.getName())) {
                 a.setActualDate(newNodeMap.get(a.getName()).getActualDate());
@@ -97,6 +98,7 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
     public void updateNodePlanDate(List<ProjectNodeDO> list, Long projectId) {
         //更新节点的计划时间,实际时间和老数据一致
         List<ProjectNodeDO> oldProjectNodes = projectNodeMapper.get(projectId);
+        log.info("新节点:{},旧节点:{}",list,oldProjectNodes);
         Map<String, ProjectNodeDO> oldNodeMap = oldProjectNodes.stream().collect(Collectors.toMap(ProjectNodeDO::getName, a -> a, (v1, v2) -> v2));
         list.forEach(a -> {
             if (oldNodeMap.containsKey(a.getName())) {
