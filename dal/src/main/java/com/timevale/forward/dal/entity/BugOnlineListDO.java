@@ -3,6 +3,8 @@ package com.timevale.forward.dal.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
+
 
 /**
  * @author by YangXu
@@ -70,4 +72,9 @@ public class BugOnlineListDO extends BaseDO {
      * 客户名称
      */
     private String customerName;
+
+    /**
+     * 预计上线日期
+     */
+    private Date expectLaunchDate;
 }

@@ -491,6 +491,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setReason(null);
         bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
         bizDemandDO.setPlanReleaseDate(planReleaseDate);
+        bizDemandDO.setProductLineId(productLineId);
         bizDemandMapper.fullUpdate(bizDemandDO);
 
         // 通知需求提交人
