@@ -72,4 +72,7 @@ public class ProjectNodeFlowDetailVO extends ToString {
 
     @ApiModelProperty("更新时间")
     private Date modifyDate;
+
+    @ApiModelProperty("变更类型:0需求调研不充分、1业务需求变更或新增、2业务需求理解偏差、3需求对现有业务流造成改动需调整方案、9其他")
+    private Integer changeType;
 }

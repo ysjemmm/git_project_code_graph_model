@@ -75,11 +75,6 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         if (projectNodeFlowDO == null) {
             return;
         }
-        ProjectDO projectDO = projectMapper.get(projectNodeFlowDO.getProjectId());
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        if(!Objects.equals(projectDO.getPmId(),userInfo.getId())){
-            throw new BaseBizRuntimeException("审批流程只能由PM发起");
-        }
         List<ProjectNodeFlowDO> projectNodeFlows = projectNodeFlowMapper.getByProjectId(projectNodeFlowDO.getProjectId());
         boolean match = projectNodeFlows.stream().anyMatch(a -> com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
         if (match) {
@@ -96,13 +91,15 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             }
             projectNodeFlowDO.setDelayDay(elapsedTime);
 //            projectNodeFlowDO.setDelayDay(BigDecimal.valueOf(1));
-            Integer stage = StringUtils.isEmpty(projectNodeFlowDO.getPdId()) && StringUtils.isEmpty(projectNodeFlowDO.getBizId())
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
+            Integer stage = StringUtils.isEmpty(projectNodeFlowDO.getBizId())
+                    && (StringUtils.isEmpty(projectNodeFlowDO.getPdId()) || Objects.equals(projectNodeFlowDO.getPdId(), userInfo.getId()))
                     ? FlowStageEnum.SECOND.getCode() : FlowStageEnum.FIRST.getCode();
             projectNodeFlowDO.setStage(stage);
-            projectNodeFlowDO.setFlowId(startFlow(projectNodeFlowDO, projectNodes));
             projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode());
-            projectNodeFlowDO.setCreateMan(projectDO.getPmName());
-            projectNodeFlowDO.setCreateManId(projectDO.getPmId());
+            projectNodeFlowDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            projectNodeFlowDO.setCreateManId(userInfo.getId());
+            projectNodeFlowDO.setFlowId(startFlow(projectNodeFlowDO, projectNodes));
             projectNodeFlowMapper.insert(projectNodeFlowDO);
         }
     }
@@ -306,14 +303,8 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             variables.put("reviewFailReason", lastFlow.getReviewFailReason());
         }
         variables.put("reviews", reviewIds);
-        if (StringUtils.isEmpty(projectNodeFlowDO.getCreateMan())) {
-            UserInfo userInfo = LocalSessionUtils.getUserInfo();
-            variables.put("proposer", userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-            start.setStartAccountId(userInfo.getId());
-        } else {
-            variables.put("proposer", projectNodeFlowDO.getCreateMan());
-            start.setStartAccountId(projectNodeFlowDO.getCreateManId());
-        }
+        variables.put("proposer", projectNodeFlowDO.getCreateMan());
+        start.setStartAccountId(projectNodeFlowDO.getCreateManId());
         start.setApplicationName("forward");
         start.setProcessDefinitionKey("forward_publishOfficeReview");
         start.setVariables(variables);

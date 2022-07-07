@@ -118,5 +118,10 @@ public class ProjectNodeFlowDO extends BaseDO {
      */
     private String reason;
 
+    /**
+     *变更类型
+     */
+    private String changeType;
+
 
 }

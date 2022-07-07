@@ -274,7 +274,7 @@ public class ProjectServiceImpl implements ProjectService {
         Integer status = projectMapper.get(projectModifyReq.getId()).getStatus();
         newProject.setStatus(status);
 
-        fillInfoWhenModify(projectNodeDOList, newProject,projectModifyReq.getDelayType());
+        fillInfoWhenModify(projectNodeDOList, newProject, projectModifyReq.getDelayType());
 
         taskComponent.containProductLineInTask(newProject.getId(), newProject.getProductLineIds());
 
@@ -308,11 +308,15 @@ public class ProjectServiceImpl implements ProjectService {
                     throw new BaseBizRuntimeException("您的发布计划还未结束，请前往发布平台处理");
                 }
             }
-            if(!Integer.valueOf(1).equals(projectModifyReq.getDelayType())){
-                //无审批,直接更新
-                projectNodeComponent.add(projectNodeDOList, newProject.getId());
-                // 更新节点状态
-                projectComponent.updateNodeStatus(projectModifyReq.getId());
+            if (!Integer.valueOf(1).equals(projectModifyReq.getDelayType())) {
+                List<ProjectNodeFlowDO> projectNodeFlows = projectNodeFlowMapper.getByProjectId(newProject.getId());
+                boolean auditing = projectNodeFlows.stream().anyMatch(a -> com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
+                if (!auditing) {
+                    //无审批,直接更新
+                    projectNodeComponent.add(projectNodeDOList, newProject.getId());
+                    // 更新节点状态
+                    projectComponent.updateNodeStatus(projectModifyReq.getId());
+                }
             }
         }
         // log
@@ -322,20 +326,20 @@ public class ProjectServiceImpl implements ProjectService {
         // 产品经理
         personComponent.update(projectModifyReq.getPds(), newProject.getId(), PersonTypeEnum.PROJECT_PD.getCode());
 
-        if(Integer.valueOf(1).equals(projectModifyReq.getDelayType())){
+        if (Integer.valueOf(1).equals(projectModifyReq.getDelayType())) {
             ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
-            projectNodeFlowComponent.process(projectNodeFlowDO,projectNodeDOList);
-        }else if(Integer.valueOf(0).equals(projectModifyReq.getDelayType())){
+            projectNodeFlowComponent.process(projectNodeFlowDO, projectNodeDOList);
+        } else if (Integer.valueOf(0).equals(projectModifyReq.getDelayType())) {
             //版本+1
-            projectNodeFlowComponent.insertProjectNodeRecord(newProject.getId(),projectNodeDOList);
-        }else {
+            projectNodeFlowComponent.insertProjectNodeRecord(newProject.getId(), projectNodeDOList);
+        } else {
             boolean match = projectNodeDOList.stream().anyMatch(e ->
                     ProjectNodeEnum.DEVELOP_START.getText().equals(e.getName()) && e.getActualDate() != null);
-            if(match){
+            if (match) {
                 List<ProjectNodeRecordDO> list = projectNodeRecordMapper.list(newProject.getId());
-                if(CollectionUtils.isEmpty(list)){
+                if (CollectionUtils.isEmpty(list)) {
                     //首次生成版本
-                    projectNodeFlowComponent.insertProjectNodeRecord(newProject.getId(),projectNodeDOList);
+                    projectNodeFlowComponent.insertProjectNodeRecord(newProject.getId(), projectNodeDOList);
                 }
             }
         }
@@ -481,7 +485,7 @@ public class ProjectServiceImpl implements ProjectService {
         Long projectId = productDemandQueryList.getProjectId();
         int pageSize = productDemandQueryList.getPageSize();
         int pageNum = productDemandQueryList.getPageNum();
-        log.info("项目-产品需求清单:pageNum={},pageSize={},projectId={}", pageNum,pageSize,projectId);
+        log.info("项目-产品需求清单:pageNum={},pageSize={},projectId={}", pageNum, pageSize, projectId);
         // 查询产品需求
         List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(projectId);
         List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
@@ -577,7 +581,7 @@ public class ProjectServiceImpl implements ProjectService {
         return true;
     }
 
-    private void fillInfoWhenModify(List<ProjectNodeDO> projectNodes, ProjectDO newProject,Integer delayType) {
+    private void fillInfoWhenModify(List<ProjectNodeDO> projectNodes, ProjectDO newProject, Integer delayType) {
         Map<String, ProjectNodeDO> nodeMap = projectNodes
                 .stream()
                 .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
@@ -614,7 +618,7 @@ public class ProjectServiceImpl implements ProjectService {
             newProject.setStatus(oldStatus);
         }
         ProjectDO oldProject = projectMapper.get(newProject.getId());
-        if(!Integer.valueOf(1).equals(delayType)){
+        if (!Integer.valueOf(1).equals(delayType)) {
             projectMapper.update(newProject);
             if (!Objects.equals(newProject.getStatus(), oldStatus)) {
                 //状态不一致时,更新产品需求状态

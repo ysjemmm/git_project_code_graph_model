@@ -14,6 +14,7 @@ import com.timevale.forward.model.enums.FlowStageEnum;
 import com.timevale.forward.model.enums.FlowStatusEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.service.component.ProjectNodeFlowComponent;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectNodeCopier;
 import com.timevale.forward.service.copy.ProjectNodeFlowCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
@@ -31,7 +32,6 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -96,16 +96,15 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
             throw new BaseBizRuntimeException("流程状态非审核中,无法撤销");
         }
 
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        if (!Objects.equals(userInfo.getId(), currentFlowDo.getCreateManId())) {
-            throw new BaseBizRuntimeException("操作人非流程发起人,无法撤销");
-        }
 
         TerminateRequest request = new TerminateRequest();
         request.setProcessInstanceId(currentFlowDo.getFlowId());
-        request.setAssignee(userInfo.getId());
+        request.setAssignee(currentFlowDo.getCreateManId());
         epeiusClient.withdrawInstance(request);
 
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        currentFlowDo.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        currentFlowDo.setModifyManId(userInfo.getId());
         currentFlowDo.setStatus(FlowStatusEnum.WITHDRAW.getCode());
         projectNodeFlowMapper.update(currentFlowDo);
         return BaseResult.success(true);

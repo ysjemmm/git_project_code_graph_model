@@ -4,15 +4,15 @@
 
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectNodeFlowDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        insert into project_node_flow (project_id, flow_id, last_flow_id,status,stage,reason,pd_id,pd,biz_id,biz,po_id,po,d_id,d
+        insert into project_node_flow (project_id, flow_id, last_flow_id,status,stage,reason,pd_id,pd,biz_id,biz,po_id,po,d_id,d,change_type
         ,publish_date,change_publish_date,delay_day,unreviewed_id,unreviewed,review_fail_id,review_fail,review_fail_reason,create_man ,create_man_id)
         values
-        (#{projectId},#{flowId}, #{lastFlowId},#{status},#{stage},#{reason},#{pdId},#{pd},#{bizId},#{biz},#{poId},#{po},#{did},#{d}
+        (#{projectId},#{flowId}, #{lastFlowId},#{status},#{stage},#{reason},#{pdId},#{pd},#{bizId},#{biz},#{poId},#{po},#{did},#{d},#{changeType}
         ,#{publishDate},#{changePublishDate},#{delayDay},#{unreviewedId},#{unreviewed},#{reviewFailId},#{reviewFail},#{reviewFailReason},#{createMan},#{createManId})
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectNodeFlowDO">
-        select id,project_id, flow_id, last_flow_id,status,stage,reason,pd_id,pd,biz_id,biz,po_id,po,d_id,d
+        select id,project_id, flow_id, last_flow_id,status,stage,reason,pd_id,pd,biz_id,biz,po_id,po,d_id,d,change_type
         ,publish_date,change_publish_date,delay_day,unreviewed_id,unreviewed,review_fail_id,review_fail,review_fail_reason
         ,create_man ,create_man_id,modify_man_id,modify_man,create_date,modify_date,is_deleted
         from project_node_flow
@@ -41,7 +41,7 @@
     </update>
 
     <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ProjectNodeFlowDO">
-        select id,project_id, flow_id, last_flow_id,status,stage,reason,pd_id,pd,biz_id,biz,po_id,po,d_id,d
+        select id,project_id, flow_id, last_flow_id,status,stage,reason,pd_id,pd,biz_id,biz,po_id,po,d_id,d,change_type
         ,publish_date,change_publish_date,delay_day,unreviewed_id,unreviewed,review_fail_id,review_fail,review_fail_reason
         ,create_man ,create_man_id,modify_man_id,modify_man,create_date,modify_date,is_deleted
         from project_node_flow
