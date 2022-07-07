@@ -36,4 +36,18 @@ public interface ProjectNodeComponent {
      */
     void buildDefaultNode(Date projectStartDate,Date projectEndDate, Long projectId);
 
+    /**
+     *
+     * @param list 节点新增
+     * @param projectId 项目id
+     */
+    void updateNodeActualDate(List<ProjectNodeDO> list,Long projectId);
+
+    /**
+     *
+     * @param list 节点新增
+     * @param projectId 项目id
+     */
+    void updateNodePlanDate(List<ProjectNodeDO> list,Long projectId);
+
 }

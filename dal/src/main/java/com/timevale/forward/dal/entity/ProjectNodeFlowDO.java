@@ -38,6 +38,11 @@ public class ProjectNodeFlowDO extends BaseDO {
      * 状态
      */
     private Integer status;
+
+    /**
+     * 流程类型
+     */
+    private Integer flowType;
     /**
      *产品经理
      */

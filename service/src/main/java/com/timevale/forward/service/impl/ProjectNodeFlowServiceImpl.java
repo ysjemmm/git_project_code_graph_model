@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.timevale.epeius.service.model.request.TerminateRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectNodeFlowMapper;
@@ -26,6 +27,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
@@ -71,10 +73,12 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
         if (!StringUtils.isEmpty(currentFlowDo.getLastFlowId())) {
             //(pd||biz)&&po审批
             ProjectNodeFlowDO lastFlowDo = projectNodeFlowMapper.get(null, currentFlowDo.getLastFlowId());
+            projectFlowDetailVO.setReviewFails(JSONObject.parseArray(lastFlowDo.getReviewFail(), String.class));
             projectFlowDetailVO.setReviewFailReason(lastFlowDo.getReviewFailReason());
             projectFlowDetailVO.setPoReviewFailReason(currentFlowDo.getReviewFailReason());
         } else if (FlowStageEnum.SECOND.getCode().equals(currentFlowDo.getStage())) {
             //pd和biz为空,只有po审批
+            projectFlowDetailVO.setReviewFails(Lists.emptyList());
             projectFlowDetailVO.setReviewFailReason(StringUtils.EMPTY);
             projectFlowDetailVO.setPoReviewFailReason(currentFlowDo.getReviewFailReason());
         }
@@ -150,7 +154,6 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
 
     @Override
     public BaseResult<Boolean> test(ProjectModifyReq projectModifyReq) {
-
         ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
         List<ProjectNodeDO> projectNodes = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
         projectNodeFlowComponent.process(projectNodeFlowDO,projectNodes);

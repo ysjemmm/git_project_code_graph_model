@@ -213,14 +213,12 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
             //3.流程通过后,更新信息
             Long projectId = projectNodeFlowDO.getProjectId();
-            projectNodeComponent.add(projectNodes, projectId);
+            projectNodeComponent.updateNodePlanDate(projectNodes, projectId);
 
             projectComponent.updateNodeStatus(projectId);
 
             ProjectDO projectDO = projectMapper.get(projectId);
             Date oldValue = projectDO.getPlanEndDate();
-
-            projectComponent.fillInfo(projectNodes, projectDO);
 
             ProjectNodeEnum.sort(projectNodes);
             ProjectNodeDO first = projectNodes.get(0);
@@ -287,13 +285,16 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         variables.put("delayDay", projectNodeFlowDO.getDelayDay());
         variables.put("changeCount", count);
         List<String> reviewIds = new ArrayList<>();
+        List<String> reviews = new ArrayList<>();
         if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())) {
             List<String> bizId = JSONObject.parseArray(projectNodeFlowDO.getBizId(), String.class);
             if(CollectionUtils.isNotEmpty(bizId)){
                 reviewIds.addAll(bizId);
+                reviews.addAll(JSONObject.parseArray(projectNodeFlowDO.getBiz(), String.class));
             }
             if(StringUtils.isNotEmpty(projectNodeFlowDO.getPdId())){
                 reviewIds.add(projectNodeFlowDO.getPdId());
+                reviews.add(projectNodeFlowDO.getPd());
             }
         } else if (!StringUtils.isEmpty(projectNodeFlowDO.getPoId())) {
             reviewIds.add(projectNodeFlowDO.getPoId());
@@ -307,6 +308,10 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             variables.put("reviewFail", StringUtils.join(reviewFail, ","));
             variables.put("reviewFailReason", lastFlow.getReviewFailReason());
         }
+        //流程发起,未审核人员=评审人员
+        projectNodeFlowDO.setUnreviewedId(JSONObject.toJSONString(reviewIds));
+        projectNodeFlowDO.setUnreviewed(JSONObject.toJSONString(reviews));
+        projectNodeFlowDO.setFlowType(ProjectNodeEnum.PUBLISH_OFFICIAL.getCode());
         variables.put("reviews", reviewIds);
         variables.put("proposer", projectNodeFlowDO.getCreateMan());
         start.setStartAccountId(projectNodeFlowDO.getCreateManId());
