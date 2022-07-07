@@ -77,6 +77,5 @@ public class ProjectAddReq extends BaseReq {
     private Integer level;
 
     @ApiModelProperty("产品技术资源评估（人天）")
-    @NotNull(message = "产品技术资源评估不能为空")
     private BigDecimal resourceAssessment;
 }
