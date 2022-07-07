@@ -482,10 +482,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             messageEventPublisher.publish(
                     new BugOnlineModifyMsgEvent(
                             this,
-                            bugOnlineDO.getName(),
+                            bugOnlineModifyReq.getName(),
                             BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()),
                             bugOnlineModifyReq.getOperatorId(),
-                            bugOnlineDO.getId()
+                            bugOnlineDO.getId(),
+                            BugOnlinePriorityEnum.getTextByCode(bugOnlineModifyReq.getPriority())
                     )
             );
         }
@@ -1157,7 +1158,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                             bugOnlineDO.getName(),
                             BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()),
                             bugOnlineTransferReq.getUserId(),
-                            bugOnlineDO.getId()
+                            bugOnlineDO.getId(),
+                            BugOnlinePriorityEnum.getTextByCode(bugOnlineDO.getPriority())
                     )
             );
         }
