@@ -308,16 +308,14 @@ public class ProjectServiceImpl implements ProjectService {
                     throw new BaseBizRuntimeException("您的发布计划还未结束，请前往发布平台处理");
                 }
             }
-            if (!Integer.valueOf(1).equals(projectModifyReq.getDelayType())) {
-                List<ProjectNodeFlowDO> projectNodeFlows = projectNodeFlowMapper.getByProjectId(newProject.getId());
-                boolean auditing = projectNodeFlows.stream().anyMatch(a -> com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
-                if (!auditing) {
-                    //无审批,直接更新实际时间
-                    projectNodeComponent.updateNodeActualDate(projectNodeDOList, newProject.getId());
-                    // 更新节点状态
-                    projectComponent.updateNodeStatus(projectModifyReq.getId());
-                }
+            if (Integer.valueOf(1).equals(projectModifyReq.getDelayType())) {
+                //需要审批,只更新实际时间
+                projectNodeComponent.updateNodeActualDate(projectNodeDOList, newProject.getId());
+            }else{
+                projectNodeComponent.add(projectNodeDOList, newProject.getId());
             }
+            // 更新节点状态
+            projectComponent.updateNodeStatus(projectModifyReq.getId());
         }
         // log
         projectLogComponent.addLogWhenModifyData(oldProject, newProject);
