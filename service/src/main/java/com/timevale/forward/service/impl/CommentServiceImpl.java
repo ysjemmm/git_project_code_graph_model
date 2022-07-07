@@ -9,6 +9,7 @@ import com.timevale.forward.facade.api.query.CommentQueryList;
 import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.request.CommentAddReq;
 import com.timevale.forward.facade.api.request.CommentBatchAddReq;
+import com.timevale.forward.facade.api.request.CommentModifyReq;
 import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.facade.api.result.CommentVO;
 import com.timevale.forward.facade.api.result.FileVO;
@@ -144,6 +145,15 @@ public class CommentServiceImpl implements CommentService {
                 commentDO.getContent()
         ));
 
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> modify(CommentModifyReq commentModifyReq) {
+        Long id = commentModifyReq.getId();
+        List<FileAddReq> fileList = commentModifyReq.getFileList();
+
+        fileComponent.update(fileList, id, FileTypeEnum.COMMENT.getCode());
         return BaseResult.success(true);
     }
 

@@ -11,6 +11,7 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -44,6 +45,7 @@ public class FileComponentImpl implements FileComponent {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(List<FileAddReq> list, Long attacheId, Integer type) {
         log.info("编辑时,附件接收参数:list={},attacheId={},type={}", list,attacheId,type);
         if(CollectionUtils.isEmpty(list)){
