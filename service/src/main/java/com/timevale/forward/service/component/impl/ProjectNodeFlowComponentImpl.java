@@ -288,8 +288,12 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         variables.put("changeCount", count);
         List<String> reviewIds = new ArrayList<>();
         if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())) {
-            reviewIds.add(projectNodeFlowDO.getPdId());
-            reviewIds.addAll(JSONObject.parseArray(projectNodeFlowDO.getBizId(), String.class));
+            if(CollectionUtils.isNotEmpty(biz)){
+                reviewIds.addAll(biz);
+            }
+            if(StringUtils.isNotEmpty(projectNodeFlowDO.getPdId())){
+                reviewIds.add(projectNodeFlowDO.getPdId());
+            }
         } else if (!StringUtils.isEmpty(projectNodeFlowDO.getPoId())) {
             reviewIds.add(projectNodeFlowDO.getPoId());
         } else {
