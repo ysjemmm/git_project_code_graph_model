@@ -359,8 +359,9 @@ public class ManDayServiceImpl implements ManDayService {
                     BizChangeLogTypeEnum.PROJECT.getCode(),
                     Lists.newArrayList(ButtonActionEnum.SUSPEND.getText(), ButtonActionEnum.INVALID.getText()));
             // 最新一次暂停或者作废记录的时间
-            logs.stream().map(BizChangeLogDO::getCreateDate)
-                    .max(Date::compareTo).ifPresent(project::setActualEndDate);
+            Date suspendDate = logs.stream().map(BizChangeLogDO::getCreateDate)
+                    .max(Date::compareTo).orElse(project.getPlanEndDate());
+            project.setActualEndDate(suspendDate);
         }
         project.setActualStartDate(DateUtil.getStartOfDay(project.getActualStartDate()));
         project.setActualEndDate(DateUtil.getStartOfDay(project.getActualEndDate()));
