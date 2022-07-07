@@ -25,6 +25,7 @@ public class ProjectNodeRecordVO extends ToString {
     private Long id;
 
     @ApiModelProperty("版本")
+    @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal version;
 
     @ApiModelProperty("提交人")
