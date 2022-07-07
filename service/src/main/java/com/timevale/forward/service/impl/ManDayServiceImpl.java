@@ -1,7 +1,9 @@
 package com.timevale.forward.service.impl;
 
 import com.google.common.base.Splitter;
-import com.google.common.collect.*;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimaps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.ManDayMapper;
@@ -71,13 +73,14 @@ public class ManDayServiceImpl implements ManDayService {
         List<ManDayListVO> res = new ArrayList<>();
 
         List<ManDayDO> suitRangeManDays = manDayMapper.getByStartDate(startDate);
+        List<Long> myProjectIds = personMapper.getMainIds(Collections.singletonList(userInfo.getId()),
+                null, PersonTypeEnum.PROJECT_MEMBER.getCode());
         if (projectId == null) {
             // 登陆人有人天录入的项目
             projectIds.addAll(suitRangeManDays.stream().filter(m -> userInfo.getId().equals(m.getMemberId()))
                     .map(ManDayDO::getProjectId).collect(Collectors.toSet()));
             // 登陆人参与的项目
-            projectIds.addAll(personMapper.getMainIds(
-                    Collections.singletonList(userInfo.getId()), null, PersonTypeEnum.PROJECT_MEMBER.getCode()));
+            projectIds.addAll(myProjectIds);
         } else {
             projectIds.add(projectId);
             suitRangeManDays.removeIf(manDay -> !manDay.getProjectId().equals(projectId));
@@ -98,7 +101,6 @@ public class ManDayServiceImpl implements ManDayService {
                         .setProjectId(project.getId())
                         .setProjectName(project.getName())
                         .setProjectCreateDate(project.getCreateDate());
-                res.add(manDayListVO);
                 if (project.getPmId().equals(userInfo.getId())) {
                     // pm时查询项目下成员
                     manDayListVO.setPm(true);
@@ -129,12 +131,16 @@ public class ManDayServiceImpl implements ManDayService {
                     }
                     manDayListVO.setManDays(resManDays);
                 } else {
-                    // 非pm时，如果数据包含本人则返回，否则新建一个空数据
+                    // 非pm时，如果数据包含本人则返回
                     Optional<ManDayDO> myManDay = projectManDays.stream().filter(m ->
                             m.getMemberId().equals(userInfo.getId())).findFirst();
                     if (myManDay.isPresent()) {
                         manDayListVO.setManDays(Collections.singletonList(ManDayCopier.INSTANCE.convert(myManDay.get())));
                     } else {
+                        // 否则，判断自己是否参与了这个项目，若没参与则不返回
+                        if (!myProjectIds.contains(project.getId())) {
+                            continue;
+                        }
                         manDayListVO.setManDays(Collections.singletonList(
                                 new ManDayVO()
                                         .setMemberId(userInfo.getId())
@@ -145,6 +151,7 @@ public class ManDayServiceImpl implements ManDayService {
                                         .setWeekDateRange(DateUtil.formDateRange(startDate, endDate))));
                     }
                 }
+                res.add(manDayListVO);
             } else {
                 // 不在时间内的项目，如果人天列表中有数据且自己是项目的pm或者数据为自身的，则保留
                 if (!manDaysByProjectId.keySet().contains(project.getId())) {
