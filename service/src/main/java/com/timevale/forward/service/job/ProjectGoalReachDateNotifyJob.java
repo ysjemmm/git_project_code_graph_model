@@ -5,6 +5,7 @@ import com.timevale.forward.dal.dao.ProjectGoalMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectGoalDO;
+import com.timevale.forward.model.enums.ProjectGoalStatusEnum;
 import com.timevale.forward.model.enums.YesOrNoEnum;
 import com.timevale.forward.service.integration.erp.ErpMessageClient;
 import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
  * create on 2022/6/27
  */
 @Slf4j
-@JobHandler(value = "ProjectGoalReachDateNotifyJob ")
+@JobHandler(value = "ProjectGoalReachDateNotifyJob")
 public class ProjectGoalReachDateNotifyJob extends IJobHandler {
 
     private static final String NOTIFY_PATTERN = "项目:%s目标达成时间已到期，请及时更新项目目标完成情况。";
@@ -51,6 +52,17 @@ public class ProjectGoalReachDateNotifyJob extends IJobHandler {
             ProjectDO project = projectById.get(projectGoal.getProjectId());
             if (project == null || YesOrNoEnum.NO.getCode().equals(project.getIsWithGoal())) {
                 // 无项目或者无项目目标，过滤
+                log.info("项目无项目目标，过滤目标: {}", projectGoal);
+                continue;
+            }
+            if (project.getStatus() < 0) {
+                // 已作废、暂停项目，过滤
+                log.info("项目已经暂停或者作废，过滤目标: {}", projectGoal);
+                continue;
+            }
+            if (!ProjectGoalStatusEnum.IN_PROGRESS.getCode().equals(projectGoal.getStatus())) {
+                // 非进行中项目目标不再提醒
+                log.info("项目目标已完成，过滤目标: {}", projectGoal);
                 continue;
             }
             log.info("通知项目到期: {}", projectGoal);

@@ -36,7 +36,7 @@ public class BizDemandCompletedMsgEvent extends MessageEvent {
         List<String> receivers = Lists.newArrayList(receiver);
         String title = MessageTitleEnum.BIZDEMAND_FEEDBACK.getText();
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_MANAGEMENT.getText(), bizDemandId) + COMMENT_SCHEME;
-        String limit = SpringContextUtil.getProperty(AUTO_CONFIRM_LIMIT);
+        String limit = SpringContextUtil.getProperty(AUTO_CONFIRM_LIMIT, "7");
         String markdown = String.format(BIZ_DEMAND_COMPLETED_MSG, title, operator, name, limit, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()

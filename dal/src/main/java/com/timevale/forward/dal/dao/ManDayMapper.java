@@ -20,9 +20,7 @@ public interface ManDayMapper {
                                                @Param("startDates") Collection<Date> startDate,
                                                @Param("memberIds") Collection<String> memberIds);
 
-    List<ManDayDO> getByMemberIdAndDateRange(@Param("memberId") String memberId,
-                                             @Param("startDate") Date startDate,
-                                             @Param("endDate") Date endDate);
+    List<ManDayDO> getByStartDate(@Param("startDate") Date startDate);
 
     void delete(ManDayDO manDayDO);
 

@@ -422,7 +422,8 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         BizDemandDO newBizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandModifyReq);
-        bizDemandMapper.update(newBizDemandDO);
+        newBizDemandDO.setStatus(oldBizDemandDO.getStatus());
+        bizDemandMapper.fullUpdate(newBizDemandDO);
 
         // 添加抄送人数据
         List<PersonAddReq> recipientInfoList = bizDemandModifyReq.getRecipientInfoList();

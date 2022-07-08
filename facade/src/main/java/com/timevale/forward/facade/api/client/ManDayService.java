@@ -39,6 +39,6 @@ public interface ManDayService {
     /**
      * 查询项目人天时间周期列表
      */
-    BaseResult<Set<String>> queryManDayDateRanges(Long projectId);
+    BaseResult<List<String>> queryManDayDateRanges(Long projectId);
 
 }

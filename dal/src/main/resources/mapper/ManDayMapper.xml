@@ -32,13 +32,12 @@
         from man_day
         where project_id = #{projectId}
           and is_deleted = false
+        order by week_start_date desc
     </select>
-    <select id="getByMemberIdAndDateRange" resultType="com.timevale.forward.dal.entity.ManDayDO">
+    <select id="getByStartDate" resultType="com.timevale.forward.dal.entity.ManDayDO">
         select *
         from man_day
-        where member_id = #{memberId}
-          and week_start_date = #{startDate}
-          and week_end_date = #{endDate}
+        where week_start_date = #{startDate}
           and is_deleted = false
     </select>
     <select id="getByProjectIdAndStartDates" resultType="com.timevale.forward.dal.entity.ManDayDO">

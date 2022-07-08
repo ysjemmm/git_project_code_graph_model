@@ -39,6 +39,13 @@ public interface ProjectMapper {
     int update(ProjectDO projectDO);
 
     /**
+     * 完成更新（可以为null）
+     *
+     * @param projectDO 项目
+     */
+    void fullUpdateById(ProjectDO projectDO);
+
+    /**
      * 查询
      *
      * @param productDemandId 产品需求id

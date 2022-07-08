@@ -228,10 +228,11 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         }
 
         // 故障定级-未定级,特殊处理
-        boolean contain = troubleTicketCondition.getTroubleRankList().contains(TroubleTicketRankEnum.UN_CERTAIN.getCode());
+        List<Integer> troubleRankList = troubleTicketCondition.getTroubleRankList();
+        boolean contain = CollectionUtils.isNotEmpty(troubleRankList) &&  troubleRankList.contains(TroubleTicketRankEnum.UN_CERTAIN.getCode());
         troubleTicketCondition.setTroubleRankIsNull(contain);
 
-        Map<Long, GroupResponse> deptNodeMap = null;
+        Map<Long, GroupResponse> deptNodeMap = new HashMap<>();
         Set<Long> queryDeptIdSet = Sets.newHashSet(troubleTicketCondition.getDutyTeamList());
 
         // 如果查询条件有部门id，收集子部门id及所需部门的完整名
@@ -268,13 +269,13 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         });
 
         // 描述数据填充
-        List<Long> dutyTeamIdList = troubleTicketVOList.stream().map(TroubleTicketVO::getDutyTeam).filter(Objects::nonNull).collect(Collectors.toList());
-        Map<Long, GroupResponse> groupListTreeMap = bizDemandComponent.getGroupListTreeMap(dutyTeamIdList);
-
         for (TroubleTicketVO e : troubleTicketVOList) {
             e.setIsMonitorDetectText(YesOrNoEnum.getTextByCode(e.getIsMonitorDetect()));
             e.setTroubleRankName(TroubleTicketRankEnum.getTextByCode(e.getTroubleRank()));
 
+            if(e.getDutyTeam() == null){
+                continue;
+            }
             GroupResponse response = deptNodeMap.get(e.getDutyTeam());
             if (response == null) {
                 e.setDutyTeamName("");

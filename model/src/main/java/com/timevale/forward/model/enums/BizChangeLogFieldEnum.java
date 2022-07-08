@@ -19,6 +19,8 @@ public enum BizChangeLogFieldEnum {
 
     PROJECT_GOAL("项目目标"),
 
+    WITH_GOAL("是否有项目目标"),
+
     /**
      * 项目目标
      */
