@@ -302,8 +302,14 @@ public class ProjectServiceImpl implements ProjectService {
         newProject.setPmName(projectModifyReq.getPm().getUserName());
         newProject.setPmId(projectModifyReq.getPm().getUserId());
         List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
-        Integer status = projectMapper.get(projectModifyReq.getId()).getStatus();
-        newProject.setStatus(status);
+
+        ProjectDO oldProjectDO = projectMapper.get(projectModifyReq.getId());
+        newProject.setStatus(oldProjectDO.getStatus());
+        if (Integer.valueOf(1).equals(projectModifyReq.getDelayType())) {
+            //有流程,计划时间不能变
+            newProject.setPlanStartDate(oldProjectDO.getPlanStartDate());
+            newProject.setPlanEndDate(oldProjectDO.getPlanEndDate());
+        }
 
         fillInfoWhenModify(projectNodeDOList, newProject);
 
@@ -355,23 +361,9 @@ public class ProjectServiceImpl implements ProjectService {
         // 产品经理
         personComponent.update(projectModifyReq.getPds(), newProject.getId(), PersonTypeEnum.PROJECT_PD.getCode());
 
-        if (Integer.valueOf(1).equals(projectModifyReq.getDelayType())) {
-            ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
-            projectNodeFlowComponent.process(projectNodeFlowDO, projectNodeDOList);
-        } else if (Integer.valueOf(0).equals(projectModifyReq.getDelayType())) {
-            //版本+1
-            projectNodeFlowComponent.insertProjectNodeRecord(newProject.getId(), projectNodeDOList);
-        } else {
-            boolean match = projectNodeDOList.stream().anyMatch(e ->
-                    ProjectNodeEnum.DEVELOP_START.getText().equals(e.getName()) && e.getActualDate() != null);
-            if (match) {
-                List<ProjectNodeRecordDO> list = projectNodeRecordMapper.list(newProject.getId());
-                if (CollectionUtils.isEmpty(list)) {
-                    //首次生成版本
-                    projectNodeFlowComponent.insertProjectNodeRecord(newProject.getId(), projectNodeDOList);
-                }
-            }
-        }
+        //流程与版本信息处理
+        processFlow(projectModifyReq);
+
         return BaseResult.success(true);
     }
 
@@ -683,4 +675,24 @@ public class ProjectServiceImpl implements ProjectService {
         productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
     }
 
+    private void processFlow(ProjectModifyReq projectModifyReq){
+        List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
+        if (Integer.valueOf(1).equals(projectModifyReq.getDelayType())) {
+            ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
+            projectNodeFlowComponent.process(projectNodeFlowDO, projectNodeDOList);
+        } else if (Integer.valueOf(0).equals(projectModifyReq.getDelayType())) {
+            //版本+1
+            projectNodeFlowComponent.insertProjectNodeRecord(projectModifyReq.getId(), projectNodeDOList);
+        } else {
+            boolean match = projectNodeDOList.stream().anyMatch(e ->
+                    ProjectNodeEnum.DEVELOP_START.getText().equals(e.getName()) && e.getActualDate() != null);
+            if (match) {
+                List<ProjectNodeRecordDO> list = projectNodeRecordMapper.list(projectModifyReq.getId());
+                if (CollectionUtils.isEmpty(list)) {
+                    //首次生成版本
+                    projectNodeFlowComponent.insertProjectNodeRecord(projectModifyReq.getId(), projectNodeDOList);
+                }
+            }
+        }
+    }
 }
