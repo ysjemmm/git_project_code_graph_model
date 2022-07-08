@@ -5,8 +5,16 @@
 <mapper namespace="com.timevale.forward.dal.dao.ProductDemandDescRecordMapper">
     <insert id="insert">
         insert into product_demand_desc_record (product_demand_id, version, `desc`, create_man_id,
-                                                create_man)
-        values (#{productDemandId}, #{version}, #{desc}, #{createManId}, #{createMan})
+        create_man
+        <if test="createDate != null">
+            , create_date
+        </if>
+        )
+        values (#{productDemandId}, #{version}, #{desc}, #{createManId}, #{createMan}
+        <if test="createDate != null">
+            , #{createDate}
+        </if>
+        )
     </insert>
 
     <select id="listByProductDemandId" resultType="com.timevale.forward.dal.entity.ProductDemandDescRecordDO">
