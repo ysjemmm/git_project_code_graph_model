@@ -182,8 +182,13 @@ public class ProductDemandDescFlowComponent {
                         .setProductDemandId(productDemand.getId())
                         .setDesc(productDemand.getDesc())
                         .setVersion(BigDecimal.ONE);
-                oldProductDemandDesc.setCreateManId(productDemand.getModifyManId());
-                oldProductDemandDesc.setCreateMan(productDemand.getModifyMan());
+                if (productDemand.getModifyManId().equals(LocalSessionUtils.SYSTEM)) {
+                    oldProductDemandDesc.setCreateManId(productDemand.getCreateManId());
+                    oldProductDemandDesc.setCreateMan(productDemand.getCreateMan());
+                } else {
+                    oldProductDemandDesc.setCreateManId(productDemand.getModifyManId());
+                    oldProductDemandDesc.setCreateMan(productDemand.getModifyMan());
+                }
                 oldProductDemandDesc.setCreateDate(auditingFlow.getCreateDate());
                 productDemandDescRecordMapper.insert(oldProductDemandDesc);
                 count = 1;
