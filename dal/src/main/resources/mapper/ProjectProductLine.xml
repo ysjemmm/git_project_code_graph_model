@@ -8,6 +8,20 @@
         where project_id = #{projectId} and is_deleted = false
     </select>
 
+    <select id="getByProjectIdList" resultType="com.timevale.forward.dal.entity.ProjectProductLineDO">
+        select id,project_id,product_line_id,create_man_id, create_man
+        from project_product_line
+        <where>
+            <if test="true">and is_deleted = false</if>
+            <if test="projectIdList != null and projectIdList.size() > 0">
+                and project_id in
+                <foreach collection="projectIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
     <insert id="batchInsert" parameterType="java.util.List">
         insert into project_product_line (project_id,product_line_id,create_man_id, create_man)
         values

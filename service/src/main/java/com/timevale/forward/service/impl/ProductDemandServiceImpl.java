@@ -114,7 +114,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
 
     @Override
-    public BaseResult<PageQueryResult<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
+    public BaseResult<QueryResultVO<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
         log.info("产品需求接收参数:{}", productDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
@@ -129,7 +129,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             }
             if (CollectionUtils.isEmpty(allMyStaffWithSelf)) {
                 //所选人员不在我的团队中
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return BaseResult.success(ResultUtil.queryResultEmpty());
             }
             condition.setOwnerIds(allMyStaffWithSelf);
         } else if (AscriptionEnum.DEPARTMENT.name().equals(productDemandQueryList.getAscription())) {
@@ -144,25 +144,51 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             }
             if (CollectionUtils.isEmpty(accountIds)) {
                 //所选人员不在我的部门中
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return BaseResult.success(ResultUtil.queryResultEmpty());
             }
             condition.setOwnerIds(accountIds);
         } else if (AscriptionEnum.COPIER.name().equals(productDemandQueryList.getAscription())) {
             condition.setCopierId(userInfo.getId());
         }
+
+        // 分页查询
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
+
         List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
         productDemandVO.forEach(p -> {
             p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
             p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
         });
+
+        // 分页数据
         PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(productDemandVO);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
-        return BaseResult.success(pageQueryResult);
+        // 完整查询
+        List<ProductDemandListDO> allProductDemandListDO = productDemandComponent.list(condition);
+        Map<Long, List<ProductDemandListDO>> bizDemandListDOMap = allProductDemandListDO.stream().collect(Collectors.groupingBy(ProductDemandListDO::getProductLineId));
+        log.info("业务查询产品线分析：{}", bizDemandListDOMap);
+
+        List<ProductLineAnalyseVO> analyseVOList = new ArrayList<>();
+        bizDemandListDOMap.forEach((k,v) -> {
+            ProductLineAnalyseVO analyseVO = new ProductLineAnalyseVO();
+            Optional<ProductDemandListDO> any = v.stream().findAny();
+            any.ifPresent(e -> {
+                analyseVO.setCount(v.size());
+                analyseVO.setProductLineId(e.getProductLineId());
+                analyseVO.setProductLineName(e.getProductLineName());
+                analyseVOList.add(analyseVO);
+            });
+        });
+
+        QueryResultVO<ProductDemandVO> queryResultVO = new QueryResultVO<>();
+        queryResultVO.setPageQueryResult(pageQueryResult);
+        queryResultVO.setAnalyseVOList(analyseVOList);
+
+        return BaseResult.success(queryResultVO);
     }
 
     @Override
@@ -351,7 +377,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     , ProjectStatusEnum.DEVING.getCode()
                     , ProjectStatusEnum.TESTING.getCode()));
         }
-        return projectCmponent.page(condition, Lists.newArrayList());
+        PageQueryResult<ProjectVO> pageQueryResult = projectCmponent.page(condition, Lists.newArrayList()).getPageQueryResult();
+        return BaseResult.success(pageQueryResult);
     }
 
     @Override
@@ -392,7 +419,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             condition.setBizDemandIds(bizDemandIds);
         }
         PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
-        return bizDemandComponent.page(condition);
+        return BaseResult.success(bizDemandComponent.page(condition).getPageQueryResult());
     }
 
     @Override

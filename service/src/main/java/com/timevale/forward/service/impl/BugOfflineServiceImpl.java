@@ -24,6 +24,7 @@ import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.compare.FieldCompareUtil;
+import com.timevale.forward.service.utils.date.DateStyle;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -673,13 +674,20 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
         String oldCause = bugOfflineDO.getCause();
         String oldPlan = bugOfflineDO.getSolvePlan();
+        Date oldExpectSolveDate = bugOfflineDO.getExpectSolveDate();
+
+        // 新字段
+        String newCause = bugOfflineReq.getCause();
+        String newPlan = bugOfflineReq.getSolvePlan();
+        Date newExpectSolveDate = bugOfflineReq.getExpectSolveDate();
 
         //bug状态变为"待验收",上一环节经办人变成目前经办人，目前经办人变成提出人
         bugOfflineDO.setStatus(BugStatusEnum.ACCEPTANCE.getCode());
         bugOfflineDO.setLastOperator(operator);
         bugOfflineDO.setLastOperatorId(operatorId);
-        bugOfflineDO.setCause(bugOfflineReq.getCause());
-        bugOfflineDO.setSolvePlan(bugOfflineReq.getSolvePlan());
+        bugOfflineDO.setCause(newCause);
+        bugOfflineDO.setSolvePlan(newPlan);
+        bugOfflineDO.setExpectSolveDate(newExpectSolveDate);
 
         bugOfflineMapper.update(bugOfflineDO);
 
@@ -693,23 +701,34 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         statusLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
         statusLogDO.setField(BugLogFieldEnum.STATUS.getText());
 
-        if(!Objects.equals(oldCause,bugOfflineReq.getCause())){
+
+        if(!Objects.equals(oldCause,newCause)){
             BugLogDO causeLogDO = new BugLogDO();
             causeLogDO.setOldValue(oldCause);
-            causeLogDO.setNewValue(bugOfflineReq.getCause());
+            causeLogDO.setNewValue(newCause);
             causeLogDO.setMainId(bugOfflineReq.getId());
             causeLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
             causeLogDO.setField(BugLogFieldEnum.CAUSE.getText());
             bugLogDOList.add(causeLogDO);
         }
 
-        if(!Objects.equals(oldPlan,bugOfflineReq.getSolvePlan())){
+        if(!Objects.equals(oldPlan,newPlan)){
             BugLogDO solvePlanLogDO = new BugLogDO();
             solvePlanLogDO.setOldValue(oldPlan);
-            solvePlanLogDO.setNewValue(bugOfflineReq.getSolvePlan());
+            solvePlanLogDO.setNewValue(newPlan);
             solvePlanLogDO.setMainId(bugOfflineReq.getId());
             solvePlanLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
             solvePlanLogDO.setField(BugLogFieldEnum.SOLVE_PLAN.getText());
+            bugLogDOList.add(solvePlanLogDO);
+        }
+
+        if(!Objects.equals(oldExpectSolveDate,newExpectSolveDate)){
+            BugLogDO solvePlanLogDO = new BugLogDO();
+            solvePlanLogDO.setOldValue(DateUtil.parseToString(oldExpectSolveDate, DateStyle.YYYY_MM_DD));
+            solvePlanLogDO.setNewValue(DateUtil.parseToString(newExpectSolveDate, DateStyle.YYYY_MM_DD));
+            solvePlanLogDO.setMainId(bugOfflineReq.getId());
+            solvePlanLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+            solvePlanLogDO.setField(BugLogFieldEnum.EXPECT_SOLVE_DATE.getText());
             bugLogDOList.add(solvePlanLogDO);
         }
 

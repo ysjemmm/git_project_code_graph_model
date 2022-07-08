@@ -34,4 +34,6 @@ public class CommentAddReq extends BaseReq {
     @ApiModelProperty("评论接收人")
     private List<PersonQuery> receiverInfoList;
 
+    @ApiModelProperty("附件列表")
+    private List<FileAddReq> fileList;
 }

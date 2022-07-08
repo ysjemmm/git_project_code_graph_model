@@ -29,7 +29,9 @@ public enum FileTypeEnum {
     // 详设评审
     TECH_REVIEW(9),
     // 埋点事件
-    TRACK_EVENT(10)
+    TRACK_EVENT(10),
+    // 评论
+    COMMENT(11)
     ;
 
     private Integer code;

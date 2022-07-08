@@ -9,8 +9,9 @@
     </insert>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
-        select  a.id,a.name,a.priority,a.owner,a.owner_id,a.status,a.create_man,a.create_man_id,a.create_date,a.modify_date,
-        c.name productLineName ,d.name bizDomainName
+        select  a.id,a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,
+                a.create_man,a.create_man_id,a.create_date,a.modify_date,
+                c.name productLineName ,d.name bizDomainName
         <if test="copierId != null and copierId != ''">
             ,e.user_name copier
         </if>

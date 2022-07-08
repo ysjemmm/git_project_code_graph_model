@@ -94,4 +94,9 @@ public class BugOnlineListCondition {
      * 用于判断是否为"抄送我的需求"tab
      */
     private String copier;
+
+    /**
+     * 客户名称
+     */
+    private String customerName;
 }

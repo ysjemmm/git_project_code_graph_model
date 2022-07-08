@@ -24,4 +24,8 @@ public class BizDemandCompletedReq extends BaseReq {
     @ApiModelProperty("处理方案")
     @NotBlank(message = "处理方案不能为空")
     private String solvePlan;
+
+    @ApiModelProperty("产品线id")
+    @NotNull(message = "产品线不能为空")
+    private Long productLineId;
 }

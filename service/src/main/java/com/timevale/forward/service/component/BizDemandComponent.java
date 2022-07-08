@@ -3,6 +3,7 @@ package com.timevale.forward.service.component;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 
@@ -53,7 +54,17 @@ public interface BizDemandComponent {
      * @param bizDemandListCondition 业务需求查询列表
      * @return 列表
      */
-    BaseResult<PageQueryResult<BizDemandVO>> page(BizDemandListCondition bizDemandListCondition);
+    QueryResultVO<BizDemandVO> page(BizDemandListCondition bizDemandListCondition);
+
+    /**
+     * 转交
+     *
+     * @param id              id
+     * @param newReceiveMan   新接收人
+     * @param newReceiveManId 新接收人身份证
+     * @return {@link Boolean}
+     */
+    Boolean transfer(Long id, String newReceiveMan, String newReceiveManId);
 
     /**
      *

@@ -92,7 +92,7 @@ public class ProductDemandComponentImplTest extends AbstractTestNGSpringContextT
 
         FileDO fileDO = new FileDO();
         fileDO.setFileId("www");
-        when(fileComponent.select(any(), any())).thenReturn(Collections.singletonList(fileDO));
+        when(fileComponent.select(anyLong(), any())).thenReturn(Collections.singletonList(fileDO));
 
         PersonDO personDO = new PersonDO();
         personDO.setUserId("www");
