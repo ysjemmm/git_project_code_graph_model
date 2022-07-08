@@ -47,25 +47,19 @@
     </select>
 
     <insert id="insert">
-        insert into biz_change_log ( `main_id`, `type`, `old_value`, `new_value`, `field`, `action`
-                                   , `create_man_id`, `create_man`, `content`)
-        values (#{mainId}, #{type}, #{oldValue}, #{newValue}, #{field}, #{action}, #{createManId}, #{createMan},
-                #{content})
-        insert into biz_change_log (`main_id`,`type`,`old_value`,`new_value`,`field`,`action`,`identity`
-        ,`create_man_id`,`create_man`)
-        values (#{mainId},#{type},#{oldValue},#{newValue},#{field} ,#{action}, #{identity}, #{createManId},#{createMan})
+        insert into biz_change_log ( `main_id`, `type`, `old_value`, `new_value`, `field`, `action`,`identity`
+         , `create_man_id`, `create_man`, `content`)
+        values (#{mainId}, #{type}, #{oldValue}, #{newValue}, #{field}, #{action}, #{identity}
+        , #{createManId}, #{createMan},  #{content})
     </insert>
 
     <insert id="batchInsert">
-        insert into biz_change_log (`main_id`,`type`,`old_value`,`new_value`,`field`,`action`
+        insert into biz_change_log (`main_id`,`type`,`old_value`,`new_value`,`field`,`action` , `identity`
         ,`create_man_id`,`create_man`,`content`)
-        insert into biz_change_log (`main_id`,`type`,`old_value`,`new_value`,`field`,`action` , `identity`,
-                                    `create_man_id`,`create_man`)
         values
         <foreach collection="list" item="item" separator=",">
-            (#{item.mainId},#{item.type},#{item.oldValue},#{item.newValue},#{item.field},#{item.action},#{item.createManId},#{item.createMan},#{item.content})
-            (#{item.mainId},#{item.type},#{item.oldValue},#{item.newValue},#{item.field},#{item.action},
-             #{item.identity},#{item.createManId},#{item.createMan})
+            (#{item.mainId},#{item.type},#{item.oldValue},#{item.newValue},#{item.field},#{item.action}, #{item.identity}
+            ,#{item.createManId},#{item.createMan},#{item.content})
         </foreach>
     </insert>
 </mapper>
