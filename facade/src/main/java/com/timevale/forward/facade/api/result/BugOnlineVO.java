@@ -56,8 +56,14 @@ public class BugOnlineVO extends ToString {
     @ApiModelProperty("bug原因")
     private Integer reason;
 
-    @ApiModelProperty("bug原因")
+    @ApiModelProperty("bug原因-描述")
     private String reasonName;
+
+    @ApiModelProperty("驳回原因")
+    private Integer dismissCause;
+
+    @ApiModelProperty("驳回原因-描述")
+    private String dismissCauseName;
 
     @ApiModelProperty("bug环境：0生产环境，1模拟环境")
     private Integer env;

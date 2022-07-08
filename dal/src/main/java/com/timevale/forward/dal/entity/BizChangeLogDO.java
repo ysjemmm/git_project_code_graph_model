@@ -2,7 +2,6 @@ package com.timevale.forward.dal.entity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.experimental.Accessors;
 
 /**
  * @author by YangXu
@@ -11,7 +10,7 @@ import lombok.experimental.Accessors;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Accessors(chain = true)
-public class BizChangeLogDO extends BaseDO {
+public class BizChangeLogDO extends BaseDO{
     /**
      * 主体id
      */
@@ -41,6 +40,11 @@ public class BizChangeLogDO extends BaseDO {
      * 按钮动作
      */
     private String action;
+
+    /**
+     * 数据标识
+     */
+    private String identity;
 
     /**
      * json 文本

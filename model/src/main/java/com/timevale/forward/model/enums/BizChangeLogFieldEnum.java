@@ -19,6 +19,21 @@ public enum BizChangeLogFieldEnum {
 
     PLAN_END_DATE("项目计划结束时间"),
 
+    PROJECT_GOAL("项目目标"),
+
+    WITH_GOAL("是否有项目目标"),
+
+    /**
+     * 项目目标
+     */
+    MAIN_GOAL("是否主目标"),
+
+    GOAL_STATUS("完成状态"),
+
+    GOAL_COMPLETE_NOTE("完成情况"),
+
+    GOAL_REACH_VALUE("项目目标达标值"),
+
     /**
      * 产品需求
      */

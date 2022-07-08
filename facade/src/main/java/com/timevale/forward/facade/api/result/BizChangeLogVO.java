@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -43,6 +44,9 @@ public class BizChangeLogVO extends ToString {
 
     @ApiModelProperty("按钮动作")
     private String action;
+
+    @ApiModelProperty("唯一标识")
+    private String identity;
 
     @ApiModelProperty("json文本")
     private BizChangeLogContentVO content;

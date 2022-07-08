@@ -21,6 +21,7 @@ import com.timevale.forward.model.middle.BusinessMD;
 import com.timevale.forward.service.component.BugOnlineProductLineComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
@@ -104,6 +105,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Value("${business}")
     private String business;
+
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
 
     /**
      * 默认经办人,来自运营支撑提报bug
@@ -201,7 +205,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         // 开始分页
-        PageHelper.startPage(bugOnlineQueryList.pageNum, bugOnlineQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        String collation = sqlOrderComponent.build(bugOnlineQueryList.getOrderFiled(), bugOnlineQueryList.getOrderCollation());
+        PageHelper.startPage(bugOnlineQueryList.pageNum, bugOnlineQueryList.pageSize, collation);
 
         // 查询并转换
         List<BugOnlineListDO> bugOnlineDOList = bugOnlineMapper.selectListByCondition(condition);
@@ -270,6 +275,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             e.setBelongName(BugOnlineBeloneEnum.getTextByCode(e.getBelong()));
             e.setReasonName(BugOnlineReasonEnum.getTextByCode(e.getReason()));
             e.setPriorityName(BugOnlinePriorityEnum.getTextByCode(e.getPriority()));
+            e.setDismissCauseName(BugOnlineDismissCauseEnum.getTextByCode(e.getDismissCause()));
         });
 
         // 返回分页数据

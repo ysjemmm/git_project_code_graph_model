@@ -133,7 +133,12 @@ public enum BugOnlineDismissCauseEnum {
     /**
      * 技术咨询
      */
-    TECHNOLOGY_SUPPORT(24, "技术咨询");
+    TECHNOLOGY_SUPPORT(24, "技术咨询"),
+
+    /**
+     * 外包项目
+     */
+    OUTSOURCING_PROJECT(25, "外包项目");
 
     private final Integer code;
     private final String text;
@@ -144,6 +149,6 @@ public enum BugOnlineDismissCauseEnum {
                 return e.text;
             }
         }
-        return "error code";
+        return "";
     }
 }

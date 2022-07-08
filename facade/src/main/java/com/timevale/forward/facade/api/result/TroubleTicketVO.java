@@ -39,6 +39,25 @@ public class TroubleTicketVO extends ToString {
     @ApiModelProperty("产品线名称")
     private String productLineName;
 
+    @ApiModelProperty("主责任人")
+    private String primePrincipal;
+
+    @ApiModelProperty("责任团队id")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long dutyTeam;
+
+    @ApiModelProperty("责任团队-描述")
+    private String dutyTeamName;
+
+    @ApiModelProperty("责任团队-是否删除标志")
+    private Integer dutyTeamFlag;
+
+    @ApiModelProperty("是否监控发现")
+    private Integer isMonitorDetect;
+
+    @ApiModelProperty("是否监控发现-描述")
+    private String isMonitorDetectText;
+
     @ApiModelProperty("提出人")
     private String createMan;
 

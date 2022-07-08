@@ -102,5 +102,24 @@
         </where>
     </select>
 
+    <select id="selectByProjectIdListStatus" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
+        SELECT id, project_id, main_id, type, name, sign, status, create_man_id, create_man, create_date, modify_date
+        FROM project_risk
+        <where>
+            <if test="projectIdList != null and projectIdList.size() > 0">
+                AND project_id IN
+                <foreach collection="projectIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="statusList != null and statusList.size() > 0">
+                AND `status` in
+                <foreach collection="statusList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
 
 </mapper>

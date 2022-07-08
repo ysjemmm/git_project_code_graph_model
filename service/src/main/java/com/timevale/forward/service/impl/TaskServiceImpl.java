@@ -110,7 +110,7 @@ public class TaskServiceImpl implements TaskService {
     @Resource
     private ProjectNodeMapper projectNodeMapper;
 
-    @Value("${excludeBizDomain:混合云电子签章}")
+    @Value("${excludeBizDomain:混合云电子签章;安全风控}")
     private String excludeBizDomain;
 
     @Override

@@ -7,12 +7,12 @@
         INSERT INTO trouble_ticket(name, influence, type, product_line_id, occurrence_time,
                                    influence_count, influence_client, during_time, failure_time, influence_scope, reason,
                                    restore_time, replay_time, asset_loss, amount_loss, time_line, reason_analysis, trouble_rank,
-                                   prime_principal, prime_principal_id, minor_principal, minor_principal_id, duty_team,
+                                   prime_principal, prime_principal_id, minor_principal, minor_principal_id, duty_team, is_monitor_detect,
                                    create_man_id, create_man)
         VALUES (#{name}, #{influence}, #{type}, #{productLineId}, #{occurrenceTime},
                 #{influenceCount}, #{influenceClient}, #{duringTime}, #{failureTime}, #{influenceScope}, #{reason},
                 #{restoreTime}, #{replayTime}, #{assetLoss}, #{amountLoss}, #{timeLine}, #{reasonAnalysis}, #{troubleRank},
-                #{primePrincipal}, #{primePrincipalId}, #{minorPrincipal}, #{minorPrincipalId}, #{dutyTeam},
+                #{primePrincipal}, #{primePrincipalId}, #{minorPrincipal}, #{minorPrincipalId}, #{dutyTeam}, #{isMonitorDetect},
                 #{createManId}, #{createMan})
     </insert>
 
@@ -31,6 +31,7 @@
             <if test="primePrincipalId != null">prime_principal_id = #{primePrincipalId},</if>
             <if test="minorPrincipal != null">minor_principal = #{minorPrincipal},</if>
             <if test="minorPrincipalId != null">minor_principal_id = #{minorPrincipalId},</if>
+            <if test="isMonitorDetect != null">is_monitor_detect = #{isMonitorDetect},</if>
             <if test="true">influence_count = #{influenceCount},</if>
             <if test="true">during_time = #{duringTime},</if>
             <if test="true">failure_time = #{failureTime},</if>
@@ -55,13 +56,15 @@
         SELECT id, name, influence, type, product_line_id, occurrence_time, influence_count,
                influence_client, during_time, failure_time, influence_scope, reason, restore_time, replay_time, asset_loss,
                amount_loss, time_line, reason_analysis, trouble_rank, prime_principal, prime_principal_id, minor_principal,
-               minor_principal_id, duty_team, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+               minor_principal_id, duty_team, is_monitor_detect,
+               create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
         FROM trouble_ticket
         WHERE id = #{id} AND is_deleted = false
     </select>
 
     <select id="selectList" resultType="com.timevale.forward.dal.entity.TroubleTicketListDO">
         SELECT tt.id, tt.name, tt.trouble_rank, tt.create_man, tt.create_man_id, tt.occurrence_time,
+               tt.prime_principal, tt.duty_team ,tt.is_monitor_detect,
                tt.create_date, tt.modify_date,
                pl.name productLineName,
                bd.name bizDomainName
@@ -70,6 +73,7 @@
         LEFT JOIN biz_domain bd ON pl.biz_domain_id = bd.id
         <where>
             <if test="name != null and name!='' ">AND tt.name LIKE concat('%',#{name},'%')</if>
+            <if test="isMonitorDetect != null">AND tt.is_monitor_detect = #{isMonitorDetect}</if>
             <if test="troubleTicketIdList != null and troubleTicketIdList.size() > 0">
                 AND tt.id IN
                 <foreach collection="troubleTicketIdList" item="item" separator="," open="(" close=")">
@@ -106,6 +110,20 @@
                     #{item}
                 </foreach>
             </if>
+
+            <if test="primePrincipalIdList != null and primePrincipalIdList.size() > 0">
+                AND tt.prime_principal_id IN
+                <foreach collection="primePrincipalIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dutyTeamList != null and dutyTeamList.size() > 0">
+                AND tt.duty_team IN
+                <foreach collection="dutyTeamList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+
             <choose>
                 <when test="occurrenceTimeStart != null and occurrenceTimeEnd != null">
                     AND tt.occurrence_time &gt;= #{occurrenceTimeStart}

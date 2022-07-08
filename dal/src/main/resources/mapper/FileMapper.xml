@@ -27,12 +27,14 @@
     <update id="update" parameterType="com.timevale.forward.dal.entity.FileDO">
         update file
         <set>
+            <if test="fileName != null and fileName != ''">name = #{fileName},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
         </set>
         <where>
             <if test="id!=null">and id = #{id}</if>
+            <if test="fileId!=null">and file_id = #{fileId}</if>
             <if test="attacheId!=null">and attache_id = #{attacheId}</if>
             <if test="type!=null">and type = #{type}</if>
         </where>

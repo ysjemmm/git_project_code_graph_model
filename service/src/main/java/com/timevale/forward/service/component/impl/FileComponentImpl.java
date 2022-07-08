@@ -69,6 +69,14 @@ public class FileComponentImpl implements FileComponent {
         fileDO.forEach((f)->{
             if(!existFileIds.contains(f.getFileId())){
                 needAddFiles.add(f);
+            }else{
+                // 更新已存在的附件
+                FileDO updateFileDO = new FileDO();
+                updateFileDO.setType(type);
+                updateFileDO.setAttacheId(attacheId);
+                updateFileDO.setFileId(f.getFileId());
+                updateFileDO.setFileName(f.getFileName());
+                fileMapper.update(updateFileDO);
             }
         });
         if(CollectionUtils.isNotEmpty(needAddFiles)){

@@ -1,0 +1,53 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.ColumnHideMapper">
+    <insert id="insert">
+        INSERT INTO column_hide(model, tab_type, content, belong_man, belong_man_id)
+        VALUES (#{model}, #{tabType}, #{content}, #{belongMan}, #{belongManId})
+    </insert>
+
+    <update id="update">
+        UPDATE column_hide
+        <set>
+            <if test="content != null">content = #{content},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modify_man_id = #{modifyManId},
+            </if>
+        </set>
+        <where>
+            <if test="model != null">AND model = #{model}</if>
+            <if test="tabType != null">AND tab_type = #{tabType}</if>
+            <if test="belongManId != null">AND belong_man_id = #{belongManId}</if>
+        </where>
+    </update>
+
+    <update id="updateById">
+        UPDATE column_hide
+        <set>
+            <if test="model != null">model = #{model},</if>
+            <if test="tabType != null">tab_type = #{tabType},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="belongMan != null and belongMan != ''">belong_man = #{belongMan},</if>
+            <if test="belongManId != null and belongManId != ''">belong_man_id = #{belongManId},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modify_man_id = #{modifyManId},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <select id="select" resultType="com.timevale.forward.dal.entity.ColumnHideDO">
+        SELECT id, model, tab_type, content, belong_man, belong_man_id
+        FROM column_hide
+        <where>
+            <if test="model != null">AND model = #{model}</if>
+            <if test="tabType != null">AND tab_type = #{tabType}</if>
+            <if test="belongManId != null">AND belong_man_id = #{belongManId}</if>
+            <if test="true">AND is_deleted = false</if>
+        </where>
+    </select>
+</mapper>

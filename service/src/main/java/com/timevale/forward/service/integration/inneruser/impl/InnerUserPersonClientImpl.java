@@ -33,9 +33,21 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
     private RpcPersonService rpcPersonService;
 
     @Override
+    public Set<String> getAllSuperiorByAccount(String userId, boolean isLeave) {
+        AccountRequest accountRequest = new AccountRequest();
+        accountRequest.setAccount(userId);
+        accountRequest.setIsLeave(isLeave);
+        BaseResult<Set<String>> res = getAllSuperiorByAccount(accountRequest);
+        if (res.ifSuccess()) {
+            return res.getData();
+        } else {
+            throw new BaseBizRuntimeException("调用内部用户中心查询上级失败! " + userId);
+        }
+    }
+
+    @Override
     public BaseResult<Set<String>> getAllSuperiorByAccount(AccountRequest request) {
-        BaseResult<Set<String>> allSuperiorByAccount = rpcPersonService.getAllSuperiorByAccount(request);
-        return allSuperiorByAccount;
+        return rpcPersonService.getAllSuperiorByAccount(request);
     }
 
     /**

@@ -16,6 +16,7 @@ import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOfflineMD;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
@@ -80,6 +81,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Resource
     private BugStatusOperatorMapper bugStatusOperatorMapper;
 
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
+
     @Override
     public BaseResult<PageQueryResult<BugOfflineVO>> list(BugOfflineQueryList bugOfflineQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -125,7 +129,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
 
         // 开始分页
-        PageHelper.startPage(bugOfflineQueryList.pageNum, bugOfflineQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        String collation = sqlOrderComponent.build(bugOfflineQueryList.getOrderFiled(), bugOfflineQueryList.getOrderCollation());
+        PageHelper.startPage(bugOfflineQueryList.pageNum, bugOfflineQueryList.pageSize, collation);
 
         // 查询并转换
         List<BugOfflineListDO> bugOfflineDOList = bugOfflineMapper.selectByCondition(condition);

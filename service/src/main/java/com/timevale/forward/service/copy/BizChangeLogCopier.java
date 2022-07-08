@@ -8,6 +8,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 /**
  * @author by YangXu
  * @date 2021/12/15 10:56
@@ -24,5 +26,7 @@ public interface BizChangeLogCopier {
      */
     @Mapping(target = "content", expression = "java(JSON.parseObject(bizChangeLogDO.getContent(), BizChangeLogContentVO.class))")
     BizChangeLogVO convert(BizChangeLogDO bizChangeLogDO);
+
+    List<BizChangeLogVO> convert(List<BizChangeLogDO> list);
 
 }

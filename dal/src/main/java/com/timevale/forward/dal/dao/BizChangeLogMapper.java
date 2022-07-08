@@ -3,7 +3,10 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author by xingyun
@@ -16,4 +19,15 @@ public interface BizChangeLogMapper {
     Integer insert(BizChangeLogDO bizChangeLogDO);
 
     int batchInsert(List<BizChangeLogDO> bizChangeLogs);
+
+    void updateIdentity(@Param("mainId") Long mainId, @Param("oldIdentity") String oldIdentity,
+                        @Param("newIdentity") String newIdentity);
+
+    void updateValue(@Param("mainId") Long mainId,
+                     @Param("field") String field,
+                     @Param("oldValue") String oldValue,
+                     @Param("newValue") String newValue);
+
+    List<BizChangeLogDO> listAllByActions(@Param("mainIds") Collection<Long> mainIds, @Param("type") Integer type,
+                                          @Param("actions") Collection<String> actions);
 }

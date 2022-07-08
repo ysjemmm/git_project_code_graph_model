@@ -27,7 +27,7 @@ public enum ProjectNodeStatusEnum {
 
     private final Integer code;
     private final String text;
-    private final static Map<String, Integer> nodeStatusMap = new HashMap<>();
+    private final static Map<String, Integer> nodeStatusMap = new LinkedHashMap<>();
 
     ProjectNodeStatusEnum(Integer code, String text) {
         this.code = code;
@@ -51,6 +51,16 @@ public enum ProjectNodeStatusEnum {
             }
         }
         return PUBLISHED.code;
+    }
+
+    public static Date getDate(List<ProjectNodeDO> nodeDOList){
+        ProjectNodeEnum.sort(nodeDOList);
+        for (ProjectNodeDO e : nodeDOList) {
+            if(e.getActualDate() == null){
+                return e.getPlanDate();
+            }
+        }
+        return null;
     }
 
     static {

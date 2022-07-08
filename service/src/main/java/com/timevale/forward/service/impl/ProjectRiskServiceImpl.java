@@ -11,6 +11,7 @@ import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
 import com.timevale.forward.dal.dto.HomePageRiskWarningSubmitTestDTO;
 import com.timevale.forward.dal.dto.HomePageRiskWarningTaskDTO;
+import com.timevale.forward.dal.dto.UpdateTimeDTO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import com.timevale.forward.dal.entity.ProjectRiskDO;
@@ -20,12 +21,11 @@ import com.timevale.forward.facade.api.query.ProjectRiskQueryList;
 import com.timevale.forward.facade.api.request.ProjectRiskAddReq;
 import com.timevale.forward.facade.api.request.ProjectRiskModifyReq;
 import com.timevale.forward.facade.api.result.ProjectRiskVO;
+import com.timevale.forward.facade.api.result.UpdateTimeVO;
 import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.HomePageRiskWarningComponent;
-import com.timevale.forward.service.component.HomePageRiskWarningSubmitTestComponent;
-import com.timevale.forward.service.component.HomePageRiskWarningTaskComponent;
-import com.timevale.forward.service.component.ProjectRiskExplanationComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.service.copy.DistributionCopier;
 import com.timevale.forward.service.copy.ProjectRiskCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -51,31 +51,34 @@ import java.util.stream.Collectors;
 public class ProjectRiskServiceImpl implements ProjectRiskService {
 
     @Resource
-    ProjectRiskMapper projectRiskMapper;
+    private ProjectRiskMapper projectRiskMapper;
 
     @Resource
-    ElapsedTimeClient elapsedTimeClient;
+    private ElapsedTimeClient elapsedTimeClient;
 
     @Resource
-    ProjectNodeMapper projectNodeMapper;
+    private ProjectNodeMapper projectNodeMapper;
 
     @Resource
-    ProjectMapper projectMapper;
+    private ProjectMapper projectMapper;
 
     @Resource
-    TaskMapper taskMapper;
+    private TaskMapper taskMapper;
 
     @Resource
-    ProjectRiskExplanationComponent projectRiskExplanationComponent;
+    private ProjectRiskExplanationComponent projectRiskExplanationComponent;
 
     @Resource
-    HomePageRiskWarningComponent riskWarningComponent;
+    private HomePageRiskWarningComponent riskWarningComponent;
 
     @Resource
-    HomePageRiskWarningSubmitTestComponent riskWarningSubmitTestComponent;
+    private HomePageRiskWarningSubmitTestComponent riskWarningSubmitTestComponent;
 
     @Resource
-    HomePageRiskWarningTaskComponent riskWarningTaskComponent;
+    private HomePageRiskWarningTaskComponent riskWarningTaskComponent;
+
+    @Resource
+    private DistributionComponent distributionComponent;
 
 
     @Override
@@ -243,6 +246,13 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         log.info("项目风险同步新增完成, 当前时间{}", new Date());
 
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<UpdateTimeVO> projectRiskUpdateTime() {
+        UpdateTimeDTO updateTimeDTO = distributionComponent.getUpdateDate();
+        UpdateTimeVO updateTimeVO = DistributionCopier.INSTANCE.convert(updateTimeDTO);
+        return BaseResult.success(updateTimeVO);
     }
 
     /**

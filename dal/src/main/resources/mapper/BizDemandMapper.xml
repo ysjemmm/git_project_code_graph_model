@@ -4,9 +4,11 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into biz_demand (name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status,
-                                priority, receive_man, receive_man_id, submit_man_id, submit_man,  create_man_id, create_man)
+                                priority, receive_man, receive_man_id, submit_man_id, submit_man,  create_man_id, create_man,
+                                customer_dev_demand,customer_dev_type,customer_dev_sale_contract,customer_dev_project_name)
         values (#{name}, #{productLineId}, #{dataIndicators}, #{targetCustomer}, #{createCustomer}, #{deptId}, #{desc}, #{status},
-                #{priority}, #{receiveMan}, #{receiveManId}, #{submitManId}, #{submitMan}, #{createManId}, #{createMan})
+                #{priority}, #{receiveMan}, #{receiveManId}, #{submitManId}, #{submitMan}, #{createManId}, #{createMan},
+                #{customerDevDemand}, #{customerDevType}, #{customerDevSaleContract}, #{customerDevProjectName})
     </insert>
 
     <update id="update">
@@ -66,6 +68,18 @@
             <if test="projectEndDate != null">
                 project_end_date = #{projectEndDate},
             </if>
+            <if test="customerDevDemand != null">
+                customer_dev_demand = #{customerDevDemand},
+            </if>
+            <if test="customerDevType != null">
+                customer_dev_type = #{customerDevType},
+            </if>
+            <if test="customerDevSaleContract != null and customerDevSaleContract != ''">
+                customer_dev_sale_contract = #{customerDevSaleContract},
+            </if>
+            <if test="customerDevProjectName != null and customerDevProjectName != ''">
+                customer_dev_project_name = #{customerDevProjectName},
+            </if>
             <if test="true">
                 modify_man_id = #{modifyManId},
                 modify_man = #{modifyMan},
@@ -95,6 +109,10 @@
             reject_reason = #{rejectReason},
             plan_release_date = #{planReleaseDate},
             project_end_date = #{projectEndDate},
+            customer_dev_demand = #{customerDevDemand},
+            customer_dev_type = #{customerDevType},
+            customer_dev_sale_contract = #{customerDevSaleContract},
+            customer_dev_project_name = #{customerDevProjectName},
             modify_man_id = #{modifyManId},
             modify_man = #{modifyMan},
         </set>
@@ -105,7 +123,8 @@
         select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status,
                priority, receive_man, receive_man_id, processor, os, plan_release_date, reason, submit_man, submit_man_id,
                solve_plan, reject_reason, project_end_date,
-               is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+               is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date,
+               customer_dev_demand,customer_dev_type,customer_dev_sale_contract,customer_dev_project_name
         from biz_demand
         where id = #{id}
     </select>

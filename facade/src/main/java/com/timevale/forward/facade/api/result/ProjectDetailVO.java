@@ -69,6 +69,9 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("项目实际结束时间")
     private Date actualEndDate;
 
+    @ApiModelProperty("项目暂停/作废时间")
+    private Date suspendDate;
+
     @ApiModelProperty("描述")
     private String desc;
 
@@ -101,6 +104,18 @@ public class ProjectDetailVO extends ToString {
 
     @ApiModelProperty("是否在发布平台发布")
     private Integer isPlatformPublish;
+
+    @ApiModelProperty("是否有项目目标")
+    private Integer isWithGoal;
+
+    @ApiModelProperty("项目等级：0普通 10重点")
+    private Integer level;
+
+    @ApiModelProperty("项目等级描述")
+    private String levelName;
+
+    @ApiModelProperty("产品技术资源评估（人天）")
+    private BigDecimal resourceAssessment;
 
     @ApiModelProperty("发布正式流程id")
     private Long publishFlowId;
