@@ -1,22 +1,18 @@
 package com.timevale.forward.service.impl;
 
-import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.query.*;
 import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
-import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
-import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
-import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -176,7 +172,7 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
 
         when(projectProductDemandMapper.getByProductDemandId(any())).thenReturn(null);
 
-        when(projectCmponent.page(any(), any())).thenReturn(new QueryResultVO<>());
+//        when(projectCmponent.page(any(), any())).thenReturn(new QueryResultVO<>());
 
         ProductDemandLinkProjectQueryList productDemandLinkProjectQueryList = new ProductDemandLinkProjectQueryList();
         productDemandLinkProjectQueryList.setProductDemandId(1L);

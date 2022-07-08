@@ -2,12 +2,12 @@ package com.timevale.forward.service.component.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
-import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
@@ -70,19 +70,19 @@ public class ProjectComponentImpl implements ProjectComponent {
     private SqlOrderComponent sqlOrderComponent;
 
     @Override
-    public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
+    public BaseResult<PageQueryResult<ProjectVO>> page(ProjectListCondition condition, List<Long> projectIds) {
         // 查找产品经理
         if (CollectionUtils.isNotEmpty(condition.getPds())) {
             projectIds = personMapper.getMainIds(condition.getPds(), projectIds, PersonTypeEnum.PROJECT_PD.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return ResultUtil.queryResultEmpty();
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
         //团队成员
         if (CollectionUtils.isNotEmpty(condition.getTeamMembers())) {
             projectIds = personMapper.getMainIds(condition.getTeamMembers(), projectIds, PersonTypeEnum.PROJECT_MEMBER.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return ResultUtil.queryResultEmpty();
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
         //产品线业务域
@@ -90,14 +90,14 @@ public class ProjectComponentImpl implements ProjectComponent {
                 || CollectionUtils.isNotEmpty(condition.getBizDomainIds())) {
             projectIds = projectMapper.getProjectIds(projectIds, condition.getProductLineIds(), condition.getBizDomainIds());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return ResultUtil.queryResultEmpty();
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
         //打回次数
         if (condition.getReturnCountType() != null && condition.getReturnCount() != null) {
             projectIds = testBillMapper.getProjectIds(projectIds, condition.getReturnCountType(), condition.getReturnCount());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return ResultUtil.queryResultEmpty();
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
 
@@ -109,7 +109,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             projectIds = projectNodeDos.stream().filter(a -> a.getActualDate() != null && a.getActualDate().after(startOfDay) && a.getActualDate().before(endOfDay))
                     .map(ProjectNodeDO::getProjectId).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return ResultUtil.queryResultEmpty();
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
         //是否逾期
@@ -124,7 +124,7 @@ public class ProjectComponentImpl implements ProjectComponent {
                 projectIds.removeAll(tmpProjectIds);
             }
             if (CollectionUtils.isEmpty(projectIds)) {
-                return ResultUtil.queryResultEmpty();
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
 
@@ -134,7 +134,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             projectIds = projectRiskDOList.stream().map(ProjectRiskDO::getProjectId).distinct().collect(Collectors.toList());
 
             if (CollectionUtils.isEmpty(projectIds)) {
-                return ResultUtil.queryResultEmpty();
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
 
             //项目状态≠已暂停、已作废、已发布
@@ -148,7 +148,7 @@ public class ProjectComponentImpl implements ProjectComponent {
                     || ProjectStatusEnum.INVALID.getCode().equals(e)
                     || ProjectStatusEnum.RELEASED.getCode().equals(e));
             if(CollectionUtils.isEmpty(status)){
-                return ResultUtil.queryResultEmpty();
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
 
@@ -162,7 +162,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         // 筛选判空
         projectIds = projectDos.stream().map(ProjectListDO::getId).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(projectIds)) {
-            return ResultUtil.queryResultEmpty();
+            return BaseResult.success(ResultUtil.pageEmpty());
         }
 
         //填充人员信息
@@ -253,11 +253,11 @@ public class ProjectComponentImpl implements ProjectComponent {
         pageQueryResult.setResultList(projectVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
-        QueryResultVO<ProjectVO> queryResultVO = new QueryResultVO<>();
-        queryResultVO.setPageQueryResult(pageQueryResult);
-        queryResultVO.setAnalyseVOList(analyse(condition));
-        
-        return queryResultVO;
+//        QueryResultVO<ProjectVO> queryResultVO = new QueryResultVO<>();
+//        queryResultVO.setPageQueryResult(pageQueryResult);
+//        queryResultVO.setAnalyseVOList(analyse(condition));
+
+        return BaseResult.success(pageQueryResult);
     }
 
     @Override
