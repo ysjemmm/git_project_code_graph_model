@@ -105,7 +105,7 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
                 a.setActualDate(oldNodeMap.get(a.getName()).getActualDate());
             }
         });
-        add(oldProjectNodes, projectId);
+        add(list, projectId);
     }
 
     private void fillValue(Long projectId, List<ProjectNodeDO> projectNodeDO) {
