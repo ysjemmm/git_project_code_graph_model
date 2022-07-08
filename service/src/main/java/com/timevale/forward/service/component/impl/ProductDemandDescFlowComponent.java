@@ -75,6 +75,10 @@ public class ProductDemandDescFlowComponent {
         ProductDemandDO productDemand = productDemandMapper.get(productDemandModifyReq.getId());
         AssertUtil.checkState(ProductDemandStatusEnum.PROGRESS.getCode().equals(productDemand.getStatus()),
                 "只有项目在进行中时才可以发起需求变更流程");
+        ProductDemandDescFlowDO lastFlow = productDemandDescFlowMapper.getLastByProductDemandId(productDemand.getId());
+        AssertUtil.checkState(lastFlow == null ||
+                !com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode().equals(lastFlow.getStatus()),
+                "该产品需求有正在审批中的方案调整流程，无法再次发起审批");
         ProjectProductDemandDO projectProduct = projectProductDemandMapper.getByProductDemandId(productDemand.getId());
         ProjectDO project = projectMapper.get(projectProduct.getProjectId());
 
