@@ -16,6 +16,7 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -76,9 +77,9 @@ public class ProductDemandDescFlowComponent {
         AssertUtil.checkState(ProductDemandStatusEnum.PROGRESS.getCode().equals(productDemand.getStatus()),
                 "只有项目在进行中时才可以发起需求变更流程");
         ProductDemandDescFlowDO lastFlow = productDemandDescFlowMapper.getLastByProductDemandId(productDemand.getId());
-        AssertUtil.checkState(lastFlow == null ||
-                !com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode().equals(lastFlow.getStatus()),
-                "该产品需求有正在审批中的方案调整流程，无法再次发起审批");
+        if (lastFlow != null && com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode().equals(lastFlow.getStatus())) {
+            throw new BaseBizRuntimeException("该产品需求有正在审批中的方案调整流程，无法再次发起审批");
+        }
         ProjectProductDemandDO projectProduct = projectProductDemandMapper.getByProductDemandId(productDemand.getId());
         ProjectDO project = projectMapper.get(projectProduct.getProjectId());
 
