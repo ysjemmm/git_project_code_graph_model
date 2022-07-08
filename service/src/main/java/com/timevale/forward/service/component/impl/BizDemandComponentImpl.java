@@ -258,6 +258,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             });
         });
 
+        // 逆序排序
+        analyseVOList.sort((a,b) -> b.getCount().compareTo(a.getCount()));
+
         QueryResultVO<BizDemandVO> queryResultVO = new QueryResultVO<>();
         queryResultVO.setAnalyseVOList(analyseVOList);
         queryResultVO.setPageQueryResult(pageQueryResult);

@@ -443,6 +443,9 @@ public class ProjectComponentImpl implements ProjectComponent {
             analyseVOList.add(analyseVO);
         });
 
+        // 逆序排序
+        analyseVOList.sort((a,b) -> b.getCount().compareTo(a.getCount()));
+
         return analyseVOList;
     }
 

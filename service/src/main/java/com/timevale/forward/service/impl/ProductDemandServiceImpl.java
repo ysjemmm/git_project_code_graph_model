@@ -180,6 +180,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             });
         });
 
+        // 逆序排序
+        analyseVOList.sort((a,b) -> b.getCount().compareTo(a.getCount()));
+
         QueryResultVO<ProductDemandVO> queryResultVO = new QueryResultVO<>();
         queryResultVO.setPageQueryResult(pageQueryResult);
         queryResultVO.setAnalyseVOList(analyseVOList);
