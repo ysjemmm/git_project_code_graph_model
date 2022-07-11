@@ -98,5 +98,6 @@ public class BugOnlineListCondition {
     /**
      * 客户名称
      */
+    @WildcardEscape
     private String customerName;
 }

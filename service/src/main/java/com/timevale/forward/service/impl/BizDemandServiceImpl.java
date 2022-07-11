@@ -437,6 +437,11 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 接收人变更
         if (!Objects.equal(oldBizDemandDO.getReceiveManId(), newBizDemandDO.getReceiveManId())) {
+            // 判断当前状态≠作废
+            if(BizDemandStatusEnum.INVALID.getCode().equals(oldBizDemandDO.getStatus())){
+                throw new BaseBizRuntimeException("已作废业务需求不可修改接收人");
+            }
+
             messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
                     this,
                     oldBizDemandDO.getId(),
