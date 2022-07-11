@@ -5,6 +5,7 @@
     <test name="Regression11">
         <packages>
             <package name="com.timevale.forward.service.impl" />
+            <package name="com.timevale.forward.service.component.impl" />
         </packages>
     </test>
 </suite>

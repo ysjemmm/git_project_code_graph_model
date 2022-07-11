@@ -17,6 +17,9 @@ public class CommonConfig {
     @Value("${forward.baseurl}")
     private String forwardBaseUrl;
 
+    @Value("${workflow.baseurl}")
+    private String workflowBaseUrl;
+
     @Value("${forward.baseurl}/productManagement")
     private String productManagementUrl;
 
