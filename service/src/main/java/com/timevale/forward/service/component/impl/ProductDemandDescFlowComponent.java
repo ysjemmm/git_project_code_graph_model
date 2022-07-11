@@ -12,9 +12,9 @@ import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProductDemandDescFlowCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
-import com.timevale.forward.service.integration.erp.ErpMessageClient;
-import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.WorkflowRejectMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -48,7 +48,7 @@ public class ProductDemandDescFlowComponent {
     private EpeiusClient epeiusClient;
 
     @Resource
-    private ErpMessageClient erpMessageClient;
+    private MessageEventPublisher messageEventPublisher;
 
     @Resource
     private ProductDemandMapper productDemandMapper;
@@ -176,22 +176,15 @@ public class ProductDemandDescFlowComponent {
                 productDemandDescFlowMapper.insert(newFlow);
             } else {
                 // 第二阶段拒绝，发送拒绝通知
-                ActionCardMsg actionCard = ActionCardMsg.builder().title("审批拒绝通知")
-                        .receivers(Collections.singletonList(auditingFlow.getCreateManId()))
-                        .singleTitle("查看详情")
-                        .singleUrl(config.getWorkflowBaseUrl() + currentTaskIdList.get(0))
-                        .markdown(String.format(
-                                "# 你提交的产品需求描述变更流程已驳回，请知晓\n\n" +
-                                        "发起人: **%s**\n\n" +
-                                        "发起时间: **%s**\n\n" +
-                                        "审批原因: **%s**",
-                                auditingFlow.getCreateMan(),
-                                DateUtil.parseToString(auditingFlow.getCreateDate(), DateUtil.DEFAULT_DATE_FORMAT),
-                                rejectReason
-                        ))
-                        .build();
-                erpMessageClient.sendActionCardMsg(actionCard);
-
+                messageEventPublisher.publish(new WorkflowRejectMsgEvent(
+                        this,
+                        "产品需求变更",
+                        auditingFlow.getCreateManId(),
+                        currentTaskIdList.get(0),
+                        auditingFlow.getCreateMan(),
+                        DateUtil.parseToString(auditingFlow.getCreateDate(), DateUtil.DEFAULT_DATE_FORMAT),
+                        rejectReason
+                        ));
             }
         } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
             auditingFlow.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.WITHDRAW.getCode());
