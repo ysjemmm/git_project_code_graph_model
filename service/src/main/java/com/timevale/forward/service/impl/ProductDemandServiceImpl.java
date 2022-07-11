@@ -114,7 +114,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
 
     @Override
-    public BaseResult<PageQueryResult<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
+    public BaseResult<QueryResultVO<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
         log.info("产品需求接收参数:{}", productDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
@@ -129,7 +129,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             }
             if (CollectionUtils.isEmpty(allMyStaffWithSelf)) {
                 //所选人员不在我的团队中
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return BaseResult.success(ResultUtil.queryResultEmpty());
             }
             condition.setOwnerIds(allMyStaffWithSelf);
         } else if (AscriptionEnum.DEPARTMENT.name().equals(productDemandQueryList.getAscription())) {
@@ -144,7 +144,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             }
             if (CollectionUtils.isEmpty(accountIds)) {
                 //所选人员不在我的部门中
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return BaseResult.success(ResultUtil.queryResultEmpty());
             }
             condition.setOwnerIds(accountIds);
         } else if (AscriptionEnum.COPIER.name().equals(productDemandQueryList.getAscription())) {
@@ -168,30 +168,30 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
         // 完整查询
-//        List<ProductDemandListDO> allProductDemandListDO = productDemandComponent.list(condition);
-//        Map<Long, List<ProductDemandListDO>> bizDemandListDOMap = allProductDemandListDO.stream().collect(Collectors.groupingBy(ProductDemandListDO::getProductLineId));
-//        log.info("业务查询产品线分析：{}", bizDemandListDOMap);
-//
-//        List<ProductLineAnalyseVO> analyseVOList = new ArrayList<>();
-//        bizDemandListDOMap.forEach((k,v) -> {
-//            ProductLineAnalyseVO analyseVO = new ProductLineAnalyseVO();
-//            Optional<ProductDemandListDO> any = v.stream().findAny();
-//            any.ifPresent(e -> {
-//                analyseVO.setCount(v.size());
-//                analyseVO.setProductLineId(e.getProductLineId());
-//                analyseVO.setProductLineName(e.getProductLineName());
-//                analyseVOList.add(analyseVO);
-//            });
-//        });
-//
-//        QueryResultVO<ProductDemandVO> queryResultVO = new QueryResultVO<>();
-//        queryResultVO.setPageQueryResult(pageQueryResult);
-//        queryResultVO.setAnalyseVOList(analyseVOList);
+        List<ProductDemandListDO> allProductDemandListDO = productDemandComponent.list(condition);
+        Map<Long, List<ProductDemandListDO>> bizDemandListDOMap = allProductDemandListDO.stream().collect(Collectors.groupingBy(ProductDemandListDO::getProductLineId));
+        log.info("业务查询产品线分析：{}", bizDemandListDOMap);
 
-        // 逆序排序
-//        analyseVOList.sort((a,b) -> b.getCount().compareTo(a.getCount()));
+        List<ProductLineAnalyseVO> analyseVOList = new ArrayList<>();
+        bizDemandListDOMap.forEach((k,v) -> {
+            ProductLineAnalyseVO analyseVO = new ProductLineAnalyseVO();
+            Optional<ProductDemandListDO> any = v.stream().findAny();
+            any.ifPresent(e -> {
+                analyseVO.setCount(v.size());
+                analyseVO.setProductLineId(e.getProductLineId());
+                analyseVO.setProductLineName(e.getProductLineName());
+                analyseVOList.add(analyseVO);
+            });
+        });
 
-        return BaseResult.success(pageQueryResult);
+        QueryResultVO<ProductDemandVO> queryResultVO = new QueryResultVO<>();
+        queryResultVO.setPageQueryResult(pageQueryResult);
+        queryResultVO.setAnalyseVOList(analyseVOList);
+
+         //逆序排序
+        analyseVOList.sort((a,b) -> b.getCount().compareTo(a.getCount()));
+
+        return BaseResult.success(queryResultVO);
     }
 
     @Override
@@ -380,7 +380,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     , ProjectStatusEnum.DEVING.getCode()
                     , ProjectStatusEnum.TESTING.getCode()));
         }
-        return projectCmponent.page(condition, Lists.newArrayList());
+        PageQueryResult<ProjectVO> pageQueryResult = projectCmponent.page(condition, Lists.newArrayList()).getPageQueryResult();
+        return BaseResult.success(pageQueryResult);
     }
 
     @Override

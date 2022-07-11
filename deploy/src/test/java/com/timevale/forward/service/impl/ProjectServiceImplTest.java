@@ -6,6 +6,7 @@ import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -91,7 +92,7 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
 
         when(personMapper.getMainIds(any(), any(), any())).thenReturn(Arrays.asList(1L, 2L));
 
-//        when(projectComponent.page(any(), any())).thenReturn(new QueryResultVO<>());
+        when(projectComponent.page(any(), any())).thenReturn(new QueryResultVO<>());
 
         ProjectQueryList projectQueryList = new ProjectQueryList();
         projectQueryList.setPageNum(1);
