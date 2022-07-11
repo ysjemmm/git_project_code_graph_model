@@ -4,15 +4,14 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectBoardService;
-import com.timevale.forward.facade.api.result.BugOfflineTrendVO;
-import com.timevale.forward.facade.api.result.ProjectBoardDataIndicatorVO;
-import com.timevale.forward.facade.api.result.ProjectBoardSinglelWorkTimeVO;
-import com.timevale.forward.facade.api.result.ProjectBoardTaskVO;
+import com.timevale.forward.facade.api.query.ProjectIdPageQuery;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
+import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 
@@ -77,7 +76,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         log.info("[getDataIndicator]项目的提测单: {}", testBillDO);
 
         List<TaskProductDemandDO> taskProductDemandDOList = new ArrayList<>();
-        if(CollectionUtils.isNotEmpty(productDemandIdList)){
+        if (CollectionUtils.isNotEmpty(productDemandIdList)) {
             taskProductDemandDOList = taskProductDemandMapper.selectByProductDemandId(productDemandIdList);
         }
         log.info("[getDataIndicator]任务-产品需求关联关系: {}", taskProductDemandDOList);
@@ -93,15 +92,15 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         BigDecimal planUseTime = new BigDecimal("0");
         for (TaskDO e : taskDOList) {
             planUseTime = planUseTime.add(e.getPlanUseTime());
-            if(TaskStatusEnum.DONE.getCode().equals(e.getStatus())){
+            if (TaskStatusEnum.DONE.getCode().equals(e.getStatus())) {
                 completedTime = completedTime.add(e.getPlanUseTime());
             }
         }
         BigDecimal absolutely = new BigDecimal("100.00");
-        if(completedTime.compareTo(planUseTime) == 0){
+        if (completedTime.compareTo(planUseTime) == 0) {
             result.setTaskProgress(absolutely.toString());
-        }else{
-            result.setTaskProgress(completedTime.multiply(absolutely).divide(planUseTime,2, RoundingMode.DOWN).toString());
+        } else {
+            result.setTaskProgress(completedTime.multiply(absolutely).divide(planUseTime, 2, RoundingMode.DOWN).toString());
         }
 
         // 总产品需求数、总任务数、总线下bug数
@@ -110,13 +109,13 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         result.setBugOfflineCount(bugOfflineDOList.size());
 
         // 提测结果
-        if(testBillDO == null){
+        if (testBillDO == null) {
             result.setSubmitTestResult(TestBillResultEnum.NO_START.getText());
-        }else if(TestBillStatusEnum.TEST_SUCCESS.getCode().equals(testBillDO.getStatus())){
+        } else if (TestBillStatusEnum.TEST_SUCCESS.getCode().equals(testBillDO.getStatus())) {
             result.setSubmitTestResult(TestBillResultEnum.SUCCESS.getText());
-        }else if(testBillDO.getReturnCount() > 0 && TestBillStatusEnum.NO_SELF_TEST.getCode().equals(testBillDO.getStatus())){
+        } else if (testBillDO.getReturnCount() > 0 && TestBillStatusEnum.NO_SELF_TEST.getCode().equals(testBillDO.getStatus())) {
             result.setSubmitTestResult(TestBillResultEnum.FAIL.getText());
-        }else{
+        } else {
             result.setSubmitTestResult(TestBillResultEnum.TESTING.getText());
         }
 
@@ -133,11 +132,11 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         // 今日应完成任务数、今日待完成任务数
         List<TaskDO> todayTaskList = taskDOList.stream().filter(e -> DateUtil.getIntervalDays(e.getPlanEndDate(), today) == 0).collect(Collectors.toList());
         result.setCompleteTaskToday(todayTaskList.size());
-        result.setCompleteTaskTodayRemain((int)todayTaskList.stream().filter(e -> !TaskStatusEnum.DONE.getCode().equals(e.getStatus())).count());
+        result.setCompleteTaskTodayRemain((int) todayTaskList.stream().filter(e -> !TaskStatusEnum.DONE.getCode().equals(e.getStatus())).count());
 
         // 未拆解任务需求数
         int productDemandCount = productDemandIdList.size();
-        int dismantleDemandCount = (int)taskProductDemandDOList.stream().map(TaskProductDemandDO::getProductDemandId).distinct().count();
+        int dismantleDemandCount = (int) taskProductDemandDOList.stream().map(TaskProductDemandDO::getProductDemandId).distinct().count();
         result.setNotDismantleDemand(productDemandCount - dismantleDemandCount);
 
         // 待处理项目风险数
@@ -148,7 +147,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
                 || BugStatusEnum.REPAIR.getCode().equals(e.getStatus())).count();
         int waitingCheck = (int) bugOfflineDOList.stream().filter(e -> BugStatusEnum.ACCEPTANCE.getCode().equals(e.getStatus())
                 || BugStatusEnum.CONFIRM.getCode().equals(e.getStatus())).count();
-        int postRepair = (int)bugOfflineDOList.stream().filter(e -> BugStatusEnum.POSTPONE_REPAIR.getCode().equals(e.getStatus())).count();
+        int postRepair = (int) bugOfflineDOList.stream().filter(e -> BugStatusEnum.POSTPONE_REPAIR.getCode().equals(e.getStatus())).count();
 
         result.setWaitingSolveBugOfflineCount(waitingSolve);
         result.setWaitingCheckBugOfflineCount(waitingCheck);
@@ -169,7 +168,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         // 线下bug日志
         List<BugLogDO> newLogList = new ArrayList<>();
         List<BugLogDO> bugLogDOList = new ArrayList<>();
-        if(CollectionUtils.isNotEmpty(bugOfflineIdList)){
+        if (CollectionUtils.isNotEmpty(bugOfflineIdList)) {
             bugLogDOList = bugLogMapper.selectBugStatusLog(bugOfflineIdList, BugLogTypeEnum.OFFLINE.getCode());
         }
 
@@ -178,10 +177,10 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         logMap.forEach((k, v) -> v.stream()
                 .max(Comparator.comparing(BaseDO::getCreateDate))
                 .ifPresent(e -> {
-                    if(BugStatusEnum.COMPLETE.getText().equals(e.getNewValue()) || BugStatusEnum.CLOSE.getText().equals(e.getNewValue())) {
-                    newLogList.add(e);
-                }
-        }));
+                    if (BugStatusEnum.COMPLETE.getText().equals(e.getNewValue()) || BugStatusEnum.CLOSE.getText().equals(e.getNewValue())) {
+                        newLogList.add(e);
+                    }
+                }));
 
         // 结果
         List<BugOfflineTrendVO> result = new ArrayList<>();
@@ -199,14 +198,14 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
         // 时间指针
         Date point = startDate;
-        while(point.compareTo(endDate) <= 0){
+        while (point.compareTo(endDate) <= 0) {
             Date pointEnd = DateUtil.getEndOfDay(point);
 
             // 日期、累积创建数量、累积解决数量
             BugOfflineTrendVO trendVO = new BugOfflineTrendVO();
             trendVO.setDate(point);
-            trendVO.setCreatedBug((int)bugOfflineDOList.stream().filter(e -> pointEnd.compareTo(e.getCreateDate()) >= 0).count());
-            trendVO.setSolvedBug((int)newLogList.stream().filter(e -> pointEnd.compareTo(e.getCreateDate()) >= 0).count());
+            trendVO.setCreatedBug((int) bugOfflineDOList.stream().filter(e -> pointEnd.compareTo(e.getCreateDate()) >= 0).count());
+            trendVO.setSolvedBug((int) newLogList.stream().filter(e -> pointEnd.compareTo(e.getCreateDate()) >= 0).count());
 
             result.add(trendVO);
 
@@ -294,6 +293,26 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         });
 
         return BaseResult.success(result);
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<TaskOverdueCountVO>> getTaskOverdueRank(ProjectIdPageQuery projectIdPageQuery) {
+        return BaseResult.success(new PageQueryResult<>(true));
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<BugOfflineCountVO>> getBugOfflineCount(ProjectIdPageQuery projectIdPageQuery) {
+        return BaseResult.success(new PageQueryResult<>(true));
+    }
+
+    @Override
+    public BaseResult<List<BugOfflineReasonDistributionVO>> getProjectBugReasonDistribution(Long projectId) {
+        return BaseResult.success(Collections.emptyList());
+    }
+
+    @Override
+    public BaseResult<List<BugOfflineBelongDistributionVO>> getProjectBugBelongDistribution(Long projectId) {
+        return BaseResult.success(Collections.emptyList());
     }
 
 }
