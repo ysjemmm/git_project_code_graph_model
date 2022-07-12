@@ -8,6 +8,7 @@ import com.timevale.forward.facade.api.client.ProductDemandDescFlowService;
 import com.timevale.forward.facade.api.request.ProductDemandIdReq;
 import com.timevale.forward.facade.api.result.ProductDemandDescFlowVO;
 import com.timevale.forward.model.enums.FlowStatusEnum;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProductDemandDescFlowCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -59,11 +60,14 @@ public class ProductDemandDescFlowServiceImpl implements ProductDemandDescFlowSe
         AssertUtil.checkState(FlowStatusEnum.AUDITING.getCode().equals(flow.getStatus()), "该审批流程处于" +
                 FlowStatusEnum.getTextByCode(flow.getStatus()) + "状态，无法撤回");
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String alias = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
         TerminateRequest terminateRequest = new TerminateRequest();
         terminateRequest.setProcessInstanceId(flow.getFlowId());
-        terminateRequest.setAssignee(userInfo.getId());
+        terminateRequest.setAssignee(flow.getCreateManId());
         epeiusClient.withdrawInstance(terminateRequest);
         flow.setStatus(FlowStatusEnum.WITHDRAW.getCode());
+        flow.setModifyManId(userInfo.getId());
+        flow.setModifyMan(alias);
         productDemandDescFlowMapper.update(flow);
         return BaseResult.success(true);
     }
