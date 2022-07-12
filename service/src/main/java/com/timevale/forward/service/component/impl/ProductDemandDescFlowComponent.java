@@ -104,6 +104,7 @@ public class ProductDemandDescFlowComponent {
         variables.put("projectName", project.getName());
         variables.put("changeType",
                 ProductDemandDescChangeTypeEnum.getTextByCode(descChangeReq.getProductDemandDescChangeType()));
+        variables.put("otherReason", descChangeReq.getOtherReason());
         variables.put("reason", descChangeReq.getReason());
         variables.put("previousDesc", StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(productDemand.getDesc())));
         variables.put("changeDesc", StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(descChangeReq.getChangeDesc())));
@@ -127,6 +128,7 @@ public class ProductDemandDescFlowComponent {
                 .setReason(descChangeReq.getReason())
                 .setChangeDesc(descChangeReq.getChangeDesc())
                 .setChangeType(descChangeReq.getProductDemandDescChangeType())
+                .setOtherReason(descChangeReq.getOtherReason())
                 .setPmId(project.getPmId())
                 .setPm(project.getPmName())
                 .setPoId(po.getAccount())
