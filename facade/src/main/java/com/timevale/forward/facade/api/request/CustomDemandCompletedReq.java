@@ -5,7 +5,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -22,7 +21,7 @@ public class CustomDemandCompletedReq extends BaseReq {
     private Long id;
 
     @ApiModelProperty("处理方案")
-    @NotBlank(message = "处理方案不能为空")
+    @NotNull(message = "处理方案不能为空")
     private String solvePlan;
 
 }

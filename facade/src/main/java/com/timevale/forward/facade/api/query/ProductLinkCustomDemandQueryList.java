@@ -15,8 +15,8 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("客户需求查询")
-public class CustomDemandQueryList extends QueryBase {
+@ApiModel("产品需求-客户需求查询")
+public class ProductLinkCustomDemandQueryList extends QueryBase {
 
     @ApiModelProperty("需求主题")
     private String name;
@@ -27,7 +27,7 @@ public class CustomDemandQueryList extends QueryBase {
     @ApiModelProperty("客户所在页面")
     private String page;
 
-    @ApiModelProperty("业务需求id")
+    @ApiModelProperty("客户需求id")
     private Long id;
 
     @ApiModelProperty("起始时间")
@@ -48,13 +48,9 @@ public class CustomDemandQueryList extends QueryBase {
     @ApiModelProperty("需求提交人")
     private String submitMan;
 
-    @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
-    private String ascription;
-
     @ApiModelProperty("项目发布时间-起始时间")
     private Date projectEndDateStart;
 
     @ApiModelProperty("项目发布时间-结束时间")
     private Date projectEndDateEnd;
-
 }

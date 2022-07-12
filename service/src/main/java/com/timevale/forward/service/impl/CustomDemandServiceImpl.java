@@ -2,14 +2,12 @@ package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.CustomDemandListCondition;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.BugOnlineMapper;
 import com.timevale.forward.dal.dao.CustomDemandMapper;
-import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.CustomDemandDO;
 import com.timevale.forward.facade.api.client.CustomDemandService;
 import com.timevale.forward.facade.api.query.CustomDemandQueryList;
@@ -18,14 +16,15 @@ import com.timevale.forward.facade.api.request.CustomDemandCompletedReq;
 import com.timevale.forward.facade.api.request.CustomDemandRejectReq;
 import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.enums.AscriptionEnum;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.FileTypeEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.CustomDemandCopier;
-import com.timevale.forward.service.observer.event.BizDemandCompletedMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -35,7 +34,6 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,7 +85,7 @@ public class CustomDemandServiceImpl implements CustomDemandService {
 
         String ascription = customDemandQueryList.getAscription();
          if (ascription.equals(AscriptionEnum.RECEIVE.toString())) {
-             condition.setReceiveManIdList(Lists.newArrayList(userInfo.getId()));
+             condition.setReceiveManIds(Lists.newArrayList(userInfo.getId()));
         }
         // 开始分页
         PageHelper.startPage(customDemandQueryList.pageNum, customDemandQueryList.pageSize,  CommonConstant.DEFAULT_ORDER_BY);
@@ -321,51 +319,41 @@ public class CustomDemandServiceImpl implements CustomDemandService {
     @Override
     public BaseResult<Boolean> completed(CustomDemandCompletedReq customDemandCompletedReq) {
         // 参数
-        Long id = customDemandCompletedReq.getId();
-        String solvePlan = customDemandCompletedReq.getSolvePlan() == null ? StringUtils.EMPTY : customDemandCompletedReq.getSolvePlan();
-
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(id);
-        Integer oldStatus = bizDemandDO.getStatus();
-        Integer newStatus = BizDemandStatusEnum.TO_CONFIRM.getCode();
-
-        // 旧数据
-        String oldSolvePlan = bizDemandDO.getSolvePlan();
-
-        // 更新
-        bizDemandDO.setRejectReason(StringUtils.EMPTY);
-        bizDemandDO.setStatus(newStatus);
-        bizDemandDO.setSolvePlan(solvePlan);
-        bizDemandMapper.fullUpdate(bizDemandDO);
-
-        // 日志
-        String oldValue = BizDemandStatusEnum.getTextByCode(oldStatus);
-        String newValue = BizDemandStatusEnum.getTextByCode(newStatus);
-        bizDemandLogComponent.addLogWhenModifyData(
-                oldValue,
-                newValue,
-                id,
-                BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
-                true,
-                ButtonActionEnum.COMPLETED_NOT_DEV.getText());
-
-        if(!Objects.equal(oldSolvePlan,customDemandCompletedReq.getSolvePlan())){
-            bizDemandLogComponent.addLogWhenModifyData(
-                    oldSolvePlan,
-                    customDemandCompletedReq.getSolvePlan(),
-                    id,
-                    BizChangeLogFieldEnum.SOLVE_PLAN.getText(),
-                    true);
-        }
-        // 通知需求提交人
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        messageEventPublisher.publish(new BizDemandCompletedMsgEvent(
-                this,
-                bizDemandDO.getId(),
-                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
-                bizDemandDO.getSubmitManId(),
-                bizDemandDO.getName()
-        ));
-
+//        Long id = customDemandCompletedReq.getId();
+//        String solvePlan = customDemandCompletedReq.getSolvePlan() == null ? StringUtils.EMPTY : customDemandCompletedReq.getSolvePlan();
+//
+//        BizDemandDO bizDemandDO = bizDemandMapper.selectById(id);
+//        Integer oldStatus = bizDemandDO.getStatus();
+//        Integer newStatus = BizDemandStatusEnum.TO_CONFIRM.getCode();
+//
+//        // 旧数据
+//        String oldSolvePlan = bizDemandDO.getSolvePlan();
+//
+//        // 更新
+//        bizDemandDO.setRejectReason(StringUtils.EMPTY);
+//        bizDemandDO.setStatus(newStatus);
+//        bizDemandDO.setSolvePlan(solvePlan);
+//        bizDemandMapper.fullUpdate(bizDemandDO);
+//
+//        // 日志
+//        String oldValue = BizDemandStatusEnum.getTextByCode(oldStatus);
+//        String newValue = BizDemandStatusEnum.getTextByCode(newStatus);
+//        bizDemandLogComponent.addLogWhenModifyData(
+//                oldValue,
+//                newValue,
+//                id,
+//                BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
+//                true,
+//                ButtonActionEnum.COMPLETED_NOT_DEV.getText());
+//
+//        if(!Objects.equal(oldSolvePlan,customDemandCompletedReq.getSolvePlan())){
+//            bizDemandLogComponent.addLogWhenModifyData(
+//                    oldSolvePlan,
+//                    customDemandCompletedReq.getSolvePlan(),
+//                    id,
+//                    BizChangeLogFieldEnum.SOLVE_PLAN.getText(),
+//                    true);
+//        }
         return BaseResult.success(true);
     }
 

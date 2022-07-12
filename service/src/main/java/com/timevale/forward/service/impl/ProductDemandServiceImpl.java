@@ -578,6 +578,21 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         return BaseResult.success(pageQueryResult);
     }
 
+    @Override
+    public BaseResult<PageQueryResult<CustomDemandVO>> matchCustomDemandList(ProductLinkCustomDemandQueryList productLinkCustomDemandQueryList) {
+        return null;
+    }
+
+    @Override
+    public BaseResult<Boolean> linkOrUnLinkCustomDemand(ProductCustomDemandLinkReq productCustomDemandLinkReq) {
+        return null;
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<CustomDemandVO>> linkCustomDemandList(Long customDemandId) {
+        return null;
+    }
+
     private void checkDescLength(String desc) {
         if (StringUtils.isNotEmpty(desc) && desc.getBytes().length > MAX_LENGTH) {
             throw new BaseBizRuntimeException("需求描述字数过大,请重新输入");

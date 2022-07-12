@@ -45,24 +45,25 @@ public class CustomDemandListCondition {
     /**
      * 需求解决状态
      */
-    private List<Integer> statusList;
+    private List<Integer> status;
     /**
      * 问题类别
      */
-    private List<Integer> causeList;
+    private List<Integer> causes;
     /**
      * 产品端
      */
-    private List<String> productEndList;
+    private List<String> productEnds;
     /**
      * 需求提交人id
      */
-    private List<String> submitManIdList;
+    @WildcardEscape
+    private String submitMan;
 
     /**
      * 需求接收id
      */
-    private List<String> receiveManIdList;
+    private List<String> receiveManIds;
     /**
      * 起始时间
      */
