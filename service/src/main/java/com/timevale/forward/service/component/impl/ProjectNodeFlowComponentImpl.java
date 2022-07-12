@@ -88,11 +88,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             Long seconds = elapsedTimeClient.getElapsedTime(oldPlanEndDate, planEndDate);
             BigDecimal elapsedTime = new BigDecimal(seconds.toString());
             elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.UP);
-            if (BigDecimal.ZERO.equals(elapsedTime)) {
-                return;
-            }
             projectNodeFlowDO.setDelayDay(elapsedTime);
-//            projectNodeFlowDO.setDelayDay(BigDecimal.valueOf(1));
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
             Integer stage = StringUtils.isEmpty(projectNodeFlowDO.getBizId())
                     && (StringUtils.isEmpty(projectNodeFlowDO.getPdId()) || Objects.equals(projectNodeFlowDO.getPdId(), userInfo.getId()))
