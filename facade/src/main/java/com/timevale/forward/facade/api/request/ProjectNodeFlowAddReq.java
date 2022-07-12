@@ -41,7 +41,10 @@ public class ProjectNodeFlowAddReq extends BaseReq {
     @ApiModelProperty("变更事由")
     private String reason;
 
-    @ApiModelProperty("变更类型")
-    private String changeType;
+    @ApiModelProperty("变更类型:0需求变更、1资源不足、2优先级降低、3外部依赖、9其他")
+    private Integer changeType;
+
+    @ApiModelProperty("变更类型为其他时,填写")
+    private String otherReason;
 
 }

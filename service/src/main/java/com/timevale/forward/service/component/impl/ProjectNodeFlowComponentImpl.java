@@ -305,6 +305,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         variables.put("changePublishDate", DateUtil.parseToString(projectNodeFlowDO.getChangePublishDate(), DateFormatConst.DATE_FORMAT));
         variables.put("delayDay", projectNodeFlowDO.getDelayDay());
         variables.put("changeCount", count);
+        variables.put("otherReason", projectNodeFlowDO.getOtherReason());
         List<String> reviewIds = new ArrayList<>();
         List<String> reviews = new ArrayList<>();
         if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())) {

@@ -19,7 +19,6 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectNodeCopier;
 import com.timevale.forward.service.copy.ProjectNodeFlowCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
-import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -52,9 +51,6 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
 
     @Resource
     private ProjectNodeMapper projectNodeMapper;
-
-    @Resource
-    private ElapsedTimeClient elapsedTimeClient;
 
     @Resource
     private EpeiusClient epeiusClient;
@@ -133,20 +129,14 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
             Date oldPlanDate = DateUtil.getEndOfDay(oldPublishNodes.get(0).getPlanDate());
             Date planDate = DateUtil.getEndOfDay(publishNodes.get(0).getPlanDate());
             if (oldPlanDate.before(planDate)) {
-                Long seconds = elapsedTimeClient.getElapsedTime(oldPlanDate, planDate);
-                if (seconds > 0) {
-                    return BaseResult.success(1);
-                }
+                return BaseResult.success(1);
             }
         }
         if (!CollectionUtils.isEmpty(oldTestNodes) && !CollectionUtils.isEmpty(testNodes)) {
             Date oldPlanDate = DateUtil.getEndOfDay(oldTestNodes.get(0).getPlanDate());
             Date planDate = DateUtil.getEndOfDay(testNodes.get(0).getPlanDate());
             if (oldPlanDate.before(planDate)) {
-                Long seconds = elapsedTimeClient.getElapsedTime(oldPlanDate, planDate);
-                if (seconds > 0) {
-                    return BaseResult.success(0);
-                }
+                return BaseResult.success(0);
             }
         }
         return BaseResult.success(-1);
