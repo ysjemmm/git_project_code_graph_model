@@ -1,6 +1,6 @@
 package com.timevale.forward.service.observer.event;
 
-import com.timevale.forward.service.integration.erp.model.ActionCardMsg;
+import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
 
 import java.util.Collections;
 
@@ -31,18 +31,17 @@ public class WorkflowRejectMsgEvent extends MessageEvent {
 
     @Override
     public void run() {
-        ActionCardMsg actionCard = ActionCardMsg.builder().title("审批拒绝通知")
+       String singleUrl= config.getWorkflowBaseUrl() + taskId;
+        MarkdownMsg actionCard = MarkdownMsg.builder().title("审批拒绝通知")
                 .receivers(Collections.singletonList(createManId))
-                .singleTitle("查看详情")
-                .singleUrl(config.getWorkflowBaseUrl() + taskId)
-                .markdown(String.format(
+                .content(String.format(
                         "### 你提交的%s流程已驳回，请知晓\n\n" +
                                 "发起人: **%s**\n\n" +
                                 "发起时间: **%s**\n\n" +
-                                "审批原因: **%s**",
+                                "审批原因: **%s**  \n  [查看详情](%s)",
                         flowName,
-                        createMan, createDate, rejectReason))
+                        createMan, createDate, rejectReason,singleUrl))
                 .build();
-        erpMessageClient.sendActionCardMsg(actionCard);
+        erpMessageClient.sendMarkdownMsg(actionCard);
     }
 }
