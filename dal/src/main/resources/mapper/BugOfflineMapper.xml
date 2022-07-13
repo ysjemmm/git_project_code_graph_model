@@ -261,14 +261,16 @@
         select reason, count(*) as count
         from bug_offline
         where project_id = #{projectId}
-        group by reason;
+        group by reason
+        order by reason
     </select>
     <select id="getBelongDistribution"
             resultType="com.timevale.forward.dal.dto.BugOfflineBelongDistributionDTO">
         select belong, count(*) as count
         from bug_offline
         where project_id = #{projectId}
-        group by belong;
+        group by belong
+        order by belong
     </select>
 
     <update id="deleteById">

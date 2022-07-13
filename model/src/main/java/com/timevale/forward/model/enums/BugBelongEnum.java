@@ -14,41 +14,39 @@ public enum BugBelongEnum {
     /**
      * 后端bug
      */
-    BACK_END(0,"后端bug"),
+    BACK_END(0, "后端bug"),
 
     /**
      * PC客户端
      */
-    PC_CLIENT(1,"PC客户端"),
+    PC_CLIENT(1, "PC客户端"),
 
     /**
      * PCweb端
      */
-    PC_WEB(2,"PCweb端"),
+    PC_WEB(2, "PCweb端"),
 
     /**
      * Android
      */
-    ANDROID(3,"Android"),
+    ANDROID(3, "Android"),
 
     /**
      * ios
      */
-    IOS(4,"IOS"),
+    IOS(4, "IOS"),
 
     /**
      * h5
      */
-    H5(5,"H5");
+    H5(5, "H5");
 
     private final Integer code;
     private final String text;
 
-    public static String getTextByCode(Integer code){
-        for (BugBelongEnum e : BugBelongEnum.values()){
-            if(e.code.equals(code)){
-                return e.text;
-            }
+    public static String getTextByCode(Integer code) {
+        if (code < values().length) {
+            return values()[code].text;
         }
         return "errorCode";
     }
