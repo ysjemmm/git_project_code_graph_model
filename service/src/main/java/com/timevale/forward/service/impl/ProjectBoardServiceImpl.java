@@ -307,7 +307,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
     @Override
     public BaseResult<PageQueryResult<TaskOverdueCountVO>> getTaskOverdueRank(TaskOverdueRankQueryList query) {
-        String collation = sqlOrderComponent.build(query.getOrderFiled(), query.getOrderCollation());
+        String collation = sqlOrderComponent.buildWithoutId(query.getOrderFiled(), query.getOrderCollation());
         PageHelper.startPage(query.getPageNum(), query.getPageSize(), collation);
         List<TaskOverdueDTO> overdueList =  taskMapper.getOverdueRank(query.getProjectId());
         List<TaskOverdueCountVO> res = TaskCopier.INSTANCE.convertOverdue(overdueList);

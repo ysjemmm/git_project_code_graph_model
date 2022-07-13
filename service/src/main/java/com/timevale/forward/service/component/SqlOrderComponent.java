@@ -14,4 +14,9 @@ public interface SqlOrderComponent {
      * @return {@link String}
      */
     String build(String field, Integer order);
+
+    /**
+     * 构建 无需id
+     */
+    String buildWithoutId(String field, Integer order);
 }
