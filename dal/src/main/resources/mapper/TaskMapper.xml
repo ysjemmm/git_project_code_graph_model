@@ -218,6 +218,18 @@
           AND tpd.is_deleted = false
           AND t.is_deleted = false
     </select>
+    <select id="getOverdueRank" resultType="com.timevale.forward.dal.dto.TaskOverdueDTO">
+        select p.user_id,
+        p.user_name,
+        count(t.id)                as overdue_count,
+        sum(now() - plan_end_date) as accumulate_overdue_millis
+        from person p
+        left join task t on p.main_id = t.id and p.type = 40
+        where t.status = 10
+        and t.plan_end_date &lt; now()
+        and t.project_id = #{projectId}
+        group by p.user_id;
+    </select>
 
 
     <update id="updateStatusAsProjectStatusChange" parameterType="com.timevale.forward.dal.entity.TaskStatusUpdateDO" >

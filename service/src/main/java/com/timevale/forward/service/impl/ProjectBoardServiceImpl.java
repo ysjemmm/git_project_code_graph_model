@@ -1,12 +1,19 @@
 package com.timevale.forward.service.impl;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dto.TaskOverdueDTO;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectBoardService;
-import com.timevale.forward.facade.api.query.ProjectIdPageQuery;
+import com.timevale.forward.facade.api.query.ProjectBugOfflineCountQueryList;
+import com.timevale.forward.facade.api.query.TaskOverdueRankQueryList;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.SqlOrderComponent;
+import com.timevale.forward.service.copy.TaskCopier;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -34,6 +41,9 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
     @Resource
     private TaskMapper taskMapper;
+
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
 
     @Resource
     private TaskProductDemandMapper taskProductDemandMapper;
@@ -271,37 +281,45 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         log.info("人员工时,任务:{}", projectBoardTaskVoMap);
 
         projectBoardTaskVoMap.forEach((k, v) -> {
-            ProjectBoardSinglelWorkTimeVO singlelWorkTimeVO = new ProjectBoardSinglelWorkTimeVO();
+            ProjectBoardSinglelWorkTimeVO singleWorkTimeVO = new ProjectBoardSinglelWorkTimeVO();
 
             Optional<ProjectBoardTaskVO> min = v.stream().min(Comparator.comparing(ProjectBoardTaskVO::getPlanStartDate));
-            min.ifPresent(projectBoardTaskVO -> singlelWorkTimeVO.setMinPlanStartDate(projectBoardTaskVO.getPlanStartDate()));
+            min.ifPresent(projectBoardTaskVO -> singleWorkTimeVO.setMinPlanStartDate(projectBoardTaskVO.getPlanStartDate()));
 
             Optional<ProjectBoardTaskVO> max = v.stream().max(Comparator.comparing(ProjectBoardTaskVO::getPlanEndDate));
-            max.ifPresent(projectBoardTaskVO -> singlelWorkTimeVO.setMaxPlanEndDate(projectBoardTaskVO.getPlanEndDate()));
+            max.ifPresent(projectBoardTaskVO -> singleWorkTimeVO.setMaxPlanEndDate(projectBoardTaskVO.getPlanEndDate()));
 
             BigDecimal bigDecimal = v.stream().map(ProjectBoardTaskVO::getPlanUseTime).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
-            singlelWorkTimeVO.setExecutor(v.get(0).getExecutor());
-            singlelWorkTimeVO.setExecutorId(v.get(0).getExecutorId());
-            singlelWorkTimeVO.setIsPm(Objects.equals(v.get(0).getExecutorId(), projectDO.getPmId()));
-            singlelWorkTimeVO.setTaskCount(v.size());
-            singlelWorkTimeVO.setProjectStartDate(projectStartDate);
-            singlelWorkTimeVO.setProjectEndDate(projectEndDate.get(0));
-            singlelWorkTimeVO.setTotalPlanUseTime(bigDecimal);
+            singleWorkTimeVO.setExecutor(v.get(0).getExecutor());
+            singleWorkTimeVO.setExecutorId(v.get(0).getExecutorId());
+            singleWorkTimeVO.setIsPm(Objects.equals(v.get(0).getExecutorId(), projectDO.getPmId()));
+            singleWorkTimeVO.setTaskCount(v.size());
+            singleWorkTimeVO.setProjectStartDate(projectStartDate);
+            singleWorkTimeVO.setProjectEndDate(projectEndDate.get(0));
+            singleWorkTimeVO.setTotalPlanUseTime(bigDecimal);
             List<ProjectBoardTaskVO> sort = v.stream().sorted(Comparator.comparing(ProjectBoardTaskVO::getPlanStartDate)).collect(Collectors.toList());
-            singlelWorkTimeVO.setProjectBoardTaskVos(sort);
-            result.add(singlelWorkTimeVO);
+            singleWorkTimeVO.setProjectBoardTaskVos(sort);
+            result.add(singleWorkTimeVO);
         });
 
         return BaseResult.success(result);
     }
 
     @Override
-    public BaseResult<PageQueryResult<TaskOverdueCountVO>> getTaskOverdueRank(ProjectIdPageQuery projectIdPageQuery) {
-        return BaseResult.success(new PageQueryResult<>(true));
+    public BaseResult<PageQueryResult<TaskOverdueCountVO>> getTaskOverdueRank(TaskOverdueRankQueryList query) {
+        String collation = sqlOrderComponent.build(query.getOrderFiled(), query.getOrderCollation());
+        PageHelper.startPage(query.getPageNum(), query.getPageSize(), collation);
+        List<TaskOverdueDTO> overdueList =  taskMapper.getOverdueRank(query.getProjectId());
+        List<TaskOverdueCountVO> res = TaskCopier.INSTANCE.convertOverdue(overdueList);
+        PageInfo<TaskOverdueDTO> pageInfo = new PageInfo<>(overdueList);
+        PageQueryResult<TaskOverdueCountVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(res);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
     }
 
     @Override
-    public BaseResult<PageQueryResult<BugOfflineCountVO>> getBugOfflineCount(ProjectIdPageQuery projectIdPageQuery) {
+    public BaseResult<PageQueryResult<BugOfflineCountVO>> getBugOfflineCount(ProjectBugOfflineCountQueryList query) {
         return BaseResult.success(new PageQueryResult<>(true));
     }
 

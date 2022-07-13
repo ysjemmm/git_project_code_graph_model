@@ -9,15 +9,15 @@ import javax.validation.constraints.NotNull;
 
 @Getter
 @Setter
-public class ProjectIdPageQuery extends QueryBase {
+public class ProjectBugOfflineCountQueryList extends QueryBase {
 
     @NotNull(message = "项目id不能为空")
     private Long projectId;
 
     @ApiModelProperty("排序字段")
-    private String orderFiled;
+    private String orderFiled = "urgentRepairCount";
 
     @ApiModelProperty("排序规则：0正序，1逆序")
-    private Integer orderCollation;
+    private Integer orderCollation = 1;
 
 }

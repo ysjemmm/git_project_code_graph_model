@@ -2,7 +2,8 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.query.ProjectIdPageQuery;
+import com.timevale.forward.facade.api.query.ProjectBugOfflineCountQueryList;
+import com.timevale.forward.facade.api.query.TaskOverdueRankQueryList;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -43,12 +44,12 @@ public interface ProjectBoardService {
     /**
      * 项目人员任务逾期时间排行
      */
-    BaseResult<PageQueryResult<TaskOverdueCountVO>> getTaskOverdueRank(ProjectIdPageQuery projectIdPageQuery);
+    BaseResult<PageQueryResult<TaskOverdueCountVO>> getTaskOverdueRank(TaskOverdueRankQueryList query);
 
     /**
      * 待修复线下bug情况
      */
-    BaseResult<PageQueryResult<BugOfflineCountVO>> getBugOfflineCount(ProjectIdPageQuery projectIdPageQuery);
+    BaseResult<PageQueryResult<BugOfflineCountVO>> getBugOfflineCount(ProjectBugOfflineCountQueryList query);
 
     /**
      * 线下Bug原因分布情况
