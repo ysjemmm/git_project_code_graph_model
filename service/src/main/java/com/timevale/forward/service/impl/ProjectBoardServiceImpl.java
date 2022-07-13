@@ -4,7 +4,9 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dto.BugOfflineBelongDistributionDTO;
 import com.timevale.forward.dal.dto.BugOfflineCountDTO;
+import com.timevale.forward.dal.dto.BugOfflineReasonDistributionDTO;
 import com.timevale.forward.dal.dto.TaskOverdueDTO;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectBoardService;
@@ -335,12 +337,14 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
     @Override
     public BaseResult<List<BugOfflineReasonDistributionVO>> getProjectBugReasonDistribution(Long projectId) {
-        return BaseResult.success(Collections.emptyList());
+        List<BugOfflineReasonDistributionDTO> reasonDistributions = bugOfflineMapper.getReasonDistribution(projectId);
+        return BaseResult.success(BugOfflineCopier.INSTANCE.convertReasonDistributions(reasonDistributions));
     }
 
     @Override
     public BaseResult<List<BugOfflineBelongDistributionVO>> getProjectBugBelongDistribution(Long projectId) {
-        return BaseResult.success(Collections.emptyList());
+        List<BugOfflineBelongDistributionDTO> belongDistributions = bugOfflineMapper.getBelongDistribution(projectId);
+        return BaseResult.success(BugOfflineCopier.INSTANCE.convertBelongDistributions(belongDistributions));
     }
 
 }

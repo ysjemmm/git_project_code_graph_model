@@ -256,6 +256,20 @@
           and project_id = #{projectId}
         group by operator_id
     </select>
+    <select id="getReasonDistribution"
+            resultType="com.timevale.forward.dal.dto.BugOfflineReasonDistributionDTO">
+        select reason, count(*) as count
+        from bug_offline
+        where project_id = #{projectId}
+        group by reason;
+    </select>
+    <select id="getBelongDistribution"
+            resultType="com.timevale.forward.dal.dto.BugOfflineBelongDistributionDTO">
+        select belong, count(*) as count
+        from bug_offline
+        where project_id = #{projectId}
+        group by belong;
+    </select>
 
     <update id="deleteById">
         update bug_offline
