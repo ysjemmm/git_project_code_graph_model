@@ -245,6 +245,7 @@
         where project_id = #{projectId}
         and is_Deleted = false
     </select>
+
     <select id="getBugCount" resultType="com.timevale.forward.dal.dto.BugOfflineCountDTO">
         select operator_id                  as user_id,
                operator                     as user_name,
@@ -253,7 +254,7 @@
         from bug_offline
         where status = 1
           and project_id = #{projectId}
-        group by operator_id;
+        group by operator_id
     </select>
 
     <update id="deleteById">
