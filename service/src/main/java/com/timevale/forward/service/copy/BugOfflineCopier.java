@@ -1,17 +1,21 @@
 package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.condition.BugOfflineListCondition;
+import com.timevale.forward.dal.dto.BugOfflineCountDTO;
 import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.dal.entity.BugOfflineListDO;
 import com.timevale.forward.facade.api.query.BugOfflineQueryList;
 import com.timevale.forward.facade.api.request.BugOfflineAddReq;
 import com.timevale.forward.facade.api.request.BugOfflineModifyReq;
+import com.timevale.forward.facade.api.result.BugOfflineCountVO;
 import com.timevale.forward.facade.api.result.BugOfflineDetailVO;
 import com.timevale.forward.facade.api.result.BugOfflineVO;
 import com.timevale.forward.model.middle.BugOfflineMD;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -72,6 +76,7 @@ public interface BugOfflineCopier {
      */
     BugOfflineMD convertToMD(BugOfflineDO bugOfflineDO);
 
+    List<BugOfflineCountVO> convertCount(List<BugOfflineCountDTO> countList);
 }
 
 

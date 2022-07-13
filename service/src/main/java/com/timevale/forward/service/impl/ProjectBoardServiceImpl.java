@@ -4,6 +4,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dto.BugOfflineCountDTO;
 import com.timevale.forward.dal.dto.TaskOverdueDTO;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectBoardService;
@@ -12,6 +13,7 @@ import com.timevale.forward.facade.api.query.TaskOverdueRankQueryList;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.SqlOrderComponent;
+import com.timevale.forward.service.copy.BugOfflineCopier;
 import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -309,7 +311,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
     public BaseResult<PageQueryResult<TaskOverdueCountVO>> getTaskOverdueRank(TaskOverdueRankQueryList query) {
         String collation = sqlOrderComponent.buildWithoutId(query.getOrderFiled(), query.getOrderCollation());
         PageHelper.startPage(query.getPageNum(), query.getPageSize(), collation);
-        List<TaskOverdueDTO> overdueList =  taskMapper.getOverdueRank(query.getProjectId());
+        List<TaskOverdueDTO> overdueList = taskMapper.getOverdueRank(query.getProjectId());
         List<TaskOverdueCountVO> res = TaskCopier.INSTANCE.convertOverdue(overdueList);
         PageInfo<TaskOverdueDTO> pageInfo = new PageInfo<>(overdueList);
         PageQueryResult<TaskOverdueCountVO> pageQueryResult = new PageQueryResult<>();
@@ -320,7 +322,15 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
     @Override
     public BaseResult<PageQueryResult<BugOfflineCountVO>> getBugOfflineCount(ProjectBugOfflineCountQueryList query) {
-        return BaseResult.success(new PageQueryResult<>(true));
+        String collation = sqlOrderComponent.buildWithoutId(query.getOrderFiled(), query.getOrderCollation());
+        PageHelper.startPage(query.getPageNum(), query.getPageSize(), collation);
+        List<BugOfflineCountDTO> countList = bugOfflineMapper.getBugCount(query.getProjectId());
+        List<BugOfflineCountVO> res = BugOfflineCopier.INSTANCE.convertCount(countList);
+        PageInfo<BugOfflineCountDTO> pageInfo = new PageInfo<>(countList);
+        PageQueryResult<BugOfflineCountVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(res);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
     }
 
     @Override

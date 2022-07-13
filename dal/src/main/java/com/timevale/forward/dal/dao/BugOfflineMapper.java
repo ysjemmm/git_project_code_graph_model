@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.BugOfflineListCondition;
+import com.timevale.forward.dal.dto.BugOfflineCountDTO;
 import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.dal.entity.BugOfflineListDO;
 import org.apache.ibatis.annotations.Param;
@@ -76,4 +77,10 @@ public interface BugOfflineMapper {
      */
     Boolean deleteById(@Param("bugOfflineId") Long bugOfflineId);
 
+    /**
+     * 查询用户待修复线下BUG数量
+     * @param projectId 项目id
+     * @return 项目下每个用户待修复线下bug数量
+     */
+    List<BugOfflineCountDTO> getBugCount(@Param("projectId") Long projectId);
 }
