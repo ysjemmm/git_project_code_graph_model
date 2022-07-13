@@ -10,6 +10,7 @@ import com.timevale.forward.dal.entity.ProjectNodeFlowDO;
 import com.timevale.forward.facade.api.client.ProjectNodeFlowService;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.request.ProjectNodeFlowCheckReq;
+import com.timevale.forward.facade.api.result.ProjectNodeDelayVO;
 import com.timevale.forward.facade.api.result.ProjectNodeFlowDetailVO;
 import com.timevale.forward.model.enums.FlowStageEnum;
 import com.timevale.forward.model.enums.FlowStatusEnum;
@@ -19,6 +20,8 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectNodeCopier;
 import com.timevale.forward.service.copy.ProjectNodeFlowCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
+import com.timevale.forward.service.integration.http.ElapsedTimeClient;
+import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -31,6 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -54,6 +59,9 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
 
     @Resource
     private EpeiusClient epeiusClient;
+
+    @Resource
+    private ElapsedTimeClient elapsedTimeClient;
 
     @Override
     public BaseResult<ProjectNodeFlowDetailVO> getFlow(Long projectId) {
@@ -111,8 +119,9 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
     }
 
     @Override
-    public BaseResult<Integer> nodeIsDelay(ProjectNodeFlowCheckReq projectNodeFlowCheckReq) {
+    public BaseResult<ProjectNodeDelayVO> nodeIsDelay(ProjectNodeFlowCheckReq projectNodeFlowCheckReq) {
         log.info("检查节点是否延期,参数:{}", projectNodeFlowCheckReq);
+        ProjectNodeDelayVO delayVO=new ProjectNodeDelayVO();
         List<ProjectNodeDO> oldProjectNodes = projectNodeMapper.get(projectNodeFlowCheckReq.getProjectId());
         List<ProjectNodeDO> oldPublishNodes = oldProjectNodes.stream()
                 .filter(a -> ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(a.getName()) && a.getPlanDate() != null).collect(Collectors.toList());
@@ -129,17 +138,29 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
             Date oldPlanDate = DateUtil.getEndOfDay(oldPublishNodes.get(0).getPlanDate());
             Date planDate = DateUtil.getEndOfDay(publishNodes.get(0).getPlanDate());
             if (oldPlanDate.before(planDate)) {
-                return BaseResult.success(1);
+                Long seconds = elapsedTimeClient.getElapsedTime(oldPlanDate, planDate);
+                BigDecimal elapsedTime = new BigDecimal(seconds.toString());
+                elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.UP);
+                delayVO.setDelayDay(elapsedTime);
+                delayVO.setDelayType(1);
+                return BaseResult.success(delayVO);
             }
         }
         if (!CollectionUtils.isEmpty(oldTestNodes) && !CollectionUtils.isEmpty(testNodes)) {
             Date oldPlanDate = DateUtil.getEndOfDay(oldTestNodes.get(0).getPlanDate());
             Date planDate = DateUtil.getEndOfDay(testNodes.get(0).getPlanDate());
             if (oldPlanDate.before(planDate)) {
-                return BaseResult.success(0);
+                Long seconds = elapsedTimeClient.getElapsedTime(oldPlanDate, planDate);
+                BigDecimal elapsedTime = new BigDecimal(seconds.toString());
+                elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.UP);
+                delayVO.setDelayDay(elapsedTime);
+                delayVO.setDelayType(0);
+                return BaseResult.success(delayVO);
             }
         }
-        return BaseResult.success(-1);
+        delayVO.setDelayDay(BigDecimal.ZERO);
+        delayVO.setDelayType(-1);
+        return BaseResult.success(delayVO);
     }
 
     @Override

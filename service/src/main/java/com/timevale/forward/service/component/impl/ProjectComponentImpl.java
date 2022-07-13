@@ -70,7 +70,7 @@ public class ProjectComponentImpl implements ProjectComponent {
     private SqlOrderComponent sqlOrderComponent;
 
     @Override
-    public QueryResultVO<ProjectVO>  page(ProjectListCondition condition, List<Long> projectIds) {
+    public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
         // 查找产品经理
         if (CollectionUtils.isNotEmpty(condition.getPds())) {
             projectIds = personMapper.getMainIds(condition.getPds(), projectIds, PersonTypeEnum.PROJECT_PD.getCode());
@@ -129,7 +129,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
 
         // 是否包含风险
-        if(condition.getIncludeRisk() != null && condition.getIncludeRisk()){
+        if (condition.getIncludeRisk() != null && condition.getIncludeRisk()) {
             List<ProjectRiskDO> projectRiskDOList = projectRiskMapper.selectByProjectIdListStatus(projectIds, Lists.newArrayList(ProjectRiskStatusEnum.PENDING.getCode()));
             projectIds = projectRiskDOList.stream().map(ProjectRiskDO::getProjectId).distinct().collect(Collectors.toList());
 
@@ -139,7 +139,7 @@ public class ProjectComponentImpl implements ProjectComponent {
 
             //项目状态≠已暂停、已作废、已发布
             List<Integer> status = condition.getStatus();
-            if(CollectionUtils.isEmpty(status)){
+            if (CollectionUtils.isEmpty(status)) {
                 for (ProjectStatusEnum e : ProjectStatusEnum.values()) {
                     status.add(e.getCode());
                 }
@@ -147,7 +147,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             status.removeIf(e -> ProjectStatusEnum.SUSPEND.getCode().equals(e)
                     || ProjectStatusEnum.INVALID.getCode().equals(e)
                     || ProjectStatusEnum.RELEASED.getCode().equals(e));
-            if(CollectionUtils.isEmpty(status)){
+            if (CollectionUtils.isEmpty(status)) {
                 return ResultUtil.queryResultEmpty();
             }
         }
@@ -317,11 +317,11 @@ public class ProjectComponentImpl implements ProjectComponent {
         //提测节点
         if (submitTest != null) {
             ProjectNodeDO oldSubmitTest = projectNodeMapper.getByName(projectDO.getId(), ProjectNodeEnum.SUBMIT_TEST.getText());
-            if (submitTest.getActualDate() == null && oldSubmitTest != null && oldSubmitTest.getActualDate() != null) {
-                throw new BaseBizRuntimeException("当前页面数据发生变化,请刷新后重试");
+            TestBillDO oldTestBillDO = testBillMapper.selectByProjectId(projectDO.getId());
+            if (submitTest.getActualDate() == null && oldSubmitTest != null && oldSubmitTest.getActualDate() != null && oldTestBillDO != null) {
+                throw new BaseBizRuntimeException("提测后,不能修改提测节点的实际时间,请刷新后重试");
             }
 
-            TestBillDO oldTestBillDO = testBillMapper.selectByProjectId(projectDO.getId());
             if (oldTestBillDO != null && TestBillStatusEnum.TEST_SUCCESS.getCode().equals(oldTestBillDO.getStatus())
                     && oldSubmitTest != null && !Objects.equals(submitTest.getPlanDate(), oldSubmitTest.getPlanDate())) {
                 //提测已经通过,修改计划时间,重算逾期时长
@@ -413,7 +413,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         return bizDemandIds;
     }
 
-    private List<ProductLineAnalyseVO> analyse(ProjectListCondition condition){
+    private List<ProductLineAnalyseVO> analyse(ProjectListCondition condition) {
         List<ProjectListDO> projectListDOList = projectMapper.list(condition);
         List<Long> projectIdList = projectListDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
 
@@ -423,7 +423,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIdList);
 
         // 产品线id-名称 map
-        Map<Long, String> productLineMap = productLineDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProductLineDO::getName, (a,b)->a));
+        Map<Long, String> productLineMap = productLineDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProductLineDO::getName, (a, b) -> a));
         Map<Long, Integer> productLineCount = productLineDOList.stream().collect(Collectors.toMap(BaseDO::getId, e -> 0, (a, b) -> a));
 
         // 统计个数
@@ -434,7 +434,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
 
         List<ProductLineAnalyseVO> analyseVOList = new ArrayList<>();
-        productLineCount.forEach((k,v) -> {
+        productLineCount.forEach((k, v) -> {
             String name = productLineMap.get(k);
             ProductLineAnalyseVO analyseVO = new ProductLineAnalyseVO();
             analyseVO.setCount(v);
@@ -444,7 +444,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         });
 
         // 逆序排序
-        analyseVOList.sort((a,b) -> b.getCount().compareTo(a.getCount()));
+        analyseVOList.sort((a, b) -> b.getCount().compareTo(a.getCount()));
 
         return analyseVOList;
     }

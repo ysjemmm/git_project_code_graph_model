@@ -75,7 +75,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
     public void process(ProjectNodeFlowDO projectNodeFlowDO, List<ProjectNodeDO> projectNodes) {
         log.info("节点审批流程发起,参数:{}", projectNodeFlowDO);
         if (projectNodeFlowDO == null) {
-            return;
+            throw new BaseBizRuntimeException("请填写流程表单数据后重新发起");
         }
         List<ProjectNodeFlowDO> projectNodeFlows = projectNodeFlowMapper.getByProjectId(projectNodeFlowDO.getProjectId());
         boolean match = projectNodeFlows.stream().anyMatch(a -> com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
