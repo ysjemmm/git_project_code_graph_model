@@ -9,7 +9,7 @@ import javax.validation.constraints.NotBlank;
 import java.util.List;
 
 /**
- * @author by YangXu
+ * @author by xingyun
  * @date 2021/12/14 15:04
  */
 @EqualsAndHashCode(callSuper = true)
@@ -39,7 +39,7 @@ public class CustomDemandAddReq extends BaseReq {
     @ApiModelProperty("联系方式")
     private String contact;
 
-    @ApiModelProperty("问题类别")
+    @ApiModelProperty("问题类别:0功能缺失、1产品不可用、2界面不美观、3复杂难用、9其他")
     @NotBlank(message = "问题类别不能为空")
     private String cause;
 
@@ -48,6 +48,6 @@ public class CustomDemandAddReq extends BaseReq {
     private String desc;
 
     @ApiModelProperty("附件列表")
-    private List<FileAddReq> fileList;
+    private List<FileAddReq> files;
 
 }

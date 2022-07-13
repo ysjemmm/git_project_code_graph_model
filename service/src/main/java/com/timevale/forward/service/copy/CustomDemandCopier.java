@@ -3,6 +3,7 @@ package com.timevale.forward.service.copy;
 import com.timevale.forward.dal.condition.CustomDemandListCondition;
 import com.timevale.forward.dal.entity.CustomDemandDO;
 import com.timevale.forward.facade.api.query.CustomDemandQueryList;
+import com.timevale.forward.facade.api.query.ProductLinkCustomDemandQueryList;
 import com.timevale.forward.facade.api.request.CustomDemandAddReq;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
 import org.mapstruct.Mapper;
@@ -52,5 +53,13 @@ public interface CustomDemandCopier {
      * @return 客户需求列表
      */
     List<CustomDemandVO> convert(List<CustomDemandDO> list);
+
+    /**
+     * 查询条件转换
+     *
+     * @param customDemandQueryList 客户需求查询条件
+     * @return 查询条件
+     */
+    CustomDemandListCondition convert(ProductLinkCustomDemandQueryList customDemandQueryList);
 
 }

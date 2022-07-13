@@ -9,7 +9,7 @@ import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
 /**
- * @author by YangXu
+ * @author by xingyun
  * @date 2021/12/14 14:03
  */
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)

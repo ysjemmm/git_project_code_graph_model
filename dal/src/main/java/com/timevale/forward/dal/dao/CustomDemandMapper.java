@@ -45,5 +45,12 @@ public interface CustomDemandMapper {
      */
     List<CustomDemandDO> list(CustomDemandListCondition condition);
 
+    /**
+     * 选择id获取对应需求信息
+     *
+     * @param productDemandId productDemandId
+     * @return 需求DO
+     */
+    List<CustomDemandDO> linkCustomDemandList(@Param("productDemandId") Long productDemandId);
 
 }

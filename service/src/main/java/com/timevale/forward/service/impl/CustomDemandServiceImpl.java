@@ -1,7 +1,7 @@
 package com.timevale.forward.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.CustomDemandListCondition;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
@@ -16,17 +16,14 @@ import com.timevale.forward.facade.api.request.CustomDemandCompletedReq;
 import com.timevale.forward.facade.api.request.CustomDemandRejectReq;
 import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
+import com.timevale.forward.model.bo.ProductEndBO;
 import com.timevale.forward.model.enums.AscriptionEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.FileTypeEnum;
-import com.timevale.forward.service.component.BizDemandComponent;
-import com.timevale.forward.service.component.BizDemandLogComponent;
-import com.timevale.forward.service.component.FileComponent;
-import com.timevale.forward.service.component.PersonComponent;
-import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.model.enums.ProblemTypeEnum;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.copy.CustomDemandCopier;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
-import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -35,14 +32,16 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
- * @author by YangXu
+ * @author by xingyun
  * @date 2021/12/14 15:05
  */
 @Slf4j
@@ -77,40 +76,52 @@ public class CustomDemandServiceImpl implements CustomDemandService {
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
 
+    @Resource
+    private CustomDemandComponent customDemandComponent;
+
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
+
+    @Value("${custom.demand.receiver}")
+    private String receiver;
+
     @Override
     public BaseResult<PageQueryResult<CustomDemandVO>> list(CustomDemandQueryList customDemandQueryList) {
+        log.info("客户需求列表,参数:{}", customDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         // 转换查询条件
         CustomDemandListCondition condition = CustomDemandCopier.INSTANCE.convert(customDemandQueryList);
 
         String ascription = customDemandQueryList.getAscription();
-         if (ascription.equals(AscriptionEnum.RECEIVE.toString())) {
-             condition.setReceiveManIds(Lists.newArrayList(userInfo.getId()));
+        if (ascription.equals(AscriptionEnum.RECEIVE.toString())) {
+            condition.setReceiveManIds(Lists.newArrayList(userInfo.getId()));
         }
+        String collation = sqlOrderComponent.build(customDemandQueryList.getOrderFiled(), customDemandQueryList.getOrderCollation());
         // 开始分页
-        PageHelper.startPage(customDemandQueryList.pageNum, customDemandQueryList.pageSize,  CommonConstant.DEFAULT_ORDER_BY);
+        PageHelper.startPage(customDemandQueryList.pageNum, customDemandQueryList.pageSize, collation);
 
-        // 分页数据
-//        List<CustomDemandDO> customDemandDOList = customDemandMapper.list(condition);
-//        List<CustomDemandVO> customDemandVOList = CustomDemandCopier.INSTANCE.convert(customDemandDOList);
-        List<CustomDemandVO> customDemandVOList=Lists.newArrayList(new CustomDemandVO());
-        List<CustomDemandDO> customDemandDOList=new ArrayList<>();
-        PageInfo<CustomDemandDO> pageInfo = new PageInfo<>(customDemandDOList);
-        PageQueryResult<CustomDemandVO> pageQueryResult = new PageQueryResult<>();
-        pageQueryResult.setResultList(customDemandVOList);
-        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
-        return BaseResult.success(pageQueryResult);
+        return customDemandComponent.list(condition);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(CustomDemandAddReq customDemandAddReq) {
-        // 新增业务需求
+        log.info("客户需求新增,参数:{}", customDemandAddReq);
         CustomDemandDO customDemandDO = CustomDemandCopier.INSTANCE.convert(customDemandAddReq);
+        List<ProductEndBO> receivers = JSONObject.parseArray(receiver, ProductEndBO.class);
+        Map<Integer, ProductEndBO> receiverMap = receivers.stream().collect(Collectors.toMap(ProductEndBO::getCode, k -> k, (v1, v2) -> v2));
+        if (!receiverMap.containsKey(customDemandDO.getProductEnd())) {
+            throw new BaseBizRuntimeException("产品端不在所给定的范围内,请修改后重试");
+        }
+        ProductEndBO productEndBO = receiverMap.get(customDemandDO.getProductEnd());
         customDemandDO.setStatus(BizDemandStatusEnum.EVALUATE.getCode());
+        customDemandDO.setName(productEndBO.getName() + "-" + ProblemTypeEnum.getTextByCode(customDemandDO.getCause()) + "-" + customDemandDO.getCustomName());
+//        customDemandDO.setReceiveMan(productEndBO.getOwner());
+//        customDemandDO.setReceiveManId(productEndBO.getOwnerId());
+        customDemandDO.setReceiveMan("星云-敖哲");
+        customDemandDO.setReceiveManId("xingyun");
         customDemandMapper.insert(customDemandDO);
-
-        List<FileAddReq> fileIdList = customDemandAddReq.getFileList();
+        List<FileAddReq> fileIdList = customDemandAddReq.getFiles();
         fileComponent.add(fileIdList, customDemandDO.getId(), FileTypeEnum.CUSTOM_DEMAND.getCode());
 
 //        // 通知需求接收人
@@ -136,12 +147,18 @@ public class CustomDemandServiceImpl implements CustomDemandService {
 
     @Override
     public BaseResult<CustomDemandVO> get(Long customDemandId) {
+        log.info("客户需求查看,参数:{}", customDemandId);
         CustomDemandDO customDemandDO = customDemandMapper.selectById(customDemandId);
         if (customDemandDO == null) {
             throw new BaseBizRuntimeException("该客户需求不存在");
         }
         // 信息填充
         CustomDemandVO customDemandVO = CustomDemandCopier.INSTANCE.convert(customDemandDO);
+        List<ProductEndBO> receivers = JSONObject.parseArray(receiver, ProductEndBO.class);
+        Map<Integer, ProductEndBO> receiverMap = receivers.stream().collect(Collectors.toMap(ProductEndBO::getCode, k -> k, (v1, v2) -> v2));
+        customDemandVO.setProductEndText(receiverMap.get(customDemandVO.getProductEnd()).getName());
+        customDemandVO.setStatusText(BizDemandStatusEnum.getTextByCode(customDemandVO.getStatus()));
+        customDemandVO.setCauseText(ProblemTypeEnum.getTextByCode(customDemandVO.getCause()));
 
         return BaseResult.success(customDemandVO);
     }

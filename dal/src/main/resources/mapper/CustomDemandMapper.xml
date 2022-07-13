@@ -3,82 +3,21 @@
 <mapper namespace="com.timevale.forward.dal.dao.CustomDemandMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into biz_demand (name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status,
-                                priority, receive_man, receive_man_id, submit_man_id, submit_man,  create_man_id, create_man,
-                                customer_dev_demand,customer_dev_type,customer_dev_sale_contract,customer_dev_project_name)
-        values (#{name}, #{productLineId}, #{dataIndicators}, #{targetCustomer}, #{createCustomer}, #{deptId}, #{desc}, #{status},
-                #{priority}, #{receiveMan}, #{receiveManId}, #{submitManId}, #{submitMan}, #{createManId}, #{createMan},
-                #{customerDevDemand}, #{customerDevType}, #{customerDevSaleContract}, #{customerDevProjectName})
+        insert into custom_demand
+        (name, product_end, custom_name, page, path, submit_man ,contact,receive_man,receive_man_id,cause
+        ,`desc`, status,solve_plan,reason,project_end_date, create_man_id, create_man)
+        values (#{name}, #{productEnd}, #{customName}, #{page}, #{path}, #{submitMan}, #{contact}, #{receiveMan}, #{receiveManId}, #{cause}
+        , #{desc}, #{status}, #{solvePlan}, #{reason}, #{projectEndDate},#{createManId}, #{createMan})
     </insert>
 
     <update id="update">
-        update biz_demand
+        update custom_demand
         <set>
             <if test="name!=null and name!='' ">
                 name = #{name},
             </if>
             <if test="productLineId!=null">
                 product_line_id = #{productLineId},
-            </if>
-            <if test="dataIndicators!=null">
-                data_indicators = #{dataIndicators},
-            </if>
-            <if test="targetCustomer!=null and targetCustomer!='' ">
-                target_customer = #{targetCustomer},
-            </if>
-            <if test="createCustomer!=null">
-                create_customer = #{createCustomer},
-            </if>
-            <if test="deptId!=null">
-                dept_id = #{deptId},
-            </if>
-            <if test="desc!=null">
-                `desc` = #{desc},
-            </if>
-            <if test="status!=null">
-                status = #{status},
-            </if>
-            <if test="priority!=null">
-                priority = #{priority},
-            </if>
-            <if test="receiveMan!=null">
-                receive_man = #{receiveMan},
-            </if>
-            <if test="receiveManId!=null">
-                receive_man_id = #{receiveManId},
-            </if>
-            <if test="reason!=null">
-                reason = #{reason},
-            </if>
-            <if test="submitMan != null and submitMan != ''">
-                submit_man = #{submitMan},
-            </if>
-            <if test="submitManId != null and submitManId != ''">
-                submit_man_id = #{submitManId},
-            </if>
-            <if test="solvePlan != null">
-                solve_plan = #{solvePlan},
-            </if>
-            <if test="rejectReason != null">
-                reject_reason = #{rejectReason},
-            </if>
-            <if test="planReleaseDate!=null">
-                plan_release_date = #{planReleaseDate},
-            </if>
-            <if test="projectEndDate != null">
-                project_end_date = #{projectEndDate},
-            </if>
-            <if test="customerDevDemand != null">
-                customer_dev_demand = #{customerDevDemand},
-            </if>
-            <if test="customerDevType != null">
-                customer_dev_type = #{customerDevType},
-            </if>
-            <if test="customerDevSaleContract != null and customerDevSaleContract != ''">
-                customer_dev_sale_contract = #{customerDevSaleContract},
-            </if>
-            <if test="customerDevProjectName != null and customerDevProjectName != ''">
-                customer_dev_project_name = #{customerDevProjectName},
             </if>
             <if test="true">
                 modify_man_id = #{modifyManId},
@@ -90,108 +29,82 @@
 
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.CustomDemandDO">
-        select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status,
-               priority, receive_man, receive_man_id, processor, os, plan_release_date, reason, submit_man, submit_man_id,
-               solve_plan, reject_reason, project_end_date,
-               is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date,
-               customer_dev_demand,customer_dev_type,customer_dev_sale_contract,customer_dev_project_name
-        from biz_demand
+        select id, name, product_end, custom_name, page, path, submit_man ,contact,receive_man,receive_man_id,cause
+        ,`desc`, status,solve_plan,reason,project_end_date, create_man_id, create_man,create_date,is_deleted,modify_man_id,modify_man,modify_date
+        from custom_demand
         where id = #{id}
     </select>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.CustomDemandDO">
-        select bd.id, bd.name, bd.dept_id, bd.status, bd.priority, bd.receive_man,  bd.receive_man_id, bd.target_customer,
-               bd.submit_man, bd.submit_man_id, bd.plan_release_date, bd.project_end_date,
-               bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date,
-               pl.id productLineId, pl.name productLineName,
-               b.id bizDomainId , b.name bizDomainName
-        from biz_demand bd
-        left join product_line pl on pl.id = bd.product_line_id
-        left join biz_domain b    on pl.biz_domain_id = b.id
+        select id, name, product_end, custom_name, page, path, submit_man ,contact,receive_man,receive_man_id,cause
+        ,`desc`, status,solve_plan,reason,project_end_date, create_man_id, create_man,create_date,is_deleted,modify_man_id,modify_man,modify_date
+        from custom_demand
         <where>
             <if test="id!=null">
-                and bd.id = #{id}
+                and id = #{id}
             </if>
             <if test="name!=null and name!='' ">
-                and bd.name like concat('%',#{name},'%')
+                and name like concat('%',#{name},'%')
             </if>
-            <if test="targetCustomer!=null and targetCustomer!='' ">
-                and bd.target_customer like concat('%',#{targetCustomer},'%')
+            <if test="customName!=null and customName!='' ">
+                and custom_name like concat('%',#{customName},'%')
             </if>
-            <if test="priorityList!=null and priorityList.size()>0">
-                and bd.priority in
-                <foreach collection="priorityList" item="item" separator="," open="(" close=")">
+            <if test="page!=null and page!='' ">
+                and page like concat('%',#{page},'%')
+            </if>
+            <if test="submitMan!=null and submitMan!='' ">
+                and submit_man like concat('%',#{submitMan},'%')
+            </if>
+            <if test="receiveManIds!=null and receiveManIds.size()>0">
+                and receive_man_id in
+                <foreach collection="receiveManIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
-            <if test="bizDomainIdList!=null and bizDomainIdList.size()>0">
-                and pl.biz_domain_id in
-                <foreach collection="bizDomainIdList" item="item" separator="," open="(" close=")">
+            <if test="status!=null and status.size()>0">
+                and status in
+                <foreach collection="status" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
-            <if test="productLineIdList!=null and productLineIdList.size()>0">
-                and bd.product_line_id in
-                <foreach collection="productLineIdList" item="item" separator="," open="(" close=")">
+            <if test="productEnds!=null and productEnds.size()>0">
+                and product_end in
+                <foreach collection="productEnds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
-            <if test="planReleaseDateList!=null and planReleaseDateList.size()>0">
-                and bd.plan_release_date in
-                <foreach collection="planReleaseDateList" item="item" separator="," open="(" close=")">
+            <if test="causes!=null and causes.size()>0">
+                and cause in
+                <foreach collection="causes" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
-            <if test="statusList!=null and statusList.size()>0">
-                and bd.status in
-                <foreach collection="statusList" item="item" separator="," open="(" close=")">
+            <if test="customDemandIds!=null and customDemandIds.size()>0">
+                and id not in
+                <foreach collection="customDemandIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
-            </if>
-            <if test="submitManIdList!=null and submitManIdList.size()>0">
-                and bd.submit_man_id in
-                <foreach collection="submitManIdList" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="receiveManIdList!=null and receiveManIdList.size()>0">
-                and bd.receive_man_id in
-                <foreach collection="receiveManIdList" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="deptIdList!=null and deptIdList.size()>0">
-                and bd.dept_id in
-                <foreach collection="deptIdList" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="bizDemandIds!=null and bizDemandIds.size()>0">
-                and bd.id not  in
-                <foreach collection="bizDemandIds" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="copier!=null and copier!='' ">
-                and bd.id IN (
-                SELECT p.main_id
-                FROM person p
-                WHERE p.user_id = #{copier}
-                AND p.type = 30
-                AND p.is_deleted = false
-                )
             </if>
             <if test="createDateStart!=null and createDateEnd!=null">
-                and bd.create_date &gt;= #{createDateStart}
-                and bd.create_date &lt;= #{createDateEnd}
+                and create_date &gt;= #{createDateStart}
+                and create_date &lt;= #{createDateEnd}
             </if>
             <if test="projectEndDateStart != null and projectEndDateEnd != null">
-                and bd.project_end_date is not null
-                and bd.project_end_date &gt;= #{projectEndDateStart}
-                and bd.project_end_date &lt;= #{projectEndDateEnd}
+                and project_end_date is not null
+                and project_end_date &gt;= #{projectEndDateStart}
+                and project_end_date &lt;= #{projectEndDateEnd}
             </if>
-            and bd.is_deleted = false
+            and is_deleted = false
         </where>
+    </select>
+
+    <select id="linkCustomDemandList" resultType="com.timevale.forward.dal.entity.CustomDemandDO">
+       select a.id,  a.name,  a.product_end,  a.custom_name,  a.page,  a.path,  a.submit_man , a.contact, a.receive_man, a.receive_man_id, a.cause
+        , a.`desc`,  a.status, a.solve_plan, a.reason, a.project_end_date, a.create_man_id,  a.create_man, a.create_date, a.is_deleted
+        , a.modify_man_id, a.modify_man,a.modify_date
+        from custom_demand a
+        join product_custom_demand b on a.id=b.custom_demand_id and b.is_deleted=false
+        where b.product_demand_id = #{productDemandId}
     </select>
 
 </mapper>

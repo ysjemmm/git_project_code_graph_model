@@ -27,7 +27,10 @@ public class CustomDemandVO extends ToString {
     private String name;
 
     @ApiModelProperty("产品端")
-    private String productEnd;
+    private Integer productEnd;
+
+    @ApiModelProperty("产品端")
+    private String productEndText;
 
     @ApiModelProperty("客户名称")
     private String customName;
@@ -47,6 +50,9 @@ public class CustomDemandVO extends ToString {
     @ApiModelProperty("问题类别")
     private Integer cause;
 
+    @ApiModelProperty("问题类别")
+    private String causeText;
+
     @ApiModelProperty("创建时间")
     private Date createDate;
 
@@ -56,6 +62,9 @@ public class CustomDemandVO extends ToString {
     @ApiModelProperty("需求解决状态:0待评估，10已接收，15已完成无需开发，20已列入项目，30项目进行中，40已完成上线，-10被驳回")
     private Integer status;
 
+    @ApiModelProperty("需求解决状态")
+    private String statusText;
+
     @ApiModelProperty("需求接收人")
     private String receiveMan;
 
@@ -64,9 +73,6 @@ public class CustomDemandVO extends ToString {
 
     @ApiModelProperty("需求提交人")
     private String submitMan;
-
-    @ApiModelProperty("需求提交人id")
-    private String submitManId;
 
     @ApiModelProperty("项目发布时间")
     private Date projectEndDate;

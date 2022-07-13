@@ -57,4 +57,10 @@ public class CustomDemandQueryList extends QueryBase {
     @ApiModelProperty("项目发布时间-结束时间")
     private Date projectEndDateEnd;
 
+    @ApiModelProperty("排序字段")
+    private String orderFiled;
+
+    @ApiModelProperty("排序规则：0正序，1逆序")
+    private Integer orderCollation;
+
 }

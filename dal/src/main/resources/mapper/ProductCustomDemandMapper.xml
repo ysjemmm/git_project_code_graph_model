@@ -1,0 +1,46 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.ProductCustomDemandMapper">
+
+    <select id="select" resultType="com.timevale.forward.dal.entity.ProductCustomDemandDO">
+        select id, product_demand_id, biz_demand_id, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        from product_biz_demand
+        <where>
+            <if test="id!=null">
+                and id = #{id}
+            </if>
+            <if test="productDemandId!=null">
+                and product_demand_id = #{productDemandId}
+            </if>
+            <if test="bizDemandId!=null">
+                and biz_demand_id = #{bizDemandId}
+            </if>
+            <if test="isDeleted!=null">
+                and is_deleted = #{isDeleted}
+            </if>
+        </where>
+    </select>
+
+
+    <update id="update" parameterType="com.timevale.forward.dal.entity.ProductCustomDemandDO">
+        update product_biz_demand
+        <set>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            <if test="productDemandId!=null">and product_demand_id = #{productDemandId}</if>
+            <if test="bizDemandId!=null">and biz_demand_id = #{bizDemandId}</if>
+            and is_deleted=false
+        </where>
+    </update>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into product_biz_demand (product_demand_id,biz_demand_id,create_man_id, create_man)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.productDemandId}, #{i.bizDemandId}, #{i.createManId},#{i.createMan})
+        </foreach>
+    </insert>
+</mapper>

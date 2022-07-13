@@ -16,10 +16,7 @@ import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.component.impl.ProductDemandDescFlowComponent;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.BizDemandCopier;
-import com.timevale.forward.service.copy.ProductDemandCopier;
-import com.timevale.forward.service.copy.ProjectCopier;
-import com.timevale.forward.service.copy.TrackEventCopier;
+import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -110,6 +107,15 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Resource
     private ProductDemandDescFlowComponent productDemandDescFlowComponent;
 
+    @Resource
+    private CustomDemandComponent customDemandComponent;
+
+    @Resource
+    private CustomDemandMapper customDemandMapper;
+
+    @Resource
+    private ProductCustomDemandMapper productCustomDemandMapper;
+
     private static final Integer MAX_LENGTH = 20 * 1000;
 
 
@@ -197,7 +203,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateStatus(Long productDemandId, Integer type) {
-        log.info("产品需求暂停,作废接收参数:productDemandId={},type={}", productDemandId, type);
+        log.info("产品需求暂停,作废接收参数:{},{}", productDemandId, type);
         if (!ProductDemandStatusEnum.SUSPEND.getCode().equals(type)
                 && !ProductDemandStatusEnum.INVALID.getCode().equals(type)) {
             throw new BaseBizRuntimeException("操作类型不是暂停或作废,请重试输入");
@@ -249,7 +255,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> enable(Long productDemandId) {
-        log.info("产品需求开启接收参数:productDemandId={}", productDemandId);
+        log.info("产品需求开启接收参数:{}", productDemandId);
         ProductDemandDO productDemandDO = productDemandMapper.get(productDemandId);
         if (productDemandDO == null) {
             throw new BaseBizRuntimeException("找不到该产品需求");
@@ -355,14 +361,14 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Override
     public BaseResult<ProductDemandDetailVO> get(Long productDemandId) {
-        log.info("产品需求查看接收参数:productDemandId={}", productDemandId);
+        log.info("产品需求查看接收参数:{}", productDemandId);
         ProductDemandDetailVO productDemandDetailVO = productDemandComponent.get(productDemandId);
         return BaseResult.success(productDemandDetailVO);
     }
 
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> matchProjectList(ProductDemandLinkProjectQueryList productDemandLinkProjectQueryList) {
-        log.info("产品需求-项目匹配接收参数:projectQueryList={}", productDemandLinkProjectQueryList);
+        log.info("产品需求-项目匹配接收参数:{}", productDemandLinkProjectQueryList);
         if (productDemandLinkProjectQueryList.getProductDemandId() != null) {
             ProjectProductDemandDO productDemandDO = projectProductDemandMapper.getByProductDemandId(productDemandLinkProjectQueryList.getProductDemandId());
             if (productDemandDO != null) {
@@ -386,7 +392,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Override
     public BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(ProductDemandLinkBizDemandQueryList productDemandLinkBizDemandQueryList) {
-        log.info("产品需求-业务需求匹配接收参数:bizDemandQueryList={}", productDemandLinkBizDemandQueryList);
+        log.info("产品需求-业务需求匹配接收参数:{}", productDemandLinkBizDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         List<String> receiveManIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
@@ -428,7 +434,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> linkOrUnLinkBizDemand(ProductBizDemandLinkReq bizDemandLinkReq) {
-        log.info("关联or取消关联业务需求,参数:bizDemandLinkReq={}", bizDemandLinkReq);
+        log.info("关联or取消关联业务需求,参数:{}", bizDemandLinkReq);
         List<Long> bizDemandIds = bizDemandLinkReq.getBizDemandIds();
         List<Long> productDemandIds = Lists.newArrayList(bizDemandLinkReq.getProductDemandId());
         ProductDemandDO productDemandDO = productDemandMapper.selectById(bizDemandLinkReq.getProductDemandId());
@@ -457,7 +463,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Override
     public ProjectVO linkProjectList(Long productDemandId) {
-        log.info("产品需求-项目清单接收参数:productDemandId={}", productDemandId);
+        log.info("产品需求-项目清单接收参数:{}", productDemandId);
         ProjectDO projectDO = projectMapper.getByProductDemandId(productDemandId);
         if (projectDO == null) {
             return null;
@@ -470,7 +476,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Override
     public BaseResult<PageQueryResult<BizDemandVO>> linkBizDemandList(ProductBizDemandQueryList productBizDemandQueryList) {
-        log.info("产品需求-业务需求清单接收参数:productBizDemandQueryList={}", productBizDemandQueryList);
+        log.info("产品需求-业务需求清单接收参数:{}", productBizDemandQueryList);
         PageHelper.startPage(productBizDemandQueryList.getPageNum(), productBizDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<BizDemandListDO> bizDemandList = bizDemandMapper.linkBizDemandList(productBizDemandQueryList.getProductDemandId());
 
@@ -525,7 +531,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Override
     public BaseResult<PageQueryResult<TrackEventVO>> matchTrackEventList(ProductDemandLinkTrackEventQueryList trackEventQueryList) {
-        log.info("产品需求-事件匹配,参数:trackEventQueryList={}", trackEventQueryList);
+        log.info("产品需求-事件匹配,参数:{}", trackEventQueryList);
         TrackEventListCondition condition = TrackEventCopier.INSTANCE.convert(trackEventQueryList);
         if(trackEventQueryList.getProductDemandId()!=null){
             ProductDemandTrackEventCondition c = ProductDemandTrackEventCondition.builder().productDemandId(trackEventQueryList.getProductDemandId()).isDeleted(false).build();
@@ -540,7 +546,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> linkOrUnLinkTrackEvent(ProductDemandTrackEventLinkReq trackEventLinkReq) {
-        log.info("关联or取消关联事件,参数:trackEventLinkReq={}", trackEventLinkReq);
+        log.info("关联or取消关联事件,参数:{}", trackEventLinkReq);
         List<Long> trackEventIds = trackEventLinkReq.getTrackEventIds();
         Long productDemandId = trackEventLinkReq.getProductDemandId();
         List<String> eventNames = trackEventMapper.selectByIds(trackEventIds).stream().map(TrackEventDO::getFullCnName).collect(Collectors.toList());
@@ -563,7 +569,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Override
     public BaseResult<PageQueryResult<TrackEventVO>> linkTrackEventList(ProductDemandTrackEventQueryList trackEventQueryList) {
-        log.info("产品需求-事件清单,参数:trackEventQueryList={}", trackEventQueryList);
+        log.info("产品需求-事件清单,参数:{}", trackEventQueryList);
         PageHelper.startPage(trackEventQueryList.getPageNum(), trackEventQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<TrackEventDO> list = trackEventMapper.linkTrackEventList(trackEventQueryList.getProductDemandId());
         List<TrackEventVO> trackEventVOList = TrackEventCopier.INSTANCE.convert(list);
@@ -579,18 +585,55 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<CustomDemandVO>> matchCustomDemandList(ProductLinkCustomDemandQueryList productLinkCustomDemandQueryList) {
-        return null;
+    public BaseResult<PageQueryResult<CustomDemandVO>> matchCustomDemandList(ProductLinkCustomDemandQueryList customDemandQueryList) {
+        log.info("产品需求-客户需求匹配接收参数:{}", customDemandQueryList);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        List<String> receiveManIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+        log.info("我和我的下属:receiveManIdList={}", receiveManIdList);
+        CustomDemandListCondition condition = CustomDemandCopier.INSTANCE.convert(customDemandQueryList);
+        if (!CollectionUtils.isEmpty(condition.getReceiveManIds())) {
+            receiveManIdList.retainAll(condition.getReceiveManIds());
+            log.info("我和我的下属,过滤后,receiveManIdList={}", receiveManIdList);
+        }
+        if (CollectionUtils.isEmpty(receiveManIdList)) {
+            //所选人员不在我和我的下属中
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+
+        condition.setReceiveManIds(receiveManIdList);
+        List<Integer> status = customDemandQueryList.getStatus();
+        if (CollectionUtils.isEmpty(status)) {
+            condition.setStatus(Lists.newArrayList(
+                    BizDemandStatusEnum.RECEIVED.getCode()
+                    , BizDemandStatusEnum.INCLUDE_PROJECT.getCode()
+                    , BizDemandStatusEnum.PROJECTING.getCode()
+                    , BizDemandStatusEnum.REJECT.getCode()
+                    , BizDemandStatusEnum.PD_LINKED.getCode()
+                    , BizDemandStatusEnum.AVAILABLE.getCode()));
+        }
+        // 过滤掉已经关联的业务需求
+        if (customDemandQueryList.getProductDemandId() != null) {
+            ProductCustomDemandCondition c = ProductCustomDemandCondition.builder().productDemandId(customDemandQueryList.getProductDemandId()).isDeleted(false).build();
+            List<ProductCustomDemandDO> productBizDemand = productCustomDemandMapper.select(c);
+            List<Long> customDemandIds = productBizDemand.stream().map(ProductCustomDemandDO::getCustomDemandId).collect(Collectors.toList());
+            condition.setCustomDemandIds(customDemandIds);
+        }
+        PageHelper.startPage(customDemandQueryList.getPageNum(), customDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        return customDemandComponent.list(condition);
     }
 
     @Override
-    public BaseResult<Boolean> linkOrUnLinkCustomDemand(ProductCustomDemandLinkReq productCustomDemandLinkReq) {
-        return null;
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> linkOrUnLinkCustomDemand(ProductCustomDemandLinkReq customDemandLinkReq) {
+        return BaseResult.success(true);
     }
 
     @Override
-    public BaseResult<PageQueryResult<CustomDemandVO>> linkCustomDemandList(Long customDemandId) {
-        return null;
+    public BaseResult<PageQueryResult<CustomDemandVO>> linkCustomDemandList(ProductCustomDemandQueryList customDemandQueryList) {
+        log.info("产品需求-客户需求清单,参数:{}", customDemandQueryList);
+        PageHelper.startPage(customDemandQueryList.getPageNum(), customDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        CustomDemandListCondition condition = CustomDemandListCondition.builder().productDemandId(customDemandQueryList.getProductDemandId()).build();
+        return customDemandComponent.list(condition);
     }
 
     private void checkDescLength(String desc) {
@@ -598,7 +641,5 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             throw new BaseBizRuntimeException("需求描述字数过大,请重新输入");
         }
     }
-
-
 
 }

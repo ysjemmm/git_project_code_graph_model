@@ -143,24 +143,24 @@ public interface ProductDemandService {
     /**
      * 查询满足条件的客户需求列表
      *
-     * @param productLinkCustomDemandQueryList 产品需求id
+     * @param customDemandQueryList customDemandQueryList
      * @return 列表
      */
-    BaseResult<PageQueryResult<CustomDemandVO>> matchCustomDemandList(ProductLinkCustomDemandQueryList productLinkCustomDemandQueryList);
+    BaseResult<PageQueryResult<CustomDemandVO>> matchCustomDemandList(ProductLinkCustomDemandQueryList customDemandQueryList);
 
     /**
      * 关联客户需求
      *
-     * @param productCustomDemandLinkReq 客户需求
+     * @param customDemandLinkReq customDemandLinkReq
      * @return true false
      */
-    BaseResult<Boolean> linkOrUnLinkCustomDemand(ProductCustomDemandLinkReq productCustomDemandLinkReq);
+    BaseResult<Boolean> linkOrUnLinkCustomDemand(ProductCustomDemandLinkReq customDemandLinkReq);
 
     /**
      * 产品需求-客户需求清单
      *
-     * @param customDemandId 客户需求id
+     * @param customDemandQueryList 客户需求id
      * @return 列表
      */
-    BaseResult<PageQueryResult<CustomDemandVO>> linkCustomDemandList(Long customDemandId);
+    BaseResult<PageQueryResult<CustomDemandVO>> linkCustomDemandList(ProductCustomDemandQueryList customDemandQueryList);
 }

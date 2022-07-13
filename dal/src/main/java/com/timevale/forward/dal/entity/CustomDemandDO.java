@@ -21,7 +21,7 @@ public class CustomDemandDO extends BaseDO {
     /**
      * 产品端
      */
-    private String productEnd;
+    private Integer productEnd;
 
     /**
      * 客户名称
@@ -70,11 +70,6 @@ public class CustomDemandDO extends BaseDO {
      * 需求提交人
      */
     private String submitMan;
-
-    /**
-     * 需求提交人id
-     */
-    private String submitManId;
 
     /**
      * 解决方案

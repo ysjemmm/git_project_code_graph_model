@@ -53,7 +53,7 @@ public class CustomDemandListCondition {
     /**
      * 产品端
      */
-    private List<String> productEnds;
+    private List<Integer> productEnds;
     /**
      * 需求提交人id
      */
@@ -72,4 +72,14 @@ public class CustomDemandListCondition {
      * 结束时间
      */
     private Date projectEndDateEnd;
+
+    /**
+     * 客户需求id
+     */
+    private List<Long> customDemandIds;
+
+    /**
+     * 产品需求id
+     */
+    private Long productDemandId;
 }

@@ -33,7 +33,7 @@ public enum FileTypeEnum {
     // 评论
     COMMENT(11),
 
-    CUSTOM_DEMAND(12)
+    CUSTOM_DEMAND(15)
     ;
 
     private Integer code;

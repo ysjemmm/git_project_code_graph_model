@@ -53,4 +53,7 @@ public class ProductLinkCustomDemandQueryList extends QueryBase {
 
     @ApiModelProperty("项目发布时间-结束时间")
     private Date projectEndDateEnd;
+
+    @ApiModelProperty("产品需求id")
+    private Long productDemandId;
 }
