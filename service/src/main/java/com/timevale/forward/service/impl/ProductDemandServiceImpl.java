@@ -589,7 +589,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Override
     public BaseResult<PageQueryResult<CustomDemandVO>> matchCustomDemandList(ProductLinkCustomDemandQueryList customDemandQueryList) {
-        log.info("产品需求-客户需求匹配接收参数:{}", customDemandQueryList);
+        log.info("产品需求-客户需求匹配,参数:{}", customDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         List<String> receiveManIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
         log.info("我和我的下属:receiveManIdList={}", receiveManIdList);

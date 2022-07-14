@@ -389,16 +389,14 @@ public class CustomDemandServiceImpl implements CustomDemandService {
 
     @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(CustomLinkProductDemandQueryList customDemandQueryList) {
+        log.info("客户需求-产品需求匹配,参数:{}", customDemandQueryList);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        // 转换查询条件
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(customDemandQueryList);
 
-        //通配符、日期处理处理
         condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
         condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
 
-        // 过滤当前业务需求已经关联的产品需求
         if (customDemandQueryList.getCustomDemandId() != null) {
             ProductCustomDemandCondition c = ProductCustomDemandCondition.builder().customDemandId(customDemandQueryList.getCustomDemandId()).isDeleted(false).build();
             List<ProductCustomDemandDO> productBizDemand = productCustomDemandMapper.select(c);
@@ -436,9 +434,9 @@ public class CustomDemandServiceImpl implements CustomDemandService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<CustomDemandStatusVO> linkOrUnLinkCustomDemand(CustomProductDemandLinkReq customDemandLinkReq) {
+    public BaseResult<CustomDemandStatusVO> linkOrUnLinkProductDemand(CustomProductDemandLinkReq customDemandLinkReq) {
+        log.info("关联or取消关联产品需求,参数:{}", customDemandLinkReq);
         CustomDemandStatusVO customDemandStatusVO=new CustomDemandStatusVO();
-        log.info("关联or取消关联客户需求,参数:{}", customDemandLinkReq);
         List<Long> productDemandIds = customDemandLinkReq.getProductDemandIds();
         Long customDemandId = customDemandLinkReq.getCustomDemandId();
 
@@ -452,10 +450,10 @@ public class CustomDemandServiceImpl implements CustomDemandService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<ProductDemandVO>> linkCustomDemandList(CustomProductDemandQueryList customDemandQueryList) {
+    public BaseResult<PageQueryResult<ProductDemandVO>> linkProductDemandList(CustomProductDemandQueryList customDemandQueryList) {
+        log.info("客户需求-产品需求清单,参数:{}", customDemandQueryList);
         // 开始分页
         PageHelper.startPage(customDemandQueryList.pageNum, customDemandQueryList.pageSize);
-
         List<ProductDemandListDO> productDemandList = productDemandMapper.linkProductDemandInCustomDemand(customDemandQueryList.getCustomDemandId());
         List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandList);
 
@@ -463,12 +461,10 @@ public class CustomDemandServiceImpl implements CustomDemandService {
             a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
             a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
         });
-
         PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandList);
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(productDemandVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);
     }
-
 }

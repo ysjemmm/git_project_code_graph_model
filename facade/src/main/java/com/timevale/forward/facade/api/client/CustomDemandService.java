@@ -93,7 +93,7 @@ public interface CustomDemandService {
      * @param customDemandLinkReq customDemandLinkReq
      * @return true false
      */
-    BaseResult<CustomDemandStatusVO> linkOrUnLinkCustomDemand(CustomProductDemandLinkReq customDemandLinkReq);
+    BaseResult<CustomDemandStatusVO> linkOrUnLinkProductDemand(CustomProductDemandLinkReq customDemandLinkReq);
 
     /**
      * 产品需求-产品需求清单
@@ -101,7 +101,7 @@ public interface CustomDemandService {
      * @param customDemandQueryList 客户需求id
      * @return 列表
      */
-    BaseResult<PageQueryResult<ProductDemandVO>> linkCustomDemandList(CustomProductDemandQueryList customDemandQueryList);
+    BaseResult<PageQueryResult<ProductDemandVO>> linkProductDemandList(CustomProductDemandQueryList customDemandQueryList);
 
 
 }
