@@ -222,7 +222,7 @@
         select p.user_id,
         p.user_name,
         count(t.id)                as overdue_count,
-        1000 * sum(now() - plan_end_date) as accumulate_overdue_millis
+        1000 * sum(TIMESTAMPDIFF(SECOND, plan_end_date, now())) as accumulate_overdue_millis
         from person p
         left join task t on p.main_id = t.id and p.type = 40
         where t.status = 10
