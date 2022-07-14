@@ -117,4 +117,13 @@ public class ProjectDetailVO extends ToString {
 
     @ApiModelProperty("产品技术资源评估（人天）")
     private BigDecimal resourceAssessment;
+
+    @ApiModelProperty("发布正式流程id")
+    private Long publishFlowId;
+
+    @ApiModelProperty("发布正式流程状态")
+    private Integer publishFlowStatus;
+
+    @ApiModelProperty("发布正式计划时间延期次数")
+    private Long publishChangeCount;
 }

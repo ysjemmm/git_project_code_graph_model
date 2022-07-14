@@ -2,7 +2,6 @@ package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.google.common.collect.Lists;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
@@ -28,6 +27,7 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -122,8 +122,18 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private ProjectGoalMapper projectGoalMapper;
 
+    @Resource
+    private ProjectNodeFlowComponent projectNodeFlowComponent;
+
+    @Resource
+    private ProjectNodeFlowMapper projectNodeFlowMapper;
+
+    @Resource
+    private ProjectNodeRecordMapper projectNodeRecordMapper;
+
+
     @Override
-    public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
+    public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
         String currentUser = LocalSessionUtils.getUserInfo().getId();
         ProjectListCondition condition = ProjectCopier.INSTANCE.convert(projectQueryList);
@@ -134,7 +144,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (AscriptionEnum.CURRENT_USER.name().equals(projectQueryList.getAscription())) {
             projectIds = personMapper.getMainIds(Lists.newArrayList(currentUser), null, PersonTypeEnum.PROJECT_MEMBER.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return BaseResult.success(ResultUtil.queryResultEmpty());
             }
 
         } else if (AscriptionEnum.TEAM.name().equals(projectQueryList.getAscription())) {
@@ -142,11 +152,10 @@ public class ProjectServiceImpl implements ProjectService {
             log.info("我和我的下属:{}", allMyStaffWithSelf);
             projectIds = personMapper.getMainIds(allMyStaffWithSelf, null, PersonTypeEnum.PROJECT_MEMBER.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return BaseResult.success(ResultUtil.queryResultEmpty());
             }
         }
-
-        return projectComponent.page(condition, projectIds);
+        return BaseResult.success(projectComponent.page(condition, projectIds));
     }
 
     @Override
@@ -293,8 +302,14 @@ public class ProjectServiceImpl implements ProjectService {
         newProject.setPmName(projectModifyReq.getPm().getUserName());
         newProject.setPmId(projectModifyReq.getPm().getUserId());
         List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
-        Integer status = projectMapper.get(projectModifyReq.getId()).getStatus();
-        newProject.setStatus(status);
+
+        ProjectDO oldProjectDO = projectMapper.get(projectModifyReq.getId());
+        newProject.setStatus(oldProjectDO.getStatus());
+        if (Integer.valueOf(1).equals(projectModifyReq.getDelayType())) {
+            //有流程,计划时间不能变
+            newProject.setPlanStartDate(oldProjectDO.getPlanStartDate());
+            newProject.setPlanEndDate(oldProjectDO.getPlanEndDate());
+        }
 
         fillInfoWhenModify(projectNodeDOList, newProject);
 
@@ -317,17 +332,6 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 节点信息
         if (CollectionUtils.isNotEmpty(projectNodeDOList)) {
-            // 实际时间校验
-            Optional<ProjectNodeDO> startNode = projectNodeDOList.stream().filter(e -> ProjectNodeEnum.START_PLAN.getText().equals(e.getName())).findAny();
-            Optional<ProjectNodeDO> endNode = projectNodeDOList.stream().filter(e -> ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(e.getName())).findAny();
-            if(startNode.isPresent() && endNode.isPresent()){
-                Date startActualDate = startNode.get().getActualDate();
-                Date endActualDate = endNode.get().getActualDate();
-                if(startActualDate != null && endActualDate != null && startActualDate.compareTo(endActualDate) > 0){
-                    throw new BaseBizRuntimeException("您的实际结束时间早于实际开始时间，请检查后再录入");
-                }
-            }
-
             boolean match = projectNodeDOList.stream().anyMatch(e ->
                     ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(e.getName()) && e.getActualDate() != null);
             if (match && !checkProductRelease(projectModifyReq.getId())) {
@@ -341,7 +345,12 @@ public class ProjectServiceImpl implements ProjectService {
                     throw new BaseBizRuntimeException("您的发布计划还未结束，请前往发布平台处理");
                 }
             }
-            projectNodeComponent.add(projectNodeDOList, newProject.getId());
+            if (Integer.valueOf(1).equals(projectModifyReq.getDelayType())) {
+                //需要审批,只更新实际时间
+                projectNodeComponent.updateNodeActualDate(projectNodeDOList, newProject.getId());
+            }else{
+                projectNodeComponent.add(projectNodeDOList, newProject.getId());
+            }
             // 更新节点状态
             projectComponent.updateNodeStatus(projectModifyReq.getId());
         }
@@ -351,6 +360,9 @@ public class ProjectServiceImpl implements ProjectService {
         projectProductLineComponent.update(newProject.getProductLineIds(), newProject.getId());
         // 产品经理
         personComponent.update(projectModifyReq.getPds(), newProject.getId(), PersonTypeEnum.PROJECT_PD.getCode());
+
+        //流程与版本信息处理
+        processFlow(projectModifyReq);
 
         return BaseResult.success(true);
     }
@@ -393,7 +405,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 节点状态
         projectDetailVO.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(projectDetailVO.getNodeStatus()));
-
+        //详设
         List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(projectId);
         if (CollectionUtils.isNotEmpty(projectFlowDos)) {
             projectFlowDos.sort(Comparator.comparing(ProjectFlowDO::getCreateDate).reversed());
@@ -413,6 +425,15 @@ public class ProjectServiceImpl implements ProjectService {
         BigDecimal resourceAssessment = projectDetailVO.getResourceAssessment();
         if(resourceAssessment != null){
             projectDetailVO.setResourceAssessment(resourceAssessment.setScale(2, RoundingMode.DOWN));
+        }
+        //发布正式
+        List<ProjectNodeFlowDO> projectNodeFlows = projectNodeFlowMapper.getByProjectId(projectId);
+        if (CollectionUtils.isNotEmpty(projectNodeFlows)) {
+            ProjectNodeFlowDO oldFlowDo = projectNodeFlows.get(0);
+            projectDetailVO.setPublishFlowId(oldFlowDo.getId());
+            projectDetailVO.setPublishFlowStatus(oldFlowDo.getStatus());
+            long count = projectNodeFlows.stream().filter(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
+            projectDetailVO.setPublishChangeCount(count);
         }
         return BaseResult.success(projectDetailVO);
     }
@@ -654,4 +675,24 @@ public class ProjectServiceImpl implements ProjectService {
         productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
     }
 
+    private void processFlow(ProjectModifyReq projectModifyReq){
+        List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
+        if (Integer.valueOf(1).equals(projectModifyReq.getDelayType())) {
+            ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
+            projectNodeFlowComponent.process(projectNodeFlowDO, projectNodeDOList);
+        } else if (Integer.valueOf(0).equals(projectModifyReq.getDelayType())) {
+            //版本+1
+            projectNodeFlowComponent.insertProjectNodeRecord(projectModifyReq.getId(), projectNodeDOList);
+        } else {
+            boolean match = projectNodeDOList.stream().anyMatch(e ->
+                    ProjectNodeEnum.DEVELOP_START.getText().equals(e.getName()) && e.getActualDate() != null);
+            if (match) {
+                List<ProjectNodeRecordDO> list = projectNodeRecordMapper.list(projectModifyReq.getId());
+                if (CollectionUtils.isEmpty(list)) {
+                    //首次生成版本
+                    projectNodeFlowComponent.insertProjectNodeRecord(projectModifyReq.getId(), projectNodeDOList);
+                }
+            }
+        }
+    }
 }

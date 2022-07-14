@@ -104,4 +104,7 @@ public class BugOfflineVO extends ToString {
 
     @ApiModelProperty("打开次数")
     private Integer openCount;
+
+    @ApiModelProperty("预计解决完成日期")
+    private Date expectSolveDate;
 }

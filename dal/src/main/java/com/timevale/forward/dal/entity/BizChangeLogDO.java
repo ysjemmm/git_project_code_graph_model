@@ -47,4 +47,9 @@ public class BizChangeLogDO extends BaseDO{
      */
     private String identity;
 
+    /**
+     * json 文本
+     */
+    private String content;
+
 }

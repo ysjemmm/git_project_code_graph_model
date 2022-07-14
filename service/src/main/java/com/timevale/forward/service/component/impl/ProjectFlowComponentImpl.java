@@ -9,7 +9,6 @@ import com.timevale.forward.dal.dao.ProjectNodeMapper;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectFlowDO;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
-import com.timevale.forward.model.enums.ProjectFlowStatusEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
@@ -72,14 +71,14 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
         }
         Map<String, Object> flowData = processInfo.getFlowData();
         if (FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
-            projectFlowDO.setStatus(ProjectFlowStatusEnum.REVIEW_FAIL.getCode());
-            String rejectReason = flowData.get("rejectReason") == null ? "" : String.valueOf(flowData.get("rejectReason"));
+            projectFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode());
+            String rejectReason = flowData.get("rejectReason") == null ? StringUtils.EMPTY : String.valueOf(flowData.get("rejectReason"));
             projectFlowDO.setReviewFailReason(rejectReason);
         } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
-            projectFlowDO.setStatus(ProjectFlowStatusEnum.WITHDRAW.getCode());
+            projectFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.WITHDRAW.getCode());
         } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
             ProjectDO oldProjectDO = projectMapper.get(projectFlowDO.getProjectId());
-            projectFlowDO.setStatus(ProjectFlowStatusEnum.REVIEWED.getCode());
+            projectFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode());
             ProjectNodeDO projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText());
             if (projectNodeDo != null) {
                 projectNodeMapper.updateActualDateById(projectNodeDo.getId(), processInfo.getEndTime());

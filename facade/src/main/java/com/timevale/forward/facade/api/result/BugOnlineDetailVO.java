@@ -140,4 +140,7 @@ public class BugOnlineDetailVO extends ToString {
 
     @ApiModelProperty("详细版本号")
     private String detailVersionId;
+
+    @ApiModelProperty("预计上线日期")
+    private Date expectLaunchDate;
 }

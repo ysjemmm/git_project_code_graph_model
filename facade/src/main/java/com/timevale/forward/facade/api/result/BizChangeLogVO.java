@@ -48,6 +48,9 @@ public class BizChangeLogVO extends ToString {
     @ApiModelProperty("唯一标识")
     private String identity;
 
+    @ApiModelProperty("json文本")
+    private BizChangeLogContentVO content;
+
     @ApiModelProperty("操作人")
     private String createMan;
 

@@ -9,8 +9,9 @@
     </insert>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
-        select  a.id,a.name,a.priority,a.owner,a.owner_id,a.status,a.create_man,a.create_man_id,a.create_date,a.modify_date,
-        c.name productLineName ,d.name bizDomainName
+        select  a.id,a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,
+                a.create_man,a.create_man_id,a.create_date,a.modify_date,
+                c.name productLineName ,d.name bizDomainName
         <if test="copierId != null and copierId != ''">
             ,e.user_name copier
         </if>
@@ -75,7 +76,7 @@
             and  a.is_deleted =false
         </where>
     </select>
-    
+
     <select id="selectByIdList" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
         select id, name, product_line_id, type, `desc`, status, priority, owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date, owner_id
         from product_demand
@@ -108,7 +109,7 @@
          WHERE b.project_id = #{projectId}
          order by modify_date desc, id
     </select>
-    
+
     <select id="selectListOfBizDemandLink" resultType="com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO">
         select pd.id, pd.name, pd.status, pd.priority, pd.owner, pd.owner_id,
                pd.is_deleted, pd.create_man_id, pd.create_man, pd.create_date, pd.modify_man_id, pd.modify_man, pd.modify_date,
@@ -198,7 +199,7 @@
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
          select  a.id,a.name,a.priority,a.type,a.owner,a.owner_id,a.status,a.create_man,a.create_man_id
-         ,a.create_date,a.modify_date, a.product_line_id,`desc`
+         ,a.create_date,a.modify_date, a.product_line_id,`desc`, a.modify_man_id, a.modify_man
         from product_demand a
         where a.id = #{id} and a.is_deleted=false
     </select>

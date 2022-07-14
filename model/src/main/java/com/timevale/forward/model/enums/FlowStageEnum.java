@@ -8,29 +8,28 @@ import lombok.Getter;
  @Getter
  */
 @Getter
-public enum TrackStatusEnum {
+public enum FlowStageEnum {
     /**
-     * 项目流程状态
+     * 项目流程阶段
      */
-    WITHDRAW(-1, "已撤回"),
-    REVIEWING(0, "审核中"),
-    REVIEWED(1, "审核通过"),
-    REVIEW_FAIL(2, "审核不通过");
+    FIRST(0, "一阶段"),
+
+    SECOND(1, "二阶段");
+
     private final Integer code;
     private final String text;
 
-    TrackStatusEnum(Integer code, String text){
+    FlowStageEnum(Integer code, String text){
         this.code = code;
         this.text = text;
     }
 
     public static String getTextByCode(Integer code){
-        for (TrackStatusEnum e : TrackStatusEnum.values()){
+        for (FlowStageEnum e : FlowStageEnum.values()){
             if(e.getCode().equals(code)){
                 return e.text;
             }
         }
         return "";
     }
-
 }

@@ -2,10 +2,12 @@ package com.timevale.forward.service.mq.listener;
 
 import com.alibaba.fastjson.JSON;
 import com.timevale.forward.model.enums.MessageTagEnum;
+import com.timevale.forward.service.component.ProjectFlowComponent;
+import com.timevale.forward.service.component.ProjectNodeFlowComponent;
+import com.timevale.forward.service.component.TrackEventComponent;
+import com.timevale.forward.service.component.impl.ProductDemandDescFlowComponent;
 import com.timevale.forward.service.mq.dto.WorkflowBody;
-import com.timevale.forward.service.mq.handler.AbstractMessageHandler;
-import com.timevale.forward.service.mq.handler.ProjectFlowMessageHandler;
-import com.timevale.forward.service.mq.handler.TrackEventMessageHandler;
+import com.timevale.forward.service.mq.handler.MqMessageHandler;
 import com.timevale.framework.mq.client.consumer.Listener;
 import com.timevale.framework.mq.client.consumer.ReceiveResult;
 import com.timevale.framework.mq.client.producer.Msg;
@@ -27,19 +29,26 @@ import java.util.Map;
 public class MqListener implements Listener {
 
     @Resource
-    private ProjectFlowMessageHandler projectFlowMessageHandler;
+    private ProjectFlowComponent projectFlowComponent;
 
     @Resource
-    private TrackEventMessageHandler trackEventMessageHandler;
+    private TrackEventComponent trackEventComponent;
 
-    public static Map<String, AbstractMessageHandler> MESSAGE_HANDLER_MAP = new HashMap<>();
+    @Resource
+    private ProjectNodeFlowComponent projectNodeFlowComponent;
+
+    @Resource
+    private ProductDemandDescFlowComponent productDemandDescFlowComponent;
+
+    public static Map<String, MqMessageHandler> MESSAGE_HANDLER_MAP = new HashMap<>();
 
     @PostConstruct
     public void init() {
-        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TECHREVIEW.getText(), projectFlowMessageHandler);
-        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TRACKEVENTREVIEW.getText(), trackEventMessageHandler);
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TECHREVIEW.getText(), projectFlowComponent::updateFlowInfo);
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TRACKEVENTREVIEW.getText(), trackEventComponent::updateTrackEventInfo);
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_PUBLISHOFFICEREVIEW.getText(), projectNodeFlowComponent::updateProjectNodeInfo);
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_PRODUCT_DEMAND_CHANGE.getText(), productDemandDescFlowComponent::updateFlowInfo);
     }
-
 
     @Override
     public ReceiveResult receive(List<Msg> list) {
@@ -51,7 +60,7 @@ public class MqListener implements Listener {
             WorkflowBody body = JSON.parseObject(message, WorkflowBody.class);
             try {
                 log.info("body: {}", JSON.toJSONString(body));
-                AbstractMessageHandler messageHandler = MESSAGE_HANDLER_MAP.get(body.getProcessDefinitionType());
+                MqMessageHandler messageHandler = MESSAGE_HANDLER_MAP.get(body.getProcessDefinitionType());
                 if (messageHandler == null) {
                     log.info("找不到消息处理器,message={}", message);
                     return ReceiveResult.success();

@@ -24,4 +24,12 @@ public class ProjectModifyReq extends ProjectAddReq {
     @ApiModelProperty("节点")
     @NotNull(message = "项目节点不能为空")
     private List<ProjectNodeAddReq> projectNodes;
+
+    @ApiModelProperty("节点审批流程")
+    private ProjectNodeFlowAddReq projectNodeFlow;
+
+    @ApiModelProperty("延期类型:0提测延期,1发布正式延期,-1不延期")
+    @NotNull(message = "延期类型不能为空")
+    private Integer delayType;
+
 }

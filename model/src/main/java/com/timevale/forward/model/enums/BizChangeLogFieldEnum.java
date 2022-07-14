@@ -17,6 +17,8 @@ public enum BizChangeLogFieldEnum {
 
     PD("产品经理"),
 
+    PLAN_END_DATE("项目计划结束时间"),
+
     PROJECT_GOAL("项目目标"),
 
     WITH_GOAL("是否有项目目标"),

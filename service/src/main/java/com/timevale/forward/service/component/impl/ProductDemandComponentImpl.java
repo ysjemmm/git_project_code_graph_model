@@ -74,6 +74,12 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     @Resource
     private ProjectMapper projectMapper;
 
+    @Resource
+    private ProductDemandDescRecordMapper productDemandDescRecordMapper;
+
+    @Resource
+    private ProductDemandDescFlowMapper productDemandDescFlowMapper;
+
     @Override
     public List<ProductDemandListDO> list(ProductDemandListCondition condition) {
         condition.setName(StringUtil.toLikeStr(condition.getName()));
@@ -106,6 +112,18 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         // 抄送人
         List<PersonDO> personDO = personComponent.select(id, PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
         demandDetailVO.setRecipients(PersonCopier.INSTANCE.transform(personDO));
+
+        // 变更次数
+        Integer changeTimes = productDemandDescRecordMapper.countByProductDemandId(demandDO.getId());
+        demandDetailVO.setDescChangeTimes(changeTimes == 0 ? changeTimes : changeTimes - 1);
+
+        // 变更后描述
+        ProductDemandDescFlowDO latestDescFlow =
+                productDemandDescFlowMapper.getLastByProductDemandId(demandDO.getId());
+        if (latestDescFlow != null && FlowStatusEnum.AUDITING.getCode().equals(latestDescFlow.getStatus())) {
+            demandDetailVO.setChangeDesc(latestDescFlow.getChangeDesc());
+        }
+
         return demandDetailVO;
     }
 
@@ -175,7 +193,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         // 业务需求id去重
         Map<Long, ProductBizDemandDO> bizDemandMap = bizDemands.stream()
                 .collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, k -> k, (v1, v2) -> v2));
-        Map<Integer, List<Long>> newStautsMap = new HashMap<>();
+        Map<Integer, List<Long>> newStatusMap = new HashMap<>();
         bizDemandMap.forEach((k, v) -> {
             //被驳回和作废的业务需求不处理
             if (!BizDemandStatusEnum.REJECT.getCode().equals(v.getStatus()) && !BizDemandStatusEnum.INVALID.getCode().equals(v.getStatus())) {
@@ -187,29 +205,27 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                             .min(Comparator.comparingInt(o -> o)).orElse(null);
                     if (minStatus == null) {
                         //业务需求只关联一个产品需求后且被解除
-                        newStautsMap.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), value -> new ArrayList<>()).add(k);
+                        newStatusMap.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), value -> new ArrayList<>()).add(k);
                     } else {
-                        processBizDemandStatus(newStautsMap, minStatus, k);
+                        processBizDemandStatus(newStatusMap, minStatus, k);
                     }
                 } else {
-                    Integer minStauts = productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
-                    if (minStauts != null) {
-                        processBizDemandStatus(newStautsMap, minStauts, k);
-                    }
+                    productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o))
+                            .ifPresent(minStatus -> processBizDemandStatus(newStatusMap, minStatus, k));
                 }
             }
         });
-        newStautsMap.forEach((status, ids) -> {
+        newStatusMap.forEach((status, ids) -> {
             //更新产品需求下的所有业务需求状态
             bizDemandMapper.updateByIds(ids, status, false);
         });
-        log.info("产品需求变化-更新业务需求:产品需求id={},需要更新的业务需求状态和id={}", productDemandIds, newStautsMap);
+        log.info("产品需求变化-更新业务需求:产品需求id={},需要更新的业务需求状态和id={}", productDemandIds, newStatusMap);
 
-        Map<Long, Integer> oldStautsMap = bizDemands.stream()
+        Map<Long, Integer> oldStatusMap = bizDemands.stream()
                 .collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, ProductBizDemandDO::getStatus, (v1, v2) -> v2));
 
-        bizDemandLogComponent.addLogAsProductDemandStatusChange(oldStautsMap, newStautsMap);
-        sendDingMsg(newStautsMap, bizDemandMap);
+        bizDemandLogComponent.addLogAsProductDemandStatusChange(oldStatusMap, newStatusMap);
+        sendDingMsg(newStatusMap, bizDemandMap);
     }
 
     private void sendDingMsg(Map<Integer, List<Long>> condition, Map<Long, ProductBizDemandDO> bizDemandMap) {
@@ -239,16 +255,16 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     }
 
     @Override
-    public void processBizDemandStatus(Map<Integer, List<Long>> condition, Integer minStauts, Long bizDemandId) {
-        if (minStauts != null && !minStauts.equals(ProductDemandStatusEnum.INVALID.getCode())) {
-            if (minStauts.equals(ProductDemandStatusEnum.WAITING.getCode())
-                    || minStauts.equals(ProductDemandStatusEnum.SUSPEND.getCode())) {
+    public void processBizDemandStatus(Map<Integer, List<Long>> condition, Integer minStatus, Long bizDemandId) {
+        if (minStatus != null && !minStatus.equals(ProductDemandStatusEnum.INVALID.getCode())) {
+            if (minStatus.equals(ProductDemandStatusEnum.WAITING.getCode())
+                    || minStatus.equals(ProductDemandStatusEnum.SUSPEND.getCode())) {
                 condition.computeIfAbsent(BizDemandStatusEnum.PD_LINKED.getCode(), v -> new ArrayList<>()).add(bizDemandId);
-            } else if (minStauts.equals(ProductDemandStatusEnum.INCLUDED.getCode())) {
+            } else if (minStatus.equals(ProductDemandStatusEnum.INCLUDED.getCode())) {
                 condition.computeIfAbsent(BizDemandStatusEnum.INCLUDE_PROJECT.getCode(), v -> new ArrayList<>()).add(bizDemandId);
-            } else if (minStauts.equals(ProductDemandStatusEnum.PROGRESS.getCode())) {
+            } else if (minStatus.equals(ProductDemandStatusEnum.PROGRESS.getCode())) {
                 condition.computeIfAbsent(BizDemandStatusEnum.PROJECTING.getCode(), v -> new ArrayList<>()).add(bizDemandId);
-            } else if (minStauts.equals(ProductDemandStatusEnum.ONLINE.getCode())) {
+            } else if (minStatus.equals(ProductDemandStatusEnum.ONLINE.getCode())) {
                 condition.computeIfAbsent(BizDemandStatusEnum.AVAILABLE.getCode(), v -> new ArrayList<>()).add(bizDemandId);
             }
         }

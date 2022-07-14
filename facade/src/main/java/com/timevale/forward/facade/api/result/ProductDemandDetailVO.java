@@ -54,6 +54,12 @@ public class ProductDemandDetailVO extends ToString {
     @ApiModelProperty("描述")
     private String desc;
 
+    @ApiModelProperty("变更后描述")
+    private String changeDesc;
+
+    @ApiModelProperty("产品需求变更(成功)次数")
+    private Integer descChangeTimes;
+
     @ApiModelProperty("抄送人")
     private List<PersonVO> recipients;
 

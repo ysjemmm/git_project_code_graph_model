@@ -136,7 +136,7 @@ public class BizDemandComponentImplTest extends AbstractTestNGSpringContextTests
 
         BizDemandListCondition bizDemandListCondition = BizDemandListCondition.builder().deptIdList(Collections.singletonList(1L))
                 .createDateStart(new Date()).createDateEnd(new Date()).build();
-        assert bizDemandComponent.page(bizDemandListCondition).ifSuccess();
+        assert bizDemandComponent.page(bizDemandListCondition).getPageQueryResult().isSuccess();
     }
 
 }

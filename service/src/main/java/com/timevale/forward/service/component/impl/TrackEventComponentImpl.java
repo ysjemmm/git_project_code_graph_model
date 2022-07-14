@@ -16,7 +16,6 @@ import com.timevale.forward.facade.api.result.TrackEventVO;
 import com.timevale.forward.model.enums.EnvEnum;
 import com.timevale.forward.model.enums.PlatformTypeEnum;
 import com.timevale.forward.model.enums.TrackPropTypeEnum;
-import com.timevale.forward.model.enums.TrackStatusEnum;
 import com.timevale.forward.service.component.TrackEventComponent;
 import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
@@ -63,7 +62,7 @@ public class TrackEventComponentImpl implements TrackEventComponent {
         List<TrackEventDO> list = trackEventMapper.list(condition);
         List<TrackEventVO> trackEventVOList = TrackEventCopier.INSTANCE.convert(list);
         trackEventVOList.forEach(a -> {
-            a.setStatusName(TrackStatusEnum.getTextByCode(a.getStatus()));
+            a.setStatusName(com.timevale.forward.model.enums.FlowStatusEnum.getTextByCode(a.getStatus()));
             a.setEnvNames(EnvEnum.getTextByCode(JSONObject.parseArray(a.getEnv(), Integer.class)));
             a.setPlatformNames(PlatformTypeEnum.getTextByCode(JSONObject.parseArray(a.getPlatform(), Integer.class)));
         });
@@ -90,14 +89,14 @@ public class TrackEventComponentImpl implements TrackEventComponent {
         }
         Map<String, Object> flowData = processInfo.getFlowData();
         if (FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
-            trackEventDO.setStatus(TrackStatusEnum.REVIEW_FAIL.getCode());
+            trackEventDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode());
             String rejectReason = flowData.get("rejectReason") == null ? StringUtils.EMPTY : String.valueOf(flowData.get("rejectReason"));
             trackEventDO.setFailReason(rejectReason);
         } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
-            trackEventDO.setStatus(TrackStatusEnum.WITHDRAW.getCode());
+            trackEventDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.WITHDRAW.getCode());
 
         } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
-            trackEventDO.setStatus(TrackStatusEnum.REVIEWED.getCode());
+            trackEventDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode());
             trackEventDO.setFailReason(StringUtils.EMPTY);
         }
 
@@ -121,7 +120,7 @@ public class TrackEventComponentImpl implements TrackEventComponent {
         if (CollectionUtils.isEmpty(filterProps)) {
             return;
         }
-        if (TrackStatusEnum.REVIEWED.getCode().equals(trackEventDO.getStatus())) {
+        if (com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode().equals(trackEventDO.getStatus())) {
             //更新
             List<Long> filterPropIds = filterProps.stream().map(TrackPropDO::getId).collect(Collectors.toList());
             log.info("更新事件属性 trackEventId={},filterPropIds={}", trackEventDO.getId(), filterPropIds);
@@ -137,41 +136,21 @@ public class TrackEventComponentImpl implements TrackEventComponent {
                     .map(TrackEventPropDO::getTrackEventId).collect(Collectors.toList());
             if (CollectionUtils.isNotEmpty(otherTrackEventIds)) {
                 List<Integer> status = trackEventMapper.selectByIds(otherTrackEventIds).stream().map(TrackEventDO::getStatus).collect(Collectors.toList());
-                if (status.contains(TrackStatusEnum.REVIEWING.getCode()) || status.contains(TrackStatusEnum.REVIEWED.getCode())) {
+                if (status.contains(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode())
+                        || status.contains(com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode())) {
                     //当前属性关联其他事件
                     return;
                 }
             }
             //没有关联其他事件,更新为撤回或拒绝
-            if (TrackStatusEnum.REVIEWING.getCode().equals(a.getStatus())) {
+            if (com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode().equals(a.getStatus())) {
                 log.info("更新事件属性 trackEventId={},propId={}", trackEventDO.getId(), a.getId());
-                a.setStatus(TrackStatusEnum.REVIEW_FAIL.getCode());
+                a.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode());
                 trackPropMapper.updateWithOutModifyMan(a);
             }
         });
     }
 
-    //    private void updateVariables(Long trackEventId){
-//        List<TrackEventPropItemDO> items = trackEvenPropMapper.getByEventId(trackEventId);
-//        List<TrackPropListDO> updateItems = items.stream().map(a -> {
-//            TrackPropListDO trackPropListDO = new TrackPropListDO();
-//            trackPropListDO.setCnName(a.getCnName());
-//            trackPropListDO.setEgName(a.getEgName());
-//            trackPropListDO.setStatusName(a.getStatus());
-//            trackPropListDO.setTypeName(a.getType());
-//            trackPropListDO.setDataType(a.getDataType());
-//            return trackPropListDO;
-//        }).collect(Collectors.toList());
-//
-//        if(CollectionUtils.isNotEmpty(updateItems)){
-//            ProcessInstanceRequest request=new ProcessInstanceRequest();
-//            request.setProcessInstanceId(items.get(0).getFlowId());
-//            Map<String, Object> variables = new HashMap<>();
-//            variables.put("props", updateItems);
-//            request.setVariables(variables);
-//            epeiusClient.addVariables(request);
-//        }
-//    }
     private void buildConditionBeforeQuery(TrackEventListCondition condition) {
         condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
         condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));

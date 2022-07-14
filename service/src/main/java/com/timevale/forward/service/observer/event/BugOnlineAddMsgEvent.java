@@ -13,7 +13,7 @@ import java.util.List;
  * @Author 望轩
  */
 public class BugOnlineAddMsgEvent extends MessageEvent {
-    private final String BUG_ONLINE_TRANS = "### %s \n 您有一条【线上bug】**%s**，请处理。 \n *** \n[查看详情](%s) \n <!--%s-->";
+    private final String BUG_ONLINE_TRANS = "### %s \n 您有一条【线上bug】**%s**，优先级 **%s**，请处理。 \n *** \n[查看详情](%s) \n <!--%s-->";
     /**
      * bug标题
      */
@@ -27,10 +27,16 @@ public class BugOnlineAddMsgEvent extends MessageEvent {
      */
     private Long bugOnlineId;
 
-    public BugOnlineAddMsgEvent(Object source, String bugName, String receiver, Long bugOnlineId) {
+    /**
+     * 优先级
+     */
+    private String priority;
+
+    public BugOnlineAddMsgEvent(Object source, String bugName, String priority, String receiver, Long bugOnlineId) {
         super(source);
         this.bugName = bugName;
         this.receiver = receiver;
+        this.priority = priority;
         this.bugOnlineId = bugOnlineId;
     }
 
@@ -38,7 +44,7 @@ public class BugOnlineAddMsgEvent extends MessageEvent {
     public void run() {
         List<String> receivers = Lists.newArrayList(receiver);
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUG_ONLINE_MANAGEMENT.getText(), bugOnlineId);
-        String markdown = String.format(BUG_ONLINE_TRANS, MessageTitleEnum.BUG_ONLINE_SUBMIT.getText(), bugName, singleUrl, new Date());
+        String markdown = String.format(BUG_ONLINE_TRANS, MessageTitleEnum.BUG_ONLINE_SUBMIT.getText(), bugName, priority, singleUrl, new Date());
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(MessageTitleEnum.BUG_ONLINE_SUBMIT.getText())

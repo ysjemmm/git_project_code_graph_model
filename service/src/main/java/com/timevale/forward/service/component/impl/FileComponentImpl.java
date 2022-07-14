@@ -11,6 +11,7 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -38,14 +39,13 @@ public class FileComponentImpl implements FileComponent {
         log.info("已存在附件:existPersons={}", existFiles);
         if(CollectionUtils.isEmpty(existFiles)){
             List<FileDO> fileDO = FileCopier.INSTANCE.convert(list);
-            fileDO.forEach(f->{
-                fillInfo(f,attacheId,type);
-            });
+            fileDO.forEach(f-> fillInfo(f,attacheId,type));
             fileMapper.inserts(fileDO);
         }
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(List<FileAddReq> list, Long attacheId, Integer type) {
         log.info("编辑时,附件接收参数:list={},attacheId={},type={}", list,attacheId,type);
         if(CollectionUtils.isEmpty(list)){
@@ -61,9 +61,7 @@ public class FileComponentImpl implements FileComponent {
         List<FileDO> existFiles = fileMapper.select(attacheId, type);
         log.info("已存在附件:existFiles={}", existFiles);
         List<FileDO> fileDO = FileCopier.INSTANCE.convert(list);
-        fileDO.forEach(f->{
-            fillInfo(f,attacheId,type);
-        });
+        fileDO.forEach(f-> fillInfo(f,attacheId,type));
         List<String> existFileIds = existFiles.stream().map(FileDO::getFileId).collect(Collectors.toList());
         List<FileDO> needAddFiles=new ArrayList<>();
         fileDO.forEach((f)->{
@@ -99,6 +97,11 @@ public class FileComponentImpl implements FileComponent {
     @Override
     public List<FileDO> select(Long attacheId, Integer type) {
         return fileMapper.select(attacheId, type);
+    }
+
+    @Override
+    public List<FileDO> select(List<Long> attacheIdList, Integer type) {
+        return fileMapper.selectByAttacheIdList(attacheIdList, type);
     }
 
     private void fillInfo(FileDO fileDO,Long attacheId, Integer type) {

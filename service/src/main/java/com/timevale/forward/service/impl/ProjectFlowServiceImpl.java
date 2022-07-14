@@ -16,7 +16,7 @@ import com.timevale.forward.facade.api.request.ProjectFlowAddReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.ProjectFlowDetailVO;
 import com.timevale.forward.model.enums.ButtonActionEnum;
-import com.timevale.forward.model.enums.ProjectFlowStatusEnum;
+import com.timevale.forward.model.enums.FlowStatusEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
@@ -79,10 +79,10 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         if (!CollectionUtils.isEmpty(projectFlowDos)) {
             projectFlowDos.sort(Comparator.comparing(ProjectFlowDO::getCreateDate).reversed());
             ProjectFlowDO oldFlowDo = projectFlowDos.get(0);
-            if (ProjectFlowStatusEnum.REVIEWING.getCode().equals(oldFlowDo.getStatus())) {
+            if (FlowStatusEnum.AUDITING.getCode().equals(oldFlowDo.getStatus())) {
                 throw new BaseBizRuntimeException("详设评审正在审核中,请不要重复发起");
             }
-            if (ProjectFlowStatusEnum.REVIEWED.getCode().equals(oldFlowDo.getStatus())) {
+            if (FlowStatusEnum.COMPLETE.getCode().equals(oldFlowDo.getStatus())) {
                 throw new BaseBizRuntimeException("详设评审已通过,请不要重复发起");
             }
         }
@@ -113,7 +113,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
 
         String processInstanceId = startWorkflow(projectFlowAddReq);
         projectFlowDO.setFlowId(processInstanceId);
-        projectFlowDO.setStatus(ProjectFlowStatusEnum.REVIEWING.getCode());
+        projectFlowDO.setStatus(FlowStatusEnum.AUDITING.getCode());
         projectFlowMapper.insert(projectFlowDO);
         return BaseResult.success(processInstanceId);
     }
@@ -136,19 +136,19 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
             reviews.add(personVO);
         }
 
-        if (ProjectFlowStatusEnum.REVIEWING.getCode().equals(oldFlowDo.getStatus())) {
+        if (FlowStatusEnum.AUDITING.getCode().equals(oldFlowDo.getStatus())) {
             projectFlowComponent.updateFlowInfo(oldFlowDo.getFlowId());
             oldFlowDo = projectFlowMapper.get(projectFlowId, null);
         }
         ProjectFlowDetailVO projectFlowDetailVO = ProjectFlowCopier.INSTANCE.convert(oldFlowDo);
-        projectFlowDetailVO.setStatusName(ProjectFlowStatusEnum.getTextByCode(oldFlowDo.getStatus()));
+        projectFlowDetailVO.setStatusName(FlowStatusEnum.getTextByCode(oldFlowDo.getStatus()));
         PersonVO proposer = new PersonVO();
         proposer.setUserName(oldFlowDo.getProposer());
         proposer.setUserId(oldFlowDo.getProposerId());
         projectFlowDetailVO.setProposerVO(proposer);
         projectFlowDetailVO.setReviews(reviews);
         List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(oldFlowDo.getProjectId());
-        long count = projectFlowDos.stream().filter(a -> ProjectFlowStatusEnum.REVIEW_FAIL.getCode().equals(a.getStatus())).count();
+        long count = projectFlowDos.stream().filter(a -> FlowStatusEnum.REJECT.getCode().equals(a.getStatus())).count();
         projectFlowDetailVO.setReturnCount(count);
         return BaseResult.success(projectFlowDetailVO);
     }

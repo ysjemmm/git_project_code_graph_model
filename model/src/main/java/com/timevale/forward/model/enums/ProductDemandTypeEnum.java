@@ -24,7 +24,9 @@ public enum ProductDemandTypeEnum {
 
     SECURITY_DEMAND(4,"安全需求"),
 
-    TRACK_DEMAND(5,"埋点需求");
+    TRACK_DEMAND(5,"埋点需求"),
+
+    DATA_DEMAND(6,"数据需求");
 
 
     final private Integer code;

@@ -11,7 +11,9 @@ import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.plugin.*;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * @author by YangXu
@@ -31,6 +33,12 @@ public class AuditInterceptor implements Interceptor {
     static {
         FILTER_METHOD.add("com.timevale.forward.dal.dao.BizChangeLogMapper.insert");
         FILTER_METHOD.add("com.timevale.forward.dal.dao.BizChangeLogMapper.batchInsert");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.ProjectNodeFlowMapper.insert");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.ProjectNodeFlowMapper.update");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.ProjectNodeRecordMapper.batchInsert");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.ProductDemandDescFlowMapper.insert");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.ProductDemandDescRecordMapper.insert");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.ProductDemandDescFlowMapper.update");
     }
 
     @Override

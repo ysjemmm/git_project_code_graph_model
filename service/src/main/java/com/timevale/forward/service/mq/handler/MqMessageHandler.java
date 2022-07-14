@@ -7,10 +7,9 @@ import org.springframework.stereotype.Component;
  * @author xingyun
  * @date 2021-12-13 13:58
  **/
-@Component
-@Slf4j
-public abstract class AbstractMessageHandler {
+@FunctionalInterface
+public interface MqMessageHandler {
 
-    public abstract void handMessage(String processInstanceId);
+    void handMessage(String processInstanceId);
 
 }

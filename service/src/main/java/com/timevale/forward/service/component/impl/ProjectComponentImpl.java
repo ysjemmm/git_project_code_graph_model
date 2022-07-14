@@ -2,17 +2,16 @@ package com.timevale.forward.service.component.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProjectListCondition;
-import com.timevale.forward.dal.condition.ProjectRiskCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.component.SqlOrderComponent;
-import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
@@ -27,7 +26,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -63,25 +61,28 @@ public class ProjectComponentImpl implements ProjectComponent {
     private ProductBizDemandMapper productBizDemandMapper;
 
     @Resource
+    private ProjectProductLineMapper projectProductLineMapper;
+
+    @Resource
     private TestBillMapper testBillMapper;
 
     @Resource
     private SqlOrderComponent sqlOrderComponent;
 
     @Override
-    public BaseResult<PageQueryResult<ProjectVO>> page(ProjectListCondition condition, List<Long> projectIds) {
+    public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
         // 查找产品经理
         if (CollectionUtils.isNotEmpty(condition.getPds())) {
             projectIds = personMapper.getMainIds(condition.getPds(), projectIds, PersonTypeEnum.PROJECT_PD.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return ResultUtil.queryResultEmpty();
             }
         }
         //团队成员
         if (CollectionUtils.isNotEmpty(condition.getTeamMembers())) {
             projectIds = personMapper.getMainIds(condition.getTeamMembers(), projectIds, PersonTypeEnum.PROJECT_MEMBER.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return ResultUtil.queryResultEmpty();
             }
         }
         //产品线业务域
@@ -89,14 +90,14 @@ public class ProjectComponentImpl implements ProjectComponent {
                 || CollectionUtils.isNotEmpty(condition.getBizDomainIds())) {
             projectIds = projectMapper.getProjectIds(projectIds, condition.getProductLineIds(), condition.getBizDomainIds());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return ResultUtil.queryResultEmpty();
             }
         }
         //打回次数
         if (condition.getReturnCountType() != null && condition.getReturnCount() != null) {
             projectIds = testBillMapper.getProjectIds(projectIds, condition.getReturnCountType(), condition.getReturnCount());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return ResultUtil.queryResultEmpty();
             }
         }
 
@@ -108,7 +109,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             projectIds = projectNodeDos.stream().filter(a -> a.getActualDate() != null && a.getActualDate().after(startOfDay) && a.getActualDate().before(endOfDay))
                     .map(ProjectNodeDO::getProjectId).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return ResultUtil.queryResultEmpty();
             }
         }
         //是否逾期
@@ -123,22 +124,22 @@ public class ProjectComponentImpl implements ProjectComponent {
                 projectIds.removeAll(tmpProjectIds);
             }
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return ResultUtil.queryResultEmpty();
             }
         }
 
         // 是否包含风险
-        if(condition.getIncludeRisk() != null && condition.getIncludeRisk()){
+        if (condition.getIncludeRisk() != null && condition.getIncludeRisk()) {
             List<ProjectRiskDO> projectRiskDOList = projectRiskMapper.selectByProjectIdListStatus(projectIds, Lists.newArrayList(ProjectRiskStatusEnum.PENDING.getCode()));
             projectIds = projectRiskDOList.stream().map(ProjectRiskDO::getProjectId).distinct().collect(Collectors.toList());
 
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return ResultUtil.queryResultEmpty();
             }
 
             //项目状态≠已暂停、已作废、已发布
             List<Integer> status = condition.getStatus();
-            if(CollectionUtils.isEmpty(status)){
+            if (CollectionUtils.isEmpty(status)) {
                 for (ProjectStatusEnum e : ProjectStatusEnum.values()) {
                     status.add(e.getCode());
                 }
@@ -146,8 +147,8 @@ public class ProjectComponentImpl implements ProjectComponent {
             status.removeIf(e -> ProjectStatusEnum.SUSPEND.getCode().equals(e)
                     || ProjectStatusEnum.INVALID.getCode().equals(e)
                     || ProjectStatusEnum.RELEASED.getCode().equals(e));
-            if(CollectionUtils.isEmpty(status)){
-                return BaseResult.success(ResultUtil.pageEmpty());
+            if (CollectionUtils.isEmpty(status)) {
+                return ResultUtil.queryResultEmpty();
             }
         }
 
@@ -161,7 +162,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         // 筛选判空
         projectIds = projectDos.stream().map(ProjectListDO::getId).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(projectIds)) {
-            return BaseResult.success(ResultUtil.pageEmpty());
+            return ResultUtil.queryResultEmpty();
         }
 
         //填充人员信息
@@ -246,12 +247,17 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         }
 
-        // 返回分页数据
+        // 分页数据
         PageQueryResult<ProjectVO> pageQueryResult = new PageQueryResult<>();
         PageInfo<ProjectListDO> pageInfo = new PageInfo<>(projectDos);
         pageQueryResult.setResultList(projectVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
-        return BaseResult.success(pageQueryResult);
+
+        QueryResultVO<ProjectVO> queryResultVO = new QueryResultVO<>();
+        queryResultVO.setPageQueryResult(pageQueryResult);
+        queryResultVO.setAnalyseVOList(analyse(condition));
+
+        return queryResultVO;
     }
 
     @Override
@@ -311,11 +317,11 @@ public class ProjectComponentImpl implements ProjectComponent {
         //提测节点
         if (submitTest != null) {
             ProjectNodeDO oldSubmitTest = projectNodeMapper.getByName(projectDO.getId(), ProjectNodeEnum.SUBMIT_TEST.getText());
-            if (submitTest.getActualDate() == null && oldSubmitTest != null && oldSubmitTest.getActualDate() != null) {
-                throw new BaseBizRuntimeException("当前页面数据发生变化,请刷新后重试");
+            TestBillDO oldTestBillDO = testBillMapper.selectByProjectId(projectDO.getId());
+            if (submitTest.getActualDate() == null && oldSubmitTest != null && oldSubmitTest.getActualDate() != null && oldTestBillDO != null) {
+                throw new BaseBizRuntimeException("提测后,不能修改提测节点的实际时间,请刷新后重试");
             }
 
-            TestBillDO oldTestBillDO = testBillMapper.selectByProjectId(projectDO.getId());
             if (oldTestBillDO != null && TestBillStatusEnum.TEST_SUCCESS.getCode().equals(oldTestBillDO.getStatus())
                     && oldSubmitTest != null && !Objects.equals(submitTest.getPlanDate(), oldSubmitTest.getPlanDate())) {
                 //提测已经通过,修改计划时间,重算逾期时长
@@ -405,6 +411,42 @@ public class ProjectComponentImpl implements ProjectComponent {
                 .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
         log.info("项目:{},关联的有业务需求:{}", projectId, bizDemandIds);
         return bizDemandIds;
+    }
+
+    private List<ProductLineAnalyseVO> analyse(ProjectListCondition condition) {
+        List<ProjectListDO> projectListDOList = projectMapper.list(condition);
+        List<Long> projectIdList = projectListDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
+
+        // 项目关联的产品线
+        List<ProjectProductLineDO> projectProductLineDOList = projectProductLineMapper.getByProjectIdList(projectIdList);
+        List<Long> productLineIdList = projectProductLineDOList.stream().map(ProjectProductLineDO::getProductLineId).distinct().collect(Collectors.toList());
+        List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIdList);
+
+        // 产品线id-名称 map
+        Map<Long, String> productLineMap = productLineDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProductLineDO::getName, (a, b) -> a));
+        Map<Long, Integer> productLineCount = productLineDOList.stream().collect(Collectors.toMap(BaseDO::getId, e -> 0, (a, b) -> a));
+
+        // 统计个数
+        for (ProjectProductLineDO e : projectProductLineDOList) {
+            Long productLineId = e.getProductLineId();
+            Integer count = productLineCount.get(productLineId);
+            productLineCount.put(productLineId, count + 1);
+        }
+
+        List<ProductLineAnalyseVO> analyseVOList = new ArrayList<>();
+        productLineCount.forEach((k, v) -> {
+            String name = productLineMap.get(k);
+            ProductLineAnalyseVO analyseVO = new ProductLineAnalyseVO();
+            analyseVO.setCount(v);
+            analyseVO.setProductLineId(k);
+            analyseVO.setProductLineName(name);
+            analyseVOList.add(analyseVO);
+        });
+
+        // 逆序排序
+        analyseVOList.sort((a, b) -> b.getCount().compareTo(a.getCount()));
+
+        return analyseVOList;
     }
 
     private void buildConditionBeforeQuery(List<Long> projectIds, ProjectListCondition condition) {

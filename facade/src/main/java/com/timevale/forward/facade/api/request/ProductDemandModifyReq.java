@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -19,5 +20,9 @@ public class ProductDemandModifyReq extends ProductDemandAddReq {
     @ApiModelProperty("id")
     @NotNull(message = "产品需求id不能为空")
     private Long id;
+
+    @Valid
+    @ApiModelProperty("需求变更请求")
+    private ProductDemandDescChangeReq descChangeReq;
 
 }

@@ -163,6 +163,11 @@ public class BugOnlineDO extends BaseDO {
      * 详细版本号
      */
     private String detailVersionId;
+
+    /**
+     * 预计上线日期
+     */
+    private Date expectLaunchDate;
 }
 
 
