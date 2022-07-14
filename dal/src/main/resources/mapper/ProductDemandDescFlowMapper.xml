@@ -6,10 +6,10 @@
     <insert id="insert">
         insert into product_demand_desc_flow (product_demand_id, flow_id, last_flow_id, stage, `desc`,
                                               change_desc, change_type, other_reason, reason, pm_id, pm, po_id, po,
-                                              review_fail_reason, create_man_id, create_man)
+                                              review_fail_reason, status, create_man_id, create_man)
         values (#{productDemandId}, #{flowId}, #{lastFlowId}, #{stage}, #{desc}, #{changeDesc}, #{changeType},
                 #{otherReason}, #{reason}, #{pmId}, #{pm}, #{poId}, #{po},
-                #{reviewFailReason}, #{createManId}, #{createMan})
+                #{reviewFailReason}, 0, #{createManId}, #{createMan})
     </insert>
     <update id="update">
         update product_demand_desc_flow
