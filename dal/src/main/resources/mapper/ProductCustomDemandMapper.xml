@@ -3,8 +3,8 @@
 <mapper namespace="com.timevale.forward.dal.dao.ProductCustomDemandMapper">
 
     <select id="select" resultType="com.timevale.forward.dal.entity.ProductCustomDemandDO">
-        select id, product_demand_id, biz_demand_id, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
-        from product_biz_demand
+        select id, product_demand_id, custom_demand_id, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        from product_custom_demand
         <where>
             <if test="id!=null">
                 and id = #{id}
@@ -12,8 +12,8 @@
             <if test="productDemandId!=null">
                 and product_demand_id = #{productDemandId}
             </if>
-            <if test="bizDemandId!=null">
-                and biz_demand_id = #{bizDemandId}
+            <if test="customDemandId!=null">
+                and custom_demand_id = #{customDemandId}
             </if>
             <if test="isDeleted!=null">
                 and is_deleted = #{isDeleted}
@@ -23,7 +23,7 @@
 
 
     <update id="update" parameterType="com.timevale.forward.dal.entity.ProductCustomDemandDO">
-        update product_biz_demand
+        update product_custom_demand
         <set>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
@@ -31,16 +31,50 @@
         </set>
         <where>
             <if test="productDemandId!=null">and product_demand_id = #{productDemandId}</if>
-            <if test="bizDemandId!=null">and biz_demand_id = #{bizDemandId}</if>
+            <if test="customDemandId!=null">and custom_demand_id = #{customDemandId}</if>
             and is_deleted=false
         </where>
     </update>
 
     <insert id="batchInsert" parameterType="java.util.List">
-        insert into product_biz_demand (product_demand_id,biz_demand_id,create_man_id, create_man)
+        insert into product_custom_demand (product_demand_id,custom_demand_id,create_man_id, create_man)
         values
         <foreach collection="list" item="i" open="" separator="," close="">
-            (#{i.productDemandId}, #{i.bizDemandId}, #{i.createManId},#{i.createMan})
+            (#{i.productDemandId}, #{i.customDemandId}, #{createManId},#{createMan})
         </foreach>
     </insert>
+
+    <select id="getByProductDemandIds" resultType="com.timevale.forward.dal.entity.ProductCustomDemandDO">
+        select a.id, a.product_demand_id, a.custom_demand_id, a.is_deleted,b.status,b.name,b.create_man_id,b.submit_man_id
+        from product_custom_demand a
+        join custom_demand b on a.custom_demand_id=b.id
+        <where>
+            and a.product_demand_id IN
+            <foreach item="item" index="index" collection="productDemandIds" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            and a.is_deleted=false
+        </where>
+    </select>
+
+    <select id="getByCustomDemandId" resultType="com.timevale.forward.dal.entity.ProductCustomDemandDO">
+        select a.id, a.product_demand_id, a.custom_demand_id, a.is_deleted,b.status
+        from product_custom_demand a
+        join product_demand b on a.product_demand_id=b.id
+        <where>
+            and a.custom_demand_id = #{customDemandId} and a.is_deleted=false
+        </where>
+    </select>
+
+    <select id="selectByProductDemandIds" resultType="com.timevale.forward.dal.entity.ProductCustomDemandDO">
+        select a.id, a.product_demand_id, a.custom_demand_id, a.is_deleted
+        from product_custom_demand a
+        <where>
+            and a.product_demand_id IN
+            <foreach item="item" index="index" collection="productDemandIds" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            and a.is_deleted=false
+        </where>
+    </select>
 </mapper>

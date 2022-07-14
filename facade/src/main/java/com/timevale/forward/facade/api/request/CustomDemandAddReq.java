@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import java.util.List;
 
@@ -48,6 +49,7 @@ public class CustomDemandAddReq extends BaseReq {
     private String desc;
 
     @ApiModelProperty("附件列表")
+    @Valid
     private List<FileAddReq> files;
 
 }

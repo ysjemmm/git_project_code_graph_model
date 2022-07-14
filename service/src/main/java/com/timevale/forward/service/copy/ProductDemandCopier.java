@@ -3,6 +3,7 @@ package com.timevale.forward.service.copy;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
+import com.timevale.forward.facade.api.query.CustomLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
@@ -82,7 +83,19 @@ public interface ProductDemandCopier {
      */
     ProductDemandListCondition convert(TaskLinkProductDemandQueryList taskLinkProductDemandQueryList);
 
+    /**
+     *
+     * @param productDemandDO productDemandDO
+     * @return ProductDemandMD
+     */
     ProductDemandMD change(ProductDemandDO productDemandDO);
+
+    /**
+     *
+     * @param customLinkProductDemandQueryList customLinkProductDemandQueryList
+     * @return ProductDemandListCondition
+     */
+    ProductDemandListCondition convert(CustomLinkProductDemandQueryList customLinkProductDemandQueryList);
 
 
 }

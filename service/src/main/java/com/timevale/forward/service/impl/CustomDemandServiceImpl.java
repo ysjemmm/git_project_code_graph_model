@@ -2,32 +2,36 @@ package com.timevale.forward.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.CustomDemandListCondition;
-import com.timevale.forward.dal.dao.BizChangeLogMapper;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.BugOnlineMapper;
-import com.timevale.forward.dal.dao.CustomDemandMapper;
-import com.timevale.forward.dal.entity.CustomDemandDO;
+import com.timevale.forward.dal.condition.ProductCustomDemandCondition;
+import com.timevale.forward.dal.condition.ProductDemandListCondition;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.CustomDemandService;
 import com.timevale.forward.facade.api.query.CustomDemandQueryList;
-import com.timevale.forward.facade.api.request.CustomDemandAddReq;
-import com.timevale.forward.facade.api.request.CustomDemandCompletedReq;
-import com.timevale.forward.facade.api.request.CustomDemandRejectReq;
-import com.timevale.forward.facade.api.request.FileAddReq;
+import com.timevale.forward.facade.api.query.CustomLinkProductDemandQueryList;
+import com.timevale.forward.facade.api.query.CustomProductDemandQueryList;
+import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.CustomDemandStatusVO;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.model.bo.ProductEndBO;
-import com.timevale.forward.model.enums.AscriptionEnum;
-import com.timevale.forward.model.enums.BizDemandStatusEnum;
-import com.timevale.forward.model.enums.FileTypeEnum;
-import com.timevale.forward.model.enums.ProblemTypeEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.CustomDemandCopier;
+import com.timevale.forward.service.copy.ProductDemandCopier;
+import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +54,7 @@ import java.util.stream.Collectors;
 public class CustomDemandServiceImpl implements CustomDemandService {
 
     @Resource
-    private BizDemandMapper bizDemandMapper;
+    private ProductCustomDemandMapper productCustomDemandMapper;
 
     @Resource
     private CustomDemandMapper customDemandMapper;
@@ -81,6 +85,15 @@ public class CustomDemandServiceImpl implements CustomDemandService {
 
     @Resource
     private SqlOrderComponent sqlOrderComponent;
+
+    @Resource
+    private InnerUserPersonClient innerUserPersonClient;
+
+    @Resource
+    private ProductDemandMapper productDemandMapper;
+
+    @Resource
+    private ProductCustomDemandComponent productCustomDemandComponent;
 
     @Value("${custom.demand.receiver}")
     private String receiver;
@@ -372,6 +385,90 @@ public class CustomDemandServiceImpl implements CustomDemandService {
 //                    true);
 //        }
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(CustomLinkProductDemandQueryList customDemandQueryList) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        // 转换查询条件
+        ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(customDemandQueryList);
+
+        //通配符、日期处理处理
+        condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
+        condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
+
+        // 过滤当前业务需求已经关联的产品需求
+        if (customDemandQueryList.getCustomDemandId() != null) {
+            ProductCustomDemandCondition c = ProductCustomDemandCondition.builder().customDemandId(customDemandQueryList.getCustomDemandId()).isDeleted(false).build();
+            List<ProductCustomDemandDO> productBizDemand = productCustomDemandMapper.select(c);
+            List<Long> productDemandIds = productBizDemand.stream().map(ProductCustomDemandDO::getProductDemandId).collect(Collectors.toList());
+            condition.setFilterProductDemandIds(productDemandIds);
+        }
+        List<String> ownerIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+        log.info("我和我的下属:receiveManIdList={}", ownerIdList);
+        if (!CollectionUtils.isEmpty(condition.getOwnerIds())) {
+            ownerIdList.retainAll(condition.getOwnerIds());
+            log.info("我和我的下属,过滤后,receiveManIdList={}", ownerIdList);
+        }
+        if (CollectionUtils.isEmpty(ownerIdList)) {
+            //所选人员不在我和我的下属中
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+        condition.setOwnerIds(ownerIdList);
+        // 开始分页
+        PageHelper.startPage(customDemandQueryList.pageNum, customDemandQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        // 查询符合条件的产品需求
+        List<ProductDemandListDO> productDemandDOList = productDemandMapper.list(condition);
+        List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandDOList);
+
+        productDemandVOList.forEach(a -> {
+            a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
+            a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
+        });
+
+        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandDOList);
+        PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(productDemandVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<CustomDemandStatusVO> linkOrUnLinkCustomDemand(CustomProductDemandLinkReq customDemandLinkReq) {
+        CustomDemandStatusVO customDemandStatusVO=new CustomDemandStatusVO();
+        log.info("关联or取消关联客户需求,参数:{}", customDemandLinkReq);
+        List<Long> productDemandIds = customDemandLinkReq.getProductDemandIds();
+        Long customDemandId = customDemandLinkReq.getCustomDemandId();
+
+        if (LinkOrUnLinkEnum.LINK.getCode().equals(customDemandLinkReq.getType())) {
+            productCustomDemandComponent.batchInsert(productDemandIds, customDemandId);
+
+        } else {
+            productCustomDemandComponent.update(productDemandIds.get(0), customDemandId);
+        }
+        return BaseResult.success(customDemandStatusVO);
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<ProductDemandVO>> linkCustomDemandList(CustomProductDemandQueryList customDemandQueryList) {
+        // 开始分页
+        PageHelper.startPage(customDemandQueryList.pageNum, customDemandQueryList.pageSize);
+
+        List<ProductDemandListDO> productDemandList = productDemandMapper.linkProductDemandInCustomDemand(customDemandQueryList.getCustomDemandId());
+        List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandList);
+
+        productDemandVOList.forEach( a-> {
+            a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
+            a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
+        });
+
+        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandList);
+        PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(productDemandVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
     }
 
 }

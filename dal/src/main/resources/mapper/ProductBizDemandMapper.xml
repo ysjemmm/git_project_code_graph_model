@@ -68,7 +68,7 @@
         insert into product_biz_demand (product_demand_id,biz_demand_id,create_man_id, create_man)
         values
         <foreach collection="list" item="i" open="" separator="," close="">
-            (#{i.productDemandId}, #{i.bizDemandId}, #{i.createManId},#{i.createMan})
+            (#{i.productDemandId}, #{i.bizDemandId}, #{createManId},#{createMan})
         </foreach>
     </insert>
 

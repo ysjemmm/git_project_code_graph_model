@@ -116,6 +116,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Resource
     private ProductCustomDemandMapper productCustomDemandMapper;
 
+    @Resource
+    private ProductCustomDemandComponent productCustomDemandComponent;
+
     private static final Integer MAX_LENGTH = 20 * 1000;
 
 
@@ -591,15 +594,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         List<String> receiveManIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
         log.info("我和我的下属:receiveManIdList={}", receiveManIdList);
         CustomDemandListCondition condition = CustomDemandCopier.INSTANCE.convert(customDemandQueryList);
-        if (!CollectionUtils.isEmpty(condition.getReceiveManIds())) {
-            receiveManIdList.retainAll(condition.getReceiveManIds());
-            log.info("我和我的下属,过滤后,receiveManIdList={}", receiveManIdList);
-        }
-        if (CollectionUtils.isEmpty(receiveManIdList)) {
-            //所选人员不在我和我的下属中
-            return BaseResult.success(ResultUtil.pageEmpty());
-        }
-
         condition.setReceiveManIds(receiveManIdList);
         List<Integer> status = customDemandQueryList.getStatus();
         if (CollectionUtils.isEmpty(status)) {
@@ -625,6 +619,29 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> linkOrUnLinkCustomDemand(ProductCustomDemandLinkReq customDemandLinkReq) {
+        log.info("关联or取消关联客户需求,参数:{}", customDemandLinkReq);
+        List<Long> customDemandIds = customDemandLinkReq.getCustomDemandIds();
+        List<Long> productDemandIds = Lists.newArrayList(customDemandLinkReq.getProductDemandId());
+        ProductDemandDO productDemandDO = productDemandMapper.selectById(customDemandLinkReq.getProductDemandId());
+        Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(customDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
+
+        if (LinkOrUnLinkEnum.LINK.getCode().equals(customDemandLinkReq.getType())) {
+            productCustomDemandComponent.batchInsert(customDemandLinkReq.getProductDemandId(), customDemandIds);
+
+//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false);
+//
+//            productDemandLogComponent.addLogWhenLinkOrUnlink(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.LINK.getText());
+
+        } else {
+            Long customDemandId = customDemandIds.get(0);
+
+//            productDemandComponent.updateBizDemandStatusWhenUnlink(bizDemandId, productDemandDO.getId());
+
+            productCustomDemandComponent.update(customDemandLinkReq.getProductDemandId(), customDemandId);
+
+//            productDemandLogComponent.addLogWhenLinkOrUnlink(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
+
+        }
         return BaseResult.success(true);
     }
 
@@ -632,7 +649,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     public BaseResult<PageQueryResult<CustomDemandVO>> linkCustomDemandList(ProductCustomDemandQueryList customDemandQueryList) {
         log.info("产品需求-客户需求清单,参数:{}", customDemandQueryList);
         PageHelper.startPage(customDemandQueryList.getPageNum(), customDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
-        CustomDemandListCondition condition = CustomDemandListCondition.builder().productDemandId(customDemandQueryList.getProductDemandId()).build();
+        CustomDemandListCondition condition = CustomDemandListCondition.builder()
+                .productDemandId(customDemandQueryList.getProductDemandId())
+                .linkCustomList(true)
+                .build();
         return customDemandComponent.list(condition);
     }
 

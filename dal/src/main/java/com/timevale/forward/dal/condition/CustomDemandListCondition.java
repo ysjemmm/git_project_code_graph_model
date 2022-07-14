@@ -82,4 +82,9 @@ public class CustomDemandListCondition {
      * 产品需求id
      */
     private Long productDemandId;
+
+    /**
+     * 是否关联客户需求列表
+     */
+    private boolean linkCustomList;
 }

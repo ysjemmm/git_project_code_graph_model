@@ -101,7 +101,7 @@
     <select id="linkCustomDemandList" resultType="com.timevale.forward.dal.entity.CustomDemandDO">
        select a.id,  a.name,  a.product_end,  a.custom_name,  a.page,  a.path,  a.submit_man , a.contact, a.receive_man, a.receive_man_id, a.cause
         , a.`desc`,  a.status, a.solve_plan, a.reason, a.project_end_date, a.create_man_id,  a.create_man, a.create_date, a.is_deleted
-        , a.modify_man_id, a.modify_man,a.modify_date
+        , a.modify_man_id, a.modify_man,b.modify_date
         from custom_demand a
         join product_custom_demand b on a.id=b.custom_demand_id and b.is_deleted=false
         where b.product_demand_id = #{productDemandId}

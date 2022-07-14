@@ -44,7 +44,7 @@ public class CustomDeamndComponentImpl implements CustomDemandComponent {
         // 分页数据
         buildConditionBeforeQuery(condition);
         List<CustomDemandDO> customDemandDOList;
-        if(condition.getProductDemandId()==null){
+        if(!condition.isLinkCustomList()){
             customDemandDOList = customDemandMapper.list(condition);
         }else {
             customDemandDOList = customDemandMapper.linkCustomDemandList(condition.getProductDemandId());

@@ -3,8 +3,15 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.CustomDemandQueryList;
-import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.query.CustomLinkProductDemandQueryList;
+import com.timevale.forward.facade.api.query.CustomProductDemandQueryList;
+import com.timevale.forward.facade.api.request.CustomDemandAddReq;
+import com.timevale.forward.facade.api.request.CustomDemandCompletedReq;
+import com.timevale.forward.facade.api.request.CustomDemandRejectReq;
+import com.timevale.forward.facade.api.request.CustomProductDemandLinkReq;
+import com.timevale.forward.facade.api.result.CustomDemandStatusVO;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
+import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
@@ -71,6 +78,30 @@ public interface CustomDemandService {
      * @param customDemandCompletedReq 客户需求完成
      */
     BaseResult<Boolean> completed(CustomDemandCompletedReq customDemandCompletedReq);
+
+    /**
+     * 查询满足条件的产品需求列表
+     *
+     * @param customDemandQueryList customDemandQueryList
+     * @return 列表
+     */
+    BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(CustomLinkProductDemandQueryList customDemandQueryList);
+
+    /**
+     * 关联产品需求
+     *
+     * @param customDemandLinkReq customDemandLinkReq
+     * @return true false
+     */
+    BaseResult<CustomDemandStatusVO> linkOrUnLinkCustomDemand(CustomProductDemandLinkReq customDemandLinkReq);
+
+    /**
+     * 产品需求-产品需求清单
+     *
+     * @param customDemandQueryList 客户需求id
+     * @return 列表
+     */
+    BaseResult<PageQueryResult<ProductDemandVO>> linkCustomDemandList(CustomProductDemandQueryList customDemandQueryList);
 
 
 }

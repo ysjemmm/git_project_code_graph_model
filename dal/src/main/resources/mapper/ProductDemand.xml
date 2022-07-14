@@ -234,4 +234,11 @@
         from product_demand a
         where a.name = #{name} and a.is_deleted=false
     </select>
+
+    <select id="linkProductDemandInCustomDemand" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
+         SELECT a.id,a.name,a.priority,a.owner,a.status,a.create_man,a.create_date,b.modify_date
+         FROM product_demand a
+         JOIN product_custom_demand b ON a.id = b.product_demand_id AND b.is_deleted = false
+         WHERE b.custom_demand_id = #{customDemandId}
+    </select>
 </mapper>
