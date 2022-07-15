@@ -5,10 +5,7 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.CustomDemandQueryList;
 import com.timevale.forward.facade.api.query.CustomLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.CustomProductDemandQueryList;
-import com.timevale.forward.facade.api.request.CustomDemandAddReq;
-import com.timevale.forward.facade.api.request.CustomDemandCompletedReq;
-import com.timevale.forward.facade.api.request.CustomDemandRejectReq;
-import com.timevale.forward.facade.api.request.CustomProductDemandLinkReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.CustomDemandStatusVO;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
@@ -64,13 +61,13 @@ public interface CustomDemandService {
      */
     BaseResult<Boolean> reject(CustomDemandRejectReq customDemandRejectReqc);
 
-//    /**
-//     * 批量转交
-//     *
-//     * @param batchTransferReq 客户需求批量转交请求 - 接收人
-//     * @return 成功与否
-//     */
-//    BaseResult<Boolean> transfer(BatchTransferReq batchTransferReq);
+    /**
+     * 批量转交
+     *
+     * @param batchTransferReq 客户需求批量转交请求 - 接收人
+     * @return 成功与否
+     */
+    BaseResult<Boolean> transfer(BatchTransferReq batchTransferReq);
 
     /**
      * 已处理（无需开发）

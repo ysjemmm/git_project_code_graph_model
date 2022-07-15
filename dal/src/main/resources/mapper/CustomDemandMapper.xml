@@ -16,8 +16,8 @@
             <if test="name!=null and name!='' ">
                 name = #{name},
             </if>
-            <if test="productLineId!=null">
-                product_line_id = #{productLineId},
+            <if test="status!=null">
+                status = #{status},
             </if>
             <if test="true">
                 modify_man_id = #{modifyManId},
@@ -27,6 +27,15 @@
         where id = #{id}
     </update>
 
+    <update id="fullUpdate">
+        update custom_demand
+        <set>
+            status = #{status},
+            reason = #{reason},
+            solve_plan = #{solvePlan},
+        </set>
+        where id = #{id}
+    </update>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.CustomDemandDO">
         select id, name, product_end, custom_name, page, path, submit_man ,contact,receive_man,receive_man_id,cause
@@ -105,6 +114,29 @@
         from custom_demand a
         join product_custom_demand b on a.id=b.custom_demand_id and b.is_deleted=false
         where b.product_demand_id = #{productDemandId}
+    </select>
+
+    <update id="updateReceiveMan">
+        UPDATE biz_demand
+        SET receive_man = #{receiveMan}, receive_man_id = #{receiveManId}
+        WHERE id IN
+        <foreach collection="idList" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="selectByIds" resultType="com.timevale.forward.dal.entity.CustomDemandDO">
+        select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status, priority,
+        receive_man, receive_man_id, submit_man, submit_man_id, plan_release_date, reason,
+        is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        from biz_demand
+        <where>
+            id in
+            <foreach collection="ids" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            and is_deleted = false
+        </where>
     </select>
 
 </mapper>

@@ -44,7 +44,13 @@ public enum TabEnum {
     /**
      * 故障单路由
      */
-    TROUBLE_MANAGEMENT("faultManagement");
+    TROUBLE_MANAGEMENT("faultManagement"),
+
+    /**
+     * 业务需求路由
+     */
+    CUSTOM_MANAGEMENT("customManagement"),
+    ;
 
     private final String text;
 }

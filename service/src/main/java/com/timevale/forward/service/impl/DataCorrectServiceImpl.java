@@ -179,31 +179,6 @@ public class DataCorrectServiceImpl implements DataCorrectService {
         return BaseResult.success(true);
     }
 
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> updateBizDemandStatus() {
-        List<Integer> status = Lists.newArrayList(BizDemandStatusEnum.RECEIVED.getCode());
-        List<BizDemandDO> bizDemandDos = bizDemandMapper.selectByStatus(status);
-        Map<Integer, List<Long>> condition = new HashMap<>();
-        bizDemandDos.forEach(a -> {
-            //被驳回和作废的业务需求不处理
-            if (!BizDemandStatusEnum.REJECT.getCode().equals(a.getStatus()) && !BizDemandStatusEnum.INVALID.getCode().equals(a.getStatus())) {
-                //当前业务需求下的所有产品需求
-                List<ProductBizDemandDO> productDemands = productBizDemandMapper.getByBizDemandId(a.getId());
-                Integer minStauts = productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
-                if (minStauts != null) {
-                    productDemandComponent.processBizDemandStatus(condition, minStauts, a.getId());
-                }
-            }
-        });
-        condition.forEach((k, v) -> {
-            //更新产品需求下的所有业务需求状态
-            bizDemandMapper.updateByIds(v, k, true);
-        });
-        log.info("数据订正,业务需求状态变更完成,更新的数据 :{}", condition);
-        return BaseResult.success(true);
-    }
-
     private void updateProductDemandStatus(Long projectId, Integer status) {
         List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectId);
         if (CollectionUtils.isEmpty(exists)) {

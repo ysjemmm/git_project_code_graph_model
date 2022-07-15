@@ -29,6 +29,14 @@ public interface CustomDemandMapper {
     int update(CustomDemandDO customDemandDO);
 
     /**
+     * 更新需求信息
+     *
+     * @param customDemandDO 需求DO
+     * @return int
+     */
+    int fullUpdate(CustomDemandDO customDemandDO);
+
+    /**
      * 选择id获取对应需求信息
      *
      * @param id id
@@ -52,5 +60,22 @@ public interface CustomDemandMapper {
      * @return 需求DO
      */
     List<CustomDemandDO> linkCustomDemandList(@Param("productDemandId") Long productDemandId);
+
+    /**
+     * 修改需求接收人
+     *
+     * @param idList       业务需求id 列表
+     * @param receiveMan   接收人
+     * @param receiveManId 接收人id
+     */
+    int updateReceiveMan(@Param("idList") List<Long> idList, @Param("receiveMan") String receiveMan,@Param("receiveManId") String receiveManId);
+
+    /**
+     * 选择id获取对应业务需求信息
+     *
+     * @param ids id
+     * @return 业务需求DO
+     */
+    List<CustomDemandDO> selectByIds(@Param("ids") List<Long> ids);
 
 }

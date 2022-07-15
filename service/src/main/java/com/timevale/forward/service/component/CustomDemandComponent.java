@@ -12,6 +12,14 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 public interface CustomDemandComponent {
 
     /**
+     * 更新业务需求状态根据关联的产品需求
+     *
+     * @param customDemandId 业务需求id
+     */
+    void updateStatusBaseOnProductDemand(Long customDemandId);
+
+
+    /**
      * 客户需求
      *
      * @return 客户需求

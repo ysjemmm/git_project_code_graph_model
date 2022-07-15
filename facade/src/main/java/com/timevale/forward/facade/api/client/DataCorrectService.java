@@ -42,8 +42,4 @@ public interface DataCorrectService {
      */
     BaseResult<Boolean> updateDelayDays();
 
-    /**
-     * 业务需求更新
-     */
-    BaseResult<Boolean> updateBizDemandStatus();
 }
