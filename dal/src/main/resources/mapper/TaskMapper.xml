@@ -228,6 +228,8 @@
         where t.status = 10
         and t.plan_end_date &lt; now()
         and t.project_id = #{projectId}
+        and t.is_deleted = false
+        and p.is_deleted = false
         group by p.user_id
     </select>
 

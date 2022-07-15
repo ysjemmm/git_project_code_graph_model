@@ -257,6 +257,7 @@
         from bug_offline
         where status = 1
           and project_id = #{projectId}
+          and is_deleted = false
         group by operator_id
     </select>
     <select id="getReasonDistribution"
@@ -265,6 +266,7 @@
         from bug_offline
         where project_id = #{projectId}
           and status != 6
+          and is_deleted = false
         group by reason
         order by count desc
     </select>
@@ -274,6 +276,7 @@
         from bug_offline
         where project_id = #{projectId}
           and status != 6
+          and is_deleted = false
         group by belong
         order by count desc
     </select>
