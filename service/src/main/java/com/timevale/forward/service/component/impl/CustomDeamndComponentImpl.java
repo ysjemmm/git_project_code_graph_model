@@ -173,6 +173,7 @@ public class CustomDeamndComponentImpl implements CustomDemandComponent {
         }
     }
 
+
     private void buildConditionBeforeQuery(CustomDemandListCondition condition) {
         condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
         condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));

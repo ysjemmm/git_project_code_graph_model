@@ -14,7 +14,7 @@ import java.util.List;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("产品-客户需求关联")
+@ApiModel("客户-产品需求关联")
 public class CustomProductDemandLinkReq extends BaseReq {
 
     @NotNull(message = "产品需求id不能为空")

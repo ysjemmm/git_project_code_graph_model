@@ -56,10 +56,10 @@ public interface CustomDemandService {
     /**
      * 驳回
      *
-     * @param customDemandRejectReqc 客户需求驳回要求的事情
+     * @param customDemandRejectReq 客户需求驳回要求的事情
      * @return 成功与否
      */
-    BaseResult<Boolean> reject(CustomDemandRejectReq customDemandRejectReqc);
+    BaseResult<Boolean> reject(CustomDemandRejectReq customDemandRejectReq);
 
     /**
      * 批量转交

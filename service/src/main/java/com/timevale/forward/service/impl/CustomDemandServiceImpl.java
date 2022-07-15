@@ -46,10 +46,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -411,9 +408,9 @@ public class CustomDemandServiceImpl implements CustomDemandService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<CustomDemandStatusVO> linkOrUnLinkProductDemand(CustomProductDemandLinkReq customDemandLinkReq) {
         log.info("关联or取消关联产品需求,参数:{}", customDemandLinkReq);
-        CustomDemandStatusVO customDemandStatusVO = new CustomDemandStatusVO();
         List<Long> productDemandIds = customDemandLinkReq.getProductDemandIds();
         Long customDemandId = customDemandLinkReq.getCustomDemandId();
+        Integer oldStatus = customDemandMapper.selectById(customDemandId).getStatus();
         if (LinkOrUnLinkEnum.LINK.getCode().equals(customDemandLinkReq.getType())) {
             productCustomDemandComponent.batchInsert(productDemandIds, customDemandId);
 
@@ -425,9 +422,10 @@ public class CustomDemandServiceImpl implements CustomDemandService {
 
             customDemandLogComponent.addLogWhenCustomDemandUnLinkProductDemand(customDemandId,productDemandId);
         }
+        //更新客户需求状态
         customDemandComponent.updateStatusBaseOnProductDemand(customDemandId);
-        //项目发布时间通知
-        return BaseResult.success(customDemandStatusVO);
+
+        return BaseResult.success(getLastedInfo(oldStatus,customDemandId));
     }
 
     @Override
@@ -447,5 +445,29 @@ public class CustomDemandServiceImpl implements CustomDemandService {
         pageQueryResult.setResultList(productDemandVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);
+    }
+
+    private CustomDemandStatusVO getLastedInfo(Integer oldStatus, Long customDemandId){
+        CustomDemandDO newCustomDemandDO = customDemandMapper.selectById(customDemandId);
+
+        Integer newStatus = newCustomDemandDO.getStatus();
+        String statusText = BizDemandStatusEnum.getTextByCode(newStatus);
+
+        Date projectEndDate = customDemandComponent.getProjectEndDate(customDemandId);
+
+        if(!oldStatus.equals(newStatus)){
+            customDemandLogComponent.addLogWhenModifyData(
+                    BizDemandStatusEnum.getTextByCode(oldStatus),
+                    BizDemandStatusEnum.getTextByCode(newStatus),
+                    customDemandId,
+                    BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
+                    false
+            );
+        }
+        CustomDemandStatusVO customDemandStatusVO = new CustomDemandStatusVO();
+        customDemandStatusVO.setStatus(newStatus);
+        customDemandStatusVO.setStatusText(statusText);
+        customDemandStatusVO.setProjectEndDate(projectEndDate);
+        return customDemandStatusVO;
     }
 }

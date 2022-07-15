@@ -24,7 +24,7 @@
                 modify_man = #{modifyMan},
             </if>
         </set>
-        where id = #{id}
+        where id = #{id} and is_deleted = false
     </update>
 
     <update id="fullUpdate">
@@ -35,14 +35,14 @@
             solve_plan = #{solvePlan},
             project_end_date = #{projectEndDate},
         </set>
-        where id = #{id}
+        where id = #{id} and is_deleted = false
     </update>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.CustomDemandDO">
         select id, name, product_end, custom_name, page, path, submit_man ,contact,receive_man,receive_man_id,cause
         ,`desc`, status,solve_plan,reason,project_end_date, create_man_id, create_man,create_date,is_deleted,modify_man_id,modify_man,modify_date
         from custom_demand
-        where id = #{id}
+        where id = #{id} and is_deleted = false
     </select>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.CustomDemandDO">

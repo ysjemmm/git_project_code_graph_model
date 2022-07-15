@@ -621,16 +621,16 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     public BaseResult<Boolean> linkOrUnLinkCustomDemand(ProductCustomDemandLinkReq customDemandLinkReq) {
         log.info("关联or取消关联客户需求,参数:{}", customDemandLinkReq);
         List<Long> customDemandIds = customDemandLinkReq.getCustomDemandIds();
-        List<Long> productDemandIds = Lists.newArrayList(customDemandLinkReq.getProductDemandId());
+//        List<Long> productDemandIds = Lists.newArrayList(customDemandLinkReq.getProductDemandId());
         ProductDemandDO productDemandDO = productDemandMapper.selectById(customDemandLinkReq.getProductDemandId());
-        Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(customDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
+        Map<Long, String> bdNameMap = customDemandMapper.selectByIds(customDemandIds).stream().collect(Collectors.toMap(CustomDemandDO::getId, CustomDemandDO::getName, (v1, v2) -> v2));
 
         if (LinkOrUnLinkEnum.LINK.getCode().equals(customDemandLinkReq.getType())) {
             productCustomDemandComponent.batchInsert(customDemandLinkReq.getProductDemandId(), customDemandIds);
 
 //            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false);
 //
-//            productDemandLogComponent.addLogWhenLinkOrUnlink(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.LINK.getText());
+            productDemandLogComponent.addLogWhenLinkOrUnlinkCustomDemand(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.LINK.getText());
 
         } else {
             Long customDemandId = customDemandIds.get(0);
@@ -639,8 +639,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
             productCustomDemandComponent.update(customDemandLinkReq.getProductDemandId(), customDemandId);
 
-//            productDemandLogComponent.addLogWhenLinkOrUnlink(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
-
+            productDemandLogComponent.addLogWhenLinkOrUnlinkCustomDemand(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
+//
         }
         return BaseResult.success(true);
     }

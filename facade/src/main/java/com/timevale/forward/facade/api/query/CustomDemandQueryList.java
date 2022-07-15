@@ -45,6 +45,9 @@ public class CustomDemandQueryList extends QueryBase {
     @ApiModelProperty("产品端")
     private List<Integer> productEnds;
 
+    @ApiModelProperty("需求接收人id")
+    private List<String> receiveManIds;
+
     @ApiModelProperty("需求提交人")
     private String submitMan;
 

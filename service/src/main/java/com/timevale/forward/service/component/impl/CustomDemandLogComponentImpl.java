@@ -47,7 +47,7 @@ public class CustomDemandLogComponentImpl implements CustomDemandLogComponent {
     @Override
     public void addLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active, String action) {
         if (!Objects.equals(oldValue, newValue)) {
-            BizChangeLogDO logDO = newBizChangeLogDO(active, BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode());
+            BizChangeLogDO logDO = newCustomChangeLogDO(active, BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode());
             logDO.setMainId(id);
             logDO.setField(field);
             logDO.setOldValue(oldValue);
@@ -68,7 +68,7 @@ public class CustomDemandLogComponentImpl implements CustomDemandLogComponent {
         List<BizChangeLogDO> bizChangeLogDOList = new ArrayList<>();
         for (ProductDemandDO e : productDemandDOList) {
             // 业务需求方
-            BizChangeLogDO bizDemandLogDO = newBizChangeLogDO(true, BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode());
+            BizChangeLogDO bizDemandLogDO = newCustomChangeLogDO(true, BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode());
 
             bizDemandLogDO.setMainId(customDemandId);
             bizDemandLogDO.setAction(ButtonActionEnum.LINK.getText());
@@ -79,7 +79,7 @@ public class CustomDemandLogComponentImpl implements CustomDemandLogComponent {
             bizChangeLogDOList.add(bizDemandLogDO);
 
             // 产品需求方
-            BizChangeLogDO productDemandLogDO = newBizChangeLogDO(true, BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+            BizChangeLogDO productDemandLogDO = newCustomChangeLogDO(true, BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
             productDemandLogDO.setMainId(e.getId());
             productDemandLogDO.setAction(ButtonActionEnum.LINK.getText());
             productDemandLogDO.setField(BizChangeLogTypeEnum.CUSTOM_DEMAND.getText());
@@ -100,7 +100,7 @@ public class CustomDemandLogComponentImpl implements CustomDemandLogComponent {
         ProductDemandDO productDemandDO = productDemandMapper.selectById(productDemandId);
 
         // 业务需求方
-        BizChangeLogDO bizDemandLogDO = newBizChangeLogDO(true, BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode());
+        BizChangeLogDO bizDemandLogDO = newCustomChangeLogDO(true, BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode());
 
         bizDemandLogDO.setMainId(customDemandId);
         bizDemandLogDO.setAction(ButtonActionEnum.UN_LINK.getText());
@@ -109,7 +109,7 @@ public class CustomDemandLogComponentImpl implements CustomDemandLogComponent {
         bizDemandLogDO.setNewValue(productDemandDO.getName());
 
         // 产品需求方
-        BizChangeLogDO productDemandLogDO = newBizChangeLogDO(true, BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+        BizChangeLogDO productDemandLogDO = newCustomChangeLogDO(true, BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
         productDemandLogDO.setMainId(productDemandId);
         productDemandLogDO.setAction(ButtonActionEnum.UN_LINK.getText());
         productDemandLogDO.setField(BizChangeLogTypeEnum.CUSTOM_DEMAND.getText());
@@ -176,7 +176,7 @@ public class CustomDemandLogComponentImpl implements CustomDemandLogComponent {
 
     @Override
     public BizChangeLogDO getLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active, String action) {
-        BizChangeLogDO logDO = newBizChangeLogDO(active, BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode());
+        BizChangeLogDO logDO = newCustomChangeLogDO(active, BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode());
 
         logDO.setMainId(id);
         logDO.setField(field);
@@ -191,7 +191,7 @@ public class CustomDemandLogComponentImpl implements CustomDemandLogComponent {
 
     @Override
     public BizChangeLogDO buildLogWhenPublishDateChange(String oldValue, String newValue, Long id) {
-        BizChangeLogDO logDO = newBizChangeLogDO(false, BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode());
+        BizChangeLogDO logDO = newCustomChangeLogDO(false, BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode());
         logDO.setMainId(id);
         logDO.setField(BizChangeLogFieldEnum.PROJECT_RELEASE_DATE.getText());
         logDO.setOldValue(oldValue);
@@ -199,7 +199,7 @@ public class CustomDemandLogComponentImpl implements CustomDemandLogComponent {
         return logDO;
     }
 
-    private BizChangeLogDO newBizChangeLogDO(Boolean isUser, Integer type) {
+    private BizChangeLogDO newCustomChangeLogDO(Boolean isUser, Integer type) {
         BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
         bizChangeLogDO.setType(type);
 
