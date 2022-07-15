@@ -235,9 +235,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
         if (ProductDemandStatusEnum.SUSPEND.getCode().equals(type)) {
             // 暂停,更新业务需求状态
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), false);
+            productDemandComponent.updateDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), false);
         } else {
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), true);
+            productDemandComponent.updateDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), true);
 
             ProductBizDemandCondition c = ProductBizDemandCondition.builder().productDemandId(productDemandId).isDeleted(false).build();
             List<Long> bizDemandIds = productBizDemandMapper.select(c).stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
@@ -268,7 +268,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
         productDemandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
         productDemandComponent.update(productDemandDO);
-        productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), false);
+        productDemandComponent.updateDemandStatusAsProductStatusChange(Lists.newArrayList(productDemandId), false);
 
         productDemandLogComponent.addLogWhenStatusChange(ProductDemandStatusEnum.SUSPEND.getCode(), ProductDemandStatusEnum.WAITING.getCode()
                 , productDemandId, ButtonActionEnum.ENABLE.getText());
@@ -305,7 +305,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, ButtonActionEnum.LINK.getText());
             if (productDemandAddReq.getProjectId() == null) {
                 //如果只关联业务需求,没关联项目,需要计算业务状态
-                productDemandComponent.updateBizDemandStatusAsProductStatusChange(Lists.newArrayList(productDemand.getId()), false);
+                productDemandComponent.updateDemandStatusAsProductStatusChange(Lists.newArrayList(productDemand.getId()), false);
             }
         }
         if (productDemandAddReq.getProjectId() != null) {
@@ -446,7 +446,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (LinkOrUnLinkEnum.LINK.getCode().equals(bizDemandLinkReq.getType())) {
             productBizDemandComponent.batchInsert(bizDemandLinkReq.getProductDemandId(), bizDemandIds);
 
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false);
+            productDemandComponent.updateBizDemandStatus(productDemandIds, false);
 
             productDemandLogComponent.addLogWhenLinkOrUnlink(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.LINK.getText());
 
@@ -454,7 +454,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             //当前业务需求下的所有产品需求
             Long bizDemandId = bizDemandIds.get(0);
 
-            productDemandComponent.updateBizDemandStatusWhenUnlink(bizDemandId, productDemandDO.getId());
+            productDemandComponent.updateDemandStatusWhenUnlink(bizDemandId, productDemandDO.getId(),true);
 
             productBizDemandComponent.update(bizDemandLinkReq.getProductDemandId(), bizDemandId);
 
@@ -621,21 +621,21 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     public BaseResult<Boolean> linkOrUnLinkCustomDemand(ProductCustomDemandLinkReq customDemandLinkReq) {
         log.info("关联or取消关联客户需求,参数:{}", customDemandLinkReq);
         List<Long> customDemandIds = customDemandLinkReq.getCustomDemandIds();
-//        List<Long> productDemandIds = Lists.newArrayList(customDemandLinkReq.getProductDemandId());
+        List<Long> productDemandIds = Lists.newArrayList(customDemandLinkReq.getProductDemandId());
         ProductDemandDO productDemandDO = productDemandMapper.selectById(customDemandLinkReq.getProductDemandId());
         Map<Long, String> bdNameMap = customDemandMapper.selectByIds(customDemandIds).stream().collect(Collectors.toMap(CustomDemandDO::getId, CustomDemandDO::getName, (v1, v2) -> v2));
 
         if (LinkOrUnLinkEnum.LINK.getCode().equals(customDemandLinkReq.getType())) {
             productCustomDemandComponent.batchInsert(customDemandLinkReq.getProductDemandId(), customDemandIds);
 
-//            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false);
+            productDemandComponent.updateCustomDemandStatus(productDemandIds, false);
 //
             productDemandLogComponent.addLogWhenLinkOrUnlinkCustomDemand(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.LINK.getText());
 
         } else {
             Long customDemandId = customDemandIds.get(0);
 
-//            productDemandComponent.updateBizDemandStatusWhenUnlink(bizDemandId, productDemandDO.getId());
+            productDemandComponent.updateDemandStatusWhenUnlink(customDemandId, productDemandDO.getId(),false);
 
             productCustomDemandComponent.update(customDemandLinkReq.getProductDemandId(), customDemandId);
 

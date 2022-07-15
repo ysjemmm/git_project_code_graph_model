@@ -19,9 +19,7 @@ public interface BizDemandLogComponent{
 
     void addLogWhenBizDemandUnLinkProductDemand(Long bizDemandId, Long productDemandId);
 
-    void addLogAsProductDemandStatusChange(Integer oldStatus,  Integer newStatus,Long id) ;
-
-    void addLogAsProductDemandStatusChange(Long id,Integer oldStatus, Integer newStatus);
+    void addLogAsProductDemandStatusChange(Integer oldStatus,  Integer newStatus,Long id,Integer type) ;
 
     BizChangeLogDO getLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active);
 

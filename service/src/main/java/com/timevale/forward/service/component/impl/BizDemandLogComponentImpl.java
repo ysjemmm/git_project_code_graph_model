@@ -197,10 +197,10 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
     }
 
     @Override
-    public void addLogAsProductDemandStatusChange(Integer oldStatus, Integer newStatus, Long id) {
+    public void addLogAsProductDemandStatusChange(Integer oldStatus, Integer newStatus, Long id,Integer type) {
         if(!Objects.equals(oldStatus,newStatus)){
             BizChangeLogDO logDO = new BizChangeLogDO();
-            logDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+            logDO.setType(type);
             logDO.setMainId(id);
             logDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
             logDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
@@ -211,20 +211,6 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
         }
     }
 
-    @Override
-    public void addLogAsProductDemandStatusChange(Long id,Integer oldStatus, Integer newStatus) {
-        if(!Objects.equals(oldStatus,newStatus)){
-            BizChangeLogDO logDO = new BizChangeLogDO();
-            logDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
-            logDO.setMainId(id);
-            logDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
-            logDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
-            logDO.setNewValue(BizDemandStatusEnum.getTextByCode(newStatus));
-            logDO.setCreateMan(CommonConstant.SYSTEM);
-            logDO.setCreateManId(CommonConstant.SYSTEM);
-            bizChangeLogMapper.insert(logDO);
-        }
-    }
     @Override
     public BizChangeLogDO getLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active) {
         return getLogWhenModifyData(oldValue, newValue, id, field, active, "");

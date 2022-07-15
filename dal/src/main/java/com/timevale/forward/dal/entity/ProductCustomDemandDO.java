@@ -20,4 +20,10 @@ public class ProductCustomDemandDO extends BaseDO {
      */
     private Long customDemandId;
 
+    /**
+     * 需求状态
+     */
+    private Integer status;
+
+
 }

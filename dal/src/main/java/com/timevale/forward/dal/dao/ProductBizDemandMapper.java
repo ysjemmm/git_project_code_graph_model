@@ -79,7 +79,6 @@ public interface ProductBizDemandMapper {
      */
     List<ProductBizDemandDO> getByProductDemandIds(@Param("productDemandIds") List<Long> productDemandIds);
 
-
     /**
      * 查询产品业务需求关联
      *
@@ -88,6 +87,10 @@ public interface ProductBizDemandMapper {
      */
     List<ProductBizDemandDO> getByBizDemandId(@Param("bizDemandId") Long bizDemandId);
 
-
+    /**
+     *
+     * @param productDemandIds productDemandIds
+     * @return ProductBizDemandDO
+     */
     List<ProductBizDemandDO> selectByProductDemandIds(@Param("productDemandIds") List<Long> productDemandIds);
 }
