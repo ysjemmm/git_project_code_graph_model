@@ -25,6 +25,7 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -311,6 +312,10 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
     @Override
     public BaseResult<PageQueryResult<TaskOverdueCountVO>> getTaskOverdueRank(TaskOverdueRankQueryList query) {
+        if (StringUtils.isBlank(query.getOrderFiled())) {
+            query.setOrderCollation(1);
+            query.setOrderFiled("accumulateOverdueMillis");
+        }
         String collation = sqlOrderComponent.buildWithoutId(query.getOrderFiled(), query.getOrderCollation());
         PageHelper.startPage(query.getPageNum(), query.getPageSize(), collation);
         List<TaskOverdueDTO> overdueList = taskMapper.getOverdueRank(query.getProjectId());
@@ -324,6 +329,10 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
     @Override
     public BaseResult<PageQueryResult<BugOfflineCountVO>> getBugOfflineCount(ProjectBugOfflineCountQueryList query) {
+        if (StringUtils.isBlank(query.getOrderFiled())) {
+            query.setOrderCollation(1);
+            query.setOrderFiled("urgentRepairCount");
+        }
         String collation = sqlOrderComponent.buildWithoutId(query.getOrderFiled(), query.getOrderCollation());
         PageHelper.startPage(query.getPageNum(), query.getPageSize(), collation);
         List<BugOfflineCountDTO> countList = bugOfflineMapper.getBugCount(query.getProjectId());
