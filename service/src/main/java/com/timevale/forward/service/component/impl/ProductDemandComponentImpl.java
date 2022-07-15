@@ -54,6 +54,9 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     private BizDemandMapper bizDemandMapper;
 
     @Resource
+    private CustomDemandMapper customDemandMapper;
+
+    @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
 
     @Resource
@@ -178,12 +181,10 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             return;
         }
         //invalid为true时:作废,解除产品需求和业务需求关系
-        buildConditionBeforeUpdate(productDemandIds, invalid);
+        processBizDemand(productDemandIds,invalid);
     }
-
-
-    private void buildConditionBeforeUpdate(List<Long> productDemandIds, boolean invalid) {
-        log.info("产品需求变化-更新业务需求,产品需求id={},是否作废={}", productDemandIds, invalid);
+    private void processBizDemand(List<Long> productDemandIds, boolean invalid) {
+        log.info("产品需求变化-更新业务需求:{},{}", productDemandIds, invalid);
         // 产品需求下的所有业务需求
         List<ProductBizDemandDO> bizDemands = productBizDemandMapper.getByProductDemandIds(productDemandIds);
         if (CollectionUtils.isEmpty(bizDemands)) {
@@ -193,80 +194,38 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         // 业务需求id去重
         Map<Long, ProductBizDemandDO> bizDemandMap = bizDemands.stream()
                 .collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, k -> k, (v1, v2) -> v2));
-        Map<Integer, List<Long>> newStatusMap = new HashMap<>();
         bizDemandMap.forEach((k, v) -> {
             //被驳回和作废的业务需求不处理
             if (!BizDemandStatusEnum.REJECT.getCode().equals(v.getStatus()) && !BizDemandStatusEnum.INVALID.getCode().equals(v.getStatus())) {
                 //当前业务需求下的所有产品需求
                 List<ProductBizDemandDO> productDemands = productBizDemandMapper.getByBizDemandId(k);
+                Integer productStatus;
                 if (invalid) {
-                    //如果是解除关联:计算业务需求状态时需要过滤掉本次被解除的产品需求
-                    Integer minStatus = productDemands.stream().filter(i -> !productDemandIds.get(0).equals(i.getProductDemandId())).map(ProductBizDemandDO::getStatus)
+                    //如果作废:计算业务需求状态时需要过滤掉本次被解除的产品需求
+                    productStatus = productDemands.stream().filter(i -> !productDemandIds.get(0).equals(i.getProductDemandId())).map(ProductBizDemandDO::getStatus)
                             .min(Comparator.comparingInt(o -> o)).orElse(null);
-                    if (minStatus == null) {
-                        //业务需求只关联一个产品需求后且被解除
-                        newStatusMap.computeIfAbsent(BizDemandStatusEnum.RECEIVED.getCode(), value -> new ArrayList<>()).add(k);
-                    } else {
-                        processBizDemandStatus(newStatusMap, minStatus, k);
-                    }
                 } else {
-                    productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o))
-                            .ifPresent(minStatus -> processBizDemandStatus(newStatusMap, minStatus, k));
+                    productStatus=productDemands.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
+
                 }
-            }
-        });
-        newStatusMap.forEach((status, ids) -> {
-            //更新产品需求下的所有业务需求状态
-            bizDemandMapper.updateByIds(ids, status, false);
-        });
-        log.info("产品需求变化-更新业务需求:产品需求id={},需要更新的业务需求状态和id={}", productDemandIds, newStatusMap);
-
-        Map<Long, Integer> oldStatusMap = bizDemands.stream()
-                .collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, ProductBizDemandDO::getStatus, (v1, v2) -> v2));
-
-        bizDemandLogComponent.addLogAsProductDemandStatusChange(oldStatusMap, newStatusMap);
-        sendDingMsg(newStatusMap, bizDemandMap);
-    }
-
-    private void sendDingMsg(Map<Integer, List<Long>> condition, Map<Long, ProductBizDemandDO> bizDemandMap) {
-        condition.forEach((k, v) -> {
-            if (BizDemandStatusEnum.INCLUDE_PROJECT.getCode().equals(k)
-                    || BizDemandStatusEnum.PROJECTING.getCode().equals(k)
-                    || BizDemandStatusEnum.AVAILABLE.getCode().equals(k)) {
-                v.forEach(a -> {
-                    ProductBizDemandDO bizDemand = bizDemandMap.get(a);
-                    if (!Objects.equals(bizDemand.getStatus(), k)) {
-                        // 业务需求状态发生变化,发送消息
-                        Date projectEndDate = bizDemandComponent.getProjectEndDate(a);
-                        log.info("发送钉钉消息,项目发布时间={},更新前状态={},更新后状态={},业务需求id={}", projectEndDate, bizDemand.getStatus(), k, a);
-
-                        messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
-                                this,
-                                a,
-                                bizDemand.getSubmitManId(),
-                                bizDemand.getName(),
-                                BizDemandStatusEnum.getTextByCode(k),
-                                projectEndDate)
-                        );
-                    }
-                });
+                Integer newStatus = updateDemandStatus(productStatus, k, true);
+                bizDemandLogComponent.addLogAsProductDemandStatusChange(v.getStatus(), newStatus,k);
+                sendDingMsg(v.getStatus(), newStatus,v);
             }
         });
     }
-
-    @Override
-    public void processBizDemandStatus(Map<Integer, List<Long>> condition, Integer minStatus, Long bizDemandId) {
-        if (minStatus != null && !minStatus.equals(ProductDemandStatusEnum.INVALID.getCode())) {
-            if (minStatus.equals(ProductDemandStatusEnum.WAITING.getCode())
-                    || minStatus.equals(ProductDemandStatusEnum.SUSPEND.getCode())) {
-                condition.computeIfAbsent(BizDemandStatusEnum.PD_LINKED.getCode(), v -> new ArrayList<>()).add(bizDemandId);
-            } else if (minStatus.equals(ProductDemandStatusEnum.INCLUDED.getCode())) {
-                condition.computeIfAbsent(BizDemandStatusEnum.INCLUDE_PROJECT.getCode(), v -> new ArrayList<>()).add(bizDemandId);
-            } else if (minStatus.equals(ProductDemandStatusEnum.PROGRESS.getCode())) {
-                condition.computeIfAbsent(BizDemandStatusEnum.PROJECTING.getCode(), v -> new ArrayList<>()).add(bizDemandId);
-            } else if (minStatus.equals(ProductDemandStatusEnum.ONLINE.getCode())) {
-                condition.computeIfAbsent(BizDemandStatusEnum.AVAILABLE.getCode(), v -> new ArrayList<>()).add(bizDemandId);
-            }
+    private void sendDingMsg(Integer oldStatus,Integer newStatus,ProductBizDemandDO bizDemandDO) {
+        if(!Objects.equals(oldStatus,newStatus)&&BizDemandStatusEnum.statusNoNeedTodo(newStatus)){
+            Date projectEndDate = bizDemandComponent.getProjectEndDate(bizDemandDO.getBizDemandId());
+            log.info("发送钉钉消息,项目发布时间={},更新前状态={},更新后状态={},业务需求id={}", projectEndDate, oldStatus, newStatus ,bizDemandDO.getBizDemandId());
+            messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
+                    this,
+                    bizDemandDO.getBizDemandId(),
+                    bizDemandDO.getSubmitManId(),
+                    bizDemandDO.getName(),
+                    BizDemandStatusEnum.getTextByCode(newStatus),
+                    projectEndDate)
+            );
         }
     }
 
@@ -300,5 +259,22 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                 );
             }
         }
+    }
+
+    @Override
+    public Integer updateDemandStatus(Integer productStatus, Long demandId, boolean bizDemand) {
+        Integer status = bizDemandComponent.getBizDemandStatus(productStatus);
+        if(bizDemand){
+            BizDemandDO bizDemandDO=new BizDemandDO();
+            bizDemandDO.setId(demandId);
+            bizDemandDO.setStatus(status);
+            bizDemandMapper.update(bizDemandDO);
+        }else {
+            CustomDemandDO customDemandDO=new CustomDemandDO();
+            customDemandDO.setId(demandId);
+            customDemandDO.setStatus(status);
+            customDemandMapper.update(customDemandDO);
+        }
+        return status;
     }
 }

@@ -6,7 +6,6 @@ import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 
 import java.util.List;
-import java.util.Map;
 
 public interface ProductDemandComponent {
     /**
@@ -45,17 +44,17 @@ public interface ProductDemandComponent {
 
     /**
      *
-     * @param condition condition
-     * @param minStauts minStauts 产品需求状态
-     * @param bizDemandId bizDemandId
-     */
-    void processBizDemandStatus(Map<Integer, List<Long>> condition, Integer minStauts, Long bizDemandId);
-
-    /**
-     *
      * @param bizDemandId bizDemandId
      * @param productDemandId productDemandId
      */
     void updateBizDemandStatusWhenUnlink(Long bizDemandId,Long productDemandId);
+
+    /**
+     *
+     * @param productStatus productStatus 产品需求状态
+     * @param bizDemandId bizDemandId
+     * @param bizDemand bizDemand
+     */
+    Integer updateDemandStatus(Integer productStatus, Long bizDemandId,boolean bizDemand);
 
 }

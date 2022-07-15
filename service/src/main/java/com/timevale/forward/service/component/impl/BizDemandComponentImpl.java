@@ -353,6 +353,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Override
     public Integer getBizDemandStatus(Integer pdStauts) {
+        log.info("产品需求状态 :{}", pdStauts);
         if (Objects.equals(ProductDemandStatusEnum.WAITING.getCode(), pdStauts)
                 || Objects.equals(ProductDemandStatusEnum.SUSPEND.getCode(), pdStauts)) {
             return BizDemandStatusEnum.PD_LINKED.getCode();
@@ -366,7 +367,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         if (Objects.equals(ProductDemandStatusEnum.ONLINE.getCode(), pdStauts)) {
             return BizDemandStatusEnum.AVAILABLE.getCode();
         }
-        log.info("产品需求状态 :{}", pdStauts);
+
         return BizDemandStatusEnum.RECEIVED.getCode();
     }
 }
