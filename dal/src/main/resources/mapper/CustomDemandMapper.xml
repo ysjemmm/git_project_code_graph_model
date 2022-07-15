@@ -33,6 +33,7 @@
             status = #{status},
             reason = #{reason},
             solve_plan = #{solvePlan},
+            project_end_date = #{projectEndDate},
         </set>
         where id = #{id}
     </update>

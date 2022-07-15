@@ -81,21 +81,22 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
         List<ProductBizDemandDO> exists = productBizDemandMapper.select(c);
         List<Long> existBizDemandIds = exists.stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
         bizDemandIds.removeAll(existBizDemandIds);
+        if (CollectionUtils.isEmpty(bizDemandIds)) {
+            return;
+        }
         // link before
         Map<Long, Date> publishDateMap = new HashMap<>();
         before(publishDateMap, bizDemandIds);
         log.info("bizDemandId,publishDate:{}", publishDateMap);
         // link
-        if (!CollectionUtils.isEmpty(bizDemandIds)) {
-            Set<Long> set = new HashSet<>(bizDemandIds);
-            List<ProductBizDemandDO> list = set.stream().map(i -> {
-                ProductBizDemandDO productDemandDO = new ProductBizDemandDO();
-                productDemandDO.setProductDemandId(productDemandId);
-                productDemandDO.setBizDemandId(i);
-                return productDemandDO;
-            }).collect(Collectors.toList());
-            productBizDemandMapper.batchInsert(list);
-        }
+        Set<Long> set = new HashSet<>(bizDemandIds);
+        List<ProductBizDemandDO> list = set.stream().map(i -> {
+            ProductBizDemandDO productDemandDO = new ProductBizDemandDO();
+            productDemandDO.setProductDemandId(productDemandId);
+            productDemandDO.setBizDemandId(i);
+            return productDemandDO;
+        }).collect(Collectors.toList());
+        productBizDemandMapper.batchInsert(list);
         // link after
         after(publishDateMap, bizDemandIds);
     }

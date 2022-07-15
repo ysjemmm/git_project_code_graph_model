@@ -7,9 +7,11 @@ import com.timevale.forward.dal.condition.CustomDemandListCondition;
 import com.timevale.forward.dal.dao.CustomDemandMapper;
 import com.timevale.forward.dal.dao.ProductCustomDemandMapper;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.CustomDemandDO;
 import com.timevale.forward.dal.entity.ProductCustomDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
 import com.timevale.forward.model.bo.ProductEndBO;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
@@ -27,6 +29,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -46,6 +49,9 @@ public class CustomDeamndComponentImpl implements CustomDemandComponent {
 
     @Resource
     private ProductCustomDemandMapper productCustomDemandMapper;
+
+    @Resource
+    private ProjectMapper projectMapper;
 
     @Resource
     private ProductDemandMapper productDemandMapper;
@@ -125,6 +131,48 @@ public class CustomDeamndComponentImpl implements CustomDemandComponent {
             customDemandMapper.update(newCustomDemand);
         }
     }
+
+    @Override
+    public Date getProjectEndDate(Long customDemandId) {
+        // 获取该业务需求所关联的产品需求
+        List<ProductCustomDemandDO> productCustomDemandDOList = productCustomDemandMapper.getByCustomDemandId(customDemandId);
+        if (productCustomDemandDOList.isEmpty()) {
+            return null;
+        }
+
+        // 获取关联的产品需求相关的项目
+        List<Long> productDemandIdList = productCustomDemandDOList.stream().map(ProductCustomDemandDO::getProductDemandId).collect(Collectors.toList());
+        List<ProjectDO> projectDOList = projectMapper.selectByProductDemandIdList(productDemandIdList);
+        if (projectDOList.isEmpty()) {
+            return null;
+        }
+
+        Date result = null;
+        for (ProjectDO projectDO : projectDOList) {
+            Date projectEndDate = projectDO.getActualEndDate() == null ? projectDO.getPlanEndDate() : projectDO.getActualEndDate();
+            if (result == null) {
+                result = projectEndDate;
+            } else {
+                result = result.after(projectEndDate) ? result : projectEndDate;
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public void updateProjectEndDate(Long customDemandId) {
+        CustomDemandDO customDemandDO = customDemandMapper.selectById(customDemandId);
+
+        Date oldProjectEndDate = customDemandDO.getProjectEndDate();
+        Date newProjectEndDate = getProjectEndDate(customDemandId);
+
+        if (!Objects.equals(newProjectEndDate, oldProjectEndDate)) {
+            customDemandDO.setProjectEndDate(newProjectEndDate);
+            customDemandMapper.fullUpdate(customDemandDO);
+            log.info("业务需求id:{},更新前发布时间:{},更新后发布时间:{}", customDemandId, oldProjectEndDate, newProjectEndDate);
+        }
+    }
+
     private void buildConditionBeforeQuery(CustomDemandListCondition condition) {
         condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
         condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));

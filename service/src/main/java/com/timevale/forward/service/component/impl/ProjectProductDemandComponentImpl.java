@@ -81,22 +81,23 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
         List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
                 .collect(Collectors.toList());
         productDemandIds.removeAll(existProductDemandIds);
+        if (CollectionUtils.isEmpty(productDemandIds)) {
+            return;
+        }
         // link before
         Map<Long, Date> publishDateMap = new HashMap<>();
         List<Long> bizDemandIds = new ArrayList<>();
         before(productDemandIds, publishDateMap, bizDemandIds);
         log.info("bizDemandId,publishDate:{}", publishDateMap);
         // link
-        if (!CollectionUtils.isEmpty(productDemandIds)) {
-            Set<Long> set = new HashSet<>(productDemandIds);
-            List<ProjectProductDemandDO> list = set.stream().map(i -> {
-                ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
-                productDemandDO.setProductDemandId(i);
-                productDemandDO.setProjectId(projectId);
-                return productDemandDO;
-            }).collect(Collectors.toList());
-            projectProductDemandMapper.batchInsert(list);
-        }
+        Set<Long> set = new HashSet<>(productDemandIds);
+        List<ProjectProductDemandDO> list = set.stream().map(i -> {
+            ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
+            productDemandDO.setProductDemandId(i);
+            productDemandDO.setProjectId(projectId);
+            return productDemandDO;
+        }).collect(Collectors.toList());
+        projectProductDemandMapper.batchInsert(list);
         // link after
         after(publishDateMap, bizDemandIds);
     }

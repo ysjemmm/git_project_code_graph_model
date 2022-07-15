@@ -416,10 +416,13 @@ public class CustomDemandServiceImpl implements CustomDemandService {
         Long customDemandId = customDemandLinkReq.getCustomDemandId();
         if (LinkOrUnLinkEnum.LINK.getCode().equals(customDemandLinkReq.getType())) {
             productCustomDemandComponent.batchInsert(productDemandIds, customDemandId);
+
             customDemandLogComponent.addLogWhenCustomDemandLinkProductDemand(customDemandId,productDemandIds);
         } else {
             Long productDemandId = productDemandIds.get(0);
+
             productCustomDemandComponent.update(productDemandId, customDemandId);
+
             customDemandLogComponent.addLogWhenCustomDemandUnLinkProductDemand(customDemandId,productDemandId);
         }
         customDemandComponent.updateStatusBaseOnProductDemand(customDemandId);

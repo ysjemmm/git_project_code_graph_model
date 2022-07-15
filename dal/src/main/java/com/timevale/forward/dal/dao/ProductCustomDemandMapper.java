@@ -47,8 +47,8 @@ public interface ProductCustomDemandMapper {
 
     /**
      * 查询产品业务需求关联
-     *
      * @param customDemandId 产品业务需求查询条件
+     *
      * @return 列表
      */
     List<ProductCustomDemandDO> getByCustomDemandId(@Param("customDemandId") Long customDemandId);
