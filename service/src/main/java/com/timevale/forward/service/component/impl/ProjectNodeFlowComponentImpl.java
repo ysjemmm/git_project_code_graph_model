@@ -8,16 +8,15 @@ import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectNodeFlowMapper;
 import com.timevale.forward.dal.dao.ProjectNodeRecordMapper;
 import com.timevale.forward.dal.entity.*;
-import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
-import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
-import com.timevale.forward.model.enums.FlowStageEnum;
-import com.timevale.forward.model.enums.ProjectNodeEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.component.ProjectNodeFlowComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
+import com.timevale.forward.service.observer.event.WorkflowRejectMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -69,11 +68,14 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
 
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
+
     @Override
     public void process(ProjectNodeFlowDO projectNodeFlowDO, List<ProjectNodeDO> projectNodes) {
         log.info("节点审批流程发起,参数:{}", projectNodeFlowDO);
         if (projectNodeFlowDO == null) {
-            return;
+            throw new BaseBizRuntimeException("请填写流程表单数据后重新发起");
         }
         List<ProjectNodeFlowDO> projectNodeFlows = projectNodeFlowMapper.getByProjectId(projectNodeFlowDO.getProjectId());
         boolean match = projectNodeFlows.stream().anyMatch(a -> com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
@@ -86,11 +88,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             Long seconds = elapsedTimeClient.getElapsedTime(oldPlanEndDate, planEndDate);
             BigDecimal elapsedTime = new BigDecimal(seconds.toString());
             elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.UP);
-            if (BigDecimal.ZERO.equals(elapsedTime)) {
-                return;
-            }
             projectNodeFlowDO.setDelayDay(elapsedTime);
-//            projectNodeFlowDO.setDelayDay(BigDecimal.valueOf(1));
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
             Integer stage = StringUtils.isEmpty(projectNodeFlowDO.getBizId())
                     && (StringUtils.isEmpty(projectNodeFlowDO.getPdId()) || Objects.equals(projectNodeFlowDO.getPdId(), userInfo.getId()))
@@ -195,20 +193,32 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         projectNodeFlowMapper.update(projectNodeFlowDO);
 
         List<ProjectNodeDO> projectNodes = JSONObject.parseArray(String.valueOf(flowData.get("projectNodes")), ProjectNodeDO.class);
-        if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage()) && FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
-            //2.流程重新发起
-            projectNodeFlowDO.setStage(FlowStageEnum.SECOND.getCode());
-            projectNodeFlowDO.setLastFlowId(projectNodeFlowDO.getFlowId());
-            projectNodeFlowDO.setFlowId(startFlow(projectNodeFlowDO, projectNodes));
-            projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode());
-            projectNodeFlowDO.setReviewFailReason(StringUtils.EMPTY);
-            projectNodeFlowDO.setReviewFail(StringUtils.EMPTY);
-            projectNodeFlowDO.setReviewFailId(StringUtils.EMPTY);
-            String unreviewed = StringUtils.isEmpty(projectNodeFlowDO.getD()) ? projectNodeFlowDO.getPo() : projectNodeFlowDO.getD();
-            String unreviewedId = StringUtils.isEmpty(projectNodeFlowDO.getDid()) ? projectNodeFlowDO.getPoId() : projectNodeFlowDO.getDid();
-            projectNodeFlowDO.setUnreviewed(JSONObject.toJSONString(Lists.newArrayList(unreviewed)));
-            projectNodeFlowDO.setUnreviewedId(JSONObject.toJSONString(Lists.newArrayList(unreviewedId)));
-            projectNodeFlowMapper.insert(projectNodeFlowDO);
+        if(FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
+            if(FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())){
+                //2.流程重新发起
+                projectNodeFlowDO.setStage(FlowStageEnum.SECOND.getCode());
+                projectNodeFlowDO.setLastFlowId(projectNodeFlowDO.getFlowId());
+                projectNodeFlowDO.setFlowId(startFlow(projectNodeFlowDO, projectNodes));
+                projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode());
+                projectNodeFlowDO.setReviewFailReason(StringUtils.EMPTY);
+                projectNodeFlowDO.setReviewFail(StringUtils.EMPTY);
+                projectNodeFlowDO.setReviewFailId(StringUtils.EMPTY);
+                String unreviewed = StringUtils.isEmpty(projectNodeFlowDO.getD()) ? projectNodeFlowDO.getPo() : projectNodeFlowDO.getD();
+                String unreviewedId = StringUtils.isEmpty(projectNodeFlowDO.getDid()) ? projectNodeFlowDO.getPoId() : projectNodeFlowDO.getDid();
+                projectNodeFlowDO.setUnreviewed(JSONObject.toJSONString(Lists.newArrayList(unreviewed)));
+                projectNodeFlowDO.setUnreviewedId(JSONObject.toJSONString(Lists.newArrayList(unreviewedId)));
+                projectNodeFlowMapper.insert(projectNodeFlowDO);
+            }else{
+                messageEventPublisher.publish(new WorkflowRejectMsgEvent(
+                        this,
+                        "项目计划变更审批流程",
+                        projectNodeFlowDO.getCreateManId(),
+                        currentTaskIdList.get(0),
+                        projectNodeFlowDO.getCreateMan(),
+                        DateUtil.parseToString(projectNodeFlowDO.getCreateDate(), DateUtil.DEFAULT_DATE_FORMAT),
+                        projectNodeFlowDO.getReviewFailReason()
+                ));
+            }
         }
         if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
             //3.流程通过后,更新信息
@@ -288,6 +298,8 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         variables.put("changePublishDate", DateUtil.parseToString(projectNodeFlowDO.getChangePublishDate(), DateFormatConst.DATE_FORMAT));
         variables.put("delayDay", projectNodeFlowDO.getDelayDay());
         variables.put("changeCount", count);
+        variables.put("changeType", ChangeTypeEnum.getTextByCode(projectNodeFlowDO.getChangeType()));
+        variables.put("otherReason", projectNodeFlowDO.getOtherReason());
         List<String> reviewIds = new ArrayList<>();
         List<String> reviews = new ArrayList<>();
         if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())) {

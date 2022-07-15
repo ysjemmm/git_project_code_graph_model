@@ -54,6 +54,11 @@ public class ProductDemandDescFlowDO extends BaseDO {
     private Integer changeType;
 
     /**
+     * 其他原因
+     */
+    private String otherReason;
+
+    /**
      * 变更原因
      */
     private String reason;

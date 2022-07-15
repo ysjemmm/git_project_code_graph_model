@@ -126,7 +126,13 @@ public class ProjectNodeFlowDO extends BaseDO {
     /**
      *变更类型
      */
-    private String changeType;
+    private Integer changeType;
+
+
+    /**
+     *变更类型为其他时,填写
+     */
+    private String otherReason;
 
 
 }

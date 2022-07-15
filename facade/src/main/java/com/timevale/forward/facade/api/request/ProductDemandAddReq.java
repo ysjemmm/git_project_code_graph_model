@@ -55,7 +55,4 @@ public class ProductDemandAddReq extends BaseReq {
     @ApiModelProperty("埋点事件id")
     private List<Long> trackEventIds;
 
-    @ApiModelProperty("需求描述类型:0需求补充,1方案调整")
-    @NotNull(message = "需求描述类型不能为空")
-    private Integer descType;
 }
