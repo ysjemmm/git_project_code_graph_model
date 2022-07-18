@@ -44,8 +44,11 @@ public class TestBillVO extends ToString {
     @ApiModelProperty("打回次数")
     private Integer returnCount;
 
-    @ApiModelProperty("测试用例链接")
+    @ApiModelProperty("冒烟用例链接")
     private String caseUrl;
+
+    @ApiModelProperty("全量用例链接")
+    private String allCaseUrl;
 
     @ApiModelProperty("提测失败原因")
     private String reason;

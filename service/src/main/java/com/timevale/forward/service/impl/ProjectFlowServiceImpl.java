@@ -13,6 +13,7 @@ import com.timevale.forward.dal.entity.ProjectNodeDO;
 import com.timevale.forward.facade.api.client.ProjectFlowService;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ProjectFlowAddReq;
+import com.timevale.forward.facade.api.request.ProjectFlowDocModifyReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.ProjectFlowDetailVO;
 import com.timevale.forward.model.enums.ButtonActionEnum;
@@ -116,6 +117,12 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         projectFlowDO.setStatus(FlowStatusEnum.AUDITING.getCode());
         projectFlowMapper.insert(projectFlowDO);
         return BaseResult.success(processInstanceId);
+    }
+
+    @Override
+    public BaseResult<Boolean> modifyDoc(ProjectFlowDocModifyReq projectFlowDocModifyReq) {
+        // TODO jingchun
+        return BaseResult.success(true);
     }
 
     @Override

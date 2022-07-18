@@ -3,6 +3,7 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.request.ProjectFlowAddReq;
+import com.timevale.forward.facade.api.request.ProjectFlowDocModifyReq;
 import com.timevale.forward.facade.api.result.ProjectFlowDetailVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
@@ -13,12 +14,20 @@ import com.timevale.mandarin.common.annotation.RestClient;
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface ProjectFlowService {
     /**
-     * 修改
+     * 新增
      *
      * @param projectFlowAddReq 详设评审
-     * @return Boolean
+     * @return 流程id
      */
     BaseResult<String> add(ProjectFlowAddReq projectFlowAddReq);
+
+    /**
+     * 修改
+     *
+     * @param projectFlowDocModifyReq 修改请求
+     * @return Boolean
+     */
+    BaseResult<Boolean> modifyDoc(ProjectFlowDocModifyReq projectFlowDocModifyReq);
 
 
     /**
