@@ -71,7 +71,7 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
         List<Long> customDemandIds = new ArrayList<>();
 
         before(productDemandIds, bizPublishDateMap, bizDemandIds,customPublishDateMap,customDemandIds);
-        log.info("bizDemandId,publishDate:{}", bizPublishDateMap);
+        log.info("bizPublishDateMap,customPublishDateMap:{},{}", bizPublishDateMap,customPublishDateMap);
         // unlink
         ProjectProductDemandDO projectProductDemandDO = new ProjectProductDemandDO();
         projectProductDemandDO.setProjectId(projectId);
@@ -99,7 +99,7 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
         List<Long> customDemandIds = new ArrayList<>();
 
         before(productDemandIds, bizPublishDateMap, bizDemandIds,customPublishDateMap,customDemandIds);
-        log.info("bizDemandId,publishDate:{}", bizPublishDateMap);
+        log.info("bizPublishDateMap,customPublishDateMap:{},{}", bizPublishDateMap,customPublishDateMap);
         // link
         Set<Long> set = new HashSet<>(productDemandIds);
         List<ProjectProductDemandDO> list = set.stream().map(i -> {

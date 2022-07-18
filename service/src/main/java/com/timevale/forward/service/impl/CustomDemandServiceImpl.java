@@ -131,6 +131,9 @@ public class CustomDemandServiceImpl implements CustomDemandService {
         if (!receiverMap.containsKey(customDemandDO.getProductEnd())) {
             throw new BaseBizRuntimeException("产品端不在所给定的范围内,请修改后重试");
         }
+        if(StringUtils.isEmpty(ProblemTypeEnum.getTextByCode(customDemandDO.getCause()))){
+            throw new BaseBizRuntimeException("问题类别不在所给定的范围内,请修改后重试");
+        }
         ProductEndBO productEndBO = receiverMap.get(customDemandDO.getProductEnd());
         customDemandDO.setStatus(BizDemandStatusEnum.EVALUATE.getCode());
         customDemandDO.setName(productEndBO.getName() + "-" + ProblemTypeEnum.getTextByCode(customDemandDO.getCause()) + "-" + customDemandDO.getCustomName());

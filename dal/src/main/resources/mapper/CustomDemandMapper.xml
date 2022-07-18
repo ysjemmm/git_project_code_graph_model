@@ -118,7 +118,7 @@
     </select>
 
     <update id="updateReceiveMan">
-        UPDATE biz_demand
+        UPDATE custom_demand
         SET receive_man = #{receiveMan}, receive_man_id = #{receiveManId}
         WHERE id IN
         <foreach collection="idList" item="item" separator="," open="(" close=")">
@@ -127,10 +127,9 @@
     </update>
 
     <select id="selectByIds" resultType="com.timevale.forward.dal.entity.CustomDemandDO">
-        select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status, priority,
-        receive_man, receive_man_id, submit_man, submit_man_id, plan_release_date, reason,
-        is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
-        from biz_demand
+        select id, name, product_end, custom_name, page, path, submit_man ,contact,receive_man,receive_man_id,cause
+        ,`desc`, status,solve_plan,reason,project_end_date, create_man_id, create_man,create_date,is_deleted,modify_man_id,modify_man,modify_date
+        from custom_demand
         <where>
             id in
             <foreach collection="ids" item="item" separator="," open="(" close=")">
