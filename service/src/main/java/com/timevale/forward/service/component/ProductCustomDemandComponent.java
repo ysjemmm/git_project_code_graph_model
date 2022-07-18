@@ -8,9 +8,9 @@ public interface ProductCustomDemandComponent {
     /**
      *
      * @param productDemandId productDemandId
-     * @param bizDemandId bizDemandId
+     * @param customDemandId customDemandId
      */
-    void update(Long productDemandId,Long bizDemandId);
+    void update(Long productDemandId,Long customDemandId);
 
     /**
      *

@@ -131,6 +131,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private ProjectNodeRecordMapper projectNodeRecordMapper;
 
+    @Resource
+    private  CustomDemandComponent customDemandComponent;
+
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -299,12 +302,9 @@ public class ProjectServiceImpl implements ProjectService {
                     "项目含有项目目标，请至少添加一条项目目标数据");
         }
         ProjectDO newProject = ProjectCopier.INSTANCE.convert(projectModifyReq);
-        newProject.setPmName(projectModifyReq.getPm().getUserName());
-        newProject.setPmId(projectModifyReq.getPm().getUserId());
         List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
 
         ProjectDO oldProjectDO = projectMapper.get(projectModifyReq.getId());
-        newProject.setStatus(oldProjectDO.getStatus());
         if (Integer.valueOf(1).equals(projectModifyReq.getDelayType())) {
             //有流程,计划时间不能变
             newProject.setPlanStartDate(oldProjectDO.getPlanStartDate());
@@ -618,27 +618,58 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     private void fillInfoWhenModify(List<ProjectNodeDO> projectNodes, ProjectDO newProject) {
-        Map<String, ProjectNodeDO> nodeMap = projectNodes
-                .stream()
-                .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
+        ProjectDO oldProject = projectMapper.get(newProject.getId());
+
+        checkBeforeUpdate(projectNodes,oldProject);
+
+        Integer oldStatus = oldProject.getStatus();
+
+        projectComponent.fillInfo(projectNodes, newProject);
+
+        if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
+            // 编辑项目时，当状态是暂停,不修改项目状态
+            newProject.setStatus(oldStatus);
+        }
+
+        projectMapper.fullUpdateById(newProject);
+
+        if (!Objects.equals(newProject.getStatus(), oldStatus)) {
+            //状态不一致时,更新产品需求状态
+            productDemandComponent.updateProductDemandStatus(newProject.getId(), newProject.getStatus());
+            projectLogComponent.addLogWhenStatusChange(oldStatus, newProject.getStatus(), newProject.getId(), ButtonActionEnum.MODIFY.getText());
+        }
+        if (!Objects.equals(oldProject.getPlanEndDate(), newProject.getPlanEndDate())
+                || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
+            List<Long> productDemandIds = projectComponent.getLinkProductDemandIds(oldProject.getId());
+
+            List<Long> bizDemandIds = productDemandComponent.getLinkBizDemandIds(productDemandIds);
+            bizDemandIds.forEach(a -> bizDemandComponent.updateProjectEndDate(a));
+
+            List<Long> customDemandIds = productDemandComponent.getLinkCustomDemandIds(productDemandIds);
+            customDemandIds.forEach(a -> customDemandComponent.updateProjectEndDate(a));
+        }
+        log.info("更新项目信息完成");
+    }
+
+    private void checkBeforeUpdate(List<ProjectNodeDO> projectNodes, ProjectDO oldProject){
+        Map<String, ProjectNodeDO> nodeMap = projectNodes.stream().collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
         // 检查任务
         boolean checkTask = nodeMap.get(ProjectNodeEnum.START_PLAN.getText()) == null
                 && nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText()) == null
                 && nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getText()) == null;
         if (checkTask) {
             //删除需求规划阶段时需要校验是否有关联任务,若有关联待执行&进行中&已完成&已暂停的任务,不能删除
-            List<TaskDO> taskDOList = taskMapper.getByProjectId(newProject.getId())
+            List<TaskDO> taskDOList = taskMapper.getByProjectId(oldProject.getId())
                     .stream().filter(a -> TaskStageEnum.DEMAND.getCode().equals(a.getStage())
                             && !TaskStatusEnum.INVALID.getCode().equals(a.getStatus())).collect(Collectors.toList());
             if (CollectionUtils.isNotEmpty(taskDOList)) {
                 throw new BaseBizRuntimeException("需求规划阶段已关联任务，不可删除");
             }
         }
-        // 计算项目状态
+
         ProjectNodeDO node;
-        Integer oldStatus = newProject.getStatus();
         if ((node = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText())) != null && node.getActualDate() != null) {
-            if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
+            if (ProjectStatusEnum.SUSPEND.getCode().equals(oldProject.getStatus())) {
                 // 编辑项目
                 throw new BaseBizRuntimeException("项目状态为暂停时,不能填写发布正式的实际时间");
             }
@@ -648,25 +679,7 @@ public class ProjectServiceImpl implements ProjectService {
                 throw new BaseBizRuntimeException("请填写完其他节点的实际时间后,再填写发布正式的实际时间");
             }
         }
-        projectComponent.fillInfo(projectNodes, newProject);
-        if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
-            // 编辑项目时，当状态是暂停,不修改项目状态
-            newProject.setStatus(oldStatus);
-        }
-        ProjectDO oldProject = projectMapper.get(newProject.getId());
-        newProject.setNodeStatus(oldProject.getNodeStatus());
-        projectMapper.fullUpdateById(newProject);
-        if (!Objects.equals(newProject.getStatus(), oldStatus)) {
-            //状态不一致时,更新产品需求状态
-            productDemandComponent.updateProductDemandStatus(newProject.getId(), newProject.getStatus());
-            projectLogComponent.addLogWhenStatusChange(oldStatus, newProject.getStatus(), newProject.getId(), ButtonActionEnum.MODIFY.getText());
-        }
-        if (!Objects.equals(oldProject.getPlanEndDate(), newProject.getPlanEndDate())
-                || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
-            List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProject.getId());
-            bizDemandIds.forEach(a -> bizDemandComponent.updateProjectEndDate(a));
-        }
-        log.info("更新项目信息完成");
+
     }
 
     private void fillInfoWhenEnable(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {

@@ -247,6 +247,14 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 // 作废解业务需求关联
                 productBizDemandComponent.update(productDemandId, null);
             }
+
+            ProductCustomDemandCondition cc = ProductCustomDemandCondition.builder().productDemandId(productDemandId).isDeleted(false).build();
+            List<Long> customDemandIds = productCustomDemandMapper.select(cc).stream().map(ProductCustomDemandDO::getCustomDemandId).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(customDemandIds)) {
+                Map<Long, String> cdNameMap = customDemandMapper.selectByIds(customDemandIds).stream().collect(Collectors.toMap(CustomDemandDO::getId, CustomDemandDO::getName, (v1, v2) -> v2));
+                productDemandLogComponent.addLogWhenLinkOrUnlinkCustomDemand(productDemand.getName(), productDemand.getId(), cdNameMap, null);
+                productCustomDemandComponent.update(productDemandId, null);
+            }
         }
         String action = ProductDemandStatusEnum.SUSPEND.getCode().equals(type) ? ButtonActionEnum.SUSPEND.getText() : ButtonActionEnum.INVALID.getText();
         productDemandLogComponent.addLogWhenStatusChange(oldStatus, type, productDemandId, action);
@@ -303,11 +311,21 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             productBizDemandComponent.batchInsert(productDemand.getId(), bizDemandIds);
             Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
             productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, ButtonActionEnum.LINK.getText());
-            if (productDemandAddReq.getProjectId() == null) {
-                //如果只关联业务需求,没关联项目,需要计算业务状态
-                productDemandComponent.updateDemandStatusAsProductStatusChange(Lists.newArrayList(productDemand.getId()), false);
-            }
         }
+
+        List<Long> customDemandIds = productDemandAddReq.getCustomDemandIds();
+        if (CollectionUtils.isNotEmpty(customDemandIds)) {
+            productCustomDemandComponent.batchInsert(productDemand.getId(), customDemandIds);
+            Map<Long, String> bdNameMap = customDemandMapper.selectByIds(customDemandIds).stream().collect(Collectors.toMap(CustomDemandDO::getId, CustomDemandDO::getName, (v1, v2) -> v2));
+            productDemandLogComponent.addLogWhenLinkOrUnlinkCustomDemand(productDemand.getName(), productDemand.getId(), bdNameMap, ButtonActionEnum.LINK.getText());
+
+        }
+
+        if (productDemandAddReq.getProjectId() == null) {
+            //如果没关联项目,需要计算业务,客户需求状态
+            productDemandComponent.updateDemandStatusAsProductStatusChange(Lists.newArrayList(productDemand.getId()), false);
+        }
+
         if (productDemandAddReq.getProjectId() != null) {
             ProjectDO projectDO = projectMapper.get(productDemandAddReq.getProjectId());
             if (projectDO == null) {

@@ -169,7 +169,7 @@ public class CustomDeamndComponentImpl implements CustomDemandComponent {
         if (!Objects.equals(newProjectEndDate, oldProjectEndDate)) {
             customDemandDO.setProjectEndDate(newProjectEndDate);
             customDemandMapper.fullUpdate(customDemandDO);
-            log.info("业务需求id:{},更新前发布时间:{},更新后发布时间:{}", customDemandId, oldProjectEndDate, newProjectEndDate);
+            log.info("客户需求id:{},发布时间,更新前:{},更新后:{}", customDemandId, oldProjectEndDate, newProjectEndDate);
         }
     }
 

@@ -70,4 +70,19 @@ public interface ProductDemandComponent {
      * @param invalid invalid
      */
     void updateCustomDemandStatus(List<Long> productDemandIds, boolean invalid);
+
+
+    /**
+     *
+     * @param productDemandIds productDemandIds
+     * @return Long
+     */
+    List<Long> getLinkBizDemandIds(List<Long> productDemandIds);
+
+    /**
+     *
+     * @param productDemandIds productDemandIds
+     * @return Long
+     */
+    List<Long> getLinkCustomDemandIds(List<Long> productDemandIds);
 }

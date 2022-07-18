@@ -20,6 +20,7 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -179,10 +180,6 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
 
     @Override
     public void updateDemandStatusAsProductStatusChange(List<Long> productDemandIds, boolean invalid) {
-        if (CollectionUtils.isEmpty(productDemandIds)) {
-            log.info("产品需求变化-更新业务和客户需求,产品需求id不存在");
-            return;
-        }
         //invalid为true时:作废,解除产品需求和业务需求关系
         updateBizDemandStatus(productDemandIds,invalid);
 
@@ -258,6 +255,27 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         });
     }
 
+    @Override
+    public List<Long> getLinkBizDemandIds(List<Long> productDemandIds) {
+        if (CollectionUtils.isEmpty(productDemandIds)) {
+            return Lists.emptyList();
+        }
+        List<Long> bizDemandIds = productBizDemandMapper.selectByProductDemandIds(productDemandIds)
+                .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
+        log.info("产品需求:{},关联的有业务需求:{}", productDemandIds, bizDemandIds);
+        return bizDemandIds;
+    }
+
+    @Override
+    public List<Long> getLinkCustomDemandIds(List<Long> productDemandIds) {
+        if (CollectionUtils.isEmpty(productDemandIds)) {
+            return Lists.emptyList();
+        }
+        List<Long> customDemandIds = productCustomDemandMapper.selectByProductDemandIds(productDemandIds)
+                .stream().map(ProductCustomDemandDO::getCustomDemandId).collect(Collectors.toList());
+        log.info("产品需求:{},关联的客户需求:{}", productDemandIds, customDemandIds);
+        return customDemandIds;
+    }
 
 
     private void sendDingMsg(Integer oldStatus,Integer newStatus,ProductBizDemandDO bizDemandDO) {
