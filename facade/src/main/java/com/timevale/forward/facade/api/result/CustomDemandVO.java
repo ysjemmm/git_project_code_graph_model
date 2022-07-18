@@ -76,4 +76,13 @@ public class CustomDemandVO extends ToString {
 
     @ApiModelProperty("项目发布时间")
     private Date projectEndDate;
+
+    @ApiModelProperty("驳回理由:0暂无法实现、1情绪不满、2定制需求")
+    private String reasonText;
+
+    @ApiModelProperty("驳回理由")
+    private Integer reason;
+
+    @ApiModelProperty("解决方案")
+    private String solvePlan;
 }

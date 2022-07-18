@@ -95,6 +95,7 @@ public interface ProductDemandCopier {
      * @param customLinkProductDemandQueryList customLinkProductDemandQueryList
      * @return ProductDemandListCondition
      */
+    @Mapping(source = "productDemandId", target = "id")
     ProductDemandListCondition convert(CustomLinkProductDemandQueryList customLinkProductDemandQueryList);
 
 

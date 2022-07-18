@@ -27,7 +27,7 @@ public class CustomLinkProductDemandQueryList extends QueryBase {
     @ApiModelProperty("产品需求主题")
     private String name;
 
-    @ApiModelProperty("优先级： 0-紧急，10-高，20-中，30低")
+    @ApiModelProperty("优先级： 0(P0),10(P1),20(P2),30(P3)")
     private List<Integer> priorities;
 
     @ApiModelProperty("业务域id")

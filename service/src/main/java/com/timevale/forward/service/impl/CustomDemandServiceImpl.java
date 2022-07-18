@@ -180,6 +180,7 @@ public class CustomDemandServiceImpl implements CustomDemandService {
         customDemandVO.setProductEndText(receiverMap.get(customDemandVO.getProductEnd()).getName());
         customDemandVO.setStatusText(BizDemandStatusEnum.getTextByCode(customDemandVO.getStatus()));
         customDemandVO.setCauseText(ProblemTypeEnum.getTextByCode(customDemandVO.getCause()));
+        customDemandVO.setReasonText(CustomDemandReasonEnum.getTextByCode(customDemandVO.getReason()));
 
         return BaseResult.success(customDemandVO);
     }
@@ -369,9 +370,6 @@ public class CustomDemandServiceImpl implements CustomDemandService {
 
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(customDemandQueryList);
 
-        condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
-        condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
-
         if (customDemandQueryList.getCustomDemandId() != null) {
             ProductCustomDemandCondition c = ProductCustomDemandCondition.builder().customDemandId(customDemandQueryList.getCustomDemandId()).isDeleted(false).build();
             List<ProductCustomDemandDO> productBizDemand = productCustomDemandMapper.select(c);
@@ -389,6 +387,13 @@ public class CustomDemandServiceImpl implements CustomDemandService {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
         condition.setOwnerIds(ownerIdList);
+        condition.setStatus(Lists.newArrayList(ProductDemandStatusEnum.WAITING.getCode()
+                , ProductDemandStatusEnum.INCLUDED.getCode()
+                , ProductDemandStatusEnum.PROGRESS.getCode()
+                , ProductDemandStatusEnum.ONLINE.getCode()));
+
+        condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
+        condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
         // 开始分页
         PageHelper.startPage(customDemandQueryList.pageNum, customDemandQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
         // 查询符合条件的产品需求
