@@ -43,6 +43,10 @@ public class TestBillDO extends BaseDO {
      */
     private String caseUrl;
     /**
+     * 全量用例链接
+     */
+    private String allCaseUrl;
+    /**
      * 提测失败原因
      */
     private String reason;
