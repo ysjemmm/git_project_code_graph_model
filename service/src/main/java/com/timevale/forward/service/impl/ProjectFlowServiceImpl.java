@@ -122,15 +122,12 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
 
     @Override
     public BaseResult<Boolean> modifyDoc(ProjectFlowDocModifyReq projectFlowDocModifyReq) {
-        // TODO jingchun
         ProjectFlowDO projectFlow = projectFlowMapper.get(projectFlowDocModifyReq.getId(), null);
         if (projectFlow == null) {
             throw new BaseBizRuntimeException("您修改的项目流程不存在，请刷新后再试");
         }
         projectFlow.setReviewUrl(projectFlowDocModifyReq.getReviewUrl());
-        if (CollectionUtils.isNotEmpty(projectFlowDocModifyReq.getFiles())) {
-            fileComponent.update(projectFlowDocModifyReq.getFiles(), projectFlow.getId(), FileTypeEnum.TECH_REVIEW.getCode());
-        }
+        fileComponent.update(projectFlowDocModifyReq.getFiles(), projectFlow.getId(), FileTypeEnum.TECH_REVIEW.getCode());
         projectFlowMapper.update(projectFlow);
         return BaseResult.success(true);
     }
