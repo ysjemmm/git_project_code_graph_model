@@ -49,7 +49,7 @@ public enum TabEnum {
     /**
      * 业务需求路由
      */
-    CUSTOM_MANAGEMENT("customManagement"),
+    CUSTOM_MANAGEMENT("customerManagement"),
     ;
 
     private final String text;
