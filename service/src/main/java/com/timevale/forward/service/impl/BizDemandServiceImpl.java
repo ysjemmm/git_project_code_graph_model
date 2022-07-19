@@ -688,7 +688,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                     this,
                     e.getId(),
                     e.getSubmitMan(),
-                    newReceiveMan,
+                    newReceiveManId,
                     e.getName()
             )));
         }
