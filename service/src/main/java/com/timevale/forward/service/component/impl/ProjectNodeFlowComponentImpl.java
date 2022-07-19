@@ -230,7 +230,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             ProjectDO projectDO = projectMapper.get(projectId);
             Date oldValue = projectDO.getPlanEndDate();
 
-            ProjectNodeEnum.sort(projectNodes);
+            projectNodes = projectNodeComponent.sort(projectNodes);
             ProjectNodeDO first = projectNodes.get(0);
             ProjectNodeDO last = projectNodes.get(projectNodes.size() - 1);
             projectDO.setPlanStartDate(first.getPlanDate());

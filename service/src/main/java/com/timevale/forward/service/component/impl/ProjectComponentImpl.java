@@ -235,7 +235,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             // 项目节点状态、节点计划时间
             Integer nodeStatus = a.getNodeStatus();
             a.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(nodeStatus));
-            a.setNodePlanDate(ProjectNodeStatusEnum.getDate(nodeMap.get(a.getId())));
+            a.setNodePlanDate(projectNodeComponent.getRecentPlanDate(nodeMap.get(a.getId())));
 
             // 是否需要预警
             Integer status = a.getStatus();
@@ -345,7 +345,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         List<ProjectNodeDO> nodeDOList = projectNodeComponent.get(projectId);
 
         // 节点排序
-        ProjectNodeEnum.sort(nodeDOList);
+        nodeDOList = projectNodeComponent.sort(nodeDOList);
 
         // 根据填入实际实际节点，判断项目状态
         Integer status = ProjectStatusEnum.RELEASED.getCode();
@@ -387,7 +387,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         if (CollectionUtils.isEmpty(nodeDOList)) {
             nodeStatus = ProjectNodeStatusEnum.READY_START.getCode();
         } else {
-            nodeStatus = ProjectNodeStatusEnum.getStatus(nodeDOList);
+            nodeStatus = projectNodeComponent.getStatus(nodeDOList);
         }
 
         // 更新项目节点状态

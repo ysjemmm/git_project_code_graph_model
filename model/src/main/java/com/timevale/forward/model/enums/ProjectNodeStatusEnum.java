@@ -18,6 +18,7 @@ public enum ProjectNodeStatusEnum {
     READY_INTERNAL_AUDIT(10,"待内审"),
     READY_CONSTRUE(20,"待串讲"),
     READY_CONSTRUE_REVERSE(25,"待反串讲"),
+    READY_UED_AUDIT(27,"待UED评审"),
     READY_TECHNICAL_DETAIL_REVIEW(30,"待详设内审"),
     READY_DEVELOP(40,"待开发"),
     DEVELOPING(50,"开发中"),
@@ -27,7 +28,7 @@ public enum ProjectNodeStatusEnum {
 
     private final Integer code;
     private final String text;
-    private final static Map<String, Integer> nodeStatusMap = new LinkedHashMap<>();
+    public final static Map<String, Integer> nodeStatusMap = new LinkedHashMap<>();
 
     ProjectNodeStatusEnum(Integer code, String text) {
         this.code = code;
@@ -43,32 +44,13 @@ public enum ProjectNodeStatusEnum {
         return "";
     }
 
-    public static Integer getStatus(List<ProjectNodeDO> nodeDOList){
-        ProjectNodeEnum.sort(nodeDOList);
-        for (ProjectNodeDO e : nodeDOList) {
-            if(e.getActualDate() == null){
-                return nodeStatusMap.get(e.getName());
-            }
-        }
-        return PUBLISHED.code;
-    }
-
-    public static Date getDate(List<ProjectNodeDO> nodeDOList){
-        ProjectNodeEnum.sort(nodeDOList);
-        for (ProjectNodeDO e : nodeDOList) {
-            if(e.getActualDate() == null){
-                return e.getPlanDate();
-            }
-        }
-        return null;
-    }
-
     static {
         // 配置节点和节点状态的映射关系
         nodeStatusMap.put(ProjectNodeEnum.START_PLAN.getText(),              ProjectNodeStatusEnum.READY_START.code);
         nodeStatusMap.put(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText(),   ProjectNodeStatusEnum.READY_INTERNAL_AUDIT.code);
         nodeStatusMap.put(ProjectNodeEnum.DEMAND_CONSTRUE.getText(),         ProjectNodeStatusEnum.READY_CONSTRUE.code);
         nodeStatusMap.put(ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText(), ProjectNodeStatusEnum.READY_CONSTRUE_REVERSE.code);
+        nodeStatusMap.put(ProjectNodeEnum.UED_AUDIT.getText(), ProjectNodeStatusEnum.READY_UED_AUDIT.code);
         nodeStatusMap.put(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText(), ProjectNodeStatusEnum.READY_TECHNICAL_DETAIL_REVIEW.code);
         nodeStatusMap.put(ProjectNodeEnum.DEVELOP_START.getText(),           ProjectNodeStatusEnum.READY_DEVELOP.code);
         nodeStatusMap.put(ProjectNodeEnum.WRITE_TEST_CASES.getText(),        ProjectNodeStatusEnum.DEVELOPING.code);
