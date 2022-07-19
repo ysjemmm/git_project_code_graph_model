@@ -234,8 +234,12 @@ public class TestBillServiceImpl implements TestBillService {
         //获取提测人
         List<String> receivers = new ArrayList<>();
         TestBillDO testBill = testBillMapper.selectByProjectId(testBillModifyReq.getProjectId());
+        boolean firstSubmit = true;
         if (testBill != null) {
             receivers.add(testBill.getCreateManId());
+            if (testBill.getStatus().compareTo(TestBillStatusEnum.NO_SELF_TEST.getCode()) >= 0) {
+                firstSubmit = false;
+            }
         }
 
         //获取提测单名称
@@ -258,15 +262,18 @@ public class TestBillServiceImpl implements TestBillService {
             fileComponent.add(fileAddReqList, testBillModifyReq.getProjectId(), FileTypeEnum.TEST_BILL_CASE.getCode());
         }
 
-        messageEventPublisher.publish(
-                new BillTestSubmitSmokeMsgEvent(
-                        this,
-                        alias,
-                        receivers,
-                        testBillName,
-                        testBillModifyReq.getProjectId()
-                )
-        );
+        // 仅首次提交需要发送消息
+        if (firstSubmit) {
+            messageEventPublisher.publish(
+                    new BillTestSubmitSmokeMsgEvent(
+                            this,
+                            alias,
+                            receivers,
+                            testBillName,
+                            testBillModifyReq.getProjectId()
+                    )
+            );
+        }
 
         return BaseResult.success(true);
     }
@@ -386,7 +393,7 @@ public class TestBillServiceImpl implements TestBillService {
 
         //获取提测单名称
         ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
-        String testBillName = "";
+        String testBillName;
         if (projectDO == null) {
             throw new BaseBizRuntimeException("该提测单" + testBillDO.getId() + ",无对应项目");
         }
