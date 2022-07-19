@@ -3,6 +3,7 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.entity.FileDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -44,7 +45,7 @@ public interface FileMapper {
      * @param type      附件所属类型
      * @return 列表
      */
-    List<FileDO> selectByAttacheIdList(@Param("attacheIdList") List<Long> attacheIdList, @Param("type") Integer type);
+    List<FileDO> selectByAttacheIdList(@Param("attacheIdList") Collection<Long> attacheIdList, @Param("type") Integer type);
 
     /**
      * 删除

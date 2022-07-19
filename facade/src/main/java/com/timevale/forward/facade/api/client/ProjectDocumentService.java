@@ -7,8 +7,7 @@ import com.timevale.forward.facade.api.result.ProductDemandDocumentVO;
 import com.timevale.forward.facade.api.result.ProjectFlowDocumentVO;
 import com.timevale.forward.facade.api.result.TestBillDocumentVO;
 import com.timevale.mandarin.common.annotation.RestClient;
-
-import java.util.List;
+import com.timevale.mandarin.common.result.PageQueryResult;
 
 /**
  * 项目文档查询接口
@@ -20,10 +19,10 @@ public interface ProjectDocumentService {
 
     /**
      * 查询产品需求文档列表
-     * @param projectId 项目id
+     * @param query 项目id
      * @return 产品需求文档列表
      */
-    BaseResult<List<ProductDemandDocumentVO>> queryProductDemandDocuments(ProductDemandDocumentQueryList projectId);
+    BaseResult<PageQueryResult<ProductDemandDocumentVO>> queryProductDemandDocuments(ProductDemandDocumentQueryList query);
 
     /**
      * 查询UED文档

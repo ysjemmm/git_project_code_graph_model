@@ -15,6 +15,9 @@ import lombok.EqualsAndHashCode;
 @ApiModel("文件")
 public class FileVO extends ToString {
 
+    @ApiModelProperty("附件所属id")
+    private Long attachId;
+
     @ApiModelProperty("文件id")
     private String fileId;
 

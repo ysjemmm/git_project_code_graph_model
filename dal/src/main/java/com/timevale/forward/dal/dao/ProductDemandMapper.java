@@ -26,6 +26,13 @@ public interface ProductDemandMapper {
      */
     ProductDemandDO selectById(Long id);
 
+    /**
+     * 根据项目id查询
+     * @param projectId 项目d
+     * @return 产品需求列表
+     */
+    List<ProductDemandDO> selectByProjectId(Long projectId);
+
 
     /**
      * 批量查询产品需求

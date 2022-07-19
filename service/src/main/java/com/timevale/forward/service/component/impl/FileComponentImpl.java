@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -100,7 +101,7 @@ public class FileComponentImpl implements FileComponent {
     }
 
     @Override
-    public List<FileDO> select(List<Long> attacheIdList, Integer type) {
+    public List<FileDO> select(Collection<Long> attacheIdList, Integer type) {
         return fileMapper.selectByAttacheIdList(attacheIdList, type);
     }
 

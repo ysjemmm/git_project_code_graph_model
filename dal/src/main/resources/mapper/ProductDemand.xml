@@ -234,4 +234,12 @@
         from product_demand a
         where a.name = #{name} and a.is_deleted=false
     </select>
+    <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
+        select * from product_demand where id in
+                                           (select product_demand_id
+                                                  from project_product_demand
+                                                  where project_id = #{projectId}
+                                                    and is_deleted = false)
+        and is_deleted = false
+    </select>
 </mapper>

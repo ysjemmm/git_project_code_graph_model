@@ -16,10 +16,8 @@ import com.timevale.forward.facade.api.request.ProjectFlowAddReq;
 import com.timevale.forward.facade.api.request.ProjectFlowDocModifyReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.ProjectFlowDetailVO;
-import com.timevale.forward.model.enums.ButtonActionEnum;
-import com.timevale.forward.model.enums.FlowStatusEnum;
-import com.timevale.forward.model.enums.ProjectNodeEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.component.ProjectLogComponent;
@@ -28,11 +26,11 @@ import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -66,6 +64,9 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
 
     @Resource
     private ProjectFlowComponent projectFlowComponent;
+
+    @Resource
+    private FileComponent fileComponent;
 
     @Value("${domain_name:http://forward-front-forward-itm-v1.projectk8s.tsign.cn/}")
     private String domainName;
@@ -122,6 +123,15 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
     @Override
     public BaseResult<Boolean> modifyDoc(ProjectFlowDocModifyReq projectFlowDocModifyReq) {
         // TODO jingchun
+        ProjectFlowDO projectFlow = projectFlowMapper.get(projectFlowDocModifyReq.getId(), null);
+        if (projectFlow == null) {
+            throw new BaseBizRuntimeException("您修改的项目流程不存在，请刷新后再试");
+        }
+        projectFlow.setReviewUrl(projectFlowDocModifyReq.getReviewUrl());
+        if (CollectionUtils.isNotEmpty(projectFlowDocModifyReq.getFiles())) {
+            fileComponent.update(projectFlowDocModifyReq.getFiles(), projectFlow.getId(), FileTypeEnum.TECH_REVIEW.getCode());
+        }
+        projectFlowMapper.update(projectFlow);
         return BaseResult.success(true);
     }
 
