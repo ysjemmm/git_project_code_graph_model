@@ -3,8 +3,10 @@ package com.timevale.forward.service.copy;
 import com.timevale.forward.dal.entity.TestBillDO;
 import com.timevale.forward.facade.api.request.TestBillAddReq;
 import com.timevale.forward.facade.api.request.TestBillModifyReq;
+import com.timevale.forward.facade.api.result.TestBillDocumentVO;
 import com.timevale.forward.facade.api.result.TestBillVO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 /**
@@ -39,4 +41,6 @@ public interface TestBillCopier {
      */
     TestBillDO change(TestBillModifyReq testBillModifyReq);
 
+    @Mapping(target = "files", ignore = true)
+    TestBillDocumentVO convert2Doc(TestBillDO testBill);
 }

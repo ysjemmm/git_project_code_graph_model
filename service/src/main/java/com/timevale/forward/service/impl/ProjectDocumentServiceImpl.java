@@ -6,8 +6,10 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimaps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.TestBillMapper;
 import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.TestBillDO;
 import com.timevale.forward.facade.api.client.ProjectDocumentService;
 import com.timevale.forward.facade.api.query.ProductDemandDocumentQueryList;
 import com.timevale.forward.facade.api.result.FileVO;
@@ -19,6 +21,7 @@ import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
+import com.timevale.forward.service.copy.TestBillCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -34,6 +37,8 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
     private ProductDemandMapper productDemandMapper;
     @Resource
     private FileComponent fileComponent;
+    @Resource
+    private TestBillMapper testBillMapper;
 
 
     @Override
@@ -72,6 +77,11 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
 
     @Override
     public BaseResult<TestBillDocumentVO> queryTestBillDocument(Long projectId) {
-        return null;
+        TestBillDO testBill = testBillMapper.selectByProjectId(projectId);
+        TestBillDocumentVO document = TestBillCopier.INSTANCE.convert2Doc(testBill);
+        List<FileDO> files = fileComponent.select(testBill.getId(), FileTypeEnum.TEST_BILL_CASE.getCode());
+        document.setFiles(FileCopier.INSTANCE.transform(files));
+        return BaseResult.success(document);
     }
+
 }
