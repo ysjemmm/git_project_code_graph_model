@@ -6,8 +6,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Max;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 /**
@@ -24,35 +25,35 @@ public class CustomDemandAddReq extends BaseReq {
     private Integer productEnd;
 
     @ApiModelProperty("客户名称")
-    @NotNull(message = "客户名称不能为空")
-    @Max(value = 500,message = "客户名称长度不能超过500")
+    @NotBlank(message = "客户名称不能为空")
+    @Size(max = 500,message = "客户名称长度不能超过500")
     private String customName;
 
     @ApiModelProperty("需求提交人")
-    @NotNull(message = "需求提交人不能为空")
-    @Max(value = 100,message = "需求提交人长度不能超过100")
+    @NotBlank(message = "需求提交人不能为空")
+    @Size(max = 100,message = "需求提交人长度不能超过100")
     private String submitMan;
 
     @ApiModelProperty("客户所在页面")
-    @NotNull(message = "客户所在页面不能为空")
-    @Max(value = 500,message = "客户所在页面长度不能超过500")
+    @NotBlank(message = "客户所在页面不能为空")
+    @Size(max = 500,message = "客户所在页面长度不能超过500")
     private String page;
 
     @ApiModelProperty("所在页面链接/路径")
-    @Max(value = 500,message = "所在页面链接/路径长度不能超过500")
+    @Size(max = 500,message = "所在页面链接/路径长度不能超过500")
     private String path;
 
     @ApiModelProperty("联系方式")
-    @Max(value = 500,message = "联系方式长度不能超过500")
-    private String contact;
+    @Size(max = 500,message = "联系方式长度不能超过500")
+    private String conatct;
 
     @ApiModelProperty("问题类别:0功能缺失、1产品不可用、2界面不美观、3复杂难用、9其他")
     @NotNull(message = "问题类别不能为空")
-    private String cause;
+    private Integer cause;
 
     @ApiModelProperty("描述")
-    @NotNull(message = "描述不能为空")
-    @Max(value = 1000,message = "描述长度不能超过1000")
+    @NotBlank(message = "描述不能为空")
+    @Size(max = 1000,message = "描述长度不能超过1000")
     private String desc;
 
     @ApiModelProperty("附件列表")
