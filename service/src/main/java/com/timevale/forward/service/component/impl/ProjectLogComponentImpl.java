@@ -5,10 +5,7 @@ import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.ProjectMD;
-import com.timevale.forward.service.component.BizDemandComponent;
-import com.timevale.forward.service.component.BizDemandLogComponent;
-import com.timevale.forward.service.component.PersonComponent;
-import com.timevale.forward.service.component.ProjectLogComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.compare.FieldCompareUtil;
@@ -57,6 +54,13 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
     @Resource
     private BizDemandLogComponent bizDemandLogComponent;
 
+    @Resource
+    private ProductCustomDemandMapper productCustomDemandMapper;
+
+    @Resource
+    private CustomDemandComponent customDemandComponent;
+
+
     /**
      * 编辑时,记录日志
      *
@@ -100,7 +104,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             List<Long> productDemandIds = projectProductDemandMapper.getByProjectId(oldObj.getId())
                     .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(productDemandIds)) {
-                List<Long> bizDemandIds = productBizDemandMapper.getByProductDemandIds(productDemandIds)
+                List<Long> bizDemandIds = productBizDemandMapper.selectByProductDemandIds(productDemandIds)
                         .stream().map(ProductBizDemandDO::getBizDemandId).distinct().collect(Collectors.toList());
                 bizDemandIds.forEach(bid -> {
                     Date publishDate = bizDemandComponent.getProjectEndDate(bid);
@@ -110,6 +114,19 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                         String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
                         String newValue = DateUtil.parseToString(newObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
                         logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, bid));
+                    }
+                });
+
+                List<Long> customDemandIds = productCustomDemandMapper.selectByProductDemandIds(productDemandIds)
+                        .stream().map(ProductCustomDemandDO::getCustomDemandId).distinct().collect(Collectors.toList());
+                customDemandIds.forEach(cid -> {
+                    Date publishDate = customDemandComponent.getProjectEndDate(cid);
+                    log.info("cid={},planEndDate={},publishDate={}",cid,newObj.getPlanEndDate(),publishDate);
+                    if (Objects.equals(newObj.getPlanEndDate(),publishDate)) {
+                        //发布时间已变为当前需要更新的时间
+                        String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
+                        String newValue = DateUtil.parseToString(newObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
+                        logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, cid,BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode()));
                     }
                 });
             }

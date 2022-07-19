@@ -15,8 +15,6 @@ public interface CustomDemandLogComponent {
 
     void addLogWhenCustomDemandUnLinkProductDemand(Long customDemandId, Long productDemandId);
 
-    void addLogAsProductDemandStatusChange(Long id,Integer oldStatus, Integer newStatus);
-
     BizChangeLogDO getLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active);
 
     BizChangeLogDO getLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active, String action);

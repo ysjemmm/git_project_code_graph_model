@@ -26,4 +26,6 @@ public interface BizDemandLogComponent{
     BizChangeLogDO getLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active, String action);
 
     BizChangeLogDO buildLogWhenPublishDateChange(String oldValue, String newValue, Long id);
+
+    BizChangeLogDO buildLogWhenPublishDateChange(String oldValue, String newValue, Long id,Integer type);
 }
