@@ -6,9 +6,11 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimaps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.ProjectFlowMapper;
 import com.timevale.forward.dal.dao.TestBillMapper;
 import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProjectFlowDO;
 import com.timevale.forward.dal.entity.TestBillDO;
 import com.timevale.forward.facade.api.client.ProjectDocumentService;
 import com.timevale.forward.facade.api.query.ProductDemandDocumentQueryList;
@@ -21,12 +23,14 @@ import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
+import com.timevale.forward.service.copy.ProjectFlowCopier;
 import com.timevale.forward.service.copy.TestBillCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
 import javax.annotation.Resource;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,6 +43,9 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
     private FileComponent fileComponent;
     @Resource
     private TestBillMapper testBillMapper;
+
+    @Resource
+    private ProjectFlowMapper projectFlowMapper;
 
 
     @Override
@@ -67,12 +74,12 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
 
     @Override
     public BaseResult<ProjectFlowDocumentVO> queryUEDDocument(Long projectId) {
-        return null;
+        return BaseResult.success(queryFlowDocument(projectId));
     }
 
     @Override
     public BaseResult<ProjectFlowDocumentVO> queryTechnicalDocument(Long projectId) {
-        return null;
+        return BaseResult.success(queryFlowDocument(projectId));
     }
 
     @Override
@@ -82,6 +89,23 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
         List<FileDO> files = fileComponent.select(testBill.getProjectId(), FileTypeEnum.TEST_BILL_CASE.getCode());
         document.setFiles(FileCopier.INSTANCE.transform(files));
         return BaseResult.success(document);
+    }
+
+    private ProjectFlowDocumentVO queryFlowDocument(Long projectId) {
+        List<ProjectFlowDO> flows = projectFlowMapper.getByProjectId(projectId);
+        if (flows.isEmpty()) {
+            return null;
+        }
+        flows.sort(Comparator.comparing(ProjectFlowDO::getCreateDate));
+        ProjectFlowDocumentVO document = ProjectFlowCopier.INSTANCE.convert2Document(flows.get(0));
+        ProjectFlowDO last = flows.get(flows.size() - 1);
+        document.setReviewUrl(last.getReviewUrl());
+        document.setModifyManId(last.getModifyManId());
+        document.setModifyMan(last.getModifyMan());
+        document.setModifyDate(last.getModifyDate());
+        List<FileDO> files = fileComponent.select(last.getId(), FileTypeEnum.TECH_REVIEW.getCode());
+        document.setFiles(FileCopier.INSTANCE.transform(files));
+        return document;
     }
 
 }
