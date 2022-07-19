@@ -49,7 +49,7 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
                         .collect(Collectors.toList()),
                 FileTypeEnum.PRODUCT_DEMAND.getCode());
         List<FileVO> fileVOList = FileCopier.INSTANCE.transform(files);
-        ListMultimap<Long, FileVO> fileByAttachId = Multimaps.index(fileVOList, FileVO::getAttachId);
+        ListMultimap<Long, FileVO> fileByAttachId = Multimaps.index(fileVOList, FileVO::getAttacheId);
         for (ProductDemandDocumentVO document : documents) {
             document.setFiles(fileByAttachId.get(document.getId()));
         }
