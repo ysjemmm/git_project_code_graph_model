@@ -79,7 +79,7 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
     public BaseResult<TestBillDocumentVO> queryTestBillDocument(Long projectId) {
         TestBillDO testBill = testBillMapper.selectByProjectId(projectId);
         TestBillDocumentVO document = TestBillCopier.INSTANCE.convert2Doc(testBill);
-        List<FileDO> files = fileComponent.select(testBill.getId(), FileTypeEnum.TEST_BILL_CASE.getCode());
+        List<FileDO> files = fileComponent.select(testBill.getProjectId(), FileTypeEnum.TEST_BILL_CASE.getCode());
         document.setFiles(FileCopier.INSTANCE.transform(files));
         return BaseResult.success(document);
     }
