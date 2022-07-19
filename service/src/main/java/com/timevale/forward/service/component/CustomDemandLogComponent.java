@@ -3,7 +3,6 @@ package com.timevale.forward.service.component;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 
 import java.util.List;
-import java.util.Map;
 
 public interface CustomDemandLogComponent {
 
@@ -15,8 +14,6 @@ public interface CustomDemandLogComponent {
     void addLogWhenCustomDemandLinkProductDemand(Long customDemandId, List<Long> productDemandIdList);
 
     void addLogWhenCustomDemandUnLinkProductDemand(Long customDemandId, Long productDemandId);
-
-    void addLogAsProductDemandStatusChange(Map<Long, Integer> oldStatusMap,  Map<Integer, List<Long>> newStatusMap) ;
 
     void addLogAsProductDemandStatusChange(Long id,Integer oldStatus, Integer newStatus);
 

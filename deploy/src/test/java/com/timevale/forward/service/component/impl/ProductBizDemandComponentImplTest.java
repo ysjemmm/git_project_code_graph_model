@@ -52,7 +52,7 @@ public class ProductBizDemandComponentImplTest extends AbstractTestNGSpringConte
         userInfo.setName("www");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
         localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
-        productBizDemandComponent.update(any(),null);
+        productBizDemandComponent.update(any(),null,false);
         localSessionUtilsMockedStatic.close();
     }
 
@@ -72,7 +72,7 @@ public class ProductBizDemandComponentImplTest extends AbstractTestNGSpringConte
         List<Long> list = new ArrayList<>();
         list.add(1L);
         list.add(2L);
-        productBizDemandComponent.batchInsert(1L, list);
+        productBizDemandComponent.batchInsert(1L, list,false);
         localSessionUtilsMockedStatic.close();
     }
 }

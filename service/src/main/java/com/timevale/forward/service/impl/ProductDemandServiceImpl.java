@@ -245,7 +245,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
                 productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, null);
                 // 作废解业务需求关联
-                productBizDemandComponent.update(productDemandId, null);
+                productBizDemandComponent.update(productDemandId, null,false);
             }
 
             ProductCustomDemandCondition cc = ProductCustomDemandCondition.builder().productDemandId(productDemandId).isDeleted(false).build();
@@ -253,7 +253,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             if (CollectionUtils.isNotEmpty(customDemandIds)) {
                 Map<Long, String> cdNameMap = customDemandMapper.selectByIds(customDemandIds).stream().collect(Collectors.toMap(CustomDemandDO::getId, CustomDemandDO::getName, (v1, v2) -> v2));
                 productDemandLogComponent.addLogWhenLinkOrUnlinkCustomDemand(productDemand.getName(), productDemand.getId(), cdNameMap, null);
-                productCustomDemandComponent.update(productDemandId, null);
+                productCustomDemandComponent.update(productDemandId, null,false);
             }
         }
         String action = ProductDemandStatusEnum.SUSPEND.getCode().equals(type) ? ButtonActionEnum.SUSPEND.getText() : ButtonActionEnum.INVALID.getText();
@@ -308,14 +308,14 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         List<Long> bizDemandIds = productDemandAddReq.getBizDemandIds();
         if (CollectionUtils.isNotEmpty(bizDemandIds)) {
-            productBizDemandComponent.batchInsert(productDemand.getId(), bizDemandIds);
+            productBizDemandComponent.batchInsert(productDemand.getId(), bizDemandIds,false);
             Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
             productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, ButtonActionEnum.LINK.getText());
         }
 
         List<Long> customDemandIds = productDemandAddReq.getCustomDemandIds();
         if (CollectionUtils.isNotEmpty(customDemandIds)) {
-            productCustomDemandComponent.batchInsert(productDemand.getId(), customDemandIds);
+            productCustomDemandComponent.batchInsert(productDemand.getId(), customDemandIds,false);
             Map<Long, String> bdNameMap = customDemandMapper.selectByIds(customDemandIds).stream().collect(Collectors.toMap(CustomDemandDO::getId, CustomDemandDO::getName, (v1, v2) -> v2));
             productDemandLogComponent.addLogWhenLinkOrUnlinkCustomDemand(productDemand.getName(), productDemand.getId(), bdNameMap, ButtonActionEnum.LINK.getText());
 
@@ -462,7 +462,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
 
         if (LinkOrUnLinkEnum.LINK.getCode().equals(bizDemandLinkReq.getType())) {
-            productBizDemandComponent.batchInsert(bizDemandLinkReq.getProductDemandId(), bizDemandIds);
+            productBizDemandComponent.batchInsert(bizDemandLinkReq.getProductDemandId(), bizDemandIds,true);
 
             productDemandComponent.updateBizDemandStatus(productDemandIds, false);
 
@@ -474,7 +474,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
             productDemandComponent.updateDemandStatusWhenUnlink(bizDemandId, productDemandDO.getId(),true);
 
-            productBizDemandComponent.update(bizDemandLinkReq.getProductDemandId(), bizDemandId);
+            productBizDemandComponent.update(bizDemandLinkReq.getProductDemandId(), bizDemandId,true);
 
             productDemandLogComponent.addLogWhenLinkOrUnlink(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
 
@@ -644,7 +644,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         Map<Long, String> bdNameMap = customDemandMapper.selectByIds(customDemandIds).stream().collect(Collectors.toMap(CustomDemandDO::getId, CustomDemandDO::getName, (v1, v2) -> v2));
 
         if (LinkOrUnLinkEnum.LINK.getCode().equals(customDemandLinkReq.getType())) {
-            productCustomDemandComponent.batchInsert(customDemandLinkReq.getProductDemandId(), customDemandIds);
+            productCustomDemandComponent.batchInsert(customDemandLinkReq.getProductDemandId(), customDemandIds,true);
 
             productDemandComponent.updateCustomDemandStatus(productDemandIds, false);
 //
@@ -655,7 +655,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
             productDemandComponent.updateDemandStatusWhenUnlink(customDemandId, productDemandDO.getId(),false);
 
-            productCustomDemandComponent.update(customDemandLinkReq.getProductDemandId(), customDemandId);
+            productCustomDemandComponent.update(customDemandLinkReq.getProductDemandId(), customDemandId,true);
 
             productDemandLogComponent.addLogWhenLinkOrUnlinkCustomDemand(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
 //

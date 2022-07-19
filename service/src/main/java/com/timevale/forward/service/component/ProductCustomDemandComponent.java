@@ -10,14 +10,14 @@ public interface ProductCustomDemandComponent {
      * @param productDemandId productDemandId
      * @param customDemandId customDemandId
      */
-    void update(Long productDemandId,Long customDemandId);
+    void update(Long productDemandId,Long customDemandId,boolean updatePublishDate);
 
     /**
      *
      * @param productDemandId productDemandId
      * @param customDemandIds customDemandIds
      */
-    void batchInsert(Long productDemandId, List<Long> customDemandIds);
+    void batchInsert(Long productDemandId, List<Long> customDemandIds,boolean updatePublishDate);
 
     /**
      *

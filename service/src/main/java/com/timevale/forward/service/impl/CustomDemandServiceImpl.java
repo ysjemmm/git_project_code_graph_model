@@ -131,16 +131,15 @@ public class CustomDemandServiceImpl implements CustomDemandService {
         if (!receiverMap.containsKey(customDemandDO.getProductEnd())) {
             throw new BaseBizRuntimeException("产品端不在所给定的范围内,请修改后重试");
         }
-        if(StringUtils.isEmpty(ProblemTypeEnum.getTextByCode(customDemandDO.getCause()))){
+        String cause = ProblemTypeEnum.getTextByCode(customDemandDO.getCause());
+        if(StringUtils.isEmpty(cause)){
             throw new BaseBizRuntimeException("问题类别不在所给定的范围内,请修改后重试");
         }
         ProductEndBO productEndBO = receiverMap.get(customDemandDO.getProductEnd());
         customDemandDO.setStatus(BizDemandStatusEnum.EVALUATE.getCode());
-        customDemandDO.setName(productEndBO.getName() + "-" + ProblemTypeEnum.getTextByCode(customDemandDO.getCause()) + "-" + customDemandDO.getCustomName());
-//        customDemandDO.setReceiveMan(productEndBO.getOwner());
-//        customDemandDO.setReceiveManId(productEndBO.getOwnerId());
-        customDemandDO.setReceiveMan("星云-敖哲");
-        customDemandDO.setReceiveManId("xingyun");
+        customDemandDO.setName(productEndBO.getName() + "-" + cause + "-" + customDemandDO.getCustomName());
+        customDemandDO.setReceiveMan(productEndBO.getOwner());
+        customDemandDO.setReceiveManId(productEndBO.getOwnerId());
         customDemandMapper.insert(customDemandDO);
 
         List<FileAddReq> fileIdList = customDemandAddReq.getFiles();
@@ -156,7 +155,7 @@ public class CustomDemandServiceImpl implements CustomDemandService {
         ));
         // 日志, 状态改为待评估
         customDemandLogComponent.addLogWhenModifyData(
-                BizDemandStatusEnum.EVALUATE.getText(),
+                StringUtils.EMPTY,
                 BizDemandStatusEnum.EVALUATE.getText(),
                 customDemandDO.getId(),
                 BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
@@ -260,7 +259,7 @@ public class CustomDemandServiceImpl implements CustomDemandService {
 
         customDemandLogComponent.addLogWhenModifyData(
                 StringUtils.EMPTY,
-                BizDemandReasonEnum.getTextByCode(reason),
+                CustomDemandReasonEnum.getTextByCode(reason),
                 customDemandDO.getId(),
                 BizChangeLogFieldEnum.REASON.getText(),
                 true
@@ -319,7 +318,7 @@ public class CustomDemandServiceImpl implements CustomDemandService {
                     this,
                     e.getId(),
                     e.getCustomName() + "-" + e.getSubmitMan(),
-                    newReceiveMan,
+                    newReceiveManId,
                     e.getName()
             )));
         }
@@ -426,7 +425,7 @@ public class CustomDemandServiceImpl implements CustomDemandService {
         } else {
             Long productDemandId = productDemandIds.get(0);
 
-            productCustomDemandComponent.update(productDemandId, customDemandId);
+            productCustomDemandComponent.update(productDemandId, customDemandId,true);
 
             customDemandLogComponent.addLogWhenCustomDemandUnLinkProductDemand(customDemandId,productDemandId);
         }

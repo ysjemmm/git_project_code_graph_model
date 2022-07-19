@@ -127,32 +127,6 @@ public class CustomDemandLogComponentImpl implements CustomDemandLogComponent {
     }
 
 
-    @Override
-    public void addLogAsProductDemandStatusChange(Map<Long, Integer> oldStatusMap, Map<Integer, List<Long>> newStatusMap) {
-        Map<Long, Integer> newStatusChangeMap = new HashMap<>();
-        newStatusMap.forEach((status, ids) -> {
-            ids.forEach(id -> {
-                newStatusChangeMap.put(id, status);
-            });
-        });
-        List<BizChangeLogDO> logs = new ArrayList<>();
-        oldStatusMap.forEach((id, oldStatus) -> {
-            if (newStatusChangeMap.containsKey(id) && !Objects.equals(oldStatus, newStatusChangeMap.get(id))) {
-                BizChangeLogDO logDO = new BizChangeLogDO();
-                logDO.setType(BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode());
-                logDO.setMainId(id);
-                logDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
-                logDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
-                logDO.setNewValue(BizDemandStatusEnum.getTextByCode(newStatusChangeMap.get(id)));
-                logDO.setCreateMan(CommonConstant.SYSTEM);
-                logDO.setCreateManId(CommonConstant.SYSTEM);
-                logs.add(logDO);
-            }
-        });
-        if (CollectionUtil.isNotEmpty(logs)) {
-            bizChangeLogMapper.batchInsert(logs);
-        }
-    }
 
     @Override
     public void addLogAsProductDemandStatusChange(Long id, Integer oldStatus, Integer newStatus) {

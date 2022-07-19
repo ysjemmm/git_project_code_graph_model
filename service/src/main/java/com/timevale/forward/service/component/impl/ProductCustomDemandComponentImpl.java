@@ -46,8 +46,8 @@ public class ProductCustomDemandComponentImpl implements ProductCustomDemandComp
 
 
     @Override
-    public void update(Long productDemandId, Long customDemandId) {
-        log.info("删除产品与业务需求关系:{},{}", productDemandId, customDemandId);
+    public void update(Long productDemandId, Long customDemandId,boolean updatePublishDate) {
+        log.info("删除产品与客户需求关系:{},{},{}", productDemandId, customDemandId,updatePublishDate);
         // unlink before
         List<Long> customDemandIds = new ArrayList<>();
         if (customDemandId != null) {
@@ -59,8 +59,10 @@ public class ProductCustomDemandComponentImpl implements ProductCustomDemandComp
                     .stream().map(ProductCustomDemandDO::getCustomDemandId).distinct().collect(Collectors.toList());
         }
         Map<Long, Date> publishDateMap = new HashMap<>();
-        before(publishDateMap, customDemandIds);
-        log.info("customDemandId,publishDate:{}", publishDateMap);
+        if(updatePublishDate){
+            before(publishDateMap, customDemandIds);
+            log.info("customDemandId,publishDate:{}", publishDateMap);
+        }
         // unlink
         ProductCustomDemandDO customDemandDO = new ProductCustomDemandDO();
         customDemandDO.setIsDeleted(true);
@@ -68,11 +70,13 @@ public class ProductCustomDemandComponentImpl implements ProductCustomDemandComp
         customDemandDO.setCustomDemandId(customDemandId);
         productCustomDemandMapper.update(customDemandDO);
         // unlink after
-        after(publishDateMap, customDemandIds);
+        if(updatePublishDate){
+            after(publishDateMap, customDemandIds);
+        }
     }
 
     @Override
-    public void batchInsert(Long productDemandId, List<Long> customDemandIds) {
+    public void batchInsert(Long productDemandId, List<Long> customDemandIds,boolean updatePublishDate) {
         log.info("产品需求详情,新增关联关系:{},{}", productDemandId, customDemandIds);
         if (CollectionUtils.isEmpty(customDemandIds)) {
             return;
@@ -86,8 +90,10 @@ public class ProductCustomDemandComponentImpl implements ProductCustomDemandComp
         }
         // link before
         Map<Long, Date> publishDateMap = new HashMap<>();
-        before(publishDateMap, customDemandIds);
-        log.info("customDemandId,publishDate:{}", publishDateMap);
+        if(updatePublishDate){
+            before(publishDateMap, customDemandIds);
+            log.info("customDemandId,publishDate:{}", publishDateMap);
+        }
         // link
         Set<Long> set = new HashSet<>(customDemandIds);
         List<ProductCustomDemandDO> list = set.stream().map(i -> {
@@ -98,7 +104,9 @@ public class ProductCustomDemandComponentImpl implements ProductCustomDemandComp
         }).collect(Collectors.toList());
         productCustomDemandMapper.batchInsert(list);
         // link after
-        after(publishDateMap, customDemandIds);
+        if(updatePublishDate){
+            after(publishDateMap, customDemandIds);
+        }
     }
 
     @Override
