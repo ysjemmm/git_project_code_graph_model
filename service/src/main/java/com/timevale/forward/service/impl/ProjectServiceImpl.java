@@ -624,7 +624,9 @@ public class ProjectServiceImpl implements ProjectService {
         // 检查任务
         boolean checkTask = nodeMap.get(ProjectNodeEnum.START_PLAN.getText()) == null
                 && nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText()) == null
-                && nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getText()) == null;
+                && nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getText()) == null
+                && nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText()) == null
+                && nodeMap.get(ProjectNodeEnum.UED_AUDIT.getText()) == null;
         if (checkTask) {
             //删除需求规划阶段时需要校验是否有关联任务,若有关联待执行&进行中&已完成&已暂停的任务,不能删除
             List<TaskDO> taskDOList = taskMapper.getByProjectId(newProject.getId())

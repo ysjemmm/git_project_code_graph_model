@@ -519,7 +519,9 @@ public class TaskServiceImpl implements TaskService {
         List<ProjectNodeDO> projectNodeDO = projectNodeMapper.get(taskDO.getProjectId());
         List<String> sureNode = Lists.newArrayList(ProjectNodeEnum.START_PLAN.getText()
                 , ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText()
-                , ProjectNodeEnum.DEMAND_CONSTRUE.getText());
+                , ProjectNodeEnum.DEMAND_CONSTRUE.getText()
+                , ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText()
+                , ProjectNodeEnum.UED_AUDIT.getText());
         List<ProjectNodeDO> filter = projectNodeDO.stream().filter(a -> sureNode.contains(a.getName())).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(filter) && TaskStageEnum.DEMAND.getCode().equals(taskDO.getStage())) {
             throw new BaseBizRuntimeException("项目无需求规划阶段,不能创建该阶段的任务,请修改后重试");

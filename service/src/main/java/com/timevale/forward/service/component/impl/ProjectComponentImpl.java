@@ -269,6 +269,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         ProjectNodeDO demandAudit = nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText());
         ProjectNodeDO demandConstrue = nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getText());
         ProjectNodeDO demandConstrueReverse = nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText());
+        ProjectNodeDO demandUedAudit = nodeMap.get(ProjectNodeEnum.UED_AUDIT.getText());
         Integer status = ProjectStatusEnum.WAITING.getCode();
         //规划中
         if (demandStart != null && demandStart.getActualDate() != null) {
@@ -278,7 +279,8 @@ public class ProjectComponentImpl implements ProjectComponent {
         boolean dev = (demandStart == null || demandStart.getActualDate() != null)
                 && (demandAudit == null || demandAudit.getActualDate() != null)
                 && (demandConstrue == null || demandConstrue.getActualDate() != null)
-                && (demandConstrueReverse == null || demandConstrueReverse.getActualDate() != null);
+                && (demandConstrueReverse == null || demandConstrueReverse.getActualDate() != null)
+                && (demandUedAudit == null || demandUedAudit.getActualDate() != null);;
         if (dev) {
             status = ProjectStatusEnum.DEVING.getCode();
         }
@@ -360,7 +362,8 @@ public class ProjectComponentImpl implements ProjectComponent {
 
             } else if (ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText().equals(name)
                     || ProjectNodeEnum.DEMAND_CONSTRUE.getText().equals(name)
-                    || ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText().equals(name)) {
+                    || ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText().equals(name)
+                    || ProjectNodeEnum.UED_AUDIT.getText().equals(name)) {
                 status = ProjectStatusEnum.PLANING.getCode();
             } else if (ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText().equals(name)
                     || ProjectNodeEnum.DEVELOP_START.getText().equals(name)
