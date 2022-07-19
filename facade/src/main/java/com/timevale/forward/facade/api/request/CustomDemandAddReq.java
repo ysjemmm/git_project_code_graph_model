@@ -45,7 +45,7 @@ public class CustomDemandAddReq extends BaseReq {
 
     @ApiModelProperty("联系方式")
     @Size(max = 500,message = "联系方式长度不能超过500")
-    private String conatct;
+    private String contact;
 
     @ApiModelProperty("问题类别:0功能缺失、1产品不可用、2界面不美观、3复杂难用、9其他")
     @NotNull(message = "问题类别不能为空")
