@@ -3,6 +3,8 @@ package com.timevale.forward.dal.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
+
 /**
  * @Date 2022/1/24 16:37
  * @Author 望轩
@@ -63,4 +65,35 @@ public class TestBillDO extends BaseDO {
      * 逾期天数
      */
     private Integer delayDay;
+
+    /**
+     * 文档创建时间
+     */
+    private Date docCreateDate;
+    /**
+     * 文档修改时间
+     */
+    private Date docModifyDate;
+
+    /**
+     * 文档创建人id
+     */
+    private String docCreateManId;
+
+    /**
+     * 文档创建人
+     */
+    private String docCreateMan;
+
+    /**
+     * 文档修改人id
+     */
+    private String docModifyManId;
+
+    /**
+     * 文档修改人
+     */
+    private String docModifyMan;
+
+
 }
