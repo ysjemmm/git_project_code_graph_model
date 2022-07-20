@@ -29,7 +29,7 @@ public class BillTestCreateMsgEvent extends MessageEvent {
     public void run() {
         String title = TestBillMessageTitleEnum.SUBMIT_SMOKING_TEST.getText();
         String singleUrl = domainName + String.format(PARAM, TabEnum.PROJECT_MANAGEMENT.getText(), projectId) + "&tabActive=3";
-        String markdown = String.format("### %s \n  **%s**发起了**%s**,请前往提交冒烟用例。   \n *** \n   [查看详情](%s)",
+        String markdown = String.format("### %s \n  **%s**发起了**%s**,请前往提交测试用例。   \n *** \n   [查看详情](%s)",
                 title,operator, billTestName, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
