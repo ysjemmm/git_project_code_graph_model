@@ -435,7 +435,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     BizDemandStatusEnum.RECEIVED.getCode()
                     , BizDemandStatusEnum.INCLUDE_PROJECT.getCode()
                     , BizDemandStatusEnum.PROJECTING.getCode()
-                    , BizDemandStatusEnum.REJECT.getCode()
                     , BizDemandStatusEnum.PD_LINKED.getCode()
                     , BizDemandStatusEnum.AVAILABLE.getCode()));
         }
@@ -619,7 +618,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     BizDemandStatusEnum.RECEIVED.getCode()
                     , BizDemandStatusEnum.INCLUDE_PROJECT.getCode()
                     , BizDemandStatusEnum.PROJECTING.getCode()
-                    , BizDemandStatusEnum.REJECT.getCode()
                     , BizDemandStatusEnum.PD_LINKED.getCode()
                     , BizDemandStatusEnum.AVAILABLE.getCode()));
         }
