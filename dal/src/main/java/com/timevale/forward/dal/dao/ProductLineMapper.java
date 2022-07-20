@@ -63,4 +63,18 @@ public interface ProductLineMapper {
      * @return 列表
      */
     List<ProductLineDO> getBizDomainId(@Param("bizDomainId") Long bizDomainId);
+
+    /**
+     *
+     * @param productLineDO productLineDO
+     * @return int
+     */
+    int insert(ProductLineDO productLineDO);
+
+    /**
+     *
+     * @param productLineDO productLineDO
+     * @return int
+     */
+    int update(ProductLineDO productLineDO);
 }

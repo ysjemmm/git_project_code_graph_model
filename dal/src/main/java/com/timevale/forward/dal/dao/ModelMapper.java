@@ -39,5 +39,20 @@ public interface ModelMapper {
      */
     List<ModelDO> getByProductLineId(@Param("productLineIds") List<Long> productLineIds);
 
+    /**
+     *
+     * @param modelDO modelDO
+     * @return int
+     */
+    int insert(ModelDO modelDO);
+
+
+    /**
+     *
+     * @param modelDO modelDO
+     * @return int
+     */
+    int update(ModelDO modelDO);
+
 
 }

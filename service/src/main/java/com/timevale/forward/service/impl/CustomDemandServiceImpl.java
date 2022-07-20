@@ -46,6 +46,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -132,7 +133,7 @@ public class CustomDemandServiceImpl implements CustomDemandService {
             throw new BaseBizRuntimeException("产品端不在所给定的范围内,请修改后重试");
         }
         String cause = ProblemTypeEnum.getTextByCode(customDemandDO.getCause());
-        if(StringUtils.isEmpty(cause)){
+        if (StringUtils.isEmpty(cause)) {
             throw new BaseBizRuntimeException("问题类别不在所给定的范围内,请修改后重试");
         }
         ProductEndBO productEndBO = receiverMap.get(customDemandDO.getProductEnd());
@@ -140,6 +141,9 @@ public class CustomDemandServiceImpl implements CustomDemandService {
         customDemandDO.setName(productEndBO.getName() + "-" + cause + "-" + customDemandDO.getCustomName());
         customDemandDO.setReceiveMan(productEndBO.getOwner());
         customDemandDO.setReceiveManId(productEndBO.getOwnerId());
+
+        checkBeforeInsert(customDemandDO);
+
         customDemandMapper.insert(customDemandDO);
 
         List<FileAddReq> fileIdList = customDemandAddReq.getFiles();
@@ -303,7 +307,6 @@ public class CustomDemandServiceImpl implements CustomDemandService {
             );
             logDOList.add(logDO);
         }
-        // 判空
         if (CollectionUtils.isNotEmpty(logDOList)) {
             // 日志
             bizChangeLogMapper.batchInsert(logDOList);
@@ -311,16 +314,18 @@ public class CustomDemandServiceImpl implements CustomDemandService {
             idList = logDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
             customDemandMapper.updateReceiveMan(idList, newReceiveMan, newReceiveManId);
 
-            // 通知
-            HashSet<Long> customDemandIdSet = new HashSet<>(idList);
-            customDemandDOList = customDemandDOList.stream().filter(e -> customDemandIdSet.contains(e.getId())).collect(Collectors.toList());
-            customDemandDOList.forEach(e -> messageEventPublisher.publish(new CustomDemandToReceiveMsgEvent(
-                    this,
-                    e.getId(),
-                    e.getCustomName() + "-" + e.getSubmitMan(),
-                    newReceiveManId,
-                    e.getName()
-            )));
+            if (Integer.valueOf(0).equals(batchTransferReq.getType())) {
+                //单个转交,通知
+                HashSet<Long> customDemandIdSet = new HashSet<>(idList);
+                customDemandDOList = customDemandDOList.stream().filter(e -> customDemandIdSet.contains(e.getId())).collect(Collectors.toList());
+                customDemandDOList.forEach(e -> messageEventPublisher.publish(new CustomDemandToReceiveMsgEvent(
+                        this,
+                        e.getId(),
+                        e.getCustomName() + "-" + e.getSubmitMan(),
+                        newReceiveManId,
+                        e.getName()
+                )));
+            }
         }
 
         return BaseResult.success(true);
@@ -421,18 +426,18 @@ public class CustomDemandServiceImpl implements CustomDemandService {
         if (LinkOrUnLinkEnum.LINK.getCode().equals(customDemandLinkReq.getType())) {
             productCustomDemandComponent.batchInsert(productDemandIds, customDemandId);
 
-            customDemandLogComponent.addLogWhenCustomDemandLinkProductDemand(customDemandId,productDemandIds);
+            customDemandLogComponent.addLogWhenCustomDemandLinkProductDemand(customDemandId, productDemandIds);
         } else {
             Long productDemandId = productDemandIds.get(0);
 
-            productCustomDemandComponent.update(productDemandId, customDemandId,true);
+            productCustomDemandComponent.update(productDemandId, customDemandId, true);
 
-            customDemandLogComponent.addLogWhenCustomDemandUnLinkProductDemand(customDemandId,productDemandId);
+            customDemandLogComponent.addLogWhenCustomDemandUnLinkProductDemand(customDemandId, productDemandId);
         }
         //更新客户需求状态
         customDemandComponent.updateStatusBaseOnProductDemand(customDemandId);
 
-        return BaseResult.success(getLastedInfo(oldStatus,customDemandId));
+        return BaseResult.success(getLastedInfo(oldStatus, customDemandId));
     }
 
     @Override
@@ -454,7 +459,7 @@ public class CustomDemandServiceImpl implements CustomDemandService {
         return BaseResult.success(pageQueryResult);
     }
 
-    private CustomDemandStatusVO getLastedInfo(Integer oldStatus, Long customDemandId){
+    private CustomDemandStatusVO getLastedInfo(Integer oldStatus, Long customDemandId) {
         CustomDemandDO newCustomDemandDO = customDemandMapper.selectById(customDemandId);
 
         Integer newStatus = newCustomDemandDO.getStatus();
@@ -462,7 +467,7 @@ public class CustomDemandServiceImpl implements CustomDemandService {
 
         Date projectEndDate = customDemandComponent.getProjectEndDate(customDemandId);
 
-        if(!oldStatus.equals(newStatus)){
+        if (!oldStatus.equals(newStatus)) {
             customDemandLogComponent.addLogWhenModifyData(
                     BizDemandStatusEnum.getTextByCode(oldStatus),
                     BizDemandStatusEnum.getTextByCode(newStatus),
@@ -476,5 +481,42 @@ public class CustomDemandServiceImpl implements CustomDemandService {
         customDemandStatusVO.setStatusText(statusText);
         customDemandStatusVO.setProjectEndDate(projectEndDate);
         return customDemandStatusVO;
+    }
+
+    public void checkBeforeInsert(CustomDemandDO customDemandDO) {
+        String date = DateUtil.parseToString(DateUtil.addMinute(new Date(), -1));
+        List<CustomDemandDO> customDemandDos = customDemandMapper.selectByDate(date);
+        customDemandDos.forEach(a -> {
+            if (commonCompare(a, customDemandDO)) {
+                throw new BaseBizRuntimeException("请勿在1分钟内新增相同内容的客户需求");
+            }
+        });
+    }
+
+    public boolean commonCompare(CustomDemandDO oldObj, CustomDemandDO newObj) {
+        Field[] oldFields = oldObj.getClass().getDeclaredFields();
+        Field[] newFields = newObj.getClass().getDeclaredFields();
+        List<String> filter = Arrays.asList("solvePlan", "projectEndDate");
+        Map<String, Field> newFieldMap = Arrays.stream(newFields).collect(Collectors.toMap(Field::getName, k -> k, (v1, v2) -> v2));
+        for (Field oldField : oldFields) {
+            Field newField = newFieldMap.get(oldField.getName());
+            if (newField == null || filter.contains(newField.getName())) {
+                continue;
+            }
+            oldField.setAccessible(true);
+            newField.setAccessible(true);
+            try {
+                Object oldValue = oldField.get(oldObj);
+                Object newValue = newField.get(newObj);
+                if (!Objects.equal(oldValue, newValue)) {
+                    return false;
+                }
+            } catch (IllegalAccessException e) {
+                log.error("字段比较异常", e);
+                e.printStackTrace();
+            }
+        }
+        log.info("重复数据id:{}", oldObj.getId());
+        return true;
     }
 }

@@ -78,4 +78,11 @@ public interface CustomDemandMapper {
      */
     List<CustomDemandDO> selectByIds(@Param("ids") List<Long> ids);
 
+    /**
+     *
+     * @param date date
+     * @return CustomDemandDO
+     */
+    List<CustomDemandDO> selectByDate(@Param("date") String date);
+
 }

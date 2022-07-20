@@ -1,6 +1,8 @@
 package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.entity.ModelDO;
+import com.timevale.forward.facade.api.request.ModelAddReq;
+import com.timevale.forward.facade.api.request.ModelModifyReq;
 import com.timevale.forward.facade.api.result.ModelVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -24,6 +26,21 @@ public interface ModelCopier {
      * @return 列表
      */
     List<ModelVO> convert(List<ModelDO> modelDOList);
+
+
+    /**
+     *
+     * @param modelAddReq modelAddReq
+     * @return return
+     */
+    ModelDO convert(ModelAddReq modelAddReq);
+
+    /**
+     *
+     * @param modelModifyReq modelModifyReq
+     * @return return
+     */
+    ModelDO convert(ModelModifyReq modelModifyReq);
 
 
 }

@@ -1,6 +1,8 @@
 package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.entity.ProductLineDO;
+import com.timevale.forward.facade.api.request.ProductLineAddReq;
+import com.timevale.forward.facade.api.request.ProductLineModifyReq;
 import com.timevale.forward.facade.api.result.ProductLineModelVO;
 import com.timevale.forward.facade.api.result.ProductLineVO;
 import org.mapstruct.Mapper;
@@ -43,5 +45,19 @@ public interface ProductLineCopier {
      * @return 列表
      */
     List<ProductLineModelVO> change(List<ProductLineDO> productLineDOList);
+
+    /**
+     *
+     * @param productLineAddReq productLineAddReq
+     * @return  ProductLineDO
+     */
+    ProductLineDO convert(ProductLineAddReq productLineAddReq);
+
+    /**
+     *
+     * @param productLineModifyReq productLineModifyReq
+     * @return  ProductLineDO
+     */
+    ProductLineDO convert(ProductLineModifyReq productLineModifyReq);
 
 }
