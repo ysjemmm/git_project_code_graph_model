@@ -1,9 +1,9 @@
 package com.timevale.forward.dal.entity;
 
+import java.util.Date;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.Date;
 
 /**
  * @author xingyun
@@ -22,6 +22,11 @@ public class ProjectFlowDO extends BaseDO {
      * flowId
      */
     private String flowId;
+
+    /**
+     * 流程类型
+     */
+    private Integer flowType;
 
     /**
      * 发起人

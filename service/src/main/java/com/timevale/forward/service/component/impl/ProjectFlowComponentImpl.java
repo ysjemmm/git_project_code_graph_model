@@ -1,7 +1,8 @@
 package com.timevale.forward.service.component.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Objects;
+
+import com.alibaba.fastjson.JSONObject;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
@@ -16,17 +17,20 @@ import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.lowcode.support.response.task.TaskHandleUserResponse;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xingyun
@@ -66,7 +70,7 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
         log.info("返回流程信息 processInfo={}", processInfo);
         ProjectFlowDO projectFlowDO = projectFlowMapper.get(null, processInstanceId);
         if (projectFlowDO == null) {
-            log.info("无详设流程 flowId={}", processInstanceId);
+            log.info("无流程数据 flowId={}", processInstanceId);
             return;
         }
         Map<String, Object> flowData = processInfo.getFlowData();
@@ -79,13 +83,13 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
         } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
             ProjectDO oldProjectDO = projectMapper.get(projectFlowDO.getProjectId());
             projectFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode());
-            ProjectNodeDO projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText());
+            ProjectNodeDO projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), ProjectNodeEnum.getNameByCode(projectFlowDO.getFlowType()));
             if (projectNodeDo != null) {
                 projectNodeMapper.updateActualDateById(projectNodeDo.getId(), processInfo.getEndTime());
                 //更新节点状态
                 projectComponent.updateNodeStatus(projectFlowDO.getProjectId());
                 projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), ProjectNodeEnum.START_PLAN.getText());
-                if (projectNodeDo == null) {
+                if (projectNodeDo == null ) {
                     //需求规划阶段被删除,详设评审为第一个节点,需要更新项目实际开始时间
                     oldProjectDO.setActualStartDate(processInfo.getEndTime());
                     projectMapper.update(oldProjectDO);

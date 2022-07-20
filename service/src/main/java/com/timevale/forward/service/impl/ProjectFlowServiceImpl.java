@@ -1,7 +1,8 @@
 package com.timevale.forward.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Objects;
+
+import com.alibaba.fastjson.JSONObject;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
@@ -16,7 +17,11 @@ import com.timevale.forward.facade.api.request.ProjectFlowAddReq;
 import com.timevale.forward.facade.api.request.ProjectFlowDocModifyReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.ProjectFlowDetailVO;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.enums.FileTypeEnum;
+import com.timevale.forward.model.enums.FlowStatusEnum;
+import com.timevale.forward.model.enums.MessageTagEnum;
+import com.timevale.forward.model.enums.ProjectNodeEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
@@ -28,13 +33,21 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
-import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xingyun
@@ -74,23 +87,33 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<String> add(ProjectFlowAddReq projectFlowAddReq) {
-        log.info("发起详设评审,参数:{}", projectFlowAddReq);
+        log.info("发起评审,参数:{}", projectFlowAddReq);
         ProjectFlowDO projectFlowDO = ProjectFlowCopier.INSTANCE.convert(projectFlowAddReq);
         ProjectDO oldProjectDO = projectMapper.get(projectFlowDO.getProjectId());
-        List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(projectFlowDO.getProjectId());
+        ProjectNodeEnum projectNodeEnum = ProjectNodeEnum.valueOf(projectFlowAddReq.getFlowType());
+        if (projectNodeEnum == null) {
+            throw new BaseBizRuntimeException("对应项目节点不存在，请修改后再发起");
+        }
+        // 需求内审、需求串讲、ued评审、详设评审可以发起
+        if (ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getCode().equals(projectNodeEnum.getCode())
+                || ProjectNodeEnum.DEMAND_CONSTRUE.getCode().equals(projectNodeEnum.getCode())
+                || ProjectNodeEnum.UED_AUDIT.getCode().equals(projectNodeEnum.getCode()) || ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getCode().equals(projectNodeEnum.getCode())) {
+            throw new BaseBizRuntimeException("该节点无法发起评审");
+        }
+        List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectIdAndFlowType(projectFlowDO.getProjectId(), projectNodeEnum.getCode());
         if (!CollectionUtils.isEmpty(projectFlowDos)) {
             projectFlowDos.sort(Comparator.comparing(ProjectFlowDO::getCreateDate).reversed());
             ProjectFlowDO oldFlowDo = projectFlowDos.get(0);
             if (FlowStatusEnum.AUDITING.getCode().equals(oldFlowDo.getStatus())) {
-                throw new BaseBizRuntimeException("详设评审正在审核中,请不要重复发起");
+                throw new BaseBizRuntimeException(String.format("%s正在审核中,请不要重复发起", projectNodeEnum.getText()));
             }
             if (FlowStatusEnum.COMPLETE.getCode().equals(oldFlowDo.getStatus())) {
-                throw new BaseBizRuntimeException("详设评审已通过,请不要重复发起");
+                throw new BaseBizRuntimeException(String.format("%s已通过,请不要重复发起", projectNodeEnum.getText()));
             }
         }
-        ProjectNodeDO projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText());
+        ProjectNodeDO projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), projectNodeEnum.getText());
         if (projectNodeDo == null) {
-            throw new BaseBizRuntimeException("技术详设评审节点不存在");
+            throw new BaseBizRuntimeException(String.format("%s节点不存在", projectNodeEnum.getText()));
         }
         projectNodeMapper.updateActualDateById(projectNodeDo.getId(), null);
         //更新节点状态
@@ -110,7 +133,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
             oldProjectDO.setStatus(newStatus);
             projectMapper.update(oldProjectDO);
             // 日志处理
-            projectLogComponent.addLogWhenStatusChange(oldProjectDO.getStatus(), newStatus, oldProjectDO.getId(), ButtonActionEnum.START_REVIEW.getText());
+            projectLogComponent.addLogWhenStatusChange(oldProjectDO.getStatus(), newStatus, oldProjectDO.getId(),String.format("发起%s", projectNodeEnum.getText()));
         }
 
         String processInstanceId = startWorkflow(projectFlowAddReq);
@@ -168,7 +191,11 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
     }
 
 
-    public String startWorkflow(ProjectFlowAddReq projectFlowAddReq) {
+    private String startWorkflow(ProjectFlowAddReq projectFlowAddReq) {
+        String processDefinitionKey = MessageTagEnum.NODE_MESSAGE_TAG_MAP.get(projectFlowAddReq.getFlowType());
+        if(StringUtils.isEmpty(processDefinitionKey)){
+            throw new BaseBizRuntimeException("找不到对应的审批流程");
+        }
         Map<String, Object> variables = new HashMap<>();
         StartProcessRequest start = new StartProcessRequest();
         variables.put("reviewUrl", projectFlowAddReq.getReviewUrl());
@@ -185,7 +212,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         variables.put("review", reviewIds);
 
         start.setApplicationName("forward");
-        start.setProcessDefinitionKey("forward_techReview");
+        start.setProcessDefinitionKey(processDefinitionKey);
         start.setStartAccountId(projectFlowAddReq.getProposer().getUserId());
         start.setVariables(variables);
         start.setEpeVirtualProcessSwitch(false);

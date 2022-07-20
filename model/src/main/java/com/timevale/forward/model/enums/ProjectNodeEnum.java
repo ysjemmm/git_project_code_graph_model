@@ -1,9 +1,9 @@
 package com.timevale.forward.model.enums;
 
+import java.util.Objects;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
-import java.util.Objects;
 
 
 /**
@@ -41,4 +41,19 @@ public enum ProjectNodeEnum {
         }
         return -1;
     }
+
+    /**
+     * 根据code获取对应的名称
+     * @param code
+     * @return
+     */
+    public static String getNameByCode(Integer code){
+        for (ProjectNodeEnum e : ProjectNodeEnum.values()) {
+            if(e.getCode().equals(code)){
+                return e.text;
+            }
+        }
+        return null;
+    }
+
 }

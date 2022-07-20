@@ -29,6 +29,14 @@ public interface ProjectFlowMapper {
     List<ProjectFlowDO> getByProjectId(@Param("projectId") Long projectId);
 
     /**
+     * 根据项目id和流程类型查询数据
+     * @param projectId
+     * @param flowType
+     * @return 项目流程信息
+     */
+    List<ProjectFlowDO> getByProjectIdAndFlowType(@Param("projectId") Long projectId,@Param("flowType") Integer flowType);
+
+    /**
      * 新增单条项目
      *
      * @param projectFlowDO 项目流程
