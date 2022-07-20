@@ -35,16 +35,6 @@
         order by id desc
     </select>
 
-    <select id="getByProjectIdAndFlowType" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
-        select id,project_id, flow_id,flow_type,proposer_id,proposer,review_date,review_id,review ,reviewed_id,reviewed,
-        unreviewed_id,unreviewed,review_fail_id, review_fail, review_fail_reason,review_url,status,is_deleted,create_man_id,
-        create_man,create_date,modify_man_id,modify_man,modify_date
-        from project_flow
-        where project_id = #{projectId} and is_deleted=false
-    </select>
-
-
-
     <update id="update" parameterType="com.timevale.forward.dal.entity.ProjectFlowDO">
         update project_flow
         <set>

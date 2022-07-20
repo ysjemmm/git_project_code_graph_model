@@ -100,7 +100,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
                 || ProjectNodeEnum.UED_AUDIT.getCode().equals(projectNodeEnum.getCode()) || ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getCode().equals(projectNodeEnum.getCode())) {
             throw new BaseBizRuntimeException("该节点无法发起评审");
         }
-        List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectIdAndFlowType(projectFlowDO.getProjectId(), projectNodeEnum.getCode());
+        List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectIdAndType(projectFlowDO.getProjectId(), projectNodeEnum.getCode());
         if (!CollectionUtils.isEmpty(projectFlowDos)) {
             projectFlowDos.sort(Comparator.comparing(ProjectFlowDO::getCreateDate).reversed());
             ProjectFlowDO oldFlowDo = projectFlowDos.get(0);
