@@ -27,6 +27,13 @@
         from project_flow
         where project_id = #{projectId} and is_deleted=false
     </select>
+    <select id="getByProjectIdAndType" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
+        select * from project_flow
+        where project_id = #{projectId}
+          and flow_type = #{flowType}
+          and is_deleted = false
+        order by id desc
+    </select>
 
     <select id="getByProjectIdAndFlowType" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
         select id,project_id, flow_id,flow_type,proposer_id,proposer,review_date,review_id,review ,reviewed_id,reviewed,

@@ -15,9 +15,13 @@ import java.util.List;
 @ApiModel("产品流程文档维护对象")
 public class ProjectFlowDocModifyReq extends ToString {
 
-    @NotNull(message = "项目流程id必填")
-    @ApiModelProperty("项目流程id")
-    private Long id;
+    @NotNull(message = "项目id必填")
+    @ApiModelProperty("项目id")
+    private Long projectId;
+
+    @NotNull(message = "流程类型必填")
+    @ApiModelProperty("流程类型:10-需求内审;20-需求串讲;27-UED评审;30-详设评审")
+    private Integer flowType;
 
     @ApiModelProperty("流程关联地址")
     private String reviewUrl;

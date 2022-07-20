@@ -145,11 +145,14 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
 
     @Override
     public BaseResult<Boolean> modifyDoc(ProjectFlowDocModifyReq projectFlowDocModifyReq) {
-        ProjectFlowDO projectFlow = projectFlowMapper.get(projectFlowDocModifyReq.getId(), null);
-        if (projectFlow == null) {
+        List<ProjectFlowDO> flows = projectFlowMapper.getByProjectIdAndType(projectFlowDocModifyReq.getProjectId(),
+                projectFlowDocModifyReq.getFlowType());
+        if (flows.isEmpty()) {
             throw new BaseBizRuntimeException("您修改的项目流程不存在，请刷新后再试");
         }
+        ProjectFlowDO projectFlow = flows.get(0);
         projectFlow.setReviewUrl(projectFlowDocModifyReq.getReviewUrl());
+        // TODO 修改文件类型
         fileComponent.update(projectFlowDocModifyReq.getFiles(), projectFlow.getId(), FileTypeEnum.TECH_REVIEW.getCode());
         projectFlowMapper.update(projectFlow);
         return BaseResult.success(true);
