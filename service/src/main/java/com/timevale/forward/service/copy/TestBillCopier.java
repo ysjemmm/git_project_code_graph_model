@@ -42,5 +42,11 @@ public interface TestBillCopier {
     TestBillDO change(TestBillModifyReq testBillModifyReq);
 
     @Mapping(target = "files", ignore = true)
+    @Mapping(target = "createDate", source = "docCreateDate")
+    @Mapping(target = "modifyDate", source = "docModifyDate")
+    @Mapping(target = "createManId", source = "docCreateManId")
+    @Mapping(target = "createMan", source = "docCreateMan")
+    @Mapping(target = "modifyManId", source = "docModifyManId")
+    @Mapping(target = "modifyMan", source = "docModifyMan")
     TestBillDocumentVO convert2Doc(TestBillDO testBill);
 }
