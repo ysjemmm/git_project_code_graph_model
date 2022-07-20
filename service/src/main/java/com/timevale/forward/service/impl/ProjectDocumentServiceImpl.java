@@ -19,7 +19,7 @@ import com.timevale.forward.facade.api.result.ProductDemandDocumentVO;
 import com.timevale.forward.facade.api.result.ProjectFlowDocumentVO;
 import com.timevale.forward.facade.api.result.TestBillDocumentVO;
 import com.timevale.forward.model.enums.FileTypeEnum;
-import com.timevale.forward.model.enums.ProjectFlowTypeEnum;
+import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
@@ -75,12 +75,12 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
 
     @Override
     public BaseResult<ProjectFlowDocumentVO> queryUEDDocument(Long projectId) {
-        return BaseResult.success(queryFlowDocument(projectId, ProjectFlowTypeEnum.UED_AUDIT.getCode()));
+        return BaseResult.success(queryFlowDocument(projectId, ProjectNodeEnum.UED_AUDIT.getCode()));
     }
 
     @Override
     public BaseResult<ProjectFlowDocumentVO> queryTechnicalDocument(Long projectId) {
-        return BaseResult.success(queryFlowDocument(projectId, ProjectFlowTypeEnum.TECHNICAL_REVIEW.getCode()));
+        return BaseResult.success(queryFlowDocument(projectId, ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getCode()));
     }
 
     @Override
