@@ -29,6 +29,7 @@ import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
+import com.timevale.mandarin.base.util.DateUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -77,17 +78,15 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         log.info("发起评审,参数:{}", projectFlowAddReq);
         ProjectFlowDO projectFlowDO = ProjectFlowCopier.INSTANCE.convert(projectFlowAddReq);
         ProjectDO oldProjectDO = projectMapper.get(projectFlowDO.getProjectId());
-        ProjectNodeEnum projectNodeEnum;
-        try {
-            projectNodeEnum = ProjectNodeEnum.valueOf(projectFlowAddReq.getFlowType());
-        } catch (IllegalArgumentException e) {
+        ProjectNodeEnum projectNodeEnum = ProjectNodeEnum.getByCode(projectFlowAddReq.getFlowType());
+        if (projectNodeEnum == null) {
             throw new BaseBizRuntimeException("对应项目节点不存在，请修改后再发起");
         }
 
         // 需求内审、需求串讲、ued评审、详设评审可以发起
-        if (ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getCode().equals(projectNodeEnum.getCode())
-                || ProjectNodeEnum.DEMAND_CONSTRUE.getCode().equals(projectNodeEnum.getCode())
-                || ProjectNodeEnum.UED_AUDIT.getCode().equals(projectNodeEnum.getCode()) || ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getCode().equals(projectNodeEnum.getCode())) {
+        if (!ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getCode().equals(projectNodeEnum.getCode())
+                && !ProjectNodeEnum.DEMAND_CONSTRUE.getCode().equals(projectNodeEnum.getCode())
+                && !ProjectNodeEnum.UED_AUDIT.getCode().equals(projectNodeEnum.getCode()) && !ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getCode().equals(projectNodeEnum.getCode())) {
             throw new BaseBizRuntimeException("该节点无法发起评审");
         }
         List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectIdAndType(projectFlowDO.getProjectId(), projectNodeEnum.getCode());
@@ -212,8 +211,9 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         //评审人,表单展示
         String reviewName = projectFlowAddReq.getReviews().stream().map(PersonAddReq::getUserName).collect(Collectors.joining(","));
         variables.put("reviewName", reviewName);
-        String projectName = projectMapper.get(projectFlowAddReq.getProjectId()).getName();
+        String projectName =projectMapper.get(projectFlowAddReq.getProjectId()).getName();
         variables.put("projectName", projectName);
+        variables.put("createDate", DateUtils.getNewFormatDateString(DateUtils.now()));
         String baseUrl = domainName + "projectManagement/edit?id=%d&type=check";
         variables.put("projectUrl", String.format(baseUrl, projectFlowAddReq.getProjectId()));
         List<String> reviewIds = projectFlowAddReq.getReviews().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());

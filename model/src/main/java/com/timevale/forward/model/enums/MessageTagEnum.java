@@ -40,15 +40,15 @@ public enum MessageTagEnum {
 
     private final String text;
 
-    public final static Map<String, String> NODE_MESSAGE_TAG_MAP = new LinkedHashMap<>();
+    public final static Map<Integer, String> NODE_MESSAGE_TAG_MAP = new LinkedHashMap<>();
 
 
     static {
 
-        NODE_MESSAGE_TAG_MAP.put(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.name(),MessageTagEnum.FORWARD_DEMAND_INTERNAL_AUDIT.getText());
-        NODE_MESSAGE_TAG_MAP.put(ProjectNodeEnum.DEMAND_CONSTRUE.name(),MessageTagEnum.FORWARD_DEMAND_CONSTRUE.getText());
-        NODE_MESSAGE_TAG_MAP.put(ProjectNodeEnum.UED_AUDIT.name(),MessageTagEnum.FORWARD_UED_AUDIT.getText());
-        NODE_MESSAGE_TAG_MAP.put(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.name(),MessageTagEnum.FORWARD_TECHREVIEW.getText());
+        NODE_MESSAGE_TAG_MAP.put(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getCode(),MessageTagEnum.FORWARD_DEMAND_INTERNAL_AUDIT.getText());
+        NODE_MESSAGE_TAG_MAP.put(ProjectNodeEnum.DEMAND_CONSTRUE.getCode(),MessageTagEnum.FORWARD_DEMAND_CONSTRUE.getText());
+        NODE_MESSAGE_TAG_MAP.put(ProjectNodeEnum.UED_AUDIT.getCode(),MessageTagEnum.FORWARD_UED_AUDIT.getText());
+        NODE_MESSAGE_TAG_MAP.put(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getCode(),MessageTagEnum.FORWARD_TECHREVIEW.getText());
 
     }
 
