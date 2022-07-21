@@ -6,12 +6,20 @@
         (#{testBillDO.projectId},0,#{testBillDO.testMan},#{testBillDO.testManId},#{createMan},#{createManId})
     </insert>
 
-    <update id="submitSmokeTesting">
+    <update id="updateByProjectId">
         update test_bill
         <set>
             <if test="testBillDO.caseUrl != null">case_url=#{testBillDO.caseUrl},</if>
             <if test="testBillDO.allCaseUrl != null">all_case_url=#{testBillDO.allCaseUrl},</if>
-            <if test="true">status=1,</if>
+            <if test="testBillDO.testManId != null">test_man_id=#{testBillDO.testManId},</if>
+            <if test="testBillDO.testMan != null">test_man=#{testBillDO.testMan},</if>
+            <if test="testBillDO.docCreateDate != null">doc_create_date = #{testBillDO.docCreateDate},</if>
+            <if test="testBillDO.docModifyDate != null">doc_modify_date = #{testBillDO.docModifyDate},</if>
+            <if test="testBillDO.docCreateManId != null">doc_create_man_id = #{testBillDO.docCreateManId},</if>
+            <if test="testBillDO.docCreateMan != null">doc_create_man = #{testBillDO.docCreateMan},</if>
+            <if test="testBillDO.docModifyManId != null">doc_modify_man_id = #{testBillDO.docModifyManId},</if>
+            <if test="testBillDO.docModifyMan != null">doc_modify_man = #{testBillDO.docModifyMan},</if>
+            <if test="testBillDO.status != null">status=#{testBillDO.status},</if>
             <if test="true">modify_man=#{modifyMan},</if>
             <if test="true">modify_man_id=#{modifyManId},</if>
         </set>

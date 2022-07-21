@@ -1,8 +1,7 @@
 package com.timevale.forward.service.impl;
 
-import com.google.common.base.Objects;
-
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.base.Objects;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
@@ -17,12 +16,10 @@ import com.timevale.forward.facade.api.request.ProjectFlowAddReq;
 import com.timevale.forward.facade.api.request.ProjectFlowDocModifyReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.ProjectFlowDetailVO;
-import com.timevale.forward.model.enums.FileTypeEnum;
 import com.timevale.forward.model.enums.FlowStatusEnum;
 import com.timevale.forward.model.enums.MessageTagEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
-import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.component.ProjectLogComponent;
@@ -34,21 +31,14 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.base.util.DateUtils;
 import com.timevale.mandarin.common.annotation.RestService;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author xingyun
@@ -79,9 +69,6 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
     @Resource
     private ProjectFlowComponent projectFlowComponent;
 
-    @Resource
-    private FileComponent fileComponent;
-
     @Value("${domain_name:http://forward-front-forward-itm-v1.projectk8s.tsign.cn/}")
     private String domainName;
 
@@ -95,6 +82,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         if (projectNodeEnum == null) {
             throw new BaseBizRuntimeException("对应项目节点不存在，请修改后再发起");
         }
+
         // 需求内审、需求串讲、ued评审、详设评审可以发起
         if (!ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getCode().equals(projectNodeEnum.getCode())
                 && !ProjectNodeEnum.DEMAND_CONSTRUE.getCode().equals(projectNodeEnum.getCode())
@@ -110,6 +98,9 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
             }
             if (FlowStatusEnum.COMPLETE.getCode().equals(oldFlowDo.getStatus())) {
                 throw new BaseBizRuntimeException(String.format("%s已通过,请不要重复发起", projectNodeEnum.getText()));
+            }
+            if (FlowStatusEnum.PRE_EDIT.getCode().equals(oldFlowDo.getStatus())) {
+                projectFlowDO.setId(oldFlowDo.getId());
             }
         }
         ProjectNodeDO projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), projectNodeEnum.getText());
@@ -140,7 +131,11 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         String processInstanceId = startWorkflow(projectFlowAddReq);
         projectFlowDO.setFlowId(processInstanceId);
         projectFlowDO.setStatus(FlowStatusEnum.AUDITING.getCode());
-        projectFlowMapper.insert(projectFlowDO);
+        if (projectFlowDO.getId() == null) {
+            projectFlowMapper.insert(projectFlowDO);
+        } else {
+            projectFlowMapper.update(projectFlowDO);
+        }
         return BaseResult.success(processInstanceId);
     }
 
@@ -149,12 +144,20 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         List<ProjectFlowDO> flows = projectFlowMapper.getByProjectIdAndType(projectFlowDocModifyReq.getProjectId(),
                 projectFlowDocModifyReq.getFlowType());
         if (flows.isEmpty()) {
-            throw new BaseBizRuntimeException("您修改的项目流程不存在，请刷新后再试");
+            // 未生成过，生成一份项目流程
+            ProjectFlowDO preEditFlow = new ProjectFlowDO();
+            preEditFlow.setFlowId(StringUtils.EMPTY);
+            preEditFlow.setFlowType(projectFlowDocModifyReq.getFlowType());
+            preEditFlow.setProposerId(StringUtils.EMPTY);
+            preEditFlow.setProposer(StringUtils.EMPTY);
+            preEditFlow.setProjectId(projectFlowDocModifyReq.getProjectId());
+            preEditFlow.setStatus(FlowStatusEnum.PRE_EDIT.getCode());
+            preEditFlow.setReviewUrl(projectFlowDocModifyReq.getReviewUrl());
+            projectFlowMapper.insert(preEditFlow);
+            return BaseResult.success(true);
         }
         ProjectFlowDO projectFlow = flows.get(0);
         projectFlow.setReviewUrl(projectFlowDocModifyReq.getReviewUrl());
-        // TODO 修改文件类型
-        fileComponent.update(projectFlowDocModifyReq.getFiles(), projectFlow.getId(), FileTypeEnum.TECH_REVIEW.getCode());
         projectFlowMapper.update(projectFlow);
         return BaseResult.success(true);
     }

@@ -23,7 +23,7 @@ public interface TestBillMapper {
      *
      * @param testBillDO 提测单修改信息
      */
-    void submitSmokeTesting(@Param("testBillDO") TestBillDO testBillDO);
+    void updateByProjectId(@Param("testBillDO") TestBillDO testBillDO);
 
     /**
      * 修改测试人

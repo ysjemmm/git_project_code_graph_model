@@ -42,6 +42,13 @@
             <if test="reviewed != null">reviewed = #{reviewed},</if>
             <if test="unreviewedId != null">unreviewed_id = #{unreviewedId},</if>
             <if test="unreviewed != null">unreviewed = #{unreviewed},</if>
+            <if test="proposerId != null">proposer_id = #{proposerId},</if>
+            <if test="proposer != null">proposer = #{proposer},</if>
+            <if test="flowId != null">flow_id = #{flowId},</if>
+            <if test="reviewDate != null">review_date = #{reviewDate},</if>
+            <if test="reviewId != null">review_id = #{reviewId},</if>
+            <if test="review != null">review = #{review},</if>
+            <if test="reviewUrl != null">review_url = #{reviewUrl},</if>
             <if test="reviewFailId != null">review_fail_id = #{reviewFailId},</if>
             <if test="reviewFail != null">review_fail = #{reviewFail},</if>
             <if test="reviewFailReason != null">review_fail_reason = #{reviewFailReason},</if>
