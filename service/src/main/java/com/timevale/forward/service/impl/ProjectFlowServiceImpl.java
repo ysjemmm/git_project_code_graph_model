@@ -16,8 +16,10 @@ import com.timevale.forward.facade.api.request.ProjectFlowAddReq;
 import com.timevale.forward.facade.api.request.ProjectFlowDocModifyReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.ProjectFlowDetailVO;
-import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.model.enums.FlowStatusEnum;
+import com.timevale.forward.model.enums.MessageTagEnum;
+import com.timevale.forward.model.enums.ProjectNodeEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.component.ProjectLogComponent;
@@ -65,9 +67,6 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
 
     @Resource
     private ProjectFlowComponent projectFlowComponent;
-
-    @Resource
-    private FileComponent fileComponent;
 
     @Value("${domain_name:http://forward-front-forward-itm-v1.projectk8s.tsign.cn/}")
     private String domainName;
@@ -148,19 +147,18 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         if (flows.isEmpty()) {
             // 未生成过，生成一份项目流程
             ProjectFlowDO preEditFlow = new ProjectFlowDO();
+            preEditFlow.setFlowId(StringUtils.EMPTY);
+            preEditFlow.setFlowType(projectFlowDocModifyReq.getFlowType());
+            preEditFlow.setProposerId(StringUtils.EMPTY);
+            preEditFlow.setProposer(StringUtils.EMPTY);
             preEditFlow.setProjectId(projectFlowDocModifyReq.getProjectId());
             preEditFlow.setStatus(FlowStatusEnum.PRE_EDIT.getCode());
             preEditFlow.setReviewUrl(projectFlowDocModifyReq.getReviewUrl());
             projectFlowMapper.insert(preEditFlow);
-            // 插入文件
-            // TODO jingchun 修改文件类型
-            fileComponent.add(projectFlowDocModifyReq.getFiles(), preEditFlow.getId(), FileTypeEnum.TECH_REVIEW.getCode());
             return BaseResult.success(true);
         }
         ProjectFlowDO projectFlow = flows.get(0);
         projectFlow.setReviewUrl(projectFlowDocModifyReq.getReviewUrl());
-        // TODO jingchun 修改文件类型
-        fileComponent.update(projectFlowDocModifyReq.getFiles(), projectFlow.getId(), FileTypeEnum.TECH_REVIEW.getCode());
         projectFlowMapper.update(projectFlow);
         return BaseResult.success(true);
     }
