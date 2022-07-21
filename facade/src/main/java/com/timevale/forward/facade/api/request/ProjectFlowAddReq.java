@@ -3,7 +3,6 @@ package com.timevale.forward.facade.api.request;
 import java.util.Date;
 import java.util.List;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import io.swagger.annotations.ApiModel;
@@ -24,6 +23,10 @@ public class ProjectFlowAddReq extends BaseReq {
     @NotNull(message = "项目id不能为空")
     private Long projectId;
 
+    @ApiModelProperty("流程类型：10：需求内审;20:需求串讲;27:ued评审;30:详设评审")
+    @NotNull(message = "流程类型不能为空")
+    private Integer flowType;
+
     @ApiModelProperty("发起人")
     @NotNull(message = "发起人不能为空")
     private PersonAddReq proposer;
@@ -42,7 +45,5 @@ public class ProjectFlowAddReq extends BaseReq {
     @ApiModelProperty("文件信息")
     private List<FileAddReq> files;
 
-    @ApiModelProperty("流程类型：DEMAND_INTERNAL_AUDIT：需求内审;DEMAND_CONSTRUE:需求串讲;UED_AUDIT:ued评审;TECHNICAL_DETAIL_REVIEW:详设评审")
-    @NotBlank(message = "流程类型不能为空")
-    private String flowType;
+
 }

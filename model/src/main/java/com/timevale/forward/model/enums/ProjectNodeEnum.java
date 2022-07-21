@@ -47,6 +47,20 @@ public enum ProjectNodeEnum {
      * @param code
      * @return
      */
+    public static ProjectNodeEnum getByCode(Integer code){
+        for (ProjectNodeEnum e : ProjectNodeEnum.values()) {
+            if(e.getCode().equals(code)){
+                return e;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 根据code获取对应的名称
+     * @param code
+     * @return
+     */
     public static String getNameByCode(Integer code){
         for (ProjectNodeEnum e : ProjectNodeEnum.values()) {
             if(e.getCode().equals(code)){
@@ -55,5 +69,4 @@ public enum ProjectNodeEnum {
         }
         return null;
     }
-
 }
