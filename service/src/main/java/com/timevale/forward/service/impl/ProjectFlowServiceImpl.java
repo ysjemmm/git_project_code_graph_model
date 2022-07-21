@@ -164,7 +164,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
             preEditFlow.setStatus(FlowStatusEnum.PRE_EDIT.getCode());
             preEditFlow.setReviewUrl(projectFlowDocModifyReq.getReviewUrl());
             projectFlowMapper.insert(preEditFlow);
-            return BaseResult.success(true);
+            flows.add(preEditFlow);
         }
         ProjectFlowDO projectFlow = flows.get(0);
         projectFlow.setReviewUrl(projectFlowDocModifyReq.getReviewUrl());
