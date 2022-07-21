@@ -308,6 +308,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         List<Long> bizDemandIds = productDemandAddReq.getBizDemandIds();
         if (CollectionUtils.isNotEmpty(bizDemandIds)) {
+            //只关联产品或客户需求时,项目发布时间不变动
             productBizDemandComponent.batchInsert(productDemand.getId(), bizDemandIds,false);
             Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
             productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, ButtonActionEnum.LINK.getText());

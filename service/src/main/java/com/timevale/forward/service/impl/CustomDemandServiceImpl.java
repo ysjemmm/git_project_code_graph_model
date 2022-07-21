@@ -204,7 +204,7 @@ public class CustomDemandServiceImpl implements CustomDemandService {
 
         customDemandDO.setReason(null);
         customDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
-        customDemandMapper.update(customDemandDO);
+        customDemandMapper.fullUpdate(customDemandDO);
 
         customDemandComponent.updateStatusBaseOnProductDemand(customDemandId);
 
@@ -235,6 +235,7 @@ public class CustomDemandServiceImpl implements CustomDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> reject(CustomDemandRejectReq customDemandRejectReq) {
         log.info("客户需求驳回,参数:{}", customDemandRejectReq);
         Long customDemandId = customDemandRejectReq.getId();
@@ -333,6 +334,7 @@ public class CustomDemandServiceImpl implements CustomDemandService {
 
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> completed(CustomDemandCompletedReq customDemandCompletedReq) {
         log.info("客户需求完成无需开发,参数:{}", customDemandCompletedReq);
         Long id = customDemandCompletedReq.getId();
@@ -462,10 +464,10 @@ public class CustomDemandServiceImpl implements CustomDemandService {
     private CustomDemandStatusVO getLastedInfo(Integer oldStatus, Long customDemandId) {
         CustomDemandDO newCustomDemandDO = customDemandMapper.selectById(customDemandId);
 
+        Date projectEndDate = newCustomDemandDO.getProjectEndDate();
         Integer newStatus = newCustomDemandDO.getStatus();
         String statusText = BizDemandStatusEnum.getTextByCode(newStatus);
 
-        Date projectEndDate = customDemandComponent.getProjectEndDate(customDemandId);
 
         if (!oldStatus.equals(newStatus)) {
             customDemandLogComponent.addLogWhenModifyData(
@@ -516,7 +518,7 @@ public class CustomDemandServiceImpl implements CustomDemandService {
                 e.printStackTrace();
             }
         }
-        log.info("重复数据id:{}", oldObj.getId());
+        log.info("重复数据,newObj:{},id:{}", newObj,oldObj.getId());
         return true;
     }
 }
