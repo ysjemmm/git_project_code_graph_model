@@ -86,6 +86,9 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
     @Override
     public BaseResult<TestBillDocumentVO> queryTestBillDocument(Long projectId) {
         TestBillDO testBill = testBillMapper.selectByProjectId(projectId);
+        if (testBill == null) {
+            return BaseResult.success(null);
+        }
         TestBillDocumentVO document = TestBillCopier.INSTANCE.convert2Doc(testBill);
         List<FileDO> files = fileComponent.select(testBill.getProjectId(), FileTypeEnum.TEST_BILL_CASE.getCode());
         document.setFiles(FileCopier.INSTANCE.transform(files));
