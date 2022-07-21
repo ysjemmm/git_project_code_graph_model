@@ -5,6 +5,7 @@ import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.DataCorrectService;
 import com.timevale.forward.facade.api.request.DataModifyReq;
+import com.timevale.forward.facade.api.request.ProjectNodeModifyReq;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.ProductDemandComponent;
@@ -19,7 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -166,6 +168,12 @@ public class DataCorrectServiceImpl implements DataCorrectService {
             testBillMapper.updateDelayDay(testBillDO,true);
         });
         log.info("数据订正,逾期时间更新完成");
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> updateNodeDate(ProjectNodeModifyReq projectNodeModifyReq) {
+        projectNodeMapper.updateActualDateById(projectNodeModifyReq.getId(),projectNodeModifyReq.getActualDate());
         return BaseResult.success(true);
     }
 
