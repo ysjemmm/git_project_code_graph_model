@@ -31,8 +31,6 @@ public class FileComponentImpl implements FileComponent {
     @Resource
     private FileMapper fileMapper;
 
-    public static final int FILE_NAME_LIMIT = 100;
-    
     @Override
     public void add(List<FileAddReq> list,Long attacheId,Integer type) {
         log.info("新增时,附件接收参数:list={},attacheId={},type={}", list,attacheId,type);
@@ -72,10 +70,6 @@ public class FileComponentImpl implements FileComponent {
             if(!existFileIds.contains(f.getFileId())){
                 needAddFiles.add(f);
             }else{
-                String fileName = f.getFileName();
-                if(StringUtils.isNotEmpty(fileName) && fileName.length() > FILE_NAME_LIMIT){
-                    throw new BaseBizRuntimeException("您上传的附件名称过长，请修改后重试");
-                }
                 // 更新已存在的附件
                 FileDO updateFileDO = new FileDO();
                 updateFileDO.setType(type);
