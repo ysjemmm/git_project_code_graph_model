@@ -42,7 +42,7 @@
             <if test="reviewed != null">reviewed = #{reviewed},</if>
             <if test="unreviewedId != null">unreviewed_id = #{unreviewedId},</if>
             <if test="unreviewed != null">unreviewed = #{unreviewed},</if>
-            <if test="proposerId != null">proposerId = #{proposerId},</if>
+            <if test="proposerId != null">proposer_id = #{proposerId},</if>
             <if test="proposer != null">proposer = #{proposer},</if>
             <if test="flowId != null">flow_id = #{flowId},</if>
             <if test="reviewDate != null">review_date = #{reviewDate},</if>
