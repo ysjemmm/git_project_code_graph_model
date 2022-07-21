@@ -26,7 +26,6 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -72,6 +71,9 @@ public class CommentServiceImpl implements CommentService {
 
     @Resource
     private FileComponent fileComponent;
+
+    @Resource
+    private CustomDemandMapper customDemandMapper;
 
     @Override
     public BaseResult<List<CommentVO>> list(CommentQueryList commentQueryList) {
@@ -132,6 +134,8 @@ public class CommentServiceImpl implements CommentService {
             name = bugOnlineMapper.selectById(toId).getName();
         }else if(CommentTypeEnum.TROUBLE_TICKET.getCode().equals(type)){
             name = troubleTicketMapper.selectById(toId).getName();
+        }else if(CommentTypeEnum.CUSTOM_DEMAND.getCode().equals(type)){
+            name = customDemandMapper.selectById(toId).getName();
         }
 
         // 发送通知
