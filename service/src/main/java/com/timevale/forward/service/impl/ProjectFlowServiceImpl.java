@@ -1,7 +1,8 @@
 package com.timevale.forward.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Objects;
+
+import com.alibaba.fastjson.JSONObject;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
@@ -16,6 +17,7 @@ import com.timevale.forward.facade.api.request.ProjectFlowAddReq;
 import com.timevale.forward.facade.api.request.ProjectFlowDocModifyReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.ProjectFlowDetailVO;
+import com.timevale.forward.facade.api.result.ProjectFlowNodeVO;
 import com.timevale.forward.model.enums.FlowStatusEnum;
 import com.timevale.forward.model.enums.MessageTagEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
@@ -31,14 +33,22 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.base.util.DateUtils;
 import com.timevale.mandarin.common.annotation.RestService;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xingyun
@@ -125,7 +135,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
             oldProjectDO.setStatus(newStatus);
             projectMapper.update(oldProjectDO);
             // 日志处理
-            projectLogComponent.addLogWhenStatusChange(oldProjectDO.getStatus(), newStatus, oldProjectDO.getId(),String.format("发起%s", projectNodeEnum.getText()));
+            projectLogComponent.addLogWhenStatusChange(oldProjectDO.getStatus(), newStatus, oldProjectDO.getId(), String.format("发起%s", projectNodeEnum.getText()));
         }
 
         String processInstanceId = startWorkflow(projectFlowAddReq);
@@ -197,10 +207,36 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         return BaseResult.success(projectFlowDetailVO);
     }
 
+    @Override
+    public BaseResult<List<ProjectFlowNodeVO>> getFlowNodeInfo(Long projectId) {
+        List<ProjectFlowNodeVO> projectFlowNodeVos = new ArrayList<>();
+        List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(projectId);
+        if (CollectionUtils.isEmpty(projectFlowDos)) {
+            return BaseResult.success(projectFlowNodeVos);
+        }
+        // 分组,排序
+        Map<Integer, List<ProjectFlowDO>> projectFlowMap = projectFlowDos.stream().sorted(Comparator.comparing(ProjectFlowDO::getCreateDate).reversed()).collect(Collectors.groupingBy(ProjectFlowDO::getFlowType, LinkedHashMap::new, Collectors.toList()));
+
+        List<ProjectNodeDO> projectNodeDos = projectNodeMapper.get(projectId);
+        projectNodeDos.forEach(p->{
+         Integer projectNodeCode =  ProjectNodeEnum.getCodeByName(p.getName());
+         List<ProjectFlowDO> projectFlowDOList =  projectFlowMap.get(projectNodeCode);
+         if(CollectionUtils.isNotEmpty(projectFlowDOList)){
+             ProjectFlowNodeVO projectFlowNodeVO = new ProjectFlowNodeVO();
+             ProjectFlowDO projectFlowDO = projectFlowDOList.get(0);
+             projectFlowNodeVO.setProjectFlowId(projectFlowDO.getId());
+             projectFlowNodeVO.setProjectFlowStatus(projectFlowDO.getStatus());
+             projectFlowNodeVO.setProjectNodeId(p.getId());
+             projectFlowNodeVos.add(projectFlowNodeVO);
+         }
+        });
+        return  BaseResult.success(projectFlowNodeVos);
+    }
+
 
     private String startWorkflow(ProjectFlowAddReq projectFlowAddReq) {
         String processDefinitionKey = MessageTagEnum.NODE_MESSAGE_TAG_MAP.get(projectFlowAddReq.getFlowType());
-        if(StringUtils.isEmpty(processDefinitionKey)){
+        if (StringUtils.isEmpty(processDefinitionKey)) {
             throw new BaseBizRuntimeException("找不到对应的审批流程");
         }
         Map<String, Object> variables = new HashMap<>();
@@ -211,7 +247,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         //评审人,表单展示
         String reviewName = projectFlowAddReq.getReviews().stream().map(PersonAddReq::getUserName).collect(Collectors.joining(","));
         variables.put("reviewName", reviewName);
-        String projectName =projectMapper.get(projectFlowAddReq.getProjectId()).getName();
+        String projectName = projectMapper.get(projectFlowAddReq.getProjectId()).getName();
         variables.put("projectName", projectName);
         variables.put("createDate", DateUtils.getNewFormatDateString(DateUtils.now()));
         String baseUrl = domainName + "projectManagement/edit?id=%d&type=check";

@@ -5,7 +5,10 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.request.ProjectFlowAddReq;
 import com.timevale.forward.facade.api.request.ProjectFlowDocModifyReq;
 import com.timevale.forward.facade.api.result.ProjectFlowDetailVO;
+import com.timevale.forward.facade.api.result.ProjectFlowNodeVO;
 import com.timevale.mandarin.common.annotation.RestClient;
+
+import java.util.List;
 
 /**
  * @author xingyun
@@ -37,5 +40,12 @@ public interface ProjectFlowService {
      * @return 详情信息
      */
     BaseResult<ProjectFlowDetailVO> get(Long projectFlowId);
+
+    /**
+     * 查看项目节点流程信息
+     * @param projectId
+     * @return
+     */
+    BaseResult<List<ProjectFlowNodeVO>> getFlowNodeInfo(Long projectId);
 
 }
