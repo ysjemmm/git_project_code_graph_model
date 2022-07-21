@@ -8,8 +8,10 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,8 @@ public class FileComponentImpl implements FileComponent {
 
     @Resource
     private FileMapper fileMapper;
+
+    public static final int FILE_NAME_LIMIT = 100;
     
     @Override
     public void add(List<FileAddReq> list,Long attacheId,Integer type) {
@@ -68,6 +72,10 @@ public class FileComponentImpl implements FileComponent {
             if(!existFileIds.contains(f.getFileId())){
                 needAddFiles.add(f);
             }else{
+                String fileName = f.getFileName();
+                if(StringUtils.isNotEmpty(fileName) && fileName.length() > FILE_NAME_LIMIT){
+                    throw new BaseBizRuntimeException("您上传的附件名称过长，请修改后重试");
+                }
                 // 更新已存在的附件
                 FileDO updateFileDO = new FileDO();
                 updateFileDO.setType(type);
