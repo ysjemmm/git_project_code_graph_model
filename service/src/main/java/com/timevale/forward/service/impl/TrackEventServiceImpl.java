@@ -135,6 +135,7 @@ public class TrackEventServiceImpl implements TrackEventService {
         Map<String, Object> variables = new HashMap<>();
         variables.put("files", new ArrayList<>());
         variables.put("fullCnName", trackEventAddReq.getFullCnName());
+        variables.put("apiName", trackEventAddReq.getApiName());
         variables.put("egName", trackEventAddReq.getEgName());
         variables.put("platform", StringUtils.join(PlatformTypeEnum.getTextByCode(trackEventAddReq.getPlatforms()), ","));
         variables.put("touchMoment", trackEventAddReq.getTouchMoment());
