@@ -22,6 +22,7 @@ public enum ProjectNodeEnum {
     DEMAND_INTERNAL_AUDIT(10,"需求内审"),
     DEMAND_CONSTRUE(20,"需求串讲"),
     DEMAND_CONSTRUE_REVERSE(25,"需求反串讲"),
+    READY_UED_AUDIT(27,"待UED评审"),
     TECHNICAL_DETAIL_REVIEW(30,"技术详设评审"),
     DEVELOP_START(40,"开发开始"),
     WRITE_TEST_CASES(50,"编写测试用例"),
