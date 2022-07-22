@@ -168,6 +168,11 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             return null;
         }
 
+        //最小的产品需求状态小于列入项目中,无需计算发布时间
+        Integer minStatus = productBizDemandDOList.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(0);
+        if(minStatus<ProductDemandStatusEnum.INCLUDED.getCode()){
+            return null;
+        }
         // 获取关联的产品需求相关的项目
         List<Long> productDemandIdList = productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList());
         List<ProjectDO> projectDOList = projectMapper.selectByProductDemandIdList(productDemandIdList);

@@ -29,10 +29,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -137,6 +134,11 @@ public class CustomDeamndComponentImpl implements CustomDemandComponent {
         // 获取该业务需求所关联的产品需求
         List<ProductCustomDemandDO> productCustomDemandDOList = productCustomDemandMapper.getByCustomDemandId(customDemandId);
         if (productCustomDemandDOList.isEmpty()) {
+            return null;
+        }
+        //最小的产品需求状态小于列入项目中,无需计算发布时间
+        Integer minStatus = productCustomDemandDOList.stream().map(ProductCustomDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(0);
+        if(minStatus<ProductDemandStatusEnum.INCLUDED.getCode()){
             return null;
         }
 
