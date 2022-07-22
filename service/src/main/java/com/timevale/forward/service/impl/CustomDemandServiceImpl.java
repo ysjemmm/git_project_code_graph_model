@@ -393,10 +393,13 @@ public class CustomDemandServiceImpl implements CustomDemandService {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
         condition.setOwnerIds(ownerIdList);
-        condition.setStatus(Lists.newArrayList(ProductDemandStatusEnum.WAITING.getCode()
-                , ProductDemandStatusEnum.INCLUDED.getCode()
-                , ProductDemandStatusEnum.PROGRESS.getCode()
-                , ProductDemandStatusEnum.ONLINE.getCode()));
+        if(CollectionUtils.isEmpty(condition.getStatus())){
+            condition.setStatus(Lists.newArrayList(ProductDemandStatusEnum.WAITING.getCode()
+                    , ProductDemandStatusEnum.INCLUDED.getCode()
+                    , ProductDemandStatusEnum.PROGRESS.getCode()
+                    , ProductDemandStatusEnum.ONLINE.getCode()
+                    , ProductDemandStatusEnum.SUSPEND.getCode()));
+        }
 
         condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
         condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
