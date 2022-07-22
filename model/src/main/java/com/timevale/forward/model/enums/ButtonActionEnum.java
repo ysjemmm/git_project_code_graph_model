@@ -66,6 +66,11 @@ public enum ButtonActionEnum {
     /**
      * 提交
      */
+    RESUBMIT("重新提交"),
+
+    /**
+     * 提交
+     */
     MODIFY("编辑"),
 
     /**

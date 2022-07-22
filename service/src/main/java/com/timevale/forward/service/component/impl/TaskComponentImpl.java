@@ -224,7 +224,7 @@ public class TaskComponentImpl implements TaskComponent {
                     //暂停后会删除待办,启用后新增待办
                     List<String> existExecutorIds = personComponent.select(a.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode())
                             .stream().map(PersonDO::getUserId).collect(Collectors.toList());
-                    addTodoTask(a, existExecutorIds);
+                    addTodoTask(a, existExecutorIds,LocalSessionUtils.getUserInfo().getId());
                 }
                 taskMapper.update(a);
             });
@@ -252,14 +252,13 @@ public class TaskComponentImpl implements TaskComponent {
     }
 
     @Override
-    public void addTodoTask(TaskDO taskDO, List<String> executorIds) {
+    public void addTodoTask(TaskDO taskDO, List<String> executorIds,String account) {
         if (CollectionUtils.isEmpty(executorIds)) {
             return;
         }
         boolean containsCurrentUser = true;
-        String id = LocalSessionUtils.getUserInfo().getId();
-        if (!executorIds.contains(id)) {
-            executorIds.add(id);
+        if (!executorIds.contains(account)) {
+            executorIds.add(account);
             containsCurrentUser = false;
         }
         Map<String, String> map = innerUserPersonClient.getUnionIds(executorIds);
@@ -267,9 +266,9 @@ public class TaskComponentImpl implements TaskComponent {
             log.info("新增待办时,查询用户中心所属用户无unionId");
             return;
         }
-        String unionId = map.get(id);
+        String unionId = map.get(account);
         if (!containsCurrentUser) {
-            map.remove(id);
+            map.remove(account);
         }
         CreateTodoTaskMsg createTodoTaskMsg = CreateTodoTaskMsg.builder()
                 .title(String.format(TITLE, taskDO.getName()))
