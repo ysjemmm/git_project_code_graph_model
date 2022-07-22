@@ -8,8 +8,10 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +30,7 @@ public class FileComponentImpl implements FileComponent {
 
     @Resource
     private FileMapper fileMapper;
-    
+
     @Override
     public void add(List<FileAddReq> list,Long attacheId,Integer type) {
         log.info("新增时,附件接收参数:list={},attacheId={},type={}", list,attacheId,type);

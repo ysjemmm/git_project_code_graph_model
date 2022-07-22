@@ -1,12 +1,14 @@
 package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.condition.TaskListCondition;
+import com.timevale.forward.dal.dto.TaskOverdueDTO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.query.TaskQueryList;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
 import com.timevale.forward.facade.api.result.TaskDetailVO;
 import com.timevale.forward.facade.api.result.TaskListVO;
+import com.timevale.forward.facade.api.result.TaskOverdueCountVO;
 import com.timevale.forward.facade.api.result.TaskVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -60,5 +62,7 @@ public interface TaskCopier {
 
 
     TaskListVO tansfer(TaskDO taskDO);
+
+    List<TaskOverdueCountVO> convertOverdue(List<TaskOverdueDTO> dtoList);
 
 }

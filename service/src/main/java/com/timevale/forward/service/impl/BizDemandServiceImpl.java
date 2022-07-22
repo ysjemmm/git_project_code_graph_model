@@ -680,17 +680,6 @@ public class BizDemandServiceImpl implements BizDemandService {
             // 实体
             bizDemandIdList = logDOList.stream().map(BizChangeLogDO::getMainId).collect(Collectors.toList());
             bizDemandMapper.updateReceiveMan(bizDemandIdList, newReceiveMan, newReceiveManId);
-
-            // 通知
-            HashSet<Long> bizDemandIdSet = new HashSet<>(bizDemandIdList);
-            bizDemandDOList = bizDemandDOList.stream().filter(e -> bizDemandIdSet.contains(e.getId())).collect(Collectors.toList());
-            bizDemandDOList.forEach(e -> messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
-                    this,
-                    e.getId(),
-                    e.getSubmitMan(),
-                    newReceiveMan,
-                    e.getName()
-            )));
         }
 
         return BaseResult.success(true);
