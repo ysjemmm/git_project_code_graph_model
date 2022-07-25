@@ -49,16 +49,16 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
     private ProductBizDemandMapper productBizDemandMapper;
 
     @Resource
-    private BizDemandComponent bizDemandComponent;
-
-    @Resource
     private BizDemandLogComponent bizDemandLogComponent;
 
     @Resource
     private ProductCustomDemandMapper productCustomDemandMapper;
 
     @Resource
-    private CustomDemandComponent customDemandComponent;
+    private BizDemandMapper bizDemandMapper;
+
+    @Resource
+    private CustomDemandMapper customDemandMapper;
 
 
     /**
@@ -92,7 +92,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
 
         //产品经理
         Map<String, String> oldPds = personComponent.select(oldObj.getId(), PersonTypeEnum.PROJECT_PD.getCode())
-                .stream().collect(Collectors.toMap(PersonDO::getUserId, PersonDO::getUserName,(v1, v2) -> v2));
+                .stream().collect(Collectors.toMap(PersonDO::getUserId, PersonDO::getUserName, (v1, v2) -> v2));
         Map<String, String> newPds = newObj.getPds().stream().collect(Collectors.toMap(PersonDO::getUserId, PersonDO::getUserName, (v1, v2) -> v2));
         if (!CollectionUtil.isEqualList(oldPds.keySet(), newPds.keySet())) {
             String oldValue = String.join(",", oldPds.values());
@@ -100,17 +100,22 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             logs.add(createLog(oldObj.getId(), BizChangeLogFieldEnum.PD.getText(), oldValue, newValue, null));
         }
         //
-        if (!Objects.equals(oldObj.getPlanEndDate(),newObj.getPlanEndDate())) {
+        if (!Objects.equals(oldObj.getPlanEndDate(), newObj.getPlanEndDate()) || newObj.getActualEndDate() != null) {
+            //计划或实际时间变动可能影响到需求的项目发布时间
             List<Long> productDemandIds = projectProductDemandMapper.getByProjectId(oldObj.getId())
                     .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(productDemandIds)) {
                 List<Long> bizDemandIds = productBizDemandMapper.selectByProductDemandIds(productDemandIds)
                         .stream().map(ProductBizDemandDO::getBizDemandId).distinct().collect(Collectors.toList());
                 bizDemandIds.forEach(bid -> {
-                    Date publishDate = bizDemandComponent.getProjectEndDate(bid);
-                    log.info("bid={},planEndDate={},publishDate={}",bid,newObj.getPlanEndDate(),publishDate);
-                    if (Objects.equals(newObj.getPlanEndDate(),publishDate)) {
-                        //发布时间已变为当前需要更新的时间
+                    Date publishDate = bizDemandMapper.selectById(bid).getProjectEndDate();
+                    log.info("bid={},planEndDate={},publishDate={}", bid, newObj.getPlanEndDate(), publishDate);
+                    //发布时间已变为当前需要更新的时间
+                    if (Objects.equals(newObj.getActualEndDate(), publishDate)) {
+                        String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
+                        String newValue = DateUtil.parseToString(newObj.getActualEndDate(), DateStyle.YYYY_MM_DD);
+                        logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, bid));
+                    } else if (Objects.equals(newObj.getPlanEndDate(), publishDate)) {
                         String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
                         String newValue = DateUtil.parseToString(newObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
                         logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, bid));
@@ -120,13 +125,16 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 List<Long> customDemandIds = productCustomDemandMapper.selectByProductDemandIds(productDemandIds)
                         .stream().map(ProductCustomDemandDO::getCustomDemandId).distinct().collect(Collectors.toList());
                 customDemandIds.forEach(cid -> {
-                    Date publishDate = customDemandComponent.getProjectEndDate(cid);
-                    log.info("cid={},planEndDate={},publishDate={}",cid,newObj.getPlanEndDate(),publishDate);
-                    if (Objects.equals(newObj.getPlanEndDate(),publishDate)) {
-                        //发布时间已变为当前需要更新的时间
+                    Date publishDate = customDemandMapper.selectById(cid).getProjectEndDate();
+                    log.info("cid={},planEndDate={},publishDate={}", cid, newObj.getPlanEndDate(), publishDate);
+                    if (Objects.equals(newObj.getActualEndDate(), publishDate)) {
+                        String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
+                        String newValue = DateUtil.parseToString(newObj.getActualEndDate(), DateStyle.YYYY_MM_DD);
+                        logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, cid, BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode()));
+                    } else if (Objects.equals(newObj.getPlanEndDate(), publishDate)) {
                         String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
                         String newValue = DateUtil.parseToString(newObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
-                        logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, cid,BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode()));
+                        logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, cid, BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode()));
                     }
                 });
             }
