@@ -7,7 +7,7 @@
                                   review,review_url,status, create_man_id, create_man, doc_modify_man_id, doc_modify_man, doc_modify_date)
         values
         (#{projectId}, #{flowId}, #{flowType},#{proposerId},#{proposer}, #{reviewDate},#{reviewId},
-         #{review},#{reviewUrl}, #{status}, #{createManId}, #{createMan}, #{createManId}, #{createMan}, now())
+         #{review},#{reviewUrl}, #{status}, #{createManId}, #{createMan}, #{docModifyManId}, #{docModifyMan}, #{docModifyDate})
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">

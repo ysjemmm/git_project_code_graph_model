@@ -134,13 +134,13 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         String processInstanceId = startWorkflow(projectFlowAddReq);
         projectFlowDO.setFlowId(processInstanceId);
         projectFlowDO.setStatus(FlowStatusEnum.AUDITING.getCode());
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        projectFlowDO.setDocModifyDate(new Date());
+        projectFlowDO.setDocModifyManId(userInfo.getId());
+        projectFlowDO.setDocModifyMan(userInfo.getFullAlias());
         if (projectFlowDO.getId() == null) {
             projectFlowMapper.insert(projectFlowDO);
         } else {
-            UserInfo userInfo = LocalSessionUtils.getUserInfo();
-            projectFlowDO.setDocModifyDate(new Date());
-            projectFlowDO.setDocModifyManId(userInfo.getId());
-            projectFlowDO.setDocModifyMan(userInfo.getFullAlias());
             projectFlowMapper.update(projectFlowDO);
         }
         return BaseResult.success(processInstanceId);
