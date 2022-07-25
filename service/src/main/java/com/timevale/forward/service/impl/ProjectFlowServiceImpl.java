@@ -184,11 +184,13 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         List<String> reviewList = JSONObject.parseArray(oldFlowDo.getReview(), String.class);
         List<String> reviewIdList = JSONObject.parseArray(oldFlowDo.getReviewId(), String.class);
         List<PersonVO> reviews = new ArrayList<>();
-        for (int i = 0; i < reviewList.size(); i++) {
-            PersonVO personVO = new PersonVO();
-            personVO.setUserName(reviewList.get(i));
-            personVO.setUserId(reviewIdList.get(i));
-            reviews.add(personVO);
+        if (reviewList != null) {
+            for (int i = 0; i < reviewList.size(); i++) {
+                PersonVO personVO = new PersonVO();
+                personVO.setUserName(reviewList.get(i));
+                personVO.setUserId(reviewIdList.get(i));
+                reviews.add(personVO);
+            }
         }
 
         if (FlowStatusEnum.AUDITING.getCode().equals(oldFlowDo.getStatus())) {
