@@ -104,9 +104,9 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
         ProjectFlowDocumentVO document = ProjectFlowCopier.INSTANCE.convert2Document(flows.get(0));
         ProjectFlowDO last = flows.get(flows.size() - 1);
         document.setReviewUrl(last.getReviewUrl());
-        document.setModifyManId(last.getModifyManId());
-        document.setModifyMan(last.getModifyMan());
-        document.setModifyDate(last.getModifyDate());
+        document.setModifyManId(last.getDocModifyManId());
+        document.setModifyMan(last.getDocModifyMan());
+        document.setModifyDate(last.getDocModifyDate());
         List<FileDO> files = fileComponent.select(last.getId(), FileTypeEnum.TECH_REVIEW.getCode());
         document.setFiles(FileCopier.INSTANCE.transform(files));
         return document;
