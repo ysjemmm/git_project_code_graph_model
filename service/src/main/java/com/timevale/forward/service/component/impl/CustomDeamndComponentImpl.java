@@ -145,7 +145,7 @@ public class CustomDeamndComponentImpl implements CustomDemandComponent {
         }
 
         if(productDemandIdList.size()!=projectDOList.size()){
-            //数量不相等,存在部分产品需求没有关联项目,此时客户需求状态<项目进行中,发布时间不存在
+            //数量不相等,存在部分产品需求没有关联项目,此时客户需求状态<已列入项目,发布时间不存在
             log.info("产品需求id,项目,{},{}",productDemandIdList,projectDOList);
             return null;
         }
