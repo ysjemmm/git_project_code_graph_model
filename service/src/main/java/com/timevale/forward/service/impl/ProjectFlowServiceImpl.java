@@ -1,8 +1,7 @@
 package com.timevale.forward.service.impl;
 
-import com.google.common.base.Objects;
-
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.base.Objects;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
@@ -29,26 +28,20 @@ import com.timevale.forward.service.copy.ProjectFlowCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.base.util.DateUtils;
 import com.timevale.mandarin.common.annotation.RestService;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author xingyun
@@ -144,6 +137,10 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         if (projectFlowDO.getId() == null) {
             projectFlowMapper.insert(projectFlowDO);
         } else {
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
+            projectFlowDO.setDocModifyDate(new Date());
+            projectFlowDO.setDocModifyManId(userInfo.getId());
+            projectFlowDO.setDocModifyMan(userInfo.getFullAlias());
             projectFlowMapper.update(projectFlowDO);
         }
         return BaseResult.success(processInstanceId);
@@ -167,6 +164,10 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
             flows.add(preEditFlow);
         }
         ProjectFlowDO projectFlow = flows.get(0);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        projectFlow.setDocModifyManId(userInfo.getId());
+        projectFlow.setDocModifyMan(userInfo.getFullAlias());
+        projectFlow.setDocModifyDate(new Date());
         projectFlow.setReviewUrl(projectFlowDocModifyReq.getReviewUrl());
         projectFlowMapper.update(projectFlow);
         return BaseResult.success(true);

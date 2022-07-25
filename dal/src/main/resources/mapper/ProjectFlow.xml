@@ -3,9 +3,11 @@
 <mapper namespace="com.timevale.forward.dal.dao.ProjectFlowMapper">
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectFlowDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        insert into project_flow ( project_id, flow_id,flow_type,proposer_id,proposer,review_date,review_id,review,review_url,status, create_man_id, create_man)
+        insert into project_flow (project_id, flow_id,flow_type,proposer_id,proposer,review_date,review_id,
+                                  review,review_url,status, create_man_id, create_man, doc_modify_man_id, doc_modify_man, doc_modify_date)
         values
-        (#{projectId}, #{flowId}, #{flowType},#{proposerId},#{proposer}, #{reviewDate},#{reviewId},#{review},#{reviewUrl}, #{status}, #{createManId}, #{createMan})
+        (#{projectId}, #{flowId}, #{flowType},#{proposerId},#{proposer}, #{reviewDate},#{reviewId},
+         #{review},#{reviewUrl}, #{status}, #{createManId}, #{createMan}, #{createManId}, #{createMan}, now())
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
@@ -55,6 +57,9 @@
             <if test="status != null">status = #{status},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            <if test="docModifyManId != null">doc_modify_man_id = #{docModifyManId},</if>
+            <if test="docModifyMan != null">doc_modify_man = #{docModifyMan},</if>
+            <if test="docModifyDate != null">doc_modify_date = #{docModifyDate},</if>
         </set>
         <where>
             id = #{id}

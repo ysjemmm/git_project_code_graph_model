@@ -80,5 +80,8 @@ public interface ProjectFlowCopier {
     }
 
     @Mapping(target = "files", ignore = true)
+    @Mapping(target = "modifyDate", source = "docModifyDate")
+    @Mapping(target = "modifyManId", source = "docModifyManId")
+    @Mapping(target = "modifyMan", source = "docModifyMan")
     ProjectFlowDocumentVO convert2Document(ProjectFlowDO projectFlowDO);
 }
