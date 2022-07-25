@@ -40,6 +40,8 @@ public interface ProjectCopier {
      * @return ProjectDO
      */
     @Mapping(source = "pds", target = "pds", qualifiedByName = "mapping")
+    @Mapping(source = "pm.userId", target = "pmId")
+    @Mapping(source = "pm.userName", target = "pmName")
     ProjectDO convert(ProjectModifyReq projectModifyReq);
     
     /**

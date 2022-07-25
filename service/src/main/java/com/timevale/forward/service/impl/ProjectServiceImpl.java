@@ -299,14 +299,11 @@ public class ProjectServiceImpl implements ProjectService {
                     "项目含有项目目标，请至少添加一条项目目标数据");
         }
         ProjectDO newProject = ProjectCopier.INSTANCE.convert(projectModifyReq);
-        newProject.setPmName(projectModifyReq.getPm().getUserName());
-        newProject.setPmId(projectModifyReq.getPm().getUserId());
         List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
 
-        ProjectDO oldProjectDO = projectMapper.get(projectModifyReq.getId());
-        newProject.setStatus(oldProjectDO.getStatus());
         if (Integer.valueOf(1).equals(projectModifyReq.getDelayType())) {
             //有流程,计划时间不能变
+            ProjectDO oldProjectDO = projectMapper.get(projectModifyReq.getId());
             newProject.setPlanStartDate(oldProjectDO.getPlanStartDate());
             newProject.setPlanEndDate(oldProjectDO.getPlanEndDate());
         }
@@ -618,39 +615,14 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     private void fillInfoWhenModify(List<ProjectNodeDO> projectNodes, ProjectDO newProject) {
-        Map<String, ProjectNodeDO> nodeMap = projectNodes
-                .stream()
-                .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
-        // 检查任务
-        boolean checkTask = nodeMap.get(ProjectNodeEnum.START_PLAN.getText()) == null
-                && nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText()) == null
-                && nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getText()) == null
-                && nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText()) == null
-                && nodeMap.get(ProjectNodeEnum.UED_AUDIT.getText()) == null;
-        if (checkTask) {
-            //删除需求规划阶段时需要校验是否有关联任务,若有关联待执行&进行中&已完成&已暂停的任务,不能删除
-            List<TaskDO> taskDOList = taskMapper.getByProjectId(newProject.getId())
-                    .stream().filter(a -> TaskStageEnum.DEMAND.getCode().equals(a.getStage())
-                            && !TaskStatusEnum.INVALID.getCode().equals(a.getStatus())).collect(Collectors.toList());
-            if (CollectionUtils.isNotEmpty(taskDOList)) {
-                throw new BaseBizRuntimeException("需求规划阶段已关联任务，不可删除");
-            }
-        }
-        // 计算项目状态
-        ProjectNodeDO node;
-        Integer oldStatus = newProject.getStatus();
-        if ((node = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText())) != null && node.getActualDate() != null) {
-            if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
-                // 编辑项目
-                throw new BaseBizRuntimeException("项目状态为暂停时,不能填写发布正式的实际时间");
-            }
-            List<Date> nullDate = projectNodes.stream().map(ProjectNodeDO::getActualDate)
-                    .filter(Objects::isNull).collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(nullDate)) {
-                throw new BaseBizRuntimeException("请填写完其他节点的实际时间后,再填写发布正式的实际时间");
-            }
-        }
+        ProjectDO oldProjectDO = projectMapper.get(newProject.getId());
+
+        checkBeforeUpdate(projectNodes,oldProjectDO);
+
+        Integer oldStatus = oldProjectDO.getStatus();
+
         projectComponent.fillInfo(projectNodes, newProject);
+
         if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
             // 编辑项目时，当状态是暂停,不修改项目状态
             newProject.setStatus(oldStatus);
@@ -671,6 +643,40 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("更新项目信息完成");
     }
 
+    private void checkBeforeUpdate(List<ProjectNodeDO> projectNodes,  ProjectDO oldProjectDO) {
+        Map<String, ProjectNodeDO> nodeMap = projectNodes
+                .stream()
+                .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
+        // 检查任务
+        boolean checkTask = nodeMap.get(ProjectNodeEnum.START_PLAN.getText()) == null
+                && nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText()) == null
+                && nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getText()) == null
+                && nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText()) == null
+                && nodeMap.get(ProjectNodeEnum.UED_AUDIT.getText()) == null;
+        if (checkTask) {
+            //删除需求规划阶段时需要校验是否有关联任务,若有关联待执行&进行中&已完成&已暂停的任务,不能删除
+            List<TaskDO> taskDOList = taskMapper.getByProjectId(oldProjectDO.getId())
+                    .stream().filter(a -> TaskStageEnum.DEMAND.getCode().equals(a.getStage())
+                            && !TaskStatusEnum.INVALID.getCode().equals(a.getStatus())).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(taskDOList)) {
+                throw new BaseBizRuntimeException("需求规划阶段已关联任务，不可删除");
+            }
+        }
+        // 计算项目状态
+        ProjectNodeDO node;
+        Integer oldStatus = oldProjectDO.getStatus();
+        if ((node = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText())) != null && node.getActualDate() != null) {
+            if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
+                // 编辑项目
+                throw new BaseBizRuntimeException("项目状态为暂停时,不能填写发布正式的实际时间");
+            }
+            List<Date> nullDate = projectNodes.stream().map(ProjectNodeDO::getActualDate)
+                    .filter(Objects::isNull).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(nullDate)) {
+                throw new BaseBizRuntimeException("请填写完其他节点的实际时间后,再填写发布正式的实际时间");
+            }
+        }
+    }
     private void fillInfoWhenEnable(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
         projectComponent.fillInfo(projectNodes, projectDO);
         projectMapper.update(projectDO);

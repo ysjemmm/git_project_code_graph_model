@@ -27,7 +27,6 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.integration.superset.model.base.PageResult;
 import com.timevale.forward.service.observer.event.TaskDoneMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -40,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -47,7 +47,6 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.timevale.forward.service.constant.CommonConstant.SECONDS_PER_HOUR;
 
@@ -517,7 +516,7 @@ public class TaskServiceImpl implements TaskService {
         checkTaskStage(taskDos.get(0));
 
         String account = LocalSessionUtils.getUserInfo().getId();
-        CountDownLatch countDownLatch = new CountDownLatch(taskSimples.size());
+//        CountDownLatch countDownLatch = new CountDownLatch(taskSimples.size());
         taskSimples.forEach(a -> {
             TaskDO taskDO = TaskCopier.INSTANCE.convert(a);
             taskDO.setDesc(StringUtils.EMPTY);
@@ -599,12 +598,13 @@ public class TaskServiceImpl implements TaskService {
      * @param taskDO
      */
     private void checkTaskStage(TaskDO taskDO) {
-        List<ProjectNodeDO> projectNodeDO = projectNodeMapper.get(taskDO.getProjectId());
+        List<ProjectNodeDO> projectNodeDos = projectNodeMapper.get(taskDO.getProjectId());
         List<String> sureNode = Lists.newArrayList(ProjectNodeEnum.START_PLAN.getText()
                 , ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText()
                 , ProjectNodeEnum.DEMAND_CONSTRUE.getText()
-                , ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText());
-        boolean match = projectNodeDO.stream().anyMatch(a -> sureNode.contains(a.getName()));
+                , ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText()
+                , ProjectNodeEnum.UED_AUDIT.getText());
+        boolean match = projectNodeDos.stream().anyMatch(a -> sureNode.contains(a.getName()));
         if (!match && TaskStageEnum.DEMAND.getCode().equals(taskDO.getStage())) {
             throw new BaseBizRuntimeException("项目无需求规划阶段,不能创建该阶段的任务,请修改后重试");
         }
