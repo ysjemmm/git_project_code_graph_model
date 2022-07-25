@@ -563,8 +563,11 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public BaseResult<String> getElapsedTime(ElapsedEndTimeQueryReq elapsedEndTimeQueryReq) {
-        return BaseResult.success("");
+    public BaseResult<String> getElapsedEndTime(ElapsedEndTimeQueryReq elapsedEndTimeQueryReq) {
+        Date startTime = elapsedEndTimeQueryReq.getStartTime();
+        BigDecimal planUseTime = elapsedEndTimeQueryReq.getPlanUseTime();
+        String elaspedEndTime = elapsedTimeClient.getElapsedEndTime(startTime, planUseTime.multiply(new BigDecimal("3600")).longValue());
+        return BaseResult.success(elaspedEndTime);
     }
 
     /**

@@ -24,7 +24,7 @@ public class ElapsedEndTimeQueryReq extends BaseReq {
     @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
     private Date startTime;
 
-    @ApiModelProperty("计划耗时")
+    @ApiModelProperty("计划耗时(h)")
     @NotNull(message = "计划耗时不能为空")
     private BigDecimal planUseTime;
 }

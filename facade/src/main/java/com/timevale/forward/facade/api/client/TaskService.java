@@ -139,5 +139,5 @@ public interface TaskService {
      * @param elapsedEndTimeQueryReq 查询条件
      * @return yyyy-MM-dd HH:mm:ss
      */
-    BaseResult<String> getElapsedTime(ElapsedEndTimeQueryReq elapsedEndTimeQueryReq);
+    BaseResult<String> getElapsedEndTime(ElapsedEndTimeQueryReq elapsedEndTimeQueryReq);
 }

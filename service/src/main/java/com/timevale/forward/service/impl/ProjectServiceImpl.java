@@ -627,17 +627,16 @@ public class ProjectServiceImpl implements ProjectService {
             // 编辑项目时，当状态是暂停,不修改项目状态
             newProject.setStatus(oldStatus);
         }
-        ProjectDO oldProject = projectMapper.get(newProject.getId());
-        newProject.setNodeStatus(oldProject.getNodeStatus());
+        newProject.setNodeStatus(oldProjectDO.getNodeStatus());
         projectMapper.fullUpdateById(newProject);
         if (!Objects.equals(newProject.getStatus(), oldStatus)) {
             //状态不一致时,更新产品需求状态
             productDemandComponent.updateProductDemandStatus(newProject.getId(), newProject.getStatus());
             projectLogComponent.addLogWhenStatusChange(oldStatus, newProject.getStatus(), newProject.getId(), ButtonActionEnum.MODIFY.getText());
         }
-        if (!Objects.equals(oldProject.getPlanEndDate(), newProject.getPlanEndDate())
-                || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
-            List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProject.getId());
+        if (!Objects.equals(oldProjectDO.getPlanEndDate(), newProject.getPlanEndDate())
+                || !Objects.equals(oldProjectDO.getActualEndDate(), newProject.getActualEndDate())) {
+            List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProjectDO.getId());
             bizDemandIds.forEach(a -> bizDemandComponent.updateProjectEndDate(a));
         }
         log.info("更新项目信息完成");

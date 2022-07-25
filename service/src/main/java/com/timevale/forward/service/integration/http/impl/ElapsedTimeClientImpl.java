@@ -31,29 +31,28 @@ public class ElapsedTimeClientImpl implements ElapsedTimeClient {
     @Resource
     private RestTemplate restTemplate;
 
-    @Value("${elapsedTime.baseUrl:http://dingtalk-testvpc-svc.local-test:8181/workday/elapsedTimeV2/}")
+    @Value("${elapsedTime.baseUrl:http://dingtalk-testvpc-svc.local-test:8181/workday/}")
     private String baseUrl;
-
-    @Value("${elapsedTime.allDay:http://dingtalk-testvpc-svc.local-test:8181/workday/elapsedTime/}")
-    private String baseUrlAllDay;
 
     @Override
     public Long getElapsedTime(Date startTime, Date endTime) {
         log.info("workTime: startTime: {},endTime: {}", startTime, endTime);
-        return getTime(startTime, endTime, baseUrl);
-    }
-
-    @Override
-    public Long getElapsedTimeAllDay(Date startTime, Date endTime) {
-        log.info("allTime: startTime: {},endTime: {}", startTime, endTime);
-        return getTime(startTime, endTime, baseUrlAllDay);
-    }
-
-    private Long getTime(Date startTime, Date endTime, String url){
-
         JSONObject param = new JSONObject();
         param.put("startTime", DateUtil.parseToString(startTime));
         param.put("endTime", DateUtil.parseToString(endTime));
+        return getTime(param, baseUrl + "elapsedTimeV2/").getLong("elapsedtime");
+    }
+
+    @Override
+    public String getElapsedEndTime(Date startTime, Long seconds) {
+        log.info("workTime: startTime: {},seconds: {}", startTime, seconds);
+        JSONObject param = new JSONObject();
+        param.put("startTime", DateUtil.parseToString(startTime));
+        param.put("seconds", seconds);
+        return getTime(param, baseUrl + "deadlineV2/").getString("deadline");
+    }
+
+    private JSONObject getTime(JSONObject param, String url) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<JSONObject> entity = new HttpEntity<>(param, httpHeaders);
@@ -61,9 +60,9 @@ public class ElapsedTimeClientImpl implements ElapsedTimeClient {
         JSONObject jsonObject = JSONObject.parseObject(result);
         Integer code = jsonObject.getInteger("code");
         if (Integer.valueOf(0).equals(code)) {
-            return jsonObject.getJSONObject("data").getLong("elapsedtime");
+            return jsonObject.getJSONObject("data");
         }
         log.info("获取工作日工作时长返回结果: result :{}", result);
-        throw new BaseBizRuntimeException("计算工作日工作时长失败！" );
+        throw new BaseBizRuntimeException("计算工作日工作时长失败！");
     }
 }
