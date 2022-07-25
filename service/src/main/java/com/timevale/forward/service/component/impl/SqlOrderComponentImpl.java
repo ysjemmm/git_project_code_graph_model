@@ -42,4 +42,25 @@ public class SqlOrderComponentImpl implements SqlOrderComponent {
 
         return sql.toString();
     }
+
+    @Override
+    public String buildWithoutId(String field, Integer order) {
+        if(StringUtils.isEmpty(field)){
+            return StringUtils.EMPTY;
+        }
+
+        // 驼峰转下划线
+        field = StrUtil.toUnderlineCase(field);
+
+        StringBuilder sql = new StringBuilder();
+        // 排序字段
+        sql.append(field);
+
+        // 判断正逆序
+        if(order == 1){
+            sql.append(BLANK).append(DESC);
+        }
+        return sql.toString();
+    }
+
 }

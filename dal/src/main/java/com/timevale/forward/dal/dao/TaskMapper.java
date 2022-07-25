@@ -2,6 +2,7 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.TaskCondition;
 import com.timevale.forward.dal.condition.TaskListCondition;
+import com.timevale.forward.dal.dto.TaskOverdueDTO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.dal.entity.TaskStatusUpdateDO;
 import org.apache.ibatis.annotations.Param;
@@ -103,10 +104,22 @@ public interface TaskMapper {
 
 
     /**
-     *
      * @param taskStatusUpdateDO taskStatusUpdateDO
      * @return return
      */
     int updateStatusAsProjectStatusChange(TaskStatusUpdateDO taskStatusUpdateDO);
+
+    /**
+     * 查询用户逾期任务数量、时间
+     */
+    List<TaskOverdueDTO> getOverdueRank(@Param("projectId") Long projectId);
+
+    /**
+     * 通过执行人查询
+     *
+     * @param names 用户id列表
+     * @return TaskDO List
+     */
+    List<TaskDO> getByName(@Param("names") List<String> names);
 
 }

@@ -422,7 +422,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         BizDemandDO newBizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandModifyReq);
-        newBizDemandDO.setStatus(oldBizDemandDO.getStatus());
+        //需求被驳回可以重新提交给接收人
+        if(Objects.equal(oldBizDemandDO.getStatus(),BizDemandStatusEnum.REJECT.getCode())){
+            addLogWhenResubmit(oldBizDemandDO,newBizDemandDO);
+        }else {
+            newBizDemandDO.setStatus(oldBizDemandDO.getStatus());
+        }
+
         bizDemandMapper.fullUpdate(newBizDemandDO);
 
         // 添加抄送人数据
@@ -435,8 +441,9 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<FileAddReq> fileIdList = bizDemandModifyReq.getFileList();
         fileComponent.update(fileIdList, bizDemandModifyReq.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
 
-        // 接收人变更
-        if (!Objects.equal(oldBizDemandDO.getReceiveManId(), newBizDemandDO.getReceiveManId())) {
+        // 接收人变更,被驳回 重新提交给接收人
+        if (!Objects.equal(oldBizDemandDO.getReceiveManId(), newBizDemandDO.getReceiveManId())
+                ||Objects.equal(oldBizDemandDO.getStatus(),BizDemandStatusEnum.REJECT.getCode())) {
             // 判断当前状态≠作废
             if(BizDemandStatusEnum.INVALID.getCode().equals(oldBizDemandDO.getStatus())){
                 throw new BaseBizRuntimeException("已作废业务需求不可修改接收人");
@@ -465,6 +472,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 变更日志
         bizDemandLogComponent.addLogWhenModifyData(oldBizDemandDO, newBizDemandDO);
+
 
         return BaseResult.success(true);
     }
@@ -995,6 +1003,30 @@ public class BizDemandServiceImpl implements BizDemandService {
         bugStatusOperatorDO.setOperatorId(userInfo.getId());
         //往状态人员处理表里面插入一条数据记录
         bugStatusOperatorMapper.insert(bugStatusOperatorDO);
+    }
+
+
+    private void addLogWhenResubmit(BizDemandDO oldDo,BizDemandDO newDo){
+        newDo.setStatus(BizDemandStatusEnum.EVALUATE.getCode());
+        newDo.setReason(null);
+        // 日志, 状态改为待评估
+        bizDemandLogComponent.addLogWhenModifyData(
+                BizDemandStatusEnum.REJECT.getText(),
+                BizDemandStatusEnum.EVALUATE.getText(),
+                oldDo.getId(),
+                BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
+                true,
+                ButtonActionEnum.RESUBMIT.getText());
+        String oldReasonText = BizDemandReasonEnum.getTextByCode(oldDo.getReason());
+        if (StringUtils.isNotEmpty(oldReasonText)) {
+            bizDemandLogComponent.addLogWhenModifyData(
+                    oldReasonText,
+                    StringUtils.EMPTY,
+                    oldDo.getId(),
+                    BizChangeLogFieldEnum.REASON.getText(),
+                    false
+            );
+        }
     }
 
 }

@@ -218,6 +218,20 @@
           AND tpd.is_deleted = false
           AND t.is_deleted = false
     </select>
+    <select id="getOverdueRank" resultType="com.timevale.forward.dal.dto.TaskOverdueDTO">
+        select p.user_id,
+        p.user_name,
+        count(t.id)                as overdue_count,
+        1000 * sum(TIMESTAMPDIFF(SECOND, plan_end_date, now())) as accumulate_overdue_millis
+        from person p
+        left join task t on p.main_id = t.id and p.type = 40
+        where t.status = 10
+        and t.plan_end_date &lt; now()
+        and t.project_id = #{projectId}
+        and t.is_deleted = false
+        and p.is_deleted = false
+        group by p.user_id
+    </select>
 
 
     <update id="updateStatusAsProjectStatusChange" parameterType="com.timevale.forward.dal.entity.TaskStatusUpdateDO" >
@@ -234,4 +248,18 @@
             and is_deleted=false
         </where>
     </update>
+
+    <select id="getByName" resultType="com.timevale.forward.dal.entity.TaskDO">
+        select id, project_id, product_line_id, name, stage, status, todo, todo_id, plan_start_date, plan_end_date,
+        plan_use_time, actual_start_date, actual_end_date, task_use_time, is_deleted, create_man_id, create_man,
+        create_date, modify_man_id, modify_man, modify_date
+        from task
+        <where>
+            name in
+            <foreach collection="names" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            and is_deleted = false
+        </where>
+    </select>
 </mapper>
