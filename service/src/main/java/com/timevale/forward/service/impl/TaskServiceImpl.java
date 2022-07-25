@@ -566,7 +566,7 @@ public class TaskServiceImpl implements TaskService {
     public BaseResult<String> getElapsedEndTime(ElapsedEndTimeQueryReq elapsedEndTimeQueryReq) {
         Date startTime = elapsedEndTimeQueryReq.getStartTime();
         BigDecimal planUseTime = elapsedEndTimeQueryReq.getPlanUseTime();
-        String elaspedEndTime = elapsedTimeClient.getElapsedEndTime(startTime, planUseTime.multiply(new BigDecimal("3600")).longValue());
+        String elaspedEndTime = elapsedTimeClient.getElapsedEndTime(startTime, planUseTime.multiply(new BigDecimal(SECONDS_PER_HOUR)).longValue());
         return BaseResult.success(elaspedEndTime);
     }
 
