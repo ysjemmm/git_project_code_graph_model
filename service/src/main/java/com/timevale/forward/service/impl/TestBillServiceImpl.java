@@ -194,7 +194,7 @@ public class TestBillServiceImpl implements TestBillService {
         log.info("提测单-提测单详情,参数:{}", projectId);
 
         TestBillDO testBillDO = testBillMapper.selectByProjectId(projectId);
-        if (testBillDO == null || testBillDO.getStatus().equals(TestBillStatusEnum.PRE_SUBMIT_TEST_CASE.getCode())) {
+        if (testBillDO == null) {
             throw new BaseBizRuntimeException("该项目id没有对应的提测单");
         }
 
