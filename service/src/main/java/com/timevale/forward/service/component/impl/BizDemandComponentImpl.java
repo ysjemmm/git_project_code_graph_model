@@ -183,7 +183,6 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             log.info("产品需求id:{},{}",productDemandIdList,linkedProductDemandInProject);
             boolean match = productBizDemandDOList.stream().anyMatch(a -> ProductDemandStatusEnum.INVALID.getCode().equals(a.getStatus()));
             if(!match){
-                log.info("产品需求id,项目,{},{}",productDemandIdList,projectDOList);
                 return null;
             }
         }

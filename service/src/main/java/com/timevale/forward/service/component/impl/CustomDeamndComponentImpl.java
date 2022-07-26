@@ -152,7 +152,6 @@ public class CustomDeamndComponentImpl implements CustomDemandComponent {
             //数量不相等,存在部分产品需求没有关联项目,此时业务需求状态<已列入项目,发布时间不存在
             boolean match = productCustomDemandDOList.stream().anyMatch(a -> ProductDemandStatusEnum.INVALID.getCode().equals(a.getStatus()));
             if(!match){
-                log.info("产品需求id,项目,{},{}",productDemandIdList,projectDOList);
                 return null;
             }
         }
