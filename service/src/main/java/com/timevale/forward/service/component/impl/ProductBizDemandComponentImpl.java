@@ -112,8 +112,8 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
     private void before(Map<Long, Date> publishDateMap, List<Long> bizDemandIds) {
         if (!CollectionUtils.isEmpty(bizDemandIds)) {
             bizDemandIds.forEach(bid -> {
-                Date publishDate = bizDemandComponent.getProjectEndDate(bid);
-                publishDateMap.put(bid, publishDate);
+                BizDemandDO bizDemandDO = bizDemandMapper.selectById(bid);
+                publishDateMap.put(bid, bizDemandDO.getProjectEndDate());
             });
         }
     }

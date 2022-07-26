@@ -143,8 +143,8 @@ public class ProductCustomDemandComponentImpl implements ProductCustomDemandComp
     private void before(Map<Long, Date> publishDateMap, List<Long> customDemandIds) {
         if (!CollectionUtils.isEmpty(customDemandIds)) {
             customDemandIds.forEach(bid -> {
-                Date publishDate = customDemandComponent.getProjectEndDate(bid);
-                publishDateMap.put(bid, publishDate);
+                CustomDemandDO customDemandDO = customDemandMapper.selectById(bid);
+                publishDateMap.put(bid, customDemandDO.getProjectEndDate());
             });
         }
     }

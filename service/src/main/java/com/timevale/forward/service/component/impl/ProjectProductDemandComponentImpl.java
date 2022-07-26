@@ -121,8 +121,8 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
                     .stream().map(ProductBizDemandDO::getBizDemandId).distinct().collect(Collectors.toList());
             bizDemandIds.addAll(bids);
             bizDemandIds.forEach(bid -> {
-                Date publishDate = bizDemandComponent.getProjectEndDate(bid);
-                publishDateMap.put(bid, publishDate);
+                BizDemandDO bizDemandDO = bizDemandMapper.selectById(bid);
+                publishDateMap.put(bid, bizDemandDO.getProjectEndDate());
             });
 
 
@@ -130,8 +130,8 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
                     .stream().map(ProductCustomDemandDO::getCustomDemandId).distinct().collect(Collectors.toList());
             customDemandIds.addAll(cIds);
             customDemandIds.forEach(cid -> {
-                Date publishDate = customDemandComponent.getProjectEndDate(cid);
-                customPublishDateMap.put(cid, publishDate);
+                CustomDemandDO customDemandDO = customDemandMapper.selectById(cid);
+                customPublishDateMap.put(cid, customDemandDO.getProjectEndDate());
             });
         }
     }
