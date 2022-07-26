@@ -144,14 +144,14 @@ public class CustomDeamndComponentImpl implements CustomDemandComponent {
             return null;
         }
 
-        List<ProjectProductDemandDO> linkedProductDemand = projectProductDemandMapper.getLinkedProductDemand(productDemandIdList);
-        List<Long> linkedProductDemandInProject = linkedProductDemand.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
-        productDemandIdList.removeAll(linkedProductDemandInProject);
-        if(productDemandIdList.size()>1){
-//            数量不相等,存在部分产品需求没有关联项目,此时业务需求状态<已列入项目,发布时间不存在
-            log.info("产品需求id:{},{}",productDemandIdList,linkedProductDemandInProject);
-            return null;
-        }
+//        List<ProjectProductDemandDO> linkedProductDemand = projectProductDemandMapper.getLinkedProductDemand(productDemandIdList);
+//        List<Long> linkedProductDemandInProject = linkedProductDemand.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
+//        productDemandIdList.removeAll(linkedProductDemandInProject);
+//        if(productDemandIdList.size()>1){
+////            数量不相等,存在部分产品需求没有关联项目,此时业务需求状态<已列入项目,发布时间不存在
+//            log.info("产品需求id:{},{}",productDemandIdList,linkedProductDemandInProject);
+//            return null;
+//        }
 
         Date result = null;
         for (ProjectDO projectDO : projectDOList) {
