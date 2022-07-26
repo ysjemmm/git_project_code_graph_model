@@ -3,10 +3,8 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import org.apache.ibatis.annotations.Param;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author by xingyun
@@ -30,4 +28,6 @@ public interface BizChangeLogMapper {
 
     List<BizChangeLogDO> listAllByActions(@Param("mainIds") Collection<Long> mainIds, @Param("type") Integer type,
                                           @Param("actions") Collection<String> actions);
+
+    BizChangeLogDO getProjectPublishDate(@Param("mainId") Long mainId, @Param("type") Integer type, @Param("field") String field);
 }

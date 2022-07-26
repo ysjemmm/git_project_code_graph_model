@@ -110,13 +110,15 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 bizDemandIds.forEach(bid -> {
                     Date publishDate = bizDemandMapper.selectById(bid).getProjectEndDate();
                     log.info("bid={},planEndDate={},publishDate={}", bid, newObj.getPlanEndDate(), publishDate);
+                    BizChangeLogDO bizChangeLogDO = bizChangeLogMapper.getProjectPublishDate(bid, 4, "项目发布时间");
                     //发布时间已变为当前需要更新的时间
+                    String oldValue = bizChangeLogDO == null ? "" : bizChangeLogDO.getOldValue();
                     if (Objects.equals(newObj.getActualEndDate(), publishDate)) {
-                        String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
+//                        String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
                         String newValue = DateUtil.parseToString(newObj.getActualEndDate(), DateStyle.YYYY_MM_DD);
                         logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, bid));
                     } else if (Objects.equals(newObj.getPlanEndDate(), publishDate)) {
-                        String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
+//                        String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
                         String newValue = DateUtil.parseToString(newObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
                         logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, bid));
                     }
@@ -127,12 +129,14 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 customDemandIds.forEach(cid -> {
                     Date publishDate = customDemandMapper.selectById(cid).getProjectEndDate();
                     log.info("cid={},planEndDate={},publishDate={}", cid, newObj.getPlanEndDate(), publishDate);
+                    BizChangeLogDO bizChangeLogDO = bizChangeLogMapper.getProjectPublishDate(cid, 4, "项目发布时间");
+                    String oldValue = bizChangeLogDO == null ? "" : bizChangeLogDO.getOldValue();
                     if (Objects.equals(newObj.getActualEndDate(), publishDate)) {
-                        String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
+//                        String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
                         String newValue = DateUtil.parseToString(newObj.getActualEndDate(), DateStyle.YYYY_MM_DD);
                         logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, cid, BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode()));
                     } else if (Objects.equals(newObj.getPlanEndDate(), publishDate)) {
-                        String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
+//                        String oldValue = DateUtil.parseToString(oldObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
                         String newValue = DateUtil.parseToString(newObj.getPlanEndDate(), DateStyle.YYYY_MM_DD);
                         logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, cid, BizChangeLogTypeEnum.CUSTOM_DEMAND.getCode()));
                     }
