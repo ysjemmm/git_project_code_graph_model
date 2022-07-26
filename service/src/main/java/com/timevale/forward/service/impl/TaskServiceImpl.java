@@ -599,7 +599,7 @@ public class TaskServiceImpl implements TaskService {
 
     private void checkNameExisted(List<TaskDO> taskDos) {
         List<String> names = taskDos.stream().map(TaskDO::getName).collect(Collectors.toList());
-        List<String> existNames = taskMapper.getByName(names).stream().map(TaskDO::getName).collect(Collectors.toList());
+        List<String> existNames = taskMapper.getByNameAndPid(names,taskDos.get(0).getProjectId()).stream().map(TaskDO::getName).collect(Collectors.toList());
         if (CollectionUtils.isNotEmpty(existNames)) {
             throw new BaseBizRuntimeException("任务名称:" + existNames + "已存在,请修改后重试");
         }

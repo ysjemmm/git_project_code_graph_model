@@ -120,6 +120,6 @@ public interface TaskMapper {
      * @param names 用户id列表
      * @return TaskDO List
      */
-    List<TaskDO> getByName(@Param("names") List<String> names);
+    List<TaskDO> getByNameAndPid(@Param("names") List<String> names,@Param("projectId") Long projectId);
 
 }
