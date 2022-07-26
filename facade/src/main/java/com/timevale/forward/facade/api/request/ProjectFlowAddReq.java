@@ -1,17 +1,17 @@
 package com.timevale.forward.facade.api.request;
 
+import org.hibernate.validator.constraints.Length;
+
+import java.util.Date;
+import java.util.List;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.hibernate.validator.constraints.Length;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author xingyun
@@ -45,7 +45,6 @@ public class ProjectFlowAddReq extends BaseReq {
     private List<PersonAddReq> reviews;
 
     @ApiModelProperty("详设地址")
-    @NotBlank
     @Length(max = 500)
     private String reviewUrl;
 
