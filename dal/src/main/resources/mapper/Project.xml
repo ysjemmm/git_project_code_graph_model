@@ -4,15 +4,15 @@
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         insert into project (name, customer_dev,is_platform_publish, is_with_goal, priority, type ,status,pm,pm_id,plan_start_date,plan_end_date,
-        `desc`, level, resource_assessment ,create_man_id, create_man)
+        `desc`, level, resource_assessment ,pj_establish_start_date,pj_establish_publish_date,create_man_id, create_man)
         values
         (#{name}, #{customerDev}, #{isPlatformPublish}, #{isWithGoal}, #{priority}, #{type},#{status}, #{pmName},#{pmId},#{planStartDate},#{planEndDate},
-        #{desc}, #{level}, #{resourceAssessment}, #{createManId}, #{createMan})
+        #{desc}, #{level}, #{resourceAssessment},#{pjEstablishStartDate},#{pjEstablishPublishDate}, #{createManId}, #{createMan})
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectDO">
         select id,name, customer_dev, is_platform_publish, is_with_goal, priority, type ,status, node_status, pm_id,pm pmName ,plan_start_date,plan_end_date,
-        actual_start_date,actual_end_date,`desc`, level, resource_assessment,
+        actual_start_date,actual_end_date,`desc`, level, resource_assessment,pj_establish_start_date,pj_establish_publish_date,
         create_man_id, create_man,create_date,modify_date
         from project
         where id = #{id} and is_deleted=false
@@ -38,8 +38,10 @@
             <if test="resourceAssessment != null">resource_assessment = #{resourceAssessment},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
-            actual_start_date = #{actualStartDate},
-            actual_end_date = #{actualEndDate}
+            <if test="true">actual_start_date = #{actualStartDate},</if>
+            <if test="true">actual_end_date = #{actualEndDate},</if>
+            <if test="true">pj_establish_start_date = #{pjEstablishStartDate},</if>
+            <if test="true">pj_establish_publish_date = #{pjEstablishPublishDate},</if>
         </set>
         <where>
             id = #{id}
@@ -129,7 +131,7 @@
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProjectListDO">
         select a.id,a.name, a.customer_dev,is_platform_publish, is_with_goal, a.priority, a.type ,a.status,a.node_status, a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
-        a.actual_start_date,a.actual_end_date,a.`desc`, a.level,
+        a.actual_start_date,a.actual_end_date,a.`desc`, a.level,pj_establish_start_date,pj_establish_publish_date,
         a.create_man_id, a.create_man,a.create_date,a.modify_date
         from project a
         <where>
@@ -194,7 +196,7 @@
 
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProjectDO">
         select id,name,is_platform_publish, is_with_goal, customer_dev, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date,
-        actual_start_date,actual_end_date,`desc`,level, resource_assessment,
+        actual_start_date,actual_end_date,`desc`,level, resource_assessment,pj_establish_start_date,pj_establish_publish_date,
         create_man_id, create_man,create_date,modify_date
         from project
         where name = #{name} and is_deleted=false

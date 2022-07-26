@@ -7,7 +7,6 @@ import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
 import java.util.Date;
-import java.util.List;
 
 /**
  * @author xingyun
@@ -15,17 +14,17 @@ import java.util.List;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("项目节点延期检查")
-public class ProjectNodeFlowCheckReq extends BaseReq {
-
-    @ApiModelProperty("项目节点")
-    @NotNull(message = "项目节点不能为空")
-    private List<ProjectNodeAddReq> projectNodes;
-
-    @ApiModelProperty("项目id")
+@ApiModel("项目日期修改")
+public class ProjectDateModifyReq extends BaseReq {
+    
+    @ApiModelProperty("id")
     @NotNull(message = "项目id不能为空")
-    private Long projectId;
+    private Long id;
+
+    @ApiModelProperty("立项开始时间")
+    private Date pjEstablishStartDate;
 
     @ApiModelProperty("立项预期上线时间")
     private Date pjEstablishPublishDate;
+
 }

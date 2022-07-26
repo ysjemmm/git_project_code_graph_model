@@ -37,7 +37,9 @@ public enum MessageTitleEnum {
     BUG_ONLINE_REPAIR_FAIL("线上bug修复失败通知"),
 
     // 改进措施
-    IMPROVEMENT_MEASURE("您收到了一条故障改进事项");
+    IMPROVEMENT_MEASURE("您收到了一条故障改进事项"),
+
+    PROJECT_ESTABLISH_DATE_CHANGE("立项预期上线时间变更通知");
 
     private String text;
 

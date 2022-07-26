@@ -67,7 +67,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
     public BaseResult<ProjectNodeFlowDetailVO> getFlow(Long projectId) {
         log.info("节点审批流程详情,参数:{}", projectId);
         List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(projectId);
-        if(CollectionUtils.isEmpty(projectFlowDos)){
+        if (CollectionUtils.isEmpty(projectFlowDos)) {
             throw new BaseBizRuntimeException("找不到该审批流程");
         }
         ProjectNodeFlowDO currentFlowDo = projectFlowDos.get(0);
@@ -96,7 +96,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
     public BaseResult<Boolean> withdraw(Long projectId) {
         log.info("节点审批流程撤销,参数:{}", projectId);
         List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(projectId);
-        if(CollectionUtils.isEmpty(projectFlowDos)){
+        if (CollectionUtils.isEmpty(projectFlowDos)) {
             throw new BaseBizRuntimeException("找不到该审批流程");
         }
         ProjectNodeFlowDO currentFlowDo = projectFlowDos.get(0);
@@ -121,7 +121,8 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
     @Override
     public BaseResult<ProjectNodeDelayVO> nodeIsDelay(ProjectNodeFlowCheckReq projectNodeFlowCheckReq) {
         log.info("检查节点是否延期,参数:{}", projectNodeFlowCheckReq);
-        ProjectNodeDelayVO delayVO=new ProjectNodeDelayVO();
+        ProjectNodeDelayVO delayVO = new ProjectNodeDelayVO();
+
         List<ProjectNodeDO> oldProjectNodes = projectNodeMapper.get(projectNodeFlowCheckReq.getProjectId());
         List<ProjectNodeDO> oldPublishNodes = oldProjectNodes.stream()
                 .filter(a -> ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(a.getName()) && a.getPlanDate() != null).collect(Collectors.toList());
@@ -134,6 +135,20 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
         List<ProjectNodeDO> testNodes = projectNodes.stream()
                 .filter(a -> ProjectNodeEnum.SUBMIT_TEST.getText().equals(a.getName()) && a.getPlanDate() != null).collect(Collectors.toList());
 
+        Date pjEstablishPublishDate = projectNodeFlowCheckReq.getPjEstablishPublishDate();
+        if (pjEstablishPublishDate != null && !CollectionUtils.isEmpty(publishNodes) && pjEstablishPublishDate.before(publishNodes.get(0).getPlanDate())) {
+            List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(projectNodeFlowCheckReq.getProjectId());
+            boolean match = projectFlowDos.stream().anyMatch(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus()));
+            if (!match) {
+                //有基线版本,且立项预期上线时间小于发布正式计划时间,且无审批通过的流程
+                Long seconds = elapsedTimeClient.getElapsedTime(pjEstablishPublishDate, publishNodes.get(0).getPlanDate());
+                BigDecimal elapsedTime = new BigDecimal(seconds.toString());
+                elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.UP);
+                delayVO.setDelayDay(elapsedTime);
+                delayVO.setDelayType(2);
+                return BaseResult.success(delayVO);
+            }
+        }
         if (!CollectionUtils.isEmpty(oldPublishNodes) && !CollectionUtils.isEmpty(publishNodes)) {
             Date oldPlanDate = DateUtil.getEndOfDay(oldPublishNodes.get(0).getPlanDate());
             Date planDate = DateUtil.getEndOfDay(publishNodes.get(0).getPlanDate());
@@ -167,7 +182,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
     public BaseResult<Boolean> test(ProjectModifyReq projectModifyReq) {
         ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
         List<ProjectNodeDO> projectNodes = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
-        projectNodeFlowComponent.process(projectNodeFlowDO,projectNodes);
+        projectNodeFlowComponent.process(projectNodeFlowDO, projectNodes);
         return BaseResult.success();
     }
 

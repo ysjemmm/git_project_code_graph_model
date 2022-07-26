@@ -515,6 +515,8 @@ public class TaskServiceImpl implements TaskService {
         //阶段限制
         checkTaskStage(taskDos.get(0));
 
+        checkPlanDate(taskDos.get(0));
+
         String account = LocalSessionUtils.getUserInfo().getId();
 //        CountDownLatch countDownLatch = new CountDownLatch(taskSimples.size());
         taskSimples.forEach(a -> {
@@ -568,6 +570,14 @@ public class TaskServiceImpl implements TaskService {
         BigDecimal planUseTime = elapsedEndTimeQueryReq.getPlanUseTime();
         String elaspedEndTime = elapsedTimeClient.getElapsedEndTime(startTime, planUseTime.multiply(new BigDecimal(SECONDS_PER_HOUR)).longValue());
         return BaseResult.success(elaspedEndTime);
+    }
+
+    @Override
+    public BaseResult<List<Long>> getProductLineIdsUnLimited() {
+        List<String> excludeBizDomains = Arrays.asList(excludeBizDomain.split(";"));
+        List<ProductLineDO> productLineDOList = productLineMapper.getByBizDomainName(excludeBizDomains);
+        List<Long> productLineIds = productLineDOList.stream().map(ProductLineDO::getId).collect(Collectors.toList());
+        return BaseResult.success(productLineIds);
     }
 
     /**

@@ -63,4 +63,11 @@ public interface ProductLineMapper {
      * @return 列表
      */
     List<ProductLineDO> getBizDomainId(@Param("bizDomainId") Long bizDomainId);
+
+    /**
+     *
+     * @param bizDomainName bizDomainName
+     * @return 列表
+     */
+    List<ProductLineDO> getByBizDomainName(@Param("bizDomainName") List<String> bizDomainName);
 }

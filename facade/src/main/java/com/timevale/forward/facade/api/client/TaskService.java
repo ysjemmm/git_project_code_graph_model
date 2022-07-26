@@ -15,6 +15,7 @@ import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * @author xingyun
@@ -140,4 +141,11 @@ public interface TaskService {
      * @return yyyy-MM-dd HH:mm:ss
      */
     BaseResult<String> getElapsedEndTime(ElapsedEndTimeQueryReq elapsedEndTimeQueryReq);
+
+
+    /**
+     *  无16h限制的产品线
+     * @return 产品线id
+     */
+    BaseResult<List<Long>> getProductLineIdsUnLimited();
 }
