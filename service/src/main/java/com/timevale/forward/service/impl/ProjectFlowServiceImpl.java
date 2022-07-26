@@ -1,7 +1,8 @@
 package com.timevale.forward.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Objects;
+
+import com.alibaba.fastjson.JSONObject;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
@@ -34,14 +35,23 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.base.util.DateUtils;
 import com.timevale.mandarin.common.annotation.RestService;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xingyun
@@ -204,7 +214,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         proposer.setUserId(oldFlowDo.getProposerId());
         projectFlowDetailVO.setProposerVO(proposer);
         projectFlowDetailVO.setReviews(reviews);
-        List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(oldFlowDo.getProjectId());
+        List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectIdAndType(oldFlowDo.getProjectId(),oldFlowDo.getFlowType());
         long count = projectFlowDos.stream().filter(a -> FlowStatusEnum.REJECT.getCode().equals(a.getStatus())).count();
         projectFlowDetailVO.setReturnCount(count);
         return BaseResult.success(projectFlowDetailVO);
