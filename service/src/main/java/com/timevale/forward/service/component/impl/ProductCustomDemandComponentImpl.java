@@ -76,6 +76,15 @@ public class ProductCustomDemandComponentImpl implements ProductCustomDemandComp
     }
 
     @Override
+    public void update(Long productDemandId) {
+        ProductCustomDemandDO customDemandDO = new ProductCustomDemandDO();
+        customDemandDO.setIsDeleted(true);
+        customDemandDO.setProductDemandId(productDemandId);
+        customDemandDO.setCustomDemandId(null);
+        productCustomDemandMapper.update(customDemandDO);
+    }
+
+    @Override
     public void batchInsert(Long productDemandId, List<Long> customDemandIds,boolean updatePublishDate) {
         log.info("产品需求详情,新增关联关系:{},{}", productDemandId, customDemandIds);
         if (CollectionUtils.isEmpty(customDemandIds)) {

@@ -230,6 +230,11 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             Map<Long, String> pdNameMap = new HashMap<>();
             pdNameMap.put(productDemand.getId(), productDemand.getName());
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, null);
+
+            if(ProductDemandStatusEnum.INVALID.getCode().equals(type)){
+                productBizDemandComponent.update(productDemandId);
+                productCustomDemandComponent.update(productDemandId);
+            }
             // 暂停or作废解除项目关联
             projectProductDemandComponent.update(null, productDemandId);
         }
