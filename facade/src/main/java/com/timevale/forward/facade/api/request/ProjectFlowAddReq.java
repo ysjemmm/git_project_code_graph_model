@@ -1,14 +1,17 @@
 package com.timevale.forward.facade.api.request;
 
-import java.util.Date;
-import java.util.List;
-
-import javax.validation.constraints.NotNull;
-
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.Length;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author xingyun
@@ -28,6 +31,7 @@ public class ProjectFlowAddReq extends BaseReq {
     private Integer flowType;
 
     @ApiModelProperty("发起人")
+    @Valid
     @NotNull(message = "发起人不能为空")
     private PersonAddReq proposer;
 
@@ -36,13 +40,17 @@ public class ProjectFlowAddReq extends BaseReq {
     private Date reviewDate;
 
     @ApiModelProperty("评审人员")
+    @Valid
     @NotNull(message = "评审人员不能为空")
     private List<PersonAddReq> reviews;
 
     @ApiModelProperty("详设地址")
+    @NotBlank
+    @Length(max = 500)
     private String reviewUrl;
 
     @ApiModelProperty("文件信息")
+    @Valid
     private List<FileAddReq> files;
 
 
