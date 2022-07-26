@@ -75,14 +75,6 @@ public class ProductCustomDemandComponentImpl implements ProductCustomDemandComp
         }
     }
 
-    @Override
-    public void update(Long productDemandId) {
-        ProductCustomDemandDO customDemandDO = new ProductCustomDemandDO();
-        customDemandDO.setIsDeleted(true);
-        customDemandDO.setProductDemandId(productDemandId);
-        customDemandDO.setCustomDemandId(null);
-        productCustomDemandMapper.update(customDemandDO);
-    }
 
     @Override
     public void batchInsert(Long productDemandId, List<Long> customDemandIds,boolean updatePublishDate) {

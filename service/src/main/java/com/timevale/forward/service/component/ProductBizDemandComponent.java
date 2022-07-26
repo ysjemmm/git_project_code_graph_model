@@ -11,12 +11,6 @@ public interface ProductBizDemandComponent {
     void update(Long productDemandId,Long bizDemandId,boolean updatePublishDate);
 
     /**
-     *
-     *
-     */
-    void update(Long productDemandId);
-
-    /**
      * 新增项目-产品需求
      *
      * @param bizDemandIds 新增项目-产品需求id

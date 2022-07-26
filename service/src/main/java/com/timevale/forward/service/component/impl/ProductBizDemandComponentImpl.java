@@ -76,15 +76,6 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
     }
 
     @Override
-    public void update(Long productDemandId) {
-        ProductBizDemandDO productDemandDO = new ProductBizDemandDO();
-        productDemandDO.setIsDeleted(true);
-        productDemandDO.setProductDemandId(productDemandId);
-        productDemandDO.setBizDemandId(null);
-        productBizDemandMapper.update(productDemandDO);
-    }
-
-    @Override
     public void batchInsert(Long productDemandId, List<Long> bizDemandIds,boolean updatePublishDate) {
         log.info("新增产品与业务需求关系:{},{},{}", productDemandId, bizDemandIds,updatePublishDate);
         if (CollectionUtils.isEmpty(bizDemandIds)) {
