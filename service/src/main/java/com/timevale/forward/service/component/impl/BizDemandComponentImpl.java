@@ -3,10 +3,7 @@ package com.timevale.forward.service.component.impl;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.ProductBizDemandMapper;
-import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
@@ -68,6 +65,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Resource
     private BizDemandLogComponent bizDemandLogComponent;
+
+    @Resource
+    private ProjectProductDemandMapper projectProductDemandMapper;
 
     @Override
     public void updateBizDemandStatusByLinkedProductDemand(Long bizDemandId) {
@@ -175,13 +175,12 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             return null;
         }
 
-        if(productDemandIdList.size()!=projectDOList.size()){
+        List<ProjectProductDemandDO> linkedProductDemand = projectProductDemandMapper.getLinkedProductDemand(productDemandIdList);
+        List<Long> linkedProductDemandInProject = linkedProductDemand.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
+        productDemandIdList.removeAll(linkedProductDemandInProject);
+        if(!CollectionUtils.isEmpty(productDemandIdList)){
             //数量不相等,存在部分产品需求没有关联项目,此时业务需求状态<已列入项目,发布时间不存在
-            boolean match = productBizDemandDOList.stream().anyMatch(a -> ProductDemandStatusEnum.INVALID.getCode().equals(a.getStatus()));
-            if(!match){
-                log.info("产品需求id,项目,{},{}",productDemandIdList,projectDOList);
-                return null;
-            }
+            return null;
         }
 
         Date result = null;

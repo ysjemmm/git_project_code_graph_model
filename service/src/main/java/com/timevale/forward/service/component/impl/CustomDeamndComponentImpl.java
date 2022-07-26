@@ -4,14 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.CustomDemandListCondition;
-import com.timevale.forward.dal.dao.CustomDemandMapper;
-import com.timevale.forward.dal.dao.ProductCustomDemandMapper;
-import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.entity.CustomDemandDO;
-import com.timevale.forward.dal.entity.ProductCustomDemandDO;
-import com.timevale.forward.dal.entity.ProductDemandDO;
-import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
 import com.timevale.forward.model.bo.ProductEndBO;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
@@ -29,7 +23,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -52,6 +49,9 @@ public class CustomDeamndComponentImpl implements CustomDemandComponent {
 
     @Resource
     private ProductDemandMapper productDemandMapper;
+
+    @Resource
+    private ProjectProductDemandMapper projectProductDemandMapper;
 
     @Value("${custom.demand.receiver}")
     private String receiver;
@@ -144,14 +144,12 @@ public class CustomDeamndComponentImpl implements CustomDemandComponent {
             return null;
         }
 
-        if(productDemandIdList.size()!=projectDOList.size()){
-            //数量不相等,存在部分客户需求没有关联项目,此时业务需求状态<已列入项目,发布时间不存在
-            boolean match = productCustomDemandDOList.stream().anyMatch(a -> ProductDemandStatusEnum.INVALID.getCode().equals(a.getStatus()));
-            if(!match){
-                //做作废产品需求时,项目和产品需求断开关系,但此时业务需求和产品需求未断开,需要过滤到作废产品需求的情况
-                log.info("产品需求id,项目,{},{}",productDemandIdList,projectDOList);
-                return null;
-            }
+        List<ProjectProductDemandDO> linkedProductDemand = projectProductDemandMapper.getLinkedProductDemand(productDemandIdList);
+        List<Long> linkedProductDemandInProject = linkedProductDemand.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
+        productDemandIdList.removeAll(linkedProductDemandInProject);
+        if(!CollectionUtils.isEmpty(productDemandIdList)){
+            //数量不相等,存在部分产品需求没有关联项目,此时业务需求状态<已列入项目,发布时间不存在
+            return null;
         }
 
         Date result = null;
