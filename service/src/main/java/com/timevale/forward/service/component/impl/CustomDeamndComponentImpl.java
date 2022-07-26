@@ -148,6 +148,7 @@ public class CustomDeamndComponentImpl implements CustomDemandComponent {
         List<Long> linkedProductDemandInProject = linkedProductDemand.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
         productDemandIdList.removeAll(linkedProductDemandInProject);
         if(!CollectionUtils.isEmpty(productDemandIdList)){
+            log.info("产品需求id:{},{}",productDemandIdList,linkedProductDemandInProject);
             //数量不相等,存在部分产品需求没有关联项目,此时业务需求状态<已列入项目,发布时间不存在
             return null;
         }
