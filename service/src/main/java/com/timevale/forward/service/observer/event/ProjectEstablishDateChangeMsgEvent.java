@@ -18,7 +18,7 @@ public class ProjectEstablishDateChangeMsgEvent extends MessageEvent {
     private final String name;
     private final String pjEstablishPublishDate;
 
-    private static final String PUBLISH_DATE_CHANGE_MSG = "### %s  \n  您的项目 **%s**，发布正式计划时间晚于立项预期上线时间 **%s**，请修改发布正式-计划时间。  \n\n  ***  \n  [查看详情](%s)";
+    private static final String PUBLISH_DATE_CHANGE_MSG = "### %s  \n  您的项目 **%s** 发布正式计划时间晚于立项预期上线时间 **%s**，请修改发布正式-计划时间。  \n\n  ***  \n  [查看详情](%s)";
 
     public ProjectEstablishDateChangeMsgEvent(Object source, Long projectId,String receiver, String name, String pjEstablishPublishDate) {
         super(source);
