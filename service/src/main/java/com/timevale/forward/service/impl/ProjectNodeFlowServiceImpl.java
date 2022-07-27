@@ -144,7 +144,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
                 boolean match = projectFlowDos.stream().anyMatch(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus()));
                 if (!match) {
                     //有基线版本,且立项预期上线时间小于发布正式计划时间,且无审批通过的流程
-                    Long seconds = elapsedTimeClient.getElapsedTime(pjEstablishPublishDate, publishNodes.get(0).getPlanDate());
+                    Long seconds = elapsedTimeClient.getElapsedTime(pjEstablishPublishDateEnd, planDate);
                     BigDecimal elapsedTime = new BigDecimal(seconds.toString());
                     elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.UP);
                     delayVO.setDelayDay(elapsedTime);
