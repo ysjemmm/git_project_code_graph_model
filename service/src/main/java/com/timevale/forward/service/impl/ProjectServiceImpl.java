@@ -368,7 +368,8 @@ public class ProjectServiceImpl implements ProjectService {
 
         //流程与版本信息处理
         processFlow(projectModifyReq);
-
+        //立项时间变化
+        sendDingMsgIfPublishDateForward(newProject);
         return BaseResult.success(true);
     }
 

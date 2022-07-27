@@ -296,6 +296,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         variables.put("d", projectNodeFlowDO.getD());
         variables.put("publishDate", DateUtil.parseToString(projectNodeFlowDO.getPublishDate(), DateFormatConst.DATE_FORMAT));
         variables.put("changePublishDate", DateUtil.parseToString(projectNodeFlowDO.getChangePublishDate(), DateFormatConst.DATE_FORMAT));
+        variables.put("pjEstablishPublishDate", DateUtil.parseToString(projectNodeFlowDO.getPjEstablishPublishDate(), DateFormatConst.DATE_FORMAT));
         variables.put("delayDay", projectNodeFlowDO.getDelayDay());
         variables.put("changeCount", count);
         variables.put("changeType", ChangeTypeEnum.getTextByCode(projectNodeFlowDO.getChangeType()));
