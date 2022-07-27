@@ -136,17 +136,21 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
                 .filter(a -> ProjectNodeEnum.SUBMIT_TEST.getText().equals(a.getName()) && a.getPlanDate() != null).collect(Collectors.toList());
 
         Date pjEstablishPublishDate = projectNodeFlowCheckReq.getPjEstablishPublishDate();
-        if (pjEstablishPublishDate != null && !CollectionUtils.isEmpty(publishNodes) && pjEstablishPublishDate.before(publishNodes.get(0).getPlanDate())) {
-            List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(projectNodeFlowCheckReq.getProjectId());
-            boolean match = projectFlowDos.stream().anyMatch(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus()));
-            if (!match) {
-                //有基线版本,且立项预期上线时间小于发布正式计划时间,且无审批通过的流程
-                Long seconds = elapsedTimeClient.getElapsedTime(pjEstablishPublishDate, publishNodes.get(0).getPlanDate());
-                BigDecimal elapsedTime = new BigDecimal(seconds.toString());
-                elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.UP);
-                delayVO.setDelayDay(elapsedTime);
-                delayVO.setDelayType(2);
-                return BaseResult.success(delayVO);
+        if (pjEstablishPublishDate != null && !CollectionUtils.isEmpty(publishNodes)) {
+            Date pjEstablishPublishDateEnd = DateUtil.getEndOfDay(pjEstablishPublishDate);
+            Date planDate = DateUtil.getEndOfDay(publishNodes.get(0).getPlanDate());
+            if(pjEstablishPublishDateEnd.before(planDate)){
+                List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(projectNodeFlowCheckReq.getProjectId());
+                boolean match = projectFlowDos.stream().anyMatch(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus()));
+                if (!match) {
+                    //有基线版本,且立项预期上线时间小于发布正式计划时间,且无审批通过的流程
+                    Long seconds = elapsedTimeClient.getElapsedTime(pjEstablishPublishDate, publishNodes.get(0).getPlanDate());
+                    BigDecimal elapsedTime = new BigDecimal(seconds.toString());
+                    elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.UP);
+                    delayVO.setDelayDay(elapsedTime);
+                    delayVO.setDelayType(2);
+                    return BaseResult.success(delayVO);
+                }
             }
         }
         if (!CollectionUtils.isEmpty(oldPublishNodes) && !CollectionUtils.isEmpty(publishNodes)) {
