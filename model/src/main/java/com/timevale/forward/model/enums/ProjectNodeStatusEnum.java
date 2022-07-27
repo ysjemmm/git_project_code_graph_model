@@ -1,9 +1,10 @@
 package com.timevale.forward.model.enums;
 
-import com.timevale.forward.dal.entity.ProjectNodeDO;
-import lombok.Getter;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
 
-import java.util.*;
+import lombok.Getter;
 
 /**
  * @author by YangXu
@@ -50,7 +51,7 @@ public enum ProjectNodeStatusEnum {
         nodeStatusMap.put(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText(),   ProjectNodeStatusEnum.READY_INTERNAL_AUDIT.code);
         nodeStatusMap.put(ProjectNodeEnum.DEMAND_CONSTRUE.getText(),         ProjectNodeStatusEnum.READY_CONSTRUE.code);
         nodeStatusMap.put(ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText(), ProjectNodeStatusEnum.READY_CONSTRUE_REVERSE.code);
-        nodeStatusMap.put(ProjectNodeEnum.UED_AUDIT.getText(), ProjectNodeStatusEnum.READY_UED_AUDIT.code);
+        nodeStatusMap.put(ProjectNodeEnum.UED_AUDIT.getText(),               ProjectNodeStatusEnum.READY_UED_AUDIT.code);
         nodeStatusMap.put(ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText(), ProjectNodeStatusEnum.READY_TECHNICAL_DETAIL_REVIEW.code);
         nodeStatusMap.put(ProjectNodeEnum.DEVELOP_START.getText(),           ProjectNodeStatusEnum.READY_DEVELOP.code);
         nodeStatusMap.put(ProjectNodeEnum.WRITE_TEST_CASES.getText(),        ProjectNodeStatusEnum.DEVELOPING.code);
