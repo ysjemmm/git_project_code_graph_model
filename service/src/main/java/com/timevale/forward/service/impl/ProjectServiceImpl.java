@@ -139,7 +139,7 @@ public class ProjectServiceImpl implements ProjectService {
     private MessageEventPublisher messageEventPublisher;
 
     @Resource
-    private  CustomDemandComponent customDemandComponent;
+    private CustomDemandComponent customDemandComponent;
 
 
     @Override
@@ -309,7 +309,7 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO newProject = ProjectCopier.INSTANCE.convert(projectModifyReq);
         List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
 
-        if(projectModifyReq.getDelayType().compareTo(1)>=0){
+        if (projectModifyReq.getDelayType().compareTo(1) >= 0) {
             //有流程,计划时间不能变
             ProjectDO oldProjectDO = projectMapper.get(projectModifyReq.getId());
             newProject.setPlanStartDate(oldProjectDO.getPlanStartDate());
@@ -350,7 +350,7 @@ public class ProjectServiceImpl implements ProjectService {
                     throw new BaseBizRuntimeException("您的发布计划还未结束，请前往发布平台处理");
                 }
             }
-            if (projectModifyReq.getDelayType().compareTo(1)>=0) {
+            if (projectModifyReq.getDelayType().compareTo(1) >= 0) {
                 //需要审批,只更新实际时间
                 projectNodeComponent.updateNodeActualDate(projectNodeDOList, newProject.getId());
             } else {
@@ -369,7 +369,7 @@ public class ProjectServiceImpl implements ProjectService {
         //流程与版本信息处理
         processFlow(projectModifyReq);
         //立项时间变化
-        sendDingMsgIfPublishDateForward(newProject);
+        sendDingMsgIfPublishDateForward(newProject.getId());
         return BaseResult.success(true);
     }
 
@@ -585,6 +585,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modifyProjectDate(ProjectDateModifyReq projectDateModifyReq) {
         log.info("立项时间修改参数:{}", projectDateModifyReq);
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectDateModifyReq);
@@ -592,7 +593,7 @@ public class ProjectServiceImpl implements ProjectService {
         oldProjectDO.setPjEstablishStartDate(projectDateModifyReq.getPjEstablishStartDate());
         oldProjectDO.setPjEstablishPublishDate(projectDateModifyReq.getPjEstablishPublishDate());
         projectMapper.update(oldProjectDO);
-        sendDingMsgIfPublishDateForward(projectDO);
+        sendDingMsgIfPublishDateForward(projectDO.getId());
         return BaseResult.success(true);
     }
 
@@ -638,7 +639,7 @@ public class ProjectServiceImpl implements ProjectService {
     private void fillInfoWhenModify(List<ProjectNodeDO> projectNodes, ProjectDO newProject) {
         ProjectDO oldProject = projectMapper.get(newProject.getId());
 
-        checkBeforeUpdate(projectNodes,oldProject);
+        checkBeforeUpdate(projectNodes, oldProject);
 
         Integer oldStatus = oldProject.getStatus();
 
@@ -713,7 +714,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     private void processFlow(ProjectModifyReq projectModifyReq) {
         List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
-        if (projectModifyReq.getDelayType().compareTo(1)>=0) {
+        if (projectModifyReq.getDelayType().compareTo(1) >= 0) {
             ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
             projectNodeFlowComponent.process(projectNodeFlowDO, projectNodeDOList);
         } else if (Integer.valueOf(0).equals(projectModifyReq.getDelayType())) {
@@ -732,18 +733,18 @@ public class ProjectServiceImpl implements ProjectService {
         }
     }
 
-    private void sendDingMsgIfPublishDateForward(ProjectDO newProject) {
-        ProjectDO projectDO = projectMapper.get(newProject.getId());
-        Date pjEstablishPublishDate = newProject.getPjEstablishPublishDate();
-        Date planEndDate = newProject.getPlanEndDate();
-        //立项预计上线时间提前
-        if (pjEstablishPublishDate != null && pjEstablishPublishDate.before(planEndDate)
-                && !ProjectStatusEnum.terminated(projectDO.getStatus())) {
+    private void sendDingMsgIfPublishDateForward(Long id) {
+        ProjectDO oldProjectDO = projectMapper.get(id);
+        Date pjEstablishPublishDate = oldProjectDO.getPjEstablishPublishDate();
+        Date planEndDate = oldProjectDO.getPlanEndDate();
+        log.info("立项预计上线时间提前:{}",oldProjectDO);
+        if (pjEstablishPublishDate != null && planEndDate != null && pjEstablishPublishDate.before(planEndDate)
+                && !ProjectStatusEnum.terminated(oldProjectDO.getStatus())) {
             messageEventPublisher.publish(new ProjectEstablishDateChangeMsgEvent(
                     this,
-                    newProject.getId(),
-                    newProject.getPmId(),
-                    newProject.getName(),
+                    oldProjectDO.getId(),
+                    oldProjectDO.getPmId(),
+                    oldProjectDO.getName(),
                     DateUtil.parseToString(pjEstablishPublishDate, DateStyle.YYYY_MM_DD))
             );
         }

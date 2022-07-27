@@ -70,6 +70,8 @@
             resource_assessment = #{resourceAssessment},
             modify_man = #{modifyMan},
             modify_man_id = #{modifyManId},
+            pj_establish_start_date = #{pjEstablishStartDate},
+            pj_establish_publish_date = #{pjEstablishPublishDate},
         </set>
         <where>
             id = #{id}
