@@ -386,7 +386,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         //获取项目发布时间
-        bizDemandDetailVO.setEndDate(bizDemandComponent.getProjectEndDate(bizDemandId));
+        bizDemandDetailVO.setEndDate(bizDemandDO.getProjectEndDate());
 
         // 查看是否为线上bug转换
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectByBizDemandId(bizDemandId);

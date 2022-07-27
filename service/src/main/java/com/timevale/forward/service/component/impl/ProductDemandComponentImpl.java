@@ -144,12 +144,18 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
 
     @Override
     public void updateProductDemandStatus(Long projectId, Integer status) {
+        updateProductDemandStatus(projectId,status,new ArrayList<>());
+    }
+
+    @Override
+    public void updateProductDemandStatus(Long projectId, Integer status, List<Long> productDemandIds) {
         List<ProjectProductDemandDO> exists = projectProductDemandMapper.getByProjectId(projectId);
-        if (CollectionUtils.isEmpty(exists)) {
+        List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
+        existProductDemandIds.addAll(productDemandIds);
+        if (CollectionUtils.isEmpty(existProductDemandIds)) {
             log.info("更新产品需求,没有找到产品需求");
             return;
         }
-        List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
         List<ProductDemandDO> productDemands = productDemandMapper.selectByIdList(existProductDemandIds);
 
         Map<Long, Integer> statusMap = productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getStatus, (v1, v2) -> v2));
@@ -216,7 +222,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                 }
                 Integer newStatus = updateDemandStatus(productStatus, bid, true);
                 bizDemandLogComponent.addLogAsProductDemandStatusChange(v.getStatus(), newStatus, bid, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
-                sendDingMsg(v.getStatus(), newStatus, v);
+                sendDingMsg(v.getStatus(), newStatus, bid);
             }
         });
     }
@@ -278,13 +284,14 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     }
 
 
-    private void sendDingMsg(Integer oldStatus, Integer newStatus, ProductBizDemandDO bizDemandDO) {
+    private void sendDingMsg(Integer oldStatus, Integer newStatus, Long bizId) {
         if (!Objects.equals(oldStatus, newStatus) && BizDemandStatusEnum.statusNeedNotice(newStatus)) {
-            Date projectEndDate = bizDemandComponent.getProjectEndDate(bizDemandDO.getBizDemandId());
-            log.info("发送钉钉消息,项目发布时间={},更新前状态={},更新后状态={},业务需求id={}", projectEndDate, oldStatus, newStatus, bizDemandDO.getBizDemandId());
+            BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizId);
+            Date projectEndDate = bizDemandDO.getProjectEndDate();
+            log.info("发送钉钉消息,项目发布时间={},更新前状态={},更新后状态={},业务需求id={}", projectEndDate, oldStatus, newStatus, bizId);
             messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
                     this,
-                    bizDemandDO.getBizDemandId(),
+                    bizId,
                     bizDemandDO.getSubmitManId(),
                     bizDemandDO.getName(),
                     BizDemandStatusEnum.getTextByCode(newStatus),
@@ -311,7 +318,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                 bizDemandLogComponent.addLogAsProductDemandStatusChange(oldStatus, newStatus, demandId, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
 
                 if (BizDemandStatusEnum.statusNeedNotice(newStatus)) {
-                    Date projectEndDate = bizDemandComponent.getProjectEndDate(demandId);
+                    Date projectEndDate = bizDemandDO.getProjectEndDate();
                     messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
                             this,
                             demandId,

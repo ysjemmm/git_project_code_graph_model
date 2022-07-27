@@ -485,19 +485,19 @@ public class ProjectServiceImpl implements ProjectService {
                 List<Long> existedIds = productDemand.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
                 throw new BaseBizRuntimeException("产品需求id为" + existedIds + "已被项目关联,请刷后重试");
             }
-            projectProductDemandComponent.batchInsert(projectDO.getId(), productDemandIds);
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus(),productDemandIds);
 
-            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
+            projectProductDemandComponent.batchInsert(projectDO.getId(), productDemandIds);
 
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.LINK.getText());
 
         } else {
-            projectProductDemandComponent.update(null, productDemandIds.get(0));
-
             ProductDemandDO productDemandDO = new ProductDemandDO();
             productDemandDO.setId(productDemandIds.get(0));
             productDemandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
             productDemandComponent.update(productDemandDO);
+
+            projectProductDemandComponent.update(null, productDemandIds.get(0));
 
             // 一个产品需求下的业务需求
             productDemandComponent.updateDemandStatusAsProductStatusChange(productDemandIds, false);
