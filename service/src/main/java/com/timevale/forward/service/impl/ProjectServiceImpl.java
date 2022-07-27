@@ -18,7 +18,11 @@ import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.ProjectEstablishDateChangeMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.date.DateStyle;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -652,8 +656,8 @@ public class ProjectServiceImpl implements ProjectService {
         }
         if (!Objects.equals(oldProjectDO.getPlanEndDate(), newProject.getPlanEndDate())
                 || !Objects.equals(oldProjectDO.getActualEndDate(), newProject.getActualEndDate())) {
-            List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProjectDO.getId());
-            bizDemandIds.forEach(a -> bizDemandComponent.updateProjectEndDate(a));
+//            List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProjectDO.getId());
+//            bizDemandIds.forEach(a -> bizDemandComponent.updateProjectEndDate(a));
         }
         log.info("更新项目信息完成");
     }
