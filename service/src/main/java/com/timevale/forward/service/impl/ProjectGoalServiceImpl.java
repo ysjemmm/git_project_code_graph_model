@@ -31,7 +31,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -152,7 +155,9 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
             log.setCreateManId(userInfo.getId());
             log.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         }
-        bizChangeLogMapper.batchInsert(logs);
+        if (!logs.isEmpty()) {
+            bizChangeLogMapper.batchInsert(logs);
+        }
         return BaseResult.success(true);
     }
 

@@ -94,5 +94,7 @@
         <mapper resource="mapper/ProductDemandDescRecordMapper.xml" />
         <mapper resource="mapper/ProjectNodeFlowMapper.xml" />
         <mapper resource="mapper/ProjectNodeRecordMapper.xml" />
+        <mapper resource="mapper/CustomDemandMapper.xml" />
+        <mapper resource="mapper/ProductCustomDemandMapper.xml" />
     </mappers>
 </configuration>

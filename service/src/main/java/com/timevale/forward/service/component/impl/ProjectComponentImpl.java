@@ -400,7 +400,7 @@ public class ProjectComponentImpl implements ProjectComponent {
     }
 
     @Override
-    public List<Long> getLinkBizDemandIds(Long projectId) {
+    public List<Long> getLinkProductDemandIds(Long projectId) {
         if (projectId == null) {
             return Lists.emptyList();
         }
@@ -409,11 +409,8 @@ public class ProjectComponentImpl implements ProjectComponent {
         if (CollectionUtils.isEmpty(productDemandIds)) {
             return Lists.emptyList();
         }
-
-        List<Long> bizDemandIds = productBizDemandMapper.selectByProductDemandIds(productDemandIds)
-                .stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
-        log.info("项目:{},关联的有业务需求:{}", projectId, bizDemandIds);
-        return bizDemandIds;
+        log.info("项目:{},关联的有产品需求:{}", projectId, productDemandIds);
+        return productDemandIds;
     }
 
     private List<ProductLineAnalyseVO> analyse(ProjectListCondition condition) {

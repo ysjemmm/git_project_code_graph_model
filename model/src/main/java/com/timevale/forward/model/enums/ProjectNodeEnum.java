@@ -1,9 +1,9 @@
 package com.timevale.forward.model.enums;
 
-import java.util.Objects;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
+import java.util.Objects;
 
 
 /**

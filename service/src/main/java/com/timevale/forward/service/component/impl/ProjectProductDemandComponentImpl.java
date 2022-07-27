@@ -1,16 +1,8 @@
 package com.timevale.forward.service.component.impl;
 
-import com.timevale.forward.dal.dao.BizChangeLogMapper;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.ProductBizDemandMapper;
-import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
-import com.timevale.forward.dal.entity.BizChangeLogDO;
-import com.timevale.forward.dal.entity.BizDemandDO;
-import com.timevale.forward.dal.entity.ProductBizDemandDO;
-import com.timevale.forward.dal.entity.ProjectProductDemandDO;
-import com.timevale.forward.service.component.BizDemandComponent;
-import com.timevale.forward.service.component.BizDemandLogComponent;
-import com.timevale.forward.service.component.ProjectProductDemandComponent;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.utils.date.DateStyle;
 import com.timevale.forward.service.utils.date.DateUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +39,18 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
     @Resource
     private BizDemandMapper bizDemandMapper;
 
+    @Resource
+    private ProductCustomDemandMapper productCustomDemandMapper;
+
+    @Resource
+    private CustomDemandComponent customDemandComponent;
+
+    @Resource
+    private CustomDemandMapper customDemandMapper;
+
+    @Resource
+    private CustomDemandLogComponent customDemandLogComponent;
+
     @Override
     public void update(Long projectId, Long productDemandId) {
         log.info("删除项目与产品需求关系,projectId={},productDemandId={}", projectId, productDemandId);
@@ -60,10 +64,14 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
             productDemandIds = projectProductDemandMapper.getByProjectId(projectId)
                     .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
         }
-        Map<Long, Date> publishDateMap = new HashMap<>();
+
+        Map<Long, Date> bizPublishDateMap = new HashMap<>();
         List<Long> bizDemandIds = new ArrayList<>();
-        before(productDemandIds, publishDateMap, bizDemandIds);
-        log.info("bizDemandId,publishDate:{}", publishDateMap);
+        Map<Long, Date> customPublishDateMap = new HashMap<>();
+        List<Long> customDemandIds = new ArrayList<>();
+
+        before(productDemandIds, bizPublishDateMap, bizDemandIds,customPublishDateMap,customDemandIds);
+        log.info("bizPublishDateMap,customPublishDateMap:{},{}", bizPublishDateMap,customPublishDateMap);
         // unlink
         ProjectProductDemandDO projectProductDemandDO = new ProjectProductDemandDO();
         projectProductDemandDO.setProjectId(projectId);
@@ -71,7 +79,7 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
         projectProductDemandDO.setIsDeleted(true);
         projectProductDemandMapper.update(projectProductDemandDO);
         // unlink after
-        after(publishDateMap, bizDemandIds);
+        after(bizPublishDateMap, bizDemandIds,customPublishDateMap,customDemandIds);
     }
 
     @Override
@@ -81,40 +89,54 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
         List<Long> existProductDemandIds = exists.stream().map(ProjectProductDemandDO::getProductDemandId)
                 .collect(Collectors.toList());
         productDemandIds.removeAll(existProductDemandIds);
-        // link before
-        Map<Long, Date> publishDateMap = new HashMap<>();
-        List<Long> bizDemandIds = new ArrayList<>();
-        before(productDemandIds, publishDateMap, bizDemandIds);
-        log.info("bizDemandId,publishDate:{}", publishDateMap);
-        // link
-        if (!CollectionUtils.isEmpty(productDemandIds)) {
-            Set<Long> set = new HashSet<>(productDemandIds);
-            List<ProjectProductDemandDO> list = set.stream().map(i -> {
-                ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
-                productDemandDO.setProductDemandId(i);
-                productDemandDO.setProjectId(projectId);
-                return productDemandDO;
-            }).collect(Collectors.toList());
-            projectProductDemandMapper.batchInsert(list);
+        if (CollectionUtils.isEmpty(productDemandIds)) {
+            return;
         }
+        // link before
+        Map<Long, Date> bizPublishDateMap = new HashMap<>();
+        List<Long> bizDemandIds = new ArrayList<>();
+        Map<Long, Date> customPublishDateMap = new HashMap<>();
+        List<Long> customDemandIds = new ArrayList<>();
+
+        before(productDemandIds, bizPublishDateMap, bizDemandIds,customPublishDateMap,customDemandIds);
+        log.info("bizPublishDateMap,customPublishDateMap:{},{}", bizPublishDateMap,customPublishDateMap);
+        // link
+        Set<Long> set = new HashSet<>(productDemandIds);
+        List<ProjectProductDemandDO> list = set.stream().map(i -> {
+            ProjectProductDemandDO productDemandDO = new ProjectProductDemandDO();
+            productDemandDO.setProductDemandId(i);
+            productDemandDO.setProjectId(projectId);
+            return productDemandDO;
+        }).collect(Collectors.toList());
+        projectProductDemandMapper.batchInsert(list);
         // link after
-        after(publishDateMap, bizDemandIds);
+        after(bizPublishDateMap, bizDemandIds,customPublishDateMap,customDemandIds);
     }
 
 
-    private void before(List<Long> productDemandIds, Map<Long, Date> publishDateMap, List<Long> bizDemandIds) {
+    private void before(List<Long> productDemandIds, Map<Long, Date> publishDateMap, List<Long> bizDemandIds
+            ,Map<Long, Date> customPublishDateMap, List<Long> customDemandIds) {
         if (!CollectionUtils.isEmpty(productDemandIds)) {
-            List<Long> bids = productBizDemandMapper.getByProductDemandIds(productDemandIds)
+            List<Long> bids = productBizDemandMapper.selectByProductDemandIds(productDemandIds)
                     .stream().map(ProductBizDemandDO::getBizDemandId).distinct().collect(Collectors.toList());
             bizDemandIds.addAll(bids);
             bizDemandIds.forEach(bid -> {
-                Date publishDate = bizDemandComponent.getProjectEndDate(bid);
-                publishDateMap.put(bid, publishDate);
+                BizDemandDO bizDemandDO = bizDemandMapper.selectById(bid);
+                publishDateMap.put(bid, bizDemandDO.getProjectEndDate());
+            });
+
+
+            List<Long> cIds = productCustomDemandMapper.selectByProductDemandIds(productDemandIds)
+                    .stream().map(ProductCustomDemandDO::getCustomDemandId).distinct().collect(Collectors.toList());
+            customDemandIds.addAll(cIds);
+            customDemandIds.forEach(cid -> {
+                CustomDemandDO customDemandDO = customDemandMapper.selectById(cid);
+                customPublishDateMap.put(cid, customDemandDO.getProjectEndDate());
             });
         }
     }
 
-    private void after(Map<Long, Date> publishDateMap, List<Long> bizDemandIds) {
+    private void after(Map<Long, Date> publishDateMap, List<Long> bizDemandIds,Map<Long, Date> customPublishDateMap, List<Long> customDemandIds) {
         List<BizChangeLogDO> logs = new ArrayList<>();
         bizDemandIds.forEach(bid -> {
             bizDemandComponent.updateProjectEndDate(bid);
@@ -125,6 +147,17 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
                 logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, bid));
             }
         });
+
+        customDemandIds.forEach(cid -> {
+            customDemandComponent.updateProjectEndDate(cid);
+            CustomDemandDO customDemandDO = customDemandMapper.selectById(cid);
+            if (!Objects.equals(customPublishDateMap.get(cid), customDemandDO.getProjectEndDate())) {
+                String oldValue = DateUtil.parseToString(customPublishDateMap.get(cid), DateStyle.YYYY_MM_DD);
+                String newValue = DateUtil.parseToString(customDemandDO.getProjectEndDate(), DateStyle.YYYY_MM_DD);
+                logs.add(customDemandLogComponent.buildLogWhenPublishDateChange(oldValue, newValue, cid));
+            }
+        });
+
         if (CollectionUtils.isNotEmpty(logs)) {
             bizChangeLogMapper.batchInsert(logs);
         }

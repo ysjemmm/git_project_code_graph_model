@@ -39,6 +39,8 @@ public enum MessageTitleEnum {
     // 改进措施
     IMPROVEMENT_MEASURE("您收到了一条故障改进事项"),
 
+    CUSTOMDEMAND_RECEIVE("您收到一条新的客户需求"),
+
     PROJECT_ESTABLISH_DATE_CHANGE("立项预期上线时间变更通知");
 
     private String text;

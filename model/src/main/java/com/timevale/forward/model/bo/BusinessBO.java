@@ -1,16 +1,15 @@
-package com.timevale.forward.model.middle;
+package com.timevale.forward.model.bo;
 
 import lombok.Data;
 
-import java.io.Serializable;
 import java.util.List;
 
 /**
- * @Date 2022/3/22 19:04
- * @Author 望轩
- */
+ * @author xingyun
+ * @date 2021-12-13 13:58
+ **/
 @Data
-public class BusinessBeanMD implements Serializable {
+public class BusinessBO {
     /**
      * 属性名字
      * */

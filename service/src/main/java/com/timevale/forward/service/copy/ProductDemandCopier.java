@@ -3,6 +3,7 @@ package com.timevale.forward.service.copy;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
+import com.timevale.forward.facade.api.query.CustomLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
@@ -83,10 +84,23 @@ public interface ProductDemandCopier {
      */
     ProductDemandListCondition convert(TaskLinkProductDemandQueryList taskLinkProductDemandQueryList);
 
+    /**
+     *
+     * @param productDemandDO productDemandDO
+     * @return ProductDemandMD
+     */
     ProductDemandMD change(ProductDemandDO productDemandDO);
 
     @Mapping(target = "files", ignore = true)
     ProductDemandDocumentVO convertToDocument(ProductDemandDO productDemand);
+    /**
+     *
+     * @param customLinkProductDemandQueryList customLinkProductDemandQueryList
+     * @return ProductDemandListCondition
+     */
+    @Mapping(source = "productDemandId", target = "id")
+    ProductDemandListCondition convert(CustomLinkProductDemandQueryList customLinkProductDemandQueryList);
+
 
     List<ProductDemandDocumentVO> convertToDocuments(List<ProductDemandDO> productDemands);
 }

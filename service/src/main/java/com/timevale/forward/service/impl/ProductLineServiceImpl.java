@@ -8,6 +8,8 @@ import com.timevale.forward.dal.entity.BizDomainDO;
 import com.timevale.forward.dal.entity.ModelDO;
 import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.client.ProductLineService;
+import com.timevale.forward.facade.api.request.ProductLineAddReq;
+import com.timevale.forward.facade.api.request.ProductLineModifyReq;
 import com.timevale.forward.facade.api.result.ModelVO;
 import com.timevale.forward.facade.api.result.ProductLineModelVO;
 import com.timevale.forward.facade.api.result.ProductLineVO;
@@ -90,5 +92,19 @@ public class ProductLineServiceImpl implements ProductLineService {
             e.setModels(modelMap.get(e.getId()));
         });
         return BaseResult.success(productLineVOList);
+    }
+
+    @Override
+    public BaseResult<Boolean> add(ProductLineAddReq productLineAddReq) {
+        ProductLineDO productLineDO = ProductLineCopier.INSTANCE.convert(productLineAddReq);
+        productLineMapper.insert(productLineDO);
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> update(ProductLineModifyReq productLineModifyReq) {
+        ProductLineDO productLineDO = ProductLineCopier.INSTANCE.convert(productLineModifyReq);
+        productLineMapper.update(productLineDO);
+        return BaseResult.success(true);
     }
 }

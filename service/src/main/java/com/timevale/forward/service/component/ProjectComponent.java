@@ -42,5 +42,5 @@ public interface ProjectComponent {
      * @param projectId projectId
      * @return Long
      */
-    List<Long> getLinkBizDemandIds(Long projectId);
+    List<Long> getLinkProductDemandIds(Long projectId);
 }

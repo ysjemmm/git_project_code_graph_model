@@ -1,0 +1,149 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.CustomDemandMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into custom_demand
+        (name, product_end, custom_name, page, path, submit_man ,contact,receive_man,receive_man_id,cause
+        ,`desc`, status,solve_plan,reason,project_end_date, create_man_id, create_man)
+        values (#{name}, #{productEnd}, #{customName}, #{page}, #{path}, #{submitMan}, #{contact}, #{receiveMan}, #{receiveManId}, #{cause}
+        , #{desc}, #{status}, #{solvePlan}, #{reason}, #{projectEndDate},#{createManId}, #{createMan})
+    </insert>
+
+    <update id="update">
+        update custom_demand
+        <set>
+            <if test="name!=null and name!='' ">
+                name = #{name},
+            </if>
+            <if test="status!=null">
+                status = #{status},
+            </if>
+            <if test="true">
+                modify_man_id = #{modifyManId},
+                modify_man = #{modifyMan},
+            </if>
+        </set>
+        where id = #{id} and is_deleted = false
+    </update>
+
+    <update id="fullUpdate">
+        update custom_demand
+        <set>
+            status = #{status},
+            reason = #{reason},
+            solve_plan = #{solvePlan},
+            project_end_date = #{projectEndDate},
+        </set>
+        where id = #{id} and is_deleted = false
+    </update>
+
+    <select id="selectById" resultType="com.timevale.forward.dal.entity.CustomDemandDO">
+        select id, name, product_end, custom_name, page, path, submit_man ,contact,receive_man,receive_man_id,cause
+        ,`desc`, status,solve_plan,reason,project_end_date, create_man_id, create_man,create_date,is_deleted,modify_man_id,modify_man,modify_date
+        from custom_demand
+        where id = #{id} and is_deleted = false
+    </select>
+
+    <select id="list" resultType="com.timevale.forward.dal.entity.CustomDemandDO">
+        select id, name, product_end, custom_name, page, path, submit_man ,contact,receive_man,receive_man_id,cause
+        ,`desc`, status,solve_plan,reason,project_end_date, create_man_id, create_man,create_date,is_deleted,modify_man_id,modify_man,modify_date
+        from custom_demand
+        <where>
+            <if test="id!=null">
+                and id = #{id}
+            </if>
+            <if test="name!=null and name!='' ">
+                and name like concat('%',#{name},'%')
+            </if>
+            <if test="customName!=null and customName!='' ">
+                and custom_name like concat('%',#{customName},'%')
+            </if>
+            <if test="page!=null and page!='' ">
+                and page like concat('%',#{page},'%')
+            </if>
+            <if test="submitMan!=null and submitMan!='' ">
+                and submit_man like concat('%',#{submitMan},'%')
+            </if>
+            <if test="receiveManIds!=null and receiveManIds.size()>0">
+                and receive_man_id in
+                <foreach collection="receiveManIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="status!=null and status.size()>0">
+                and status in
+                <foreach collection="status" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="productEnds!=null and productEnds.size()>0">
+                and product_end in
+                <foreach collection="productEnds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="causes!=null and causes.size()>0">
+                and cause in
+                <foreach collection="causes" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="customDemandIds!=null and customDemandIds.size()>0">
+                and id not in
+                <foreach collection="customDemandIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="createDateStart!=null and createDateEnd!=null">
+                and create_date &gt;= #{createDateStart}
+                and create_date &lt;= #{createDateEnd}
+            </if>
+            <if test="projectEndDateStart != null and projectEndDateEnd != null">
+                and project_end_date is not null
+                and project_end_date &gt;= #{projectEndDateStart}
+                and project_end_date &lt;= #{projectEndDateEnd}
+            </if>
+            and is_deleted = false
+        </where>
+    </select>
+
+    <select id="linkCustomDemandList" resultType="com.timevale.forward.dal.entity.CustomDemandDO">
+       select a.id,  a.name,  a.product_end,  a.custom_name,  a.page,  a.path,  a.submit_man , a.contact, a.receive_man, a.receive_man_id, a.cause
+        , a.`desc`,  a.status, a.solve_plan, a.reason, a.project_end_date, a.create_man_id,  a.create_man, a.create_date, a.is_deleted
+        , a.modify_man_id, a.modify_man,b.modify_date
+        from custom_demand a
+        join product_custom_demand b on a.id=b.custom_demand_id and b.is_deleted=false
+        where b.product_demand_id = #{productDemandId}
+    </select>
+
+    <update id="updateReceiveMan">
+        UPDATE custom_demand
+        SET receive_man = #{receiveMan}, receive_man_id = #{receiveManId}
+        WHERE id IN
+        <foreach collection="idList" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="selectByIds" resultType="com.timevale.forward.dal.entity.CustomDemandDO">
+        select id, name, product_end, custom_name, page, path, submit_man ,contact,receive_man,receive_man_id,cause
+        ,`desc`, status,solve_plan,reason,project_end_date, create_man_id, create_man,create_date,is_deleted,modify_man_id,modify_man,modify_date
+        from custom_demand
+        <where>
+            id in
+            <foreach collection="ids" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            and is_deleted = false
+        </where>
+    </select>
+
+    <select id="selectByDate" resultType="com.timevale.forward.dal.entity.CustomDemandDO">
+        select id, name, product_end, custom_name, page, path, submit_man ,contact,receive_man,receive_man_id,cause
+        ,`desc`, status,solve_plan,reason,project_end_date, create_man_id, create_man,create_date,is_deleted,modify_man_id,modify_man,modify_date
+        from custom_demand
+        where create_date>= #{date} and is_deleted = false
+    </select>
+
+</mapper>

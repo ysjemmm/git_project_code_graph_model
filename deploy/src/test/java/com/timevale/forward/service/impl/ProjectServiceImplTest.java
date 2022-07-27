@@ -119,7 +119,7 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
 
         List<Long> list = new ArrayList<>();
         list.add(1L);
-        doNothing().when(productDemandComponent).updateBizDemandStatusAsProductStatusChange(list, false);
+        doNothing().when(productDemandComponent).updateDemandStatusAsProductStatusChange(list, false);
 
         doNothing().when(taskComponent).updateStatusAsProjectStatusChange(any(), any(), any());
 
