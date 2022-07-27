@@ -35,6 +35,12 @@ public class HomePageProjectDateVO extends ToString {
     @ApiModelProperty("需求串讲时间")
     private Date demandConstrue;
 
+    @ApiModelProperty("需求反串讲时间")
+    private Date demandConstrueReverse;
+
+    @ApiModelProperty("ued评审时间")
+    private Date uedAudit;
+
     @ApiModelProperty("技术详设评审时间")
     private Date technicalDetailReview;
 
