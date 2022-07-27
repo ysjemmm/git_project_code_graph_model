@@ -419,7 +419,6 @@ public class ProjectComponentImpl implements ProjectComponent {
     public void updateNodeStatus(Long projectId) {
         // 查询项目节点
         List<ProjectNodeDO> nodeDOList = projectNodeComponent.get(projectId);
-        log.info("projectId={},nodeDOList={}", projectId,JSONUtils.toJSONString(nodeDOList));
 
         // 如果节点为空则状态设为待启动
         Integer nodeStatus;
@@ -428,7 +427,6 @@ public class ProjectComponentImpl implements ProjectComponent {
         } else {
             nodeStatus = projectNodeComponent.getStatus(nodeDOList);
         }
-        log.info("projectId={},nodeStatus={}", projectId,JSONUtils.toJSONString(nodeStatus));
 
         // 更新项目节点状态
         ProjectDO projectDO = new ProjectDO();
