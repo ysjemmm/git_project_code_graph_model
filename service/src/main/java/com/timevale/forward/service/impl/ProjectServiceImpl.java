@@ -647,7 +647,7 @@ public class ProjectServiceImpl implements ProjectService {
             // 编辑项目时，当状态是暂停,不修改项目状态
             newProject.setStatus(oldStatus);
         }
-
+        newProject.setNodeStatus(oldProject.getNodeStatus());
         projectMapper.fullUpdateById(newProject);
 
         if (!Objects.equals(newProject.getStatus(), oldStatus)) {
