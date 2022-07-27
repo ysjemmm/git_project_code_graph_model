@@ -87,8 +87,10 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
                 projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), ProjectNodeEnum.START_PLAN.getText());
                 if (projectNodeDo == null ) {
                     //需求规划阶段被删除,详设评审为第一个节点,需要更新项目实际开始时间
-                    oldProjectDO.setActualStartDate(processInfo.getEndTime());
-                    projectMapper.fullUpdateById(oldProjectDO);
+                    ProjectDO updateActualStartDateDO = new ProjectDO();
+                    updateActualStartDateDO.setId(projectFlowDO.getProjectId());
+                    updateActualStartDateDO.setActualStartDate(processInfo.getEndTime());
+                    projectMapper.update(updateActualStartDateDO);
                 }
             }
 
@@ -96,8 +98,10 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
             if (!Objects.equal(oldProjectDO.getStatus(), newStatus)
                     && !ProjectStatusEnum.INVALID.getCode().equals(oldProjectDO.getStatus())
                     && !ProjectStatusEnum.SUSPEND.getCode().equals(oldProjectDO.getStatus())) {
-                oldProjectDO.setStatus(newStatus);
-                projectMapper.fullUpdateById(oldProjectDO);
+                ProjectDO updateStatusDO = new ProjectDO();
+                updateStatusDO.setId(projectFlowDO.getProjectId());
+                updateStatusDO.setStatus(newStatus);
+                projectMapper.update(updateStatusDO);
             }
         }
 

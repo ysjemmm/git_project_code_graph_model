@@ -431,9 +431,10 @@ public class ProjectComponentImpl implements ProjectComponent {
         log.info("projectId={},nodeStatus={}", projectId,JSONUtils.toJSONString(nodeStatus));
 
         // 更新项目节点状态
-        ProjectDO projectDO = projectMapper.get(projectId);
+        ProjectDO projectDO = new ProjectDO();
+        projectDO.setId(projectId);
         projectDO.setNodeStatus(nodeStatus);
-        projectMapper.fullUpdateById(projectDO);
+        projectMapper.update(projectDO);
     }
 
     @Override

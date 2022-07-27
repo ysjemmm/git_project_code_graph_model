@@ -184,8 +184,13 @@ public class ProjectServiceImpl implements ProjectService {
         if (ProjectStatusEnum.INVALID.getCode().equals(oldStatus) || ProjectStatusEnum.RELEASED.getCode().equals(oldStatus)) {
             throw new BaseBizRuntimeException("项目状态为已作废或已发布时,不能修改状态");
         }
-        projectDO.setStatus(type);
-        projectMapper.fullUpdateById(projectDO);
+
+        // 更新项目状态
+        ProjectDO updateStatusDO = new ProjectDO();
+        updateStatusDO.setId(projectId);
+        updateStatusDO.setStatus(type);
+        projectMapper.update(updateStatusDO);
+
         //修改产品需求状态
         productDemandComponent.updateProductDemandStatus(projectId, type);
         if (ProjectStatusEnum.INVALID.getCode().equals(type)) {

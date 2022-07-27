@@ -38,6 +38,8 @@
             <if test="resourceAssessment != null">resource_assessment = #{resourceAssessment},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            <if test="actual_start_date != null">actual_start_date = #{actualStartDate},</if>
+            <if test="actual_end_date != null">actual_end_date = #{actualEndDate},</if>
         </set>
         <where>
             id = #{id}
