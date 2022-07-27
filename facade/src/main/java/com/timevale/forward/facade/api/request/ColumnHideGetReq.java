@@ -16,7 +16,7 @@ import javax.validation.constraints.NotNull;
 @ApiModel("列隐藏-查询")
 public class ColumnHideGetReq extends BaseReq{
 
-    @ApiModelProperty("所属模块:0 业务需求，10 产品需求， 20 项目管理， 30 任务管理， 40 线下bug， 50 线上bug， 60 故障单")
+    @ApiModelProperty("所属模块:0 业务需求，10 产品需求， 20 项目管理， 30 任务管理， 40 线下bug， 50 线上bug， 60 故障单， 70 客户需求")
     @NotNull(message = "所属模块不能为空")
     private Integer model;
 

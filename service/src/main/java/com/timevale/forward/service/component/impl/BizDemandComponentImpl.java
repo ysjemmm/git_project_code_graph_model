@@ -3,10 +3,7 @@ package com.timevale.forward.service.component.impl;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.ProductBizDemandMapper;
-import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
@@ -68,6 +65,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Resource
     private BizDemandLogComponent bizDemandLogComponent;
+
+    @Resource
+    private ProjectProductDemandMapper projectProductDemandMapper;
 
     @Override
     public void updateBizDemandStatusByLinkedProductDemand(Long bizDemandId) {
@@ -172,6 +172,20 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         List<Long> productDemandIdList = productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList());
         List<ProjectDO> projectDOList = projectMapper.selectByProductDemandIdList(productDemandIdList);
         if (projectDOList.isEmpty()) {
+            return null;
+        }
+
+        List<ProductDemandDO> productDemandDOList = productDemandMapper.selectByIdList(productDemandIdList);
+        List<Long> invalidIds = productDemandDOList.stream()
+                .filter(a -> ProductDemandStatusEnum.INVALID.getCode().equals(a.getStatus())).map(ProductDemandDO::getId)
+                .collect(Collectors.toList());
+        List<ProjectProductDemandDO> linkedProductDemand = projectProductDemandMapper.getLinkedProductDemand(productDemandIdList);
+        List<Long> linkedProductDemandInProject = linkedProductDemand.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
+        productDemandIdList.removeAll(linkedProductDemandInProject);
+        productDemandIdList.removeAll(invalidIds);
+        if(CollectionUtils.isNotEmpty(productDemandIdList)){
+//            数量不相等,存在部分产品需求没有关联项目,此时业务需求状态<已列入项目,发布时间不存在
+            log.info("产品需求id:{},{}",productDemandIdList,linkedProductDemandInProject);
             return null;
         }
 
@@ -324,7 +338,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             }
             bizDemandDO.setProjectEndDate(newProjectEndDate);
             bizDemandMapper.fullUpdate(bizDemandDO);
-            log.info("业务需求id:{},更新前发布时间:{},更新后发布时间:{}", bizDemandId, oldProjectEndDate, newProjectEndDate);
+            log.info("业务需求id:{},发布时间,更新前:{},更新后:{}", bizDemandId, oldProjectEndDate, newProjectEndDate);
             if (!Objects.equals(oldPlanReleaseDate, bizDemandDO.getPlanReleaseDate())) {
                 List<ProductBizDemandDO> productBizDemandDos = productBizDemandMapper.getByBizDemandId(bizDemandId);
                 //link biz
@@ -353,6 +367,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Override
     public Integer getBizDemandStatus(Integer pdStauts) {
+        log.info("产品需求状态 :{}", pdStauts);
         if (Objects.equals(ProductDemandStatusEnum.WAITING.getCode(), pdStauts)
                 || Objects.equals(ProductDemandStatusEnum.SUSPEND.getCode(), pdStauts)) {
             return BizDemandStatusEnum.PD_LINKED.getCode();
@@ -366,7 +381,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         if (Objects.equals(ProductDemandStatusEnum.ONLINE.getCode(), pdStauts)) {
             return BizDemandStatusEnum.AVAILABLE.getCode();
         }
-        log.info("产品需求状态 :{}", pdStauts);
+
         return BizDemandStatusEnum.RECEIVED.getCode();
     }
 }

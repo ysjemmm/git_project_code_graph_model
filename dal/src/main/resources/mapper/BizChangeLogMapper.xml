@@ -62,4 +62,15 @@
             ,#{item.createManId},#{item.createMan},#{item.content})
         </foreach>
     </insert>
+
+    <select id="getProjectPublishDate" resultType="com.timevale.forward.dal.entity.BizChangeLogDO">
+        select * from biz_change_log
+        <where>
+            main_id=#{mainId}
+            and `type`=#{type}
+            and field=#{field}
+            and is_deleted = false
+            order by id desc limit 1
+        </where>
+    </select>
 </mapper>

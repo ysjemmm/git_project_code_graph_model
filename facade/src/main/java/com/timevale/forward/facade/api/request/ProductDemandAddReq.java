@@ -55,4 +55,7 @@ public class ProductDemandAddReq extends BaseReq {
     @ApiModelProperty("埋点事件id")
     private List<Long> trackEventIds;
 
+    @ApiModelProperty("客户需求id")
+    private List<Long> customDemandIds;
+
 }

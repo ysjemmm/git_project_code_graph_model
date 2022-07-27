@@ -139,4 +139,28 @@ public interface ProductDemandService {
      * @return 列表
      */
     BaseResult<PageQueryResult<TrackEventVO>> linkTrackEventList(ProductDemandTrackEventQueryList trackEventQueryList);
+
+    /**
+     * 查询满足条件的客户需求列表
+     *
+     * @param customDemandQueryList customDemandQueryList
+     * @return 列表
+     */
+    BaseResult<PageQueryResult<CustomDemandVO>> matchCustomDemandList(ProductLinkCustomDemandQueryList customDemandQueryList);
+
+    /**
+     * 关联客户需求
+     *
+     * @param customDemandLinkReq customDemandLinkReq
+     * @return true false
+     */
+    BaseResult<Boolean> linkOrUnLinkCustomDemand(ProductCustomDemandLinkReq customDemandLinkReq);
+
+    /**
+     * 产品需求-客户需求清单
+     *
+     * @param customDemandQueryList 客户需求id
+     * @return 列表
+     */
+    BaseResult<PageQueryResult<CustomDemandVO>> linkCustomDemandList(ProductCustomDemandQueryList customDemandQueryList);
 }

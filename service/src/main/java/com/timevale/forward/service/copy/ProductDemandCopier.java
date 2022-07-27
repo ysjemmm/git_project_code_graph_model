@@ -9,7 +9,6 @@ import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
-import com.timevale.forward.facade.api.result.ProductDemandDocumentVO;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.model.middle.ProductDemandMD;
 import org.mapstruct.Mapper;
@@ -83,10 +82,23 @@ public interface ProductDemandCopier {
      */
     ProductDemandListCondition convert(TaskLinkProductDemandQueryList taskLinkProductDemandQueryList);
 
+    /**
+     *
+     * @param productDemandDO productDemandDO
+     * @return ProductDemandMD
+     */
     ProductDemandMD change(ProductDemandDO productDemandDO);
 
     @Mapping(target = "files", ignore = true)
     ProductDemandDocumentVO convertToDocument(ProductDemandDO productDemand);
+    /**
+     *
+     * @param customLinkProductDemandQueryList customLinkProductDemandQueryList
+     * @return ProductDemandListCondition
+     */
+    @Mapping(source = "productDemandId", target = "id")
+    ProductDemandListCondition convert(CustomLinkProductDemandQueryList customLinkProductDemandQueryList);
+
 
     List<ProductDemandDocumentVO> convertToDocuments(List<ProductDemandDO> productDemands);
 }

@@ -113,4 +113,11 @@ public interface ProductDemandMapper {
      * @return 产品需求DO
      */
     ProductDemandDO getByName(@Param("name") String name);
+
+    /**
+     *
+     * @param customDemandId customDemandId
+     * @return 项目产品需求清单
+     */
+    List<ProductDemandListDO> linkProductDemandInCustomDemand(@Param("customDemandId") Long customDemandId);
 }

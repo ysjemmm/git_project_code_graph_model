@@ -70,4 +70,18 @@ public interface ProductLineMapper {
      * @return 列表
      */
     List<ProductLineDO> getByBizDomainName(@Param("bizDomainName") List<String> bizDomainName);
+
+    /**
+     *
+     * @param productLineDO productLineDO
+     * @return int
+     */
+    int insert(ProductLineDO productLineDO);
+
+    /**
+     *
+     * @param productLineDO productLineDO
+     * @return int
+     */
+    int update(ProductLineDO productLineDO);
 }

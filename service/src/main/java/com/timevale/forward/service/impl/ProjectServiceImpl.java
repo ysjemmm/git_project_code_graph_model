@@ -18,11 +18,7 @@ import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.observer.event.ProjectEstablishDateChangeMsgEvent;
-import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
-import com.timevale.forward.service.utils.date.DateStyle;
-import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -138,6 +134,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private MessageEventPublisher messageEventPublisher;
 
+    @Resource
+    private  CustomDemandComponent customDemandComponent;
+
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -199,7 +198,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> enable(Long projectId, Boolean enableTask) {
-        log.info("项目开启接收参数:{}", projectId);
+        log.info("项目开启接收参数:projectId={}", projectId);
         ProjectDO projectDO = projectMapper.get(projectId);
         if (projectDO == null) {
             throw new BaseBizRuntimeException("找不到该项目");
@@ -502,7 +501,7 @@ public class ProjectServiceImpl implements ProjectService {
             productDemandComponent.update(productDemandDO);
 
             // 一个产品需求下的业务需求
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false);
+            productDemandComponent.updateDemandStatusAsProductStatusChange(productDemandIds, false);
 
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.UN_LINK.getText());
             productDemandLogComponent.addLogAsProjectStatusChange(statusMap, productDemandDO.getStatus());
@@ -692,6 +691,7 @@ public class ProjectServiceImpl implements ProjectService {
                 throw new BaseBizRuntimeException("请填写完其他节点的实际时间后,再填写发布正式的实际时间");
             }
         }
+
     }
 
     private void fillInfoWhenEnable(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {

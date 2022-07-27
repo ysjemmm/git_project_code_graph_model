@@ -23,7 +23,12 @@ public enum BizChangeLogTypeEnum {
     /**
      * 业务需求
      */
-    BIZ_DEMAND(4, "业务需求");
+    BIZ_DEMAND(4, "业务需求"),
+
+    /**
+     * 客户需求
+     */
+    CUSTOM_DEMAND(5, "客户需求");
 
     private final Integer code;
     private final String text;

@@ -31,7 +31,9 @@ public enum FileTypeEnum {
     // 埋点事件
     TRACK_EVENT(10),
     // 评论
-    COMMENT(11)
+    COMMENT(11),
+    // 客户需求
+    CUSTOM_DEMAND(15)
     ;
 
     private Integer code;

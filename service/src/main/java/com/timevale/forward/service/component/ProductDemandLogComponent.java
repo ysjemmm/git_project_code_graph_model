@@ -2,6 +2,7 @@ package com.timevale.forward.service.component;
 
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,11 @@ public interface ProductDemandLogComponent {
 
     void addLogWhenStatusChange(Integer oldStatus,Integer newStatus,Long id,String action) ;
 
-    void addLogWhenLinkOrUnlink(String name, Long id,Map<Long, String> bdNameMap,String linkOrUnlink)  ;
+    void addLogWhenLinkOrUnlink(String name, Long id, Map<Long, String> bdNameMap, String linkOrUnlink, BizChangeLogTypeEnum bizChangeLogTypeEnum)  ;
+
+    void addLogWhenLinkOrUnlink(String name, Long id, Map<Long, String> bdNameMap, String linkOrUnlink)  ;
+
+    void addLogWhenLinkOrUnlinkCustomDemand(String name, Long id, Map<Long, String> bdNameMap, String linkOrUnlink)  ;
 
     void addLogWhenLinkOrUnlinkTrackEvent(Long id,List<String> trackEventName,String linkOrUnlink)  ;
 }

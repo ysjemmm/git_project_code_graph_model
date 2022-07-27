@@ -56,7 +56,6 @@
             priority = #{priority},
             type = #{type},
             `status` = #{status},
-            node_status = #{nodeStatus},
             pm = #{pmName},
             pm_id = #{pmId},
             plan_start_date = #{planStartDate},

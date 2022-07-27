@@ -1,0 +1,80 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.ProductCustomDemandMapper">
+
+    <select id="select" resultType="com.timevale.forward.dal.entity.ProductCustomDemandDO">
+        select id, product_demand_id, custom_demand_id, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        from product_custom_demand
+        <where>
+            <if test="id!=null">
+                and id = #{id}
+            </if>
+            <if test="productDemandId!=null">
+                and product_demand_id = #{productDemandId}
+            </if>
+            <if test="customDemandId!=null">
+                and custom_demand_id = #{customDemandId}
+            </if>
+            <if test="isDeleted!=null">
+                and is_deleted = #{isDeleted}
+            </if>
+        </where>
+    </select>
+
+
+    <update id="update" parameterType="com.timevale.forward.dal.entity.ProductCustomDemandDO">
+        update product_custom_demand
+        <set>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            <if test="productDemandId!=null">and product_demand_id = #{productDemandId}</if>
+            <if test="customDemandId!=null">and custom_demand_id = #{customDemandId}</if>
+            and is_deleted=false
+        </where>
+    </update>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into product_custom_demand (product_demand_id,custom_demand_id,create_man_id, create_man)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.productDemandId}, #{i.customDemandId}, #{createManId},#{createMan})
+        </foreach>
+    </insert>
+
+    <select id="getByProductDemandIds" resultType="com.timevale.forward.dal.entity.ProductCustomDemandDO">
+        select a.id, a.product_demand_id, a.custom_demand_id, a.is_deleted,b.status
+        from product_custom_demand a
+        join custom_demand b on a.custom_demand_id=b.id
+        <where>
+            and a.product_demand_id IN
+            <foreach item="item" index="index" collection="productDemandIds" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            and a.is_deleted=false
+        </where>
+    </select>
+
+    <select id="getByCustomDemandId" resultType="com.timevale.forward.dal.entity.ProductCustomDemandDO">
+        select a.id, a.product_demand_id, a.custom_demand_id, a.is_deleted,b.status
+        from product_custom_demand a
+        join product_demand b on a.product_demand_id=b.id
+        <where>
+            and a.custom_demand_id = #{customDemandId} and a.is_deleted=false
+        </where>
+    </select>
+
+    <select id="selectByProductDemandIds" resultType="com.timevale.forward.dal.entity.ProductCustomDemandDO">
+        select a.id, a.product_demand_id, a.custom_demand_id, a.is_deleted
+        from product_custom_demand a
+        <where>
+            and a.product_demand_id IN
+            <foreach item="item" index="index" collection="productDemandIds" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            and a.is_deleted=false
+        </where>
+    </select>
+</mapper>

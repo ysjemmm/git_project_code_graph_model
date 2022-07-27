@@ -151,7 +151,7 @@ public class ProductDemandComponentImplTest extends AbstractTestNGSpringContextT
 
         List<Long> list = new ArrayList<>();
         list.add(1L);
-        productDemandComponent.updateBizDemandStatusAsProductStatusChange(list, false);
+        productDemandComponent.updateDemandStatusAsProductStatusChange(list, false);
 
         bizDemandStatusChangeMsgEventMock.close();
     }

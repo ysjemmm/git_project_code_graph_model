@@ -46,8 +46,8 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
 
 
     @Override
-    public void update(Long productDemandId, Long bizDemandId) {
-        log.info("删除产品与业务需求关系,productDemandId={},bizDemandId={}", productDemandId, bizDemandId);
+    public void update(Long productDemandId, Long bizDemandId,boolean updatePublishDate) {
+        log.info("删除产品与业务需求关系:{},{},{}", productDemandId, bizDemandId,updatePublishDate);
         // unlink before
         List<Long> bizDemandIds = new ArrayList<>();
         if (bizDemandId != null) {
@@ -59,7 +59,9 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
                     .stream().map(ProductBizDemandDO::getBizDemandId).distinct().collect(Collectors.toList());
         }
         Map<Long, Date> publishDateMap = new HashMap<>();
-        before(publishDateMap, bizDemandIds);
+        if(updatePublishDate){
+            before(publishDateMap, bizDemandIds);
+        }
         log.info("bizDemandId,publishDate:{}", publishDateMap);
         // unlink
         ProductBizDemandDO productDemandDO = new ProductBizDemandDO();
@@ -68,12 +70,14 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
         productDemandDO.setBizDemandId(bizDemandId);
         productBizDemandMapper.update(productDemandDO);
         // unlink after
-        after(publishDateMap, bizDemandIds);
+        if(updatePublishDate){
+            after(publishDateMap, bizDemandIds);
+        }
     }
 
     @Override
-    public void batchInsert(Long productDemandId, List<Long> bizDemandIds) {
-        log.info("新增产品与业务需求关系,productDemandId={},bizDemandId={}", productDemandId, bizDemandIds);
+    public void batchInsert(Long productDemandId, List<Long> bizDemandIds,boolean updatePublishDate) {
+        log.info("新增产品与业务需求关系:{},{},{}", productDemandId, bizDemandIds,updatePublishDate);
         if (CollectionUtils.isEmpty(bizDemandIds)) {
             return;
         }
@@ -81,30 +85,35 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
         List<ProductBizDemandDO> exists = productBizDemandMapper.select(c);
         List<Long> existBizDemandIds = exists.stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
         bizDemandIds.removeAll(existBizDemandIds);
+        if (CollectionUtils.isEmpty(bizDemandIds)) {
+            return;
+        }
         // link before
         Map<Long, Date> publishDateMap = new HashMap<>();
-        before(publishDateMap, bizDemandIds);
-        log.info("bizDemandId,publishDate:{}", publishDateMap);
-        // link
-        if (!CollectionUtils.isEmpty(bizDemandIds)) {
-            Set<Long> set = new HashSet<>(bizDemandIds);
-            List<ProductBizDemandDO> list = set.stream().map(i -> {
-                ProductBizDemandDO productDemandDO = new ProductBizDemandDO();
-                productDemandDO.setProductDemandId(productDemandId);
-                productDemandDO.setBizDemandId(i);
-                return productDemandDO;
-            }).collect(Collectors.toList());
-            productBizDemandMapper.batchInsert(list);
+        if(updatePublishDate){
+            before(publishDateMap, bizDemandIds);
+            log.info("bizDemandId,publishDate:{}", publishDateMap);
         }
+        // link
+        Set<Long> set = new HashSet<>(bizDemandIds);
+        List<ProductBizDemandDO> list = set.stream().map(i -> {
+            ProductBizDemandDO productDemandDO = new ProductBizDemandDO();
+            productDemandDO.setProductDemandId(productDemandId);
+            productDemandDO.setBizDemandId(i);
+            return productDemandDO;
+        }).collect(Collectors.toList());
+        productBizDemandMapper.batchInsert(list);
         // link after
-        after(publishDateMap, bizDemandIds);
+        if(updatePublishDate){
+            after(publishDateMap, bizDemandIds);
+        }
     }
 
     private void before(Map<Long, Date> publishDateMap, List<Long> bizDemandIds) {
         if (!CollectionUtils.isEmpty(bizDemandIds)) {
             bizDemandIds.forEach(bid -> {
-                Date publishDate = bizDemandComponent.getProjectEndDate(bid);
-                publishDateMap.put(bid, publishDate);
+                BizDemandDO bizDemandDO = bizDemandMapper.selectById(bid);
+                publishDateMap.put(bid, bizDemandDO.getProjectEndDate());
             });
         }
     }

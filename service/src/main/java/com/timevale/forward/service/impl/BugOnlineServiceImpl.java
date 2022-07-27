@@ -14,9 +14,9 @@ import com.timevale.forward.facade.api.client.BugOnlineService;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.model.bo.BusinessBO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOnlineMD;
-import com.timevale.forward.model.middle.BusinessBeanMD;
 import com.timevale.forward.model.middle.BusinessMD;
 import com.timevale.forward.service.component.BugOnlineProductLineComponent;
 import com.timevale.forward.service.component.FileComponent;
@@ -122,15 +122,15 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
         log.info("线上bug-从配置中心获取信息，接收参数：{}", bugOnlineGetFieldReq.getProductLineIdList());
 
-        List<BusinessBeanMD> businessBeanList = JSON.parseArray(business, BusinessBeanMD.class);
+        List<BusinessBO> businessBeanList = JSON.parseArray(business, BusinessBO.class);
         List<Long> productLineIdList = bugOnlineGetFieldReq.getProductLineIdList();
         Map<Integer, String> fieldMap = getFieldMap();
         ProductLineToFieldVO productLineToFieldVO = new ProductLineToFieldVO();
         List<String> fieldList = new ArrayList<>();
         productLineIdList.forEach(productLineId -> {
             for (int i = 0; i < businessBeanList.size(); i++) {
-                BusinessBeanMD businessBean = businessBeanList.get(i);
-                if (businessBean.getFieldValue().contains(productLineId)) {
+                BusinessBO businessBO = businessBeanList.get(i);
+                if (businessBO.getFieldValue().contains(productLineId)) {
                     fieldList.add(fieldMap.get(i));
                 }
             }
