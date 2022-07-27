@@ -235,7 +235,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             ProjectNodeDO last = projectNodes.get(projectNodes.size() - 1);
             projectDO.setPlanStartDate(first.getPlanDate());
             projectDO.setPlanEndDate(last.getPlanDate());
-            projectMapper.update(projectDO);
+            projectMapper.fullUpdateById(projectDO);
 
             insertProjectNodeRecord(projectNodeFlowDO.getProjectId(), projectNodes,projectNodeFlowDO);
 

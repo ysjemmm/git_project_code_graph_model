@@ -152,7 +152,7 @@ public class TestBillServiceImpl implements TestBillService {
             Integer newStatus = projectComponent.getStatus(projectDO.getId());
             if (!Objects.equal(oldStatus, newStatus)) {
                 projectDO.setStatus(newStatus);
-                projectMapper.update(projectDO);
+                projectMapper.fullUpdateById(projectDO);
 
                 // 日志处理
                 projectLogComponent.addLogWhenStatusChange(oldStatus, newStatus, projectDO.getId(), ButtonActionEnum.TEST_CREATE.getText());
@@ -465,7 +465,7 @@ public class TestBillServiceImpl implements TestBillService {
 
             // 项目状态更新
             projectDO.setStatus(newStatus);
-            projectMapper.update(projectDO);
+            projectMapper.fullUpdateById(projectDO);
 
             projectLogComponent.addLogWhenStatusChange(oldStatus, newStatus, projectDO.getId(), ButtonActionEnum.TEST_PASS.getText());
         }

@@ -396,7 +396,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         // 更新项目节点状态
         ProjectDO projectDO = projectMapper.get(projectId);
         projectDO.setNodeStatus(nodeStatus);
-        projectMapper.update(projectDO);
+        projectMapper.fullUpdateById(projectDO);
     }
 
     @Override

@@ -38,10 +38,6 @@
             <if test="resourceAssessment != null">resource_assessment = #{resourceAssessment},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
-            <if test="true">actual_start_date = #{actualStartDate},</if>
-            <if test="true">actual_end_date = #{actualEndDate},</if>
-            <if test="true">pj_establish_start_date = #{pjEstablishStartDate},</if>
-            <if test="true">pj_establish_publish_date = #{pjEstablishPublishDate},</if>
         </set>
         <where>
             id = #{id}

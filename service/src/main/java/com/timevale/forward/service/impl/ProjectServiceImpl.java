@@ -185,7 +185,7 @@ public class ProjectServiceImpl implements ProjectService {
             throw new BaseBizRuntimeException("项目状态为已作废或已发布时,不能修改状态");
         }
         projectDO.setStatus(type);
-        projectMapper.update(projectDO);
+        projectMapper.fullUpdateById(projectDO);
         //修改产品需求状态
         productDemandComponent.updateProductDemandStatus(projectId, type);
         if (ProjectStatusEnum.INVALID.getCode().equals(type)) {
@@ -215,7 +215,7 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("项目开启,节点信息:projectNode={}", projectNode);
         if (CollectionUtils.isEmpty(projectNode)) {
             projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
-            projectMapper.update(projectDO);
+            projectMapper.fullUpdateById(projectDO);
         } else {
             fillInfoWhenEnable(projectNode, projectDO);
         }
@@ -592,7 +592,7 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO oldProjectDO = projectMapper.get(projectDO.getId());
         oldProjectDO.setPjEstablishStartDate(projectDateModifyReq.getPjEstablishStartDate());
         oldProjectDO.setPjEstablishPublishDate(projectDateModifyReq.getPjEstablishPublishDate());
-        projectMapper.update(oldProjectDO);
+        projectMapper.fullUpdateById(oldProjectDO);
         sendDingMsgIfPublishDateForward(projectDO.getId());
         return BaseResult.success(true);
     }
@@ -708,7 +708,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     private void fillInfoWhenEnable(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
         projectComponent.fillInfo(projectNodes, projectDO);
-        projectMapper.update(projectDO);
+        projectMapper.fullUpdateById(projectDO);
         productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
     }
 

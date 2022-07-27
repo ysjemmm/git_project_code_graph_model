@@ -188,7 +188,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
             if (project.getIsWithGoal().equals(YesOrNoEnum.YES.getCode())) {
                 // 删除最后一条记录，变更项目是否有主目标
                 project.setIsWithGoal(YesOrNoEnum.NO.getCode());
-                projectMapper.update(project);
+                projectMapper.fullUpdateById(project);
                 // 插入是否有主目标变更记录
                 bizChangeLogMapper.insert(createCommonChangeLog()
                         .setType(BizChangeLogTypeEnum.PROJECT.getCode())
