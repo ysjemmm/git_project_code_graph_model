@@ -929,6 +929,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (oldBizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
+        String oldReceiveMan = oldBizDemandDO.getReceiveMan();
         // 日志, 状态改为待评估
         bizDemandLogComponent.addLogWhenModifyData(
                 BizDemandStatusEnum.REJECT.getText(),
@@ -956,6 +957,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         messageEventPublisher.publish(new BizDemandToReceiveAaginMsgEvent(
                 this,
+                oldReceiveMan,
                 oldBizDemandDO.getId(),
                 oldBizDemandDO.getSubmitMan(),
                 oldBizDemandDO.getReceiveManId(),
@@ -1039,30 +1041,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         bugStatusOperatorDO.setOperatorId(userInfo.getId());
         //往状态人员处理表里面插入一条数据记录
         bugStatusOperatorMapper.insert(bugStatusOperatorDO);
-    }
-
-
-    private void addLogWhenResubmit(BizDemandDO oldDo,BizDemandDO newDo){
-        newDo.setStatus(BizDemandStatusEnum.EVALUATE.getCode());
-        newDo.setReason(null);
-        // 日志, 状态改为待评估
-        bizDemandLogComponent.addLogWhenModifyData(
-                BizDemandStatusEnum.REJECT.getText(),
-                BizDemandStatusEnum.EVALUATE.getText(),
-                oldDo.getId(),
-                BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
-                true,
-                ButtonActionEnum.RESUBMIT.getText());
-        String oldReasonText = BizDemandReasonEnum.getTextByCode(oldDo.getReason());
-        if (StringUtils.isNotEmpty(oldReasonText)) {
-            bizDemandLogComponent.addLogWhenModifyData(
-                    oldReasonText,
-                    StringUtils.EMPTY,
-                    oldDo.getId(),
-                    BizChangeLogFieldEnum.REASON.getText(),
-                    false
-            );
-        }
     }
 
 }

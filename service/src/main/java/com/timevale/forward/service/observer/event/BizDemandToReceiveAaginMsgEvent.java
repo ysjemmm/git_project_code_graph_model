@@ -14,14 +14,16 @@ import java.util.List;
 public class BizDemandToReceiveAaginMsgEvent extends MessageEvent {
 
     private final Long bizDemandId;
+    private final String oldReceiver;
     private final String operator;
     private final String receiver;
     private final String name;
 
-    private static final String BIZ_DEMAND_TO_RECEIVE_MSG = "### %s  \n  您驳回了业务需求 **%s**， **%s**重新提交  \n\n  ***  \n  [查看详情](%s)";
+    private static final String BIZ_DEMAND_TO_RECEIVE_MSG = "### %s  \n  **%s**驳回了业务需求 **%s**， **%s**重新提交  \n\n  ***  \n  [查看详情](%s)";
 
-    public BizDemandToReceiveAaginMsgEvent(Object source, Long bizDemandId, String operator, String receiver, String name) {
+    public BizDemandToReceiveAaginMsgEvent(Object source,String oldReceiver, Long bizDemandId, String operator, String receiver, String name) {
         super(source);
+        this.oldReceiver = oldReceiver;
         this.bizDemandId = bizDemandId;
         this.operator = operator;
         this.receiver = receiver;
@@ -33,7 +35,7 @@ public class BizDemandToReceiveAaginMsgEvent extends MessageEvent {
         List<String> receivers = Lists.newArrayList(receiver);
         String title = MessageTitleEnum.BIZDEMAND_FEEDBACK.getText();
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_MANAGEMENT.getText(), bizDemandId);
-        String markdown = String.format(BIZ_DEMAND_TO_RECEIVE_MSG, title, name, operator, singleUrl);
+        String markdown = String.format(BIZ_DEMAND_TO_RECEIVE_MSG, title, oldReceiver,name, operator, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(title)
