@@ -20,7 +20,7 @@ public class TestBillVO extends ToString {
     @ApiModelProperty("项目id")
     private Long projectId;
 
-    @ApiModelProperty("项目状态:0待提交冒烟用例,1待自测,2待提测预演,3提测成功")
+    @ApiModelProperty("项目状态:0待提交测试用例,1待自测,2待提测预演,3提测成功")
     private Integer status;
 
     @ApiModelProperty("项目状态名字")
@@ -44,7 +44,7 @@ public class TestBillVO extends ToString {
     @ApiModelProperty("打回次数")
     private Integer returnCount;
 
-    @ApiModelProperty("冒烟用例链接")
+    @ApiModelProperty("测试用例链接")
     private String caseUrl;
 
     @ApiModelProperty("全量用例链接")

@@ -164,7 +164,7 @@ public class TestBillServiceImpl implements TestBillService {
         String testBillName = projectDO.getName() + CommonConstant.TESTBILL_SUFFIX;
 
         if (testBill == null) {
-            // 发起测试待提交冒烟用例提醒
+            // 发起测试待提交测试用例提醒
             messageEventPublisher.publish(
                     new BillTestCreateMsgEvent(
                             this,
@@ -238,7 +238,7 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitSmokeTesting(TestBillModifyReq testBillModifyReq) {
-        log.info("提测单-提测冒烟用例,参数:{}", testBillModifyReq);
+        log.info("提测单-提测测试用例,参数:{}", testBillModifyReq);
         Date now = new Date();
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
