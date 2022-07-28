@@ -73,6 +73,9 @@ public class BugOnlineQueryList extends QueryBase {
     @ApiModelProperty("客户名称")
     private String customerName;
 
+    @ApiModelProperty("来源列表")
+    private List<String> sourceList;
+
     @ApiModelProperty("排序字段")
     private String orderFiled;
 

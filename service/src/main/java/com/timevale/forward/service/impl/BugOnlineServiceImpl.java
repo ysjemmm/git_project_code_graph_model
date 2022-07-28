@@ -274,6 +274,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             e.setStatusName(BugOnlineStatusEnum.getTextByCode(e.getStatus()));
             e.setBelongName(BugOnlineBeloneEnum.getTextByCode(e.getBelong()));
             e.setReasonName(BugOnlineReasonEnum.getTextByCode(e.getReason()));
+            e.setSourceName(BugOnlineSourceEnum.getTextByCode(e.getSource()));
             e.setPriorityName(BugOnlinePriorityEnum.getTextByCode(e.getPriority()));
             e.setDismissCauseName(BugOnlineDismissCauseEnum.getTextByCode(e.getDismissCause()));
         });

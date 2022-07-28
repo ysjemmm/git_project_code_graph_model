@@ -77,4 +77,9 @@ public class BugOnlineListDO extends BaseDO {
      * 预计上线日期
      */
     private Date expectLaunchDate;
+
+    /**
+     * 来源
+     */
+    private String source;
 }

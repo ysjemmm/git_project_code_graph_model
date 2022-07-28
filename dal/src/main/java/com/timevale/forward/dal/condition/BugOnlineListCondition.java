@@ -100,4 +100,9 @@ public class BugOnlineListCondition {
      */
     @WildcardEscape
     private String customerName;
+
+    /**
+     * 来源列表
+     */
+    private List<String> sourceList;
 }
