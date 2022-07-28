@@ -21,7 +21,7 @@ public class FileQueryList extends BaseReq {
     @NotNull(message = "文件所属id不能为空")
     private Long attachId;
 
-    @ApiModelProperty(value = "文件类型:1产品需求,2业务需求,3任务,4提测单-冒烟用例,5提测单-自测通过,6线下bug,7线上bug,8故障单,9详设评审,10埋点事件, 11评论")
+    @ApiModelProperty(value = "文件类型:1产品需求,2业务需求,3任务,4提测单-测试用例,5提测单-自测通过,6线下bug,7线上bug,8故障单,9详设评审,10埋点事件, 11评论")
     @NotNull(message = "文件类型不能为空")
     private Integer type;
 }

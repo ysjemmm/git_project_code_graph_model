@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 public enum TestBillStatusEnum {
     /**
-     * 项目状态:-1提前提交测试用例,0待提交冒烟用例1待自测,2待提测预演,3提测成功
+     * 项目状态:-1提前提交测试用例,0待提交测试用例1待自测,2待提测预演,3提测成功
      */
     PRE_SUBMIT_TEST_CASE(-1, "提前提交测试用例"),
     NO_SUBMIT_SMOKING(0, "待提交测试用例"),

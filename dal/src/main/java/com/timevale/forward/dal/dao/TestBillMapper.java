@@ -19,7 +19,7 @@ public interface TestBillMapper {
     void submitTestBill(@Param("testBillDO") TestBillDO testBillDO);
 
     /**
-     * 提交冒烟用例
+     * 提交测试用例
      *
      * @param testBillDO 提测单修改信息
      */

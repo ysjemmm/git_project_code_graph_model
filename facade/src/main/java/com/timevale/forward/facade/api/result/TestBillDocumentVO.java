@@ -14,7 +14,7 @@ import java.util.List;
 @ApiModel("提测单文档说明对象")
 public class TestBillDocumentVO extends ToString {
 
-    @ApiModelProperty("冒烟用例链接")
+    @ApiModelProperty("测试用例链接")
     private String caseUrl;
 
     @ApiModelProperty("全量用例链接")
