@@ -141,7 +141,8 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
             Date planDate = DateUtil.getEndOfDay(publishNodes.get(0).getPlanDate());
             if(pjEstablishPublishDateEnd.before(planDate)){
                 List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(projectNodeFlowCheckReq.getProjectId());
-                boolean match = projectFlowDos.stream().anyMatch(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus()));
+                boolean match = projectFlowDos.stream().anyMatch(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())
+                        ||FlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
                 if (!match) {
                     //有基线版本,且立项预期上线时间小于发布正式计划时间,且无审批通过的流程
                     Long seconds = elapsedTimeClient.getElapsedTime(pjEstablishPublishDateEnd, planDate);

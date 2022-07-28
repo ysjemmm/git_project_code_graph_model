@@ -508,6 +508,10 @@ public class TaskServiceImpl implements TaskService {
         if (match) {
             throw new BaseBizRuntimeException("任务名称中请勿包含空格");
         }
+        Set<String> names = taskSimples.stream().map(TaskSimpleAddReq::getName).collect(Collectors.toSet());
+        if(taskSimples.size()!=names.size()){
+            throw new BaseBizRuntimeException("任务名称重复,请修改后重试");
+        }
         //名称查重
         List<TaskDO> taskDos = TaskCopier.INSTANCE.tansfer(taskBatchAddReq.getTaskSimples());
 
