@@ -102,6 +102,11 @@ public enum BugReasonEnum {
      * 重复出现
      */
     REPEAT(22, "重复出现"),
+
+    /**
+     * 合并代码冲突
+     */
+    CODE_MERGE(23, "合并代码冲突")
     ;
 
     private final Integer code;
