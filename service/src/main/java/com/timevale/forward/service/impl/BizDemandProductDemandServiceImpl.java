@@ -324,6 +324,18 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         }
         condition.setOwnerIdList(allMyStaffWithSelfList);
 
+        List<Integer> statusList = new ArrayList<>();
+        Integer status = bizDemandSubProductDemandQueryList.getStatus();
+        if (status != null) {
+            statusList.add(status);
+        } else {
+            statusList = Arrays.stream(ProductDemandStatusEnum.values())
+                    .filter(e -> !ProductDemandStatusEnum.INVALID.equals(e) && !ProductDemandStatusEnum.ONLINE.equals(e))
+                    .map(ProductDemandStatusEnum::getCode)
+                    .collect(Collectors.toList());
+        }
+        condition.setStatusList(statusList);
+
         // 开始分页
         PageHelper.startPage(bizDemandSubProductDemandQueryList.pageNum, bizDemandSubProductDemandQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
         // 查询符合条件的产品需求
