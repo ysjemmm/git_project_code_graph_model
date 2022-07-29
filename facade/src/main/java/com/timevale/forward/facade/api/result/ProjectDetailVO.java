@@ -133,6 +133,6 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("立项预期上线时间")
     private Date pjEstablishPublishDate;
 
-    @ApiModelProperty("是否可以编辑立项时间")
-    private Boolean canModifyPjEstablishDate;
+    @ApiModelProperty("是否是pmo")
+    private Boolean isPMO;
 }
