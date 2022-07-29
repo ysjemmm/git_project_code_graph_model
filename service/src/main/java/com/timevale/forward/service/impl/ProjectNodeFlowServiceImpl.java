@@ -91,7 +91,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
             projectFlowDetailVO.setPoReviewFailReason(currentFlowDo.getReviewFailReason());
         }
 
-        ProcessResponse processInfo = epeiusClient.getProcessInfo("119b9f40-0289-11ed-aa3e-d6e0ba8953f1");
+        ProcessResponse processInfo = epeiusClient.getProcessInfo(flowId);
         Map<String, Object> flowData = processInfo.getFlowData();
         String pjEstablishPublishDate=flowData.get("pjEstablishPublishDate")==null ?null:flowData.get("pjEstablishPublishDate").toString();
         projectFlowDetailVO.setPjEstablishPublishDate(DateUtil.parseToDate(pjEstablishPublishDate, DateFormatConst.DATE_FORMAT));
