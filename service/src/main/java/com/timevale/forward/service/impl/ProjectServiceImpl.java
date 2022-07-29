@@ -29,6 +29,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
@@ -446,6 +447,7 @@ public class ProjectServiceImpl implements ProjectService {
             long count = projectNodeFlows.stream().filter(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
             projectDetailVO.setPublishChangeCount(count);
         }
+        projectDetailVO.setCanModifyPjEstablishDate(hasModifyDatePermission());
         return BaseResult.success(projectDetailVO);
     }
 
@@ -768,5 +770,20 @@ public class ProjectServiceImpl implements ProjectService {
                     DateUtil.parseToString(pjEstablishPublishDate, DateStyle.YYYY_MM_DD))
             );
         }
+    }
+
+    /**
+     * PMO 和 PMO 的上级才有权限编辑立项时间
+     */
+    private boolean hasModifyDatePermission() {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        List<BaseInfoResponse> users =
+                innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
+        for (BaseInfoResponse user : users) {
+            if (CommonConstant.PMO.equalsIgnoreCase(user.getJob())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
