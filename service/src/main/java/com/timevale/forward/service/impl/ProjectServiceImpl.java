@@ -597,9 +597,22 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO oldProjectDO = projectMapper.get(projectDO.getId());
         oldProjectDO.setPjEstablishStartDate(projectDateModifyReq.getPjEstablishStartDate());
         oldProjectDO.setPjEstablishPublishDate(projectDateModifyReq.getPjEstablishPublishDate());
+
+        checkPjEstablishPublishDateChange(oldProjectDO,projectDateModifyReq.getPjEstablishPublishDate());
+
         projectMapper.fullUpdateById(oldProjectDO);
         sendDingMsgIfPublishDateForward(projectDO.getId());
         return BaseResult.success(true);
+    }
+
+    private void checkPjEstablishPublishDateChange(ProjectDO oldProjectDO,Date pjEstablishPublishDate) {
+        if(!Objects.equals(oldProjectDO.getPjEstablishPublishDate(),pjEstablishPublishDate)){
+            List<ProjectNodeFlowDO> projectNodeFlowDos = projectNodeFlowMapper.getByProjectId(oldProjectDO.getId());
+            boolean match = projectNodeFlowDos.stream().anyMatch(a ->FlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
+            if(match){
+                throw new BaseBizRuntimeException("发布正式节点流程处于审核中,不能修改立项预期上线时间");
+            }
+        }
     }
 
     private boolean checkProductRelease(Long projectId) {
@@ -645,6 +658,8 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO oldProject = projectMapper.get(newProject.getId());
 
         checkBeforeUpdate(projectNodes, oldProject);
+
+        checkPjEstablishPublishDateChange(oldProject,newProject.getPjEstablishPublishDate());
 
         Integer oldStatus = oldProject.getStatus();
 
