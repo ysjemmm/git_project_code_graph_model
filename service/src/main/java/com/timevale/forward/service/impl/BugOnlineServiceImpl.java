@@ -581,6 +581,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugOnlineDetailVO.setRepairFailReason(bugOnlineDO.getRepairFailReason());
         }
         bugOnlineDetailVO.setEnvName(BugOnlineEnvEnum.getTextByCode(bugOnlineDO.getEnv()));
+        bugOnlineDetailVO.setSourceName(BugOnlineSourceEnum.getTextByCode(bugOnlineDO.getSource()));
         bugOnlineDetailVO.setBelongName(BugOnlineBeloneEnum.getTextByCode(bugOnlineDO.getBelong()));
         bugOnlineDetailVO.setPriorityName(BugOnlinePriorityEnum.getTextByCode(bugOnlineDO.getPriority()));
         if (bugOnlineDO.getReason() != null) {
