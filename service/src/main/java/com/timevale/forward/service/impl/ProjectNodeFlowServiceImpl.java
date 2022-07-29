@@ -25,6 +25,7 @@ import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -74,18 +76,26 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
         ProjectNodeFlowDetailVO projectFlowDetailVO = ProjectNodeFlowCopier.INSTANCE.convert(currentFlowDo);
         projectFlowDetailVO.setStatusName(FlowStatusEnum.getTextByCode(currentFlowDo.getStatus()));
 
+        String flowId = currentFlowDo.getFlowId();
         if (!StringUtils.isEmpty(currentFlowDo.getLastFlowId())) {
             //(pd||biz)&&po审批
             ProjectNodeFlowDO lastFlowDo = projectNodeFlowMapper.get(null, currentFlowDo.getLastFlowId());
             projectFlowDetailVO.setReviewFails(JSONObject.parseArray(lastFlowDo.getReviewFail(), String.class));
             projectFlowDetailVO.setReviewFailReason(lastFlowDo.getReviewFailReason());
             projectFlowDetailVO.setPoReviewFailReason(currentFlowDo.getReviewFailReason());
+            flowId=lastFlowDo.getFlowId();
         } else if (FlowStageEnum.SECOND.getCode().equals(currentFlowDo.getStage())) {
             //pd和biz为空,只有po审批
             projectFlowDetailVO.setReviewFails(Lists.emptyList());
             projectFlowDetailVO.setReviewFailReason(StringUtils.EMPTY);
             projectFlowDetailVO.setPoReviewFailReason(currentFlowDo.getReviewFailReason());
         }
+
+        ProcessResponse processInfo = epeiusClient.getProcessInfo("119b9f40-0289-11ed-aa3e-d6e0ba8953f1");
+        Map<String, Object> flowData = processInfo.getFlowData();
+        String pjEstablishPublishDate=flowData.get("pjEstablishPublishDate")==null ?null:flowData.get("pjEstablishPublishDate").toString();
+        projectFlowDetailVO.setPjEstablishPublishDate(DateUtil.parseToDate(pjEstablishPublishDate, DateFormatConst.DATE_FORMAT));
+
         long changeCount = projectFlowDos.stream().filter(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
         projectFlowDetailVO.setChangeCount(changeCount);
         return BaseResult.success(projectFlowDetailVO);

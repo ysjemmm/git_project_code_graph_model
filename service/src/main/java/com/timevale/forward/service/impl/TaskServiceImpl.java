@@ -509,7 +509,7 @@ public class TaskServiceImpl implements TaskService {
             throw new BaseBizRuntimeException("任务名称中请勿包含空格");
         }
         Set<String> names = taskSimples.stream().map(TaskSimpleAddReq::getName).collect(Collectors.toSet());
-        if(taskSimples.size()!=names.size()){
+        if (taskSimples.size() != names.size()) {
             throw new BaseBizRuntimeException("任务名称重复,请修改后重试");
         }
         //名称查重
@@ -522,48 +522,24 @@ public class TaskServiceImpl implements TaskService {
         checkPlanDate(taskDos.get(0));
 
         String account = LocalSessionUtils.getUserInfo().getId();
-//        CountDownLatch countDownLatch = new CountDownLatch(taskSimples.size());
         taskSimples.forEach(a -> {
-            TaskDO taskDO = TaskCopier.INSTANCE.convert(a);
-            taskDO.setDesc(StringUtils.EMPTY);
-            //填充状态
-            fillStatus(taskDO);
+            threadPoolTaskExecutor.execute(() -> {
+                TaskDO taskDO = TaskCopier.INSTANCE.convert(a);
+                taskDO.setDesc(StringUtils.EMPTY);
+                //填充状态
+                fillStatus(taskDO);
 
-            List<String> executorIds = a.getExecutors().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+                List<String> executorIds = a.getExecutors().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
 
-            sendDingTodo(taskDO, executorIds, account);
+                sendDingTodo(taskDO, executorIds, account);
 
-            taskMapper.insert(taskDO);
-            //执行人
-            personComponent.add(a.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
-            // 若执行人不在项目成员中,需新增
-            personComponent.addIfNotExisted(a.getExecutors(), taskDO.getProjectId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
-//            threadPoolTaskExecutor.execute(() -> {
-//                try {
-//                    TaskDO taskDO = TaskCopier.INSTANCE.convert(a);
-//                    //填充状态
-//                    fillStatus(taskDO);
-//
-//                    List<String> executorIds = a.getExecutors().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
-//
-//                    sendDingTodo(taskDO, executorIds, account);
-//
-//                    taskMapper.insert(taskDO);
-//                    //执行人
-//                    personComponent.add(a.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
-//                    // 若执行人不在项目成员中,需新增
-//                    personComponent.addIfNotExisted(a.getExecutors(), taskDO.getProjectId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
-//                } finally {
-//                    countDownLatch.countDown();
-//                }
-//            });
+                taskMapper.insert(taskDO);
+                //执行人
+                personComponent.add(a.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
+                // 若执行人不在项目成员中,需新增
+                personComponent.addIfNotExisted(a.getExecutors(), taskDO.getProjectId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
+            });
         });
-//        try {
-//            countDownLatch.await();
-//        } catch (Exception e) {
-//            log.error("批量新增异常",e);
-//            e.printStackTrace();
-//        }
         return BaseResult.success(true);
 
     }
@@ -603,7 +579,7 @@ public class TaskServiceImpl implements TaskService {
 
     private void checkNameExisted(List<TaskDO> taskDos) {
         List<String> names = taskDos.stream().map(TaskDO::getName).collect(Collectors.toList());
-        List<String> existNames = taskMapper.getByNameAndPid(names,taskDos.get(0).getProjectId()).stream().map(TaskDO::getName).collect(Collectors.toList());
+        List<String> existNames = taskMapper.getByNameAndPid(names, taskDos.get(0).getProjectId()).stream().map(TaskDO::getName).collect(Collectors.toList());
         if (CollectionUtils.isNotEmpty(existNames)) {
             throw new BaseBizRuntimeException("任务名称:" + existNames + "已存在,请修改后重试");
         }

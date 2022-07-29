@@ -957,7 +957,6 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         messageEventPublisher.publish(new BizDemandToReceiveAaginMsgEvent(
                 this,
-                oldReceiveMan,
                 oldBizDemandDO.getId(),
                 oldBizDemandDO.getSubmitMan(),
                 oldBizDemandDO.getReceiveManId(),
