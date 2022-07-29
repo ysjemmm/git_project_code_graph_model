@@ -447,7 +447,7 @@ public class ProjectServiceImpl implements ProjectService {
             long count = projectNodeFlows.stream().filter(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
             projectDetailVO.setPublishChangeCount(count);
         }
-        projectDetailVO.setCanModifyPjEstablishDate(hasModifyDatePermission());
+        projectDetailVO.setIsPMO(isPMO());
         return BaseResult.success(projectDetailVO);
     }
 
@@ -775,7 +775,7 @@ public class ProjectServiceImpl implements ProjectService {
     /**
      * PMO 和 PMO 的上级才有权限编辑立项时间
      */
-    private boolean hasModifyDatePermission() {
+    private boolean isPMO() {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         List<BaseInfoResponse> users =
                 innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
