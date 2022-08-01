@@ -333,8 +333,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             if (projectDO == null) {
                 throw new BaseBizRuntimeException("找不到该项目");
             }
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus(),Lists.newArrayList(productDemand.getId()));
+
             projectProductDemandComponent.batchInsert(productDemandAddReq.getProjectId(), Lists.newArrayList(productDemand.getId()));
-            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
 
             Map<Long, String> pdNameMap = new HashMap<>();
             pdNameMap.put(productDemand.getId(), productDemand.getName());
@@ -473,9 +474,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             //当前业务需求下的所有产品需求
             Long bizDemandId = bizDemandIds.get(0);
 
-            productDemandComponent.updateDemandStatusWhenUnlink(bizDemandId, productDemandDO.getId(), true);
-
             productBizDemandComponent.update(bizDemandLinkReq.getProductDemandId(), bizDemandId, true);
+
+            productDemandComponent.updateDemandStatusWhenUnlink(bizDemandId, productDemandDO.getId(), true);
 
             productDemandLogComponent.addLogWhenLinkOrUnlink(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
 
@@ -653,9 +654,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         } else {
             Long customDemandId = customDemandIds.get(0);
 
-            productDemandComponent.updateDemandStatusWhenUnlink(customDemandId, productDemandDO.getId(), false);
-
             productCustomDemandComponent.update(customDemandLinkReq.getProductDemandId(), customDemandId, true);
+
+            productDemandComponent.updateDemandStatusWhenUnlink(customDemandId, productDemandDO.getId(), false);
 
             productDemandLogComponent.addLogWhenLinkOrUnlinkCustomDemand(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
 //
