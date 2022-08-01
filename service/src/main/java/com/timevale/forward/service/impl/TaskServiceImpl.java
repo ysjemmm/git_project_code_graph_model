@@ -168,7 +168,11 @@ public class TaskServiceImpl implements TaskService {
             //处理待办
             sendDingTodo(taskDO, executorIds);
         }
+
         //入库
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        taskDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        taskDO.setCreateManId(userInfo.getId());
         taskMapper.insert(taskDO);
         //耗时表入库
         insertTaskTime(taskDO);
@@ -528,8 +532,6 @@ public class TaskServiceImpl implements TaskService {
                 taskDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
                 taskDO.setCreateManId(userInfo.getId());
 
-                taskDO.setModifyMan(taskDO.getCreateMan());
-                taskDO.setModifyManId(taskDO.getCreateManId());
                 //填充状态
                 fillStatus(taskDO);
 
