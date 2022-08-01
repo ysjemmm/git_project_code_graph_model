@@ -1,6 +1,5 @@
 package com.timevale.forward.service.job;
 
-import cn.hutool.core.map.MapUtil;
 import com.google.common.collect.Maps;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -13,7 +12,6 @@ import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.Sets;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.Resource;
@@ -25,16 +23,15 @@ import java.util.stream.Collectors;
  * create on 2022/6/27
  */
 @Slf4j
-@JobHandler(value = "TestProjectGoalReachDateNotifyJob")
+@JobHandler(value = "ProjectGoalReachDateNotifyJob")
 public class ProjectGoalReachDateNotifyJob extends IJobHandler {
 
     private static final String NOTIFY_PATTERN = "项目:%s目标达成时间已到期，请及时更新项目目标完成情况。";
     private static final String TITLE = "项目目标到期提醒";
+    private static final String EXCLUDE_BIZ_DOMAIN = "数智化中心";
 
-    // @Value("${projectGoal.receiver:zhuque}")
-    private String reachGoalReceiver = "yangxu";
-    // 不通知的业务域
-    private final String excludeBizDomain = "数智化中心";
+    @Value("${projectGoal.receiver:zhuque}")
+    private String reachGoalReceiver;
 
     @Resource
     private ProjectGoalMapper projectGoalMapper;
@@ -75,9 +72,10 @@ public class ProjectGoalReachDateNotifyJob extends IJobHandler {
         // 产品线、业务域信息
         List<Long> productLineIdList = projectProductLineDOList.stream().map(ProjectProductLineDO::getProductLineId).collect(Collectors.toList());
         List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIdList);
-        List<Long> bizDomainIdList = productLineDOList.stream().map(ProductLineDO::getBizDomainId).collect(Collectors.toList());
-        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByIdList(bizDomainIdList);
-        Map<Long, String> bizDomainMap = bizDomainDOList.stream().collect(Collectors.toMap(BaseDO::getId, BizDomainDO::getName));
+        Set<Long> bizDomainIdSet = productLineDOList.stream().map(ProductLineDO::getBizDomainId).collect(Collectors.toSet());
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByIdList(new ArrayList<>(bizDomainIdSet));
+        Map<Long, String> bizDomainNameMap = bizDomainDOList.stream().collect(Collectors.toMap(BaseDO::getId, BizDomainDO::getName));
+        Map<Long, String> productLineBizDomainGroup = productLineDOList.stream().collect(Collectors.toMap(BaseDO::getId, e->bizDomainNameMap.get(e.getBizDomainId())));
 
         Map<Long, ProjectDO> projectById = Maps.uniqueIndex(projects, ProjectDO::getId);
         for (ProjectGoalDO projectGoal : projectGoals) {
@@ -103,8 +101,8 @@ public class ProjectGoalReachDateNotifyJob extends IJobHandler {
             // 如果业务域仅=数智化中，则不通知
             Long projectId = project.getId();
             Set<Long> productLineIdSet = projectProductLineGroup.get(projectId);
-            Set<String> bizDomainSet = productLineIdSet.stream().map(bizDomainMap::get).collect(Collectors.toSet());
-            if(bizDomainSet.size() == 1 && bizDomainSet.contains(excludeBizDomain)) {
+            Set<String> bizDomainNameSet = productLineIdSet.stream().map(productLineBizDomainGroup::get).collect(Collectors.toSet());
+            if(bizDomainNameSet.size() == 1 && bizDomainNameSet.contains(EXCLUDE_BIZ_DOMAIN)) {
                 continue;
             }
 
