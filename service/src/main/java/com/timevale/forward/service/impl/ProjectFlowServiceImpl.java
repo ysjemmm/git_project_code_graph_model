@@ -1,7 +1,8 @@
 package com.timevale.forward.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Objects;
+
+import com.alibaba.fastjson.JSONObject;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
@@ -34,14 +35,23 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.base.util.DateUtils;
 import com.timevale.mandarin.common.annotation.RestService;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xingyun
@@ -117,16 +127,20 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), ProjectNodeEnum.START_PLAN.getText());
         if (projectNodeDo == null) {
             //需求规划阶段被删除,详设评审为第一个节点,需要清空项目实际开始时间
-            oldProjectDO.setActualStartDate(null);
-            projectMapper.fullUpdateById(oldProjectDO);
+            ProjectDO updateActualStartDateDO = new ProjectDO();
+            updateActualStartDateDO.setId(projectFlowDO.getProjectId());
+            updateActualStartDateDO.setActualStartDate(null);
+            projectMapper.update(updateActualStartDateDO);
         }
 
         Integer newStatus = projectComponent.getStatus(projectFlowDO.getProjectId());
         if (!Objects.equal(oldProjectDO.getStatus(), newStatus)
                 && !ProjectStatusEnum.INVALID.getCode().equals(oldProjectDO.getStatus())
                 && !ProjectStatusEnum.SUSPEND.getCode().equals(oldProjectDO.getStatus())) {
-            oldProjectDO.setStatus(newStatus);
-            projectMapper.fullUpdateById(oldProjectDO);
+            ProjectDO updateStatusDO = new ProjectDO();
+            updateStatusDO.setId(projectFlowDO.getProjectId());
+            updateStatusDO.setStatus(newStatus);
+            projectMapper.update(updateStatusDO);
             // 日志处理
             projectLogComponent.addLogWhenStatusChange(oldProjectDO.getStatus(), newStatus, oldProjectDO.getId(), String.format("发起%s", projectNodeEnum.getText()));
         }
