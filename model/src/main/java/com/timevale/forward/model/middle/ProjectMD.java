@@ -80,4 +80,10 @@ public class ProjectMD extends BaseMD{
 
     @FieldCompare(fieldName = "产品技术资源评估（人天）", scale = 2)
     private BigDecimal resourceAssessment;
+
+    @FieldCompare(fieldName = "立项开始时间")
+    private Date pjEstablishStartDate;
+
+    @FieldCompare(fieldName = "立项预期上线时间")
+    private Date pjEstablishPublishDate;
 }

@@ -315,6 +315,8 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO newProject = ProjectCopier.INSTANCE.convert(projectModifyReq);
         List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
 
+        Date oldPjEstablishPublishDate = oldProject.getPjEstablishPublishDate();
+
         if (projectModifyReq.getDelayType().compareTo(1) >= 0) {
             //有流程,计划时间不能变
             ProjectDO oldProjectDO = projectMapper.get(projectModifyReq.getId());
@@ -375,7 +377,7 @@ public class ProjectServiceImpl implements ProjectService {
         //流程与版本信息处理
         processFlow(projectModifyReq);
         //立项时间变化
-        sendDingMsgIfPublishDateForward(newProject.getId());
+        sendDingMsgIfPublishDateForward(newProject.getId(), oldPjEstablishPublishDate);
         return BaseResult.success(true);
     }
 
@@ -597,21 +599,36 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("立项时间修改参数:{}", projectDateModifyReq);
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectDateModifyReq);
         ProjectDO oldProjectDO = projectMapper.get(projectDO.getId());
-        oldProjectDO.setPjEstablishStartDate(projectDateModifyReq.getPjEstablishStartDate());
-        oldProjectDO.setPjEstablishPublishDate(projectDateModifyReq.getPjEstablishPublishDate());
 
-        checkPjEstablishPublishDateChange(oldProjectDO,projectDateModifyReq.getPjEstablishPublishDate());
+        checkPjEstablishPublishDateChange(oldProjectDO, projectDateModifyReq.getPjEstablishPublishDate());
+
+        Date pjEstablishStartDate = projectDateModifyReq.getPjEstablishStartDate();
+        Date pjEstablishPublishDate = projectDateModifyReq.getPjEstablishPublishDate();
+
+
+        String oldStartDateStr = DateUtil.parseToString(oldProjectDO.getPjEstablishStartDate(), DateStyle.YYYY_MM_DD);
+        String newStartDateStr = DateUtil.parseToString(pjEstablishStartDate, DateStyle.YYYY_MM_DD);
+        projectLogComponent.addLogWhenContentChange(oldStartDateStr, newStartDateStr, projectDO.getId(), BizChangeLogFieldEnum.PJ_ESTABLISH_START_DATE.getText());
+
+        Date oldPublishDate = oldProjectDO.getPjEstablishPublishDate();
+        String oldPublishDateStr = DateUtil.parseToString(oldPublishDate, DateStyle.YYYY_MM_DD);
+        String newPublishDateStr = DateUtil.parseToString(pjEstablishPublishDate, DateStyle.YYYY_MM_DD);
+        projectLogComponent.addLogWhenContentChange(oldPublishDateStr, newPublishDateStr, projectDO.getId(), BizChangeLogFieldEnum.PJ_ESTABLISH_PUBLISH_DATE.getText());
+
+        oldProjectDO.setPjEstablishStartDate(pjEstablishStartDate);
+        oldProjectDO.setPjEstablishPublishDate(pjEstablishPublishDate);
 
         projectMapper.fullUpdateById(oldProjectDO);
-        sendDingMsgIfPublishDateForward(projectDO.getId());
+        sendDingMsgIfPublishDateForward(projectDO.getId(), oldPublishDate);
+
         return BaseResult.success(true);
     }
 
-    private void checkPjEstablishPublishDateChange(ProjectDO oldProjectDO,Date pjEstablishPublishDate) {
-        if(!Objects.equals(oldProjectDO.getPjEstablishPublishDate(),pjEstablishPublishDate)){
+    private void checkPjEstablishPublishDateChange(ProjectDO oldProjectDO, Date pjEstablishPublishDate) {
+        if (!Objects.equals(oldProjectDO.getPjEstablishPublishDate(), pjEstablishPublishDate)) {
             List<ProjectNodeFlowDO> projectNodeFlowDos = projectNodeFlowMapper.getByProjectId(oldProjectDO.getId());
-            boolean match = projectNodeFlowDos.stream().anyMatch(a ->FlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
-            if(match){
+            boolean match = projectNodeFlowDos.stream().anyMatch(a -> FlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
+            if (match) {
                 throw new BaseBizRuntimeException("发布正式节点流程处于审核中,不能修改立项预期上线时间");
             }
         }
@@ -661,7 +678,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         checkBeforeUpdate(projectNodes, oldProject);
 
-        checkPjEstablishPublishDateChange(oldProject,newProject.getPjEstablishPublishDate());
+        checkPjEstablishPublishDateChange(oldProject, newProject.getPjEstablishPublishDate());
 
         Integer oldStatus = oldProject.getStatus();
 
@@ -755,19 +772,22 @@ public class ProjectServiceImpl implements ProjectService {
         }
     }
 
-    private void sendDingMsgIfPublishDateForward(Long id) {
+    private void sendDingMsgIfPublishDateForward(Long id, Date oldPjEstablishPublishDate) {
         ProjectDO oldProjectDO = projectMapper.get(id);
-        Date pjEstablishPublishDate = oldProjectDO.getPjEstablishPublishDate();
+        //此处已更新项目信息
+        Date newPjEstablishPublishDate = oldProjectDO.getPjEstablishPublishDate();
         Date planEndDate = oldProjectDO.getPlanEndDate();
-        log.info("立项预计上线时间提前:{}",oldProjectDO);
-        if (pjEstablishPublishDate != null && planEndDate != null && pjEstablishPublishDate.before(planEndDate)
-                && !ProjectStatusEnum.terminated(oldProjectDO.getStatus())) {
+        log.info("立项预计上线时间提前:{}", oldProjectDO);
+
+        if (newPjEstablishPublishDate != null && planEndDate != null && newPjEstablishPublishDate.before(planEndDate)
+                && !ProjectStatusEnum.terminated(oldProjectDO.getStatus())
+                && !Objects.equals(oldPjEstablishPublishDate, newPjEstablishPublishDate)) {
             messageEventPublisher.publish(new ProjectEstablishDateChangeMsgEvent(
                     this,
                     oldProjectDO.getId(),
                     oldProjectDO.getPmId(),
                     oldProjectDO.getName(),
-                    DateUtil.parseToString(pjEstablishPublishDate, DateStyle.YYYY_MM_DD))
+                    DateUtil.parseToString(newPjEstablishPublishDate, DateStyle.YYYY_MM_DD))
             );
         }
     }

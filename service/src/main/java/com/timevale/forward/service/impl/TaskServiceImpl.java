@@ -520,18 +520,22 @@ public class TaskServiceImpl implements TaskService {
         checkTaskStage(taskDos.get(0));
 
         checkPlanDate(taskDos.get(0));
-
-        String account = LocalSessionUtils.getUserInfo().getId();
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         taskSimples.forEach(a -> {
             threadPoolTaskExecutor.execute(() -> {
                 TaskDO taskDO = TaskCopier.INSTANCE.convert(a);
                 taskDO.setDesc(StringUtils.EMPTY);
+                taskDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+                taskDO.setCreateManId(userInfo.getId());
+
+                taskDO.setModifyMan(taskDO.getCreateMan());
+                taskDO.setModifyManId(taskDO.getCreateManId());
                 //填充状态
                 fillStatus(taskDO);
 
                 List<String> executorIds = a.getExecutors().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
 
-                sendDingTodo(taskDO, executorIds, account);
+                sendDingTodo(taskDO, executorIds, userInfo.getId());
 
                 taskMapper.insert(taskDO);
                 //执行人
