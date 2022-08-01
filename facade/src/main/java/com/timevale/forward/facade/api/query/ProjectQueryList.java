@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -17,6 +18,7 @@ import java.util.List;
 @Data
 @ApiModel("项目列表查询")
 public class ProjectQueryList extends QueryBase {
+
     @ApiModelProperty("id")
     private Long id;
 
@@ -112,4 +114,10 @@ public class ProjectQueryList extends QueryBase {
 
     @ApiModelProperty("是否有项目风险")
     private Boolean includeRisk;
+
+
+    @ApiModelProperty("标签或类别查询")
+    @NotNull(message = "标签或类别不能为空")
+    private List<LabelMarkedQueryList>labelMarkedQuery;
+
 }
