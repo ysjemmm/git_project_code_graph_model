@@ -31,8 +31,8 @@ public class ProjectGoalReachDateNotifyJob extends IJobHandler {
     private static final String NOTIFY_PATTERN = "项目:%s目标达成时间已到期，请及时更新项目目标完成情况。";
     private static final String TITLE = "项目目标到期提醒";
 
-    @Value("${projectGoal.receiver:zhuque}")
-    private String reachGoalReceiver;
+    // @Value("${projectGoal.receiver:zhuque}")
+    private String reachGoalReceiver = "yangxu";
     // 不通知的业务域
     private final String excludeBizDomain = "数智化中心";
 
