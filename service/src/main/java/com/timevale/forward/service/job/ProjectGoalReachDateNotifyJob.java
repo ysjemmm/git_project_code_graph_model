@@ -1,5 +1,6 @@
 package com.timevale.forward.service.job;
 
+import cn.hutool.core.map.MapUtil;
 import com.google.common.collect.Maps;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
  * create on 2022/6/27
  */
 @Slf4j
-@JobHandler(value = "ProjectGoalReachDateNotifyJob")
+@JobHandler(value = "TestProjectGoalReachDateNotifyJob")
 public class ProjectGoalReachDateNotifyJob extends IJobHandler {
 
     private static final String NOTIFY_PATTERN = "项目:%s目标达成时间已到期，请及时更新项目目标完成情况。";
