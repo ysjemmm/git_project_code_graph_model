@@ -1,6 +1,6 @@
 package com.timevale.forward.facade.api.query;
 
-import com.timevale.mandarin.common.result.ToString;
+import com.timevale.mandarin.common.query.QueryBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -15,14 +15,21 @@ import java.util.List;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("查询类别下的标签")
-public class LabelInCategoryQueryList extends ToString {
+@ApiModel("标签列表查询")
+public class LabelQueryList extends QueryBase {
+
+    @ApiModelProperty("名称")
+    private String names;
+
+    @ApiModelProperty("类别名称")
+    private List<String> categoryNames;
 
     @ApiModelProperty("模块类型(10业务需求、11产品需求、12项目、13线下bug、14线上bug)")
     @NotNull(message = "模块类型不能为空")
     private List<Integer> types;
 
     @ApiModelProperty("业务域")
+    @NotNull(message = "业务域不能为空")
     private List<Long> bizDomainIds;
 
 }

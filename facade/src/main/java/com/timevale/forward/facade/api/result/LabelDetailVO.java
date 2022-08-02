@@ -8,23 +8,25 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.Date;
-
 /**
  * @author xingyun
  * @date 2021-12-13 13:58
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("标签类别信息")
-public class LabelCategoryVO extends ToString {
+@ApiModel("标签详情信息")
+public class LabelDetailVO extends ToString {
 
     @ApiModelProperty("id")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
-    @ApiModelProperty("名称")
-    private String name;
+    @ApiModelProperty("类别id")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long categoryId;
+
+    @ApiModelProperty("类别名称")
+    private String categoryName;
 
     @ApiModelProperty("模块名称")
     private String typeName;
@@ -32,21 +34,4 @@ public class LabelCategoryVO extends ToString {
     @ApiModelProperty("业务域名称")
     private String bizDomainNames;
 
-    @ApiModelProperty("部门名称")
-    private String deptNames;
-
-    @ApiModelProperty("打标人员")
-    private String markMans;
-
-    @ApiModelProperty("提交人")
-    private String createMan;
-
-    @ApiModelProperty("提交人id")
-    private String createManId;
-
-    @ApiModelProperty("创建时间")
-    private Date createDate;
-
-    @ApiModelProperty("更新时间")
-    private Date modifyDate;
 }

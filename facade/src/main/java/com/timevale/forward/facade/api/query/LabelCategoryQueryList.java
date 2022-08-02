@@ -19,7 +19,7 @@ import java.util.List;
 public class LabelCategoryQueryList extends QueryBase {
 
     @ApiModelProperty("名称")
-    private String name;
+    private List<String> names;
 
     @ApiModelProperty("模块类型(10业务需求、11产品需求、12项目、13线下bug、14线上bug)")
     @NotNull(message = "模块类型不能为空")

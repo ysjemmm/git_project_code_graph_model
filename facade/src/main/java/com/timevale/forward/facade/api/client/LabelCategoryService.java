@@ -5,8 +5,10 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.LabelCategoryQueryList;
 import com.timevale.forward.facade.api.query.LabelInCategoryQueryList;
 import com.timevale.forward.facade.api.request.LabelCategoryAddReq;
+import com.timevale.forward.facade.api.result.LabelCategoryDetailVO;
 import com.timevale.forward.facade.api.result.LabelCategorySimpleVO;
-import com.timevale.forward.facade.api.result.TrackPropVO;
+import com.timevale.forward.facade.api.result.LabelCategoryVO;
+import com.timevale.forward.facade.api.result.LabelSimpleVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
@@ -22,18 +24,41 @@ public interface LabelCategoryService {
 
 
     /**
-     * 埋点地图
+     * 列表
      *
-     * @return 埋点属性
+     * @return 列表
      */
-    BaseResult<PageQueryResult<TrackPropVO>> list(LabelCategoryQueryList labelCategoryQueryList);
+    BaseResult<PageQueryResult<LabelCategoryVO>> list(LabelCategoryQueryList labelCategoryQueryList);
 
     /**
-     * 埋点地图
+     * 所有类别
      *
-     * @return 埋点属性
+     * @return 所有类别
+     */
+    BaseResult<List<LabelSimpleVO>> getAll();
+
+    /**
+     * 类别下-标签
+     *
+     * @return 类别下-标签
      */
     BaseResult<List<LabelCategorySimpleVO>> getLabelInCategory(LabelInCategoryQueryList labelInCategoryQueryList);
+
+    /**
+     * 查看
+     *
+     * @param categoryId categoryId
+     * @return 详情信息
+     */
+    BaseResult<LabelCategoryDetailVO> get(Long categoryId);
+
+    /**
+     * 查看
+     *
+     * @param categoryId categoryId
+     * @return 详情信息
+     */
+    BaseResult<Boolean> delete(Long categoryId);
 
 
     /**

@@ -16,7 +16,7 @@ import java.util.List;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("标签新增")
+@ApiModel("标签类别新增")
 public class LabelCategoryAddReq extends BaseReq {
 
 
@@ -34,17 +34,16 @@ public class LabelCategoryAddReq extends BaseReq {
     private List<Long> bizDomainIds;
 
     @ApiModelProperty("打标部门")
-    @NotNull(message = "打标部门不能为空")
     @Size(max = 500,message = "打标部门长度不能超过500字符")
     private List<Long> deptIds;
 
     @ApiModelProperty("打标人员")
     @Size(max = 500,message = "打标人员长度不能超过500字符")
-    private String markMan;
+    private List<String>markMans;
 
     @ApiModelProperty("打标人员id")
     @Size(max = 500,message = "打标人员长度不能超过500字符")
-    private String markManId;
+    private List<String> markManIds;
 
 
 }

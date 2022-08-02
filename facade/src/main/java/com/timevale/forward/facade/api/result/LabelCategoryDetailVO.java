@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author xingyun
@@ -16,8 +17,8 @@ import java.util.Date;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("标签类别信息")
-public class LabelCategoryVO extends ToString {
+@ApiModel("标签类别详情信息")
+public class LabelCategoryDetailVO extends ToString {
 
     @ApiModelProperty("id")
     @JsonSerialize(using = ToStringSerializer.class)
@@ -26,17 +27,20 @@ public class LabelCategoryVO extends ToString {
     @ApiModelProperty("名称")
     private String name;
 
-    @ApiModelProperty("模块名称")
-    private String typeName;
+    @ApiModelProperty("模块类型(10业务需求、11产品需求、12项目、13线下bug、14线上bug)")
+    private List<Integer> types;
 
-    @ApiModelProperty("业务域名称")
-    private String bizDomainNames;
-
-    @ApiModelProperty("部门名称")
-    private String deptNames;
+    @ApiModelProperty("业务域")
+    private List<Long> bizDomainIds;
 
     @ApiModelProperty("打标人员")
-    private String markMans;
+    private List<String> markManIds;
+
+    @ApiModelProperty("打标人员")
+    private List<String> markMans;
+
+    @ApiModelProperty("打标部门")
+    private List<Long> deptIds;
 
     @ApiModelProperty("提交人")
     private String createMan;
