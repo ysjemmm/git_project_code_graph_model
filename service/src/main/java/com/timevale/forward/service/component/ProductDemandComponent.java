@@ -37,6 +37,13 @@ public interface ProductDemandComponent {
 
     /**
      *
+     * @param projectId 项目id
+     * @param status 项目状态
+     */
+    void updateProductDemandStatus(Long projectId,Integer status,List<Long>productDemandIds);
+
+    /**
+     *
      * @param productDemandIds 产品需求id
      * @param invalid 产品需求与关联业务需求取消关联,
      */
@@ -85,4 +92,6 @@ public interface ProductDemandComponent {
      * @return Long
      */
     List<Long> getLinkCustomDemandIds(List<Long> productDemandIds);
+
+    void sendDingMsg(Integer oldStatus, Integer newStatus, Long bizDemandId);
 }
