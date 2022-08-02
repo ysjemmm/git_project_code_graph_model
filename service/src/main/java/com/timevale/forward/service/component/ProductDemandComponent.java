@@ -92,4 +92,6 @@ public interface ProductDemandComponent {
      * @return Long
      */
     List<Long> getLinkCustomDemandIds(List<Long> productDemandIds);
+
+    void sendDingMsg(Integer oldStatus, Integer newStatus, Long bizDemandId);
 }

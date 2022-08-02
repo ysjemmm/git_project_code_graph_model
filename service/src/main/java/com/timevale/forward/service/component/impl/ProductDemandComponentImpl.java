@@ -144,7 +144,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
 
     @Override
     public void updateProductDemandStatus(Long projectId, Integer status) {
-        updateProductDemandStatus(projectId,status,new ArrayList<>());
+        updateProductDemandStatus(projectId, status, new ArrayList<>());
     }
 
     @Override
@@ -283,20 +283,22 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         return customDemandIds;
     }
 
-
-    private void sendDingMsg(Integer oldStatus, Integer newStatus, Long bizId) {
+    @Override
+    public void sendDingMsg(Integer oldStatus, Integer newStatus, Long bizDemandId) {
         if (!Objects.equals(oldStatus, newStatus) && BizDemandStatusEnum.statusNeedNotice(newStatus)) {
-            BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizId);
-            Date projectEndDate = bizDemandComponent.getProjectEndDate(bizId);
-            log.info("发送钉钉消息,项目发布时间={},更新前状态={},更新后状态={},业务需求id={}", projectEndDate, oldStatus, newStatus, bizId);
-            messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
-                    this,
-                    bizId,
-                    bizDemandDO.getSubmitManId(),
-                    bizDemandDO.getName(),
-                    BizDemandStatusEnum.getTextByCode(newStatus),
-                    projectEndDate)
-            );
+            BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+            Date projectEndDate = bizDemandDO.getProjectEndDate();
+            log.info("发送钉钉消息,项目发布时间={},更新前状态={},更新后状态={},业务需求id={}", projectEndDate, oldStatus, newStatus, bizDemandId);
+            if (projectEndDate != null) {
+                messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
+                        this,
+                        bizDemandId,
+                        bizDemandDO.getSubmitManId(),
+                        bizDemandDO.getName(),
+                        BizDemandStatusEnum.getTextByCode(newStatus),
+                        projectEndDate)
+                );
+            }
         }
     }
 
