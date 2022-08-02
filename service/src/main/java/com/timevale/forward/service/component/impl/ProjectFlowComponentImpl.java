@@ -1,7 +1,8 @@
 package com.timevale.forward.service.component.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Objects;
+
+import com.alibaba.fastjson.JSONObject;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
@@ -13,20 +14,24 @@ import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
+import com.timevale.forward.service.component.ProjectLogComponent;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.lowcode.support.response.task.TaskHandleUserResponse;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xingyun
@@ -49,6 +54,9 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
 
     @Resource
     private ProjectMapper projectMapper;
+
+    @Resource
+    private ProjectLogComponent projectLogComponent;
 
     @Override
     public void updateFlowInfo(String processInstanceId) {
@@ -102,6 +110,8 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
                 updateStatusDO.setId(projectFlowDO.getProjectId());
                 updateStatusDO.setStatus(newStatus);
                 projectMapper.update(updateStatusDO);
+                projectLogComponent.addLogWhenStatusChange(oldProjectDO.getStatus(), newStatus, oldProjectDO.getId(), null);
+
             }
         }
 
