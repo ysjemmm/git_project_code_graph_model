@@ -3,6 +3,7 @@ package com.timevale.forward.service.component;
 import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.facade.api.request.FileAddReq;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface FileComponent {
@@ -36,5 +37,5 @@ public interface FileComponent {
      * @param type 附属类型
      * @return 列表
      */
-    List<FileDO> select(List<Long> attacheIdList, Integer type);
+    List<FileDO> select(Collection<Long> attacheIdList, Integer type);
 }

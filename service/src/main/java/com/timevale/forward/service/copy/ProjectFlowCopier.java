@@ -5,6 +5,7 @@ import com.timevale.forward.dal.entity.ProjectFlowDO;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ProjectFlowAddReq;
 import com.timevale.forward.facade.api.result.ProjectFlowDetailVO;
+import com.timevale.forward.facade.api.result.ProjectFlowDocumentVO;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.mapstruct.Mapper;
@@ -77,4 +78,10 @@ public interface ProjectFlowCopier {
         }
         return JSONObject.parseArray(reviewFails,String.class);
     }
+
+    @Mapping(target = "files", ignore = true)
+    @Mapping(target = "modifyDate", source = "docModifyDate")
+    @Mapping(target = "modifyManId", source = "docModifyManId")
+    @Mapping(target = "modifyMan", source = "docModifyMan")
+    ProjectFlowDocumentVO convert2Document(ProjectFlowDO projectFlowDO);
 }

@@ -14,6 +14,7 @@ import java.util.Objects;
 @AllArgsConstructor
 public enum FlowStatusEnum {
 
+    PRE_EDIT(-2, "提前编写文档"),
     WITHDRAW(-1, "已撤回"),
     AUDITING(0, "审核中"),
     COMPLETE(1, "审核通过"),

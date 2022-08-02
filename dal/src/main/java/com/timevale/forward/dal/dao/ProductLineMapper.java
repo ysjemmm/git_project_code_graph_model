@@ -66,6 +66,13 @@ public interface ProductLineMapper {
 
     /**
      *
+     * @param bizDomainName bizDomainName
+     * @return 列表
+     */
+    List<ProductLineDO> getByBizDomainName(@Param("bizDomainName") List<String> bizDomainName);
+
+    /**
+     *
      * @param productLineDO productLineDO
      * @return int
      */

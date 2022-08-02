@@ -24,6 +24,11 @@ public class ProjectFlowDO extends BaseDO {
     private String flowId;
 
     /**
+     * 流程类型
+     */
+    private Integer flowType;
+
+    /**
      * 发起人
      */
     private String proposer;
@@ -93,6 +98,18 @@ public class ProjectFlowDO extends BaseDO {
      */
     private String reviewUrl;
 
+    /**
+     * 文档修改人id
+     */
+    private String docModifyManId;
+    /**
+     * 文档修改人
+     */
+    private String docModifyMan;
+    /**
+     * 文档修改时间
+     */
+    private Date docModifyDate;
 
 
 }

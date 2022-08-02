@@ -32,15 +32,13 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
+import com.timevale.mandarin.base.util.StringUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -88,7 +86,7 @@ public class TestBillServiceImpl implements TestBillService {
         if (CollectionUtils.isNotEmpty(projectNodeDOList)) {
             //获取提测的计划时间
             List<Date> dateList = projectNodeDOList.stream().filter(e -> e.getName()
-                    .equals(ProjectNodeEnum.SUBMIT_TEST.getText())).map(ProjectNodeDO::getPlanDate)
+                            .equals(ProjectNodeEnum.SUBMIT_TEST.getText())).map(ProjectNodeDO::getPlanDate)
                     .collect(Collectors.toList());
             if (CollectionUtils.isEmpty(dateList)) {
                 throw new BaseBizRuntimeException("提测单的计划时间不能为空");
@@ -104,7 +102,8 @@ public class TestBillServiceImpl implements TestBillService {
             //提测人
             createTestBillVO.setSubmitTestMan(alias);
             //此项目是否有提测单
-            createTestBillVO.setIsHaveSubmitTest(testBillDO != null);
+            createTestBillVO.setIsHaveSubmitTest(testBillDO != null && !Objects.equal(testBillDO.getStatus(),
+                    TestBillStatusEnum.PRE_SUBMIT_TEST_CASE.getCode()));
         }
 
         return BaseResult.success(createTestBillVO);
@@ -115,22 +114,29 @@ public class TestBillServiceImpl implements TestBillService {
     public BaseResult<Boolean> submitTestBill(TestBillAddReq testBillAddReq) {
         log.info("提测单-提交提测单,参数:{}", testBillAddReq);
 
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String alias = userInfo.getAlias();
+        String userId = userInfo.getId();
+        testBillAddReq.setAlias(alias);
+        testBillAddReq.setAccount(userId);
+
         //判断该项目是否已经有提测单了，有的话则显示提示信息
         TestBillDO testBill = testBillMapper.selectByProjectId(testBillAddReq.getProjectId());
         if (testBill != null) {
-            throw new BaseBizRuntimeException("该项目已经有提测单了!");
+            if (testBill.getStatus().equals(TestBillStatusEnum.PRE_SUBMIT_TEST_CASE.getCode())) {
+                // 提前维护文档的情况，更新阶段到待自测
+                testBill.setStatus(TestBillStatusEnum.NO_SELF_TEST.getCode());
+                testBill.setTestManId(testBillAddReq.getTestManId());
+                testBill.setTestMan(testBillAddReq.getTestMan());
+                testBillMapper.updateByProjectId(testBill);
+            } else {
+                throw new BaseBizRuntimeException("该项目已经有提测单了!");
+            }
+        } else {
+            TestBillDO testBillDO = TestBillCopier.INSTANCE.transform(testBillAddReq);
+            //提交提测单
+            testBillMapper.submitTestBill(testBillDO);
         }
-
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        String alias = userInfo.getAlias();
-        String id = userInfo.getId();
-        testBillAddReq.setAlias(alias);
-        testBillAddReq.setAccount(id);
-
-        TestBillDO testBillDO = TestBillCopier.INSTANCE.transform(testBillAddReq);
-
-        //提交提测单
-        testBillMapper.submitTestBill(testBillDO);
 
         //创建一个项目的提测单之后需要清空项目原本的提测节点的实际时间
         projectNodeMapper.updateSubmitTestActualDate(testBillAddReq.getProjectId(), null);
@@ -146,7 +152,7 @@ public class TestBillServiceImpl implements TestBillService {
             Integer newStatus = projectComponent.getStatus(projectDO.getId());
             if (!Objects.equal(oldStatus, newStatus)) {
                 projectDO.setStatus(newStatus);
-                projectMapper.update(projectDO);
+                projectMapper.fullUpdateById(projectDO);
 
                 // 日志处理
                 projectLogComponent.addLogWhenStatusChange(oldStatus, newStatus, projectDO.getId(), ButtonActionEnum.TEST_CREATE.getText());
@@ -157,21 +163,29 @@ public class TestBillServiceImpl implements TestBillService {
         //获取提测单名称
         String testBillName = projectDO.getName() + CommonConstant.TESTBILL_SUFFIX;
 
-        //消息接收人
-        List<String> receivers = new ArrayList<>();
-        receivers.add(testBillAddReq.getTestManId());
-
-        //通知提测单接收人
-        messageEventPublisher.publish(
-                new BillTestCreateMsgEvent(
-                        this,
-                        alias,
-                        receivers,
-                        testBillName,
-                        testBillAddReq.getProjectId()
-                )
-        );
-
+        if (testBill == null) {
+            // 发起测试待提交测试用例提醒
+            messageEventPublisher.publish(
+                    new BillTestCreateMsgEvent(
+                            this,
+                            alias,
+                            Collections.singletonList(testBillAddReq.getTestManId()),
+                            testBillName,
+                            testBillAddReq.getProjectId()
+                    )
+            );
+        } else {
+            // 提前创建的测试单，发起自测通知
+            messageEventPublisher.publish(
+                    new BillTestSubmitSmokeMsgEvent(
+                            this,
+                            testBill.getDocModifyMan(),
+                            Collections.singletonList(userId),
+                            testBillName,
+                            testBillAddReq.getProjectId()
+                    )
+            );
+        }
         return BaseResult.success(true);
     }
 
@@ -224,18 +238,44 @@ public class TestBillServiceImpl implements TestBillService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> submitSmokeTesting(TestBillModifyReq testBillModifyReq) {
-        log.info("提测单-提测冒烟用例,参数:{}", testBillModifyReq);
+        log.info("提测单-提测测试用例,参数:{}", testBillModifyReq);
+        Date now = new Date();
 
         TestBillDO testBillDO = TestBillCopier.INSTANCE.change(testBillModifyReq);
 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String alias = userInfo.getAlias();
+        String longAlias = alias + CommonConstant.JOIN_LINE + userInfo.getName();
+
+        testBillDO.setDocModifyManId(userInfo.getId());
+        testBillDO.setDocModifyMan(longAlias);
+        testBillDO.setDocModifyDate(now);
 
         //获取提测人
         List<String> receivers = new ArrayList<>();
         TestBillDO testBill = testBillMapper.selectByProjectId(testBillModifyReq.getProjectId());
+        boolean notifyUser = false;
         if (testBill != null) {
+            if (StringUtils.isBlank(testBill.getDocCreateManId())) {
+                // 首次编写文档
+                testBillDO.setDocCreateManId(userInfo.getId());
+                testBillDO.setDocCreateMan(longAlias);
+                testBillDO.setDocCreateDate(now);
+            }
             receivers.add(testBill.getCreateManId());
+            if (testBill.getStatus().equals(TestBillStatusEnum.NO_SUBMIT_SMOKING.getCode())) {
+                testBillDO.setStatus(TestBillStatusEnum.NO_SELF_TEST.getCode());
+                notifyUser = true;
+            }
+        } else {
+            testBillDO.setStatus(TestBillStatusEnum.PRE_SUBMIT_TEST_CASE.getCode());
+            // 无提测单则创建
+            testBillDO.setDocCreateManId(userInfo.getId());
+            testBillDO.setDocCreateMan(longAlias);
+            testBillDO.setDocCreateDate(now);
+            testBillDO.setTestManId(StringUtils.EMPTY);
+            testBillDO.setTestMan(StringUtils.EMPTY);
+            testBillMapper.submitTestBill(testBillDO);
         }
 
         //获取提测单名称
@@ -243,7 +283,7 @@ public class TestBillServiceImpl implements TestBillService {
         String testBillName = projectDO.getName() + CommonConstant.TESTBILL_SUFFIX;
 
         //更新提测单
-        testBillMapper.submitSmokeTesting(testBillDO);
+        testBillMapper.updateByProjectId(testBillDO);
 
         FileDO fileDO = new FileDO();
         fileDO.setIsDeleted(true);
@@ -258,15 +298,18 @@ public class TestBillServiceImpl implements TestBillService {
             fileComponent.add(fileAddReqList, testBillModifyReq.getProjectId(), FileTypeEnum.TEST_BILL_CASE.getCode());
         }
 
-        messageEventPublisher.publish(
-                new BillTestSubmitSmokeMsgEvent(
-                        this,
-                        alias,
-                        receivers,
-                        testBillName,
-                        testBillModifyReq.getProjectId()
-                )
-        );
+        // 仅首次提交需要发送消息
+        if (notifyUser) {
+            messageEventPublisher.publish(
+                    new BillTestSubmitSmokeMsgEvent(
+                            this,
+                            alias,
+                            receivers,
+                            testBillName,
+                            testBillModifyReq.getProjectId()
+                    )
+            );
+        }
 
         return BaseResult.success(true);
     }
@@ -386,7 +429,7 @@ public class TestBillServiceImpl implements TestBillService {
 
         //获取提测单名称
         ProjectDO projectDO = projectMapper.get(testBillModifyReq.getProjectId());
-        String testBillName = "";
+        String testBillName;
         if (projectDO == null) {
             throw new BaseBizRuntimeException("该提测单" + testBillDO.getId() + ",无对应项目");
         }
@@ -422,7 +465,7 @@ public class TestBillServiceImpl implements TestBillService {
 
             // 项目状态更新
             projectDO.setStatus(newStatus);
-            projectMapper.update(projectDO);
+            projectMapper.fullUpdateById(projectDO);
 
             projectLogComponent.addLogWhenStatusChange(oldStatus, newStatus, projectDO.getId(), ButtonActionEnum.TEST_PASS.getText());
         }

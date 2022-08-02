@@ -8,7 +8,7 @@ import lombok.Getter;
  */
 @Getter
 public enum TestBillMessageTitleEnum {
-    SUBMIT_SMOKING_TEST("提交冒烟用例通知"),
+    SUBMIT_SMOKING_TEST("提交测试用例通知"),
     TEST_MAN_UPDATE("测试人更新通知"),
     SUBMIT_TEST_SHOW("提测预演通知"),
     SELF_TEST("自测通知"),
@@ -17,7 +17,7 @@ public enum TestBillMessageTitleEnum {
     ;
 
 
-    private String text;
+    private final String text;
 
     TestBillMessageTitleEnum(String text) {
         this.text = text;

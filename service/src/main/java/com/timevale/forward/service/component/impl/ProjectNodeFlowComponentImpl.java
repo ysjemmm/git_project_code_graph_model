@@ -82,7 +82,8 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         if (match) {
             throw new BaseBizRuntimeException("存在正在审核中的审批流程,请撤销后重新发起");
         }
-        Date oldPlanEndDate = DateUtil.getEndOfDay(projectNodeFlowDO.getPublishDate());
+        Date notNull = projectNodeFlowDO.getPjEstablishPublishDate() != null ? projectNodeFlowDO.getPjEstablishPublishDate() : projectNodeFlowDO.getPublishDate();
+        Date oldPlanEndDate = DateUtil.getEndOfDay(notNull);
         Date planEndDate = DateUtil.getEndOfDay(projectNodeFlowDO.getChangePublishDate());
         if (oldPlanEndDate.before(planEndDate)) {
             Long seconds = elapsedTimeClient.getElapsedTime(oldPlanEndDate, planEndDate);
@@ -193,8 +194,8 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         projectNodeFlowMapper.update(projectNodeFlowDO);
 
         List<ProjectNodeDO> projectNodes = JSONObject.parseArray(String.valueOf(flowData.get("projectNodes")), ProjectNodeDO.class);
-        if(FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
-            if(FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())){
+        if (FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
+            if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())) {
                 //2.流程重新发起
                 projectNodeFlowDO.setStage(FlowStageEnum.SECOND.getCode());
                 projectNodeFlowDO.setLastFlowId(projectNodeFlowDO.getFlowId());
@@ -208,7 +209,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
                 projectNodeFlowDO.setUnreviewed(JSONObject.toJSONString(Lists.newArrayList(unreviewed)));
                 projectNodeFlowDO.setUnreviewedId(JSONObject.toJSONString(Lists.newArrayList(unreviewedId)));
                 projectNodeFlowMapper.insert(projectNodeFlowDO);
-            }else{
+            } else {
                 messageEventPublisher.publish(new WorkflowRejectMsgEvent(
                         this,
                         "项目计划变更审批流程",
@@ -230,14 +231,14 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             ProjectDO projectDO = projectMapper.get(projectId);
             Date oldValue = projectDO.getPlanEndDate();
 
-            ProjectNodeEnum.sort(projectNodes);
+            projectNodes = projectNodeComponent.sort(projectNodes);
             ProjectNodeDO first = projectNodes.get(0);
             ProjectNodeDO last = projectNodes.get(projectNodes.size() - 1);
             projectDO.setPlanStartDate(first.getPlanDate());
             projectDO.setPlanEndDate(last.getPlanDate());
-            projectMapper.update(projectDO);
+            projectMapper.fullUpdateById(projectDO);
 
-            insertProjectNodeRecord(projectNodeFlowDO.getProjectId(), projectNodes,projectNodeFlowDO);
+            insertProjectNodeRecord(projectNodeFlowDO.getProjectId(), projectNodes, projectNodeFlowDO);
 
             // 创建变更记录
             BizChangeLogDO bizChangeLogDO = new BizChangeLogDO()
@@ -257,13 +258,13 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
     public void insertProjectNodeRecord(Long projectId, List<ProjectNodeDO> projectNodes) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String operator = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
-        ProjectNodeFlowDO projectNodeFlowDO=new ProjectNodeFlowDO();
+        ProjectNodeFlowDO projectNodeFlowDO = new ProjectNodeFlowDO();
         projectNodeFlowDO.setCreateMan(operator);
         projectNodeFlowDO.setCreateManId(userInfo.getId());
-        insertProjectNodeRecord( projectId, projectNodes,projectNodeFlowDO);
+        insertProjectNodeRecord(projectId, projectNodes, projectNodeFlowDO);
     }
 
-    private void insertProjectNodeRecord(Long projectId, List<ProjectNodeDO> projectNodes,ProjectNodeFlowDO projectNodeFlowDO) {
+    private void insertProjectNodeRecord(Long projectId, List<ProjectNodeDO> projectNodes, ProjectNodeFlowDO projectNodeFlowDO) {
         BigDecimal max = projectNodeRecordMapper.list(projectId).stream().map(ProjectNodeRecordDO::getVersion)
                 .max(Comparator.comparing(BigDecimal::abs)).orElse(BigDecimal.ZERO);
 
@@ -296,6 +297,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         variables.put("d", projectNodeFlowDO.getD());
         variables.put("publishDate", DateUtil.parseToString(projectNodeFlowDO.getPublishDate(), DateFormatConst.DATE_FORMAT));
         variables.put("changePublishDate", DateUtil.parseToString(projectNodeFlowDO.getChangePublishDate(), DateFormatConst.DATE_FORMAT));
+        variables.put("pjEstablishPublishDate", DateUtil.parseToString(projectNodeFlowDO.getPjEstablishPublishDate(), DateFormatConst.DATE_FORMAT));
         variables.put("delayDay", projectNodeFlowDO.getDelayDay());
         variables.put("changeCount", count);
         variables.put("changeType", ChangeTypeEnum.getTextByCode(projectNodeFlowDO.getChangeType()));
@@ -304,11 +306,11 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         List<String> reviews = new ArrayList<>();
         if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())) {
             List<String> bizId = JSONObject.parseArray(projectNodeFlowDO.getBizId(), String.class);
-            if(CollectionUtils.isNotEmpty(bizId)){
+            if (CollectionUtils.isNotEmpty(bizId)) {
                 reviewIds.addAll(bizId);
                 reviews.addAll(JSONObject.parseArray(projectNodeFlowDO.getBiz(), String.class));
             }
-            if(StringUtils.isNotEmpty(projectNodeFlowDO.getPdId())){
+            if (StringUtils.isNotEmpty(projectNodeFlowDO.getPdId())) {
                 reviewIds.add(projectNodeFlowDO.getPdId());
                 reviews.add(projectNodeFlowDO.getPd());
             }

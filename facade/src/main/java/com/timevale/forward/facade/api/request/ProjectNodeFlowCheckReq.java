@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -24,4 +25,7 @@ public class ProjectNodeFlowCheckReq extends BaseReq {
     @ApiModelProperty("项目id")
     @NotNull(message = "项目id不能为空")
     private Long projectId;
+
+    @ApiModelProperty("立项预期上线时间")
+    private Date pjEstablishPublishDate;
 }

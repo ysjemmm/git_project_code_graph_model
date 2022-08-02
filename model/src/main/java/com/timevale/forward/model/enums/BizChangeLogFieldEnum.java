@@ -23,6 +23,10 @@ public enum BizChangeLogFieldEnum {
 
     WITH_GOAL("是否有项目目标"),
 
+    PJ_ESTABLISH_PUBLISH_DATE("立项预期上线时间"),
+
+    PJ_ESTABLISH_START_DATE("立项开始时间"),
+
     /**
      * 项目目标
      */

@@ -25,6 +25,7 @@ import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -67,25 +69,33 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
     public BaseResult<ProjectNodeFlowDetailVO> getFlow(Long projectId) {
         log.info("节点审批流程详情,参数:{}", projectId);
         List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(projectId);
-        if(CollectionUtils.isEmpty(projectFlowDos)){
+        if (CollectionUtils.isEmpty(projectFlowDos)) {
             throw new BaseBizRuntimeException("找不到该审批流程");
         }
         ProjectNodeFlowDO currentFlowDo = projectFlowDos.get(0);
         ProjectNodeFlowDetailVO projectFlowDetailVO = ProjectNodeFlowCopier.INSTANCE.convert(currentFlowDo);
         projectFlowDetailVO.setStatusName(FlowStatusEnum.getTextByCode(currentFlowDo.getStatus()));
 
+        String flowId = currentFlowDo.getFlowId();
         if (!StringUtils.isEmpty(currentFlowDo.getLastFlowId())) {
             //(pd||biz)&&po审批
             ProjectNodeFlowDO lastFlowDo = projectNodeFlowMapper.get(null, currentFlowDo.getLastFlowId());
             projectFlowDetailVO.setReviewFails(JSONObject.parseArray(lastFlowDo.getReviewFail(), String.class));
             projectFlowDetailVO.setReviewFailReason(lastFlowDo.getReviewFailReason());
             projectFlowDetailVO.setPoReviewFailReason(currentFlowDo.getReviewFailReason());
+            flowId=lastFlowDo.getFlowId();
         } else if (FlowStageEnum.SECOND.getCode().equals(currentFlowDo.getStage())) {
             //pd和biz为空,只有po审批
             projectFlowDetailVO.setReviewFails(Lists.emptyList());
             projectFlowDetailVO.setReviewFailReason(StringUtils.EMPTY);
             projectFlowDetailVO.setPoReviewFailReason(currentFlowDo.getReviewFailReason());
         }
+
+        ProcessResponse processInfo = epeiusClient.getProcessInfo(flowId);
+        Map<String, Object> flowData = processInfo.getFlowData();
+        String pjEstablishPublishDate=flowData.get("pjEstablishPublishDate")==null ?null:flowData.get("pjEstablishPublishDate").toString();
+        projectFlowDetailVO.setPjEstablishPublishDate(DateUtil.parseToDate(pjEstablishPublishDate, DateFormatConst.DATE_FORMAT));
+
         long changeCount = projectFlowDos.stream().filter(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
         projectFlowDetailVO.setChangeCount(changeCount);
         return BaseResult.success(projectFlowDetailVO);
@@ -96,7 +106,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
     public BaseResult<Boolean> withdraw(Long projectId) {
         log.info("节点审批流程撤销,参数:{}", projectId);
         List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(projectId);
-        if(CollectionUtils.isEmpty(projectFlowDos)){
+        if (CollectionUtils.isEmpty(projectFlowDos)) {
             throw new BaseBizRuntimeException("找不到该审批流程");
         }
         ProjectNodeFlowDO currentFlowDo = projectFlowDos.get(0);
@@ -121,7 +131,8 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
     @Override
     public BaseResult<ProjectNodeDelayVO> nodeIsDelay(ProjectNodeFlowCheckReq projectNodeFlowCheckReq) {
         log.info("检查节点是否延期,参数:{}", projectNodeFlowCheckReq);
-        ProjectNodeDelayVO delayVO=new ProjectNodeDelayVO();
+        ProjectNodeDelayVO delayVO = new ProjectNodeDelayVO();
+
         List<ProjectNodeDO> oldProjectNodes = projectNodeMapper.get(projectNodeFlowCheckReq.getProjectId());
         List<ProjectNodeDO> oldPublishNodes = oldProjectNodes.stream()
                 .filter(a -> ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(a.getName()) && a.getPlanDate() != null).collect(Collectors.toList());
@@ -134,6 +145,25 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
         List<ProjectNodeDO> testNodes = projectNodes.stream()
                 .filter(a -> ProjectNodeEnum.SUBMIT_TEST.getText().equals(a.getName()) && a.getPlanDate() != null).collect(Collectors.toList());
 
+        Date pjEstablishPublishDate = projectNodeFlowCheckReq.getPjEstablishPublishDate();
+        if (pjEstablishPublishDate != null && !CollectionUtils.isEmpty(publishNodes)) {
+            Date pjEstablishPublishDateEnd = DateUtil.getEndOfDay(pjEstablishPublishDate);
+            Date planDate = DateUtil.getEndOfDay(publishNodes.get(0).getPlanDate());
+            if(pjEstablishPublishDateEnd.before(planDate)){
+                List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(projectNodeFlowCheckReq.getProjectId());
+                boolean match = projectFlowDos.stream().anyMatch(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())
+                        ||FlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
+                if (!match) {
+                    //有基线版本,且立项预期上线时间小于发布正式计划时间,且无审批通过的流程
+                    Long seconds = elapsedTimeClient.getElapsedTime(pjEstablishPublishDateEnd, planDate);
+                    BigDecimal elapsedTime = new BigDecimal(seconds.toString());
+                    elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.UP);
+                    delayVO.setDelayDay(elapsedTime);
+                    delayVO.setDelayType(2);
+                    return BaseResult.success(delayVO);
+                }
+            }
+        }
         if (!CollectionUtils.isEmpty(oldPublishNodes) && !CollectionUtils.isEmpty(publishNodes)) {
             Date oldPlanDate = DateUtil.getEndOfDay(oldPublishNodes.get(0).getPlanDate());
             Date planDate = DateUtil.getEndOfDay(publishNodes.get(0).getPlanDate());
@@ -167,7 +197,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
     public BaseResult<Boolean> test(ProjectModifyReq projectModifyReq) {
         ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
         List<ProjectNodeDO> projectNodes = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
-        projectNodeFlowComponent.process(projectNodeFlowDO,projectNodes);
+        projectNodeFlowComponent.process(projectNodeFlowDO, projectNodes);
         return BaseResult.success();
     }
 

@@ -4,16 +4,14 @@ import com.google.common.collect.Maps;
 import com.timevale.forward.dal.dao.ProjectNodeMapper;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
+import com.timevale.forward.model.enums.ProjectNodeStatusEnum;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -106,6 +104,39 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
             }
         });
         add(list, projectId);
+    }
+
+    @Override
+    public Date getRecentPlanDate(List<ProjectNodeDO> nodeDOList) {
+        nodeDOList = sort(nodeDOList);
+        for (ProjectNodeDO e : nodeDOList) {
+            if(e.getActualDate() == null){
+                return e.getPlanDate();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public List<ProjectNodeDO> sort(List<ProjectNodeDO> nodeDOList) {
+        Map<String, Integer> nodeMap = Arrays.stream(ProjectNodeEnum.values())
+                .collect(Collectors.toMap(ProjectNodeEnum::getText, ProjectNodeEnum::getCode, (a, b) -> a));
+        return nodeDOList.stream().sorted((a, b) -> {
+            Integer aCode = nodeMap.get(a.getName());
+            Integer bCode = nodeMap.get(b.getName());
+            return aCode.compareTo(bCode);
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public Integer getStatus(List<ProjectNodeDO> nodeDOList) {
+        nodeDOList = sort(nodeDOList);
+        for (ProjectNodeDO e : nodeDOList) {
+            if(e.getActualDate() == null){
+                return ProjectNodeStatusEnum.nodeStatusMap.get(e.getName());
+            }
+        }
+        return ProjectNodeStatusEnum.PUBLISHED.getCode();
     }
 
     private void fillValue(Long projectId, List<ProjectNodeDO> projectNodeDO) {

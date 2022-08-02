@@ -51,6 +51,9 @@ public class HomePageDataIndicatorVO extends ToString {
     @ApiModelProperty("待反串讲项目数")
     private Integer projectReadyConstrueReverseCount;
 
+    @ApiModelProperty("待UED评审项目数")
+    private Integer projectReadyUedAuditCount;
+
     @ApiModelProperty("待详设内审项目数")
     private Integer projectReadyTechnicalDetailReviewCount;
 

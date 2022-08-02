@@ -119,6 +119,11 @@ public class ProjectNodeFlowDO extends BaseDO {
     private Date changePublishDate;
 
     /**
+     * 立项预期上线时间
+     */
+    private Date pjEstablishPublishDate;
+
+    /**
      *变更事由
      */
     private String reason;
