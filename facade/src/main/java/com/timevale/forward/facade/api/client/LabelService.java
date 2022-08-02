@@ -55,7 +55,7 @@ public interface LabelService {
      * @param labelModifyReq 标签修改
      * @return Boolean
      */
-    BaseResult<Boolean> add(LabelModifyReq labelModifyReq);
+    BaseResult<Boolean> modify(LabelModifyReq labelModifyReq);
 
 
 }

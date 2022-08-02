@@ -59,7 +59,7 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
-    public BaseResult<Boolean> add(LabelModifyReq labelModifyReq) {
+    public BaseResult<Boolean> modify(LabelModifyReq labelModifyReq) {
         return BaseResult.success(true);
     }
 
