@@ -333,9 +333,17 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             if (projectDO == null) {
                 throw new BaseBizRuntimeException("找不到该项目");
             }
+            List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByProductDemandIds(Lists.newArrayList(productDemand.getId()));
+            Map<Long, Integer> bizIdMap = productBizDemandDOList.stream().collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, ProductBizDemandDO::getStatus, (v1, v2) -> v2));
+
             productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus(),Lists.newArrayList(productDemand.getId()));
 
             projectProductDemandComponent.batchInsert(productDemandAddReq.getProjectId(), Lists.newArrayList(productDemand.getId()));
+            //
+            bizIdMap.forEach((k,v)->{
+                BizDemandDO bizDemandDO = bizDemandMapper.selectById(k);
+                productDemandComponent.sendDingMsg(v,bizDemandDO.getStatus(),k);
+            });
 
             Map<Long, String> pdNameMap = new HashMap<>();
             pdNameMap.put(productDemand.getId(), productDemand.getName());

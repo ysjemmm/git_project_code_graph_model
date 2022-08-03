@@ -83,6 +83,9 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectProductDemandMapper projectProductDemandMapper;
 
     @Resource
+    private ProductBizDemandMapper productBizDemandMapper;
+
+    @Resource
     private PersonMapper personMapper;
 
     @Resource
@@ -141,6 +144,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private CustomDemandComponent customDemandComponent;
+
+    @Resource
+    private  BizDemandMapper bizDemandMapper;
 
 
     @Override
@@ -500,9 +506,18 @@ public class ProjectServiceImpl implements ProjectService {
                 List<Long> existedIds = productDemand.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
                 throw new BaseBizRuntimeException("产品需求id为" + existedIds + "已被项目关联,请刷后重试");
             }
+            List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByProductDemandIds(productDemandIds);
+            Map<Long, Integer> bizIdMap = productBizDemandDOList.stream().collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, ProductBizDemandDO::getStatus, (v1, v2) -> v2));
+
             productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus(),productDemandIds);
 
             projectProductDemandComponent.batchInsert(projectDO.getId(), productDemandIds);
+
+            //项目关联后,业务需求的发布时间可能变化
+            bizIdMap.forEach((k,v)->{
+                BizDemandDO bizDemandDO = bizDemandMapper.selectById(k);
+                productDemandComponent.sendDingMsg(v,bizDemandDO.getStatus(),k);
+            });
 
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.LINK.getText());
 

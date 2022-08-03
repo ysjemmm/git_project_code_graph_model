@@ -144,7 +144,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
 
     @Override
     public void updateProductDemandStatus(Long projectId, Integer status) {
-        updateProductDemandStatus(projectId,status,new ArrayList<>());
+        updateProductDemandStatus(projectId, status, new ArrayList<>());
     }
 
     @Override
@@ -283,20 +283,22 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         return customDemandIds;
     }
 
-
-    private void sendDingMsg(Integer oldStatus, Integer newStatus, Long bizId) {
+    @Override
+    public void sendDingMsg(Integer oldStatus, Integer newStatus, Long bizDemandId) {
         if (!Objects.equals(oldStatus, newStatus) && BizDemandStatusEnum.statusNeedNotice(newStatus)) {
-            BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizId);
+            BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
             Date projectEndDate = bizDemandDO.getProjectEndDate();
-            log.info("发送钉钉消息,项目发布时间={},更新前状态={},更新后状态={},业务需求id={}", projectEndDate, oldStatus, newStatus, bizId);
-            messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
-                    this,
-                    bizId,
-                    bizDemandDO.getSubmitManId(),
-                    bizDemandDO.getName(),
-                    BizDemandStatusEnum.getTextByCode(newStatus),
-                    projectEndDate)
-            );
+            log.info("发送钉钉消息,项目发布时间={},更新前状态={},更新后状态={},业务需求id={}", projectEndDate, oldStatus, newStatus, bizDemandId);
+            if (projectEndDate != null) {
+                messageEventPublisher.publish(new BizDemandStatusChangeMsgEvent(
+                        this,
+                        bizDemandId,
+                        bizDemandDO.getSubmitManId(),
+                        bizDemandDO.getName(),
+                        BizDemandStatusEnum.getTextByCode(newStatus),
+                        projectEndDate)
+                );
+            }
         }
     }
 
@@ -304,9 +306,8 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     public void updateDemandStatusWhenUnlink(Long demandId, Long productDemandId, boolean bizDemand) {
         if (bizDemand) {
             List<ProductBizDemandDO> demandDOList = productBizDemandMapper.getByBizDemandId(demandId);
-            //计算业务需求状态时需要过滤掉本次被解除的产品需求
-            Integer productStatus = demandDOList.stream().filter(i -> !productDemandId.equals(i.getProductDemandId())).map(ProductBizDemandDO::getStatus)
-                    .min(Comparator.comparingInt(o -> o)).orElse(null);
+
+            Integer productStatus = demandDOList.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
 
             Integer newStatus = bizDemandComponent.getBizDemandStatus(productStatus);
             BizDemandDO bizDemandDO = bizDemandMapper.selectById(demandId);
@@ -331,8 +332,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             }
         } else {
             List<ProductCustomDemandDO> demandDOList = productCustomDemandMapper.getByCustomDemandId(demandId);
-            Integer productStatus = demandDOList.stream().filter(i -> !productDemandId.equals(i.getProductDemandId())).map(ProductCustomDemandDO::getStatus)
-                    .min(Comparator.comparingInt(o -> o)).orElse(null);
+            Integer productStatus = demandDOList.stream().map(ProductCustomDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
 
             Integer newStatus = bizDemandComponent.getBizDemandStatus(productStatus);
             CustomDemandDO customDemandDO = customDemandMapper.selectById(demandId);
