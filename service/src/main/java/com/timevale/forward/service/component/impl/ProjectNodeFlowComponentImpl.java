@@ -229,7 +229,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             projectComponent.updateNodeStatus(projectId);
 
             ProjectDO projectDO = projectMapper.get(projectId);
-            Date oldValue = projectDO.getPlanEndDate();
+            Date oldEndDate = projectDO.getPlanEndDate();
 
             projectNodes = projectNodeComponent.sort(projectNodes);
             ProjectNodeDO first = projectNodes.get(0);
@@ -241,16 +241,20 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             insertProjectNodeRecord(projectNodeFlowDO.getProjectId(), projectNodes, projectNodeFlowDO);
 
             // 创建变更记录
-            BizChangeLogDO bizChangeLogDO = new BizChangeLogDO()
-                    .setMainId(projectId)
-                    .setType(BizChangeLogTypeEnum.PROJECT.getCode())
-                    .setField(BizChangeLogFieldEnum.PLAN_END_DATE.getText())
-                    .setOldValue(DateUtil.parseToString(oldValue, DateFormatConst.DATE_FORMAT))
-                    .setNewValue(DateUtil.parseToString(projectDO.getPlanEndDate(), DateFormatConst.DATE_FORMAT));
-            bizChangeLogDO.setCreateMan(projectNodeFlowDO.getCreateMan());
-            bizChangeLogDO.setCreateManId(projectNodeFlowDO.getCreateManId());
-            bizChangeLogDO.setContent(String.format("{\"taskId\": \"%s\"}", currentTaskIdList.get(0)));
-            bizChangeLogMapper.insert(bizChangeLogDO);
+            String oldValue = DateUtil.parseToString(oldEndDate, DateFormatConst.DATE_FORMAT);
+            String newValue = DateUtil.parseToString(projectDO.getPlanEndDate(), DateFormatConst.DATE_FORMAT);
+            if (!Objects.equals(oldValue, newValue)) {
+                BizChangeLogDO bizChangeLogDO = new BizChangeLogDO()
+                        .setMainId(projectId)
+                        .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                        .setField(BizChangeLogFieldEnum.PLAN_END_DATE.getText())
+                        .setOldValue(oldValue)
+                        .setNewValue(newValue);
+                bizChangeLogDO.setCreateMan(projectNodeFlowDO.getCreateMan());
+                bizChangeLogDO.setCreateManId(projectNodeFlowDO.getCreateManId());
+                bizChangeLogDO.setContent(String.format("{\"taskId\": \"%s\"}", currentTaskIdList.get(0)));
+                bizChangeLogMapper.insert(bizChangeLogDO);
+            }
         }
     }
 
