@@ -49,8 +49,4 @@ public class ProjectGoalVO extends ToString {
 
     @ApiModelProperty("项目目标状态: 0: 进行中; 10: 已完成; 30: 未完成")
     private Integer status;
-
-    @ApiModelProperty("是否有完成情况填写权限")
-    private boolean permitFinish = false;
-
 }
