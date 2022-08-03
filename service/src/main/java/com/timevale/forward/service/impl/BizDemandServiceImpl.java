@@ -438,7 +438,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<FileAddReq> fileIdList = bizDemandModifyReq.getFileList();
         fileComponent.update(fileIdList, bizDemandModifyReq.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
 
-        // 接收人变更
+        // 接收人变更,被驳回 重新提交给接收人
         if (!Objects.equal(oldBizDemandDO.getReceiveManId(), newBizDemandDO.getReceiveManId())) {
             // 判断当前状态≠作废
             if(BizDemandStatusEnum.INVALID.getCode().equals(oldBizDemandDO.getStatus())){
@@ -468,6 +468,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 变更日志
         bizDemandLogComponent.addLogWhenModifyData(oldBizDemandDO, newBizDemandDO);
+
 
         return BaseResult.success(true);
     }
@@ -920,6 +921,49 @@ public class BizDemandServiceImpl implements BizDemandService {
                 oldBizDemandDO.getName()
         ));
 
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> reSubmit(BizDemandResubmitReq bizDemandResubmitReq) {
+        Long bizDemandId = bizDemandResubmitReq.getId();
+        BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        if (oldBizDemandDO == null) {
+            throw new BaseBizRuntimeException("不存在该业务需求");
+        }
+        String oldReceiveMan = oldBizDemandDO.getReceiveMan();
+        // 日志, 状态改为待评估
+        bizDemandLogComponent.addLogWhenModifyData(
+                BizDemandStatusEnum.REJECT.getText(),
+                BizDemandStatusEnum.EVALUATE.getText(),
+                bizDemandId,
+                BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
+                true,
+                ButtonActionEnum.RESUBMIT.getText());
+
+        String oldReasonText = BizDemandReasonEnum.getTextByCode(oldBizDemandDO.getReason());
+        if (StringUtils.isNotEmpty(oldReasonText)) {
+            bizDemandLogComponent.addLogWhenModifyData(
+                    oldReasonText,
+                    StringUtils.EMPTY,
+                    bizDemandId,
+                    BizChangeLogFieldEnum.REASON.getText(),
+                    false
+            );
+        }
+        oldBizDemandDO.setStatus(BizDemandStatusEnum.EVALUATE.getCode());
+        oldBizDemandDO.setReason(null);
+        oldBizDemandDO.setReceiveMan(bizDemandResubmitReq.getReceiveMan());
+        oldBizDemandDO.setReceiveManId(bizDemandResubmitReq.getReceiveManId());
+        bizDemandMapper.fullUpdate(oldBizDemandDO);
+
+        messageEventPublisher.publish(new BizDemandToReceiveAaginMsgEvent(
+                this,
+                oldBizDemandDO.getId(),
+                oldBizDemandDO.getSubmitMan(),
+                oldBizDemandDO.getReceiveManId(),
+                oldBizDemandDO.getName()
+        ));
         return BaseResult.success(true);
     }
 

@@ -20,7 +20,7 @@ public class ProjectNodeDelayVO extends ToString {
     @ApiModelProperty("延期天数")
     private BigDecimal delayDay;
 
-    @ApiModelProperty("延期类型:-1不延期,0提测延期,1发布正式延期")
+    @ApiModelProperty("延期类型:-1不延期,0提测延期,1发布正式延期,2立项预期上线时间小于发布正式计划时间")
     private Integer delayType;
 
 }

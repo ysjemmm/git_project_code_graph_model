@@ -5,11 +5,10 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
-import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.mandarin.common.annotation.RestClient;
-import com.timevale.mandarin.common.result.PageQueryResult;
 
 import java.util.List;
 
@@ -128,5 +127,12 @@ public interface BizDemandService {
      * @param bizDemandCompletedRejectReq 业务需求完成拒绝要求事情
      */
     BaseResult<Boolean> completedReject(BizDemandCompletedRejectReq bizDemandCompletedRejectReq);
+
+    /**
+     * 被驳回后 可重新提交
+     * @param bizDemandResubmitReq bizDemandResubmitReq
+     * @return Boolean
+     */
+    BaseResult<Boolean> reSubmit(BizDemandResubmitReq bizDemandResubmitReq);
 
 }

@@ -6,6 +6,7 @@ import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
+import com.timevale.forward.facade.api.request.ProjectDateModifyReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
 import com.timevale.forward.facade.api.result.*;
@@ -103,4 +104,12 @@ public interface ProjectService {
      * @return 项目简单VO列表
      */
     BaseResult<List<ProjectBaseVO>> getProjectByProductLine(Long productLineId);
+
+    /**
+     * 修改立项日期
+     *
+     * @param projectDateModifyReq 修改立项日期
+     * @return Boolean
+     */
+    BaseResult<Boolean> modifyProjectDate(ProjectDateModifyReq projectDateModifyReq);
 }

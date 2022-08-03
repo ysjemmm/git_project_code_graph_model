@@ -41,13 +41,13 @@ public interface TaskComponent {
      */
     void containProductLineInTask(Long projectId,List<Long> productLineIdsInProject);
 
-
     /**
      *
-     * @param taskDO
-     * @param executorIds
+     * @param taskDO taskDO
+     * @param executorIds executorIds
+     * @param account account
      */
-     void addTodoTask(TaskDO taskDO, List<String> executorIds);
+     void addTodoTask(TaskDO taskDO, List<String> executorIds,String account);
 
     /**
      *

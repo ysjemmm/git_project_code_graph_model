@@ -248,4 +248,19 @@
             and is_deleted=false
         </where>
     </update>
+
+    <select id="getByNameAndPid" resultType="com.timevale.forward.dal.entity.TaskDO">
+        select id, project_id, product_line_id, name, stage, status, todo, todo_id, plan_start_date, plan_end_date,
+        plan_use_time, actual_start_date, actual_end_date, task_use_time, is_deleted, create_man_id, create_man,
+        create_date, modify_man_id, modify_man, modify_date
+        from task
+        <where>
+            project_id = #{projectId} and
+            name in
+            <foreach collection="names" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            and is_deleted = false
+        </where>
+    </select>
 </mapper>

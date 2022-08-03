@@ -122,7 +122,7 @@ public class DataCorrectServiceImpl implements DataCorrectService {
             if (org.apache.commons.collections.CollectionUtils.isEmpty(nodeDOList)) {
                 nodeStatus = ProjectNodeStatusEnum.READY_START.getCode();
             } else {
-                nodeStatus = ProjectNodeStatusEnum.getStatus(nodeDOList);
+                nodeStatus = projectNodeComponent.getStatus(nodeDOList);
             }
             // 更新项目节点状态
             ProjectDO projectDO = new ProjectDO();

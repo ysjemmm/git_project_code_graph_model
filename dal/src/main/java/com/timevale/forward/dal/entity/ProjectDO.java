@@ -106,4 +106,15 @@ public class ProjectDO extends BaseDO {
      */
     private BigDecimal resourceAssessment;
 
+    /**
+     * 立项开始时间
+     */
+    private Date pjEstablishStartDate;
+
+
+    /**
+     * 立项预期上线时间
+     */
+    private Date pjEstablishPublishDate;
+
 }

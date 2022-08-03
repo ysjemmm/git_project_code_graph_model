@@ -15,6 +15,9 @@ import lombok.EqualsAndHashCode;
 @ApiModel("文件")
 public class FileVO extends ToString {
 
+    @ApiModelProperty("附件所属id")
+    private Long attacheId;
+
     @ApiModelProperty("文件id")
     private String fileId;
 
@@ -24,7 +27,7 @@ public class FileVO extends ToString {
     @ApiModelProperty(value = "文件下载地址")
     private String downloadUrl;
 
-    @ApiModelProperty(value = "文件类型:-1:产品线图片,1产品需求,2业务需求,3任务,4提测单-冒烟用例,5提测单-自测通过,6线下bug,7线上bug,8故障单,9详设评审,10埋点事件,15客户需求")
+    @ApiModelProperty(value = "文件类型:-1:产品线图片,1产品需求,2业务需求,3任务,4提测单-测试用例,5提测单-自测通过,6线下bug,7线上bug,8故障单,9详设评审,10埋点事件,15客户需求")
     private String fileType;
 
     @ApiModelProperty(value = "文件Key")

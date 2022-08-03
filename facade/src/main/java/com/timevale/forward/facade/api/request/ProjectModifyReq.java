@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -28,8 +29,14 @@ public class ProjectModifyReq extends ProjectAddReq {
     @ApiModelProperty("节点审批流程")
     private ProjectNodeFlowAddReq projectNodeFlow;
 
-    @ApiModelProperty("延期类型:0提测延期,1发布正式延期,-1不延期")
+    @ApiModelProperty("延期类型:0提测延期,1发布正式延期,2立项预期上线时间小于发布正式计划时间,-1不延期")
     @NotNull(message = "延期类型不能为空")
     private Integer delayType;
+
+    @ApiModelProperty("立项开始时间")
+    private Date pjEstablishStartDate;
+
+    @ApiModelProperty("立项预期上线时间")
+    private Date pjEstablishPublishDate;
 
 }

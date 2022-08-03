@@ -50,4 +50,27 @@ public interface ProjectNodeComponent {
      */
     void updateNodePlanDate(List<ProjectNodeDO> list,Long projectId);
 
+    /**
+     * 得到实际日期为null的计划日期
+     *
+     * @param nodeDOList 节点DO列表
+     * @return {@link Date}
+     */
+    Date getRecentPlanDate(List<ProjectNodeDO> nodeDOList);
+
+    /**
+     * 节点排序
+     *
+     * @param nodeDOList 节点DO列表
+     */
+    List<ProjectNodeDO> sort(List<ProjectNodeDO> nodeDOList);
+
+    /**
+     * 获得项目节点状态
+     *
+     * @param nodeDOList 节点DO列表
+     * @return {@link Integer}
+     */
+    Integer getStatus(List<ProjectNodeDO> nodeDOList);
+
 }

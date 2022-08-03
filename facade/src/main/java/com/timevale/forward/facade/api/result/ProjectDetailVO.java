@@ -126,4 +126,13 @@ public class ProjectDetailVO extends ToString {
 
     @ApiModelProperty("发布正式计划时间延期次数")
     private Long publishChangeCount;
+
+    @ApiModelProperty("立项开始时间")
+    private Date pjEstablishStartDate;
+
+    @ApiModelProperty("立项预期上线时间")
+    private Date pjEstablishPublishDate;
+
+    @ApiModelProperty("是否是pmo")
+    private Boolean isPMO;
 }

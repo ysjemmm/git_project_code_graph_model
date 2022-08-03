@@ -114,4 +114,12 @@ public interface TaskMapper {
      */
     List<TaskOverdueDTO> getOverdueRank(@Param("projectId") Long projectId);
 
+    /**
+     * 通过执行人查询
+     *
+     * @param names 用户id列表
+     * @return TaskDO List
+     */
+    List<TaskDO> getByNameAndPid(@Param("names") List<String> names,@Param("projectId") Long projectId);
+
 }

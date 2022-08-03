@@ -38,6 +38,9 @@ public class ProjectNodeFlowAddReq extends BaseReq {
     @ApiModelProperty("调整后发布时间")
     private Date changePublishDate;
 
+    @ApiModelProperty("立项预期上线时间")
+    private Date pjEstablishPublishDate;
+
     @ApiModelProperty("变更事由")
     private String reason;
 

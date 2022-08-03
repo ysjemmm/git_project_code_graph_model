@@ -17,12 +17,12 @@ public interface ElapsedTimeClient {
     Long getElapsedTime(Date startTime, Date endTime);
 
     /**
-     * 得到时间(24小时计算)
+     * 计算结束时间(工作时长计算)
      *
      * @param startTime 开始时间
-     * @param endTime   结束时间
+     * @param seconds   s
      * @return 时间戳
      */
-    Long getElapsedTimeAllDay(Date startTime, Date endTime);
+    String getElapsedEndTime(Date startTime, Long seconds);
 
 }

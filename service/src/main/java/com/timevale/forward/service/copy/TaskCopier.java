@@ -6,6 +6,7 @@ import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.query.TaskQueryList;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
+import com.timevale.forward.facade.api.request.TaskSimpleAddReq;
 import com.timevale.forward.facade.api.result.TaskDetailVO;
 import com.timevale.forward.facade.api.result.TaskListVO;
 import com.timevale.forward.facade.api.result.TaskOverdueCountVO;
@@ -60,9 +61,31 @@ public interface TaskCopier {
      */
     TaskDetailVO convert(TaskDO taskDO);
 
-
+    /**
+     *
+     * @param taskDO taskDO
+     * @return TaskListVO
+     */
     TaskListVO tansfer(TaskDO taskDO);
 
+    /**
+     *
+     * @param dtoList dtoList
+     * @return TaskOverdueCountVO
+     */
     List<TaskOverdueCountVO> convertOverdue(List<TaskOverdueDTO> dtoList);
 
+    /**
+     *
+     * @param taskSimpleAddReqs taskSimpleAddReqs
+     * @return TaskDO
+     */
+    List<TaskDO> tansfer(List<TaskSimpleAddReq> taskSimpleAddReqs);
+
+    /**
+     *
+     * @param taskSimpleAddReq taskSimpleAddReq
+     * @return TaskDO
+     */
+    TaskDO convert(TaskSimpleAddReq taskSimpleAddReq);
 }

@@ -16,7 +16,7 @@ public enum FileTypeEnum {
     BIZ_DEMAND(2),
     // 任务
     TASK(3),
-    // 提测单-冒烟用例
+    // 提测单-测试用例
     TEST_BILL_CASE(4),
     // 提测单-自测通过
     TEST_BILL_PASS(5),
@@ -36,6 +36,6 @@ public enum FileTypeEnum {
     CUSTOM_DEMAND(15)
     ;
 
-    private Integer code;
+    private final Integer code;
 
 }

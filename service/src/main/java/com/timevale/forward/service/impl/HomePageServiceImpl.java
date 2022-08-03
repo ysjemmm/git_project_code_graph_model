@@ -104,6 +104,7 @@ public class HomePageServiceImpl implements HomePageService {
             dataIndicatorVO.setProjectReadyInternalAuditCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_INTERNAL_AUDIT.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyConstrueCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_CONSTRUE.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyConstrueReverseCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_CONSTRUE_REVERSE.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyUedAuditCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_UED_AUDIT.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyTechnicalDetailReviewCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_TECHNICAL_DETAIL_REVIEW.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyDevelopCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_DEVELOP.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectDevelopingCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.DEVELOPING.getCode().equals(e.getNodeStatus())).count());
@@ -429,8 +430,8 @@ public class HomePageServiceImpl implements HomePageService {
     public List<HomePageProjectBoardDTO> filterByDate(UserTypeEnum userType, Date startDate, Date endDate, List<HomePageProjectBoardDTO> list) {
         if (userType.equals(UserTypeEnum.PD)) {
             return list.stream().filter(e -> {
-                Date nodeStart = DateUtil.min(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(),e.getDemandConstrueReverse());
-                Date nodeEnd = DateUtil.max(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(),e.getDemandConstrueReverse());
+                Date nodeStart = DateUtil.min(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(),e.getDemandConstrueReverse(),e.getUedAudit());
+                Date nodeEnd = DateUtil.max(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(),e.getDemandConstrueReverse(),e.getUedAudit());
                 return DateUtil.haveOverlap(nodeStart, nodeEnd, startDate, endDate);
             }).collect(Collectors.toList());
         } else if (userType.equals(UserTypeEnum.RD)) {
