@@ -2,9 +2,7 @@ package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.TrackEvenPropMapper;
-import com.timevale.forward.dal.dao.TrackEventMapper;
-import com.timevale.forward.dal.dao.TrackPropMapper;
+import com.timevale.forward.dal.dao.LabelCategoryMapper;
 import com.timevale.forward.dal.entity.LabelCategoryDO;
 import com.timevale.forward.facade.api.client.LabelCategoryService;
 import com.timevale.forward.facade.api.query.LabelCategoryQueryList;
@@ -14,7 +12,6 @@ import com.timevale.forward.facade.api.request.LabelCategoryModifyReq;
 import com.timevale.forward.facade.api.result.LabelCategoryDetailVO;
 import com.timevale.forward.facade.api.result.LabelCategorySimpleVO;
 import com.timevale.forward.facade.api.result.LabelCategoryVO;
-import com.timevale.forward.service.component.TrackPropComponent;
 import com.timevale.forward.service.copy.LabelCategoryCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -35,16 +32,7 @@ import java.util.List;
 public class LabelCategoryServiceImpl implements LabelCategoryService {
 
     @Resource
-    private TrackPropComponent trackPropComponent;
-
-    @Resource
-    private TrackPropMapper trackPropMapper;
-
-    @Resource
-    private TrackEvenPropMapper trackEvenPropMapper;
-
-    @Resource
-    private TrackEventMapper trackEventMapper;
+    private LabelCategoryMapper labelCategoryMapper;
 
 
     @Override
@@ -84,6 +72,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
 
     @Override
     public BaseResult<Boolean> add(LabelCategoryAddReq labelCategoryAddReq) {
+        //同模块下,类别唯一
         LabelCategoryDO labelCategoryDO = LabelCategoryCopier.INSTANCE.convert(labelCategoryAddReq);
         return BaseResult.success(true);
     }
