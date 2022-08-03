@@ -5,10 +5,10 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.LabelCategoryQueryList;
 import com.timevale.forward.facade.api.query.LabelInCategoryQueryList;
 import com.timevale.forward.facade.api.request.LabelCategoryAddReq;
+import com.timevale.forward.facade.api.request.LabelCategoryModifyReq;
 import com.timevale.forward.facade.api.result.LabelCategoryDetailVO;
 import com.timevale.forward.facade.api.result.LabelCategorySimpleVO;
 import com.timevale.forward.facade.api.result.LabelCategoryVO;
-import com.timevale.forward.facade.api.result.LabelSimpleVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
@@ -35,7 +35,7 @@ public interface LabelCategoryService {
      *
      * @return 所有类别
      */
-    BaseResult<List<LabelSimpleVO>> getAll();
+    BaseResult<List<LabelCategorySimpleVO>> getAll();
 
     /**
      * 类别下-标签
@@ -68,6 +68,14 @@ public interface LabelCategoryService {
      * @return Boolean
      */
     BaseResult<Boolean> add(LabelCategoryAddReq labelCategoryAddReq);
+
+    /**
+     * 新增
+     *
+     * @param labelCategoryModifyReq 标签类别新增
+     * @return Boolean
+     */
+    BaseResult<Boolean> modify(LabelCategoryModifyReq labelCategoryModifyReq);
 
 
 }

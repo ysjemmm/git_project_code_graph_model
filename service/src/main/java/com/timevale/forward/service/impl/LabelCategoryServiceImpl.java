@@ -10,10 +10,10 @@ import com.timevale.forward.facade.api.client.LabelCategoryService;
 import com.timevale.forward.facade.api.query.LabelCategoryQueryList;
 import com.timevale.forward.facade.api.query.LabelInCategoryQueryList;
 import com.timevale.forward.facade.api.request.LabelCategoryAddReq;
+import com.timevale.forward.facade.api.request.LabelCategoryModifyReq;
 import com.timevale.forward.facade.api.result.LabelCategoryDetailVO;
 import com.timevale.forward.facade.api.result.LabelCategorySimpleVO;
 import com.timevale.forward.facade.api.result.LabelCategoryVO;
-import com.timevale.forward.facade.api.result.LabelSimpleVO;
 import com.timevale.forward.service.component.TrackPropComponent;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -59,8 +59,8 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     }
 
     @Override
-    public BaseResult<List<LabelSimpleVO>> getAll() {
-        List<LabelSimpleVO> labelSimpleVOList = Lists.newArrayList(new LabelSimpleVO());
+    public BaseResult<List<LabelCategorySimpleVO>> getAll() {
+        List<LabelCategorySimpleVO> labelSimpleVOList = Lists.newArrayList(new LabelCategorySimpleVO());
         return BaseResult.success(labelSimpleVOList);
     }
 
@@ -83,6 +83,11 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
 
     @Override
     public BaseResult<Boolean> add(LabelCategoryAddReq labelCategoryAddReq) {
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> modify(LabelCategoryModifyReq labelCategoryModifyReq) {
         return BaseResult.success(true);
     }
 

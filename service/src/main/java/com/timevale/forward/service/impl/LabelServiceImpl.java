@@ -49,7 +49,7 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
-    public BaseResult<Boolean> delete(Long categoryId) {
+    public BaseResult<Boolean> delete(Long labelId) {
         return BaseResult.success(true);
     }
 
