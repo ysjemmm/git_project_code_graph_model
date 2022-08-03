@@ -102,7 +102,12 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         //同模块下,类别唯一
         LabelCategoryDO labelCategoryDO = LabelCategoryCopier.INSTANCE.convert(labelCategoryAddReq);
         checkBeforeInsert(labelCategoryDO);
+
         labelCategoryMapper.insert(labelCategoryDO);
+
+        addRelation(labelCategoryAddReq.getBizDomainIds(),labelCategoryDO.getId());
+
+
         return BaseResult.success(true);
     }
 
@@ -125,5 +130,39 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
             }
         });
     }
+
+    private void addRelation(List<Long> bizDomainIds, Long labelCategoryId) {
+        List<LabelCategoryBizDomainDO> lcbd = bizDomainIds.stream().map(a -> {
+            LabelCategoryBizDomainDO o = new LabelCategoryBizDomainDO();
+            o.setBizDomainId(a);
+            o.setLabelCategoryId(labelCategoryId);
+            return o;
+        }).collect(Collectors.toList());
+        labelCategoryBizDomainMapper.batchInsert(lcbd);
+    }
+
+//    private void delRelation(List<TrackPropDO> trackPropDOList, Long trackEventId) {
+//        if (org.springframework.util.CollectionUtils.isEmpty(trackPropDOList)) {
+//            TrackEventPropDO trackEventPropDO = new TrackEventPropDO();
+//            trackEventPropDO.setTrackEventId(trackEventId);
+//            trackEventPropDO.setIsDeleted(true);
+//            trackEvenPropMapper.update(trackEventPropDO);
+//            return;
+//        }
+//
+//        List<Long> newPropIds = trackPropDOList.stream().map(TrackPropDO::getId).collect(Collectors.toList());
+//        //新增
+//        List<Long> oldPropIds = addRelation(trackPropDOList, trackEventId);
+//        //删除
+//        oldPropIds.forEach(a -> {
+//            if (!newPropIds.contains(a)) {
+//                TrackEventPropDO trackEventPropDO = new TrackEventPropDO();
+//                trackEventPropDO.setTrackEventId(trackEventId);
+//                trackEventPropDO.setTrackPropId(a);
+//                trackEventPropDO.setIsDeleted(true);
+//                trackEvenPropMapper.update(trackEventPropDO);
+//            }
+//        });
+//    }
 
 }

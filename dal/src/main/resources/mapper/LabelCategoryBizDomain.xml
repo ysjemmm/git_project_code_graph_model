@@ -13,7 +13,7 @@
         insert into label_category_biz_domain (label_category_id,biz_domain_id,create_man_id, create_man)
         values
         <foreach collection="list" item="i" open="" separator="," close="">
-            (#{i.projectId}, #{i.productLineId}, #{i.createManId},#{i.createMan})
+            (#{i.labelCategoryId}, #{i.bizDomainId}, #{createManId},#{createMan})
         </foreach>
     </insert>
 
