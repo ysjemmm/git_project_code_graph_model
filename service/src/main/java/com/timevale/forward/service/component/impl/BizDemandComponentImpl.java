@@ -175,17 +175,10 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             return null;
         }
 
-        List<ProductDemandDO> productDemandDOList = productDemandMapper.selectByIdList(productDemandIdList);
-        List<Long> invalidIds = productDemandDOList.stream()
-                .filter(a -> ProductDemandStatusEnum.INVALID.getCode().equals(a.getStatus())).map(ProductDemandDO::getId)
-                .collect(Collectors.toList());
-        List<ProjectProductDemandDO> linkedProductDemand = projectProductDemandMapper.getLinkedProductDemand(productDemandIdList);
-        List<Long> linkedProductDemandInProject = linkedProductDemand.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
-        productDemandIdList.removeAll(linkedProductDemandInProject);
-        productDemandIdList.removeAll(invalidIds);
-        if(CollectionUtils.isNotEmpty(productDemandIdList)){
-//            数量不相等,存在部分产品需求没有关联项目,此时业务需求状态<已列入项目,发布时间不存在
-            log.info("产品需求id:{},{}",productDemandIdList,linkedProductDemandInProject);
+        //最小的产品需求状态小于列入项目中,无需计算发布时间
+        Integer minStatus = productBizDemandDOList.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(0);
+        if(minStatus<ProductDemandStatusEnum.INCLUDED.getCode()){
+            log.info("业务需求关联的产品需求{}:",productBizDemandDOList);
             return null;
         }
 

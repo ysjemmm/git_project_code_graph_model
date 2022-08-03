@@ -36,6 +36,7 @@ import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -386,7 +387,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         //获取项目发布时间
-        bizDemandDetailVO.setEndDate(bizDemandComponent.getProjectEndDate(bizDemandId));
+        bizDemandDetailVO.setEndDate(bizDemandDO.getProjectEndDate());
 
         // 查看是否为线上bug转换
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectByBizDemandId(bizDemandId);
@@ -423,6 +424,8 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         BizDemandDO newBizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandModifyReq);
         newBizDemandDO.setStatus(oldBizDemandDO.getStatus());
+        newBizDemandDO.setReason(oldBizDemandDO.getReason());
+        newBizDemandDO.setProjectEndDate(oldBizDemandDO.getProjectEndDate());
         bizDemandMapper.fullUpdate(newBizDemandDO);
 
         // 添加抄送人数据
