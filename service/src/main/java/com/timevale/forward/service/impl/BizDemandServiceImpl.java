@@ -931,11 +931,15 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> reSubmit(BizDemandResubmitReq bizDemandResubmitReq) {
         Long bizDemandId = bizDemandResubmitReq.getId();
+        String name = bizDemandResubmitReq.getName();
         BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(bizDemandId);
         if (oldBizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
-        String oldReceiveMan = oldBizDemandDO.getReceiveMan();
+        BizDemandDO checkUniqueName = bizDemandMapper.selectByName(name);
+        if (checkUniqueName != null && !checkUniqueName.getId().equals(bizDemandId)) {
+            throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
+        }
         // 日志, 状态改为待评估
         bizDemandLogComponent.addLogWhenModifyData(
                 BizDemandStatusEnum.REJECT.getText(),
@@ -966,7 +970,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 oldBizDemandDO.getId(),
                 oldBizDemandDO.getSubmitMan(),
                 oldBizDemandDO.getReceiveManId(),
-                oldBizDemandDO.getName()
+                name
         ));
         return BaseResult.success(true);
     }
