@@ -15,6 +15,7 @@ import com.timevale.forward.facade.api.result.LabelCategoryDetailVO;
 import com.timevale.forward.facade.api.result.LabelCategorySimpleVO;
 import com.timevale.forward.facade.api.result.LabelCategoryVO;
 import com.timevale.forward.service.component.TrackPropComponent;
+import com.timevale.forward.service.copy.LabelCategoryCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -83,6 +84,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
 
     @Override
     public BaseResult<Boolean> add(LabelCategoryAddReq labelCategoryAddReq) {
+        LabelCategoryDO labelCategoryDO = LabelCategoryCopier.INSTANCE.convert(labelCategoryAddReq);
         return BaseResult.success(true);
     }
 

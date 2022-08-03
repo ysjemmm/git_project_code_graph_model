@@ -19,7 +19,6 @@ import java.util.List;
 @ApiModel("标签类别新增")
 public class LabelCategoryAddReq extends BaseReq {
 
-
     @ApiModelProperty("标签类别名称")
     @NotBlank(message = "模块类型不能为空")
     @Size(max = 100,message = "标签类别长度不能超过100字符")
@@ -34,15 +33,15 @@ public class LabelCategoryAddReq extends BaseReq {
     private List<Long> bizDomainIds;
 
     @ApiModelProperty("打标部门")
-    @Size(max = 500,message = "打标部门长度不能超过500字符")
+    @Size(max = 20,message = "打标部门长度不能超过500字符")
     private List<Long> deptIds;
 
     @ApiModelProperty("打标人员")
-    @Size(max = 500,message = "打标人员长度不能超过500字符")
+    @Size(max = 50,message = "打标人员长度不能超过500字符")
     private List<String>markMans;
 
     @ApiModelProperty("打标人员花名拼音")
-    @Size(max = 500,message = "打标人员长度不能超过500字符")
+    @Size(max = 50,message = "打标人员长度不能超过500字符")
     private List<String> markManIds;
 
 
