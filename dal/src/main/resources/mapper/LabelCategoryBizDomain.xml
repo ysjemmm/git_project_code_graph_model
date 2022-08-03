@@ -1,0 +1,33 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.LabelCategoryBizDomainMapper">
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.LabelCategoryBizDomainDO">
+        select id,label_category_id,biz_domain_id,create_man_id, create_man
+        from label_category_biz_domain
+        where label_category_id = #{labelCategoryId} and is_deleted = false
+    </select>
+
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into label_category_biz_domain (label_category_id,biz_domain_id,create_man_id, create_man)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.projectId}, #{i.productLineId}, #{i.createManId},#{i.createMan})
+        </foreach>
+    </insert>
+
+    <update id="update" parameterType="com.timevale.forward.dal.entity.LabelCategoryBizDomainDO">
+        update label_category_biz_domain
+        <set>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+
+</mapper>

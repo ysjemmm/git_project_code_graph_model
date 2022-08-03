@@ -1,16 +1,12 @@
 package com.timevale.forward.service.copy;
 
 import com.alibaba.fastjson.JSONObject;
-import com.timevale.forward.dal.condition.TrackEventListCondition;
 import com.timevale.forward.dal.entity.LabelCategoryDO;
-import com.timevale.forward.dal.entity.TrackEventDO;
-import com.timevale.forward.facade.api.query.ProductDemandLinkTrackEventQueryList;
-import com.timevale.forward.facade.api.query.TrackEventQueryList;
 import com.timevale.forward.facade.api.request.LabelCategoryAddReq;
 import com.timevale.forward.facade.api.request.LabelCategoryModifyReq;
-import com.timevale.forward.facade.api.result.TrackEventDetailVO;
-import com.timevale.forward.facade.api.result.TrackEventVO;
+import com.timevale.forward.facade.api.result.LabelCategoryDetailVO;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.util.Lists;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -30,33 +26,14 @@ public interface LabelCategoryCopier {
 
     /**
      *
-     * @param trackEventQueryList trackEventQueryList
-     * @return return
+     * @param labelCategoryDO labelCategoryDO
+     * @return LabelCategoryDetailVO
      */
-    TrackEventListCondition convert(TrackEventQueryList trackEventQueryList);
-
-    /**
-     *
-     * @param trackEventDO trackEventDO
-     * @return return
-     */
-    TrackEventDetailVO convert(TrackEventDO trackEventDO);
-
-    /**
-     *
-     * @param trackEventQueryList trackEventQueryList
-     * @return return
-     */
-    TrackEventListCondition convert(ProductDemandLinkTrackEventQueryList trackEventQueryList);
-
-
-    /**
-     *
-     * @param trackEventDOList trackEventDOList
-     * @return return
-     */
-    List<TrackEventVO> convert(List<TrackEventDO>trackEventDOList);
-
+    @Mapping(source = "type", target = "types", qualifiedByName = "typeMappingList")
+    @Mapping(source = "deptId", target = "deptIds", qualifiedByName = "deptMappingList")
+    @Mapping(source = "markMan", target = "markMans", qualifiedByName = "markManMappingList")
+    @Mapping(source = "markManId", target = "markManIds", qualifiedByName = "markManIdMappingList")
+    LabelCategoryDetailVO convert(LabelCategoryDO labelCategoryDO);
     /**
      *
      * @param labelCategoryAddReq labelCategoryAddReq
@@ -77,7 +54,7 @@ public interface LabelCategoryCopier {
     @Mapping(source = "deptIds", target = "deptId", qualifiedByName = "deptMappingStr")
     @Mapping(source = "markMans", target = "markMan", qualifiedByName = "markManMappingStr")
     @Mapping(source = "markManIds", target = "markManId", qualifiedByName = "markManIdMappingStr")
-    TrackEventDO convert(LabelCategoryModifyReq labelCategoryModifyReq);
+    LabelCategoryDO convert(LabelCategoryModifyReq labelCategoryModifyReq);
 
     @Named("typeMappingStr")
     default String typeMappingStr(List<Integer> types){
@@ -88,7 +65,7 @@ public interface LabelCategoryCopier {
     }
 
     @Named("deptMappingStr")
-    default String deptMappingStr(List<Integer> deptIds){
+    default String deptMappingStr(List<Long> deptIds){
         if(CollectionUtils.isEmpty(deptIds)){
             return StringUtils.EMPTY;
         }
@@ -96,7 +73,7 @@ public interface LabelCategoryCopier {
     }
 
     @Named("markManMappingStr")
-    default String markManMappingStr(List<Integer> markMans){
+    default String markManMappingStr(List<String> markMans){
         if(CollectionUtils.isEmpty(markMans)){
             return StringUtils.EMPTY;
         }
@@ -104,11 +81,41 @@ public interface LabelCategoryCopier {
     }
 
     @Named("markManIdMappingStr")
-    default String markManIdMappingStr(List<Integer> markManIds){
+    default String markManIdMappingStr(List<String> markManIds){
         if(CollectionUtils.isEmpty(markManIds)){
             return StringUtils.EMPTY;
         }
         return JSONObject.toJSONString(markManIds);
+    }
+
+    @Named("typeMappingList")
+    default List<Integer> typeMappingList(String type){
+        if(StringUtils.isEmpty(type)){
+            return Lists.emptyList();
+        }
+        return JSONObject.parseArray(type,Integer.class);
+    }
+
+    @Named("deptMappingList")
+    default List<Long> deptMappingList(String deptId){
+        if(StringUtils.isEmpty(deptId)){
+            return Lists.emptyList();
+        }
+        return JSONObject.parseArray(deptId,Long.class);
+    }
+    @Named("markManMappingList")
+    default List<String> markManMappingList(String markMan){
+        if(StringUtils.isEmpty(markMan)){
+            return Lists.emptyList();
+        }
+        return JSONObject.parseArray(markMan,String.class);
+    }
+    @Named("markManIdMappingList")
+    default List<String> markManIdMappingList(String markManId){
+        if(StringUtils.isEmpty(markManId)){
+            return Lists.emptyList();
+        }
+        return JSONObject.parseArray(markManId,String.class);
     }
 
 

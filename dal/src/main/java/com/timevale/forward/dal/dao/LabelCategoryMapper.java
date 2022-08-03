@@ -1,6 +1,6 @@
 package com.timevale.forward.dal.dao;
 
-import com.timevale.forward.dal.condition.TrackEventListCondition;
+import com.timevale.forward.dal.condition.LabelCategoryListCondition;
 import com.timevale.forward.dal.entity.LabelCategoryDO;
 import org.apache.ibatis.annotations.Param;
 
@@ -33,7 +33,7 @@ public interface LabelCategoryMapper {
      *
      * @return LabelCategoryDO
      */
-    List<LabelCategoryDO> list(TrackEventListCondition condition);
+    List<LabelCategoryDO> list(LabelCategoryListCondition condition);
 
 
     /**
@@ -51,5 +51,12 @@ public interface LabelCategoryMapper {
      * @return LabelCategoryDO
      */
     LabelCategoryDO get(@Param("id") Long id);
+
+    /**
+     * 列表
+     *
+     * @return LabelCategoryDO
+     */
+    List<LabelCategoryDO> getByName(@Param("name") String name);
 
 }

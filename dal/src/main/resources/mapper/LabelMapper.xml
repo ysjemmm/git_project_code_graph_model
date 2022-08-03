@@ -1,16 +1,16 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
-<mapper namespace="com.timevale.forward.dal.dao.LabelCategoryMapper">
+<mapper namespace="com.timevale.forward.dal.dao.LabelMapper">
 
 
-    <insert id="insert" parameterType="com.timevale.forward.dal.entity.LabelCategoryDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        insert into label_category (name,type, mark_man, mark_man_id,dept_id,create_man ,create_man_id)
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.LabelDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into label (name,label_category_id,create_man ,create_man_id)
         values
-        (#{name},#{type},#{markMan}, #{markManId},#{deptId},#{createMan},#{createManId})
+        (#{name},#{labelCategoryId},#{createMan},#{createManId})
     </insert>
 
     <update id="update">
-        update label_category
+        update label
         <set>
             <if test="name != null and name != ''">name = #{name},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
@@ -24,26 +24,12 @@
         </where>
     </update>
 
-    <select id="selectByIds" resultType="com.timevale.forward.dal.entity.LabelCategoryDO">
-        select id,name,type, mark_man, mark_man_id,dept_id,
-        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
-        from label_category a
-        <where>
-            <if test="ids!=null and ids.size()>0">
-                and a.id in
-                <foreach collection="ids" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            and a.is_deleted=false
-        </where>
-    </select>
 
 
-    <select id="list" resultType="com.timevale.forward.dal.entity.LabelCategoryDO">
-        select id,name,type, mark_man, mark_man_id,dept_id,
+    <select id="list" resultType="com.timevale.forward.dal.entity.LabelDO">
+        select id,name,label_category_id,
         is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
-        from label_category a
+        from label a
         <where>
             <if test="id != null">and a.id = #{id}</if>
             <if test="fullCnName != null and fullCnName != ''">and a.full_cn_name like concat('%',#{fullCnName},'%')</if>
@@ -89,22 +75,14 @@
     </select>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.LabelCategoryDO">
-        select id,name,type, mark_man, mark_man_id,dept_id,
+        select id,name,label_category_id,
         is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
-        from label_category
+        from label
         <where>
             id = #{id} and is_deleted=false
         </where>
     </select>
 
-    <select id="getByName" resultType="com.timevale.forward.dal.entity.LabelCategoryDO">
-        select id,name,type, mark_man, mark_man_id,dept_id,
-        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
-        from label_category
-        <where>
-            name = #{name} and is_deleted=false
-        </where>
-    </select>
 
 </mapper>
 

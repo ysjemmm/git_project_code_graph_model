@@ -96,5 +96,8 @@
         <mapper resource="mapper/ProjectNodeRecordMapper.xml" />
         <mapper resource="mapper/CustomDemandMapper.xml" />
         <mapper resource="mapper/ProductCustomDemandMapper.xml" />
+        <mapper resource="mapper/LabelCategoryMapper.xml" />
+        <mapper resource="mapper/LabelMapper.xml" />
+        <mapper resource="mapper/LabelCategoryBizDomain.xml" />
     </mappers>
 </configuration>
