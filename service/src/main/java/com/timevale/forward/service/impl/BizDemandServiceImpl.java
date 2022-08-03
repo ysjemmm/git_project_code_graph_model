@@ -36,7 +36,6 @@ import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -572,6 +571,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> reject(BizDemandRejectReq bizDemandRejectReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
@@ -761,6 +761,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> completed(BizDemandCompletedReq bizDemandCompleted) {
         // 参数
         Long id = bizDemandCompleted.getId();
@@ -849,6 +850,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> completedAgree(BizDemandCompletedAgreeReq bizDemandCompletedAgreeReq) {
         Long id = bizDemandCompletedAgreeReq.getId();
 
@@ -877,6 +879,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> completedReject(BizDemandCompletedRejectReq bizDemandCompletedRejectReq) {
         Long id = bizDemandCompletedRejectReq.getId();
         String reason = bizDemandCompletedRejectReq.getRejectReason();
@@ -925,6 +928,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> reSubmit(BizDemandResubmitReq bizDemandResubmitReq) {
         Long bizDemandId = bizDemandResubmitReq.getId();
         BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(bizDemandId);
