@@ -121,7 +121,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     public Map<Long, GroupResponse> getGroupListTreeMap(List<Long> queryDeptIdList) {
         Map<Long, GroupResponse> deptMap = Maps.newHashMap();
         Set<Long> queryDeptIdSet = Sets.newHashSet(queryDeptIdList);
-        GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
+        GroupResponse rootNode = innerGroupClient.getGroupListTree(true).get(0);
         for (GroupResponse childNode : rootNode.getChildNode()) {
             dfsGroupListTree(childNode, deptMap, queryDeptIdSet, StringUtils.EMPTY, false);
         }

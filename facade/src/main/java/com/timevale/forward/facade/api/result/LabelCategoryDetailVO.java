@@ -40,7 +40,7 @@ public class LabelCategoryDetailVO extends ToString {
     private List<String> markMans;
 
     @ApiModelProperty("打标部门")
-    private List<Long> deptIds;
+    private List<String> deptIds;
 
     @ApiModelProperty("提交人")
     private String createMan;

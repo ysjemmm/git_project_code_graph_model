@@ -34,7 +34,7 @@ public class LabelCategoryAddReq extends BaseReq {
 
     @ApiModelProperty("打标部门")
     @Size(max = 20,message = "打标部门长度不能超过500字符")
-    private List<Long> deptIds;
+    private List<String> deptIds;
 
     @ApiModelProperty("打标人员")
     @Size(max = 50,message = "打标人员长度不能超过500字符")

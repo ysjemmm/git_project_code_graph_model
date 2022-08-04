@@ -117,7 +117,7 @@ public interface LabelCategoryCopier {
     }
 
     @Named("deptMappingStr")
-    default String deptMappingStr(List<Long> deptIds){
+    default String deptMappingStr(List<String> deptIds){
         if(CollectionUtils.isEmpty(deptIds)){
             return StringUtils.EMPTY;
         }
@@ -149,11 +149,11 @@ public interface LabelCategoryCopier {
     }
 
     @Named("deptMappingList")
-    default List<Long> deptMappingList(String deptId){
+    default List<String> deptMappingList(String deptId){
         if(StringUtils.isEmpty(deptId)){
             return Lists.emptyList();
         }
-        return JSONObject.parseArray(deptId,Long.class);
+        return JSONObject.parseArray(deptId,String.class);
     }
     @Named("markManMappingList")
     default List<String> markManMappingList(String markMan){

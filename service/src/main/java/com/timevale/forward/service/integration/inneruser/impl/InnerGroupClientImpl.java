@@ -92,17 +92,17 @@ public class InnerGroupClientImpl implements InnerGroupClient {
     }
 
     @Override
-    public GroupResponse getGroupListTree(Boolean isTree) {
+    public List<GroupResponse> getGroupListTree(Boolean isTree) {
         try{
             BaseResult<List<GroupResponse>> groupListTree = rpcGroupService.getGroupListTreeWithDeleted(true);
             if(groupListTree.ifSuccess()){
-                return groupListTree.getData().get(0);
+                return groupListTree.getData();
             }
-            log.error("[innerGroup]调用内部部门中心失败  error: " + groupListTree.getMessage());
-            return new GroupResponse();
+            log.error("[innerGroup]调用内部中心部门失败  error: " + groupListTree.getMessage());
+            throw new BaseBizRuntimeException("调用内部中心部门失败! ");
         }catch (Exception e){
-            log.error("调用内部部门中心失败  error: " + e.getMessage(), e);
-            throw new BaseBizRuntimeException("调用内部部门中心失败! ");
+            log.error("调用内部中心部门失败  error: " + e.getMessage(), e);
+            throw new BaseBizRuntimeException("调用内部中心部门失败! ");
         }
     }
 

@@ -1,6 +1,5 @@
 package com.timevale.forward.service.integration.inneruser;
 
-import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.security.facade.response.GroupResponse;
 import com.timevale.security.facade.response.SimpleGroupResponse;
 
@@ -60,5 +59,5 @@ public interface InnerGroupClient {
      * @param isTree 是树
      * @return 部门树
      */
-    GroupResponse getGroupListTree(Boolean isTree);
+    List<GroupResponse> getGroupListTree(Boolean isTree);
 }

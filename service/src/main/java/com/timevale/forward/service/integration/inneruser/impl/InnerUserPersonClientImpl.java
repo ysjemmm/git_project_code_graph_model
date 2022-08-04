@@ -187,6 +187,24 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
     }
 
     @Override
+    public BaseInfoResponse getSelfInfo(String account, Boolean isLeave) {
+        try {
+            final AccountRequest request = new AccountRequest();
+            request.setAccount(account);
+            request.setIsLeave(isLeave);
+            final BaseResult<BaseInfoResponse> accountInfo = rpcPersonService.getByAccount(request);
+            if (accountInfo.ifSuccess()) {
+                return accountInfo.getData();
+            }
+            log.error("调用内部用户中心失败 getByAccount account: " + account + " error: " + accountInfo.getMessage());
+            throw new BaseBizRuntimeException("调用内部用户中心失败! " + account);
+        } catch (Exception e) {
+            log.error("调用内部用户中心失败 getByAccount account: " + account + " error: " + e.getMessage(), e);
+        }
+        throw new BaseBizRuntimeException("调用内部用户中心失败! " + account);
+    }
+
+    @Override
     public List<String> getByGroupIdNew(String groupId) {
         if (StringUtils.isEmpty(groupId)) {
             throw new BaseBizRuntimeException("部门id为空! " + groupId);
