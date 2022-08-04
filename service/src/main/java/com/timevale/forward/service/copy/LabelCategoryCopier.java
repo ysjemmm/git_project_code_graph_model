@@ -1,10 +1,15 @@
 package com.timevale.forward.service.copy;
 
 import com.alibaba.fastjson.JSONObject;
+import com.timevale.forward.dal.condition.LabelCategoryListCondition;
 import com.timevale.forward.dal.entity.LabelCategoryDO;
+import com.timevale.forward.facade.api.query.LabelCategoryQueryList;
+import com.timevale.forward.facade.api.query.LabelInCategoryQueryList;
 import com.timevale.forward.facade.api.request.LabelCategoryAddReq;
 import com.timevale.forward.facade.api.request.LabelCategoryModifyReq;
 import com.timevale.forward.facade.api.result.LabelCategoryDetailVO;
+import com.timevale.forward.facade.api.result.LabelCategorySimpleVO;
+import com.timevale.forward.facade.api.result.LabelCategoryVO;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.mapstruct.Mapper;
@@ -24,6 +29,53 @@ public interface LabelCategoryCopier {
 
     LabelCategoryCopier INSTANCE = Mappers.getMapper(LabelCategoryCopier.class);
 
+
+    /**
+     *
+     * @param labelInCategoryQueryList labelInCategoryQueryList
+     * @return LabelCategoryListCondition
+     */
+    LabelCategoryListCondition convert(LabelInCategoryQueryList labelInCategoryQueryList);
+
+    /**
+     *
+     * @param labelCategoryQueryList labelCategoryQueryList
+     * @return LabelCategoryListCondition
+     */
+    LabelCategoryListCondition convert(LabelCategoryQueryList labelCategoryQueryList);
+
+    /**
+     *
+     * @param labelCategoryDOList labelCategoryDOList
+     * @return LabelCategorySimpleVO
+     */
+    List<LabelCategorySimpleVO> convert(List<LabelCategoryDO> labelCategoryDOList);
+
+    /**
+     *
+     * @param labelCategoryDOList labelCategoryDOList
+     * @return LabelCategorySimpleVO
+     */
+
+    List<LabelCategoryVO> change(List<LabelCategoryDO> labelCategoryDOList);
+
+    /**
+     *
+     * @param labelCategoryDOList labelCategoryDOList
+     * @return LabelCategorySimpleVO
+     */
+
+    List<LabelCategorySimpleVO> changeT(List<LabelCategoryDO> labelCategoryDOList);
+
+
+    /**
+     *
+     * @param labelCategoryDO labelCategoryDO
+     * @return LabelCategoryVO
+     */
+    @Mapping(source = "type", target = "types", qualifiedByName = "typeMappingList")
+    @Mapping(source = "markMan", target = "markMans", qualifiedByName = "markManMappingList")
+    LabelCategoryVO change(LabelCategoryDO labelCategoryDO);
     /**
      *
      * @param labelCategoryDO labelCategoryDO

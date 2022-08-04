@@ -14,10 +14,10 @@ public interface LabelCategoryBizDomainMapper {
 
     /**
      *
-     * @param labelCategoryId labelCategoryId
+     * @param labelCategoryIds labelCategoryIds
      * @return 列表
      */
-    List<LabelCategoryBizDomainDO> get(@Param("labelCategoryId") Long labelCategoryId);
+    List<LabelCategoryBizDomainDO> get(@Param("labelCategoryIds") List<Long> labelCategoryIds);
 
     /**
      * 新增

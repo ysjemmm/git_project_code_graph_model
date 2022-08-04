@@ -8,6 +8,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 /**
  * @author xingyun
  * @date 2021-12-13 13:58
@@ -26,12 +28,12 @@ public class LabelDetailVO extends ToString {
     private Long categoryId;
 
     @ApiModelProperty("类别名称")
-    private String categoryName;
+    private String categoryNames;
 
     @ApiModelProperty("模块名称")
-    private String typeName;
+    private List<Integer> types;
 
     @ApiModelProperty("业务域名称")
-    private String bizDomainNames;
+    private List<String> bizDomains;
 
 }

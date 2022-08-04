@@ -5,7 +5,15 @@
     <select id="get" resultType="com.timevale.forward.dal.entity.LabelCategoryBizDomainDO">
         select id,label_category_id,biz_domain_id,create_man_id, create_man
         from label_category_biz_domain
-        where label_category_id = #{labelCategoryId} and is_deleted = false
+        <where>
+            <if test="labelCategoryIds!=null and labelCategoryIds.size()>0">
+                and label_category_id  in
+                <foreach collection="labelCategoryIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and is_deleted=false
+        </where>
     </select>
 
 

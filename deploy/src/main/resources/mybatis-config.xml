@@ -99,5 +99,6 @@
         <mapper resource="mapper/LabelCategoryMapper.xml" />
         <mapper resource="mapper/LabelMapper.xml" />
         <mapper resource="mapper/LabelCategoryBizDomain.xml" />
+        <mapper resource="mapper/BizLabelMapper.xml" />
     </mappers>
 </configuration>

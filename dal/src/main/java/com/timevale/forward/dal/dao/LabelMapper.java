@@ -12,13 +12,13 @@ import java.util.List;
  */
 public interface LabelMapper {
 
+
     /**
-     * 新增
      *
-     * @param labelDO labelDO
+     * @param labelDOList labelDOList
      * @return int
      */
-    int insert(LabelDO labelDO);
+    int batchInsert(List<LabelDO> labelDOList);
 
     /**
      * 新增
@@ -42,5 +42,20 @@ public interface LabelMapper {
      * @return LabelCategoryDO
      */
     LabelDO get(@Param("id") Long id);
+
+    /**
+     * 列表
+     *
+     * @return LabelCategoryDO
+     */
+    List<LabelDO> getByCategoryIds(@Param("categoryIds")List<Long> categoryIds);
+
+    /**
+     * 列表
+     *
+     * @return LabelCategoryDO
+     */
+    List<LabelDO> getByNameInOneCategory(@Param("names")List<String> names,@Param("categoryId") Long categoryId);
+
 
 }

@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author xingyun
@@ -27,16 +28,16 @@ public class LabelCategoryVO extends ToString {
     private String name;
 
     @ApiModelProperty("模块名称")
-    private String typeName;
+    private List<Integer> types;
 
     @ApiModelProperty("业务域名称")
-    private String bizDomainNames;
+    private List<String> bizDomains;
 
     @ApiModelProperty("部门名称")
-    private String deptNames;
+    private List<String> depts;
 
     @ApiModelProperty("打标人员")
-    private String markMans;
+    private List<String> markMans;
 
     @ApiModelProperty("提交人")
     private String createMan;

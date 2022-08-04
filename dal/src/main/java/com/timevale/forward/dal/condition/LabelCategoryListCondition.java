@@ -19,7 +19,7 @@ public class LabelCategoryListCondition extends QueryBase {
     /**
      * names
      */
-    private String names;
+    private List<String> names;
     /**
      * types
      */

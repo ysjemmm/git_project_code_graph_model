@@ -39,10 +39,9 @@ public interface LabelCategoryMapper {
     /**
      * 列表
      *
-     * @param ids id
      * @return LabelCategoryDO
      */
-    List<LabelCategoryDO> selectByIds(@Param("ids") List<Long> ids);
+    List<LabelCategoryDO> getAll();
 
     /**
      * 列表

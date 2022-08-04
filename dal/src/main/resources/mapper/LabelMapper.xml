@@ -2,11 +2,12 @@
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
 <mapper namespace="com.timevale.forward.dal.dao.LabelMapper">
 
-
-    <insert id="insert" parameterType="com.timevale.forward.dal.entity.LabelDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+    <insert id="batchInsert" parameterType="java.util.List">
         insert into label (name,label_category_id,create_man ,create_man_id)
         values
-        (#{name},#{labelCategoryId},#{createMan},#{createManId})
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.name},#{i.labelCategoryId},#{createMan},#{createManId})
+        </foreach>
     </insert>
 
     <update id="update">
@@ -74,12 +75,44 @@
         </where>
     </select>
 
-    <select id="get" resultType="com.timevale.forward.dal.entity.LabelCategoryDO">
+    <select id="get" resultType="com.timevale.forward.dal.entity.LabelDO">
         select id,name,label_category_id,
         is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
         from label
         <where>
             id = #{id} and is_deleted=false
+        </where>
+    </select>
+
+    <select id="getByCategoryIds" resultType="com.timevale.forward.dal.entity.LabelDO">
+        select id,name,label_category_id,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from label
+        <where>
+            <if test="categoryIds!=null and categoryIds.size()>0">
+                and label_category_id  in
+                <foreach collection="categoryIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+
+             and is_deleted=false
+        </where>
+    </select>
+
+    <select id="getByNameInOneCategory" resultType="com.timevale.forward.dal.entity.LabelDO">
+        select id,name,label_category_id,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from label
+        <where>
+            <if test="categoryId != null">and label_category_id = #{categoryId}</if>
+            <if test="names!=null and names.size()>0">
+                and name  in
+                <foreach collection="names" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and is_deleted=false
         </where>
     </select>
 

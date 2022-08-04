@@ -1,12 +1,18 @@
 package com.timevale.forward.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.LabelCategoryListCondition;
+import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.dao.LabelCategoryBizDomainMapper;
 import com.timevale.forward.dal.dao.LabelCategoryMapper;
+import com.timevale.forward.dal.dao.LabelMapper;
+import com.timevale.forward.dal.entity.BizDomainDO;
 import com.timevale.forward.dal.entity.LabelCategoryBizDomainDO;
 import com.timevale.forward.dal.entity.LabelCategoryDO;
+import com.timevale.forward.dal.entity.LabelDO;
 import com.timevale.forward.facade.api.client.LabelCategoryService;
 import com.timevale.forward.facade.api.query.LabelCategoryQueryList;
 import com.timevale.forward.facade.api.query.LabelInCategoryQueryList;
@@ -15,8 +21,11 @@ import com.timevale.forward.facade.api.request.LabelCategoryModifyReq;
 import com.timevale.forward.facade.api.result.LabelCategoryDetailVO;
 import com.timevale.forward.facade.api.result.LabelCategorySimpleVO;
 import com.timevale.forward.facade.api.result.LabelCategoryVO;
+import com.timevale.forward.facade.api.result.LabelSimpleVO;
 import com.timevale.forward.model.enums.BizTypeEnum;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.LabelCategoryCopier;
+import com.timevale.forward.service.copy.LabelCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -29,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -44,53 +54,111 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     private LabelCategoryMapper labelCategoryMapper;
 
     @Resource
+    private LabelMapper labelMapper;
+
+    @Resource
     private LabelCategoryBizDomainMapper labelCategoryBizDomainMapper;
+
+    @Resource
+    private BizDomainMapper bizDomainMapper;
 
 
     @Override
     public BaseResult<PageQueryResult<LabelCategoryVO>> list(LabelCategoryQueryList labelCategoryQueryList) {
         log.info("类别列表,参数:{}", labelCategoryQueryList);
-        List<LabelCategoryVO>labelCategoryVOList=new ArrayList<>();
-        List<LabelCategoryDO>labelCategoryDOList=new ArrayList<>();
 
+        PageHelper.startPage(labelCategoryQueryList.getPageNum(), labelCategoryQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        LabelCategoryListCondition condition = LabelCategoryCopier.INSTANCE.convert(labelCategoryQueryList);
+        List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.list(condition);
+        if(CollectionUtils.isEmpty(labelCategoryDOList)){
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+
+        List<Long> categoryIds = labelCategoryDOList.stream().map(LabelCategoryDO::getId).collect(Collectors.toList());
+        List<LabelCategoryBizDomainDO> lcbds = labelCategoryBizDomainMapper.get(categoryIds);
+
+        Map<Long, List<Long>> lcbdMap = lcbds.stream().collect(Collectors.groupingBy(LabelCategoryBizDomainDO::getLabelCategoryId
+                , Collectors.mapping(LabelCategoryBizDomainDO::getBizDomainId, Collectors.toList())));
+
+
+        List<Long> bizDomainIds = lcbds.stream().map(LabelCategoryBizDomainDO::getBizDomainId).collect(Collectors.toList());
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByIdList(bizDomainIds);
+        Map<Long, BizDomainDO> bizDomainMap = bizDomainDOList.stream().collect(Collectors.toMap(BizDomainDO::getId, k -> k, (v1, v2) -> v2));
+
+        List<LabelCategoryVO> labelCategoryVos = LabelCategoryCopier.INSTANCE.change(labelCategoryDOList);
+
+        labelCategoryVos.forEach(a->{
+            List<Long> bdIds = lcbdMap.get(a.getId());
+            List<String> bizDomains = bdIds.stream().map(bizDomainMap::get).map(BizDomainDO::getName).collect(Collectors.toList());
+            a.setDepts(Lists.emptyList());
+            a.setBizDomains(bizDomains);
+        });
         PageInfo<LabelCategoryDO> pageInfo = new PageInfo<>(labelCategoryDOList);
         PageQueryResult<LabelCategoryVO> pageQueryResult = new PageQueryResult<>();
-        pageQueryResult.setResultList(labelCategoryVOList);
+        pageQueryResult.setResultList(labelCategoryVos);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         return BaseResult.success(pageQueryResult);
     }
 
     @Override
     public BaseResult<List<LabelCategorySimpleVO>> getAll() {
-        List<LabelCategorySimpleVO> labelSimpleVOList = Lists.newArrayList(new LabelCategorySimpleVO());
+        List<LabelCategoryDO> all = labelCategoryMapper.getAll();
+        List<LabelCategorySimpleVO> labelSimpleVOList = LabelCategoryCopier.INSTANCE.changeT(all);
         return BaseResult.success(labelSimpleVOList);
     }
 
     @Override
     public BaseResult<List<LabelCategorySimpleVO>> getLabelInCategory(LabelInCategoryQueryList labelInCategoryQueryList) {
         log.info("类别下的标签,参数:{}", labelInCategoryQueryList);
-        List<LabelCategorySimpleVO> labelSimpleVOList = Lists.newArrayList(new LabelCategorySimpleVO());
-        return BaseResult.success(labelSimpleVOList);
+        LabelCategoryListCondition condition = LabelCategoryCopier.INSTANCE.convert(labelInCategoryQueryList);
+        List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.list(condition);
+        List<Long> categoryIds = labelCategoryDOList.stream().map(LabelCategoryDO::getId).collect(Collectors.toList());
+        if(CollectionUtils.isEmpty(categoryIds)){
+            return BaseResult.success(Lists.emptyList());
+        }
+        List<LabelCategorySimpleVO> labelCategorySimpleVos = LabelCategoryCopier.INSTANCE.convert(labelCategoryDOList);
+
+        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(categoryIds);
+        List<LabelSimpleVO> labelSimpleVos = LabelCopier.INSTANCE.convert(labelDOList);
+
+        Map<Long, List<LabelSimpleVO>> labelMap = labelSimpleVos.stream().collect(Collectors.groupingBy(LabelSimpleVO::getLabelCategoryId));
+
+        labelCategorySimpleVos.forEach(a->{
+            a.setLabelSimples(labelMap.get(a.getId()));
+        });
+        return BaseResult.success(labelCategorySimpleVos);
     }
 
     @Override
     public BaseResult<LabelCategoryDetailVO> get(Long categoryId) {
         log.info("类别查看,参数:{}", categoryId);
         LabelCategoryDO labelCategoryDO = labelCategoryMapper.get(categoryId);
+
         if(labelCategoryDO==null){
             throw new BaseBizRuntimeException("找不到该标签类别");
         }
+
         LabelCategoryDetailVO labelCategoryDetailVO = LabelCategoryCopier.INSTANCE.convert(labelCategoryDO);
-        List<LabelCategoryBizDomainDO> labelCategoryBizDomainDos = labelCategoryBizDomainMapper.get(categoryId);
+        List<LabelCategoryBizDomainDO> labelCategoryBizDomainDos = labelCategoryBizDomainMapper.get(Lists.newArrayList(categoryId));
         List<Long> bizDomainIds = labelCategoryBizDomainDos.stream().map(LabelCategoryBizDomainDO::getBizDomainId).collect(Collectors.toList());
         labelCategoryDetailVO.setBizDomainIds(bizDomainIds);
-        return BaseResult.success(new LabelCategoryDetailVO());
+        return BaseResult.success(labelCategoryDetailVO);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> delete(Long categoryId) {
         log.info("类别删除,参数:{}", categoryId);
+        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(Lists.newArrayList(categoryId));
+
+        if(CollectionUtils.isNotEmpty(labelDOList)){
+            throw new BaseBizRuntimeException("该类别下已存在标签名称,不可删除。");
+        }
+
+        LabelCategoryDO labelCategoryDO=new LabelCategoryDO();
+        labelCategoryDO.setId(categoryId);
+        labelCategoryDO.setIsDeleted(true);
+        labelCategoryMapper.update(labelCategoryDO);
         return BaseResult.success(true);
     }
 
@@ -101,6 +169,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         log.info("类别新增,参数:{}", labelCategoryAddReq);
         //同模块下,类别唯一
         LabelCategoryDO labelCategoryDO = LabelCategoryCopier.INSTANCE.convert(labelCategoryAddReq);
+
         checkBeforeInsert(labelCategoryDO);
 
         labelCategoryMapper.insert(labelCategoryDO);
@@ -115,6 +184,14 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(LabelCategoryModifyReq labelCategoryModifyReq) {
         log.info("类别修改,参数:{}", labelCategoryModifyReq);
+        LabelCategoryDO labelCategoryDO = LabelCategoryCopier.INSTANCE.convert(labelCategoryModifyReq);
+
+        checkBeforeInsert(labelCategoryDO);
+
+        labelCategoryMapper.update(labelCategoryDO);
+
+        delRelation(labelCategoryModifyReq.getBizDomainIds(),labelCategoryModifyReq.getId());
+
         return BaseResult.success(true);
     }
 
@@ -126,43 +203,48 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
             List<Integer> oldType = JSONObject.parseArray(a.getType(), Integer.class);
             oldType.retainAll(newType);
             if(CollectionUtils.isNotEmpty(oldType)){
-                throw new BaseBizRuntimeException("类别名称:"+labelCategoryDO.getName()+",在应用模块"+ BizTypeEnum.getTextByCode(oldType)+"中已存在,请修改后重试");
+                throw new BaseBizRuntimeException("类别名称:"+labelCategoryDO.getName()+",在应用模块 "+ BizTypeEnum.getTextByCode(oldType)+" 中已存在,请修改后重试");
             }
         });
     }
 
     private void addRelation(List<Long> bizDomainIds, Long labelCategoryId) {
+        if (CollectionUtils.isEmpty(bizDomainIds)) {
+            return;
+        }
         List<LabelCategoryBizDomainDO> lcbd = bizDomainIds.stream().map(a -> {
             LabelCategoryBizDomainDO o = new LabelCategoryBizDomainDO();
             o.setBizDomainId(a);
             o.setLabelCategoryId(labelCategoryId);
             return o;
         }).collect(Collectors.toList());
+
         labelCategoryBizDomainMapper.batchInsert(lcbd);
     }
 
-//    private void delRelation(List<TrackPropDO> trackPropDOList, Long trackEventId) {
-//        if (org.springframework.util.CollectionUtils.isEmpty(trackPropDOList)) {
-//            TrackEventPropDO trackEventPropDO = new TrackEventPropDO();
-//            trackEventPropDO.setTrackEventId(trackEventId);
-//            trackEventPropDO.setIsDeleted(true);
-//            trackEvenPropMapper.update(trackEventPropDO);
-//            return;
-//        }
-//
-//        List<Long> newPropIds = trackPropDOList.stream().map(TrackPropDO::getId).collect(Collectors.toList());
-//        //新增
-//        List<Long> oldPropIds = addRelation(trackPropDOList, trackEventId);
-//        //删除
-//        oldPropIds.forEach(a -> {
-//            if (!newPropIds.contains(a)) {
-//                TrackEventPropDO trackEventPropDO = new TrackEventPropDO();
-//                trackEventPropDO.setTrackEventId(trackEventId);
-//                trackEventPropDO.setTrackPropId(a);
-//                trackEventPropDO.setIsDeleted(true);
-//                trackEvenPropMapper.update(trackEventPropDO);
-//            }
-//        });
-//    }
+    private void delRelation(List<Long> bizDomainIds, Long labelCategoryId) {
+        if (CollectionUtils.isEmpty(bizDomainIds)) {
+            return;
+        }
+
+        List<LabelCategoryBizDomainDO> lcbds = labelCategoryBizDomainMapper.get(Lists.newArrayList(labelCategoryId));
+        List<Long> oldbdIds = lcbds.stream().map(LabelCategoryBizDomainDO::getBizDomainId).collect(Collectors.toList());
+
+        List<Long> copyBizDomainIds=new ArrayList<>(bizDomainIds);
+        copyBizDomainIds.removeAll(oldbdIds);
+
+        addRelation(copyBizDomainIds, labelCategoryId);
+        //删除
+        lcbds.forEach(a -> {
+            if (!bizDomainIds.contains(a)) {
+                LabelCategoryBizDomainDO o = new LabelCategoryBizDomainDO();
+                o.setId(a.getId());
+                o.setLabelCategoryId(labelCategoryId);
+                o.setBizDomainId(a.getBizDomainId());
+                o.setIsDeleted(true);
+                labelCategoryBizDomainMapper.update(o);
+            }
+        });
+    }
 
 }
