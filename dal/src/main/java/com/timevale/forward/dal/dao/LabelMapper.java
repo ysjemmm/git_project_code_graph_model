@@ -1,6 +1,6 @@
 package com.timevale.forward.dal.dao;
 
-import com.timevale.forward.dal.condition.LabelCategoryListCondition;
+import com.timevale.forward.dal.condition.LabelListCondition;
 import com.timevale.forward.dal.entity.LabelDO;
 import org.apache.ibatis.annotations.Param;
 
@@ -33,7 +33,7 @@ public interface LabelMapper {
      *
      * @return LabelCategoryDO
      */
-    List<LabelDO> list(LabelCategoryListCondition condition);
+    List<LabelDO> list(LabelListCondition condition);
 
     /**
      * 列表

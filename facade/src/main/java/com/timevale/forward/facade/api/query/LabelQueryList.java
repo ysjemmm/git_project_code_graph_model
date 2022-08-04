@@ -19,7 +19,7 @@ import java.util.List;
 public class LabelQueryList extends QueryBase {
 
     @ApiModelProperty("名称")
-    private String names;
+    private String name;
 
     @ApiModelProperty("类别名称")
     private List<String> categoryNames;

@@ -46,10 +46,10 @@ public interface LabelCategoryMapper {
     /**
      * 列表
      *
-     * @param id id
+     * @param ids ids
      * @return LabelCategoryDO
      */
-    LabelCategoryDO get(@Param("id") Long id);
+    List<LabelCategoryDO> get(@Param("ids") List<Long> ids);
 
     /**
      * 列表

@@ -25,4 +25,8 @@ public class LabelInCategoryQueryList extends ToString {
     @ApiModelProperty("业务域")
     private List<Long> bizDomainIds;
 
+    @ApiModelProperty("是否为列表:true列表搜索,false非列表")
+    @NotNull(message = "是否为列表不能为空")
+    private Boolean list;
+
 }

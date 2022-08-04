@@ -111,6 +111,9 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     public BaseResult<List<LabelCategorySimpleVO>> getLabelInCategory(LabelInCategoryQueryList labelInCategoryQueryList) {
         log.info("类别下的标签,参数:{}", labelInCategoryQueryList);
         LabelCategoryListCondition condition = LabelCategoryCopier.INSTANCE.convert(labelInCategoryQueryList);
+        if(!labelInCategoryQueryList.getList()){
+
+        }
         List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.list(condition);
         List<Long> categoryIds = labelCategoryDOList.stream().map(LabelCategoryDO::getId).collect(Collectors.toList());
         if(CollectionUtils.isEmpty(categoryIds)){
@@ -132,13 +135,13 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     @Override
     public BaseResult<LabelCategoryDetailVO> get(Long categoryId) {
         log.info("类别查看,参数:{}", categoryId);
-        LabelCategoryDO labelCategoryDO = labelCategoryMapper.get(categoryId);
+        List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(Lists.newArrayList(categoryId));
 
-        if(labelCategoryDO==null){
+        if(CollectionUtils.isEmpty(labelCategoryDOList)){
             throw new BaseBizRuntimeException("找不到该标签类别");
         }
 
-        LabelCategoryDetailVO labelCategoryDetailVO = LabelCategoryCopier.INSTANCE.convert(labelCategoryDO);
+        LabelCategoryDetailVO labelCategoryDetailVO = LabelCategoryCopier.INSTANCE.convert(labelCategoryDOList.get(0));
         List<LabelCategoryBizDomainDO> labelCategoryBizDomainDos = labelCategoryBizDomainMapper.get(Lists.newArrayList(categoryId));
         List<Long> bizDomainIds = labelCategoryBizDomainDos.stream().map(LabelCategoryBizDomainDO::getBizDomainId).collect(Collectors.toList());
         labelCategoryDetailVO.setBizDomainIds(bizDomainIds);

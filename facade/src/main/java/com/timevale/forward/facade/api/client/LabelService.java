@@ -5,8 +5,8 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.LabelQueryList;
 import com.timevale.forward.facade.api.request.LabelAddReq;
 import com.timevale.forward.facade.api.request.LabelModifyReq;
-import com.timevale.forward.facade.api.result.LabelCategoryVO;
 import com.timevale.forward.facade.api.result.LabelDetailVO;
+import com.timevale.forward.facade.api.result.LabelVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
@@ -22,7 +22,7 @@ public interface LabelService {
      *
      * @return 列表
      */
-    BaseResult<PageQueryResult<LabelCategoryVO>> list(LabelQueryList labelQueryList);
+    BaseResult<PageQueryResult<LabelVO>> list(LabelQueryList labelQueryList);
 
     /**
      * 查看
