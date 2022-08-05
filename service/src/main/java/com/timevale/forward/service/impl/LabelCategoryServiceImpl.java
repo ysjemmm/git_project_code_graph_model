@@ -29,12 +29,9 @@ import com.timevale.forward.service.copy.LabelCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
-import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
-import com.timevale.security.facade.response.BaseInfoResponse;
-import com.timevale.security.facade.response.GroupModelResponse;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -120,20 +117,20 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     public BaseResult<List<LabelCategorySimpleVO>> getLabelInCategory(LabelInCategoryQueryList labelInCategoryQueryList) {
         log.info("类别下的标签,参数:{}", labelInCategoryQueryList);
         LabelCategoryListCondition condition = LabelCategoryCopier.INSTANCE.convert(labelInCategoryQueryList);
-        if(!labelInCategoryQueryList.getList()){
-            List<GroupResponse> gdata = innerGroupClient.getGroupListTree(false);
-            Map<String, GroupResponse> groupMap = gdata.stream().collect(Collectors.toMap(GroupResponse::getGroupId, a -> a, (v1, v2) -> v2));
-
-            String account = LocalSessionUtils.getUserInfo().getId();
-            BaseInfoResponse selfInfo = innerUserPersonClient.getSelfInfo(account, false);
-            List<String> groupIds = selfInfo.getGroupList().stream().map(GroupModelResponse::getGroupId).collect(Collectors.toList());
-            log.info("花名:{},部门:{}",account,groupIds);
-            Set<String> deptIds=new HashSet<>(groupIds);
-            for (String gid : groupIds) {
-                getSuperiorGroupId(groupMap,gid,deptIds);
-            }
-            log.info("花名:{},部门及其上级部门:{}",account,groupIds);
-        }
+//        if(!labelInCategoryQueryList.getList()){
+//            List<GroupResponse> gdata = innerGroupClient.getGroupListTree(false);
+//            Map<String, GroupResponse> groupMap = gdata.stream().collect(Collectors.toMap(GroupResponse::getGroupId, a -> a, (v1, v2) -> v2));
+//
+//            String account = LocalSessionUtils.getUserInfo().getId();
+//            BaseInfoResponse selfInfo = innerUserPersonClient.getSelfInfo(account, false);
+//            List<String> groupIds = selfInfo.getGroupList().stream().map(GroupModelResponse::getGroupId).collect(Collectors.toList());
+//            log.info("花名:{},部门:{}",account,groupIds);
+//            Set<String> deptIds=new HashSet<>(groupIds);
+//            for (String gid : groupIds) {
+//                getSuperiorGroupId(groupMap,gid,deptIds);
+//            }
+//            log.info("花名:{},部门及其上级部门:{}",account,groupIds);
+//        }
         List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.list(condition);
         List<Long> categoryIds = labelCategoryDOList.stream().map(LabelCategoryDO::getId).collect(Collectors.toList());
         if(CollectionUtils.isEmpty(categoryIds)){

@@ -196,10 +196,10 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             if (accountInfo.ifSuccess()) {
                 return accountInfo.getData();
             }
-            log.error("调用内部用户中心失败 getByAccount account: " + account + " error: " + accountInfo.getMessage());
+            log.error("调用内部用户中心失败 getSelfInfo account: " + account + " error: " + accountInfo.getMessage());
             throw new BaseBizRuntimeException("调用内部用户中心失败! " + account);
         } catch (Exception e) {
-            log.error("调用内部用户中心失败 getByAccount account: " + account + " error: " + e.getMessage(), e);
+            log.error("调用内部用户中心失败 getSelfInfo account: " + account + " error: " + e.getMessage(), e);
         }
         throw new BaseBizRuntimeException("调用内部用户中心失败! " + account);
     }
