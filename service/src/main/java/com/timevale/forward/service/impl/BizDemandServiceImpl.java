@@ -36,7 +36,6 @@ import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -572,6 +571,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> reject(BizDemandRejectReq bizDemandRejectReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
@@ -761,6 +761,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> completed(BizDemandCompletedReq bizDemandCompleted) {
         // 参数
         Long id = bizDemandCompleted.getId();
@@ -849,6 +850,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> completedAgree(BizDemandCompletedAgreeReq bizDemandCompletedAgreeReq) {
         Long id = bizDemandCompletedAgreeReq.getId();
 
@@ -877,6 +879,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> completedReject(BizDemandCompletedRejectReq bizDemandCompletedRejectReq) {
         Long id = bizDemandCompletedRejectReq.getId();
         String reason = bizDemandCompletedRejectReq.getRejectReason();
@@ -925,13 +928,18 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> reSubmit(BizDemandResubmitReq bizDemandResubmitReq) {
         Long bizDemandId = bizDemandResubmitReq.getId();
+        String name = bizDemandResubmitReq.getName();
         BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(bizDemandId);
         if (oldBizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
-        String oldReceiveMan = oldBizDemandDO.getReceiveMan();
+        BizDemandDO checkUniqueName = bizDemandMapper.selectByName(name);
+        if (checkUniqueName != null && !checkUniqueName.getId().equals(bizDemandId)) {
+            throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
+        }
         // 日志, 状态改为待评估
         bizDemandLogComponent.addLogWhenModifyData(
                 BizDemandStatusEnum.REJECT.getText(),
@@ -962,7 +970,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 oldBizDemandDO.getId(),
                 oldBizDemandDO.getSubmitMan(),
                 oldBizDemandDO.getReceiveManId(),
-                oldBizDemandDO.getName()
+                name
         ));
         return BaseResult.success(true);
     }
