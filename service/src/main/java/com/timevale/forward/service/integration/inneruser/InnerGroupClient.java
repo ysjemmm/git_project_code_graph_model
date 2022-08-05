@@ -18,7 +18,7 @@ public interface InnerGroupClient {
      * @param deptIdList 部门id列表
      * @return 部门简单信息
      */
-    List<SimpleGroupResponse> batchGetSimpleGroupList(List<Long> deptIdList);
+    List<SimpleGroupResponse> batchGetSimpleGroupList(List<String> deptIdList);
 
     /**
      * 批处理得到部门id名称映射
@@ -26,7 +26,7 @@ public interface InnerGroupClient {
      * @param deptIdList 部门id列表
      * @return 部门id，名称Map
      */
-    Map<Long, String> batchGetSimpleGroupMap(List<Long> deptIdList);
+    Map<String, String> batchGetSimpleGroupMap(List<String> deptIdList);
 
     /**
      * 得到单个部门信息

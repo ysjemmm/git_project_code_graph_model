@@ -36,6 +36,9 @@ public class LabelCategoryVO extends ToString {
     @ApiModelProperty("部门名称")
     private List<String> depts;
 
+    @ApiModelProperty(hidden=true)
+    private String deptId;
+
     @ApiModelProperty("打标人员")
     private List<String> markMans;
 

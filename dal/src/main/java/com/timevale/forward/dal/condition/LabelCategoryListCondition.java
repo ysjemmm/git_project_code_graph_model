@@ -30,13 +30,4 @@ public class LabelCategoryListCondition extends QueryBase {
      */
     private List<Long> bizDomainIds;
 
-    /**
-     * names
-     */
-    private String markManId;
-
-    /**
-     * names
-     */
-    private List<String> deptIds;
 }

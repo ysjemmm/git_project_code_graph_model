@@ -29,12 +29,16 @@ import com.timevale.forward.service.copy.LabelCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.BaseInfoResponse;
+import com.timevale.security.facade.response.GroupModelResponse;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,14 +95,29 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByIdList(bizDomainIds);
         Map<Long, BizDomainDO> bizDomainMap = bizDomainDOList.stream().collect(Collectors.toMap(BizDomainDO::getId, k -> k, (v1, v2) -> v2));
 
-        List<LabelCategoryVO> labelCategoryVos = LabelCategoryCopier.INSTANCE.change(labelCategoryDOList);
+        List<String> allDeptIds = new ArrayList<>();
+        labelCategoryDOList.forEach(a->{
+            if(StringUtils.isNotEmpty(a.getDeptId())){
+                List<String> deptIds = JSONObject.parseArray(a.getDeptId(), String.class);
+                allDeptIds.addAll(deptIds);
+            }
+        });
+        Map<String, String> deptMap=new HashMap<>();
+        if(CollectionUtils.isNotEmpty(allDeptIds)){
+            deptMap = innerGroupClient.batchGetSimpleGroupMap(allDeptIds);
+        }
 
-        labelCategoryVos.forEach(a->{
+        List<LabelCategoryVO> labelCategoryVos = LabelCategoryCopier.INSTANCE.change(labelCategoryDOList);
+        for (LabelCategoryVO a : labelCategoryVos) {
+            if(StringUtils.isNotEmpty(a.getDeptId())){
+                List<String> deptIds = JSONObject.parseArray(a.getDeptId(), String.class);
+                List<String> depts = deptIds.stream().filter(deptMap::containsKey).map(deptMap::get).collect(Collectors.toList());
+                a.setDepts(depts);
+            }
             List<Long> bdIds = lcbdMap.get(a.getId());
             List<String> bizDomains = bdIds.stream().map(bizDomainMap::get).map(BizDomainDO::getName).collect(Collectors.toList());
-            a.setDepts(Lists.emptyList());
             a.setBizDomains(bizDomains);
-        });
+        }
         PageInfo<LabelCategoryDO> pageInfo = new PageInfo<>(labelCategoryDOList);
         PageQueryResult<LabelCategoryVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(labelCategoryVos);
@@ -117,27 +136,44 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     public BaseResult<List<LabelCategorySimpleVO>> getLabelInCategory(LabelInCategoryQueryList labelInCategoryQueryList) {
         log.info("类别下的标签,参数:{}", labelInCategoryQueryList);
         LabelCategoryListCondition condition = LabelCategoryCopier.INSTANCE.convert(labelInCategoryQueryList);
-//        if(!labelInCategoryQueryList.getList()){
-//            List<GroupResponse> gdata = innerGroupClient.getGroupListTree(false);
-//            Map<String, GroupResponse> groupMap = gdata.stream().collect(Collectors.toMap(GroupResponse::getGroupId, a -> a, (v1, v2) -> v2));
-//
-//            String account = LocalSessionUtils.getUserInfo().getId();
-//            BaseInfoResponse selfInfo = innerUserPersonClient.getSelfInfo(account, false);
-//            List<String> groupIds = selfInfo.getGroupList().stream().map(GroupModelResponse::getGroupId).collect(Collectors.toList());
-//            log.info("花名:{},部门:{}",account,groupIds);
-//            Set<String> deptIds=new HashSet<>(groupIds);
-//            for (String gid : groupIds) {
-//                getSuperiorGroupId(groupMap,gid,deptIds);
-//            }
-//            log.info("花名:{},部门及其上级部门:{}",account,groupIds);
-//        }
+
         List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.list(condition);
-        List<Long> categoryIds = labelCategoryDOList.stream().map(LabelCategoryDO::getId).collect(Collectors.toList());
-        if(CollectionUtils.isEmpty(categoryIds)){
+        if(CollectionUtils.isEmpty(labelCategoryDOList)){
             return BaseResult.success(Lists.emptyList());
         }
+
+        if(!labelInCategoryQueryList.getList()){
+            List<GroupResponse> gdata = innerGroupClient.getGroupListTree(false);
+            Map<String, GroupResponse> groupMap = gdata.stream().collect(Collectors.toMap(GroupResponse::getGroupId, a -> a, (v1, v2) -> v2));
+
+            String account = LocalSessionUtils.getUserInfo().getId();
+            BaseInfoResponse selfInfo = innerUserPersonClient.getSelfInfo(account, false);
+            List<String> groupIds = selfInfo.getGroupList().stream().map(GroupModelResponse::getGroupId).collect(Collectors.toList());
+            log.info("花名:{},部门:{}",account,groupIds);
+            Set<String> deptSets=new HashSet<>(groupIds);
+            for (String gid : groupIds) {
+                getSuperiorGroupId(groupMap,gid,deptSets);
+            }
+            log.info("花名:{},部门及其上级部门:{}",account,deptSets);
+
+            labelCategoryDOList = labelCategoryDOList.stream().filter(a -> {
+                List<String> markManIds = JSONObject.parseArray(a.getMarkManId(), String.class);
+                List<String> deptIds = JSONObject.parseArray(a.getDeptId(), String.class);
+                //打标人或打标部门 包含该用户,或用户所在部门
+                if(CollectionUtils.isNotEmpty(markManIds)&&markManIds.contains(account)){
+                    return true;
+                }
+                if(CollectionUtils.isNotEmpty(deptIds)){
+                    deptIds.retainAll(deptSets);
+                    return CollectionUtils.isNotEmpty(deptIds);
+                }
+                return false;
+            }).collect(Collectors.toList());
+        }
+
         List<LabelCategorySimpleVO> labelCategorySimpleVos = LabelCategoryCopier.INSTANCE.convert(labelCategoryDOList);
 
+        List<Long> categoryIds = labelCategoryDOList.stream().map(LabelCategoryDO::getId).collect(Collectors.toList());
         List<LabelDO> labelDOList = labelMapper.getByCategoryIds(categoryIds);
         List<LabelSimpleVO> labelSimpleVos = LabelCopier.INSTANCE.convert(labelDOList);
 

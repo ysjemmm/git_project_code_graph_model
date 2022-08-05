@@ -11,6 +11,31 @@
         </where>
     </select>
 
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into biz_label(biz_id,label_id, type, create_man_id, create_man)
+        values (#{bizId},#{labelId}, #{type}, #{createManId}, #{createMan});
+    </insert>
 
+
+    <update id="update" parameterType="com.timevale.forward.dal.entity.BizLabelDO">
+        update biz_label
+        <set>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            biz_id = #{bizId} and label_id = #{labelId} and type = #{type}
+        </where>
+    </update>
+
+    <select id="list" resultType="com.timevale.forward.dal.entity.BizLabelDO">
+        select id,biz_id,label_id,type,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from biz_label
+        <where>
+            biz_id = #{bizId} and type = #{type} and is_deleted=false
+        </where>
+    </select>
 </mapper>
 
