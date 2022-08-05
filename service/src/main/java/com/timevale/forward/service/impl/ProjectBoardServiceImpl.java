@@ -124,7 +124,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         result.setBugOfflineCount(bugOfflineDOList.size());
 
         // 提测结果
-        if (testBillDO == null) {
+        if (testBillDO == null || TestBillStatusEnum.PRE_SUBMIT_TEST_CASE.getCode().equals(testBillDO.getStatus())) {
             result.setSubmitTestResult(TestBillResultEnum.NO_START.getText());
         } else if (TestBillStatusEnum.TEST_SUCCESS.getCode().equals(testBillDO.getStatus())) {
             result.setSubmitTestResult(TestBillResultEnum.SUCCESS.getText());

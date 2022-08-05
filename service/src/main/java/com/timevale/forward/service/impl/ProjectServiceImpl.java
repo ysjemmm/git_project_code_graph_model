@@ -818,7 +818,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<BaseInfoResponse> users =
                 innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
         for (BaseInfoResponse user : users) {
-            if (CommonConstant.PMO.equalsIgnoreCase(user.getJob())) {
+            if (CommonConstant.PMO.equalsIgnoreCase(user.getJobClassification())) {
                 return true;
             }
         }
