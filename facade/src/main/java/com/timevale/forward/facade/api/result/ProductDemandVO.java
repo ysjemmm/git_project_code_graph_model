@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author xingyun
@@ -74,4 +75,7 @@ public class ProductDemandVO extends ToString {
     @ApiModelProperty("项目id")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long projectId;
+
+    @ApiModelProperty("标签名称")
+    private List<String> labelNames;
 }

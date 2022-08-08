@@ -37,5 +37,20 @@
             biz_id = #{bizId} and type = #{type} and is_deleted=false
         </where>
     </select>
+
+    <select id="getByLabelIdInType" resultType="com.timevale.forward.dal.entity.BizLabelDO">
+        select id,biz_id,label_id,type,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from biz_label
+        <where>
+            <if test="labelIds!=null and labelIds.size()>0">
+                and label_id  in
+                <foreach collection="labelIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and type = #{type} and is_deleted=false
+        </where>
+    </select>
 </mapper>
 

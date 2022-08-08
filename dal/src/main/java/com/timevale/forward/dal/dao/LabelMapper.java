@@ -57,5 +57,12 @@ public interface LabelMapper {
      */
     List<LabelDO> getByNameInOneCategory(@Param("names")List<String> names,@Param("categoryId") Long categoryId);
 
+    /**
+     * 列表
+     *
+     * @return LabelCategoryDO
+     */
+    List<LabelDO> getByIds(@Param("ids")List<Long> ids);
+
 
 }

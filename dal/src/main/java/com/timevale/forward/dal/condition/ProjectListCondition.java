@@ -1,7 +1,6 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.mandarin.common.query.QueryBase;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -176,4 +175,15 @@ public class ProjectListCondition extends QueryBase {
      * 排序规则：0正序，1逆序
      */
     private Integer orderCollation;
+
+    /**
+     * 标签id
+     */
+    private List<Long> labelIds;
+
+
+    /**
+     * 业务类型
+     */
+    private Integer bizType;
 }

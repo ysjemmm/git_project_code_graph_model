@@ -149,6 +149,12 @@
             <if test="id!=null">
                 and bd.id = #{id}
             </if>
+            <if test="containIds!=null and containIds.size()>0">
+                and bd.id  in
+                <foreach collection="containIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="name!=null and name!='' ">
                 and bd.name like concat('%',#{name},'%')
             </if>

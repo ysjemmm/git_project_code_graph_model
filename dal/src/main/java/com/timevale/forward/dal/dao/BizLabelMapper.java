@@ -38,10 +38,20 @@ public interface BizLabelMapper {
     /**
      * 列表
      *
-     * @param labelId labelId
+     * @param bizId bizId
      * @param type type
      * @return LabelCategoryDO
      */
-    List<BizLabelDO> list(@Param("bizId") Long labelId,@Param("type") Integer type);
+    List<BizLabelDO> list(@Param("bizId") Long bizId,@Param("type") Integer type);
+
+
+    /**
+     * 列表
+     *
+     * @param labelIds labelIds
+     * @param type type
+     * @return LabelCategoryDO
+     */
+    List<BizLabelDO> getByLabelIdInType(@Param("labelIds") List<Long> labelIds,@Param("type") Integer type);
 
 }

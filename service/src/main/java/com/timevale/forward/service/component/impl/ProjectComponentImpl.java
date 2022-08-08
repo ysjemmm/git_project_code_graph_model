@@ -1,41 +1,14 @@
 package com.timevale.forward.service.component.impl;
 
-import com.alibaba.druid.support.json.JSONUtils;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.forward.dal.condition.ProjectListCondition;
-import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.dao.ProductBizDemandMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.dao.ProjectNodeMapper;
-import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
-import com.timevale.forward.dal.dao.ProjectProductLineMapper;
-import com.timevale.forward.dal.dao.ProjectRiskMapper;
-import com.timevale.forward.dal.dao.TestBillMapper;
-import com.timevale.forward.dal.entity.BaseDO;
-import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.dal.entity.ProductLineDO;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectListDO;
-import com.timevale.forward.dal.entity.ProjectNodeDO;
-import com.timevale.forward.dal.entity.ProjectProductDemandDO;
-import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
-import com.timevale.forward.dal.entity.ProjectProductLineDO;
-import com.timevale.forward.dal.entity.ProjectRiskDO;
-import com.timevale.forward.dal.entity.TestBillDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
-import com.timevale.forward.model.enums.PersonTypeEnum;
-import com.timevale.forward.model.enums.PriorityEnum;
-import com.timevale.forward.model.enums.ProjectLevelEnum;
-import com.timevale.forward.model.enums.ProjectNodeEnum;
-import com.timevale.forward.model.enums.ProjectNodeStatusEnum;
-import com.timevale.forward.model.enums.ProjectRiskStatusEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
-import com.timevale.forward.model.enums.ProjectTypeEnum;
-import com.timevale.forward.model.enums.TestBillStatusEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.component.SqlOrderComponent;
@@ -46,22 +19,14 @@ import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.result.PageQueryResult;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author xingyun
@@ -103,6 +68,16 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Resource
     private SqlOrderComponent sqlOrderComponent;
+
+    @Resource
+    private BizLabelMapper bizLabelMapper;
+
+    @Resource
+    private LabelMapper labelMapper;
+
+    @Resource
+    private LabelCategoryMapper labelCategoryMapper;
+
 
     @Override
     public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -185,6 +160,34 @@ public class ProjectComponentImpl implements ProjectComponent {
             if (CollectionUtils.isEmpty(status)) {
                 return ResultUtil.queryResultEmpty();
             }
+        }
+
+        //是否打标
+        List<BizLabelDO> bizLabelDOList;
+        if (CollectionUtils.isNotEmpty(condition.getLabelIds())) {
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(condition.getLabelIds(), condition.getBizType());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            projectIds.retainAll(bizIds);
+            if (CollectionUtils.isEmpty(projectIds)) {
+                return ResultUtil.queryResultEmpty();
+            }
+        } else {
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(projectIds, BizTypeEnum.PROJECT.getCode());
+        }
+        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
+                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
+
+        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
+        Map<Long, String> labelNameMap = new HashMap<>();
+        Map<Long, Long> labelCategoryIdMap = new HashMap<>();
+        Map<Long, String> labelCategoryMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(labelIds)) {
+            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
+            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
+            labelCategoryIdMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getLabelCategoryId, (v1, v2) -> v2));
+            List<Long> labelCategoryIds = labelDOList.stream().map(LabelDO::getLabelCategoryId).collect(Collectors.toList());
+            List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(labelCategoryIds);
+            labelCategoryMap = labelCategoryDOList.stream().collect(Collectors.toMap(LabelCategoryDO::getId, LabelCategoryDO::getName, (v1, v2) -> v2));
         }
 
         buildConditionBeforeQuery(projectIds, condition);
@@ -280,6 +283,24 @@ public class ProjectComponentImpl implements ProjectComponent {
             if (!warn) {
                 a.setContainRisk(riskSet.contains(a.getId()));
             }
+            if (labelIdMap.containsKey(a.getId())) {
+                List<Long> labelIdList = labelIdMap.get(a.getId());
+                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
+
+                List<Long> labelCatergoryIdList = labelIdList.stream().filter(labelCategoryIdMap::containsKey).map(labelCategoryIdMap::get).collect(Collectors.toList());
+                List<String> labelCategoryNames = labelCatergoryIdList.stream().filter(labelCategoryMap::containsKey).map(labelCategoryMap::get).collect(Collectors.toList());
+
+                List<String> result=new ArrayList<>();
+                if(labelNames.size()==labelCategoryNames.size()){
+                    for (int i = 0; i < labelNames.size(); i++) {
+                        String labelName=labelCategoryNames.get(i)+"-"+ labelNames.get(i);
+                        result.add(labelName);
+                    }
+                    a.setLabelNames(result);
+                }else{
+                    log.info("标签信息:{},类别信息:{}",labelIdList,labelCatergoryIdList);
+                }
+            }
         }
 
         // 分页数据
@@ -315,7 +336,8 @@ public class ProjectComponentImpl implements ProjectComponent {
                 && (demandAudit == null || demandAudit.getActualDate() != null)
                 && (demandConstrue == null || demandConstrue.getActualDate() != null)
                 && (demandConstrueReverse == null || demandConstrueReverse.getActualDate() != null)
-                && (demandUedAudit == null || demandUedAudit.getActualDate() != null);;
+                && (demandUedAudit == null || demandUedAudit.getActualDate() != null);
+        ;
         if (dev) {
             status = ProjectStatusEnum.DEVING.getCode();
         }
