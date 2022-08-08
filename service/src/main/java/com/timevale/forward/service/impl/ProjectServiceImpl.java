@@ -146,7 +146,7 @@ public class ProjectServiceImpl implements ProjectService {
     private CustomDemandComponent customDemandComponent;
 
     @Resource
-    private  BizDemandMapper bizDemandMapper;
+    private BizDemandMapper bizDemandMapper;
 
 
     @Override
@@ -380,10 +380,12 @@ public class ProjectServiceImpl implements ProjectService {
         // 产品经理
         personComponent.update(projectModifyReq.getPds(), newProject.getId(), PersonTypeEnum.PROJECT_PD.getCode());
 
-        //流程与版本信息处理
-        processFlow(projectModifyReq);
         //立项时间变化
         sendDingMsgIfPublishDateForward(newProject.getId(), oldPjEstablishPublishDate);
+
+        //流程与版本信息处理
+        processFlow(projectModifyReq);
+
         return BaseResult.success(true);
     }
 
@@ -509,14 +511,14 @@ public class ProjectServiceImpl implements ProjectService {
             List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByProductDemandIds(productDemandIds);
             Map<Long, Integer> bizIdMap = productBizDemandDOList.stream().collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, ProductBizDemandDO::getStatus, (v1, v2) -> v2));
 
-            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus(),productDemandIds);
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus(), productDemandIds);
 
             projectProductDemandComponent.batchInsert(projectDO.getId(), productDemandIds);
 
             //项目关联后,业务需求的发布时间可能变化
-            bizIdMap.forEach((k,v)->{
+            bizIdMap.forEach((k, v) -> {
                 BizDemandDO bizDemandDO = bizDemandMapper.selectById(k);
-                productDemandComponent.sendDingMsg(v,bizDemandDO.getStatus(),k);
+                productDemandComponent.sendDingMsg(v, bizDemandDO.getStatus(), k);
             });
 
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.LINK.getText());
@@ -793,8 +795,9 @@ public class ProjectServiceImpl implements ProjectService {
         Date newPjEstablishPublishDate = oldProjectDO.getPjEstablishPublishDate();
         Date planEndDate = oldProjectDO.getPlanEndDate();
         log.info("立项预计上线时间提前:{}", oldProjectDO);
-
-        if (newPjEstablishPublishDate != null && planEndDate != null && newPjEstablishPublishDate.before(planEndDate)
+        List<ProjectNodeRecordDO> list = projectNodeRecordMapper.list(id);
+        if (CollectionUtils.isEmpty(list) && newPjEstablishPublishDate != null
+                && planEndDate != null && newPjEstablishPublishDate.before(planEndDate)
                 && !ProjectStatusEnum.terminated(oldProjectDO.getStatus())
                 && !Objects.equals(oldPjEstablishPublishDate, newPjEstablishPublishDate)) {
             messageEventPublisher.publish(new ProjectEstablishDateChangeMsgEvent(
