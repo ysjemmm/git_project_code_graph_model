@@ -1,15 +1,14 @@
 package com.timevale.forward.service.component;
 
-import com.timevale.forward.facade.api.query.LabelMarkedQueryList;
-
 import java.util.List;
 
 public interface LabelComponent {
     /**
      *
-     * @param labelMarkedQuery labelMarkedQuery
-     * @return 标签id
+     * @param labelIds labelIds
+     * @param labelCategoryIds labelCategoryIds
+     * @return标签id
      */
-    List<Long> getLabelIds(List<LabelMarkedQueryList> labelMarkedQuery);
+    List<Long> getLabelIds(List<Long> labelIds,List<Long> labelCategoryIds);
 
 }
