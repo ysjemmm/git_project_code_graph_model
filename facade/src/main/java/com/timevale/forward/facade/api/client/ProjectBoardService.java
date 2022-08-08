@@ -52,6 +52,11 @@ public interface ProjectBoardService {
     BaseResult<PageQueryResult<BugOfflineCountVO>> getBugOfflineCount(ProjectBugOfflineCountQueryList query);
 
     /**
+     * 待修复线下bug情况(总数)
+     */
+    BaseResult<BugOfflineAllCountVO> getBugOfflineAllCount(Long projectId);
+
+    /**
      * 线下Bug原因分布情况
      * @param projectId 项目id
      * @return 线下BUG原因分布情况列表
