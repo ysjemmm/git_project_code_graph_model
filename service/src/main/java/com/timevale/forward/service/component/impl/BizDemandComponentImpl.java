@@ -235,7 +235,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
         List<Long> bizDemandIds = bizDemandListDOList.stream().map(BizDemandListDO::getId).collect(Collectors.toList());
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
-
+        if (CollectionUtils.isEmpty(bizDemandVOList)) {
+            return ResultUtil.queryResultEmpty();
+        }
         //标签信息
         bizLabelDOList = bizLabelMapper.getByLabelIdInType(bizDemandIds, bizDemandListCondition.getBizType());
         Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId

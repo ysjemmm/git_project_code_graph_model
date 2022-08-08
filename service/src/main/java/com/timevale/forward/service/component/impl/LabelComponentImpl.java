@@ -6,6 +6,7 @@ import com.timevale.forward.facade.api.query.LabelMarkedQueryList;
 import com.timevale.forward.service.component.LabelComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -26,9 +27,12 @@ public class LabelComponentImpl implements LabelComponent {
 
     @Override
     public List<Long> getLabelIds(List<LabelMarkedQueryList> labelMarkedQuery) {
-        List<Long> labelCategoryIds = labelMarkedQuery.stream().filter(a->a.getLabelCategoryId()!=null).map(LabelMarkedQueryList::getLabelCategoryId).collect(Collectors.toList());
-        List<Long> labelIds = labelMarkedQuery.stream().filter(a->a.getLabelId()!=null).map(LabelMarkedQueryList::getLabelId).collect(Collectors.toList());
-        if(!CollectionUtils.isEmpty(labelCategoryIds)){
+        if (labelMarkedQuery == null) {
+            return Lists.emptyList();
+        }
+        List<Long> labelCategoryIds = labelMarkedQuery.stream().filter(a -> a.getLabelCategoryId() != null).map(LabelMarkedQueryList::getLabelCategoryId).collect(Collectors.toList());
+        List<Long> labelIds = labelMarkedQuery.stream().filter(a -> a.getLabelId() != null).map(LabelMarkedQueryList::getLabelId).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(labelCategoryIds)) {
             List<LabelDO> labelDOList = labelMapper.getByCategoryIds(labelCategoryIds);
             List<Long> oldLabelIds = labelDOList.stream().map(LabelDO::getId).collect(Collectors.toList());
             labelIds.addAll(oldLabelIds);

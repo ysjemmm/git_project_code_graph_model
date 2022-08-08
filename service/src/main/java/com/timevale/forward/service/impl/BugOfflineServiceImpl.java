@@ -160,6 +160,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         // 查询并转换
         List<BugOfflineListDO> bugOfflineDOList = bugOfflineMapper.selectByCondition(condition);
         List<BugOfflineVO> bugOfflineVOList = bugOfflineDOList.stream().map(BugOfflineCopier.INSTANCE::convert).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(bugOfflineVOList)) {
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
 
         List<Long>bugOfflineIds = bugOfflineDOList.stream().map(BugOfflineListDO::getId).collect(Collectors.toList());
         bizLabelDOList = bizLabelMapper.getByLabelIdInType(bugOfflineIds, BizTypeEnum.BUG_OFFLINE.getCode());

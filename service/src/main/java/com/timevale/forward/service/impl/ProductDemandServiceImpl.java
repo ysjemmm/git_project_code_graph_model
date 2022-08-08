@@ -187,8 +187,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         // 分页查询
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
-        List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
-
+        List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
+        if (CollectionUtils.isEmpty(productDemandVOList)) {
+            return BaseResult.success(ResultUtil.queryResultEmpty());
+        }
         List<Long>productDemandIds = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
         bizLabelDOList = bizLabelMapper.getByLabelIdInType(productDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
         Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
@@ -206,7 +208,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(labelCategoryIds);
             labelCategoryMap = labelCategoryDOList.stream().collect(Collectors.toMap(LabelCategoryDO::getId, LabelCategoryDO::getName, (v1, v2) -> v2));
         }
-        for (ProductDemandVO a : productDemandVO) {
+        for (ProductDemandVO a : productDemandVOList) {
             a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
             a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
             if (labelIdMap.containsKey(a.getId())) {
@@ -231,7 +233,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         // 分页数据
         PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
-        pageQueryResult.setResultList(productDemandVO);
+        pageQueryResult.setResultList(productDemandVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
         // 完整查询
