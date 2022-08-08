@@ -453,6 +453,17 @@ public class BizDemandServiceImpl implements BizDemandService {
             ));
         }
 
+        // 判断是否通知接收人
+        if (Objects.equal(bizDemandModifyReq.getNotifyReceiveMan(), true)) {
+            messageEventPublisher.publish(new BizDemandModifyMsgEvent(
+                    this,
+                    oldBizDemandDO.getId(),
+                    oldBizDemandDO.getSubmitMan(),
+                    newBizDemandDO.getReceiveManId(),
+                    newBizDemandDO.getName()
+            ));
+        }
+
         // 预期上线时间变更带来的通知
         if(!Objects.equal(oldBizDemandDO.getPlanReleaseDate(), newBizDemandDO.getPlanReleaseDate())){
             messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
