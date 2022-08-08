@@ -15,6 +15,7 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOfflineMD;
 import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.LabelComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -85,6 +86,18 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Resource
     private SqlOrderComponent sqlOrderComponent;
 
+    @Resource
+    private LabelComponent labelComponent;
+
+    @Resource
+    private BizLabelMapper bizLabelMapper;
+
+    @Resource
+    private LabelMapper labelMapper;
+
+    @Resource
+    private LabelCategoryMapper labelCategoryMapper;
+
     @Override
     public BaseResult<PageQueryResult<BugOfflineVO>> list(BugOfflineQueryList bugOfflineQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -128,6 +141,17 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         if (resultIsEmpty) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
+        //是否打标
+        List<Long> newLabelIds = labelComponent.getLabelIds(bugOfflineQueryList.getLabelMarkedQuery());
+        List<BizLabelDO> bizLabelDOList;
+        if (CollectionUtils.isNotEmpty(newLabelIds)) {
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_OFFLINE.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(bizIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            condition.setContainIds(bizIds);
+        }
 
         // 开始分页
         String collation = sqlOrderComponent.build(bugOfflineQueryList.getOrderFiled(), bugOfflineQueryList.getOrderCollation());
@@ -137,8 +161,26 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         List<BugOfflineListDO> bugOfflineDOList = bugOfflineMapper.selectByCondition(condition);
         List<BugOfflineVO> bugOfflineVOList = bugOfflineDOList.stream().map(BugOfflineCopier.INSTANCE::convert).collect(Collectors.toList());
 
+        List<Long>bugOfflineIds = bugOfflineDOList.stream().map(BugOfflineListDO::getId).collect(Collectors.toList());
+        bizLabelDOList = bizLabelMapper.getByLabelIdInType(bugOfflineIds, BizTypeEnum.BUG_OFFLINE.getCode());
+        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
+                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
+
+        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
+        Map<Long, String> labelNameMap = new HashMap<>();
+        Map<Long, Long> labelCategoryIdMap = new HashMap<>();
+        Map<Long, String> labelCategoryMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(labelIds)) {
+            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
+            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
+            labelCategoryIdMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getLabelCategoryId, (v1, v2) -> v2));
+            List<Long> labelCategoryIds = labelDOList.stream().map(LabelDO::getLabelCategoryId).collect(Collectors.toList());
+            List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(labelCategoryIds);
+            labelCategoryMap = labelCategoryDOList.stream().collect(Collectors.toMap(LabelCategoryDO::getId, LabelCategoryDO::getName, (v1, v2) -> v2));
+        }
+
         // 信息填充
-        bugOfflineVOList.forEach(e -> {
+        for (BugOfflineVO e : bugOfflineVOList) {
             e.setEnvName(BugEnvEnum.getTextByCode(e.getEnv()));
             e.setStatusName(BugStatusEnum.getTextByCode(e.getStatus()));
             e.setSourceName(BugSourceEnum.getTextByCode(e.getSource()));
@@ -146,7 +188,26 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             e.setReasonName(BugReasonEnum.getTextByCode(e.getReason()));
             e.setPriorityName(PriorityEnum.getTextChineseByCode(e.getPriority()));
             e.setUnHandleReasonName(BugUnHandleReasonEnum.getTextByCode(e.getUnHandleReason()));
-        });
+
+            if (labelIdMap.containsKey(e.getId())) {
+                List<Long> labelIdList = labelIdMap.get(e.getId());
+                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
+
+                List<Long> labelCatergoryIdList = labelIdList.stream().filter(labelCategoryIdMap::containsKey).map(labelCategoryIdMap::get).collect(Collectors.toList());
+                List<String> labelCategoryNames = labelCatergoryIdList.stream().filter(labelCategoryMap::containsKey).map(labelCategoryMap::get).collect(Collectors.toList());
+
+                List<String> result=new ArrayList<>();
+                if(labelNames.size()==labelCategoryNames.size()){
+                    for (int i = 0; i < labelNames.size(); i++) {
+                        String labelName=labelCategoryNames.get(i)+"-"+ labelNames.get(i);
+                        result.add(labelName);
+                    }
+                    e.setLabelNames(result);
+                }else{
+                    log.info("标签信息:{},类别信息:{}",labelIdList,labelCatergoryIdList);
+                }
+            }
+        }
 
         // 返回分页数据
         PageInfo<BugOfflineListDO> pageInfo = new PageInfo<>(bugOfflineDOList);

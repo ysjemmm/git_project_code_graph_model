@@ -119,6 +119,18 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Resource
     private ProductCustomDemandComponent productCustomDemandComponent;
 
+    @Resource
+    private LabelComponent labelComponent;
+
+    @Resource
+    private BizLabelMapper bizLabelMapper;
+
+    @Resource
+    private LabelMapper labelMapper;
+
+    @Resource
+    private LabelCategoryMapper labelCategoryMapper;
+
     private static final Integer MAX_LENGTH = 20 * 1000;
 
 
@@ -160,16 +172,62 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             condition.setCopierId(userInfo.getId());
         }
 
+        //是否打标
+        List<Long> newLabelIds = labelComponent.getLabelIds(productDemandQueryList.getLabelMarkedQuery());
+        List<BizLabelDO> bizLabelDOList;
+        if (CollectionUtils.isNotEmpty(newLabelIds)) {
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(bizIds)) {
+                return BaseResult.success(ResultUtil.queryResultEmpty());
+            }
+            condition.setInProductDemandIds(bizIds);
+
+        }
         // 分页查询
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
-
         List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
-        productDemandVO.forEach(p -> {
-            p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
-            p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
-        });
 
+        List<Long>productDemandIds = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
+        bizLabelDOList = bizLabelMapper.getByLabelIdInType(productDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
+                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
+
+        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
+        Map<Long, String> labelNameMap = new HashMap<>();
+        Map<Long, Long> labelCategoryIdMap = new HashMap<>();
+        Map<Long, String> labelCategoryMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(labelIds)) {
+            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
+            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
+            labelCategoryIdMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getLabelCategoryId, (v1, v2) -> v2));
+            List<Long> labelCategoryIds = labelDOList.stream().map(LabelDO::getLabelCategoryId).collect(Collectors.toList());
+            List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(labelCategoryIds);
+            labelCategoryMap = labelCategoryDOList.stream().collect(Collectors.toMap(LabelCategoryDO::getId, LabelCategoryDO::getName, (v1, v2) -> v2));
+        }
+        for (ProductDemandVO a : productDemandVO) {
+            a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
+            a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
+            if (labelIdMap.containsKey(a.getId())) {
+                List<Long> labelIdList = labelIdMap.get(a.getId());
+                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
+
+                List<Long> labelCatergoryIdList = labelIdList.stream().filter(labelCategoryIdMap::containsKey).map(labelCategoryIdMap::get).collect(Collectors.toList());
+                List<String> labelCategoryNames = labelCatergoryIdList.stream().filter(labelCategoryMap::containsKey).map(labelCategoryMap::get).collect(Collectors.toList());
+
+                List<String> result=new ArrayList<>();
+                if(labelNames.size()==labelCategoryNames.size()){
+                    for (int i = 0; i < labelNames.size(); i++) {
+                        String labelName=labelCategoryNames.get(i)+"-"+ labelNames.get(i);
+                        result.add(labelName);
+                    }
+                    a.setLabelNames(result);
+                }else{
+                    log.info("标签信息:{},类别信息:{}",labelIdList,labelCatergoryIdList);
+                }
+            }
+        }
         // 分页数据
         PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
@@ -418,6 +476,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     , ProjectStatusEnum.DEVING.getCode()
                     , ProjectStatusEnum.TESTING.getCode()));
         }
+        List<Long> labelIds = labelComponent.getLabelIds(productDemandLinkProjectQueryList.getLabelMarkedQuery());
+        condition.setLabelIds(labelIds);
+        condition.setBizType(BizTypeEnum.PRODUCT_DEMAND.getCode());
         PageQueryResult<ProjectVO> pageQueryResult = projectCmponent.page(condition, Lists.newArrayList()).getPageQueryResult();
         return BaseResult.success(pageQueryResult);
     }
@@ -458,7 +519,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             List<Long> bizDemandIds = productBizDemand.stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
             condition.setBizDemandIds(bizDemandIds);
         }
-        PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        condition.setPageNum(productDemandLinkBizDemandQueryList.getPageNum());
+        condition.setPageSize(productDemandLinkBizDemandQueryList.getPageSize());
+        condition.setCollation(CommonConstant.DEFAULT_ORDER_BY);
         return BaseResult.success(bizDemandComponent.page(condition).getPageQueryResult());
     }
 

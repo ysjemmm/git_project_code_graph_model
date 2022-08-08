@@ -148,6 +148,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private BizDemandMapper bizDemandMapper;
 
+    @Resource
+    private LabelComponent labelComponent;
+
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -172,6 +175,9 @@ public class ProjectServiceImpl implements ProjectService {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
         }
+        List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelMarkedQuery());
+        condition.setLabelIds(labelIds);
+        condition.setBizType(BizTypeEnum.PROJECT.getCode());
         return BaseResult.success(projectComponent.page(condition, projectIds));
     }
 

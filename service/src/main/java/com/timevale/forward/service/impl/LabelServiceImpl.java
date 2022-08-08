@@ -15,16 +15,20 @@ import com.timevale.forward.facade.api.result.LabelDetailVO;
 import com.timevale.forward.facade.api.result.LabelVO;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.LabelCopier;
+import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -52,6 +56,9 @@ public class LabelServiceImpl implements LabelService {
     @Resource
     private BizLabelMapper bizLabelMapper;
 
+    @Resource
+    private InnerGroupClient innerGroupClient;
+
 
     @Override
     public BaseResult<PageQueryResult<LabelVO>> list(LabelQueryList labelQueryList) {
@@ -64,6 +71,7 @@ public class LabelServiceImpl implements LabelService {
         }
 
         List<Long> categoryIds = labelDOList.stream().map(LabelDO::getLabelCategoryId).collect(Collectors.toList());
+        Map<Long, Long> labelIdMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getLabelCategoryId, (v1, v2) -> v2));
 
         List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(Lists.newArrayList(categoryIds));
         Map<Long, LabelCategoryDO> labelCategoryMap = labelCategoryDOList.stream().collect(Collectors.toMap(LabelCategoryDO::getId, a -> a, (v1, v2) -> v2));
@@ -77,22 +85,37 @@ public class LabelServiceImpl implements LabelService {
         List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByIdList(bizDomainIds);
         Map<Long, BizDomainDO> bizDomainMap = bizDomainDOList.stream().collect(Collectors.toMap(BizDomainDO::getId, k -> k, (v1, v2) -> v2));
 
-        List<LabelVO> labelVOList = LabelCopier.INSTANCE.convertT(labelDOList);
+        List<String> allDeptIds = new ArrayList<>();
+        labelCategoryDOList.forEach(a->{
+            if(StringUtils.isNotEmpty(a.getDeptId())){
+                List<String> deptIds = JSONObject.parseArray(a.getDeptId(), String.class);
+                allDeptIds.addAll(deptIds);
+            }
+        });
+        Map<String, String> deptMap=new HashMap<>();
+        if(CollectionUtils.isNotEmpty(allDeptIds)){
+            deptMap = innerGroupClient.batchGetSimpleGroupMap(allDeptIds);
+        }
 
-        labelVOList.forEach(a -> {
+        List<LabelVO> labelVOList = LabelCopier.INSTANCE.convertT(labelDOList);
+        for (LabelVO a : labelVOList) {
+            Long labelCategoryId = labelIdMap.get(a.getId());
+            String deptId = labelCategoryMap.get(labelCategoryId).getDeptId();
+            if(StringUtils.isNotEmpty(deptId)){
+                List<String> deptIds = JSONObject.parseArray(deptId, String.class);
+                List<String> depts = deptIds.stream().filter(deptMap::containsKey).map(deptMap::get).collect(Collectors.toList());
+                a.setDepts(depts);
+            }
             List<Long> bdIds = lcbdMap.get(a.getLabelCategoryId());
             List<String> bizDomains = bdIds.stream().map(bizDomainMap::get).map(BizDomainDO::getName).collect(Collectors.toList());
-            a.setDepts(Lists.emptyList());
             a.setBizDomains(bizDomains);
             LabelCategoryDO labelCategoryDO = labelCategoryMap.get(a.getLabelCategoryId());
             if (labelCategoryDO != null) {
                 a.setCategoryName(labelCategoryDO.getName());
                 a.setTypes(JSONObject.parseArray(labelCategoryDO.getType(), Integer.class));
                 a.setMarkMans(JSONObject.parseArray(labelCategoryDO.getMarkMan(), String.class));
-                a.setCategoryName(labelCategoryDO.getName());
             }
-        });
-
+        }
         PageInfo<LabelDO> pageInfo = new PageInfo<>(labelDOList);
         PageQueryResult<LabelVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(labelVOList);

@@ -292,11 +292,9 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         addRelation(copyBizDomainIds, labelCategoryId);
         //删除
         lcbds.forEach(a -> {
-            if (!bizDomainIds.contains(a)) {
+            if (!bizDomainIds.contains(a.getBizDomainId())) {
                 LabelCategoryBizDomainDO o = new LabelCategoryBizDomainDO();
                 o.setId(a.getId());
-                o.setLabelCategoryId(labelCategoryId);
-                o.setBizDomainId(a.getBizDomainId());
                 o.setIsDeleted(true);
                 labelCategoryBizDomainMapper.update(o);
             }

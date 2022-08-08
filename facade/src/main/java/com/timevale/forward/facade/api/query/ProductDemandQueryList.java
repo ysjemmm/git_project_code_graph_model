@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -46,4 +47,8 @@ public class ProductDemandQueryList extends QueryBase {
 
     @ApiModelProperty("结束时间")
     private Date createDateEnd;
+
+    @ApiModelProperty("标签或类别查询")
+    @NotNull(message = "标签或类别不能为空")
+    private List<LabelMarkedQueryList>labelMarkedQuery;
 }

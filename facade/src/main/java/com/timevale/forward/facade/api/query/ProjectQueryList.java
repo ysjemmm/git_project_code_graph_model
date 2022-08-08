@@ -115,7 +115,6 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("是否有项目风险")
     private Boolean includeRisk;
 
-
     @ApiModelProperty("标签或类别查询")
     @NotNull(message = "标签或类别不能为空")
     private List<LabelMarkedQueryList>labelMarkedQuery;

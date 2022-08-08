@@ -100,4 +100,11 @@ public class BugOnlineListCondition {
      */
     @WildcardEscape
     private String customerName;
+
+    /**
+     *包含的id
+     */
+    private List<Long> containIds;
+
+
 }

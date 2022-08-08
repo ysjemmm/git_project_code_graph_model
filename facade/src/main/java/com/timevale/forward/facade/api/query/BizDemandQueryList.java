@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -71,4 +72,8 @@ public class BizDemandQueryList extends QueryBase {
 
     @ApiModelProperty("排序规则：0正序，1逆序")
     private Integer orderCollation;
+
+    @ApiModelProperty("标签或类别查询")
+    @NotNull(message = "标签或类别不能为空")
+    private List<LabelMarkedQueryList>labelMarkedQuery;
 }

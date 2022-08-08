@@ -100,6 +100,21 @@
         </where>
     </select>
 
+    <select id="getByIds" resultType="com.timevale.forward.dal.entity.LabelDO">
+        select id,name,label_category_id,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from label
+        <where>
+            <if test="ids!=null and ids.size()>0">
+                and id  in
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+
+            and is_deleted=false
+        </where>
+    </select>
 
 </mapper>
 

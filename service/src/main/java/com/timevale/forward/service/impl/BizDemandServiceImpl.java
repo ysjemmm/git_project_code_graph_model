@@ -1,6 +1,5 @@
 package com.timevale.forward.service.impl;
 
-import com.github.pagehelper.PageHelper;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
@@ -90,6 +89,9 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Resource
     private SqlOrderComponent sqlOrderComponent;
 
+    @Resource
+    private LabelComponent labelComponent;
+
     @Override
     public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -130,8 +132,12 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
         // 开始分页
         String collation = sqlOrderComponent.build(bizDemandQueryList.getOrderFiled(), bizDemandQueryList.getOrderCollation());
-        PageHelper.startPage(bizDemandQueryList.pageNum, bizDemandQueryList.pageSize, collation);
-
+        List<Long> labelIds = labelComponent.getLabelIds(bizDemandQueryList.getLabelMarkedQuery());
+        bizDemandListCondition.setLabelIds(labelIds);
+        bizDemandListCondition.setBizType(BizTypeEnum.BIZ_DEMAND.getCode());
+        bizDemandListCondition.setPageNum(bizDemandQueryList.getPageNum());
+        bizDemandListCondition.setPageSize(bizDemandQueryList.getPageSize());
+        bizDemandListCondition.setCollation(collation);
         return BaseResult.success(bizDemandComponent.page(bizDemandListCondition));
     }
 

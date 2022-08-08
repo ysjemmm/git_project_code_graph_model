@@ -14,6 +14,12 @@
         left join product_line pl on bopl.product_line_id = pl.id
         left join biz_domain bdm on pl.biz_domain_id = bdm.id
         <where>
+            <if test="containIds!=null and containIds.size()>0">
+                and bo.id  in
+                <foreach collection="containIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="name != null and name != '' ">
                 and bo.name like concat('%',#{name},'%')
             </if>
