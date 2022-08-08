@@ -7,7 +7,7 @@ public interface LabelComponent {
      *
      * @param labelIds labelIds
      * @param labelCategoryIds labelCategoryIds
-     * @return标签id
+     * @return 标签id
      */
     List<Long> getLabelIds(List<Long> labelIds,List<Long> labelCategoryIds);
 

@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -63,8 +62,9 @@ public class ProductDemandLinkProjectQueryList extends QueryBase {
     @ApiModelProperty("产品需求id")
     private Long productDemandId;
 
-    @ApiModelProperty("标签或类别查询")
-    @NotNull(message = "标签或类别不能为空")
-    private List<LabelMarkedQueryList>labelMarkedQuery;
+    @ApiModelProperty("选中为标签时填写,标签id")
+    private List<Long> labelIds;
 
+    @ApiModelProperty("选中为标签类别时填写,类别id")
+    private List<Long> labelCategoryIds;
 }

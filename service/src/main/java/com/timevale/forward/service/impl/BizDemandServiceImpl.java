@@ -132,7 +132,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
         // 开始分页
         String collation = sqlOrderComponent.build(bizDemandQueryList.getOrderFiled(), bizDemandQueryList.getOrderCollation());
-        List<Long> labelIds = labelComponent.getLabelIds(bizDemandQueryList.getLabelMarkedQuery());
+        List<Long> labelIds = labelComponent.getLabelIds(bizDemandQueryList.getLabelIds(),bizDemandQueryList.getLabelCategoryIds());
         bizDemandListCondition.setLabelIds(labelIds);
         bizDemandListCondition.setBizType(BizTypeEnum.BIZ_DEMAND.getCode());
         bizDemandListCondition.setPageNum(bizDemandQueryList.getPageNum());

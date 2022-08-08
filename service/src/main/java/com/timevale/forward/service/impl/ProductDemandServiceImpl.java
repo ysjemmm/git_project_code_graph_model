@@ -173,7 +173,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         //是否打标
-        List<Long> newLabelIds = labelComponent.getLabelIds(productDemandQueryList.getLabelMarkedQuery());
+        List<Long> newLabelIds = labelComponent.getLabelIds(productDemandQueryList.getLabelIds(),productDemandQueryList.getLabelCategoryIds());
         List<BizLabelDO> bizLabelDOList;
         if (CollectionUtils.isNotEmpty(newLabelIds)) {
             bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
@@ -478,7 +478,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     , ProjectStatusEnum.DEVING.getCode()
                     , ProjectStatusEnum.TESTING.getCode()));
         }
-        List<Long> labelIds = labelComponent.getLabelIds(productDemandLinkProjectQueryList.getLabelMarkedQuery());
+        List<Long> labelIds = labelComponent.getLabelIds(productDemandLinkProjectQueryList.getLabelIds(),productDemandLinkProjectQueryList.getLabelCategoryIds());
         condition.setLabelIds(labelIds);
         condition.setBizType(BizTypeEnum.PRODUCT_DEMAND.getCode());
         PageQueryResult<ProjectVO> pageQueryResult = projectCmponent.page(condition, Lists.newArrayList()).getPageQueryResult();
