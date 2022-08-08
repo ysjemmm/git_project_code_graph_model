@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.forward.dal.annotation.WildcardEscape;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -56,6 +57,11 @@ public class BizDemandListCondition {
      * 产品线id列表
      */
     private List<Long> productLineIdList;
+
+    /**
+     * 子产品线id列表
+     */
+    private List<Long> subProductLineIdList;
 
     /**
      * 预期上线日期列表

@@ -36,6 +36,9 @@ public class BizDemandQueryList extends QueryBase {
     @ApiModelProperty("产品线id")
     private List<Long> productLineIdList;
 
+    @ApiModelProperty("子产品线id")
+    private List<Long> subProductLineIdList;
+
     @ApiModelProperty("起始时间")
     private Date createDateStart;
 

@@ -177,6 +177,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
         // 完整查询
+        condition.setProductLineIds(productDemandQueryList.getSubProductLineIdList());
         List<ProductDemandListDO> allProductDemandListDO = productDemandComponent.list(condition);
         Map<Long, List<ProductDemandListDO>> bizDemandListDOMap = allProductDemandListDO.stream().collect(Collectors.groupingBy(ProductDemandListDO::getProductLineId));
         log.info("业务查询产品线分析：{}", bizDemandListDOMap);

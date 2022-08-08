@@ -249,6 +249,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
         // 产品线分析信息
+        bizDemandListCondition.setProductLineIdList(bizDemandListCondition.getSubProductLineIdList());
         List<BizDemandListDO> allBizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
         Map<Long, List<BizDemandListDO>> bizDemandListDOMap = allBizDemandListDOList.stream().collect(Collectors.groupingBy(BizDemandListDO::getProductLineId));
         log.info("业务查询产品线分析：{}", bizDemandListDOMap);

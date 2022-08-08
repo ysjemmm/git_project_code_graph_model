@@ -450,6 +450,7 @@ public class ProjectComponentImpl implements ProjectComponent {
     }
 
     private List<ProductLineAnalyseVO> analyse(ProjectListCondition condition) {
+        condition.setProductLineIds(condition.getSubProductLineIdList());
         List<ProjectListDO> projectListDOList = projectMapper.list(condition);
         List<Long> projectIdList = projectListDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
 
