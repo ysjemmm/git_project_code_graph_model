@@ -5,14 +5,8 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.LabelCategoryListCondition;
-import com.timevale.forward.dal.dao.BizDomainMapper;
-import com.timevale.forward.dal.dao.LabelCategoryBizDomainMapper;
-import com.timevale.forward.dal.dao.LabelCategoryMapper;
-import com.timevale.forward.dal.dao.LabelMapper;
-import com.timevale.forward.dal.entity.BizDomainDO;
-import com.timevale.forward.dal.entity.LabelCategoryBizDomainDO;
-import com.timevale.forward.dal.entity.LabelCategoryDO;
-import com.timevale.forward.dal.entity.LabelDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.LabelCategoryService;
 import com.timevale.forward.facade.api.query.LabelCategoryQueryList;
 import com.timevale.forward.facade.api.query.LabelInCategoryQueryList;
@@ -71,6 +65,9 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
 
     @Resource
     private InnerUserPersonClient innerUserPersonClient;
+
+    @Resource
+    private ProductLineMapper productLineMapper;
 
 
     @Override
@@ -137,6 +134,11 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         log.info("类别下的标签,参数:{}", labelInCategoryQueryList);
         LabelCategoryListCondition condition = LabelCategoryCopier.INSTANCE.convert(labelInCategoryQueryList);
 
+        if(CollectionUtils.isNotEmpty(labelInCategoryQueryList.getProductLineIds())){
+            List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(labelInCategoryQueryList.getProductLineIds());
+            List<Long> bizDomainIds = productLineDOList.stream().map(ProductLineDO::getBizDomainId).collect(Collectors.toList());
+            condition.setBizDomainIds(bizDomainIds);
+        }
         List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.list(condition);
         if(CollectionUtils.isEmpty(labelCategoryDOList)){
             return BaseResult.success(Lists.emptyList());

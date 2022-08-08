@@ -151,6 +151,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private LabelComponent labelComponent;
 
+    @Resource
+    private BizLabelComponent bizLabelComponent;
+
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -272,6 +275,12 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
         projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
         projectMapper.insert(projectDO);
+
+        //标签
+        if(CollectionUtils.isNotEmpty(projectAddReq.getLabelIds())){
+            bizLabelComponent.addLabel(projectDO.getId(),projectAddReq.getLabelIds(),BizTypeEnum.PROJECT.getCode());
+            bizLabelComponent.addLog(projectDO.getId(),projectAddReq.getLabelIds(),BizTypeEnum.PROJECT.getCode(),true);
+        }
 
         // 产品线
         projectProductLineComponent.add(projectDO.getProductLineIds(), projectDO.getId());

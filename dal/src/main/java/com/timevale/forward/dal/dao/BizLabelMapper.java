@@ -28,6 +28,13 @@ public interface BizLabelMapper {
     int insert(BizLabelDO bizLabelDO);
 
     /**
+     *
+     * @param bizLabelDOList bizLabelDOList
+     * @return int
+     */
+    int batchInsert(List<BizLabelDO> bizLabelDOList);
+
+    /**
      * 插入业务-标签
      *
      * @param bizLabelDO 业务-标签
