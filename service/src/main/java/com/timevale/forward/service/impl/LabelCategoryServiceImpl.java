@@ -144,7 +144,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
             return BaseResult.success(Lists.emptyList());
         }
 
-        if(!labelInCategoryQueryList.getList()){
+        if(labelInCategoryQueryList.getAuth()){
             List<GroupResponse> gdata = innerGroupClient.getGroupListTree(false);
             Map<String, GroupResponse> groupMap = gdata.stream().collect(Collectors.toMap(GroupResponse::getGroupId, a -> a, (v1, v2) -> v2));
 
