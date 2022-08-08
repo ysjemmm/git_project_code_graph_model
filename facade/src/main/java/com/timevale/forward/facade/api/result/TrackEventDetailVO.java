@@ -87,4 +87,6 @@ public class TrackEventDetailVO extends ToString {
     @ApiModelProperty("埋点元素")
     private List<String> elementNames;
 
+    @ApiModelProperty("埋点说明")
+    private String explanation;
 }
