@@ -19,6 +19,7 @@ import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.ProjectGoalMD;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectGoalCopier;
+import com.timevale.forward.service.integration.inneruser.InnerUserPermissionClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.compare.FieldCompareUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -26,6 +27,7 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.security.facade.response.BaseInfoResponse;
+import com.timevale.security.facade.response.RoleResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +58,8 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
 
     @Resource
     private InnerUserPersonClient innerUserPersonClient;
+    @Resource
+    private InnerUserPermissionClient innerUserPermissionClient;
 
     @Override
     public BaseResult<List<ProjectGoalVO>> list(Long projectGoalProjectId) {
