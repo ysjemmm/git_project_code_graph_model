@@ -15,7 +15,9 @@ public enum BugOnlineSourceEnum {
 
     SUPPORT("support", "运营支撑平台"),
 
-    DUTY("duty", "值班反馈")
+    DUTY("duty", "值班反馈"),
+
+    SELF("self","自主发现"),
 
     ;
 

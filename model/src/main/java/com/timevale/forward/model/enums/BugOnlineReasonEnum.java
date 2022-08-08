@@ -98,12 +98,9 @@ public enum BugOnlineReasonEnum {
     /**
      * 无法重现但客户环境必现
      */
-    CUSTOMER_ENV_MUST(17, "无法重现但客户环境必现"),
+    CUSTOMER_ENV_MUST(17, "无法重现但客户环境必现")
 
-    /**
-     * 自主发现
-     */
-    INDEPENDENT_DISCOVERY(18, "自主发现");
+
     ;
 
     private final Integer code;
