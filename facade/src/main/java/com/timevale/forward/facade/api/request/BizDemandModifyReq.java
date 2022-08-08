@@ -28,4 +28,7 @@ public class BizDemandModifyReq extends BizDemandAddReq {
 
     @ApiModelProperty("拒绝原因")
     private String rejectReason;
+
+    @ApiModelProperty("是否通知接收人")
+    private Boolean notifyReceiveMan;
 }
