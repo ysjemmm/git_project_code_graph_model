@@ -69,7 +69,6 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     @Resource
     private ProductLineMapper productLineMapper;
 
-
     @Override
     public BaseResult<PageQueryResult<LabelCategoryVO>> list(LabelCategoryQueryList labelCategoryQueryList) {
         log.info("类别列表,参数:{}", labelCategoryQueryList);
