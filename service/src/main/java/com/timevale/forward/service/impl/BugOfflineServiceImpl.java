@@ -142,7 +142,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
         //是否打标
-        List<Long> newLabelIds = labelComponent.getLabelIds(bugOfflineQueryList.getLabelMarkedQuery());
+        List<Long> newLabelIds = labelComponent.getLabelIds(bugOfflineQueryList.getLabelIds(),bugOfflineQueryList.getLabelCategoryIds());
         List<BizLabelDO> bizLabelDOList;
         if (CollectionUtils.isNotEmpty(newLabelIds)) {
             bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_OFFLINE.getCode());

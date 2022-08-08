@@ -213,7 +213,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
         //是否打标
-        List<Long> newLabelIds = labelComponent.getLabelIds(bugOnlineQueryList.getLabelMarkedQuery());
+        List<Long> newLabelIds = labelComponent.getLabelIds(bugOnlineQueryList.getLabelIds(),bugOnlineQueryList.getLabelCategoryIds());
         List<BizLabelDO> bizLabelDOList;
         if (CollectionUtils.isNotEmpty(newLabelIds)) {
             bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_ONLINE.getCode());

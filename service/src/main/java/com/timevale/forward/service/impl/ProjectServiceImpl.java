@@ -175,7 +175,7 @@ public class ProjectServiceImpl implements ProjectService {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
         }
-        List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelMarkedQuery());
+        List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelIds(),projectQueryList.getLabelCategoryIds());
         condition.setLabelIds(labelIds);
         condition.setBizType(BizTypeEnum.PROJECT.getCode());
         return BaseResult.success(projectComponent.page(condition, projectIds));
