@@ -96,6 +96,8 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 转换查询条件
         BizDemandListCondition bizDemandListCondition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
+        bizDemandListCondition.setPageNum(bizDemandQueryList.getPageNum());
+        bizDemandListCondition.setPageSize(bizDemandQueryList.getPageSize());
 
         // 标志是否有对应数据
         boolean resultIsEmpty = false;
