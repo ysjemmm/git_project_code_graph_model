@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -73,11 +72,10 @@ public class BizLabelServiceImpl implements BizLabelService {
             return BaseResult.success(Lists.emptyList());
         }
         List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
-        Map<Long, String> labelMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
-        List<LabelDetailVO> bizLabelDOList = list.stream().map(a -> {
+        List<LabelDetailVO> bizLabelDOList = labelDOList.stream().map(a -> {
             LabelDetailVO labelDetailVO = new LabelDetailVO();
             labelDetailVO.setId(a.getId());
-            labelDetailVO.setName(labelMap.get(a.getLabelId()));
+            labelDetailVO.setName(a.getName());
             return labelDetailVO;
         }).collect(Collectors.toList());
         return BaseResult.success(bizLabelDOList);
