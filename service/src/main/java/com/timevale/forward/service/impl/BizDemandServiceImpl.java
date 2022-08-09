@@ -128,10 +128,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (resultIsEmpty) {
             return BaseResult.success(ResultUtil.queryResultEmpty());
         }
-        // 开始分页
-        String collation = sqlOrderComponent.build(bizDemandQueryList.getOrderFiled(), bizDemandQueryList.getOrderCollation());
-        PageHelper.startPage(bizDemandQueryList.pageNum, bizDemandQueryList.pageSize, collation);
-
         return BaseResult.success(bizDemandComponent.page(bizDemandListCondition));
     }
 

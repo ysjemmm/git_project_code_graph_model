@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.forward.dal.annotation.WildcardEscape;
+import com.timevale.mandarin.common.query.QueryBase;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,7 @@ import java.util.List;
  */
 @Data
 @Builder
-public class BizDemandListCondition {
+public class BizDemandListCondition extends QueryBase {
 
     /**
      * 名称
@@ -116,4 +117,8 @@ public class BizDemandListCondition {
      * 项目发布时间-结束时间
      */
     private Date projectEndDateEnd;
+
+    private String orderFiled;
+
+    private Integer orderCollation;
 }

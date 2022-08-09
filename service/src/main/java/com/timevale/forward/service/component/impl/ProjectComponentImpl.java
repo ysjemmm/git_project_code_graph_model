@@ -1,41 +1,14 @@
 package com.timevale.forward.service.component.impl;
 
-import com.alibaba.druid.support.json.JSONUtils;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.forward.dal.condition.ProjectListCondition;
-import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.dao.ProductBizDemandMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.dao.ProjectNodeMapper;
-import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
-import com.timevale.forward.dal.dao.ProjectProductLineMapper;
-import com.timevale.forward.dal.dao.ProjectRiskMapper;
-import com.timevale.forward.dal.dao.TestBillMapper;
-import com.timevale.forward.dal.entity.BaseDO;
-import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.dal.entity.ProductLineDO;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectListDO;
-import com.timevale.forward.dal.entity.ProjectNodeDO;
-import com.timevale.forward.dal.entity.ProjectProductDemandDO;
-import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
-import com.timevale.forward.dal.entity.ProjectProductLineDO;
-import com.timevale.forward.dal.entity.ProjectRiskDO;
-import com.timevale.forward.dal.entity.TestBillDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
-import com.timevale.forward.model.enums.PersonTypeEnum;
-import com.timevale.forward.model.enums.PriorityEnum;
-import com.timevale.forward.model.enums.ProjectLevelEnum;
-import com.timevale.forward.model.enums.ProjectNodeEnum;
-import com.timevale.forward.model.enums.ProjectNodeStatusEnum;
-import com.timevale.forward.model.enums.ProjectRiskStatusEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
-import com.timevale.forward.model.enums.ProjectTypeEnum;
-import com.timevale.forward.model.enums.TestBillStatusEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.component.SqlOrderComponent;
@@ -46,22 +19,14 @@ import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.result.PageQueryResult;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author xingyun
@@ -188,6 +153,24 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
 
         buildConditionBeforeQuery(projectIds, condition);
+
+        // 产品线分析
+        List<ProductLineAnalyseVO> analyseVOList = analyse(condition);
+
+        // 产品线排查
+        List<Long> conditionSubProductLineIdList = condition.getSubProductLineIdList();
+        if (CollectionUtils.isNotEmpty(conditionSubProductLineIdList)) {
+            Set<Long> resultProductLineIdSet = analyseVOList.stream().map(ProductLineAnalyseVO::getProductLineId).collect(Collectors.toSet());
+            List<Long> queryProductLineIdList = conditionSubProductLineIdList.stream().filter(resultProductLineIdSet::contains).collect(Collectors.toList());
+            if(CollectionUtils.isEmpty(queryProductLineIdList)) {
+                QueryResultVO<ProjectVO> queryResultVO = new QueryResultVO<>();
+                queryResultVO.setAnalyseVOList(analyseVOList);
+                queryResultVO.setPageQueryResult(ResultUtil.pageEmpty());
+                return queryResultVO;
+            } else {
+                condition.setProductLineIds(queryProductLineIdList);
+            }
+        }
 
         // 开始分页
         String collation = sqlOrderComponent.build(condition.getOrderFiled(), condition.getOrderCollation());
