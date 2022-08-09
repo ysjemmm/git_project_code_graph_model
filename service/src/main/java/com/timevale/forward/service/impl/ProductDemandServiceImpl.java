@@ -129,7 +129,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     private LabelMapper labelMapper;
 
     @Resource
-    private LabelCategoryMapper labelCategoryMapper;
+    private BizLabelComponent bizLabelComponent;
 
     private static final Integer MAX_LENGTH = 20 * 1000;
 
@@ -198,15 +198,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
         Map<Long, String> labelNameMap = new HashMap<>();
-        Map<Long, Long> labelCategoryIdMap = new HashMap<>();
-        Map<Long, String> labelCategoryMap = new HashMap<>();
         if (CollectionUtils.isNotEmpty(labelIds)) {
             List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
             labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
-            labelCategoryIdMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getLabelCategoryId, (v1, v2) -> v2));
-            List<Long> labelCategoryIds = labelDOList.stream().map(LabelDO::getLabelCategoryId).collect(Collectors.toList());
-            List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(labelCategoryIds);
-            labelCategoryMap = labelCategoryDOList.stream().collect(Collectors.toMap(LabelCategoryDO::getId, LabelCategoryDO::getName, (v1, v2) -> v2));
         }
         for (ProductDemandVO a : productDemandVOList) {
             a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
@@ -214,20 +208,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             if (labelIdMap.containsKey(a.getId())) {
                 List<Long> labelIdList = labelIdMap.get(a.getId());
                 List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
-
-                List<Long> labelCatergoryIdList = labelIdList.stream().filter(labelCategoryIdMap::containsKey).map(labelCategoryIdMap::get).collect(Collectors.toList());
-                List<String> labelCategoryNames = labelCatergoryIdList.stream().filter(labelCategoryMap::containsKey).map(labelCategoryMap::get).collect(Collectors.toList());
-
-                List<String> result=new ArrayList<>();
-                if(labelNames.size()==labelCategoryNames.size()){
-                    for (int i = 0; i < labelNames.size(); i++) {
-                        String labelName=labelCategoryNames.get(i)+"-"+ labelNames.get(i);
-                        result.add(labelName);
-                    }
-                    a.setLabelNames(result);
-                }else{
-                    log.info("标签信息:{},类别信息:{}",labelIdList,labelCatergoryIdList);
-                }
+                a.setLabelNames(labelNames);
             }
         }
         // 分页数据
@@ -363,6 +344,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         productDemand.setType(JSON.toJSONString(productDemandAddReq.getTypes()));
         productDemandMapper.insert(productDemand);
 
+        //标签
+        if(CollectionUtils.isNotEmpty(productDemandAddReq.getLabelIds())){
+            bizLabelComponent.addLabel(productDemand.getId(),productDemandAddReq.getLabelIds(),BizTypeEnum.PRODUCT_DEMAND.getCode());
+            bizLabelComponent.addLog(productDemand.getId(),productDemandAddReq.getLabelIds(),BizTypeEnum.PRODUCT_DEMAND.getCode(),true);
+        }
+
         fileComponent.add(productDemandAddReq.getFiles(), productDemand.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
 
         personComponent.add(productDemandAddReq.getRecipients(), productDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
@@ -480,7 +467,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
         List<Long> labelIds = labelComponent.getLabelIds(productDemandLinkProjectQueryList.getLabelIds(),productDemandLinkProjectQueryList.getLabelCategoryIds());
         condition.setLabelIds(labelIds);
-        condition.setBizType(BizTypeEnum.PRODUCT_DEMAND.getCode());
         PageQueryResult<ProjectVO> pageQueryResult = projectCmponent.page(condition, Lists.newArrayList()).getPageQueryResult();
         return BaseResult.success(pageQueryResult);
     }
@@ -524,6 +510,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         condition.setPageNum(productDemandLinkBizDemandQueryList.getPageNum());
         condition.setPageSize(productDemandLinkBizDemandQueryList.getPageSize());
         condition.setCollation(CommonConstant.DEFAULT_ORDER_BY);
+        List<Long> labelIds = labelComponent.getLabelIds(productDemandLinkBizDemandQueryList.getLabelIds(),productDemandLinkBizDemandQueryList.getLabelCategoryIds());
+        condition.setLabelIds(labelIds);
         return BaseResult.success(bizDemandComponent.page(condition).getPageQueryResult());
     }
 

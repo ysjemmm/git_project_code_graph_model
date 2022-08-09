@@ -70,4 +70,9 @@ public class BizDemandLinkProductDemandListCondition {
      * 已经关联的id列表
      */
     private List<Long> linkedIdList;
+
+    /**
+     *包含的id
+     */
+    private List<Long> containIds;
 }

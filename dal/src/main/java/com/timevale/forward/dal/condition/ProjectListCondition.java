@@ -181,9 +181,4 @@ public class ProjectListCondition extends QueryBase {
      */
     private List<Long> labelIds;
 
-
-    /**
-     * 业务类型
-     */
-    private Integer bizType;
 }

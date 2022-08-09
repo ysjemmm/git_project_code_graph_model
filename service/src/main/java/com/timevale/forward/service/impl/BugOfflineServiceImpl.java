@@ -95,9 +95,6 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Resource
     private LabelMapper labelMapper;
 
-    @Resource
-    private LabelCategoryMapper labelCategoryMapper;
-
     @Override
     public BaseResult<PageQueryResult<BugOfflineVO>> list(BugOfflineQueryList bugOfflineQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -171,15 +168,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
         Map<Long, String> labelNameMap = new HashMap<>();
-        Map<Long, Long> labelCategoryIdMap = new HashMap<>();
-        Map<Long, String> labelCategoryMap = new HashMap<>();
         if (CollectionUtils.isNotEmpty(labelIds)) {
             List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
             labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
-            labelCategoryIdMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getLabelCategoryId, (v1, v2) -> v2));
-            List<Long> labelCategoryIds = labelDOList.stream().map(LabelDO::getLabelCategoryId).collect(Collectors.toList());
-            List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(labelCategoryIds);
-            labelCategoryMap = labelCategoryDOList.stream().collect(Collectors.toMap(LabelCategoryDO::getId, LabelCategoryDO::getName, (v1, v2) -> v2));
         }
 
         // 信息填充
@@ -195,20 +186,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             if (labelIdMap.containsKey(e.getId())) {
                 List<Long> labelIdList = labelIdMap.get(e.getId());
                 List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
-
-                List<Long> labelCatergoryIdList = labelIdList.stream().filter(labelCategoryIdMap::containsKey).map(labelCategoryIdMap::get).collect(Collectors.toList());
-                List<String> labelCategoryNames = labelCatergoryIdList.stream().filter(labelCategoryMap::containsKey).map(labelCategoryMap::get).collect(Collectors.toList());
-
-                List<String> result=new ArrayList<>();
-                if(labelNames.size()==labelCategoryNames.size()){
-                    for (int i = 0; i < labelNames.size(); i++) {
-                        String labelName=labelCategoryNames.get(i)+"-"+ labelNames.get(i);
-                        result.add(labelName);
-                    }
-                    e.setLabelNames(result);
-                }else{
-                    log.info("标签信息:{},类别信息:{}",labelIdList,labelCatergoryIdList);
-                }
+                e.setLabelNames(labelNames);
             }
         }
 

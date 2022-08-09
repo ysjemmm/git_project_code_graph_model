@@ -89,6 +89,7 @@ public class BizLabelComponentImpl implements BizLabelComponent {
             bizLabelDO.setLabelId(a);
             return bizLabelDO;
         }).collect(Collectors.toList());
+
         if(CollectionUtils.isNotEmpty(bizLabelDOList)){
             bizLabelMapper.batchInsert(bizLabelDOList);
         }

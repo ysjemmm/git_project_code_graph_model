@@ -134,7 +134,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         String collation = sqlOrderComponent.build(bizDemandQueryList.getOrderFiled(), bizDemandQueryList.getOrderCollation());
         List<Long> labelIds = labelComponent.getLabelIds(bizDemandQueryList.getLabelIds(),bizDemandQueryList.getLabelCategoryIds());
         bizDemandListCondition.setLabelIds(labelIds);
-        bizDemandListCondition.setBizType(BizTypeEnum.BIZ_DEMAND.getCode());
         bizDemandListCondition.setPageNum(bizDemandQueryList.getPageNum());
         bizDemandListCondition.setPageSize(bizDemandQueryList.getPageSize());
         bizDemandListCondition.setCollation(collation);

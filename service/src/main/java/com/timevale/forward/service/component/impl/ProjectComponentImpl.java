@@ -75,9 +75,6 @@ public class ProjectComponentImpl implements ProjectComponent {
     @Resource
     private LabelMapper labelMapper;
 
-    @Resource
-    private LabelCategoryMapper labelCategoryMapper;
-
 
     @Override
     public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -165,7 +162,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         //是否打标
         List<BizLabelDO> bizLabelDOList;
         if (CollectionUtils.isNotEmpty(condition.getLabelIds())) {
-            bizLabelDOList = bizLabelMapper.getByLabelIdInType(condition.getLabelIds(), condition.getBizType());
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(condition.getLabelIds(), BizTypeEnum.PROJECT.getCode());
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
             projectIds.retainAll(bizIds);
             if (CollectionUtils.isEmpty(projectIds)) {
@@ -179,15 +176,9 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
         Map<Long, String> labelNameMap = new HashMap<>();
-        Map<Long, Long> labelCategoryIdMap = new HashMap<>();
-        Map<Long, String> labelCategoryMap = new HashMap<>();
         if (CollectionUtils.isNotEmpty(labelIds)) {
             List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
             labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
-            labelCategoryIdMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getLabelCategoryId, (v1, v2) -> v2));
-            List<Long> labelCategoryIds = labelDOList.stream().map(LabelDO::getLabelCategoryId).collect(Collectors.toList());
-            List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(labelCategoryIds);
-            labelCategoryMap = labelCategoryDOList.stream().collect(Collectors.toMap(LabelCategoryDO::getId, LabelCategoryDO::getName, (v1, v2) -> v2));
         }
 
         buildConditionBeforeQuery(projectIds, condition);
@@ -286,20 +277,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             if (labelIdMap.containsKey(a.getId())) {
                 List<Long> labelIdList = labelIdMap.get(a.getId());
                 List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
-
-                List<Long> labelCatergoryIdList = labelIdList.stream().filter(labelCategoryIdMap::containsKey).map(labelCategoryIdMap::get).collect(Collectors.toList());
-                List<String> labelCategoryNames = labelCatergoryIdList.stream().filter(labelCategoryMap::containsKey).map(labelCategoryMap::get).collect(Collectors.toList());
-
-                List<String> result=new ArrayList<>();
-                if(labelNames.size()==labelCategoryNames.size()){
-                    for (int i = 0; i < labelNames.size(); i++) {
-                        String labelName=labelCategoryNames.get(i)+"-"+ labelNames.get(i);
-                        result.add(labelName);
-                    }
-                    a.setLabelNames(result);
-                }else{
-                    log.info("标签信息:{},类别信息:{}",labelIdList,labelCatergoryIdList);
-                }
+                a.setLabelNames(labelNames);
             }
         }
 

@@ -221,7 +221,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         //是否打标
         List<BizLabelDO> bizLabelDOList;
         if (CollectionUtils.isNotEmpty(bizDemandListCondition.getLabelIds())) {
-            bizLabelDOList = bizLabelMapper.getByLabelIdInType(bizDemandListCondition.getLabelIds(), bizDemandListCondition.getBizType());
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(bizDemandListCondition.getLabelIds(), BizTypeEnum.BIZ_DEMAND.getCode());
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(bizIds)) {
                 return ResultUtil.queryResultEmpty();
@@ -239,21 +239,15 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             return ResultUtil.queryResultEmpty();
         }
         //标签信息
-        bizLabelDOList = bizLabelMapper.getByLabelIdInType(bizDemandIds, bizDemandListCondition.getBizType());
+        bizLabelDOList = bizLabelMapper.getByLabelIdInType(bizDemandIds, BizTypeEnum.BIZ_DEMAND.getCode());
         Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
                 , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
 
         List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
         Map<Long, String> labelNameMap = new HashMap<>();
-        Map<Long, Long> labelCategoryIdMap = new HashMap<>();
-        Map<Long, String> labelCategoryMap = new HashMap<>();
         if (CollectionUtils.isNotEmpty(labelIds)) {
             List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
             labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
-            labelCategoryIdMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getLabelCategoryId, (v1, v2) -> v2));
-            List<Long> labelCategoryIds = labelDOList.stream().map(LabelDO::getLabelCategoryId).collect(Collectors.toList());
-            List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(labelCategoryIds);
-            labelCategoryMap = labelCategoryDOList.stream().collect(Collectors.toMap(LabelCategoryDO::getId, LabelCategoryDO::getName, (v1, v2) -> v2));
         }
 
         // 如果查询条件没有部门id，收集完整名
@@ -278,20 +272,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             if (labelIdMap.containsKey(bizDemandVO.getId())) {
                 List<Long> labelIdList = labelIdMap.get(bizDemandVO.getId());
                 List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
-
-                List<Long> labelCatergoryIdList = labelIdList.stream().filter(labelCategoryIdMap::containsKey).map(labelCategoryIdMap::get).collect(Collectors.toList());
-                List<String> labelCategoryNames = labelCatergoryIdList.stream().filter(labelCategoryMap::containsKey).map(labelCategoryMap::get).collect(Collectors.toList());
-
-                List<String> result=new ArrayList<>();
-                if(labelNames.size()==labelCategoryNames.size()){
-                    for (int i = 0; i < labelNames.size(); i++) {
-                        String labelName=labelCategoryNames.get(i)+"-"+ labelNames.get(i);
-                        result.add(labelName);
-                    }
-                    bizDemandVO.setLabelNames(result);
-                }else{
-                    log.info("标签信息:{},类别信息:{}",labelIdList,labelCatergoryIdList);
-                }
+                bizDemandVO.setLabelNames(labelNames);
             }
         }
 

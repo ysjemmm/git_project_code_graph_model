@@ -120,6 +120,12 @@
         left join biz_domain bd on pl.biz_domain_id = bd.id
         <where>
             and pd.status != -20
+            <if test="containIds!=null and containIds.size()>0">
+                and pd.id  in
+                <foreach collection="containIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="productDemandId!=null">
                 and pd.id = #{productDemandId}
             </if>

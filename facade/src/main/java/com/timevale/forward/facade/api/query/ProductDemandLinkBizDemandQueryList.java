@@ -54,4 +54,10 @@ public class ProductDemandLinkBizDemandQueryList extends QueryBase {
     @ApiModelProperty("需求id")
     private Long productDemandId;
 
+    @ApiModelProperty("选中为标签时填写,标签id")
+    private List<Long> labelIds;
+
+    @ApiModelProperty("选中为标签类别时填写,类别id")
+    private List<Long> labelCategoryIds;
+
 }

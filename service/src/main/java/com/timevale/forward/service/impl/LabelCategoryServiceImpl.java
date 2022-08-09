@@ -76,7 +76,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         PageHelper.startPage(labelCategoryQueryList.getPageNum(), labelCategoryQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         LabelCategoryListCondition condition = LabelCategoryCopier.INSTANCE.convert(labelCategoryQueryList);
         List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.list(condition);
-        if(CollectionUtils.isEmpty(labelCategoryDOList)){
+        if (CollectionUtils.isEmpty(labelCategoryDOList)) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
 
@@ -92,20 +92,20 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         Map<Long, BizDomainDO> bizDomainMap = bizDomainDOList.stream().collect(Collectors.toMap(BizDomainDO::getId, k -> k, (v1, v2) -> v2));
 
         List<String> allDeptIds = new ArrayList<>();
-        labelCategoryDOList.forEach(a->{
-            if(StringUtils.isNotEmpty(a.getDeptId())){
+        labelCategoryDOList.forEach(a -> {
+            if (StringUtils.isNotEmpty(a.getDeptId())) {
                 List<String> deptIds = JSONObject.parseArray(a.getDeptId(), String.class);
                 allDeptIds.addAll(deptIds);
             }
         });
-        Map<String, String> deptMap=new HashMap<>();
-        if(CollectionUtils.isNotEmpty(allDeptIds)){
+        Map<String, String> deptMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(allDeptIds)) {
             deptMap = innerGroupClient.batchGetSimpleGroupMap(allDeptIds);
         }
 
         List<LabelCategoryVO> labelCategoryVos = LabelCategoryCopier.INSTANCE.change(labelCategoryDOList);
         for (LabelCategoryVO a : labelCategoryVos) {
-            if(StringUtils.isNotEmpty(a.getDeptId())){
+            if (StringUtils.isNotEmpty(a.getDeptId())) {
                 List<String> deptIds = JSONObject.parseArray(a.getDeptId(), String.class);
                 List<String> depts = deptIds.stream().filter(deptMap::containsKey).map(deptMap::get).collect(Collectors.toList());
                 a.setDepts(depts);
@@ -133,38 +133,38 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         log.info("类别下的标签,参数:{}", labelInCategoryQueryList);
         LabelCategoryListCondition condition = LabelCategoryCopier.INSTANCE.convert(labelInCategoryQueryList);
 
-        if(CollectionUtils.isNotEmpty(labelInCategoryQueryList.getProductLineIds())){
+        if (CollectionUtils.isNotEmpty(labelInCategoryQueryList.getProductLineIds())) {
             List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(labelInCategoryQueryList.getProductLineIds());
             List<Long> bizDomainIds = productLineDOList.stream().map(ProductLineDO::getBizDomainId).collect(Collectors.toList());
             condition.setBizDomainIds(bizDomainIds);
         }
         List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.list(condition);
-        if(CollectionUtils.isEmpty(labelCategoryDOList)){
+        if (CollectionUtils.isEmpty(labelCategoryDOList)) {
             return BaseResult.success(Lists.emptyList());
         }
 
-        if(labelInCategoryQueryList.getAuth()){
+        if (labelInCategoryQueryList.getAuth()) {
             List<GroupResponse> gdata = innerGroupClient.getGroupListTree(false);
             Map<String, GroupResponse> groupMap = gdata.stream().collect(Collectors.toMap(GroupResponse::getGroupId, a -> a, (v1, v2) -> v2));
 
             String account = LocalSessionUtils.getUserInfo().getId();
             BaseInfoResponse selfInfo = innerUserPersonClient.getSelfInfo(account, false);
             List<String> groupIds = selfInfo.getGroupList().stream().map(GroupModelResponse::getGroupId).collect(Collectors.toList());
-            log.info("花名:{},部门:{}",account,groupIds);
-            Set<String> deptSets=new HashSet<>(groupIds);
+            log.info("花名:{},部门:{}", account, groupIds);
+            Set<String> deptSets = new HashSet<>(groupIds);
             for (String gid : groupIds) {
-                getSuperiorGroupId(groupMap,gid,deptSets);
+                getSuperiorGroupId(groupMap, gid, deptSets);
             }
-            log.info("花名:{},部门及其上级部门:{}",account,deptSets);
+            log.info("花名:{},部门及其上级部门:{}", account, deptSets);
 
             labelCategoryDOList = labelCategoryDOList.stream().filter(a -> {
                 List<String> markManIds = JSONObject.parseArray(a.getMarkManId(), String.class);
                 List<String> deptIds = JSONObject.parseArray(a.getDeptId(), String.class);
                 //打标人或打标部门 包含该用户,或用户所在部门
-                if(CollectionUtils.isNotEmpty(markManIds)&&markManIds.contains(account)){
+                if (CollectionUtils.isNotEmpty(markManIds) && markManIds.contains(account)) {
                     return true;
                 }
-                if(CollectionUtils.isNotEmpty(deptIds)){
+                if (CollectionUtils.isNotEmpty(deptIds)) {
                     deptIds.retainAll(deptSets);
                     return CollectionUtils.isNotEmpty(deptIds);
                 }
@@ -180,7 +180,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
 
         Map<Long, List<LabelSimpleVO>> labelMap = labelSimpleVos.stream().collect(Collectors.groupingBy(LabelSimpleVO::getLabelCategoryId));
 
-        labelCategorySimpleVos.forEach(a->{
+        labelCategorySimpleVos.forEach(a -> {
             a.setLabelSimples(labelMap.get(a.getId()));
         });
         return BaseResult.success(labelCategorySimpleVos);
@@ -191,7 +191,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         log.info("类别查看,参数:{}", categoryId);
         List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(Lists.newArrayList(categoryId));
 
-        if(CollectionUtils.isEmpty(labelCategoryDOList)){
+        if (CollectionUtils.isEmpty(labelCategoryDOList)) {
             throw new BaseBizRuntimeException("找不到该标签类别");
         }
 
@@ -208,11 +208,11 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         log.info("类别删除,参数:{}", categoryId);
         List<LabelDO> labelDOList = labelMapper.getByCategoryIds(Lists.newArrayList(categoryId));
 
-        if(CollectionUtils.isNotEmpty(labelDOList)){
+        if (CollectionUtils.isNotEmpty(labelDOList)) {
             throw new BaseBizRuntimeException("该类别下已存在标签名称,不可删除。");
         }
 
-        LabelCategoryDO labelCategoryDO=new LabelCategoryDO();
+        LabelCategoryDO labelCategoryDO = new LabelCategoryDO();
         labelCategoryDO.setId(categoryId);
         labelCategoryDO.setIsDeleted(true);
         labelCategoryMapper.update(labelCategoryDO);
@@ -231,7 +231,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
 
         labelCategoryMapper.insert(labelCategoryDO);
 
-        addRelation(labelCategoryAddReq.getBizDomainIds(),labelCategoryDO.getId());
+        addRelation(labelCategoryAddReq.getBizDomainIds(), labelCategoryDO.getId());
 
 
         return BaseResult.success(true);
@@ -247,20 +247,23 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
 
         labelCategoryMapper.update(labelCategoryDO);
 
-        delRelation(labelCategoryModifyReq.getBizDomainIds(),labelCategoryModifyReq.getId());
+        delRelation(labelCategoryModifyReq.getBizDomainIds(), labelCategoryModifyReq.getId());
 
         return BaseResult.success(true);
     }
 
-    private void checkBeforeInsert(LabelCategoryDO labelCategoryDO){
+    private void checkBeforeInsert(LabelCategoryDO labelCategoryDO) {
+        if (StringUtils.isEmpty(labelCategoryDO.getDeptId()) && StringUtils.isEmpty(labelCategoryDO.getMarkManId())) {
+            throw new BaseBizRuntimeException("打标部门和打标人员不能同时为空,请修改后重试");
+        }
         List<Integer> newType = JSONObject.parseArray(labelCategoryDO.getType(), Integer.class);
         List<LabelCategoryDO> categoryDOList = labelCategoryMapper.getByName(labelCategoryDO.getName());
         List<LabelCategoryDO> filter = categoryDOList.stream().filter(a -> !Objects.equals(labelCategoryDO.getId(), a.getId())).collect(Collectors.toList());
-        filter.forEach(a->{
+        filter.forEach(a -> {
             List<Integer> oldType = JSONObject.parseArray(a.getType(), Integer.class);
             oldType.retainAll(newType);
-            if(CollectionUtils.isNotEmpty(oldType)){
-                throw new BaseBizRuntimeException("类别名称:"+labelCategoryDO.getName()+",在应用模块 "+ BizTypeEnum.getTextByCode(oldType)+" 中已存在,请修改后重试");
+            if (CollectionUtils.isNotEmpty(oldType)) {
+                throw new BaseBizRuntimeException("类别名称:" + labelCategoryDO.getName() + ",在应用模块 " + BizTypeEnum.getTextByCode(oldType) + " 中已存在,请修改后重试");
             }
         });
     }
@@ -287,7 +290,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         List<LabelCategoryBizDomainDO> lcbds = labelCategoryBizDomainMapper.get(Lists.newArrayList(labelCategoryId));
         List<Long> oldbdIds = lcbds.stream().map(LabelCategoryBizDomainDO::getBizDomainId).collect(Collectors.toList());
 
-        List<Long> copyBizDomainIds=new ArrayList<>(bizDomainIds);
+        List<Long> copyBizDomainIds = new ArrayList<>(bizDomainIds);
         copyBizDomainIds.removeAll(oldbdIds);
 
         addRelation(copyBizDomainIds, labelCategoryId);
@@ -302,13 +305,13 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         });
     }
 
-    private void getSuperiorGroupId(Map<String, GroupResponse> groupMap,String gid,Set<String>deptIds){
-        if(groupMap.containsKey(gid)){
+    private void getSuperiorGroupId(Map<String, GroupResponse> groupMap, String gid, Set<String> deptIds) {
+        if (groupMap.containsKey(gid)) {
             GroupResponse groupResponse = groupMap.get(gid);
-            if (groupResponse.getDepth()>1){
+            if (groupResponse.getDepth() > 1) {
                 //部门及其上级部门,不包含顶级部门
                 deptIds.add(groupResponse.getGroupId());
-                getSuperiorGroupId(groupMap,groupResponse.getParentId(),deptIds);
+                getSuperiorGroupId(groupMap, groupResponse.getParentId(), deptIds);
             }
         }
     }

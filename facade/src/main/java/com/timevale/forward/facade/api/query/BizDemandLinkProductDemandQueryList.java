@@ -47,4 +47,10 @@ public class BizDemandLinkProductDemandQueryList extends QueryBase {
 
     @ApiModelProperty("产品需求状态")
     private Integer status;
+
+    @ApiModelProperty("选中为标签时填写,标签id")
+    private List<Long> labelIds;
+
+    @ApiModelProperty("选中为标签类别时填写,类别id")
+    private List<Long> labelCategoryIds;
 }

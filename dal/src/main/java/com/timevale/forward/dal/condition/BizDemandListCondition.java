@@ -123,11 +123,6 @@ public class BizDemandListCondition extends QueryBase {
     private List<Long> containIds;
 
     /**
-     * 业务类型
-     */
-    private Integer bizType;
-
-    /**
      * 排序
      */
     private String collation;

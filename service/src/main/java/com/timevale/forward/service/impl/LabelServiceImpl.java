@@ -27,10 +27,7 @@ import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -86,14 +83,14 @@ public class LabelServiceImpl implements LabelService {
         Map<Long, BizDomainDO> bizDomainMap = bizDomainDOList.stream().collect(Collectors.toMap(BizDomainDO::getId, k -> k, (v1, v2) -> v2));
 
         List<String> allDeptIds = new ArrayList<>();
-        labelCategoryDOList.forEach(a->{
-            if(StringUtils.isNotEmpty(a.getDeptId())){
+        labelCategoryDOList.forEach(a -> {
+            if (StringUtils.isNotEmpty(a.getDeptId())) {
                 List<String> deptIds = JSONObject.parseArray(a.getDeptId(), String.class);
                 allDeptIds.addAll(deptIds);
             }
         });
-        Map<String, String> deptMap=new HashMap<>();
-        if(CollectionUtils.isNotEmpty(allDeptIds)){
+        Map<String, String> deptMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(allDeptIds)) {
             deptMap = innerGroupClient.batchGetSimpleGroupMap(allDeptIds);
         }
 
@@ -101,7 +98,7 @@ public class LabelServiceImpl implements LabelService {
         for (LabelVO a : labelVOList) {
             Long labelCategoryId = labelIdMap.get(a.getId());
             String deptId = labelCategoryMap.get(labelCategoryId).getDeptId();
-            if(StringUtils.isNotEmpty(deptId)){
+            if (StringUtils.isNotEmpty(deptId)) {
                 List<String> deptIds = JSONObject.parseArray(deptId, String.class);
                 List<String> depts = deptIds.stream().filter(deptMap::containsKey).map(deptMap::get).collect(Collectors.toList());
                 a.setDepts(depts);
@@ -127,7 +124,7 @@ public class LabelServiceImpl implements LabelService {
     public BaseResult<LabelDetailVO> get(Long labelId) {
         log.info("标签查看,参数:{}", labelId);
         LabelDO labelDO = labelMapper.get(labelId);
-        if(labelDO==null){
+        if (labelDO == null) {
             throw new BaseBizRuntimeException("找不到标签");
         }
         List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(Lists.newArrayList(labelDO.getLabelCategoryId()));
@@ -168,6 +165,10 @@ public class LabelServiceImpl implements LabelService {
     public BaseResult<Boolean> add(LabelAddReq labelAddReq) {
         log.info("标签新增,参数:{}", labelAddReq);
         List<String> names = labelAddReq.getNames();
+        Set<String> nameSet = new HashSet<>(names);
+        if (nameSet.size() != names.size()) {
+            throw new BaseBizRuntimeException("标签名称重复,请修改后重试");
+        }
         Long categoryId = labelAddReq.getCategoryId();
         List<LabelDO> labelDOList = labelMapper.getByNameInOneCategory(names, categoryId);
         if (!CollectionUtils.isEmpty(labelDOList)) {
