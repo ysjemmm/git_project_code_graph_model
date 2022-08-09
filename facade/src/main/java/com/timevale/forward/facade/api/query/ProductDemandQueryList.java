@@ -33,7 +33,7 @@ public class ProductDemandQueryList extends QueryBase {
     private List<Long> productLineIds;
 
     @ApiModelProperty("子产品线id")
-    private List<Long> subProductLineIdList;
+    private List<Long> subProductLineIds;
 
     @ApiModelProperty("状态:0待排期,10已列入项目,20项目进行中,30已完成上线,-10已暂停,-20已作废")
     private List<Integer> status;

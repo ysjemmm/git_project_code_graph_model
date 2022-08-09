@@ -58,7 +58,7 @@ public class ProjectListCondition extends QueryBase {
     /**
      * 子产品线id
      */
-    private List<Long> subProductLineIdList;
+    private List<Long> subProductLineIds;
 
     /**
      * 项目类型:0产品研发项目,1技术优化项目,2日常迭代

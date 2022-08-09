@@ -158,7 +158,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         List<ProductLineAnalyseVO> analyseVOList = analyse(condition);
 
         // 产品线排查
-        List<Long> conditionSubProductLineIdList = condition.getSubProductLineIdList();
+        List<Long> conditionSubProductLineIdList = condition.getSubProductLineIds();
         if (CollectionUtils.isNotEmpty(conditionSubProductLineIdList)) {
             Set<Long> resultProductLineIdSet = analyseVOList.stream().map(ProductLineAnalyseVO::getProductLineId).collect(Collectors.toSet());
             List<Long> queryProductLineIdList = conditionSubProductLineIdList.stream().filter(resultProductLineIdSet::contains).collect(Collectors.toList());
@@ -433,7 +433,7 @@ public class ProjectComponentImpl implements ProjectComponent {
     }
 
     private List<ProductLineAnalyseVO> analyse(ProjectListCondition condition) {
-        condition.setProductLineIds(condition.getSubProductLineIdList());
+        condition.setProductLineIds(condition.getSubProductLineIds());
         List<ProjectListDO> projectListDOList = projectMapper.list(condition);
         List<Long> projectIdList = projectListDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
 

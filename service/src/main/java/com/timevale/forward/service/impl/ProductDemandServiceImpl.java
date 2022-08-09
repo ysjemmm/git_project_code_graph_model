@@ -161,7 +161,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         // 完整查询
-        condition.setProductLineIds(productDemandQueryList.getSubProductLineIdList());
+        condition.setProductLineIds(productDemandQueryList.getSubProductLineIds());
         List<ProductDemandListDO> allProductDemandListDO = productDemandComponent.list(condition);
         Map<Long, List<ProductDemandListDO>> bizDemandListDOMap = allProductDemandListDO.stream().collect(Collectors.groupingBy(ProductDemandListDO::getProductLineId));
         log.info("业务查询产品线分析：{}", bizDemandListDOMap);
@@ -180,7 +180,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         //逆序排序
         analyseVOList.sort((a, b) -> b.getCount().compareTo(a.getCount()));
 
-        List<Long> conditionSubProductLineIdList = productDemandQueryList.getSubProductLineIdList();
+        List<Long> conditionSubProductLineIdList = productDemandQueryList.getSubProductLineIds();
         if (CollectionUtils.isNotEmpty(conditionSubProductLineIdList)) {
             Set<Long> resultProductLineIdSet = analyseVOList.stream().map(ProductLineAnalyseVO::getProductLineId).collect(Collectors.toSet());
             List<Long> queryProductLineIdList = conditionSubProductLineIdList.stream().filter(resultProductLineIdSet::contains).collect(Collectors.toList());
