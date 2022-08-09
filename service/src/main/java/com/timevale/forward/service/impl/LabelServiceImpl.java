@@ -141,6 +141,7 @@ public class LabelServiceImpl implements LabelService {
         labelDetailVO.setBizDomains(bizDomains);
         labelDetailVO.setCategoryId(categoryId);
         labelDetailVO.setCategoryName(labelCategoryDO.getName());
+        labelDetailVO.setName(labelDO.getName());
         labelDetailVO.setTypes(JSONObject.parseArray(labelCategoryDO.getType(), Integer.class));
         return BaseResult.success(labelDetailVO);
     }

@@ -4,6 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BizLabelQueryList;
 import com.timevale.forward.facade.api.request.BizLabelAddReq;
+import com.timevale.forward.facade.api.result.LabelDetailVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
 import java.util.List;
@@ -30,5 +31,5 @@ public interface BizLabelService {
      * @param bizLabelQueryList bizLabelQueryList
      * @return 标签id
      */
-    BaseResult<List<Long>> getSelectedLabel(BizLabelQueryList bizLabelQueryList);
+    BaseResult<List<LabelDetailVO>> getSelectedLabel(BizLabelQueryList bizLabelQueryList);
 }

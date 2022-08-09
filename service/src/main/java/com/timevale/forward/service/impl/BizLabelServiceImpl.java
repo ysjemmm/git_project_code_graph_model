@@ -8,16 +8,19 @@ import com.timevale.forward.dal.entity.LabelDO;
 import com.timevale.forward.facade.api.client.BizLabelService;
 import com.timevale.forward.facade.api.query.BizLabelQueryList;
 import com.timevale.forward.facade.api.request.BizLabelAddReq;
+import com.timevale.forward.facade.api.result.LabelDetailVO;
 import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.copy.BizLabelCopier;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -62,11 +65,22 @@ public class BizLabelServiceImpl implements BizLabelService {
     }
 
     @Override
-    public BaseResult<List<Long>> getSelectedLabel(BizLabelQueryList bizLabelQueryList) {
+    public BaseResult<List<LabelDetailVO>> getSelectedLabel(BizLabelQueryList bizLabelQueryList) {
         log.info("标签查询,参数:{}", bizLabelQueryList);
         List<BizLabelDO> list = bizLabelMapper.list(bizLabelQueryList.getBizId(), bizLabelQueryList.getType());
         List<Long> labelIds = list.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
-        return BaseResult.success(labelIds);
+        if(CollectionUtils.isEmpty(labelIds)){
+            return BaseResult.success(Lists.emptyList());
+        }
+        List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
+        Map<Long, String> labelMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
+        List<LabelDetailVO> bizLabelDOList = list.stream().map(a -> {
+            LabelDetailVO labelDetailVO = new LabelDetailVO();
+            labelDetailVO.setId(a.getId());
+            labelDetailVO.setName(labelMap.get(a.getLabelId()));
+            return labelDetailVO;
+        }).collect(Collectors.toList());
+        return BaseResult.success(bizLabelDOList);
     }
 
 }

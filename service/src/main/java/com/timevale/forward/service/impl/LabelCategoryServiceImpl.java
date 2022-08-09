@@ -124,7 +124,9 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     @Override
     public BaseResult<List<LabelCategorySimpleVO>> getAll() {
         List<LabelCategoryDO> all = labelCategoryMapper.getAll();
+
         List<LabelCategorySimpleVO> labelSimpleVOList = LabelCategoryCopier.INSTANCE.changeT(all);
+
         return BaseResult.success(labelSimpleVOList);
     }
 
@@ -170,6 +172,9 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
                 }
                 return false;
             }).collect(Collectors.toList());
+        }
+        if (CollectionUtils.isEmpty(labelCategoryDOList)) {
+            return BaseResult.success(Lists.emptyList());
         }
 
         List<LabelCategorySimpleVO> labelCategorySimpleVos = LabelCategoryCopier.INSTANCE.convert(labelCategoryDOList);
