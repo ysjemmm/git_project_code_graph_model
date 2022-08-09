@@ -262,7 +262,6 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         AssertUtil.checkState(projectGoalFinishReq.getStatus().equals(ProjectGoalStatusEnum.FINISHED.getCode()) ||
                         projectGoalFinishReq.getStatus().equals(ProjectGoalStatusEnum.UNFINISHED.getCode()),
                 "完成状态只能是 10-已完成 或 30-未完成");
-        AssertUtil.checkState(hasGoalFinishPermission(), "您没有该操作权限");
         AssertUtil.checkState(ProjectGoalStatusEnum.IN_PROGRESS.getCode().equals(goal.getStatus()),
                 "目标只有在进行中时可以填写完成情况");
         // 更新目标
