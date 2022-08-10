@@ -169,7 +169,7 @@ public class ProjectComponentImpl implements ProjectComponent {
                 return ResultUtil.queryResultEmpty();
             }
         } else {
-            bizLabelDOList = bizLabelMapper.getByLabelIdInType(projectIds, BizTypeEnum.PROJECT.getCode());
+            bizLabelDOList = bizLabelMapper.getByBizIdInType(projectIds, BizTypeEnum.PROJECT.getCode());
         }
         Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
                 , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
@@ -204,7 +204,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         }
 
-        buildConditionBeforeQuery(projectIds, condition);
+        condition.setIds(projectIds);
         // 开始分页
         String collation = sqlOrderComponent.build(condition.getOrderFiled(), condition.getOrderCollation());
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), collation);

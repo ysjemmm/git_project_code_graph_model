@@ -61,4 +61,13 @@ public interface BizLabelMapper {
      */
     List<BizLabelDO> getByLabelIdInType(@Param("labelIds") List<Long> labelIds,@Param("type") Integer type);
 
+    /**
+     * 列表
+     *
+     * @param bizIds bizIds
+     * @param type type
+     * @return LabelCategoryDO
+     */
+    List<BizLabelDO> getByBizIdInType(@Param("bizIds") List<Long> bizIds,@Param("type") Integer type);
+
 }

@@ -277,7 +277,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             return ResultUtil.queryResultEmpty();
         }
         //标签信息
-        bizLabelDOList = bizLabelMapper.getByLabelIdInType(bizDemandIds, BizTypeEnum.BIZ_DEMAND.getCode());
+        bizLabelDOList = bizLabelMapper.getByBizIdInType(bizDemandIds, BizTypeEnum.BIZ_DEMAND.getCode());
         Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
                 , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
 

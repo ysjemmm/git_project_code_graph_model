@@ -516,7 +516,7 @@ public class ProjectServiceImpl implements ProjectService {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
         List<Long>pids = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
-        bizLabelDOList = bizLabelMapper.getByLabelIdInType(pids, BizTypeEnum.PRODUCT_DEMAND.getCode());
+        bizLabelDOList = bizLabelMapper.getByBizIdInType(pids, BizTypeEnum.PRODUCT_DEMAND.getCode());
         Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
                 , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
 
@@ -720,6 +720,8 @@ public class ProjectServiceImpl implements ProjectService {
                 return BaseResult.success(new ArrayList<>());
             }
         }
+        List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelIds(), projectQueryList.getLabelCategoryIds());
+        condition.setLabelIds(labelIds);
         List<ProductLineAnalyseVO> analyseVOList = projectComponent.page(condition, projectIds).getAnalyseVOList();
         return BaseResult.success(analyseVOList);
     }

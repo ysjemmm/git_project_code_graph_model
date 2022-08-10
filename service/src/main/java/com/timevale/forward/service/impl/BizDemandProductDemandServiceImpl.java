@@ -364,7 +364,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
             return BaseResult.success(ResultUtil.pageEmpty());
         }
         List<Long>bizDemandIds = productDemandDOList.stream().map(BizDemandLinkProductDemandListDO::getId).collect(Collectors.toList());
-        bizLabelDOList = bizLabelMapper.getByLabelIdInType(bizDemandIds, BizTypeEnum.BIZ_DEMAND.getCode());
+        bizLabelDOList = bizLabelMapper.getByBizIdInType(bizDemandIds, BizTypeEnum.BIZ_DEMAND.getCode());
         Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
                 , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
 

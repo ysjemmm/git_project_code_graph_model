@@ -228,7 +228,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             return BaseResult.success(ResultUtil.queryResultEmpty());
         }
         List<Long> productDemandIds = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
-        bizLabelDOList = bizLabelMapper.getByLabelIdInType(productDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+        bizLabelDOList = bizLabelMapper.getByBizIdInType(productDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
         Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
                 , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
 

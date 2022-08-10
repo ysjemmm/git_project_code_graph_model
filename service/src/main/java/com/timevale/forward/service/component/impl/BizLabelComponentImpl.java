@@ -16,7 +16,6 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -64,7 +63,7 @@ public class BizLabelComponentImpl implements BizLabelComponent {
             logDO.setType(logType);
             logDO.setMainId(mainId);
             logDO.setField(BizChangeLogFieldEnum.LABEL.getText());
-            logDO.setOldValue(StringUtils.EMPTY);
+            logDO.setOldValue(labelName);
             logDO.setNewValue(labelName);
             String action = add ? ButtonActionEnum.ADD.getText() : ButtonActionEnum.DELETE.getText();
             logDO.setAction(action);

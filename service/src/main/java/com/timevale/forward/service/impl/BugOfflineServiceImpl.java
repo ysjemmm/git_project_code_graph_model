@@ -162,7 +162,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
 
         List<Long>bugOfflineIds = bugOfflineDOList.stream().map(BugOfflineListDO::getId).collect(Collectors.toList());
-        bizLabelDOList = bizLabelMapper.getByLabelIdInType(bugOfflineIds, BizTypeEnum.BUG_OFFLINE.getCode());
+        bizLabelDOList = bizLabelMapper.getByBizIdInType(bugOfflineIds, BizTypeEnum.BUG_OFFLINE.getCode());
         Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
                 , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
 
