@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import com.github.pagehelper.PageHelper;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
@@ -98,6 +99,8 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 转换查询条件
         BizDemandListCondition bizDemandListCondition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
+        bizDemandListCondition.setPageNum(bizDemandQueryList.getPageNum());
+        bizDemandListCondition.setPageSize(bizDemandQueryList.getPageSize());
 
         // 标志是否有对应数据
         boolean resultIsEmpty = false;

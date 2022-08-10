@@ -6,8 +6,12 @@ import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandLinkProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProductBizDemandCondition;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.ProductBizDemandMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO;
+import com.timevale.forward.dal.entity.ProductBizDemandDO;
 import com.timevale.forward.facade.api.client.BizDemandProductDemandService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.query.BizDemandLinkProductDemandQueryList;
@@ -20,7 +24,6 @@ import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
-import com.timevale.forward.service.component.LabelComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
@@ -329,6 +332,18 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
             }
         }
         condition.setOwnerIdList(allMyStaffWithSelfList);
+
+        List<Integer> statusList = new ArrayList<>();
+        Integer status = bizDemandSubProductDemandQueryList.getStatus();
+        if (status != null) {
+            statusList.add(status);
+        } else {
+            statusList = Arrays.stream(ProductDemandStatusEnum.values())
+                    .filter(e -> !ProductDemandStatusEnum.INVALID.equals(e) && !ProductDemandStatusEnum.ONLINE.equals(e))
+                    .map(ProductDemandStatusEnum::getCode)
+                    .collect(Collectors.toList());
+        }
+        condition.setStatusList(statusList);
 
         //是否打标
         List<Long> newLabelIds = labelComponent.getLabelIds(bizDemandSubProductDemandQueryList.getLabelIds(),bizDemandSubProductDemandQueryList.getLabelCategoryIds());

@@ -132,12 +132,15 @@
             <if test="name!=null and name!=''">
                 and pd.name like concat('%',#{name},'%')
             </if>
-            <if test="status!=null">
-                and pd.status = #{status}
-            </if>
             <if test="priorityList!=null and priorityList.size()>0">
                 and pd.priority in
                 <foreach collection="priorityList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="statusList!=null and statusList.size()>0">
+                and pd.status in
+                <foreach collection="statusList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>

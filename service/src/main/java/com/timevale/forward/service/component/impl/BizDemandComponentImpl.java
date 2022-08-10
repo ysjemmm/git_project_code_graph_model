@@ -1,6 +1,5 @@
 package com.timevale.forward.service.component.impl;
 
-import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
@@ -47,19 +46,19 @@ import java.util.stream.Collectors;
 public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Resource
-    BizDemandMapper bizDemandMapper;
+    private BizDemandMapper bizDemandMapper;
 
     @Resource
-    ProductDemandMapper productDemandMapper;
+    private ProductDemandMapper productDemandMapper;
 
     @Resource
-    ProjectMapper projectMapper;
+    private ProjectMapper projectMapper;
 
     @Resource
-    ProductBizDemandMapper productBizDemandMapper;
+    private ProductBizDemandMapper productBizDemandMapper;
 
     @Resource
-    InnerGroupClient innerGroupClient;
+    private InnerGroupClient innerGroupClient;
 
     @Resource
     private MessageEventPublisher messageEventPublisher;
@@ -75,6 +74,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Resource
     private LabelCategoryMapper labelCategoryMapper;
+
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
 
     @Override
     public void updateBizDemandStatusByLinkedProductDemand(Long bizDemandId) {
@@ -228,6 +230,43 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             }
             bizDemandListCondition.setContainIds(bizIds);
 
+        // 产品线分析信息
+        List<BizDemandListDO> allBizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
+        Map<Long, List<BizDemandListDO>> bizDemandListDOMap = allBizDemandListDOList.stream().collect(Collectors.groupingBy(BizDemandListDO::getProductLineId));
+        log.info("业务查询产品线分析：{}", bizDemandListDOMap);
+
+        List<ProductLineAnalyseVO> analyseVOList = new ArrayList<>();
+        bizDemandListDOMap.forEach((k,v) -> {
+            ProductLineAnalyseVO bizDemandProductLineVO = new ProductLineAnalyseVO();
+            Optional<BizDemandListDO> any = v.stream().findAny();
+            any.ifPresent(e -> {
+                bizDemandProductLineVO.setCount(v.size());
+                bizDemandProductLineVO.setProductLineId(e.getProductLineId());
+                bizDemandProductLineVO.setProductLineName(e.getProductLineName());
+                analyseVOList.add(bizDemandProductLineVO);
+            });
+        });
+        // 根据数量，逆序排序
+        analyseVOList.sort((a,b) -> b.getCount().compareTo(a.getCount()));
+
+        // 产品线排查
+        List<Long> conditionSubProductLineIdList = bizDemandListCondition.getSubProductLineIdList();
+        if (CollectionUtils.isNotEmpty(conditionSubProductLineIdList)) {
+            Set<Long> resultProductLineIdSet = analyseVOList.stream().map(ProductLineAnalyseVO::getProductLineId).collect(Collectors.toSet());
+            List<Long> queryProductLineIdList = conditionSubProductLineIdList.stream().filter(resultProductLineIdSet::contains).collect(Collectors.toList());
+            if(CollectionUtils.isEmpty(queryProductLineIdList)) {
+                QueryResultVO<BizDemandVO> queryResultVO = new QueryResultVO<>();
+                queryResultVO.setAnalyseVOList(analyseVOList);
+                queryResultVO.setPageQueryResult(ResultUtil.pageEmpty());
+                return queryResultVO;
+            } else {
+                bizDemandListCondition.setProductLineIdList(queryProductLineIdList);
+            }
+        }
+
+        // 开始分页,查询并转换
+        String collation = sqlOrderComponent.build(bizDemandListCondition.getOrderFiled(), bizDemandListCondition.getOrderCollation());
+        PageHelper.startPage(bizDemandListCondition.pageNum, bizDemandListCondition.pageSize, collation);
         }
 
         // 开始分页
@@ -275,32 +314,17 @@ public class BizDemandComponentImpl implements BizDemandComponent {
                 bizDemandVO.setLabelNames(labelNames);
             }
         }
+        bizDemandVOList.forEach(e -> {
+            e.setStatusText(BizDemandStatusEnum.getTextByCode(e.getStatus()));
+            e.setPriorityText(PriorityEnum.getTextChineseByCode(e.getPriority()));
+            e.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(e.getPlanReleaseDate()));
+        });
 
         // 分页数据
         PageInfo<BizDemandListDO> pageInfo = new PageInfo<>(bizDemandListDOList);
         PageQueryResult<BizDemandVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(bizDemandVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
-
-        // 产品线分析信息
-        List<BizDemandListDO> allBizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
-        Map<Long, List<BizDemandListDO>> bizDemandListDOMap = allBizDemandListDOList.stream().collect(Collectors.groupingBy(BizDemandListDO::getProductLineId));
-        log.info("业务查询产品线分析：{}", bizDemandListDOMap);
-
-        List<ProductLineAnalyseVO> analyseVOList = new ArrayList<>();
-        bizDemandListDOMap.forEach((k,v) -> {
-            ProductLineAnalyseVO bizDemandProductLineVO = new ProductLineAnalyseVO();
-            Optional<BizDemandListDO> any = v.stream().findAny();
-            any.ifPresent(e -> {
-                bizDemandProductLineVO.setCount(v.size());
-                bizDemandProductLineVO.setProductLineId(e.getProductLineId());
-                bizDemandProductLineVO.setProductLineName(e.getProductLineName());
-                analyseVOList.add(bizDemandProductLineVO);
-            });
-        });
-
-        // 逆序排序
-        analyseVOList.sort((a,b) -> b.getCount().compareTo(a.getCount()));
 
         QueryResultVO<BizDemandVO> queryResultVO = new QueryResultVO<>();
         queryResultVO.setAnalyseVOList(analyseVOList);

@@ -69,6 +69,12 @@ public class BugOnlineDetailVO extends ToString {
             "，17无法重现但客户环境必现")
     private String reasonName;
 
+    @ApiModelProperty("来源: forward 产研系统， support 运营支撑平台， duty 值班反馈")
+    private String source;
+
+    @ApiModelProperty("来源-描述")
+    private String sourceName;
+
     @ApiModelProperty("是否复现：0是，1否")
     private Integer recurrent;
 

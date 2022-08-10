@@ -301,6 +301,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             e.setStatusName(BugOnlineStatusEnum.getTextByCode(e.getStatus()));
             e.setBelongName(BugOnlineBeloneEnum.getTextByCode(e.getBelong()));
             e.setReasonName(BugOnlineReasonEnum.getTextByCode(e.getReason()));
+            e.setSourceName(BugOnlineSourceEnum.getTextByCode(e.getSource()));
             e.setPriorityName(BugOnlinePriorityEnum.getTextByCode(e.getPriority()));
             e.setDismissCauseName(BugOnlineDismissCauseEnum.getTextByCode(e.getDismissCause()));
 
@@ -613,6 +614,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugOnlineDetailVO.setRepairFailReason(bugOnlineDO.getRepairFailReason());
         }
         bugOnlineDetailVO.setEnvName(BugOnlineEnvEnum.getTextByCode(bugOnlineDO.getEnv()));
+        bugOnlineDetailVO.setSourceName(BugOnlineSourceEnum.getTextByCode(bugOnlineDO.getSource()));
         bugOnlineDetailVO.setBelongName(BugOnlineBeloneEnum.getTextByCode(bugOnlineDO.getBelong()));
         bugOnlineDetailVO.setPriorityName(BugOnlinePriorityEnum.getTextByCode(bugOnlineDO.getPriority()));
         if (bugOnlineDO.getReason() != null) {

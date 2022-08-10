@@ -183,6 +183,28 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         buildConditionBeforeQuery(projectIds, condition);
 
+        // 产品线分析
+        List<ProductLineAnalyseVO> analyseVOList = analyse(condition);
+
+        // 产品线排查
+        List<Long> conditionSubProductLineIdList = condition.getSubProductLineIds();
+        if (CollectionUtils.isNotEmpty(conditionSubProductLineIdList)) {
+            Set<Long> resultProductLineIdSet = analyseVOList.stream().map(ProductLineAnalyseVO::getProductLineId).collect(Collectors.toSet());
+            List<Long> queryProductLineIdList = conditionSubProductLineIdList.stream().filter(resultProductLineIdSet::contains).collect(Collectors.toList());
+            boolean pageEmpty = CollectionUtils.isEmpty(queryProductLineIdList);
+            if(!pageEmpty) {
+                projectIds = projectMapper.getProjectIds(projectIds, queryProductLineIdList, condition.getBizDomainIds());
+                pageEmpty = CollectionUtils.isEmpty(projectIds);
+            }
+            if (pageEmpty) {
+                QueryResultVO<ProjectVO> queryResultVO = new QueryResultVO<>();
+                queryResultVO.setAnalyseVOList(analyseVOList);
+                queryResultVO.setPageQueryResult(ResultUtil.pageEmpty());
+                return queryResultVO;
+            }
+        }
+
+        buildConditionBeforeQuery(projectIds, condition);
         // 开始分页
         String collation = sqlOrderComponent.build(condition.getOrderFiled(), condition.getOrderCollation());
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), collation);
@@ -289,7 +311,7 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         QueryResultVO<ProjectVO> queryResultVO = new QueryResultVO<>();
         queryResultVO.setPageQueryResult(pageQueryResult);
-        queryResultVO.setAnalyseVOList(analyse(condition));
+        queryResultVO.setAnalyseVOList(analyseVOList);
 
         return queryResultVO;
     }

@@ -233,13 +233,44 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 analyseVOList.add(analyseVO);
             });
         });
+        //逆序排序
+        analyseVOList.sort((a, b) -> b.getCount().compareTo(a.getCount()));
+
+        List<Long> conditionSubProductLineIdList = productDemandQueryList.getSubProductLineIds();
+        if (CollectionUtils.isNotEmpty(conditionSubProductLineIdList)) {
+            Set<Long> resultProductLineIdSet = analyseVOList.stream().map(ProductLineAnalyseVO::getProductLineId).collect(Collectors.toSet());
+            List<Long> queryProductLineIdList = conditionSubProductLineIdList.stream().filter(resultProductLineIdSet::contains).collect(Collectors.toList());
+            if(CollectionUtils.isEmpty(queryProductLineIdList)) {
+                QueryResultVO<ProductDemandVO> queryResultVO = new QueryResultVO<>();
+                queryResultVO.setAnalyseVOList(analyseVOList);
+                queryResultVO.setPageQueryResult(ResultUtil.pageEmpty());
+                return BaseResult.success(queryResultVO);
+            } else {
+                condition.setProductLineIds(queryProductLineIdList);
+            }
+        }
+
+        // 分页查询
+        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
+
+        List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
+        productDemandVO.forEach(p -> {
+            p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
+            p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
+        });
+
+        // 分页数据
+        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
+        PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(productDemandVO);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
+
 
         QueryResultVO<ProductDemandVO> queryResultVO = new QueryResultVO<>();
         queryResultVO.setPageQueryResult(pageQueryResult);
         queryResultVO.setAnalyseVOList(analyseVOList);
-
-        //逆序排序
-        analyseVOList.sort((a, b) -> b.getCount().compareTo(a.getCount()));
 
         return BaseResult.success(queryResultVO);
     }

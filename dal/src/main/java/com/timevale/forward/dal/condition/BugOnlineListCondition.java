@@ -102,6 +102,11 @@ public class BugOnlineListCondition {
     private String customerName;
 
     /**
+     * 来源列表
+     */
+    private List<String> sourceList;
+
+    /**
      *包含的id
      */
     private List<Long> containIds;

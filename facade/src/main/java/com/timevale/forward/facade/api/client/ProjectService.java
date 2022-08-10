@@ -112,4 +112,11 @@ public interface ProjectService {
      * @return Boolean
      */
     BaseResult<Boolean> modifyProjectDate(ProjectDateModifyReq projectDateModifyReq);
+
+    /**
+     * 产品线分析
+     *
+     * @return {@link BaseResult}<{@link List}<{@link ProductLineAnalyseVO}>>
+     */
+    BaseResult<List<ProductLineAnalyseVO>> analyseProductLine(ProjectQueryList projectQueryList);
 }

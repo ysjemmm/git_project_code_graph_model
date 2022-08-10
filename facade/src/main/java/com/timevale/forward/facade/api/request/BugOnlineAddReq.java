@@ -80,7 +80,7 @@ public class BugOnlineAddReq extends BaseReq {
     @ApiModelProperty("系统菜单名称")
     private String systemMenuName;
 
-    @ApiModelProperty("bug来源:产研(forward),运营支撑(support)")
+    @ApiModelProperty("来源: forward 产研系统， support 运营支撑平台， duty 值班反馈")
     @NotNull(message = "bug来源不能为空")
     private String source;
 

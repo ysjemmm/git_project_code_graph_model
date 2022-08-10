@@ -1,7 +1,6 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.forward.dal.annotation.WildcardEscape;
-import com.timevale.mandarin.common.query.QueryBase;
 import lombok.Builder;
 import lombok.Data;
 
@@ -59,6 +58,11 @@ public class BizDemandListCondition extends QueryBase {
     private List<Long> productLineIdList;
 
     /**
+     * 子产品线id列表
+     */
+    private List<Long> subProductLineIdList;
+
+    /**
      * 预期上线日期列表
      */
     private List<Integer> planReleaseDateList;
@@ -111,6 +115,10 @@ public class BizDemandListCondition extends QueryBase {
      * 项目发布时间-结束时间
      */
     private Date projectEndDateEnd;
+
+    private String orderFiled;
+
+    private Integer orderCollation;
 
     /**
      * 标签id
