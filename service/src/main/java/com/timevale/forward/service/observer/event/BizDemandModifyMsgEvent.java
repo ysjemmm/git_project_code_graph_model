@@ -19,7 +19,7 @@ public class BizDemandModifyMsgEvent extends MessageEvent {
     private final String receiver;
     private final String name;
 
-    private static final String BIZ_DEMAND_INVALID_MSG = "### %s  \n  您收到了**%s**提交的业务需求**%s**发生了修改  \n\n ***  \n  [查看详情](%s)";
+    private static final String BIZ_DEMAND_INVALID_MSG = "### %s  \n  **%s**修改了业务需求**%s**内容  \n\n ***  \n  [查看详情](%s)";
 
     public BizDemandModifyMsgEvent(Object source, Long bizDemandId, String operator, String receiver, String name) {
         super(source);

@@ -84,5 +84,15 @@
             <groupId>com.timevale.lowcode</groupId>
             <artifactId>support-flow-facade</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>easyexcel</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.timevale.crm.sdk</groupId>
+            <artifactId>crm-sdk-common-core</artifactId>
+        </dependency>
     </dependencies>
 </project>

@@ -31,4 +31,6 @@ public class CommonConstant {
     public static final String SYSTEM_DEFAULT = "系统默认";
 
     public static final String PMO = "PMO";
+
+    public static final String TRACK_IMPORT_STATUS = "forward:track:import:status:";
 }
