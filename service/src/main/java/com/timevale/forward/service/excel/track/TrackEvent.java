@@ -14,10 +14,12 @@ public class TrackEvent {
     private String fifthClassify;
     private String eventNameCn;
     private String eventNameEn;
-    private List<TrackProp> trackPropList = new ArrayList<>();
     private String platform;
     private String explanation;
     private String apiName;
     private String touchMoment;
     private String env;
+    private List<TrackProp> trackPropList = new ArrayList<>();
+
+    private List<String> failInfoList = new ArrayList<>();
 }

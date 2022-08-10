@@ -36,7 +36,7 @@ public class TrackCheckListener extends AnalysisEventListener<TrackRow> {
         if (StrUtil.isNotEmpty(firstClassify)) {
             eventLimit--;
         }
-        AssertUtil.checkState(eventLimit >= 0, "导入事件数不能超过100条");
+
     }
 
     @Override
@@ -46,16 +46,5 @@ public class TrackCheckListener extends AnalysisEventListener<TrackRow> {
 
     @Override
     public void invokeHeadMap(Map<Integer, String> headMap, AnalysisContext context) {
-        if (headRow-- > 1) {
-            return;
-        }
-        Field[] fields = ReflectUtil.getFields(TrackRow.class);
-        for (Field field : fields) {
-            ExcelProperty annotation = AnnotationUtil.getAnnotation(field, ExcelProperty.class);
-            int index = annotation.index();
-            String value = annotation.value()[0];
-            String headMapValue = headMap.get(index);
-            AssertUtil.checkState(ObjectUtil.equal(value, headMapValue), "表头错误，请勿修改表头");
-        }
     }
 }
