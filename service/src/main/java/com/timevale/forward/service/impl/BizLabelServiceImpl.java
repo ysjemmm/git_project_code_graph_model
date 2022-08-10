@@ -40,26 +40,35 @@ public class BizLabelServiceImpl implements BizLabelService {
     @Resource
     private LabelMapper labelMapper;
 
+    private static final int MAX_COUNT = 20;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> markOrUnMark(BizLabelAddReq bizLabelAddReq) {
         log.info("标签标记,参数:{}", bizLabelAddReq);
         BizLabelDO bizLabelDO = BizLabelCopier.INSTANCE.convert(bizLabelAddReq);
         LabelDO labelDO = labelMapper.get(bizLabelAddReq.getLabelId());
-        if(labelDO==null){
+        if (labelDO == null) {
             throw new BaseBizRuntimeException("该标签已被删除");
         }
-        List<BizLabelDO> list = bizLabelMapper.list(bizLabelAddReq.getBizId(), bizLabelAddReq.getType());
-        boolean match = list.stream().map(BizLabelDO::getLabelId).anyMatch(a -> Objects.equals(a, bizLabelAddReq.getLabelId()));
-        if(bizLabelAddReq.getAdd()&&!match){
+
+        //同个标签,只能添加一次
+        if (bizLabelAddReq.getAdd() ) {
+            List<BizLabelDO> list = bizLabelMapper.list(bizLabelAddReq.getBizId(), bizLabelAddReq.getType());
+            boolean match = list.stream().map(BizLabelDO::getLabelId).anyMatch(a -> Objects.equals(a, bizLabelAddReq.getLabelId()));
+            if(match){
+                throw new BaseBizRuntimeException("同个标签不能重复添加,请刷新后重试");
+            }
+            if (list.size() == MAX_COUNT) {
+                throw new BaseBizRuntimeException("添加的标签数量不能超过20");
+            }
             bizLabelMapper.insert(bizLabelDO);
-        }else {
+        } else {
             bizLabelDO.setIsDeleted(true);
             bizLabelMapper.update(bizLabelDO);
         }
-        if(!match||!bizLabelAddReq.getAdd()){
-            bizLabelComponent.addLog(bizLabelDO.getBizId(),Lists.newArrayList(labelDO.getId()),bizLabelDO.getType(),bizLabelAddReq.getAdd());
-        }
+        bizLabelComponent.addLog(bizLabelDO.getBizId(), Lists.newArrayList(labelDO.getId()), bizLabelDO.getType(), bizLabelAddReq.getAdd());
+
         return BaseResult.success(true);
     }
 
@@ -68,7 +77,7 @@ public class BizLabelServiceImpl implements BizLabelService {
         log.info("标签查询,参数:{}", bizLabelQueryList);
         List<BizLabelDO> list = bizLabelMapper.list(bizLabelQueryList.getBizId(), bizLabelQueryList.getType());
         List<Long> labelIds = list.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
-        if(CollectionUtils.isEmpty(labelIds)){
+        if (CollectionUtils.isEmpty(labelIds)) {
             return BaseResult.success(Lists.emptyList());
         }
         List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);

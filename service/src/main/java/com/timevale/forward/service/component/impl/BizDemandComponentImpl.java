@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component.impl;
 
+import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
@@ -11,6 +12,7 @@ import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
+import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
@@ -229,6 +231,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
                 return ResultUtil.queryResultEmpty();
             }
             bizDemandListCondition.setContainIds(bizIds);
+        }
 
         // 产品线分析信息
         List<BizDemandListDO> allBizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
@@ -264,10 +267,6 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             }
         }
 
-        // 开始分页,查询并转换
-        String collation = sqlOrderComponent.build(bizDemandListCondition.getOrderFiled(), bizDemandListCondition.getOrderCollation());
-        PageHelper.startPage(bizDemandListCondition.pageNum, bizDemandListCondition.pageSize, collation);
-        }
 
         // 开始分页
         PageHelper.startPage(bizDemandListCondition.pageNum, bizDemandListCondition.pageSize, bizDemandListCondition.getCollation());
@@ -314,11 +313,6 @@ public class BizDemandComponentImpl implements BizDemandComponent {
                 bizDemandVO.setLabelNames(labelNames);
             }
         }
-        bizDemandVOList.forEach(e -> {
-            e.setStatusText(BizDemandStatusEnum.getTextByCode(e.getStatus()));
-            e.setPriorityText(PriorityEnum.getTextChineseByCode(e.getPriority()));
-            e.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(e.getPlanReleaseDate()));
-        });
 
         // 分页数据
         PageInfo<BizDemandListDO> pageInfo = new PageInfo<>(bizDemandListDOList);

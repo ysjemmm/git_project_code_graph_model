@@ -79,7 +79,6 @@
         select id,name,type, mark_man, mark_man_id,dept_id,
         is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
         from label_category where is_deleted=false
-        group by name
     </select>
 
     <select id="getByName" resultType="com.timevale.forward.dal.entity.LabelCategoryDO">

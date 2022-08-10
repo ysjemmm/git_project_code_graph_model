@@ -173,7 +173,8 @@ public class LabelServiceImpl implements LabelService {
         Long categoryId = labelAddReq.getCategoryId();
         List<LabelDO> labelDOList = labelMapper.getByNameInOneCategory(names, categoryId);
         if (!CollectionUtils.isEmpty(labelDOList)) {
-            throw new BaseBizRuntimeException("名称为: " + names + " 的标签,已在该标签类别下存在,请修改后重试");
+            String existName = labelDOList.stream().map(LabelDO::getName).collect(Collectors.joining(","));
+            throw new BaseBizRuntimeException("名称为: " + existName + " 的标签,已在该标签类别下存在,请修改后重试");
         }
         List<LabelDO> labelDos = names.stream().map(a -> {
             LabelDO o = new LabelDO();

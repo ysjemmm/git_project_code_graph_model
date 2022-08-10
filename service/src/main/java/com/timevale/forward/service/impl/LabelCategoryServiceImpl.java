@@ -125,8 +125,14 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     public BaseResult<List<LabelCategorySimpleVO>> getAll() {
         List<LabelCategoryDO> all = labelCategoryMapper.getAll();
 
-        List<LabelCategorySimpleVO> labelSimpleVOList = LabelCategoryCopier.INSTANCE.changeT(all);
+        Map<String, List<LabelCategoryDO>> labelMap = all.stream().collect(Collectors.groupingBy(LabelCategoryDO::getName));
 
+        List<LabelCategoryDO> result=new ArrayList<>();
+        labelMap.forEach((k,v)->{
+            result.add(v.get(0));
+        });
+
+        List<LabelCategorySimpleVO> labelSimpleVOList = LabelCategoryCopier.INSTANCE.changeT(result);
         return BaseResult.success(labelSimpleVOList);
     }
 
@@ -231,6 +237,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         log.info("类别新增,参数:{}", labelCategoryAddReq);
         //同模块下,类别唯一
         LabelCategoryDO labelCategoryDO = LabelCategoryCopier.INSTANCE.convert(labelCategoryAddReq);
+
 
         checkBeforeInsert(labelCategoryDO);
 

@@ -173,7 +173,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         //是否打标
-        List<Long> newLabelIds = labelComponent.getLabelIds(productDemandQueryList.getLabelIds(),productDemandQueryList.getLabelCategoryIds());
+        List<Long> newLabelIds = labelComponent.getLabelIds(productDemandQueryList.getLabelIds(), productDemandQueryList.getLabelCategoryIds());
         List<BizLabelDO> bizLabelDOList;
         if (CollectionUtils.isNotEmpty(newLabelIds)) {
             bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
@@ -184,38 +184,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             condition.setInProductDemandIds(bizIds);
 
         }
-        // 分页查询
-        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
-        List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
-        List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
-        if (CollectionUtils.isEmpty(productDemandVOList)) {
-            return BaseResult.success(ResultUtil.queryResultEmpty());
-        }
-        List<Long>productDemandIds = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
-        bizLabelDOList = bizLabelMapper.getByLabelIdInType(productDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
-        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
-                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
-
-        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
-        Map<Long, String> labelNameMap = new HashMap<>();
-        if (CollectionUtils.isNotEmpty(labelIds)) {
-            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
-            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
-        }
-        for (ProductDemandVO a : productDemandVOList) {
-            a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
-            a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
-            if (labelIdMap.containsKey(a.getId())) {
-                List<Long> labelIdList = labelIdMap.get(a.getId());
-                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
-                a.setLabelNames(labelNames);
-            }
-        }
-        // 分页数据
-        PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
-        PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
-        pageQueryResult.setResultList(productDemandVOList);
-        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
         // 完整查询
         List<ProductDemandListDO> allProductDemandListDO = productDemandComponent.list(condition);
@@ -240,7 +208,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (CollectionUtils.isNotEmpty(conditionSubProductLineIdList)) {
             Set<Long> resultProductLineIdSet = analyseVOList.stream().map(ProductLineAnalyseVO::getProductLineId).collect(Collectors.toSet());
             List<Long> queryProductLineIdList = conditionSubProductLineIdList.stream().filter(resultProductLineIdSet::contains).collect(Collectors.toList());
-            if(CollectionUtils.isEmpty(queryProductLineIdList)) {
+            if (CollectionUtils.isEmpty(queryProductLineIdList)) {
                 QueryResultVO<ProductDemandVO> queryResultVO = new QueryResultVO<>();
                 queryResultVO.setAnalyseVOList(analyseVOList);
                 queryResultVO.setPageQueryResult(ResultUtil.pageEmpty());
@@ -254,19 +222,37 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
 
-        List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
-        productDemandVO.forEach(p -> {
-            p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
-            p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
-        });
+        List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
 
+        if (CollectionUtils.isEmpty(productDemandVOList)) {
+            return BaseResult.success(ResultUtil.queryResultEmpty());
+        }
+        List<Long> productDemandIds = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
+        bizLabelDOList = bizLabelMapper.getByLabelIdInType(productDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
+                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
+
+        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
+        Map<Long, String> labelNameMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(labelIds)) {
+            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
+            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
+        }
+
+        for (ProductDemandVO a : productDemandVOList) {
+            a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
+            a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
+            if (labelIdMap.containsKey(a.getId())) {
+                List<Long> labelIdList = labelIdMap.get(a.getId());
+                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
+                a.setLabelNames(labelNames);
+            }
+        }
         // 分页数据
         PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
-        pageQueryResult.setResultList(productDemandVO);
+        pageQueryResult.setResultList(productDemandVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
-
-
 
         QueryResultVO<ProductDemandVO> queryResultVO = new QueryResultVO<>();
         queryResultVO.setPageQueryResult(pageQueryResult);
@@ -376,9 +362,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         productDemandMapper.insert(productDemand);
 
         //标签
-        if(CollectionUtils.isNotEmpty(productDemandAddReq.getLabelIds())){
-            bizLabelComponent.addLabel(productDemand.getId(),productDemandAddReq.getLabelIds(),BizTypeEnum.PRODUCT_DEMAND.getCode());
-            bizLabelComponent.addLog(productDemand.getId(),productDemandAddReq.getLabelIds(),BizTypeEnum.PRODUCT_DEMAND.getCode(),true);
+        if (CollectionUtils.isNotEmpty(productDemandAddReq.getLabelIds())) {
+            bizLabelComponent.addLabel(productDemand.getId(), productDemandAddReq.getLabelIds(), BizTypeEnum.PRODUCT_DEMAND.getCode());
+            bizLabelComponent.addLog(productDemand.getId(), productDemandAddReq.getLabelIds(), BizTypeEnum.PRODUCT_DEMAND.getCode(), true);
         }
 
         fileComponent.add(productDemandAddReq.getFiles(), productDemand.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
@@ -414,13 +400,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByProductDemandIds(Lists.newArrayList(productDemand.getId()));
             Map<Long, Integer> bizIdMap = productBizDemandDOList.stream().collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, ProductBizDemandDO::getStatus, (v1, v2) -> v2));
 
-            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus(),Lists.newArrayList(productDemand.getId()));
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus(), Lists.newArrayList(productDemand.getId()));
 
             projectProductDemandComponent.batchInsert(productDemandAddReq.getProjectId(), Lists.newArrayList(productDemand.getId()));
             //
-            bizIdMap.forEach((k,v)->{
+            bizIdMap.forEach((k, v) -> {
                 BizDemandDO bizDemandDO = bizDemandMapper.selectById(k);
-                productDemandComponent.sendDingMsg(v,bizDemandDO.getStatus(),k);
+                productDemandComponent.sendDingMsg(v, bizDemandDO.getStatus(), k);
             });
 
             Map<Long, String> pdNameMap = new HashMap<>();
@@ -496,7 +482,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     , ProjectStatusEnum.DEVING.getCode()
                     , ProjectStatusEnum.TESTING.getCode()));
         }
-        List<Long> labelIds = labelComponent.getLabelIds(productDemandLinkProjectQueryList.getLabelIds(),productDemandLinkProjectQueryList.getLabelCategoryIds());
+        List<Long> labelIds = labelComponent.getLabelIds(productDemandLinkProjectQueryList.getLabelIds(), productDemandLinkProjectQueryList.getLabelCategoryIds());
         condition.setLabelIds(labelIds);
         PageQueryResult<ProjectVO> pageQueryResult = projectCmponent.page(condition, Lists.newArrayList()).getPageQueryResult();
         return BaseResult.success(pageQueryResult);
@@ -541,7 +527,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         condition.setPageNum(productDemandLinkBizDemandQueryList.getPageNum());
         condition.setPageSize(productDemandLinkBizDemandQueryList.getPageSize());
         condition.setCollation(CommonConstant.DEFAULT_ORDER_BY);
-        List<Long> labelIds = labelComponent.getLabelIds(productDemandLinkBizDemandQueryList.getLabelIds(),productDemandLinkBizDemandQueryList.getLabelCategoryIds());
+        List<Long> labelIds = labelComponent.getLabelIds(productDemandLinkBizDemandQueryList.getLabelIds(), productDemandLinkBizDemandQueryList.getLabelCategoryIds());
         condition.setLabelIds(labelIds);
         return BaseResult.success(bizDemandComponent.page(condition).getPageQueryResult());
     }
