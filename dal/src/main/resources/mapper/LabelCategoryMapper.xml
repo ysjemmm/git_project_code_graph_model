@@ -14,13 +14,13 @@
         <set>
             <if test="name != null and name != ''">name = #{name},</if>
             <if test="type != null and type != ''">type = #{type},</if>
-            <if test="markMan != null and markMan != ''">mark_man = #{markMan},</if>
-            <if test="markManId != null and markManId != ''">mark_man_id = #{markManId},</if>
-            <if test="deptId != null and deptId != ''">dept_id = #{deptId},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
             <if test="true">
                 modify_man = #{modifyMan},
                 modify_man_id = #{modifyManId},
+                mark_man = #{markMan},
+                mark_man_id = #{markManId},
+                dept_id = #{deptId},
             </if>
         </set>
         <where>
