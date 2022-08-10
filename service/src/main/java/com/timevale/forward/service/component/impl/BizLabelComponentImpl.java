@@ -2,14 +2,13 @@ package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.BizLabelMapper;
+import com.timevale.forward.dal.dao.BugLogMapper;
 import com.timevale.forward.dal.dao.LabelMapper;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.BizLabelDO;
+import com.timevale.forward.dal.entity.BugLogDO;
 import com.timevale.forward.dal.entity.LabelDO;
-import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
-import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
-import com.timevale.forward.model.enums.BizTypeEnum;
-import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -41,46 +40,67 @@ public class BizLabelComponentImpl implements BizLabelComponent {
     @Resource
     private LabelMapper labelMapper;
 
+    @Resource
+    private BugLogMapper bugLogMapper;
+
     @Override
-    public void addLog(Long mainId, List<Long> labelIds, Integer type,Boolean add) {
+    public void addLog(Long mainId, List<Long> labelIds, Integer type, Boolean add) {
         List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
         List<String> labelNames = labelDOList.stream().map(LabelDO::getName).collect(Collectors.toList());
-        Integer logType=0;
-        if(BizTypeEnum.PROJECT.getCode().equals(type)){
-            logType= BizChangeLogTypeEnum.PROJECT.getCode();
-        }else if(BizTypeEnum.PRODUCT_DEMAND.getCode().equals(type)){
-            logType=BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode();
-        }else if(BizTypeEnum.BIZ_DEMAND.getCode().equals(type)){
-            logType=BizChangeLogTypeEnum.BIZ_DEMAND.getCode();
-        }else if(BizTypeEnum.BUG_OFFLINE.getCode().equals(type)){
-            logType=BizChangeLogTypeEnum.BUG_OFFLINE.getCode();
-        }else if(BizTypeEnum.BUG_ONLINE.getCode().equals(type)){
-            logType=BizChangeLogTypeEnum.BUG_ONLINE.getCode();
+        Integer logType = 0;
+        if (BizTypeEnum.PROJECT.getCode().equals(type)) {
+            logType = BizChangeLogTypeEnum.PROJECT.getCode();
+        } else if (BizTypeEnum.PRODUCT_DEMAND.getCode().equals(type)) {
+            logType = BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode();
+        } else if (BizTypeEnum.BIZ_DEMAND.getCode().equals(type)) {
+            logType = BizChangeLogTypeEnum.BIZ_DEMAND.getCode();
+        } else if (BizTypeEnum.BUG_OFFLINE.getCode().equals(type)) {
+            logType = BugLogTypeEnum.OFFLINE.getCode();
+        } else if (BizTypeEnum.BUG_ONLINE.getCode().equals(type)) {
+            logType = BugLogTypeEnum.ONLINE.getCode();
         }
-        List<BizChangeLogDO>bizChangeLogDOList=new ArrayList<>();
+        List<BizChangeLogDO> bizChangeLogDOList = new ArrayList<>();
+        List<BugLogDO> bugLogDOList = new ArrayList<>();
         for (String labelName : labelNames) {
-            BizChangeLogDO logDO = new BizChangeLogDO();
-            logDO.setType(logType);
-            logDO.setMainId(mainId);
-            logDO.setField(BizChangeLogFieldEnum.LABEL.getText());
-            logDO.setOldValue(labelName);
-            logDO.setNewValue(labelName);
-            String action = add ? ButtonActionEnum.ADD.getText() : ButtonActionEnum.DELETE.getText();
-            logDO.setAction(action);
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
             String createMan = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
             String createManId = userInfo.getId();
-            logDO.setCreateMan(createMan);
-            logDO.setCreateManId(createManId);
-            bizChangeLogDOList.add(logDO);
+            if (BizTypeEnum.BUG_OFFLINE.getCode().equals(type) || BizTypeEnum.BUG_ONLINE.getCode().equals(type)) {
+                BugLogDO bugLogDO = new BugLogDO();
+                bugLogDO.setType(logType);
+                bugLogDO.setMainId(mainId);
+                bugLogDO.setField(BugFieldEnum.LABEL.getText());
+                bugLogDO.setOldValue(labelName);
+                bugLogDO.setNewValue(labelName);
+                String action = add ? ButtonActionEnum.ADD.getText() : ButtonActionEnum.DELETE.getText();
+                bugLogDO.setAction(action);
+                bugLogDO.setCreateMan(createMan);
+                bugLogDO.setCreateManId(createManId);
+                bugLogDOList.add(bugLogDO);
+            } else {
+                BizChangeLogDO logDO = new BizChangeLogDO();
+                logDO.setType(logType);
+                logDO.setMainId(mainId);
+                logDO.setField(BizChangeLogFieldEnum.LABEL.getText());
+                logDO.setOldValue(labelName);
+                logDO.setNewValue(labelName);
+                String action = add ? ButtonActionEnum.ADD.getText() : ButtonActionEnum.DELETE.getText();
+                logDO.setAction(action);
+                logDO.setCreateMan(createMan);
+                logDO.setCreateManId(createManId);
+                bizChangeLogDOList.add(logDO);
+            }
         }
-        if(CollectionUtils.isNotEmpty(bizChangeLogDOList)){
+        if (CollectionUtils.isNotEmpty(bizChangeLogDOList)) {
             bizChangeLogMapper.batchInsert(bizChangeLogDOList);
+        }
+        if (CollectionUtils.isNotEmpty(bugLogDOList)) {
+            bugLogMapper.batchInsert(bugLogDOList);
         }
     }
 
     @Override
-    public void addLabel(Long bizId, List<Long> labelIds,Integer type) {
+    public void addLabel(Long bizId, List<Long> labelIds, Integer type) {
         List<BizLabelDO> bizLabelDOList = labelIds.stream().map(a -> {
             BizLabelDO bizLabelDO = new BizLabelDO();
             bizLabelDO.setBizId(bizId);
@@ -89,7 +109,7 @@ public class BizLabelComponentImpl implements BizLabelComponent {
             return bizLabelDO;
         }).collect(Collectors.toList());
 
-        if(CollectionUtils.isNotEmpty(bizLabelDOList)){
+        if (CollectionUtils.isNotEmpty(bizLabelDOList)) {
             bizLabelMapper.batchInsert(bizLabelDOList);
         }
     }

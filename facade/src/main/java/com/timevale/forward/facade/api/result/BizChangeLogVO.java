@@ -29,7 +29,7 @@ public class BizChangeLogVO extends ToString {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long mainId;
 
-    @ApiModelProperty("内容变更记录类型:2项目，3产品需求，4业务需求,5客户需求,6线下bug,7线上bug")
+    @ApiModelProperty("内容变更记录类型:2项目，3产品需求，4业务需求,5客户需求")
     private Integer type;
 
     @ApiModelProperty("变更前的值")
