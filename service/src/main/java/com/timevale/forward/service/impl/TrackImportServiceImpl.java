@@ -1,6 +1,5 @@
 package com.timevale.forward.service.impl;
 
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.poi.excel.ExcelFileUtil;
 import com.alibaba.excel.EasyExcel;
 import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
@@ -20,7 +19,10 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.mandarin.common.service.retry.RetryCallback;
+import com.timevale.mandarin.common.service.retry.RetryTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.Resource;
@@ -50,7 +52,7 @@ public class TrackImportServiceImpl implements TrackImportService {
     public BaseResult<Boolean> importEvent(TrackImportReq trackImportReq) {
         try {
             // 获取文件流
-            InputStream in = getFileInputStream(templateFileId);
+            InputStream in = getFileInputStream(trackImportReq.getFileId());
 
             // 校验文件类型
             boolean isXlsx = ExcelFileUtil.isXlsx(in);
@@ -105,14 +107,27 @@ public class TrackImportServiceImpl implements TrackImportService {
      */
     private InputStream getFileInputStream(String fileId) {
         // 获取下载文件流
-        FileDownloadDTO fileDownloadInfo = FileUtil.getFileDownloadInfo(fileId, envUtils.getEnv());
-        if(fileDownloadInfo == null || StrUtil.isEmpty(fileDownloadInfo.getDownloadUrl())) {
-            log.info("获取文件下载信息，fileId：{}，info：{}", fileId, fileDownloadInfo);
-            throw new BaseBizRuntimeException("文件导入失败，请稍后重试");
-        }
+        FileDownloadDTO info;
 
+        RetryTemplate retryTemplate = new RetryTemplate();
+        info = (FileDownloadDTO)retryTemplate.execute(new RetryCallback() {
+            @Override
+            public Object doWithRetry() {
+                return FileUtil.getFileDownloadInfo(fileId, envUtils.getEnv());
+            }
+            @Override
+            public boolean isComplete(Object result) {
+                FileDownloadDTO infoResult = (FileDownloadDTO) result;
+                log.info("获取文件信息请求，fileId: {}，result: {}",fileId,result);
+                return StringUtils.isNotEmpty(infoResult.getDownloadUrl());
+            }
+        });
+        if(info == null){
+            log.error("文件下载异常，fileId:{}",fileId);
+            throw new BaseBizRuntimeException("文件下载异常");
+        }
         // 获取输入流
-        String downloadUrl = fileDownloadInfo.getDownloadUrl();
+        String downloadUrl = info.getDownloadUrl();
         try {
             URL fileUrl = new URL(downloadUrl);
             URLConnection conn = fileUrl.openConnection();
