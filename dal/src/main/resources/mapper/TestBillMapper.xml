@@ -22,6 +22,8 @@
             <if test="testBillDO.status != null">status=#{testBillDO.status},</if>
             <if test="true">modify_man=#{modifyMan},</if>
             <if test="true">modify_man_id=#{modifyManId},</if>
+            <if test="testBillDO.createManId != null">create_man_id=#{testBillDO.createManId},</if>
+            <if test="testBillDO.createMan != null">create_man=#{testBillDO.createMan},</if>
         </set>
         <where>
             <if test="testBillDO.projectId != null">
