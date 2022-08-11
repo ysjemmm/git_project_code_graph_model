@@ -31,7 +31,9 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
     }
 
     @Override
-    public void invoke(TrackRow trackRow, AnalysisContext analysisContext) {
+    public void invoke(TrackRow trackRow, AnalysisContext context) {
+        Integer rowIndex = context.readRowHolder().getRowIndex();
+
         if(BeanUtil.isEmpty(trackRow)) {
             return;
         }
@@ -63,7 +65,7 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
             int index = annotation.index();
             String value = annotation.value()[0];
             String headMapValue = headMap.get(index);
-            AssertUtil.checkState(ObjectUtil.equal(value, headMapValue), "表头错误，请勿修改表头");
+            AssertUtil.checkState(ObjectUtil.equal(value, headMapValue), "导入文件列表格式错误，请勿修改模板格式");
         }
     }
 }

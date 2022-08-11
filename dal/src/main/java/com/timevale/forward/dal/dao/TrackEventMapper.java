@@ -68,7 +68,7 @@ public interface TrackEventMapper {
      *
      * @return TrackEventDO
      */
-    List<TrackEventDO> selectByName(@Param("cnNameList") List<String> cnNameList, @Param("egNameList") List<String> egNameList);
+    List<TrackEventDO> selectByName(@Param("fullCnNameList") List<String> fullCnNameList, @Param("egNameList") List<String> egNameList);
 
     /**
      * 列表

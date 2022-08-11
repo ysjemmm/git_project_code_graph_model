@@ -21,5 +21,6 @@ public class TrackEvent {
     private String env;
     private List<TrackProp> trackPropList = new ArrayList<>();
 
+    private String fullNameCn;
     private List<String> failInfoList = new ArrayList<>();
 }

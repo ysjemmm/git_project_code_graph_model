@@ -1,22 +1,28 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.poi.excel.ExcelFileUtil;
 import com.alibaba.excel.EasyExcel;
 import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
 import com.timevale.crm.sdk.common.utils.file.FileUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.TrackEventMapper;
-import com.timevale.forward.dal.dao.TrackMapMapper;
-import com.timevale.forward.dal.entity.TrackEventDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TrackImportService;
 import com.timevale.forward.facade.api.request.TrackImportReq;
 import com.timevale.forward.facade.api.result.TrackImportLogVO;
 import com.timevale.forward.facade.api.result.TrackImportProgressVO;
 import com.timevale.forward.facade.api.result.TrackImportTemplateVO;
+import com.timevale.forward.model.enums.EnvEnum;
+import com.timevale.forward.model.enums.PlatformTypeEnum;
+import com.timevale.forward.model.enums.TrackMapEnum;
+import com.timevale.forward.model.enums.TrackPropTypeEnum;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.excel.track.TrackEvent;
 import com.timevale.forward.service.excel.track.TrackListener;
+import com.timevale.forward.service.excel.track.TrackProp;
 import com.timevale.forward.service.excel.track.TrackRow;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -37,7 +43,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -56,9 +62,14 @@ public class TrackImportServiceImpl implements TrackImportService {
 
     @Resource
     private TrackEventMapper trackEventMapper;
-
     @Resource
     private TrackMapMapper trackMapMapper;
+    @Resource
+    private BizDomainMapper bizDomainMapper;
+    @Resource
+    private ProductLineMapper productLineMapper;
+    @Resource
+    private ModelMapper modelMapper;
 
     @Value("${templateFileId:b210b33a8167439e930dfe7dd3808ab8}")
     private String templateFileId;
@@ -95,11 +106,15 @@ public class TrackImportServiceImpl implements TrackImportService {
 
         // 事件数校验
         AssertUtil.checkState(CollectionUtil.isEmpty(trackEventList), "无有效数据，请检查后重试");
-        AssertUtil.checkState(trackEventList.size() <= importEventLimit, "导入埋点事件条数不能超过" + importEventLimit);
+        AssertUtil.checkState(trackEventList.size() <= importEventLimit, "导入埋点事件数不能超过" + importEventLimit + "条");
 
-        // 分类校验
+        // 校验
         classifyCheck(trackEventList);
         eventNameCheck(trackEventList);
+        propCheck(trackEventList);
+        platformCheck(trackEventList);
+        touchMomentCheck(trackEventList);
+        envCheck(trackEventList);
 
         return BaseResult.success(true);
     }
@@ -165,61 +180,256 @@ public class TrackImportServiceImpl implements TrackImportService {
         }
     }
 
+    /**
+     * 分类检查
+     *
+     * @param trackEventList 跟踪事件列表
+     */
     private void classifyCheck(List<TrackEvent> trackEventList) {
-        // 验空
+        List<String> firstClassifyList = trackEventList.stream().map(TrackEvent::getFirstClassify).distinct().collect(Collectors.toList());
+
+        // 业务域
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByName(firstClassifyList);
+        Set<String> bizDomainNameSet = bizDomainDOList.stream().map(BizDomainDO::getName).collect(Collectors.toSet());
+
+        // 产品线
+        List<ProductLineDO> productLineDOList = productLineMapper.getByBizDomainName(new ArrayList<>(bizDomainNameSet));
+        Set<String> productLineNameSet = productLineDOList.stream().map(ProductLineDO::getName).collect(Collectors.toSet());
+
+        // 模块
+        List<Long> productLineIdList = productLineDOList.stream().map(BaseDO::getId).distinct().collect(Collectors.toList());
+        List<ModelDO> modelDOList = modelMapper.getByProductLineId(productLineIdList);
+        Set<String> modelNameSet = modelDOList.stream().map(ModelDO::getName).collect(Collectors.toSet());
+
+        // 页面
+        List<Long> modelIdList = modelDOList.stream().map(BaseDO::getId).distinct().collect(Collectors.toList());
+        List<TrackMapDO> trackPageDOList = trackMapMapper.getChildren(modelIdList, TrackMapEnum.PAGE.getCode());
+        Set<String> trackPageNameSet = trackPageDOList.stream().map(TrackMapDO::getName).collect(Collectors.toSet());
+
+        // 元素
+        List<Long> trackPageIdList = trackPageDOList.stream().map(BaseDO::getId).distinct().collect(Collectors.toList());
+        List<TrackMapDO> trackElementDOList = trackMapMapper.getChildren(trackPageIdList, TrackMapEnum.ELEMENT.getCode());
+        Set<String> trackElementNameSet = trackElementDOList.stream().map(TrackMapDO::getName).collect(Collectors.toSet());
+
+        // 校验
         for (TrackEvent e : trackEventList) {
+            List<String> failInfoList = e.getFailInfoList();
+
+            String eventNameCn = e.getEventNameCn();
             String firstClassify = e.getFirstClassify();
-            if(StrUtil.isEmpty(firstClassify)) {
-                e.getFailInfoList().add("【格式错误】一级分类为必填字段，请检查后修改");
-            }
             String secondClassify = e.getSecondClassify();
-            if(StrUtil.isEmpty(secondClassify)) {
-                e.getFailInfoList().add("【格式错误】二级分类为必填字段，请检查后修改");
-            }
             String thirdClassify = e.getThirdClassify();
-            if(StrUtil.isEmpty(thirdClassify)) {
-                e.getFailInfoList().add("【格式错误】三级分类为必填字段，请检查后修改");
-            }
             String fourthClassify = e.getFourthClassify();
-            if(StrUtil.isEmpty(fourthClassify)) {
-                e.getFailInfoList().add("【格式错误】四级分类为必填字段，请检查后修改");
+            String fifthClassify = e.getFifthClassify();
+
+            if (StrUtil.isEmpty(firstClassify)) {
+                failInfoList.add("【格式错误】一级分类为必填字段，请检查后修改");
             }
+            if (StrUtil.isEmpty(secondClassify)) {
+                failInfoList.add("【格式错误】二级分类为必填字段，请检查后修改");
+            }
+            if (StrUtil.isEmpty(thirdClassify)) {
+                failInfoList.add("【格式错误】三级分类为必填字段，请检查后修改");
+            }
+            if (StrUtil.isEmpty(fourthClassify)) {
+                failInfoList.add("【格式错误】四级分类为必填字段，请检查后修改");
+            }
+
+            if (StrUtil.isNotEmpty(firstClassify) && !bizDomainNameSet.contains(firstClassify)) {
+                failInfoList.add("【事件错误】一级分类不存在，请检查后修改");
+            } else if (StrUtil.isNotEmpty(secondClassify) && !productLineNameSet.contains(secondClassify)) {
+                failInfoList.add("【事件错误】二级分类不存在，请检查后修改");
+            } else if (StrUtil.isNotEmpty(secondClassify) && !modelNameSet.contains(thirdClassify)) {
+                failInfoList.add("【事件错误】三级分类不存在，请检查后修改");
+            } else if (StrUtil.isNotEmpty(secondClassify) && !trackPageNameSet.contains(fourthClassify)) {
+                failInfoList.add("【事件错误】四级分类不存在，请检查后修改");
+            } else if (StrUtil.isNotEmpty(fifthClassify) && !trackElementNameSet.contains(fifthClassify)) {
+                failInfoList.add("【事件错误】五级分类不存在，请检查后修改");
+            }
+
+            StringBuilder fullNameBuilder = new StringBuilder();
+            if (StrUtil.isNotEmpty(firstClassify)) {
+                fullNameBuilder.append(firstClassify).append(CommonConstant.JOIN_LINE);
+            }
+            if (StrUtil.isNotEmpty(secondClassify)) {
+                fullNameBuilder.append(secondClassify).append(CommonConstant.JOIN_LINE);
+            }
+            if (StrUtil.isNotEmpty(thirdClassify)) {
+                fullNameBuilder.append(thirdClassify).append(CommonConstant.JOIN_LINE);
+            }
+            if (StrUtil.isNotEmpty(fourthClassify)) {
+                fullNameBuilder.append(fourthClassify).append(CommonConstant.JOIN_LINE);
+            }
+            if (StrUtil.isNotEmpty(fifthClassify)) {
+                fullNameBuilder.append(fifthClassify).append(CommonConstant.JOIN_LINE);
+            }
+            if (StrUtil.isNotEmpty(eventNameCn)) {
+                fullNameBuilder.append(eventNameCn);
+            }
+            e.setFullNameCn(fullNameBuilder.toString());
         }
     }
 
+    /**
+     * 事件名称检查
+     *
+     * @param trackEventList 跟踪事件列表
+     */
     private void eventNameCheck(List<TrackEvent> trackEventList) {
-        List<String> cnNameList = trackEventList.stream().map(TrackEvent::getEventNameCn).collect(Collectors.toList());
+        List<String> fullCnNameList = trackEventList.stream().map(TrackEvent::getFullNameCn).collect(Collectors.toList());
         List<String> egNameList = trackEventList.stream().map(TrackEvent::getEventNameEn).collect(Collectors.toList());
-        List<TrackEventDO> trackEventNameDOList = trackEventMapper.selectByName(cnNameList, egNameList);
+        List<TrackEventDO> trackEventNameDOList = trackEventMapper.selectByName(fullCnNameList, egNameList);
 
-        Set<String> cnNameSet = trackEventNameDOList.stream().map(TrackEventDO::getCnName).collect(Collectors.toSet());
         Set<String> egNameSet = trackEventNameDOList.stream().map(TrackEventDO::getEgName).collect(Collectors.toSet());
+        Set<String> fullCnNameSet = trackEventNameDOList.stream().map(TrackEventDO::getFullCnName).collect(Collectors.toSet());
 
         for (TrackEvent e : trackEventList) {
             String eventNameCn = e.getEventNameCn();
+            String fullCnName = e.getFullNameCn();
 
             // 注意， 事件中文名需要以完整分类验证
             if (StrUtil.isEmpty(eventNameCn)) {
-                e.getFailInfoList().add("【格式错误】{事件中文名}为必填字段，请检查后修改");
+                e.getFailInfoList().add("【格式错误】事件中文名为必填字段，请检查后修改");
             }
-            if (eventNameCn.length() > 100) {
-                e.getFailInfoList().add("【格式错误】事件中文名（含埋点分类）字数已超过100字，请检查后修改");
-            }
-            if (cnNameSet.contains(eventNameCn)) {
-                e.getFailInfoList().add("【事件错误】事件中文名与事件“{事件中文名}”重复，请检查后修改");
+            if (StrUtil.isNotEmpty(fullCnName)) {
+                if (fullCnName.length() > 100) {
+                    e.getFailInfoList().add("【格式错误】事件中文名（含埋点分类）字数已超过100字，请检查后修改");
+                }
+                if (fullCnNameSet.contains(fullCnName)) {
+                    e.getFailInfoList().add("【事件错误】事件中文名与事件" + fullCnName + "重复，请检查后修改");
+                }
             }
 
             String eventNameEn = e.getEventNameEn();
             if (StrUtil.isEmpty(eventNameEn)) {
                 e.getFailInfoList().add("【格式错误】" + eventNameEn + "为必填字段，请检查后修改");
-            }
-            if (eventNameEn.length() > 100) {
-                e.getFailInfoList().add("【格式错误】事件英文名字数已超过100字符，请检查后修改");
-            }
-            if (egNameSet.contains(eventNameEn)) {
-                e.getFailInfoList().add("【事件错误】事件英文名与事件" + eventNameEn + "重复，请检查后修改");
+            } else {
+                if (eventNameEn.length() > 100) {
+                    e.getFailInfoList().add("【格式错误】事件英文名字数已超过100字符，请检查后修改");
+                }
+                if (egNameSet.contains(eventNameEn)) {
+                    e.getFailInfoList().add("【事件错误】事件英文名与事件" + eventNameEn + "重复，请检查后修改");
+                }
             }
         }
     }
 
+    /**
+     * 属性检查
+     *
+     * @param trackEventList 跟踪事件列表
+     */
+    private void propCheck(List<TrackEvent> trackEventList) {
+        Set<String> dateTypeSet = Arrays.stream(TrackPropTypeEnum.values()).map(TrackPropTypeEnum::getText).collect(Collectors.toSet());
+
+        for (TrackEvent trackEvent : trackEventList) {
+            List<String> failInfoList = trackEvent.getFailInfoList();
+
+            List<TrackProp> trackPropList = trackEvent.getTrackPropList();
+            if (CollectionUtil.isEmpty(trackPropList)) {
+                failInfoList.add("【格式错误】事件属性为必填字段，请检查后修改");
+            }
+            for (TrackProp e : trackPropList) {
+                String dataType = e.getDataType();
+                String propNameCn = e.getPropNameCn();
+                String propNameEn = e.getPropNameEn();
+
+                if (StrUtil.isEmpty(propNameCn)) {
+                    failInfoList.add("【格式错误】属性中文名为必填字段，请检查后修改");
+                } else if(propNameCn.length() > 100) {
+                    failInfoList.add("【格式错误】属性中文名字数已超过100字，请检查后修改");
+                }
+
+                if (StrUtil.isEmpty(propNameEn)) {
+                    failInfoList.add("【格式错误】属性英文名为必填字段，请检查后修改");
+                } else if(propNameCn.length() > 100) {
+                    failInfoList.add("【格式错误】属性英文名字数已超过100字，请检查后修改");
+                }
+
+                if (StrUtil.isEmpty(dataType)) {
+                    failInfoList.add("【格式错误】数据类型为必填字段，请检查后修改");
+                } else {
+                    dataType = dataType.toUpperCase();
+                    e.setDataType(dataType);
+                    if(!dateTypeSet.contains(dataType)) {
+                        failInfoList.add("【属性错误】属性数据类型不存在，请检查后修改");
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 平台检查
+     *
+     * @param trackEventList 跟踪事件列表
+     */
+    private void platformCheck(List<TrackEvent> trackEventList) {
+        Set<String> platformSet = Arrays.stream(PlatformTypeEnum.values()).map(PlatformTypeEnum::getText).collect(Collectors.toSet());
+        for (TrackEvent e : trackEventList) {
+            List<String> failInfoList = e.getFailInfoList();
+
+            String platform = e.getPlatform();
+            if (StrUtil.isEmpty(platform)) {
+                failInfoList.add("【格式错误】埋点平台必填字段，请检查后修改");
+            } else {
+                String[] platforms = platform.split("/");
+                for (String s : platforms) {
+                    if(!platformSet.contains(s)) {
+                        failInfoList.add("【属性错误】" + s + "埋点平台不存在，请检查后修改");
+                    } else if (s.equals(PlatformTypeEnum.SERVER.getText())) {
+                        String apiName = e.getApiName();
+                        if (StrUtil.isEmpty(apiName)) {
+                            failInfoList.add("【格式错误】埋点平台含非服务端时，埋点位置为为必填字段，请检查后修改");
+                        }
+                    } else {
+                        String explanation = e.getExplanation();
+                        if (StrUtil.isEmpty(explanation)) {
+                            failInfoList.add("【格式错误】埋点平台含服务端时，埋点位置为为必填字段，请检查后修改");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 触发时机检查
+     *
+     * @param trackEventList 跟踪事件列表
+     */
+    private void touchMomentCheck(List<TrackEvent> trackEventList) {
+        for (TrackEvent e : trackEventList) {
+            List<String> failInfoList = e.getFailInfoList();
+            String touchMoment = e.getTouchMoment();
+            if (StrUtil.isEmpty(touchMoment)) {
+                failInfoList.add("【格式错误】触发时机为必填字段，请检查后修改");
+            }
+        }
+    }
+
+    /**
+     * 所属环境检查
+     *
+     * @param trackEventList 跟踪事件列表
+     */
+    private void envCheck(List<TrackEvent> trackEventList) {
+        Set<String> envSet = Arrays.stream(EnvEnum.values()).map(EnvEnum::getText).collect(Collectors.toSet());
+
+        for (TrackEvent e : trackEventList) {
+            List<String> failInfoList = e.getFailInfoList();
+
+            String env = e.getEnv();
+            if (StrUtil.isEmpty(env)) {
+                failInfoList.add("【格式错误】埋点所属环境为必填字段，请检查后修改");
+            } else {
+                String[] envs = env.split("/");
+                for (String s : envs) {
+                    if (!envSet.contains(s)) {
+                        failInfoList.add("【属性错误】埋点所属环境为不存在，请检查后修改");
+                    }
+                }
+            }
+        }
+    }
 }

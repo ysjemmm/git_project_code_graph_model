@@ -9,6 +9,9 @@ import com.timevale.forward.facade.api.request.TrackEventAddReq;
 import com.timevale.forward.facade.api.request.TrackEventModifyReq;
 import com.timevale.forward.facade.api.result.TrackEventDetailVO;
 import com.timevale.forward.facade.api.result.TrackEventVO;
+import com.timevale.forward.service.excel.track.TrackEvent;
+import com.timevale.forward.service.excel.track.TrackProp;
+import com.timevale.forward.service.excel.track.TrackRow;
 import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -55,6 +58,10 @@ public interface TrackEventCopier {
      * @return return
      */
     List<TrackEventVO> convert(List<TrackEventDO>trackEventDOList);
+
+    TrackEvent convert(TrackRow trackRow);
+
+    TrackProp transform(TrackRow trackRow);
 
     /**
      *

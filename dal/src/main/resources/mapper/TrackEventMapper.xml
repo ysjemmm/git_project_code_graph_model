@@ -147,12 +147,12 @@
     </select>
 
     <select id="selectByName" resultType="com.timevale.forward.dal.entity.TrackEventDO">
-        SELECT cn_name, eg_name
+        SELECT cn_name, eg_name, full_cn_name
         FROM track_event
         <where>
-            <if test="cnNameList != null and cnNameList.size() > 0">
-                and cn_name in
-                <foreach collection="cnNameList" item="item" separator="," open="(" close=")">
+            <if test="fullCnNameList != null and fullCnNameList.size() > 0">
+                and full_cn_name in
+                <foreach collection="fullCnNameList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
