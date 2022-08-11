@@ -1,6 +1,5 @@
 package com.timevale.forward.service.integration.inneruser;
 
-import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.security.facade.response.GroupResponse;
 import com.timevale.security.facade.response.SimpleGroupResponse;
 
@@ -19,7 +18,7 @@ public interface InnerGroupClient {
      * @param deptIdList 部门id列表
      * @return 部门简单信息
      */
-    List<SimpleGroupResponse> batchGetSimpleGroupList(List<Long> deptIdList);
+    List<SimpleGroupResponse> batchGetSimpleGroupList(List<String> deptIdList);
 
     /**
      * 批处理得到部门id名称映射
@@ -27,7 +26,7 @@ public interface InnerGroupClient {
      * @param deptIdList 部门id列表
      * @return 部门id，名称Map
      */
-    Map<Long, String> batchGetSimpleGroupMap(List<Long> deptIdList);
+    Map<String, String> batchGetSimpleGroupMap(List<String> deptIdList);
 
     /**
      * 得到单个部门信息
@@ -60,5 +59,5 @@ public interface InnerGroupClient {
      * @param isTree 是树
      * @return 部门树
      */
-    GroupResponse getGroupListTree(Boolean isTree);
+    List<GroupResponse> getGroupListTree(Boolean isTree);
 }

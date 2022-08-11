@@ -27,6 +27,8 @@ public enum BugFieldEnum {
 
     REASON("bug原因"),
 
+    LABEL("标签"),
+
     MODEL("模块");
 
     private final String text;

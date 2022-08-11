@@ -5,11 +5,11 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import io.swagger.models.auth.In;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -90,4 +90,7 @@ public class BizDemandVO extends ToString {
 
     @ApiModelProperty("项目发布时间")
     private Date projectEndDate;
+
+    @ApiModelProperty("标签名称")
+    private List<String> labelNames;
 }

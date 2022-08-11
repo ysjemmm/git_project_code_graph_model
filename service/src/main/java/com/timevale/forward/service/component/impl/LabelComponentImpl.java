@@ -1,0 +1,41 @@
+package com.timevale.forward.service.component.impl;
+
+import com.timevale.forward.dal.dao.LabelMapper;
+import com.timevale.forward.dal.entity.LabelDO;
+import com.timevale.forward.service.component.LabelComponent;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * @author xingyun
+ * @date 2021-12-13 13:58
+ **/
+@Component
+@Slf4j
+public class LabelComponentImpl implements LabelComponent {
+
+
+    @Resource
+    private LabelMapper labelMapper;
+
+    @Override
+    public List<Long> getLabelIds(List<Long> labelIds, List<Long> labelCategoryIds) {
+        if(CollectionUtils.isEmpty(labelIds)){
+            labelIds=new ArrayList<>();
+
+        }
+        if(!CollectionUtils.isEmpty(labelCategoryIds)){
+            List<LabelDO> labelDOList = labelMapper.getByCategoryIds(labelCategoryIds);
+            List<Long> oldLabelIds = labelDOList.stream().map(LabelDO::getId).collect(Collectors.toList());
+            labelIds.addAll(oldLabelIds);
+
+        }
+        return labelIds;
+    }
+}

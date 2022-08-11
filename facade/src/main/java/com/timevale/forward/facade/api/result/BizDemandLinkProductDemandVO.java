@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -59,4 +60,7 @@ public class BizDemandLinkProductDemandVO extends ToString {
 
     @ApiModelProperty("产品需求状态名称")
     private String statusText;
+
+    @ApiModelProperty("标签名称")
+    private List<String> labelNames;
 }

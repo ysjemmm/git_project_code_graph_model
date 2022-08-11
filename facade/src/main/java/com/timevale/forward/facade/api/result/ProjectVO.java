@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author: xingyun
@@ -112,4 +113,7 @@ public class ProjectVO extends ToString {
 
     @ApiModelProperty("提测实际时间")
     private Date actualTestDate;
+
+    @ApiModelProperty("标签名称")
+    private List<String> labelNames;
 }

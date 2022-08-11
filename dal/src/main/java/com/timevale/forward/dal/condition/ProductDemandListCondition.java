@@ -92,4 +92,5 @@ public class ProductDemandListCondition extends QueryBase {
      */
     private List<Long> inProductDemandIds;
 
+
 }

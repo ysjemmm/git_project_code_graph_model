@@ -69,6 +69,13 @@ public class ProjectComponentImpl implements ProjectComponent {
     @Resource
     private SqlOrderComponent sqlOrderComponent;
 
+    @Resource
+    private BizLabelMapper bizLabelMapper;
+
+    @Resource
+    private LabelMapper labelMapper;
+
+
     @Override
     public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
         // 查找产品经理
@@ -152,6 +159,32 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         }
 
+        //是否打标
+        List<BizLabelDO> bizLabelDOList;
+        if (CollectionUtils.isNotEmpty(condition.getLabelIds())) {
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(condition.getLabelIds(), BizTypeEnum.PROJECT.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            if(CollectionUtils.isEmpty(projectIds)){
+                //产品需求关联项目时,projectIds可能为空
+                projectIds=bizIds;
+            }else{
+                projectIds.retainAll(bizIds);
+            }
+            if (CollectionUtils.isEmpty(projectIds)) {
+                return ResultUtil.queryResultEmpty();
+            }
+        }
+        bizLabelDOList = bizLabelMapper.getByBizIdInType(projectIds, BizTypeEnum.PROJECT.getCode());
+        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
+                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
+
+        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
+        Map<Long, String> labelNameMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(labelIds)) {
+            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
+            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
+        }
+
         buildConditionBeforeQuery(projectIds, condition);
 
         // 产品线分析
@@ -175,7 +208,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         }
 
-        buildConditionBeforeQuery(projectIds, condition);
+        condition.setIds(projectIds);
         // 开始分页
         String collation = sqlOrderComponent.build(condition.getOrderFiled(), condition.getOrderCollation());
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), collation);
@@ -267,6 +300,11 @@ public class ProjectComponentImpl implements ProjectComponent {
             if (!warn) {
                 a.setContainRisk(riskSet.contains(a.getId()));
             }
+            if (labelIdMap.containsKey(a.getId())) {
+                List<Long> labelIdList = labelIdMap.get(a.getId());
+                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
+                a.setLabelNames(labelNames);
+            }
         }
 
         // 分页数据
@@ -302,7 +340,8 @@ public class ProjectComponentImpl implements ProjectComponent {
                 && (demandAudit == null || demandAudit.getActualDate() != null)
                 && (demandConstrue == null || demandConstrue.getActualDate() != null)
                 && (demandConstrueReverse == null || demandConstrueReverse.getActualDate() != null)
-                && (demandUedAudit == null || demandUedAudit.getActualDate() != null);;
+                && (demandUedAudit == null || demandUedAudit.getActualDate() != null);
+        ;
         if (dev) {
             status = ProjectStatusEnum.DEVING.getCode();
         }

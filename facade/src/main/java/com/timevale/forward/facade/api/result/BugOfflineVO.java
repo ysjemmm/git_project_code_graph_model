@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -107,4 +108,7 @@ public class BugOfflineVO extends ToString {
 
     @ApiModelProperty("预计解决完成日期")
     private Date expectSolveDate;
+
+    @ApiModelProperty("标签名称")
+    private List<String> labelNames;
 }

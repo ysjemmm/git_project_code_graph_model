@@ -75,7 +75,9 @@ public enum BizChangeLogFieldEnum {
      */
     PRODUCT_LINE("产品线"),
 
-    DESC("需求描述");
+    DESC("需求描述"),
+
+    LABEL("标签");
 
     private final String text;
 

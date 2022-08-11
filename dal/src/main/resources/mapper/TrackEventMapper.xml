@@ -145,5 +145,24 @@
          JOIN product_demand_track_event b ON a.id = b.track_event_id AND b.is_deleted = false
          WHERE b.product_demand_id = #{productDemandId} and a.is_deleted = false
     </select>
+
+    <select id="selectByName" resultType="com.timevale.forward.dal.entity.TrackEventDO">
+        SELECT cn_name, eg_name, full_cn_name
+        FROM track_event
+        <where>
+            <if test="fullCnNameList != null and fullCnNameList.size() > 0">
+                and full_cn_name in
+                <foreach collection="fullCnNameList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="egNameList != null and egNameList.size() > 0">
+                and eg_name in
+                <foreach collection="egNameList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
 </mapper>
 

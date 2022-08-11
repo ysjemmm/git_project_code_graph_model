@@ -1,0 +1,95 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.LabelCategoryMapper">
+
+
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.LabelCategoryDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into label_category (name,type, mark_man, mark_man_id,dept_id,create_man ,create_man_id)
+        values
+        (#{name},#{type},#{markMan}, #{markManId},#{deptId},#{createMan},#{createManId})
+    </insert>
+
+    <update id="update">
+        update label_category
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="type != null and type != ''">type = #{type},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modify_man_id = #{modifyManId},
+                mark_man = #{markMan},
+                mark_man_id = #{markManId},
+                dept_id = #{deptId},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.LabelCategoryDO">
+        select id,name,type, mark_man, mark_man_id,dept_id,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from label_category a
+        <where>
+            <if test="ids!=null and ids.size()>0">
+                and a.id in
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and a.is_deleted=false
+        </where>
+    </select>
+
+
+    <select id="list" resultType="com.timevale.forward.dal.entity.LabelCategoryDO">
+        select a.id,a.name,type, a.mark_man, a.mark_man_id,a.dept_id,
+        a.is_deleted,a.create_man ,a.create_man_id,a.create_date ,a.modify_man ,a.modify_man_id,a.modify_date
+        from label_category a
+        <if test="bizDomainIds != null and bizDomainIds.size() > 0">
+        left join label_category_biz_domain b on a.id=b.label_category_id and b.is_deleted=false
+        </if>
+        <where>
+            <if test="names!=null and names.size()>0">
+                and a.name in
+                <foreach collection="names" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="createManId != null and createManId != ''">and a.create_man_id = #{createManId}</if>
+            <if test="types!=null and types.size()>0">
+                and
+                <foreach collection="types" item="item" separator="or" open="(" close=")">
+                    a.type  like concat('%',#{item},'%')
+                </foreach>
+            </if>
+            <if test="bizDomainIds != null and bizDomainIds.size() > 0">
+                and b.biz_domain_id in
+                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and a.is_deleted=false
+        </where>
+        group by a.id
+    </select>
+
+    <select id="getAll" resultType="com.timevale.forward.dal.entity.LabelCategoryDO">
+        select id,name,type, mark_man, mark_man_id,dept_id,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from label_category where is_deleted=false
+    </select>
+
+    <select id="getByName" resultType="com.timevale.forward.dal.entity.LabelCategoryDO">
+        select id,name,type, mark_man, mark_man_id,dept_id,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from label_category
+        <where>
+            name = #{name} and is_deleted=false
+        </where>
+    </select>
+
+</mapper>
+
