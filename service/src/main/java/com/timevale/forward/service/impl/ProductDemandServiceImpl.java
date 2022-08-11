@@ -173,16 +173,19 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         //是否打标
-        List<Long> newLabelIds = labelComponent.getLabelIds(productDemandQueryList.getLabelIds(), productDemandQueryList.getLabelCategoryIds());
         List<BizLabelDO> bizLabelDOList;
-        if (CollectionUtils.isNotEmpty(newLabelIds)) {
+        if(CollectionUtils.isNotEmpty(productDemandQueryList.getLabelIds())||CollectionUtils.isNotEmpty(productDemandQueryList.getLabelCategoryIds())){
+            List<Long> newLabelIds = labelComponent.getLabelIds(productDemandQueryList.getLabelIds(), productDemandQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(newLabelIds)){
+                //类别下没有标签
+                return BaseResult.success(ResultUtil.queryResultEmpty());
+            }
             bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(bizIds)) {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
             condition.setInProductDemandIds(bizIds);
-
         }
 
         // 完整查询
@@ -482,8 +485,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     , ProjectStatusEnum.DEVING.getCode()
                     , ProjectStatusEnum.TESTING.getCode()));
         }
-        List<Long> labelIds = labelComponent.getLabelIds(productDemandLinkProjectQueryList.getLabelIds(), productDemandLinkProjectQueryList.getLabelCategoryIds());
-        condition.setLabelIds(labelIds);
+        if(CollectionUtils.isNotEmpty(productDemandLinkProjectQueryList.getLabelIds())||CollectionUtils.isNotEmpty(productDemandLinkProjectQueryList.getLabelCategoryIds())){
+            List<Long> labelIds = labelComponent.getLabelIds(productDemandLinkProjectQueryList.getLabelIds(), productDemandLinkProjectQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(labelIds)){
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            condition.setLabelIds(labelIds);
+        }
         PageQueryResult<ProjectVO> pageQueryResult = projectCmponent.page(condition, Lists.newArrayList()).getPageQueryResult();
         return BaseResult.success(pageQueryResult);
     }
@@ -527,8 +535,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         condition.setPageNum(productDemandLinkBizDemandQueryList.getPageNum());
         condition.setPageSize(productDemandLinkBizDemandQueryList.getPageSize());
         condition.setCollation(CommonConstant.DEFAULT_ORDER_BY);
-        List<Long> labelIds = labelComponent.getLabelIds(productDemandLinkBizDemandQueryList.getLabelIds(), productDemandLinkBizDemandQueryList.getLabelCategoryIds());
-        condition.setLabelIds(labelIds);
+        if(CollectionUtils.isNotEmpty(productDemandLinkBizDemandQueryList.getLabelIds())||CollectionUtils.isNotEmpty(productDemandLinkBizDemandQueryList.getLabelCategoryIds())){
+            List<Long> labelIds = labelComponent.getLabelIds(productDemandLinkBizDemandQueryList.getLabelIds(), productDemandLinkBizDemandQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(labelIds)){
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            condition.setLabelIds(labelIds);
+        }
         return BaseResult.success(bizDemandComponent.page(condition).getPageQueryResult());
     }
 

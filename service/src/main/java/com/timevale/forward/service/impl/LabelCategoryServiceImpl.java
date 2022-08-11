@@ -16,6 +16,7 @@ import com.timevale.forward.facade.api.result.LabelCategoryDetailVO;
 import com.timevale.forward.facade.api.result.LabelCategorySimpleVO;
 import com.timevale.forward.facade.api.result.LabelCategoryVO;
 import com.timevale.forward.facade.api.result.LabelSimpleVO;
+import com.timevale.forward.model.enums.AscriptionEnum;
 import com.timevale.forward.model.enums.BizTypeEnum;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.LabelCategoryCopier;
@@ -72,9 +73,11 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     @Override
     public BaseResult<PageQueryResult<LabelCategoryVO>> list(LabelCategoryQueryList labelCategoryQueryList) {
         log.info("类别列表,参数:{}", labelCategoryQueryList);
-
-        PageHelper.startPage(labelCategoryQueryList.getPageNum(), labelCategoryQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         LabelCategoryListCondition condition = LabelCategoryCopier.INSTANCE.convert(labelCategoryQueryList);
+        if (AscriptionEnum.CURRENT_USER.toString().equals(labelCategoryQueryList.getAscription())) {
+            condition.setCreateManId(LocalSessionUtils.getUserInfo().getId());
+        }
+        PageHelper.startPage(labelCategoryQueryList.getPageNum(), labelCategoryQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.list(condition);
         if (CollectionUtils.isEmpty(labelCategoryDOList)) {
             return BaseResult.success(ResultUtil.pageEmpty());

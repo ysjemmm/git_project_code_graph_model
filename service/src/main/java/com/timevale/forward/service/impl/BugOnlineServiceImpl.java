@@ -212,17 +212,20 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         if (resultIsEmpty) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
+
         //是否打标
-        List<Long> newLabelIds = labelComponent.getLabelIds(bugOnlineQueryList.getLabelIds(),bugOnlineQueryList.getLabelCategoryIds());
         List<BizLabelDO> bizLabelDOList;
-        if (CollectionUtils.isNotEmpty(newLabelIds)) {
+        if(CollectionUtils.isNotEmpty(bugOnlineQueryList.getLabelIds())|| CollectionUtils.isNotEmpty(bugOnlineQueryList.getLabelCategoryIds())){
+            List<Long> newLabelIds = labelComponent.getLabelIds(bugOnlineQueryList.getLabelIds(), bugOnlineQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(newLabelIds)){
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
             bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_ONLINE.getCode());
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(bizIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
             condition.setContainIds(bizIds);
-
         }
         // 开始分页
         String collation = sqlOrderComponent.build(bugOnlineQueryList.getOrderFiled(), bugOnlineQueryList.getOrderCollation());

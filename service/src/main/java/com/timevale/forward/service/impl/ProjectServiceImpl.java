@@ -187,8 +187,14 @@ public class ProjectServiceImpl implements ProjectService {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
         }
-        List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelIds(),projectQueryList.getLabelCategoryIds());
-        condition.setLabelIds(labelIds);
+
+        if(CollectionUtils.isNotEmpty(projectQueryList.getLabelIds())||CollectionUtils.isNotEmpty(projectQueryList.getLabelCategoryIds())){
+            List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelIds(), projectQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(labelIds)){
+                return BaseResult.success(ResultUtil.queryResultEmpty());
+            }
+            condition.setLabelIds(labelIds);
+        }
         return BaseResult.success(projectComponent.page(condition, projectIds));
     }
 
@@ -496,17 +502,20 @@ public class ProjectServiceImpl implements ProjectService {
                 , ProductDemandStatusEnum.INCLUDED.getCode()
                 , ProductDemandStatusEnum.PROGRESS.getCode()
                 , ProductDemandStatusEnum.ONLINE.getCode()));
+
         //是否打标
-        List<Long> newLabelIds = labelComponent.getLabelIds(productDemandQueryList.getLabelIds(),productDemandQueryList.getLabelCategoryIds());
         List<BizLabelDO> bizLabelDOList;
-        if (CollectionUtils.isNotEmpty(newLabelIds)) {
+        if(CollectionUtils.isNotEmpty(productDemandQueryList.getLabelIds())||CollectionUtils.isNotEmpty(productDemandQueryList.getLabelCategoryIds())){
+            List<Long> newLabelIds = labelComponent.getLabelIds(productDemandQueryList.getLabelIds(), productDemandQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(newLabelIds)){
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
             bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(bizIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
             condition.setInProductDemandIds(bizIds);
-
         }
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
@@ -720,8 +729,13 @@ public class ProjectServiceImpl implements ProjectService {
                 return BaseResult.success(new ArrayList<>());
             }
         }
-        List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelIds(), projectQueryList.getLabelCategoryIds());
-        condition.setLabelIds(labelIds);
+        if(CollectionUtils.isNotEmpty(projectQueryList.getLabelIds())||CollectionUtils.isNotEmpty(projectQueryList.getLabelCategoryIds())){
+            List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelIds(), projectQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(labelIds)){
+                return BaseResult.success(new ArrayList<>());
+            }
+            condition.setLabelIds(labelIds);
+        }
         List<ProductLineAnalyseVO> analyseVOList = projectComponent.page(condition, projectIds).getAnalyseVOList();
         return BaseResult.success(analyseVOList);
     }

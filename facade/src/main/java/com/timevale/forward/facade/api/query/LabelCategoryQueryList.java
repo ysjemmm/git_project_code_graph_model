@@ -29,4 +29,7 @@ public class LabelCategoryQueryList extends QueryBase {
     @NotNull(message = "业务域不能为空")
     private List<Long> bizDomainIds;
 
+    @ApiModelProperty("CURRENT_USER:我创建的,ALL:全部")
+    private String ascription;
+
 }

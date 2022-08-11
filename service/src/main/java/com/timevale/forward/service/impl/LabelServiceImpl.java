@@ -13,10 +13,12 @@ import com.timevale.forward.facade.api.request.LabelAddReq;
 import com.timevale.forward.facade.api.request.LabelModifyReq;
 import com.timevale.forward.facade.api.result.LabelDetailVO;
 import com.timevale.forward.facade.api.result.LabelVO;
+import com.timevale.forward.model.enums.AscriptionEnum;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.LabelCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -60,8 +62,12 @@ public class LabelServiceImpl implements LabelService {
     @Override
     public BaseResult<PageQueryResult<LabelVO>> list(LabelQueryList labelQueryList) {
         log.info("标签列表,参数:{}", labelQueryList);
-        PageHelper.startPage(labelQueryList.getPageNum(), labelQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         LabelListCondition condition = LabelCopier.INSTANCE.convert(labelQueryList);
+        if (AscriptionEnum.CURRENT_USER.toString().equals(labelQueryList.getAscription())) {
+            condition.setCreateManId(LocalSessionUtils.getUserInfo().getId());
+        }
+
+        PageHelper.startPage(labelQueryList.getPageNum(), labelQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<LabelDO> labelDOList = labelMapper.list(condition);
         if (CollectionUtils.isEmpty(labelDOList)) {
             return BaseResult.success(ResultUtil.pageEmpty());
