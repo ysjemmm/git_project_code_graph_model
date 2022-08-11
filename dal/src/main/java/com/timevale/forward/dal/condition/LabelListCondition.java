@@ -37,4 +37,9 @@ public class LabelListCondition extends QueryBase {
      */
     private List<Long> bizDomainIds;
 
+    /**
+     * createManId
+     */
+    private String createManId;
+
 }

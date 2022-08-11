@@ -343,10 +343,13 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         condition.setStatusList(statusList);
 
         //是否打标
-        List<Long> newLabelIds = labelComponent.getLabelIds(bizDemandSubProductDemandQueryList.getLabelIds(),bizDemandSubProductDemandQueryList.getLabelCategoryIds());
         List<BizLabelDO> bizLabelDOList;
-        if (CollectionUtils.isNotEmpty(newLabelIds)) {
-            bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_OFFLINE.getCode());
+        if(CollectionUtils.isNotEmpty(bizDemandSubProductDemandQueryList.getLabelIds())||CollectionUtils.isNotEmpty(bizDemandSubProductDemandQueryList.getLabelCategoryIds())){
+            List<Long> newLabelIds = labelComponent.getLabelIds(bizDemandSubProductDemandQueryList.getLabelIds(), bizDemandSubProductDemandQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(newLabelIds)){
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BIZ_DEMAND.getCode());
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(bizIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
