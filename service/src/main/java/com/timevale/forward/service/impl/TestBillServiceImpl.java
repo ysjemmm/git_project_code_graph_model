@@ -128,6 +128,9 @@ public class TestBillServiceImpl implements TestBillService {
                 testBill.setStatus(TestBillStatusEnum.NO_SELF_TEST.getCode());
                 testBill.setTestManId(testBillAddReq.getTestManId());
                 testBill.setTestMan(testBillAddReq.getTestMan());
+                // 更新提测人
+                testBill.setCreateManId(userId);
+                testBill.setCreateMan(alias + CommonConstant.JOIN_LINE + userInfo.getName());
                 testBillMapper.updateByProjectId(testBill);
             } else {
                 throw new BaseBizRuntimeException("该项目已经有提测单了!");

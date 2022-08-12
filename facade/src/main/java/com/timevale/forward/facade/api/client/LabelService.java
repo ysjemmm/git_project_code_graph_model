@@ -4,6 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.LabelQueryList;
 import com.timevale.forward.facade.api.request.LabelAddReq;
+import com.timevale.forward.facade.api.request.LabelGetReq;
 import com.timevale.forward.facade.api.request.LabelModifyReq;
 import com.timevale.forward.facade.api.result.LabelDetailVO;
 import com.timevale.forward.facade.api.result.LabelVO;
@@ -27,10 +28,10 @@ public interface LabelService {
     /**
      * 查看
      *
-     * @param labelId labelId
+     * @param labelGetReq labelGetReq
      * @return 详情信息
      */
-    BaseResult<LabelDetailVO> get(Long labelId);
+    BaseResult<LabelDetailVO> get(LabelGetReq labelGetReq);
 
     /**
      * 查看
