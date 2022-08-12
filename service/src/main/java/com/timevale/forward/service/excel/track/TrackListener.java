@@ -39,6 +39,8 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
 
         TrackEvent trackEvent = trackEventList.get(eventIndex);
 
+        log.info("导入第{}行信息：{}", rowIndex, trackEvent);
+
         // 当前事件的合并行数
         Integer firstRowIndex = trackEvent.getFirstRowIndex();
         Integer lastRowIndex = trackEvent.getLastRowIndex();
