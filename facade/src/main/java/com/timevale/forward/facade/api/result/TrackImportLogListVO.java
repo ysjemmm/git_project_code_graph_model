@@ -29,8 +29,8 @@ public class TrackImportLogListVO extends ToString {
     @ApiModelProperty("处理状态描述")
     private String statusName;
 
-    @ApiModelProperty("文件id")
-    private String fileId;
+    @ApiModelProperty("文件信息")
+    private TrackImportLogFileVO fileInfo;
 
     @ApiModelProperty("导入事件数")
     private Integer importCount;

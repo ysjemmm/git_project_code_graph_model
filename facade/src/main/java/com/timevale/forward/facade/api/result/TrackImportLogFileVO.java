@@ -12,8 +12,8 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("埋点导入模板")
-public class TrackImportTemplateVO extends ToString {
+@ApiModel("埋点导入相关文件")
+public class TrackImportLogFileVO extends ToString {
 
     @ApiModelProperty("文件id")
     private String fileId;
