@@ -21,6 +21,8 @@ public class TrackEvent {
     private String env;
     private List<TrackProp> trackPropList = new ArrayList<>();
 
+    private Integer firstRowIndex;
+    private Integer lastRowIndex;
     private String fullNameCn;
     private List<String> failInfoList = new ArrayList<>();
 }

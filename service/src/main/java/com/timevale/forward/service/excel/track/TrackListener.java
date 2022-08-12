@@ -23,6 +23,7 @@ import java.util.Map;
 @Slf4j
 public class TrackListener extends AnalysisEventListener<TrackRow> {
 
+    private int eventIndex = 0;
     private int headRow = 3;
     private final List<TrackEvent> trackEventList;
 
@@ -32,21 +33,29 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
 
     @Override
     public void invoke(TrackRow trackRow, AnalysisContext context) {
-        Integer rowIndex = context.readRowHolder().getRowIndex();
-
-        if(BeanUtil.isEmpty(trackRow)) {
+        if (BeanUtil.isEmpty(trackRow)) {
             return;
         }
-        String firstClassify = trackRow.getFirstClassify();
-        if (StrUtil.isNotEmpty(firstClassify)) {
-            TrackEvent trackEvent = new TrackEvent();
+        Integer rowIndex = context.readRowHolder().getRowIndex();
+
+        TrackEvent trackEvent = trackEventList.get(eventIndex);
+
+        // 当前事件的合并行数
+        Integer firstRowIndex = trackEvent.getFirstRowIndex();
+        Integer lastRowIndex = trackEvent.getLastRowIndex();
+
+        // 如果为首行则复制全部数据
+        if(firstRowIndex.equals(rowIndex)) {
             BeanUtil.copyProperties(trackRow, trackEvent);
-            trackEventList.add(trackEvent);
         }
-        List<TrackProp> trackPropList = CollectionUtil.getLast(trackEventList).getTrackPropList();
+        // 增加属性数据
         TrackProp trackProp = new TrackProp();
         BeanUtil.copyProperties(trackRow, trackProp);
-        trackPropList.add(trackProp);
+        trackEvent.getTrackPropList().add(trackProp);
+
+        if (lastRowIndex.equals(rowIndex)) {
+            eventIndex++;
+        }
     }
 
     @Override
