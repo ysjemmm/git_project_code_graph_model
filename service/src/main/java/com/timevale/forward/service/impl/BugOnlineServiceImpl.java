@@ -238,6 +238,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         if (CollectionUtils.isEmpty(bugOnlineVOList)) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
+        //标签
         List<Long>bugOnlineIds = bugOnlineDOList.stream().map(BugOnlineListDO::getId).collect(Collectors.toList());
         bizLabelDOList = bizLabelMapper.getByBizIdInType(bugOnlineIds, BizTypeEnum.BUG_ONLINE.getCode());
         Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
@@ -249,6 +250,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
             labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
         }
+
         // 查询对应产品线和业务域
         List<Long> bugOnlineIdList = bugOnlineVOList.stream().map(BugOnlineVO::getId).collect(Collectors.toList());
         List<BugOnlineProductLineDO> bugOnlineProductLineDOList = bugOnlineProductLineMapper.selectByBugOnlineIdList(bugOnlineIdList);
@@ -258,6 +260,22 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         List<Long> bizDomainIdList = productLineDOList.stream().map(ProductLineDO::getBizDomainId).collect(Collectors.toList());
         List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByIdList(bizDomainIdList);
+
+        //模块名称
+        List<Long>modelIds=new ArrayList<>();
+        Map<Long, List<Long>> modelMap = new HashMap<>();
+        List<ModelDO> modelDOList=new ArrayList<>();
+        bugOnlineDOList.forEach(a->{
+            List<Long> existModelIds = JSONObject.parseArray(a.getModelId(), Long.class);
+            if (!CollectionUtils.isEmpty(existModelIds)) {
+                modelIds.addAll(existModelIds);
+                modelMap.put(a.getId(),existModelIds);
+            }
+        });
+        if(CollectionUtils.isNotEmpty(modelIds)){
+            modelDOList = modelMapper.getByIds(modelIds);
+        }
+        Map<Long, String> modelNameMap  = modelDOList.stream().collect(Collectors.toMap(ModelDO::getId, ModelDO::getName, (v1, v2) -> v2));
 
         Map<Long, ProductLineDO> productLineMap = productLineDOList.stream().collect(Collectors.toMap(ProductLineDO::getId, Function.identity()));
         Map<Long, BizDomainDO> bizDomainDOMap = bizDomainDOList.stream().collect(Collectors.toMap(BizDomainDO::getId, Function.identity()));
@@ -312,6 +330,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 List<Long> labelIdList = labelIdMap.get(e.getId());
                 List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
                 e.setLabelNames(labelNames);
+            }
+            if (modelMap.containsKey(e.getId())) {
+                List<Long> modelIdList = modelMap.get(e.getId());
+                List<String> labelNames = modelIdList.stream().filter(modelNameMap::containsKey).map(modelNameMap::get).collect(Collectors.toList());
+                e.setModelNames(labelNames);
             }
         }
 

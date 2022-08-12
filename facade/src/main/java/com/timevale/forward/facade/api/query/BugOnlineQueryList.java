@@ -87,4 +87,7 @@ public class BugOnlineQueryList extends QueryBase {
 
     @ApiModelProperty("选中为标签类别时填写,类别id")
     private List<Long> labelCategoryIds;
+
+    @ApiModelProperty("模块id")
+    private List<Long> modelIds;
 }

@@ -7,7 +7,7 @@
 
     <select id="selectListByCondition" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
         select bo.id, bo.name, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env,
-        bo.reason, bo.belong, bo.dismiss_cause, bo.customer_name, bo.expect_launch_date, bo.source,
+        bo.reason, bo.belong, bo.dismiss_cause, bo.customer_name, bo.expect_launch_date, bo.source,bo.model_id,
         bo.create_date, bo.modify_date
         from bug_online bo
         left join bug_online_product_line bopl on bo.id = bopl.bug_online_id
@@ -78,6 +78,12 @@
                 and bo.source in
                 <foreach collection="sourceList" item="item" separator="," open="(" close=")">
                     #{item}
+                </foreach>
+            </if>
+            <if test="modelIds!=null and modelIds.size()>0">
+                and
+                <foreach collection="modelIds" item="item" separator="or" open="(" close=")">
+                    bo.model_id  like concat('%',#{item},'%')
                 </foreach>
             </if>
             <if test="productLineIdList != null and productLineIdList.size() > 0">

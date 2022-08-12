@@ -97,4 +97,7 @@ public class BugOnlineVO extends ToString {
 
     @ApiModelProperty("标签名称")
     private List<String> labelNames;
+
+    @ApiModelProperty("模块名称")
+    private List<String> modelNames;
 }
