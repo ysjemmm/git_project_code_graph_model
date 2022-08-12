@@ -130,22 +130,11 @@ public class LabelServiceImpl implements LabelService {
     @Override
     public BaseResult<LabelDetailVO> get(LabelGetReq labelGetReq) {
         log.info("标签查看,参数:{}", labelGetReq);
-        if (labelGetReq.getCategoryId() == null && labelGetReq.getLabelId() == null) {
-            throw new BaseBizRuntimeException("类别id和标签id不能同时为空");
-        }
-        Long categoryId;
+        Long categoryId=labelGetReq.getCategoryId();
         LabelDetailVO labelDetailVO = new LabelDetailVO();
-        if (labelGetReq.getCategoryId() != null) {
-            categoryId = labelGetReq.getCategoryId();
-            List<LabelDO> labelDOList = labelMapper.getByCategoryIds(Lists.newArrayList(categoryId));
-            labelDetailVO.setNames(labelDOList.stream().map(LabelDO::getName).collect(Collectors.toList()));
-        } else {
-            LabelDO labelDO = labelMapper.get(labelGetReq.getLabelId());
-            if (labelDO == null) {
-                throw new BaseBizRuntimeException("找不到标签");
-            }
-            categoryId = labelDO.getLabelCategoryId();
-        }
+
+        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(Lists.newArrayList(categoryId));
+        labelDetailVO.setNames(labelDOList.stream().map(LabelDO::getName).collect(Collectors.toList()));
 
         List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(Lists.newArrayList(categoryId));
         if (CollectionUtils.isEmpty(labelCategoryDOList)) {
