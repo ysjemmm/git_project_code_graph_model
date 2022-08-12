@@ -473,7 +473,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             List<Long> bizDemandIds = productBizDemand.stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
             condition.setBizDemandIds(bizDemandIds);
         }
-        PageHelper.startPage(productDemandLinkBizDemandQueryList.getPageNum(), productDemandLinkBizDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+
+        condition.setPageNum(productDemandLinkBizDemandQueryList.getPageNum());
+        condition.setPageNum(productDemandLinkBizDemandQueryList.getPageSize());
         return BaseResult.success(bizDemandComponent.page(condition).getPageQueryResult());
     }
 
