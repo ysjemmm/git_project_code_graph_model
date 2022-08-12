@@ -15,6 +15,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @ApiModel("线上bug 不用修复")
 public class BugOnlineNoRepairReq extends BaseReq {
+
     @ApiModelProperty("线上bug id")
     @NotNull(message = "线上bug id不能为空")
     private Long id;
