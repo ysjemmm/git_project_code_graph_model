@@ -349,7 +349,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
             if(CollectionUtils.isEmpty(newLabelIds)){
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
-            bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BIZ_DEMAND.getCode());
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(bizIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
@@ -367,7 +367,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
             return BaseResult.success(ResultUtil.pageEmpty());
         }
         List<Long>bizDemandIds = productDemandDOList.stream().map(BizDemandLinkProductDemandListDO::getId).collect(Collectors.toList());
-        bizLabelDOList = bizLabelMapper.getByBizIdInType(bizDemandIds, BizTypeEnum.BIZ_DEMAND.getCode());
+        bizLabelDOList = bizLabelMapper.getByBizIdInType(bizDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
         Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
                 , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
 

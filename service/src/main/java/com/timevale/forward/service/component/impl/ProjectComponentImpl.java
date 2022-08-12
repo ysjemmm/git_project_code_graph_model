@@ -164,7 +164,12 @@ public class ProjectComponentImpl implements ProjectComponent {
         if (CollectionUtils.isNotEmpty(condition.getLabelIds())) {
             bizLabelDOList = bizLabelMapper.getByLabelIdInType(condition.getLabelIds(), BizTypeEnum.PROJECT.getCode());
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
-            projectIds.retainAll(bizIds);
+            if(CollectionUtils.isEmpty(projectIds)){
+                //产品需求关联项目时,projectIds可能为空
+                projectIds=bizIds;
+            }else{
+                projectIds.retainAll(bizIds);
+            }
             if (CollectionUtils.isEmpty(projectIds)) {
                 return ResultUtil.queryResultEmpty();
             }
