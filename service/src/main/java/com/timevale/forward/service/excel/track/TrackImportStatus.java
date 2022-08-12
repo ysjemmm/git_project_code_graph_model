@@ -1,5 +1,6 @@
 package com.timevale.forward.service.excel.track;
 
+import com.timevale.mandarin.common.result.ToString;
 import lombok.Data;
 
 /**
@@ -7,7 +8,13 @@ import lombok.Data;
  * @date 2022/08/10 14:27
  */
 @Data
-public class TrackStatus {
+public class TrackImportStatus extends ToString {
+
+    /**
+     * 导入进度
+     */
+    private Integer progress = 0;
+
     /**
      * 是否取消导入
      */

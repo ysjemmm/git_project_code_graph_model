@@ -33,6 +33,7 @@ import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.framework.tedis.util.TedisUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -74,8 +75,6 @@ public class TrackImportServiceImpl implements TrackImportService {
     private ModelMapper modelMapper;
     @Resource
     private TrackImportLogMapper trackImportLogMapper;
-    @Resource
-    private SqlOrderComponent sqlOrderComponent;
 
     @Value("${templateFileId:d3a98af8ea754d11ae27d50b563d9c1f}")
     private String templateFileId;
@@ -158,8 +157,6 @@ public class TrackImportServiceImpl implements TrackImportService {
 
     @Override
     public BaseResult<TrackImportProgressVO> progress() {
-        String userId = LocalSessionUtils.getUserInfo().getId();
-        String statusKey = CommonConstant.TRACK_IMPORT_STATUS + userId;
         return BaseResult.success(new TrackImportProgressVO());
     }
 

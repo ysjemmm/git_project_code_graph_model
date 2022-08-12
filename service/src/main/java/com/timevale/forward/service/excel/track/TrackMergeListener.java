@@ -41,7 +41,7 @@ public class TrackMergeListener extends AnalysisEventListener<TrackRow> {
     @Override
     public void doAfterAllAnalysed(AnalysisContext analysisContext) {
         CollectionUtil.sort(trackEventList, Comparator.comparingInt(TrackEvent::getFirstRowIndex));
-        log.info("导入文件读取完成");
+        log.info("导入文件扫描完成");
     }
 
 }
