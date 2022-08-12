@@ -14,14 +14,24 @@ public interface TrackImportComponent {
      *
      * @return {@link TrackImportStatus}
      */
-    TrackImportStatus getStatus();
+    int getProgress();
 
     /**
-     * 配置当前导入状态
+     * 更新进展
      *
-     * @param status 状态
+     * @param progress 进展
      */
-    void setStatus(TrackImportStatus status);
+    void updateProgress(int progress);
+
+    /**
+     * 标记取消
+     */
+    void cancelTag();
+
+    /**
+     * 删除状态
+     */
+    void deleteStatus();
 
     void importEvent(TrackImportReq trackImportReq);
 }

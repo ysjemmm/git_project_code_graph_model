@@ -15,15 +15,17 @@ import com.timevale.forward.facade.api.request.TrackImportReq;
 import com.timevale.forward.facade.api.result.TrackImportLogFileVO;
 import com.timevale.forward.facade.api.result.TrackImportLogListVO;
 import com.timevale.forward.facade.api.result.TrackImportProgressVO;
-import com.timevale.forward.model.enums.TrackImportResultEnum;
-import com.timevale.forward.model.enums.TrackImportStatusEnum;
+import com.timevale.forward.model.enums.TrackImportLogResultEnum;
+import com.timevale.forward.model.enums.TrackImportLogStatusEnum;
 import com.timevale.forward.service.component.TrackImportComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TrackImportLogCopier;
+import com.timevale.forward.service.excel.track.TrackImportStatus;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -52,15 +54,28 @@ public class TrackImportServiceImpl implements TrackImportService {
     @Value("${templateFileId:d3a98af8ea754d11ae27d50b563d9c1f}")
     private String templateFileId;
 
-
     @Override
     public BaseResult<Boolean> importEvent(TrackImportReq trackImportReq) {
-        trackImportComponent.importEvent(trackImportReq);
+        // 判断当前是否有导入任务
+        // TrackImportStatus importStatus = trackImportComponent.getProgress();
+        // AssertUtil.checkState(importStatus == null, "当前已有导入任务");
+
+        // 开始导入
+        try {
+            trackImportComponent.importEvent(trackImportReq);
+        } finally {
+            // 删除导入状态
+            trackImportComponent.deleteStatus();
+        }
+
         return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<Boolean> cancel() {
+
+
+
         return BaseResult.success(true);
     }
 
@@ -107,8 +122,8 @@ public class TrackImportServiceImpl implements TrackImportService {
 
         List<TrackImportLogListVO> result = trackImportLogDOList.stream().map(TrackImportLogCopier.INSTANCE::convert).collect(Collectors.toList());
         result.forEach(e -> {
-            e.setStatusName(TrackImportStatusEnum.getTextByCode(e.getStatus()));
-            e.setResultName(TrackImportResultEnum.getTextByCode(e.getResult()));
+            e.setStatusName(TrackImportLogStatusEnum.getTextByCode(e.getStatus()));
+            e.setResultName(TrackImportLogResultEnum.getTextByCode(e.getResult()));
         });
 
         // 文件信息

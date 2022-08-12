@@ -35,6 +35,7 @@ import javax.annotation.Resource;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -64,21 +65,44 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     // 限制导入事件条数
     public static final int importEventLimit = 100;
 
-    private static final String TRACK_IMPORT_STATUS = "forward:track:import:status:";
+    private static final String TRACK_IMPORT_CANCEL = "forward:track:import:cancel:";
+    private static final String TRACK_IMPORT_PROGRESS = "forward:track:import:progress:";
 
     @Override
-    public TrackImportStatus getStatus() {
+    public int getProgress() {
+        String userId = LocalSessionUtils.getUserInfo().getId();
+        String key = TRACK_IMPORT_PROGRESS + userId;
 
-
-        return null;
+        int progress = TedisUtil.get(key);
+        log.info("获取用户{}导入进度：{}%", userId, progress);
+        return progress;
     }
 
     @Override
-    public void setStatus(TrackImportStatus status) {
-        String statusKey = TRACK_IMPORT_STATUS + LocalSessionUtils.getUserInfo().getId();
+    public void updateProgress(int progress) {
+        String userId = LocalSessionUtils.getUserInfo().getId();
+        String key = TRACK_IMPORT_PROGRESS + userId;
 
-        TedisUtil.set(statusKey, status);
+        log.info("更新用户{}导入进度：{}%", userId, progress);
+        TedisUtil.set(key, progress, 10, TimeUnit.MINUTES);
+    }
 
+    @Override
+    public void cancelTag() {
+        String userId = LocalSessionUtils.getUserInfo().getId();
+        String key = TRACK_IMPORT_CANCEL + userId;
+
+        log.info("用户{}取消导入操作", userId);
+        TedisUtil.set(key, true, 10, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public void deleteStatus() {
+        String userId = LocalSessionUtils.getUserInfo().getId();
+        String statusKey = TRACK_IMPORT_CANCEL + userId;
+
+        log.info("删除用户{}导入相关状态", userId);
+        TedisUtil.delete(statusKey);
     }
 
     @Override
@@ -524,11 +548,11 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             String fileId = fileDownloadDTO.getFileId();
 
             TrackImportLogDO trackImportLogDO = new TrackImportLogDO();
-            trackImportLogDO.setStatus(TrackImportStatusEnum.FAILURE.getCode());
+            trackImportLogDO.setStatus(TrackImportLogStatusEnum.FAILURE.getCode());
             trackImportLogDO.setFileId(fileId);
             trackImportLogDO.setImportCount(importCount);
             trackImportLogDO.setImportFailCount(importFailCount);
-            trackImportLogDO.setResult(TrackImportResultEnum.FAILURE.getCode());
+            trackImportLogDO.setResult(TrackImportLogResultEnum.FAILURE.getCode());
             trackImportLogMapper.insert(trackImportLogDO);
 
         } catch (IOException e) {
