@@ -2,7 +2,9 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.query.TaskImportLogQueryList;
 import com.timevale.forward.facade.api.request.TrackImportReq;
+import com.timevale.forward.facade.api.result.TrackImportLogListVO;
 import com.timevale.forward.facade.api.result.TrackImportLogVO;
 import com.timevale.forward.facade.api.result.TrackImportProgressVO;
 import com.timevale.forward.facade.api.result.TrackImportTemplateVO;
@@ -49,7 +51,8 @@ public interface TrackImportService {
     /**
      * 导入记录
      *
+     * @param query 查询
      * @return {@link BaseResult}<{@link PageQueryResult}<{@link TrackImportLogVO}>>
      */
-    BaseResult<PageQueryResult<TrackImportLogVO>> log();
+    BaseResult<PageQueryResult<TrackImportLogListVO>> log(TaskImportLogQueryList query);
 }

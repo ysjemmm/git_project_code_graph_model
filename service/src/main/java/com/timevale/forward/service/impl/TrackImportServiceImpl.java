@@ -2,31 +2,34 @@ package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.io.resource.ResourceUtil;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import cn.hutool.poi.excel.ExcelFileUtil;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.enums.CellExtraTypeEnum;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
 import com.timevale.crm.sdk.common.utils.file.FileUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TrackImportService;
+import com.timevale.forward.facade.api.query.TaskImportLogQueryList;
 import com.timevale.forward.facade.api.request.TrackImportReq;
+import com.timevale.forward.facade.api.result.TrackImportLogListVO;
 import com.timevale.forward.facade.api.result.TrackImportLogVO;
 import com.timevale.forward.facade.api.result.TrackImportProgressVO;
 import com.timevale.forward.facade.api.result.TrackImportTemplateVO;
-import com.timevale.forward.model.enums.EnvEnum;
-import com.timevale.forward.model.enums.PlatformTypeEnum;
-import com.timevale.forward.model.enums.TrackDataTypeEnum;
-import com.timevale.forward.model.enums.TrackMapEnum;
+import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TrackEventCopier;
+import com.timevale.forward.service.copy.TrackImportLogCopier;
 import com.timevale.forward.service.excel.track.*;
 import com.timevale.forward.service.utils.EnvUtils;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
@@ -67,6 +70,10 @@ public class TrackImportServiceImpl implements TrackImportService {
     private ProductLineMapper productLineMapper;
     @Resource
     private ModelMapper modelMapper;
+    @Resource
+    private TrackImportLogMapper trackImportLogMapper;
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
 
     @Value("${templateFileId:b210b33a8167439e930dfe7dd3808ab8}")
     private String templateFileId;
@@ -128,14 +135,14 @@ public class TrackImportServiceImpl implements TrackImportService {
             } else {
                 System.out.println("完美通过");
             }
-
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("埋点导入IO异常");
+            throw new BaseBizRuntimeException("埋点导入处理失败");
         } finally {
             // 删除临时文件
             importFile.delete();
             if (outputFile != null) {
-                // outputFile.delete();
+                outputFile.delete();
             }
         }
 
@@ -160,8 +167,23 @@ public class TrackImportServiceImpl implements TrackImportService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<TrackImportLogVO>> log() {
-        return null;
+    public BaseResult<PageQueryResult<TrackImportLogListVO>> log(TaskImportLogQueryList query) {
+        PageHelper.startPage(query.pageNum, query.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        List<TrackImportLogDO> trackImportLogDOList = trackImportLogMapper.selectAll();
+
+        List<TrackImportLogListVO> result = trackImportLogDOList.stream().map(TrackImportLogCopier.INSTANCE::convert).collect(Collectors.toList());
+        result.forEach(e -> {
+            e.setStatusName(TrackImportStatusEnum.getTextByCode(e.getStatus()));
+            e.setResultName(TrackImportResultEnum.getTextByCode(e.getResult()));
+        });
+
+        // 返回分页数据
+        PageInfo<TrackImportLogDO> pageInfo = new PageInfo<>(trackImportLogDOList);
+        PageQueryResult<TrackImportLogListVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(result);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
+        return BaseResult.success(pageQueryResult);
     }
 
     /**
@@ -482,6 +504,9 @@ public class TrackImportServiceImpl implements TrackImportService {
         Map<Integer, Integer> mergeInfo = new HashMap<>();
 
         int startRow = 3;
+        int importCount = trackEventList.size();
+        int importFailCount = 0;
+
         for (TrackEvent trackEvent : trackEventList) {
             TrackFailRow trackFailRow = TrackEventCopier.INSTANCE.convert(trackEvent);
 
@@ -490,6 +515,7 @@ public class TrackImportServiceImpl implements TrackImportService {
             if (CollectionUtil.isNotEmpty(failInfoList)) {
                 String failInfo = String.join("\n", failInfoList);
                 trackFailRow.setFailInfo(failInfo);
+                importFailCount++;
             }
 
             List<TrackProp> trackPropList = trackEvent.getTrackPropList();
@@ -521,7 +547,23 @@ public class TrackImportServiceImpl implements TrackImportService {
                     .registerWriteHandler(new TrackMergeHandler(mergeInfo))
                     .doWrite(trackFailRowList);
         } catch (FileNotFoundException e) {
-            log.error("读取模板文件失败");
+            log.error("错误信息写出失败");
+        }
+
+        try (InputStream ins = new FileInputStream(outputFile)) {
+            FileDownloadDTO fileDownloadDTO = FileUtil.uploadFileToOSS(ins, "埋点事件检验错误文件.xlsx", envUtils.getEnv());
+            String fileId = fileDownloadDTO.getFileId();
+
+            TrackImportLogDO trackImportLogDO = new TrackImportLogDO();
+            trackImportLogDO.setStatus(TrackImportStatusEnum.FAILURE.getCode());
+            trackImportLogDO.setFileId(fileId);
+            trackImportLogDO.setImportCount(importCount);
+            trackImportLogDO.setImportFailCount(importFailCount);
+            trackImportLogDO.setResult(TrackImportResultEnum.FAILURE.getCode());
+            trackImportLogMapper.insert(trackImportLogDO);
+
+        } catch (IOException e) {
+            log.error("错误文件上传失败");
         }
     }
 }
