@@ -100,5 +100,6 @@
         <mapper resource="mapper/LabelMapper.xml" />
         <mapper resource="mapper/LabelCategoryBizDomain.xml" />
         <mapper resource="mapper/BizLabelMapper.xml" />
+        <mapper resource="mapper/TrackImportLogMapper.xml" />
     </mappers>
 </configuration>

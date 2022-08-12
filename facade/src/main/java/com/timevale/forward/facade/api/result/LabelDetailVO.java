@@ -33,6 +33,9 @@ public class LabelDetailVO extends ToString {
     @ApiModelProperty("标签名称")
     private String name;
 
+    @ApiModelProperty("标签名称")
+    private List<String> names;
+
     @ApiModelProperty("模块名称")
     private List<Integer> types;
 

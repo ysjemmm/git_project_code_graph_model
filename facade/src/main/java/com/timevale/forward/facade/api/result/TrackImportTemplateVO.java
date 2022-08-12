@@ -17,4 +17,10 @@ public class TrackImportTemplateVO extends ToString {
 
     @ApiModelProperty("文件id")
     private String fileId;
+
+    @ApiModelProperty("文件名")
+    private String fileName;
+
+    @ApiModelProperty("文件下载地址")
+    private String downloadUrl;
 }

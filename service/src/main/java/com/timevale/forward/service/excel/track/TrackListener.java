@@ -9,6 +9,8 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
+import com.timevale.forward.service.copy.TrackEventCopier;
+import com.timevale.forward.service.copy.TrackPropCopier;
 import com.timevale.mandarin.base.util.AssertUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,6 +25,7 @@ import java.util.Map;
 @Slf4j
 public class TrackListener extends AnalysisEventListener<TrackRow> {
 
+    private int eventIndex = 0;
     private int headRow = 3;
     private final List<TrackEvent> trackEventList;
 
@@ -34,19 +37,23 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
     public void invoke(TrackRow trackRow, AnalysisContext context) {
         Integer rowIndex = context.readRowHolder().getRowIndex();
 
-        if(BeanUtil.isEmpty(trackRow)) {
-            return;
-        }
-        String firstClassify = trackRow.getFirstClassify();
-        if (StrUtil.isNotEmpty(firstClassify)) {
-            TrackEvent trackEvent = new TrackEvent();
+        TrackEvent trackEvent = trackEventList.get(eventIndex);
+
+        // 当前事件的合并行数
+        Integer firstRowIndex = trackEvent.getFirstRowIndex();
+        Integer lastRowIndex = trackEvent.getLastRowIndex();
+
+        // 如果为首行则复制全部数据
+        if(firstRowIndex.equals(rowIndex)) {
             BeanUtil.copyProperties(trackRow, trackEvent);
-            trackEventList.add(trackEvent);
         }
-        List<TrackProp> trackPropList = CollectionUtil.getLast(trackEventList).getTrackPropList();
-        TrackProp trackProp = new TrackProp();
-        BeanUtil.copyProperties(trackRow, trackProp);
-        trackPropList.add(trackProp);
+        // 增加属性数据
+        TrackProp trackProp = TrackPropCopier.INSTANCE.convert(trackRow);
+        trackEvent.getTrackPropList().add(trackProp);
+
+        if (lastRowIndex.equals(rowIndex)) {
+            eventIndex++;
+        }
     }
 
     @Override

@@ -20,4 +20,6 @@ public class TrackEventModifyReq extends TrackEventAddReq {
     @NotNull(message = "埋点事件id不能为空")
     private Long id;
 
+    @ApiModelProperty("埋点说明id")
+    private String explanation;
 }

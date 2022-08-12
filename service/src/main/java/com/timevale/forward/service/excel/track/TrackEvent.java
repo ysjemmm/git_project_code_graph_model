@@ -7,6 +7,7 @@ import java.util.List;
 
 @Data
 public class TrackEvent {
+    private String serialNumber;
     private String firstClassify;
     private String secondClassify;
     private String thirdClassify;
@@ -19,8 +20,10 @@ public class TrackEvent {
     private String apiName;
     private String touchMoment;
     private String env;
-    private List<TrackProp> trackPropList = new ArrayList<>();
 
+    private Integer firstRowIndex;
+    private Integer lastRowIndex;
     private String fullNameCn;
     private List<String> failInfoList = new ArrayList<>();
+    private List<TrackProp> trackPropList = new ArrayList<>();
 }

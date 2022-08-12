@@ -5,6 +5,9 @@ import com.timevale.forward.dal.entity.TrackPropDO;
 import com.timevale.forward.facade.api.query.TrackPropQueryList;
 import com.timevale.forward.facade.api.request.TrackPropAddReq;
 import com.timevale.forward.facade.api.result.TrackPropVO;
+import com.timevale.forward.service.excel.track.TrackEvent;
+import com.timevale.forward.service.excel.track.TrackProp;
+import com.timevale.forward.service.excel.track.TrackRow;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -40,5 +43,8 @@ public interface TrackPropCopier {
      * @return return
      */
     List<TrackPropDO> change(List<TrackPropAddReq> trackPropDO);
+
+
+    TrackProp convert(TrackRow trackRow);
 
 }

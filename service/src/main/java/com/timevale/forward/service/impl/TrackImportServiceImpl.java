@@ -1,30 +1,35 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.text.StrBuilder;
+import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
 import cn.hutool.poi.excel.ExcelFileUtil;
 import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.enums.CellExtraTypeEnum;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
 import com.timevale.crm.sdk.common.utils.file.FileUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TrackImportService;
+import com.timevale.forward.facade.api.query.TaskImportLogQueryList;
 import com.timevale.forward.facade.api.request.TrackImportReq;
+import com.timevale.forward.facade.api.result.TrackImportLogListVO;
 import com.timevale.forward.facade.api.result.TrackImportLogVO;
 import com.timevale.forward.facade.api.result.TrackImportProgressVO;
 import com.timevale.forward.facade.api.result.TrackImportTemplateVO;
-import com.timevale.forward.model.enums.EnvEnum;
-import com.timevale.forward.model.enums.PlatformTypeEnum;
-import com.timevale.forward.model.enums.TrackMapEnum;
-import com.timevale.forward.model.enums.TrackPropTypeEnum;
+import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.excel.track.TrackEvent;
-import com.timevale.forward.service.excel.track.TrackListener;
-import com.timevale.forward.service.excel.track.TrackProp;
-import com.timevale.forward.service.excel.track.TrackRow;
+import com.timevale.forward.service.copy.TrackEventCopier;
+import com.timevale.forward.service.copy.TrackImportLogCopier;
+import com.timevale.forward.service.excel.track.*;
 import com.timevale.forward.service.utils.EnvUtils;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
@@ -35,17 +40,12 @@ import com.timevale.mandarin.common.service.retry.RetryTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.ResourceUtils;
 
 import javax.annotation.Resource;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -70,6 +70,10 @@ public class TrackImportServiceImpl implements TrackImportService {
     private ProductLineMapper productLineMapper;
     @Resource
     private ModelMapper modelMapper;
+    @Resource
+    private TrackImportLogMapper trackImportLogMapper;
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
 
     @Value("${templateFileId:b210b33a8167439e930dfe7dd3808ab8}")
     private String templateFileId;
@@ -77,44 +81,70 @@ public class TrackImportServiceImpl implements TrackImportService {
     // 限制导入事件条数
     public static final int importEventLimit = 100;
 
-    private static final String FILE_NAME = "E:\\test.xlsx";
-
     @Override
     public BaseResult<Boolean> importEvent(TrackImportReq trackImportReq) {
         List<TrackEvent> trackEventList = new ArrayList<>();
 
-        try {
-            // 获取文件流
-            // InputStream in = getFileInputStream(trackImportReq.getFileId());
-            InputStream in = new FileInputStream(FILE_NAME);
+        File importFile = getFile(trackImportReq.getFileId());
+        File outputFile = null;
 
-            // 校验文件类型
-            boolean isXlsx = ExcelFileUtil.isXlsx(in);
-            AssertUtil.checkState(isXlsx, "导入文件仅支持xls和xlsx格式");
+        // 校验文件类型
+        boolean isExcel = false;
+        try (InputStream isXls = new FileInputStream(importFile);
+             InputStream isXlsx = new FileInputStream(importFile)) {
+            isExcel = ExcelFileUtil.isXls(isXls) || ExcelFileUtil.isXlsx(isXlsx);
+        } catch (IOException e) {
+            log.info("IO错误，判断是否为excel文件失败");
+        }
+        AssertUtil.checkState(isExcel, "导入文件仅支持xls和xlsx格式");
+
+        try {
+            // 校验合并单元格
+            EasyExcel.read(importFile, TrackRow.class, new TrackMergeListener(trackEventList))
+                    .ignoreEmptyRow(true)
+                    .extraRead(CellExtraTypeEnum.MERGE)
+                    .sheet()
+                    .doRead();
 
             // 校验内容及格式
-            EasyExcel.read(FILE_NAME, TrackRow.class, new TrackListener(trackEventList))
+            EasyExcel.read(importFile, TrackRow.class, new TrackListener(trackEventList))
+                    .ignoreEmptyRow(true)
                     .sheet()
                     .headRowNumber(3)
                     .doRead();
 
-            // 关闭文件流
-            in.close();
+            // 事件数校验
+            AssertUtil.checkState(CollectionUtil.isNotEmpty(trackEventList), "无有效数据，请检查后重试");
+            AssertUtil.checkState(trackEventList.size() <= importEventLimit, "导入埋点事件数不能超过" + importEventLimit + "条");
+
+            // 校验
+            classifyCheck(trackEventList);
+            eventNameCheck(trackEventList);
+            propCheck(trackEventList);
+            platformCheck(trackEventList);
+            touchMomentCheck(trackEventList);
+            envCheck(trackEventList);
+
+            // 判断是否有错误信息
+            boolean failImport = trackEventList.stream().anyMatch(e -> CollectionUtil.isNotEmpty(e.getFailInfoList()));
+            if (failImport) {
+                // 输出错误信息
+                outputFile = File.createTempFile(UUID.fastUUID().toString(), ".xlsx");
+                outputFile.deleteOnExit();
+                outputFailInfo(trackEventList, outputFile);
+            } else {
+                System.out.println("完美通过");
+            }
         } catch (IOException e) {
-            log.info("io异常");
+            log.error("埋点导入IO异常");
+            throw new BaseBizRuntimeException("埋点导入处理失败");
+        } finally {
+            // 删除临时文件
+            importFile.delete();
+            if (outputFile != null) {
+                outputFile.delete();
+            }
         }
-
-        // 事件数校验
-        AssertUtil.checkState(CollectionUtil.isEmpty(trackEventList), "无有效数据，请检查后重试");
-        AssertUtil.checkState(trackEventList.size() <= importEventLimit, "导入埋点事件数不能超过" + importEventLimit + "条");
-
-        // 校验
-        classifyCheck(trackEventList);
-        eventNameCheck(trackEventList);
-        propCheck(trackEventList);
-        platformCheck(trackEventList);
-        touchMomentCheck(trackEventList);
-        envCheck(trackEventList);
 
         return BaseResult.success(true);
     }
@@ -131,26 +161,44 @@ public class TrackImportServiceImpl implements TrackImportService {
 
     @Override
     public BaseResult<TrackImportTemplateVO> template() {
-        TrackImportTemplateVO result = new TrackImportTemplateVO();
-        result.setFileId(templateFileId);
+        FileDownloadDTO info = FileUtil.getFileDownloadInfo(templateFileId, envUtils.getEnv());
+        if (info == null || StrUtil.isEmpty(info.getDownloadUrl())) {
+            throw new BaseBizRuntimeException("模板文件不存在");
+        }
+        TrackImportTemplateVO result = TrackImportLogCopier.INSTANCE.convert(info);
         return BaseResult.success(result);
     }
 
     @Override
-    public BaseResult<PageQueryResult<TrackImportLogVO>> log() {
-        return null;
+    public BaseResult<PageQueryResult<TrackImportLogListVO>> log(TaskImportLogQueryList query) {
+        PageHelper.startPage(query.pageNum, query.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        List<TrackImportLogDO> trackImportLogDOList = trackImportLogMapper.selectAll();
+
+        List<TrackImportLogListVO> result = trackImportLogDOList.stream().map(TrackImportLogCopier.INSTANCE::convert).collect(Collectors.toList());
+        result.forEach(e -> {
+            e.setStatusName(TrackImportStatusEnum.getTextByCode(e.getStatus()));
+            e.setResultName(TrackImportResultEnum.getTextByCode(e.getResult()));
+        });
+
+        // 返回分页数据
+        PageInfo<TrackImportLogDO> pageInfo = new PageInfo<>(trackImportLogDOList);
+        PageQueryResult<TrackImportLogListVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(result);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
+        return BaseResult.success(pageQueryResult);
     }
 
     /**
-     * 获取文件输入流
+     * 获取文件
      *
      * @param fileId 文件标识
-     * @return {@link InputStream}
+     * @return {@link File}
      */
-    private InputStream getFileInputStream(String fileId) {
+    private File getFile(String fileId) {
         // 获取下载文件流
         FileDownloadDTO info;
-
+        // 重试下载
         RetryTemplate retryTemplate = new RetryTemplate();
         info = (FileDownloadDTO)retryTemplate.execute(new RetryCallback() {
             @Override
@@ -166,18 +214,32 @@ public class TrackImportServiceImpl implements TrackImportService {
         });
         if(info == null){
             log.error("文件下载异常，fileId:{}",fileId);
-            throw new BaseBizRuntimeException("文件下载异常");
+            throw new BaseBizRuntimeException("获取文件异常，导入失败");
         }
-        // 获取输入流
-        String downloadUrl = info.getDownloadUrl();
+
+        // 临时文件
+        File importFile;
+
+        // 创建临时文件，输出流
         try {
-            URL fileUrl = new URL(downloadUrl);
-            URLConnection conn = fileUrl.openConnection();
-            return conn.getInputStream();
+            importFile = File.createTempFile(UUID.fastUUID().toString(), ".xlsx");
+            importFile.deleteOnExit();
         } catch (IOException e) {
-            log.error("获取输出流失败，downloadUrl:{}",downloadUrl);
-            throw new BaseBizRuntimeException("文件导入失败，请稍后重试");
+            log.error("创建临时文件失败");
+            throw new BaseBizRuntimeException("获取文件异常，导入失败");
         }
+
+        // 数据复制
+        String downloadUrl = info.getDownloadUrl();
+        try (InputStream ins = URLUtil.getStream(new URL(downloadUrl));
+             OutputStream ous = new FileOutputStream(importFile);){
+            IoUtil.copy(ins, ous);
+        } catch (IOException e) {
+            log.error("复制数据时失败");
+            throw new BaseBizRuntimeException("获取文件异常，导入失败");
+        }
+
+        return importFile;
     }
 
     /**
@@ -320,8 +382,7 @@ public class TrackImportServiceImpl implements TrackImportService {
      * @param trackEventList 跟踪事件列表
      */
     private void propCheck(List<TrackEvent> trackEventList) {
-        Set<String> dateTypeSet = Arrays.stream(TrackPropTypeEnum.values()).map(TrackPropTypeEnum::getText).collect(Collectors.toSet());
-
+        Set<String> dateTypeSet = Arrays.stream(TrackDataTypeEnum.values()).map(Enum::toString).collect(Collectors.toSet());
         for (TrackEvent trackEvent : trackEventList) {
             List<String> failInfoList = trackEvent.getFailInfoList();
 
@@ -352,7 +413,7 @@ public class TrackImportServiceImpl implements TrackImportService {
                     dataType = dataType.toUpperCase();
                     e.setDataType(dataType);
                     if(!dateTypeSet.contains(dataType)) {
-                        failInfoList.add("【属性错误】属性数据类型不存在，请检查后修改");
+                        failInfoList.add("【属性错误】属性数据类型" + dataType + "不存在，请检查后修改");
                     }
                 }
             }
@@ -373,19 +434,24 @@ public class TrackImportServiceImpl implements TrackImportService {
             if (StrUtil.isEmpty(platform)) {
                 failInfoList.add("【格式错误】埋点平台必填字段，请检查后修改");
             } else {
+                boolean failApiName = true;
+                boolean failExplanation = true;
+
                 String[] platforms = platform.split("/");
                 for (String s : platforms) {
                     if(!platformSet.contains(s)) {
                         failInfoList.add("【属性错误】" + s + "埋点平台不存在，请检查后修改");
                     } else if (s.equals(PlatformTypeEnum.SERVER.getText())) {
                         String apiName = e.getApiName();
-                        if (StrUtil.isEmpty(apiName)) {
-                            failInfoList.add("【格式错误】埋点平台含非服务端时，埋点位置为为必填字段，请检查后修改");
+                        if (StrUtil.isEmpty(apiName) && failApiName) {
+                            failApiName = false;
+                            failInfoList.add("【格式错误】埋点平台含非服务端时，接口名称为必填字段，请检查后修改");
                         }
                     } else {
                         String explanation = e.getExplanation();
-                        if (StrUtil.isEmpty(explanation)) {
-                            failInfoList.add("【格式错误】埋点平台含服务端时，埋点位置为为必填字段，请检查后修改");
+                        if (StrUtil.isEmpty(explanation) && failExplanation) {
+                            failExplanation = false;
+                            failInfoList.add("【格式错误】埋点平台含服务端时，埋点位置说明为必填字段，请检查后修改");
                         }
                     }
                 }
@@ -423,13 +489,84 @@ public class TrackImportServiceImpl implements TrackImportService {
             if (StrUtil.isEmpty(env)) {
                 failInfoList.add("【格式错误】埋点所属环境为必填字段，请检查后修改");
             } else {
+                boolean failEnv = true;
+
                 String[] envs = env.split("/");
                 for (String s : envs) {
-                    if (!envSet.contains(s)) {
+                    if (!envSet.contains(s) && failEnv) {
+                        failEnv = false;
                         failInfoList.add("【属性错误】埋点所属环境为不存在，请检查后修改");
                     }
                 }
             }
+        }
+    }
+
+    private void outputFailInfo(List<TrackEvent> trackEventList, File outputFile) {
+        List<TrackFailRow> trackFailRowList = new ArrayList<>();
+        Map<Integer, Integer> mergeInfo = new HashMap<>();
+
+        int startRow = 3;
+        int importCount = trackEventList.size();
+        int importFailCount = 0;
+
+        for (TrackEvent trackEvent : trackEventList) {
+            TrackFailRow trackFailRow = TrackEventCopier.INSTANCE.convert(trackEvent);
+
+            // 新增错误信息
+            List<String> failInfoList = trackEvent.getFailInfoList();
+            if (CollectionUtil.isNotEmpty(failInfoList)) {
+                String failInfo = String.join("\n", failInfoList);
+                trackFailRow.setFailInfo(failInfo);
+                importFailCount++;
+            }
+
+            List<TrackProp> trackPropList = trackEvent.getTrackPropList();
+            if (CollectionUtil.isNotEmpty(trackPropList)) {
+
+                TrackProp trackProp = trackPropList.get(0);
+                trackFailRow.setPropNameCn(trackProp.getPropNameCn());
+                trackFailRow.setPropNameEn(trackProp.getPropNameEn());
+                trackFailRow.setDataType(trackProp.getDataType());
+                trackFailRowList.add(trackFailRow);
+
+                for (int i = 1; i < trackPropList.size(); i++) {
+                    TrackFailRow row = TrackEventCopier.INSTANCE.convert(trackPropList.get(i));
+                    trackFailRowList.add(row);
+                }
+            }
+
+            // 保存事件合并单元格信息
+            int endRow = trackPropList.size();
+            mergeInfo.put(startRow, endRow);
+            startRow += endRow;
+        }
+
+        try {
+            File template = ResourceUtils.getFile("classpath:TRACK-FAIL-TEMPLATE.xlsx");
+            EasyExcel.write(outputFile)
+                    .withTemplate(template)
+                    .sheet()
+                    .registerWriteHandler(new TrackMergeHandler(mergeInfo))
+                    .doWrite(trackFailRowList);
+        } catch (FileNotFoundException e) {
+            log.error("错误信息写出失败");
+        }
+
+        try (InputStream ins = new FileInputStream(outputFile)) {
+            FileDownloadDTO fileDownloadDTO = FileUtil.uploadFileToOSS(ins, "埋点事件检验错误文件.xlsx", envUtils.getEnv());
+            String fileId = fileDownloadDTO.getFileId();
+
+            TrackImportLogDO trackImportLogDO = new TrackImportLogDO();
+            trackImportLogDO.setStatus(TrackImportStatusEnum.FAILURE.getCode());
+            trackImportLogDO.setFileId(fileId);
+            trackImportLogDO.setImportCount(importCount);
+            trackImportLogDO.setImportFailCount(importFailCount);
+            trackImportLogDO.setResult(TrackImportResultEnum.FAILURE.getCode());
+            trackImportLogMapper.insert(trackImportLogDO);
+
+        } catch (IOException e) {
+            log.error("错误文件上传失败");
         }
     }
 }

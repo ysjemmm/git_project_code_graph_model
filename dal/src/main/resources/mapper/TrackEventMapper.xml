@@ -4,9 +4,9 @@
 
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.TrackEventDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        insert into track_event (cn_name,full_cn_name, eg_name, flow_id,track_map_id,platform,api_name,touch_moment,env,status,create_man ,create_man_id)
+        insert into track_event (cn_name,full_cn_name, eg_name, flow_id,track_map_id,platform,api_name,touch_moment,env,status,explanation,create_man ,create_man_id)
         values
-        (#{cnName},#{fullCnName},#{egName}, #{flowId},#{trackMapId},#{platform},#{apiName},#{touchMoment},#{env},#{status},#{createMan},#{createManId})
+        (#{cnName},#{fullCnName},#{egName}, #{flowId},#{trackMapId},#{platform},#{apiName},#{touchMoment},#{env},#{status},#{explanation},#{createMan},#{createManId})
     </insert>
 
     <update id="update">
@@ -23,6 +23,7 @@
             <if test="env != null and env != ''">env = #{env},</if>
             <if test="failReason != null and failReason != ''">fail_reason = #{failReason},</if>
             <if test="status != null">status = #{status},</if>
+            <if test="explanation != null">explanation = #{explanation},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
             <if test="true">
                 modify_man = #{modifyMan},
@@ -129,7 +130,7 @@
     </select>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.TrackEventDO">
-        select id,cn_name,full_cn_name, eg_name, flow_id,track_map_id,platform,api_name,touch_moment,env,status,fail_reason,
+        select id,cn_name,full_cn_name, eg_name, flow_id,track_map_id,platform,api_name,touch_moment,env,status,fail_reason,explanation,
         is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
         from track_event a
         <where>

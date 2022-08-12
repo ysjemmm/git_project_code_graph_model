@@ -35,6 +35,7 @@
         <swagger-bootstrap-ui.version>1.8.8</swagger-bootstrap-ui.version>
         <springfox-swagger2.version>2.9.2</springfox-swagger2.version>
         <easyexcel.version>2.2.8</easyexcel.version>
+        <apache-commons-commons-collections4-version>4.4</apache-commons-commons-collections4-version>
         <!-- Second Party -->
         <billing-log-monitor.version>1.2.9-SNAPSHOT</billing-log-monitor.version>
         <elock.version>1.2.1</elock.version>
@@ -193,6 +194,13 @@
                 <artifactId>crm-sdk-common-core</artifactId>
                 <version>${crm-sdk-common-core-version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-collections4</artifactId>
+                <version>${apache-commons-commons-collections4-version}</version>
+            </dependency>
+
 
         </dependencies>
     </dependencyManagement>
