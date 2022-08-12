@@ -2,14 +2,11 @@ package com.timevale.forward.service.excel.track;
 
 import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
-import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
-import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.copy.TrackPropCopier;
 import com.timevale.mandarin.base.util.AssertUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -68,15 +65,15 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
         if (headRow -- > 1) {
             return;
         }
-        log.info("表头信息对比开始");
+
         Field[] fields = ReflectUtil.getFields(TrackRow.class);
         for (Field field : fields) {
             ExcelProperty annotation = AnnotationUtil.getAnnotation(field, ExcelProperty.class);
             int index = annotation.index();
             String value = annotation.value()[0];
             String headMapValue = headMap.get(index);
-            log.info("表头对比:{},{}",value,headMapValue);
             AssertUtil.checkState(ObjectUtil.equal(value, headMapValue), "导入文件列表格式错误，请勿修改模板格式");
         }
+        log.info("表头信息对比结束");
     }
 }

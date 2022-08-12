@@ -241,7 +241,7 @@ public class TrackImportServiceImpl implements TrackImportService {
         // 数据复制
         String downloadUrl = info.getDownloadUrl();
         try (InputStream ins = URLUtil.getStream(new URL(downloadUrl));
-             OutputStream ous = new FileOutputStream(importFile);){
+             OutputStream ous = new FileOutputStream(importFile)){
             IoUtil.copy(ins, ous);
         } catch (IOException e) {
             log.error("复制数据时失败");
