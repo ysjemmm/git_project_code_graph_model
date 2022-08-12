@@ -7,7 +7,9 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import cn.hutool.poi.excel.ExcelFileUtil;
 import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.enums.CellExtraTypeEnum;
+import com.alibaba.excel.write.metadata.WriteSheet;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
@@ -75,7 +77,7 @@ public class TrackImportServiceImpl implements TrackImportService {
     @Resource
     private SqlOrderComponent sqlOrderComponent;
 
-    @Value("${templateFileId:b210b33a8167439e930dfe7dd3808ab8}")
+    @Value("${templateFileId:d3a98af8ea754d11ae27d50b563d9c1f}")
     private String templateFileId;
 
     // 限制导入事件条数
@@ -134,6 +136,7 @@ public class TrackImportServiceImpl implements TrackImportService {
                 outputFailInfo(trackEventList, outputFile);
             } else {
                 System.out.println("完美通过");
+
             }
         } catch (IOException e) {
             log.error("埋点导入IO异常");
