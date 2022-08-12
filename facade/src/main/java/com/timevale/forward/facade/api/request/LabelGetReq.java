@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * @author xingyun
  * @date 2021-12-13 13:58
@@ -14,12 +16,8 @@ import lombok.EqualsAndHashCode;
 @ApiModel("标签详情")
 public class LabelGetReq extends BaseReq {
 
-
-    @ApiModelProperty("标签名称")
-    private Long labelId;
-
-
     @ApiModelProperty("类别id")
+    @NotNull(message = "类别id不能为空")
     private Long categoryId;
 
 
