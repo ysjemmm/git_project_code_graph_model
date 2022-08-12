@@ -9,6 +9,8 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
+import com.timevale.forward.service.copy.TrackEventCopier;
+import com.timevale.forward.service.copy.TrackPropCopier;
 import com.timevale.mandarin.base.util.AssertUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,9 +35,6 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
 
     @Override
     public void invoke(TrackRow trackRow, AnalysisContext context) {
-        if (BeanUtil.isEmpty(trackRow)) {
-            return;
-        }
         Integer rowIndex = context.readRowHolder().getRowIndex();
 
         TrackEvent trackEvent = trackEventList.get(eventIndex);
@@ -49,8 +48,7 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
             BeanUtil.copyProperties(trackRow, trackEvent);
         }
         // 增加属性数据
-        TrackProp trackProp = new TrackProp();
-        BeanUtil.copyProperties(trackRow, trackProp);
+        TrackProp trackProp = TrackPropCopier.INSTANCE.convert(trackRow);
         trackEvent.getTrackPropList().add(trackProp);
 
         if (lastRowIndex.equals(rowIndex)) {
