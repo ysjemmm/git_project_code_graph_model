@@ -8,12 +8,9 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import cn.hutool.poi.excel.ExcelFileUtil;
 import com.alibaba.excel.EasyExcel;
-import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.enums.CellExtraTypeEnum;
-import com.alibaba.excel.write.metadata.WriteSheet;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.timevale.crm.sdk.common.entity.UserInfo;
 import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
 import com.timevale.crm.sdk.common.utils.file.FileUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -22,19 +19,17 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TrackImportService;
 import com.timevale.forward.facade.api.query.TaskImportLogQueryList;
 import com.timevale.forward.facade.api.request.TrackImportReq;
-import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.facade.api.result.TrackImportLogFileVO;
+import com.timevale.forward.facade.api.result.TrackImportLogListVO;
+import com.timevale.forward.facade.api.result.TrackImportProgressVO;
 import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.copy.TrackImportLogCopier;
 import com.timevale.forward.service.excel.track.*;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
-import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
-import com.timevale.framework.tedis.util.TedisUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -43,16 +38,13 @@ import com.timevale.mandarin.common.service.retry.RetryCallback;
 import com.timevale.mandarin.common.service.retry.RetryTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.codehaus.groovy.tools.groovydoc.ClasspathResourceManager;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.util.ResourceUtils;
 
 import javax.annotation.Resource;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 /**
@@ -163,7 +155,7 @@ public class TrackImportServiceImpl implements TrackImportService {
     public BaseResult<TrackImportProgressVO> progress() {
         TrackImportProgressVO result = new TrackImportProgressVO();
 
-        int i = RandomUtil.randomInt(0, 2);
+        int i = RandomUtil.randomInt(0, 3);
         result.setStatus(i);
         if (i == 0) {
             int progress = RandomUtil.randomInt(0, 100);
@@ -536,6 +528,12 @@ public class TrackImportServiceImpl implements TrackImportService {
         }
     }
 
+    /**
+     * 输出失败信息
+     *
+     * @param trackEventList 跟踪事件列表
+     * @param outputFile     输出文件
+     */
     private void outputFailInfo(List<TrackEvent> trackEventList, File outputFile) {
         List<TrackFailRow> trackFailRowList = new ArrayList<>();
         Map<Integer, Integer> mergeInfo = new HashMap<>();
@@ -578,8 +576,6 @@ public class TrackImportServiceImpl implements TrackImportService {
 
         ClassPathResource resource = new ClassPathResource("TRACK-FAIL-TEMPLATE.xlsx");
         try (InputStream ins = resource.getInputStream()){
-            // File template = ResourceUtils.getFile("classpath:TRACK-FAIL-TEMPLATE.xlsx");
-
             EasyExcel.write(outputFile)
                     .withTemplate(ins)
                     .sheet()
