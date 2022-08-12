@@ -10,6 +10,7 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.LabelService;
 import com.timevale.forward.facade.api.query.LabelQueryList;
 import com.timevale.forward.facade.api.request.LabelAddReq;
+import com.timevale.forward.facade.api.request.LabelGetReq;
 import com.timevale.forward.facade.api.request.LabelModifyReq;
 import com.timevale.forward.facade.api.result.LabelDetailVO;
 import com.timevale.forward.facade.api.result.LabelVO;
@@ -127,15 +128,30 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
-    public BaseResult<LabelDetailVO> get(Long labelId) {
-        log.info("标签查看,参数:{}", labelId);
-        LabelDO labelDO = labelMapper.get(labelId);
-        if (labelDO == null) {
-            throw new BaseBizRuntimeException("找不到标签");
+    public BaseResult<LabelDetailVO> get(LabelGetReq labelGetReq) {
+        log.info("标签查看,参数:{}", labelGetReq);
+        if (labelGetReq.getCategoryId() == null && labelGetReq.getLabelId() == null) {
+            throw new BaseBizRuntimeException("类别id和标签id不能同时为空");
         }
-        List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(Lists.newArrayList(labelDO.getLabelCategoryId()));
+        Long categoryId;
+        LabelDetailVO labelDetailVO = new LabelDetailVO();
+        if (labelGetReq.getCategoryId() != null) {
+            categoryId = labelGetReq.getCategoryId();
+            List<LabelDO> labelDOList = labelMapper.getByCategoryIds(Lists.newArrayList(categoryId));
+            labelDetailVO.setNames(labelDOList.stream().map(LabelDO::getName).collect(Collectors.toList()));
+        } else {
+            LabelDO labelDO = labelMapper.get(labelGetReq.getLabelId());
+            if (labelDO == null) {
+                throw new BaseBizRuntimeException("找不到标签");
+            }
+            categoryId = labelDO.getLabelCategoryId();
+        }
+
+        List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(Lists.newArrayList(categoryId));
+        if (CollectionUtils.isEmpty(labelCategoryDOList)) {
+            throw new BaseBizRuntimeException("找不到标签类别");
+        }
         LabelCategoryDO labelCategoryDO = labelCategoryDOList.get(0);
-        Long categoryId = labelCategoryDO.getId();
 
         List<LabelCategoryBizDomainDO> lcbds = labelCategoryBizDomainMapper.get(Lists.newArrayList(categoryId));
         List<Long> bdIds = lcbds.stream().map(LabelCategoryBizDomainDO::getBizDomainId).collect(Collectors.toList());
@@ -143,11 +159,9 @@ public class LabelServiceImpl implements LabelService {
         List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByIdList(bdIds);
         List<String> bizDomains = bizDomainDOList.stream().map(BizDomainDO::getName).collect(Collectors.toList());
 
-        LabelDetailVO labelDetailVO = new LabelDetailVO();
         labelDetailVO.setBizDomains(bizDomains);
         labelDetailVO.setCategoryId(categoryId);
         labelDetailVO.setCategoryName(labelCategoryDO.getName());
-        labelDetailVO.setName(labelDO.getName());
         labelDetailVO.setTypes(JSONObject.parseArray(labelCategoryDO.getType(), Integer.class));
         return BaseResult.success(labelDetailVO);
     }
