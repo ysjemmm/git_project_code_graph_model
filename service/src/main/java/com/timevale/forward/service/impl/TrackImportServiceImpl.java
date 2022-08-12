@@ -3,6 +3,7 @@ package com.timevale.forward.service.impl;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.UUID;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import cn.hutool.poi.excel.ExcelFileUtil;
@@ -51,6 +52,7 @@ import javax.annotation.Resource;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 /**
@@ -159,7 +161,28 @@ public class TrackImportServiceImpl implements TrackImportService {
 
     @Override
     public BaseResult<TrackImportProgressVO> progress() {
-        return BaseResult.success(new TrackImportProgressVO());
+        TrackImportProgressVO result = new TrackImportProgressVO();
+
+        int i = RandomUtil.randomInt(0, 2);
+        result.setStatus(i);
+        if (i == 0) {
+            int progress = RandomUtil.randomInt(0, 100);
+            result.setProgress(progress);
+        } else if(i == 1) {
+            int success = RandomUtil.randomInt(1, 100);
+            result.setProgress(100);
+            result.setImportCount(success);
+            result.setImportFailCount(0);
+        } else {
+            int all = RandomUtil.randomInt(50, 100);
+            int fail = RandomUtil.randomInt(1, all);
+
+            result.setProgress(100);
+            result.setImportCount(all);
+            result.setImportFailCount(fail);
+        }
+
+        return BaseResult.success(result);
     }
 
     @Override
