@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component;
 
+import com.timevale.forward.facade.api.request.TrackImportReq;
 import com.timevale.forward.service.excel.track.TrackImportStatus;
 
 /**
@@ -21,4 +22,6 @@ public interface TrackImportComponent {
      * @param status 状态
      */
     void setStatus(TrackImportStatus status);
+
+    void importEvent(TrackImportReq trackImportReq);
 }
