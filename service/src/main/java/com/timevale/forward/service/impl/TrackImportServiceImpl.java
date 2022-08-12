@@ -161,8 +161,11 @@ public class TrackImportServiceImpl implements TrackImportService {
 
     @Override
     public BaseResult<TrackImportTemplateVO> template() {
-        TrackImportTemplateVO result = new TrackImportTemplateVO();
-        result.setFileId(templateFileId);
+        FileDownloadDTO info = FileUtil.getFileDownloadInfo(templateFileId, envUtils.getEnv());
+        if (info == null || StrUtil.isEmpty(info.getDownloadUrl())) {
+            throw new BaseBizRuntimeException("模板文件不存在");
+        }
+        TrackImportTemplateVO result = TrackImportLogCopier.INSTANCE.convert(info);
         return BaseResult.success(result);
     }
 
