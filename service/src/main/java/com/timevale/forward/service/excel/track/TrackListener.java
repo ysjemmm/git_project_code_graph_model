@@ -65,14 +65,14 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
         if (headRow -- > 1) {
             return;
         }
-
+        log.info("表头信息对比开始");
         Field[] fields = ReflectUtil.getFields(TrackRow.class);
         for (Field field : fields) {
             ExcelProperty annotation = AnnotationUtil.getAnnotation(field, ExcelProperty.class);
             int index = annotation.index();
             String value = annotation.value()[0];
             String headMapValue = headMap.get(index);
-            AssertUtil.checkState(ObjectUtil.equal(value, headMapValue), "导入文件列表格式错误，请勿修改模板格式");
+            // AssertUtil.checkState(ObjectUtil.equal(value, headMapValue), "导入文件列表格式错误，请勿修改模板格式");
         }
         log.info("表头信息对比结束");
     }
