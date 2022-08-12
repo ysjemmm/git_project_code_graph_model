@@ -65,15 +65,17 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
 
     @Override
     public void invokeHeadMap(Map<Integer, String> headMap, AnalysisContext context) {
-        if (headRow-- > 1) {
+        if (headRow -- > 1) {
             return;
         }
+        log.info("表头信息对比开始");
         Field[] fields = ReflectUtil.getFields(TrackRow.class);
         for (Field field : fields) {
             ExcelProperty annotation = AnnotationUtil.getAnnotation(field, ExcelProperty.class);
             int index = annotation.index();
             String value = annotation.value()[0];
             String headMapValue = headMap.get(index);
+            log.info("表头对比:{},{}",value,headMapValue);
             AssertUtil.checkState(ObjectUtil.equal(value, headMapValue), "导入文件列表格式错误，请勿修改模板格式");
         }
     }
