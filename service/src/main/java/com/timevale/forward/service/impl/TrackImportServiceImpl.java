@@ -42,7 +42,9 @@ import com.timevale.mandarin.common.service.retry.RetryCallback;
 import com.timevale.mandarin.common.service.retry.RetryTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.codehaus.groovy.tools.groovydoc.ClasspathResourceManager;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.ResourceUtils;
 
 import javax.annotation.Resource;
@@ -551,14 +553,16 @@ public class TrackImportServiceImpl implements TrackImportService {
             startRow += endRow;
         }
 
-        try {
-            File template = ResourceUtils.getFile("classpath:TRACK-FAIL-TEMPLATE.xlsx");
+        ClassPathResource resource = new ClassPathResource("TRACK-FAIL-TEMPLATE.xlsx");
+        try (InputStream ins = resource.getInputStream()){
+            // File template = ResourceUtils.getFile("classpath:TRACK-FAIL-TEMPLATE.xlsx");
+
             EasyExcel.write(outputFile)
-                    .withTemplate(template)
+                    .withTemplate(ins)
                     .sheet()
                     .registerWriteHandler(new TrackMergeHandler(mergeInfo))
                     .doWrite(trackFailRowList);
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             log.error("错误信息写出失败");
         }
 
