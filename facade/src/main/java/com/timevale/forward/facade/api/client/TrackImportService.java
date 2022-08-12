@@ -4,10 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.TaskImportLogQueryList;
 import com.timevale.forward.facade.api.request.TrackImportReq;
-import com.timevale.forward.facade.api.result.TrackImportLogListVO;
-import com.timevale.forward.facade.api.result.TrackImportLogVO;
-import com.timevale.forward.facade.api.result.TrackImportProgressVO;
-import com.timevale.forward.facade.api.result.TrackImportTemplateVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
@@ -46,7 +43,7 @@ public interface TrackImportService {
      *
      * @return {@link BaseResult}<{@link Boolean}>
      */
-    BaseResult<TrackImportTemplateVO> template();
+    BaseResult<TrackImportLogFileVO> template();
 
     /**
      * 导入记录

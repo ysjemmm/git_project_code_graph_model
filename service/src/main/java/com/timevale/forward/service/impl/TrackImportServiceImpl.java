@@ -7,9 +7,12 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import cn.hutool.poi.excel.ExcelFileUtil;
 import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.enums.CellExtraTypeEnum;
+import com.alibaba.excel.write.metadata.WriteSheet;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.timevale.crm.sdk.common.entity.UserInfo;
 import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
 import com.timevale.crm.sdk.common.utils.file.FileUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -18,19 +21,18 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TrackImportService;
 import com.timevale.forward.facade.api.query.TaskImportLogQueryList;
 import com.timevale.forward.facade.api.request.TrackImportReq;
-import com.timevale.forward.facade.api.result.TrackImportLogListVO;
-import com.timevale.forward.facade.api.result.TrackImportLogVO;
-import com.timevale.forward.facade.api.result.TrackImportProgressVO;
-import com.timevale.forward.facade.api.result.TrackImportTemplateVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.copy.TrackImportLogCopier;
 import com.timevale.forward.service.excel.track.*;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -75,7 +77,7 @@ public class TrackImportServiceImpl implements TrackImportService {
     @Resource
     private SqlOrderComponent sqlOrderComponent;
 
-    @Value("${templateFileId:b210b33a8167439e930dfe7dd3808ab8}")
+    @Value("${templateFileId:d3a98af8ea754d11ae27d50b563d9c1f}")
     private String templateFileId;
 
     // 限制导入事件条数
@@ -156,16 +158,18 @@ public class TrackImportServiceImpl implements TrackImportService {
 
     @Override
     public BaseResult<TrackImportProgressVO> progress() {
+        String userId = LocalSessionUtils.getUserInfo().getId();
+        String statusKey = CommonConstant.TRACK_IMPORT_STATUS + userId;
         return BaseResult.success(new TrackImportProgressVO());
     }
 
     @Override
-    public BaseResult<TrackImportTemplateVO> template() {
+    public BaseResult<TrackImportLogFileVO> template() {
         FileDownloadDTO info = FileUtil.getFileDownloadInfo(templateFileId, envUtils.getEnv());
         if (info == null || StrUtil.isEmpty(info.getDownloadUrl())) {
             throw new BaseBizRuntimeException("模板文件不存在");
         }
-        TrackImportTemplateVO result = TrackImportLogCopier.INSTANCE.convert(info);
+        TrackImportLogFileVO result = TrackImportLogCopier.INSTANCE.convert(info);
         return BaseResult.success(result);
     }
 
@@ -179,6 +183,14 @@ public class TrackImportServiceImpl implements TrackImportService {
             e.setStatusName(TrackImportStatusEnum.getTextByCode(e.getStatus()));
             e.setResultName(TrackImportResultEnum.getTextByCode(e.getResult()));
         });
+
+        // 文件信息
+        for (int i = 0; i < result.size(); i++) {
+            String fileId = trackImportLogDOList.get(i).getFileId();
+            FileDownloadDTO fileDownloadInfo = FileUtil.getFileDownloadInfo(fileId, envUtils.getEnv());
+            TrackImportLogFileVO fileInfo = TrackImportLogCopier.INSTANCE.convert(fileDownloadInfo);
+            result.get(i).setFileInfo(fileInfo);
+        }
 
         // 返回分页数据
         PageInfo<TrackImportLogDO> pageInfo = new PageInfo<>(trackImportLogDOList);

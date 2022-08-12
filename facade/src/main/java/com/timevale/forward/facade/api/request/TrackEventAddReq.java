@@ -55,5 +55,7 @@ public class TrackEventAddReq extends BaseReq {
     @NotNull(message = "事件属性不能为空")
     private List<TrackPropAddReq> trackProps;
 
-
+    @ApiModelProperty("埋点说明")
+    @NotNull(message = "埋点说明不能为空")
+    private String explanation;
 }
