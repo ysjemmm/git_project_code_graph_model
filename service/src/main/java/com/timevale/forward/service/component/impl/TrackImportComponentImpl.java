@@ -25,6 +25,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.service.retry.RetryCallback;
 import com.timevale.mandarin.common.service.retry.RetryTemplate;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.core.io.ClassPathResource;
@@ -32,8 +33,12 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -67,56 +72,100 @@ public class TrackImportComponentImpl implements TrackImportComponent {
 
     private static final String TRACK_IMPORT_CANCEL = "forward:track:import:cancel:";
     private static final String TRACK_IMPORT_PROGRESS = "forward:track:import:progress:";
+    private static final String TRACK_IMPORT_RESULT = "forward:track:import:result:";
 
     @Override
-    public int getProgress() {
+    public Integer getProgress() {
         String userId = LocalSessionUtils.getUserInfo().getId();
-        String key = TRACK_IMPORT_PROGRESS + userId;
+        String progressTag = TRACK_IMPORT_PROGRESS + userId;
 
-        int progress = TedisUtil.get(key);
+        Integer progress = TedisUtil.get(progressTag);
         log.info("获取用户{}导入进度：{}%", userId, progress);
         return progress;
     }
 
     @Override
-    public void updateProgress(int progress) {
+    public void setProgress(Integer progress) {
         String userId = LocalSessionUtils.getUserInfo().getId();
-        String key = TRACK_IMPORT_PROGRESS + userId;
+        String progressTag = TRACK_IMPORT_PROGRESS + userId;
 
         log.info("更新用户{}导入进度：{}%", userId, progress);
-        TedisUtil.set(key, progress, 10, TimeUnit.MINUTES);
+        TedisUtil.set(progressTag, progress, 10, TimeUnit.MINUTES);
     }
 
     @Override
-    public void cancelTag() {
+    public Boolean getCancelTag() {
         String userId = LocalSessionUtils.getUserInfo().getId();
-        String key = TRACK_IMPORT_CANCEL + userId;
+        String cancelTag = TRACK_IMPORT_CANCEL + userId;
 
-        log.info("用户{}取消导入操作", userId);
-        TedisUtil.set(key, true, 10, TimeUnit.MINUTES);
+        log.info("用户{}获取取消导入操作标志", userId);
+        return TedisUtil.get(cancelTag);
+    }
+
+    @Override
+    public void setCancelTag() {
+        String userId = LocalSessionUtils.getUserInfo().getId();
+        String cancelTag = TRACK_IMPORT_CANCEL + userId;
+
+        log.info("用户{}尝试取消导入操作", userId);
+        TedisUtil.set(cancelTag, true, 10, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public void setImportResult(Integer result) {
+        String userId = LocalSessionUtils.getUserInfo().getId();
+        String resultTag = TRACK_IMPORT_RESULT + userId;
+
+        log.info("用户{}设置导入结果：{}", userId, result);
+        TedisUtil.set(resultTag, result, 10, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public Integer getImportResult() {
+        String userId = LocalSessionUtils.getUserInfo().getId();
+        String resultTag = TRACK_IMPORT_RESULT + userId;
+
+        Integer result = TedisUtil.get(resultTag);
+        log.info("获取用户{}导入结果：{}", userId, result);
+        return result;
     }
 
     @Override
     public void deleteStatus() {
         String userId = LocalSessionUtils.getUserInfo().getId();
-        String statusKey = TRACK_IMPORT_CANCEL + userId;
+        String cancelTag = TRACK_IMPORT_CANCEL + userId;
+        String resultTag = TRACK_IMPORT_RESULT + userId;
+        String progressTag = TRACK_IMPORT_PROGRESS + userId;
 
-        log.info("删除用户{}导入相关状态", userId);
-        TedisUtil.delete(statusKey);
+        log.info("删除用户{}全部导入相关状态", userId);
+        TedisUtil.delete(cancelTag, resultTag, progressTag);
     }
 
+    @Override
+    public void importEnd() {
+        String userId = LocalSessionUtils.getUserInfo().getId();
+        String cancelTag = TRACK_IMPORT_CANCEL + userId;
+        String progressTag = TRACK_IMPORT_PROGRESS + userId;
+
+        log.info("删除用户{}部分导入相关状态", userId);
+        TedisUtil.delete(cancelTag, progressTag);
+    }
+
+    @SneakyThrows
     @Override
     @Async("threadPoolTaskExecutor")
     public void importEvent(TrackImportReq trackImportReq) {
         List<TrackEvent> trackEventList = new ArrayList<>();
 
-        File importFile = getFile(trackImportReq.getFileId());
+        // 获取导入数据
+        String importFileId = trackImportReq.getFileId();
+        File importFile = getFile(importFileId);
         File outputFile = null;
 
         // 校验文件类型
         boolean isExcel = false;
-        try (InputStream isXls = new FileInputStream(importFile);
-             InputStream isXlsx = new FileInputStream(importFile)) {
+        try (InputStream isXls = Files.newInputStream(importFile.toPath());
+             InputStream isXlsx = Files.newInputStream(importFile.toPath())) {
             isExcel = ExcelFileUtil.isXls(isXls) || ExcelFileUtil.isXlsx(isXlsx);
         } catch (IOException e) {
             log.info("IO错误，判断是否为excel文件失败");
@@ -124,14 +173,14 @@ public class TrackImportComponentImpl implements TrackImportComponent {
         AssertUtil.checkState(isExcel, "导入文件仅支持xls和xlsx格式");
 
         try {
-            // 校验合并单元格
+            // 读取合并单元格信息
             EasyExcel.read(importFile, TrackRow.class, new TrackMergeListener(trackEventList))
                     .ignoreEmptyRow(true)
                     .extraRead(CellExtraTypeEnum.MERGE)
                     .sheet()
                     .doRead();
 
-            // 校验内容及格式
+            // 读取表头及内容
             EasyExcel.read(importFile, TrackRow.class, new TrackListener(trackEventList))
                     .ignoreEmptyRow(true)
                     .sheet()
@@ -142,13 +191,16 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             AssertUtil.checkState(CollectionUtil.isNotEmpty(trackEventList), "无有效数据，请检查后重试");
             AssertUtil.checkState(trackEventList.size() <= importEventLimit, "导入埋点事件数不能超过" + importEventLimit + "条");
 
+            // 进度20%
+            setProgress(20);Thread.sleep(1000);
+
             // 校验
-            classifyCheck(trackEventList);
+            classifyCheck(trackEventList);      setProgress(30);Thread.sleep(1500);
             eventNameCheck(trackEventList);
-            propCheck(trackEventList);
+            propCheck(trackEventList);          setProgress(50);Thread.sleep(1500);
             platformCheck(trackEventList);
             touchMomentCheck(trackEventList);
-            envCheck(trackEventList);
+            envCheck(trackEventList);           setProgress(70);Thread.sleep(1500);
 
             // 判断是否有错误信息
             boolean failImport = trackEventList.stream().anyMatch(e -> CollectionUtil.isNotEmpty(e.getFailInfoList()));
@@ -157,20 +209,32 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 outputFile = File.createTempFile(UUID.fastUUID().toString(), ".xlsx");
                 outputFile.deleteOnExit();
                 outputFailInfo(trackEventList, outputFile);
+                // 导入结果
+                setImportResult(TrackImportLogResultEnum.FAILURE.getCode());
             } else {
-                System.out.println("完美通过");
+                // 通过校验，导入数据
+                TrackImportLogDO trackImportLogDO = new TrackImportLogDO();
+                trackImportLogDO.setStatus(TrackImportLogStatusEnum.SUCCESS.getCode());
+                trackImportLogDO.setResult(TrackImportLogResultEnum.SUCCESS.getCode());
+                trackImportLogDO.setImportCount(trackEventList.size());
+                trackImportLogDO.setImportFailCount(0);
+                trackImportLogDO.setFileId(importFileId);
+                trackImportLogMapper.insert(trackImportLogDO);
+                setImportResult(TrackImportLogResultEnum.SUCCESS.getCode());
             }
         } catch (IOException e) {
             log.error("埋点导入IO异常");
             throw new BaseBizRuntimeException("埋点导入处理失败");
         } finally {
+            // 导入结束状态
+            importEnd();
+
             // 删除临时文件
             importFile.delete();
             if (outputFile != null) {
                 outputFile.delete();
             }
         }
-
     }
 
     /**
@@ -216,7 +280,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
         // 数据复制
         String downloadUrl = info.getDownloadUrl();
         try (InputStream ins = URLUtil.getStream(new URL(downloadUrl));
-             OutputStream ous = new FileOutputStream(importFile)){
+             OutputStream ous = Files.newOutputStream(importFile.toPath())){
             IoUtil.copy(ins, ous);
         } catch (IOException e) {
             log.error("复制数据时失败");
@@ -543,7 +607,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             log.error("错误信息写出失败");
         }
 
-        try (InputStream ins = new FileInputStream(outputFile)) {
+        try (InputStream ins = Files.newInputStream(outputFile.toPath())) {
             FileDownloadDTO fileDownloadDTO = FileUtil.uploadFileToOSS(ins, "埋点事件检验错误文件.xlsx", envUtils.getEnv());
             String fileId = fileDownloadDTO.getFileId();
 

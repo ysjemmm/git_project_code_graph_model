@@ -14,7 +14,15 @@ public enum TrackImportLogResultEnum {
 
     SUCCESS(0,"导入成功" ),
 
-    FAILURE(1,"导入失败");
+    FAILURE(1,"导入失败"),
+
+    LOADING(2, "导入中"),
+
+    NOTING(3,"无导入事件"),
+
+    CANCEL(4,"取消导入"),
+
+    ;
 
 
     final private Integer code;

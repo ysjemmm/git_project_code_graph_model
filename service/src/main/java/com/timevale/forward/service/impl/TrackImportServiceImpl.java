@@ -1,6 +1,5 @@
 package com.timevale.forward.service.impl;
 
-import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -20,10 +19,10 @@ import com.timevale.forward.model.enums.TrackImportLogStatusEnum;
 import com.timevale.forward.service.component.TrackImportComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TrackImportLogCopier;
-import com.timevale.forward.service.excel.track.TrackImportStatus;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -57,52 +56,52 @@ public class TrackImportServiceImpl implements TrackImportService {
     @Override
     public BaseResult<Boolean> importEvent(TrackImportReq trackImportReq) {
         // 判断当前是否有导入任务
-        // TrackImportStatus importStatus = trackImportComponent.getProgress();
-        // AssertUtil.checkState(importStatus == null, "当前已有导入任务");
+        Integer progress = trackImportComponent.getProgress();
+        AssertUtil.checkState(progress == null, "当前已有导入任务");
+
+        // 初始化状态
+        trackImportComponent.deleteStatus();
 
         // 开始导入
-        try {
-            trackImportComponent.importEvent(trackImportReq);
-        } finally {
-            // 删除导入状态
-            trackImportComponent.deleteStatus();
-        }
+        trackImportComponent.setProgress(0);
+        trackImportComponent.setImportResult(TrackImportLogResultEnum.LOADING.getCode());
+        trackImportComponent.importEvent(trackImportReq);
 
         return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<Boolean> cancel() {
-
-
-
+        Integer progress = trackImportComponent.getProgress();
+        AssertUtil.checkState(progress == null, "取消导入失败");
+        trackImportComponent.setCancelTag();
         return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<TrackImportProgressVO> progress() {
-        TrackImportProgressVO result = new TrackImportProgressVO();
+        TrackImportProgressVO trackImportProgressVO = new TrackImportProgressVO();
 
-        int i = RandomUtil.randomInt(0, 3);
-        result.setStatus(i);
-        if (i == 0) {
-            int progress = RandomUtil.randomInt(0, 100);
-            result.setProgress(progress);
-        } else if(i == 1) {
-            int success = RandomUtil.randomInt(1, 100);
-            result.setProgress(100);
-            result.setImportCount(success);
-            result.setImportFailCount(0);
-        } else {
-            int all = RandomUtil.randomInt(50, 100);
-            int fail = RandomUtil.randomInt(1, all);
-
-            result.setProgress(100);
-            result.setImportCount(all);
-            result.setImportFailCount(fail);
+        Integer progress = trackImportComponent.getProgress();
+        if (progress != null) {
+            trackImportProgressVO.setProgress(progress);
+            trackImportProgressVO.setResult(TrackImportLogResultEnum.LOADING.getCode());
+            return BaseResult.success(trackImportProgressVO);
         }
 
-        return BaseResult.success(result);
+        Integer result = trackImportComponent.getImportResult();
+        if (result != null) {
+            // 删除过气状态
+            trackImportComponent.deleteStatus();
+            String userId = LocalSessionUtils.getUserInfo().getId();
+            TrackImportLogDO trackImportLogDO = trackImportLogMapper.selectCreateLatest(userId);
+            trackImportProgressVO = TrackImportLogCopier.INSTANCE.transfer(trackImportLogDO);
+            return BaseResult.success(trackImportProgressVO);
+        }
+
+        // 无导入事件
+        trackImportProgressVO.setResult(TrackImportLogResultEnum.NOTING.getCode());
+        return BaseResult.success(trackImportProgressVO);
     }
 
     @Override

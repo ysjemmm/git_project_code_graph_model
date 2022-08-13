@@ -14,19 +14,34 @@ public interface TrackImportComponent {
      *
      * @return {@link TrackImportStatus}
      */
-    int getProgress();
+    Integer getProgress();
 
     /**
      * 更新进展
      *
      * @param progress 进展
      */
-    void updateProgress(int progress);
+    void setProgress(Integer progress);
 
     /**
-     * 标记取消
+     * 取消导入状态
      */
-    void cancelTag();
+    void setCancelTag();
+
+    /**
+     * 得到取消标签
+     */
+    Boolean getCancelTag();
+
+    /**
+     * 设置导入结果
+     */
+    void setImportResult(Integer result);
+
+    /**
+     * 得到导入结果
+     */
+    Integer getImportResult();
 
     /**
      * 删除状态
@@ -34,4 +49,6 @@ public interface TrackImportComponent {
     void deleteStatus();
 
     void importEvent(TrackImportReq trackImportReq);
+
+    void importEnd();
 }

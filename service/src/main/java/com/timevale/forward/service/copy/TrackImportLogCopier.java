@@ -4,6 +4,7 @@ import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
 import com.timevale.forward.dal.entity.TrackImportLogDO;
 import com.timevale.forward.facade.api.result.TrackImportLogFileVO;
 import com.timevale.forward.facade.api.result.TrackImportLogListVO;
+import com.timevale.forward.facade.api.result.TrackImportProgressVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -18,6 +19,8 @@ public interface TrackImportLogCopier {
     TrackImportLogCopier INSTANCE = Mappers.getMapper(TrackImportLogCopier.class);
 
     TrackImportLogListVO convert(TrackImportLogDO trackImportLogDO);
+
+    TrackImportProgressVO transfer(TrackImportLogDO trackImportLogDO);
 
     TrackImportLogFileVO convert(FileDownloadDTO fileDownloadDTO);
 }

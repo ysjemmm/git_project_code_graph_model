@@ -3,14 +3,22 @@
 <mapper namespace="com.timevale.forward.dal.dao.TrackImportLogMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO track_import_log (status, file_id, import_count, import_fail_count, result, create_man, create_man_id)
+        INSERT INTO track_import_log (status, file_id, import_count, import_fail_count, `result`, create_man, create_man_id)
         VALUES (#{status}, #{fileId}, #{importCount}, #{importFailCount}, #{result}, #{createMan}, #{createManId})
     </insert>
 
     <select id="selectAll" resultType="com.timevale.forward.dal.entity.TrackImportLogDO">
-        SELECT id, status, file_id, import_count, import_fail_count, result, create_man_id, create_man, create_date
+        SELECT id, status, file_id, import_count, import_fail_count, `result`, create_man_id, create_man, create_date
         FROM track_import_log
-        WHERE is_deleted = false;
+        WHERE is_deleted = false
+    </select>
+
+    <select id="selectCreateLatest" resultType="com.timevale.forward.dal.entity.TrackImportLogDO">
+        SELECT id, status, file_id, import_count, import_fail_count, `result`, create_man_id, create_man, create_date
+        FROM track_import_log
+        WHERE create_man_id = #{userId} AND is_deleted = false
+        ORDER BY create_date DESC
+        LIMIT 1
     </select>
 </mapper>
 
