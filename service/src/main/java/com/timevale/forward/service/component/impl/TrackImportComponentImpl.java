@@ -19,7 +19,6 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.excel.track.*;
 import com.timevale.forward.service.utils.EnvUtils;
-import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.framework.tedis.util.TedisUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
@@ -75,8 +74,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     private static final String TRACK_IMPORT_RESULT = "forward:track:import:result:";
 
     @Override
-    public Integer getProgress() {
-        String userId = LocalSessionUtils.getUserInfo().getId();
+    public Integer getProgress(String userId) {
         String progressTag = TRACK_IMPORT_PROGRESS + userId;
 
         Integer progress = TedisUtil.get(progressTag);
@@ -85,8 +83,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     }
 
     @Override
-    public void setProgress(Integer progress) {
-        String userId = LocalSessionUtils.getUserInfo().getId();
+    public void setProgress(Integer progress, String userId) {
         String progressTag = TRACK_IMPORT_PROGRESS + userId;
 
         log.info("更新用户{}导入进度：{}%", userId, progress);
@@ -94,8 +91,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     }
 
     @Override
-    public Boolean getCancelTag() {
-        String userId = LocalSessionUtils.getUserInfo().getId();
+    public Boolean getCancelTag(String userId) {
         String cancelTag = TRACK_IMPORT_CANCEL + userId;
 
         log.info("用户{}获取取消导入操作标志", userId);
@@ -103,8 +99,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     }
 
     @Override
-    public void setCancelTag() {
-        String userId = LocalSessionUtils.getUserInfo().getId();
+    public void setCancelTag(String userId) {
         String cancelTag = TRACK_IMPORT_CANCEL + userId;
 
         log.info("用户{}尝试取消导入操作", userId);
@@ -112,8 +107,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     }
 
     @Override
-    public void setImportResult(Integer result) {
-        String userId = LocalSessionUtils.getUserInfo().getId();
+    public void setImportResult(Integer result, String userId) {
         String resultTag = TRACK_IMPORT_RESULT + userId;
 
         log.info("用户{}设置导入结果：{}", userId, result);
@@ -121,8 +115,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     }
 
     @Override
-    public Integer getImportResult() {
-        String userId = LocalSessionUtils.getUserInfo().getId();
+    public Integer getImportResult(String userId) {
         String resultTag = TRACK_IMPORT_RESULT + userId;
 
         Integer result = TedisUtil.get(resultTag);
@@ -131,8 +124,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     }
 
     @Override
-    public void deleteStatus() {
-        String userId = LocalSessionUtils.getUserInfo().getId();
+    public void deleteStatus(String userId) {
         String cancelTag = TRACK_IMPORT_CANCEL + userId;
         String resultTag = TRACK_IMPORT_RESULT + userId;
         String progressTag = TRACK_IMPORT_PROGRESS + userId;
@@ -142,8 +134,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     }
 
     @Override
-    public void importEnd() {
-        String userId = LocalSessionUtils.getUserInfo().getId();
+    public void importEnd(String userId) {
         String cancelTag = TRACK_IMPORT_CANCEL + userId;
         String progressTag = TRACK_IMPORT_PROGRESS + userId;
 
@@ -154,7 +145,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     @SneakyThrows
     @Override
     @Async("threadPoolTaskExecutor")
-    public void importEvent(TrackImportReq trackImportReq) {
+    public void importEvent(TrackImportReq trackImportReq, String userId) {
         List<TrackEvent> trackEventList = new ArrayList<>();
 
         // 获取导入数据
@@ -192,15 +183,15 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             AssertUtil.checkState(trackEventList.size() <= importEventLimit, "导入埋点事件数不能超过" + importEventLimit + "条");
 
             // 进度20%
-            setProgress(20);Thread.sleep(1000);
+            setProgress(20, userId);Thread.sleep(1000);
 
             // 校验
-            classifyCheck(trackEventList);      setProgress(30);Thread.sleep(1500);
+            classifyCheck(trackEventList);      setProgress(30, userId);Thread.sleep(1500);
             eventNameCheck(trackEventList);
-            propCheck(trackEventList);          setProgress(50);Thread.sleep(1500);
+            propCheck(trackEventList);          setProgress(50, userId);Thread.sleep(1500);
             platformCheck(trackEventList);
             touchMomentCheck(trackEventList);
-            envCheck(trackEventList);           setProgress(70);Thread.sleep(1500);
+            envCheck(trackEventList);           setProgress(70, userId);Thread.sleep(1500);
 
             // 判断是否有错误信息
             boolean failImport = trackEventList.stream().anyMatch(e -> CollectionUtil.isNotEmpty(e.getFailInfoList()));
@@ -210,7 +201,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 outputFile.deleteOnExit();
                 outputFailInfo(trackEventList, outputFile);
                 // 导入结果
-                setImportResult(TrackImportLogResultEnum.FAILURE.getCode());
+                setImportResult(TrackImportLogResultEnum.FAILURE.getCode(), userId);
             } else {
                 // 通过校验，导入数据
                 TrackImportLogDO trackImportLogDO = new TrackImportLogDO();
@@ -220,14 +211,14 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 trackImportLogDO.setImportFailCount(0);
                 trackImportLogDO.setFileId(importFileId);
                 trackImportLogMapper.insert(trackImportLogDO);
-                setImportResult(TrackImportLogResultEnum.SUCCESS.getCode());
+                setImportResult(TrackImportLogResultEnum.SUCCESS.getCode(), userId);
             }
         } catch (IOException e) {
             log.error("埋点导入IO异常");
             throw new BaseBizRuntimeException("埋点导入处理失败");
         } finally {
             // 导入结束状态
-            importEnd();
+            importEnd(userId);
 
             // 删除临时文件
             importFile.delete();

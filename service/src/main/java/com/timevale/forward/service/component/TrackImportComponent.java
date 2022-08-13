@@ -14,41 +14,41 @@ public interface TrackImportComponent {
      *
      * @return {@link TrackImportStatus}
      */
-    Integer getProgress();
+    Integer getProgress(String userId);
 
     /**
      * 更新进展
      *
      * @param progress 进展
      */
-    void setProgress(Integer progress);
+    void setProgress(Integer progress, String userId);
 
     /**
      * 取消导入状态
      */
-    void setCancelTag();
+    void setCancelTag(String userId);
 
     /**
      * 得到取消标签
      */
-    Boolean getCancelTag();
+    Boolean getCancelTag(String userId);
 
     /**
      * 设置导入结果
      */
-    void setImportResult(Integer result);
+    void setImportResult(Integer result, String userId);
 
     /**
      * 得到导入结果
      */
-    Integer getImportResult();
+    Integer getImportResult(String userId);
 
     /**
      * 删除状态
      */
-    void deleteStatus();
+    void deleteStatus(String userId);
 
-    void importEvent(TrackImportReq trackImportReq);
+    void importEvent(TrackImportReq trackImportReq, String userId);
 
-    void importEnd();
+    void importEnd(String userId);
 }
