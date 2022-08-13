@@ -62,7 +62,7 @@ public class TrackImportServiceImpl implements TrackImportService {
         AssertUtil.checkState(progress == null, "当前已有导入任务");
 
         // 初始化状态
-        trackImportComponent.deleteStatus(userId);
+        trackImportComponent.deleteAllStatus(userId);
 
         // 开始导入
         trackImportComponent.setProgress(0,userId);
@@ -75,18 +75,34 @@ public class TrackImportServiceImpl implements TrackImportService {
     @Override
     public BaseResult<Boolean> cancel() {
         String userId = LocalSessionUtils.getUserInfo().getId();
-
         Integer progress = trackImportComponent.getProgress(userId);
-        AssertUtil.checkState(progress == null, "取消导入失败");
+        AssertUtil.checkState(progress != null, "取消导入失败，没有正在进行中的导入任务");
         trackImportComponent.setCancelTag(userId);
+        trackImportComponent.deleteImportStatus(userId);
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> cleanImportStatus() {
+        String userId = LocalSessionUtils.getUserInfo().getId();
+        trackImportComponent.deleteAllStatus(userId);
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<String> getAllImportStatus() {
+        String userId = LocalSessionUtils.getUserInfo().getId();
+        Integer progress = trackImportComponent.getProgress(userId);
+        Boolean cancelTag = trackImportComponent.getCancelTag(userId);
+        Integer importResult = trackImportComponent.getImportResult(userId);
+        String s = "progress：" + progress + ", cancelTag：" + cancelTag + ", importResult：" + importResult;
+        return BaseResult.success(s);
     }
 
     @Override
     public BaseResult<TrackImportProgressVO> progress() {
         String userId = LocalSessionUtils.getUserInfo().getId();
 
-        trackImportComponent.deleteStatus(userId);
         TrackImportProgressVO trackImportProgressVO = new TrackImportProgressVO();
 
         Integer progress = trackImportComponent.getProgress(userId);
@@ -99,7 +115,7 @@ public class TrackImportServiceImpl implements TrackImportService {
         Integer result = trackImportComponent.getImportResult(userId);
         if (result != null) {
             // 删除过气状态
-            trackImportComponent.deleteStatus(userId);
+            trackImportComponent.deleteAllStatus(userId);
             TrackImportLogDO trackImportLogDO = trackImportLogMapper.selectCreateLatest(userId);
             trackImportProgressVO = TrackImportLogCopier.INSTANCE.transfer(trackImportLogDO);
             return BaseResult.success(trackImportProgressVO);

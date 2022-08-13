@@ -17,7 +17,7 @@ public class TrackImportProgressVO extends ToString {
     @ApiModelProperty("进度范围：0~100")
     private Integer progress;
 
-    @ApiModelProperty("导入结果：0导入成功,1导入失败，2导入中，3无导入事件,4取消导入")
+    @ApiModelProperty("导入结果：0导入成功,1导入失败，2导入中，3无导入事件")
     private Integer result;
 
     @ApiModelProperty("导入总数量")

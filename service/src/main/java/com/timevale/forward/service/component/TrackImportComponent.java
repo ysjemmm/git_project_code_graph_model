@@ -21,7 +21,7 @@ public interface TrackImportComponent {
      *
      * @param progress 进展
      */
-    void setProgress(Integer progress, String userId);
+    boolean setProgress(Integer progress, String userId);
 
     /**
      * 取消导入状态
@@ -46,7 +46,13 @@ public interface TrackImportComponent {
     /**
      * 删除状态
      */
-    void deleteStatus(String userId);
+    void deleteAllStatus(String userId);
+
+    /**
+     * 删除状态
+     */
+    void deleteImportStatus(String userId);
+
 
     void importEvent(TrackImportReq trackImportReq, String userId);
 

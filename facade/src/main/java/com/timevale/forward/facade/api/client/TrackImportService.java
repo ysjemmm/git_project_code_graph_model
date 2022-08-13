@@ -31,6 +31,21 @@ public interface TrackImportService {
      */
     BaseResult<Boolean> cancel();
 
+
+    /**
+     * 清除进口状态
+     *
+     * @return {@link BaseResult}<{@link Boolean}>
+     */
+    BaseResult<Boolean> cleanImportStatus();
+
+    /**
+     * 得到所有进口状态
+     *
+     * @return {@link BaseResult}<{@link String}>
+     */
+    BaseResult<String> getAllImportStatus();
+
     /**
      * 查询导入进度
      *
