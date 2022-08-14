@@ -20,12 +20,14 @@ import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.excel.track.*;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.framework.tedis.util.TedisUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.service.retry.RetryCallback;
 import com.timevale.mandarin.common.service.retry.RetryTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Async;
@@ -156,7 +158,9 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     @Override
     @Async("threadPoolTaskExecutor")
     @Transactional(rollbackFor = Exception.class)
-    public void importEvent(TrackImportReq trackImportReq, String userId) {
+    public void importEvent(TrackImportReq trackImportReq, UserInfo userInfo) {
+        String userId = userInfo.getId();
+
         List<TrackEvent> trackEventList = new ArrayList<>();
 
         // 获取导入数据
@@ -202,10 +206,10 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             // 判断是否有错误信息
             boolean failImport = trackEventList.stream().anyMatch(e -> CollectionUtil.isNotEmpty(e.getFailInfoList()));
             if (failImport) {
-                outputFailInfo(trackEventList);
+                outputFailInfo(trackEventList, userInfo);
                 setImportResult(TrackImportLogResultEnum.FAILURE.getCode(), userId);
             } else {
-                importInfo(trackEventList, importFileId);
+                importInfo(trackEventList, importFileId, userInfo);
                 setImportResult(TrackImportLogResultEnum.SUCCESS.getCode(), userId);
             }
 
@@ -559,7 +563,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
      *
      * @param trackEventList 跟踪事件列表
      */
-    private void outputFailInfo(List<TrackEvent> trackEventList) {
+    private void outputFailInfo(List<TrackEvent> trackEventList, UserInfo userInfo) {
         log.info("埋点导入输出失败信息开始");
 
         File outputFile = null;
@@ -629,6 +633,8 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             trackImportLogDO.setImportCount(importCount);
             trackImportLogDO.setImportFailCount(importFailCount);
             trackImportLogDO.setResult(TrackImportLogResultEnum.FAILURE.getCode());
+            trackImportLogDO.setCreateMan(userInfo.getName());
+            trackImportLogDO.setCreateManId(userInfo.getId());
             trackImportLogMapper.insert(trackImportLogDO);
 
         } catch (IOException e) {
@@ -646,13 +652,15 @@ public class TrackImportComponentImpl implements TrackImportComponent {
      *
      * @param trackEventList 跟踪事件列表
      */
-    private void importInfo(List<TrackEvent> trackEventList, String importFileId) {
+    private void importInfo(List<TrackEvent> trackEventList, String importFileId, UserInfo userInfo) {
         TrackImportLogDO trackImportLogDO = new TrackImportLogDO();
         trackImportLogDO.setStatus(TrackImportLogStatusEnum.SUCCESS.getCode());
         trackImportLogDO.setResult(TrackImportLogResultEnum.SUCCESS.getCode());
         trackImportLogDO.setImportCount(trackEventList.size());
         trackImportLogDO.setImportFailCount(0);
         trackImportLogDO.setFileId(importFileId);
+        trackImportLogDO.setCreateMan(userInfo.getName());
+        trackImportLogDO.setCreateManId(userInfo.getId());
         trackImportLogMapper.insert(trackImportLogDO);
     }
 }

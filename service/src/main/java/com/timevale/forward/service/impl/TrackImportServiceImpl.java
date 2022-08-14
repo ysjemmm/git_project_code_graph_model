@@ -23,6 +23,7 @@ import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -55,7 +56,8 @@ public class TrackImportServiceImpl implements TrackImportService {
 
     @Override
     public BaseResult<Boolean> importEvent(TrackImportReq trackImportReq) {
-        String userId = LocalSessionUtils.getUserInfo().getId();
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String userId = userInfo.getId();
 
         // 判断当前是否有导入任务
         Integer progress = trackImportComponent.getProgress(userId);
@@ -67,7 +69,7 @@ public class TrackImportServiceImpl implements TrackImportService {
         // 开始导入
         trackImportComponent.setProgress(0,userId);
         trackImportComponent.setImportResult(TrackImportLogResultEnum.LOADING.getCode(), userId);
-        trackImportComponent.importEvent(trackImportReq, userId);
+        trackImportComponent.importEvent(trackImportReq, userInfo);
 
         return BaseResult.success(true);
     }

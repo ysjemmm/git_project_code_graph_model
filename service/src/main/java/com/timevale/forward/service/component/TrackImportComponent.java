@@ -2,6 +2,7 @@ package com.timevale.forward.service.component;
 
 import com.timevale.forward.facade.api.request.TrackImportReq;
 import com.timevale.forward.service.excel.track.TrackImportStatus;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 
 /**
  * @author by YangXu
@@ -54,7 +55,7 @@ public interface TrackImportComponent {
     void deleteImportStatus(String userId);
 
 
-    void importEvent(TrackImportReq trackImportReq, String userId);
+    void importEvent(TrackImportReq trackImportReq, UserInfo userInfo);
 
     void importEnd(String userId);
 }
