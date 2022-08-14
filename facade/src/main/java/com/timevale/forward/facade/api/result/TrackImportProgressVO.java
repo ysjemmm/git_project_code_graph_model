@@ -25,4 +25,7 @@ public class TrackImportProgressVO extends ToString {
 
     @ApiModelProperty("导入失败数量")
     private Integer importFailCount;
+
+    @ApiModelProperty("文件信息")
+    private TrackImportLogFileVO importLogFileVO;
 }

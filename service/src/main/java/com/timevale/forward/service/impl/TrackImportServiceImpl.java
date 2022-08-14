@@ -70,7 +70,6 @@ public class TrackImportServiceImpl implements TrackImportService {
         trackImportComponent.setProgress(0,userId);
         trackImportComponent.setImportResult(TrackImportLogResultEnum.LOADING.getCode(), userId);
         trackImportComponent.importEvent(trackImportReq, userInfo);
-
         return BaseResult.success(true);
     }
 
@@ -79,21 +78,20 @@ public class TrackImportServiceImpl implements TrackImportService {
         String userId = LocalSessionUtils.getUserInfo().getId();
         Integer progress = trackImportComponent.getProgress(userId);
         AssertUtil.checkState(progress != null, "取消导入失败，没有正在进行中的导入任务");
+
         trackImportComponent.setCancelTag(userId);
         trackImportComponent.deleteImportStatus(userId);
         return BaseResult.success(true);
     }
 
     @Override
-    public BaseResult<Boolean> cleanImportStatus() {
-        String userId = LocalSessionUtils.getUserInfo().getId();
+    public BaseResult<Boolean> cleanImportStatus(String userId) {
         trackImportComponent.deleteAllStatus(userId);
         return BaseResult.success(true);
     }
 
     @Override
-    public BaseResult<String> getAllImportStatus() {
-        String userId = LocalSessionUtils.getUserInfo().getId();
+    public BaseResult<String> getAllImportStatus(String userId) {
         Integer progress = trackImportComponent.getProgress(userId);
         Boolean cancelTag = trackImportComponent.getCancelTag(userId);
         Integer importResult = trackImportComponent.getImportResult(userId);
@@ -104,7 +102,6 @@ public class TrackImportServiceImpl implements TrackImportService {
     @Override
     public BaseResult<TrackImportProgressVO> progress() {
         String userId = LocalSessionUtils.getUserInfo().getId();
-
         TrackImportProgressVO trackImportProgressVO = new TrackImportProgressVO();
 
         Integer progress = trackImportComponent.getProgress(userId);
@@ -120,6 +117,13 @@ public class TrackImportServiceImpl implements TrackImportService {
             trackImportComponent.deleteAllStatus(userId);
             TrackImportLogDO trackImportLogDO = trackImportLogMapper.selectCreateLatest(userId);
             trackImportProgressVO = TrackImportLogCopier.INSTANCE.transfer(trackImportLogDO);
+
+            // 失败文件信息
+            if (TrackImportLogResultEnum.FAILURE.getCode().equals(trackImportLogDO.getResult())) {
+                FileDownloadDTO fileDownloadInfo = FileUtil.getFileDownloadInfo(trackImportLogDO.getFileId(), envUtils.getEnv());
+                TrackImportLogFileVO fileVO = TrackImportLogCopier.INSTANCE.convert(fileDownloadInfo);
+                trackImportProgressVO.setImportLogFileVO(fileVO);
+            }
             return BaseResult.success(trackImportProgressVO);
         }
 

@@ -33,18 +33,20 @@ public interface TrackImportService {
 
 
     /**
-     * 清除进口状态
+     * 清除所有状态
      *
+     * @param userId 用户id
      * @return {@link BaseResult}<{@link Boolean}>
      */
-    BaseResult<Boolean> cleanImportStatus();
+    BaseResult<Boolean> cleanImportStatus(String userId);
 
     /**
-     * 得到所有进口状态
+     * 得到所有状态
      *
+     * @param userId 用户id
      * @return {@link BaseResult}<{@link String}>
      */
-    BaseResult<String> getAllImportStatus();
+    BaseResult<String> getAllImportStatus(String userId);
 
     /**
      * 查询导入进度
