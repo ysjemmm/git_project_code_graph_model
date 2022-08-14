@@ -39,6 +39,14 @@ public interface TrackEvenPropMapper {
     int batchInsert(List<TrackEventPropDO> trackEventPropDOList);
 
     /**
+     * 新增事件-属性-无填充审计信息
+     *
+     * @param trackEventPropDOList trackEventPropDOList
+     * @return int
+     */
+    int batchInsertNotIC(List<TrackEventPropDO> trackEventPropDOList);
+
+    /**
      * 查询事件-属性
      *
      * @param eventId eventId

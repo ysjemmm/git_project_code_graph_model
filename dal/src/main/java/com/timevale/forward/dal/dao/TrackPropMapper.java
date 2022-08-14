@@ -30,6 +30,13 @@ public interface TrackPropMapper {
      */
     int batchInsert(List<TrackPropDO> trackPropDOList);
 
+    /**
+     * 新增事件-属性-无填充审计信息
+     *
+     * @param trackPropDOList trackPropDOList
+     * @return int
+     */
+    int batchInsertNotIC(List<TrackPropDO> trackPropDOList);
 
     /**
      * 列表

@@ -8,6 +8,7 @@ import lombok.Data;
  */
 @Data
 public class TrackProp {
+    private Long id;
     private String propNameCn;
     private String propNameEn;
     private String dataType;

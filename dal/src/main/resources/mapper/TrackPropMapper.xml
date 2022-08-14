@@ -17,6 +17,14 @@
         </foreach>
     </insert>
 
+    <insert id="batchInsertNotIC" parameterType="java.util.List"  useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into track_prop (cn_name, eg_name, status,type,data_type,create_man ,create_man_id)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.cnName},#{i.egName}, #{i.status},#{i.type},#{i.dataType},#{i.createMan},#{i.createManId})
+        </foreach>
+    </insert>
+
     <select id="select" resultType="com.timevale.forward.dal.entity.TrackPropDO">
         select id,cn_name, eg_name, status,type,data_type,
          is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date

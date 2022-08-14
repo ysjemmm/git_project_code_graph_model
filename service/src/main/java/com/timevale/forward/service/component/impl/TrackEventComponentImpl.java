@@ -3,35 +3,42 @@ package com.timevale.forward.service.component.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageInfo;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
+import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.TrackEventListCondition;
 import com.timevale.forward.dal.condition.TrackEventPropCondition;
+import com.timevale.forward.dal.condition.TrackPropListCondition;
 import com.timevale.forward.dal.dao.TrackEvenPropMapper;
 import com.timevale.forward.dal.dao.TrackEventMapper;
 import com.timevale.forward.dal.dao.TrackPropMapper;
 import com.timevale.forward.dal.entity.TrackEventDO;
 import com.timevale.forward.dal.entity.TrackEventPropDO;
 import com.timevale.forward.dal.entity.TrackPropDO;
+import com.timevale.forward.dal.entity.TrackPropItemDO;
+import com.timevale.forward.facade.api.request.FileAddReq;
+import com.timevale.forward.facade.api.request.TrackEventAddReq;
 import com.timevale.forward.facade.api.result.TrackEventVO;
 import com.timevale.forward.model.enums.EnvEnum;
 import com.timevale.forward.model.enums.PlatformTypeEnum;
 import com.timevale.forward.model.enums.TrackPropTypeEnum;
 import com.timevale.forward.service.component.TrackEventComponent;
 import com.timevale.forward.service.copy.TrackEventCopier;
+import com.timevale.forward.service.copy.TrackPropCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -149,6 +156,65 @@ public class TrackEventComponentImpl implements TrackEventComponent {
                 trackPropMapper.updateWithOutModifyMan(a);
             }
         });
+    }
+
+    @Override
+    public String startFlow(TrackEventAddReq trackEventAddReq) {
+        StartProcessRequest start = new StartProcessRequest();
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("files", new ArrayList<>());
+        variables.put("fullCnName", trackEventAddReq.getFullCnName());
+        variables.put("apiName", trackEventAddReq.getApiName());
+        variables.put("egName", trackEventAddReq.getEgName());
+        variables.put("platform", StringUtils.join(PlatformTypeEnum.getTextByCode(trackEventAddReq.getPlatforms()), ","));
+        variables.put("touchMoment", trackEventAddReq.getTouchMoment());
+        variables.put("env", StringUtils.join(EnvEnum.getTextByCode(trackEventAddReq.getEnvs()), ","));
+        variables.put("trackEventName", trackEventAddReq.getFullCnName());
+
+        List<FileAddReq> fileAddReqs = trackEventAddReq.getFiles();
+        List<Map<String, String>> files = new ArrayList<>();
+        fileAddReqs.forEach(a -> {
+            Map<String, String> file = new HashMap<>();
+            file.put("file_key", a.getFileKey());
+            file.put("file_name", a.getFileName());
+            files.add(file);
+        });
+        variables.put("files", files);
+
+        List<Integer> types = Lists.newArrayList(TrackPropTypeEnum.DEFAULT.getCode());
+        TrackPropListCondition c = TrackPropListCondition.builder().types(types).build();
+        List<TrackPropDO> defaultProps = trackPropMapper.list(c);
+
+        List<TrackPropDO> trackProps = TrackPropCopier.INSTANCE.change(trackEventAddReq.getTrackProps());
+        trackProps.addAll(defaultProps);
+
+        List<TrackPropItemDO> trackPropItemDOList = new ArrayList<>();
+        trackProps.forEach(a -> {
+            TrackPropItemDO trackPropDO = new TrackPropItemDO();
+            trackPropDO.setDataType(a.getDataType());
+            trackPropDO.setCnName(a.getCnName());
+            trackPropDO.setEgName(a.getEgName());
+            if (a.getId() != null && com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode().equals(a.getStatus())) {
+                //审核不通过的属性重新提交,变成审核中
+                trackPropDO.setStatusName(com.timevale.forward.model.enums.FlowStatusEnum.getTextByCode(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode()));
+                a.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode());
+                trackPropMapper.update(a);
+            } else {
+                trackPropDO.setStatusName(com.timevale.forward.model.enums.FlowStatusEnum.getTextByCode(a.getStatus()));
+            }
+            trackPropDO.setTypeName(TrackPropTypeEnum.getTextByCode(a.getType()));
+            trackPropItemDOList.add(trackPropDO);
+        });
+        variables.put("props", trackPropItemDOList);
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        start.setApplicationName("forward");
+        start.setProcessDefinitionKey("forward_trackEventReview");
+        start.setStartAccountId(userInfo.getId());
+        start.setVariables(variables);
+        start.setEpeVirtualProcessSwitch(false);
+        String id = epeiusClient.start(start);
+        return id;
     }
 
     private void buildConditionBeforeQuery(TrackEventListCondition condition) {

@@ -9,6 +9,15 @@
         (#{cnName},#{fullCnName},#{egName}, #{flowId},#{trackMapId},#{platform},#{apiName},#{touchMoment},#{env},#{status},#{explanation},#{createMan},#{createManId})
     </insert>
 
+    <insert id="batchInsert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO track_event (cn_name,full_cn_name, eg_name, flow_id,track_map_id,platform,api_name,touch_moment,env,status,explanation,create_man ,create_man_id)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.cnName},#{item.fullCnName},#{item.egName}, #{item.flowId},#{item.trackMapId},#{item.platform},
+             #{item.apiName},#{item.touchMoment},#{item.env},#{item.status},#{item.explanation},#{item.createMan},#{item.createManId})
+        </foreach>
+    </insert>
+
     <update id="update">
         update track_event
         <set>

@@ -23,6 +23,14 @@ public interface TrackEventMapper {
     int insert(TrackEventDO trackMapDO);
 
     /**
+     * 批量新增
+     *
+     * @param list 列表
+     * @return int
+     */
+    int batchInsert(@Param("list") List<TrackEventDO> list);
+
+    /**
      * 新增
      *
      * @param trackMapDO trackMapDO
