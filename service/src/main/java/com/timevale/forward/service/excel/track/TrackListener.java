@@ -2,6 +2,9 @@ package com.timevale.forward.service.excel.track;
 
 import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.lang.intern.InternUtil;
+import cn.hutool.core.math.MathUtil;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.extra.spring.SpringUtil;
@@ -29,7 +32,7 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
     private int eventIndex = 0;
     private int headRow = 2;
     private final List<TrackEvent> trackEventList;
-    private String userId;
+    private final String userId;
 
     public TrackListener(List<TrackEvent> trackEventList, String userId) {
         this.userId = userId;
@@ -41,12 +44,17 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
         Integer rowIndex = context.readRowHolder().getRowIndex();
 
         TrackEvent trackEvent = trackEventList.get(eventIndex);
-
-        log.info("导入第{}行信息：{}", rowIndex, trackEvent);
-
         // 当前事件的合并行数
         Integer firstRowIndex = trackEvent.getFirstRowIndex();
         Integer lastRowIndex = trackEvent.getLastRowIndex();
+
+        // 判断是否到下一个
+        while (lastRowIndex.compareTo(rowIndex) < 0) {
+            eventIndex++;
+            trackEvent = trackEventList.get(eventIndex);
+            firstRowIndex = trackEvent.getFirstRowIndex();
+            lastRowIndex = trackEvent.getLastRowIndex();
+        }
 
         // 如果为首行则复制全部数据
         if(firstRowIndex.equals(rowIndex)) {
@@ -56,9 +64,7 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
         TrackProp trackProp = TrackPropCopier.INSTANCE.convert(trackRow);
         trackEvent.getTrackPropList().add(trackProp);
 
-        if (lastRowIndex.equals(rowIndex)) {
-            eventIndex++;
-        }
+        log.info("导入第{}行信息：{}", rowIndex, trackEvent);
     }
 
     @Override
