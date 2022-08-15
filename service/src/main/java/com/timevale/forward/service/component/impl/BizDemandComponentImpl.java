@@ -269,10 +269,8 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
         // 开始分页,查询并转换
         String collation = sqlOrderComponent.build(bizDemandListCondition.getOrderFiled(), bizDemandListCondition.getOrderCollation());
-        PageHelper.startPage(bizDemandListCondition.getPageNum(), bizDemandListCondition.getPageSize(), collation);
-
         // 开始分页
-        PageHelper.startPage(bizDemandListCondition.pageNum, bizDemandListCondition.pageSize, bizDemandListCondition.getCollation());
+        PageHelper.startPage(bizDemandListCondition.getPageNum(), bizDemandListCondition.getPageSize(), collation);
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
         List<Long> bizDemandIds = bizDemandListDOList.stream().map(BizDemandListDO::getId).collect(Collectors.toList());
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
