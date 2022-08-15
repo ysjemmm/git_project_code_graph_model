@@ -1,0 +1,51 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.timevale.forward.dal.dao.BugOnlineModelMapper">
+
+    <select id="selectModelIds" resultType="Long">
+        select model_id from bug_online_model
+        where bug_online_id = #{id} and is_deleted = false
+    </select>
+
+    <select id="selectByBugOnlineIdList" resultType="com.timevale.forward.dal.entity.BugOnlineModelDO">
+        SELECT bug_online_id, model_id
+        FROM bug_online_model
+        <where>
+            <if test="bugOnlineIdList != null and bugOnlineIdList.size() > 0">
+                AND bug_online_id IN
+                <foreach collection="bugOnlineIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="true">
+                AND is_deleted = false
+            </if>
+        </where>
+    </select>
+
+    <insert id="batchInsert">
+        insert into bug_online_model(bug_online_id,model_id,create_man,create_man_id) values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.bugOnlineId},#{item.modelId},#{createMan},#{createManId})
+        </foreach>
+    </insert>
+
+    <update id="update">
+        update bug_online_model
+        <set>
+            <if test="modelId != null">
+                model_id = #{modelId},
+            </if>
+            <if test="bugOnlineId != null">
+                bug_online_id = #{bugOnlineId},
+            </if>
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted},
+            </if>
+            <if test="true">
+                modify_man_id = #{modifyManId},
+                modify_man = #{modifyMan},
+            </if>
+        </set>
+        where bug_online_id = #{bugOnlineId}
+    </update>
+</mapper>

@@ -6,7 +6,7 @@ import java.util.List;
  * @Date 2022/3/22 10:29
  * @Author 望轩
  */
-public interface BugOnlineProductLineComponent {
+public interface BugOnlineModelComponent {
     /**
      * 更新
      *

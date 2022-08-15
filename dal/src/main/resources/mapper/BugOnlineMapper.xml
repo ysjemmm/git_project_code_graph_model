@@ -7,10 +7,11 @@
 
     <select id="selectListByCondition" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
         select bo.id, bo.name, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env,
-        bo.reason, bo.belong, bo.dismiss_cause, bo.customer_name, bo.expect_launch_date, bo.source,bo.model_id,
+        bo.reason, bo.belong, bo.dismiss_cause, bo.customer_name, bo.expect_launch_date, bo.source,
         bo.create_date, bo.modify_date
         from bug_online bo
         left join bug_online_product_line bopl on bo.id = bopl.bug_online_id
+        left join bug_online_model mo on bo.id = mo.bug_online_id
         left join product_line pl on bopl.product_line_id = pl.id
         left join biz_domain bdm on pl.biz_domain_id = bdm.id
         <where>
@@ -80,10 +81,10 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="modelIds!=null and modelIds.size()>0">
-                and
-                <foreach collection="modelIds" item="item" separator="or" open="(" close=")">
-                    bo.model_id  like concat('%',#{item},'%')
+            <if test="modelIds != null and modelIds.size() > 0">
+                and mo.model_id in
+                <foreach collection="modelIds" item="item" separator="," open="(" close=")">
+                    #{item}
                 </foreach>
             </if>
             <if test="productLineIdList != null and productLineIdList.size() > 0">
@@ -116,6 +117,7 @@
             <if test="true">
                 and bo.is_deleted = false
                 and bopl.is_deleted = false
+                and mo.is_deleted = false
             </if>
         </where>
         group by bo.id
@@ -130,12 +132,12 @@
     <insert id="insert" useGeneratedKeys="true" keyProperty="bugOnlineDO.id">
         insert into bug_online(name,operator,operator_id,last_operator,last_operator_id,proposer
         ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
-        ,create_man,create_man_id,source, model_id, detail_version_id)
+        ,create_man,create_man_id,source,  detail_version_id)
         values(#{bugOnlineDO.name},#{bugOnlineDO.operator},#{bugOnlineDO.operatorId},#{bugOnlineDO.lastOperator}
         ,#{bugOnlineDO.lastOperatorId},#{bugOnlineDO.proposer},#{bugOnlineDO.proposerId},#{bugOnlineDO.customerName}
         ,#{bugOnlineDO.env},#{bugOnlineDO.belong},#{bugOnlineDO.priority},#{bugOnlineDO.recurrent}
         ,#{bugOnlineDO.reason},#{bugOnlineDO.expectDate},#{bugOnlineDO.business},#{bugOnlineDO.describe},#{bugOnlineDO.systemMenuName}
-        ,#{createMan},#{createManId},#{bugOnlineDO.source}, #{bugOnlineDO.modelId}, #{bugOnlineDO.detailVersionId})
+        ,#{createMan},#{createManId},#{bugOnlineDO.source}, #{bugOnlineDO.detailVersionId})
     </insert>
 
     <update id="update">
@@ -219,9 +221,6 @@
             <if test="bugOnlineDO.isDeleted != null">
                 is_deleted = #{bugOnlineDO.isDeleted},
             </if>
-            <if test="bugOnlineDO.modelId != null">
-                model_id = #{bugOnlineDO.modelId},
-            </if>
             <if test="bugOnlineDO.detailVersionId != null">
                 detail_version_id = #{bugOnlineDO.detailVersionId},
             </if>
@@ -267,7 +266,6 @@
             repair_fail_reason = #{bugOnlineDO.repairFailReason},
             open_again_reason = #{bugOnlineDO.openAgainReason},
             is_deleted = #{bugOnlineDO.isDeleted},
-            model_id = #{bugOnlineDO.modelId},
             detail_version_id = #{bugOnlineDO.detailVersionId},
             modify_man_id = #{modifyManId},
             modify_man = #{modifyMan}

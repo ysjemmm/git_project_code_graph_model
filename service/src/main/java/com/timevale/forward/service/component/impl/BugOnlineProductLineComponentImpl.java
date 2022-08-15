@@ -41,4 +41,19 @@ public class BugOnlineProductLineComponentImpl implements BugOnlineProductLineCo
             bugOnlineProductLineMapper.batchInsert(bugOnlineProductLineDOList);
         }
     }
+
+    @Override
+    public void add(List<Long> productLineIdList, Long id) {
+        List<BugOnlineProductLineDO> bugOnlineProductLineDOList = new ArrayList<>();
+        //如果产品线id不为空往线上bug和产品线的映射表中插入信息
+        if (CollectionUtils.isNotEmpty(productLineIdList)) {
+            productLineIdList.forEach(productLineId -> {
+                BugOnlineProductLineDO bugOnlineProductLineDO = new BugOnlineProductLineDO();
+                bugOnlineProductLineDO.setBugOnlineId(id);
+                bugOnlineProductLineDO.setProductLineId(productLineId);
+                bugOnlineProductLineDOList.add(bugOnlineProductLineDO);
+            });
+            bugOnlineProductLineMapper.batchInsert(bugOnlineProductLineDOList);
+        }
+    }
 }

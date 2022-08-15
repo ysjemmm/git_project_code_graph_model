@@ -62,6 +62,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     private BugOnlineProductLineMapper bugOnlineProductLineMapper;
 
     @Resource
+    private BugOnlineModelMapper bugOnlineModelMapper;
+
+    @Resource
     private ProductLineMapper productLineMapper;
 
     @Resource
@@ -114,6 +117,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Resource
     private BugOnlineProductLineComponent bugOnlineProductLineComponent;
+
+    @Resource
+    private BugOnlineModelComponent bugOnlineModelComponent;
 
     @Resource
     private LabelComponent labelComponent;
@@ -255,32 +261,28 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<Long> bugOnlineIdList = bugOnlineVOList.stream().map(BugOnlineVO::getId).collect(Collectors.toList());
         List<BugOnlineProductLineDO> bugOnlineProductLineDOList = bugOnlineProductLineMapper.selectByBugOnlineIdList(bugOnlineIdList);
 
+
         List<Long> productLineIdList = bugOnlineProductLineDOList.stream().map(BugOnlineProductLineDO::getProductLineId).collect(Collectors.toList());
         List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIdList);
 
         List<Long> bizDomainIdList = productLineDOList.stream().map(ProductLineDO::getBizDomainId).collect(Collectors.toList());
         List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByIdList(bizDomainIdList);
 
-        //模块名称
-        List<Long>modelIds=new ArrayList<>();
-        Map<Long, List<Long>> modelMap = new HashMap<>();
+        List<BugOnlineModelDO> bugOnlineModelDOList = bugOnlineModelMapper.selectByBugOnlineIdList(bugOnlineIdList);
+        List<Long> modelIdList = bugOnlineModelDOList.stream().map(BugOnlineModelDO::getModelId).collect(Collectors.toList());
         List<ModelDO> modelDOList=new ArrayList<>();
-        bugOnlineDOList.forEach(a->{
-            List<Long> existModelIds = JSONObject.parseArray(a.getModelId(), Long.class);
-            if (!CollectionUtils.isEmpty(existModelIds)) {
-                modelIds.addAll(existModelIds);
-                modelMap.put(a.getId(),existModelIds);
-            }
-        });
-        if(CollectionUtils.isNotEmpty(modelIds)){
-            modelDOList = modelMapper.getByIds(modelIds);
+        if(CollectionUtils.isNotEmpty(modelIdList)){
+            modelDOList = modelMapper.getByIds(modelIdList);
         }
-        Map<Long, String> modelNameMap  = modelDOList.stream().collect(Collectors.toMap(ModelDO::getId, ModelDO::getName, (v1, v2) -> v2));
 
         Map<Long, ProductLineDO> productLineMap = productLineDOList.stream().collect(Collectors.toMap(ProductLineDO::getId, Function.identity()));
         Map<Long, BizDomainDO> bizDomainDOMap = bizDomainDOList.stream().collect(Collectors.toMap(BizDomainDO::getId, Function.identity()));
         Map<Long, List<BugOnlineProductLineDO>> bugOnlineProductLineMap =
                 bugOnlineProductLineDOList.stream().collect(Collectors.groupingBy(BugOnlineProductLineDO::getBugOnlineId));
+
+        Map<Long, List<BugOnlineModelDO>> bugOnlineModelMap =
+                bugOnlineModelDOList.stream().collect(Collectors.groupingBy(BugOnlineModelDO::getBugOnlineId));
+        Map<Long, String> modelNameMap  = modelDOList.stream().collect(Collectors.toMap(ModelDO::getId, ModelDO::getName, (v1, v2) -> v2));
 
         for (BugOnlineVO e : bugOnlineVOList) {
             // 关联的产品线id
@@ -315,6 +317,16 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                     .distinct()
                     .collect(Collectors.toList());
 
+            // 关联的模块id
+            if(bugOnlineModelMap.containsKey(e.getId())){
+                List<Long> eModelIdList = bugOnlineModelMap.get(e.getId())
+                        .stream()
+                        .map(BugOnlineModelDO::getModelId)
+                        .collect(Collectors.toList());
+                List<String> modelNames = eModelIdList.stream().filter(modelNameMap::containsKey).map(modelNameMap::get).collect(Collectors.toList());
+                e.setModelNames(modelNames);
+
+            }
             e.setProductLineNameList(eProductLineNameList);
             e.setBizDomainNameList(eBizDomainNameList);
 
@@ -330,11 +342,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 List<Long> labelIdList = labelIdMap.get(e.getId());
                 List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
                 e.setLabelNames(labelNames);
-            }
-            if (modelMap.containsKey(e.getId())) {
-                List<Long> modelIdList = modelMap.get(e.getId());
-                List<String> labelNames = modelIdList.stream().filter(modelNameMap::containsKey).map(modelNameMap::get).collect(Collectors.toList());
-                e.setModelNames(labelNames);
             }
         }
 
@@ -367,18 +374,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         bugOnlineMapper.insert(bugOnlineDO);
 
-        List<Long> productLineIdList = bugOnlineAddReq.getProductLineIdList();
-        List<BugOnlineProductLineDO> bugOnlineProductLineDOList = new ArrayList<>();
-        //如果产品线id不为空往线上bug和产品线的映射表中插入信息
-        if (CollectionUtils.isNotEmpty(productLineIdList)) {
-            productLineIdList.forEach(productLineId -> {
-                BugOnlineProductLineDO bugOnlineProductLineDO = new BugOnlineProductLineDO();
-                bugOnlineProductLineDO.setBugOnlineId(bugOnlineDO.getId());
-                bugOnlineProductLineDO.setProductLineId(productLineId);
-                bugOnlineProductLineDOList.add(bugOnlineProductLineDO);
-            });
-            bugOnlineProductLineMapper.batchInsert(bugOnlineProductLineDOList);
-        }
+        bugOnlineProductLineComponent.add(bugOnlineAddReq.getProductLineIdList(),bugOnlineDO.getId());
+
+        bugOnlineModelComponent.add(bugOnlineAddReq.getModelIds(),bugOnlineDO.getId());
 
         //如果有附件往附件表里存放数据
         List<FileAddReq> files = bugOnlineAddReq.getFiles();
@@ -478,8 +476,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     public BusinessResult<Boolean> modify(BugOnlineModifyReq bugOnlineModifyReq) {
         log.info("线上bug-修改,接收参数：{}", bugOnlineModifyReq);
 
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         //查询线上bug
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineModifyReq.getId());
         if (bugOnlineDO == null) {
@@ -492,15 +488,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //保存老的产品线列表
         List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineModifyReq.getId());
 
-        //是否为经办人&提出人及其上级，或者是测试角色
-        // Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
-        // Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
-        // Boolean result = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
-        // if (!result && !operatorResult && !proposerResult) {
-        //     throw new BaseBizRuntimeException("您没有修改权限");
-        // }
+        List<Long> oldModelList = bugOnlineModelMapper.selectModelIds(bugOnlineModifyReq.getId());
 
-        //BugOnlineModifyReq -->  BugOnlineDO
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(bugOnlineModifyReq);
         //更新线上bug
         bugOnlineMapper.update(bugOnlineConvert);
@@ -513,9 +502,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<PersonAddReq> recipients = bugOnlineModifyReq.getRecipients();
         personComponent.update(recipients, bugOnlineModifyReq.getId(), PersonTypeEnum.BUG_ONLINE_CC.getCode());
 
-        List<Long> productLineIdList = bugOnlineModifyReq.getProductLineIdList();
-        //更新线上bug和产品线映射表
-        bugOnlineProductLineComponent.update(productLineIdList, bugOnlineModifyReq.getId());
+        bugOnlineProductLineComponent.update(bugOnlineModifyReq.getProductLineIdList(), bugOnlineModifyReq.getId());
+
+        bugOnlineModelComponent.update(bugOnlineModifyReq.getModelIds(), bugOnlineModifyReq.getId());
 
         //新的线上bug比较对象
         BugOnlineMD newBugOnlineMD = BugOnlineCopier.INSTANCE.convert(bugOnlineModifyReq);
@@ -525,8 +514,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<BugLogDO> bugLogDOList = FieldCompareUtil.commonCompare(oldBugOnlineMD, newBugOnlineMD, BugLogDO.class);
 
         //模块日志
-        bugLogDOList.addAll(compareModel(JSONObject.parseArray(bugOnlineDO.getModelId(), Long.class), bugOnlineModifyReq.getModelIds(), bugOnlineDO.getId()));
-        //额外判断产品线和产品线业务
+        bugLogDOList.addAll(compareModel(oldModelList, bugOnlineModifyReq.getModelIds(), bugOnlineDO.getId()));
         bugLogDOList.addAll(compareProductLine(oldProductLineIdList, bugOnlineModifyReq.getProductLineIdList(), bugOnlineDO.getId()));
         bugLogDOList.addAll(compareExtField(bugOnlineDO, newBugOnlineDO));
         if (!CollectionUtils.isEmpty(bugLogDOList)) {
@@ -624,11 +612,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugOnlineDetailVO.setCommentVOList(commentVOList);
         }
         //模块名称
-        List<Long> modelIds = JSONObject.parseArray(bugOnlineDO.getModelId(), Long.class);
-        if (!CollectionUtils.isEmpty(modelIds)) {
-            String modelName = modelMapper.getByIds(modelIds).stream().map(ModelDO::getName).collect(Collectors.joining(","));
+        List<Long> modelIdList = bugOnlineModelMapper.selectModelIds(bugOnlineDetailReq.getId());
+        if (!CollectionUtils.isEmpty(modelIdList)) {
+            String modelName = modelMapper.getByIds(modelIdList).stream().map(ModelDO::getName).collect(Collectors.joining(","));
             bugOnlineDetailVO.setModelName(modelName);
-            bugOnlineDetailVO.setModelIds(modelIds);
+            bugOnlineDetailVO.setModelIds(modelIdList);
         }
 
         //信息填充
@@ -1677,6 +1665,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
         return bugLogDOList;
     }
+
+
 }
 
 
