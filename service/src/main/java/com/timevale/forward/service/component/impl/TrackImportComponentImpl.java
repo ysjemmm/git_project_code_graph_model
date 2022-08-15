@@ -241,7 +241,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             // 删除全部状态
             deleteAllStatus(userId);
             log.error("埋点导入失败：{}", e.getMessage());
-            throw new BaseBizRuntimeException("系统异常，埋点导入处理失败");
+            throw new BaseBizRuntimeException("系统异常，埋点导入处理失败:{}",e.getMessage());
         } finally {
             // 配置导入结束状态，删除临时文件
             importEnd(userId);

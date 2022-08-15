@@ -43,7 +43,7 @@ public class TrackMergeHandler implements CellWriteHandler {
         int columnIndex = cell.getColumnIndex();
 
         Integer size = mergeInfo.get(rowIndex);
-        if (columnIndex != 0 || size == null) {
+        if (columnIndex != 0 || size == null || size == 1) {
             return;
         }
 
