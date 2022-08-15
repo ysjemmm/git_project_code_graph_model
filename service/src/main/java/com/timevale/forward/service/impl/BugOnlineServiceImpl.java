@@ -1697,7 +1697,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 //要关联的bug B可能有关联的bug C   最终取C
                 finalBugId=linkBug.getLinkBugId();
             }
-            updateIds.add(finalBugId);
             bugOnlineMapper.updateByIds(updateIds,finalBugId);
         }
     }
