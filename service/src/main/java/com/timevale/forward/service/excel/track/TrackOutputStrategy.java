@@ -5,9 +5,12 @@ import com.alibaba.excel.metadata.Head;
 import com.alibaba.excel.write.handler.CellWriteHandler;
 import com.alibaba.excel.write.metadata.holder.WriteSheetHolder;
 import com.alibaba.excel.write.metadata.holder.WriteTableHolder;
-import org.apache.poi.ss.usermodel.*;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 
 import java.util.List;
 import java.util.Map;
@@ -16,12 +19,13 @@ import java.util.Map;
  * @author by YangXu
  * @date 2022/08/12 12:34
  */
-public class TrackMergeHandler implements CellWriteHandler {
+@Slf4j
+public class TrackOutputStrategy implements CellWriteHandler {
 
     private final Map<Integer, Integer> mergeInfo;
     private final int[] mergeColumns = new int[]{0,1,2,3,4,5,6,7,8,12,13,14,15,16};
 
-    public TrackMergeHandler(Map<Integer, Integer> mergeInfo) {
+    public TrackOutputStrategy(Map<Integer, Integer> mergeInfo) {
         this.mergeInfo = mergeInfo;
     }
 

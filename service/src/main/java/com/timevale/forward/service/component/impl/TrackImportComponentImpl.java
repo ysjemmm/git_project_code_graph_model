@@ -9,7 +9,9 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import cn.hutool.poi.excel.ExcelFileUtil;
 import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.enums.CellExtraTypeEnum;
+import com.alibaba.excel.write.metadata.WriteSheet;
 import com.alibaba.fastjson.JSONObject;
 import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
 import com.timevale.crm.sdk.common.utils.file.FileUtil;
@@ -28,7 +30,6 @@ import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.framework.tedis.util.TedisUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
-import com.timevale.mandarin.base.exception.BaseIllegalStateException;
 import com.timevale.mandarin.common.service.retry.RetryCallback;
 import com.timevale.mandarin.common.service.retry.RetryTemplate;
 import lombok.extern.slf4j.Slf4j;
@@ -825,7 +826,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 EasyExcel.write(outputFile)
                         .withTemplate(ins)
                         .sheet()
-                        .registerWriteHandler(new TrackMergeHandler(mergeInfo))
+                        .registerWriteHandler(new TrackOutputStrategy(mergeInfo))
                         .doWrite(trackFailRowList);
             }
 
