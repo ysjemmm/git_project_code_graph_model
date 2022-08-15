@@ -22,6 +22,7 @@ public enum TrackImportLogResultEnum {
 
     CANCEL(4,"取消导入"),
 
+    EXCEPTION(5,"导入异常")
     ;
 
 

@@ -25,6 +25,29 @@ public interface TrackImportComponent {
     boolean setProgress(Integer progress, String userId);
 
     /**
+     * 导入异常
+     *
+     * @param message 消息
+     * @param userId  用户id
+     */
+    void setExceptionMessage(String message, String userId);
+
+    /**
+     * 删除异常消息
+     *
+     * @param userId 用户id
+     */
+    void deleteExceptionMessage(String userId);
+
+    /**
+     * 得到异常消息
+     *
+     * @param userId 用户id
+     * @return {@link String}
+     */
+    String getExceptionMessage(String userId);
+
+    /**
      * 取消导入状态
      */
     void setCancelTag(String userId);

@@ -57,6 +57,7 @@ public class TrackImportServiceImpl implements TrackImportService {
     @Override
     public BaseResult<Boolean> importEvent(TrackImportReq trackImportReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        userInfo.setName(userInfo.getAlias() + "-" + userInfo.getName());
         String userId = userInfo.getId();
 
         // 判断当前是否有导入任务
@@ -65,6 +66,7 @@ public class TrackImportServiceImpl implements TrackImportService {
 
         // 初始化状态
         trackImportComponent.deleteAllStatus(userId);
+        trackImportComponent.deleteExceptionMessage(userId);
 
         // 开始导入
         trackImportComponent.setProgress(0,userId);
@@ -91,6 +93,7 @@ public class TrackImportServiceImpl implements TrackImportService {
     @Override
     public BaseResult<Boolean> cleanImportStatus(String userId) {
         trackImportComponent.deleteAllStatus(userId);
+        trackImportComponent.deleteExceptionMessage(userId);
         return BaseResult.success(true);
     }
 
@@ -99,7 +102,8 @@ public class TrackImportServiceImpl implements TrackImportService {
         Integer progress = trackImportComponent.getProgress(userId);
         Boolean cancelTag = trackImportComponent.getCancelTag(userId);
         Integer importResult = trackImportComponent.getImportResult(userId);
-        String s = "progress：" + progress + ", cancelTag：" + cancelTag + ", importResult：" + importResult;
+        String message = trackImportComponent.getExceptionMessage(userId);
+        String s = "progress：" + progress + ", cancelTag：" + cancelTag + ", importResult：" + importResult + ", message: " + message;
         return BaseResult.success(s);
     }
 
@@ -107,6 +111,14 @@ public class TrackImportServiceImpl implements TrackImportService {
     public BaseResult<TrackImportProgressVO> progress() {
         String userId = LocalSessionUtils.getUserInfo().getId();
         TrackImportProgressVO trackImportProgressVO = new TrackImportProgressVO();
+
+        String message = trackImportComponent.getExceptionMessage(userId);
+        if (StrUtil.isNotEmpty(message)) {
+            trackImportComponent.deleteExceptionMessage(userId);
+            trackImportProgressVO.setMessage(message);
+            trackImportProgressVO.setResult(TrackImportLogResultEnum.FAILURE.getCode());
+            return BaseResult.success(trackImportProgressVO);
+        }
 
         Integer progress = trackImportComponent.getProgress(userId);
         if (progress != null) {

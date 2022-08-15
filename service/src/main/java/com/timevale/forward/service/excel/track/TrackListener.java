@@ -4,10 +4,14 @@ import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
+import com.timevale.crm.sdk.common.utils.SpringBeanUtil;
+import com.timevale.forward.service.component.impl.TrackImportComponentImpl;
 import com.timevale.forward.service.copy.TrackPropCopier;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,8 +29,10 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
     private int eventIndex = 0;
     private int headRow = 2;
     private final List<TrackEvent> trackEventList;
+    private String userId;
 
-    public TrackListener(List<TrackEvent> trackEventList) {
+    public TrackListener(List<TrackEvent> trackEventList, String userId) {
+        this.userId = userId;
         this.trackEventList = trackEventList;
     }
 
@@ -73,7 +79,11 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
             int index = annotation.index();
             String value = annotation.value()[0];
             String headMapValue = headMap.get(index);
-            AssertUtil.checkState(ObjectUtil.equal(value, headMapValue), "导入文件列表格式错误，请勿修改模板格式");
+            if (ObjectUtil.notEqual(value, headMapValue)) {
+                SpringUtil.getBean(TrackImportComponentImpl.class).
+                        setExceptionMessage("导入文件列表格式错误，请勿修改模板格式", userId);
+                throw new BaseBizRuntimeException("导入文件列表格式错误，请勿修改模板格式");
+            }
         }
         log.info("表头信息对比结束");
     }
