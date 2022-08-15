@@ -311,7 +311,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         variables.put("changeType", ChangeTypeEnum.getTextByCode(projectNodeFlowDO.getChangeType()));
         variables.put("otherReason", projectNodeFlowDO.getOtherReason());
         variables.put("projectName", projectNodeFlowDO.getProjectName());
-        variables.put("detailLink", String.format(config.getCommonViewUrl(),TabEnum.PROJECT_MANAGEMENT,projectNodeFlowDO.getProjectId()));
+        variables.put("detailLink", String.format(config.getCommonViewUrl(),TabEnum.PROJECT_MANAGEMENT.getText(),projectNodeFlowDO.getProjectId()));
         List<String> reviewIds = new ArrayList<>();
         List<String> reviews = new ArrayList<>();
         if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())) {

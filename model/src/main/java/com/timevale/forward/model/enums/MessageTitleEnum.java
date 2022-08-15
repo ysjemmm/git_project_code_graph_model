@@ -36,6 +36,8 @@ public enum MessageTitleEnum {
     BUG_ONLINE_TRANSFER("线上bug转交通知"),
     BUG_ONLINE_REJECT("线上bug拒绝通知"),
     BUG_ONLINE_REPAIR_FAIL("线上bug修复失败通知"),
+    BUG_ONLINE_RESUBMIT_NO_REPAIR("线上bug重复提交驳回通知"),
+    BUG_ONLINE_RESUBMIT_ONLINE("线上bug重复提交已上线通知"),
 
     // 改进措施
     IMPROVEMENT_MEASURE("您收到了一条故障改进事项"),

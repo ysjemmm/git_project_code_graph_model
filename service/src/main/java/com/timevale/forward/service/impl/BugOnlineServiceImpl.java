@@ -976,6 +976,17 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 )
         );
 
+        List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(bugOnlineDO.getId());
+        bugOnlineDOList.forEach(a->{
+            messageEventPublisher.publish(
+                    new BugOnlineResubmitOnlineMsgEvent(
+                            this,
+                            bugOnlineDO.getName(),
+                            a.getProposerId(),
+                            bugOnlineDO.getId()
+                    )
+            );
+        });
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
@@ -1164,6 +1175,18 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                         bugOnlineDO.getId()
                 )
         );
+
+        List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(bugOnlineDO.getId());
+        bugOnlineDOList.forEach(a->{
+            messageEventPublisher.publish(
+                    new BugOnlineResubmitNoRepairMsgEvent(
+                            this,
+                            bugOnlineDO.getName(),
+                            a.getProposerId(),
+                            bugOnlineDO.getId()
+                    )
+            );
+        });
 
         updateLinkBug(bugOnlineNoRepairReq.getId(),bugOnlineNoRepairReq.getLinkBugId());
 
