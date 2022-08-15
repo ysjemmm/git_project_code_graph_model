@@ -484,7 +484,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
 
             String eventNameEn = e.getEventNameEn();
             if (StrUtil.isEmpty(eventNameEn)) {
-                failInfoList.add("【格式错误】" + eventNameEn + "为必填字段，请检查后修改");
+                failInfoList.add("【格式错误】事件英文名为必填字段，请检查后修改");
             } else {
                 int failTag = failInfoList.size();
                 if (eventNameEn.length() > 100) {
