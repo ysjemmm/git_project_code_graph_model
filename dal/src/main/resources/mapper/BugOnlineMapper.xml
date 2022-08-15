@@ -11,7 +11,7 @@
         bo.create_date, bo.modify_date
         from bug_online bo
         left join bug_online_product_line bopl on bo.id = bopl.bug_online_id
-        left join bug_online_model mo on bo.id = mo.bug_online_id
+        left join bug_online_model mo on bo.id = mo.bug_online_id  and mo.is_deleted = false
         left join product_line pl on bopl.product_line_id = pl.id
         left join biz_domain bdm on pl.biz_domain_id = bdm.id
         <where>
@@ -117,7 +117,6 @@
             <if test="true">
                 and bo.is_deleted = false
                 and bopl.is_deleted = false
-                and mo.is_deleted = false
             </if>
         </where>
         group by bo.id
