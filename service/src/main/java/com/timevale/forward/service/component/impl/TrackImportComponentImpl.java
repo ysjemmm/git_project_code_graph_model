@@ -396,9 +396,9 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 failInfoList.add("【事件错误】事件1级分类不存在，请检查后修改，如需添加/修改请联系PMO");
             } else if (StrUtil.isNotEmpty(secondClassify) && !productLineNameSet.contains(secondClassify)) {
                 failInfoList.add("【事件错误】事件2级分类不存在，请检查后修改，如需添加/修改请联系PMO");
-            } else if (StrUtil.isNotEmpty(secondClassify) && !modelNameSet.contains(thirdClassify)) {
+            } else if (StrUtil.isNotEmpty(thirdClassify) && !modelNameSet.contains(thirdClassify)) {
                 failInfoList.add("【事件错误】事件3级分类不存在，请检查后修改，如需添加/修改请联系PMO");
-            } else if (StrUtil.isNotEmpty(secondClassify) && !trackPageNameMap.containsKey(fourthClassify)) {
+            } else if (StrUtil.isNotEmpty(fourthClassify) && !trackPageNameMap.containsKey(fourthClassify)) {
                 failInfoList.add("【事件错误】事件4级分类不存在，请检查后修改，如需添加/修改请联系PMO");
             } else if (StrUtil.isNotEmpty(fifthClassify) && !trackElementNameMap.containsKey(fifthClassify)) {
                 failInfoList.add("【事件错误】事件5级分类不存在，请检查后修改，如需添加/修改，请前往产研系统添加/修改5级分类");
@@ -431,7 +431,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 if (StrUtil.isEmpty(fifthClassify)) {
                     e.setTrackMapId(trackPageNameMap.get(fourthClassify).getId());
                 } else {
-                    e.setTrackMapId(trackElementNameMap.get(fourthClassify).getId());
+                    e.setTrackMapId(trackElementNameMap.get(fifthClassify).getId());
                 }
             }
         }
