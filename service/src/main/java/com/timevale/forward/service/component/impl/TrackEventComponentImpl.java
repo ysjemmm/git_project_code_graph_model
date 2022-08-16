@@ -170,6 +170,7 @@ public class TrackEventComponentImpl implements TrackEventComponent {
         variables.put("touchMoment", trackEventAddReq.getTouchMoment());
         variables.put("env", StringUtils.join(EnvEnum.getTextByCode(trackEventAddReq.getEnvs()), ","));
         variables.put("trackEventName", trackEventAddReq.getFullCnName());
+        variables.put("explanation", trackEventAddReq.getExplanation());
 
         List<FileAddReq> fileAddReqs = trackEventAddReq.getFiles();
         List<Map<String, String>> files = new ArrayList<>();
