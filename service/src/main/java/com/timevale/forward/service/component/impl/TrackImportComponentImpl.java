@@ -850,7 +850,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             }
 
             log.info("记录导入记录");
-            trackImportLogComponent.failLog(importFileId, importCount, importFailCount, userInfo);
+            trackImportLogComponent.failLog(fileId, importCount, importFailCount, userInfo);
 
         } catch (IOException e) {
             log.error("错误文件上传失败: {}", e.getMessage());

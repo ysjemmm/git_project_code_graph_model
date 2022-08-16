@@ -27,12 +27,12 @@ public class TrackImportLogComponentImpl implements TrackImportLogComponent {
     private TrackImportLogMapper trackImportLogMapper;
 
     @Override
-    public void failLog(String importFileId, int importCount, int importFailCount, UserInfo userInfo) {
+    public void failLog(String failFileId, int importCount, int importFailCount, UserInfo userInfo) {
         log.info("失败导入记录");
         TrackImportLogDO trackImportLogDO = new TrackImportLogDO();
-        trackImportLogDO.setImportCount(0);
-        trackImportLogDO.setImportFailCount(0);
-        trackImportLogDO.setFileId(importFileId);
+        trackImportLogDO.setImportCount(importCount);
+        trackImportLogDO.setImportFailCount(importFailCount);
+        trackImportLogDO.setFileId(failFileId);
         trackImportLogDO.setCreateMan(userInfo.getAlias() + "-" + userInfo.getName());
         trackImportLogDO.setCreateManId(userInfo.getId());
         trackImportLogDO.setResult(TrackImportLogResultEnum.FAILURE.getCode());
