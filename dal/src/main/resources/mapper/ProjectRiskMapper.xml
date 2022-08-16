@@ -124,7 +124,7 @@
     <select id="selectByStatusType" resultType="long">
         SELECT distinct project_id
         FROM project_risk
-        WHERE status = #{status} AND type = #{type} AND is_deleted = false  and project_id= 815 limit 1
+        WHERE status = #{status} AND type = #{type} AND is_deleted = false
     </select>
 
 </mapper>

@@ -4,18 +4,12 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProjectRiskCondition;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.dao.ProjectNodeMapper;
-import com.timevale.forward.dal.dao.ProjectRiskMapper;
-import com.timevale.forward.dal.dao.TaskMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.dto.HomePageRiskWarningDTO;
 import com.timevale.forward.dal.dto.HomePageRiskWarningSubmitTestDTO;
 import com.timevale.forward.dal.dto.HomePageRiskWarningTaskDTO;
 import com.timevale.forward.dal.dto.UpdateTimeDTO;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectNodeDO;
-import com.timevale.forward.dal.entity.ProjectRiskDO;
-import com.timevale.forward.dal.entity.TaskDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectRiskService;
 import com.timevale.forward.facade.api.query.ProjectRiskQueryList;
 import com.timevale.forward.facade.api.request.ProjectRiskAddReq;
@@ -28,9 +22,13 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.DistributionCopier;
 import com.timevale.forward.service.copy.ProjectRiskCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
+import com.timevale.forward.service.observer.event.ProjectNodeDelayUnInputMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateFormatConst;
+import com.timevale.forward.service.utils.date.DateStyle;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -79,6 +77,15 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
 
     @Resource
     private DistributionComponent distributionComponent;
+
+    @Resource
+    private ProjectRiskRecordMapper projectRiskRecordMapper;
+
+    @Resource
+    private PersonMapper personMapper;
+
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
 
 
     @Override
@@ -411,6 +418,94 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         }
 
         return result;
+    }
+
+    @Override
+    public BaseResult<Boolean> syncRiskRecord() {
+        log.info("项目节点逾期未录入,任务开始");
+        //未处理的逾期未录入风险
+        List<Long> projectIds = projectRiskMapper.selectByStatusType(ProjectRiskStatusEnum.PENDING.getCode(), ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode());
+        if(CollectionUtils.isEmpty(projectIds)){
+            log.info("没有需要处理逾期未录入的风险");
+            return BaseResult.success(true);
+        }
+        List<ProjectDO> projectDOList = projectMapper.getByIds(projectIds);
+
+        List<ProjectDO> filter = projectDOList.stream().filter(a -> !ProjectStatusEnum.terminated(a.getStatus())).collect(Collectors.toList());
+        List<Long> filterIds = filter.stream().map(ProjectDO::getId).collect(Collectors.toList());
+        if(CollectionUtils.isEmpty(filterIds)){
+            log.info("没有需要处理的项目");
+            return BaseResult.success(true);
+        }
+
+        Map<Long, ProjectDO> projectMap = filter.stream().collect(Collectors.toMap(ProjectDO::getId, b -> b, (v1, v2) -> v2));
+        Map<Long, List<PersonDO>> pdMap = personMapper.get(filterIds, PersonTypeEnum.PROJECT_PD.getCode())
+                .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
+
+        //待处理的节点
+        Date today=new Date();
+        List<ProjectNodeDO> projectNodeDOList = projectNodeMapper.selectByProjectIdListFilterDate(filterIds);
+        List<ProjectNodeDO> filterProjectNodes = projectNodeDOList.stream()
+                .filter(a -> DateUtil.getEndOfDay(a.getPlanDate()).before(DateUtil.getEndOfDay(today))).collect(Collectors.toList());
+        //已经处理过的记录
+        List<ProjectRiskRecordDO> projectRiskRecordDOList = projectRiskRecordMapper.get(null,ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode());
+        Map<String, ProjectRiskRecordDO> riskRecordMap = projectRiskRecordDOList.stream()
+                .collect(Collectors.toMap(a -> a.getMainId() + "-" + a.getName() + "-" + a.getReceiveManId(), b -> b, (v1, v2) -> v2));
+        List<ProjectRiskRecordDO> result = new ArrayList<>();
+        for (ProjectNodeDO nodeDO : filterProjectNodes) {
+            if (!projectMap.containsKey(nodeDO.getProjectId())) {
+                continue;
+            }
+            ProjectDO projectDO = projectMap.get(nodeDO.getProjectId());
+            Integer code = ProjectNodeEnum.getCodeByName(nodeDO.getName());
+            if (code < 30) {
+                //需求规划阶段,消息接收人找pd
+                if (!pdMap.containsKey(nodeDO.getProjectId())) {
+                    continue;
+                }
+                for (PersonDO personDO : pdMap.get(nodeDO.getProjectId())) {
+                    String key = nodeDO.getProjectId() + "-" + nodeDO.getName() + "-" + personDO.getUserId();
+                    if (!riskRecordMap.containsKey(key)) {
+                        result.add(createProjectRiskRecordDO(nodeDO.getProjectId(), nodeDO.getName(), personDO.getUserName(), personDO.getUserId()));
+                        send(nodeDO.getProjectId(),nodeDO.getName(),nodeDO.getPlanDate(),personDO.getUserId());
+                    }
+                }
+
+            } else {
+                //其他阶段,消息接收人找pm
+                String key = nodeDO.getProjectId() + "-" + nodeDO.getName() + "-" + projectDO.getPmId();
+                if (!riskRecordMap.containsKey(key)) {
+                    result.add(createProjectRiskRecordDO(nodeDO.getProjectId(), nodeDO.getName(), projectDO.getPmName(), projectDO.getPmId()));
+                    send(nodeDO.getProjectId(),nodeDO.getName(),nodeDO.getPlanDate(),projectDO.getPmId());
+                }
+
+            }
+        }
+        if(CollectionUtils.isNotEmpty(result)){
+            projectRiskRecordMapper.batchInsert(result);
+        }
+        log.info("项目节点逾期未录入,任务结束,共计: {}条", result.size());
+        return BaseResult.success(true);
+    }
+
+    private ProjectRiskRecordDO createProjectRiskRecordDO(Long projectId, String name, String receiveMan, String receiveManId) {
+        ProjectRiskRecordDO riskRecordDO = new ProjectRiskRecordDO();
+        riskRecordDO.setName(name);
+        riskRecordDO.setMainId(projectId);
+        riskRecordDO.setType(ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode());
+        riskRecordDO.setReceiveMan(receiveMan);
+        riskRecordDO.setReceiveManId(receiveManId);
+        return riskRecordDO;
+    }
+
+    private void send(Long projectId,String name, Date planDate, String receiveManId) {
+        messageEventPublisher.publish(new ProjectNodeDelayUnInputMsgEvent(
+                this,
+                projectId,
+                receiveManId,
+                name,
+                DateUtil.parseToString(planDate, DateStyle.YYYY_MM_DD)
+        ));
     }
 
 }

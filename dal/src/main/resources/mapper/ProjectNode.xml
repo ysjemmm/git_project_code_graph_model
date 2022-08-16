@@ -66,4 +66,16 @@
         </where>
     </select>
 
+    <select id="selectByProjectIdListFilterDate" resultType="com.timevale.forward.dal.entity.ProjectNodeDO">
+        SELECT id,project_id,name, plan_date, actual_date ,create_man_id, create_man
+        FROM project_node
+        <where>
+            project_id IN
+            <foreach collection="projectIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            and plan_date is not null and actual_date is null
+        </where>
+    </select>
+
 </mapper>
