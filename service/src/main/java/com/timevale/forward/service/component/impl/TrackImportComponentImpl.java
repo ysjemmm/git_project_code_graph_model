@@ -1,12 +1,10 @@
 package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.UUID;
-import cn.hutool.core.util.RandomUtil;
-import cn.hutool.core.util.ReUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.core.util.URLUtil;
+import cn.hutool.core.util.*;
 import cn.hutool.poi.excel.ExcelFileUtil;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.enums.CellExtraTypeEnum;
@@ -556,20 +554,27 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             cnNameList.addAll(trackEvent.getTrackPropList().stream().map(TrackProp::getPropNameCn).collect(Collectors.toList()));
             egNameList.addAll(trackEvent.getTrackPropList().stream().map(TrackProp::getPropNameEn).collect(Collectors.toList()));
         }
+        // 去重
+        cnNameList = cnNameList.stream().distinct().collect(Collectors.toList());
+        egNameList = egNameList.stream().distinct().collect(Collectors.toList());
+
+        // 状态为审核中和审核通过
         List<Integer> status = Lists.newArrayList(FlowStatusEnum.AUDITING.getCode(), FlowStatusEnum.COMPLETE.getCode());
+
+        // 查询原有中文名数据
         Map<String, List<TrackPropDO>> cnNameGroup = new HashMap<>();
-        Map<String, List<TrackPropDO>> egNameGroup = new HashMap<>();
         if (CollectionUtil.isNotEmpty(cnNameList)) {
-            cnNameList = cnNameList.stream().distinct().collect(Collectors.toList());
             TrackPropCondition cnNameCondition = TrackPropCondition.builder().cnNames(cnNameList).status(status).build();
             List<TrackPropDO> cnNameDOList = trackPropMapper.select(cnNameCondition);
             cnNameGroup = cnNameDOList.stream().collect(Collectors.groupingBy(TrackPropDO::getCnName));
         }
+
+        // 查询原有英文名数据
+        Map<String, List<TrackPropDO>> egNameGroup = new HashMap<>();
         if (CollectionUtil.isNotEmpty(egNameList)) {
-            egNameList = egNameList.stream().distinct().collect(Collectors.toList());
-            TrackPropCondition egNameCondition = TrackPropCondition.builder().cnNames(egNameList).status(status).build();
+            TrackPropCondition egNameCondition = TrackPropCondition.builder().egNames(egNameList).status(status).build();
             List<TrackPropDO> egNameDOList = trackPropMapper.select(egNameCondition);
-            egNameGroup = egNameDOList.stream().collect(Collectors.groupingBy(TrackPropDO::getCnName));
+            egNameGroup = egNameDOList.stream().collect(Collectors.groupingBy(TrackPropDO::getEgName));
         }
 
         // 数据类型枚举
@@ -611,8 +616,10 @@ public class TrackImportComponentImpl implements TrackImportComponent {
 
                 // 格式正确，验证属性
                 if (failTag != failInfoList.size()) {continue;}
-
+                // 判断是否是新属性
                 boolean newProp = true;
+
+                // 验证中文名
                 List<TrackPropDO> cnNamePropDOList = cnNameGroup.get(propNameCn);
                 if (CollectionUtil.isNotEmpty(cnNamePropDOList)) {
                     for (TrackPropDO f : cnNamePropDOList) {
@@ -630,6 +637,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                         }
                     }
                 }
+                // 验证英文名
                 List<TrackPropDO> egNamePropDOList = egNameGroup.get(propNameEn);
                 if (CollectionUtil.isNotEmpty(egNamePropDOList)) {
                     for (TrackPropDO f : egNamePropDOList) {
