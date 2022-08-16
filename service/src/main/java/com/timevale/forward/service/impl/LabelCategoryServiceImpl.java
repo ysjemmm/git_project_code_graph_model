@@ -103,7 +103,18 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         });
         Map<String, String> deptMap = new HashMap<>();
         if (CollectionUtils.isNotEmpty(allDeptIds)) {
-            deptMap = innerGroupClient.batchGetSimpleGroupMap(allDeptIds);
+            List<GroupResponse> gdata = innerGroupClient.getGroupListTree(false);
+            Map<String, GroupResponse> groupMap = gdata.stream().collect(Collectors.toMap(GroupResponse::getGroupId, a -> a, (v1, v2) -> v2));
+            allDeptIds.forEach(a->{
+                if(groupMap.containsKey(a)){
+                    GroupResponse response = groupMap.get(a);
+                    String groupName = response.getGroupName();
+                    if(response.getDeleteFlag()==1){
+                        groupName=groupName+"（已删除）";
+                    }
+                    deptMap.put(a,groupName);
+                }
+            });
         }
 
         List<LabelCategoryVO> labelCategoryVos = LabelCategoryCopier.INSTANCE.change(labelCategoryDOList);
