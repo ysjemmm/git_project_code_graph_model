@@ -81,6 +81,7 @@ public class TrackImportServiceImpl implements TrackImportService {
 
         Integer progress = trackImportComponent.getProgress(userId);
         AssertUtil.checkState(progress != null, "取消导入失败，没有正在进行中的导入任务");
+        AssertUtil.checkState(progress.compareTo(100) < 0, "取消导入失败，导入任务已完成");
 
         Integer importResult = trackImportComponent.getImportResult(userId);
         AssertUtil.checkState(TrackImportLogResultEnum.LOADING.getCode().equals(importResult), "取消导入失败，导入任务已完成");

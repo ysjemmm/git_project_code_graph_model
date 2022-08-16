@@ -20,6 +20,7 @@ import com.timevale.forward.facade.api.request.TrackImportReq;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.TrackEventComponent;
 import com.timevale.forward.service.component.TrackImportComponent;
+import com.timevale.forward.service.component.TrackImportLogComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.excel.track.*;
@@ -36,6 +37,7 @@ import org.assertj.core.util.Lists;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
@@ -81,6 +83,8 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     private TrackEvenPropMapper trackEvenPropMapper;
     @Resource
     private TrackEventComponent trackEventComponent;
+    @Resource
+    private TrackImportLogComponent trackImportLogComponent;
 
     // 限制导入事件条数
     public static final int importEventLimit = 100;
@@ -198,7 +202,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     public void importEvent(TrackImportReq trackImportReq, UserInfo userInfo) {
         String userId = userInfo.getId();
 
-        boolean cancelImport = false;
+        boolean success = false;
         List<TrackEvent> trackEventList = new ArrayList<>();
         Set<TrackPropDO> newTrackPropSet = new HashSet<>();
         List<TrackEventDO> trackEventDOList = new ArrayList<>();
@@ -247,40 +251,46 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                     .doRead();
 
             // 校验
-            classifyCheck(trackEventList);                          if (!setProgress(RandomUtil.randomInt(10,20), userId)) {return;}
-            eventNameCheck(trackEventList);                         if (!setProgress(RandomUtil.randomInt(20,30), userId)) {return;}
-            propCheck(trackEventList, newTrackPropSet, userInfo);   if (!setProgress(RandomUtil.randomInt(30,40), userId)) {return;}
-            platformCheck(trackEventList);                          if (!setProgress(RandomUtil.randomInt(40,50), userId)) {return;}
-            touchMomentCheck(trackEventList);                       if (!setProgress(RandomUtil.randomInt(50,60), userId)) {return;}
-            envCheck(trackEventList);                               if (!setProgress(RandomUtil.randomInt(60,70), userId)) {return;}
+            Thread.sleep(5000);
+            if (setProgress(RandomUtil.randomInt(1,10), userId)) {classifyCheck(trackEventList);}
+            if (setProgress(RandomUtil.randomInt(10,20), userId)) {eventNameCheck(trackEventList);}
+            if (setProgress(RandomUtil.randomInt(20,30), userId)) {propCheck(trackEventList, newTrackPropSet, userInfo);}
+            if (setProgress(RandomUtil.randomInt(30,40), userId)) {platformCheck(trackEventList);}
+            if (setProgress(RandomUtil.randomInt(40,50), userId)) {touchMomentCheck(trackEventList);}
+            if (setProgress(RandomUtil.randomInt(50,60), userId)) {envCheck(trackEventList);}
 
             // 判断是否有错误信息
             boolean failImport = trackEventList.stream().anyMatch(e -> CollectionUtil.isNotEmpty(e.getFailInfoList()));
             if (failImport) {
-                outputFailInfo(trackEventList, userInfo);
+                outputFailInfo(trackEventList, importFileId, userInfo);
                 setImportResult(TrackImportLogResultEnum.FAILURE.getCode(), userId);
             } else {
                 trackEventDOList = importInfo(trackEventList, newTrackPropSet, importFileId, userInfo);
                 setImportResult(TrackImportLogResultEnum.SUCCESS.getCode(), userId);
+                success = true;
             }
 
             // 判断是否取消操作
             if (getCancelTag(userId) != null) {
                 log.info("用户取消导入操作，触发回滚");
+                success = false;
                 deleteImportStatus(userId);
-                cancelImport = true;
+                trackImportLogComponent.allFailLog(importFileId, userInfo);
                 TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             }
         } catch (Exception e) {
             // 删除全部状态
             deleteAllStatus(userId);
+            success = false;
             String message = getExceptionMessage(userId);
             if (StrUtil.isEmpty(message)) {
                 log.error("埋点导入失败：{}", e.getMessage());
                 setExceptionMessage("系统异常，埋点导入失败", userId);
+                trackImportLogComponent.allFailLog(importFileId, userInfo);
             } else {
                 log.info("埋点导入失败：{}", e.getMessage());
             }
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
         }  finally {
             // 配置导入结束状态，删除临时文件
             importEnd(userId);
@@ -288,19 +298,8 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 log.error("临时文件{}删除失败", importFile.getAbsolutePath());
             }
         }
-
-        // 如果取消则记录
-        if (cancelImport) {
-            TrackImportLogDO cancelLogDO = new TrackImportLogDO();
-            cancelLogDO.setImportCount(0);
-            cancelLogDO.setImportFailCount(0);
-            cancelLogDO.setFileId(importFileId);
-            cancelLogDO.setCreateMan(userInfo.getAlias() + "-" + userInfo.getName());
-            cancelLogDO.setCreateManId(userInfo.getId());
-            cancelLogDO.setResult(TrackImportLogResultEnum.CANCEL.getCode());
-            cancelLogDO.setStatus(TrackImportLogStatusEnum.SUCCESS.getCode());
-            trackImportLogMapper.insert(cancelLogDO);
-        } else {
+        // 如果成功导入则发送工作流
+        if (success) {
             updateFlowId(trackEventDOList, userInfo);
         }
     }
@@ -598,7 +597,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 }
                 if (StrUtil.isEmpty(propNameEn)) {
                     failInfoList.add("【格式错误】属性英文名为必填字段，请检查后修改");
-                } else if(propNameCn.length() > 100) {
+                } else if(propNameEn.length() > 100) {
                     failInfoList.add("【格式错误】属性英文名字数已超过100字，请检查后修改");
                 }
                 if (StrUtil.isEmpty(dataType)) {
@@ -637,10 +636,10 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                     for (TrackPropDO f : egNamePropDOList) {
                         String fCnName = f.getCnName();
                         String fDataType = f.getDataType();
-                        if (fCnName.equals(propNameEn) && fDataType.equals(dataType)) {
+                        if (fCnName.equals(propNameCn) && fDataType.equals(dataType)) {
                             e.setId(f.getId());
                             newProp = false;
-                        } else if (fCnName.equals(propNameEn)) {
+                        } else if (fCnName.equals(propNameCn)) {
                             failInfoList.add("【属性错误】属性数据类型与系统中相同属性的数据类型" + fDataType + "不同，请检查后修改");
                         } else if (fDataType.equals(dataType)) {
                             failInfoList.add("【属性错误】属性英文名与系统中相同属性的显示名" + fCnName + "不同，请检查后修改");
@@ -669,7 +668,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     }
 
     /**
-     * 平台检查
+     * 平台、接口名称检查
      *
      * @param trackEventList 跟踪事件列表
      */
@@ -686,8 +685,15 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 boolean failApiName = true;
                 boolean failExplanation = true;
 
-                String[] platforms = platform.split("/");
-                for (String s : platforms) {
+                // 去重
+                List<String> platformList = StrUtil.split(platform, "/");
+                Set<String> insertPlatformSet = new HashSet<>(platformList);
+                if (platformList.size() != insertPlatformSet.size()) {
+                    failInfoList.add("【格式错误】埋点平台中出现重复数据，请检查后修改");
+                }
+                platformList = new ArrayList<>(insertPlatformSet);
+
+                for (String s : platformList) {
                     if(!platformSet.contains(s)) {
                         failInfoList.add("【属性错误】" + s + "埋点平台不存在，请检查后修改");
                     } else if (s.equals(PlatformTypeEnum.SERVER.getText())) {
@@ -695,18 +701,24 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                         if (StrUtil.isEmpty(apiName) && failApiName) {
                             failApiName = false;
                             failInfoList.add("【格式错误】埋点平台含非服务端时，接口名称为必填字段，请检查后修改");
+                        } else if(StrUtil.length(apiName) > 100 && failApiName) {
+                            failApiName = false;
+                            failInfoList.add("【格式错误】接口名称字数已超过100字符，请检查后修改");
                         }
                     } else {
                         String explanation = e.getExplanation();
                         if (StrUtil.isEmpty(explanation) && failExplanation) {
                             failExplanation = false;
                             failInfoList.add("【格式错误】埋点平台含服务端时，埋点位置说明为必填字段，请检查后修改");
+                        } if (StrUtil.length(explanation) > 100 && failExplanation) {
+                            failApiName = false;
+                            failInfoList.add("【格式错误】埋点位置说明字数已超过100字符，请检查后修改");
                         }
                     }
                 }
                 // 如果没有错误，添加平台属性
                 if (failApiName && failExplanation) {
-                    CollectionUtil.addAll(e.getPlatformList(), Arrays.stream(platforms).map(PlatformTypeEnum::getCodeByText).collect(Collectors.toList()));
+                    CollectionUtil.addAll(e.getPlatformList(), platformList.stream().map(PlatformTypeEnum::getCodeByText).collect(Collectors.toList()));
                 }
             }
         }
@@ -772,7 +784,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
      *
      * @param trackEventList 跟踪事件列表
      */
-    private void outputFailInfo(List<TrackEvent> trackEventList, UserInfo userInfo) {
+    private void outputFailInfo(List<TrackEvent> trackEventList, String importFileId, UserInfo userInfo) {
         log.info("埋点导入输出失败信息开始");
 
         if (!setProgress(RandomUtil.randomInt(80,100), userInfo.getId())) {return;}
@@ -838,15 +850,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             }
 
             log.info("记录导入记录");
-            TrackImportLogDO trackImportLogDO = new TrackImportLogDO();
-            trackImportLogDO.setStatus(TrackImportLogStatusEnum.FAILURE.getCode());
-            trackImportLogDO.setFileId(fileId);
-            trackImportLogDO.setImportCount(importCount);
-            trackImportLogDO.setImportFailCount(importFailCount);
-            trackImportLogDO.setResult(TrackImportLogResultEnum.FAILURE.getCode());
-            trackImportLogDO.setCreateMan(userInfo.getName());
-            trackImportLogDO.setCreateManId(userInfo.getId());
-            trackImportLogMapper.insert(trackImportLogDO);
+            trackImportLogComponent.failLog(importFileId, importCount, importFailCount, userInfo);
 
         } catch (IOException e) {
             log.error("错误文件上传失败: {}", e.getMessage());
@@ -927,16 +931,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
         trackEvenPropMapper.batchInsertNotIC(relationList);
 
         // 导入记录
-        log.info("导入导入记录");
-        TrackImportLogDO trackImportLogDO = new TrackImportLogDO();
-        trackImportLogDO.setStatus(TrackImportLogStatusEnum.SUCCESS.getCode());
-        trackImportLogDO.setResult(TrackImportLogResultEnum.SUCCESS.getCode());
-        trackImportLogDO.setImportCount(trackEventList.size());
-        trackImportLogDO.setImportFailCount(0);
-        trackImportLogDO.setFileId(importFileId);
-        trackImportLogDO.setCreateMan(userInfo.getName());
-        trackImportLogDO.setCreateManId(userInfo.getId());
-        trackImportLogMapper.insert(trackImportLogDO);
+        trackImportLogComponent.successLog(importFileId, trackEventList.size(), userInfo);
 
         log.info("导入数据结束");
         return trackEventDOList;
