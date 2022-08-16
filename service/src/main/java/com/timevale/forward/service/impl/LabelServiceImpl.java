@@ -215,7 +215,7 @@ public class LabelServiceImpl implements LabelService {
         LabelDO update = new LabelDO();
         update.setId(labelModifyReq.getId());
         update.setName(labelModifyReq.getName());
-        labelMapper.update(labelDO);
+        labelMapper.update(update);
         return BaseResult.success(true);
     }
 
