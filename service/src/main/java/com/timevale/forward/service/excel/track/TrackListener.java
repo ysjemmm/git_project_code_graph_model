@@ -30,7 +30,7 @@ import java.util.Map;
 public class TrackListener extends AnalysisEventListener<TrackRow> {
 
     private int eventIndex = 0;
-    private int headRow = 2;
+    private boolean checkHead = false;
     private final List<TrackEvent> trackEventList;
     private final String userId;
 
@@ -41,6 +41,12 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
 
     @Override
     public void invoke(TrackRow trackRow, AnalysisContext context) {
+        if (!checkHead) {
+            SpringUtil.getBean(TrackImportComponentImpl.class).
+                    setExceptionMessage("导入文件列表格式错误，请勿修改模板格式", userId);
+            throw new BaseBizRuntimeException("导入文件列表格式错误，请勿修改模板格式");
+        }
+
         Integer rowIndex = context.readRowHolder().getRowIndex();
 
         TrackEvent trackEvent = trackEventList.get(eventIndex);
@@ -73,24 +79,24 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
     }
 
     public void invokeHeadMap(Map<Integer, String> headMap, AnalysisContext context) {
-        if (headRow > 0) {
-            headRow--;
-            return;
-        }
-        log.info("表头信息对比开始");
-        Field[] fields = ReflectUtil.getFields(TrackRow.class);
-        for (int i = 0; i < 16; i++) {
-            Field field = fields[i];
-            ExcelProperty annotation = AnnotationUtil.getAnnotation(field, ExcelProperty.class);
-            int index = annotation.index();
-            String value = annotation.value()[0];
-            String headMapValue = headMap.get(index);
-            if (ObjectUtil.notEqual(value, headMapValue)) {
-                SpringUtil.getBean(TrackImportComponentImpl.class).
-                        setExceptionMessage("导入文件列表格式错误，请勿修改模板格式", userId);
-                throw new BaseBizRuntimeException("导入文件列表格式错误，请勿修改模板格式");
+        Integer rowIndex = context.readRowHolder().getRowIndex();
+        if (rowIndex == 3) {
+            log.info("表头信息对比开始");
+            checkHead = true;
+            Field[] fields = ReflectUtil.getFields(TrackRow.class);
+            for (int i = 0; i < 16; i++) {
+                Field field = fields[i];
+                ExcelProperty annotation = AnnotationUtil.getAnnotation(field, ExcelProperty.class);
+                int index = annotation.index();
+                String value = annotation.value()[0];
+                String headMapValue = headMap.get(index);
+                if (ObjectUtil.notEqual(value, headMapValue)) {
+                    SpringUtil.getBean(TrackImportComponentImpl.class).
+                            setExceptionMessage("导入文件列表格式错误，请勿修改模板格式", userId);
+                    throw new BaseBizRuntimeException("导入文件列表格式错误，请勿修改模板格式");
+                }
             }
+            log.info("表头信息对比结束");
         }
-        log.info("表头信息对比结束");
     }
 }
