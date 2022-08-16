@@ -191,15 +191,12 @@ public class LabelServiceImpl implements LabelService {
         if (nameSet.size() != names.size()) {
             throw new BaseBizRuntimeException("标签名称重复,请修改后重试");
         }
-        Long categoryId = labelAddReq.getCategoryId();
-        List<LabelDO> labelDOList = labelMapper.getByNameInOneCategory(names, categoryId);
-        if (!CollectionUtils.isEmpty(labelDOList)) {
-            String existName = labelDOList.stream().map(LabelDO::getName).collect(Collectors.joining(","));
-            throw new BaseBizRuntimeException("名称为: " + existName + " 的标签,已在该标签类别下存在,请修改后重试");
-        }
+
+        checkName(labelAddReq.getCategoryId(),names);
+
         List<LabelDO> labelDos = names.stream().map(a -> {
             LabelDO o = new LabelDO();
-            o.setLabelCategoryId(categoryId);
+            o.setLabelCategoryId(labelAddReq.getCategoryId());
             o.setName(a);
             return o;
         }).collect(Collectors.toList());
@@ -211,11 +208,23 @@ public class LabelServiceImpl implements LabelService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(LabelModifyReq labelModifyReq) {
         log.info("标签修改,参数:{}", labelModifyReq);
-        LabelDO labelDO = new LabelDO();
-        labelDO.setId(labelModifyReq.getId());
-        labelDO.setName(labelModifyReq.getName());
+        LabelDO labelDO = labelMapper.get(labelModifyReq.getId());
+
+        checkName(labelDO.getLabelCategoryId(),Lists.newArrayList(labelModifyReq.getName()));
+
+        LabelDO update = new LabelDO();
+        update.setId(labelModifyReq.getId());
+        update.setName(labelModifyReq.getName());
         labelMapper.update(labelDO);
         return BaseResult.success(true);
+    }
+
+    private void checkName(Long categoryId,List<String> names){
+        List<LabelDO> labelDOList = labelMapper.getByNameInOneCategory(names, categoryId);
+        if (!CollectionUtils.isEmpty(labelDOList)) {
+            String existName = labelDOList.stream().map(LabelDO::getName).collect(Collectors.joining(","));
+            throw new BaseBizRuntimeException("名称为: " + existName + " 的标签,已在该标签类别下存在,请修改后重试");
+        }
     }
 
 }
