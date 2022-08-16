@@ -2,20 +2,15 @@ package com.timevale.forward.service.excel.track;
 
 import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.lang.intern.InternUtil;
-import cn.hutool.core.math.MathUtil;
-import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
-import com.timevale.crm.sdk.common.utils.SpringBeanUtil;
 import com.timevale.forward.service.component.impl.TrackImportComponentImpl;
 import com.timevale.forward.service.copy.TrackPropCopier;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
-import com.timevale.mandarin.base.util.AssertUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
@@ -80,7 +75,7 @@ public class TrackListener extends AnalysisEventListener<TrackRow> {
 
     public void invokeHeadMap(Map<Integer, String> headMap, AnalysisContext context) {
         Integer rowIndex = context.readRowHolder().getRowIndex();
-        if (rowIndex == 3) {
+        if (rowIndex == 2) {
             log.info("表头信息对比开始");
             checkHead = true;
             Field[] fields = ReflectUtil.getFields(TrackRow.class);
