@@ -64,7 +64,7 @@ public class TrackImportLogComponentImpl implements TrackImportLogComponent {
         trackImportLogDO.setImportCount(importCount);
         trackImportLogDO.setImportFailCount(0);
         trackImportLogDO.setFileId(importFileId);
-        trackImportLogDO.setCreateMan(userInfo.getName());
+        trackImportLogDO.setCreateMan(userInfo.getAlias() + "-" + userInfo.getName());
         trackImportLogDO.setCreateManId(userInfo.getId());
         trackImportLogMapper.insert(trackImportLogDO);
     }

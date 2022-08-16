@@ -57,7 +57,6 @@ public class TrackImportServiceImpl implements TrackImportService {
     @Override
     public BaseResult<Boolean> importEvent(TrackImportReq trackImportReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        userInfo.setName(userInfo.getAlias() + "-" + userInfo.getName());
         String userId = userInfo.getId();
 
         // 判断当前是否有导入任务

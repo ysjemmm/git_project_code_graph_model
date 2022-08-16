@@ -37,7 +37,6 @@ import org.assertj.core.util.Lists;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
@@ -262,7 +261,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             // 判断是否有错误信息
             boolean failImport = trackEventList.stream().anyMatch(e -> CollectionUtil.isNotEmpty(e.getFailInfoList()));
             if (failImport) {
-                outputFailInfo(trackEventList, importFileId, userInfo);
+                outputFailInfo(trackEventList, userInfo);
                 setImportResult(TrackImportLogResultEnum.FAILURE.getCode(), userId);
             } else {
                 trackEventDOList = importInfo(trackEventList, newTrackPropSet, importFileId, userInfo);
@@ -657,7 +656,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                     trackPropDO.setDataType(dataType);
                     trackPropDO.setType(TrackPropTypeEnum.NEW.getCode());
                     trackPropDO.setStatus(FlowStatusEnum.AUDITING.getCode());
-                    trackPropDO.setCreateMan(userInfo.getName());
+                    trackPropDO.setCreateMan(userInfo.getAlias() + "-" + userInfo.getName());
                     trackPropDO.setCreateManId(userInfo.getId());
                     // 中文名-英文名-属性值 作为唯一key
                     newTrackPropSet.add(trackPropDO);
@@ -784,7 +783,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
      *
      * @param trackEventList 跟踪事件列表
      */
-    private void outputFailInfo(List<TrackEvent> trackEventList, String importFileId, UserInfo userInfo) {
+    private void outputFailInfo(List<TrackEvent> trackEventList, UserInfo userInfo) {
         log.info("埋点导入输出失败信息开始");
 
         if (!setProgress(RandomUtil.randomInt(80,100), userInfo.getId())) {return;}
@@ -849,7 +848,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 fileId = fileDownloadDTO.getFileId();
             }
 
-            log.info("记录导入记录");
+            // 记录导入记录
             trackImportLogComponent.failLog(fileId, importCount, importFailCount, userInfo);
 
         } catch (IOException e) {
@@ -886,7 +885,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             trackEventDO.setEnv(JSONObject.toJSONString(e.getEnvList()));
             trackEventDO.setExplanation(StrUtil.emptyIfNull(e.getExplanation()));
             trackEventDO.setPlatform(JSONObject.toJSONString(e.getPlatformList()));
-            trackEventDO.setCreateMan(userInfo.getName());
+            trackEventDO.setCreateMan(userInfo.getAlias() + "-" + userInfo.getName());
             trackEventDO.setCreateManId(userInfo.getId());
 
             trackEventDOList.add(trackEventDO);
@@ -915,7 +914,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             for (TrackProp trackProp : trackPropList) {
                 TrackEventPropDO trackEventPropDO = new TrackEventPropDO();
                 trackEventPropDO.setTrackEventId(trackEventId);
-                trackEventPropDO.setCreateMan(userInfo.getName());
+                trackEventPropDO.setCreateMan(userInfo.getAlias() + "-" + userInfo.getName());
                 trackEventPropDO.setCreateManId(userInfo.getId());
 
                 Long trackPropId = trackProp.getId();
