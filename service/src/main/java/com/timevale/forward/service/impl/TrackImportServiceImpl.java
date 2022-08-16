@@ -160,8 +160,10 @@ public class TrackImportServiceImpl implements TrackImportService {
 
     @Override
     public BaseResult<PageQueryResult<TrackImportLogListVO>> log(TaskImportLogQueryList query) {
+        String userId = LocalSessionUtils.getUserInfo().getId();
+
         PageHelper.startPage(query.pageNum, query.pageSize, CommonConstant.DEFAULT_ORDER_BY);
-        List<TrackImportLogDO> trackImportLogDOList = trackImportLogMapper.selectAll();
+        List<TrackImportLogDO> trackImportLogDOList = trackImportLogMapper.selectByCreateManId(userId);
 
         List<TrackImportLogListVO> result = trackImportLogDOList.stream().map(TrackImportLogCopier.INSTANCE::convert).collect(Collectors.toList());
         result.forEach(e -> {

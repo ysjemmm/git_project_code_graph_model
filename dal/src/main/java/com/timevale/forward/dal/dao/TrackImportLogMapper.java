@@ -26,6 +26,14 @@ public interface TrackImportLogMapper {
     List<TrackImportLogDO> selectAll();
 
     /**
+     * 查询-通过创建人
+     *
+     * @param userId 用户id
+     * @return {@link List}<{@link TrackImportLogDO}>
+     */
+    List<TrackImportLogDO> selectByCreateManId(@Param("userId")String userId);
+
+    /**
      * 选择最新记录
      *
      * @param userId 用户id

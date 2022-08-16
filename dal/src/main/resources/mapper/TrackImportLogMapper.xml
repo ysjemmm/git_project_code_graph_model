@@ -20,5 +20,11 @@
         ORDER BY create_date DESC
         LIMIT 1
     </select>
+
+    <select id="selectByCreateManId" resultType="com.timevale.forward.dal.entity.TrackImportLogDO">
+        SELECT id, status, file_id, import_count, import_fail_count, `result`, create_man_id, create_man, create_date
+        FROM track_import_log
+        WHERE create_man_id = #{userId} AND is_deleted = false
+    </select>
 </mapper>
 
