@@ -9,9 +9,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import cn.hutool.poi.excel.ExcelFileUtil;
 import com.alibaba.excel.EasyExcel;
-import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.enums.CellExtraTypeEnum;
-import com.alibaba.excel.write.metadata.WriteSheet;
 import com.alibaba.fastjson.JSONObject;
 import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
 import com.timevale.crm.sdk.common.utils.file.FileUtil;
@@ -226,14 +224,9 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             // 读取合并单元格信息
             EasyExcel.read(importFile, TrackRow.class, new TrackMergeListener(trackEventList))
                     .ignoreEmptyRow(true)
+                    .headRowNumber(3)
                     .extraRead(CellExtraTypeEnum.MERGE)
                     .sheet()
-                    .doRead();
-            // 读取表头及内容
-            EasyExcel.read(importFile, TrackRow.class, new TrackListener(trackEventList, userId))
-                    .ignoreEmptyRow(true)
-                    .sheet()
-                    .headRowNumber(3)
                     .doRead();
 
             // 事件数校验
@@ -245,6 +238,13 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 setExceptionMessage("导入埋点事件数不能超过" + importEventLimit + "条", userId);
                 throw new BaseBizRuntimeException("导入埋点事件数不能超过" + importEventLimit + "条");
             }
+
+            // 读取表头及内容
+            EasyExcel.read(importFile, TrackRow.class, new TrackListener(trackEventList, userId))
+                    .ignoreEmptyRow(true)
+                    .sheet()
+                    .headRowNumber(3)
+                    .doRead();
 
             // 校验
             classifyCheck(trackEventList);                          if (!setProgress(RandomUtil.randomInt(10,20), userId)) {return;}
