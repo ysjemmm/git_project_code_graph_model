@@ -44,7 +44,9 @@ public enum MessageTitleEnum {
 
     CUSTOMDEMAND_RECEIVE("您收到一条新的客户需求"),
 
-    PROJECT_ESTABLISH_DATE_CHANGE("立项预期上线时间变更通知");
+    PROJECT_ESTABLISH_DATE_CHANGE("立项预期上线时间变更通知"),
+
+    PROJECT_NODE_DELAY_UNINPUT("项目节点逾期未录入通知");
 
     private String text;
 

@@ -80,6 +80,7 @@
         <mapper resource="mapper/SearchConditionMapper.xml"/>
         <mapper resource="mapper/ProjectRiskMapper.xml"/>
         <mapper resource="mapper/ProjectRiskExplanationMapper.xml"/>
+        <mapper resource="mapper/ProjectRiskRecordMapper.xml"/>
         <mapper resource="mapper/ProjectFlow.xml"/>
         <mapper resource="mapper/ProjectPublishPlan.xml"/>
         <mapper resource="mapper/ProjectGoalMapper.xml"/>

@@ -1,0 +1,25 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.ProjectRiskRecordMapper">
+
+
+    <insert id="batchInsert">
+        INSERT INTO project_risk_record( main_id, type, name,receive_man_id,receive_man, create_man_id, create_man)
+        VALUES
+        <foreach collection = "list" item = "item" separator = ",">
+            (#{item.mainId}, #{item.type},#{item.name},#{item.receiveManId},#{item.receiveMan},#{createManId},#{createMan})
+        </foreach>
+    </insert>
+
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.ProjectRiskRecordDO">
+        SELECT id, main_id, type, name,receive_man_id,receive_man, create_man_id, create_man
+        FROM project_risk_record
+        <where>
+            <if test="mainId!=null">and main_id = #{mainId}</if>
+            <if test="type!=null">and type = #{type}</if>
+            and is_deleted=false
+        </where>
+    </select>
+
+</mapper>
