@@ -295,14 +295,14 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             cancelLogDO.setImportCount(0);
             cancelLogDO.setImportFailCount(0);
             cancelLogDO.setFileId(importFileId);
-            cancelLogDO.setCreateMan(userInfo.getName());
+            cancelLogDO.setCreateMan(userInfo.getAlias() + "-" + userInfo.getName());
             cancelLogDO.setCreateManId(userInfo.getId());
             cancelLogDO.setResult(TrackImportLogResultEnum.CANCEL.getCode());
             cancelLogDO.setStatus(TrackImportLogStatusEnum.SUCCESS.getCode());
             trackImportLogMapper.insert(cancelLogDO);
+        } else {
+            updateFlowId(trackEventDOList, userInfo);
         }
-
-        updateFlowId(trackEventDOList, userInfo);
     }
 
     /**
