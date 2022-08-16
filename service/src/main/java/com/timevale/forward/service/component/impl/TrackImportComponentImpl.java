@@ -633,7 +633,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                         } else if (fDataType.equals(dataType)) {
                             failInfoList.add("【属性错误】属性英文名与系统中相同属性的英文名" + fEgName + "不同，请检查后修改");
                         } else {
-                            failInfoList.add("【属性错误】属性显示名与系统中相同属性的英文名" + fEgName + "不同，请检查后修改");
+                            failInfoList.add("【属性错误】属性英文名与系统中相同属性的英文名" + fEgName + "不同，请检查后修改");
                         }
                     }
                 }
@@ -649,7 +649,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                         } else if (fCnName.equals(propNameCn)) {
                             failInfoList.add("【属性错误】属性数据类型与系统中相同属性的数据类型" + fDataType + "不同，请检查后修改");
                         } else if (fDataType.equals(dataType)) {
-                            failInfoList.add("【属性错误】属性英文名与系统中相同属性的显示名" + fCnName + "不同，请检查后修改");
+                            failInfoList.add("【属性错误】属性显示名与系统中相同属性的显示名" + fCnName + "不同，请检查后修改");
                         } else {
                             failInfoList.add("【属性错误】属性显示名与系统中相同属性的显示名" + fCnName + "不同，请检查后修改");
                         }
@@ -666,7 +666,6 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                     trackPropDO.setStatus(FlowStatusEnum.AUDITING.getCode());
                     trackPropDO.setCreateMan(userInfo.getAlias() + "-" + userInfo.getName());
                     trackPropDO.setCreateManId(userInfo.getId());
-                    // 中文名-英文名-属性值 作为唯一key
                     newTrackPropSet.add(trackPropDO);
                 }
             }
