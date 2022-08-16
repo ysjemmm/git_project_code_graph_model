@@ -23,6 +23,7 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -98,7 +99,18 @@ public class LabelServiceImpl implements LabelService {
         });
         Map<String, String> deptMap = new HashMap<>();
         if (CollectionUtils.isNotEmpty(allDeptIds)) {
-            deptMap = innerGroupClient.batchGetSimpleGroupMap(allDeptIds);
+            List<GroupResponse> gdata = innerGroupClient.getGroupListTree(false);
+            Map<String, GroupResponse> groupMap = gdata.stream().collect(Collectors.toMap(GroupResponse::getGroupId, a -> a, (v1, v2) -> v2));
+            allDeptIds.forEach(a->{
+                if(groupMap.containsKey(a)){
+                    GroupResponse response = groupMap.get(a);
+                    String groupName = response.getGroupName();
+                    if(response.getDeleteFlag()==1){
+                        groupName=groupName+"（已删除）";
+                    }
+                    deptMap.put(a,groupName);
+                }
+            });
         }
 
         List<LabelVO> labelVOList = LabelCopier.INSTANCE.convertT(labelDOList);
