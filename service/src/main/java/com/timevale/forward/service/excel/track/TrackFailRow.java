@@ -1,6 +1,7 @@
 package com.timevale.forward.service.excel.track;
 
 import com.alibaba.excel.annotation.ExcelProperty;
+import com.alibaba.excel.annotation.write.style.ContentStyle;
 import lombok.Data;
 
 /**

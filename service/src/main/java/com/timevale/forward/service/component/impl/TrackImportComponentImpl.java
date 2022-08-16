@@ -825,8 +825,9 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             try (InputStream ins = resource.getInputStream()){
                 EasyExcel.write(outputFile)
                         .withTemplate(ins)
-                        .sheet()
+                        .registerWriteHandler(new TrackStyleStrategy())
                         .registerWriteHandler(new TrackOutputStrategy(mergeInfo))
+                        .sheet("校验结果")
                         .doWrite(trackFailRowList);
             }
 

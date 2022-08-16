@@ -6,10 +6,7 @@ import com.alibaba.excel.write.handler.CellWriteHandler;
 import com.alibaba.excel.write.metadata.holder.WriteSheetHolder;
 import com.alibaba.excel.write.metadata.holder.WriteTableHolder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 
 import java.util.List;
@@ -50,7 +47,6 @@ public class TrackOutputStrategy implements CellWriteHandler {
         if (columnIndex != 0 || size == null || size == 1) {
             return;
         }
-
         Sheet sheet = writeSheetHolder.getSheet();
         for (int column : mergeColumns) {
             sheet.addMergedRegion(new CellRangeAddress(rowIndex, rowIndex + size - 1, column, column));
