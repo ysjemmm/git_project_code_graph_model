@@ -1627,7 +1627,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 , BugLogTypeEnum.ONLINE.getCode(), true);
 
         //按创建时间逆序排列，筛选出最后一条状态变更记录
-        List<BugLogDO> collect = bugLogDOS.stream()
+        List<BugLogDO> collect = bugLogDOS.stream().filter(a->BugLogFieldEnum.STATUS.getText().equals(a.getField()))
                 .sorted(Comparator.comparing(BugLogDO::getCreateDate).reversed()).collect(Collectors.toList());
         BugLogDO lastStatusBugLogDO = collect.get(0);
 
