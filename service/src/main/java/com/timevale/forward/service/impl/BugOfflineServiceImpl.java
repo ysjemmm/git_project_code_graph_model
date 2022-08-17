@@ -1151,8 +1151,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             List<Long> bugIds = bugLogDOList.stream().map(BugLogDO::getMainId).distinct().collect(Collectors.toList());
             List<BugOnlineDO>bugOnlineDOList = bugOnlineMapper.selectByIds(bugIds);
 
-            List<Long> linkBugIds = bugOnlineDOList.stream().map(BugOnlineDO::getLinkBugId).collect(Collectors.toList());
-            bugOnlineDOList.addAll(bugOnlineMapper.selectByIds(linkBugIds));
+            List<Long> linkBugIds = bugOnlineDOList.stream().filter(a->a.getLinkBugId()!=null).map(BugOnlineDO::getLinkBugId).collect(Collectors.toList());
+            if(CollectionUtils.isNotEmpty(linkBugIds)){
+                bugOnlineDOList.addAll(bugOnlineMapper.selectByIds(linkBugIds));
+            }
 
             bugMap = bugOnlineDOList.stream().collect(Collectors.toMap(BugOnlineDO::getId, a->a, (v1, v2) -> v2));
         }
