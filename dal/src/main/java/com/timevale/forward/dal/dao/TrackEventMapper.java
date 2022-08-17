@@ -44,6 +44,14 @@ public interface TrackEventMapper {
      * @param trackMapDO trackMapDO
      * @return int
      */
+    int updateNotIC(TrackEventDO trackMapDO);
+
+    /**
+     * 新增
+     *
+     * @param trackMapDO trackMapDO
+     * @return int
+     */
     int updateWithOutModifyMan(TrackEventDO trackMapDO);
 
 

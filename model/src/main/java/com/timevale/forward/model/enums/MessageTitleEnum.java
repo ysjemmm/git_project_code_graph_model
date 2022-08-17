@@ -42,7 +42,10 @@ public enum MessageTitleEnum {
 
     CUSTOMDEMAND_RECEIVE("您收到一条新的客户需求"),
 
-    PROJECT_ESTABLISH_DATE_CHANGE("立项预期上线时间变更通知");
+    PROJECT_ESTABLISH_DATE_CHANGE("立项预期上线时间变更通知"),
+
+    TRACK_EVENT_APPROVAL("您有新的需要审批的埋点事件")
+    ;
 
     private String text;
 

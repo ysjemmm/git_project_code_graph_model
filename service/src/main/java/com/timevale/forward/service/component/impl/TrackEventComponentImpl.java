@@ -27,6 +27,8 @@ import com.timevale.forward.service.component.TrackEventComponent;
 import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.copy.TrackPropCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
+import com.timevale.forward.service.observer.event.TrackEventApprovalMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -36,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -64,6 +67,12 @@ public class TrackEventComponentImpl implements TrackEventComponent {
 
     @Resource
     private TrackPropMapper trackPropMapper;
+
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
+
+    @Value("trackApprovalUser:nianci")
+    private String trackApprovalUser;
 
     @Override
     public BaseResult<PageQueryResult<TrackEventVO>> list(TrackEventListCondition condition) {
@@ -271,7 +280,9 @@ public class TrackEventComponentImpl implements TrackEventComponent {
                     //审核不通过的属性重新提交,变成审核中
                     trackPropDO.setStatusName(com.timevale.forward.model.enums.FlowStatusEnum.getTextByCode(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode()));
                     a.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode());
-                    trackPropMapper.update(a);
+                    a.setModifyManId(userInfo.getId());
+                    a.setModifyMan(userInfo.getAlias() + "-" + userInfo.getName());
+                    trackPropMapper.updateNotIC(a);
                 } else {
                     trackPropDO.setStatusName(com.timevale.forward.model.enums.FlowStatusEnum.getTextByCode(a.getStatus()));
                 }
@@ -289,15 +300,26 @@ public class TrackEventComponentImpl implements TrackEventComponent {
             try {
                 log.info("[updateFlowId]:发起工作流，start:{}",start);
                 String flowId = epeiusClient.start(start);
-                log.error("[updateFlowId]:工作流启动成功, 事件id:{},工作流id:{}", e.getId(),flowId);
+                log.info("[updateFlowId]:工作流启动成功, 事件id:{},工作流id:{}", e.getId(),flowId);
                 TrackEventDO eventDO = new TrackEventDO();
                 eventDO.setId(e.getId());
                 eventDO.setFlowId(flowId);
-                trackEventMapper.update(eventDO);
+                eventDO.setModifyManId(userInfo.getId());
+                eventDO.setModifyMan(userInfo.getAlias() + "-" + userInfo.getName());
+                trackEventMapper.updateNotIC(eventDO);
             } catch (Exception exception) {
                 log.error("[updateFlowId]:工作流更新失败, 事件id:{}", e.getId());
             }
         }
+
+        log.info("[updateFlowId]:发送钉钉消息");
+        messageEventPublisher.publish(new TrackEventApprovalMsgEvent(
+                this,
+                userInfo.getAlias() + "-" + userInfo.getName(),
+                trackApprovalUser,
+                trackEventDOList.size()
+        ));
+
         log.info("[updateFlowId]:批量发送埋点审批工作流结束");
     }
 
