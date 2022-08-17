@@ -230,7 +230,9 @@ public class TrackEventComponentImpl implements TrackEventComponent {
         for (TrackEventDO e : trackEventDOList) {
             StartProcessRequest start = new StartProcessRequest();
             Map<String, Object> variables = new HashMap<>();
-            variables.put("files", new ArrayList<>());
+
+            List<Map<String, String>> files = new ArrayList<>();
+            variables.put("files", files);
             variables.put("fullCnName", e.getFullCnName());
             variables.put("apiName", e.getApiName());
             variables.put("egName", e.getEgName());
@@ -242,8 +244,10 @@ public class TrackEventComponentImpl implements TrackEventComponent {
             String platform = e.getPlatform();
             List<String> envSplits = StrUtil.split(env.replace("[", "".replace("]", "")), ",");
             List<String> platformSplits = StrUtil.split(platform.replace("[", "".replace("]", "")), ",");
-            variables.put("env", envSplits);
-            variables.put("platform", platformSplits);
+            String envText = envSplits.stream().map(f -> EnvEnum.getTextByCode(Integer.valueOf(f))).collect(Collectors.joining(","));
+            String platformText = platformSplits.stream().map(f -> PlatformTypeEnum.getTextByCode(Integer.valueOf(f))).collect(Collectors.joining(","));
+            variables.put("env", envText);
+            variables.put("platform", platformText);
 
             // 默认属性
             TrackPropListCondition c = TrackPropListCondition.builder()
@@ -283,8 +287,8 @@ public class TrackEventComponentImpl implements TrackEventComponent {
             start.setEpeVirtualProcessSwitch(false);
 
             try {
+                log.info("[updateFlowId]:发起工作流，start:{}",start);
                 String flowId = epeiusClient.start(start);
-
                 log.error("[updateFlowId]:工作流启动成功, 事件id:{},工作流id:{}", e.getId(),flowId);
                 TrackEventDO eventDO = new TrackEventDO();
                 eventDO.setId(e.getId());

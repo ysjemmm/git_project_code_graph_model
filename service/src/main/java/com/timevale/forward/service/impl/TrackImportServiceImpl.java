@@ -7,6 +7,7 @@ import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
 import com.timevale.crm.sdk.common.utils.file.FileUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.TrackImportLogMapper;
+import com.timevale.forward.dal.dao.TrackMapMapper;
 import com.timevale.forward.dal.entity.TrackImportLogDO;
 import com.timevale.forward.facade.api.client.TrackImportService;
 import com.timevale.forward.facade.api.query.TaskImportLogQueryList;
@@ -46,6 +47,9 @@ public class TrackImportServiceImpl implements TrackImportService {
 
     @Resource
     private EnvUtils envUtils;
+
+    @Resource
+    private TrackMapMapper trackMapMapper;
     @Resource
     private TrackImportLogMapper trackImportLogMapper;
     @Resource
