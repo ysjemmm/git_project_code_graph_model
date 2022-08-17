@@ -39,6 +39,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -1725,9 +1726,37 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             }
             bugOnlineMapper.updateByIds(updateIds,finalBugId);
         }
+        log.info("更新关联bug,id:{},oldLinkBugId:{},linkBugId:{},finalBugId:{}",id,oldLinkBugId,linkBugId,finalBugId);
+        if (!Objects.equals(oldLinkBugId, finalBugId)) {
+            List<BugLogDO> bugLogDOList = new ArrayList<>();
+            BugLogDO source = new BugLogDO();
+            Long mainId=null;
+            source.setAction(ButtonActionEnum.LINK.getText());
+            source.setOldValue(String.valueOf(id));
+            if(oldLinkBugId!=null&&finalBugId==null){
+                //xx  将{关联的BUG名称} 删除关联 {被关联的BUG名称}
+                source.setAction(ButtonActionEnum.UN_LINK.getText());
+                source.setNewValue(String.valueOf(oldLinkBugId));
+                mainId=oldLinkBugId;
+            } else if(oldLinkBugId==null&&finalBugId!=null){
+                source.setNewValue(String.valueOf(finalBugId));
+                mainId=finalBugId;
 
+            }else if(oldLinkBugId!=null&&finalBugId!=null){
+                source.setNewValue(String.valueOf(finalBugId));
+                mainId=finalBugId;
+            }
+            source.setMainId(id);
+            source.setType(BugLogTypeEnum.ONLINE.getCode());
+            BugLogDO target = new BugLogDO();
+            //被关联方也记录一条日志
+            BeanUtils.copyProperties(source,target);
+            target.setMainId(mainId);
+            bugLogDOList.add(source);
+            bugLogDOList.add(target);
+            bugLogMapper.batchInsert(bugLogDOList);
+        }
     }
-
 }
 
 
