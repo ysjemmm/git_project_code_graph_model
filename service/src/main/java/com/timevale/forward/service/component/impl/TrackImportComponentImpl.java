@@ -504,8 +504,8 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             }
             if (StrUtil.isNotEmpty(fullCnName)) {
                 int failTag = failInfoList.size();
-                if (fullCnName.length() > 100) {
-                    failInfoList.add("【格式错误】事件中文名（含埋点分类）字数已超过100字，请检查后修改");
+                if (fullCnName.length() > 200) {
+                    failInfoList.add("【格式错误】事件中文名（含埋点分类）字数已超过200字，请检查后修改");
                 }
                 if (fullCnNameSet.contains(fullCnName)) {
                     failInfoList.add("【事件错误】事件中文名与事件" + fullCnName + "重复，请检查后修改");
