@@ -688,6 +688,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             } else {
                 boolean failApiName = true;
                 boolean failExplanation = true;
+                boolean includeServer = false;
 
                 // 去重
                 List<String> platformList = StrUtil.split(platform, "/");
@@ -701,6 +702,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                     if(!platformSet.contains(s)) {
                         failInfoList.add("【属性错误】" + s + "埋点平台不存在，请检查后修改");
                     } else if (s.equals(PlatformTypeEnum.SERVER.getText())) {
+                        includeServer = true;
                         String apiName = e.getApiName();
                         if (StrUtil.isEmpty(apiName) && failApiName) {
                             failApiName = false;
@@ -720,6 +722,11 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                         }
                     }
                 }
+
+                if (!includeServer && StrUtil.isNotEmpty(e.getApiName())) {
+                    failInfoList.add("【格式错误】埋点平台不含服务端时，接口名称不可填写");
+                }
+
                 // 如果没有错误，添加平台属性
                 if (failApiName && failExplanation) {
                     CollectionUtil.addAll(e.getPlatformList(), platformList.stream().map(PlatformTypeEnum::getCodeByText).collect(Collectors.toList()));
