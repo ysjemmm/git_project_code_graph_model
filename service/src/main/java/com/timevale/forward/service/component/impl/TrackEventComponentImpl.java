@@ -298,6 +298,9 @@ public class TrackEventComponentImpl implements TrackEventComponent {
             start.setEpeVirtualProcessSwitch(false);
 
             try {
+                if(e.getCnName().equals("工作流出错校验")) {
+                    int i  = 1 /0;
+                }
                 log.info("[updateFlowId]:发起工作流，start:{}",start);
                 String flowId = epeiusClient.start(start);
                 log.info("[updateFlowId]:工作流启动成功, 事件id:{},工作流id:{}", e.getId(),flowId);
