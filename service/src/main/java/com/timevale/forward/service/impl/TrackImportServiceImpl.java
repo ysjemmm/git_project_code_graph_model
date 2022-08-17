@@ -7,7 +7,7 @@ import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
 import com.timevale.crm.sdk.common.utils.file.FileUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.entity.TrackImportLogDO;
 import com.timevale.forward.facade.api.client.TrackImportService;
 import com.timevale.forward.facade.api.query.TaskImportLogQueryList;
 import com.timevale.forward.facade.api.request.TrackImportReq;
@@ -19,7 +19,6 @@ import com.timevale.forward.model.enums.TrackImportLogStatusEnum;
 import com.timevale.forward.service.component.TrackImportComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TrackImportLogCopier;
-import com.timevale.forward.service.excel.track.map.ClassifyData;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -33,9 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -163,8 +160,6 @@ public class TrackImportServiceImpl implements TrackImportService {
 
     @Override
     public BaseResult<TrackImportLogFileVO> template() {
-
-
         FileDownloadDTO info = FileUtil.getFileDownloadInfo(templateFileId, envUtils.getEnv());
         if (info == null || StrUtil.isEmpty(info.getDownloadUrl())) {
             throw new BaseBizRuntimeException("模板文件不存在");
@@ -202,19 +197,4 @@ public class TrackImportServiceImpl implements TrackImportService {
 
         return BaseResult.success(pageQueryResult);
     }
-
-    private int dfs(Map<Long,List<ProductLineDO>>plg, Map<Long,List<ModelDO>>mdg,
-                    Map<Long, List<TrackMapDO>>pg, Map<Long, List<TrackMapDO>>eg, int fid, int level) {
-        if (level == 2) {
-
-        } else if (level == 3) {
-
-        } else if (level == 4) {
-
-        } else {
-
-        }
-        return 0;
-    }
-
 }
