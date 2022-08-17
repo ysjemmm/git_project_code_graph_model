@@ -1,13 +1,22 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.annotation.AnnotationUtil;
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.EasyExcelFactory;
+import com.alibaba.excel.annotation.ExcelProperty;
+import com.alibaba.excel.write.metadata.WriteSheet;
+import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
 import com.timevale.crm.sdk.common.utils.file.FileUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.TrackImportLogDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TrackImportService;
 import com.timevale.forward.facade.api.query.TaskImportLogQueryList;
 import com.timevale.forward.facade.api.request.TrackImportReq;
@@ -19,6 +28,8 @@ import com.timevale.forward.model.enums.TrackImportLogStatusEnum;
 import com.timevale.forward.service.component.TrackImportComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TrackImportLogCopier;
+import com.timevale.forward.service.excel.track.map.ClassifyData;
+import com.timevale.forward.service.excel.track.map.ClassifyRow;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -29,10 +40,21 @@ import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.Resource;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -160,12 +182,132 @@ public class TrackImportServiceImpl implements TrackImportService {
 
     @Override
     public BaseResult<TrackImportLogFileVO> template() {
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectAllBizDomain();
+        List<ProductLineDO> productLineDOList = productLineMapper.selectAllProductLine();
+        List<ModelDO> modelDOList = modelMapper.selectAllModel();
+        List<TrackMapDO> trackMapDOList = trackMapMapper.selectAllTrackMap();
+
+        Map<Long, List<ProductLineDO>> plg = productLineDOList.stream().collect(Collectors.groupingBy(ProductLineDO::getBizDomainId));
+        Map<Long, List<ModelDO>> mdg = modelDOList.stream().collect(Collectors.groupingBy(ModelDO::getProductLineId));
+        Map<Long, List<TrackMapDO>> pg = trackMapDOList.stream().filter(e -> e.getLevel() == 4).collect(Collectors.groupingBy(TrackMapDO::getParentId));
+        Map<Long, List<TrackMapDO>> elg = trackMapDOList.stream().filter(e -> e.getLevel() == 5).collect(Collectors.groupingBy(TrackMapDO::getParentId));
+
+        List<ClassifyData> subBizList = new ArrayList<>();
+        ClassifyData root = new ClassifyData();
+
+        for (BizDomainDO biz : bizDomainDOList) {
+            ClassifyData bizData = new ClassifyData();
+            List<ClassifyData> subPlList = new ArrayList<>();
+
+            List<ProductLineDO> pls = plg.get(biz.getId());
+            if (CollectionUtil.isNotEmpty(pls)) {
+                for (ProductLineDO pl : pls) {
+                    ClassifyData plData = new ClassifyData();
+                    List<ClassifyData> subMdList = new ArrayList<>();
+
+                    List<ModelDO> mds = mdg.get(pl.getId());
+                    if (CollectionUtil.isNotEmpty(mds)) {
+                        for (ModelDO md : mds) {
+                            ClassifyData mdData = new ClassifyData();
+                            List<ClassifyData> subPList = new ArrayList<>();
+
+                            List<TrackMapDO> ps = pg.get(md.getId());
+                            if (CollectionUtil.isNotEmpty(ps)) {
+                                for (TrackMapDO p : ps) {
+                                    ClassifyData pData = new ClassifyData();
+                                    List<ClassifyData> subElList = new ArrayList<>();
+
+                                    List<TrackMapDO> els = elg.get(p.getId());
+                                    if (CollectionUtil.isNotEmpty(els)) {
+                                        for (TrackMapDO el : els) {
+                                            ClassifyData elData = new ClassifyData();
+                                            elData.setId(el.getId());
+                                            elData.setLevel(5);
+                                            elData.setName(el.getName());
+                                            elData.setSize(1);
+                                            subElList.add(elData);
+                                        }
+                                    }
+                                    pData.setId(p.getId());
+                                    pData.setLevel(4);
+                                    pData.setName(p.getName());
+                                    pData.setSubClassifyData(subElList);
+                                    pData.setSize(Math.max(1, subElList.size()));
+                                    subPList.add(pData);
+                                }
+                            }
+                            mdData.setId(md.getId());
+                            mdData.setLevel(3);
+                            mdData.setName(md.getName());
+                            mdData.setSubClassifyData(subPList);
+                            mdData.setSize(Math.max(1, subPList.stream().mapToInt(ClassifyData::getSize).sum()));
+                            subMdList.add(mdData);
+                        }
+                    }
+                    plData.setId(pl.getId());
+                    plData.setLevel(2);
+                    plData.setName(pl.getName());
+                    plData.setSubClassifyData(subMdList);
+                    plData.setSize(Math.max(1, subMdList.stream().mapToInt(ClassifyData::getSize).sum()));
+                    subPlList.add(plData);
+                }
+            }
+            bizData.setId(biz.getId());
+            bizData.setLevel(1);
+            bizData.setName(biz.getName());
+            bizData.setSubClassifyData(subPlList);
+            bizData.setSize(Math.max(1, subPlList.stream().mapToInt(ClassifyData::getSize).sum()));
+            subBizList.add(bizData);
+        }
+        root.setId(0L);
+        root.setLevel(1);
+        root.setName("root");
+        root.setSize(Math.max(1, subBizList.stream().mapToInt(ClassifyData::getSize).sum()));
+        root.setSubClassifyData(subBizList);
+
+        List<ClassifyRow> classifyRowList = new ArrayList<>();
+
+
         FileDownloadDTO info = FileUtil.getFileDownloadInfo(templateFileId, envUtils.getEnv());
         if (info == null || StrUtil.isEmpty(info.getDownloadUrl())) {
             throw new BaseBizRuntimeException("模板文件不存在");
         }
         TrackImportLogFileVO result = TrackImportLogCopier.INSTANCE.convert(info);
         return BaseResult.success(result);
+    }
+
+    private void dfs(ClassifyData data, List<ClassifyRow> rowList, ClassifyRow row) throws IOException, InvalidFormatException {
+        Integer level = data.getLevel();
+
+        Workbook workbook = WorkbookFactory.create(new File("/test.xlsx"));
+        Sheet sheet = workbook.getSheetAt(1);
+
+
+        // 赋值
+        Field[] fields = ReflectUtil.getFields(ClassifyRow.class);
+        for (Field field : fields) {
+            int index = field.getAnnotation(ExcelProperty.class).index();
+            if (index == level - 1) {
+                try {
+                    field.set(row, data.getName());
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        List<ClassifyData> subList = data.getSubClassifyData();
+        if (CollectionUtil.isEmpty(subList)) {
+            rowList.add(row);
+        } else {
+            for (int i = 0; i < subList.size(); i++) {
+                if (i == 0) {
+                    dfs(subList.get(i), rowList, row);
+                } else {
+                    dfs(subList.get(i), rowList, new ClassifyRow());
+                }
+            }
+        }
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.timevale.forward.service.excel.track;
+package com.timevale.forward.service.excel.track.event;
 
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.metadata.CellData;
@@ -49,6 +49,8 @@ public class TrackStyleStrategy implements CellWriteHandler {
             font.setFontHeightInPoints((short) 10);
             font.setColor(IndexedColors.RED.index);
             cellStyle.setVerticalAlignment(VerticalAlignment.TOP);
+
+
         } else {
             font.setFontHeightInPoints((short) 12);
         }
