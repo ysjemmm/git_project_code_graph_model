@@ -1148,8 +1148,12 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         Map<Long, BugOnlineDO> bugMap=new HashMap<>();
         if(BugLogTypeEnum.ONLINE.getCode().equals(bugLogQueryList.getType())){
-            List<Long> bugIds = bugLogDOList.stream().map(BugLogDO::getMainId).collect(Collectors.toList());
+            List<Long> bugIds = bugLogDOList.stream().map(BugLogDO::getMainId).distinct().collect(Collectors.toList());
             List<BugOnlineDO>bugOnlineDOList = bugOnlineMapper.selectByIds(bugIds);
+
+            List<Long> linkBugIds = bugOnlineDOList.stream().map(BugOnlineDO::getLinkBugId).collect(Collectors.toList());
+            bugOnlineDOList.addAll(bugOnlineMapper.selectByIds(linkBugIds));
+
             bugMap = bugOnlineDOList.stream().collect(Collectors.toMap(BugOnlineDO::getId, a->a, (v1, v2) -> v2));
         }
 
