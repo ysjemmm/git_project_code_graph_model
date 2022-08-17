@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -24,6 +25,7 @@ public class TrackEventAddReq extends BaseReq {
     private String cnName;
 
     @ApiModelProperty("中文名全称")
+    @Length(max = 100, message = "事件中文名全称字符数不能超过100")
     private String fullCnName;
 
     @ApiModelProperty("英文名称")

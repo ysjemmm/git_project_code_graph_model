@@ -242,8 +242,8 @@ public class TrackEventComponentImpl implements TrackEventComponent {
 
             String env = e.getEnv();
             String platform = e.getPlatform();
-            List<String> envSplits = StrUtil.split(env.replace("[", "".replace("]", "")), ",");
-            List<String> platformSplits = StrUtil.split(platform.replace("[", "".replace("]", "")), ",");
+            List<String> envSplits = StrUtil.split(env.replace("[", "").replace("]", ""), ",");
+            List<String> platformSplits = StrUtil.split(platform.replace("[", "").replace("]", ""), ",");
             String envText = envSplits.stream().map(f -> EnvEnum.getTextByCode(Integer.valueOf(f))).collect(Collectors.joining(","));
             String platformText = platformSplits.stream().map(f -> PlatformTypeEnum.getTextByCode(Integer.valueOf(f))).collect(Collectors.joining(","));
             variables.put("env", envText);
