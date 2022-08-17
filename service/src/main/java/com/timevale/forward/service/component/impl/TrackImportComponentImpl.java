@@ -73,8 +73,6 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     @Resource
     private ModelMapper modelMapper;
     @Resource
-    private TrackImportLogMapper trackImportLogMapper;
-    @Resource
     private TrackPropMapper trackPropMapper;
     @Resource
     private TrackEvenPropMapper trackEvenPropMapper;
@@ -194,7 +192,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     }
 
     @Override
-    @Async("threadPoolTaskExecutor")
+    @Async("trackImportExecutor")
     @Transactional(rollbackFor = Exception.class)
     public void importEvent(TrackImportReq trackImportReq, UserInfo userInfo) {
         String userId = userInfo.getId();
@@ -248,13 +246,13 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                     .doRead();
 
             // 校验
-            Thread.sleep(5000);
             if (setProgress(RandomUtil.randomInt(1,10), userId)) {classifyCheck(trackEventList);}
             if (setProgress(RandomUtil.randomInt(10,20), userId)) {eventNameCheck(trackEventList);}
             if (setProgress(RandomUtil.randomInt(20,30), userId)) {propCheck(trackEventList, newTrackPropSet, userInfo);}
             if (setProgress(RandomUtil.randomInt(30,40), userId)) {platformCheck(trackEventList);}
             if (setProgress(RandomUtil.randomInt(40,50), userId)) {touchMomentCheck(trackEventList);}
             if (setProgress(RandomUtil.randomInt(50,60), userId)) {envCheck(trackEventList);}
+            Thread.sleep(3000);
 
             // 判断是否有错误信息
             boolean failImport = trackEventList.stream().anyMatch(e -> CollectionUtil.isNotEmpty(e.getFailInfoList()));
@@ -297,7 +295,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
         }
         // 如果成功导入则发送工作流
         if (success) {
-            updateFlowId(trackEventDOList, userInfo);
+            trackEventComponent.updateFlowId(trackEventDOList, userInfo);
         }
     }
 
@@ -943,6 +941,4 @@ public class TrackImportComponentImpl implements TrackImportComponent {
         return trackEventDOList;
     }
 
-    private void updateFlowId(List<TrackEventDO> trackEventDOList, UserInfo userInfo) {
-    }
 }

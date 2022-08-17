@@ -23,6 +23,7 @@ import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.copy.TrackPropCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -88,8 +89,6 @@ public class TrackEventServiceImpl implements TrackEventService {
     @Resource
     private ProductDemandTrackEventComponent productDemandTrackEventComponent;
 
-
-
     @Override
     public BaseResult<PageQueryResult<TrackEventVO>> list(TrackEventQueryList trackEventQueryList) {
         log.info("埋点事件列表,参数:{}", trackEventQueryList);
@@ -121,12 +120,11 @@ public class TrackEventServiceImpl implements TrackEventService {
 
         fileComponent.add(trackEventAddReq.getFiles(), trackEventDO.getId(), FileTypeEnum.TRACK_EVENT.getCode());
 
-        trackEventDO.setFlowId(trackEventComponent.startFlow(trackEventAddReq));
+        trackEventDO.setFlowId(trackEventComponent.startFlow(trackEventAddReq, LocalSessionUtils.getUserInfo()));
         trackEventMapper.update(trackEventDO);
 
         return BaseResult.success(true);
     }
-
 
 
     @Override
@@ -149,7 +147,7 @@ public class TrackEventServiceImpl implements TrackEventService {
         // 附件
         fileComponent.update(trackEventModifyReq.getFiles(), trackEventModifyReq.getId(), FileTypeEnum.TRACK_EVENT.getCode());
 
-        trackEventDO.setFlowId(trackEventComponent.startFlow(trackEventModifyReq));
+        trackEventDO.setFlowId(trackEventComponent.startFlow(trackEventModifyReq, LocalSessionUtils.getUserInfo()));
         trackEventDO.setStatus(FlowStatusEnum.AUDITING.getCode());
         trackEventMapper.update(trackEventDO);
         return BaseResult.success(true);

@@ -51,6 +51,13 @@ public interface TrackEventCopier {
      */
     TrackEventListCondition convert(ProductDemandLinkTrackEventQueryList trackEventQueryList);
 
+    /**
+     * 转换
+     *
+     * @param trackEventDO 跟踪事件DO
+     * @return {@link TrackEventAddReq}
+     */
+    TrackEventAddReq transfer(TrackEventDO trackEventDO);
 
     /**
      *

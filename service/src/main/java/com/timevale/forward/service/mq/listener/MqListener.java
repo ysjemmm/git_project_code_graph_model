@@ -52,6 +52,7 @@ public class MqListener implements Listener {
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_DEMAND_CONSTRUE.getText(),projectFlowComponent::updateFlowInfo);
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_UED_AUDIT.getText(),projectFlowComponent::updateFlowInfo);
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TRACKEVENTREVIEW.getText(), trackEventComponent::updateTrackEventInfo);
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TRACKEVENTREVIEW_NOTNOTICE.getText(), trackEventComponent::updateTrackEventInfo);
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_PUBLISHOFFICEREVIEW.getText(), projectNodeFlowComponent::updateProjectNodeInfo);
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_PRODUCT_DEMAND_CHANGE.getText(), productDemandDescFlowComponent::updateFlowInfo);
 
