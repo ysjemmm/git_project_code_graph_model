@@ -72,6 +72,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
 
     @Override
     public BaseResult<PageQueryResult<LabelCategoryVO>> list(LabelCategoryQueryList labelCategoryQueryList) {
+
         log.info("类别列表,参数:{}", labelCategoryQueryList);
         LabelCategoryListCondition condition = LabelCategoryCopier.INSTANCE.convert(labelCategoryQueryList);
         if (AscriptionEnum.CURRENT_USER.toString().equals(labelCategoryQueryList.getAscription())) {
