@@ -1129,6 +1129,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //如果是状态变更,需要进行筛选出状态变更的数据
         if (bugLogQueryList.getStatusChange()) {
             bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), true);
+            bugLogDOList = bugLogDOList.stream().filter(a->BugLogFieldEnum.STATUS.getText().equals(a.getField())).collect(Collectors.toList());
         } else {
             bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), false);
         }
