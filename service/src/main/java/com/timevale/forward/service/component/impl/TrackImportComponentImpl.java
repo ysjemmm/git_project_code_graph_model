@@ -811,7 +811,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 // 新增错误信息
                 List<String> failInfoList = trackEvent.getFailInfoList();
                 if (CollectionUtil.isNotEmpty(failInfoList)) {
-                    String failInfo = String.join("\n", failInfoList);
+                    String failInfo = failInfoList.stream().distinct().collect(Collectors.joining("\n"));
                     trackFailRow.setFailInfo(failInfo);
                     importFailCount++;
                 }
