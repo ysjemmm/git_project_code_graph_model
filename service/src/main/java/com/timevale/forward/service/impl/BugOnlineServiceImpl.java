@@ -636,7 +636,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDetailVO.setRecurrentName(BugOnlineRecurrentEnum.getTextByCode(bugOnlineDO.getRecurrent()));
 
         //关联的bug/被关联的bug
-        if(bugOnlineDO.getLinkBugId()!=0){
+        if(bugOnlineDO.getLinkBugId()!=null){
             BugOnlineDO linkBug = bugOnlineMapper.selectById(bugOnlineDO.getLinkBugId());
             BugOnlineLinkVO bugOnlineLinkVO=new BugOnlineLinkVO();
             bugOnlineLinkVO.setId(linkBug.getId());
@@ -1708,6 +1708,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     private void updateLinkBug(Long id,Long linkBugId){
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(id);
+        Long oldLinkBugId = bugOnlineDO.getLinkBugId();
+        Long finalBugId = null;
         if(linkBugId!=null){
             //查找哪些bug关联了当前bug,要将这些bug,重新关联到新的bug上
             List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(id);
@@ -1715,13 +1718,14 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             updateIds.add(id);
 
             BugOnlineDO linkBug = bugOnlineMapper.selectById(linkBugId);
-            Long finalBugId=linkBug.getId();
-            if (linkBug.getLinkBugId() != 0) {
+            finalBugId=linkBug.getId();
+            if (linkBug.getLinkBugId() != null) {
                 //要关联的bug B可能有关联的bug C   最终取C
                 finalBugId=linkBug.getLinkBugId();
             }
             bugOnlineMapper.updateByIds(updateIds,finalBugId);
         }
+
     }
 
 }
