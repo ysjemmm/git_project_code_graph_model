@@ -44,6 +44,10 @@ public class AuditInterceptor implements Interceptor {
         FILTER_METHOD.add("com.timevale.forward.dal.dao.TaskMapper.insert");
         FILTER_METHOD.add("com.timevale.forward.dal.dao.TrackImportLogMapper.insert");
         FILTER_METHOD.add("com.timevale.forward.dal.dao.TrackEventMapper.batchInsert");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.TrackEventMapper.updateNotIC");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.TrackPropMapper.updateNotIC");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.TrackPropMapper.batchInsertNotIC");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.TrackEvenPropMapper.batchInsertNotIC");
     }
 
     @Override
