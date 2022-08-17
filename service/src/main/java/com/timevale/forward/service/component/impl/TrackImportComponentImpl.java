@@ -714,9 +714,9 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                         if (StrUtil.isEmpty(explanation) && failExplanation) {
                             failExplanation = false;
                             failInfoList.add("【格式错误】埋点平台含服务端时，埋点位置说明为必填字段，请检查后修改");
-                        } if (StrUtil.length(explanation) > 100 && failExplanation) {
+                        } if (StrUtil.length(explanation) > 500 && failExplanation) {
                             failApiName = false;
-                            failInfoList.add("【格式错误】埋点位置说明字数已超过100字符，请检查后修改");
+                            failInfoList.add("【格式错误】埋点位置说明字数已超过500字符，请检查后修改");
                         }
                     }
                 }
