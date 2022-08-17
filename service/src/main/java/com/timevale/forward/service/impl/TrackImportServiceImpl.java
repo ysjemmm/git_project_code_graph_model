@@ -163,21 +163,7 @@ public class TrackImportServiceImpl implements TrackImportService {
 
     @Override
     public BaseResult<TrackImportLogFileVO> template() {
-        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectAllBizDomain();
-        List<ProductLineDO> productLineDOList = productLineMapper.selectAllProductLine();
-        List<ModelDO> modelDOList = modelMapper.selectAllModel();
-        List<TrackMapDO> trackMapDOList = trackMapMapper.selectAllTrackMap();
 
-        Map<Long, List<ProductLineDO>> plg = productLineDOList.stream().collect(Collectors.groupingBy(ProductLineDO::getBizDomainId));
-        Map<Long, List<ModelDO>> mdg = modelDOList.stream().collect(Collectors.groupingBy(ModelDO::getProductLineId));
-        Map<Long, List<TrackMapDO>> pg = trackMapDOList.stream().filter(e -> e.getLevel() == 4).collect(Collectors.groupingBy(TrackMapDO::getParentId));
-        Map<Long, List<TrackMapDO>> eg = trackMapDOList.stream().filter(e -> e.getLevel() == 5).collect(Collectors.groupingBy(TrackMapDO::getParentId));
-
-
-        for (BizDomainDO bizDomainDO : bizDomainDOList) {
-            List<ClassifyData> subClassifyDate = new ArrayList<>();
-
-        }
 
         FileDownloadDTO info = FileUtil.getFileDownloadInfo(templateFileId, envUtils.getEnv());
         if (info == null || StrUtil.isEmpty(info.getDownloadUrl())) {

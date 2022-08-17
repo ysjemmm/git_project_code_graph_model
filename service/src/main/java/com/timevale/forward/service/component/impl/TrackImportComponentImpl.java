@@ -252,7 +252,6 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             if (setProgress(RandomUtil.randomInt(30,40), userId)) {platformCheck(trackEventList);}
             if (setProgress(RandomUtil.randomInt(40,50), userId)) {touchMomentCheck(trackEventList);}
             if (setProgress(RandomUtil.randomInt(50,60), userId)) {envCheck(trackEventList);}
-            Thread.sleep(3000);
 
             // 判断是否有错误信息
             boolean failImport = trackEventList.stream().anyMatch(e -> CollectionUtil.isNotEmpty(e.getFailInfoList()));
