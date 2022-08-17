@@ -145,7 +145,7 @@ public class LabelServiceImpl implements LabelService {
         Long categoryId=labelGetReq.getCategoryId();
         LabelDetailVO labelDetailVO = new LabelDetailVO();
 
-        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(Lists.newArrayList(categoryId));
+        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(Lists.newArrayList(categoryId),false);
         labelDetailVO.setNames(labelDOList.stream().map(LabelDO::getName).collect(Collectors.toList()));
 
         List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(Lists.newArrayList(categoryId));

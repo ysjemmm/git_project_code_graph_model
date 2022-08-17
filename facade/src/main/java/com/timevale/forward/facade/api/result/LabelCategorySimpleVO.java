@@ -41,4 +41,7 @@ public class LabelCategorySimpleVO extends ToString {
 
     @ApiModelProperty("标签信息")
     List<LabelSimpleVO>labelSimples;
+
+    @ApiModelProperty("是否删除")
+    private Boolean isDeleted;
 }

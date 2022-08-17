@@ -35,4 +35,9 @@ public class LabelCategoryListCondition extends QueryBase {
      */
     private String createManId;
 
+    /**
+     * 是否包含删除
+     */
+    private Boolean containDeleted;
+
 }

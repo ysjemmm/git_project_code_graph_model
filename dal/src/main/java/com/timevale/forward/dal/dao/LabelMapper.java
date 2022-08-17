@@ -48,7 +48,7 @@ public interface LabelMapper {
      *
      * @return LabelCategoryDO
      */
-    List<LabelDO> getByCategoryIds(@Param("categoryIds")List<Long> categoryIds);
+    List<LabelDO> getByCategoryIds(@Param("categoryIds")List<Long> categoryIds,@Param("containDeleted")Boolean containDeleted);
 
     /**
      * 列表
