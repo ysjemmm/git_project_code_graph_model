@@ -1126,11 +1126,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     public BaseResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList bugLogQueryList) {
         PageHelper.startPage(bugLogQueryList.pageNum, bugLogQueryList.pageSize);
         List<BugLogDO> bugLogDOList;
-        List<String> filter = Arrays.asList(ButtonActionEnum.ADD.getText(), ButtonActionEnum.DELETE.getText());
         //如果是状态变更,需要进行筛选出状态变更的数据
         if (bugLogQueryList.getStatusChange()) {
             bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), true);
-            bugLogDOList = bugLogDOList.stream().filter(a -> !filter.contains(a.getAction())).collect(Collectors.toList());
         } else {
             bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), false);
         }
