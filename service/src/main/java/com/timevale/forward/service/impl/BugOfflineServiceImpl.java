@@ -140,9 +140,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
         //是否打标
         List<BizLabelDO> bizLabelDOList;
-        if(CollectionUtils.isNotEmpty(bugOfflineQueryList.getLabelIds())|| CollectionUtils.isNotEmpty(bugOfflineQueryList.getLabelCategoryIds())){
+        if (CollectionUtils.isNotEmpty(bugOfflineQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(bugOfflineQueryList.getLabelCategoryIds())) {
             List<Long> newLabelIds = labelComponent.getLabelIds(bugOfflineQueryList.getLabelIds(), bugOfflineQueryList.getLabelCategoryIds());
-            if(CollectionUtils.isEmpty(newLabelIds)){
+            if (CollectionUtils.isEmpty(newLabelIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
             bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_OFFLINE.getCode());
@@ -164,7 +164,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
 
-        List<Long>bugOfflineIds = bugOfflineDOList.stream().map(BugOfflineListDO::getId).collect(Collectors.toList());
+        List<Long> bugOfflineIds = bugOfflineDOList.stream().map(BugOfflineListDO::getId).collect(Collectors.toList());
         bizLabelDOList = bizLabelMapper.getByBizIdInType(bugOfflineIds, BizTypeEnum.BUG_OFFLINE.getCode());
         Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
                 , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
@@ -205,7 +205,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Long> add(BugOfflineAddReq bugOfflineAddReq) {
-        if(bugOfflineAddReq.getName().contains(CommonConstant.BLANK)){
+        if (bugOfflineAddReq.getName().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("线下bug名称中请勿包含空格");
         }
 
@@ -747,7 +747,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         statusLogDO.setField(BugLogFieldEnum.STATUS.getText());
 
 
-        if(!Objects.equals(oldCause,newCause)){
+        if (!Objects.equals(oldCause, newCause)) {
             BugLogDO causeLogDO = new BugLogDO();
             causeLogDO.setOldValue(oldCause);
             causeLogDO.setNewValue(newCause);
@@ -757,7 +757,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             bugLogDOList.add(causeLogDO);
         }
 
-        if(!Objects.equals(oldPlan,newPlan)){
+        if (!Objects.equals(oldPlan, newPlan)) {
             BugLogDO solvePlanLogDO = new BugLogDO();
             solvePlanLogDO.setOldValue(oldPlan);
             solvePlanLogDO.setNewValue(newPlan);
@@ -767,7 +767,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             bugLogDOList.add(solvePlanLogDO);
         }
 
-        if(!Objects.equals(oldExpectSolveDate,newExpectSolveDate)){
+        if (!Objects.equals(oldExpectSolveDate, newExpectSolveDate)) {
             BugLogDO solvePlanLogDO = new BugLogDO();
             solvePlanLogDO.setOldValue(DateUtil.parseToString(oldExpectSolveDate, DateStyle.YYYY_MM_DD));
             solvePlanLogDO.setNewValue(DateUtil.parseToString(newExpectSolveDate, DateStyle.YYYY_MM_DD));
@@ -1126,9 +1126,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     public BaseResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList bugLogQueryList) {
         PageHelper.startPage(bugLogQueryList.pageNum, bugLogQueryList.pageSize);
         List<BugLogDO> bugLogDOList;
+        List<String> filter = Arrays.asList(ButtonActionEnum.ADD.getText(), ButtonActionEnum.DELETE.getText());
         //如果是状态变更,需要进行筛选出状态变更的数据
         if (bugLogQueryList.getStatusChange()) {
             bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), true);
+            bugLogDOList = bugLogDOList.stream().filter(a -> !filter.contains(a.getAction())).collect(Collectors.toList());
         } else {
             bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), false);
         }

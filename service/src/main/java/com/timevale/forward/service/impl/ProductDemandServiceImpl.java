@@ -418,6 +418,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             List<String> eventNames = trackEventMapper.selectByIds(trackEventIds).stream().map(TrackEventDO::getFullCnName).collect(Collectors.toList());
             productDemandLogComponent.addLogWhenLinkOrUnlinkTrackEvent(productDemand.getId(), eventNames, ButtonActionEnum.LINK.getText());
         }
+
+        //标签
+        if(CollectionUtils.isNotEmpty(productDemandAddReq.getLabelIds())){
+            bizLabelComponent.addLabel(productDemand.getId(),productDemandAddReq.getLabelIds(),BizTypeEnum.PRODUCT_DEMAND.getCode());
+            bizLabelComponent.addLog(productDemand.getId(),productDemandAddReq.getLabelIds(),BizTypeEnum.PRODUCT_DEMAND.getCode(),true);
+        }
         return BaseResult.success(true);
     }
 
