@@ -45,10 +45,10 @@
     </insert>
 
     <insert id="batchInsertNotIC" parameterType="java.util.List">
-        insert into track_event_prop (track_prop_id,track_event_id,create_man_id, create_man)
+        insert into track_event_prop (track_prop_id,track_event_id,create_man_id, create_man, modify_man_id, modify_man)
         values
         <foreach collection="list" item="i" open="" separator="," close="">
-            (#{i.trackPropId}, #{i.trackEventId}, #{i.createManId},#{i.createMan})
+            (#{i.trackPropId}, #{i.trackEventId}, #{i.createManId},#{i.createMan}, #{i.createManId}, #{i.createMan})
         </foreach>
     </insert>
 

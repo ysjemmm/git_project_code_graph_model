@@ -724,7 +724,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 }
 
                 if (!includeServer && StrUtil.isNotEmpty(e.getApiName())) {
-                    failInfoList.add("【格式错误】埋点平台不含服务端时，接口名称不可填写");
+                    failInfoList.add("【格式错误】埋点平台不含服务端时，接口名称无需填写，如有数据将不显示");
                 }
 
                 // 如果没有错误，添加平台属性
