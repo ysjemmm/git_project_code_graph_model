@@ -71,7 +71,7 @@ public class TrackEventComponentImpl implements TrackEventComponent {
     @Resource
     private MessageEventPublisher messageEventPublisher;
 
-    @Value("trackApprovalUser:nianci")
+    @Value("${trackApprovalUser:nianci}")
     private String trackApprovalUser;
 
     @Override
