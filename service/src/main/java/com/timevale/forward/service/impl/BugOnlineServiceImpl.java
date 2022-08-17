@@ -1732,6 +1732,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             BugLogDO source = new BugLogDO();
             Long mainId=null;
             source.setAction(ButtonActionEnum.LINK.getText());
+            source.setField(BugFieldEnum.LINK_BUG.getText());
             source.setOldValue(String.valueOf(id));
             if(oldLinkBugId!=null&&finalBugId==null){
                 //xx  将{关联的BUG名称} 删除关联 {被关联的BUG名称}

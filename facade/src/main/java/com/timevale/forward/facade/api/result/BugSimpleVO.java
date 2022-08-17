@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
 public class BugSimpleVO extends ToString {
 
     @ApiModelProperty(value = "bugId")
-    private Integer id;
+    private Long id;
 
     @ApiModelProperty("bug名称")
     private String name;

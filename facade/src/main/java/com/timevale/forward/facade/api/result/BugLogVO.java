@@ -57,8 +57,8 @@ public class BugLogVO extends ToString {
     private List<BugStatusOperatorVO> bugStatusOperatorVOList;
 
     @ApiModelProperty("关联bug信息")
-    private BugSimpleVO linkeBug;
+    private BugSimpleVO linkBug;
 
     @ApiModelProperty("被关联bug信息")
-    private BugSimpleVO linkedBugs;
+    private BugSimpleVO linkedBug;
 }
