@@ -40,4 +40,7 @@ public class LabelSimpleVO extends ToString {
 
     @ApiModelProperty("更新时间")
     private Date modifyDate;
+
+    @ApiModelProperty("是否删除")
+    private Boolean isDeleted;
 }

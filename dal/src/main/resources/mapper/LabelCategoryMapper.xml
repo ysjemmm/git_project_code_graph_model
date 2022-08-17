@@ -71,7 +71,7 @@
                     #{item}
                 </foreach>
             </if>
-            and a.is_deleted=false
+            <if test="containDeleted == null or containDeleted==false">and a.is_deleted = false</if>
         </where>
         group by a.id
     </select>

@@ -31,7 +31,7 @@ public class LabelComponentImpl implements LabelComponent {
 
         }
         if(!CollectionUtils.isEmpty(labelCategoryIds)){
-            List<LabelDO> labelDOList = labelMapper.getByCategoryIds(labelCategoryIds);
+            List<LabelDO> labelDOList = labelMapper.getByCategoryIds(labelCategoryIds,false);
             List<Long> oldLabelIds = labelDOList.stream().map(LabelDO::getId).collect(Collectors.toList());
             labelIds.addAll(oldLabelIds);
 

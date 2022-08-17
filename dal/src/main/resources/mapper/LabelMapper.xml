@@ -80,8 +80,7 @@
                     #{item}
                 </foreach>
             </if>
-
-             and is_deleted=false
+            <if test="containDeleted == null or containDeleted==false">and is_deleted = false</if>
         </where>
     </select>
 

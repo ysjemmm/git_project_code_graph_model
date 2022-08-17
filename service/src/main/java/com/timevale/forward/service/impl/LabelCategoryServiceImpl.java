@@ -200,7 +200,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         List<LabelCategorySimpleVO> labelCategorySimpleVos = LabelCategoryCopier.INSTANCE.convert(labelCategoryDOList);
 
         List<Long> categoryIds = labelCategoryDOList.stream().map(LabelCategoryDO::getId).collect(Collectors.toList());
-        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(categoryIds);
+        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(categoryIds,condition.getContainDeleted());
         List<LabelSimpleVO> labelSimpleVos = LabelCopier.INSTANCE.convert(labelDOList);
 
         Map<Long, List<LabelSimpleVO>> labelMap = labelSimpleVos.stream().collect(Collectors.groupingBy(LabelSimpleVO::getLabelCategoryId));
@@ -231,7 +231,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> delete(Long categoryId) {
         log.info("类别删除,参数:{}", categoryId);
-        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(Lists.newArrayList(categoryId));
+        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(Lists.newArrayList(categoryId),false);
 
         if (CollectionUtils.isNotEmpty(labelDOList)) {
             throw new BaseBizRuntimeException("该类别下已存在标签名称,不可删除。");
