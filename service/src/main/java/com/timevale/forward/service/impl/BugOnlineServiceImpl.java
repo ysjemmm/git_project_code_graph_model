@@ -424,12 +424,14 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     public BusinessResult<Boolean> delete(BugOnlineReq bugOnlineReq) {
         log.info("线上bug-删除,接收参数：{}", bugOnlineReq);
 
-        BugOnlineDO bugOnlineDO = new BugOnlineDO();
-        bugOnlineDO.setId(bugOnlineReq.getId());
-        bugOnlineDO.setIsDeleted(true);
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineReq.getId());
+
+        BugOnlineDO update = new BugOnlineDO();
+        update.setId(bugOnlineReq.getId());
+        update.setIsDeleted(true);
 
         //删除线上bug
-        bugOnlineMapper.update(bugOnlineDO);
+        bugOnlineMapper.update(update);
 
         //删除bug日志表中的数据
         bugLogMapper.deleteByBugId(bugOnlineReq.getId(), BugLogTypeEnum.ONLINE.getCode());
@@ -465,7 +467,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         if (CollectionUtils.isNotEmpty(bugLogStatusIdList)) {
             bugStatusOperatorMapper.deleteByBugLogId(bugLogStatusIdList);
         }
-
+        deleteLinkBug(bugOnlineDO.getId(),bugOnlineDO.getLinkBugId(),true);
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
@@ -1077,7 +1079,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                         bugOnlineDO.getId()
                 )
         );
-
+        deleteLinkBug(bugOnlineDO.getId(),bugOnlineDO.getLinkBugId(),false);
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
@@ -1394,7 +1396,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                         bugOnlineDO.getId()
                 )
         );
-
+        deleteLinkBug(bugOnlineDO.getId(),bugOnlineDO.getLinkBugId(),false);
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
@@ -1757,6 +1759,35 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugLogDOList.add(target);
             bugLogMapper.batchInsert(bugLogDOList);
         }
+    }
+
+    private void deleteLinkBug(Long id,Long linkBugId,boolean deleteLinked){
+        //删除关联
+        List<BugLogDO> bugLogDOList = new ArrayList<>();
+        if(linkBugId!=null){
+            bugOnlineMapper.updateByIds(Lists.newArrayList(id),null);
+            bugLogDOList.add(createBugLog(id,id,linkBugId));
+            bugLogDOList.add(createBugLog(linkBugId,id,linkBugId));
+        }
+        if(deleteLinked){
+            List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(id);
+            bugOnlineDOList.forEach(a->{
+                bugLogDOList.add(createBugLog(a.getId(),a.getId(),id));
+            });
+        }
+        if(CollectionUtils.isNotEmpty(bugLogDOList)){
+            bugLogMapper.batchInsert(bugLogDOList);
+        }
+    }
+    private BugLogDO createBugLog(Long mainId,Long oldValue,Long newValue){
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction(ButtonActionEnum.UN_LINK.getText());
+        bugLogDO.setField(BugFieldEnum.LINK_BUG.getText());
+        bugLogDO.setMainId(mainId);
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setOldValue(String.valueOf(oldValue));
+        bugLogDO.setNewValue(String.valueOf(newValue));
+        return  bugLogDO;
     }
 }
 

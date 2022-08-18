@@ -23,6 +23,7 @@ import com.timevale.forward.service.copy.DistributionCopier;
 import com.timevale.forward.service.copy.ProjectRiskCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.observer.event.ProjectNodeDelayUnInputMsgEvent;
+import com.timevale.forward.service.observer.event.ProjectNodePlanDateDelayUnInputMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -445,8 +446,13 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         //待处理的节点
         Date today=new Date();
         List<ProjectNodeDO> projectNodeDOList = projectNodeMapper.selectByProjectIdListFilterDate(filterIds);
-        List<ProjectNodeDO> filterProjectNodes = projectNodeDOList.stream()
-                .filter(a -> DateUtil.getEndOfDay(a.getPlanDate()).before(DateUtil.getEndOfDay(today))).collect(Collectors.toList());
+        List<ProjectNodeDO> filterProjectNodes=projectNodeDOList.stream().filter(a->{
+            if(a.getPlanDate()!=null){
+                //计划时间不空时,计划时间大于实际时间延期
+                return DateUtil.getEndOfDay(a.getPlanDate()).after(DateUtil.getEndOfDay(today));
+            }
+            return true;
+        }).collect(Collectors.toList());
         //已经处理过的记录
         List<ProjectRiskRecordDO> projectRiskRecordDOList = projectRiskRecordMapper.get(null,ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode());
         Map<String, ProjectRiskRecordDO> riskRecordMap = projectRiskRecordDOList.stream()
@@ -499,13 +505,22 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
     }
 
     private void send(Long projectId,String name, Date planDate, String receiveManId) {
-        messageEventPublisher.publish(new ProjectNodeDelayUnInputMsgEvent(
-                this,
-                projectId,
-                receiveManId,
-                name,
-                DateUtil.parseToString(planDate, DateStyle.YYYY_MM_DD)
-        ));
+        if(planDate==null){
+            messageEventPublisher.publish(new ProjectNodePlanDateDelayUnInputMsgEvent(
+                    this,
+                    projectId,
+                    receiveManId,
+                    name
+            ));
+        }else{
+            messageEventPublisher.publish(new ProjectNodeDelayUnInputMsgEvent(
+                    this,
+                    projectId,
+                    receiveManId,
+                    name,
+                    DateUtil.parseToString(planDate, DateStyle.YYYY_MM_DD)
+            ));
+        }
     }
 
 }

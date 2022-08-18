@@ -1148,15 +1148,17 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         Map<Long, BugOnlineDO> bugMap=new HashMap<>();
         if(BugLogTypeEnum.ONLINE.getCode().equals(bugLogQueryList.getType())){
-            List<Long> bugIds = bugLogDOList.stream().map(BugLogDO::getMainId).distinct().collect(Collectors.toList());
-            List<BugOnlineDO>bugOnlineDOList = bugOnlineMapper.selectByIds(bugIds);
+            List<Long> oldBugIds = bugLogDOList.stream().filter(a->BugFieldEnum.LINK_BUG.getText().equals(a.getField()))
+                    .map(a->Long.valueOf(a.getOldValue())).distinct().collect(Collectors.toList());
+            List<Long> newBugIds = bugLogDOList.stream().filter(a->BugFieldEnum.LINK_BUG.getText().equals(a.getField()))
+                    .map(a->Long.valueOf(a.getNewValue())).distinct().collect(Collectors.toList());
 
-            List<Long> linkBugIds = bugOnlineDOList.stream().filter(a->a.getLinkBugId()!=null).map(BugOnlineDO::getLinkBugId).collect(Collectors.toList());
-            if(CollectionUtils.isNotEmpty(linkBugIds)){
-                bugOnlineDOList.addAll(bugOnlineMapper.selectByIds(linkBugIds));
+            oldBugIds.addAll(newBugIds);
+            if(CollectionUtils.isNotEmpty(oldBugIds)){
+                List<BugOnlineDO>bugOnlineDOList = bugOnlineMapper.selectByIds(oldBugIds);
+                bugMap = bugOnlineDOList.stream().collect(Collectors.toMap(BugOnlineDO::getId, a->a, (v1, v2) -> v2));
             }
 
-            bugMap = bugOnlineDOList.stream().collect(Collectors.toMap(BugOnlineDO::getId, a->a, (v1, v2) -> v2));
         }
 
         for (BugLogVO bugLogVO : bugLogVOList) {
