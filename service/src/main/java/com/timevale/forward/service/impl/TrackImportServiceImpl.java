@@ -174,12 +174,12 @@ public class TrackImportServiceImpl implements TrackImportService {
     @Override
     public BaseResult<TrackImportLogFileVO> template() {
         log.info("[template]:读取埋点数据");
-        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectAllBizDomain();
-        List<ProductLineDO> productLineDOList = productLineMapper.selectAllProductLine();
-        List<ModelDO> modelDOList = modelMapper.selectAllModel();
-        List<TrackMapDO> trackMapDOList = trackMapMapper.selectAllTrackMap();
-        List<TrackMapDO> pageDOList = trackMapDOList.stream().filter(e -> e.getLevel() == 4).collect(Collectors.toList());
-        List<TrackMapDO> elementDOList = trackMapDOList.stream().filter(e -> e.getLevel() == 5).collect(Collectors.toList());
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectAllBizDomain().stream().filter(e-> !e.getIsDeleted()).collect(Collectors.toList());
+        List<ProductLineDO> productLineDOList = productLineMapper.selectAllProductLine().stream().filter(e-> !e.getIsDeleted()).collect(Collectors.toList());
+        List<ModelDO> modelDOList = modelMapper.selectAllModel().stream().filter(e-> !e.getIsDeleted()).collect(Collectors.toList());
+        List<TrackMapDO> trackMapDOList = trackMapMapper.selectAllTrackMap().stream().filter(e-> !e.getIsDeleted()).collect(Collectors.toList());
+        List<TrackMapDO> pageDOList = trackMapDOList.stream().filter(e -> e.getLevel() == 4 && !e.getIsDeleted()).collect(Collectors.toList());
+        List<TrackMapDO> elementDOList = trackMapDOList.stream().filter(e -> e.getLevel() == 5 && !e.getIsDeleted()).collect(Collectors.toList());
 
         log.info("[template]:埋点数据转换");
         List<List<ClassifyData>> dataList = new ArrayList<>();
