@@ -1727,6 +1727,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 finalBugId=linkBug.getLinkBugId();
             }
             bugOnlineMapper.updateByIds(updateIds,finalBugId);
+        }else{
+            bugOnlineMapper.updateByIds(Lists.newArrayList(id),null);
         }
         log.info("更新关联bug,id:{},oldLinkBugId:{},linkBugId:{},finalBugId:{}",id,oldLinkBugId,linkBugId,finalBugId);
         if (!Objects.equals(oldLinkBugId, finalBugId)) {
