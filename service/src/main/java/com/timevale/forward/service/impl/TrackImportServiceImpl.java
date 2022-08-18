@@ -289,6 +289,10 @@ public class TrackImportServiceImpl implements TrackImportService {
         } catch (IOException e) {
             log.error("[template]:文件上传失败");
             throw new BaseBizRuntimeException("模板文件创建失败");
+        } finally {
+            if (template != null && !template.delete()) {
+                log.error("[TrackImportServiceImpl][template]:模板临时文件删除失败");
+            }
         }
 
         return BaseResult.success(result);
