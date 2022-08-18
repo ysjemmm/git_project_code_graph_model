@@ -1155,7 +1155,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
             oldBugIds.addAll(newBugIds);
             if(CollectionUtils.isNotEmpty(oldBugIds)){
-                List<BugOnlineDO>bugOnlineDOList = bugOnlineMapper.selectByIds(oldBugIds);
+                List<BugOnlineDO>bugOnlineDOList = bugOnlineMapper.selectByIds(oldBugIds,true);
                 bugMap = bugOnlineDOList.stream().collect(Collectors.toMap(BugOnlineDO::getId, a->a, (v1, v2) -> v2));
             }
 

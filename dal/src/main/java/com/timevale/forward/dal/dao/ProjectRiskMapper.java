@@ -98,6 +98,6 @@ public interface ProjectRiskMapper {
      * @param type type
      * @return 列表
      */
-    List<Long> selectByStatusType(@Param("status") Integer status,@Param("type") Integer type);
+    List<ProjectRiskDO> selectByStatusType(@Param("status") Integer status,@Param("type") Integer type);
 
 }

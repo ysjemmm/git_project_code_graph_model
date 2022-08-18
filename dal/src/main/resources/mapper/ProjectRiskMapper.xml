@@ -121,8 +121,8 @@
         </where>
     </select>
 
-    <select id="selectByStatusType" resultType="long">
-        SELECT distinct project_id
+    <select id="selectByStatusType" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
+        SELECT id, project_id, main_id, type, name, sign, status, create_man_id, create_man, create_date, modify_date
         FROM project_risk
         WHERE status = #{status} AND type = #{type} AND is_deleted = false
     </select>

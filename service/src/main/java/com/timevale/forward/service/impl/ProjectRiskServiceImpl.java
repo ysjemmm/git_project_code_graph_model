@@ -425,64 +425,61 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
     public BaseResult<Boolean> syncRiskRecord() {
         log.info("项目节点逾期未录入,任务开始");
         //未处理的逾期未录入风险
-        List<Long> projectIds = projectRiskMapper.selectByStatusType(ProjectRiskStatusEnum.PENDING.getCode(), ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode());
-        if(CollectionUtils.isEmpty(projectIds)){
+        List<ProjectRiskDO> projectRiskDOList = projectRiskMapper.selectByStatusType(ProjectRiskStatusEnum.PENDING.getCode(), ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode());
+        if(CollectionUtils.isEmpty(projectRiskDOList)){
             log.info("没有需要处理逾期未录入的风险");
             return BaseResult.success(true);
         }
+        List<Long> projectIds = projectRiskDOList.stream().map(ProjectRiskDO::getProjectId).distinct().collect(Collectors.toList());
         List<ProjectDO> projectDOList = projectMapper.getByIds(projectIds);
 
-        List<ProjectDO> filter = projectDOList.stream().filter(a -> !ProjectStatusEnum.terminated(a.getStatus())).collect(Collectors.toList());
-        List<Long> filterIds = filter.stream().map(ProjectDO::getId).collect(Collectors.toList());
+        List<ProjectDO> filterProject = projectDOList.stream().filter(a -> !ProjectStatusEnum.terminated(a.getStatus())).collect(Collectors.toList());
+        List<Long> filterIds = filterProject.stream().map(ProjectDO::getId).collect(Collectors.toList());
         if(CollectionUtils.isEmpty(filterIds)){
             log.info("没有需要处理的项目");
             return BaseResult.success(true);
         }
-
-        Map<Long, ProjectDO> projectMap = filter.stream().collect(Collectors.toMap(ProjectDO::getId, b -> b, (v1, v2) -> v2));
+        Map<Long, ProjectDO> projectMap = filterProject.stream().collect(Collectors.toMap(ProjectDO::getId, b -> b, (v1, v2) -> v2));
         Map<Long, List<PersonDO>> pdMap = personMapper.get(filterIds, PersonTypeEnum.PROJECT_PD.getCode())
                 .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
+        //过滤暂停,作废,发布,状态风险
+        List<ProjectRiskDO> filterRiskList = projectRiskDOList.stream().filter(a -> filterIds.contains(a.getProjectId())).collect(Collectors.toList());
 
-        //待处理的节点
-        Date today=new Date();
         List<ProjectNodeDO> projectNodeDOList = projectNodeMapper.selectByProjectIdListFilterDate(filterIds);
-        List<ProjectNodeDO> filterProjectNodes=projectNodeDOList.stream().filter(a->{
-            if(a.getPlanDate()!=null){
-                //计划时间不空时,计划时间大于实际时间延期
-                return DateUtil.getEndOfDay(a.getPlanDate()).after(DateUtil.getEndOfDay(today));
-            }
-            return true;
-        }).collect(Collectors.toList());
+        //待处理的节点
+        Map<String, ProjectNodeDO> projectNodeDateMap = projectNodeDOList.stream().collect(Collectors.toMap(a -> a.getProjectId() + "-" + a.getName(), a->a, (v1, v2) -> v2));
         //已经处理过的记录
         List<ProjectRiskRecordDO> projectRiskRecordDOList = projectRiskRecordMapper.get(null,ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode());
         Map<String, ProjectRiskRecordDO> riskRecordMap = projectRiskRecordDOList.stream()
                 .collect(Collectors.toMap(a -> a.getMainId() + "-" + a.getName() + "-" + a.getReceiveManId(), b -> b, (v1, v2) -> v2));
         List<ProjectRiskRecordDO> result = new ArrayList<>();
-        for (ProjectNodeDO nodeDO : filterProjectNodes) {
-            if (!projectMap.containsKey(nodeDO.getProjectId())) {
+        for (ProjectRiskDO projectRiskDO : filterRiskList) {
+            if (!projectMap.containsKey(projectRiskDO.getProjectId())) {
                 continue;
             }
-            ProjectDO projectDO = projectMap.get(nodeDO.getProjectId());
-            Integer code = ProjectNodeEnum.getCodeByName(nodeDO.getName());
+            ProjectDO projectDO = projectMap.get(projectRiskDO.getProjectId());
+            Integer code = ProjectNodeEnum.getCodeByName(projectRiskDO.getName());
+            String dateKey = projectRiskDO.getProjectId() + "-" + projectRiskDO.getName();
+            ProjectNodeDO nodeDO = projectNodeDateMap.get(dateKey);
             if (code < 30) {
                 //需求规划阶段,消息接收人找pd
-                if (!pdMap.containsKey(nodeDO.getProjectId())) {
+                if (!pdMap.containsKey(projectRiskDO.getProjectId())) {
                     continue;
                 }
-                for (PersonDO personDO : pdMap.get(nodeDO.getProjectId())) {
-                    String key = nodeDO.getProjectId() + "-" + nodeDO.getName() + "-" + personDO.getUserId();
+                for (PersonDO personDO : pdMap.get(projectRiskDO.getProjectId())) {
+                    String key = projectRiskDO.getProjectId() + "-" + projectRiskDO.getName() + "-" + personDO.getUserId();
                     if (!riskRecordMap.containsKey(key)) {
-                        result.add(createProjectRiskRecordDO(nodeDO.getProjectId(), nodeDO.getName(), personDO.getUserName(), personDO.getUserId()));
-                        send(nodeDO.getProjectId(),nodeDO.getName(),nodeDO.getPlanDate(),personDO.getUserId());
+                        result.add(createProjectRiskRecordDO(projectRiskDO.getProjectId(), projectRiskDO.getName(), personDO.getUserName(), personDO.getUserId()));
+                        send(projectRiskDO.getProjectId(),projectRiskDO.getName(),nodeDO.getPlanDate(),personDO.getUserId());
                     }
                 }
 
             } else {
                 //其他阶段,消息接收人找pm
-                String key = nodeDO.getProjectId() + "-" + nodeDO.getName() + "-" + projectDO.getPmId();
+                String key = projectRiskDO.getProjectId() + "-" + projectRiskDO.getName() + "-" + projectDO.getPmId();
                 if (!riskRecordMap.containsKey(key)) {
-                    result.add(createProjectRiskRecordDO(nodeDO.getProjectId(), nodeDO.getName(), projectDO.getPmName(), projectDO.getPmId()));
-                    send(nodeDO.getProjectId(),nodeDO.getName(),nodeDO.getPlanDate(),projectDO.getPmId());
+                    result.add(createProjectRiskRecordDO(projectRiskDO.getProjectId(), projectRiskDO.getName(), projectDO.getPmName(), projectDO.getPmId()));
+                    send(projectRiskDO.getProjectId(),projectRiskDO.getName(),nodeDO.getPlanDate(),projectDO.getPmId());
                 }
 
             }

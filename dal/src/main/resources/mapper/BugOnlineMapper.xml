@@ -305,7 +305,9 @@
             <foreach collection="ids" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
-            and is_deleted = false
+            <if test="containDeleted == false">
+                and is_deleted = false
+            </if>
         </where>
     </select>
 </mapper>
