@@ -1774,6 +1774,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugOnlineDOList.forEach(a->{
                 bugLogDOList.add(createBugLog(a.getId(),a.getId(),id));
             });
+            List<Long> updateIds = bugOnlineDOList.stream().map(BugOnlineDO::getId).collect(Collectors.toList());
+            if(CollectionUtils.isNotEmpty(updateIds)){
+                bugOnlineMapper.updateByIds(updateIds,null);
+            }
         }
         if(CollectionUtils.isNotEmpty(bugLogDOList)){
             bugLogMapper.batchInsert(bugLogDOList);
