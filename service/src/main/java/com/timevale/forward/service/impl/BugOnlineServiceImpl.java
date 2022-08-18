@@ -425,7 +425,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         log.info("线上bug-删除,接收参数：{}", bugOnlineReq);
 
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineReq.getId());
-
+        if (bugOnlineDO == null) {
+            throw new BaseBizRuntimeException("线上bug不存在");
+        }
         BugOnlineDO update = new BugOnlineDO();
         update.setId(bugOnlineReq.getId());
         update.setIsDeleted(true);
@@ -1725,6 +1727,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             if (linkBug.getLinkBugId() != null) {
                 //要关联的bug B可能有关联的bug C   最终取C
                 finalBugId=linkBug.getLinkBugId();
+            }
+            if (updateIds.contains(finalBugId)) {
+                throw new BaseBizRuntimeException("关联的bug或其上级bug与当前bug为同一bug,请修改后重试");
             }
             bugOnlineMapper.updateByIds(updateIds,finalBugId);
         }else{
