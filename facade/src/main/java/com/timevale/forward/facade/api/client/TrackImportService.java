@@ -8,6 +8,8 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
+import java.io.IOException;
+
 
 /**
  * @author by YangXu
@@ -60,7 +62,7 @@ public interface TrackImportService {
      *
      * @return {@link BaseResult}<{@link Boolean}>
      */
-    BaseResult<TrackImportLogFileVO> template();
+    BaseResult<TrackImportLogFileVO> template() throws IOException;
 
     /**
      * 导入记录

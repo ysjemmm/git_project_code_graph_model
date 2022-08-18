@@ -1,15 +1,7 @@
 package com.timevale.forward.service.impl;
 
-import cn.hutool.core.annotation.AnnotationUtil;
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.alibaba.excel.EasyExcel;
-import com.alibaba.excel.EasyExcelFactory;
-import com.alibaba.excel.annotation.ExcelProperty;
-import com.alibaba.excel.write.metadata.WriteSheet;
-import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
@@ -29,7 +21,6 @@ import com.timevale.forward.service.component.TrackImportComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TrackImportLogCopier;
 import com.timevale.forward.service.excel.track.map.ClassifyData;
-import com.timevale.forward.service.excel.track.map.ClassifyRow;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -41,17 +32,17 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -182,130 +173,177 @@ public class TrackImportServiceImpl implements TrackImportService {
 
     @Override
     public BaseResult<TrackImportLogFileVO> template() {
+        log.info("[template]:读取埋点数据");
         List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectAllBizDomain();
         List<ProductLineDO> productLineDOList = productLineMapper.selectAllProductLine();
         List<ModelDO> modelDOList = modelMapper.selectAllModel();
         List<TrackMapDO> trackMapDOList = trackMapMapper.selectAllTrackMap();
+        List<TrackMapDO> pageDOList = trackMapDOList.stream().filter(e -> e.getLevel() == 4).collect(Collectors.toList());
+        List<TrackMapDO> elementDOList = trackMapDOList.stream().filter(e -> e.getLevel() == 5).collect(Collectors.toList());
 
-        Map<Long, List<ProductLineDO>> plg = productLineDOList.stream().collect(Collectors.groupingBy(ProductLineDO::getBizDomainId));
-        Map<Long, List<ModelDO>> mdg = modelDOList.stream().collect(Collectors.groupingBy(ModelDO::getProductLineId));
-        Map<Long, List<TrackMapDO>> pg = trackMapDOList.stream().filter(e -> e.getLevel() == 4).collect(Collectors.groupingBy(TrackMapDO::getParentId));
-        Map<Long, List<TrackMapDO>> elg = trackMapDOList.stream().filter(e -> e.getLevel() == 5).collect(Collectors.groupingBy(TrackMapDO::getParentId));
+        log.info("[template]:埋点数据转换");
+        List<List<ClassifyData>> dataList = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            dataList.add(new ArrayList<>());
+        }
+        for (BizDomainDO e : bizDomainDOList) {
+            ClassifyData data = new ClassifyData();
+            data.setLevel(1);
+            data.setId(e.getId());
+            data.setName(e.getName());
+            data.setParentId(0L);
+            data.setSubClassifyData(new ArrayList<>());
+            dataList.get(0).add(data);
+        }
+        for (ProductLineDO e : productLineDOList) {
+            ClassifyData data = new ClassifyData();
+            data.setLevel(2);
+            data.setId(e.getId());
+            data.setName(e.getName());
+            data.setParentId(e.getBizDomainId());
+            data.setSubClassifyData(new ArrayList<>());
+            dataList.get(1).add(data);
+        }
+        for (ModelDO e : modelDOList) {
+            ClassifyData data = new ClassifyData();
+            data.setLevel(3);
+            data.setId(e.getId());
+            data.setName(e.getName());
+            data.setParentId(e.getProductLineId());
+            data.setSubClassifyData(new ArrayList<>());
+            dataList.get(2).add(data);
+        }
+        for (TrackMapDO e : pageDOList) {
+            ClassifyData data = new ClassifyData();
+            data.setLevel(4);
+            data.setId(e.getId());
+            data.setName(e.getName());
+            data.setParentId(e.getParentId());
+            data.setSubClassifyData(new ArrayList<>());
+            dataList.get(3).add(data);
+        }
+        for (TrackMapDO e : elementDOList) {
+            ClassifyData data = new ClassifyData();
+            data.setLevel(5);
+            data.setId(e.getId());
+            data.setName(e.getName());
+            data.setParentId(e.getParentId());
+            data.setSubClassifyData(new ArrayList<>());
+            dataList.get(4).add(data);
+        }
+        List<Map<Long,List<ClassifyData>>> dataGroup = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            List<ClassifyData> list = dataList.get(i);
+            dataGroup.add(list.stream().collect(Collectors.groupingBy(ClassifyData::getParentId)));
+        }
 
-        List<ClassifyData> subBizList = new ArrayList<>();
+        log.info("[template]:埋点数据关联关系梳理");
         ClassifyData root = new ClassifyData();
+        root.setId(0L);
+        root.setLevel(0);
+        dfs(dataGroup, root);
 
-        for (BizDomainDO biz : bizDomainDOList) {
-            ClassifyData bizData = new ClassifyData();
-            List<ClassifyData> subPlList = new ArrayList<>();
+        File template;
+        try {
+            template = File.createTempFile("产研系统_新增埋点事件导入模板", ".xlsx");
+            template.deleteOnExit();
+        } catch (IOException e) {
+            log.error("[template]:模板文件临时文件创建失败");
+            throw new BaseBizRuntimeException("模板文件创建失败");
+        }
 
-            List<ProductLineDO> pls = plg.get(biz.getId());
-            if (CollectionUtil.isNotEmpty(pls)) {
-                for (ProductLineDO pl : pls) {
-                    ClassifyData plData = new ClassifyData();
-                    List<ClassifyData> subMdList = new ArrayList<>();
-
-                    List<ModelDO> mds = mdg.get(pl.getId());
-                    if (CollectionUtil.isNotEmpty(mds)) {
-                        for (ModelDO md : mds) {
-                            ClassifyData mdData = new ClassifyData();
-                            List<ClassifyData> subPList = new ArrayList<>();
-
-                            List<TrackMapDO> ps = pg.get(md.getId());
-                            if (CollectionUtil.isNotEmpty(ps)) {
-                                for (TrackMapDO p : ps) {
-                                    ClassifyData pData = new ClassifyData();
-                                    List<ClassifyData> subElList = new ArrayList<>();
-
-                                    List<TrackMapDO> els = elg.get(p.getId());
-                                    if (CollectionUtil.isNotEmpty(els)) {
-                                        for (TrackMapDO el : els) {
-                                            ClassifyData elData = new ClassifyData();
-                                            elData.setId(el.getId());
-                                            elData.setLevel(5);
-                                            elData.setName(el.getName());
-                                            elData.setSize(1);
-                                            subElList.add(elData);
-                                        }
-                                    }
-                                    pData.setId(p.getId());
-                                    pData.setLevel(4);
-                                    pData.setName(p.getName());
-                                    pData.setSubClassifyData(subElList);
-                                    pData.setSize(Math.max(1, subElList.size()));
-                                    subPList.add(pData);
-                                }
-                            }
-                            mdData.setId(md.getId());
-                            mdData.setLevel(3);
-                            mdData.setName(md.getName());
-                            mdData.setSubClassifyData(subPList);
-                            mdData.setSize(Math.max(1, subPList.stream().mapToInt(ClassifyData::getSize).sum()));
-                            subMdList.add(mdData);
-                        }
-                    }
-                    plData.setId(pl.getId());
-                    plData.setLevel(2);
-                    plData.setName(pl.getName());
-                    plData.setSubClassifyData(subMdList);
-                    plData.setSize(Math.max(1, subMdList.stream().mapToInt(ClassifyData::getSize).sum()));
-                    subPlList.add(plData);
+        // 埋点地图写入
+        ClassPathResource resource = new ClassPathResource("TRACK-TEMPLATE.xlsx");
+        try(InputStream ins = resource.getInputStream();) {
+            // 写出埋点地图
+            OutputStream ous = Files.newOutputStream(template.toPath());
+            Workbook workbook = WorkbookFactory.create(ins);
+            Sheet sheet = workbook.getSheet("查看埋点分类");
+            if (sheet == null) {
+                sheet = workbook.createSheet("查看埋点分类");
+                for (int i = 0; i < 5; i++) {
+                    sheet.setColumnWidth(i, 3840);
                 }
             }
-            bizData.setId(biz.getId());
-            bizData.setLevel(1);
-            bizData.setName(biz.getName());
-            bizData.setSubClassifyData(subPlList);
-            bizData.setSize(Math.max(1, subPlList.stream().mapToInt(ClassifyData::getSize).sum()));
-            subBizList.add(bizData);
+            dfs(root, 3, -1, workbook, sheet);
+            workbook.setActiveSheet(0);
+            workbook.write(ous);
+        } catch (IOException | InvalidFormatException e) {
+            log.error("[template]:模板文件文件埋点地图写入失败");
+            throw new BaseBizRuntimeException("模板文件创建失败");
         }
-        root.setId(0L);
-        root.setLevel(1);
-        root.setName("root");
-        root.setSize(Math.max(1, subBizList.stream().mapToInt(ClassifyData::getSize).sum()));
-        root.setSubClassifyData(subBizList);
 
-        List<ClassifyRow> classifyRowList = new ArrayList<>();
+        // 结果
+        TrackImportLogFileVO result = new TrackImportLogFileVO();
 
+        // 上传文件
+        try {
+            InputStream ins = Files.newInputStream(template.toPath());
+            FileDownloadDTO info = FileUtil.uploadFileToOSS(ins, "产研系统_新增埋点事件导入模板.xlsx", envUtils.getEnv());
+            if (info == null || StrUtil.isEmpty(info.getDownloadUrl())) {
+                throw new BaseBizRuntimeException("模板文件创建失败");
+            }
 
-        FileDownloadDTO info = FileUtil.getFileDownloadInfo(templateFileId, envUtils.getEnv());
-        if (info == null || StrUtil.isEmpty(info.getDownloadUrl())) {
-            throw new BaseBizRuntimeException("模板文件不存在");
+            // 结果转化
+            result = TrackImportLogCopier.INSTANCE.convert(info);
+        } catch (IOException e) {
+            log.error("[template]:文件上传失败");
+            throw new BaseBizRuntimeException("模板文件创建失败");
         }
-        TrackImportLogFileVO result = TrackImportLogCopier.INSTANCE.convert(info);
+
         return BaseResult.success(result);
     }
 
-    private void dfs(ClassifyData data, List<ClassifyRow> rowList, ClassifyRow row) throws IOException, InvalidFormatException {
+    private void dfs(List<Map<Long,List<ClassifyData>>> dataGroup, ClassifyData data) {
+        Long id = data.getId();
         Integer level = data.getLevel();
+        List<ClassifyData> subDataList = new ArrayList<>();
 
-        Workbook workbook = WorkbookFactory.create(new File("/test.xlsx"));
-        Sheet sheet = workbook.getSheetAt(1);
-
-
-        // 赋值
-        Field[] fields = ReflectUtil.getFields(ClassifyRow.class);
-        for (Field field : fields) {
-            int index = field.getAnnotation(ExcelProperty.class).index();
-            if (index == level - 1) {
-                try {
-                    field.set(row, data.getName());
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
+        if (dataGroup.size() > level) {
+            List<ClassifyData> list = dataGroup.get(level).get(id);
+            if (CollectionUtil.isNotEmpty(list)) {
+                for (ClassifyData e : list) {
+                    dfs(dataGroup, e);
+                    subDataList.add(e);
                 }
             }
         }
+        data.setSubClassifyData(subDataList);
+        data.setSize(Math.max(1, subDataList.stream().mapToInt(ClassifyData::getSize).sum()));
+    }
 
-        List<ClassifyData> subList = data.getSubClassifyData();
-        if (CollectionUtil.isEmpty(subList)) {
-            rowList.add(row);
-        } else {
-            for (int i = 0; i < subList.size(); i++) {
-                if (i == 0) {
-                    dfs(subList.get(i), rowList, row);
-                } else {
-                    dfs(subList.get(i), rowList, new ClassifyRow());
-                }
+    private void dfs(ClassifyData data, Integer rowIndex, Integer cellIndex, Workbook workbook, Sheet sheet) {
+        Integer level = data.getLevel();
+        if (level > 0) {
+            // 获取单元格
+            Row row = sheet.getRow(rowIndex);
+            if (row == null) {
+                row = sheet.createRow(rowIndex);
+            }
+            Cell cell = row.getCell(cellIndex);
+            if (cell == null) {
+                cell = row.createCell(cellIndex);
+            }
+
+            // 配置值
+            cell.setCellValue(data.getName());
+            CellStyle cellStyle = workbook.createCellStyle();
+            cellStyle.cloneStyleFrom(cell.getCellStyle());
+            cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+            cell.setCellStyle(cellStyle);
+
+            // 合并列
+            Integer size = data.getSize();
+            if (size > 1) {
+                CellRangeAddress address = new CellRangeAddress(rowIndex, rowIndex + size - 1, cellIndex, cellIndex);
+                sheet.addMergedRegion(address);
+            }
+        }
+        List<ClassifyData> subDataList = data.getSubClassifyData();
+        if (CollectionUtil.isNotEmpty(subDataList)) {
+            for (ClassifyData e : subDataList) {
+                dfs(e, rowIndex, cellIndex + 1, workbook, sheet);
+                rowIndex += e.getSize();
             }
         }
     }

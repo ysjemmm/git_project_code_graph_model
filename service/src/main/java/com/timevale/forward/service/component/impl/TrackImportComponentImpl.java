@@ -855,7 +855,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                         .doWrite(trackFailRowList);
             }
 
-            String fileId = "";
+            String fileId;
             try (InputStream ins = Files.newInputStream(outputFile.toPath())) {
                 FileDownloadDTO fileDownloadDTO = FileUtil.uploadFileToOSS(ins, "埋点事件检验错误文件.xlsx", envUtils.getEnv());
                 fileId = fileDownloadDTO.getFileId();

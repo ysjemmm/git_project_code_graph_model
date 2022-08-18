@@ -15,6 +15,8 @@ public class ClassifyData {
 
     private Long id;
 
+    private Long parentId;
+
     private String name;
 
     private Integer size;
