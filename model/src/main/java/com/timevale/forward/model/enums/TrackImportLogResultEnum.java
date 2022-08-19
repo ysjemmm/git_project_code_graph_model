@@ -5,23 +5,32 @@ import lombok.Getter;
 
 
 /**
- * @author xingyun
- * @date 2021-12-13 13:58
- **/
+ * @author by YangXu
+ * @date 2022/08/12 13:52
+ */
 @Getter
 @AllArgsConstructor
-public enum TrackImportStatusEnum {
+public enum TrackImportLogResultEnum {
 
-    SUCCESS(0,"处理成功" ),
+    SUCCESS(0,"导入成功" ),
 
-    FAILURE(1,"处理失败");
+    FAILURE(1,"导入失败"),
+
+    LOADING(2, "导入中"),
+
+    NOTING(3,"无导入事件"),
+
+    CANCEL(4,"取消导入"),
+
+    EXCEPTION(5,"导入异常")
+    ;
 
 
     final private Integer code;
     final private String text;
 
     public static String getTextByCode(Integer code){
-        for (TrackImportStatusEnum e : TrackImportStatusEnum.values()){
+        for (TrackImportLogResultEnum e : TrackImportLogResultEnum.values()){
             if(e.getCode().equals(code)){
                 return e.text;
             }

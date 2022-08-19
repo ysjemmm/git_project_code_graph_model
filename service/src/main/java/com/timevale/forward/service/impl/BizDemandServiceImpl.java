@@ -467,10 +467,11 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 判断是否通知接收人
         if (Objects.equal(bizDemandModifyReq.getNotifyReceiveMan(), true)) {
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
             messageEventPublisher.publish(new BizDemandModifyMsgEvent(
                     this,
                     oldBizDemandDO.getId(),
-                    oldBizDemandDO.getSubmitMan(),
+                    userInfo.getAlias() + "-" + userInfo.getName(),
                     newBizDemandDO.getReceiveManId(),
                     newBizDemandDO.getName()
             ));

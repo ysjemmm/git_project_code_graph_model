@@ -5,9 +5,8 @@ import com.timevale.forward.dal.entity.TrackPropDO;
 import com.timevale.forward.facade.api.query.TrackPropQueryList;
 import com.timevale.forward.facade.api.request.TrackPropAddReq;
 import com.timevale.forward.facade.api.result.TrackPropVO;
-import com.timevale.forward.service.excel.track.TrackEvent;
-import com.timevale.forward.service.excel.track.TrackProp;
-import com.timevale.forward.service.excel.track.TrackRow;
+import com.timevale.forward.service.excel.track.event.TrackProp;
+import com.timevale.forward.service.excel.track.event.TrackRow;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 

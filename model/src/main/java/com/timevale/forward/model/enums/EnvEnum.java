@@ -55,4 +55,14 @@ public enum EnvEnum {
         });
         return result;
     }
+
+    public static Integer getCodeByText(String text){
+        for (EnvEnum e : EnvEnum.values()){
+            if(e.text.equals(text)){
+                return e.code;
+            }
+        }
+        return null;
+    }
+
 }

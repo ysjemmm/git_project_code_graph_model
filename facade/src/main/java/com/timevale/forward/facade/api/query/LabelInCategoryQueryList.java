@@ -32,4 +32,7 @@ public class LabelInCategoryQueryList extends ToString {
     @NotNull(message = "是否需要标记权限不能为空")
     private Boolean auth;
 
+    @ApiModelProperty("是否包含删除")
+    private Boolean containDeleted;
+
 }

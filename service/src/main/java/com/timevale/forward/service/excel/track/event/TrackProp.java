@@ -1,4 +1,4 @@
-package com.timevale.forward.service.excel.track;
+package com.timevale.forward.service.excel.track.event;
 
 import lombok.Data;
 
@@ -8,6 +8,7 @@ import lombok.Data;
  */
 @Data
 public class TrackProp {
+    private Long id;
     private String propNameCn;
     private String propNameEn;
     private String dataType;

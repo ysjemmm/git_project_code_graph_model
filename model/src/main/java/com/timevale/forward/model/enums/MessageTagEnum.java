@@ -18,6 +18,8 @@ public enum MessageTagEnum {
 
     FORWARD_TRACKEVENTREVIEW("forward_trackEventReview"),
 
+    FORWARD_TRACKEVENTREVIEW_NOTNOTICE("forward_trackEventReview_notNotice"),
+
     FORWARD_PRODUCT_DEMAND_CHANGE("forward_productDemandChange"),
 
     FORWARD_PUBLISHOFFICEREVIEW("forward_publishOfficeReview"),

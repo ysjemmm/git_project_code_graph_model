@@ -1,4 +1,4 @@
-package com.timevale.forward.service.excel.track;
+package com.timevale.forward.service.excel.track.event;
 
 import lombok.Data;
 
@@ -24,6 +24,9 @@ public class TrackEvent {
     private Integer firstRowIndex;
     private Integer lastRowIndex;
     private String fullNameCn;
+    private Long trackMapId;
     private List<String> failInfoList = new ArrayList<>();
     private List<TrackProp> trackPropList = new ArrayList<>();
+    private List<Integer> platformList = new ArrayList<>();
+    private List<Integer> envList = new ArrayList<>();
 }

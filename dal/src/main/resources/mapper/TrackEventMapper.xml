@@ -9,7 +9,42 @@
         (#{cnName},#{fullCnName},#{egName}, #{flowId},#{trackMapId},#{platform},#{apiName},#{touchMoment},#{env},#{status},#{explanation},#{createMan},#{createManId})
     </insert>
 
+    <insert id="batchInsert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO track_event (cn_name,full_cn_name, eg_name, flow_id,track_map_id,platform,api_name,touch_moment,env,status,explanation,create_man ,create_man_id)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.cnName},#{item.fullCnName},#{item.egName}, #{item.flowId},#{item.trackMapId},#{item.platform},
+             #{item.apiName},#{item.touchMoment},#{item.env},#{item.status},#{item.explanation},#{item.createMan},#{item.createManId})
+        </foreach>
+    </insert>
+
     <update id="update">
+        update track_event
+        <set>
+            <if test="cnName != null and cnName != ''">cn_name = #{cnName},</if>
+            <if test="fullCnName != null and fullCnName != ''">full_cn_name = #{fullCnName},</if>
+            <if test="egName != null and egName != ''">eg_name = #{egName},</if>
+            <if test="flowId != null and flowId != ''">flow_id = #{flowId},</if>
+            <if test="trackMapId != null">track_map_id = #{trackMapId},</if>
+            <if test="platform != null and platform != ''">platform = #{platform},</if>
+            <if test="apiName != null and apiName != ''">api_name = #{apiName},</if>
+            <if test="touchMoment != null and touchMoment != ''">touch_moment = #{touchMoment},</if>
+            <if test="env != null and env != ''">env = #{env},</if>
+            <if test="failReason != null and failReason != ''">fail_reason = #{failReason},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="explanation != null">explanation = #{explanation},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modify_man_id = #{modifyManId},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <update id="updateNotIC">
         update track_event
         <set>
             <if test="cnName != null and cnName != ''">cn_name = #{cnName},</if>

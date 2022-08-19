@@ -23,6 +23,7 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -98,7 +99,18 @@ public class LabelServiceImpl implements LabelService {
         });
         Map<String, String> deptMap = new HashMap<>();
         if (CollectionUtils.isNotEmpty(allDeptIds)) {
-            deptMap = innerGroupClient.batchGetSimpleGroupMap(allDeptIds);
+            List<GroupResponse> gdata = innerGroupClient.getGroupListTree(false);
+            Map<String, GroupResponse> groupMap = gdata.stream().collect(Collectors.toMap(GroupResponse::getGroupId, a -> a, (v1, v2) -> v2));
+            allDeptIds.forEach(a->{
+                if(groupMap.containsKey(a)){
+                    GroupResponse response = groupMap.get(a);
+                    String groupName = response.getGroupName();
+                    if(response.getDeleteFlag()==1){
+                        groupName=groupName+"（已删除）";
+                    }
+                    deptMap.put(a,groupName);
+                }
+            });
         }
 
         List<LabelVO> labelVOList = LabelCopier.INSTANCE.convertT(labelDOList);
@@ -133,7 +145,7 @@ public class LabelServiceImpl implements LabelService {
         Long categoryId=labelGetReq.getCategoryId();
         LabelDetailVO labelDetailVO = new LabelDetailVO();
 
-        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(Lists.newArrayList(categoryId));
+        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(Lists.newArrayList(categoryId),false);
         labelDetailVO.setNames(labelDOList.stream().map(LabelDO::getName).collect(Collectors.toList()));
 
         List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(Lists.newArrayList(categoryId));
@@ -179,15 +191,12 @@ public class LabelServiceImpl implements LabelService {
         if (nameSet.size() != names.size()) {
             throw new BaseBizRuntimeException("标签名称重复,请修改后重试");
         }
-        Long categoryId = labelAddReq.getCategoryId();
-        List<LabelDO> labelDOList = labelMapper.getByNameInOneCategory(names, categoryId);
-        if (!CollectionUtils.isEmpty(labelDOList)) {
-            String existName = labelDOList.stream().map(LabelDO::getName).collect(Collectors.joining(","));
-            throw new BaseBizRuntimeException("名称为: " + existName + " 的标签,已在该标签类别下存在,请修改后重试");
-        }
+
+        checkName(labelAddReq.getCategoryId(),names);
+
         List<LabelDO> labelDos = names.stream().map(a -> {
             LabelDO o = new LabelDO();
-            o.setLabelCategoryId(categoryId);
+            o.setLabelCategoryId(labelAddReq.getCategoryId());
             o.setName(a);
             return o;
         }).collect(Collectors.toList());
@@ -199,11 +208,23 @@ public class LabelServiceImpl implements LabelService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(LabelModifyReq labelModifyReq) {
         log.info("标签修改,参数:{}", labelModifyReq);
-        LabelDO labelDO = new LabelDO();
-        labelDO.setId(labelModifyReq.getId());
-        labelDO.setName(labelModifyReq.getName());
-        labelMapper.update(labelDO);
+        LabelDO labelDO = labelMapper.get(labelModifyReq.getId());
+
+        checkName(labelDO.getLabelCategoryId(),Lists.newArrayList(labelModifyReq.getName()));
+
+        LabelDO update = new LabelDO();
+        update.setId(labelModifyReq.getId());
+        update.setName(labelModifyReq.getName());
+        labelMapper.update(update);
         return BaseResult.success(true);
+    }
+
+    private void checkName(Long categoryId,List<String> names){
+        List<LabelDO> labelDOList = labelMapper.getByNameInOneCategory(names, categoryId);
+        if (!CollectionUtils.isEmpty(labelDOList)) {
+            String existName = labelDOList.stream().map(LabelDO::getName).collect(Collectors.joining(","));
+            throw new BaseBizRuntimeException("名称为: " + existName + " 的标签,已在该标签类别下存在,请修改后重试");
+        }
     }
 
 }

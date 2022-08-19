@@ -103,7 +103,18 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         });
         Map<String, String> deptMap = new HashMap<>();
         if (CollectionUtils.isNotEmpty(allDeptIds)) {
-            deptMap = innerGroupClient.batchGetSimpleGroupMap(allDeptIds);
+            List<GroupResponse> gdata = innerGroupClient.getGroupListTree(false);
+            Map<String, GroupResponse> groupMap = gdata.stream().collect(Collectors.toMap(GroupResponse::getGroupId, a -> a, (v1, v2) -> v2));
+            allDeptIds.forEach(a->{
+                if(groupMap.containsKey(a)){
+                    GroupResponse response = groupMap.get(a);
+                    String groupName = response.getGroupName();
+                    if(response.getDeleteFlag()==1){
+                        groupName=groupName+"（已删除）";
+                    }
+                    deptMap.put(a,groupName);
+                }
+            });
         }
 
         List<LabelCategoryVO> labelCategoryVos = LabelCategoryCopier.INSTANCE.change(labelCategoryDOList);
@@ -189,7 +200,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         List<LabelCategorySimpleVO> labelCategorySimpleVos = LabelCategoryCopier.INSTANCE.convert(labelCategoryDOList);
 
         List<Long> categoryIds = labelCategoryDOList.stream().map(LabelCategoryDO::getId).collect(Collectors.toList());
-        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(categoryIds);
+        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(categoryIds,condition.getContainDeleted());
         List<LabelSimpleVO> labelSimpleVos = LabelCopier.INSTANCE.convert(labelDOList);
 
         Map<Long, List<LabelSimpleVO>> labelMap = labelSimpleVos.stream().collect(Collectors.groupingBy(LabelSimpleVO::getLabelCategoryId));
@@ -220,7 +231,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> delete(Long categoryId) {
         log.info("类别删除,参数:{}", categoryId);
-        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(Lists.newArrayList(categoryId));
+        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(Lists.newArrayList(categoryId),false);
 
         if (CollectionUtils.isNotEmpty(labelDOList)) {
             throw new BaseBizRuntimeException("该类别下已存在标签名称,不可删除。");

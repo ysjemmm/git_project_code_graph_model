@@ -50,4 +50,13 @@ public enum PlatformTypeEnum {
         });
         return result;
     }
+
+    public static Integer getCodeByText(String text){
+        for (PlatformTypeEnum e : PlatformTypeEnum.values()){
+            if(e.getText().equals(text)){
+                return e.getCode();
+            }
+        }
+        return null;
+    }
 }

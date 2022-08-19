@@ -3,8 +3,12 @@ package com.timevale.forward.service.component;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.TrackEventListCondition;
 import com.timevale.forward.dal.entity.TrackEventDO;
+import com.timevale.forward.facade.api.request.TrackEventAddReq;
 import com.timevale.forward.facade.api.result.TrackEventVO;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.result.PageQueryResult;
+
+import java.util.List;
 
 /**
  * @author xingyun
@@ -31,4 +35,9 @@ public interface TrackEventComponent {
      * @param trackEventDO trackEventDO
      */
     void updateTrackEventProp(TrackEventDO trackEventDO);
+
+
+    String startFlow(TrackEventAddReq trackEventAddReq, UserInfo userInfo);
+
+    void updateFlowId(List<TrackEventDO> trackEventDOList, UserInfo userInfo);
 }

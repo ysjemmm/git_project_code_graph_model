@@ -5,6 +5,7 @@
     <select id="selectAllTrackMap" resultType="com.timevale.forward.dal.entity.TrackMapDO">
         select id, parent_id, name, level, is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
         from track_map
+        where is_deleted = false
     </select>
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.TrackMapDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">

@@ -364,12 +364,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         productDemand.setType(JSON.toJSONString(productDemandAddReq.getTypes()));
         productDemandMapper.insert(productDemand);
 
-        //标签
-        if (CollectionUtils.isNotEmpty(productDemandAddReq.getLabelIds())) {
-            bizLabelComponent.addLabel(productDemand.getId(), productDemandAddReq.getLabelIds(), BizTypeEnum.PRODUCT_DEMAND.getCode());
-            bizLabelComponent.addLog(productDemand.getId(), productDemandAddReq.getLabelIds(), BizTypeEnum.PRODUCT_DEMAND.getCode(), true);
-        }
-
         fileComponent.add(productDemandAddReq.getFiles(), productDemand.getId(), FileTypeEnum.PRODUCT_DEMAND.getCode());
 
         personComponent.add(productDemandAddReq.getRecipients(), productDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
@@ -423,6 +417,12 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             productDemandTrackEventComponent.batchInsert(productDemand.getId(), trackEventIds);
             List<String> eventNames = trackEventMapper.selectByIds(trackEventIds).stream().map(TrackEventDO::getFullCnName).collect(Collectors.toList());
             productDemandLogComponent.addLogWhenLinkOrUnlinkTrackEvent(productDemand.getId(), eventNames, ButtonActionEnum.LINK.getText());
+        }
+
+        //标签
+        if(CollectionUtils.isNotEmpty(productDemandAddReq.getLabelIds())){
+            bizLabelComponent.addLabel(productDemand.getId(),productDemandAddReq.getLabelIds(),BizTypeEnum.PRODUCT_DEMAND.getCode());
+            bizLabelComponent.addLog(productDemand.getId(),productDemandAddReq.getLabelIds(),BizTypeEnum.PRODUCT_DEMAND.getCode(),true);
         }
         return BaseResult.success(true);
     }
