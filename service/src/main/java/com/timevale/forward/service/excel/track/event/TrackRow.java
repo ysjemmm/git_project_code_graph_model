@@ -51,7 +51,7 @@ public class TrackRow {
     @ExcelProperty(value = "埋点位置说明\n（埋点平台含非服务端时，必填。可填写PRD或者wiki链接）", index = 12)
     private String explanation;
 
-    @ExcelProperty(value = "接口名称\n（埋点平台包含服务端时，必填）", index = 13)
+    @ExcelProperty(value = "接口名称\n（埋点平台含服务端时，必填；不含服务端，该字段不显示）", index = 13)
     private String apiName;
 
     @ExcelProperty(value = "触发时机（必填）", index = 14)
