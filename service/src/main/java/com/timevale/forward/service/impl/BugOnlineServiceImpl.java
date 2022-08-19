@@ -39,7 +39,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -1729,11 +1728,13 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(id);
         Long oldLinkBugId = bugOnlineDO.getLinkBugId();
         Long finalBugId = null;
+//        List<Long> updateIdA=new ArrayList<>();
         if(linkBugId!=null){
+            List<BugLogDO> bugLogDOList = new ArrayList<>();
             //查找哪些bug关联了当前bug,要将这些bug,重新关联到新的bug上
             List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(id);
-            List<Long> updateIds = bugOnlineDOList.stream().map(BugOnlineDO::getId).collect(Collectors.toList());
-            updateIds.add(id);
+            List<Long> updateIdA = bugOnlineDOList.stream().map(BugOnlineDO::getId).collect(Collectors.toList());
+            updateIdA.add(id);
 
             BugOnlineDO linkBug = bugOnlineMapper.selectById(linkBugId);
             finalBugId=linkBug.getId();
@@ -1741,58 +1742,62 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 //要关联的bug B可能有关联的bug C   最终取C
                 finalBugId=linkBug.getLinkBugId();
             }
-            if (updateIds.contains(finalBugId)) {
-                throw new BaseBizRuntimeException("关联的bug或其上级bug与当前bug为同一bug,请修改后重试");
+            bugOnlineMapper.updateByIds(updateIdA,finalBugId);
+
+            updateIdA.remove(id);
+            //处理bug-a: a->关联了当前bugA,现关联finalBugId
+            for (Long a : updateIdA) {
+                //a删除当前bugA
+                bugLogDOList.add(createBugLog(a,a,id,ButtonActionEnum.UN_LINK.getText()));
+                bugLogDOList.add(createBugLog(id,a,id,ButtonActionEnum.UN_LINK.getText()));
+                //a关联finalBugId
+                bugLogDOList.add(createBugLog(a,a,finalBugId,ButtonActionEnum.LINK.getText()));
+                bugLogDOList.add(createBugLog(finalBugId,a,finalBugId,ButtonActionEnum.LINK.getText()));
             }
-            bugOnlineMapper.updateByIds(updateIds,finalBugId);
+            if(CollectionUtils.isNotEmpty(bugLogDOList)){
+                bugLogMapper.batchInsert(bugLogDOList);
+            }
         }else{
             bugOnlineMapper.updateByIds(Lists.newArrayList(id),null);
         }
         log.info("更新关联bug,id:{},oldLinkBugId:{},linkBugId:{},finalBugId:{}",id,oldLinkBugId,linkBugId,finalBugId);
         if (!Objects.equals(oldLinkBugId, finalBugId)) {
+            //处理当前bug
             List<BugLogDO> bugLogDOList = new ArrayList<>();
-            BugLogDO source = new BugLogDO();
-            Long mainId=null;
-            source.setAction(ButtonActionEnum.LINK.getText());
-            source.setField(BugFieldEnum.LINK_BUG.getText());
-            source.setOldValue(String.valueOf(id));
             if(oldLinkBugId!=null&&finalBugId==null){
-                //xx  将{关联的BUG名称} 删除关联 {被关联的BUG名称}
-                source.setAction(ButtonActionEnum.UN_LINK.getText());
-                source.setNewValue(String.valueOf(oldLinkBugId));
-                mainId=oldLinkBugId;
+                //由A->B 变成 A->无
+                bugLogDOList.add(createBugLog(id,id,oldLinkBugId,ButtonActionEnum.UN_LINK.getText()));
+                bugLogDOList.add(createBugLog(oldLinkBugId,id,oldLinkBugId,ButtonActionEnum.UN_LINK.getText()));
             } else if(oldLinkBugId==null&&finalBugId!=null){
-                source.setNewValue(String.valueOf(finalBugId));
-                mainId=finalBugId;
-
+                //由A->无 变成 A->B
+                bugLogDOList.add(createBugLog(id,id,finalBugId,ButtonActionEnum.LINK.getText()));
+                bugLogDOList.add(createBugLog(finalBugId,id,finalBugId,ButtonActionEnum.LINK.getText()));
             }else if(oldLinkBugId!=null&&finalBugId!=null){
-                source.setNewValue(String.valueOf(finalBugId));
-                mainId=finalBugId;
+                //由A->B 变成 A->finalBugId
+                //删除老的
+                bugLogDOList.add(createBugLog(id,id,oldLinkBugId,ButtonActionEnum.UN_LINK.getText()));
+                bugLogDOList.add(createBugLog(oldLinkBugId,id,oldLinkBugId,ButtonActionEnum.UN_LINK.getText()));
+
+                bugLogDOList.add(createBugLog(id,id,finalBugId,ButtonActionEnum.LINK.getText()));
+                bugLogDOList.add(createBugLog(finalBugId,id,finalBugId,ButtonActionEnum.LINK.getText()));
             }
-            source.setMainId(id);
-            source.setType(BugLogTypeEnum.ONLINE.getCode());
-            BugLogDO target = new BugLogDO();
-            //被关联方也记录一条日志
-            BeanUtils.copyProperties(source,target);
-            target.setMainId(mainId);
-            bugLogDOList.add(source);
-            bugLogDOList.add(target);
             bugLogMapper.batchInsert(bugLogDOList);
         }
     }
 
     private void deleteLinkBug(Long id,Long linkBugId,boolean deleteLinked){
         //删除关联
+        log.info("删除关联bug,id:{},linkBugId:{},deleteLinked:{},",id,linkBugId,deleteLinked);
         List<BugLogDO> bugLogDOList = new ArrayList<>();
         if(linkBugId!=null){
             bugOnlineMapper.updateByIds(Lists.newArrayList(id),null);
-            bugLogDOList.add(createBugLog(id,id,linkBugId));
-            bugLogDOList.add(createBugLog(linkBugId,id,linkBugId));
+            bugLogDOList.add(createBugLog(id,id,linkBugId,ButtonActionEnum.UN_LINK.getText()));
+            bugLogDOList.add(createBugLog(linkBugId,id,linkBugId,ButtonActionEnum.UN_LINK.getText()));
         }
         if(deleteLinked){
             List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(id);
             bugOnlineDOList.forEach(a->{
-                bugLogDOList.add(createBugLog(a.getId(),a.getId(),id));
+                bugLogDOList.add(createBugLog(a.getId(),a.getId(),id,ButtonActionEnum.UN_LINK.getText()));
             });
             List<Long> updateIds = bugOnlineDOList.stream().map(BugOnlineDO::getId).collect(Collectors.toList());
             if(CollectionUtils.isNotEmpty(updateIds)){
@@ -1803,9 +1808,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugLogMapper.batchInsert(bugLogDOList);
         }
     }
-    private BugLogDO createBugLog(Long mainId,Long oldValue,Long newValue){
+    private BugLogDO createBugLog(Long mainId,Long oldValue,Long newValue,String action){
         BugLogDO bugLogDO = new BugLogDO();
-        bugLogDO.setAction(ButtonActionEnum.UN_LINK.getText());
+        bugLogDO.setAction(action);
         bugLogDO.setField(BugFieldEnum.LINK_BUG.getText());
         bugLogDO.setMainId(mainId);
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
