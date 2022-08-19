@@ -81,4 +81,12 @@ public interface BugOnlineMapper {
      * @return 返回值
      */
     List<BugOnlineDO> selectByIds(@Param("ids") List<Long> ids,@Param("containDeleted")Boolean containDeleted);
+
+    /**
+     * 根据线上bug的业务需求id查询线上bug
+     *
+     * @param name name
+     * @return 返回值
+     */
+    List<BugOnlineDO> selectByName(@Param("name") String name);
 }

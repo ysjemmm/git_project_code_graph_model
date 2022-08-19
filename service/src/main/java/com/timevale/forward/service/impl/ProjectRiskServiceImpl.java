@@ -22,8 +22,8 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.DistributionCopier;
 import com.timevale.forward.service.copy.ProjectRiskCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
-import com.timevale.forward.service.observer.event.ProjectNodeDelayUnInputMsgEvent;
-import com.timevale.forward.service.observer.event.ProjectNodePlanDateDelayUnInputMsgEvent;
+import com.timevale.forward.service.observer.event.ProjectNodeActualDateUnInputMsgEvent;
+import com.timevale.forward.service.observer.event.ProjectNodePlanDateUnInputMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -447,7 +447,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
 
         List<ProjectNodeDO> projectNodeDOList = projectNodeMapper.selectByProjectIdListFilterDate(filterIds);
         //待处理的节点
-        Map<String, ProjectNodeDO> projectNodeDateMap = projectNodeDOList.stream().collect(Collectors.toMap(a -> a.getProjectId() + "-" + a.getName(), a->a, (v1, v2) -> v2));
+        Map<String, ProjectNodeDO> projectNodeMap = projectNodeDOList.stream().collect(Collectors.toMap(a -> a.getProjectId() + "-" + a.getName(), a->a, (v1, v2) -> v2));
         //已经处理过的记录
         List<ProjectRiskRecordDO> projectRiskRecordDOList = projectRiskRecordMapper.get(null,ProjectRiskTypeEnum.NODE_ENTRY_OVERDUE.getCode());
         Map<String, ProjectRiskRecordDO> riskRecordMap = projectRiskRecordDOList.stream()
@@ -460,7 +460,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
             ProjectDO projectDO = projectMap.get(projectRiskDO.getProjectId());
             Integer code = ProjectNodeEnum.getCodeByName(projectRiskDO.getName());
             String dateKey = projectRiskDO.getProjectId() + "-" + projectRiskDO.getName();
-            ProjectNodeDO nodeDO = projectNodeDateMap.get(dateKey);
+            ProjectNodeDO nodeDO = projectNodeMap.get(dateKey);
             if (code < 30) {
                 //需求规划阶段,消息接收人找pd
                 if (!pdMap.containsKey(projectRiskDO.getProjectId())) {
@@ -470,7 +470,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                     String key = projectRiskDO.getProjectId() + "-" + projectRiskDO.getName() + "-" + personDO.getUserId();
                     if (!riskRecordMap.containsKey(key)) {
                         result.add(createProjectRiskRecordDO(projectRiskDO.getProjectId(), projectRiskDO.getName(), personDO.getUserName(), personDO.getUserId()));
-                        send(projectRiskDO.getProjectId(),projectRiskDO.getName(),nodeDO.getPlanDate(),personDO.getUserId());
+                        send(projectRiskDO.getProjectId(),projectRiskDO.getName(),projectDO.getName(),nodeDO.getPlanDate(),personDO.getUserId());
                     }
                 }
 
@@ -479,7 +479,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                 String key = projectRiskDO.getProjectId() + "-" + projectRiskDO.getName() + "-" + projectDO.getPmId();
                 if (!riskRecordMap.containsKey(key)) {
                     result.add(createProjectRiskRecordDO(projectRiskDO.getProjectId(), projectRiskDO.getName(), projectDO.getPmName(), projectDO.getPmId()));
-                    send(projectRiskDO.getProjectId(),projectRiskDO.getName(),nodeDO.getPlanDate(),projectDO.getPmId());
+                    send(projectRiskDO.getProjectId(),projectRiskDO.getName(),projectDO.getName(),nodeDO.getPlanDate(),projectDO.getPmId());
                 }
 
             }
@@ -501,21 +501,23 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         return riskRecordDO;
     }
 
-    private void send(Long projectId,String name, Date planDate, String receiveManId) {
+    private void send(Long projectId,String nodeName,String projectName, Date planDate, String receiveManId) {
         if(planDate==null){
-            messageEventPublisher.publish(new ProjectNodePlanDateDelayUnInputMsgEvent(
+            messageEventPublisher.publish(new ProjectNodePlanDateUnInputMsgEvent(
                     this,
                     projectId,
                     receiveManId,
-                    name
+                    nodeName,
+                    projectName
             ));
         }else{
-            messageEventPublisher.publish(new ProjectNodeDelayUnInputMsgEvent(
+            messageEventPublisher.publish(new ProjectNodeActualDateUnInputMsgEvent(
                     this,
                     projectId,
                     receiveManId,
-                    name,
-                    DateUtil.parseToString(planDate, DateStyle.YYYY_MM_DD)
+                    nodeName,
+                    DateUtil.parseToString(planDate, DateStyle.YYYY_MM_DD),
+                    projectName
             ));
         }
     }

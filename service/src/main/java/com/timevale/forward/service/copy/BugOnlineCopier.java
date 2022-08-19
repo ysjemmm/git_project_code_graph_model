@@ -37,6 +37,14 @@ public interface BugOnlineCopier {
     BugOnlineVO convert(BugOnlineListDO bugOnlineListDO);
 
     /**
+     * bugOnlineDO --> BugOnlineVO
+     *
+     * @param bugOnlineDO 对象
+     * @return BugOnlineVO
+     */
+    BugOnlineVO convertT(BugOnlineDO bugOnlineDO);
+
+    /**
      * bugOnlineQueryList --> BugOnlineListCondition
      *
      * @param bugOnlineQueryList 对象

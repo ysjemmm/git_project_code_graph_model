@@ -11,6 +11,8 @@ import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
+import java.util.List;
+
 /**
  * @Date 2022/3/17 10:22
  * @Author 望轩
@@ -168,6 +170,14 @@ public interface BugOnlineService {
      * @return 返回值
      */
     BusinessResult<Boolean> repairFailed(BugOnlineRepairFailedReasonReq bugOnlineRepairFailedReasonReq);
+
+    /**
+     * 查询线上bug列表
+     *
+     * @param bugOnlineGetReq 查询参数
+     * @return 返回值
+     */
+    BaseResult<List<BugOnlineVO>> getByName(BugOnlineGetReq bugOnlineGetReq);
 }
 
 

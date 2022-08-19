@@ -11,21 +11,21 @@ import java.util.List;
  * @author by YangXu
  * @date 2022/01/21 15:20
  */
-public class ProjectNodeDelayUnInputMsgEvent extends MessageEvent {
+public class ProjectNodePlanDateUnInputMsgEvent extends MessageEvent {
 
     private final Long projectId;
     private final String receiver;
-    private final String name;
-    private final String planDate;
+    private final String nodeName;
+    private final String projectName;
 
-    private static final String PROJECT_NODE_DELAY_UNINPUT_MSG = "### %s  \n  **%s**节点计划时间为**%s**已逾期，请及时录入。  \n\n  ***  \n  [查看详情](%s)";
+    private static final String PROJECT_NODE_DELAY_UNINPUT_MSG = "### %s  \n 【项目名称】：**%s**  \n  **%s**节点未录入，请及时维护。  \n\n  ***  \n  [查看详情](%s)";
 
-    public ProjectNodeDelayUnInputMsgEvent(Object source, Long projectId, String receiver, String name, String planDate) {
+    public ProjectNodePlanDateUnInputMsgEvent(Object source, Long projectId, String receiver, String nodeName,String projectName) {
         super(source);
         this.projectId = projectId;
         this.receiver = receiver;
-        this.name = name;
-        this.planDate = planDate;
+        this.nodeName = nodeName;
+        this.projectName = projectName;
     }
 
     @Override
@@ -33,7 +33,7 @@ public class ProjectNodeDelayUnInputMsgEvent extends MessageEvent {
         List<String> receivers = Lists.newArrayList(receiver);
         String title = MessageTitleEnum.PROJECT_NODE_DELAY_UNINPUT.getText();
         String singleUrl = domainName + String.format(PARAM, TabEnum.PROJECT_MANAGEMENT.getText(), projectId);
-        String markdown = String.format(PROJECT_NODE_DELAY_UNINPUT_MSG, title, name, planDate, singleUrl);
+        String markdown = String.format(PROJECT_NODE_DELAY_UNINPUT_MSG, title,projectName, nodeName, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(title)

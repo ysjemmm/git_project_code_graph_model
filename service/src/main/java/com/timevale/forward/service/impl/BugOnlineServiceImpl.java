@@ -1586,6 +1586,19 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         return businessResult;
     }
 
+    @Override
+    public BaseResult<List<BugOnlineVO>> getByName(BugOnlineGetReq bugOnlineGetReq) {
+        List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByName(bugOnlineGetReq.getLinkBugName());
+        List<BugOnlineDO> filter = bugOnlineDOList.stream()
+                .filter(a -> !Objects.equals(a.getId(), bugOnlineGetReq.getId())&&!Objects.equals(a.getLinkBugId(), bugOnlineGetReq.getId()))
+                .collect(Collectors.toList());
+        if(CollectionUtils.isEmpty(filter)){
+           return BaseResult.success(Lists.emptyList());
+        }
+        List<BugOnlineVO> result = filter.stream().map(BugOnlineCopier.INSTANCE::convertT).collect(Collectors.toList());
+        return BaseResult.success(result);
+    }
+
     /**
      * 判断当前操作人是否为personId或者personId的上级
      */

@@ -310,6 +310,16 @@
             </if>
         </where>
     </select>
+
+    <select id="selectByName" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+        SELECT id, name,operator,operator_id,last_operator,last_operator_id,proposer
+        ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
+        ,create_man,create_man_id,source,  detail_version_id,link_bug_id
+        FROM bug_online
+        <where>
+            name like concat('%',#{name},'%')
+        </where>
+    </select>
 </mapper>
 
 
