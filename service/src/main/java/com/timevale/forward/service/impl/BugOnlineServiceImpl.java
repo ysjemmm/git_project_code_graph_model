@@ -1808,6 +1808,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugLogMapper.batchInsert(bugLogDOList);
         }
     }
+
     private BugLogDO createBugLog(Long mainId,Long oldValue,Long newValue,String action){
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(action);
