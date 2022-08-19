@@ -1,0 +1,36 @@
+package com.timevale.forward.dal.entity;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+
+import java.math.BigDecimal;
+
+/**
+ * 人天提报记录表
+ */
+@Data
+@Accessors(chain = true)
+@NoArgsConstructor
+public class ManDayReportDO extends BaseDO {
+    /**
+     * 人天id
+     */
+    private Long manDayId;
+
+    /**
+     * 审计人天
+     */
+    private BigDecimal auditManDay;
+
+    /**
+     * 审计状态
+     */
+    private Integer auditStatus;
+
+    /**
+     * 驳回理由
+     */
+    private String rejectReason;
+
+}

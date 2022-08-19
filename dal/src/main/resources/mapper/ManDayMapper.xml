@@ -26,7 +26,21 @@
         where id = #{id}
     </update>
 
-
+    <select id="getById" resultType="com.timevale.forward.dal.entity.ManDayDO">
+        select *
+        from man_day
+        where id = #{id}
+          and is_deleted = false
+    </select>
+    <select id="getByIds" resultType="com.timevale.forward.dal.entity.ManDayDO">
+        select *
+        from man_day
+        where id in
+            <foreach collection="ids" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+          and is_deleted = false
+    </select>
     <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ManDayDO">
         select *
         from man_day
