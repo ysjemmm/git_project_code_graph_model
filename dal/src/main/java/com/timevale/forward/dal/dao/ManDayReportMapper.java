@@ -19,6 +19,8 @@ public interface ManDayReportMapper {
 
     ManDayReportDO selectByManDayId(@Param("manDayId") Long manDayId);
 
+    ManDayReportDO selectByStatus(@Param("manDayId") Long manDayId, @Param("auditStatus") Integer auditStatus);
+
     List<ManDayReportDO> selectByManDayIds(@Param("manDayIds") List<Long> manDayIds);
 
     List<ManDayReportDO> selectByIds(@Param("ids") List<Long> ids);

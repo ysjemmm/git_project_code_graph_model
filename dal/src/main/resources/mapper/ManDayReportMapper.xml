@@ -23,10 +23,10 @@
     <update id="updateById">
         UPDATE man_day_report
         <set>
-            <if test="man_day_id    != null">man_day_id      = #{manDayId},</if>
-            <if test="audit_man_day != null">audit_man_day   = #{auditManDay},</if>
-            <if test="audit_status  != null">audit_status    = #{auditStatus},</if>
-            <if test="reject_reason != null">reject_reason   = #{rejectReason},</if>
+            <if test="manDayId    != null">man_day_id      = #{manDayId},</if>
+            <if test="auditManDay != null">audit_man_day   = #{auditManDay},</if>
+            <if test="auditStatus  != null">audit_status    = #{auditStatus},</if>
+            <if test="rejectReason != null">reject_reason   = #{rejectReason},</if>
         </set>
         WHERE id = #{id}
     </update>
@@ -99,6 +99,13 @@
             <foreach collection="manDayIds" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
+          AND is_deleted = false
+    </select>
+    <select id="selectByStatus" resultType="com.timevale.forward.dal.entity.ManDayReportDO">
+        SELECT *
+        FROM man_day_report
+        WHERE man_day_id = #{manDayId}
+          AND audit_status = #{auditStatus}
           AND is_deleted = false
     </select>
 

@@ -95,6 +95,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(ManDayReportModifyReq manDayReportModifyReq) {
         Long id = manDayReportModifyReq.getId();
 
@@ -125,7 +126,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
             manDayDO.setActualManDay(manDayReportDO.getAuditManDay());
             manDayMapper.updateActualManDay(manDayDO);
         } else {
-            updateDO.setRejectReason(manDayReportDO.getRejectReason());
+            updateDO.setRejectReason(manDayReportModifyReq.getRejectReason());
         }
         manDayReportMapper.updateById(updateDO);
 

@@ -355,10 +355,9 @@ public class ManDayServiceImpl implements ManDayService {
         if (modifiedManDay.isPresent()) {
             // 原本已经存在的数据直接更新或者删除
             ManDayDO oldManDay = modifiedManDay.get();
-            // 判断有审核并且审核中
-            ManDayReportDO reportDO = manDayReportMapper.selectByManDayId(oldManDay.getId());
-            AssertUtil.checkState(reportDO == null || !AuditStatusEnum.AUDITING.getCode().equals(reportDO.getAuditStatus()),
-                    "审核中状态不可编辑。若需要修改，请联系项目经理驳回后，再编辑提交");
+            // 判断是否有审核中提报
+            ManDayReportDO reportDO = manDayReportMapper.selectByStatus(oldManDay.getId(), AuditStatusEnum.AUDITING.getCode());
+            AssertUtil.checkState(reportDO == null, "审核中状态不可编辑。若需要修改，请联系项目经理驳回后，再编辑提交");
             // 如果是PM直接修改
             if (isPM) {
                 if (actualManDay == null || actualManDay.compareTo(BigDecimal.ZERO) == 0) {
