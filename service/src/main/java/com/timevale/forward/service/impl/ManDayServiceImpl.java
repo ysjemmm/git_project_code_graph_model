@@ -30,6 +30,7 @@ import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -333,6 +334,7 @@ public class ManDayServiceImpl implements ManDayService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(ManDayModifyReq manDayModifyReq) {
         Long projectId = manDayModifyReq.getProjectId();
         String memberId = manDayModifyReq.getMemberId();
@@ -353,9 +355,9 @@ public class ManDayServiceImpl implements ManDayService {
         if (modifiedManDay.isPresent()) {
             // 原本已经存在的数据直接更新或者删除
             ManDayDO oldManDay = modifiedManDay.get();
-            // 判断是否审核中
+            // 判断有审核并且审核中
             ManDayReportDO reportDO = manDayReportMapper.selectByManDayId(oldManDay.getId());
-            AssertUtil.checkState(AuditStatusEnum.AUDITING.getCode().equals(reportDO.getAuditStatus()),
+            AssertUtil.checkState(reportDO == null || !AuditStatusEnum.AUDITING.getCode().equals(reportDO.getAuditStatus()),
                     "审核中状态不可编辑。若需要修改，请联系项目经理驳回后，再编辑提交");
             // 如果是PM直接修改
             if (isPM) {
