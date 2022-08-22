@@ -18,6 +18,7 @@ import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.ImprovementMeasureComponent;
+import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.component.impl.PersonComponentImpl;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
@@ -52,27 +53,23 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
     @Resource
     private TroubleTicketMapper troubleTicketMapper;
-
     @Resource
     private FileComponent fileComponent;
-
     @Resource
     private ImprovementMeasureMapper improvementMeasureMapper;
-
     @Resource
     private ImprovementMeasureComponent improvementMeasureComponent;
-
     @Resource
     private PersonComponentImpl personComponent;
-
     @Resource
     private PersonMapper personMapper;
-
     @Resource
     private ProductLineMapper productLineMapper;
-
     @Resource
     private BizDemandComponent bizDemandComponent;
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -243,7 +240,8 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         }
 
         // 分页查询
-        PageHelper.startPage(troubleTicketQueryList.pageNum, troubleTicketQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        String collation = sqlOrderComponent.build(troubleTicketQueryList.getOrderFiled(), troubleTicketQueryList.getOrderCollation());
+        PageHelper.startPage(troubleTicketQueryList.pageNum, troubleTicketQueryList.pageSize, collation);
         List<TroubleTicketListDO> troubleTicketDOList = troubleTicketMapper.selectList(troubleTicketCondition);
 
         if(CollectionUtils.isEmpty(troubleTicketDOList)){
