@@ -62,7 +62,7 @@ public interface TrackImportService {
      *
      * @return {@link BaseResult}<{@link Boolean}>
      */
-    BaseResult<TrackImportLogFileVO> template() throws IOException;
+    BaseResult<TrackImportLogFileVO> template();
 
     /**
      * 导入记录
