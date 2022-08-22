@@ -199,6 +199,41 @@ public class ManDayServiceImpl implements ManDayService {
         res.sort(Comparator.comparing(ManDayListVO::isPm).reversed()
                 .thenComparing(ManDayListVO::getProjectCreateDate));
 
+        // 人天审核
+        List<Long> manDayIds = new ArrayList<>();
+        for (ManDayListVO e : res) {
+            manDayIds.addAll(e.getManDays().stream().map(ManDayVO::getId).collect(Collectors.toList()));
+        }
+        manDayIds = manDayIds.stream().distinct().collect(Collectors.toList());
+
+        // 查询审核信息
+        List<ManDayReportDO> reportDOS = new ArrayList<>();
+        if (CollectionUtil.isNotEmpty(manDayIds)) {
+            reportDOS = manDayReportMapper.selectByManDayIds(manDayIds);
+        }
+
+        Map<Long, ManDayReportDO> reportDOMap = reportDOS.stream()
+                .collect(Collectors.toMap(ManDayReportDO::getManDayId, Function.identity(), (a, b) -> a));
+        for (ManDayListVO e : res) {
+
+            List<ManDayVO> dayVOS = e.getManDays();
+            for (ManDayVO a : dayVOS) {
+                Long manDayId = a.getId();
+
+                // 人天为0的数据不入库，所以对应的id为null,需要额外判断
+                ManDayReportDO reportDO = reportDOMap.get(manDayId);
+                if (reportDO == null) {
+                    a.setAuditManDay(BigDecimal.ZERO);
+                    a.setAuditStatus(AuditStatusEnum.APPROVE.getCode());
+                    a.setRejectReason("");
+                } else {
+                    a.setAuditManDay(reportDO.getAuditManDay());
+                    a.setAuditStatus(reportDO.getAuditStatus());
+                    a.setRejectReason(reportDO.getRejectReason());
+                }
+            }
+        }
+
         return BaseResult.success(res);
     }
 
