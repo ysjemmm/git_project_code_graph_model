@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import java.util.Date;
 import java.util.List;
 
@@ -37,10 +36,7 @@ public class ManDayReportQueryList extends QueryBase {
     @ApiModelProperty("提报结束时间")
     private Date createEndDate;
 
-    @Pattern(regexp = "^\\s*\\d{4}-\\d{2}-\\d{2}\\s*~\\s*\\d{4}-\\d{2}-\\d{2}\\s*$",
-            message = "日期范围输入格式不符合规则: yyyy-MM-dd ~ yyyy-MM-dd")
-    @NotNull(message = "日期范围必填")
-    @ApiModelProperty(value = "日期范围: yyyy-MM-dd ~ yyyy-MM-dd", required = true)
+    @ApiModelProperty(value = "日期范围: yyyy-MM-dd ~ yyyy-MM-dd")
     private String weekDateRange;
 
     @ApiModelProperty("驳回原因")
