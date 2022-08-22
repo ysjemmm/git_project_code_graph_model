@@ -239,8 +239,21 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
             troubleTicketCondition.setDutyTeamList(Lists.newArrayList(deptNodeMap.keySet()));
         }
 
+        // 列表排序规则
+        String collation = "";
+        String orderFiled = troubleTicketQueryList.getOrderFiled();
+        Integer orderCollation = troubleTicketQueryList.getOrderCollation();
+        if (orderFiled.equals("troubleRank")) {
+            collation = "IF(troubleRank < 0, -10 * troubleRank, troubleRank)";
+            if (Objects.equals(OrderCollationEnum.DESC.getCode(), orderCollation)) {
+                collation += "desc";
+            }
+            collation += ", modify_date desc, id";
+        } else {
+            collation = sqlOrderComponent.build(orderFiled, orderCollation);
+        }
+
         // 分页查询
-        String collation = sqlOrderComponent.build(troubleTicketQueryList.getOrderFiled(), troubleTicketQueryList.getOrderCollation());
         PageHelper.startPage(troubleTicketQueryList.pageNum, troubleTicketQueryList.pageSize, collation);
         List<TroubleTicketListDO> troubleTicketDOList = troubleTicketMapper.selectList(troubleTicketCondition);
 
