@@ -12,9 +12,9 @@ import lombok.Getter;
 public enum AuditStatusEnum {
     APPROVE(0,"审核通过"),
 
-    AUDITING(10,"审核中"),
+    REJECT(10,"已驳回"),
 
-    REJECT(20,"已驳回");
+    AUDITING(20,"审核中");
 
     private Integer code;
     private String text;

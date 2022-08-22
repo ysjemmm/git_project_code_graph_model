@@ -1,28 +1,45 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import com.google.common.base.Splitter;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.ManDayReportCondition;
 import com.timevale.forward.dal.dao.ManDayMapper;
 import com.timevale.forward.dal.dao.ManDayReportMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.entity.ManDayDO;
-import com.timevale.forward.dal.entity.ManDayReportDO;
-import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ManDayReportService;
 import com.timevale.forward.facade.api.query.ManDayReportQueryList;
 import com.timevale.forward.facade.api.request.ManDayReportBatchApproveReq;
 import com.timevale.forward.facade.api.request.ManDayReportModifyReq;
+import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ManDayReportListVO;
 import com.timevale.forward.model.enums.AuditStatusEnum;
+import com.timevale.forward.model.enums.ManDayReportTabEnum;
+import com.timevale.forward.service.component.SqlOrderComponent;
+import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.service.copy.ManDayReportCopier;
+import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -44,7 +61,36 @@ public class ManDayReportServiceImpl implements ManDayReportService {
 
     @Override
     public BaseResult<PageQueryResult<ManDayReportListVO>> page(ManDayReportQueryList manDayReportQueryList) {
-        return null;
+        String userId = LocalSessionUtils.getUserInfo().getId();
+
+        ManDayReportCondition condition = ManDayReportCopier.INSTANCE.convert(manDayReportQueryList);
+
+        String tabTag = manDayReportQueryList.getTabTag();
+        if (ManDayReportTabEnum.AUDIT.toString().equals(tabTag)) {
+            condition.setPmIds(Collections.singletonList(userId));
+        } else if (ManDayReportTabEnum.REPORT.toString().equals(tabTag)) {
+            condition.setCreateMandIds(Collections.singletonList(userId));
+        }
+
+        Pair<Date, Date> dateDatePair = parseAndCheckDateRange(manDayReportQueryList.getWeekDateRange());
+        condition.setWeekStartDate(dateDatePair.getLeft());
+        condition.setWeekEndDate(dateDatePair.getRight());
+
+        PageHelper.startPage(manDayReportQueryList.getPageNum(), manDayReportQueryList.getPageSize(), "audit_status desc, modify_date desc, id desc");
+        List<ManDayReportListDO> reportDOList = manDayReportMapper.selectCondition(condition);
+        List<ManDayReportListVO> reportVOList = reportDOList.stream().map(ManDayReportCopier.INSTANCE::convert).collect(Collectors.toList());
+
+        for (ManDayReportListVO e : reportVOList) {
+            e.setAuditStatusText(AuditStatusEnum.getTextByCode(e.getAuditStatus()));
+            e.setWeekDateRange(DateUtil.formDateRange(e.getWeekStartDate(), e.getWeekEndDate()));
+        }
+
+        PageInfo<ManDayReportListDO> pageInfo = new PageInfo<>(reportDOList);
+        PageQueryResult<ManDayReportListVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(reportVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+
+        return BaseResult.success(pageQueryResult);
     }
 
     @Override
@@ -117,5 +163,29 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         manDayReportMapper.updateStatus(ids, AuditStatusEnum.APPROVE.getCode());
 
         return BaseResult.success(true);
+    }
+
+    private static Pair<Date, Date> parseAndCheckDateRange(String dateRange) {
+        if (StrUtil.isEmpty(dateRange)) {
+            return Pair.of(null,null);
+        }
+        Pair<LocalDate, LocalDate> localDatePair = parseDateRange(dateRange);
+        LocalDate startLocalDate = localDatePair.getLeft();
+        LocalDate endLocalDate = localDatePair.getRight();
+        AssertUtil.checkState(startLocalDate.getDayOfWeek() == DayOfWeek.MONDAY,
+                "传入时间开始时间必须为周一");
+        AssertUtil.checkState(endLocalDate.getDayOfWeek() == DayOfWeek.SUNDAY,
+                "传入时间开始时间必须为周日");
+        AssertUtil.checkState(ChronoUnit.DAYS.between(startLocalDate, endLocalDate) == 6L,
+                "结束时间和开始时间需要在同一周");
+        Date startDate = Date.from(startLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date endDate = Date.from(endLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        return Pair.of(startDate, endDate);
+    }
+
+    private static Pair<LocalDate, LocalDate> parseDateRange(String dateRange) {
+        List<String> dates = Splitter.on(CommonConstant.TILDE).trimResults().splitToList(dateRange);
+        AssertUtil.checkState(dates.size() == 2, "时间间隔格式错误");
+        return Pair.of(LocalDate.parse(dates.get(0)), LocalDate.parse(dates.get(1)));
     }
 }

@@ -31,7 +31,45 @@
         WHERE id = #{id}
     </update>
 
-    <select id="selectCondition" resultType="com.timevale.forward.dal.entity.ManDayReportDO"></select>
+    <select id="selectCondition" resultType="com.timevale.forward.dal.entity.ManDayReportListDO">
+        SELECT mdr.id, mdr.audit_status, mdr.audit_man_day,
+               mdr.create_date, mdr.create_man, mdr.create_man_id,
+               md.week_start_date, md.week_end_date,
+               p.pm, p.pm_id, p.name projectName
+        FROM man_day_report mdr
+            LEFT JOIN man_day md on mdr.man_day_id = md.id
+            LEFT JOIN project p on md.project_id = p.id
+        <where>
+            <if test="projectName != null and projectName != ''">AND p.name like concat('%',#{projectName},'%')</if>
+            <if test="rejectReason != null and rejectReason != ''">AND mdr.reject_reason like concat('%',#{rejectReason},'%')</if>
+            <if test="auditStatus != null and auditStatus.size() > 0">
+                AND mdr.audit_status in
+                <foreach collection="auditStatus" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="createMandIds != null and createMandIds.size() > 0">
+                AND mdr.create_man_id in
+                <foreach collection="createMandIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="pmIds != null and pmIds.size() > 0">
+                AND p.pm_id in
+                <foreach collection="pmIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="createStartDate != null and createEndDate != null">
+                AND mdr.create_date &gt;= #{createDateStart}
+                AND mdr.create_date &lt;= #{createDateEnd}
+            </if>
+            <if test="weekStartDate != null and weekEndDate != null">
+                AND md.week_start_date &gt;= #{weekStartDate}
+                AND md.week_end_date &lt;= #{weekEndDate}
+            </if>
+        </where>
+    </select>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.ManDayReportDO">
         SELECT *
@@ -46,6 +84,12 @@
             <foreach collection="ids" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
+          AND is_deleted = false
+    </select>
+    <select id="selectByManDayId" resultType="com.timevale.forward.dal.entity.ManDayReportDO">
+        SELECT *
+        FROM man_day_report
+        WHERE man_day_id = #{manDayId}
           AND is_deleted = false
     </select>
 

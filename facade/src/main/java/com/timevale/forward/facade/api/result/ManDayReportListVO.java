@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 
@@ -25,9 +26,6 @@ public class ManDayReportListVO extends ToString {
 
     @ApiModelProperty("项目名称")
     private String projectName;
-
-    @ApiModelProperty("项目创建日期")
-    private Date projectCreateDate;
 
     @ApiModelProperty("周开始日期")
     private Date weekStartDate;
@@ -54,7 +52,7 @@ public class ManDayReportListVO extends ToString {
     private String createManId;
 
     @ApiModelProperty("提报人天")
-    private Integer auditManDay;
+    private BigDecimal auditManDay;
 
     @ApiModelProperty("提报状态：0审核通过，10审核中，20已驳回")
     private Integer auditStatus;

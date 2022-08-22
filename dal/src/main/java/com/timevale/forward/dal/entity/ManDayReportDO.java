@@ -1,7 +1,7 @@
 package com.timevale.forward.dal.entity;
 
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
@@ -11,7 +11,7 @@ import java.math.BigDecimal;
  */
 @Data
 @Accessors(chain = true)
-@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class ManDayReportDO extends BaseDO {
     /**
      * 人天id

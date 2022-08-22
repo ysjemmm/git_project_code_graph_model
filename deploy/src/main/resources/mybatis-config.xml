@@ -96,5 +96,6 @@
         <mapper resource="mapper/ProjectNodeRecordMapper.xml" />
         <mapper resource="mapper/CustomDemandMapper.xml" />
         <mapper resource="mapper/ProductCustomDemandMapper.xml" />
+        <mapper resource="mapper/ManDayReportMapper.xml" />
     </mappers>
 </configuration>

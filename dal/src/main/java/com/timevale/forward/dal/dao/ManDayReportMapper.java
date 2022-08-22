@@ -2,6 +2,7 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.ManDayReportCondition;
 import com.timevale.forward.dal.entity.ManDayReportDO;
+import com.timevale.forward.dal.entity.ManDayReportListDO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -16,9 +17,11 @@ public interface ManDayReportMapper {
 
     ManDayReportDO selectById(@Param("id") Long id);
 
+    ManDayReportDO selectByManDayId(@Param("manDayId") Long manDayId);
+
     List<ManDayReportDO> selectByIds(@Param("ids") List<Long> ids);
 
-    List<ManDayReportDO> selectCondition(ManDayReportCondition condition);
+    List<ManDayReportListDO> selectCondition(ManDayReportCondition condition);
 
     void updateById(ManDayReportDO manDayReportDO);
 
