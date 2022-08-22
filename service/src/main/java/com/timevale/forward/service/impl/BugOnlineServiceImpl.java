@@ -1728,7 +1728,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(id);
         Long oldLinkBugId = bugOnlineDO.getLinkBugId();
         Long finalBugId = null;
-//        List<Long> updateIdA=new ArrayList<>();
         if(linkBugId!=null){
             List<BugLogDO> bugLogDOList = new ArrayList<>();
             //查找哪些bug关联了当前bug,要将这些bug,重新关联到新的bug上
@@ -1741,6 +1740,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             if (linkBug.getLinkBugId() != null) {
                 //要关联的bug B可能有关联的bug C   最终取C
                 finalBugId=linkBug.getLinkBugId();
+            }
+            if(updateIdA.contains(finalBugId)){
+                throw new BaseBizRuntimeException("关联的bug或其上级bug与当前bug相同,请修改后重试");
             }
             bugOnlineMapper.updateByIds(updateIdA,finalBugId);
 
