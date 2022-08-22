@@ -243,8 +243,8 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         String collation = "";
         String orderFiled = troubleTicketQueryList.getOrderFiled();
         Integer orderCollation = troubleTicketQueryList.getOrderCollation();
-        if (orderFiled.equals("troubleRank")) {
-            collation = "IF(troubleRank < 0, -10 * troubleRank, troubleRank)";
+        if (Objects.equals(orderFiled, "troubleRank")) {
+            collation = "IF(trouble_rank < 0, -10 * trouble_rank, trouble_rank)";
             if (Objects.equals(OrderCollationEnum.DESC.getCode(), orderCollation)) {
                 collation += "desc";
             }
