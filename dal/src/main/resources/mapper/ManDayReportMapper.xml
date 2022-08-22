@@ -92,5 +92,14 @@
         WHERE man_day_id = #{manDayId}
           AND is_deleted = false
     </select>
+    <select id="selectByManDayIds" resultType="com.timevale.forward.dal.entity.ManDayReportDO">
+        SELECT *
+        FROM man_day_report
+        WHERE man_day_id IN
+            <foreach collection="manDayIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+          AND is_deleted = false
+    </select>
 
 </mapper>

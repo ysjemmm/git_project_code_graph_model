@@ -20,6 +20,9 @@ import java.util.Date;
 @ApiModel("人天展示类")
 public class ManDayVO extends ToString {
 
+    @ApiModelProperty("人天id")
+    private Long id;
+
     @ApiModelProperty("项目id")
     private Long projectId;
 
@@ -46,5 +49,14 @@ public class ManDayVO extends ToString {
 
     @ApiModelProperty("是否项目经理")
     private boolean pm = false;
+
+    @ApiModelProperty("审计人天")
+    private BigDecimal auditManDay;
+
+    @ApiModelProperty("审计状态：0审核通过，10已驳回，20审核中")
+    private Integer auditStatus;
+
+    @ApiModelProperty("驳回理由")
+    private String rejectReason;
 
 }

@@ -21,6 +21,9 @@ import java.util.List;
 @Accessors(chain = true)
 public class ManDayListVO extends ToString {
 
+    @ApiModelProperty("人天id")
+    private Long id;
+
     @ApiModelProperty("项目id")
     private Long projectId;
 

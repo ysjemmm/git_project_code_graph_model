@@ -19,6 +19,8 @@ public interface ManDayReportMapper {
 
     ManDayReportDO selectByManDayId(@Param("manDayId") Long manDayId);
 
+    List<ManDayReportDO> selectByManDayIds(@Param("manDayIds") List<Long> manDayIds);
+
     List<ManDayReportDO> selectByIds(@Param("ids") List<Long> ids);
 
     List<ManDayReportListDO> selectCondition(ManDayReportCondition condition);

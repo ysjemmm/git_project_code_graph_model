@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -37,6 +38,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -254,6 +256,44 @@ public class ManDayServiceImpl implements ManDayService {
 
         res.getProjectManDays().sort(Comparator.comparing(ProjectManDayVO::isPm).reversed()
                 .thenComparing(ProjectManDayVO::getMemberId));
+
+        // 人天审核
+        List<ProjectManDayVO> projectManDays = res.getProjectManDays();
+        List<Long> manDayIds = new ArrayList<>();
+        for (ProjectManDayVO e : projectManDays) {
+            manDayIds.addAll(e.getManDays().stream().map(ManDayVO::getId).collect(Collectors.toList()));
+        }
+        manDayIds = manDayIds.stream().distinct().collect(Collectors.toList());
+
+        // 查询审核信息
+        List<ManDayReportDO> reportDOS = new ArrayList<>();
+        if (CollectionUtil.isNotEmpty(manDayIds)) {
+            reportDOS = manDayReportMapper.selectByManDayIds(manDayIds);
+        }
+
+        Map<Long, ManDayReportDO> reportDOMap = reportDOS.stream()
+                .collect(Collectors.toMap(ManDayReportDO::getManDayId, Function.identity(), (a, b) -> a));
+
+        for (ProjectManDayVO e : projectManDays) {
+
+            List<ManDayVO> dayVOS = e.getManDays();
+            for (ManDayVO a : dayVOS) {
+                Long manDayId = a.getId();
+
+                // 人天为0的数据不入库，所以对应的id为null,需要额外判断
+                ManDayReportDO reportDO = reportDOMap.get(manDayId);
+                if (reportDO == null) {
+                    a.setAuditManDay(BigDecimal.ZERO);
+                    a.setAuditStatus(AuditStatusEnum.APPROVE.getCode());
+                    a.setRejectReason("");
+                } else {
+                    a.setAuditManDay(reportDO.getAuditManDay());
+                    a.setAuditStatus(reportDO.getAuditStatus());
+                    a.setRejectReason(reportDO.getRejectReason());
+                }
+            }
+        }
+
         return BaseResult.success(res);
     }
 
