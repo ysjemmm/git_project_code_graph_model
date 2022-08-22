@@ -146,4 +146,28 @@ public class TroubleTicketDetailVO extends ToString {
     @ApiModelProperty("附件")
     private List<FileVO> fileVOList;
 
+    @ApiModelProperty("故障持续时长")
+    private BigDecimal durationTime;
+
+    @ApiModelProperty("故障上报时间")
+    private Date reportTime;
+
+    @ApiModelProperty("故障响应时间")
+    private Date responseTime;
+
+    @ApiModelProperty("定位到问题原因时间")
+    private Date locationTime;
+
+    @ApiModelProperty("故障解决时间")
+    private Date solveTime;
+
+    @ApiModelProperty("是否编码导致：0是，1否")
+    private Integer codeCause;
+
+    @ApiModelProperty("故障扣分")
+    private Integer deductPoints;
+
+    @ApiModelProperty("数据统计说明")
+    private String dataStatistics;
+
 }

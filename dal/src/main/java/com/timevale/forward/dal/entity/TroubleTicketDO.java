@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.entity;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -132,5 +133,45 @@ public class TroubleTicketDO extends BaseDO {
      * 是否监控发现
      */
     private Integer isMonitorDetect;
+
+    /**
+     * 故障持续时长
+     */
+    private BigDecimal durationTime;
+
+    /**
+     * 故障上报时间
+     */
+    private Date reportTime;
+
+    /**
+     * 故障响应时间
+     */
+    private Date responseTime;
+
+    /**
+     * 定位到问题原因时间
+     */
+    private Date locationTime;
+
+    /**
+     * 故障解决时间
+     */
+    private Date solveTime;
+
+    /**
+     * 是否编码导致：0是，1否
+     */
+    private Integer codeCause;
+
+    /**
+     * 故障扣分
+     */
+    private Integer deductPoints;
+
+    /**
+     * 数据统计说明
+     */
+    private String dataStatistics;
 }
 
