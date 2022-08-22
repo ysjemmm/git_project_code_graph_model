@@ -461,28 +461,31 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
             Integer code = ProjectNodeEnum.getCodeByName(projectRiskDO.getName());
             String dateKey = projectRiskDO.getProjectId() + "-" + projectRiskDO.getName();
             ProjectNodeDO nodeDO = projectNodeMap.get(dateKey);
-            if (code < 30) {
-                //需求规划阶段,消息接收人找pd
-                if (!pdMap.containsKey(projectRiskDO.getProjectId())) {
-                    continue;
-                }
-                for (PersonDO personDO : pdMap.get(projectRiskDO.getProjectId())) {
-                    String key = projectRiskDO.getProjectId() + "-" + projectRiskDO.getName() + "-" + personDO.getUserId();
-                    if (!riskRecordMap.containsKey(key)) {
-                        result.add(createProjectRiskRecordDO(projectRiskDO.getProjectId(), projectRiskDO.getName(), personDO.getUserName(), personDO.getUserId()));
-                        send(projectRiskDO.getProjectId(),projectRiskDO.getName(),projectDO.getName(),nodeDO.getPlanDate(),personDO.getUserId());
+            if(nodeDO!=null){
+                if (code < 30) {
+                    //需求规划阶段,消息接收人找pd
+                    if (!pdMap.containsKey(projectRiskDO.getProjectId())) {
+                        continue;
                     }
-                }
+                    for (PersonDO personDO : pdMap.get(projectRiskDO.getProjectId())) {
+                        String key = projectRiskDO.getProjectId() + "-" + projectRiskDO.getName() + "-" + personDO.getUserId();
+                        if (!riskRecordMap.containsKey(key)) {
+                            result.add(createProjectRiskRecordDO(projectRiskDO.getProjectId(), projectRiskDO.getName(), personDO.getUserName(), personDO.getUserId()));
+                            send(projectRiskDO.getProjectId(),projectRiskDO.getName(),projectDO.getName(),nodeDO.getPlanDate(),personDO.getUserId());
+                        }
+                    }
 
-            } else {
-                //其他阶段,消息接收人找pm
-                String key = projectRiskDO.getProjectId() + "-" + projectRiskDO.getName() + "-" + projectDO.getPmId();
-                if (!riskRecordMap.containsKey(key)) {
-                    result.add(createProjectRiskRecordDO(projectRiskDO.getProjectId(), projectRiskDO.getName(), projectDO.getPmName(), projectDO.getPmId()));
-                    send(projectRiskDO.getProjectId(),projectRiskDO.getName(),projectDO.getName(),nodeDO.getPlanDate(),projectDO.getPmId());
-                }
+                } else {
+                    //其他阶段,消息接收人找pm
+                    String key = projectRiskDO.getProjectId() + "-" + projectRiskDO.getName() + "-" + projectDO.getPmId();
+                    if (!riskRecordMap.containsKey(key)) {
+                        result.add(createProjectRiskRecordDO(projectRiskDO.getProjectId(), projectRiskDO.getName(), projectDO.getPmName(), projectDO.getPmId()));
+                        send(projectRiskDO.getProjectId(),projectRiskDO.getName(),projectDO.getName(),nodeDO.getPlanDate(),projectDO.getPmId());
+                    }
 
+                }
             }
+
         }
         if(CollectionUtils.isNotEmpty(result)){
             projectRiskRecordMapper.batchInsert(result);
