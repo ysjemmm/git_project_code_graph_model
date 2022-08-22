@@ -17,6 +17,7 @@ import java.util.List;
 @Data
 @ApiModel("项目列表查询")
 public class ProjectQueryList extends QueryBase {
+
     @ApiModelProperty("id")
     private Long id;
 
@@ -115,4 +116,11 @@ public class ProjectQueryList extends QueryBase {
 
     @ApiModelProperty("是否有项目风险")
     private Boolean includeRisk;
+
+    @ApiModelProperty("选中为标签时填写,标签id")
+    private List<Long> labelIds;
+
+    @ApiModelProperty("选中为标签类别时填写,类别id")
+    private List<Long> labelCategoryIds;
+
 }

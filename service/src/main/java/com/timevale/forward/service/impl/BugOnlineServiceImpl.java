@@ -18,10 +18,7 @@ import com.timevale.forward.model.bo.BusinessBO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOnlineMD;
 import com.timevale.forward.model.middle.BusinessMD;
-import com.timevale.forward.service.component.BugOnlineProductLineComponent;
-import com.timevale.forward.service.component.FileComponent;
-import com.timevale.forward.service.component.PersonComponent;
-import com.timevale.forward.service.component.SqlOrderComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
@@ -118,6 +115,18 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Resource
     private BugOnlineProductLineComponent bugOnlineProductLineComponent;
 
+    @Resource
+    private LabelComponent labelComponent;
+
+    @Resource
+    private BizLabelMapper bizLabelMapper;
+
+    @Resource
+    private LabelMapper labelMapper;
+
+    @Resource
+    private LabelCategoryMapper labelCategoryMapper;
+
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
         log.info("线上bug-从配置中心获取信息，接收参数：{}", bugOnlineGetFieldReq.getProductLineIdList());
@@ -204,6 +213,20 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
 
+        //是否打标
+        List<BizLabelDO> bizLabelDOList;
+        if(CollectionUtils.isNotEmpty(bugOnlineQueryList.getLabelIds())|| CollectionUtils.isNotEmpty(bugOnlineQueryList.getLabelCategoryIds())){
+            List<Long> newLabelIds = labelComponent.getLabelIds(bugOnlineQueryList.getLabelIds(), bugOnlineQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(newLabelIds)){
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_ONLINE.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(bizIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            condition.setContainIds(bizIds);
+        }
         // 开始分页
         String collation = sqlOrderComponent.build(bugOnlineQueryList.getOrderFiled(), bugOnlineQueryList.getOrderCollation());
         PageHelper.startPage(bugOnlineQueryList.pageNum, bugOnlineQueryList.pageSize, collation);
@@ -215,7 +238,17 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         if (CollectionUtils.isEmpty(bugOnlineVOList)) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
+        List<Long>bugOnlineIds = bugOnlineDOList.stream().map(BugOnlineListDO::getId).collect(Collectors.toList());
+        bizLabelDOList = bizLabelMapper.getByBizIdInType(bugOnlineIds, BizTypeEnum.BUG_ONLINE.getCode());
+        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
+                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
 
+        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
+        Map<Long, String> labelNameMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(labelIds)) {
+            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
+            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
+        }
         // 查询对应产品线和业务域
         List<Long> bugOnlineIdList = bugOnlineVOList.stream().map(BugOnlineVO::getId).collect(Collectors.toList());
         List<BugOnlineProductLineDO> bugOnlineProductLineDOList = bugOnlineProductLineMapper.selectByBugOnlineIdList(bugOnlineIdList);
@@ -266,10 +299,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
             e.setProductLineNameList(eProductLineNameList);
             e.setBizDomainNameList(eBizDomainNameList);
-        }
 
-        // 信息填充
-        bugOnlineVOList.forEach(e -> {
             e.setEnvName(BugOnlineEnvEnum.getTextByCode(e.getEnv()));
             e.setStatusName(BugOnlineStatusEnum.getTextByCode(e.getStatus()));
             e.setBelongName(BugOnlineBeloneEnum.getTextByCode(e.getBelong()));
@@ -277,7 +307,13 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             e.setSourceName(BugOnlineSourceEnum.getTextByCode(e.getSource()));
             e.setPriorityName(BugOnlinePriorityEnum.getTextByCode(e.getPriority()));
             e.setDismissCauseName(BugOnlineDismissCauseEnum.getTextByCode(e.getDismissCause()));
-        });
+
+            if (labelIdMap.containsKey(e.getId())) {
+                List<Long> labelIdList = labelIdMap.get(e.getId());
+                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
+                e.setLabelNames(labelNames);
+            }
+        }
 
         // 返回分页数据
         PageInfo<BugOnlineListDO> pageInfo = new PageInfo<>(bugOnlineDOList);
@@ -1538,7 +1574,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 , BugLogTypeEnum.ONLINE.getCode(), true);
 
         //按创建时间逆序排列，筛选出最后一条状态变更记录
-        List<BugLogDO> collect = bugLogDOS.stream()
+        List<BugLogDO> collect = bugLogDOS.stream().filter(a->BugLogFieldEnum.STATUS.getText().equals(a.getField()))
                 .sorted(Comparator.comparing(BugLogDO::getCreateDate).reversed()).collect(Collectors.toList());
         BugLogDO lastStatusBugLogDO = collect.get(0);
 

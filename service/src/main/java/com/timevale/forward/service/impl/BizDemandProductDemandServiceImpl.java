@@ -6,12 +6,8 @@ import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandLinkProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProductBizDemandCondition;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.ProductBizDemandMapper;
-import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.entity.BizDemandDO;
-import com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO;
-import com.timevale.forward.dal.entity.ProductBizDemandDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BizDemandProductDemandService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.query.BizDemandLinkProductDemandQueryList;
@@ -24,6 +20,7 @@ import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
+import com.timevale.forward.service.component.LabelComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
@@ -83,6 +80,15 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
     @Resource
     BizDemandLogComponent bizDemandLogComponent;
+
+    @Resource
+    private LabelComponent labelComponent;
+
+    @Resource
+    private BizLabelMapper bizLabelMapper;
+
+    @Resource
+    private LabelMapper labelMapper;
 
     @Override
     public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> linkedProductDemandList(BizDemandProductDemandQueryList bizDemandProductDemandQueryList) {
@@ -336,17 +342,53 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         }
         condition.setStatusList(statusList);
 
+        //是否打标
+        List<BizLabelDO> bizLabelDOList;
+        if(CollectionUtils.isNotEmpty(bizDemandSubProductDemandQueryList.getLabelIds())||CollectionUtils.isNotEmpty(bizDemandSubProductDemandQueryList.getLabelCategoryIds())){
+            List<Long> newLabelIds = labelComponent.getLabelIds(bizDemandSubProductDemandQueryList.getLabelIds(), bizDemandSubProductDemandQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(newLabelIds)){
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(bizIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            condition.setContainIds(bizIds);
+        }
+
         // 开始分页
         PageHelper.startPage(bizDemandSubProductDemandQueryList.pageNum, bizDemandSubProductDemandQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
         // 查询符合条件的产品需求
         List<BizDemandLinkProductDemandListDO> productDemandDOList = productDemandMapper.selectListOfBizDemandLink(condition);
         List<BizDemandLinkProductDemandVO> bizDemandLinkProductDemandVOList = BizDemandCopier.INSTANCE.transform(productDemandDOList);
 
+        if (CollectionUtils.isEmpty(bizDemandLinkProductDemandVOList)) {
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+        List<Long>bizDemandIds = productDemandDOList.stream().map(BizDemandLinkProductDemandListDO::getId).collect(Collectors.toList());
+        bizLabelDOList = bizLabelMapper.getByBizIdInType(bizDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
+                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
+
+        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
+        Map<Long, String> labelNameMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(labelIds)) {
+            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
+            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
+        }
+
         // 业务需求状态信息赋值
-        bizDemandLinkProductDemandVOList.forEach(e -> {
+        for (BizDemandLinkProductDemandVO e : bizDemandLinkProductDemandVOList) {
             e.setPriorityText(PriorityEnum.getTextByCode(e.getPriority()));
             e.setStatusText(ProductDemandStatusEnum.getTextByCode(e.getStatus()));
-        });
+
+            if (labelIdMap.containsKey(e.getId())) {
+                List<Long> labelIdList = labelIdMap.get(e.getId());
+                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
+                e.setLabelNames(labelNames);
+            }
+        }
 
         PageInfo<BizDemandLinkProductDemandListDO> pageInfo = new PageInfo<>(productDemandDOList);
         PageQueryResult<BizDemandLinkProductDemandVO> pageQueryResult = new PageQueryResult<>();

@@ -23,12 +23,28 @@ public interface TrackEventMapper {
     int insert(TrackEventDO trackMapDO);
 
     /**
+     * 批量新增
+     *
+     * @param list 列表
+     * @return int
+     */
+    int batchInsert(@Param("list") List<TrackEventDO> list);
+
+    /**
      * 新增
      *
      * @param trackMapDO trackMapDO
      * @return int
      */
     int update(TrackEventDO trackMapDO);
+
+    /**
+     * 新增
+     *
+     * @param trackMapDO trackMapDO
+     * @return int
+     */
+    int updateNotIC(TrackEventDO trackMapDO);
 
     /**
      * 新增
@@ -62,6 +78,13 @@ public interface TrackEventMapper {
      * @return TrackEventDO
      */
     List<TrackEventDO> selectByIds(@Param("ids") List<Long> ids);
+
+    /**
+     * 列表
+     *
+     * @return TrackEventDO
+     */
+    List<TrackEventDO> selectByName(@Param("fullCnNameList") List<String> fullCnNameList, @Param("egNameList") List<String> egNameList);
 
     /**
      * 列表

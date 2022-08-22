@@ -96,6 +96,11 @@
         <mapper resource="mapper/ProjectNodeRecordMapper.xml" />
         <mapper resource="mapper/CustomDemandMapper.xml" />
         <mapper resource="mapper/ProductCustomDemandMapper.xml" />
+        <mapper resource="mapper/LabelCategoryMapper.xml" />
+        <mapper resource="mapper/LabelMapper.xml" />
+        <mapper resource="mapper/LabelCategoryBizDomain.xml" />
+        <mapper resource="mapper/BizLabelMapper.xml" />
+        <mapper resource="mapper/TrackImportLogMapper.xml" />
         <mapper resource="mapper/ManDayReportMapper.xml" />
     </mappers>
 </configuration>

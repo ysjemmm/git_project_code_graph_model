@@ -1,0 +1,79 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.BizLabelMapper">
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.BizLabelDO">
+        select id,biz_id,label_id,type,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from biz_label
+        <where>
+            label_id = #{labelId} and is_deleted=false
+        </where>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into biz_label(biz_id,label_id, type, create_man_id, create_man)
+        values (#{bizId},#{labelId}, #{type}, #{createManId}, #{createMan});
+    </insert>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into biz_label(biz_id,label_id, type, create_man_id, create_man)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.bizId}, #{i.labelId},#{i.type}, #{createManId},#{createMan})
+        </foreach>
+    </insert>
+
+
+    <update id="update" parameterType="com.timevale.forward.dal.entity.BizLabelDO">
+        update biz_label
+        <set>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            biz_id = #{bizId} and label_id = #{labelId} and type = #{type}
+        </where>
+    </update>
+
+    <select id="list" resultType="com.timevale.forward.dal.entity.BizLabelDO">
+        select id,biz_id,label_id,type,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from biz_label
+        <where>
+            biz_id = #{bizId} and type = #{type} and is_deleted=false
+        </where>
+    </select>
+
+    <select id="getByLabelIdInType" resultType="com.timevale.forward.dal.entity.BizLabelDO">
+        select id,biz_id,label_id,type,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from biz_label
+        <where>
+            <if test="labelIds!=null and labelIds.size()>0">
+                and label_id  in
+                <foreach collection="labelIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and type = #{type} and is_deleted=false
+        </where>
+    </select>
+
+    <select id="getByBizIdInType" resultType="com.timevale.forward.dal.entity.BizLabelDO">
+        select id,biz_id,label_id,type,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from biz_label
+        <where>
+            <if test="bizIds!=null and bizIds.size()>0">
+                and biz_id  in
+                <foreach collection="bizIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and type = #{type} and is_deleted=false
+        </where>
+    </select>
+</mapper>
+

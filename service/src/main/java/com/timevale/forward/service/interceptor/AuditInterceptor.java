@@ -4,6 +4,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -26,6 +27,7 @@ import java.util.Set;
                 args = {MappedStatement.class, Object.class}
         )
 })
+@Slf4j
 public class AuditInterceptor implements Interceptor {
 
     private static final Set<String> FILTER_METHOD = new HashSet<>();
@@ -40,6 +42,12 @@ public class AuditInterceptor implements Interceptor {
         FILTER_METHOD.add("com.timevale.forward.dal.dao.ProductDemandDescRecordMapper.insert");
         FILTER_METHOD.add("com.timevale.forward.dal.dao.ProductDemandDescFlowMapper.update");
         FILTER_METHOD.add("com.timevale.forward.dal.dao.TaskMapper.insert");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.TrackImportLogMapper.insert");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.TrackEventMapper.batchInsert");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.TrackEventMapper.updateNotIC");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.TrackPropMapper.updateNotIC");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.TrackPropMapper.batchInsertNotIC");
+        FILTER_METHOD.add("com.timevale.forward.dal.dao.TrackEvenPropMapper.batchInsertNotIC");
     }
 
     @Override
@@ -109,12 +117,7 @@ public class AuditInterceptor implements Interceptor {
         // 修改人
         MODIFY_MAN("modifyMan"),
         // 修改人Id
-        MODIFY_MAN_ID("modifyManId"),
-
-        // 审计创建人
-        AUDIT_CREATE_MAN("auditCreateMan"),
-        // 审计创建人id
-        AUDIT_CREATE_MAN_ID("auditCreateManId");
+        MODIFY_MAN_ID("modifyManId");
 
         private final String text;
 

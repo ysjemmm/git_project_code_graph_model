@@ -1,0 +1,120 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.LabelMapper">
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into label (name,label_category_id,create_man ,create_man_id)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.name},#{i.labelCategoryId},#{createMan},#{createManId})
+        </foreach>
+    </insert>
+
+    <update id="update">
+        update label
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modify_man_id = #{modifyManId},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+
+    <select id="list" resultType="com.timevale.forward.dal.entity.LabelDO">
+        select a.id,a.name,a.label_category_id,
+        a.is_deleted,a.create_man ,a.create_man_id,a.create_date ,a.modify_man ,a.modify_man_id,a.modify_date
+        from label a
+        left join label_category b on a.label_category_id=b.id
+        <if test="bizDomainIds != null and bizDomainIds.size() > 0">
+            left join label_category_biz_domain c on b.id=c.label_category_id and c.is_deleted=false
+        </if>
+        <where>
+            <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
+            <if test="categoryNames!=null and categoryNames.size()>0">
+                and b.name in
+                <foreach collection="categoryNames" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="createManId != null and createManId != ''">and a.create_man_id = #{createManId}</if>
+            <if test="types!=null and types.size()>0">
+                and
+                <foreach collection="types" item="item" separator="or" open="(" close=")">
+                    b.type  like concat('%',#{item},'%')
+                </foreach>
+            </if>
+            <if test="bizDomainIds != null and bizDomainIds.size() > 0">
+                and c.biz_domain_id in
+                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and a.is_deleted=false
+        </where>
+        group by a.id
+    </select>
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.LabelDO">
+        select id,name,label_category_id,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from label
+        <where>
+            id = #{id} and is_deleted=false
+        </where>
+    </select>
+
+    <select id="getByCategoryIds" resultType="com.timevale.forward.dal.entity.LabelDO">
+        select id,name,label_category_id,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from label
+        <where>
+            <if test="categoryIds!=null and categoryIds.size()>0">
+                and label_category_id  in
+                <foreach collection="categoryIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="containDeleted == null or containDeleted==false">and is_deleted = false</if>
+        </where>
+    </select>
+
+    <select id="getByNameInOneCategory" resultType="com.timevale.forward.dal.entity.LabelDO">
+        select id,name,label_category_id,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from label
+        <where>
+            <if test="categoryId != null">and label_category_id = #{categoryId}</if>
+            <if test="names!=null and names.size()>0">
+                and name  in
+                <foreach collection="names" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and is_deleted=false
+        </where>
+    </select>
+
+    <select id="getByIds" resultType="com.timevale.forward.dal.entity.LabelDO">
+        select id,name,label_category_id,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from label
+        <where>
+            <if test="ids!=null and ids.size()>0">
+                and id  in
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+
+            and is_deleted=false
+        </where>
+    </select>
+
+</mapper>
+

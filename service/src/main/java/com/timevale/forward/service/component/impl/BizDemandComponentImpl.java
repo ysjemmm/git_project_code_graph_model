@@ -69,7 +69,13 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     private BizDemandLogComponent bizDemandLogComponent;
 
     @Resource
-    private ProjectProductDemandMapper projectProductDemandMapper;
+    private BizLabelMapper bizLabelMapper;
+
+    @Resource
+    private LabelMapper labelMapper;
+
+    @Resource
+    private LabelCategoryMapper labelCategoryMapper;
 
     @Resource
     private SqlOrderComponent sqlOrderComponent;
@@ -126,7 +132,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     public Map<Long, GroupResponse> getGroupListTreeMap(List<Long> queryDeptIdList) {
         Map<Long, GroupResponse> deptMap = Maps.newHashMap();
         Set<Long> queryDeptIdSet = Sets.newHashSet(queryDeptIdList);
-        GroupResponse rootNode = innerGroupClient.getGroupListTree(true);
+        GroupResponse rootNode = innerGroupClient.getGroupListTree(true).get(0);
         for (GroupResponse childNode : rootNode.getChildNode()) {
             dfsGroupListTree(childNode, deptMap, queryDeptIdSet, StringUtils.EMPTY, false);
         }
@@ -216,6 +222,16 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         bizDemandListCondition.setCreateDateEnd(DateUtil.getEndOfDay(bizDemandListCondition.getCreateDateEnd()));
         bizDemandListCondition.setProjectEndDateStart(DateUtil.getStartOfDay(bizDemandListCondition.getProjectEndDateStart()));
         bizDemandListCondition.setProjectEndDateEnd(DateUtil.getEndOfDay(bizDemandListCondition.getProjectEndDateEnd()));
+        //是否打标
+        List<BizLabelDO> bizLabelDOList;
+        if (CollectionUtils.isNotEmpty(bizDemandListCondition.getLabelIds())) {
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(bizDemandListCondition.getLabelIds(), BizTypeEnum.BIZ_DEMAND.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(bizIds)) {
+                return ResultUtil.queryResultEmpty();
+            }
+            bizDemandListCondition.setContainIds(bizIds);
+        }
 
         // 产品线分析信息
         List<BizDemandListDO> allBizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
@@ -251,11 +267,26 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             }
         }
 
-        // 开始分页,查询并转换
-        String collation = sqlOrderComponent.build(bizDemandListCondition.getOrderFiled(), bizDemandListCondition.getOrderCollation());
-        PageHelper.startPage(bizDemandListCondition.getPageNum(), bizDemandListCondition.getPageSize(), collation);
+
+        // 开始分页
+        PageHelper.startPage(bizDemandListCondition.pageNum, bizDemandListCondition.pageSize, bizDemandListCondition.getCollation());
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
+        List<Long> bizDemandIds = bizDemandListDOList.stream().map(BizDemandListDO::getId).collect(Collectors.toList());
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
+        if (CollectionUtils.isEmpty(bizDemandVOList)) {
+            return ResultUtil.queryResultEmpty();
+        }
+        //标签信息
+        bizLabelDOList = bizLabelMapper.getByBizIdInType(bizDemandIds, BizTypeEnum.BIZ_DEMAND.getCode());
+        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
+                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
+
+        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
+        Map<Long, String> labelNameMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(labelIds)) {
+            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
+            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
+        }
 
         // 如果查询条件没有部门id，收集完整名
         if (CollectionUtils.isEmpty(queryDeptIdSet)) {
@@ -275,12 +306,13 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             bizDemandVO.setStatusText(BizDemandStatusEnum.getTextByCode(bizDemandVO.getStatus()));
             bizDemandVO.setPriorityText(PriorityEnum.getTextChineseByCode(bizDemandVO.getPriority()));
             bizDemandVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandVO.getPlanReleaseDate()));
+
+            if (labelIdMap.containsKey(bizDemandVO.getId())) {
+                List<Long> labelIdList = labelIdMap.get(bizDemandVO.getId());
+                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
+                bizDemandVO.setLabelNames(labelNames);
+            }
         }
-        bizDemandVOList.forEach(e -> {
-            e.setStatusText(BizDemandStatusEnum.getTextByCode(e.getStatus()));
-            e.setPriorityText(PriorityEnum.getTextChineseByCode(e.getPriority()));
-            e.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(e.getPlanReleaseDate()));
-        });
 
         // 分页数据
         PageInfo<BizDemandListDO> pageInfo = new PageInfo<>(bizDemandListDOList);

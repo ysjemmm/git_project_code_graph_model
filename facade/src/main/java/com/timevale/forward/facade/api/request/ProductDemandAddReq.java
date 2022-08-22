@@ -58,4 +58,7 @@ public class ProductDemandAddReq extends BaseReq {
     @ApiModelProperty("客户需求id")
     private List<Long> customDemandIds;
 
+    @ApiModelProperty("标签id")
+    private List<Long> labelIds;
+
 }

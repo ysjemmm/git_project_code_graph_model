@@ -20,11 +20,14 @@ public class ThreadPoolExecutorConfig {
     public ThreadPoolExecutorConfig() {
     }
 
-    @Bean(
-            name = {"threadPoolTaskExecutor"}
-    )
+    @Bean(name = "threadPoolTaskExecutor")
     public ThreadPoolTaskExecutor threadPoolTaskExecutor() {
         return initThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, 200, 30000, "ThreadPoolExecutor-");
+    }
+
+    @Bean(name = "trackImportExecutor")
+    public ThreadPoolTaskExecutor trackImportExecutor() {
+        return initThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, 200, 30000, "TrackImportExecutor-");
     }
 
     public static ThreadPoolTaskExecutor initThreadPoolExecutor(int corePoolSize, int maxPoolSize, int queueCapacity, int keepAliveSeconds, String threadNamePrefix) {

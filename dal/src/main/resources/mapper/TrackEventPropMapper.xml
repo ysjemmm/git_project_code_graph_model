@@ -44,6 +44,14 @@
         </foreach>
     </insert>
 
+    <insert id="batchInsertNotIC" parameterType="java.util.List">
+        insert into track_event_prop (track_prop_id,track_event_id,create_man_id, create_man, modify_man_id, modify_man)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.trackPropId}, #{i.trackEventId}, #{i.createManId},#{i.createMan}, #{i.createManId}, #{i.createMan})
+        </foreach>
+    </insert>
+
     <select id="getByEventId" resultType="com.timevale.forward.dal.entity.TrackEventPropItemDO">
         select a.id track_event_id,a.flow_id, c.id track_prop_id ,c.cn_name,c.eg_name
         , case when c.status =-1 then '已撤回'

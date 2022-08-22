@@ -34,6 +34,8 @@
         <aspectj.version>1.9.4</aspectj.version>
         <swagger-bootstrap-ui.version>1.8.8</swagger-bootstrap-ui.version>
         <springfox-swagger2.version>2.9.2</springfox-swagger2.version>
+        <easyexcel.version>2.2.8</easyexcel.version>
+        <apache-commons-commons-collections4-version>4.4</apache-commons-commons-collections4-version>
         <!-- Second Party -->
         <billing-log-monitor.version>1.2.9-SNAPSHOT</billing-log-monitor.version>
         <elock.version>1.2.1</elock.version>
@@ -41,6 +43,7 @@
         <schedulerT.version>2.1.0</schedulerT.version>
         <mq.version>2.11.2</mq.version>
         <footstone-base.version>1.0.0-SNAPSHOT</footstone-base.version>
+        <crm-sdk-common-core-version>1.0.11-SNAPSHOT</crm-sdk-common-core-version>
         <!-- RPC Facade -->
         <filesystem.version>2.0.4-RELEASE</filesystem.version>
         <inuser.security.facade.version>1.0.18-SNAPSHOT</inuser.security.facade.version>
@@ -178,6 +181,26 @@
                 <artifactId>support-flow-facade</artifactId>
                 <version>${lowcode.version}</version>
             </dependency>
+
+            <!-- Excel工具 -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>easyexcel</artifactId>
+                <version>${easyexcel.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.timevale.crm.sdk</groupId>
+                <artifactId>crm-sdk-common-core</artifactId>
+                <version>${crm-sdk-common-core-version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-collections4</artifactId>
+                <version>${apache-commons-commons-collections4-version}</version>
+            </dependency>
+
 
         </dependencies>
     </dependencyManagement>

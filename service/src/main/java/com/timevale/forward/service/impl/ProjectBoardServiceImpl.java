@@ -345,6 +345,18 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
     }
 
     @Override
+    public BaseResult<BugOfflineAllCountVO> getBugOfflineAllCount(Long projectId) {
+        List<BugOfflineCountDTO> countList = bugOfflineMapper.getBugCount(projectId);
+        long waitRepairCount = countList.stream().mapToLong(BugOfflineCountDTO::getWaitRepairCount).sum();
+        long urgentRepairCount = countList.stream().mapToLong(BugOfflineCountDTO::getUrgentRepairCount).sum();
+
+        BugOfflineAllCountVO result = new BugOfflineAllCountVO();
+        result.setWaitRepairCount(waitRepairCount);
+        result.setUrgentRepairCount(urgentRepairCount);
+        return BaseResult.success(result);
+    }
+
+    @Override
     public BaseResult<List<BugOfflineReasonDistributionVO>> getProjectBugReasonDistribution(Long projectId) {
         List<BugOfflineReasonDistributionDTO> reasonDistributions = bugOfflineMapper.getReasonDistribution(projectId);
         return BaseResult.success(BugOfflineCopier.INSTANCE.convertReasonDistributions(reasonDistributions));

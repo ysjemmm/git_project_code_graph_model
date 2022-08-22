@@ -1,7 +1,5 @@
 package com.timevale.forward.facade.api.request;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -78,4 +76,7 @@ public class ProjectAddReq extends BaseReq {
 
     @ApiModelProperty("产品技术资源评估（人天）")
     private BigDecimal resourceAssessment;
+
+    @ApiModelProperty("标签id")
+    private List<Long> labelIds;
 }

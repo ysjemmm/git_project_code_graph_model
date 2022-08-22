@@ -77,4 +77,9 @@ public class TrackEventDO extends BaseDO {
      */
     private String failReason;
 
+    /**
+     * 埋点说明
+     */
+    private String explanation;
+
 }

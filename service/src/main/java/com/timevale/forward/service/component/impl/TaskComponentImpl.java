@@ -142,7 +142,9 @@ public class TaskComponentImpl implements TaskComponent {
             List<PersonDO> executors = executorMap.get(a.getId());
             if (CollectionUtils.isNotEmpty(executors)) {
                 String executor = executors.stream().map(PersonDO::getUserName).collect(Collectors.joining(","));
+                String executorId = executors.stream().map(PersonDO::getUserId).collect(Collectors.joining(","));
                 a.setExecutor(executor);
+                a.setExecutorId(executorId);
             }
             a.setProductLineName(productLineMap.get(a.getProductLineId()));
             a.setStatusName(TaskStatusEnum.getTextByCode(a.getStatus()));

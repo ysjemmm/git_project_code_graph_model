@@ -2,7 +2,6 @@ package com.timevale.forward.dal.condition;
 
 import com.timevale.forward.dal.annotation.WildcardEscape;
 import com.timevale.mandarin.common.query.QueryBase;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -121,4 +120,20 @@ public class BizDemandListCondition extends QueryBase {
     private String orderFiled;
 
     private Integer orderCollation;
+
+    /**
+     * 标签id
+     */
+    private List<Long> labelIds;
+
+    /**
+     *包含的id
+     */
+    private List<Long> containIds;
+
+    /**
+     * 排序
+     */
+    private String collation;
+
 }

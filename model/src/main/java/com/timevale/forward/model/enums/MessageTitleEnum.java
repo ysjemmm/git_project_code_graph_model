@@ -13,6 +13,7 @@ public enum MessageTitleEnum {
     BIZDEMAND_STATUS_CHANGE("业务需求进度变更通知"),
     BIZDEMAND_RECEIVE("您收到一条新的业务需求"),
     BIZDEMAND_INVALID("业务需求作废通知"),
+    BIZDEMAND_MODIFY("您收到一条业务需求修改通知"),
     // 评论区@通知标题
     COMMENT("评论通知"),
     TEST_BILL("提测单消息通知"),
@@ -41,7 +42,10 @@ public enum MessageTitleEnum {
 
     CUSTOMDEMAND_RECEIVE("您收到一条新的客户需求"),
 
-    PROJECT_ESTABLISH_DATE_CHANGE("立项预期上线时间变更通知");
+    PROJECT_ESTABLISH_DATE_CHANGE("立项预期上线时间变更通知"),
+
+    TRACK_EVENT_APPROVAL("您有新的需要审批的埋点事件")
+    ;
 
     private String text;
 

@@ -30,9 +30,9 @@ public class InnerGroupClientImpl implements InnerGroupClient {
     RpcGroupService rpcGroupService;
 
     @Override
-    public List<SimpleGroupResponse>batchGetSimpleGroupList(List<Long> deptIdList) {
+    public List<SimpleGroupResponse>batchGetSimpleGroupList(List<String> deptIdList) {
         try{
-            List<String> deptIdStringList = deptIdList.stream().distinct().map(String::valueOf).collect(Collectors.toList());
+            List<String> deptIdStringList = deptIdList.stream().distinct().collect(Collectors.toList());
             BaseResult<List<SimpleGroupResponse>> listBaseResult = rpcGroupService.batchGetSimpleGroupList(deptIdStringList);
             if(listBaseResult.ifSuccess()){
                 return listBaseResult.getData();
@@ -46,16 +46,16 @@ public class InnerGroupClientImpl implements InnerGroupClient {
     }
 
     @Override
-    public Map<Long, String> batchGetSimpleGroupMap(List<Long> deptIdList) {
+    public Map<String, String> batchGetSimpleGroupMap(List<String> deptIdList) {
         List<SimpleGroupResponse> groupList = batchGetSimpleGroupList(deptIdList);
-        Map<Long, String> result = new HashMap<>(groupList.size());
-        groupList.forEach(iter -> result.put(Long.parseLong(iter.getGroupId()), iter.getGroupName()));
+        Map<String, String> result = new HashMap<>(groupList.size());
+        groupList.forEach(iter -> result.put(iter.getGroupId(), iter.getGroupName()));
         return result;
     }
 
     @Override
     public SimpleGroupResponse getSimpleGroup(Long deptId) {
-        return batchGetSimpleGroupList(Lists.newArrayList(deptId)).get(0);
+        return batchGetSimpleGroupList(Lists.newArrayList(String.valueOf(deptId))).get(0);
     }
 
     @Override
@@ -92,17 +92,17 @@ public class InnerGroupClientImpl implements InnerGroupClient {
     }
 
     @Override
-    public GroupResponse getGroupListTree(Boolean isTree) {
+    public List<GroupResponse> getGroupListTree(Boolean isTree) {
         try{
-            BaseResult<List<GroupResponse>> groupListTree = rpcGroupService.getGroupListTreeWithDeleted(true);
+            BaseResult<List<GroupResponse>> groupListTree = rpcGroupService.getGroupListTreeWithDeleted(isTree);
             if(groupListTree.ifSuccess()){
-                return groupListTree.getData().get(0);
+                return groupListTree.getData();
             }
-            log.error("[innerGroup]调用内部部门中心失败  error: " + groupListTree.getMessage());
-            return new GroupResponse();
+            log.error("[innerGroup]调用内部中心部门失败  error: " + groupListTree.getMessage());
+            throw new BaseBizRuntimeException("调用内部中心部门失败! ");
         }catch (Exception e){
-            log.error("调用内部部门中心失败  error: " + e.getMessage(), e);
-            throw new BaseBizRuntimeException("调用内部部门中心失败! ");
+            log.error("调用内部中心部门失败  error: " + e.getMessage(), e);
+            throw new BaseBizRuntimeException("调用内部中心部门失败! ");
         }
     }
 

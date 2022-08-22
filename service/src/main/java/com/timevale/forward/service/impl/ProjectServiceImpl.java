@@ -148,6 +148,21 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private BizDemandMapper bizDemandMapper;
 
+    @Resource
+    private LabelComponent labelComponent;
+
+    @Resource
+    private BizLabelComponent bizLabelComponent;
+
+    @Resource
+    private BizLabelMapper bizLabelMapper;
+
+    @Resource
+    private LabelMapper labelMapper;
+
+    @Resource
+    private LabelCategoryMapper labelCategoryMapper;
+
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -171,6 +186,14 @@ public class ProjectServiceImpl implements ProjectService {
             if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
+        }
+
+        if(CollectionUtils.isNotEmpty(projectQueryList.getLabelIds())||CollectionUtils.isNotEmpty(projectQueryList.getLabelCategoryIds())){
+            List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelIds(), projectQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(labelIds)){
+                return BaseResult.success(ResultUtil.queryResultEmpty());
+            }
+            condition.setLabelIds(labelIds);
         }
         return BaseResult.success(projectComponent.page(condition, projectIds));
     }
@@ -266,6 +289,12 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
         projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
         projectMapper.insert(projectDO);
+
+        //标签
+        if(CollectionUtils.isNotEmpty(projectAddReq.getLabelIds())){
+            bizLabelComponent.addLabel(projectDO.getId(),projectAddReq.getLabelIds(),BizTypeEnum.PROJECT.getCode());
+            bizLabelComponent.addLog(projectDO.getId(),projectAddReq.getLabelIds(),BizTypeEnum.PROJECT.getCode(),true);
+        }
 
         // 产品线
         projectProductLineComponent.add(projectDO.getProductLineIds(), projectDO.getId());
@@ -473,17 +502,53 @@ public class ProjectServiceImpl implements ProjectService {
                 , ProductDemandStatusEnum.INCLUDED.getCode()
                 , ProductDemandStatusEnum.PROGRESS.getCode()
                 , ProductDemandStatusEnum.ONLINE.getCode()));
+
+        //是否打标
+        List<BizLabelDO> bizLabelDOList;
+        if(CollectionUtils.isNotEmpty(productDemandQueryList.getLabelIds())||CollectionUtils.isNotEmpty(productDemandQueryList.getLabelCategoryIds())){
+            List<Long> newLabelIds = labelComponent.getLabelIds(productDemandQueryList.getLabelIds(), productDemandQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(newLabelIds)){
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(bizIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            condition.setInProductDemandIds(bizIds);
+        }
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
-        List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
-        productDemandVO.forEach(p -> {
-            p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
-            p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
-        });
+        List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
+
+        if (CollectionUtils.isEmpty(productDemandListDO)) {
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+        List<Long>pids = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
+        bizLabelDOList = bizLabelMapper.getByBizIdInType(pids, BizTypeEnum.PRODUCT_DEMAND.getCode());
+        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
+                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
+
+        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
+        Map<Long, String> labelNameMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(labelIds)) {
+            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
+            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
+        }
+        for (ProductDemandVO a : productDemandVOList) {
+            a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
+            a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
+
+            if (labelIdMap.containsKey(a.getId())) {
+                List<Long> labelIdList = labelIdMap.get(a.getId());
+                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
+                a.setLabelNames(labelNames);
+            }
+        }
         PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
 
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
-        pageQueryResult.setResultList(productDemandVO);
+        pageQueryResult.setResultList(productDemandVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
         return BaseResult.success(pageQueryResult);
@@ -663,6 +728,13 @@ public class ProjectServiceImpl implements ProjectService {
             if (CollectionUtils.isEmpty(projectIds)) {
                 return BaseResult.success(new ArrayList<>());
             }
+        }
+        if(CollectionUtils.isNotEmpty(projectQueryList.getLabelIds())||CollectionUtils.isNotEmpty(projectQueryList.getLabelCategoryIds())){
+            List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelIds(), projectQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(labelIds)){
+                return BaseResult.success(new ArrayList<>());
+            }
+            condition.setLabelIds(labelIds);
         }
         List<ProductLineAnalyseVO> analyseVOList = projectComponent.page(condition, projectIds).getAnalyseVOList();
         return BaseResult.success(analyseVOList);
