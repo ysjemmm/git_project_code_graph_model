@@ -33,6 +33,7 @@ public class TroubleTicketModifyReq extends BaseReq {
     private String name;
 
     @ApiModelProperty("故障影响")
+    @NotNull(message = "故障影响不能为空")
     private String influence;
 
     @ApiModelProperty("故障类型 0 业务故障，1 数据故障")
@@ -50,6 +51,7 @@ public class TroubleTicketModifyReq extends BaseReq {
     private Integer influenceCount;
 
     @ApiModelProperty("受影响客户")
+    @NotNull(message = "受影响客户不能为空")
     private String influenceClient;
 
     @NotNull(message = "故障发生时间不能为空")
@@ -84,24 +86,30 @@ public class TroubleTicketModifyReq extends BaseReq {
     private BigDecimal amountLoss;
 
     @ApiModelProperty("时间线")
+    @NotNull(message = "时间线不能为空")
     private String timeLine;
 
     @ApiModelProperty("原因分析")
+    @NotNull(message = "原因分析不能为空")
     private String reasonAnalysis;
 
     @ApiModelProperty("故障定级 0 P0， 10 P1，20 P2， -10 未达到级别")
     private Integer troubleRank;
 
     @ApiModelProperty("主责任人")
+    @NotNull(message = "主责任人不能为空")
     private String primePrincipal;
 
     @ApiModelProperty("主责任人id")
+    @NotNull(message = "主责任人id不能为空")
     private String primePrincipalId;
 
     @ApiModelProperty("次责任人")
+    @NotNull(message = "次责任人不能为空")
     private String minorPrincipal;
 
     @ApiModelProperty("次责任人id")
+    @NotNull(message = "次责任人id不能为空")
     private String minorPrincipalId;
 
     @ApiModelProperty("责任团队id")
@@ -137,5 +145,6 @@ public class TroubleTicketModifyReq extends BaseReq {
     private Integer deductPoints;
 
     @ApiModelProperty("数据统计说明")
+    @NotNull(message = "数据统计说明不能为空")
     private String dataStatistics;
 }
