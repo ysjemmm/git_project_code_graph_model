@@ -127,7 +127,6 @@ public class ManDayServiceImpl implements ManDayService {
                                 .setWeekDateRange(DateUtil.formDateRange(startDate, endDate)));
                     }
                     for (ManDayVO resManDay : resManDays) {
-                        resManDay.setEditable(true);
                         if (resManDay.getMemberId().equals(userInfo.getId())) {
                             resManDay.setPm(true);
                         }
@@ -169,7 +168,6 @@ public class ManDayServiceImpl implements ManDayService {
                             .setProjectCreateDate(project.getCreateDate());
                     manDayListVO.setManDays(ManDayCopier.INSTANCE.convert(projectManDays));
                     for (ManDayVO resManDay : manDayListVO.getManDays()) {
-                        resManDay.setEditable(true);
                         if (resManDay.getMemberId().equals(userInfo.getId())) {
                             resManDay.setPm(true);
                         }
@@ -220,6 +218,7 @@ public class ManDayServiceImpl implements ManDayService {
             List<ManDayVO> dayVOS = e.getManDays();
             for (ManDayVO a : dayVOS) {
                 Long manDayId = a.getId();
+                a.setEditable(a.getMemberId().equals(userInfo.getId()));
 
                 // 人天为0的数据不入库，所以对应的id为null,需要额外判断
                 ManDayReportDO reportDO = reportDOMap.get(manDayId);
