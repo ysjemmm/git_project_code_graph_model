@@ -208,6 +208,22 @@ public class ManDayServiceImpl implements ManDayService {
         res.sort(Comparator.comparing(ManDayListVO::isPm).reversed()
                 .thenComparing(ManDayListVO::getProjectCreateDate));
 
+        // 项目id-项目PMid Map
+        String userId = userInfo.getId();
+        Map<Long, String> projectPmMap = projects.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getPmId, (a, b) -> a));
+
+        // 编辑权限
+        for (ManDayListVO manDayListVO : res) {
+            List<ManDayVO> manDays = manDayListVO.getManDays();
+            for (ManDayVO manDay : manDays) {
+                // 只有自己的人天，或者自己为PM，并且不在审核中的才可以编辑
+                boolean isMember = userId.equals(manDay.getMemberId());
+                boolean isPM = userId.equals(projectPmMap.get(manDay.getProjectId()));
+                boolean auditing = AuditStatusEnum.AUDITING.getCode().equals(manDay.getAuditStatus());
+                manDay.setEditable((isMember || isPM) && !auditing);
+            }
+        }
+
         return BaseResult.success(res);
     }
 
@@ -268,6 +284,21 @@ public class ManDayServiceImpl implements ManDayService {
 
         res.getProjectManDays().sort(Comparator.comparing(ProjectManDayVO::isPm).reversed()
                 .thenComparing(ProjectManDayVO::getMemberId));
+
+
+        // 用户id
+        String userId = userInfo.getId();
+        boolean isPm = userId.equals(project.getPmId());
+
+        List<ProjectManDayVO> projectManDayVOS = res.getProjectManDays();
+        for (ProjectManDayVO projectManDayVO : projectManDayVOS) {
+            List<ManDayVO> manDayVOS = projectManDayVO.getManDays();
+            for (ManDayVO manDayVO : manDayVOS) {
+                boolean isMember = userId.equals(manDayVO.getMemberId());
+                boolean auditing = AuditStatusEnum.AUDITING.getCode().equals(manDayVO.getAuditStatus());
+                manDayVO.setEditable((isMember || isPm) && !auditing);
+            }
+        }
 
         return BaseResult.success(res);
     }
