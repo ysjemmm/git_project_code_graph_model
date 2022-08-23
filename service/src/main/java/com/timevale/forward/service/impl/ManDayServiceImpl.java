@@ -221,8 +221,6 @@ public class ManDayServiceImpl implements ManDayService {
             List<ManDayVO> dayVOS = e.getManDays();
             for (ManDayVO a : dayVOS) {
                 Long manDayId = a.getId();
-                boolean isPM = userInfo.getId().equals(projectPM.get(a.getProjectId()));
-                a.setEditable(a.getMemberId().equals(userInfo.getId()) || isPM);
 
                 // 人天为0的数据不入库，所以对应的id为null,需要额外判断
                 ManDayReportDO reportDO = reportDOMap.get(manDayId);
@@ -235,6 +233,10 @@ public class ManDayServiceImpl implements ManDayService {
                     a.setAuditStatus(reportDO.getAuditStatus());
                     a.setRejectReason(reportDO.getRejectReason());
                 }
+
+                boolean isPM = userInfo.getId().equals(projectPM.get(a.getProjectId()));
+                a.setEditable(!AuditStatusEnum.AUDITING.getCode().equals(a.getAuditStatus())
+                        && (a.getMemberId().equals(userInfo.getId()) || isPM));
             }
         }
 
@@ -324,7 +326,6 @@ public class ManDayServiceImpl implements ManDayService {
             List<ManDayVO> dayVOS = e.getManDays();
             for (ManDayVO a : dayVOS) {
                 Long manDayId = a.getId();
-                a.setEditable(a.getMemberId().equals(userInfo.getId()) || pm);
 
                 // 人天为0的数据不入库，所以对应的id为null,需要额外判断
                 ManDayReportDO reportDO = reportDOMap.get(manDayId);
@@ -337,6 +338,9 @@ public class ManDayServiceImpl implements ManDayService {
                     a.setAuditStatus(reportDO.getAuditStatus());
                     a.setRejectReason(reportDO.getRejectReason());
                 }
+
+                a.setEditable(!AuditStatusEnum.AUDITING.getCode().equals(a.getAuditStatus())
+                        && (a.getMemberId().equals(userInfo.getId()) || pm));
             }
         }
 
