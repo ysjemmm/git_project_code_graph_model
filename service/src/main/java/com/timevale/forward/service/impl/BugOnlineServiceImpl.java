@@ -476,7 +476,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BusinessResult<Boolean> modify(BugOnlineModifyReq bugOnlineModifyReq) {
+    public BusinessResult<String> modify(BugOnlineModifyReq bugOnlineModifyReq) {
         log.info("线上bug-修改,接收参数：{}", bugOnlineModifyReq);
 
         //查询线上bug
@@ -541,9 +541,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                     )
             );
         }
-        updateLinkBug(bugOnlineModifyReq.getId(),bugOnlineModifyReq.getLinkBugId());
-        BusinessResult<Boolean> businessResult = new BusinessResult<>();
-        businessResult.setData(true);
+        String tips = updateLinkBug(bugOnlineModifyReq.getId(), bugOnlineModifyReq.getLinkBugId());
+        BusinessResult<String> businessResult = new BusinessResult<>();
+        businessResult.setData(tips);
         return businessResult;
     }
 
@@ -1088,7 +1088,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BusinessResult<Boolean> noRepair(BugOnlineNoRepairReq bugOnlineNoRepairReq) {
+    public BusinessResult<String> noRepair(BugOnlineNoRepairReq bugOnlineNoRepairReq) {
         log.info("线上bug-不用修复接收参数：{}", bugOnlineNoRepairReq.getId());
 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -1192,10 +1192,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             );
         });
 
-        updateLinkBug(bugOnlineNoRepairReq.getId(),bugOnlineNoRepairReq.getLinkBugId());
+        String tips = updateLinkBug(bugOnlineNoRepairReq.getId(), bugOnlineNoRepairReq.getLinkBugId());
 
-        BusinessResult<Boolean> businessResult = new BusinessResult<>();
-        businessResult.setData(true);
+        BusinessResult<String> businessResult = new BusinessResult<>();
+        businessResult.setData(tips);
         return businessResult;
     }
 
@@ -1724,10 +1724,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         return bugLogDOList;
     }
 
-    private void updateLinkBug(Long id,Long linkBugId){
+    private String updateLinkBug(Long id,Long linkBugId){
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(id);
         Long oldLinkBugId = bugOnlineDO.getLinkBugId();
         Long finalBugId = null;
+        String tips=StringUtils.EMPTY;
         if(linkBugId!=null){
             List<BugLogDO> bugLogDOList = new ArrayList<>();
             //查找哪些bug关联了当前bug,要将这些bug,重新关联到新的bug上
@@ -1740,6 +1741,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             if (linkBug.getLinkBugId() != null) {
                 //要关联的bug B可能有关联的bug C   最终取C
                 finalBugId=linkBug.getLinkBugId();
+                tips="若关联的bug已关联其他bug，会显示父级bug名称";
             }
             if(updateIdA.contains(finalBugId)){
                 throw new BaseBizRuntimeException("关联的bug或其上级bug与当前bug相同,请修改后重试");
@@ -1785,6 +1787,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             }
             bugLogMapper.batchInsert(bugLogDOList);
         }
+        return tips;
     }
 
     private void deleteLinkBug(Long id,Long linkBugId,boolean deleteLinked){

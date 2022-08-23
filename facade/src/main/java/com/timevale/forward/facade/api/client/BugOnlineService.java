@@ -57,7 +57,7 @@ public interface BugOnlineService {
      * @param bugOnlineModifyReq 参数
      * @return 返回值
      */
-    BusinessResult<Boolean> modify(BugOnlineModifyReq bugOnlineModifyReq);
+    BusinessResult<String> modify(BugOnlineModifyReq bugOnlineModifyReq);
 
     /**
      * 查看线上bug详情
@@ -121,7 +121,7 @@ public interface BugOnlineService {
      * @param bugOnlineNoRepairReq 参数
      * @return 返回值
      */
-    BusinessResult<Boolean> noRepair(BugOnlineNoRepairReq bugOnlineNoRepairReq);
+    BusinessResult<String> noRepair(BugOnlineNoRepairReq bugOnlineNoRepairReq);
 
     /**
      * 转交
