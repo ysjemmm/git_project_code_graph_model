@@ -19,7 +19,7 @@ public class ProjectNodeActualDateUnInputMsgEvent extends MessageEvent {
     private final String planDate;
     private final String projectName;
 
-    private static final String PROJECT_NODE_DELAY_UNINPUT_MSG = "### %s  \n 【项目名称】：**%s**  \n **%s**节点计划时间为**%s**已逾期，请及时录入。  \n\n  ***  \n  [查看详情](%s)";
+    private static final String PROJECT_NODE_DELAY_UNINPUT_MSG = "### %s  \n 【项目名称】**%s**  \n **%s**节点计划时间为**%s**已逾期，请及时录入。  \n\n  ***  \n  [查看详情](%s)";
 
     public ProjectNodeActualDateUnInputMsgEvent(Object source, Long projectId, String receiver, String nodeName, String planDate,String projectName) {
         super(source);
