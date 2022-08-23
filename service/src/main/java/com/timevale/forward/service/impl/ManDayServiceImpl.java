@@ -242,19 +242,22 @@ public class ManDayServiceImpl implements ManDayService {
         Long projectId = projectManDayQueryList.getProjectId();
         ProjectDO project = projectMapper.get(projectId);
         AssertUtil.notNull(project, "您查询的项目不存在，无法查询人天数据");
+
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        boolean pm = userInfo.getId().equals(project.getPmId());
         List<Date> startDates = null;
         if (projectManDayQueryList.getWeekDateRanges() != null) {
             startDates = projectManDayQueryList.getWeekDateRanges().stream()
                     .map(ManDayServiceImpl::parseAndCheckDateRange)
                     .map(Pair::getLeft).collect(Collectors.toList());
         }
+
         List<ManDayDO> manDays = manDayMapper.getByProjectIdAndStartDates(projectId,
                 startDates, projectManDayQueryList.getUserIds());
         ProjectTotalManDayVO res = new ProjectTotalManDayVO();
+
         // 项目总人天总是返回
         res.setProjectActualManDay(manDayMapper.sumProjectActualDays(projectId));
+
         if (manDays.isEmpty()) {
             if (res.getProjectActualManDay() == null) {
                 res.setProjectActualManDay(BigDecimal.ZERO);
@@ -309,12 +312,15 @@ public class ManDayServiceImpl implements ManDayService {
         Map<Long, ManDayReportDO> reportDOMap = reportDOS.stream()
                 .collect(Collectors.toMap(ManDayReportDO::getManDayId, Function.identity(), (a, b) -> a));
 
+        // 当前用户是否为pm
+        boolean pm = userInfo.getId().equals(project.getPmId());
+
         for (ProjectManDayVO e : projectManDays) {
 
             List<ManDayVO> dayVOS = e.getManDays();
             for (ManDayVO a : dayVOS) {
                 Long manDayId = a.getId();
-                a.setEditable(a.getMemberId().equals(userInfo.getId()) || a.isPm());
+                a.setEditable(a.getMemberId().equals(userInfo.getId()) || pm);
 
                 // 人天为0的数据不入库，所以对应的id为null,需要额外判断
                 ManDayReportDO reportDO = reportDOMap.get(manDayId);
@@ -375,8 +381,9 @@ public class ManDayServiceImpl implements ManDayService {
             }
             return BaseResult.success(true);
         }
-        if (actualManDay == null || actualManDay.compareTo(BigDecimal.ZERO) == 0) {
-            // 不存在且入参为空或者0不做处理
+
+        // 不存在且入参为空或者0不做处理
+        if (isPM && (actualManDay == null || actualManDay.compareTo(BigDecimal.ZERO) == 0)) {
             return BaseResult.success(true);
         }
         Optional<PersonDO> member = personMapper.get(Collections.singletonList(project.getId()),

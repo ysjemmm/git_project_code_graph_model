@@ -124,8 +124,15 @@ public class ManDayReportServiceImpl implements ManDayReportService {
 
         // 判断审批状态
         if (AuditStatusEnum.APPROVE.getCode().equals(manDayReportModifyReq.getAuditStatus())) {
-            manDayDO.setActualManDay(manDayReportDO.getAuditManDay());
+            // 更新实际实际
+            BigDecimal auditManDay = manDayReportDO.getAuditManDay();
+            manDayDO.setActualManDay(auditManDay);
             manDayMapper.updateActualManDay(manDayDO);
+
+            // 如果为0则逻辑删除对应数据
+            if (BigDecimal.ZERO.compareTo(auditManDay) == 0) {
+                manDayMapper.delete(manDayDO);
+            }
         } else {
             updateDO.setRejectReason(manDayReportModifyReq.getRejectReason());
         }
