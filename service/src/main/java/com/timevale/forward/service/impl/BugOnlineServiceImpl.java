@@ -1741,7 +1741,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             if (linkBug.getLinkBugId() != null) {
                 //要关联的bug B可能有关联的bug C   最终取C
                 finalBugId=linkBug.getLinkBugId();
-                tips="若关联的bug已关联其他bug，会显示父级bug名称";
+                tips="关联的bug已关联其他bug，会显示父级bug名称";
             }
             if(updateIdA.contains(finalBugId)){
                 throw new BaseBizRuntimeException("关联的bug或其上级bug与当前bug相同,请修改后重试");
