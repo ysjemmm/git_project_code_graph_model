@@ -125,25 +125,38 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         Integer auditStatus = manDayReportModifyReq.getAuditStatus();
         AssertUtil.checkState(!AuditStatusEnum.AUDITING.getCode().equals(auditStatus), "审批状态只能变为审批通过和已驳回");
 
-        ManDayReportDO updateDO = new ManDayReportDO();
-        updateDO.setId(id);
-        updateDO.setAuditStatus(auditStatus);
+        ManDayReportDO updateReportDO = new ManDayReportDO();
+        updateReportDO.setId(id);
+        updateReportDO.setAuditStatus(auditStatus);
 
         // 判断审批状态
         if (AuditStatusEnum.APPROVE.getCode().equals(manDayReportModifyReq.getAuditStatus())) {
-            // 更新实际实际
+            // 如果更新人天为0，则逻辑删除
             BigDecimal auditManDay = manDayReportDO.getAuditManDay();
-            manDayDO.setActualManDay(auditManDay);
-            manDayMapper.updateActualManDay(manDayDO);
-
-            // 如果为0则逻辑删除对应数据
             if (BigDecimal.ZERO.compareTo(auditManDay) == 0) {
                 manDayMapper.delete(manDayDO);
+            } else {
+                // 否则更新实际人天
+                manDayDO.setActualManDay(auditManDay);
+                manDayMapper.updateActualManDay(manDayDO);
+                // 重置当前审核状态
+                manDayDO.setRejectReason("");
+                manDayDO.setAuditManDay(BigDecimal.ZERO);
+                manDayDO.setAuditStatus(AuditStatusEnum.APPROVE.getCode());
+                manDayMapper.updateAudit(manDayDO);
+                // 更新提报状态
+                manDayReportMapper.updateById(updateReportDO);
             }
         } else {
-            updateDO.setRejectReason(manDayReportModifyReq.getRejectReason());
+            String rejectReason = manDayReportModifyReq.getRejectReason();
+            // 更新提报状态，拒绝原因
+            updateReportDO.setRejectReason(rejectReason);
+            manDayReportMapper.updateById(updateReportDO);
+            // 更新当前审核状态
+            manDayDO.setRejectReason(rejectReason);
+            manDayDO.setAuditStatus(AuditStatusEnum.REJECT.getCode());
+            manDayMapper.updateAudit(manDayDO);
         }
-        manDayReportMapper.updateById(updateDO);
 
         return BaseResult.success(true);
     }
@@ -164,7 +177,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         List<Long> projectIds = manDayDOS.stream().map(ManDayDO::getProjectId).distinct().collect(Collectors.toList());
         List<ProjectDO> projectDOS = projectMapper.getByIds(projectIds).stream().filter(e->!e.getIsDeleted()).collect(Collectors.toList());
 
-        // 判断对应项目是否全为自己
+        // 判断对应项目是否全为自己pm
         AssertUtil.checkState(projectDOS.stream().allMatch(e -> userId.equals(e.getPmId())), "您无法审批您不是项目经理的项目");
 
         Map<Long, BigDecimal> auditDayMap = manDayReportDOS.stream()
@@ -174,8 +187,24 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         for (Long id : manDayIds) {
             ManDayDO manDayDO = new ManDayDO();
             manDayDO.setId(id);
-            manDayDO.setActualManDay(auditDayMap.get(id));
+
+            // 对应审核人天天数
+            BigDecimal auditManDay = auditDayMap.get(id);
+
+            // 如果比较为0，删除人天
+            if (BigDecimal.ZERO.compareTo(auditManDay) == 0) {
+                manDayMapper.delete(manDayDO);
+            }
+
+            // 更新人天实际天数
+            manDayDO.setActualManDay(auditManDay);
             manDayMapper.updateActualManDay(manDayDO);
+
+            // 更新人天当前审核状态
+            manDayDO.setRejectReason("");
+            manDayDO.setAuditManDay(BigDecimal.ZERO);
+            manDayDO.setAuditStatus(AuditStatusEnum.APPROVE.getCode());
+            manDayMapper.updateAudit(manDayDO);
         }
         manDayReportMapper.updateStatus(ids, AuditStatusEnum.APPROVE.getCode());
 

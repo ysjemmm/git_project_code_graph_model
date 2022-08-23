@@ -29,6 +29,8 @@ public interface ManDayMapper {
 
     void updateActualManDay(ManDayDO manDayDO);
 
+    void updateAudit(ManDayDO manDayDO);
+
     void insert(ManDayDO setWeekEndDate);
 
     BigDecimal sumProjectActualDays(@Param("projectId") Long projectId);

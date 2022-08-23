@@ -26,6 +26,18 @@
         where id = #{id}
     </update>
 
+    <update id="updateAudit">
+        update man_day
+        <set>
+            <if test="auditManDay != null">audit_man_day = #{auditManDay,</if>
+            <if test="auditStatus != null">audit_status = #{auditStatus},</if>
+            <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
+            modify_man_id  = #{modifyManId},
+            modify_man     = #{modifyMan}
+        </set>
+        where id = #{id}
+    </update>
+
     <select id="getById" resultType="com.timevale.forward.dal.entity.ManDayDO">
         select *
         from man_day
