@@ -77,7 +77,8 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         condition.setWeekStartDate(dateDatePair.getLeft());
         condition.setWeekEndDate(dateDatePair.getRight());
 
-        PageHelper.startPage(manDayReportQueryList.getPageNum(), manDayReportQueryList.getPageSize(), "audit_status desc, modify_date desc, id desc");
+        PageHelper.startPage(manDayReportQueryList.getPageNum(), manDayReportQueryList.getPageSize(),
+                "audit_status desc, modify_date desc, id desc");
         List<ManDayReportListDO> reportDOList = manDayReportMapper.selectCondition(condition);
         List<ManDayReportListVO> reportVOList = reportDOList.stream().map(ManDayReportCopier.INSTANCE::convert).collect(Collectors.toList());
 

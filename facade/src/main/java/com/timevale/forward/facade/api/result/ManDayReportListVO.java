@@ -37,7 +37,7 @@ public class ManDayReportListVO extends ToString {
     private String weekDateRange;
 
     @ApiModelProperty("审批人（取项目最新pm）")
-    private String pmName;
+    private String pm;
 
     @ApiModelProperty("审批人id（取项目最新pm）")
     private String pmId;
