@@ -59,4 +59,7 @@ public class ManDayReportListVO extends ToString {
 
     @ApiModelProperty("提报状态描述")
     private String auditStatusText;
+
+    @ApiModelProperty("驳回原因")
+    private String rejectReason;
 }
