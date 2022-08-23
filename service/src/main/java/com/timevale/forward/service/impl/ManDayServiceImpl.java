@@ -208,7 +208,7 @@ public class ManDayServiceImpl implements ManDayService {
         // 查询审核信息
         List<ManDayReportDO> reportDOS = new ArrayList<>();
         if (CollectionUtil.isNotEmpty(manDayIds)) {
-            reportDOS = manDayReportMapper.selectByManDayIds(manDayIds);
+            reportDOS = manDayReportMapper.selectByManDayIdsLast(manDayIds);
         }
 
         // 项目对应的PM
@@ -312,7 +312,7 @@ public class ManDayServiceImpl implements ManDayService {
         // 查询审核信息
         List<ManDayReportDO> reportDOS = new ArrayList<>();
         if (CollectionUtil.isNotEmpty(manDayIds)) {
-            reportDOS = manDayReportMapper.selectByManDayIds(manDayIds);
+            reportDOS = manDayReportMapper.selectByManDayIdsLast(manDayIds);
         }
 
         Map<Long, ManDayReportDO> reportDOMap = reportDOS.stream()

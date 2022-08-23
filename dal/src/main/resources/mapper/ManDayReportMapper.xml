@@ -85,20 +85,15 @@
             </foreach>
           AND is_deleted = false
     </select>
-    <select id="selectByManDayId" resultType="com.timevale.forward.dal.entity.ManDayReportDO">
+    <select id="selectByManDayIdsLast" resultType="com.timevale.forward.dal.entity.ManDayReportDO">
         SELECT *
-        FROM man_day_report
-        WHERE man_day_id = #{manDayId}
-          AND is_deleted = false
-    </select>
-    <select id="selectByManDayIds" resultType="com.timevale.forward.dal.entity.ManDayReportDO">
-        SELECT *
-        FROM man_day_report
+        FROM man_day_report mdr
+            INNER JOIN (SELECT max(id) id FROM man_day_report GROUP BY man_day_id) tmdr ON mdr.id = tmdr.id
         WHERE man_day_id IN
-            <foreach collection="manDayIds" item="item" separator="," open="(" close=")">
-                #{item}
-            </foreach>
-          AND is_deleted = false
+        <foreach collection="manDayIds" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        AND is_deleted = false
     </select>
     <select id="selectByStatus" resultType="com.timevale.forward.dal.entity.ManDayReportDO">
         SELECT *

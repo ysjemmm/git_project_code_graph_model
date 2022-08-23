@@ -7,13 +7,14 @@ import lombok.Setter;
 
 import javax.validation.constraints.NotNull;
 
+
 /**
- * @author jingchun
- * create on 2022/6/20
+ * @author by YangXu
+ * @date 2022/08/23 18:07
  */
 @Getter
 @Setter
-@ApiModel("人天提报修改请求")
+@ApiModel("人天提报催办请求")
 public class ManDayReportUrgeReq extends BaseReq {
 
     @NotNull(message = "提报id必填")

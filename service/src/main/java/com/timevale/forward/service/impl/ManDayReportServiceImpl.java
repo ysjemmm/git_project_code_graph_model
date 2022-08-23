@@ -189,7 +189,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         ManDayReportDO manDayReportDO = manDayReportMapper.selectById(id);
         AssertUtil.notNull(manDayReportDO, "该提报不存在");
 
-        AssertUtil.checkState(AuditStatusEnum.APPROVE.getCode().equals(manDayReportDO.getAuditStatus()),
+        AssertUtil.checkState(!AuditStatusEnum.APPROVE.getCode().equals(manDayReportDO.getAuditStatus()),
                 "该提报已经审核通过，无需催办");
 
         Long manDayId = manDayReportDO.getManDayId();
