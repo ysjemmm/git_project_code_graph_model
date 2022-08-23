@@ -218,7 +218,7 @@ public class ManDayServiceImpl implements ManDayService {
             List<ManDayVO> dayVOS = e.getManDays();
             for (ManDayVO a : dayVOS) {
                 Long manDayId = a.getId();
-                a.setEditable(a.getMemberId().equals(userInfo.getId()));
+                a.setEditable(a.getMemberId().equals(userInfo.getId()) || a.isPm());
 
                 // 人天为0的数据不入库，所以对应的id为null,需要额外判断
                 ManDayReportDO reportDO = reportDOMap.get(manDayId);
@@ -314,6 +314,7 @@ public class ManDayServiceImpl implements ManDayService {
             List<ManDayVO> dayVOS = e.getManDays();
             for (ManDayVO a : dayVOS) {
                 Long manDayId = a.getId();
+                a.setEditable(a.getMemberId().equals(userInfo.getId()) || a.isPm());
 
                 // 人天为0的数据不入库，所以对应的id为null,需要额外判断
                 ManDayReportDO reportDO = reportDOMap.get(manDayId);
