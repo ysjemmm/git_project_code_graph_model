@@ -266,13 +266,9 @@ public class ManDayServiceImpl implements ManDayService {
         res.setProjectManDays(new ArrayList<>());
 
         List<ManDayVO> manDayVOList = ManDayCopier.INSTANCE.convert(manDays);
+        // 项目成员为自己可编辑
         for (ManDayVO manDayVO : manDayVOList) {
-            if (pm) {
-                manDayVO.setEditable(true);
-            }
-            if (project.getPmId().equals(manDayVO.getMemberId())) {
-                manDayVO.setPm(true);
-            }
+            manDayVO.setEditable(manDayVO.getMemberId().equals(userInfo.getId()));
         }
         Map<String, List<ManDayVO>> manDayVOListByMemberId =
                 manDayVOList.stream().collect(Collectors.groupingBy(ManDayVO::getMemberId));
