@@ -8,6 +8,7 @@ import com.timevale.forward.facade.api.query.ProjectManDayQueryList;
 import com.timevale.forward.facade.api.request.ManDayModifyReq;
 import com.timevale.forward.facade.api.request.ManDayReportBatchApproveReq;
 import com.timevale.forward.facade.api.request.ManDayReportModifyReq;
+import com.timevale.forward.facade.api.request.ManDayReportUrgeReq;
 import com.timevale.forward.facade.api.result.ManDayListVO;
 import com.timevale.forward.facade.api.result.ManDayReportListVO;
 import com.timevale.forward.facade.api.result.ProjectTotalManDayVO;
@@ -41,4 +42,5 @@ public interface ManDayReportService {
      */
     BaseResult<Boolean> batchApprove(ManDayReportBatchApproveReq manDayReportBatchApproveReq);
 
+    BaseResult<Boolean> urge(ManDayReportUrgeReq manDayReportUrgeReq);
 }

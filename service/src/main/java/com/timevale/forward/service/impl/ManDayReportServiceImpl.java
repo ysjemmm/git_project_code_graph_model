@@ -18,14 +18,18 @@ import com.timevale.forward.facade.api.client.ManDayReportService;
 import com.timevale.forward.facade.api.query.ManDayReportQueryList;
 import com.timevale.forward.facade.api.request.ManDayReportBatchApproveReq;
 import com.timevale.forward.facade.api.request.ManDayReportModifyReq;
+import com.timevale.forward.facade.api.request.ManDayReportUrgeReq;
 import com.timevale.forward.facade.api.result.ManDayReportListVO;
 import com.timevale.forward.model.enums.AuditStatusEnum;
 import com.timevale.forward.model.enums.ManDayReportTabEnum;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ManDayReportCopier;
+import com.timevale.forward.service.observer.event.ManDayReportUrgeMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -59,6 +63,8 @@ public class ManDayReportServiceImpl implements ManDayReportService {
     private ManDayReportMapper manDayReportMapper;
     @Resource
     private ProjectMapper projectMapper;
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
 
     @Override
     public BaseResult<PageQueryResult<ManDayReportListVO>> page(ManDayReportQueryList manDayReportQueryList) {
@@ -171,6 +177,35 @@ public class ManDayReportServiceImpl implements ManDayReportService {
             manDayMapper.updateActualManDay(manDayDO);
         }
         manDayReportMapper.updateStatus(ids, AuditStatusEnum.APPROVE.getCode());
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> urge(ManDayReportUrgeReq manDayReportUrgeReq) {
+        Long id = manDayReportUrgeReq.getId();
+
+        ManDayReportDO manDayReportDO = manDayReportMapper.selectById(id);
+        AssertUtil.notNull(manDayReportDO, "该提报不存在");
+
+        AssertUtil.checkState(AuditStatusEnum.APPROVE.getCode().equals(manDayReportDO.getAuditStatus()),
+                "该提报已经审核通过，无需催办");
+
+        Long manDayId = manDayReportDO.getManDayId();
+        ManDayDO manDayDO = manDayMapper.getById(manDayId);
+        AssertUtil.notNull(manDayDO, "该提报对应的人天不存在");
+
+        Long projectId = manDayDO.getProjectId();
+        ProjectDO projectDO = projectMapper.get(projectId);
+        AssertUtil.notNull(manDayDO, "该提报对应的项目不存在");
+
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        log.info("[ManDayReportServiceImpl][urge]{}发送提报{}催办信息",userInfo.getId(),manDayReportDO.getId());
+        messageEventPublisher.publish(new ManDayReportUrgeMsgEvent(
+                this,
+                userInfo.getAlias() + "-" + userInfo.getName(),
+                projectDO.getPmId()
+        ));
 
         return BaseResult.success(true);
     }

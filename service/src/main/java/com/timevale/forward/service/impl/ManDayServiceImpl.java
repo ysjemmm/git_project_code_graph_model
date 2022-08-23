@@ -211,6 +211,9 @@ public class ManDayServiceImpl implements ManDayService {
             reportDOS = manDayReportMapper.selectByManDayIds(manDayIds);
         }
 
+        // 项目对应的PM
+        Map<Long, String> projectPM = projects.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getPmId));
+
         Map<Long, ManDayReportDO> reportDOMap = reportDOS.stream()
                 .collect(Collectors.toMap(ManDayReportDO::getManDayId, Function.identity(), (a, b) -> a));
         for (ManDayListVO e : res) {
@@ -218,7 +221,8 @@ public class ManDayServiceImpl implements ManDayService {
             List<ManDayVO> dayVOS = e.getManDays();
             for (ManDayVO a : dayVOS) {
                 Long manDayId = a.getId();
-                a.setEditable(a.getMemberId().equals(userInfo.getId()) || a.isPm());
+                boolean isPM = userInfo.getId().equals(projectPM.get(a.getProjectId()));
+                a.setEditable(a.getMemberId().equals(userInfo.getId()) || isPM);
 
                 // 人天为0的数据不入库，所以对应的id为null,需要额外判断
                 ManDayReportDO reportDO = reportDOMap.get(manDayId);
