@@ -13,7 +13,7 @@ import java.util.List;
  * @Author 望轩
  */
 public class BugOnlineResubmitOnlineMsgEvent extends MessageEvent {
-    private static final String BUG_ONLINE_COMPLETE = "### %s \n 相关的线上bug**%s**已处理完成，请知悉 。 \n *** \n[查看详情](%s) \n <!--%s-->";
+    private static final String BUG_ONLINE_COMPLETE = "### %s \n 相关的【线上bug】**%s**已处理完成，请知悉 。 \n *** \n[查看详情](%s) \n <!--%s-->";
     /**
      * bug标题
      */
