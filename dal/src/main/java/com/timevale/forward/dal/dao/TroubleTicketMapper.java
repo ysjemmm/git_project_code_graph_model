@@ -30,6 +30,14 @@ public interface TroubleTicketMapper {
     int update(TroubleTicketDO troubleTicketDO);
 
     /**
+     * 全量更新数据
+     *
+     * @param troubleTicketDO 故障单DO
+     * @return 影响行数
+     */
+    int allUpdate(TroubleTicketDO troubleTicketDO);
+
+    /**
      * 根据id查询
      *
      * @param id 故障工单id

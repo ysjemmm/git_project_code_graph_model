@@ -111,7 +111,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
         // 故障单信息
         TroubleTicketDO newTroubleTicketDO = TroubleTicketCopier.INSTANCE.convert(troubleTicketModifyReq);
-        troubleTicketMapper.update(newTroubleTicketDO);
+        troubleTicketMapper.allUpdate(newTroubleTicketDO);
 
         // 修改处理人
         List<PersonAddReq> handlerList = troubleTicketModifyReq.getHandlerList();
@@ -240,7 +240,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         }
 
         // 列表排序规则
-        String collation = "";
+        String collation;
         String orderFiled = troubleTicketQueryList.getOrderFiled();
         Integer orderCollation = troubleTicketQueryList.getOrderCollation();
         if (Objects.equals(orderFiled, "troubleRank")) {
@@ -248,7 +248,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
             if (Objects.equals(OrderCollationEnum.DESC.getCode(), orderCollation)) {
                 collation += "desc";
             }
-            collation += ", modify_date desc, id";
+            collation += ", modify_date desc, id desc";
         } else {
             collation = sqlOrderComponent.build(orderFiled, orderCollation);
         }

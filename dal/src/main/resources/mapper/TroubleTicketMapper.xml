@@ -103,28 +103,71 @@
             <if test="minorPrincipal != null">minor_principal = #{minorPrincipal},</if>
             <if test="minorPrincipalId != null">minor_principal_id = #{minorPrincipalId},</if>
             <if test="isMonitorDetect != null">is_monitor_detect = #{isMonitorDetect},</if>
-            <if test="true">influence_count = #{influenceCount},</if>
-            <if test="true">during_time = #{duringTime},</if>
-            <if test="true">failure_time = #{failureTime},</if>
-            <if test="true">influence_scope = #{influenceScope},</if>
-            <if test="true">reason = #{reason},</if>
-            <if test="true">restore_time = #{restoreTime},</if>
-            <if test="true">replay_time = #{replayTime},</if>
-            <if test="true">asset_loss = #{assetLoss},</if>
-            <if test="true">amount_loss = #{amountLoss},</if>
-            <if test="true">trouble_rank = #{troubleRank},</if>
-            <if test="true">duty_team = #{dutyTeam},</if>
-            <if test="durationTime != null">#{duration_time},</if>
-            <if test="reportTime != null">#{report_time},</if>
-            <if test="responseTime != null">#{response_time},</if>
-            <if test="locationTime != null">#{location_time},</if>
-            <if test="solveTime != null">#{solve_time},</if>
-            <if test="codeCause != null">#{code_cause},</if>
-            <if test="deductPoints != null">#{deduct_points},</if>
-            <if test="dataStatistics != null">#{data_statistics},</if>
+            <if test="influenceCount  != null">influence_count = #{influenceCount},</if>
+            <if test="duringTime != null">during_time = #{duringTime},</if>
+            <if test="failureTime != null">failure_time = #{failureTime},</if>
+            <if test="influenceScope != null">influence_scope = #{influenceScope},</if>
+            <if test="reason != null">reason = #{reason},</if>
+            <if test="restoreTime != null">restore_time = #{restoreTime},</if>
+            <if test="replayTime != null">replay_time = #{replayTime},</if>
+            <if test="assetLoss != null">asset_loss = #{assetLoss},</if>
+            <if test="amountLoss != null">amount_loss = #{amountLoss},</if>
+            <if test="troubleRank != null">trouble_rank = #{troubleRank},</if>
+            <if test="dutyTeam != null">duty_team = #{dutyTeam},</if>
+            <if test="durationTime != null">duration_time = #{durationTime},</if>
+            <if test="reportTime != null">report_time = #{reportTime},</if>
+            <if test="responseTime != null">response_time = #{responseTime},</if>
+            <if test="locationTime != null">location_time = #{locationTime},</if>
+            <if test="solveTime != null">solve_time = #{solveTime},</if>
+            <if test="codeCause != null">code_cause = #{codeCause},</if>
+            <if test="deductPoints != null">deduct_points = #{deductPoints},</if>
+            <if test="dataStatistics != null">data_statistics = #{dataStatistics},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <update id="allUpdate">
+        UPDATE trouble_ticket
+        <set>
+            name = #{name},
+            influence = #{influence},
+            product_line_id = #{productLineId},
+            occurrence_time = #{occurrenceTime},
+            influence_client = #{influenceClient},
+            type = #{type},
+            time_line = #{timeLine},
+            reason_analysis = #{reasonAnalysis},
+            prime_principal = #{primePrincipal},
+            prime_principal_id = #{primePrincipalId},
+            minor_principal = #{minorPrincipal},
+            minor_principal_id = #{minorPrincipalId},
+            is_monitor_detect = #{isMonitorDetect},
+            influence_count = #{influenceCount},
+            during_time = #{duringTime},
+            failure_time = #{failureTime},
+            influence_scope = #{influenceScope},
+            reason = #{reason},
+            restore_time = #{restoreTime},
+            replay_time = #{replayTime},
+            asset_loss = #{assetLoss},
+            amount_loss = #{amountLoss},
+            trouble_rank = #{troubleRank},
+            duty_team = #{dutyTeam},
+            duration_time = #{durationTime},
+            report_time = #{reportTime},
+            response_time = #{responseTime},
+            location_time = #{locationTime},
+            solve_time = #{solveTime},
+            code_cause = #{codeCause},
+            deduct_points = #{deductPoints},
+            data_statistics = #{dataStatistics},
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId},
         </set>
         <where>
             id = #{id}
