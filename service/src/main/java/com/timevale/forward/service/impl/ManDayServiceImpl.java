@@ -339,7 +339,7 @@ public class ManDayServiceImpl implements ManDayService {
                     // 重置审核状态
                     oldManDay.setRejectReason("");
                     oldManDay.setAuditManDay(BigDecimal.ZERO);
-                    oldManDay.setAuditStatus(AuditStatusEnum.AUDITING.getCode());
+                    oldManDay.setAuditStatus(AuditStatusEnum.APPROVE.getCode());
                     manDayMapper.updateAudit(oldManDay);
                 }
             } else {
@@ -357,7 +357,7 @@ public class ManDayServiceImpl implements ManDayService {
         }
 
         // 不存在且入参为空或者0不做处理
-        if (actualManDay == null || actualManDay.compareTo(BigDecimal.ZERO) == 0) {
+        if (isPM && (actualManDay == null || actualManDay.compareTo(BigDecimal.ZERO) == 0)) {
             return BaseResult.success(true);
         }
 
