@@ -142,6 +142,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         // 填充描述数据
         ticketDetailVO.setProductLineName(productLineDO.getName());
         ticketDetailVO.setTypeName(TroubleTicketTypeEnum.getTextByCode(ticketDetailVO.getType()));
+        ticketDetailVO.setCauseName(TroubleTicketCauseEnum.getTextByCode(ticketDetailVO.getCause()));
         ticketDetailVO.setReasonName(TroubleTicketReasonEnum.getTextByCode(troubleTicketDO.getReason()));
         ticketDetailVO.setTroubleRankName(TroubleTicketRankEnum.getTextByCode(ticketDetailVO.getTroubleRank()));
         ticketDetailVO.setDuringTimeName(TroubleTicketDuringTimeEnum.getTextByCode(ticketDetailVO.getDuringTime()));

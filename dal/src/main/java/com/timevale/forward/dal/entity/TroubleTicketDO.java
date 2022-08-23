@@ -160,9 +160,9 @@ public class TroubleTicketDO extends BaseDO {
     private Date solveTime;
 
     /**
-     * 是否编码导致：0是，1否
+     * 原因类型：0代码导致，10其它原因
      */
-    private Integer codeCause;
+    private Integer cause;
 
     /**
      * 故障扣分

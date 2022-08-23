@@ -161,8 +161,11 @@ public class TroubleTicketDetailVO extends ToString {
     @ApiModelProperty("故障解决时间")
     private Date solveTime;
 
-    @ApiModelProperty("是否编码导致：0是，1否")
-    private Integer codeCause;
+    @ApiModelProperty("原因类型：0代码导致，10其它原因")
+    private Integer cause;
+
+    @ApiModelProperty("原因类型-描述")
+    private String causeName;
 
     @ApiModelProperty("故障扣分")
     private Integer deductPoints;
