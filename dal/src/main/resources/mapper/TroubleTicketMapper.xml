@@ -24,6 +24,7 @@
             <if test="primePrincipal != null">prime_principal,</if>
             <if test="primePrincipalId != null">prime_principal_id,</if>
             <if test="minorPrincipal != null">minor_principal,</if>
+            <if test="minorPrincipalId != null">minor_principal_id,</if>
             <if test="dutyTeam != null">duty_team,</if>
             <if test="isMonitorDetect != null">is_monitor_detect,</if>
             <if test="durationTime != null">duration_time,</if>
@@ -59,6 +60,7 @@
             <if test="primePrincipal != null">#{primePrincipal},</if>
             <if test="primePrincipalId != null">#{primePrincipalId},</if>
             <if test="minorPrincipal != null">#{minorPrincipal},</if>
+            <if test="minorPrincipalId != null">#{minorPrincipalId},</if>
             <if test="dutyTeam != null">#{dutyTeam},</if>
             <if test="isMonitorDetect != null">#{isMonitorDetect},</if>
             <if test="durationTime != null">#{durationTime},</if>
