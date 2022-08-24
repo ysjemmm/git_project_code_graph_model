@@ -49,7 +49,7 @@ public class ManDayReportComponentImpl implements ManDayReportComponent {
         messageEventPublisher.publish(new ManDayReportAddMsgEvent(
                 this,
                 userInfo.getAlias() + "-" + userInfo.getName(),
-                manDayDO.getMemberId(),
+                projectDO.getPmId(),
                 DateUtil.formDateRange(manDayDO.getWeekStartDate(), manDayDO.getWeekEndDate()),
                 projectDO.getName(),
                 auditManDay.toString()
