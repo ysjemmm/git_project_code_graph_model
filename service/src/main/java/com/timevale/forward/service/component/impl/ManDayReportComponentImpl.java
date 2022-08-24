@@ -46,7 +46,7 @@ public class ManDayReportComponentImpl implements ManDayReportComponent {
         ManDayDO manDayDO = manDayMapper.getById(manDayId);
         ProjectDO projectDO = projectMapper.get(manDayDO.getProjectId());
 
-        messageEventPublisher.publish(new ManDayReportApproveMsgEvent(
+        messageEventPublisher.publish(new ManDayReportAddMsgEvent(
                 this,
                 userInfo.getAlias() + "-" + userInfo.getName(),
                 manDayDO.getMemberId(),

@@ -155,7 +155,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
                     manDayDO.getMemberId(),
                     DateUtil.formDateRange(manDayDO.getWeekStartDate(), manDayDO.getWeekEndDate()),
                     projectDO.getName(),
-                    manDayDO.getAuditManDay().toString()
+                    auditManDay.toString()
             ));
         } else {
             String rejectReason = manDayReportModifyReq.getRejectReason();
@@ -173,7 +173,8 @@ public class ManDayReportServiceImpl implements ManDayReportService {
                     manDayDO.getMemberId(),
                     DateUtil.formDateRange(manDayDO.getWeekStartDate(), manDayDO.getWeekEndDate()),
                     projectDO.getName(),
-                    manDayDO.getAuditManDay().toString()
+                    manDayDO.getActualManDay().toString(),
+                    rejectReason
             ));
         }
 
@@ -238,7 +239,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
                     manDayDO.getMemberId(),
                     DateUtil.formDateRange(manDayDO.getWeekStartDate(), manDayDO.getWeekEndDate()),
                     projectName,
-                    manDayDO.getAuditManDay().toString()));
+                    manDayDO.getActualManDay().toString()));
         }
 
         return BaseResult.success(true);
