@@ -52,7 +52,7 @@ public class ManDayReportComponentImpl implements ManDayReportComponent {
                 manDayDO.getMemberId(),
                 DateUtil.formDateRange(manDayDO.getWeekStartDate(), manDayDO.getWeekEndDate()),
                 projectDO.getName(),
-                manDayDO.getAuditManDay().toString()
+                auditManDay.toString()
         ));
     }
 }
