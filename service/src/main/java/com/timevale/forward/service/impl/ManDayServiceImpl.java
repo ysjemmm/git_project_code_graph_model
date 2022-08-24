@@ -1,6 +1,5 @@
 package com.timevale.forward.service.impl;
 
-import cn.hutool.core.collection.CollectionUtil;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -39,7 +38,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -208,9 +206,10 @@ public class ManDayServiceImpl implements ManDayService {
         res.sort(Comparator.comparing(ManDayListVO::isPm).reversed()
                 .thenComparing(ManDayListVO::getProjectCreateDate));
 
-        // 项目id-项目PMid Map
+        // 项目pm，pm名称，项目名称Map
         String userId = userInfo.getId();
         Map<Long, String> projectPmMap = projects.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getPmId, (a, b) -> a));
+        Map<Long, String> projectPmNameMap = projects.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getPmName, (a, b) -> a));
 
         // 编辑权限
         for (ManDayListVO manDayListVO : res) {
@@ -221,6 +220,10 @@ public class ManDayServiceImpl implements ManDayService {
                 boolean isPM = userId.equals(projectPmMap.get(manDay.getProjectId()));
                 boolean auditing = AuditStatusEnum.AUDITING.getCode().equals(manDay.getAuditStatus());
                 manDay.setEditable((isMember || isPM) && !auditing);
+                // 项目名称
+                manDay.setProjectName(manDayListVO.getProjectName());
+                // 项目PM名称
+                manDay.setPmName(projectPmNameMap.get(manDay.getProjectId()));
             }
         }
 
@@ -285,7 +288,6 @@ public class ManDayServiceImpl implements ManDayService {
         res.getProjectManDays().sort(Comparator.comparing(ProjectManDayVO::isPm).reversed()
                 .thenComparing(ProjectManDayVO::getMemberId));
 
-
         // 用户id
         String userId = userInfo.getId();
         boolean isPm = userId.equals(project.getPmId());
@@ -294,9 +296,12 @@ public class ManDayServiceImpl implements ManDayService {
         for (ProjectManDayVO projectManDayVO : projectManDayVOS) {
             List<ManDayVO> manDayVOS = projectManDayVO.getManDays();
             for (ManDayVO manDayVO : manDayVOS) {
+                // 只有自己的人天，或者自己为PM，并且不在审核中的才可以编辑
                 boolean isMember = userId.equals(manDayVO.getMemberId());
                 boolean auditing = AuditStatusEnum.AUDITING.getCode().equals(manDayVO.getAuditStatus());
                 manDayVO.setEditable((isMember || isPm) && !auditing);
+                manDayVO.setPmName(project.getPmName());
+                manDayVO.setProjectName(project.getName());
             }
         }
 
