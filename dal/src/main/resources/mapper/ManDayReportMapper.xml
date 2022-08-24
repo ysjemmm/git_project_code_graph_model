@@ -41,9 +41,9 @@
         <where>
             <if test="projectName != null and projectName != ''">AND p.name like concat('%',#{projectName},'%')</if>
             <if test="rejectReason != null and rejectReason != ''">AND mdr.reject_reason like concat('%',#{rejectReason},'%')</if>
-            <if test="auditStatus != null and auditStatus.size() > 0">
+            <if test="auditStatuses != null and auditStatuses.size() > 0">
                 AND mdr.audit_status in
-                <foreach collection="auditStatus" item="item" separator="," open="(" close=")">
+                <foreach collection="auditStatuses" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>

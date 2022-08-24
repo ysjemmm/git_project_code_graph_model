@@ -22,7 +22,7 @@ public class ManDayReportCondition extends QueryBase {
     @WildcardEscape
     private String rejectReason;
 
-    private List<Integer> auditStatus;
+    private List<Integer> auditStatuses;
 
     private List<String> createMandIds;
 

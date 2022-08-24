@@ -75,7 +75,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         String tabTag = manDayReportQueryList.getTabTag();
         if (ManDayReportTabEnum.AUDIT.toString().equals(tabTag)) {
             condition.setPmIds(Collections.singletonList(userId));
-            condition.setAuditStatus(Collections.singletonList(AuditStatusEnum.AUDITING.getCode()));
+            condition.setAuditStatuses(Collections.singletonList(AuditStatusEnum.AUDITING.getCode()));
         } else if (ManDayReportTabEnum.REPORT.toString().equals(tabTag)) {
             condition.setCreateMandIds(Collections.singletonList(userId));
         }
