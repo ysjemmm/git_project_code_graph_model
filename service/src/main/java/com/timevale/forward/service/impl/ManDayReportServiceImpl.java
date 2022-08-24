@@ -10,10 +10,7 @@ import com.timevale.forward.dal.condition.ManDayReportCondition;
 import com.timevale.forward.dal.dao.ManDayMapper;
 import com.timevale.forward.dal.dao.ManDayReportMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.entity.ManDayDO;
-import com.timevale.forward.dal.entity.ManDayReportDO;
-import com.timevale.forward.dal.entity.ManDayReportListDO;
-import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ManDayReportService;
 import com.timevale.forward.facade.api.query.ManDayReportQueryList;
 import com.timevale.forward.facade.api.request.ManDayReportBatchApproveReq;
@@ -25,8 +22,8 @@ import com.timevale.forward.model.enums.ManDayReportTabEnum;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ManDayReportCopier;
 import com.timevale.forward.service.observer.event.ManDayReportApproveMsgEvent;
+import com.timevale.forward.service.observer.event.ManDayReportRejectMsgEvent;
 import com.timevale.forward.service.observer.event.ManDayReportUrgeMsgEvent;
-import com.timevale.forward.service.observer.event.TrackEventApprovalMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -36,7 +33,6 @@ import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.cglib.core.Local;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -152,6 +148,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
                 // 更新提报状态
                 manDayReportMapper.updateById(updateReportDO);
             }
+            // 发送消息
             messageEventPublisher.publish(new ManDayReportApproveMsgEvent(
                     this,
                     userInfo.getAlias() + "-" + userInfo.getName(),
@@ -169,6 +166,15 @@ public class ManDayReportServiceImpl implements ManDayReportService {
             manDayDO.setRejectReason(rejectReason);
             manDayDO.setAuditStatus(AuditStatusEnum.REJECT.getCode());
             manDayMapper.updateAudit(manDayDO);
+            // 发送消息
+            messageEventPublisher.publish(new ManDayReportRejectMsgEvent(
+                    this,
+                    userInfo.getAlias() + "-" + userInfo.getName(),
+                    manDayDO.getMemberId(),
+                    DateUtil.formDateRange(manDayDO.getWeekStartDate(), manDayDO.getWeekEndDate()),
+                    projectDO.getName(),
+                    manDayDO.getAuditManDay().toString()
+            ));
         }
 
         return BaseResult.success(true);
@@ -177,7 +183,8 @@ public class ManDayReportServiceImpl implements ManDayReportService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> batchApprove(ManDayReportBatchApproveReq manDayReportBatchApproveReq) {
-        String userId = LocalSessionUtils.getUserInfo().getId();
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
 
         List<Long> ids = manDayReportBatchApproveReq.getIds();
         List<ManDayReportDO> manDayReportDOS = manDayReportMapper.selectByIds(ids);
@@ -192,18 +199,16 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         projectDOS = projectDOS.stream().filter(e->!e.getIsDeleted()).collect(Collectors.toList());
 
         // 判断对应项目是否全为自己pm
+        String userId = userInfo.getId();
         AssertUtil.checkState(projectDOS.stream().allMatch(e -> userId.equals(e.getPmId())), "您无法审批您不是项目经理的项目");
 
         Map<Long, BigDecimal> auditDayMap = manDayReportDOS.stream()
                 .collect(Collectors.toMap(ManDayReportDO::getManDayId, ManDayReportDO::getAuditManDay, (a, b) -> a));
 
         log.info("[ManDayReportServiceImpl][batchApprove]批量更新人天{}",auditDayMap);
-        for (Long id : manDayIds) {
-            ManDayDO manDayDO = new ManDayDO();
-            manDayDO.setId(id);
-
+        for (ManDayDO manDayDO : manDayDOS) {
             // 对应审核人天天数
-            BigDecimal auditManDay = auditDayMap.get(id);
+            BigDecimal auditManDay = auditDayMap.get(manDayDO.getId());
 
             // 如果比较为0，删除人天
             if (BigDecimal.ZERO.compareTo(auditManDay) == 0) {
@@ -221,6 +226,20 @@ public class ManDayReportServiceImpl implements ManDayReportService {
             manDayMapper.updateAudit(manDayDO);
         }
         manDayReportMapper.updateStatus(ids, AuditStatusEnum.APPROVE.getCode());
+
+        // 发送消息
+        Map<Long, String> projectNameMap = projectDOS.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getName, (a, b) -> a));
+        for (ManDayDO manDayDO : manDayDOS) {
+            String projectName = projectNameMap.get(manDayDO.getProjectId());
+            // 发送消息
+            messageEventPublisher.publish(new ManDayReportApproveMsgEvent(
+                    this,
+                    userInfo.getAlias() + "-" + userInfo.getName(),
+                    manDayDO.getMemberId(),
+                    DateUtil.formDateRange(manDayDO.getWeekStartDate(), manDayDO.getWeekEndDate()),
+                    projectName,
+                    manDayDO.getAuditManDay().toString()));
+        }
 
         return BaseResult.success(true);
     }
