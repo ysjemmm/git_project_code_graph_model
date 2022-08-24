@@ -188,7 +188,8 @@ public class ManDayReportServiceImpl implements ManDayReportService {
 
         // 对应项目数据
         List<Long> projectIds = manDayDOS.stream().map(ManDayDO::getProjectId).distinct().collect(Collectors.toList());
-        List<ProjectDO> projectDOS = projectMapper.getByIds(projectIds).stream().filter(e->!e.getIsDeleted()).collect(Collectors.toList());
+        List<ProjectDO> projectDOS = projectMapper.getByIds(projectIds);
+        projectDOS = projectDOS.stream().filter(e->!e.getIsDeleted()).collect(Collectors.toList());
 
         // 判断对应项目是否全为自己pm
         AssertUtil.checkState(projectDOS.stream().allMatch(e -> userId.equals(e.getPmId())), "您无法审批您不是项目经理的项目");
