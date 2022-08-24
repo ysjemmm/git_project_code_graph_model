@@ -335,6 +335,10 @@ public class ManDayServiceImpl implements ManDayService {
             // 判断审核状态是否为审核中
             AssertUtil.checkState(!AuditStatusEnum.AUDITING.getCode().equals(oldManDay.getAuditStatus()),
                     "审核中状态不可编辑。若需要修改，请联系项目经理驳回后，再编辑提交");
+
+            AssertUtil.checkState(oldManDay.getActualManDay().compareTo(actualManDay) != 0,
+                    "相同天数无需修改");
+
             // 如果是PM直接修改
             if (isPM) {
                 if (actualManDay == null || actualManDay.compareTo(BigDecimal.ZERO) == 0) {
