@@ -51,7 +51,7 @@ public enum MessageTitleEnum {
 
     PROJECT_ACCEPTANCE_REMIND("项目验收催办通知"),
 
-    PROJECT_ACCEPTANCE_REVOKE("项目验收撤回通知"),
+    PROJECT_ACCEPTANCE_REVOKE("项目验收撤销通知"),
 
     PROJECT_ACCEPTANCE_ACCEPT("项目验收通过通知"),
 
