@@ -24,7 +24,7 @@ public class ManDayReportCondition extends QueryBase {
 
     private List<Integer> auditStatuses;
 
-    private List<String> createMandIds;
+    private List<String> createManIds;
 
     private List<String> pmIds;
 

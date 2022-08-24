@@ -25,7 +25,7 @@ public class ManDayReportQueryList extends QueryBase {
     private List<Integer> auditStatuses;
 
     @ApiModelProperty("提报人")
-    private List<String> createMandIds;
+    private List<String> createManIds;
 
     @ApiModelProperty("审批人")
     private List<String> pmIds;

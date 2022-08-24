@@ -77,7 +77,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
             condition.setPmIds(Collections.singletonList(userId));
             condition.setAuditStatuses(Collections.singletonList(AuditStatusEnum.AUDITING.getCode()));
         } else if (ManDayReportTabEnum.REPORT.toString().equals(tabTag)) {
-            condition.setCreateMandIds(Collections.singletonList(userId));
+            condition.setCreateManIds(Collections.singletonList(userId));
         }
 
         Pair<Date, Date> dateDatePair = parseAndCheckDateRange(manDayReportQueryList.getWeekDateRange());

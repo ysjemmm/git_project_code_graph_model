@@ -47,9 +47,9 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="createMandIds != null and createMandIds.size() > 0">
+            <if test="createManIds != null and createManIds.size() > 0">
                 AND mdr.create_man_id in
-                <foreach collection="createMandIds" item="item" separator="," open="(" close=")">
+                <foreach collection="createManIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
