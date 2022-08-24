@@ -131,9 +131,10 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         updateReportDO.setAuditStatus(auditStatus);
 
         // 判断审批状态
+        BigDecimal auditManDay = manDayReportDO.getAuditManDay();
         if (AuditStatusEnum.APPROVE.getCode().equals(manDayReportModifyReq.getAuditStatus())) {
             // 如果更新人天为0，则逻辑删除
-            BigDecimal auditManDay = manDayReportDO.getAuditManDay();
+
             if (BigDecimal.ZERO.compareTo(auditManDay) == 0) {
                 manDayMapper.delete(manDayDO);
             } else {
@@ -173,7 +174,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
                     manDayDO.getMemberId(),
                     DateUtil.formDateRange(manDayDO.getWeekStartDate(), manDayDO.getWeekEndDate()),
                     projectDO.getName(),
-                    manDayDO.getActualManDay().toString(),
+                    auditManDay.toString(),
                     rejectReason
             ));
         }
