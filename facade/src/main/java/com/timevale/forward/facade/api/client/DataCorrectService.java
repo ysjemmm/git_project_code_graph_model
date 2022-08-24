@@ -50,4 +50,10 @@ public interface DataCorrectService {
      */
     BaseResult<Boolean> updateNodeDate(ProjectNodeModifyReq projectNodeModifyReq);
 
+
+    /**
+     * 更新逾期天数
+     * @return return
+     */
+    BaseResult<Boolean> updateModelIdInBugOnline();
 }

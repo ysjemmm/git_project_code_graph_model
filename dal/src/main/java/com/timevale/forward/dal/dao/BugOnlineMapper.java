@@ -89,4 +89,11 @@ public interface BugOnlineMapper {
      * @return 返回值
      */
     List<BugOnlineDO> selectByName(@Param("name") String name);
+
+    /**
+     * 根据线上bug的业务需求id查询线上bug
+     *
+     * @return 返回值
+     */
+    List<BugOnlineDO> getModelIds();
 }
