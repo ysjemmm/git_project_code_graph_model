@@ -12,26 +12,32 @@ import java.util.List;
  * @author by YangXu
  * @date 2022/08/23 16:40
  */
-public class ManDayReportUrgeMsgEvent extends MessageEvent {
+public class ManDayReportRejectMsgEvent extends MessageEvent {
 
     private final String operator;
     private final String receiver;
+    private final String time;
+    private final String project;
+    private final String manDay;
 
-    private static final String LINK = "%s/auditList";
-    private static final String MSG = "### %s  \n  **%s**提醒您尽快处理项目人天提报申请  \n\n  ***  \n  [查看详情](%s)";
+    private static final String LINK = "%s/auditList?tabActive=1";
+    private static final String MSG = "### %s  \n  %s驳回了您提报的%s项目%s实际工时：%s人天  \n\n  ***  \n  [查看详情](%s)";
 
-    public ManDayReportUrgeMsgEvent(Object source, String operator, String receiver) {
+    public ManDayReportRejectMsgEvent(Object source, String operator, String receiver, String time, String project, String manDay) {
         super(source);
         this.operator = operator;
         this.receiver = receiver;
+        this.time = time;
+        this.project = project;
+        this.manDay = manDay;
     }
 
     @Override
     public void run() {
         List<String> receivers = Lists.newArrayList(receiver);
-        String title = MessageTitleEnum.MAN_DAY_URGE.getText();
+        String title = MessageTitleEnum.MAN_DAY_REJECT.getText();
         String singleUrl = domainName + String.format(LINK, TabEnum.MAN_DAY_MANAGEMENT.getText());
-        String markdown = String.format(MSG, title, operator, singleUrl);
+        String markdown = String.format(MSG, title, operator, time, project, manDay, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(title)

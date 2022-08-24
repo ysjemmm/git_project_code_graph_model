@@ -24,7 +24,9 @@ import com.timevale.forward.model.enums.AuditStatusEnum;
 import com.timevale.forward.model.enums.ManDayReportTabEnum;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ManDayReportCopier;
+import com.timevale.forward.service.observer.event.ManDayReportApproveMsgEvent;
 import com.timevale.forward.service.observer.event.ManDayReportUrgeMsgEvent;
+import com.timevale.forward.service.observer.event.TrackEventApprovalMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -34,6 +36,7 @@ import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.cglib.core.Local;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -105,6 +108,8 @@ public class ManDayReportServiceImpl implements ManDayReportService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(ManDayReportModifyReq manDayReportModifyReq) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         Long id = manDayReportModifyReq.getId();
 
         ManDayReportDO manDayReportDO = manDayReportMapper.selectById(id);
@@ -119,7 +124,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         AssertUtil.notNull(projectDO,"对应项目不存在");
 
         String pmId = projectDO.getPmId();
-        String userId = LocalSessionUtils.getUserInfo().getId();
+        String userId = userInfo.getId();
         AssertUtil.checkState(ObjectUtil.equal(pmId, userId), "您不是提报对应项目的项目经理，无权审批");
 
         Integer auditStatus = manDayReportModifyReq.getAuditStatus();
@@ -147,6 +152,14 @@ public class ManDayReportServiceImpl implements ManDayReportService {
                 // 更新提报状态
                 manDayReportMapper.updateById(updateReportDO);
             }
+            messageEventPublisher.publish(new ManDayReportApproveMsgEvent(
+                    this,
+                    userInfo.getAlias() + "-" + userInfo.getName(),
+                    manDayDO.getMemberId(),
+                    DateUtil.formDateRange(manDayDO.getWeekStartDate(), manDayDO.getWeekEndDate()),
+                    projectDO.getName(),
+                    manDayDO.getAuditManDay().toString()
+            ));
         } else {
             String rejectReason = manDayReportModifyReq.getRejectReason();
             // 更新提报状态，拒绝原因

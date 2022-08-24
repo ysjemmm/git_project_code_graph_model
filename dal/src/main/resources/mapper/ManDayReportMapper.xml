@@ -60,8 +60,8 @@
                 </foreach>
             </if>
             <if test="createStartDate != null and createEndDate != null">
-                AND mdr.create_date &gt;= #{createDateStart}
-                AND mdr.create_date &lt;= #{createDateEnd}
+                AND mdr.create_date &gt;= #{createStartDate}
+                AND mdr.create_date &lt;= #{createEndDate}
             </if>
             <if test="weekStartDate != null and weekEndDate != null">
                 AND md.week_start_date &gt;= #{weekStartDate}
