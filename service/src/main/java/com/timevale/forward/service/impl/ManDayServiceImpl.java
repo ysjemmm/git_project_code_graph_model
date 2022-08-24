@@ -222,7 +222,8 @@ public class ManDayServiceImpl implements ManDayService {
                 manDay.setEditable((isMember || isPM) && !auditing);
                 // 项目名称
                 manDay.setProjectName(manDayListVO.getProjectName());
-                // 项目PM名称
+                // 项目PM
+                manDay.setPmId(projectPmMap.get(manDay.getProjectId()));
                 manDay.setPmName(projectPmNameMap.get(manDay.getProjectId()));
             }
         }
@@ -300,6 +301,7 @@ public class ManDayServiceImpl implements ManDayService {
                 boolean isMember = userId.equals(manDayVO.getMemberId());
                 boolean auditing = AuditStatusEnum.AUDITING.getCode().equals(manDayVO.getAuditStatus());
                 manDayVO.setEditable((isMember || isPm) && !auditing);
+                manDayVO.setPmId(project.getPmId());
                 manDayVO.setPmName(project.getPmName());
                 manDayVO.setProjectName(project.getName());
             }

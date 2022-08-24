@@ -53,6 +53,9 @@ public class ManDayVO extends ToString {
     @ApiModelProperty("是否项目经理")
     private boolean pm = false;
 
+    @ApiModelProperty("项目经理id")
+    private String pmId;
+
     @ApiModelProperty("项目经理名称")
     private String pmName;
 
