@@ -14,7 +14,7 @@
             <if test="duringTime != null">during_time,</if>
             <if test="failureTime != null">failure_time,</if>
             <if test="influenceScope != null">influence_scope,</if>
-            <if test="influence != null">reason,</if>
+            <if test="reason != null">reason,</if>
             <if test="restoreTime != null">restore_time,</if>
             <if test="replayTime != null">replay_time,</if>
             <if test="assetLoss != null">asset_loss,</if>

@@ -127,15 +127,19 @@ public class TroubleTicketModifyReq extends BaseReq {
     private BigDecimal durationTime;
 
     @ApiModelProperty("故障上报时间")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
     private Date reportTime;
 
     @ApiModelProperty("故障响应时间")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
     private Date responseTime;
 
     @ApiModelProperty("定位到问题原因时间")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
     private Date locationTime;
 
     @ApiModelProperty("故障解决时间")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
     private Date solveTime;
 
     @ApiModelProperty("原因类型：0代码导致，10其它原因")
