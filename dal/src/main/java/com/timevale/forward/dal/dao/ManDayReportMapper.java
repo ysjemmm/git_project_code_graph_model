@@ -27,6 +27,6 @@ public interface ManDayReportMapper {
 
     void updateById(ManDayReportDO manDayReportDO);
 
-    void updateStatus(@Param("idList") List<Long> ids, @Param("auditStatus") Integer auditStatus);
+    void updateStatus(@Param("ids") List<Long> ids, @Param("auditStatus") Integer auditStatus);
 
 }
