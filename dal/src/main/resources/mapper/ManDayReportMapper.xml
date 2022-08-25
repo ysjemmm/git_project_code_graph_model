@@ -5,8 +5,8 @@
 <mapper namespace="com.timevale.forward.dal.dao.ManDayReportMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO man_day_report(man_day_id, audit_man_day, audit_status, create_man_id, create_man)
-        VALUES (#{manDayId}, #{auditManDay}, #{auditStatus}, #{createManId}, #{createMan})
+        INSERT INTO man_day_report(man_day_id, audit_man_day, audit_status, auditor, auditor_id, create_man_id, create_man)
+        VALUES (#{manDayId}, #{auditManDay}, #{auditStatus}, #{auditor}, #{auditorId}, #{createManId}, #{createMan})
     </insert>
 
     <update id="updateStatus">
