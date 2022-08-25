@@ -9,25 +9,25 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @Date 2022/3/21 17:48
+ * @Date 2022/3/23 16:05
  * @Author 望轩
  */
-public class BugOnlineOnlineMsgEvent extends MessageEvent {
-    private final String BUG_ONLINE_TRANS = "### %s \n 您的【线上bug】已完成：**%s**。 \n *** \n[查看详情](%s) \n <!--%s-->";
+public class BugOnlineResubmitNoRepairMsgEvent extends MessageEvent {
+    private static final String BUG_ONLINE_NO_REPAIR = "### %s \n 相关的【线上bug】**%s**申请不用修复，请知悉 。 \n *** \n[查看详情](%s) \n <!--%s-->";
     /**
      * bug标题
      */
-    private String bugName;
+    private final String bugName;
     /**
      * 接收人,用户id
      */
-    private String receiver;
+    private final String receiver;
     /**
      * 线上bug id
      */
-    private Long bugOnlineId;
+    private final Long bugOnlineId;
 
-    public BugOnlineOnlineMsgEvent(Object source, String bugName, String receiver, Long bugOnlineId) {
+    public BugOnlineResubmitNoRepairMsgEvent(Object source, String bugName, String receiver, Long bugOnlineId) {
         super(source);
         this.bugName = bugName;
         this.receiver = receiver;
@@ -38,10 +38,10 @@ public class BugOnlineOnlineMsgEvent extends MessageEvent {
     public void run() {
         List<String> receivers = Lists.newArrayList(receiver);
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUG_ONLINE_MANAGEMENT.getText(), bugOnlineId);
-        String markdown = String.format(BUG_ONLINE_TRANS, MessageTitleEnum.BUG_ONLINE_ONLINE.getText(), bugName, singleUrl, new Date());
+        String markdown = String.format(BUG_ONLINE_NO_REPAIR, MessageTitleEnum.BUG_ONLINE_LINK_BUG_PROCESS.getText(), bugName, singleUrl, new Date());
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
-                .title(MessageTitleEnum.BUG_ONLINE_ONLINE.getText())
+                .title(MessageTitleEnum.BUG_ONLINE_LINK_BUG_PROCESS.getText())
                 .content(markdown)
                 .receivers(receivers)
                 .build();

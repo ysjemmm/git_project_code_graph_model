@@ -82,4 +82,9 @@ public class BugOnlineListDO extends BaseDO {
      * 来源
      */
     private String source;
+
+    /**
+     * 模块
+     */
+    private String modelId;
 }

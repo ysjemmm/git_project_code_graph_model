@@ -168,6 +168,11 @@ public class BugOnlineDO extends BaseDO {
      * 预计上线日期
      */
     private Date expectLaunchDate;
+
+    /**
+     * 关联的bug_id
+     */
+    private Long linkBugId;
 }
 
 

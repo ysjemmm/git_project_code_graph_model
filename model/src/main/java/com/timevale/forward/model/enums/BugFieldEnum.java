@@ -29,6 +29,8 @@ public enum BugFieldEnum {
 
     LABEL("标签"),
 
+    LINK_BUG("关联bug"),
+
     MODEL("模块");
 
     private final String text;

@@ -37,6 +37,9 @@ public class BugOnlineModifyReq extends BugOnlineAddReq {
 
     @ApiModelProperty("预计上线日期")
     private Date expectLaunchDate;
+
+    @ApiModelProperty("关联的线上bug id")
+    private Long linkBugId;
 }
 
 

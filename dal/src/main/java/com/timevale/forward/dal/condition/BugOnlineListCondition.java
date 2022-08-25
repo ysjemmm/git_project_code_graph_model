@@ -111,5 +111,10 @@ public class BugOnlineListCondition {
      */
     private List<Long> containIds;
 
+    /**
+     * 模块id
+     */
+    private List<Long> modelIds;
+
 
 }

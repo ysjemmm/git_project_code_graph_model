@@ -57,4 +57,43 @@ public interface BugOnlineMapper {
      * @return 返回值
      */
     BugOnlineDO selectByBizDemandId(@Param("bizDemandId") Long bizDemandId);
+
+    /**
+     * 根据线上bug的id查询线上bug
+     *
+     * @param linkBugId 关联的线上bug的id
+     * @return 返回值
+     */
+    List<BugOnlineDO> selectByLinkBugId(@Param("linkBugId") Long linkBugId);
+
+    /**
+     * 批量更新关联的bug
+     * @param ids ids
+     * @param linkBugId linkBugId
+     * @return int
+     */
+    int updateByIds(@Param("ids") List<Long> ids,@Param("linkBugId") Long linkBugId);
+
+    /**
+     * 根据线上bug的id查询线上bug
+     *
+     * @param ids 线上bug的id
+     * @return 返回值
+     */
+    List<BugOnlineDO> selectByIds(@Param("ids") List<Long> ids,@Param("containDeleted")Boolean containDeleted);
+
+    /**
+     * 根据线上bug的业务需求id查询线上bug
+     *
+     * @param name name
+     * @return 返回值
+     */
+    List<BugOnlineDO> selectByName(@Param("name") String name);
+
+    /**
+     * 根据线上bug的业务需求id查询线上bug
+     *
+     * @return 返回值
+     */
+    List<BugOnlineDO> getModelIds();
 }

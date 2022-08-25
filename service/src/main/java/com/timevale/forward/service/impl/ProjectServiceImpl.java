@@ -838,6 +838,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
         if (projectModifyReq.getDelayType().compareTo(1) >= 0) {
             ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
+            projectNodeFlowDO.setProjectName(projectModifyReq.getName());
             projectNodeFlowComponent.process(projectNodeFlowDO, projectNodeDOList);
         } else if (Integer.valueOf(0).equals(projectModifyReq.getDelayType())) {
             //版本+1

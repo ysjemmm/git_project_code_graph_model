@@ -6,11 +6,13 @@ import com.timevale.forward.dal.entity.ModelDO;
 import com.timevale.forward.facade.api.client.ModelService;
 import com.timevale.forward.facade.api.request.ModelAddReq;
 import com.timevale.forward.facade.api.request.ModelModifyReq;
+import com.timevale.forward.facade.api.result.ModelVO;
 import com.timevale.forward.service.copy.ModelCopier;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -22,6 +24,13 @@ public class ModelServiceImpl implements ModelService {
 
     @Resource
     ModelMapper modelMapper;
+
+    @Override
+    public BaseResult<List<ModelVO>> modelList() {
+        List<ModelDO> modelDOList = modelMapper.selectAllModel();
+        List<ModelVO> modelVOList = ModelCopier.INSTANCE.convert(modelDOList);
+        return BaseResult.success(modelVOList);
+    }
 
     @Override
     public BaseResult<Boolean> add(ModelAddReq modelAddReq) {

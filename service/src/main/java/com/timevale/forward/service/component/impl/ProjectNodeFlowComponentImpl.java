@@ -12,6 +12,7 @@ import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.component.ProjectNodeFlowComponent;
+import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
@@ -70,6 +71,9 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
 
     @Resource
     private MessageEventPublisher messageEventPublisher;
+
+    @Resource
+    private CommonConfig config;
 
     @Override
     public void process(ProjectNodeFlowDO projectNodeFlowDO, List<ProjectNodeDO> projectNodes) {
@@ -306,6 +310,8 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         variables.put("changeCount", count);
         variables.put("changeType", ChangeTypeEnum.getTextByCode(projectNodeFlowDO.getChangeType()));
         variables.put("otherReason", projectNodeFlowDO.getOtherReason());
+        variables.put("projectName", projectNodeFlowDO.getProjectName());
+        variables.put("detailLink", String.format(config.getCommonViewUrl(),TabEnum.PROJECT_MANAGEMENT.getText(),projectNodeFlowDO.getProjectId()));
         List<String> reviewIds = new ArrayList<>();
         List<String> reviews = new ArrayList<>();
         if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())) {

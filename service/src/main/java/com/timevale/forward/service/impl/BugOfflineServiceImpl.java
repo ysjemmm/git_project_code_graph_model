@@ -95,6 +95,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Resource
     private LabelMapper labelMapper;
 
+    @Resource
+    private BugOnlineMapper bugOnlineMapper;
+
     @Override
     public BaseResult<PageQueryResult<BugOfflineVO>> list(BugOfflineQueryList bugOfflineQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -1133,24 +1136,49 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         } else {
             bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), false);
         }
-        PageInfo<BugLogDO> pageInfo = new PageInfo<>(bugLogDOList);
 
-        PageQueryResult<BugLogVO> pageQueryResult = new PageQueryResult<>();
-        //如果没有查询到日志，直接返回空的数据
         if (CollectionUtils.isEmpty(bugLogDOList)) {
-            return BaseResult.success(pageQueryResult);
+            return BaseResult.success(ResultUtil.pageEmpty());
         }
 
-        //获取分页数据
-        bugLogDOList = pageInfo.getList();
+        PageInfo<BugLogDO> pageInfo = new PageInfo<>(bugLogDOList);
+        PageQueryResult<BugLogVO> pageQueryResult = new PageQueryResult<>();
 
-        //bugLogDO  -->  bugLogVO
         List<BugLogVO> bugLogVOList = bugLogDOList.stream().map(BugLogCopier.INSTANCE::convert).collect(Collectors.toList());
-        //给bug内容变更记录类型的名字赋值，给当前时间赋值
-        bugLogVOList.forEach(bugLogVO -> {
+
+        Map<Long, BugOnlineDO> bugMap=new HashMap<>();
+        if(BugLogTypeEnum.ONLINE.getCode().equals(bugLogQueryList.getType())){
+            List<Long> oldBugIds = bugLogDOList.stream().filter(a->BugFieldEnum.LINK_BUG.getText().equals(a.getField()))
+                    .map(a->Long.valueOf(a.getOldValue())).distinct().collect(Collectors.toList());
+            List<Long> newBugIds = bugLogDOList.stream().filter(a->BugFieldEnum.LINK_BUG.getText().equals(a.getField()))
+                    .map(a->Long.valueOf(a.getNewValue())).distinct().collect(Collectors.toList());
+
+            oldBugIds.addAll(newBugIds);
+            if(CollectionUtils.isNotEmpty(oldBugIds)){
+                List<BugOnlineDO>bugOnlineDOList = bugOnlineMapper.selectByIds(oldBugIds,true);
+                bugMap = bugOnlineDOList.stream().collect(Collectors.toMap(BugOnlineDO::getId, a->a, (v1, v2) -> v2));
+            }
+
+        }
+
+        for (BugLogVO bugLogVO : bugLogVOList) {
             bugLogVO.setTypeName(BugLogTypeEnum.getTextByCode(bugLogVO.getType()));
             bugLogVO.setCurrentDate(new Date());
-        });
+            if(BugLogTypeEnum.ONLINE.getCode().equals(bugLogQueryList.getType())&&BugFieldEnum.LINK_BUG.getText().equals(bugLogVO.getField())){
+                //线上bug 关联bug日志
+                if(bugMap.containsKey(Long.valueOf(bugLogVO.getOldValue()))&&bugMap.containsKey(Long.valueOf(bugLogVO.getNewValue()))){
+                    BugSimpleVO linkBug=new BugSimpleVO();
+                    linkBug.setId(Long.valueOf(bugLogVO.getOldValue()));
+                    linkBug.setName(bugMap.get(Long.valueOf(bugLogVO.getOldValue())).getName());
+                    bugLogVO.setLinkBug(linkBug);
+
+                    BugSimpleVO linkedBug=new BugSimpleVO();
+                    linkedBug.setId(Long.valueOf(bugLogVO.getNewValue()));
+                    linkedBug.setName(bugMap.get(Long.valueOf(bugLogVO.getNewValue())).getName());
+                    bugLogVO.setLinkedBug(linkedBug);
+                }
+            }
+        }
         //如果是状态变更，需要填充状态经办人信息
         if (bugLogQueryList.getStatusChange()) {
             //查询出所有的状态经办人记录

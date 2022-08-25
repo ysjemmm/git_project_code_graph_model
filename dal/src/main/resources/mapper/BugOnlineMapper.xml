@@ -11,6 +11,7 @@
         bo.create_date, bo.modify_date
         from bug_online bo
         left join bug_online_product_line bopl on bo.id = bopl.bug_online_id
+        left join bug_online_model mo on bo.id = mo.bug_online_id  and mo.is_deleted = false
         left join product_line pl on bopl.product_line_id = pl.id
         left join biz_domain bdm on pl.biz_domain_id = bdm.id
         <where>
@@ -80,6 +81,12 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="modelIds != null and modelIds.size() > 0">
+                and mo.model_id in
+                <foreach collection="modelIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="productLineIdList != null and productLineIdList.size() > 0">
                 and pl.id in
                 <foreach collection="productLineIdList" item="item" separator="," open="(" close=")">
@@ -124,12 +131,12 @@
     <insert id="insert" useGeneratedKeys="true" keyProperty="bugOnlineDO.id">
         insert into bug_online(name,operator,operator_id,last_operator,last_operator_id,proposer
         ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
-        ,create_man,create_man_id,source, model_id, detail_version_id)
+        ,create_man,create_man_id,source,  detail_version_id)
         values(#{bugOnlineDO.name},#{bugOnlineDO.operator},#{bugOnlineDO.operatorId},#{bugOnlineDO.lastOperator}
         ,#{bugOnlineDO.lastOperatorId},#{bugOnlineDO.proposer},#{bugOnlineDO.proposerId},#{bugOnlineDO.customerName}
         ,#{bugOnlineDO.env},#{bugOnlineDO.belong},#{bugOnlineDO.priority},#{bugOnlineDO.recurrent}
         ,#{bugOnlineDO.reason},#{bugOnlineDO.expectDate},#{bugOnlineDO.business},#{bugOnlineDO.describe},#{bugOnlineDO.systemMenuName}
-        ,#{createMan},#{createManId},#{bugOnlineDO.source}, #{bugOnlineDO.modelId}, #{bugOnlineDO.detailVersionId})
+        ,#{createMan},#{createManId},#{bugOnlineDO.source}, #{bugOnlineDO.detailVersionId})
     </insert>
 
     <update id="update">
@@ -213,9 +220,6 @@
             <if test="bugOnlineDO.isDeleted != null">
                 is_deleted = #{bugOnlineDO.isDeleted},
             </if>
-            <if test="bugOnlineDO.modelId != null">
-                model_id = #{bugOnlineDO.modelId},
-            </if>
             <if test="bugOnlineDO.detailVersionId != null">
                 detail_version_id = #{bugOnlineDO.detailVersionId},
             </if>
@@ -261,7 +265,6 @@
             repair_fail_reason = #{bugOnlineDO.repairFailReason},
             open_again_reason = #{bugOnlineDO.openAgainReason},
             is_deleted = #{bugOnlineDO.isDeleted},
-            model_id = #{bugOnlineDO.modelId},
             detail_version_id = #{bugOnlineDO.detailVersionId},
             modify_man_id = #{modifyManId},
             modify_man = #{modifyMan}
@@ -271,6 +274,62 @@
         </where>
     </update>
 
+    <select id="selectByLinkBugId" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+        SELECT id, name,operator,operator_id,last_operator,last_operator_id,proposer
+        ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
+        ,create_man,create_man_id,source,  detail_version_id,link_bug_id
+        FROM bug_online
+        WHERE link_bug_id = #{linkBugId} and is_deleted=false
+    </select>
+
+    <update id="updateByIds">
+        update bug_online
+        <set>
+            link_bug_id =#{linkBugId}
+        </set>
+        <where>
+            and id IN
+            <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="selectByIds" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+        SELECT id, name,operator,operator_id,last_operator,last_operator_id,proposer
+        ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
+        ,create_man,create_man_id,source,  detail_version_id,link_bug_id
+        FROM bug_online
+        <where>
+            id in
+            <foreach collection="ids" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            <if test="containDeleted == false">
+                and is_deleted = false
+            </if>
+        </where>
+    </select>
+
+    <select id="selectByName" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+        SELECT id, name,operator,operator_id,last_operator,last_operator_id,proposer
+        ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
+        ,create_man,create_man_id,source,  detail_version_id,link_bug_id
+        FROM bug_online
+        <where>
+            name like concat('%',#{name},'%')
+        </where>
+    </select>
+
+    <select id="getModelIds" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+        SELECT id, name,operator,operator_id,last_operator,last_operator_id,proposer,model_id
+        ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
+        ,create_man,create_man_id,source,  detail_version_id,link_bug_id
+        FROM bug_online
+        <where>
+            model_id != ''
+        </where>
+    </select>
 </mapper>
 
 

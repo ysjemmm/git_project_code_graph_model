@@ -20,6 +20,11 @@ public class ProjectNodeFlowDO extends BaseDO {
     private Long projectId;
 
     /**
+     * 项目名称
+     */
+    private String projectName;
+
+    /**
      *流程id
      */
     private String flowId;

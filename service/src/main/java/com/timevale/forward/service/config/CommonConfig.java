@@ -26,4 +26,7 @@ public class CommonConfig {
     @Value("${forward.baseurl}/productManagement/edit?type=check&id=")
     private String productManagementViewUrl;
 
+    @Value("${forward.baseurl}/%s/edit?type=check&id=%d")
+    private String commonViewUrl;
+
 }
