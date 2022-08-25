@@ -8,4 +8,6 @@ import java.math.BigDecimal;
  */
 public interface ManDayReportComponent {
     void add(Long manDayId, BigDecimal auditManDay);
+
+    void batchMsg(Long projectId);
 }
