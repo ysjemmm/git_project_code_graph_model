@@ -143,7 +143,6 @@ public class DataCorrectServiceImpl implements DataCorrectService {
         return BaseResult.success(true);
     }
 
-
     @Override
     public BaseResult<Boolean> updateDelayDays() {
         List<ProjectNodeDO> projectNodeDos = projectNodeMapper.listByName(null,ProjectNodeEnum.SUBMIT_TEST.getText())
@@ -193,8 +192,7 @@ public class DataCorrectServiceImpl implements DataCorrectService {
             log.info("[DataCorrectServiceImpl][troubleTicketTime]更新故障单{}持续时间{}", e.getId(), durationTime);
             troubleTicketMapper.updateDurationTime(e.getId(), durationTime);
         }
-
-        return null;
+        return BaseResult.success(true);
     }
 
     private void updateProductDemandStatus(Long projectId, Integer status) {
