@@ -50,4 +50,10 @@ public interface DataCorrectService {
      */
     BaseResult<Boolean> updateNodeDate(ProjectNodeModifyReq projectNodeModifyReq);
 
+    /**
+     * 故障单刷新持续时间
+     *
+     * @return {@link BaseResult}<{@link Boolean}>
+     */
+    BaseResult<Boolean> troubleTicketTime();
 }

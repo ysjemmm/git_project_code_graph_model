@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,37 +36,28 @@ public class DataCorrectServiceImpl implements DataCorrectService {
 
     @Resource
     private ProjectComponent projectComponent;
-
     @Resource
     private ProjectMapper projectMapper;
-
     @Resource
     private ProjectNodeMapper projectNodeMapper;
-
     @Resource
     private ProductDemandComponent productDemandComponent;
-
     @Resource
     private ProductBizDemandMapper productBizDemandMapper;
-
     @Resource
     private BizDemandMapper bizDemandMapper;
-
     @Resource
     private BizDemandComponent bizDemandComponent;
-
     @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
-
     @Resource
     private ProductDemandMapper productDemandMapper;
-
     @Resource
     private ProjectNodeComponent projectNodeComponent;
-
     @Resource
     private TestBillMapper testBillMapper;
-
+    @Resource
+    private TroubleTicketMapper troubleTicketMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -175,6 +168,33 @@ public class DataCorrectServiceImpl implements DataCorrectService {
     public BaseResult<Boolean> updateNodeDate(ProjectNodeModifyReq projectNodeModifyReq) {
         projectNodeMapper.updateActualDateById(projectNodeModifyReq.getId(),projectNodeModifyReq.getActualDate());
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> troubleTicketTime() {
+        List<TroubleTicketDO> troubleTicketDOS = troubleTicketMapper.selectAll();
+
+        // 只保存仅有的时间
+        troubleTicketDOS = troubleTicketDOS.stream()
+                .filter(e -> e.getOccurrenceTime() != null && e.getRestoreTime() != null)
+                .collect(Collectors.toList());
+
+        for (TroubleTicketDO e : troubleTicketDOS) {
+            Date occurrenceTime = e.getOccurrenceTime();
+            Date restoreTime = e.getRestoreTime();
+
+            long occurrenceTimeTime = occurrenceTime.getTime();
+            long restoreTimeTime = restoreTime.getTime();
+
+            long differ = Math.max(restoreTimeTime - occurrenceTimeTime, 0L);
+            long result = differ / DateFormatConst.ONE_MINUTE;
+            BigDecimal durationTime = BigDecimal.valueOf(result);
+
+            log.info("[DataCorrectServiceImpl][troubleTicketTime]更新故障单{}持续时间{}", e.getId(), durationTime);
+            troubleTicketMapper.updateDurationTime(e.getId(), durationTime);
+        }
+
+        return null;
     }
 
     private void updateProductDemandStatus(Long projectId, Integer status) {

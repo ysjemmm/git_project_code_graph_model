@@ -165,6 +165,14 @@
         </where>
     </update>
 
+    <update id="updateDurationTime">
+        UPDATE trouble_ticket
+        SET duration_time = #{durationTime},
+            modify_man = modify_man,
+            modify_man_id = modify_man_id
+        WHERE id = #{id}
+    </update>
+
     <select id="selectById" resultType="com.timevale.forward.dal.entity.TroubleTicketDO">
         SELECT *
         FROM trouble_ticket
@@ -253,5 +261,10 @@
                 AND tt.is_deleted = false
             </if>
         </where>
+    </select>
+
+    <select id="selectAll" resultType="com.timevale.forward.dal.entity.TroubleTicketDO">
+        SELECT *
+        FROM trouble_ticket;
     </select>
 </mapper>

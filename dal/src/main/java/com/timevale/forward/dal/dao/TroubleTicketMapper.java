@@ -5,6 +5,7 @@ import com.timevale.forward.dal.entity.TroubleTicketDO;
 import com.timevale.forward.dal.entity.TroubleTicketListDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -52,4 +53,19 @@ public interface TroubleTicketMapper {
      * @return 故障工单DO 列表
      */
     List<TroubleTicketListDO> selectList(TroubleTicketCondition troubleTicketCondition);
+
+    /**
+     * 选择所有
+     *
+     * @return 故障工单DO 列表
+     */
+    List<TroubleTicketDO> selectAll();
+
+    /**
+     * 更新持续时间(不更新修改人)
+     *
+     * @param id           id
+     * @param durationTime 持续时间
+     */
+    void updateDurationTime(@Param("id")Long id, @Param("durationTime")BigDecimal durationTime);
 }
