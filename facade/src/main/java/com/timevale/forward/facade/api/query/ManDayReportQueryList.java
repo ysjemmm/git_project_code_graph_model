@@ -30,6 +30,9 @@ public class ManDayReportQueryList extends QueryBase {
     @ApiModelProperty("审批人")
     private List<String> pmIds;
 
+    @ApiModelProperty("审核人id列表")
+    private List<String> auditorIds ;
+
     @ApiModelProperty("提报起始时间")
     private Date createStartDate;
 

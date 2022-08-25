@@ -31,6 +31,8 @@ public class ManDayReportCondition extends QueryBase {
 
     private List<String> pmIds;
 
+    private List<String> auditorIds;
+
     private Date createStartDate;
 
     private Date createEndDate;
