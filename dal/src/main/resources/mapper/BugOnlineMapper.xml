@@ -317,7 +317,7 @@
         ,create_man,create_man_id,source,  detail_version_id,link_bug_id
         FROM bug_online
         <where>
-            name like concat('%',#{name},'%')
+            name like concat('%',#{name},'%') and is_deleted = false
         </where>
     </select>
 
