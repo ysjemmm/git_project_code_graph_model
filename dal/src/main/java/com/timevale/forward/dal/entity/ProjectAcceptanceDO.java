@@ -20,18 +20,6 @@ public class ProjectAcceptanceDO extends BaseDO {
 
 
     /**
-     * proposer
-     */
-    private String proposer;
-
-
-    /**
-     * proposerId
-     */
-    private String proposerId;
-
-
-    /**
      * acceptorId
      */
     private String acceptorId;

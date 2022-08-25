@@ -466,18 +466,18 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<ProjectVO>> matchProjectList(ProductDemandLinkProjectQueryList productDemandLinkProjectQueryList) {
-        log.info("产品需求-项目匹配接收参数:{}", productDemandLinkProjectQueryList);
-        if (productDemandLinkProjectQueryList.getProductDemandId() != null) {
-            ProjectProductDemandDO productDemandDO = projectProductDemandMapper.getByProductDemandId(productDemandLinkProjectQueryList.getProductDemandId());
+    public BaseResult<PageQueryResult<ProjectVO>> matchProjectList(ProductDemandLinkProjectQueryList query) {
+        log.info("产品需求-项目匹配接收参数:{}", query);
+        if (query.getProductDemandId() != null) {
+            ProjectProductDemandDO productDemandDO = projectProductDemandMapper.getByProductDemandId(query.getProductDemandId());
             if (productDemandDO != null) {
                 throw new BaseBizRuntimeException("该产品需求已被关联,请解除后重试");
             }
         }
-        ProjectListCondition condition = ProjectCopier.INSTANCE.convert(productDemandLinkProjectQueryList);
-        condition.setPageNum(productDemandLinkProjectQueryList.getPageNum());
-        condition.setPageSize(productDemandLinkProjectQueryList.getPageSize());
-        List<Integer> status = productDemandLinkProjectQueryList.getStatus();
+        ProjectListCondition condition = ProjectCopier.INSTANCE.convert(query);
+        condition.setPageNum(query.getPageNum());
+        condition.setPageSize(query.getPageSize());
+        List<Integer> status = query.getStatus();
         if (CollectionUtils.isEmpty(status)) {
             // 空,默认选择下列状态
             condition.setStatus(Lists.newArrayList(ProjectStatusEnum.WAITING.getCode()
@@ -485,8 +485,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                     , ProjectStatusEnum.DEVING.getCode()
                     , ProjectStatusEnum.TESTING.getCode()));
         }
-        if(CollectionUtils.isNotEmpty(productDemandLinkProjectQueryList.getLabelIds())||CollectionUtils.isNotEmpty(productDemandLinkProjectQueryList.getLabelCategoryIds())){
-            List<Long> labelIds = labelComponent.getLabelIds(productDemandLinkProjectQueryList.getLabelIds(), productDemandLinkProjectQueryList.getLabelCategoryIds());
+        if(CollectionUtils.isNotEmpty(query.getLabelIds())||CollectionUtils.isNotEmpty(query.getLabelCategoryIds())){
+            List<Long> labelIds = labelComponent.getLabelIds(query.getLabelIds(), query.getLabelCategoryIds());
             if(CollectionUtils.isEmpty(labelIds)){
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
@@ -497,13 +497,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(ProductDemandLinkBizDemandQueryList productDemandLinkBizDemandQueryList) {
-        log.info("产品需求-业务需求匹配接收参数:{}", productDemandLinkBizDemandQueryList);
+    public BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(ProductDemandLinkBizDemandQueryList query) {
+        log.info("产品需求-业务需求匹配接收参数:{}", query);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         List<String> receiveManIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
         log.info("我和我的下属:receiveManIdList={}", receiveManIdList);
-        BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(productDemandLinkBizDemandQueryList);
+        BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(query);
         if (!CollectionUtils.isEmpty(condition.getReceiveManIdList())) {
             receiveManIdList.retainAll(condition.getReceiveManIdList());
             log.info("我和我的下属,过滤后,receiveManIdList={}", receiveManIdList);
@@ -514,7 +514,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         condition.setReceiveManIdList(receiveManIdList);
-        List<Integer> status = productDemandLinkBizDemandQueryList.getStatusList();
+        List<Integer> status = query.getStatusList();
         if (CollectionUtils.isEmpty(status)) {
             condition.setStatusList(Lists.newArrayList(
                     BizDemandStatusEnum.RECEIVED.getCode()
@@ -532,11 +532,11 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             List<Long> bizDemandIds = productBizDemand.stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
             condition.setBizDemandIds(bizDemandIds);
         }
-        condition.setPageNum(productDemandLinkBizDemandQueryList.getPageNum());
-        condition.setPageSize(productDemandLinkBizDemandQueryList.getPageSize());
+        condition.setPageNum(query.getPageNum());
+        condition.setPageSize(query.getPageSize());
         condition.setCollation(CommonConstant.DEFAULT_ORDER_BY);
-        if(CollectionUtils.isNotEmpty(productDemandLinkBizDemandQueryList.getLabelIds())||CollectionUtils.isNotEmpty(productDemandLinkBizDemandQueryList.getLabelCategoryIds())){
-            List<Long> labelIds = labelComponent.getLabelIds(productDemandLinkBizDemandQueryList.getLabelIds(), productDemandLinkBizDemandQueryList.getLabelCategoryIds());
+        if(CollectionUtils.isNotEmpty(query.getLabelIds())||CollectionUtils.isNotEmpty(query.getLabelCategoryIds())){
+            List<Long> labelIds = labelComponent.getLabelIds(query.getLabelIds(), query.getLabelCategoryIds());
             if(CollectionUtils.isEmpty(labelIds)){
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
@@ -589,10 +589,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<BizDemandVO>> linkBizDemandList(ProductBizDemandQueryList productBizDemandQueryList) {
-        log.info("产品需求-业务需求清单接收参数:{}", productBizDemandQueryList);
-        PageHelper.startPage(productBizDemandQueryList.getPageNum(), productBizDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
-        List<BizDemandListDO> bizDemandList = bizDemandMapper.linkBizDemandList(productBizDemandQueryList.getProductDemandId());
+    public BaseResult<PageQueryResult<BizDemandVO>> linkBizDemandList(ProductBizDemandQueryList query) {
+        log.info("产品需求-业务需求清单接收参数:{}", query);
+        PageHelper.startPage(query.getPageNum(), query.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        List<BizDemandListDO> bizDemandList = bizDemandMapper.linkBizDemandList(query.getProductDemandId());
 
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandList);
         Map<Long, GroupResponse> deptMap = bizDemandComponent.getGroupListTreeMap(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));

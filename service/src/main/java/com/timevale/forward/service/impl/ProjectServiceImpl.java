@@ -491,9 +491,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(ProjectLinkProductDemandQueryList productDemandQueryList) {
-        log.info("项目-产品需求匹配,接收参数:{}", productDemandQueryList);
-        ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
+    public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(ProjectLinkProductDemandQueryList query) {
+        log.info("项目-产品需求匹配,接收参数:{}", query);
+        ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(query);
         // 过滤掉已经关联的产品需求
         List<Long> productDemandIds = projectProductDemandMapper.getLinkedProductDemand(Lists.newArrayList())
                 .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
@@ -505,8 +505,8 @@ public class ProjectServiceImpl implements ProjectService {
 
         //是否打标
         List<BizLabelDO> bizLabelDOList;
-        if(CollectionUtils.isNotEmpty(productDemandQueryList.getLabelIds())||CollectionUtils.isNotEmpty(productDemandQueryList.getLabelCategoryIds())){
-            List<Long> newLabelIds = labelComponent.getLabelIds(productDemandQueryList.getLabelIds(), productDemandQueryList.getLabelCategoryIds());
+        if(CollectionUtils.isNotEmpty(query.getLabelIds())||CollectionUtils.isNotEmpty(query.getLabelCategoryIds())){
+            List<Long> newLabelIds = labelComponent.getLabelIds(query.getLabelIds(), query.getLabelCategoryIds());
             if(CollectionUtils.isEmpty(newLabelIds)){
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
@@ -517,7 +517,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
             condition.setInProductDemandIds(bizIds);
         }
-        PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        PageHelper.startPage(query.getPageNum(), query.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
         List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
 
@@ -614,10 +614,10 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<ProductDemandVO>> linkProductDemandList(ProjectProductDemandQueryList productDemandQueryList) {
-        Long projectId = productDemandQueryList.getProjectId();
-        int pageSize = productDemandQueryList.getPageSize();
-        int pageNum = productDemandQueryList.getPageNum();
+    public BaseResult<PageQueryResult<ProductDemandVO>> linkProductDemandList(ProjectProductDemandQueryList query) {
+        Long projectId = query.getProjectId();
+        int pageSize = query.getPageSize();
+        int pageNum = query.getPageNum();
         log.info("项目-产品需求清单:{},{},{}", pageNum, pageSize, projectId);
         // 查询产品需求
         List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(projectId);
@@ -643,9 +643,9 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
-        if (Integer.valueOf(0).equals(productDemandQueryList.getType())) {
+        if (Integer.valueOf(0).equals(query.getType())) {
             productDemandVOList = productDemandVOList.stream().filter(a -> a.getTaskCount() == 0).collect(Collectors.toList());
-        } else if (Integer.valueOf(1).equals(productDemandQueryList.getType())) {
+        } else if (Integer.valueOf(1).equals(query.getType())) {
             productDemandVOList = productDemandVOList.stream().filter(a -> a.getTaskCount() >= 1).collect(Collectors.toList());
         }
 
@@ -706,39 +706,6 @@ public class ProjectServiceImpl implements ProjectService {
         return BaseResult.success(true);
     }
 
-    @Override
-    public BaseResult<List<ProductLineAnalyseVO>> analyseProductLine(ProjectQueryList projectQueryList) {
-        log.info("项目列表接收参数:{}", projectQueryList);
-        String currentUser = LocalSessionUtils.getUserInfo().getId();
-        ProjectListCondition condition = ProjectCopier.INSTANCE.convert(projectQueryList);
-        condition.setPageNum(projectQueryList.getPageNum());
-        condition.setPageSize(projectQueryList.getPageSize());
-        List<Long> projectIds = new ArrayList<>();
-        //1.查找我或我的团队所属项目id
-        if (AscriptionEnum.CURRENT_USER.name().equals(projectQueryList.getAscription())) {
-            projectIds = personMapper.getMainIds(Lists.newArrayList(currentUser), null, PersonTypeEnum.PROJECT_MEMBER.getCode());
-            if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(new ArrayList<>());
-            }
-
-        } else if (AscriptionEnum.TEAM.name().equals(projectQueryList.getAscription())) {
-            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(currentUser, true);
-            log.info("我和我的下属:{}", allMyStaffWithSelf);
-            projectIds = personMapper.getMainIds(allMyStaffWithSelf, null, PersonTypeEnum.PROJECT_MEMBER.getCode());
-            if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(new ArrayList<>());
-            }
-        }
-        if(CollectionUtils.isNotEmpty(projectQueryList.getLabelIds())||CollectionUtils.isNotEmpty(projectQueryList.getLabelCategoryIds())){
-            List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelIds(), projectQueryList.getLabelCategoryIds());
-            if(CollectionUtils.isEmpty(labelIds)){
-                return BaseResult.success(new ArrayList<>());
-            }
-            condition.setLabelIds(labelIds);
-        }
-        List<ProductLineAnalyseVO> analyseVOList = projectComponent.page(condition, projectIds).getAnalyseVOList();
-        return BaseResult.success(analyseVOList);
-    }
 
     private void checkPjEstablishPublishDateChange(ProjectDO oldProjectDO, Date pjEstablishPublishDate) {
         if (!Objects.equals(oldProjectDO.getPjEstablishPublishDate(), pjEstablishPublishDate)) {

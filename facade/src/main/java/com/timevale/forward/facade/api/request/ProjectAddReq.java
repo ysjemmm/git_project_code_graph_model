@@ -79,4 +79,7 @@ public class ProjectAddReq extends BaseReq {
 
     @ApiModelProperty("标签id")
     private List<Long> labelIds;
+
+    @ApiModelProperty("是否需要验收：0否，1是")
+    private Integer isAcceptance;
 }

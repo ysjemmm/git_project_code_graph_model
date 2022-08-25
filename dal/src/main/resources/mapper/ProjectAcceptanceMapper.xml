@@ -4,17 +4,16 @@
 
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectAcceptanceDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        insert into project_acceptance (project_id,proposer_id, proposer, acceptor_id,acceptor,status,desc,accept_date,create_man ,create_man_id)
+        insert into project_acceptance (project_id,acceptor_id,acceptor,status,create_man ,create_man_id)
         values
-        (#{projectId},#{proposerId},#{proposer}, #{acceptorId},#{acceptor},1,#{desc},#{acceptDate},#{createMan},#{createManId})
+        (#{projectId},#{acceptorId},#{acceptor},0,#{createMan},#{createManId})
     </insert>
 
     <insert id="batchInsert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO project_acceptance (project_id,proposer_id, proposer, acceptor_id,acceptor,status,desc,accept_date,create_man ,create_man_id)
+        INSERT INTO project_acceptance (project_id, acceptor_id,acceptor,status,`desc`,create_man ,create_man_id)
         VALUES
         <foreach collection="list" item="item" separator=",">
-            (#{item.projectId},#{item.proposerId},#{item.proposer}, #{item.acceptorId},#{item.acceptor},1,
-             #{item.desc},#{item.acceptDate},#{item.createMan},#{item.createManId})
+            (#{item.projectId}, #{item.acceptorId},#{item.acceptor},0,'',#{createMan},#{createManId})
         </foreach>
     </insert>
 
@@ -22,6 +21,7 @@
         update project_acceptance
         <set>
             <if test="acceptDate != null ">accept_date = #{acceptDate},</if>
+            <if test="desc != null and desc != ''">`desc` = #{desc},</if>
             <if test="status != null">status = #{status},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
             <if test="true">
@@ -35,11 +35,11 @@
     </update>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProjectAcceptanceDO">
-        select id,project_id,proposer_id, proposer, acceptor_id,acceptor,status,desc,accept_date,
+        select id,project_id, acceptor_id,acceptor,status,`desc`,accept_date,
         is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
         from project_acceptance a
         <where>
-            <if test="projectId != null">and a.id = #{projectId}</if>
+            <if test="projectId != null">and a.project_id = #{projectId}</if>
 
             <if test="status!=null and status.size()>0">
                 and a.status in
@@ -52,7 +52,7 @@
     </select>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectAcceptanceDO">
-        select id,project_id,proposer_id, proposer, acceptor_id,acceptor,status,desc,accept_date,
+        select id,project_id, acceptor_id,acceptor,status,`desc`,accept_date,
         is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
         from project_acceptance a
         <where>

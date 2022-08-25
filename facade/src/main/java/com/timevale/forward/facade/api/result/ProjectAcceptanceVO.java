@@ -28,12 +28,6 @@ public class ProjectAcceptanceVO extends ToString {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long projectId;
 
-    @ApiModelProperty("发起人id")
-    private String proposerId;
-
-    @ApiModelProperty("发起人")
-    private String proposer;
-
     @ApiModelProperty("验收人id")
     private String acceptorId;
 

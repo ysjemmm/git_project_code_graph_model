@@ -76,10 +76,10 @@ public interface ProjectService {
     /**
      * 查询满足条件的产品需求列表
      *
-     * @param productDemandQueryList 项目信息
+     * @param query 项目信息
      * @return 列表
      */
-    BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(ProjectLinkProductDemandQueryList productDemandQueryList);
+    BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(ProjectLinkProductDemandQueryList query);
 
 
     /**
@@ -92,10 +92,10 @@ public interface ProjectService {
 
     /**
      *
-     * @param productDemandQueryList 查询条件
+     * @param query 查询条件
      * @return 项目产品需求清单
      */
-    BaseResult<PageQueryResult<ProductDemandVO>>  linkProductDemandList(ProjectProductDemandQueryList productDemandQueryList);
+    BaseResult<PageQueryResult<ProductDemandVO>>  linkProductDemandList(ProjectProductDemandQueryList query);
 
     /**
      * 产品线Id
@@ -112,11 +112,4 @@ public interface ProjectService {
      * @return Boolean
      */
     BaseResult<Boolean> modifyProjectDate(ProjectDateModifyReq projectDateModifyReq);
-
-    /**
-     * 产品线分析
-     *
-     * @return {@link BaseResult}<{@link List}<{@link ProductLineAnalyseVO}>>
-     */
-    BaseResult<List<ProductLineAnalyseVO>> analyseProductLine(ProjectQueryList projectQueryList);
 }
