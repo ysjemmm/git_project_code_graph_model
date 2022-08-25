@@ -15,6 +15,7 @@
             <if test="failureTime != null">failure_time,</if>
             <if test="influenceScope != null">influence_scope,</if>
             <if test="reason != null">reason,</if>
+            <if test="timeLine != null">time_line,</if>
             <if test="restoreTime != null">restore_time,</if>
             <if test="replayTime != null">replay_time,</if>
             <if test="assetLoss != null">asset_loss,</if>
@@ -51,6 +52,7 @@
             <if test="failureTime != null">#{failureTime},</if>
             <if test="influenceScope != null">#{influenceScope},</if>
             <if test="reason != null">#{reason},</if>
+            <if test="timeLine != null">#{timeLine},</if>
             <if test="restoreTime != null">#{restoreTime},</if>
             <if test="replayTime != null">#{replayTime},</if>
             <if test="assetLoss != null">#{assetLoss},</if>
