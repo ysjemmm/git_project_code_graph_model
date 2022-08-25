@@ -546,6 +546,16 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     private void propCheck(List<TrackEvent> trackEventList, Set<TrackPropDO> newTrackPropSet, UserInfo userInfo) {
         log.info("埋点导入属性检查开始");
 
+        // 默认属性
+        TrackPropDO distinctID = new TrackPropDO();
+        distinctID.setCnName("神策用户唯一ID");
+        distinctID.setEgName("distinct_id");
+        distinctID.setDataType("STRING");
+        TrackPropDO time = new TrackPropDO();
+        time.setCnName("事件触发事件");
+        time.setEgName("time");
+        time.setDataType("DATETIME");
+
         // 已有属性
         List<String> cnNameList = new ArrayList<>();
         List<String> egNameList = new ArrayList<>();
@@ -615,6 +625,17 @@ public class TrackImportComponentImpl implements TrackImportComponent {
 
                 // 格式正确，验证属性
                 if (failTag != failInfoList.size()) {continue;}
+
+                // 判断是否为默认属性
+                TrackPropDO defaultCmp = new TrackPropDO();
+                defaultCmp.setDataType(dataType);
+                defaultCmp.setCnName(propNameCn);
+                defaultCmp.setEgName(propNameEn);
+                if (Objects.equals(defaultCmp, distinctID) || Objects.equals(defaultCmp, time)) {
+                    failInfoList.add("【属性错误】埋点事件自动添加默认埋点属性，请勿重复填写");
+                    continue;
+                }
+
                 // 判断是否是新属性
                 boolean newProp = true;
 
@@ -882,7 +903,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     private List<TrackEventDO> importInfo(List<TrackEvent> trackEventList,  Set<TrackPropDO> newTrackPropSet, String importFileId, UserInfo userInfo) {
         log.info("开始导入数据");
 
-        // 导入属性（是否要开启流程？）
+        // 导入属性
         if (!setProgress(RandomUtil.randomInt(70,80), userInfo.getId())) {return new ArrayList<>();}
         List<TrackEventDO> trackEventDOList = new ArrayList<>();
         for (TrackEvent e : trackEventList) {
