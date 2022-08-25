@@ -80,8 +80,10 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         }
 
         Pair<Date, Date> dateDatePair = parseAndCheckDateRange(manDayReportQueryList.getWeekDateRange());
-        condition.setWeekStartDate(dateDatePair.getLeft());
-        condition.setWeekEndDate(dateDatePair.getRight());
+        condition.setWeekStartDate(DateUtil.getStartOfDay(dateDatePair.getLeft()));
+        condition.setWeekEndDate(DateUtil.getEndOfDay(dateDatePair.getRight()));
+        condition.setCreateStartDate(DateUtil.getStartOfDay(condition.getCreateStartDate()));
+        condition.setCreateEndDate(DateUtil.getStartOfDay(condition.getCreateEndDate()));
 
         PageHelper.startPage(manDayReportQueryList.getPageNum(), manDayReportQueryList.getPageSize(),
                 "mdr.audit_status desc, mdr.create_date desc, mdr.id desc");
