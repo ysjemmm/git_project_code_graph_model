@@ -30,9 +30,21 @@
         </set>
         WHERE id = #{id}
     </update>
+    <update id="updateAuditor">
+        UPDATE man_day_report
+        SET auditor         = #{auditor},
+            auditor_id      = #{auditorId},
+            modify_man      = #{modifyMan},
+            modify_man_id   = #{modifyManId}
+        WHERE id in
+        <foreach collection="ids" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </update>
 
     <select id="selectCondition" resultType="com.timevale.forward.dal.entity.ManDayReportListDO">
-        SELECT mdr.id, mdr.audit_status, mdr.audit_man_day, mdr.reject_reason, mdr.create_date, mdr.create_man, mdr.create_man_id,
+        SELECT mdr.id, mdr.audit_status, mdr.audit_man_day, mdr.reject_reason, mdr.auditor, mdr.auditor_id,
+               mdr.create_date, mdr.create_man, mdr.create_man_id,
                md.week_start_date, md.week_end_date,
                p.pm, p.pm_id, p.name projectName
         FROM man_day_report mdr

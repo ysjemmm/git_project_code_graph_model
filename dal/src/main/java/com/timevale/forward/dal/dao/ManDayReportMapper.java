@@ -29,4 +29,6 @@ public interface ManDayReportMapper {
 
     void updateStatus(@Param("ids") List<Long> ids, @Param("auditStatus") Integer auditStatus);
 
+    void updateAuditor(@Param("ids") List<Long> ids, @Param("auditor") String auditor, @Param("auditorId") String auditorId);
+
 }

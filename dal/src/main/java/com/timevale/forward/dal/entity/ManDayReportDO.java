@@ -33,4 +33,13 @@ public class ManDayReportDO extends BaseDO {
      */
     private String rejectReason;
 
+    /**
+     * 审核员
+     */
+    private String auditor;
+
+    /**
+     * 审核员id
+     */
+    private String auditorId;
 }

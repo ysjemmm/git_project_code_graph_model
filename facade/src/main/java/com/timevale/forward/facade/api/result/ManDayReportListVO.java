@@ -42,6 +42,12 @@ public class ManDayReportListVO extends ToString {
     @ApiModelProperty("审批人id（取项目最新pm）")
     private String pmId;
 
+    @ApiModelProperty("审核人")
+    private String auditor;
+
+    @ApiModelProperty("审核人id")
+    private String auditorId;
+
     @ApiModelProperty("提报时间")
     private Date createDate;
 

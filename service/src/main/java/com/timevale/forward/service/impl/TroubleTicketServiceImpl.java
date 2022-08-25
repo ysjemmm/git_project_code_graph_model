@@ -245,7 +245,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         String orderFiled = troubleTicketQueryList.getOrderFiled();
         Integer orderCollation = troubleTicketQueryList.getOrderCollation();
         if (Objects.equals(orderFiled, "troubleRank")) {
-            collation = "FIELD(COALESCE(trouble_rank, -20), 0, 10, 20, 30, 40, 50, -10, -20)";
+            collation = "FIELD(COALESCE(trouble_rank, -20), -20, -10, 50, 40, 30, 20, 10, 0)";
             if (Objects.equals(OrderCollationEnum.DESC.getCode(), orderCollation)) {
                 collation += "desc";
             }

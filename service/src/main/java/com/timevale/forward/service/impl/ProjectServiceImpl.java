@@ -419,6 +419,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 人天如果更换项目经理
         if (!Objects.equals(oldProject.getPmId(), newProject.getPmId())) {
+            manDayReportComponent.updateAuditor(newProject.getId());
             manDayReportComponent.batchMsg(newProject.getId());
         }
 
