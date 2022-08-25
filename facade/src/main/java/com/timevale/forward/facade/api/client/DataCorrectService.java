@@ -56,4 +56,10 @@ public interface DataCorrectService {
      * @return {@link BaseResult}<{@link Boolean}>
      */
     BaseResult<Boolean> troubleTicketTime();
+
+    /**
+     * 更新逾期天数
+     * @return return
+     */
+    BaseResult<Boolean> updateModelIdInBugOnline();
 }

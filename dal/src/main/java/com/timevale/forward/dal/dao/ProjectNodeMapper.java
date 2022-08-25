@@ -70,4 +70,12 @@ public interface ProjectNodeMapper {
 
     List<ProjectNodeDO> listByName(@Param("projectIds") List<Long> projectIds,@Param("name") String name);
 
+    /**
+     * 查询 by 项目id列表
+     *
+     * @param projectIdList 项目id列表
+     * @return {@code List<ProjectNodeDO>}
+     */
+    List<ProjectNodeDO> selectByProjectIdListFilterDate(@Param("projectIdList") List<Long> projectIdList);
+
 }

@@ -107,8 +107,6 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
         document.setModifyManId(last.getDocModifyManId());
         document.setModifyMan(last.getDocModifyMan());
         document.setModifyDate(last.getDocModifyDate());
-        List<FileDO> files = fileComponent.select(last.getId(), FileTypeEnum.TECH_REVIEW.getCode());
-        document.setFiles(FileCopier.INSTANCE.transform(files));
         return document;
     }
 

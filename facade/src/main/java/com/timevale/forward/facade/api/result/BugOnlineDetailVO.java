@@ -149,4 +149,10 @@ public class BugOnlineDetailVO extends ToString {
 
     @ApiModelProperty("预计上线日期")
     private Date expectLaunchDate;
+
+    @ApiModelProperty("被关联bug")
+    private List<BugOnlineLinkVO> linkedBugs;
+
+    @ApiModelProperty("关联bug")
+    private BugOnlineLinkVO linkBug;
 }

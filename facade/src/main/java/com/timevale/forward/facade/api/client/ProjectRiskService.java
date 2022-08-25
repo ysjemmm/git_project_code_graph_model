@@ -55,4 +55,10 @@ public interface ProjectRiskService {
      */
     BaseResult<PageQueryResult<ProjectRiskVO>> list(ProjectRiskQueryList projectRiskQueryList);
 
+    /**
+     * 给逾期未录入节点发送钉钉消息
+     * @return Boolean
+     */
+    BaseResult<Boolean> syncRiskRecord();
+
 }

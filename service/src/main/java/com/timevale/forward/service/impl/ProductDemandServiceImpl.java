@@ -542,6 +542,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             }
             condition.setLabelIds(labelIds);
         }
+
+        condition.setPageNum(productDemandLinkBizDemandQueryList.getPageNum());
+        condition.setPageSize(productDemandLinkBizDemandQueryList.getPageSize());
         return BaseResult.success(bizDemandComponent.page(condition).getPageQueryResult());
     }
 

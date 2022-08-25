@@ -36,6 +36,7 @@ public enum MessageTitleEnum {
     BUG_ONLINE_TRANSFER("线上bug转交通知"),
     BUG_ONLINE_REJECT("线上bug拒绝通知"),
     BUG_ONLINE_REPAIR_FAIL("线上bug修复失败通知"),
+    BUG_ONLINE_LINK_BUG_PROCESS("关联的线上bug处理进度通知"),
 
     // 人天通知标题
     MAN_DAY_AUDIT("人天审核通知"),
@@ -50,8 +51,9 @@ public enum MessageTitleEnum {
 
     PROJECT_ESTABLISH_DATE_CHANGE("立项预期上线时间变更通知"),
 
-    TRACK_EVENT_APPROVAL("您有新的需要审批的埋点事件")
-    ;
+    TRACK_EVENT_APPROVAL("您有新的需要审批的埋点事件"),
+
+    PROJECT_NODE_DELAY_UNINPUT("项目节点逾期未录入通知");
 
     private String text;
 

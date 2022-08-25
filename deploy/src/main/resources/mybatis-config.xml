@@ -74,11 +74,13 @@
         <mapper resource="mapper/ImprovementMeasureMapper.xml"/>
         <mapper resource="mapper/BugOnlineMapper.xml"/>
         <mapper resource="mapper/BugOnlineProductLineMapper.xml"/>
+        <mapper resource="mapper/BugOnlineModelMapper.xml"/>
         <mapper resource="mapper/BugStatusOperatorMapper.xml"/>
         <mapper resource="mapper/BizChangeLogMapper.xml"/>
         <mapper resource="mapper/SearchConditionMapper.xml"/>
         <mapper resource="mapper/ProjectRiskMapper.xml"/>
         <mapper resource="mapper/ProjectRiskExplanationMapper.xml"/>
+        <mapper resource="mapper/ProjectRiskRecordMapper.xml"/>
         <mapper resource="mapper/ProjectFlow.xml"/>
         <mapper resource="mapper/ProjectPublishPlan.xml"/>
         <mapper resource="mapper/ProjectGoalMapper.xml"/>
