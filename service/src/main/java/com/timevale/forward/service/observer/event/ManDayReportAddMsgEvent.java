@@ -21,7 +21,7 @@ public class ManDayReportAddMsgEvent extends MessageEvent {
     private final String manDay;
 
     private static final String LINK = "%s/auditList";
-    private static final String MSG = "### %s  \n  %s提报%s项目%s实际工时：%s人天，请及时审批  \n\n  ***  \n  [查看详情](%s)";
+    private static final String MSG = "### %s  \n  **%s**提报 **%s**项目**%s**，实际工时：**%s**人天，请及时审批  \n\n  ***  \n  [查看详情](%s)";
 
     public ManDayReportAddMsgEvent(Object source, String operator, String receiver, String time, String project, String manDay) {
         super(source);
