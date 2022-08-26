@@ -4,6 +4,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
+import com.timevale.forward.dal.condition.ProjectAcceptanceListCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -161,7 +162,7 @@ public class ProjectServiceImpl implements ProjectService {
     private LabelMapper labelMapper;
 
     @Resource
-    private LabelCategoryMapper labelCategoryMapper;
+    private ProjectAcceptanceMapper projectAcceptanceMapper;
 
 
     @Override
@@ -188,9 +189,9 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
-        if(CollectionUtils.isNotEmpty(projectQueryList.getLabelIds())||CollectionUtils.isNotEmpty(projectQueryList.getLabelCategoryIds())){
+        if (CollectionUtils.isNotEmpty(projectQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(projectQueryList.getLabelCategoryIds())) {
             List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelIds(), projectQueryList.getLabelCategoryIds());
-            if(CollectionUtils.isEmpty(labelIds)){
+            if (CollectionUtils.isEmpty(labelIds)) {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
             condition.setLabelIds(labelIds);
@@ -291,9 +292,9 @@ public class ProjectServiceImpl implements ProjectService {
         projectMapper.insert(projectDO);
 
         //标签
-        if(CollectionUtils.isNotEmpty(projectAddReq.getLabelIds())){
-            bizLabelComponent.addLabel(projectDO.getId(),projectAddReq.getLabelIds(),BizTypeEnum.PROJECT.getCode());
-            bizLabelComponent.addLog(projectDO.getId(),projectAddReq.getLabelIds(),BizTypeEnum.PROJECT.getCode(),true);
+        if (CollectionUtils.isNotEmpty(projectAddReq.getLabelIds())) {
+            bizLabelComponent.addLabel(projectDO.getId(), projectAddReq.getLabelIds(), BizTypeEnum.PROJECT.getCode());
+            bizLabelComponent.addLog(projectDO.getId(), projectAddReq.getLabelIds(), BizTypeEnum.PROJECT.getCode(), true);
         }
 
         // 产品线
@@ -505,9 +506,9 @@ public class ProjectServiceImpl implements ProjectService {
 
         //是否打标
         List<BizLabelDO> bizLabelDOList;
-        if(CollectionUtils.isNotEmpty(query.getLabelIds())||CollectionUtils.isNotEmpty(query.getLabelCategoryIds())){
+        if (CollectionUtils.isNotEmpty(query.getLabelIds()) || CollectionUtils.isNotEmpty(query.getLabelCategoryIds())) {
             List<Long> newLabelIds = labelComponent.getLabelIds(query.getLabelIds(), query.getLabelCategoryIds());
-            if(CollectionUtils.isEmpty(newLabelIds)){
+            if (CollectionUtils.isEmpty(newLabelIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
             bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
@@ -524,7 +525,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (CollectionUtils.isEmpty(productDemandListDO)) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
-        List<Long>pids = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
+        List<Long> pids = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
         bizLabelDOList = bizLabelMapper.getByBizIdInType(pids, BizTypeEnum.PRODUCT_DEMAND.getCode());
         Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
                 , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
@@ -717,6 +718,32 @@ public class ProjectServiceImpl implements ProjectService {
         }
     }
 
+    private void checkAcceptBeforeUpdate(List<ProjectNodeDO> projectNodes, ProjectDO newProject) {
+        if (YesOrNoEnum.NO.getCode().equals(newProject.getIsAcceptance())) {
+            List<Integer> status = Lists.newArrayList(FlowStatusEnum.AUDITING.getCode(), FlowStatusEnum.COMPLETE.getCode(), FlowStatusEnum.REJECT.getCode());
+            ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().status(status).projectId(newProject.getId()).build();
+            List<ProjectAcceptanceDO> list = projectAcceptanceMapper.list(c);
+            if (CollectionUtils.isNotEmpty(list)) {
+                throw new BaseBizRuntimeException("存在验收流程,不能将项目验收改为否");
+            }
+        }
+
+        boolean released = projectNodes.stream().anyMatch(a ->
+                ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(a.getName()) && a.getActualDate() != null);
+        if (released && YesOrNoEnum.YES.getCode().equals(newProject.getIsAcceptance())) {
+            ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().projectId(newProject.getId()).build();
+            List<ProjectAcceptanceDO> list = projectAcceptanceMapper.list(c);
+            if (CollectionUtils.isNotEmpty(list)) {
+                throw new BaseBizRuntimeException("您还没有发起项目验收,请验收通过后再发布");
+            }
+            boolean match = list.stream().anyMatch(a -> FlowStatusEnum.AUDITING.getCode().equals(a.getStatus())
+                    ||FlowStatusEnum.REJECT.getCode().equals(a.getStatus()));
+            if (match) {
+                throw new BaseBizRuntimeException("请确保所有验收人员验收通过后再发布");
+            }
+        }
+    }
+
     private boolean checkProductRelease(Long projectId) {
         List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);
 
@@ -763,9 +790,12 @@ public class ProjectServiceImpl implements ProjectService {
 
         checkPjEstablishPublishDateChange(oldProject, newProject.getPjEstablishPublishDate());
 
+        checkAcceptBeforeUpdate(projectNodes, newProject);
+
         Integer oldStatus = oldProject.getStatus();
 
         projectComponent.fillInfo(projectNodes, newProject);
+
 
         if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
             // 编辑项目时，当状态是暂停,不修改项目状态

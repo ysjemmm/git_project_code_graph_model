@@ -15,6 +15,7 @@ import com.timevale.forward.facade.api.request.ProjectAcceptanceAddReq;
 import com.timevale.forward.facade.api.request.ProjectAcceptanceModifyReq;
 import com.timevale.forward.facade.api.result.ProjectAcceptanceVO;
 import com.timevale.forward.model.enums.FlowStatusEnum;
+import com.timevale.forward.model.enums.YesOrNoEnum;
 import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectAcceptanceCopier;
@@ -99,6 +100,10 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(ProjectAcceptanceAddReq req) {
         log.info("项目验收发起,参数:{}", req);
+        ProjectDO projectDO = projectMapper.get(req.getProjectId());
+        if(!YesOrNoEnum.YES.getCode().equals(projectDO.getIsAcceptance())){
+            throw new BaseBizRuntimeException("项目处于无需验收中,不能发起项目验收,请修改后重试");
+        }
         ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().projectId(req.getProjectId()).build();
         List<ProjectAcceptanceDO> list = projectAcceptanceMapper.list(c);
 
@@ -128,7 +133,7 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
         }
         projectAcceptanceMapper.batchInsert(projectAcceptanceDOList);
 
-        ProjectDO projectDO = projectMapper.get(req.getProjectId());
+
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String operator = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
 

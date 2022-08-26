@@ -135,4 +135,7 @@ public class ProjectDetailVO extends ToString {
 
     @ApiModelProperty("是否是pmo")
     private Boolean isPMO;
+
+    @ApiModelProperty("是否需要项目验收")
+    private Integer isAcceptance;
 }
