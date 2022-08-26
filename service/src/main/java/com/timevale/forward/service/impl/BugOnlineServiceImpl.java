@@ -1737,6 +1737,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             updateIdA.add(id);
 
             BugOnlineDO linkBug = bugOnlineMapper.selectById(linkBugId);
+            if (linkBug == null) {
+                throw new BaseBizRuntimeException("关联的线上bug不存在");
+            }
             finalBugId=linkBug.getId();
             if (linkBug.getLinkBugId() != null) {
                 //要关联的bug B可能有关联的bug C   最终取C
