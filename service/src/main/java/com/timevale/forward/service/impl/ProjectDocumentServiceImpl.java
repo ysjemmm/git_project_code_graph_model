@@ -29,6 +29,7 @@ import com.timevale.forward.service.copy.TestBillCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import org.assertj.core.util.Lists;
 
 import javax.annotation.Resource;
 import java.util.Comparator;
@@ -107,6 +108,7 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
         document.setModifyManId(last.getDocModifyManId());
         document.setModifyMan(last.getDocModifyMan());
         document.setModifyDate(last.getDocModifyDate());
+        document.setFiles(Lists.emptyList());
         return document;
     }
 
