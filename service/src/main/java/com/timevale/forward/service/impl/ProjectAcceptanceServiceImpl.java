@@ -59,10 +59,10 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
 
 
     @Override
-    public BaseResult<List<ProjectAcceptanceVO>> list(ProjectAcceptanceQueryList query) {
-        log.info("项目验收列表,参数:{}", query);
+    public BaseResult<List<ProjectAcceptanceVO>> list(Long id) {
+        log.info("项目验收列表,参数:{}", id);
         List<Integer> status = Lists.newArrayList(FlowStatusEnum.AUDITING.getCode(), FlowStatusEnum.COMPLETE.getCode(), FlowStatusEnum.REJECT.getCode());
-        ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().status(status).projectId(query.getProjectId()).build();
+        ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().status(status).projectId(id).build();
 
         List<ProjectAcceptanceDO> list = projectAcceptanceMapper.list(c);
         Map<String, List<ProjectAcceptanceDO>> groupMap = list.stream().collect(Collectors.groupingBy(ProjectAcceptanceDO::getAcceptorId));
@@ -183,7 +183,7 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
 
     @Override
     public BaseResult<Boolean> revoke(Long id) {
-        log.info("项目验收撤销,参数:{}", id);
+        log.info("项目验收撤回,参数:{}", id);
         ProjectAcceptanceDO projectAcceptanceDO = projectAcceptanceMapper.get(id);
         projectAcceptanceDO.setStatus(FlowStatusEnum.WITHDRAW.getCode());
         projectAcceptanceMapper.update(projectAcceptanceDO);
