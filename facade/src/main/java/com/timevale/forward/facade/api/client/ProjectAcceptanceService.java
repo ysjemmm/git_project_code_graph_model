@@ -21,10 +21,10 @@ public interface ProjectAcceptanceService {
 
     /**
      *
-     * @param id id
+     * @param projectId projectId
      * @return List
      */
-    BaseResult<List<ProjectAcceptanceVO>> list(Long id);
+    BaseResult<List<ProjectAcceptanceVO>> list(Long projectId);
 
     /**
      * 项目验收历史
