@@ -59,7 +59,7 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
 
 
     @Override
-    public BaseResult<List<ProjectAcceptanceVO>> list(Long projectId) {
+    public BaseResult<List<ProjectAcceptanceVO>> acceptList(Long projectId) {
         log.info("项目验收列表,参数:{}", projectId);
         List<Integer> status = Lists.newArrayList(FlowStatusEnum.AUDITING.getCode(), FlowStatusEnum.COMPLETE.getCode(), FlowStatusEnum.REJECT.getCode());
         ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().status(status).projectId(projectId).build();
