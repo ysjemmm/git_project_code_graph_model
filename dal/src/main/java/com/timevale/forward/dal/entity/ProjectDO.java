@@ -117,4 +117,9 @@ public class ProjectDO extends BaseDO {
      */
     private Date pjEstablishPublishDate;
 
+    /**
+     * 项目暂停原因
+     */
+    private String suspendReason;
+
 }

@@ -77,7 +77,9 @@ public enum BizChangeLogFieldEnum {
 
     DESC("需求描述"),
 
-    LABEL("标签");
+    LABEL("标签"),
+
+    ATTACHMENT("附件");
 
     private final String text;
 

@@ -18,6 +18,7 @@ import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.common.query.QueryBase;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -473,6 +474,17 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
         log.info("项目:{},关联的有产品需求:{}", projectId, productDemandIds);
         return productDemandIds;
+    }
+
+    @Override
+    public List<ProjectDO> pageAllOngoingProjects(QueryBase queryBase) {
+        PageHelper.startPage(queryBase.getPageNum(), queryBase.getPageSize());
+
+        List<ProjectDO> projectDOList = projectMapper.pageAllOngoingProjects();
+
+        PageInfo<ProjectDO> pageInfo = new PageInfo<>(projectDOList);
+
+        return pageInfo.getList();
     }
 
     private List<ProductLineAnalyseVO> analyse(ProjectListCondition condition) {

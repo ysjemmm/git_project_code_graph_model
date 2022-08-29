@@ -65,5 +65,16 @@
           and is_deleted = false
     </select>
 
-
+    <select id="listAlreadyCreateProject" resultType="java.lang.String">
+        select project_id
+        from man_day
+        where week_end_date = #{yesterday,jdbcType=VARCHAR}
+        <if test="projectList != null and projectList.size() > 0">
+            and project_id in
+            <foreach collection="projectList" item="item" open="(" separator="," close=")">
+                #{item.id,jdbcType=BIGINT}
+            </foreach>
+        </if>
+        and is_deleted = false
+    </select>
 </mapper>

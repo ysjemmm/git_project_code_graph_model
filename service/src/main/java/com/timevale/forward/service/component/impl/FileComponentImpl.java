@@ -3,6 +3,12 @@ package com.timevale.forward.service.component.impl;
 import com.timevale.forward.dal.dao.FileMapper;
 import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.facade.api.request.FileAddReq;
+import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.model.enums.FileTypeEnum;
+import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
@@ -12,6 +18,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,9 +38,13 @@ public class FileComponentImpl implements FileComponent {
 
     @Resource
     private FileMapper fileMapper;
+    @Resource
+    private BizDemandLogComponent bizDemandLogComponent;
+
+    private static final String ATTACHMENT_NAME = "附件名称: ";
 
     @Override
-    public void add(List<FileAddReq> list,Long attacheId,Integer type) {
+    public void add(List<FileAddReq> list, Long attacheId, Integer type) {
         log.info("新增时,附件接收参数:list={},attacheId={},type={}", list,attacheId,type);
         if(CollectionUtils.isEmpty(list)){
             return;
@@ -44,6 +55,12 @@ public class FileComponentImpl implements FileComponent {
             List<FileDO> fileDO = FileCopier.INSTANCE.convert(list);
             fileDO.forEach(f-> fillInfo(f,attacheId,type));
             fileMapper.inserts(fileDO);
+
+            List<String> fileNameList = existFiles.stream()
+                    .map(file -> file.getFileName())
+                    .collect(Collectors.toList());
+
+            addLog(fileNameList, attacheId, ButtonActionEnum.ADD, type);
         }
     }
 
@@ -83,8 +100,15 @@ public class FileComponentImpl implements FileComponent {
         if(CollectionUtils.isNotEmpty(needAddFiles)){
             fileMapper.inserts(needAddFiles);
             log.info("编辑时,新增附件:needAddFiles={},type={}", needAddFiles,type);
+
+            List<String> addFileNameList = needAddFiles.stream()
+                    .map(FileDO::getFileName)
+                    .collect(Collectors.toList());
+
+            addLog(addFileNameList, attacheId, ButtonActionEnum.ADD, type);
         }
         List<String> reqFileIds = fileDO.stream().map(FileDO::getFileId).collect(Collectors.toList());
+        List<String> needDeleteList = Lists.newArrayList();
         existFiles.forEach((f)->{
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
             if(!reqFileIds.contains(f.getFileId())){
@@ -93,8 +117,14 @@ public class FileComponentImpl implements FileComponent {
                 f.setModifyManId(userInfo.getId());
                 //删除
                 fileMapper.update(f);
+
+                needDeleteList.add(f.getFileName());
             }
         });
+
+        if (CollectionUtils.isNotEmpty(needDeleteList)) {
+            addLog(needDeleteList, attacheId, ButtonActionEnum.DELETE, type);
+        }
     }
 
     @Override
@@ -105,6 +135,23 @@ public class FileComponentImpl implements FileComponent {
     @Override
     public List<FileDO> select(Collection<Long> attacheIdList, Integer type) {
         return fileMapper.selectByAttacheIdList(attacheIdList, type);
+    }
+
+    private void addLog(List<String> fileNameList, Long id, ButtonActionEnum actionEnum, Integer type) {
+        if (!FileTypeEnum.BIZ_DEMAND.getCode().equals(type)) {
+            return;
+        }
+
+        for (String fileName : fileNameList) {
+            // 日志, 状态改为待评估
+            bizDemandLogComponent.addLogWhenModifyData(
+                    ATTACHMENT_NAME + fileName,
+                    BizDemandStatusEnum.EVALUATE.getText(),
+                    id,
+                    BizChangeLogFieldEnum.ATTACHMENT.getText(),
+                    true,
+                    actionEnum.getText());
+        }
     }
 
     private void fillInfo(FileDO fileDO,Long attacheId, Integer type) {

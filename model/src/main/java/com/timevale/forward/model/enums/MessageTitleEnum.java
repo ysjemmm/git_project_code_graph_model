@@ -47,7 +47,9 @@ public enum MessageTitleEnum {
 
     TRACK_EVENT_APPROVAL("您有新的需要审批的埋点事件"),
 
-    PROJECT_NODE_DELAY_UNINPUT("项目节点逾期未录入通知");
+    PROJECT_NODE_DELAY_UNINPUT("项目节点逾期未录入通知"),
+
+    PROJECT_MAN_DAY_REMIND("您收到一条项目人天填报提醒");
 
     private String text;
 

@@ -2008,4 +2008,33 @@ public class DateUtil implements DateFormatConst {
         return dateFormat.format(startDate) + CommonConstant.TILDE + dateFormat.format(endDate);
     }
 
+    public static String dateStr(Date date, String f) {
+        if (date == null) {
+            return "";
+        }
+        SimpleDateFormat format = new SimpleDateFormat(f);
+        String str = format.format(date);
+        return str;
+    }
+
+    public static String getShotDate(Date date) {
+        if (date == null) {
+            return "";
+        }
+        return dateStr(date, "yyyy-MM-dd");
+    }
+
+    public static Date getDayBefore(int before) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        calendar.add(Calendar.DATE, before);
+
+        return calendar.getTime();
+    }
+
+    public static String getDayBeforeStr(int before) {
+        Date dayBefore = getDayBefore(before);
+
+        return getShotDate(dayBefore);
+    }
 }

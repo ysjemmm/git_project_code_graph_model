@@ -133,4 +133,10 @@ public interface ProjectMapper {
      */
     int updateNodeStatus(ProjectDO projectDO);
 
+    /**
+     * 获得所有进行中的项目id
+     * @return
+     */
+    List<ProjectDO> pageAllOngoingProjects();
+
 }
