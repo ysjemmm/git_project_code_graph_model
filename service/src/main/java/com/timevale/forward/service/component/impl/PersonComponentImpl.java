@@ -33,7 +33,7 @@ public class PersonComponentImpl implements PersonComponent {
     @Override
     public void add(List<PersonAddReq> list, Long mainId, Integer type) {
         log.info("人员新增接收参数:list={},mainId={},type={}", list, mainId, type);
-        if(CollectionUtils.isEmpty(list)){
+        if (CollectionUtils.isEmpty(list)) {
             return;
         }
         List<PersonDO> existPersons = select(mainId, type);
@@ -53,9 +53,9 @@ public class PersonComponentImpl implements PersonComponent {
             delete(list, mainId, type);
             return;
         }
-        List<PersonDO> personDO = PersonCopier.INSTANCE.convert(list);
+        List<PersonDO> personDOList = PersonCopier.INSTANCE.convert(list);
         List<PersonDO> existPersons = addIfNotExisted(list, mainId, type);
-        Set<String> reqPersonIds = personDO.stream().map(PersonDO::getUserId).collect(Collectors.toSet());
+        Set<String> reqPersonIds = personDOList.stream().map(PersonDO::getUserId).collect(Collectors.toSet());
         existPersons.forEach((p) -> {
             if (!reqPersonIds.contains(p.getUserId())) {
                 UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -78,18 +78,21 @@ public class PersonComponentImpl implements PersonComponent {
 
     @Override
     public List<PersonDO> addIfNotExisted(List<PersonAddReq> list, Long mainId, Integer type) {
-        List<PersonDO> personDO = PersonCopier.INSTANCE.convert(list);
-        fillInfo(mainId, type, personDO);
+        List<PersonDO> personDOList = PersonCopier.INSTANCE.convert(list);
+        fillInfo(mainId, type, personDOList);
         List<PersonDO> existPersons = select(mainId, type);
         log.info("已存在人员:existPersons={}", existPersons);
         Set<String> existUserIds = existPersons.stream().map(PersonDO::getUserId).collect(Collectors.toSet());
         List<PersonDO> needAddPersons = new ArrayList<>();
-        personDO.forEach((p) -> {
-            if (!existUserIds.contains(p.getUserId())) {
+        List<String> tmpList = new ArrayList<>();
+        personDOList.forEach((p) -> {
+            // personDOList去重
+            if (!existUserIds.contains(p.getUserId()) && !tmpList.contains(p.getUserId())) {
                 needAddPersons.add(p);
+                tmpList.add(p.getUserId());
             }
         });
-        if(CollectionUtils.isNotEmpty(needAddPersons)){
+        if (CollectionUtils.isNotEmpty(needAddPersons)) {
             personMapper.inserts(needAddPersons);
             log.info("新增人员:needAddPersons={},type={}", needAddPersons, type);
         }
@@ -97,9 +100,9 @@ public class PersonComponentImpl implements PersonComponent {
     }
 
 
-    private void fillInfo(Long mainId, Integer type, List<PersonDO> personDO) {
+    private void fillInfo(Long mainId, Integer type, List<PersonDO> personDOList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        personDO.forEach(t -> {
+        personDOList.forEach(t -> {
             t.setType(type);
             t.setMainId(mainId);
             t.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
