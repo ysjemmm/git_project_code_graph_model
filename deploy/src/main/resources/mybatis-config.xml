@@ -14,6 +14,7 @@
         <setting name="lazyLoadingEnabled" value="true"/>
         <!-- 设置超时时间，它决定驱动等待数据库响应的秒数。-->
         <setting name="defaultStatementTimeout" value="10"/>
+<!--        <setting name="logImpl" value="STDOUT_LOGGING"/>-->
     </settings>
 
     <plugins>

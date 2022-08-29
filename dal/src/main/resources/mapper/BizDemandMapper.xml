@@ -142,7 +142,7 @@
     <select id="selectList" resultType="com.timevale.forward.dal.entity.BizDemandListDO">
         select bd.id, bd.name, bd.dept_id, bd.status, bd.priority, bd.receive_man,  bd.receive_man_id, bd.target_customer,
                bd.submit_man, bd.submit_man_id, bd.plan_release_date, bd.project_end_date,
-               bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date, bd.source_id
+               bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date, bd.source_id,
                pl.id productLineId, pl.name productLineName,
                b.id bizDomainId , b.name bizDomainName
         from biz_demand bd
