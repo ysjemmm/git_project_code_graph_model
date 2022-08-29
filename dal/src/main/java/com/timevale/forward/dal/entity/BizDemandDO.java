@@ -122,4 +122,9 @@ public class BizDemandDO extends BaseDO {
      * 项目名称
      */
     private String customerDevProjectName;
+
+    /**
+     * 来源id
+     */
+    private String sourceId;
 }

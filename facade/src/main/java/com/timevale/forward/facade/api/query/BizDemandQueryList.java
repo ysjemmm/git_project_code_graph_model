@@ -75,6 +75,9 @@ public class BizDemandQueryList extends QueryBase {
     @ApiModelProperty("排序规则：0正序，1逆序")
     private Integer orderCollation;
 
+    @ApiModelProperty("来源id")
+    private String sourceId;
+
     @ApiModelProperty("选中为标签时填写,标签id")
     private List<Long> labelIds;
 

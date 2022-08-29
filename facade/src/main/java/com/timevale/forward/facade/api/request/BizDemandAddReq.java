@@ -81,4 +81,7 @@ public class BizDemandAddReq extends BaseReq {
 
     @ApiModelProperty("项目名称")
     private String customerDevProjectName;
+
+    @ApiModelProperty("来源id")
+    private String sourceId;
 }
