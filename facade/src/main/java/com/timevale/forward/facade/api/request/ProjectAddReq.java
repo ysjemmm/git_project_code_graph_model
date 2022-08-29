@@ -81,5 +81,6 @@ public class ProjectAddReq extends BaseReq {
     private List<Long> labelIds;
 
     @ApiModelProperty("是否需要验收：0否，1是")
+    @NotNull(message = "是否需要验收不能为空")
     private Integer isAcceptance;
 }

@@ -733,7 +733,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (released && YesOrNoEnum.YES.getCode().equals(newProject.getIsAcceptance())) {
             ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().projectId(newProject.getId()).build();
             List<ProjectAcceptanceDO> list = projectAcceptanceMapper.list(c);
-            if (CollectionUtils.isNotEmpty(list)) {
+            if (CollectionUtils.isEmpty(list)) {
                 throw new BaseBizRuntimeException("您还没有发起项目验收,请验收通过后再发布");
             }
             boolean match = list.stream().anyMatch(a -> FlowStatusEnum.AUDITING.getCode().equals(a.getStatus())

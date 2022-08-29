@@ -209,7 +209,7 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
         ProjectAcceptanceDO o = new ProjectAcceptanceDO();
         o.setId(req.getId());
         o.setDesc(req.getDesc());
-        o.setAcceptDate(accept ? new Date() : null);
+        o.setAcceptDate(new Date());
         o.setStatus(accept ? FlowStatusEnum.COMPLETE.getCode() : FlowStatusEnum.REJECT.getCode());
         projectAcceptanceMapper.update(o);
 
