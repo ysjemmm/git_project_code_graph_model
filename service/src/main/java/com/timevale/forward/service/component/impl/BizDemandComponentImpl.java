@@ -209,6 +209,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     public QueryResultVO<BizDemandVO> page(BizDemandListCondition bizDemandListCondition) {
         Map<Long, GroupResponse> deptNodeMap = new HashMap<>();
         Set<Long> queryDeptIdSet = Sets.newHashSet(bizDemandListCondition.getDeptIdList());
+        if (queryDeptIdSet == null) {
+            queryDeptIdSet = new HashSet<>();
+        }
 
         // 如果查询条件有部门id，收集子部门id及所需部门的完整名
         if (!CollectionUtils.isEmpty(queryDeptIdSet)) {
