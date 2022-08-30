@@ -25,7 +25,7 @@ import java.util.List;
  * @date 2022/8/29/029 15:27
  */
 @Slf4j
-@JobHandler(value = "ProjectManDayRemindJob")
+@JobHandler(value = "projectManDayRemindJob")
 public class ProjectManDayRemindJob extends IJobHandler {
     @Resource
     private ProjectComponent projectComponent;
