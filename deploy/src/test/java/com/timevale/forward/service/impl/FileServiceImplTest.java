@@ -36,7 +36,7 @@ public class FileServiceImplTest extends AbstractTestNGSpringContextTests {
     public void testAdd() {
 
         List<FileDO> list= Lists.newArrayList(new FileDO());
-        when(fileComponent.select(any(), any())).thenReturn(list);
+        when(fileComponent.select(1L ,1)).thenReturn(list);
         when(fileMapper.updateFileId(any())).thenReturn(1);
         assert fileService.add(new FileAddReq()).ifSuccess();
     }
@@ -44,7 +44,7 @@ public class FileServiceImplTest extends AbstractTestNGSpringContextTests {
     @Test
     public void testGetFiles() {
         List<FileDO> list= Lists.newArrayList(new FileDO());
-        when(fileComponent.select(any(), any())).thenReturn(list);
+        when(fileComponent.select(1L ,1)).thenReturn(list);
         assert fileService.getFiles().ifSuccess();
     }
 }

@@ -113,7 +113,7 @@ public class TroubleTicketServiceImplTest extends AbstractTestNGSpringContextTes
 
         when(bizDemandComponent.getDeptChainName(any())).thenReturn("1");
         when(personComponent.select(any(),any())).thenReturn(Lists.emptyList());
-        when(fileComponent.select(any(),any())).thenReturn(Lists.emptyList());
+        when(fileComponent.select(1L ,1)).thenReturn(Lists.emptyList());
 
         assert troubleTicketService.get(1L).ifSuccess();
     }

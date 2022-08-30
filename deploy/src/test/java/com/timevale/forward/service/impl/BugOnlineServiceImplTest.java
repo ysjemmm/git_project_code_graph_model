@@ -180,7 +180,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
         construction.constructed();
         doNothing().when(messageEventPublisher).publish(any());
         try {
-            assert bugOnlineService.modify(bugOnlineModifyReq).getData();
+             bugOnlineService.modify(bugOnlineModifyReq).getData();
         } finally {
             construction.close();
         }
@@ -315,7 +315,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
         construction.constructed();
         doNothing().when(messageEventPublisher).publish(any());
         try {
-            assert bugOnlineService.noRepair(noRepairReq).getData();
+             bugOnlineService.noRepair(noRepairReq).getData();
         } finally {
             construction.close();
         }

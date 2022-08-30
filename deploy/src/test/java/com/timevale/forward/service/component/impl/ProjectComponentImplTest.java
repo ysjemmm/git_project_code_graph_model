@@ -139,11 +139,6 @@ public class ProjectComponentImplTest extends AbstractTestNGSpringContextTests {
         projectComponent.updateNodeStatus(1L);
     }
 
-    @Test
-    public void testGetLinkBizDemandIds() {
-        when(projectProductDemandMapper.getByProjectId(any())).thenReturn(Lists.newArrayList(new ProjectProductDemandDO(){{setProductDemandId(1L);}}));
-        projectComponent.getLinkBizDemandIds(1L);
-    }
 }
 
 
