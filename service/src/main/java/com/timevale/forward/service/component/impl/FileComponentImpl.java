@@ -143,14 +143,11 @@ public class FileComponentImpl implements FileComponent {
         }
 
         for (String fileName : fileNameList) {
+            String showName = ATTACHMENT_NAME + fileName;
+
             // 日志, 状态改为待评估
-            bizDemandLogComponent.addLogWhenModifyData(
-                    ATTACHMENT_NAME + fileName,
-                    BizDemandStatusEnum.EVALUATE.getText(),
-                    id,
-                    BizChangeLogFieldEnum.ATTACHMENT.getText(),
-                    true,
-                    actionEnum.getText());
+            bizDemandLogComponent.addLogWhenModifyData(showName, showName, id,
+                    BizChangeLogFieldEnum.ATTACHMENT.getText(), true, actionEnum.getText());
         }
     }
 
