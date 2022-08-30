@@ -525,6 +525,7 @@ public class TaskServiceImpl implements TaskService {
 
         checkPlanDate(taskDos.get(0));
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        List<PersonAddReq> executors=new ArrayList<>();
         taskSimples.forEach(a -> {
             threadPoolTaskExecutor.execute(() -> {
                 TaskDO taskDO = TaskCopier.INSTANCE.convert(a);
@@ -542,10 +543,13 @@ public class TaskServiceImpl implements TaskService {
                 taskMapper.insert(taskDO);
                 //执行人
                 personComponent.add(a.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
-                // 若执行人不在项目成员中,需新增
-                personComponent.addIfNotExisted(a.getExecutors(), taskDO.getProjectId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
+
             });
+            //添加每个人任务的执行人
+            executors.addAll(a.getExecutors());
         });
+        // 若执行人不在项目成员中,需新增
+        personComponent.addIfNotExisted(executors, taskDos.get(0).getProjectId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
         return BaseResult.success(true);
 
     }
