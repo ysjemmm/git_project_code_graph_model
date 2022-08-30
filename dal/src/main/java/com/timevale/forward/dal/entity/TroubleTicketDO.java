@@ -167,7 +167,7 @@ public class TroubleTicketDO extends BaseDO {
     /**
      * 故障扣分
      */
-    private Integer deductPoints;
+    private Long deductPoints;
 
     /**
      * 数据统计说明

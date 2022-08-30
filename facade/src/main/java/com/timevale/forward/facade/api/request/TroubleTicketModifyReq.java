@@ -146,7 +146,7 @@ public class TroubleTicketModifyReq extends BaseReq {
     private Integer cause;
 
     @ApiModelProperty("故障扣分")
-    private Integer deductPoints;
+    private Long deductPoints;
 
     @ApiModelProperty("数据统计说明")
     @NotNull(message = "数据统计说明不能为空")

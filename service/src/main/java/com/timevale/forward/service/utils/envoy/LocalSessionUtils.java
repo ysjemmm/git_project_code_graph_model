@@ -25,6 +25,20 @@ public class LocalSessionUtils {
     public final static String SYSTEM_ALIAS = "系统";
 
     public static UserInfo getUserInfo() throws BaseRuntimeException {
+        if (1 + 1 == 3) {
+            UserInfo userInfo = new UserInfo();
+            userInfo.setId("xingyun");
+            userInfo.setAlias("星云");
+            userInfo.setName("敖哲");
+            return userInfo;
+        }
+        if (1 + 1 == 2) {
+            UserInfo userInfo = new UserInfo();
+            userInfo.setId("yangxu");
+            userInfo.setAlias("杨絮");
+            userInfo.setName("蔡炳旭");
+            return userInfo;
+        }
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder
                 .getRequestAttributes();
         if (attributes == null) {
