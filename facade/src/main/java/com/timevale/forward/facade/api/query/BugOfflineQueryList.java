@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -45,7 +46,7 @@ public class BugOfflineQueryList extends QueryBase {
     @ApiModelProperty("bug环境")
     private List<Integer> envs;
 
-    @ApiModelProperty("bug原因")
+    @ApiModelProperty("bug原因：1功能错误，2功能缺失，3改动波及，4参数校验错误，5历史遗留，6实现与需求不符，7配置错误，8环境部署，9页面格式错误，10文案提示，11UI和原型不一致，12数据问题，13需求问题，14兼容性问题，15交互体验，16交付文档错误，17优化建议，18性能问题，19安全问题，20数据库问题，21低级错误，22外部原因，23重复出现，24合并代码冲突")
     private List<String> reasons;
 
     @ApiModelProperty("bug来源")
@@ -80,4 +81,16 @@ public class BugOfflineQueryList extends QueryBase {
 
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
     private String ascription;
+
+    @ApiModelProperty("排序字段")
+    private String orderFiled;
+
+    @ApiModelProperty("排序规则：0正序，1逆序")
+    private Integer orderCollation;
+
+    @ApiModelProperty("选中为标签时填写,标签id")
+    private List<Long> labelIds;
+
+    @ApiModelProperty("选中为标签类别时填写,类别id")
+    private List<Long> labelCategoryIds;
 }

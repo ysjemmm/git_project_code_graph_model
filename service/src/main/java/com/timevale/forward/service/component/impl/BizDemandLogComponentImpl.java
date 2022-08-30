@@ -196,39 +196,11 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
         }
     }
 
-
     @Override
-    public void addLogAsProductDemandStatusChange(Map<Long, Integer> oldStatusMap, Map<Integer, List<Long>> newStatusMap) {
-        Map<Long, Integer> newStatusChangeMap = new HashMap<>();
-        newStatusMap.forEach((status, ids) -> {
-            ids.forEach(id -> {
-                newStatusChangeMap.put(id, status);
-            });
-        });
-        List<BizChangeLogDO> logs = new ArrayList<>();
-        oldStatusMap.forEach((id, oldStatus) -> {
-            if (newStatusChangeMap.containsKey(id) && !Objects.equals(oldStatus, newStatusChangeMap.get(id))) {
-                BizChangeLogDO logDO = new BizChangeLogDO();
-                logDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
-                logDO.setMainId(id);
-                logDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
-                logDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
-                logDO.setNewValue(BizDemandStatusEnum.getTextByCode(newStatusChangeMap.get(id)));
-                logDO.setCreateMan(CommonConstant.SYSTEM);
-                logDO.setCreateManId(CommonConstant.SYSTEM);
-                logs.add(logDO);
-            }
-        });
-        if (CollectionUtil.isNotEmpty(logs)) {
-            bizChangeLogMapper.batchInsert(logs);
-        }
-    }
-
-    @Override
-    public void addLogAsProductDemandStatusChange(Long id,Integer oldStatus, Integer newStatus) {
+    public void addLogAsProductDemandStatusChange(Integer oldStatus, Integer newStatus, Long id,Integer type) {
         if(!Objects.equals(oldStatus,newStatus)){
             BizChangeLogDO logDO = new BizChangeLogDO();
-            logDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+            logDO.setType(type);
             logDO.setMainId(id);
             logDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
             logDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
@@ -238,6 +210,7 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
             bizChangeLogMapper.insert(logDO);
         }
     }
+
     @Override
     public BizChangeLogDO getLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active) {
         return getLogWhenModifyData(oldValue, newValue, id, field, active, "");
@@ -260,7 +233,12 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
 
     @Override
     public BizChangeLogDO buildLogWhenPublishDateChange(String oldValue, String newValue, Long id) {
-        BizChangeLogDO logDO = newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+        return buildLogWhenPublishDateChange(oldValue,newValue,id,BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+    }
+
+    @Override
+    public BizChangeLogDO buildLogWhenPublishDateChange(String oldValue, String newValue, Long id, Integer type) {
+        BizChangeLogDO logDO = newBizChangeLogDO(false, type);
         logDO.setMainId(id);
         logDO.setField(BizChangeLogFieldEnum.PROJECT_RELEASE_DATE.getText());
         logDO.setOldValue(oldValue);

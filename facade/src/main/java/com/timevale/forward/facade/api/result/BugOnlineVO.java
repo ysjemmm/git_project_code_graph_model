@@ -56,8 +56,20 @@ public class BugOnlineVO extends ToString {
     @ApiModelProperty("bug原因")
     private Integer reason;
 
-    @ApiModelProperty("bug原因")
+    @ApiModelProperty("bug原因-描述")
     private String reasonName;
+
+    @ApiModelProperty("驳回原因")
+    private Integer dismissCause;
+
+    @ApiModelProperty("驳回原因-描述")
+    private String dismissCauseName;
+
+    @ApiModelProperty("来源: forward 产研系统， support 运营支撑平台， duty 值班反馈")
+    private String source;
+
+    @ApiModelProperty("来源-描述")
+    private String sourceName;
 
     @ApiModelProperty("bug环境：0生产环境，1模拟环境")
     private Integer env;
@@ -77,4 +89,15 @@ public class BugOnlineVO extends ToString {
     @ApiModelProperty("更新时间")
     private Date modifyDate;
 
+    @ApiModelProperty("客户名称")
+    private String customerName;
+
+    @ApiModelProperty("预计上线日期")
+    private Date expectLaunchDate;
+
+    @ApiModelProperty("标签名称")
+    private List<String> labelNames;
+
+    @ApiModelProperty("模块名称")
+    private List<String> modelNames;
 }

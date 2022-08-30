@@ -28,6 +28,7 @@ public interface ProjectFlowMapper {
      */
     List<ProjectFlowDO> getByProjectId(@Param("projectId") Long projectId);
 
+
     /**
      * 新增单条项目
      *
@@ -36,4 +37,12 @@ public interface ProjectFlowMapper {
      */
     int update(ProjectFlowDO projectFlowDO);
 
+    /**
+     * 根据项目id和流程类型获取
+     * @param projectId 项目id
+     * @param flowType 流程类型
+     * @return 流程列表
+     */
+    List<ProjectFlowDO> getByProjectIdAndType(@Param("projectId") Long projectId,
+                                              @Param("flowType") Integer flowType);
 }

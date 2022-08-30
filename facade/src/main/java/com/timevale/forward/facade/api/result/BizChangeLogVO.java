@@ -9,7 +9,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
-import java.util.List;
 
 
 /**
@@ -30,7 +29,7 @@ public class BizChangeLogVO extends ToString {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long mainId;
 
-    @ApiModelProperty("内容变更记录类型:2项目，3产品需求，4业务需求")
+    @ApiModelProperty("内容变更记录类型:2项目，3产品需求，4业务需求,5客户需求")
     private Integer type;
 
     @ApiModelProperty("变更前的值")
@@ -44,6 +43,12 @@ public class BizChangeLogVO extends ToString {
 
     @ApiModelProperty("按钮动作")
     private String action;
+
+    @ApiModelProperty("唯一标识")
+    private String identity;
+
+    @ApiModelProperty("json文本")
+    private BizChangeLogContentVO content;
 
     @ApiModelProperty("操作人")
     private String createMan;

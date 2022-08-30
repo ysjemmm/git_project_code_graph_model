@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @author xingyun
@@ -131,5 +132,10 @@ public class BugOfflineDO extends BaseDO {
      * 解决方案
      */
     private String solvePlan;
+
+    /**
+     * 预计解决完成日期
+     */
+    private Date expectSolveDate;
 
 }

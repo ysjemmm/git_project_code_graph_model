@@ -131,7 +131,7 @@ public class TaskComponentImplTest extends AbstractTestNGSpringContextTests {
         Map<String, String> map= Maps.newHashMap();
         map.put("1","1");
         when(innerUserPersonClient.getUnionIds(any())).thenReturn(map);
-        taskComponentImpl.addTodoTask(taskDO, Lists.newArrayList("1"));
+        taskComponentImpl.addTodoTask(taskDO, Lists.newArrayList("1"),any());
     }
 
     @Test

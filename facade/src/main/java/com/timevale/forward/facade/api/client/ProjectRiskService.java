@@ -6,6 +6,7 @@ import com.timevale.forward.facade.api.query.ProjectRiskQueryList;
 import com.timevale.forward.facade.api.request.ProjectRiskAddReq;
 import com.timevale.forward.facade.api.request.ProjectRiskModifyReq;
 import com.timevale.forward.facade.api.result.ProjectRiskVO;
+import com.timevale.forward.facade.api.result.UpdateTimeVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
@@ -19,6 +20,13 @@ public interface ProjectRiskService {
      * 项目风险-数据同步
      */
     BaseResult<Boolean> sync();
+
+    /**
+     * 获取更新时间
+     *
+     * @return {@link BaseResult}<{@link UpdateTimeVO}>
+     */
+    BaseResult<UpdateTimeVO> projectRiskUpdateTime();
 
     /**
      * 添加
@@ -46,5 +54,11 @@ public interface ProjectRiskService {
      * @param projectRiskQueryList 项目风险-分页查询
      */
     BaseResult<PageQueryResult<ProjectRiskVO>> list(ProjectRiskQueryList projectRiskQueryList);
+
+    /**
+     * 给逾期未录入节点发送钉钉消息
+     * @return Boolean
+     */
+    BaseResult<Boolean> syncRiskRecord();
 
 }

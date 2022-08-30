@@ -3,6 +3,7 @@ package com.timevale.forward.service.component;
 import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.facade.api.request.FileAddReq;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface FileComponent {
@@ -29,4 +30,12 @@ public interface FileComponent {
      * @return 列表
      */
     List<FileDO> select(Long attacheId, Integer type);
+
+    /**
+     *
+     * @param attacheIdList 附属id列表
+     * @param type 附属类型
+     * @return 列表
+     */
+    List<FileDO> select(Collection<Long> attacheIdList, Integer type);
 }

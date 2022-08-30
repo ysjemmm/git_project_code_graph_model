@@ -1,7 +1,6 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.forward.dal.annotation.WildcardEscape;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -121,4 +120,9 @@ public class BugOfflineListCondition {
      * 用于判断是否为"抄送我的需求"tab
      */
     private String copier;
+
+    /**
+     *包含的id
+     */
+    private List<Long> containIds;
 }

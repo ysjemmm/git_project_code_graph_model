@@ -74,13 +74,34 @@
         <mapper resource="mapper/ImprovementMeasureMapper.xml"/>
         <mapper resource="mapper/BugOnlineMapper.xml"/>
         <mapper resource="mapper/BugOnlineProductLineMapper.xml"/>
+        <mapper resource="mapper/BugOnlineModelMapper.xml"/>
         <mapper resource="mapper/BugStatusOperatorMapper.xml"/>
         <mapper resource="mapper/BizChangeLogMapper.xml"/>
         <mapper resource="mapper/SearchConditionMapper.xml"/>
         <mapper resource="mapper/ProjectRiskMapper.xml"/>
         <mapper resource="mapper/ProjectRiskExplanationMapper.xml"/>
+        <mapper resource="mapper/ProjectRiskRecordMapper.xml"/>
         <mapper resource="mapper/ProjectFlow.xml"/>
         <mapper resource="mapper/ProjectPublishPlan.xml"/>
+        <mapper resource="mapper/ProjectGoalMapper.xml"/>
+        <mapper resource="mapper/ManDayMapper.xml"/>
         <mapper resource="mapper/ModelMapper.xml"/>
+        <mapper resource="mapper/TrackMapMapper.xml"/>
+        <mapper resource="mapper/TrackEventMapper.xml"/>
+        <mapper resource="mapper/ProductDemandTrackEventMapper.xml"/>
+        <mapper resource="mapper/TrackEventPropMapper.xml"/>
+        <mapper resource="mapper/TrackPropMapper.xml"/>
+        <mapper resource="mapper/ColumnHideMapper.xml"/>
+        <mapper resource="mapper/ProductDemandDescFlowMapper.xml" />
+        <mapper resource="mapper/ProductDemandDescRecordMapper.xml" />
+        <mapper resource="mapper/ProjectNodeFlowMapper.xml" />
+        <mapper resource="mapper/ProjectNodeRecordMapper.xml" />
+        <mapper resource="mapper/CustomDemandMapper.xml" />
+        <mapper resource="mapper/ProductCustomDemandMapper.xml" />
+        <mapper resource="mapper/LabelCategoryMapper.xml" />
+        <mapper resource="mapper/LabelMapper.xml" />
+        <mapper resource="mapper/LabelCategoryBizDomain.xml" />
+        <mapper resource="mapper/BizLabelMapper.xml" />
+        <mapper resource="mapper/TrackImportLogMapper.xml" />
     </mappers>
 </configuration>

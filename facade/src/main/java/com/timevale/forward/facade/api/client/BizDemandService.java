@@ -6,8 +6,11 @@ import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizDemandDetailVO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.mandarin.common.annotation.RestClient;
-import com.timevale.mandarin.common.result.PageQueryResult;
+
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -22,7 +25,15 @@ public interface BizDemandService {
      * @param bizDemandQueryList 业务需求查询列表
      * @return 列表
      */
-    BaseResult<PageQueryResult<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList);
+    BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList);
+
+    /**
+     * 列表分类 by 产品线
+     *
+     * @param bizDemandQueryList 业务需求查询列表
+     * @return {@link BaseResult}<{@link List}<{@link ProductLineAnalyseVO}>>
+     */
+    BaseResult<List<ProductLineAnalyseVO>> listClassify(BizDemandQueryList bizDemandQueryList);
 
     /**
      * 作废
@@ -116,5 +127,12 @@ public interface BizDemandService {
      * @param bizDemandCompletedRejectReq 业务需求完成拒绝要求事情
      */
     BaseResult<Boolean> completedReject(BizDemandCompletedRejectReq bizDemandCompletedRejectReq);
+
+    /**
+     * 被驳回后 可重新提交
+     * @param bizDemandResubmitReq bizDemandResubmitReq
+     * @return Boolean
+     */
+    BaseResult<Boolean> reSubmit(BizDemandResubmitReq bizDemandResubmitReq);
 
 }

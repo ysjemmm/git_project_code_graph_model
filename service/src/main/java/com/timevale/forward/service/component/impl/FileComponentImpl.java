@@ -8,12 +8,16 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,7 +31,7 @@ public class FileComponentImpl implements FileComponent {
 
     @Resource
     private FileMapper fileMapper;
-    
+
     @Override
     public void add(List<FileAddReq> list,Long attacheId,Integer type) {
         log.info("新增时,附件接收参数:list={},attacheId={},type={}", list,attacheId,type);
@@ -38,14 +42,13 @@ public class FileComponentImpl implements FileComponent {
         log.info("已存在附件:existPersons={}", existFiles);
         if(CollectionUtils.isEmpty(existFiles)){
             List<FileDO> fileDO = FileCopier.INSTANCE.convert(list);
-            fileDO.forEach(f->{
-                fillInfo(f,attacheId,type);
-            });
+            fileDO.forEach(f-> fillInfo(f,attacheId,type));
             fileMapper.inserts(fileDO);
         }
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(List<FileAddReq> list, Long attacheId, Integer type) {
         log.info("编辑时,附件接收参数:list={},attacheId={},type={}", list,attacheId,type);
         if(CollectionUtils.isEmpty(list)){
@@ -61,14 +64,20 @@ public class FileComponentImpl implements FileComponent {
         List<FileDO> existFiles = fileMapper.select(attacheId, type);
         log.info("已存在附件:existFiles={}", existFiles);
         List<FileDO> fileDO = FileCopier.INSTANCE.convert(list);
-        fileDO.forEach(f->{
-            fillInfo(f,attacheId,type);
-        });
+        fileDO.forEach(f-> fillInfo(f,attacheId,type));
         List<String> existFileIds = existFiles.stream().map(FileDO::getFileId).collect(Collectors.toList());
         List<FileDO> needAddFiles=new ArrayList<>();
         fileDO.forEach((f)->{
             if(!existFileIds.contains(f.getFileId())){
                 needAddFiles.add(f);
+            }else{
+                // 更新已存在的附件
+                FileDO updateFileDO = new FileDO();
+                updateFileDO.setType(type);
+                updateFileDO.setAttacheId(attacheId);
+                updateFileDO.setFileId(f.getFileId());
+                updateFileDO.setFileName(f.getFileName());
+                fileMapper.update(updateFileDO);
             }
         });
         if(CollectionUtils.isNotEmpty(needAddFiles)){
@@ -91,6 +100,11 @@ public class FileComponentImpl implements FileComponent {
     @Override
     public List<FileDO> select(Long attacheId, Integer type) {
         return fileMapper.select(attacheId, type);
+    }
+
+    @Override
+    public List<FileDO> select(Collection<Long> attacheIdList, Integer type) {
+        return fileMapper.selectByAttacheIdList(attacheIdList, type);
     }
 
     private void fillInfo(FileDO fileDO,Long attacheId, Integer type) {

@@ -1,18 +1,16 @@
 package com.timevale.forward.service.impl;
 
-import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
-import com.timevale.mandarin.common.result.PageQueryResult;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -113,9 +111,7 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
 
         when(personMapper.getMainIds(any(), any(), any())).thenReturn(Arrays.asList(1L, 2L));
 
-        BaseResult<PageQueryResult<ProjectVO>> baseResult = new BaseResult<>();
-        baseResult.setMessage("成功");
-        when(projectComponent.page(any(), any())).thenReturn(baseResult);
+        when(projectComponent.page(any(), any())).thenReturn(new QueryResultVO<>());
 
         ProjectQueryList projectQueryList = new ProjectQueryList();
         projectQueryList.setPageNum(1);
@@ -142,7 +138,7 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
 
         List<Long> list = new ArrayList<>();
         list.add(1L);
-        doNothing().when(productDemandComponent).updateBizDemandStatusAsProductStatusChange(list, false);
+        doNothing().when(productDemandComponent).updateDemandStatusAsProductStatusChange(list, false);
 
         doNothing().when(taskComponent).updateStatusAsProjectStatusChange(any(), any(), any());
 

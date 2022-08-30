@@ -1,38 +1,33 @@
 package com.timevale.forward.service.impl;
 
-import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.query.*;
-import com.timevale.forward.facade.api.request.BatchTransferReq;
 import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
 import com.timevale.forward.facade.api.request.ProductDemandAddReq;
 import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
-import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
-import com.timevale.forward.facade.api.result.ProductDemandVO;
-import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
-import com.timevale.mandarin.common.result.PageQueryResult;
-import com.timevale.security.facade.response.BaseInfoResponse;
-import com.timevale.security.facade.response.GroupModelResponse;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.security.facade.response.GroupResponse;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.Test;
-import org.testng.collections.Lists;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 /**
@@ -89,44 +84,26 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
     @Mock
     private TaskProductDemandComponent taskProductDemandComponent;
 
-    @Mock
-    private ProductDemandLogComponent productDemandLogComponent;
-
-    @Mock
-    private ProjectLogComponent projectLogComponent;
-
-    @Mock
-    private BizDemandLogComponent bizDemandLogComponent;
-
-    @Mock
-    private MessageEventPublisher messageEventPublisher;
-
-
     @Test
     public void testList() {
+        UserInfo userInfo = new UserInfo();
+        userInfo.setId("www");
+        MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
+        localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
+
         ProductDemandListDO productDemandListDO = new ProductDemandListDO();
         productDemandListDO.setStatus(1);
         productDemandListDO.setPriority(1);
         when(productDemandComponent.list(any())).thenReturn(Collections.singletonList(productDemandListDO));
 
         ProductDemandQueryList productDemandQueryList = new ProductDemandQueryList();
-        productDemandQueryList.setAscription("TEAM");
+        productDemandQueryList.setAscription("CURRENT_USER");
         productDemandQueryList.setPageNum(1);
         productDemandQueryList.setPageSize(5);
-        productDemandQueryList.setOwnerIds(Collections.singletonList("1"));
+        productDemandQueryList.setOwnerIds(Collections.singletonList("www"));
 
-        when(innerUserPersonClient.getAllMyStaffWithSelf(any(),any())).thenReturn(Lists.newArrayList("1"));
-        BaseResult<PageQueryResult<ProductDemandVO>> result = productDemandService.list(productDemandQueryList);
-
-        BaseInfoResponse baseInfoResponse=new BaseInfoResponse();
-        GroupModelResponse groupModelResponse=new GroupModelResponse();
-        baseInfoResponse.setDefaultGroup(groupModelResponse);
-        when(innerUserPersonClient.getPersonByAccountNew(any())).thenReturn(Lists.newArrayList(baseInfoResponse));
-        when(innerUserPersonClient.getAllByGroupId(any())).thenReturn(Lists.newArrayList("1"));
-        productDemandQueryList.setAscription("DEPARTMENT");
-        result = productDemandService.list(productDemandQueryList);
-
-        assert result.ifSuccess();
+        assert productDemandService.list(productDemandQueryList).ifSuccess();
+        localSessionUtilsMockedStatic.close();
     }
 
 
@@ -162,7 +139,6 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
         ProductDemandAddReq productDemandAddReq = new ProductDemandAddReq();
         productDemandAddReq.setTypes(Collections.singletonList(1));
         productDemandAddReq.setProjectId(1L);
-        productDemandAddReq.setName("");
 
         assert productDemandService.add(productDemandAddReq).ifSuccess();
     }
@@ -196,9 +172,7 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
 
         when(projectProductDemandMapper.getByProductDemandId(any())).thenReturn(null);
 
-        BaseResult<PageQueryResult<ProjectVO>> baseResult = new BaseResult<>();
-        baseResult.setMessage("成功");
-        when(projectCmponent.page(any(), any())).thenReturn(baseResult);
+//        when(projectCmponent.page(any(), any())).thenReturn(new QueryResultVO<>());
 
         ProductDemandLinkProjectQueryList productDemandLinkProjectQueryList = new ProductDemandLinkProjectQueryList();
         productDemandLinkProjectQueryList.setProductDemandId(1L);
@@ -217,9 +191,7 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
         productBizDemandDO.setBizDemandId(1L);
         when(productBizDemandMapper.select(any())).thenReturn(Collections.singletonList(productBizDemandDO));
 
-        BaseResult<PageQueryResult<BizDemandVO>> baseResult = new BaseResult<>();
-        baseResult.setMessage("成功");
-        when(bizDemandComponent.page(any())).thenReturn(baseResult);
+        when(bizDemandComponent.page(any())).thenReturn(new QueryResultVO<>());
 
         ProductDemandLinkBizDemandQueryList productDemandLinkBizDemandQueryList = new ProductDemandLinkBizDemandQueryList();
         productDemandLinkBizDemandQueryList.setStatusList(Collections.singletonList(1));
@@ -228,6 +200,7 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
         PersonQuery personQuery = new PersonQuery();
         personQuery.setUserId("www");
         productDemandLinkBizDemandQueryList.setProductDemandId(1L);
+        productDemandLinkBizDemandQueryList.setBizDomainIdList(Collections.singletonList(1L));
 
         assert productDemandService.matchBizDemandList(productDemandLinkBizDemandQueryList).ifSuccess();
     }
@@ -238,7 +211,7 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
         ProductBizDemandLinkReq productBizDemandLinkReq = new ProductBizDemandLinkReq();
         productBizDemandLinkReq.setBizDemandIds(Collections.singletonList(1L));
         productBizDemandLinkReq.setType(0);
-        when(productDemandMapper.selectById(any())).thenReturn(new ProductDemandDO());
+
         assert productDemandService.linkOrUnLinkBizDemand(productBizDemandLinkReq).ifSuccess();
     }
 
@@ -273,15 +246,6 @@ public class ProductDemandServiceImplTest extends AbstractTestNGSpringContextTes
         productBizDemandQueryList.setPageSize(5);
 
         assert productDemandService.linkBizDemandList(productBizDemandQueryList).ifSuccess();
-    }
-
-    @Test
-    public void testTransferReceiveMan() {
-        BatchTransferReq req=new BatchTransferReq();
-        req.setIdList(Lists.newArrayList(1L));
-        when(productDemandMapper.selectByIdList(any())).thenReturn(Lists.newArrayList(new ProductDemandDO()));
-
-        assert productDemandService.productDemandBatchTransferReceiveMan(req).ifSuccess();
     }
 
 }

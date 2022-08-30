@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.Range;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -101,6 +102,10 @@ public class TroubleTicketAddReq extends BaseReq {
     @ApiModelProperty("责任团队id")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long dutyTeam;
+
+    @ApiModelProperty("是否监控发现")
+    @NotNull(message = "是否监控发现不能为空")
+    private Integer isMonitorDetect;
 
     @ApiModelProperty("改进措施列表")
     private List<ImprovementMeasureAddReq> improvementMeasureAddReqList;

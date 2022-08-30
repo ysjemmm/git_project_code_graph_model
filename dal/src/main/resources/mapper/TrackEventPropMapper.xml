@@ -1,0 +1,75 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.TrackEvenPropMapper">
+
+    <select id="select" resultType="com.timevale.forward.dal.entity.TrackEventPropDO">
+        select id, track_prop_id, track_event_id, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        from track_event_prop
+        <where>
+            <if test="id!=null">
+                and id = #{id}
+            </if>
+            <if test="trackPropId!=null">
+                and track_prop_id = #{trackPropId}
+            </if>
+            <if test="trackEventId!=null">
+                and track_event_id = #{trackEventId}
+            </if>
+            <if test="isDeleted!=null">
+                and is_deleted = #{isDeleted}
+            </if>
+        </where>
+    </select>
+
+
+    <update id="update" parameterType="com.timevale.forward.dal.entity.TrackEventPropDO">
+        update track_event_prop
+        <set>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            <if test="trackPropId!=null">and track_prop_id = #{trackPropId}</if>
+            <if test="trackEventId!=null">and track_event_id = #{trackEventId}</if>
+            and is_deleted=false
+        </where>
+    </update>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into track_event_prop (track_prop_id,track_event_id,create_man_id, create_man)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.trackPropId}, #{i.trackEventId}, #{createManId},#{createMan})
+        </foreach>
+    </insert>
+
+    <insert id="batchInsertNotIC" parameterType="java.util.List">
+        insert into track_event_prop (track_prop_id,track_event_id,create_man_id, create_man, modify_man_id, modify_man)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.trackPropId}, #{i.trackEventId}, #{i.createManId},#{i.createMan}, #{i.createManId}, #{i.createMan})
+        </foreach>
+    </insert>
+
+    <select id="getByEventId" resultType="com.timevale.forward.dal.entity.TrackEventPropItemDO">
+        select a.id track_event_id,a.flow_id, c.id track_prop_id ,c.cn_name,c.eg_name
+        , case when c.status =-1 then '已撤回'
+        when c.status =0 then '审核中'
+        when c.status =1 then '审核通过'
+        when c.status =2 then '审核不通过'
+        end as status
+        ,case when c.type =0 then '新增属性'
+        when c.type =1 then '已有属性'
+        when c.type =2 then '默认属性'
+        end as type
+        ,c.data_type
+        from track_event a
+        join track_event_prop b on a.id=b.track_event_id  and b.is_deleted=false
+        join track_prop c on b.track_prop_id=c.id
+        <where>
+            a.id = #{eventId} and a.status=0
+        </where>
+    </select>
+
+</mapper>

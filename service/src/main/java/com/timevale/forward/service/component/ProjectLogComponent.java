@@ -11,4 +11,6 @@ public interface ProjectLogComponent{
     void addLogWhenStatusChange(Integer oldStatus,Integer newStatus,Long id,String action) ;
 
     void addLogWhenLinkOrUnlink(String name, Long id,Map<Long, String> pdNameMap,String linkOrUnlink)  ;
+
+    void addLogWhenContentChange(String oldValue,String newValue,Long id,String field) ;
 }

@@ -15,7 +15,9 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOfflineMD;
 import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.LabelComponent;
 import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
@@ -23,6 +25,7 @@ import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.compare.FieldCompareUtil;
+import com.timevale.forward.service.utils.date.DateStyle;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -80,6 +83,21 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Resource
     private BugStatusOperatorMapper bugStatusOperatorMapper;
 
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
+
+    @Resource
+    private LabelComponent labelComponent;
+
+    @Resource
+    private BizLabelMapper bizLabelMapper;
+
+    @Resource
+    private LabelMapper labelMapper;
+
+    @Resource
+    private BugOnlineMapper bugOnlineMapper;
+
     @Override
     public BaseResult<PageQueryResult<BugOfflineVO>> list(BugOfflineQueryList bugOfflineQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -123,16 +141,46 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         if (resultIsEmpty) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
+        //是否打标
+        List<BizLabelDO> bizLabelDOList;
+        if (CollectionUtils.isNotEmpty(bugOfflineQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(bugOfflineQueryList.getLabelCategoryIds())) {
+            List<Long> newLabelIds = labelComponent.getLabelIds(bugOfflineQueryList.getLabelIds(), bugOfflineQueryList.getLabelCategoryIds());
+            if (CollectionUtils.isEmpty(newLabelIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_OFFLINE.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(bizIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            condition.setContainIds(bizIds);
+        }
 
         // 开始分页
-        PageHelper.startPage(bugOfflineQueryList.pageNum, bugOfflineQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        String collation = sqlOrderComponent.build(bugOfflineQueryList.getOrderFiled(), bugOfflineQueryList.getOrderCollation());
+        PageHelper.startPage(bugOfflineQueryList.pageNum, bugOfflineQueryList.pageSize, collation);
 
         // 查询并转换
         List<BugOfflineListDO> bugOfflineDOList = bugOfflineMapper.selectByCondition(condition);
         List<BugOfflineVO> bugOfflineVOList = bugOfflineDOList.stream().map(BugOfflineCopier.INSTANCE::convert).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(bugOfflineVOList)) {
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+
+        List<Long> bugOfflineIds = bugOfflineDOList.stream().map(BugOfflineListDO::getId).collect(Collectors.toList());
+        bizLabelDOList = bizLabelMapper.getByBizIdInType(bugOfflineIds, BizTypeEnum.BUG_OFFLINE.getCode());
+        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
+                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
+
+        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
+        Map<Long, String> labelNameMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(labelIds)) {
+            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
+            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
+        }
 
         // 信息填充
-        bugOfflineVOList.forEach(e -> {
+        for (BugOfflineVO e : bugOfflineVOList) {
             e.setEnvName(BugEnvEnum.getTextByCode(e.getEnv()));
             e.setStatusName(BugStatusEnum.getTextByCode(e.getStatus()));
             e.setSourceName(BugSourceEnum.getTextByCode(e.getSource()));
@@ -140,7 +188,13 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             e.setReasonName(BugReasonEnum.getTextByCode(e.getReason()));
             e.setPriorityName(PriorityEnum.getTextChineseByCode(e.getPriority()));
             e.setUnHandleReasonName(BugUnHandleReasonEnum.getTextByCode(e.getUnHandleReason()));
-        });
+
+            if (labelIdMap.containsKey(e.getId())) {
+                List<Long> labelIdList = labelIdMap.get(e.getId());
+                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
+                e.setLabelNames(labelNames);
+            }
+        }
 
         // 返回分页数据
         PageInfo<BugOfflineListDO> pageInfo = new PageInfo<>(bugOfflineDOList);
@@ -154,7 +208,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Long> add(BugOfflineAddReq bugOfflineAddReq) {
-        if(bugOfflineAddReq.getName().contains(CommonConstant.BLANK)){
+        if (bugOfflineAddReq.getName().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("线下bug名称中请勿包含空格");
         }
 
@@ -668,13 +722,20 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         String oldValue = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
         String oldCause = bugOfflineDO.getCause();
         String oldPlan = bugOfflineDO.getSolvePlan();
+        Date oldExpectSolveDate = bugOfflineDO.getExpectSolveDate();
+
+        // 新字段
+        String newCause = bugOfflineReq.getCause();
+        String newPlan = bugOfflineReq.getSolvePlan();
+        Date newExpectSolveDate = bugOfflineReq.getExpectSolveDate();
 
         //bug状态变为"待验收",上一环节经办人变成目前经办人，目前经办人变成提出人
         bugOfflineDO.setStatus(BugStatusEnum.ACCEPTANCE.getCode());
         bugOfflineDO.setLastOperator(operator);
         bugOfflineDO.setLastOperatorId(operatorId);
-        bugOfflineDO.setCause(bugOfflineReq.getCause());
-        bugOfflineDO.setSolvePlan(bugOfflineReq.getSolvePlan());
+        bugOfflineDO.setCause(newCause);
+        bugOfflineDO.setSolvePlan(newPlan);
+        bugOfflineDO.setExpectSolveDate(newExpectSolveDate);
 
         bugOfflineMapper.update(bugOfflineDO);
 
@@ -688,23 +749,34 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         statusLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
         statusLogDO.setField(BugLogFieldEnum.STATUS.getText());
 
-        if(!Objects.equals(oldCause,bugOfflineReq.getCause())){
+
+        if (!Objects.equals(oldCause, newCause)) {
             BugLogDO causeLogDO = new BugLogDO();
             causeLogDO.setOldValue(oldCause);
-            causeLogDO.setNewValue(bugOfflineReq.getCause());
+            causeLogDO.setNewValue(newCause);
             causeLogDO.setMainId(bugOfflineReq.getId());
             causeLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
             causeLogDO.setField(BugLogFieldEnum.CAUSE.getText());
             bugLogDOList.add(causeLogDO);
         }
 
-        if(!Objects.equals(oldPlan,bugOfflineReq.getSolvePlan())){
+        if (!Objects.equals(oldPlan, newPlan)) {
             BugLogDO solvePlanLogDO = new BugLogDO();
             solvePlanLogDO.setOldValue(oldPlan);
-            solvePlanLogDO.setNewValue(bugOfflineReq.getSolvePlan());
+            solvePlanLogDO.setNewValue(newPlan);
             solvePlanLogDO.setMainId(bugOfflineReq.getId());
             solvePlanLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
             solvePlanLogDO.setField(BugLogFieldEnum.SOLVE_PLAN.getText());
+            bugLogDOList.add(solvePlanLogDO);
+        }
+
+        if (!Objects.equals(oldExpectSolveDate, newExpectSolveDate)) {
+            BugLogDO solvePlanLogDO = new BugLogDO();
+            solvePlanLogDO.setOldValue(DateUtil.parseToString(oldExpectSolveDate, DateStyle.YYYY_MM_DD));
+            solvePlanLogDO.setNewValue(DateUtil.parseToString(newExpectSolveDate, DateStyle.YYYY_MM_DD));
+            solvePlanLogDO.setMainId(bugOfflineReq.getId());
+            solvePlanLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+            solvePlanLogDO.setField(BugLogFieldEnum.EXPECT_SOLVE_DATE.getText());
             bugLogDOList.add(solvePlanLogDO);
         }
 
@@ -1060,27 +1132,53 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         //如果是状态变更,需要进行筛选出状态变更的数据
         if (bugLogQueryList.getStatusChange()) {
             bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), true);
+            bugLogDOList = bugLogDOList.stream().filter(a->BugLogFieldEnum.STATUS.getText().equals(a.getField())).collect(Collectors.toList());
         } else {
             bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), false);
         }
-        PageInfo<BugLogDO> pageInfo = new PageInfo<>(bugLogDOList);
 
-        PageQueryResult<BugLogVO> pageQueryResult = new PageQueryResult<>();
-        //如果没有查询到日志，直接返回空的数据
         if (CollectionUtils.isEmpty(bugLogDOList)) {
-            return BaseResult.success(pageQueryResult);
+            return BaseResult.success(ResultUtil.pageEmpty());
         }
 
-        //获取分页数据
-        bugLogDOList = pageInfo.getList();
+        PageInfo<BugLogDO> pageInfo = new PageInfo<>(bugLogDOList);
+        PageQueryResult<BugLogVO> pageQueryResult = new PageQueryResult<>();
 
-        //bugLogDO  -->  bugLogVO
         List<BugLogVO> bugLogVOList = bugLogDOList.stream().map(BugLogCopier.INSTANCE::convert).collect(Collectors.toList());
-        //给bug内容变更记录类型的名字赋值，给当前时间赋值
-        bugLogVOList.forEach(bugLogVO -> {
+
+        Map<Long, BugOnlineDO> bugMap=new HashMap<>();
+        if(BugLogTypeEnum.ONLINE.getCode().equals(bugLogQueryList.getType())){
+            List<Long> oldBugIds = bugLogDOList.stream().filter(a->BugFieldEnum.LINK_BUG.getText().equals(a.getField()))
+                    .map(a->Long.valueOf(a.getOldValue())).distinct().collect(Collectors.toList());
+            List<Long> newBugIds = bugLogDOList.stream().filter(a->BugFieldEnum.LINK_BUG.getText().equals(a.getField()))
+                    .map(a->Long.valueOf(a.getNewValue())).distinct().collect(Collectors.toList());
+
+            oldBugIds.addAll(newBugIds);
+            if(CollectionUtils.isNotEmpty(oldBugIds)){
+                List<BugOnlineDO>bugOnlineDOList = bugOnlineMapper.selectByIds(oldBugIds,true);
+                bugMap = bugOnlineDOList.stream().collect(Collectors.toMap(BugOnlineDO::getId, a->a, (v1, v2) -> v2));
+            }
+
+        }
+
+        for (BugLogVO bugLogVO : bugLogVOList) {
             bugLogVO.setTypeName(BugLogTypeEnum.getTextByCode(bugLogVO.getType()));
             bugLogVO.setCurrentDate(new Date());
-        });
+            if(BugLogTypeEnum.ONLINE.getCode().equals(bugLogQueryList.getType())&&BugFieldEnum.LINK_BUG.getText().equals(bugLogVO.getField())){
+                //线上bug 关联bug日志
+                if(bugMap.containsKey(Long.valueOf(bugLogVO.getOldValue()))&&bugMap.containsKey(Long.valueOf(bugLogVO.getNewValue()))){
+                    BugSimpleVO linkBug=new BugSimpleVO();
+                    linkBug.setId(Long.valueOf(bugLogVO.getOldValue()));
+                    linkBug.setName(bugMap.get(Long.valueOf(bugLogVO.getOldValue())).getName());
+                    bugLogVO.setLinkBug(linkBug);
+
+                    BugSimpleVO linkedBug=new BugSimpleVO();
+                    linkedBug.setId(Long.valueOf(bugLogVO.getNewValue()));
+                    linkedBug.setName(bugMap.get(Long.valueOf(bugLogVO.getNewValue())).getName());
+                    bugLogVO.setLinkedBug(linkedBug);
+                }
+            }
+        }
         //如果是状态变更，需要填充状态经办人信息
         if (bugLogQueryList.getStatusChange()) {
             //查询出所有的状态经办人记录

@@ -1,0 +1,165 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.TrackPropMapper">
+
+
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.TrackPropDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into track_prop (cn_name, eg_name, status,type,data_type,create_man ,create_man_id)
+        values
+        (#{cnName},#{egName}, #{status},#{type},#{dataType},#{createMan},#{createManId})
+    </insert>
+
+    <insert id="batchInsert" parameterType="java.util.List"  useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into track_prop (cn_name, eg_name, status,type,data_type,create_man ,create_man_id)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.cnName},#{i.egName}, #{i.status},#{i.type},#{i.dataType},#{createMan},#{createManId})
+        </foreach>
+    </insert>
+
+    <insert id="batchInsertNotIC" parameterType="java.util.List"  useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into track_prop (cn_name, eg_name, status,type,data_type,create_man ,create_man_id)
+        values
+        <foreach collection="list" item="i" open="" separator="," close="">
+            (#{i.cnName},#{i.egName}, #{i.status},#{i.type},#{i.dataType},#{i.createMan},#{i.createManId})
+        </foreach>
+    </insert>
+
+    <select id="select" resultType="com.timevale.forward.dal.entity.TrackPropDO">
+        select id,cn_name, eg_name, status,type,data_type,
+         is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from track_prop a
+        <where>
+            <if test="id != null">and a.id = #{id}</if>
+            <if test="cnNames!=null and cnNames.size()>0">
+                and a.cn_name  in
+                <foreach collection="cnNames" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="egNames!=null and egNames.size()>0">
+                and a.eg_name  in
+                <foreach collection="egNames" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="status!=null and status.size()>0">
+                and a.status  in
+                <foreach collection="status" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and a.is_deleted=false
+        </where>
+    </select>
+
+    <select id="selectByIds" resultType="com.timevale.forward.dal.entity.TrackPropDO">
+        select id,cn_name, eg_name, status,type,data_type,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from track_prop a
+        <where>
+            <if test="ids!=null and ids.size()>0">
+                and a.id in
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and a.is_deleted=false
+        </where>
+    </select>
+
+
+    <select id="list" resultType="com.timevale.forward.dal.entity.TrackPropDO">
+        select id,cn_name, eg_name, status,type,data_type,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from track_prop a
+        <where>
+            <if test="id != null">and a.id = #{id}</if>
+            <if test="cnName != null and cnName != ''">and a.cn_name like concat('%',#{cnName},'%')</if>
+            <if test="egName != null and egName != ''">and a.eg_name like concat('%',#{egName},'%')</if>
+            <if test="status!=null and status.size()>0">
+                and a.status in
+                <foreach collection="status" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="types!=null and types.size()>0">
+                and a.type in
+                <foreach collection="types" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and a.is_deleted=false
+        </where>
+    </select>
+
+    <update id="update">
+        update track_prop
+        <set>
+            <if test="cnName != null and cnName != ''">cn_name = #{cnName},</if>
+            <if test="egName != null and egName != ''">eg_name = #{egName},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="dataType != null">data_type = #{dataType},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modify_man_id = #{modifyManId},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <update id="updateNotIC">
+        update track_prop
+        <set>
+            <if test="cnName != null and cnName != ''">cn_name = #{cnName},</if>
+            <if test="egName != null and egName != ''">eg_name = #{egName},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="dataType != null">data_type = #{dataType},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modify_man_id = #{modifyManId},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <update id="updateWithOutModifyMan">
+        update track_prop
+        <set>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <update id="batchUpdate">
+        update track_prop
+        <set>
+            <if test="status != null">status = #{status},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modify_man_id = #{modifyManId},
+            </if>
+        </set>
+        <where>
+            <if test="ids!=null and ids.size()>0">
+                and id in
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </update>
+
+</mapper>
+

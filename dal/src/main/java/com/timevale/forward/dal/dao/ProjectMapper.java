@@ -5,6 +5,7 @@ import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface ProjectMapper {
@@ -18,6 +19,7 @@ public interface ProjectMapper {
 
     /**
      * 查询
+     *
      * @param id id
      * @return 项目信息
      */
@@ -37,7 +39,15 @@ public interface ProjectMapper {
     int update(ProjectDO projectDO);
 
     /**
+     * 完成更新（可以为null）
+     *
+     * @param projectDO 项目
+     */
+    void fullUpdateById(ProjectDO projectDO);
+
+    /**
      * 查询
+     *
      * @param productDemandId 产品需求id
      * @return 项目信息
      */
@@ -61,10 +71,8 @@ public interface ProjectMapper {
     List<ProjectDO> selectByTeamMember(@Param("teamMemberList") List<String> teamMemberList);
 
     /**
-     *
-     * @param projectIds 项目id
+     * @param projectIds     项目id
      * @param productLineIds 产品线id
-     * @return
      */
     List<Long> getProjectIds(@Param("projectIds") List<Long> projectIds, @Param("productLineIds") List<Long> productLineIds, @Param("bizDomainIds") List<Long> bizDomainIds);
 
@@ -79,6 +87,7 @@ public interface ProjectMapper {
 
     /**
      * 查询
+     *
      * @param name name
      * @return 产品需求DO
      */
@@ -86,10 +95,11 @@ public interface ProjectMapper {
 
     /**
      * 查询
+     *
      * @param ids id
      * @return 项目信息
      */
-    List<ProjectDO>  getByIds(@Param("ids") List<Long> ids);
+    List<ProjectDO> getByIds(@Param("ids") Collection<Long> ids);
 
     /**
      * 查询id
@@ -102,10 +112,11 @@ public interface ProjectMapper {
 
     /**
      * 查询
+     *
      * @param status status
      * @return 项目信息
      */
-    List<ProjectDO>  getByStatus(@Param("status") List<Integer> status);
+    List<ProjectDO> getByStatus(@Param("status") List<Integer> status);
 
     /**
      * 状态重算时使用
@@ -121,4 +132,5 @@ public interface ProjectMapper {
      * @param projectDO 项目DO
      */
     int updateNodeStatus(ProjectDO projectDO);
+
 }

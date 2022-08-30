@@ -3,6 +3,7 @@ package com.timevale.forward.dal.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -89,5 +90,31 @@ public class ProjectDO extends BaseDO {
      * 是否在发布平台发布
      */
     private Integer isPlatformPublish;
+
+    /**
+     * 是否有项目目标
+     */
+    private Integer isWithGoal;
+
+    /**
+     * 项目等级
+     */
+    private Integer level;
+
+    /**
+     * 产品资源评估（人天）
+     */
+    private BigDecimal resourceAssessment;
+
+    /**
+     * 立项开始时间
+     */
+    private Date pjEstablishStartDate;
+
+
+    /**
+     * 立项预期上线时间
+     */
+    private Date pjEstablishPublishDate;
 
 }

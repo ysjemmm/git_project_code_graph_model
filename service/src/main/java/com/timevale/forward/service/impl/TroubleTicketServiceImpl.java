@@ -13,10 +13,7 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TroubleTicketService;
 import com.timevale.forward.facade.api.query.TroubleTicketQueryList;
 import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.FileVO;
-import com.timevale.forward.facade.api.result.PersonVO;
-import com.timevale.forward.facade.api.result.TroubleTicketDetailVO;
-import com.timevale.forward.facade.api.result.TroubleTicketVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.FileComponent;
@@ -34,15 +31,14 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -232,8 +228,19 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         }
 
         // 故障定级-未定级,特殊处理
-        boolean contain = troubleTicketCondition.getTroubleRankList().contains(TroubleTicketRankEnum.UN_CERTAIN.getCode());
+        List<Integer> troubleRankList = troubleTicketCondition.getTroubleRankList();
+        boolean contain = CollectionUtils.isNotEmpty(troubleRankList) &&  troubleRankList.contains(TroubleTicketRankEnum.UN_CERTAIN.getCode());
         troubleTicketCondition.setTroubleRankIsNull(contain);
+
+        Map<Long, GroupResponse> deptNodeMap = new HashMap<>();
+        Set<Long> queryDeptIdSet = Sets.newHashSet(troubleTicketCondition.getDutyTeamList());
+
+        // 如果查询条件有部门id，收集子部门id及所需部门的完整名
+        if (CollectionUtils.isNotEmpty(queryDeptIdSet)) {
+            deptNodeMap = bizDemandComponent.getGroupListTreeMap(new ArrayList<>(queryDeptIdSet));
+            // 替换查询部门id条件
+            troubleTicketCondition.setDutyTeamList(Lists.newArrayList(deptNodeMap.keySet()));
+        }
 
         // 分页查询
         PageHelper.startPage(troubleTicketQueryList.pageNum, troubleTicketQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
@@ -241,6 +248,12 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
         if(CollectionUtils.isEmpty(troubleTicketDOList)){
             return BaseResult.success(ResultUtil.pageEmpty());
+        }
+
+        // 如果查询条件没有部门id，收集完整名
+        if (CollectionUtils.isEmpty(queryDeptIdSet)) {
+            queryDeptIdSet.addAll(troubleTicketDOList.stream().map(TroubleTicketListDO::getDutyTeam).collect(Collectors.toList()));
+            deptNodeMap = bizDemandComponent.getGroupListTreeMap(Lists.newArrayList(queryDeptIdSet));
         }
 
         // 结果集转换
@@ -256,9 +269,22 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         });
 
         // 描述数据填充
-        troubleTicketVOList.forEach(e -> {
+        for (TroubleTicketVO e : troubleTicketVOList) {
+            e.setIsMonitorDetectText(YesOrNoEnum.getTextByCode(e.getIsMonitorDetect()));
             e.setTroubleRankName(TroubleTicketRankEnum.getTextByCode(e.getTroubleRank()));
-        });
+
+            if(e.getDutyTeam() == null){
+                continue;
+            }
+            GroupResponse response = deptNodeMap.get(e.getDutyTeam());
+            if (response == null) {
+                e.setDutyTeamName("");
+                log.info("没有找到部门,id为:{}", e.getDutyTeam());
+            } else {
+                e.setDutyTeamName(response.getGroupName());
+                e.setDutyTeamFlag(response.getDeleteFlag());
+            }
+        }
 
         // 返回分页数据
         PageInfo<TroubleTicketListDO> pageInfo = new PageInfo<>(troubleTicketDOList);

@@ -11,28 +11,33 @@ import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
-import com.timevale.forward.facade.api.request.PersonAddReq;
-import com.timevale.forward.facade.api.request.ProjectAddReq;
-import com.timevale.forward.facade.api.request.ProjectModifyReq;
-import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.ProjectEstablishDateChangeMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.date.DateStyle;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -78,6 +83,9 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectProductDemandMapper projectProductDemandMapper;
 
     @Resource
+    private ProductBizDemandMapper productBizDemandMapper;
+
+    @Resource
     private PersonMapper personMapper;
 
     @Resource
@@ -116,8 +124,48 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private BizDemandComponent bizDemandComponent;
 
+    @Resource
+    private BizChangeLogMapper bizChangeLogMapper;
+
+    @Resource
+    private ProjectGoalMapper projectGoalMapper;
+
+    @Resource
+    private ProjectNodeFlowComponent projectNodeFlowComponent;
+
+    @Resource
+    private ProjectNodeFlowMapper projectNodeFlowMapper;
+
+    @Resource
+    private ProjectNodeRecordMapper projectNodeRecordMapper;
+
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
+
+    @Resource
+    private CustomDemandComponent customDemandComponent;
+
+    @Resource
+    private BizDemandMapper bizDemandMapper;
+
+    @Resource
+    private LabelComponent labelComponent;
+
+    @Resource
+    private BizLabelComponent bizLabelComponent;
+
+    @Resource
+    private BizLabelMapper bizLabelMapper;
+
+    @Resource
+    private LabelMapper labelMapper;
+
+    @Resource
+    private LabelCategoryMapper labelCategoryMapper;
+
+
     @Override
-    public BaseResult<PageQueryResult<ProjectVO>> list(ProjectQueryList projectQueryList) {
+    public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
         String currentUser = LocalSessionUtils.getUserInfo().getId();
         ProjectListCondition condition = ProjectCopier.INSTANCE.convert(projectQueryList);
@@ -128,7 +176,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (AscriptionEnum.CURRENT_USER.name().equals(projectQueryList.getAscription())) {
             projectIds = personMapper.getMainIds(Lists.newArrayList(currentUser), null, PersonTypeEnum.PROJECT_MEMBER.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return BaseResult.success(ResultUtil.queryResultEmpty());
             }
 
         } else if (AscriptionEnum.TEAM.name().equals(projectQueryList.getAscription())) {
@@ -136,17 +184,24 @@ public class ProjectServiceImpl implements ProjectService {
             log.info("我和我的下属:{}", allMyStaffWithSelf);
             projectIds = personMapper.getMainIds(allMyStaffWithSelf, null, PersonTypeEnum.PROJECT_MEMBER.getCode());
             if (CollectionUtils.isEmpty(projectIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                return BaseResult.success(ResultUtil.queryResultEmpty());
             }
         }
 
-        return projectComponent.page(condition, projectIds);
+        if(CollectionUtils.isNotEmpty(projectQueryList.getLabelIds())||CollectionUtils.isNotEmpty(projectQueryList.getLabelCategoryIds())){
+            List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelIds(), projectQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(labelIds)){
+                return BaseResult.success(ResultUtil.queryResultEmpty());
+            }
+            condition.setLabelIds(labelIds);
+        }
+        return BaseResult.success(projectComponent.page(condition, projectIds));
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateStatus(Long projectId, Integer type) {
-        log.info("项目暂停或作废接收参数:projectId={},type={}", projectId, type);
+        log.info("项目暂停或作废接收参数:{},{}", projectId, type);
         if (!ProjectStatusEnum.SUSPEND.getCode().equals(type)
                 && !ProjectStatusEnum.INVALID.getCode().equals(type)) {
             throw new BaseBizRuntimeException("操作类型不是暂停或作废,请重试输入");
@@ -159,8 +214,13 @@ public class ProjectServiceImpl implements ProjectService {
         if (ProjectStatusEnum.INVALID.getCode().equals(oldStatus) || ProjectStatusEnum.RELEASED.getCode().equals(oldStatus)) {
             throw new BaseBizRuntimeException("项目状态为已作废或已发布时,不能修改状态");
         }
-        projectDO.setStatus(type);
-        projectMapper.update(projectDO);
+
+        // 更新项目状态
+        ProjectDO updateStatusDO = new ProjectDO();
+        updateStatusDO.setId(projectId);
+        updateStatusDO.setStatus(type);
+        projectMapper.update(updateStatusDO);
+
         //修改产品需求状态
         productDemandComponent.updateProductDemandStatus(projectId, type);
         if (ProjectStatusEnum.INVALID.getCode().equals(type)) {
@@ -190,7 +250,7 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("项目开启,节点信息:projectNode={}", projectNode);
         if (CollectionUtils.isEmpty(projectNode)) {
             projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
-            projectMapper.update(projectDO);
+            projectMapper.fullUpdateById(projectDO);
         } else {
             fillInfoWhenEnable(projectNode, projectDO);
         }
@@ -213,11 +273,28 @@ public class ProjectServiceImpl implements ProjectService {
         if (project != null) {
             throw new BaseBizRuntimeException("该项目名称已存在,请修改后重试");
         }
+        if (YesOrNoEnum.YES.getCode().equals(projectAddReq.getIsWithGoal())) {
+            AssertUtil.notEmpty(projectAddReq.getProjectGoals(), "项目含有项目目标，请至少添加一条项目目标数据");
+            AssertUtil.checkState(projectAddReq.getProjectGoals().stream()
+                    .filter(goal -> YesOrNoEnum.YES.getCode().equals(goal.getIsMain()))
+                    .count() == 1, "项目目标主目标只能有一个，请检查参数");
+            for (ProjectGoalAddReq projectGoal : projectAddReq.getProjectGoals()) {
+                if (ProjectGoalTypeEnum.QUANTIFY.getCode().equals(projectGoal.getType())) {
+                    AssertUtil.notNull(projectGoal.getReachValue(), "定量项目目标的目标达标值必填");
+                } else {
+                    projectGoal.setReachValue(null);
+                }
+            }
+        }
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
         projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
-        projectDO.setPmName(projectAddReq.getPm().getUserName());
-        projectDO.setPmId(projectAddReq.getPm().getUserId());
         projectMapper.insert(projectDO);
+
+        //标签
+        if(CollectionUtils.isNotEmpty(projectAddReq.getLabelIds())){
+            bizLabelComponent.addLabel(projectDO.getId(),projectAddReq.getLabelIds(),BizTypeEnum.PROJECT.getCode());
+            bizLabelComponent.addLog(projectDO.getId(),projectAddReq.getLabelIds(),BizTypeEnum.PROJECT.getCode(),true);
+        }
 
         // 产品线
         projectProductLineComponent.add(projectDO.getProductLineIds(), projectDO.getId());
@@ -243,14 +320,14 @@ public class ProjectServiceImpl implements ProjectService {
         Integer status = ProjectStatusEnum.WAITING.getCode();
         projectLogComponent.addLogWhenStatusChange(status, status, projectDO.getId(), ButtonActionEnum.SUBMIT.getText());
 
-        List<Long> productDemandIds = projectAddReq.getProductDemandIds();
-        if (CollectionUtils.isNotEmpty(productDemandIds)) {
-            ProjectProductDemandLinkReq req = new ProjectProductDemandLinkReq();
-            req.setProductDemandIds(productDemandIds);
-            req.setProjectId(projectDO.getId());
-            req.setType(LinkOrUnLinkEnum.LINK.getCode());
-            linkOrUnLinkProductDemand(req);
+        // 项目目标信息插入
+        if (YesOrNoEnum.YES.getCode().equals(projectAddReq.getIsWithGoal())) {
+            for (ProjectGoalAddReq goal : projectAddReq.getProjectGoals()) {
+                goal.setProjectId(projectDO.getId());
+            }
+            projectGoalMapper.batchInsert(ProjectGoalCopier.INSTANCE.convert(projectAddReq.getProjectGoals()));
         }
+
         return BaseResult.success(true);
     }
 
@@ -265,12 +342,22 @@ public class ProjectServiceImpl implements ProjectService {
         if (oldProject == null) {
             oldProject = projectMapper.get(projectModifyReq.getId());
         }
+        // 校验项目目标
+        if (YesOrNoEnum.YES.getCode().equals(projectModifyReq.getIsWithGoal())) {
+            AssertUtil.notEmpty(projectGoalMapper.getByProjectId(oldProject.getId()),
+                    "项目含有项目目标，请至少添加一条项目目标数据");
+        }
         ProjectDO newProject = ProjectCopier.INSTANCE.convert(projectModifyReq);
-        newProject.setPmName(projectModifyReq.getPm().getUserName());
-        newProject.setPmId(projectModifyReq.getPm().getUserId());
         List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
-        Integer status = projectMapper.get(projectModifyReq.getId()).getStatus();
-        newProject.setStatus(status);
+
+        Date oldPjEstablishPublishDate = oldProject.getPjEstablishPublishDate();
+
+        if (projectModifyReq.getDelayType().compareTo(1) >= 0) {
+            //有流程,计划时间不能变
+            ProjectDO oldProjectDO = projectMapper.get(projectModifyReq.getId());
+            newProject.setPlanStartDate(oldProjectDO.getPlanStartDate());
+            newProject.setPlanEndDate(oldProjectDO.getPlanEndDate());
+        }
 
         fillInfoWhenModify(projectNodeDOList, newProject);
 
@@ -306,7 +393,12 @@ public class ProjectServiceImpl implements ProjectService {
                     throw new BaseBizRuntimeException("您的发布计划还未结束，请前往发布平台处理");
                 }
             }
-            projectNodeComponent.add(projectNodeDOList, newProject.getId());
+            if (projectModifyReq.getDelayType().compareTo(1) >= 0) {
+                //需要审批,只更新实际时间
+                projectNodeComponent.updateNodeActualDate(projectNodeDOList, newProject.getId());
+            } else {
+                projectNodeComponent.add(projectNodeDOList, newProject.getId());
+            }
             // 更新节点状态
             projectComponent.updateNodeStatus(projectModifyReq.getId());
         }
@@ -317,12 +409,18 @@ public class ProjectServiceImpl implements ProjectService {
         // 产品经理
         personComponent.update(projectModifyReq.getPds(), newProject.getId(), PersonTypeEnum.PROJECT_PD.getCode());
 
+        //立项时间变化
+        sendDingMsgIfPublishDateForward(newProject.getId(), oldPjEstablishPublishDate);
+
+        //流程与版本信息处理
+        processFlow(projectModifyReq);
+
         return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<ProjectDetailVO> get(Long projectId) {
-        log.info("项目查看接收参数:projectId={}", projectId);
+        log.info("项目查看接收参数:{}", projectId);
         ProjectDO projectDO = projectMapper.get(projectId);
         if (projectDO == null) {
             throw new BaseBizRuntimeException("该项目不存在");
@@ -331,6 +429,7 @@ public class ProjectServiceImpl implements ProjectService {
         projectDetailVO.setStatusName(ProjectStatusEnum.getTextByCode(projectDetailVO.getStatus()));
         projectDetailVO.setPriorityName(PriorityEnum.getTextByCode(projectDetailVO.getPriority()));
         projectDetailVO.setTypeName(ProjectTypeEnum.getTextByCode(projectDetailVO.getType()));
+        projectDetailVO.setLevelName(ProjectLevelEnum.getTextByCode(projectDetailVO.getLevel()));
 
         //产品线
         List<ProductLineDO> productLineDO = productLineMapper.get(projectId);
@@ -357,19 +456,43 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 节点状态
         projectDetailVO.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(projectDetailVO.getNodeStatus()));
-
+        //详设
         List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(projectId);
         if (CollectionUtils.isNotEmpty(projectFlowDos)) {
             projectFlowDos.sort(Comparator.comparing(ProjectFlowDO::getCreateDate).reversed());
             ProjectFlowDO oldFlowDo = projectFlowDos.get(0);
             projectDetailVO.setProjectFlowId(oldFlowDo.getId());
         }
+        if (projectDO.getStatus() < 0) {
+            // 项目已暂停或者作废，则拿暂停、作废时间作为完成时间
+            List<BizChangeLogDO> logs = bizChangeLogMapper.listAllByActions(Collections.singletonList(projectDO.getId()),
+                    BizChangeLogTypeEnum.PROJECT.getCode(),
+                    Lists.newArrayList(ButtonActionEnum.SUSPEND.getText(), ButtonActionEnum.INVALID.getText()));
+            // 最新一次暂停或者作废记录的时间
+            logs.stream().map(BizChangeLogDO::getCreateDate)
+                    .max(Date::compareTo).ifPresent(projectDetailVO::setSuspendDate);
+        }
+
+        BigDecimal resourceAssessment = projectDetailVO.getResourceAssessment();
+        if (resourceAssessment != null) {
+            projectDetailVO.setResourceAssessment(resourceAssessment.setScale(2, RoundingMode.DOWN));
+        }
+        //发布正式
+        List<ProjectNodeFlowDO> projectNodeFlows = projectNodeFlowMapper.getByProjectId(projectId);
+        if (CollectionUtils.isNotEmpty(projectNodeFlows)) {
+            ProjectNodeFlowDO oldFlowDo = projectNodeFlows.get(0);
+            projectDetailVO.setPublishFlowId(oldFlowDo.getId());
+            projectDetailVO.setPublishFlowStatus(oldFlowDo.getStatus());
+            long count = projectNodeFlows.stream().filter(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
+            projectDetailVO.setPublishChangeCount(count);
+        }
+        projectDetailVO.setIsPMO(isPMO());
         return BaseResult.success(projectDetailVO);
     }
 
     @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(ProjectLinkProductDemandQueryList productDemandQueryList) {
-        log.info("项目-产品需求匹配,接收参数:productDemandQueryList={}", productDemandQueryList);
+        log.info("项目-产品需求匹配,接收参数:{}", productDemandQueryList);
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(productDemandQueryList);
         // 过滤掉已经关联的产品需求
         List<Long> productDemandIds = projectProductDemandMapper.getLinkedProductDemand(Lists.newArrayList())
@@ -379,17 +502,53 @@ public class ProjectServiceImpl implements ProjectService {
                 , ProductDemandStatusEnum.INCLUDED.getCode()
                 , ProductDemandStatusEnum.PROGRESS.getCode()
                 , ProductDemandStatusEnum.ONLINE.getCode()));
+
+        //是否打标
+        List<BizLabelDO> bizLabelDOList;
+        if(CollectionUtils.isNotEmpty(productDemandQueryList.getLabelIds())||CollectionUtils.isNotEmpty(productDemandQueryList.getLabelCategoryIds())){
+            List<Long> newLabelIds = labelComponent.getLabelIds(productDemandQueryList.getLabelIds(), productDemandQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(newLabelIds)){
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(bizIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            condition.setInProductDemandIds(bizIds);
+        }
         PageHelper.startPage(productDemandQueryList.getPageNum(), productDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         List<ProductDemandListDO> productDemandListDO = productDemandComponent.list(condition);
-        List<ProductDemandVO> productDemandVO = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
-        productDemandVO.forEach(p -> {
-            p.setStatusName(ProductDemandStatusEnum.getTextByCode(p.getStatus()));
-            p.setPriorityName(PriorityEnum.getTextByCode(p.getPriority()));
-        });
+        List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
+
+        if (CollectionUtils.isEmpty(productDemandListDO)) {
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+        List<Long>pids = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
+        bizLabelDOList = bizLabelMapper.getByBizIdInType(pids, BizTypeEnum.PRODUCT_DEMAND.getCode());
+        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
+                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
+
+        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
+        Map<Long, String> labelNameMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(labelIds)) {
+            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
+            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
+        }
+        for (ProductDemandVO a : productDemandVOList) {
+            a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
+            a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
+
+            if (labelIdMap.containsKey(a.getId())) {
+                List<Long> labelIdList = labelIdMap.get(a.getId());
+                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
+                a.setLabelNames(labelNames);
+            }
+        }
         PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
 
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
-        pageQueryResult.setResultList(productDemandVO);
+        pageQueryResult.setResultList(productDemandVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
         return BaseResult.success(pageQueryResult);
@@ -398,7 +557,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<ProductDemandStatusVO> linkOrUnLinkProductDemand(ProjectProductDemandLinkReq productDemandLinkReq) {
-        log.info("关联or取消关联接收参数:productDemandLinkReq={}", productDemandLinkReq);
+        log.info("关联or取消关联接收参数:{}", productDemandLinkReq);
         ProjectDO projectDO = projectMapper.get(productDemandLinkReq.getProjectId());
         if (projectDO == null) {
             throw new BaseBizRuntimeException("找不到该项目");
@@ -414,22 +573,31 @@ public class ProjectServiceImpl implements ProjectService {
                 List<Long> existedIds = productDemand.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
                 throw new BaseBizRuntimeException("产品需求id为" + existedIds + "已被项目关联,请刷后重试");
             }
+            List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByProductDemandIds(productDemandIds);
+            Map<Long, Integer> bizIdMap = productBizDemandDOList.stream().collect(Collectors.toMap(ProductBizDemandDO::getBizDemandId, ProductBizDemandDO::getStatus, (v1, v2) -> v2));
+
+            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus(), productDemandIds);
+
             projectProductDemandComponent.batchInsert(projectDO.getId(), productDemandIds);
 
-            productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
+            //项目关联后,业务需求的发布时间可能变化
+            bizIdMap.forEach((k, v) -> {
+                BizDemandDO bizDemandDO = bizDemandMapper.selectById(k);
+                productDemandComponent.sendDingMsg(v, bizDemandDO.getStatus(), k);
+            });
 
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.LINK.getText());
 
         } else {
-            projectProductDemandComponent.update(null, productDemandIds.get(0));
-
             ProductDemandDO productDemandDO = new ProductDemandDO();
             productDemandDO.setId(productDemandIds.get(0));
             productDemandDO.setStatus(ProductDemandStatusEnum.WAITING.getCode());
             productDemandComponent.update(productDemandDO);
 
+            projectProductDemandComponent.update(null, productDemandIds.get(0));
+
             // 一个产品需求下的业务需求
-            productDemandComponent.updateBizDemandStatusAsProductStatusChange(productDemandIds, false);
+            productDemandComponent.updateDemandStatusAsProductStatusChange(productDemandIds, false);
 
             projectLogComponent.addLogWhenLinkOrUnlink(projectDO.getName(), projectDO.getId(), pdNameMap, ButtonActionEnum.UN_LINK.getText());
             productDemandLogComponent.addLogAsProjectStatusChange(statusMap, productDemandDO.getStatus());
@@ -447,12 +615,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> linkProductDemandList(ProjectProductDemandQueryList productDemandQueryList) {
-        // 参数
         Long projectId = productDemandQueryList.getProjectId();
-
-        // 开始分页
-        PageHelper.startPage(productDemandQueryList.getPageNum(), 100, CommonConstant.DEFAULT_ORDER_BY);
-
+        int pageSize = productDemandQueryList.getPageSize();
+        int pageNum = productDemandQueryList.getPageNum();
+        log.info("项目-产品需求清单:{},{},{}", pageNum, pageSize, projectId);
         // 查询产品需求
         List<ProductDemandListDO> productDemandListDO = productDemandMapper.linkProductDemandList(projectId);
         List<ProductDemandVO> productDemandVOList = ProductDemandCopier.INSTANCE.convert(productDemandListDO);
@@ -484,17 +650,18 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         int count = productDemandVOList.size();
-        int pageSize = productDemandQueryList.getPageSize();
         if (count > pageSize) {
-            productDemandVOList = productDemandVOList.subList(0, pageSize);
+            int fromIndex = (pageNum - 1) * pageSize;
+            int toIndex = Math.min(fromIndex + pageSize, count);
+            productDemandVOList = productDemandVOList.subList(fromIndex, toIndex);
         }
 
         PageQueryResult<ProductDemandVO> pageQueryResult = new PageQueryResult<>();
         pageQueryResult.setResultList(productDemandVOList);
         pageQueryResult.setTotalItems(count);
         pageQueryResult.setTotalPages(count % pageSize == 0 ? count / pageSize : (count / pageSize) + 1);
-        pageQueryResult.setCurrentPage(productDemandQueryList.getPageNum());
-        pageQueryResult.setItemsPerPage(productDemandQueryList.getPageSize());
+        pageQueryResult.setCurrentPage(pageNum);
+        pageQueryResult.setItemsPerPage(pageSize);
         return BaseResult.success(pageQueryResult);
     }
 
@@ -506,6 +673,81 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProjectBaseVO> projectBaseVOList = projectDOList.stream().map(ProjectCopier.INSTANCE::convertTo).collect(Collectors.toList());
 
         return BaseResult.success(projectBaseVOList);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> modifyProjectDate(ProjectDateModifyReq projectDateModifyReq) {
+        log.info("立项时间修改参数:{}", projectDateModifyReq);
+        ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectDateModifyReq);
+        ProjectDO oldProjectDO = projectMapper.get(projectDO.getId());
+
+        checkPjEstablishPublishDateChange(oldProjectDO, projectDateModifyReq.getPjEstablishPublishDate());
+
+        Date pjEstablishStartDate = projectDateModifyReq.getPjEstablishStartDate();
+        Date pjEstablishPublishDate = projectDateModifyReq.getPjEstablishPublishDate();
+
+
+        String oldStartDateStr = DateUtil.parseToString(oldProjectDO.getPjEstablishStartDate(), DateStyle.YYYY_MM_DD);
+        String newStartDateStr = DateUtil.parseToString(pjEstablishStartDate, DateStyle.YYYY_MM_DD);
+        projectLogComponent.addLogWhenContentChange(oldStartDateStr, newStartDateStr, projectDO.getId(), BizChangeLogFieldEnum.PJ_ESTABLISH_START_DATE.getText());
+
+        Date oldPublishDate = oldProjectDO.getPjEstablishPublishDate();
+        String oldPublishDateStr = DateUtil.parseToString(oldPublishDate, DateStyle.YYYY_MM_DD);
+        String newPublishDateStr = DateUtil.parseToString(pjEstablishPublishDate, DateStyle.YYYY_MM_DD);
+        projectLogComponent.addLogWhenContentChange(oldPublishDateStr, newPublishDateStr, projectDO.getId(), BizChangeLogFieldEnum.PJ_ESTABLISH_PUBLISH_DATE.getText());
+
+        oldProjectDO.setPjEstablishStartDate(pjEstablishStartDate);
+        oldProjectDO.setPjEstablishPublishDate(pjEstablishPublishDate);
+
+        projectMapper.fullUpdateById(oldProjectDO);
+        sendDingMsgIfPublishDateForward(projectDO.getId(), oldPublishDate);
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<List<ProductLineAnalyseVO>> analyseProductLine(ProjectQueryList projectQueryList) {
+        log.info("项目列表接收参数:{}", projectQueryList);
+        String currentUser = LocalSessionUtils.getUserInfo().getId();
+        ProjectListCondition condition = ProjectCopier.INSTANCE.convert(projectQueryList);
+        condition.setPageNum(projectQueryList.getPageNum());
+        condition.setPageSize(projectQueryList.getPageSize());
+        List<Long> projectIds = new ArrayList<>();
+        //1.查找我或我的团队所属项目id
+        if (AscriptionEnum.CURRENT_USER.name().equals(projectQueryList.getAscription())) {
+            projectIds = personMapper.getMainIds(Lists.newArrayList(currentUser), null, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            if (CollectionUtils.isEmpty(projectIds)) {
+                return BaseResult.success(new ArrayList<>());
+            }
+
+        } else if (AscriptionEnum.TEAM.name().equals(projectQueryList.getAscription())) {
+            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(currentUser, true);
+            log.info("我和我的下属:{}", allMyStaffWithSelf);
+            projectIds = personMapper.getMainIds(allMyStaffWithSelf, null, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            if (CollectionUtils.isEmpty(projectIds)) {
+                return BaseResult.success(new ArrayList<>());
+            }
+        }
+        if(CollectionUtils.isNotEmpty(projectQueryList.getLabelIds())||CollectionUtils.isNotEmpty(projectQueryList.getLabelCategoryIds())){
+            List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelIds(), projectQueryList.getLabelCategoryIds());
+            if(CollectionUtils.isEmpty(labelIds)){
+                return BaseResult.success(new ArrayList<>());
+            }
+            condition.setLabelIds(labelIds);
+        }
+        List<ProductLineAnalyseVO> analyseVOList = projectComponent.page(condition, projectIds).getAnalyseVOList();
+        return BaseResult.success(analyseVOList);
+    }
+
+    private void checkPjEstablishPublishDateChange(ProjectDO oldProjectDO, Date pjEstablishPublishDate) {
+        if (!Objects.equals(oldProjectDO.getPjEstablishPublishDate(), pjEstablishPublishDate)) {
+            List<ProjectNodeFlowDO> projectNodeFlowDos = projectNodeFlowMapper.getByProjectId(oldProjectDO.getId());
+            boolean match = projectNodeFlowDos.stream().anyMatch(a -> FlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
+            if (match) {
+                throw new BaseBizRuntimeException("发布正式节点流程处于审核中,不能修改立项预期上线时间");
+            }
+        }
     }
 
     private boolean checkProductRelease(Long projectId) {
@@ -548,16 +790,54 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     private void fillInfoWhenModify(List<ProjectNodeDO> projectNodes, ProjectDO newProject) {
+        ProjectDO oldProject = projectMapper.get(newProject.getId());
+
+        checkBeforeUpdate(projectNodes, oldProject);
+
+        checkPjEstablishPublishDateChange(oldProject, newProject.getPjEstablishPublishDate());
+
+        Integer oldStatus = oldProject.getStatus();
+
+        projectComponent.fillInfo(projectNodes, newProject);
+
+        if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
+            // 编辑项目时，当状态是暂停,不修改项目状态
+            newProject.setStatus(oldStatus);
+        }
+        newProject.setNodeStatus(oldProject.getNodeStatus());
+        projectMapper.fullUpdateById(newProject);
+
+        if (!Objects.equals(newProject.getStatus(), oldStatus)) {
+            //状态不一致时,更新产品需求状态
+            productDemandComponent.updateProductDemandStatus(newProject.getId(), newProject.getStatus());
+            projectLogComponent.addLogWhenStatusChange(oldStatus, newProject.getStatus(), newProject.getId(), ButtonActionEnum.MODIFY.getText());
+        }
+        if (!Objects.equals(oldProject.getPlanEndDate(), newProject.getPlanEndDate())
+                || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
+            List<Long> productDemandIds = projectComponent.getLinkProductDemandIds(oldProject.getId());
+
+            List<Long> bizDemandIds = productDemandComponent.getLinkBizDemandIds(productDemandIds);
+            bizDemandIds.forEach(a -> bizDemandComponent.updateProjectEndDate(a));
+
+            List<Long> customDemandIds = productDemandComponent.getLinkCustomDemandIds(productDemandIds);
+            customDemandIds.forEach(a -> customDemandComponent.updateProjectEndDate(a));
+        }
+        log.info("更新项目信息完成");
+    }
+
+    private void checkBeforeUpdate(List<ProjectNodeDO> projectNodes, ProjectDO oldProjectDO) {
         Map<String, ProjectNodeDO> nodeMap = projectNodes
                 .stream()
                 .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
         // 检查任务
         boolean checkTask = nodeMap.get(ProjectNodeEnum.START_PLAN.getText()) == null
                 && nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText()) == null
-                && nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getText()) == null;
+                && nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE.getText()) == null
+                && nodeMap.get(ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText()) == null
+                && nodeMap.get(ProjectNodeEnum.UED_AUDIT.getText()) == null;
         if (checkTask) {
             //删除需求规划阶段时需要校验是否有关联任务,若有关联待执行&进行中&已完成&已暂停的任务,不能删除
-            List<TaskDO> taskDOList = taskMapper.getByProjectId(newProject.getId())
+            List<TaskDO> taskDOList = taskMapper.getByProjectId(oldProjectDO.getId())
                     .stream().filter(a -> TaskStageEnum.DEMAND.getCode().equals(a.getStage())
                             && !TaskStatusEnum.INVALID.getCode().equals(a.getStatus())).collect(Collectors.toList());
             if (CollectionUtils.isNotEmpty(taskDOList)) {
@@ -565,8 +845,8 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
         // 计算项目状态
-        ProjectNodeDO node = null;
-        Integer oldStatus = newProject.getStatus();
+        ProjectNodeDO node;
+        Integer oldStatus = oldProjectDO.getStatus();
         if ((node = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText())) != null && node.getActualDate() != null) {
             if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
                 // 编辑项目
@@ -578,32 +858,70 @@ public class ProjectServiceImpl implements ProjectService {
                 throw new BaseBizRuntimeException("请填写完其他节点的实际时间后,再填写发布正式的实际时间");
             }
         }
-        projectComponent.fillInfo(projectNodes, newProject);
-        if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
-            // 编辑项目时，当状态是暂停,不修改项目状态
-            newProject.setStatus(oldStatus);
-        }
-        ProjectDO oldProject = projectMapper.get(newProject.getId());
-        projectMapper.update(newProject);
-        if (!Objects.equals(newProject.getStatus(), oldStatus)) {
-            //状态不一致时,更新产品需求状态
-            productDemandComponent.updateProductDemandStatus(newProject.getId(), newProject.getStatus());
-            projectLogComponent.addLogWhenStatusChange(oldStatus, newProject.getStatus(), newProject.getId(), ButtonActionEnum.MODIFY.getText());
-        }
-        if (!Objects.equals(oldProject.getPlanEndDate(), newProject.getPlanEndDate())
-                || !Objects.equals(oldProject.getActualEndDate(), newProject.getActualEndDate())) {
-            List<Long> bizDemandIds = projectComponent.getLinkBizDemandIds(oldProject.getId());
-            bizDemandIds.forEach(a->{
-                bizDemandComponent.updateProjectEndDate(a, true);
-            });
-        }
-        log.info("更新项目信息完成");
+
     }
 
     private void fillInfoWhenEnable(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
         projectComponent.fillInfo(projectNodes, projectDO);
-        projectMapper.update(projectDO);
+        projectMapper.fullUpdateById(projectDO);
         productDemandComponent.updateProductDemandStatus(projectDO.getId(), projectDO.getStatus());
     }
 
+    private void processFlow(ProjectModifyReq projectModifyReq) {
+        List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
+        if (projectModifyReq.getDelayType().compareTo(1) >= 0) {
+            ProjectNodeFlowDO projectNodeFlowDO = ProjectNodeFlowCopier.INSTANCE.convert(projectModifyReq.getProjectNodeFlow());
+            projectNodeFlowDO.setProjectName(projectModifyReq.getName());
+            projectNodeFlowComponent.process(projectNodeFlowDO, projectNodeDOList);
+        } else if (Integer.valueOf(0).equals(projectModifyReq.getDelayType())) {
+            //版本+1
+            projectNodeFlowComponent.insertProjectNodeRecord(projectModifyReq.getId(), projectNodeDOList);
+        } else {
+            boolean match = projectNodeDOList.stream().anyMatch(e ->
+                    ProjectNodeEnum.DEVELOP_START.getText().equals(e.getName()) && e.getActualDate() != null);
+            if (match) {
+                List<ProjectNodeRecordDO> list = projectNodeRecordMapper.list(projectModifyReq.getId());
+                if (CollectionUtils.isEmpty(list)) {
+                    //首次生成版本
+                    projectNodeFlowComponent.insertProjectNodeRecord(projectModifyReq.getId(), projectNodeDOList);
+                }
+            }
+        }
+    }
+
+    private void sendDingMsgIfPublishDateForward(Long id, Date oldPjEstablishPublishDate) {
+        ProjectDO oldProjectDO = projectMapper.get(id);
+        //此处已更新项目信息
+        Date newPjEstablishPublishDate = oldProjectDO.getPjEstablishPublishDate();
+        Date planEndDate = oldProjectDO.getPlanEndDate();
+        log.info("立项预计上线时间提前:{}", oldProjectDO);
+        List<ProjectNodeRecordDO> list = projectNodeRecordMapper.list(id);
+        if (CollectionUtils.isEmpty(list) && newPjEstablishPublishDate != null
+                && planEndDate != null && newPjEstablishPublishDate.before(planEndDate)
+                && !ProjectStatusEnum.terminated(oldProjectDO.getStatus())
+                && !Objects.equals(oldPjEstablishPublishDate, newPjEstablishPublishDate)) {
+            messageEventPublisher.publish(new ProjectEstablishDateChangeMsgEvent(
+                    this,
+                    oldProjectDO.getId(),
+                    oldProjectDO.getPmId(),
+                    oldProjectDO.getName(),
+                    DateUtil.parseToString(newPjEstablishPublishDate, DateStyle.YYYY_MM_DD))
+            );
+        }
+    }
+
+    /**
+     * PMO 和 PMO 的上级才有权限编辑立项时间
+     */
+    private boolean isPMO() {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        List<BaseInfoResponse> users =
+                innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
+        for (BaseInfoResponse user : users) {
+            if (CommonConstant.PMO.equalsIgnoreCase(user.getJobClassification())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

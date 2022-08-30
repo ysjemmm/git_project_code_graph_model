@@ -9,6 +9,7 @@ import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ProjectAddReq;
+import com.timevale.forward.facade.api.request.ProjectDateModifyReq;
 import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.result.ProjectBaseVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
@@ -32,6 +33,8 @@ public interface ProjectCopier {
      * @param projectAddReq 对象
      * @return ProductDemandDO
      */
+    @Mapping(source = "pm.userId", target = "pmId")
+    @Mapping(source = "pm.userName", target = "pmName")
     ProjectDO convert(ProjectAddReq projectAddReq);
     /**
      * 转换转换DO
@@ -40,6 +43,8 @@ public interface ProjectCopier {
      * @return ProjectDO
      */
     @Mapping(source = "pds", target = "pds", qualifiedByName = "mapping")
+    @Mapping(source = "pm.userId", target = "pmId")
+    @Mapping(source = "pm.userName", target = "pmName")
     ProjectDO convert(ProjectModifyReq projectModifyReq);
     
     /**
@@ -108,6 +113,13 @@ public interface ProjectCopier {
      * @return ProjectDO
      */
     ProjectMD change(ProjectDO projectDO);
+
+    /**
+     *
+     * @param projectDateModifyReq projectDateModifyReq
+     * @return ProjectDO
+     */
+    ProjectDO convert(ProjectDateModifyReq projectDateModifyReq);
 
 
     @Named("mapping")

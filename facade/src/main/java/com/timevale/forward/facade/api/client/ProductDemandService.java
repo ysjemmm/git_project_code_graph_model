@@ -2,18 +2,9 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.query.ProductBizDemandQueryList;
-import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
-import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
-import com.timevale.forward.facade.api.query.ProductDemandQueryList;
-import com.timevale.forward.facade.api.request.BatchTransferReq;
-import com.timevale.forward.facade.api.request.ProductBizDemandLinkReq;
-import com.timevale.forward.facade.api.request.ProductDemandAddReq;
-import com.timevale.forward.facade.api.request.ProductDemandModifyReq;
-import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
-import com.timevale.forward.facade.api.result.ProductDemandVO;
-import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.query.*;
+import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
@@ -29,7 +20,7 @@ public interface ProductDemandService {
      * @param productDemandQueryList 产品需求信息
      * @return 列表
      */
-    BaseResult<PageQueryResult<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList);
+    BaseResult<QueryResultVO<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList);
 
     /**
      * 修改状态
@@ -122,4 +113,54 @@ public interface ProductDemandService {
      * @return 成功与否
      */
     BaseResult<Boolean> productDemandBatchTransferReceiveMan(BatchTransferReq batchTransferReq);
+
+
+    /**
+     * 查询满足条件的事件列表
+     *
+     * @param trackEventQueryList trackEventQueryList
+     * @return 列表
+     */
+    BaseResult<PageQueryResult<TrackEventVO>> matchTrackEventList(ProductDemandLinkTrackEventQueryList trackEventQueryList);
+
+    /**
+     * 关联事件
+     *
+     * @param trackEventLinkReq 关联事件
+     * @return true false
+     */
+    BaseResult<Boolean> linkOrUnLinkTrackEvent(ProductDemandTrackEventLinkReq trackEventLinkReq);
+
+
+    /**
+     * 产品需求-事件清单
+     *
+     * @param trackEventQueryList 事件
+     * @return 列表
+     */
+    BaseResult<PageQueryResult<TrackEventVO>> linkTrackEventList(ProductDemandTrackEventQueryList trackEventQueryList);
+
+    /**
+     * 查询满足条件的客户需求列表
+     *
+     * @param customDemandQueryList customDemandQueryList
+     * @return 列表
+     */
+    BaseResult<PageQueryResult<CustomDemandVO>> matchCustomDemandList(ProductLinkCustomDemandQueryList customDemandQueryList);
+
+    /**
+     * 关联客户需求
+     *
+     * @param customDemandLinkReq customDemandLinkReq
+     * @return true false
+     */
+    BaseResult<Boolean> linkOrUnLinkCustomDemand(ProductCustomDemandLinkReq customDemandLinkReq);
+
+    /**
+     * 产品需求-客户需求清单
+     *
+     * @param customDemandQueryList 客户需求id
+     * @return 列表
+     */
+    BaseResult<PageQueryResult<CustomDemandVO>> linkCustomDemandList(ProductCustomDemandQueryList customDemandQueryList);
 }

@@ -38,10 +38,10 @@ public class BugOnlineOnlineMsgEvent extends MessageEvent {
     public void run() {
         List<String> receivers = Lists.newArrayList(receiver);
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUG_ONLINE_MANAGEMENT.getText(), bugOnlineId);
-        String markdown = String.format(BUG_ONLINE_TRANS, MessageTitleEnum.BUG_ONLINE_REPAIR_FINISHED.getText(), bugName, singleUrl, new Date());
+        String markdown = String.format(BUG_ONLINE_TRANS, MessageTitleEnum.BUG_ONLINE_ONLINE.getText(), bugName, singleUrl, new Date());
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
-                .title(MessageTitleEnum.BUG_ONLINE_REPAIR_FINISHED.getText())
+                .title(MessageTitleEnum.BUG_ONLINE_ONLINE.getText())
                 .content(markdown)
                 .receivers(receivers)
                 .build();

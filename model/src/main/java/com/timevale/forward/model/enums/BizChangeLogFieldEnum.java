@@ -17,6 +17,27 @@ public enum BizChangeLogFieldEnum {
 
     PD("产品经理"),
 
+    PLAN_END_DATE("项目计划结束时间"),
+
+    PROJECT_GOAL("项目目标"),
+
+    WITH_GOAL("是否有项目目标"),
+
+    PJ_ESTABLISH_PUBLISH_DATE("立项预期上线时间"),
+
+    PJ_ESTABLISH_START_DATE("立项开始时间"),
+
+    /**
+     * 项目目标
+     */
+    MAIN_GOAL("是否主目标"),
+
+    GOAL_STATUS("完成状态"),
+
+    GOAL_COMPLETE_NOTE("完成情况"),
+
+    GOAL_REACH_VALUE("项目目标达标值"),
+
     /**
      * 产品需求
      */
@@ -25,6 +46,8 @@ public enum BizChangeLogFieldEnum {
     PRODUCT_DEMAND_STATUS("产品需求状态"),
 
     PRODUCT_DEMAND_TYPE("产品需求类型"),
+
+    TRACK_EVENT("埋点事件"),
 
     /**
      * 业务需求
@@ -35,7 +58,7 @@ public enum BizChangeLogFieldEnum {
 
     CREATE_MAN("需求提交人"),
 
-    REASON("驳回原因"),
+    REASON("驳回理由"),
 
     REJECT_REASON("拒绝原因"),
 
@@ -52,7 +75,9 @@ public enum BizChangeLogFieldEnum {
      */
     PRODUCT_LINE("产品线"),
 
-    DESC("需求描述");
+    DESC("需求描述"),
+
+    LABEL("标签");
 
     private final String text;
 

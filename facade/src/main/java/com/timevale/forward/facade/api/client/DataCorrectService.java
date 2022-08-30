@@ -3,6 +3,7 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.request.DataModifyReq;
+import com.timevale.forward.facade.api.request.ProjectNodeModifyReq;
 import com.timevale.mandarin.common.annotation.RestClient;
 
 /**
@@ -43,7 +44,16 @@ public interface DataCorrectService {
     BaseResult<Boolean> updateDelayDays();
 
     /**
-     * 业务需求更新
+     * 节点时间更新
+     * @param projectNodeModifyReq projectNodeModifyReq
+     * @return
      */
-    BaseResult<Boolean> updateBizDemandStatus();
+    BaseResult<Boolean> updateNodeDate(ProjectNodeModifyReq projectNodeModifyReq);
+
+
+    /**
+     * 更新逾期天数
+     * @return return
+     */
+    BaseResult<Boolean> updateModelIdInBugOnline();
 }

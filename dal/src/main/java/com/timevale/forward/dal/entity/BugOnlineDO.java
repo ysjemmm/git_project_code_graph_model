@@ -157,12 +157,22 @@ public class BugOnlineDO extends BaseDO {
     /**
      * 模块id
      */
-    private Long modelId;
+    private String modelId;
 
     /**
      * 详细版本号
      */
     private String detailVersionId;
+
+    /**
+     * 预计上线日期
+     */
+    private Date expectLaunchDate;
+
+    /**
+     * 关联的bug_id
+     */
+    private Long linkBugId;
 }
 
 

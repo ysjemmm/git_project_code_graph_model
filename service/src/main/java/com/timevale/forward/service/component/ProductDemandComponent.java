@@ -6,7 +6,6 @@ import com.timevale.forward.dal.entity.ProductDemandListDO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 
 import java.util.List;
-import java.util.Map;
 
 public interface ProductDemandComponent {
     /**
@@ -38,24 +37,61 @@ public interface ProductDemandComponent {
 
     /**
      *
+     * @param projectId 项目id
+     * @param status 项目状态
+     */
+    void updateProductDemandStatus(Long projectId,Integer status,List<Long>productDemandIds);
+
+    /**
+     *
      * @param productDemandIds 产品需求id
      * @param invalid 产品需求与关联业务需求取消关联,
      */
-    void updateBizDemandStatusAsProductStatusChange(List<Long> productDemandIds,boolean invalid);
+    void updateDemandStatusAsProductStatusChange(List<Long> productDemandIds,boolean invalid);
 
     /**
      *
-     * @param condition condition
-     * @param minStauts minStauts 产品需求状态
-     * @param bizDemandId bizDemandId
-     */
-    void processBizDemandStatus(Map<Integer, List<Long>> condition, Integer minStauts, Long bizDemandId);
-
-    /**
-     *
-     * @param bizDemandId bizDemandId
+     * @param demandId demandId
      * @param productDemandId productDemandId
      */
-    void updateBizDemandStatusWhenUnlink(Long bizDemandId,Long productDemandId);
+    void updateDemandStatusWhenUnlink(Long demandId,Long productDemandId,boolean bizDemand);
 
+    /**
+     *
+     * @param productStatus productStatus 产品需求状态
+     * @param bizDemandId bizDemandId
+     * @param bizDemand bizDemand
+     */
+    Integer updateDemandStatus(Integer productStatus, Long bizDemandId,boolean bizDemand);
+
+    /**
+     *
+     * @param productDemandIds productDemandIds
+     * @param invalid invalid
+     */
+    void updateBizDemandStatus(List<Long> productDemandIds, boolean invalid);
+
+    /**
+     *
+     * @param productDemandIds productDemandIds
+     * @param invalid invalid
+     */
+    void updateCustomDemandStatus(List<Long> productDemandIds, boolean invalid);
+
+
+    /**
+     *
+     * @param productDemandIds productDemandIds
+     * @return Long
+     */
+    List<Long> getLinkBizDemandIds(List<Long> productDemandIds);
+
+    /**
+     *
+     * @param productDemandIds productDemandIds
+     * @return Long
+     */
+    List<Long> getLinkCustomDemandIds(List<Long> productDemandIds);
+
+    void sendDingMsg(Integer oldStatus, Integer newStatus, Long bizDemandId);
 }

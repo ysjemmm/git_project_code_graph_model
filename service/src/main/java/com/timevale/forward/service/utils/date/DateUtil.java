@@ -1,5 +1,8 @@
 package com.timevale.forward.service.utils.date;
 
+import com.timevale.forward.service.constant.CommonConstant;
+import org.apache.commons.lang3.time.FastDateFormat;
+
 import java.sql.Timestamp;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
@@ -227,7 +230,7 @@ public class DateUtil implements DateFormatConst {
                     if (pos.getIndex() != date.length()) {
                         dateTmp = null;
                     }
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                 }
             }
             if (dateTmp != null) {
@@ -291,7 +294,7 @@ public class DateUtil implements DateFormatConst {
         if (date != null) {
             try {
                 myDate = getDateFormat(pattern).parse(date);
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         }
         return myDate;
@@ -357,7 +360,7 @@ public class DateUtil implements DateFormatConst {
         if (date != null) {
             try {
                 dateString = getDateFormat(pattern).format(date);
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         }
         return dateString;
@@ -410,7 +413,7 @@ public class DateUtil implements DateFormatConst {
      * @return 日期字符串 string
      */
     public static String parseToString(Date date, DateStyle dateStyle) {
-        String dateString = null;
+        String dateString = "";
         if (dateStyle != null) {
             dateString = parseToString(date, dateStyle.getValue());
         }
@@ -526,7 +529,7 @@ public class DateUtil implements DateFormatConst {
      *
      * @param date the date
      * @return timestamp
-     * @date转Timestamp
+     * @date 转Timestamp
      */
     public static Timestamp parseToTimestamp(Date date) {
         return new Timestamp(date.getTime());
@@ -1995,6 +1998,14 @@ public class DateUtil implements DateFormatConst {
         calendar.set(Calendar.HOUR_OF_DAY,18);
         calendar.set(Calendar.MINUTE,30);
         return calendar.getTime();
+    }
+
+    /**
+     * 构造时间间隔字符串
+     */
+    public static String formDateRange(Date startDate, Date endDate) {
+        FastDateFormat dateFormat = FastDateFormat.getInstance(DateFormatConst.DATE_FORMAT);
+        return dateFormat.format(startDate) + CommonConstant.TILDE + dateFormat.format(endDate);
     }
 
 }

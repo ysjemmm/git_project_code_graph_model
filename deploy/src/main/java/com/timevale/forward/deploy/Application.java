@@ -26,6 +26,7 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
  */
 @UniversalService
 @EnableFeignClients(basePackages = {
+        "com.timevale.filesystem.common.service.api",
         "com.timevale.forward.facade.api",
         "com.timevale.security.facade.api",
         "com.timevale.erp.message.service.api",
@@ -33,7 +34,11 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
         "com.timevale.epeius.service.api"
 })
 @MapperScan("com.timevale.forward.dal")
-@SpringBootApplication(scanBasePackages = {"com.timevale.forward.service"})
+@SpringBootApplication(scanBasePackages = {
+        "com.timevale.crm.sdk.common.base",
+        "com.timevale.crm.sdk.common.utils.file",
+        "com.timevale.forward.service"
+})
 @EnablePuppeteerConfig({"application", "JSBZ.SOA_PUBLIC"})
 @EnableLogMonitor
 public class Application {

@@ -1,12 +1,10 @@
 package com.timevale.forward.facade.api.request;
 
-import com.timevale.forward.facade.api.result.PersonVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -70,4 +68,17 @@ public class BizDemandAddReq extends BaseReq {
 
     @ApiModelProperty("需求提交人id")
     private String submitManId;
+
+    @ApiModelProperty("是否客开需求")
+    @NotNull(message = "是否客开需求")
+    private Boolean customerDevDemand;
+
+    @ApiModelProperty("客开类型：0基于销售合同；1基于项目")
+    private Integer customerDevType;
+
+    @ApiModelProperty("销售合同编号")
+    private String customerDevSaleContract ;
+
+    @ApiModelProperty("项目名称")
+    private String customerDevProjectName;
 }

@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author: xingyun
@@ -95,6 +96,15 @@ public class ProjectVO extends ToString {
     @ApiModelProperty("节点状态名称")
     private String nodeStatusName;
 
+    @ApiModelProperty("节点计划时间")
+    private Date nodePlanDate;
+
+    @ApiModelProperty("项目等级")
+    private Integer level;
+
+    @ApiModelProperty("项目等级-描述")
+    private String levelName;
+
     @ApiModelProperty("提测打回次数")
     private Integer returnCount;
 
@@ -103,4 +113,7 @@ public class ProjectVO extends ToString {
 
     @ApiModelProperty("提测实际时间")
     private Date actualTestDate;
+
+    @ApiModelProperty("标签名称")
+    private List<String> labelNames;
 }

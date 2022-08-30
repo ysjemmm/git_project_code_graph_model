@@ -17,6 +17,7 @@ import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.Test;
+import org.testng.collections.Lists;
 
 import java.util.*;
 
@@ -74,7 +75,7 @@ public class BizDemandComponentImplTest extends AbstractTestNGSpringContextTests
 
     @Test
     public void testGetGroupListTreeMap() {
-        GroupResponse groupResponse = new GroupResponse();
+        List<GroupResponse>groupResponse = Lists.newArrayList( new GroupResponse());
         GroupResponse childNode = new GroupResponse();
         childNode.setGroupId("1");
         childNode.setGroupName("www");
@@ -82,7 +83,7 @@ public class BizDemandComponentImplTest extends AbstractTestNGSpringContextTests
         grandSonNode.setGroupId("1");
         grandSonNode.setGroupName("www");
         childNode.setChildNode(Collections.singletonList(grandSonNode));
-        groupResponse.setChildNode(Collections.singletonList(childNode));
+        groupResponse.get(0).setChildNode(Collections.singletonList(childNode));
 
         when(innerGroupClient.getGroupListTree(any())).thenReturn(groupResponse);
 
@@ -119,12 +120,13 @@ public class BizDemandComponentImplTest extends AbstractTestNGSpringContextTests
 
     @Test
     public void testPage() {
-        GroupResponse groupResponse = new GroupResponse();
-        groupResponse.setGroupName("www");
+        List<GroupResponse> groupResponse =Lists.newArrayList(new GroupResponse());
+        GroupResponse response = groupResponse.get(0);
+        response.setGroupName("www");
         GroupResponse child = new GroupResponse();
         child.setGroupName("www");
         child.setGroupId("1");
-        groupResponse.setChildNode(Collections.singletonList(child));
+        response.setChildNode(Collections.singletonList(child));
         when(innerGroupClient.getGroupListTree(any())).thenReturn(groupResponse);
 
         BizDemandListDO bizDemandListDO = new BizDemandListDO();
@@ -136,7 +138,7 @@ public class BizDemandComponentImplTest extends AbstractTestNGSpringContextTests
 
         BizDemandListCondition bizDemandListCondition = BizDemandListCondition.builder().deptIdList(Collections.singletonList(1L))
                 .createDateStart(new Date()).createDateEnd(new Date()).build();
-        assert bizDemandComponent.page(bizDemandListCondition).ifSuccess();
+        assert bizDemandComponent.page(bizDemandListCondition).getPageQueryResult().isSuccess();
     }
 
 }

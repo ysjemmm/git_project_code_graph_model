@@ -27,4 +27,9 @@ public class SpringContextUtil implements ApplicationContextAware {
         return applicationContext.getEnvironment().getProperty(key);
     }
 
+    public static String getProperty(String key, String defaultValue){
+        String property = applicationContext.getEnvironment().getProperty(key);
+        return property == null ? defaultValue : property;
+    }
+
 }

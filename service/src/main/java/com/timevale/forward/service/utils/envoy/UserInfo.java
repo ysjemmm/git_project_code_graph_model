@@ -1,5 +1,6 @@
 package com.timevale.forward.service.utils.envoy;
 
+import com.timevale.forward.service.constant.CommonConstant;
 import lombok.Data;
 
 import java.util.List;
@@ -50,6 +51,8 @@ public class UserInfo {
      */
     private GroupModel defaultGroup;
 
-
+    public String getFullAlias() {
+        return alias + CommonConstant.JOIN_LINE + name;
+    }
 
 }

@@ -69,6 +69,12 @@ public class BugOnlineDetailVO extends ToString {
             "，17无法重现但客户环境必现")
     private String reasonName;
 
+    @ApiModelProperty("来源: forward 产研系统， support 运营支撑平台， duty 值班反馈")
+    private String source;
+
+    @ApiModelProperty("来源-描述")
+    private String sourceName;
+
     @ApiModelProperty("是否复现：0是，1否")
     private Integer recurrent;
 
@@ -133,11 +139,20 @@ public class BugOnlineDetailVO extends ToString {
     private BizDemandVO bizDemandVO;
 
     @ApiModelProperty("模块id")
-    private Long modelId;
+    private List<Long> modelIds;
 
     @ApiModelProperty("模块名称")
     private String modelName;
 
     @ApiModelProperty("详细版本号")
     private String detailVersionId;
+
+    @ApiModelProperty("预计上线日期")
+    private Date expectLaunchDate;
+
+    @ApiModelProperty("被关联bug")
+    private List<BugOnlineLinkVO> linkedBugs;
+
+    @ApiModelProperty("关联bug")
+    private BugOnlineLinkVO linkBug;
 }

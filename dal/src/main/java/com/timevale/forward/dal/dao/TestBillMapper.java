@@ -19,11 +19,11 @@ public interface TestBillMapper {
     void submitTestBill(@Param("testBillDO") TestBillDO testBillDO);
 
     /**
-     * 提交冒烟用例
+     * 提交测试用例
      *
      * @param testBillDO 提测单修改信息
      */
-    void submitSmokeTesting(@Param("testBillDO") TestBillDO testBillDO);
+    void updateByProjectId(@Param("testBillDO") TestBillDO testBillDO);
 
     /**
      * 修改测试人

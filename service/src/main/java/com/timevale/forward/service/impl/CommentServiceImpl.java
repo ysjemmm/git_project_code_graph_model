@@ -3,15 +3,22 @@ package com.timevale.forward.service.impl;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.CommentDO;
+import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.facade.api.client.CommentService;
 import com.timevale.forward.facade.api.query.CommentQueryList;
 import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.request.CommentAddReq;
 import com.timevale.forward.facade.api.request.CommentBatchAddReq;
+import com.timevale.forward.facade.api.request.CommentModifyReq;
+import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.facade.api.result.CommentVO;
+import com.timevale.forward.facade.api.result.FileVO;
 import com.timevale.forward.model.enums.CommentTypeEnum;
+import com.timevale.forward.model.enums.FileTypeEnum;
+import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.CommentCopier;
+import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.observer.event.CommentMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -21,7 +28,9 @@ import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -60,6 +69,12 @@ public class CommentServiceImpl implements CommentService {
     @Resource
     private MessageEventPublisher messageEventPublisher;
 
+    @Resource
+    private FileComponent fileComponent;
+
+    @Resource
+    private CustomDemandMapper customDemandMapper;
+
     @Override
     public BaseResult<List<CommentVO>> list(CommentQueryList commentQueryList) {
 
@@ -68,6 +83,19 @@ public class CommentServiceImpl implements CommentService {
 
         List<CommentDO> commentDOList = commentMapper.select(toId, type);
         List<CommentVO> commentVOList = CommentCopier.INSTANCE.convert(commentDOList);
+
+        // 查询评论对应附件
+        List<Long> commentIdList = commentDOList.stream().map(CommentDO::getId).collect(Collectors.toList());
+        List<FileDO> fileDOList = fileComponent.select(commentIdList, FileTypeEnum.COMMENT.getCode());
+        Map<Long, List<FileDO>> fileMap = fileDOList.stream().collect(Collectors.groupingBy(FileDO::getAttacheId));
+
+        for (CommentVO e : commentVOList) {
+            List<FileVO> fileVOList = new ArrayList<>();
+            if(fileMap.containsKey(e.getId())){
+                fileVOList = FileCopier.INSTANCE.transform(fileMap.get(e.getId()));
+            }
+            e.setFileList(fileVOList);
+        }
 
         return BaseResult.success(commentVOList);
     }
@@ -79,6 +107,10 @@ public class CommentServiceImpl implements CommentService {
         // 添加评论
         CommentDO commentDO = CommentCopier.INSTANCE.convert(commentAddReq);
         commentMapper.insert(commentDO);
+
+        // 添加附件
+        List<FileAddReq> fileList = commentAddReq.getFileList();
+        fileComponent.add(fileList, commentDO.getId(), FileTypeEnum.COMMENT.getCode());
 
         // 评论接收人
         List<String> receivers = commentAddReq.getReceiverInfoList().stream().map(PersonQuery::getUserId).collect(Collectors.toList());
@@ -102,6 +134,8 @@ public class CommentServiceImpl implements CommentService {
             name = bugOnlineMapper.selectById(toId).getName();
         }else if(CommentTypeEnum.TROUBLE_TICKET.getCode().equals(type)){
             name = troubleTicketMapper.selectById(toId).getName();
+        }else if(CommentTypeEnum.CUSTOM_DEMAND.getCode().equals(type)){
+            name = customDemandMapper.selectById(toId).getName();
         }
 
         // 发送通知
@@ -115,6 +149,15 @@ public class CommentServiceImpl implements CommentService {
                 commentDO.getContent()
         ));
 
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> modify(CommentModifyReq commentModifyReq) {
+        Long id = commentModifyReq.getId();
+        List<FileAddReq> fileList = commentModifyReq.getFileList();
+
+        fileComponent.update(fileList, id, FileTypeEnum.COMMENT.getCode());
         return BaseResult.success(true);
     }
 

@@ -2,6 +2,8 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.request.ProductLineAddReq;
+import com.timevale.forward.facade.api.request.ProductLineModifyReq;
 import com.timevale.forward.facade.api.result.ProductLineModelVO;
 import com.timevale.forward.facade.api.result.ProductLineVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -36,4 +38,21 @@ public interface ProductLineService {
      * @return 返回产品线列表
      */
     BaseResult<List<ProductLineModelVO>> listProductLineModes();
+
+    /**
+     * 新增
+     *
+     * @param productLineAddReq 产品线新增请求
+     * @return 数量
+     */
+    BaseResult<Boolean> add(ProductLineAddReq productLineAddReq);
+
+    /**
+     * 新增
+     *
+     * @param productLineModifyReq 产品线新增请求
+     * @return 数量
+     */
+    BaseResult<Boolean> update(ProductLineModifyReq productLineModifyReq);
+
 }

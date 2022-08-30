@@ -37,6 +37,10 @@ public class ProductDemandListDO extends BaseDO {
      */
     private String ownerId;
 
+    /**
+     * 产品线id
+     */
+    private Long productLineId;
 
     /**
      * 产品线
@@ -48,10 +52,6 @@ public class ProductDemandListDO extends BaseDO {
      */
     private String bizDomainName;
 
-    /**
-     * 修改时间
-     */
-    private Date modifyDate;
 
     /**
      * 抄送人

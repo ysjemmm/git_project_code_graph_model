@@ -75,6 +75,9 @@
             <if test="solvePlan != null and solvePlan != ''">
                 solve_plan = #{solvePlan},
             </if>
+            <if test="expectSolveDate != null">
+                expect_solve_date = #{expectSolveDate},
+            </if>
             <if test="true">
                 delay_handle_reason = #{delayHandleReason},
             </if>
@@ -92,7 +95,7 @@
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
         select id, project_id, product_line_id, name, status, last_operator, last_operator_id, operator, operator_id,
                proposer, proposer_id, priority, env, reason, source, belong, frequency, `desc`, open_count, return_count,
-               delay_handle_reason, unhandle_reason, cause, solve_plan,
+               delay_handle_reason, unhandle_reason, cause, solve_plan, expect_solve_date,
                is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
         from bug_offline
         where id = #{id} and is_deleted = false
@@ -100,7 +103,7 @@
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.BugOfflineListDO">
         select bo.id, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env, bo.reason, bo.source, bo.belong,
-        bo.return_count, bo.unhandle_reason, bo.open_count,
+        bo.return_count, bo.unhandle_reason, bo.open_count, bo.expect_solve_date,
         bo.create_date, bo.modify_date,
         bo.name bugName,
         p.name projectName, p.status projectStatus,
@@ -111,6 +114,12 @@
         join product_line pl on pl.id = bo.product_line_id
         join biz_domain bd on pl.biz_domain_id = bd.id
         <where>
+            <if test="containIds!=null and containIds.size()>0">
+                and bo.id  in
+                <foreach collection="containIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="name != null and name != '' ">
                 and bo.name like concat('%',#{name},'%')
             </if>
@@ -244,6 +253,38 @@
         from bug_offline
         where project_id = #{projectId}
         and is_Deleted = false
+    </select>
+
+    <select id="getBugCount" resultType="com.timevale.forward.dal.dto.BugOfflineCountDTO">
+        select operator_id                  as user_id,
+               operator                     as user_name,
+               count(*)                     as wait_repair_count,
+               sum(IF(priority &lt; 20, 1, 0)) as urgent_repair_count
+        from bug_offline
+        where status = 1
+          and project_id = #{projectId}
+          and is_deleted = false
+        group by operator_id
+    </select>
+    <select id="getReasonDistribution"
+            resultType="com.timevale.forward.dal.dto.BugOfflineReasonDistributionDTO">
+        select reason, count(*) as count
+        from bug_offline
+        where project_id = #{projectId}
+          and status != 6
+          and is_deleted = false
+        group by reason
+        order by count desc
+    </select>
+    <select id="getBelongDistribution"
+            resultType="com.timevale.forward.dal.dto.BugOfflineBelongDistributionDTO">
+        select belong, count(*) as count
+        from bug_offline
+        where project_id = #{projectId}
+          and status != 6
+          and is_deleted = false
+        group by belong
+        order by count desc
     </select>
 
     <update id="deleteById">

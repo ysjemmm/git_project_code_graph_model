@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @LogPoint
@@ -31,11 +30,11 @@ public class BizChangeLogServiceImpl implements BizChangeLogService {
     @Override
     public BaseResult<PageQueryResult<BizChangeLogVO>> list(BizChangeLogQueryList bizChangeLogQueryList) {
         // 开始分页
-        PageHelper.startPage(bizChangeLogQueryList.pageNum, bizChangeLogQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        PageHelper.startPage(bizChangeLogQueryList.pageNum, bizChangeLogQueryList.pageSize, CommonConstant.CREATE_ORDER_BY);
 
         // 查询转换
         List<BizChangeLogDO> bizChangeLogDOList = bizChangeLogMapper.list(bizChangeLogQueryList.getMainId(), bizChangeLogQueryList.getType());
-        List<BizChangeLogVO> bizChangeLogVOList = bizChangeLogDOList.stream().map(BizChangeLogCopier.INSTANCE::convert).collect(Collectors.toList());
+        List<BizChangeLogVO> bizChangeLogVOList = BizChangeLogCopier.INSTANCE.convert(bizChangeLogDOList);
 
         // 返回分页数据
         PageInfo<BizChangeLogDO> pageInfo = new PageInfo<>(bizChangeLogDOList);

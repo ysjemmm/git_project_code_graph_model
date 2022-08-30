@@ -17,6 +17,7 @@ import java.util.List;
 @Data
 @ApiModel("项目列表查询")
 public class ProjectQueryList extends QueryBase {
+
     @ApiModelProperty("id")
     private Long id;
 
@@ -34,6 +35,9 @@ public class ProjectQueryList extends QueryBase {
 
     @ApiModelProperty("产品线")
     private List<Long> productLineIds;
+
+    @ApiModelProperty("子产品线id")
+    private List<Long> subProductLineIds;
 
     @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
     private List<Integer> types;
@@ -100,5 +104,23 @@ public class ProjectQueryList extends QueryBase {
 
     @ApiModelProperty("提测时间右区间")
     private Date actualTestDateRight;
+
+    @ApiModelProperty("排序字段")
+    private String orderFiled;
+
+    @ApiModelProperty("排序规则：0正序，1逆序")
+    private Integer orderCollation;
+
+    @ApiModelProperty("项目等级：0普通 10重点")
+    private Integer level;
+
+    @ApiModelProperty("是否有项目风险")
+    private Boolean includeRisk;
+
+    @ApiModelProperty("选中为标签时填写,标签id")
+    private List<Long> labelIds;
+
+    @ApiModelProperty("选中为标签类别时填写,类别id")
+    private List<Long> labelCategoryIds;
 
 }

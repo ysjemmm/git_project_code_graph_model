@@ -4,6 +4,8 @@ import com.timevale.forward.dal.annotation.FieldCompare;
 import com.timevale.forward.model.enums.*;
 import lombok.Data;
 
+import java.util.Date;
+
 /**
  * @author by YangXu
  * @date 2022/02/25 16:16
@@ -95,4 +97,9 @@ public class BugOfflineMD extends BaseMD{
     @FieldCompare(fieldName = "解决方案")
     private String solvePlan;
 
+    /**
+     * 预计解决完成日期
+     */
+    @FieldCompare(fieldName = "预计解决完成日期")
+    private Date expectSolveDate;
 }

@@ -61,7 +61,9 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
         if (!Objects.equals(oldObj.getDesc(), newObj.getDesc())) {
             String oldValue = StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(oldObj.getDesc()));
             String newValue = StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(newObj.getDesc()));
-            logs.add(createLog(oldObj.getId(), BizChangeLogFieldEnum.DESC.getText(), oldValue, newValue, null));
+            if (!Objects.equals(oldValue, newValue)) {
+                logs.add(createLog(oldObj.getId(), BizChangeLogFieldEnum.DESC.getText(), oldValue, newValue, null));
+            }
         }
         //类型
         List<Integer> oldTypes = JSON.parseArray(oldObj.getType(), Integer.class);
@@ -93,11 +95,11 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
     @Override
     public BizChangeLogDO getLog(String oldValue, String newValue, Long id, String field, Boolean active) {
         BizChangeLogDO log = createLog(id, field, oldValue, newValue, "");
-        if(active){
+        if (active) {
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
             log.setCreateManId(userInfo.getId());
             log.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        }else{
+        } else {
             log.setCreateManId(CommonConstant.SYSTEM);
             log.setCreateMan(CommonConstant.SYSTEM);
         }
@@ -106,7 +108,7 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
 
     @Override
     public void batchAddLog(List<BizChangeLogDO> bizChangeLogDOList) {
-        if(CollectionUtil.isEmpty(bizChangeLogDOList)){
+        if (CollectionUtil.isEmpty(bizChangeLogDOList)) {
             return;
         }
         bizChangeLogMapper.batchInsert(bizChangeLogDOList);
@@ -166,7 +168,7 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
      * @param linkOrUnlink linkOrUnlink
      */
     @Override
-    public void addLogWhenLinkOrUnlink(String name, Long id, Map<Long, String> bdNameMap, String linkOrUnlink) {
+    public void addLogWhenLinkOrUnlink(String name, Long id, Map<Long, String> bdNameMap, String linkOrUnlink, BizChangeLogTypeEnum bizChangeLogTypeEnum) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         //为空表示非主动点击删除按钮,赋值SYSTEM-SYSTEM
         boolean empty = StringUtils.isEmpty(linkOrUnlink);
@@ -180,7 +182,7 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
             BizChangeLogDO pdLog = new BizChangeLogDO();
             pdLog.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
             pdLog.setMainId(id);
-            pdLog.setField(BizChangeLogTypeEnum.BIZ_DEMAND.getText());
+            pdLog.setField(bizChangeLogTypeEnum.getText());
             pdLog.setAction(action);
             pdLog.setOldValue(bName);
             pdLog.setNewValue(bName);
@@ -190,7 +192,7 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
 
             //1.业务需求记录日志:{操作人}添加/删除 {产品需求}:{产品需求A}
             BizChangeLogDO bdLog = new BizChangeLogDO();
-            bdLog.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+            bdLog.setType(bizChangeLogTypeEnum.getCode());
             bdLog.setMainId(bId);
             bdLog.setField(BizChangeLogTypeEnum.PRODUCT_DEMAND.getText());
             bdLog.setAction(action);
@@ -200,6 +202,41 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
             bdLog.setCreateManId(createManId);
             logs.add(bdLog);
 
+        });
+        if (CollectionUtil.isNotEmpty(logs)) {
+            bizChangeLogMapper.batchInsert(logs);
+        }
+    }
+
+    @Override
+    public void addLogWhenLinkOrUnlink(String name, Long id, Map<Long, String> bdNameMap, String linkOrUnlink) {
+        addLogWhenLinkOrUnlink(name, id, bdNameMap, linkOrUnlink, BizChangeLogTypeEnum.BIZ_DEMAND);
+    }
+
+    @Override
+    public void addLogWhenLinkOrUnlinkCustomDemand(String name, Long id, Map<Long, String> bdNameMap, String linkOrUnlink) {
+        addLogWhenLinkOrUnlink(name, id, bdNameMap, linkOrUnlink, BizChangeLogTypeEnum.CUSTOM_DEMAND);
+    }
+
+    @Override
+    public void addLogWhenLinkOrUnlinkTrackEvent(Long id, List<String> trackEventName, String linkOrUnlink) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String createMan = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
+        String createManId = userInfo.getId();
+
+        List<BizChangeLogDO> logs = new ArrayList<>();
+        trackEventName.forEach(a -> {
+            //1.产品需求记录日志:{操作人}添加/删除 {埋点事件}:{埋点事件A}
+            BizChangeLogDO pdLog = new BizChangeLogDO();
+            pdLog.setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+            pdLog.setMainId(id);
+            pdLog.setField(BizChangeLogFieldEnum.TRACK_EVENT.getText());
+            pdLog.setAction(linkOrUnlink);
+            pdLog.setOldValue(a);
+            pdLog.setNewValue(a);
+            pdLog.setCreateMan(createMan);
+            pdLog.setCreateManId(createManId);
+            logs.add(pdLog);
         });
         if (CollectionUtil.isNotEmpty(logs)) {
             bizChangeLogMapper.batchInsert(logs);

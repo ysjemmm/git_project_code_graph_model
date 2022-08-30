@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -17,6 +18,8 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 @ApiModel("评论列表")
 public class CommentVO extends ToString {
+    @ApiModelProperty("评论id")
+    private Long id;
 
     @ApiModelProperty("内容")
     private String content;
@@ -27,4 +30,6 @@ public class CommentVO extends ToString {
     @ApiModelProperty("创建时间")
     private Date createDate;
 
+    @ApiModelProperty("附件")
+    private List<FileVO> fileList;
 }

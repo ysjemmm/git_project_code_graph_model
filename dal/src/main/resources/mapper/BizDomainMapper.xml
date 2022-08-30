@@ -26,4 +26,17 @@
         </where>
     </select>
 
+    <select id="selectByName" resultType="com.timevale.forward.dal.entity.BizDomainDO">
+        SELECT id, name
+        FROM biz_domain
+        <where>
+            <if test="nameList != null and nameList.size() > 0">
+                AND `name` IN
+                <foreach collection="nameList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
 </mapper>

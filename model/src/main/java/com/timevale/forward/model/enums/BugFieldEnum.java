@@ -25,7 +25,13 @@ public enum BugFieldEnum {
 
     DISMISS_CAUSE("驳回原因"),
 
-    REASON("bug原因");
+    REASON("bug原因"),
+
+    LABEL("标签"),
+
+    LINK_BUG("关联bug"),
+
+    MODEL("模块");
 
     private final String text;
 }

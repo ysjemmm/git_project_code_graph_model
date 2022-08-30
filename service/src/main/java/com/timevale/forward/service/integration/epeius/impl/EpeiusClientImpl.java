@@ -2,7 +2,10 @@ package com.timevale.forward.service.integration.epeius.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.timevale.epeius.service.api.FlowService;
+import com.timevale.epeius.service.enums.FlowStatusEnum;
+import com.timevale.epeius.service.model.request.ProcessInstanceRequest;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
+import com.timevale.epeius.service.model.request.TerminateRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.lowcode.support.api.ProcessQueryRpcService;
@@ -89,4 +92,43 @@ public class EpeiusClientImpl implements EpeiusClient {
             throw new BaseBizRuntimeException("查询工作流人员信息失败");
         }
     }
+
+    @Override
+    public Boolean withdrawInstance(TerminateRequest terminateRequest) {
+        try {
+            ProcessResponse processInfo = getProcessInfo(terminateRequest.getProcessInstanceId());
+            if(!FlowStatusEnum.PENDING.getValue().equals(processInfo.getProcessStatus())){
+                return true;
+            }
+            log.info("撤回工作流 withdrawInstance: {}", JSON.toJSONString(terminateRequest));
+            BaseResult<Boolean> result = flowService.withdrawInstance(terminateRequest);
+            if (result == null || !result.ifSuccess() || result.getData() == null) {
+                log.error("撤回工作流失败 result: {}", result);
+                throw new BaseBizRuntimeException("撤回工作流失败");
+            }
+            log.info("撤回工作流 result: {}", result.getData());
+            return result.getData();
+        } catch (Exception e) {
+            log.warn("撤回工作流异常: ", e);
+            throw new BaseBizRuntimeException("撤回工作流异常");
+        }
+    }
+
+    @Override
+    public Boolean addVariables(ProcessInstanceRequest processInstanceRequest) {
+        try {
+            log.info("添加流程变量 withdrawInstance: {}", JSON.toJSONString(processInstanceRequest));
+            BaseResult<Boolean> result = flowService.addVariables(processInstanceRequest);
+            if (result == null || !result.ifSuccess() || result.getData() == null) {
+                log.error("添加流程变量 result: {}", result);
+                throw new BaseBizRuntimeException("添加流程变量");
+            }
+            log.info("添加流程变量 result: {}", result.getData());
+            return result.getData();
+        } catch (Exception e) {
+            log.warn("添加流程变量: ", e);
+            throw new BaseBizRuntimeException("添加流程变量");
+        }
+    }
+
 }

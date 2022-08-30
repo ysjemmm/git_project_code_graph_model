@@ -66,6 +66,11 @@ public enum ButtonActionEnum {
     /**
      * 提交
      */
+    RESUBMIT("重新提交"),
+
+    /**
+     * 提交
+     */
     MODIFY("编辑"),
 
     /**
@@ -163,9 +168,16 @@ public enum ButtonActionEnum {
     /**
      * 已处理（无需开发）
      */
-    COMPLETED_NOT_DEV("已处理（无需开发）");
+    COMPLETED_NOT_DEV("已处理（无需开发）"),
 
-
+    /**
+     * 添加
+     */
+    ADD("添加"),
+    /**
+     *删除
+     */
+    DELETE("删除");
 
     private final String text;
 

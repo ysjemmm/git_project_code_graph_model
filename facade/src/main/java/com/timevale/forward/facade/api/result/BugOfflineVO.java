@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -51,7 +52,7 @@ public class BugOfflineVO extends ToString {
     @ApiModelProperty(value = "bug来源-描述")
     private String sourceName;
 
-    @ApiModelProperty(value = "bug原因")
+    @ApiModelProperty("bug原因：1功能错误，2功能缺失，3改动波及，4参数校验错误，5历史遗留，6实现与需求不符，7配置错误，8环境部署，9页面格式错误，10文案提示，11UI和原型不一致，12数据问题，13需求问题，14兼容性问题，15交互体验，16交付文档错误，17优化建议，18性能问题，19安全问题，20数据库问题，21低级错误，22外部原因，23重复出现，24合并代码冲突")
     private Integer reason;
 
     @ApiModelProperty(value = "bug原因-描述")
@@ -104,4 +105,10 @@ public class BugOfflineVO extends ToString {
 
     @ApiModelProperty("打开次数")
     private Integer openCount;
+
+    @ApiModelProperty("预计解决完成日期")
+    private Date expectSolveDate;
+
+    @ApiModelProperty("标签名称")
+    private List<String> labelNames;
 }

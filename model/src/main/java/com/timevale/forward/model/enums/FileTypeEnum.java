@@ -16,7 +16,7 @@ public enum FileTypeEnum {
     BIZ_DEMAND(2),
     // 任务
     TASK(3),
-    // 提测单-冒烟用例
+    // 提测单-测试用例
     TEST_BILL_CASE(4),
     // 提测单-自测通过
     TEST_BILL_PASS(5),
@@ -27,9 +27,15 @@ public enum FileTypeEnum {
     // 故障单
     TROUBLE_TICKET(8),
     // 详设评审
-    TECH_REVIEW(9)
+    TECH_REVIEW(9),
+    // 埋点事件
+    TRACK_EVENT(10),
+    // 评论
+    COMMENT(11),
+    // 客户需求
+    CUSTOM_DEMAND(15)
     ;
 
-    private Integer code;
+    private final Integer code;
 
 }

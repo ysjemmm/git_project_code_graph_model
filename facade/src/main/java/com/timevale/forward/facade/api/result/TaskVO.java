@@ -51,6 +51,9 @@ public class TaskVO extends ToString {
     @ApiModelProperty("执行人")
     private String executor;
 
+    @ApiModelProperty("执行人id")
+    private String executorId;
+
     @ApiModelProperty("项目计划开始时间")
     private Date planStartDate;
 

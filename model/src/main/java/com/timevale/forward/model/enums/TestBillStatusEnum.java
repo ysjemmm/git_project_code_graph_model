@@ -9,15 +9,16 @@ import lombok.Getter;
 @Getter
 public enum TestBillStatusEnum {
     /**
-     * 项目状态:0待提交冒烟用例1待自测,2待提测预演,3提测成功
+     * 项目状态:-1提前提交测试用例,0待提交测试用例1待自测,2待提测预演,3提测成功
      */
-    NO_SUBMIT_SMOKING(0, "待提交冒烟用例"),
+    PRE_SUBMIT_TEST_CASE(-1, "提前提交测试用例"),
+    NO_SUBMIT_SMOKING(0, "待提交测试用例"),
     NO_SELF_TEST(1, "待自测"),
     NO_TEST_PREVIEW(2, "待提测预演"),
     TEST_SUCCESS(3, "提测成功");
 
-    private Integer code;
-    private String text;
+    private final Integer code;
+    private final String text;
 
     TestBillStatusEnum(Integer code, String text) {
         this.code = code;

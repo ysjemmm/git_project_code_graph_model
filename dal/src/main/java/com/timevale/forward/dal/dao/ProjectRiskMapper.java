@@ -79,10 +79,25 @@ public interface ProjectRiskMapper {
     List<ProjectRiskDO> selectByProjectIdList(@Param("projectIdList") List<Long>projectIdList);
 
     /**
+     * 查询 by 项目id列表 状态
+     *
+     * @param projectIdList 项目id列表
+     */
+    List<ProjectRiskDO> selectByProjectIdListStatus(@Param("projectIdList") List<Long>projectIdList, @Param("statusList") List<Integer> statusList);
+
+    /**
      * 查询 by 状态, 不包含类型：其它
      *
      * @param status 项目id
      */
     List<ProjectRiskDO> selectByStatus(@Param("status") Integer status);
+
+    /**
+     *
+     * @param status status
+     * @param type type
+     * @return 列表
+     */
+    List<ProjectRiskDO> selectByStatusType(@Param("status") Integer status,@Param("type") Integer type);
 
 }

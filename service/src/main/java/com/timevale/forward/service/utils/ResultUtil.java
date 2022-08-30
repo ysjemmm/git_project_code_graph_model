@@ -1,10 +1,12 @@
 package com.timevale.forward.service.utils;
 
 import com.github.pagehelper.PageInfo;
+import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.mandarin.common.result.ListResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.mandarin.common.result.QueryResult;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -50,10 +52,16 @@ public class ResultUtil {
         return result;
     }
 
-
     public static <T> ListResult<T> success(List<T> data) {
         ListResult<T> result = new ListResult<>(true);
         result.setResultList(data);
         return result;
+    }
+
+    public static <T> QueryResultVO<T> queryResultEmpty(){
+        QueryResultVO<T> empty = new QueryResultVO<>();
+        empty.setAnalyseVOList(new ArrayList<>());
+        empty.setPageQueryResult(ResultUtil.pageEmpty());
+        return empty;
     }
 }

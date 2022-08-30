@@ -41,7 +41,7 @@ public class BizDemandListDO extends BaseDO {
     /**
      * 产品线id
      */
-    private String productLineId;
+    private Long productLineId;
 
     /**
      * 产品线名称

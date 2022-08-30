@@ -33,9 +33,21 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
     private RpcPersonService rpcPersonService;
 
     @Override
+    public Set<String> getAllSuperiorByAccount(String userId, boolean isLeave) {
+        AccountRequest accountRequest = new AccountRequest();
+        accountRequest.setAccount(userId);
+        accountRequest.setIsLeave(isLeave);
+        BaseResult<Set<String>> res = getAllSuperiorByAccount(accountRequest);
+        if (res.ifSuccess()) {
+            return res.getData();
+        } else {
+            throw new BaseBizRuntimeException("调用内部用户中心查询上级失败! " + userId);
+        }
+    }
+
+    @Override
     public BaseResult<Set<String>> getAllSuperiorByAccount(AccountRequest request) {
-        BaseResult<Set<String>> allSuperiorByAccount = rpcPersonService.getAllSuperiorByAccount(request);
-        return allSuperiorByAccount;
+        return rpcPersonService.getAllSuperiorByAccount(request);
     }
 
     /**
@@ -172,6 +184,24 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             log.error("调用内部用户中心失败 getPersonByAccountNew account: " + accountIds + " error: " + e.getMessage(), e);
         }
         throw new BaseBizRuntimeException("调用内部用户中心失败! " + accountIds);
+    }
+
+    @Override
+    public BaseInfoResponse getSelfInfo(String account, Boolean isLeave) {
+        try {
+            final AccountRequest request = new AccountRequest();
+            request.setAccount(account);
+            request.setIsLeave(isLeave);
+            final BaseResult<BaseInfoResponse> accountInfo = rpcPersonService.getByAccount(request);
+            if (accountInfo.ifSuccess()) {
+                return accountInfo.getData();
+            }
+            log.error("调用内部用户中心失败 getSelfInfo account: " + account + " error: " + accountInfo.getMessage());
+            throw new BaseBizRuntimeException("调用内部用户中心失败! " + account);
+        } catch (Exception e) {
+            log.error("调用内部用户中心失败 getSelfInfo account: " + account + " error: " + e.getMessage(), e);
+        }
+        throw new BaseBizRuntimeException("调用内部用户中心失败! " + account);
     }
 
     @Override

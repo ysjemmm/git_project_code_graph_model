@@ -6,10 +6,7 @@ import com.timevale.forward.facade.api.query.ProductDemandLinkTaskQueryList;
 import com.timevale.forward.facade.api.query.TaskLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskProductDemandQueryList;
 import com.timevale.forward.facade.api.query.TaskQueryList;
-import com.timevale.forward.facade.api.request.ElapsedTimeQueryReq;
-import com.timevale.forward.facade.api.request.TaskAddReq;
-import com.timevale.forward.facade.api.request.TaskModifyReq;
-import com.timevale.forward.facade.api.request.TaskProductDemandLinkReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.ProductDemandVO;
 import com.timevale.forward.facade.api.result.TaskDetailVO;
 import com.timevale.forward.facade.api.result.TaskListVO;
@@ -18,6 +15,7 @@ import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * @author xingyun
@@ -128,4 +126,26 @@ public interface TaskService {
      * @return 任务需求清单
      */
     BaseResult<PageQueryResult<TaskListVO>> listTask(ProductDemandLinkTaskQueryList productDemandLinkTaskQueryList);
+
+    /**
+     * 修改
+     *
+     * @param taskBatchAddReq 任务信息
+     * @return 数量
+     */
+    BaseResult<Boolean> batchAdd(TaskBatchAddReq taskBatchAddReq);
+
+    /**
+     *
+     * @param elapsedEndTimeQueryReq 查询条件
+     * @return yyyy-MM-dd HH:mm:ss
+     */
+    BaseResult<String> getElapsedEndTime(ElapsedEndTimeQueryReq elapsedEndTimeQueryReq);
+
+
+    /**
+     *  无16h限制的产品线
+     * @return 产品线id
+     */
+    BaseResult<List<Long>> getProductLineIdsUnLimited();
 }

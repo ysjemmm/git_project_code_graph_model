@@ -15,6 +15,16 @@ import java.util.Set;
  * @date 2020/11/5 16:17
  */
 public interface InnerUserPersonClient {
+
+    /**
+     * 查询上级
+     *
+     * @param userId 用户花名拼音
+     * @param isLeave 是否查询离职用户 true 同时查询离职用户
+     * @return 上级花名拼音集合
+     */
+    Set<String> getAllSuperiorByAccount(String userId, boolean isLeave);
+
     /**
      * 查询上级
      *
@@ -90,4 +100,13 @@ public interface InnerUserPersonClient {
      * @return accountId-unionId
      */
     Map<String, String> getUnionIds(List<String> accountIds);
+
+    /**
+     * 获取指定用户
+     *
+     * @param account 当前用户花名拼音
+     * @param isLeave 是否包含已经离职用户
+     * @return 指定用户
+     */
+    BaseInfoResponse getSelfInfo(String account, Boolean isLeave);
 }

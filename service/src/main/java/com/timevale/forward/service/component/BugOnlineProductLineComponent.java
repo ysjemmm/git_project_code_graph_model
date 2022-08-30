@@ -14,4 +14,12 @@ public interface BugOnlineProductLineComponent {
      * @param id                线上bug的id
      */
     void update(List<Long> productLineIdList, Long id);
+
+    /**
+     * 更新
+     *
+     * @param productLineIdList 产品线列表
+     * @param id                线上bug的id
+     */
+    void add(List<Long> productLineIdList, Long id);
 }

@@ -15,12 +15,10 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.HomePageDataIndicatorCopier;
-import com.timevale.forward.service.copy.HomePageProjectBoardCopier;
-import com.timevale.forward.service.copy.HomePageProjectOnlineLatelyCopier;
-import com.timevale.forward.service.copy.HomePageRiskWarningCopier;
+import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.integration.superset.model.base.PageResult;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -67,6 +65,9 @@ public class HomePageServiceImpl implements HomePageService {
     private HomePageRiskWarningTaskComponent homePageRiskWarningTaskComponent;
 
     @Resource
+    private DistributionComponent distributionComponent;
+
+    @Resource
     private InnerUserPersonClient innerUserPersonClient;
 
     @Resource
@@ -103,6 +104,7 @@ public class HomePageServiceImpl implements HomePageService {
             dataIndicatorVO.setProjectReadyInternalAuditCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_INTERNAL_AUDIT.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyConstrueCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_CONSTRUE.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyConstrueReverseCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_CONSTRUE_REVERSE.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyUedAuditCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_UED_AUDIT.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyTechnicalDetailReviewCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_TECHNICAL_DETAIL_REVIEW.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectReadyDevelopCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_DEVELOP.getCode().equals(e.getNodeStatus())).count());
             dataIndicatorVO.setProjectDevelopingCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.DEVELOPING.getCode().equals(e.getNodeStatus())).count());
@@ -417,11 +419,19 @@ public class HomePageServiceImpl implements HomePageService {
         return BaseResult.success(result);
     }
 
+    @Override
+    public BaseResult<UpdateTimeVO> getUpdateTime() {
+        UpdateTimeDTO updateTimeDTO = distributionComponent.getUpdateDate();
+        UpdateTimeVO updateTimeVO = DistributionCopier.INSTANCE.convert(updateTimeDTO);
+
+        return BaseResult.success(updateTimeVO);
+    }
+
     public List<HomePageProjectBoardDTO> filterByDate(UserTypeEnum userType, Date startDate, Date endDate, List<HomePageProjectBoardDTO> list) {
         if (userType.equals(UserTypeEnum.PD)) {
             return list.stream().filter(e -> {
-                Date nodeStart = DateUtil.min(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(),e.getDemandConstrueReverse());
-                Date nodeEnd = DateUtil.max(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(),e.getDemandConstrueReverse());
+                Date nodeStart = DateUtil.min(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(),e.getDemandConstrueReverse(),e.getUedAudit());
+                Date nodeEnd = DateUtil.max(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(),e.getDemandConstrueReverse(),e.getUedAudit());
                 return DateUtil.haveOverlap(nodeStart, nodeEnd, startDate, endDate);
             }).collect(Collectors.toList());
         } else if (userType.equals(UserTypeEnum.RD)) {

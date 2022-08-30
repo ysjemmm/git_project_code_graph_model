@@ -127,7 +127,7 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         when(projectProductDemandMapper.getByProjectId(any())).thenReturn(Collections.emptyList());
         FieldUtils.setFieldValue("excludeBizDomain", taskServiceImp, "1");
         when(productLineMapper.getById(any())).thenReturn(new ProjectProductLineBizDomain());
-        doNothing().when(taskComponent).addTodoTask(any(),any());
+        doNothing().when(taskComponent).addTodoTask(any(),any(),any());
         when(taskMapper.insert(any())).thenReturn(0);
         TaskTimeDO t1 = new TaskTimeDO();
         t1.setId(1L);
@@ -171,7 +171,7 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         when(projectProductDemandMapper.getByProjectId(any())).thenReturn(Collections.emptyList());
         FieldUtils.setFieldValue("excludeBizDomain", taskServiceImp, "1");
         when(productLineMapper.getById(any())).thenReturn(new ProjectProductLineBizDomain());
-        doNothing().when(taskComponent).addTodoTask(any(),any());
+        doNothing().when(taskComponent).addTodoTask(any(),any(),any());
         when(taskMapper.insert(any())).thenReturn(0);
         TaskTimeDO t1 = new TaskTimeDO();
         t1.setId(1L);
@@ -211,7 +211,7 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         when(taskMapper.get(any())).thenReturn(taskDO);
         when(projectMapper.get(any())).thenReturn(new ProjectDO());
         when(productLineMapper.selectById(any())).thenReturn(new ProductLineDO());
-        when(fileComponent.select(any(),any())).thenReturn(Collections.emptyList());
+        when(fileComponent.select(anyLong(),any())).thenReturn(Collections.emptyList());
         when(personComponent.select(any(),any())).thenReturn(Collections.emptyList());
         when(taskTimeComponent.getUseTime(any())).thenReturn(Collections.emptyList());
         BaseResult<TaskDetailVO> baseResult = taskServiceImp.get(1L);
@@ -243,7 +243,7 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         taskDO.setTodo(true);
         when(taskMapper.get(any())).thenReturn(taskDO);
         when(personComponent.select(any(),any())).thenReturn(Collections.emptyList());
-        doNothing().when(taskComponent).addTodoTask(any(),any());
+        doNothing().when(taskComponent).addTodoTask(any(),any(),any());
         BaseResult<Boolean> baseResult = taskServiceImp.enable(1L);
         assert baseResult.ifSuccess();
     }

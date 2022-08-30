@@ -1,0 +1,204 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.TrackEventMapper">
+
+
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.TrackEventDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into track_event (cn_name,full_cn_name, eg_name, flow_id,track_map_id,platform,api_name,touch_moment,env,status,explanation,create_man ,create_man_id)
+        values
+        (#{cnName},#{fullCnName},#{egName}, #{flowId},#{trackMapId},#{platform},#{apiName},#{touchMoment},#{env},#{status},#{explanation},#{createMan},#{createManId})
+    </insert>
+
+    <insert id="batchInsert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO track_event (cn_name,full_cn_name, eg_name, flow_id,track_map_id,platform,api_name,touch_moment,env,status,explanation,create_man ,create_man_id)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.cnName},#{item.fullCnName},#{item.egName}, #{item.flowId},#{item.trackMapId},#{item.platform},
+             #{item.apiName},#{item.touchMoment},#{item.env},#{item.status},#{item.explanation},#{item.createMan},#{item.createManId})
+        </foreach>
+    </insert>
+
+    <update id="update">
+        update track_event
+        <set>
+            <if test="cnName != null and cnName != ''">cn_name = #{cnName},</if>
+            <if test="fullCnName != null and fullCnName != ''">full_cn_name = #{fullCnName},</if>
+            <if test="egName != null and egName != ''">eg_name = #{egName},</if>
+            <if test="flowId != null and flowId != ''">flow_id = #{flowId},</if>
+            <if test="trackMapId != null">track_map_id = #{trackMapId},</if>
+            <if test="platform != null and platform != ''">platform = #{platform},</if>
+            <if test="apiName != null and apiName != ''">api_name = #{apiName},</if>
+            <if test="touchMoment != null and touchMoment != ''">touch_moment = #{touchMoment},</if>
+            <if test="env != null and env != ''">env = #{env},</if>
+            <if test="failReason != null and failReason != ''">fail_reason = #{failReason},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="explanation != null">explanation = #{explanation},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modify_man_id = #{modifyManId},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <update id="updateNotIC">
+        update track_event
+        <set>
+            <if test="cnName != null and cnName != ''">cn_name = #{cnName},</if>
+            <if test="fullCnName != null and fullCnName != ''">full_cn_name = #{fullCnName},</if>
+            <if test="egName != null and egName != ''">eg_name = #{egName},</if>
+            <if test="flowId != null and flowId != ''">flow_id = #{flowId},</if>
+            <if test="trackMapId != null">track_map_id = #{trackMapId},</if>
+            <if test="platform != null and platform != ''">platform = #{platform},</if>
+            <if test="apiName != null and apiName != ''">api_name = #{apiName},</if>
+            <if test="touchMoment != null and touchMoment != ''">touch_moment = #{touchMoment},</if>
+            <if test="env != null and env != ''">env = #{env},</if>
+            <if test="failReason != null and failReason != ''">fail_reason = #{failReason},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="explanation != null">explanation = #{explanation},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modify_man_id = #{modifyManId},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <update id="updateWithOutModifyMan">
+        update track_event
+        <set>
+            <if test="true">fail_reason = #{failReason},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <select id="select" resultType="com.timevale.forward.dal.entity.TrackEventDO">
+        select id,cn_name, full_cn_name,eg_name, flow_id,track_map_id,platform,api_name,touch_moment,env,status,fail_reason,
+         is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from track_event a
+        <where>
+            <if test="id != null">and a.id = #{id}</if>
+            <if test="trackMapId != null">and a.track_map_id = #{trackMapId}</if>
+            <if test="fullCnName != null">and a.full_cn_name = #{fullCnName}</if>
+            <if test="egName != null">and a.eg_name = #{egName}</if>
+            <if test="status!=null and status.size()>0">
+                and a.status in
+                <foreach collection="status" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and a.is_deleted=false
+        </where>
+    </select>
+
+    <select id="selectByIds" resultType="com.timevale.forward.dal.entity.TrackEventDO">
+        select id,cn_name,full_cn_name, eg_name, flow_id,track_map_id,platform,api_name,touch_moment,env,status,fail_reason,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from track_event a
+        <where>
+            <if test="ids!=null and ids.size()>0">
+                and a.id in
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and a.is_deleted=false
+        </where>
+    </select>
+
+
+    <select id="list" resultType="com.timevale.forward.dal.entity.TrackEventDO">
+        select id,cn_name,full_cn_name, eg_name, flow_id,track_map_id,platform,api_name,touch_moment,env,status,fail_reason,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from track_event a
+        <where>
+            <if test="id != null">and a.id = #{id}</if>
+            <if test="fullCnName != null and fullCnName != ''">and a.full_cn_name like concat('%',#{fullCnName},'%')</if>
+            <if test="egName != null and egName != ''">and a.eg_name like concat('%',#{egName},'%')</if>
+            <if test="status!=null and status.size()>0">
+                and a.status in
+                <foreach collection="status" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="createManIds!=null and createManIds.size()>0">
+                and a.create_man_id in
+                <foreach collection="createManIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="filterTrackEventIds!=null and filterTrackEventIds.size()>0">
+                and a.id not in
+                <foreach collection="filterTrackEventIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="trackEventIds!=null and trackEventIds.size()>0">
+                and a.id  in
+                <foreach collection="trackEventIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="trackMapIds!=null and trackMapIds.size()>0">
+                and a.track_map_id  in
+                <foreach collection="trackMapIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="createDateStart != null and createDateEnd != null">
+                and a.create_date &gt;= #{createDateStart} and a.create_date &lt;= #{createDateEnd}
+            </if>
+            <if test="modifyDateStart != null and modifyDateEnd != null">
+                and a.modify_date &gt;= #{modifyDateStart} and a.modify_date &lt;= #{modifyDateEnd}
+            </if>
+            and a.is_deleted=false
+        </where>
+    </select>
+
+    <select id="get" resultType="com.timevale.forward.dal.entity.TrackEventDO">
+        select id,cn_name,full_cn_name, eg_name, flow_id,track_map_id,platform,api_name,touch_moment,env,status,fail_reason,explanation,
+        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        from track_event a
+        <where>
+            <if test="id != null"> id = #{id}</if>
+            <if test="flowId != null">and flow_id = #{flowId}</if>
+            and is_deleted=false
+        </where>
+    </select>
+
+    <select id="linkTrackEventList" resultType="com.timevale.forward.dal.entity.TrackEventDO">
+         SELECT a.id,a.cn_name,a.full_cn_name,a.eg_name,a.platform,a.env,a.create_man,a.create_date,b.modify_date
+         FROM track_event a
+         JOIN product_demand_track_event b ON a.id = b.track_event_id AND b.is_deleted = false
+         WHERE b.product_demand_id = #{productDemandId} and a.is_deleted = false
+    </select>
+
+    <select id="selectByName" resultType="com.timevale.forward.dal.entity.TrackEventDO">
+        SELECT cn_name, eg_name, full_cn_name
+        FROM track_event
+        <where>
+            <if test="fullCnNameList != null and fullCnNameList.size() > 0">
+                and full_cn_name in
+                <foreach collection="fullCnNameList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="egNameList != null and egNameList.size() > 0">
+                and eg_name in
+                <foreach collection="egNameList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+</mapper>
+

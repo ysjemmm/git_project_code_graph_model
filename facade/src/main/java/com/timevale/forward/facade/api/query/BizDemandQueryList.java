@@ -36,6 +36,9 @@ public class BizDemandQueryList extends QueryBase {
     @ApiModelProperty("产品线id")
     private List<Long> productLineIdList;
 
+    @ApiModelProperty("子产品线id")
+    private List<Long> subProductLineIdList;
+
     @ApiModelProperty("起始时间")
     private Date createDateStart;
 
@@ -65,4 +68,16 @@ public class BizDemandQueryList extends QueryBase {
 
     @ApiModelProperty("项目发布时间-结束时间")
     private Date projectEndDateEnd;
+
+    @ApiModelProperty("排序字段")
+    private String orderFiled;
+
+    @ApiModelProperty("排序规则：0正序，1逆序")
+    private Integer orderCollation;
+
+    @ApiModelProperty("选中为标签时填写,标签id")
+    private List<Long> labelIds;
+
+    @ApiModelProperty("选中为标签类别时填写,类别id")
+    private List<Long> labelCategoryIds;
 }

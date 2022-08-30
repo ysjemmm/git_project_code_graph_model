@@ -1,9 +1,7 @@
 package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
-import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProductBizDemandMapper;
-import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.ProductBizDemandDO;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
@@ -19,7 +17,6 @@ import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -47,9 +44,6 @@ public class ProductBizDemandComponentImplTest extends AbstractTestNGSpringConte
     @Mock
     private BizChangeLogMapper bizChangeLogMapper;
 
-    @Mock
-    private BizDemandMapper bizDemandMapper;
-
     @Test
     public void testUpdate() {
         UserInfo userInfo = new UserInfo();
@@ -57,12 +51,9 @@ public class ProductBizDemandComponentImplTest extends AbstractTestNGSpringConte
         userInfo.setId("www");
         userInfo.setName("www");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
-        try {
-            localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
-            productBizDemandComponent.update(any(),null);
-        }finally {
-            localSessionUtilsMockedStatic.close();
-        }
+        localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
+        productBizDemandComponent.update(any(),null,false);
+        localSessionUtilsMockedStatic.close();
     }
 
     @Test
@@ -70,23 +61,19 @@ public class ProductBizDemandComponentImplTest extends AbstractTestNGSpringConte
         ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
         productBizDemandDO.setBizDemandId(1L);
         when(productBizDemandMapper.select(any())).thenReturn(Collections.singletonList(productBizDemandDO));
-        when(bizDemandMapper.selectById(any())).thenReturn(new BizDemandDO(){{setProjectEndDate(new Date());}});
 
         UserInfo userInfo = new UserInfo();
         userInfo.setAlias("www");
         userInfo.setId("www");
         userInfo.setName("www");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
-        try {
-            localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
-            List<Long> list = new ArrayList<>();
-            list.add(1L);
-            list.add(2L);
-            productBizDemandComponent.batchInsert(1L, list);
-        }finally {
-            localSessionUtilsMockedStatic.close();
-        }
+        localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
 
+        List<Long> list = new ArrayList<>();
+        list.add(1L);
+        list.add(2L);
+        productBizDemandComponent.batchInsert(1L, list,false);
+        localSessionUtilsMockedStatic.close();
     }
 }
 

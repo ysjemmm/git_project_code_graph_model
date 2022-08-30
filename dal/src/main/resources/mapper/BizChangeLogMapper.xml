@@ -1,5 +1,18 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.timevale.forward.dal.dao.BizChangeLogMapper">
+    <update id="updateIdentity">
+        update biz_change_log set identity = #{newIdentity}
+                              where main_id = #{mainId} and identity = #{oldIdentity}
+    </update>
+    <update id="updateValue">
+        update biz_change_log
+        set old_value = #{newValue},
+            new_value = #{newValue}
+        where main_id = #{mainId}
+          and field = #{field}
+          and old_value = #{oldValue}
+          and new_value = #{oldValue}
+    </update>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.BizChangeLogDO">
         select * from biz_change_log
@@ -10,17 +23,54 @@
         </where>
     </select>
 
+    <select id="listAllByActions" resultType="com.timevale.forward.dal.entity.BizChangeLogDO">
+        select * from biz_change_log
+        <where>
+            <if test="mainIds != null and mainIds.size() > 0">
+                and main_id in
+                 <foreach collection="mainIds" item="mainId" open="(" separator="," close=")">
+                     #{mainId}
+                 </foreach>
+            </if>
+            <if test="type != null">
+                and type = #{type}
+            </if>
+            <if test="actions != null and actions.size() > 0">
+                and action in
+                <foreach collection="actions" item="action" open="(" separator="," close=")">
+                    #{action}
+                </foreach>
+            </if>
+                 and is_deleted = false
+        </where>
+        order by create_date desc
+    </select>
+
     <insert id="insert">
-        insert into biz_change_log (`main_id`,`type`,`old_value`,`new_value`,`field`,`action`
-        ,`create_man_id`,`create_man`)
-        values (#{mainId},#{type},#{oldValue},#{newValue},#{field} ,#{action},#{createManId},#{createMan})
+        insert into biz_change_log ( `main_id`, `type`, `old_value`, `new_value`, `field`, `action`,`identity`
+         , `create_man_id`, `create_man`, `content`)
+        values (#{mainId}, #{type}, #{oldValue}, #{newValue}, #{field}, #{action}, #{identity}
+        , #{createManId}, #{createMan},  #{content})
     </insert>
 
     <insert id="batchInsert">
-        insert into biz_change_log (`main_id`,`type`,`old_value`,`new_value`,`field`,`action` ,`create_man_id`,`create_man`)
+        insert into biz_change_log (`main_id`,`type`,`old_value`,`new_value`,`field`,`action` , `identity`
+        ,`create_man_id`,`create_man`,`content`)
         values
         <foreach collection="list" item="item" separator=",">
-            (#{item.mainId},#{item.type},#{item.oldValue},#{item.newValue},#{item.field},#{item.action},#{item.createManId},#{item.createMan})
+            (#{item.mainId},#{item.type},#{item.oldValue},#{item.newValue},#{item.field},#{item.action}, #{item.identity}
+            ,#{item.createManId},#{item.createMan},#{item.content})
         </foreach>
     </insert>
+
+    <select id="getProjectPublishDate" resultType="com.timevale.forward.dal.entity.BizChangeLogDO">
+        select * from biz_change_log
+        <where>
+            main_id=#{mainId}
+            and `type`=#{type}
+            and field=#{field}
+            and is_deleted = false
+            order by id desc limit 1
+        </where>
+    </select>
 </mapper>

@@ -6,7 +6,6 @@ import com.timevale.forward.dal.entity.BugOnlineListDO;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.BugOnlineAddReq;
 import com.timevale.forward.facade.api.request.BugOnlineModifyReq;
-import com.timevale.forward.facade.api.request.BugOnlineStartRepairReq;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
 import com.timevale.forward.model.middle.BugOnlineMD;
@@ -36,6 +35,14 @@ public interface BugOnlineCopier {
      * @return BugOnlineVO
      */
     BugOnlineVO convert(BugOnlineListDO bugOnlineListDO);
+
+    /**
+     * bugOnlineDO --> BugOnlineVO
+     *
+     * @param bugOnlineDO 对象
+     * @return BugOnlineVO
+     */
+    BugOnlineVO convertT(BugOnlineDO bugOnlineDO);
 
     /**
      * bugOnlineQueryList --> BugOnlineListCondition
@@ -76,5 +83,4 @@ public interface BugOnlineCopier {
      * @return 返回值
      */
     BugOnlineMD change(BugOnlineDO bugOnlineDO);
-
 }

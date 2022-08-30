@@ -98,7 +98,10 @@ public enum BugOnlineReasonEnum {
     /**
      * 无法重现但客户环境必现
      */
-    CUSTOMER_ENV_MUST(17, "无法重现但客户环境必现");
+    CUSTOMER_ENV_MUST(17, "无法重现但客户环境必现")
+
+
+    ;
 
     private final Integer code;
     private final String text;

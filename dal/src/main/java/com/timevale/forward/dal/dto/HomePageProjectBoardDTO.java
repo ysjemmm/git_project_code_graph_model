@@ -61,6 +61,12 @@ public class HomePageProjectBoardDTO {
     private Date demandConstrueReverse;
 
     /**
+     * ued评审
+     */
+    @JSONField(name = "uedps")
+    private Date uedAudit;
+
+    /**
      * 技术详设评审
      */
     @JSONField(name = "jsxsps")

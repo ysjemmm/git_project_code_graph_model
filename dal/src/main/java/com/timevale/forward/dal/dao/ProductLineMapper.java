@@ -38,7 +38,7 @@ public interface ProductLineMapper {
     /**
      *
      * @param projectIds 项目id
-     * @return
+     * @return 列表
      */
     List<ProjectProductLineBizDomain> getByProjectIds(@Param("projectIds") List<Long> projectIds);
 
@@ -53,7 +53,35 @@ public interface ProductLineMapper {
     /**
      *
      * @param id 产品线id
-     * @return
+     * @return ProjectProductLineBizDomain
      */
     ProjectProductLineBizDomain getById(@Param("id") Long id);
+
+    /**
+     *
+     * @param bizDomainId bizDomainId
+     * @return 列表
+     */
+    List<ProductLineDO> getBizDomainId(@Param("bizDomainId") Long bizDomainId);
+
+    /**
+     *
+     * @param bizDomainName bizDomainName
+     * @return 列表
+     */
+    List<ProductLineDO> getByBizDomainName(@Param("bizDomainName") List<String> bizDomainName);
+
+    /**
+     *
+     * @param productLineDO productLineDO
+     * @return int
+     */
+    int insert(ProductLineDO productLineDO);
+
+    /**
+     *
+     * @param productLineDO productLineDO
+     * @return int
+     */
+    int update(ProductLineDO productLineDO);
 }

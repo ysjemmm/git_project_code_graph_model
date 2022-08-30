@@ -4,7 +4,6 @@ import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.BizDemandDO;
 
 import java.util.List;
-import java.util.Map;
 
 public interface BizDemandLogComponent{
 
@@ -20,13 +19,13 @@ public interface BizDemandLogComponent{
 
     void addLogWhenBizDemandUnLinkProductDemand(Long bizDemandId, Long productDemandId);
 
-    void addLogAsProductDemandStatusChange(Map<Long, Integer> oldStatusMap,  Map<Integer, List<Long>> newStatusMap) ;
-
-    void addLogAsProductDemandStatusChange(Long id,Integer oldStatus, Integer newStatus);
+    void addLogAsProductDemandStatusChange(Integer oldStatus,  Integer newStatus,Long id,Integer type) ;
 
     BizChangeLogDO getLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active);
 
     BizChangeLogDO getLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active, String action);
 
     BizChangeLogDO buildLogWhenPublishDateChange(String oldValue, String newValue, Long id);
+
+    BizChangeLogDO buildLogWhenPublishDateChange(String oldValue, String newValue, Long id,Integer type);
 }

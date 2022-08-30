@@ -45,6 +45,15 @@ public class TroubleTicketQueryList extends QueryBase {
     @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd")
     private Date occurrenceTimeEnd;
 
+    @ApiModelProperty("主责任人id-列表")
+    private List<String> primePrincipalIdList;
+
+    @ApiModelProperty("责任团队id-列表")
+    private List<Long> dutyTeamList;
+
+    @ApiModelProperty("是否监控发现 0否， 1是")
+    private Integer isMonitorDetect;
+
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
     private String ascription;
 

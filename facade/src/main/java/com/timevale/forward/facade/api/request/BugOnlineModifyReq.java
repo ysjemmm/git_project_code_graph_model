@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 /**
  * @Date 2022/3/17 14:57
@@ -33,6 +34,12 @@ public class BugOnlineModifyReq extends BugOnlineAddReq {
 
     @ApiModelProperty("重新打开原因")
     private String openAgainReason;
+
+    @ApiModelProperty("预计上线日期")
+    private Date expectLaunchDate;
+
+    @ApiModelProperty("关联的线上bug id")
+    private Long linkBugId;
 }
 
 

@@ -50,4 +50,7 @@ public class TestBillModifyReq extends BaseReq {
 
     @ApiModelProperty(value = "测试用例链接")
     private String caseUrl;
+
+    @ApiModelProperty(value = "全量用例链接")
+    private String allCaseUrl;
 }

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 /**
  * @Date 2022/3/21 13:44
@@ -32,4 +33,8 @@ public class BugOnlineStartRepairReq extends BaseReq {
     @ApiModelProperty("解决方案")
     @NotNull(message = "解决方案不能为空")
     private String solveScheme;
+
+    @ApiModelProperty("预计上线日期")
+    @NotNull(message = "预计上线日期不能为空")
+    private Date expectLaunchDate;
 }

@@ -45,6 +45,9 @@ public class BugOnlineQueryList extends QueryBase {
     @ApiModelProperty("bug原因")
     private List<Integer> reasons;
 
+    @ApiModelProperty("驳回原因")
+    private List<Integer> dismissCauseList;
+
     @ApiModelProperty("bug所属端")
     private List<Integer> belongs;
 
@@ -66,4 +69,25 @@ public class BugOnlineQueryList extends QueryBase {
 
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
     private String ascription;
+
+    @ApiModelProperty("客户名称")
+    private String customerName;
+
+    @ApiModelProperty("来源列表: forward 产研系统， support 运营支撑平台， duty 值班反馈")
+    private List<String> sourceList;
+
+    @ApiModelProperty("排序字段")
+    private String orderFiled;
+
+    @ApiModelProperty("排序规则：0正序，1逆序")
+    private Integer orderCollation;
+
+    @ApiModelProperty("选中为标签时填写,标签id")
+    private List<Long> labelIds;
+
+    @ApiModelProperty("选中为标签类别时填写,类别id")
+    private List<Long> labelCategoryIds;
+
+    @ApiModelProperty("模块id")
+    private List<Long> modelIds;
 }

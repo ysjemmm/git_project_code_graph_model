@@ -54,4 +54,45 @@
         where a.id = #{id}
     </select>
 
+    <select id="getBizDomainId" resultType="com.timevale.forward.dal.entity.ProductLineDO">
+        select id, biz_domain_id, name, owner, owner_id,bug_online_owner_id,bug_online_owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        from product_line
+        where biz_domain_id = #{bizDomainId} and is_deleted = false
+    </select>
+
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductLineDO">
+        insert into product_line (biz_domain_id, name, owner, owner_id,bug_online_owner_id,bug_online_owner)
+        values
+        (#{bizDomainId}, #{name},#{owner},#{ownerId}, #{bugOnlineOwnerId}, #{bugOnlineOwner})
+    </insert>
+
+    <update id="update" parameterType="com.timevale.forward.dal.entity.ProductLineDO">
+        update product_line
+        <set>
+            <if test="bizDomainId != null">biz_domain_id = #{bizDomainId},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="owner != null">owner = #{owner},</if>
+            <if test="ownerId != null">owner_id = #{ownerId},</if>
+            <if test="bugOnlineOwnerId != null">bug_online_owner_id = #{bugOnlineOwnerId},</if>
+            <if test="bugOnlineOwner != null">bug_online_owner = #{bugOnlineOwner},</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <select id="getByBizDomainName" resultType="com.timevale.forward.dal.entity.ProductLineDO">
+        select a.id ,a.name
+        from product_line a
+        join biz_domain b on a.biz_domain_id=b.id
+        <where>
+            <if test="bizDomainName != null and bizDomainName.size() > 0">
+                and b.name in
+                <foreach collection="bizDomainName" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+                and a.is_deleted = false
+            </if>
+        </where>
+    </select>
 </mapper>

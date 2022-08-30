@@ -2,6 +2,7 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.query.FileQueryList;
 import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.facade.api.result.FileVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -24,9 +25,17 @@ public interface FileService {
 
 
     /**
-     * 查看团队成员
+     * 查看图片
      *
      * @return 详情信息
      */
     BaseResult<List<FileVO>> getFiles();
+
+    /**
+     * 修改
+     *
+     * @param fileQueryList 附件
+     * @return 详情信息
+     */
+    BaseResult<List<FileVO>> listFiles(FileQueryList fileQueryList);
 }

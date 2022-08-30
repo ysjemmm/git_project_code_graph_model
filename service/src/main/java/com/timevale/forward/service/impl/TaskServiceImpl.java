@@ -27,7 +27,6 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.integration.superset.model.base.PageResult;
 import com.timevale.forward.service.observer.event.TaskDoneMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -40,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -47,7 +47,6 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.timevale.forward.service.constant.CommonConstant.SECONDS_PER_HOUR;
 
@@ -110,8 +109,11 @@ public class TaskServiceImpl implements TaskService {
     @Resource
     private ProjectNodeMapper projectNodeMapper;
 
-    @Value("${excludeBizDomain:混合云电子签章}")
+    @Value("${excludeBizDomain:混合云电子签章;安全风控}")
     private String excludeBizDomain;
+
+    @Resource
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Override
     public BaseResult<PageQueryResult<TaskVO>> list(TaskQueryList taskQueryList) {
@@ -145,7 +147,7 @@ public class TaskServiceImpl implements TaskService {
     public BaseResult<Boolean> add(TaskAddReq taskAddReq) {
         log.info("任务新增接收参数:{}", taskAddReq);
 
-        if(taskAddReq.getName().contains(CommonConstant.BLANK)){
+        if (taskAddReq.getName().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("任务名称中请勿包含空格");
         }
 
@@ -166,7 +168,11 @@ public class TaskServiceImpl implements TaskService {
             //处理待办
             sendDingTodo(taskDO, executorIds);
         }
+
         //入库
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        taskDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        taskDO.setCreateManId(userInfo.getId());
         taskMapper.insert(taskDO);
         //耗时表入库
         insertTaskTime(taskDO);
@@ -322,7 +328,7 @@ public class TaskServiceImpl implements TaskService {
             //暂停后会删除待办,启用后新增待办
             List<String> existExecutorIds = personComponent.select(taskId, PersonTypeEnum.TASK_EXECUTOR.getCode())
                     .stream().map(PersonDO::getUserId).collect(Collectors.toList());
-            taskComponent.addTodoTask(taskDO, existExecutorIds);
+            taskComponent.addTodoTask(taskDO, existExecutorIds, LocalSessionUtils.getUserInfo().getId());
         }
         taskMapper.update(taskDO);
         return BaseResult.success(true);
@@ -469,7 +475,7 @@ public class TaskServiceImpl implements TaskService {
         // 任务执行人
         Map<Long, List<PersonDO>> executorMap = new HashMap<>();
         List<Long> taskIdList = taskDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
-        if(CollectionUtils.isNotEmpty(taskIdList)){
+        if (CollectionUtils.isNotEmpty(taskIdList)) {
             List<PersonDO> executorList = personMapper.get(taskIdList, PersonTypeEnum.TASK_EXECUTOR.getCode());
             executorMap = executorList.stream().collect(Collectors.groupingBy(PersonDO::getMainId));
         }
@@ -493,6 +499,77 @@ public class TaskServiceImpl implements TaskService {
         return BaseResult.success(pageResult);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> batchAdd(TaskBatchAddReq taskBatchAddReq) {
+        log.info("任务批量新增接收参数:{}", taskBatchAddReq);
+        List<TaskSimpleAddReq> taskSimples = taskBatchAddReq.getTaskSimples();
+        if (CollectionUtils.isEmpty(taskSimples)) {
+            return BaseResult.success(true);
+        }
+
+        boolean match = taskSimples.stream().anyMatch(a -> a.getName().contains(CommonConstant.BLANK));
+        if (match) {
+            throw new BaseBizRuntimeException("任务名称中请勿包含空格");
+        }
+        Set<String> names = taskSimples.stream().map(TaskSimpleAddReq::getName).collect(Collectors.toSet());
+        if (taskSimples.size() != names.size()) {
+            throw new BaseBizRuntimeException("任务名称重复,请修改后重试");
+        }
+        //名称查重
+        List<TaskDO> taskDos = TaskCopier.INSTANCE.tansfer(taskBatchAddReq.getTaskSimples());
+
+        checkNameExisted(taskDos);
+        //阶段限制
+        checkTaskStage(taskDos.get(0));
+
+        checkPlanDate(taskDos.get(0));
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        List<PersonAddReq> executors=new ArrayList<>();
+        taskSimples.forEach(a -> {
+            threadPoolTaskExecutor.execute(() -> {
+                TaskDO taskDO = TaskCopier.INSTANCE.convert(a);
+                taskDO.setDesc(StringUtils.EMPTY);
+                taskDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+                taskDO.setCreateManId(userInfo.getId());
+
+                //填充状态
+                fillStatus(taskDO);
+
+                List<String> executorIds = a.getExecutors().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+
+                sendDingTodo(taskDO, executorIds, userInfo.getId());
+
+                taskMapper.insert(taskDO);
+                //执行人
+                personComponent.add(a.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
+
+            });
+            //添加每个人任务的执行人
+            executors.addAll(a.getExecutors());
+        });
+        // 若执行人不在项目成员中,需新增
+        personComponent.addIfNotExisted(executors, taskDos.get(0).getProjectId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
+        return BaseResult.success(true);
+
+    }
+
+    @Override
+    public BaseResult<String> getElapsedEndTime(ElapsedEndTimeQueryReq elapsedEndTimeQueryReq) {
+        Date startTime = elapsedEndTimeQueryReq.getStartTime();
+        BigDecimal planUseTime = elapsedEndTimeQueryReq.getPlanUseTime();
+        String elaspedEndTime = elapsedTimeClient.getElapsedEndTime(startTime, planUseTime.multiply(new BigDecimal(SECONDS_PER_HOUR)).longValue());
+        return BaseResult.success(elaspedEndTime);
+    }
+
+    @Override
+    public BaseResult<List<Long>> getProductLineIdsUnLimited() {
+        List<String> excludeBizDomains = Arrays.asList(excludeBizDomain.split(";"));
+        List<ProductLineDO> productLineDOList = productLineMapper.getByBizDomainName(excludeBizDomains);
+        List<Long> productLineIds = productLineDOList.stream().map(ProductLineDO::getId).collect(Collectors.toList());
+        return BaseResult.success(productLineIds);
+    }
+
     /**
      * 名称重复
      *
@@ -510,18 +587,28 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
+    private void checkNameExisted(List<TaskDO> taskDos) {
+        List<String> names = taskDos.stream().map(TaskDO::getName).collect(Collectors.toList());
+        List<String> existNames = taskMapper.getByNameAndPid(names, taskDos.get(0).getProjectId()).stream().map(TaskDO::getName).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(existNames)) {
+            throw new BaseBizRuntimeException("任务名称:" + existNames + "已存在,请修改后重试");
+        }
+    }
+
     /**
      * 名称重复
      *
      * @param taskDO
      */
     private void checkTaskStage(TaskDO taskDO) {
-        List<ProjectNodeDO> projectNodeDO = projectNodeMapper.get(taskDO.getProjectId());
+        List<ProjectNodeDO> projectNodeDos = projectNodeMapper.get(taskDO.getProjectId());
         List<String> sureNode = Lists.newArrayList(ProjectNodeEnum.START_PLAN.getText()
                 , ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText()
-                , ProjectNodeEnum.DEMAND_CONSTRUE.getText());
-        List<ProjectNodeDO> filter = projectNodeDO.stream().filter(a -> sureNode.contains(a.getName())).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(filter) && TaskStageEnum.DEMAND.getCode().equals(taskDO.getStage())) {
+                , ProjectNodeEnum.DEMAND_CONSTRUE.getText()
+                , ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText()
+                , ProjectNodeEnum.UED_AUDIT.getText());
+        boolean match = projectNodeDos.stream().anyMatch(a -> sureNode.contains(a.getName()));
+        if (!match && TaskStageEnum.DEMAND.getCode().equals(taskDO.getStage())) {
             throw new BaseBizRuntimeException("项目无需求规划阶段,不能创建该阶段的任务,请修改后重试");
         }
     }
@@ -641,11 +728,20 @@ public class TaskServiceImpl implements TaskService {
      * @param taskDO taskDO
      */
     private void sendDingTodo(TaskDO taskDO, List<String> executorIds) {
+        sendDingTodo(taskDO, executorIds, LocalSessionUtils.getUserInfo().getId());
+    }
+
+    /**
+     * 处理钉钉待办
+     *
+     * @param taskDO taskDO
+     */
+    private void sendDingTodo(TaskDO taskDO, List<String> executorIds, String account) {
         if (taskDO.getId() == null) {
             //新增
             if (taskDO.getTodo()) {
 //            //钉钉待办
-                taskComponent.addTodoTask(taskDO, executorIds);
+                taskComponent.addTodoTask(taskDO, executorIds, account);
             }
         } else {
             TaskCondition condition = TaskCondition.builder().id(taskDO.getId()).build();
@@ -655,7 +751,7 @@ public class TaskServiceImpl implements TaskService {
             if (taskDO.getTodo() && StringUtils.isEmpty(existTaskDO.getTodoId())
                     && !TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
 //            //编辑时,状态为待执行,进行中时才能新增待办
-                taskComponent.addTodoTask(taskDO, executorIds);
+                taskComponent.addTodoTask(taskDO, executorIds, account);
             } else {
                 boolean executorChanged = false;
                 List<String> existExecutorIds = personComponent.select(existTaskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode())

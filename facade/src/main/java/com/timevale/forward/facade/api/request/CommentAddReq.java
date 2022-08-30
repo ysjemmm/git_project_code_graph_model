@@ -23,7 +23,7 @@ public class CommentAddReq extends BaseReq {
     @NotNull(message = "主体id不能为空")
     private Long toId;
 
-    @ApiModelProperty("主体类型:0:项目,1产品需求,2业务需求")
+    @ApiModelProperty("主体类型:0:项目,1产品需求,2业务需求,3任务,4线下bug,5线上bug,6故障单,7客户需求")
     @NotNull(message = "主体类型不能为空")
     private Integer type;
 
@@ -34,4 +34,6 @@ public class CommentAddReq extends BaseReq {
     @ApiModelProperty("评论接收人")
     private List<PersonQuery> receiverInfoList;
 
+    @ApiModelProperty("附件列表")
+    private List<FileAddReq> fileList;
 }

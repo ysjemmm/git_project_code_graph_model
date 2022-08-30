@@ -9,8 +9,9 @@
     </insert>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
-        select  a.id,a.name,a.priority,a.owner,a.owner_id,a.status,a.create_man,a.create_man_id,a.create_date,a.modify_date,
-        c.name productLineName ,d.name bizDomainName
+        select  a.id,a.name,a.priority,a.owner,a.owner_id,a.status, a.product_line_id,
+                a.create_man,a.create_man_id,a.create_date,a.modify_date,
+                c.name productLineName ,d.name bizDomainName
         <if test="copierId != null and copierId != ''">
             ,e.user_name copier
         </if>
@@ -75,7 +76,7 @@
             and  a.is_deleted =false
         </where>
     </select>
-    
+
     <select id="selectByIdList" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
         select id, name, product_line_id, type, `desc`, status, priority, owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date, owner_id
         from product_demand
@@ -106,8 +107,9 @@
          FROM product_demand a
          LEFT JOIN project_product_demand b ON a.id = b.product_demand_id AND b.is_deleted = false
          WHERE b.project_id = #{projectId}
+         order by modify_date desc, id
     </select>
-    
+
     <select id="selectListOfBizDemandLink" resultType="com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO">
         select pd.id, pd.name, pd.status, pd.priority, pd.owner, pd.owner_id,
                pd.is_deleted, pd.create_man_id, pd.create_man, pd.create_date, pd.modify_man_id, pd.modify_man, pd.modify_date,
@@ -118,18 +120,27 @@
         left join biz_domain bd on pl.biz_domain_id = bd.id
         <where>
             and pd.status != -20
+            <if test="containIds!=null and containIds.size()>0">
+                and pd.id  in
+                <foreach collection="containIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="productDemandId!=null">
                 and pd.id = #{productDemandId}
             </if>
             <if test="name!=null and name!=''">
                 and pd.name like concat('%',#{name},'%')
             </if>
-            <if test="status!=null">
-                and pd.status = #{status}
-            </if>
             <if test="priorityList!=null and priorityList.size()>0">
                 and pd.priority in
                 <foreach collection="priorityList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="statusList!=null and statusList.size()>0">
+                and pd.status in
+                <foreach collection="statusList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
@@ -197,7 +208,7 @@
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
          select  a.id,a.name,a.priority,a.type,a.owner,a.owner_id,a.status,a.create_man,a.create_man_id
-         ,a.create_date,a.modify_date, a.product_line_id,`desc`
+         ,a.create_date,a.modify_date, a.product_line_id,`desc`, a.modify_man_id, a.modify_man
         from product_demand a
         where a.id = #{id} and a.is_deleted=false
     </select>
@@ -231,5 +242,20 @@
          ,a.create_date,a.modify_date, a.product_line_id,`desc`
         from product_demand a
         where a.name = #{name} and a.is_deleted=false
+    </select>
+    <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
+        select * from product_demand where id in
+                                           (select product_demand_id
+                                                  from project_product_demand
+                                                  where project_id = #{projectId}
+                                                    and is_deleted = false)
+        and is_deleted = false
+    </select>
+
+    <select id="linkProductDemandInCustomDemand" resultType="com.timevale.forward.dal.entity.ProductDemandListDO">
+         SELECT a.id,a.name,a.priority,a.owner,a.status,a.create_man,a.create_date,b.modify_date
+         FROM product_demand a
+         JOIN product_custom_demand b ON a.id = b.product_demand_id AND b.is_deleted = false
+         WHERE b.custom_demand_id = #{customDemandId}
     </select>
 </mapper>

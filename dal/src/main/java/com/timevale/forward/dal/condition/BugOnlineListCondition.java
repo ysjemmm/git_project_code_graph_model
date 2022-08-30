@@ -61,6 +61,11 @@ public class BugOnlineListCondition {
     private List<String> reasons;
 
     /**
+     * 驳回原因列表
+     */
+    private List<Integer> dismissCauseList;
+
+    /**
      * 属于
      */
     private List<Integer> belongs;
@@ -89,4 +94,27 @@ public class BugOnlineListCondition {
      * 用于判断是否为"抄送我的需求"tab
      */
     private String copier;
+
+    /**
+     * 客户名称
+     */
+    @WildcardEscape
+    private String customerName;
+
+    /**
+     * 来源列表
+     */
+    private List<String> sourceList;
+
+    /**
+     *包含的id
+     */
+    private List<Long> containIds;
+
+    /**
+     * 模块id
+     */
+    private List<Long> modelIds;
+
+
 }
