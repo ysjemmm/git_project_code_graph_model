@@ -7,6 +7,7 @@ import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.query.CommentQueryList;
 import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.request.CommentAddReq;
+import com.timevale.forward.facade.api.request.CommentBatchAddReq;
 import com.timevale.forward.service.observer.event.CommentMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -19,6 +20,7 @@ import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.Test;
+import org.testng.collections.Lists;
 
 import java.util.Collections;
 
@@ -82,6 +84,13 @@ public class CommentServiceImplTest extends AbstractTestNGSpringContextTests {
         assert commentService.add(commentAddReq).ifSuccess();
         commentMsgEventMockedConstruction.close();
         localSessionUtilsMockedStatic.close();
+    }
+
+    @Test
+    public void testBatchAdd() {
+        CommentBatchAddReq req = new CommentBatchAddReq();
+        req.setToIds(Lists.newArrayList(1L));
+        assert commentService.add(req).ifSuccess();
     }
 }
 

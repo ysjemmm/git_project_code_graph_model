@@ -43,13 +43,16 @@ public class PersonComponentImplTest extends AbstractTestNGSpringContextTests {
         userInfo.setName("www");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
         localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
+        try {
+            PersonAddReq personAddReq = new PersonAddReq();
+            personAddReq.setUserId("www");
+            List<PersonAddReq> list = new ArrayList<>();
+            list.add(personAddReq);
+            personComponent.add(list, 1L, 1);
+        }finally {
+            localSessionUtilsMockedStatic.close();
+        }
 
-        PersonAddReq personAddReq = new PersonAddReq();
-        personAddReq.setUserId("www");
-        List<PersonAddReq> list = new ArrayList<>();
-        list.add(personAddReq);
-        personComponent.add(list, 1L, 1);
-        localSessionUtilsMockedStatic.close();
     }
 
     @Test
@@ -59,18 +62,21 @@ public class PersonComponentImplTest extends AbstractTestNGSpringContextTests {
         userInfo.setId("www");
         userInfo.setName("www");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
-        localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
+        try {
+            localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
 
-        PersonDO personDO = new PersonDO();
-        personDO.setUserId("qqq");
-        when(personMapper.select(any())).thenReturn(Collections.singletonList(personDO));
+            PersonDO personDO = new PersonDO();
+            personDO.setUserId("qqq");
+            when(personMapper.select(any())).thenReturn(Collections.singletonList(personDO));
 
-        PersonAddReq personAddReq = new PersonAddReq();
-        personAddReq.setUserId("www");
-        List<PersonAddReq> list = new ArrayList<>();
-        list.add(personAddReq);
-        personComponent.update(list, 1L, 1);
-        localSessionUtilsMockedStatic.close();
+            PersonAddReq personAddReq = new PersonAddReq();
+            personAddReq.setUserId("www");
+            List<PersonAddReq> list = new ArrayList<>();
+            list.add(personAddReq);
+            personComponent.update(list, 1L, 1);
+        }finally {
+            localSessionUtilsMockedStatic.close();
+        }
     }
 
     @Test

@@ -12,6 +12,8 @@ import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.facade.api.request.TestBillAddReq;
 import com.timevale.forward.facade.api.request.TestBillModifyReq;
 import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.ProjectComponent;
+import com.timevale.forward.service.component.ProjectLogComponent;
 import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -61,25 +63,36 @@ public class TestBillServiceImplTest extends AbstractTestNGSpringContextTests {
     @Mock
     private FileComponent fileComponent;
 
+    @Mock
+    private ProjectComponent projectComponent;
+
+    @Mock
+    private ProjectLogComponent projectLogComponent;
+
     @Test
     public void testAddTestBill() {
         UserInfo userInfo = new UserInfo();
         userInfo.setAlias("望轩");
         userInfo.setName("轩振营");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
-        localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
+        try {
+            localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
 
-        ProjectNodeDO projectNodeDO = new ProjectNodeDO();
-        projectNodeDO.setName("提测");
-        projectNodeDO.setPlanDate(new Date());
-        when(projectNodeMapper.get(any())).thenReturn(Collections.singletonList(projectNodeDO));
+            ProjectNodeDO projectNodeDO = new ProjectNodeDO();
+            projectNodeDO.setName("提测");
+            projectNodeDO.setPlanDate(new Date());
+            when(projectNodeMapper.get(any())).thenReturn(Collections.singletonList(projectNodeDO));
 
-        TestBillDO testBillDO = new TestBillDO();
-        testBillDO.setCreateManId("wangxuan");
-        when(testBillMapper.selectByProjectId(any())).thenReturn(testBillDO);
+            TestBillDO testBillDO = new TestBillDO();
+            testBillDO.setCreateManId("wangxuan");
+            when(testBillMapper.selectByProjectId(any())).thenReturn(testBillDO);
 
-        assert testBillServiceImpl.addTestBill(3L).ifSuccess();
-        localSessionUtilsMockedStatic.close();
+            assert testBillServiceImpl.addTestBill(3L).ifSuccess();
+        }finally {
+            localSessionUtilsMockedStatic.close();
+        }
+
+
     }
 
     @Test
@@ -100,12 +113,15 @@ public class TestBillServiceImplTest extends AbstractTestNGSpringContextTests {
         MockedConstruction<BillTestCreateMsgEvent> billTestCreateMsgEventMockedConstruction = mockConstruction(BillTestCreateMsgEvent.class);
         billTestCreateMsgEventMockedConstruction.constructed();
         doNothing().when(messageEventPublisher).publish(any());
+        try {
+            TestBillAddReq testBillAddReq = new TestBillAddReq();
+            testBillAddReq.setTestManId("www");
+            assert testBillServiceImpl.submitTestBill(testBillAddReq).ifSuccess();
+        }finally {
+            localSessionUtilsMockedStatic.close();
+            billTestCreateMsgEventMockedConstruction.close();
+        }
 
-        TestBillAddReq testBillAddReq = new TestBillAddReq();
-        testBillAddReq.setTestManId("www");
-        assert testBillServiceImpl.submitTestBill(testBillAddReq).ifSuccess();
-        localSessionUtilsMockedStatic.close();
-        billTestCreateMsgEventMockedConstruction.close();
     }
 
     @Test
@@ -115,6 +131,7 @@ public class TestBillServiceImplTest extends AbstractTestNGSpringContextTests {
         testBillDO.setStatus(1);
         testBillDO.setCreateMan("www");
         testBillDO.setCreateManId("www");
+        testBillDO.setDelayDay(1);
         when(testBillMapper.selectByProjectId(any())).thenReturn(testBillDO);
 
         ProjectDO projectDO = new ProjectDO();
@@ -154,18 +171,22 @@ public class TestBillServiceImplTest extends AbstractTestNGSpringContextTests {
         MockedConstruction<BillTestSubmitSmokeMsgEvent> billTestSubmitSmokeMsgEventMockedConstruction = mockConstruction(BillTestSubmitSmokeMsgEvent.class);
         billTestSubmitSmokeMsgEventMockedConstruction.constructed();
         doNothing().when(messageEventPublisher).publish(any());
+        try {
+            TestBillModifyReq testBillModifyReq = new TestBillModifyReq();
+            testBillModifyReq.setProjectId(1L);
+            FileAddReq fileAddReq = new FileAddReq();
+            fileAddReq.setFileId("www");
+            List<FileAddReq> list = new ArrayList<>();
+            list.add(fileAddReq);
+            testBillModifyReq.setList(list);
 
-        TestBillModifyReq testBillModifyReq = new TestBillModifyReq();
-        testBillModifyReq.setProjectId(1L);
-        FileAddReq fileAddReq = new FileAddReq();
-        fileAddReq.setFileId("www");
-        List<FileAddReq> list = new ArrayList<>();
-        list.add(fileAddReq);
-        testBillModifyReq.setList(list);
+            assert testBillServiceImpl.submitSmokeTesting(testBillModifyReq).ifSuccess();
+        }finally {
+            localSessionUtilsMockedStatic.close();
+            billTestSubmitSmokeMsgEventMockedConstruction.close();
+        }
 
-        assert testBillServiceImpl.submitSmokeTesting(testBillModifyReq).ifSuccess();
-        localSessionUtilsMockedStatic.close();
-        billTestSubmitSmokeMsgEventMockedConstruction.close();
+
     }
 
     @Test
@@ -188,22 +209,24 @@ public class TestBillServiceImplTest extends AbstractTestNGSpringContextTests {
         userInfo.setId("www");
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
         localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
-
         when(projectMapper.get(any())).thenReturn(projectDO);
-
         MockedConstruction<BillTestModifyTestManMsgEvent> billTestModifyTestManMsgEventMockedConstruction = mockConstruction(BillTestModifyTestManMsgEvent.class);
         billTestModifyTestManMsgEventMockedConstruction.constructed();
-        doNothing().when(messageEventPublisher).publish(any());
+        try {
+            doNothing().when(messageEventPublisher).publish(any());
+            assert testBillServiceImpl.modifyTestMan(testBillModifyReq).ifSuccess();
+        }finally {
+            localSessionUtilsMockedStatic.close();
+            billTestModifyTestManMsgEventMockedConstruction.close();
+        }
 
-        assert testBillServiceImpl.modifyTestMan(testBillModifyReq).ifSuccess();
-        localSessionUtilsMockedStatic.close();
-        billTestModifyTestManMsgEventMockedConstruction.close();
     }
 
     @Test
     public void testSelfTestPass() {
         UserInfo userInfo = new UserInfo();
         userInfo.setAlias("www");
+
         MockedStatic<LocalSessionUtils> localSessionUtilsMockedStatic = mockStatic(LocalSessionUtils.class);
         localSessionUtilsMockedStatic.when(LocalSessionUtils::getUserInfo).thenReturn(userInfo);
 
@@ -218,17 +241,19 @@ public class TestBillServiceImplTest extends AbstractTestNGSpringContextTests {
         MockedConstruction<BillTestSelfTestPassMsgEvent> billTestSelfTestPassMsgEventMockedConstruction = mockConstruction(BillTestSelfTestPassMsgEvent.class);
         billTestSelfTestPassMsgEventMockedConstruction.constructed();
         doNothing().when(messageEventPublisher).publish(any());
-
-        TestBillModifyReq testBillModifyReq = new TestBillModifyReq();
-        testBillModifyReq.setProjectId(1L);
-        FileAddReq fileAddReq = new FileAddReq();
-        fileAddReq.setFileId("www");
-        List<FileAddReq> list = new ArrayList<>();
-        list.add(fileAddReq);
-        testBillModifyReq.setList(list);
-        assert testBillServiceImpl.selfTestPass(testBillModifyReq).ifSuccess();
-        localSessionUtilsMockedStatic.close();
-        billTestSelfTestPassMsgEventMockedConstruction.close();
+        try {
+            TestBillModifyReq testBillModifyReq = new TestBillModifyReq();
+            testBillModifyReq.setProjectId(1L);
+            FileAddReq fileAddReq = new FileAddReq();
+            fileAddReq.setFileId("www");
+            List<FileAddReq> list = new ArrayList<>();
+            list.add(fileAddReq);
+            testBillModifyReq.setList(list);
+            assert testBillServiceImpl.selfTestPass(testBillModifyReq).ifSuccess();
+        }finally {
+            localSessionUtilsMockedStatic.close();
+            billTestSelfTestPassMsgEventMockedConstruction.close();
+        }
     }
 
     @Test
@@ -244,11 +269,16 @@ public class TestBillServiceImplTest extends AbstractTestNGSpringContextTests {
         MockedConstruction<BillTestSubmitTestSuccessMsgEvent> billTestSubmitTestSuccessMsgEventMockedConstruction = mockConstruction(BillTestSubmitTestSuccessMsgEvent.class);
         billTestSubmitTestSuccessMsgEventMockedConstruction.constructed();
         doNothing().when(messageEventPublisher).publish(any());
+        try {
+            TestBillModifyReq testBillModifyReq = new TestBillModifyReq();
+            testBillModifyReq.setProjectId(1L);
+            testBillModifyReq.setActualDate(new Date());
+            assert testBillServiceImpl.submitTestPass(testBillModifyReq).ifSuccess();
+        }finally {
+            billTestSubmitTestSuccessMsgEventMockedConstruction.close();
+        }
 
-        TestBillModifyReq testBillModifyReq = new TestBillModifyReq();
-        testBillModifyReq.setProjectId(1L);
-        assert testBillServiceImpl.submitTestPass(testBillModifyReq).ifSuccess();
-        billTestSubmitTestSuccessMsgEventMockedConstruction.close();
+
     }
 
     @Test
