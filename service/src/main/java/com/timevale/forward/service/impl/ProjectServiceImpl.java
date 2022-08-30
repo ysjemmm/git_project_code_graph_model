@@ -200,7 +200,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> updateStatus(Long projectId, Integer type) {
+    public BaseResult<Boolean> updateStatus(ProjectUpdateStatusReq req) {
+        Long projectId = req.getProjectId();
+        Integer type = req.getType();
+        String reason = req.getSuspendReason();
         log.info("项目暂停或作废接收参数:{},{}", projectId, type);
         if (!ProjectStatusEnum.SUSPEND.getCode().equals(type)
                 && !ProjectStatusEnum.INVALID.getCode().equals(type)) {
@@ -219,6 +222,7 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO updateStatusDO = new ProjectDO();
         updateStatusDO.setId(projectId);
         updateStatusDO.setStatus(type);
+        updateStatusDO.setSuspendReason(reason);
         projectMapper.update(updateStatusDO);
 
         //修改产品需求状态
@@ -229,6 +233,9 @@ public class ProjectServiceImpl implements ProjectService {
         }
         String action = ProjectStatusEnum.SUSPEND.getCode().equals(type) ? ButtonActionEnum.SUSPEND.getText() : ButtonActionEnum.INVALID.getText();
         projectLogComponent.addLogWhenStatusChange(oldStatus, type, projectId, action);
+        //记录暂停/作废原因更新日志
+        projectLogComponent.addLogWhenContentChange(CommonConstant.NULL, reason, projectId,
+                BizChangeLogFieldEnum.SUSPEND_REASON.getText());
         // 更新任务状态
         taskComponent.updateStatusAsProjectStatusChange(projectId, type, false);
         return BaseResult.success(true);
@@ -246,10 +253,12 @@ public class ProjectServiceImpl implements ProjectService {
             throw new BaseBizRuntimeException("项目状态不是暂停,不能开启");
         }
         Integer oldStatus = projectDO.getStatus();
+        String oldReason = projectDO.getSuspendReason();
         List<ProjectNodeDO> projectNode = projectNodeComponent.get(projectId);
         log.info("项目开启,节点信息:projectNode={}", projectNode);
         if (CollectionUtils.isEmpty(projectNode)) {
             projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
+            projectDO.setSuspendReason(oldReason);
             projectMapper.fullUpdateById(projectDO);
         } else {
             fillInfoWhenEnable(projectNode, projectDO);
@@ -258,6 +267,10 @@ public class ProjectServiceImpl implements ProjectService {
         taskComponent.updateStatusAsProjectStatusChange(projectId, projectDO.getStatus(), enableTask);
 
         projectLogComponent.addLogWhenStatusChange(oldStatus, projectDO.getStatus(), projectId, ButtonActionEnum.ENABLE.getText());
+        //记录开启日志更新日志
+        projectLogComponent.addLogWhenContentChange(oldReason, CommonConstant.NULL, projectId,
+                BizChangeLogFieldEnum.SUSPEND_REASON.getText());
+
         return BaseResult.success(true);
     }
 

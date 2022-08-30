@@ -29,11 +29,10 @@ public interface ProjectService {
     /**
      * 修改状态
      *
-     * @param projectId, 项目id
-     * @param type       操作类型 暂停,作废
+     * @param req 暂停/作废更新
      * @return 数量
      */
-    BaseResult<Boolean> updateStatus(Long projectId, Integer type);
+    BaseResult<Boolean> updateStatus(ProjectUpdateStatusReq req);
 
     /**
      * 开启项目
