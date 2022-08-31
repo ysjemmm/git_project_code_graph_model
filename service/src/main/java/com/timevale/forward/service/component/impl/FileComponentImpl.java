@@ -41,8 +41,6 @@ public class FileComponentImpl implements FileComponent {
     @Resource
     private BizDemandLogComponent bizDemandLogComponent;
 
-    private static final String ATTACHMENT_NAME = "附件名称: ";
-
     @Override
     public void add(List<FileAddReq> list, Long attacheId, Integer type) {
         log.info("新增时,附件接收参数:list={},attacheId={},type={}", list,attacheId,type);
@@ -60,7 +58,7 @@ public class FileComponentImpl implements FileComponent {
                     .map(file -> file.getFileName())
                     .collect(Collectors.toList());
 
-            addLog(fileNameList, attacheId, ButtonActionEnum.ADD, type);
+            addLog(fileNameList, attacheId, ButtonActionEnum.LINK, type);
         }
     }
 
@@ -105,7 +103,7 @@ public class FileComponentImpl implements FileComponent {
                     .map(FileDO::getFileName)
                     .collect(Collectors.toList());
 
-            addLog(addFileNameList, attacheId, ButtonActionEnum.ADD, type);
+            addLog(addFileNameList, attacheId, ButtonActionEnum.LINK, type);
         }
         List<String> reqFileIds = fileDO.stream().map(FileDO::getFileId).collect(Collectors.toList());
         List<String> needDeleteList = Lists.newArrayList();
@@ -123,7 +121,7 @@ public class FileComponentImpl implements FileComponent {
         });
 
         if (CollectionUtils.isNotEmpty(needDeleteList)) {
-            addLog(needDeleteList, attacheId, ButtonActionEnum.DELETE, type);
+            addLog(needDeleteList, attacheId, ButtonActionEnum.UN_LINK, type);
         }
     }
 
@@ -143,11 +141,12 @@ public class FileComponentImpl implements FileComponent {
         }
 
         for (String fileName : fileNameList) {
-            String showName = ATTACHMENT_NAME + fileName;
+            String showName = BizChangeLogFieldEnum.ATTACHMENT.getText() +
+                    CommonConstant.WIDE_COLON + fileName;
 
             // 日志, 状态改为待评估
-            bizDemandLogComponent.addLogWhenModifyData(showName, showName, id,
-                    BizChangeLogFieldEnum.ATTACHMENT.getText(), true, actionEnum.getText());
+            bizDemandLogComponent.addLogWhenModifyData(fileName, fileName, id,
+                    BizChangeLogFieldEnum.ATTACHMENT.getText(), true, actionEnum.getText(), showName);
         }
     }
 
