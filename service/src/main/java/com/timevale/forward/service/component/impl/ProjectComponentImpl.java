@@ -5,13 +5,16 @@ import com.github.pagehelper.PageInfo;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.facade.api.result.LabelSimpleVO;
 import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.component.SqlOrderComponent;
+import com.timevale.forward.service.copy.LabelCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
@@ -27,6 +30,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -72,6 +76,9 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Resource
     private BizLabelMapper bizLabelMapper;
+
+    @Resource
+    private BizLabelComponent bizLabelComponent;
 
     @Resource
     private LabelMapper labelMapper;
@@ -175,16 +182,18 @@ public class ProjectComponentImpl implements ProjectComponent {
                 return ResultUtil.queryResultEmpty();
             }
         }
-        bizLabelDOList = bizLabelMapper.getByBizIdInType(projectIds, BizTypeEnum.PROJECT.getCode());
-        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
-                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
-
-        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
-        Map<Long, String> labelNameMap = new HashMap<>();
-        if (CollectionUtils.isNotEmpty(labelIds)) {
-            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
-            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
-        }
+//        bizLabelDOList = bizLabelMapper.getByBizIdInType(projectIds, BizTypeEnum.PROJECT.getCode());
+//        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
+//                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
+//
+//        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
+//        Map<Long, LabelDO> labelNameMap = new HashMap<>();
+//        if (CollectionUtils.isNotEmpty(labelIds)) {
+//            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
+//            labelNameMap = labelDOList.stream()
+//                    .collect(Collectors.toMap(LabelDO::getId, Function.identity()));
+//        }
+        Map<Long, List<LabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(projectIds, BizTypeEnum.PROJECT.getCode());
 
         buildConditionBeforeQuery(projectIds, condition);
 
@@ -301,10 +310,10 @@ public class ProjectComponentImpl implements ProjectComponent {
             if (!warn) {
                 a.setContainRisk(riskSet.contains(a.getId()));
             }
-            if (labelIdMap.containsKey(a.getId())) {
-                List<Long> labelIdList = labelIdMap.get(a.getId());
-                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
-                a.setLabelNames(labelNames);
+
+            List<LabelSimpleVO> labelSimpleVOList = bizLabelMap.get(a.getId());
+            if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
+                a.setLabelNames(labelSimpleVOList);
             }
         }
 

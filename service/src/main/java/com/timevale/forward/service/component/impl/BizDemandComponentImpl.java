@@ -7,11 +7,13 @@ import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.LabelSimpleVO;
 import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
+import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
@@ -70,6 +72,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Resource
     private BizLabelMapper bizLabelMapper;
+
+    @Resource
+    private BizLabelComponent bizLabelComponent;
 
     @Resource
     private LabelMapper labelMapper;
@@ -278,16 +283,8 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             return ResultUtil.queryResultEmpty();
         }
         //标签信息
-        bizLabelDOList = bizLabelMapper.getByBizIdInType(bizDemandIds, BizTypeEnum.BIZ_DEMAND.getCode());
-        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
-                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
-
-        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
-        Map<Long, String> labelNameMap = new HashMap<>();
-        if (CollectionUtils.isNotEmpty(labelIds)) {
-            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
-            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
-        }
+        Map<Long, List<LabelSimpleVO>> labelMap = bizLabelComponent
+                .getBizLabelMap(bizDemandIds, BizTypeEnum.BIZ_DEMAND.getCode());
 
         // 如果查询条件没有部门id，收集完整名
         if (CollectionUtils.isEmpty(queryDeptIdSet)) {
@@ -308,10 +305,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             bizDemandVO.setPriorityText(PriorityEnum.getTextChineseByCode(bizDemandVO.getPriority()));
             bizDemandVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandVO.getPlanReleaseDate()));
 
-            if (labelIdMap.containsKey(bizDemandVO.getId())) {
-                List<Long> labelIdList = labelIdMap.get(bizDemandVO.getId());
-                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
-                bizDemandVO.setLabelNames(labelNames);
+            List<LabelSimpleVO> list = labelMap.get(bizDemandVO.getId());
+            if (CollectionUtils.isNotEmpty(list)) {
+                bizDemandVO.setLabelNames(list);
             }
         }
 

@@ -233,10 +233,10 @@ public class ProjectServiceImpl implements ProjectService {
         }
         String action = ProjectStatusEnum.SUSPEND.getCode().equals(type) ? ButtonActionEnum.SUSPEND.getText() : ButtonActionEnum.INVALID.getText();
         projectLogComponent.addLogWhenStatusChange(oldStatus, type, projectId, action);
+
         //记录暂停/作废原因更新日志
         String field = ProjectStatusEnum.SUSPEND.getCode().equals(type) ?
                 BizChangeLogFieldEnum.SUSPEND_REASON.getText() : BizChangeLogFieldEnum.INVALID_REASON.getText();
-
         projectLogComponent.addLogWhenContentChange(CommonConstant.NULL, reason, projectId, field);
         // 更新任务状态
         taskComponent.updateStatusAsProjectStatusChange(projectId, type, false);

@@ -110,5 +110,5 @@ public class BugOfflineVO extends ToString {
     private Date expectSolveDate;
 
     @ApiModelProperty("标签名称")
-    private List<String> labelNames;
+    private List<LabelSimpleVO> labelNames;
 }

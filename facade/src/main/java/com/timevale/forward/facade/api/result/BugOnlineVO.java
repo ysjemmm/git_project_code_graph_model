@@ -96,7 +96,7 @@ public class BugOnlineVO extends ToString {
     private Date expectLaunchDate;
 
     @ApiModelProperty("标签名称")
-    private List<String> labelNames;
+    private List<LabelSimpleVO> labelNames;
 
     @ApiModelProperty("模块名称")
     private List<String> modelNames;
