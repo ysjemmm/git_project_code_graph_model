@@ -112,6 +112,7 @@
             reject_reason = #{rejectReason},
             plan_release_date = #{planReleaseDate},
             project_end_date = #{projectEndDate},
+            source_id = #{sourceId},
             customer_dev_demand = #{customerDevDemand},
             customer_dev_type = #{customerDevType},
             customer_dev_sale_contract = #{customerDevSaleContract},
