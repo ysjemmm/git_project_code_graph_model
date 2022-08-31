@@ -136,4 +136,7 @@ public class BizDemandDetailVO extends ToString {
 
     @ApiModelProperty("项目名称")
     private String customerDevProjectName;
+
+    @ApiModelProperty("需求来源id")
+    private String sourceId;
 }
