@@ -23,10 +23,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -82,11 +79,14 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
             projectFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode());
             String rejectReason = flowData.get("rejectReason") == null ? StringUtils.EMPTY : String.valueOf(flowData.get("rejectReason"));
             projectFlowDO.setReviewFailReason(rejectReason);
+            projectFlowDO.setFlowEndDate(new Date());
         } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
             projectFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.WITHDRAW.getCode());
+            projectFlowDO.setFlowEndDate(new Date());
         } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
             ProjectDO oldProjectDO = projectMapper.get(projectFlowDO.getProjectId());
             projectFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode());
+            projectFlowDO.setFlowEndDate(new Date());
             ProjectNodeDO projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), ProjectNodeEnum.getNameByCode(projectFlowDO.getFlowType()));
             if (projectNodeDo != null) {
                 projectNodeMapper.updateActualDateById(projectNodeDo.getId(), processInfo.getEndTime());

@@ -13,7 +13,7 @@
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
         select id,project_id, flow_id,flow_type,proposer_id,proposer,review_date,review_id,review ,reviewed_id,reviewed,
         unreviewed_id,unreviewed,review_fail_id, review_fail, review_fail_reason,review_url,status,is_deleted,create_man_id,
-        create_man,create_date,modify_man_id,modify_man,modify_date
+        create_man,create_date,modify_man_id,modify_man,modify_date, flow_end_date
         from project_flow
         <where>
             <if test="id != null"> id = #{id}</if>
@@ -25,7 +25,7 @@
     <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
         select id,project_id, flow_id,flow_type,proposer_id,proposer,review_date,review_id,review ,reviewed_id,reviewed,
         unreviewed_id,unreviewed,review_fail_id, review_fail, review_fail_reason,review_url,status,is_deleted,create_man_id,
-        create_man,create_date,modify_man_id,modify_man,modify_date
+        create_man,create_date,modify_man_id,modify_man,modify_date, flow_end_date
         from project_flow
         where project_id = #{projectId} and is_deleted=false
     </select>
@@ -60,6 +60,7 @@
             <if test="docModifyManId != null">doc_modify_man_id = #{docModifyManId},</if>
             <if test="docModifyMan != null">doc_modify_man = #{docModifyMan},</if>
             <if test="docModifyDate != null">doc_modify_date = #{docModifyDate},</if>
+            <if test="flowEndDate != null">flow_end_date = #{flowEndDate},</if>
         </set>
         <where>
             id = #{id}
