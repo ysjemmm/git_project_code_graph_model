@@ -136,9 +136,10 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         BigDecimal auditManDay = manDayReportDO.getAuditManDay();
         if (AuditStatusEnum.APPROVE.getCode().equals(manDayReportModifyReq.getAuditStatus())) {
             // 如果更新人天为0，则逻辑删除
-
             if (BigDecimal.ZERO.compareTo(auditManDay) == 0) {
                 manDayMapper.delete(manDayDO);
+                // 更新提报状态
+                manDayReportMapper.updateById(updateReportDO);
             } else {
                 // 否则更新实际人天
                 manDayDO.setActualManDay(auditManDay);
