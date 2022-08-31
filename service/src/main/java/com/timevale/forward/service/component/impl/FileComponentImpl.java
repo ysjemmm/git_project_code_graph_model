@@ -54,11 +54,11 @@ public class FileComponentImpl implements FileComponent {
             fileDO.forEach(f-> fillInfo(f,attacheId,type));
             fileMapper.inserts(fileDO);
 
-            List<String> fileNameList = existFiles.stream()
-                    .map(file -> file.getFileName())
-                    .collect(Collectors.toList());
-
-            addLog(fileNameList, attacheId, ButtonActionEnum.LINK, type);
+//            List<String> fileNameList = existFiles.stream()
+//                    .map(file -> file.getFileName())
+//                    .collect(Collectors.toList());
+//
+//            addLog(fileNameList, attacheId, ButtonActionEnum.LINK, type);
         }
     }
 
@@ -99,14 +99,14 @@ public class FileComponentImpl implements FileComponent {
             fileMapper.inserts(needAddFiles);
             log.info("编辑时,新增附件:needAddFiles={},type={}", needAddFiles,type);
 
-            List<String> addFileNameList = needAddFiles.stream()
-                    .map(FileDO::getFileName)
-                    .collect(Collectors.toList());
-
-            addLog(addFileNameList, attacheId, ButtonActionEnum.LINK, type);
+//            List<String> addFileNameList = needAddFiles.stream()
+//                    .map(FileDO::getFileName)
+//                    .collect(Collectors.toList());
+//
+//            addLog(addFileNameList, attacheId, ButtonActionEnum.LINK, type);
         }
         List<String> reqFileIds = fileDO.stream().map(FileDO::getFileId).collect(Collectors.toList());
-        List<String> needDeleteList = Lists.newArrayList();
+//        List<String> needDeleteList = Lists.newArrayList();
         existFiles.forEach((f)->{
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
             if(!reqFileIds.contains(f.getFileId())){
@@ -116,13 +116,13 @@ public class FileComponentImpl implements FileComponent {
                 //删除
                 fileMapper.update(f);
 
-                needDeleteList.add(f.getFileName());
+//                needDeleteList.add(f.getFileName());
             }
         });
 
-        if (CollectionUtils.isNotEmpty(needDeleteList)) {
-            addLog(needDeleteList, attacheId, ButtonActionEnum.UN_LINK, type);
-        }
+//        if (CollectionUtils.isNotEmpty(needDeleteList)) {
+//            addLog(needDeleteList, attacheId, ButtonActionEnum.UN_LINK, type);
+//        }
     }
 
     @Override
@@ -135,20 +135,20 @@ public class FileComponentImpl implements FileComponent {
         return fileMapper.selectByAttacheIdList(attacheIdList, type);
     }
 
-    private void addLog(List<String> fileNameList, Long id, ButtonActionEnum actionEnum, Integer type) {
-        if (!FileTypeEnum.BIZ_DEMAND.getCode().equals(type)) {
-            return;
-        }
-
-        for (String fileName : fileNameList) {
-            String showName = BizChangeLogFieldEnum.ATTACHMENT.getText() +
-                    CommonConstant.WIDE_COLON + fileName;
-
-            // 日志, 状态改为待评估
-            bizDemandLogComponent.addLogWhenModifyData(fileName, fileName, id,
-                    BizChangeLogFieldEnum.ATTACHMENT.getText(), true, actionEnum.getText(), showName);
-        }
-    }
+//    private void addLog(List<String> fileNameList, Long id, ButtonActionEnum actionEnum, Integer type) {
+//        if (!FileTypeEnum.BIZ_DEMAND.getCode().equals(type)) {
+//            return;
+//        }
+//
+//        for (String fileName : fileNameList) {
+//            String showName = BizChangeLogFieldEnum.ATTACHMENT.getText() +
+//                    CommonConstant.WIDE_COLON + fileName;
+//
+//            // 日志, 状态改为待评估
+//            bizDemandLogComponent.addLogWhenModifyData(fileName, fileName, id,
+//                    BizChangeLogFieldEnum.ATTACHMENT.getText(), true, actionEnum.getText(), showName);
+//        }
+//    }
 
     private void fillInfo(FileDO fileDO,Long attacheId, Integer type) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
