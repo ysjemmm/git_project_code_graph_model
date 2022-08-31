@@ -115,7 +115,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
 
         Long manDayId = manDayReportDO.getManDayId();
         ManDayDO manDayDO = manDayMapper.getById(manDayId);
-        AssertUtil.notNull(manDayReportDO, "对应人天不存在");
+        AssertUtil.notNull(manDayDO, "对应人天不存在");
 
         Long projectId = manDayDO.getProjectId();
         ProjectDO projectDO = projectMapper.get(projectId);
