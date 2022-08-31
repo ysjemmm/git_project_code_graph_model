@@ -30,6 +30,7 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -56,6 +57,9 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
 
     @Resource
     private SqlOrderComponent sqlOrderComponent;
+
+    @Value("${acceptance.upperLimit:20}")
+    private Integer acceptanceUpperLimit;
 
 
     @Override
@@ -114,7 +118,7 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
         Set<String> newAcceptorIds = acceptors.stream().map(PersonAddReq::getUserId).collect(Collectors.toSet());
         newAcceptorIds.addAll(allAcceptorIds);
 
-        if (newAcceptorIds.size() > 20) {
+        if (newAcceptorIds.size() > acceptanceUpperLimit) {
             throw new BaseBizRuntimeException("该项目累计验收人员已超过20人,请修改后重试");
         }
 
