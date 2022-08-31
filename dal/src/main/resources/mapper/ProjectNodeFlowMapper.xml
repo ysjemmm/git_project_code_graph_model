@@ -14,7 +14,7 @@
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectNodeFlowDO">
         select id,project_id, flow_id, last_flow_id,status,stage,reason,pd_id,pd,biz_id,biz,po_id,po,d_id,d,change_type,flow_type,other_reason
         ,publish_date,change_publish_date,delay_day,unreviewed_id,unreviewed,review_fail_id,review_fail,review_fail_reason
-        ,create_man ,create_man_id,modify_man_id,modify_man,create_date,modify_date,is_deleted
+        ,create_man ,create_man_id,modify_man_id,modify_man,create_date,modify_date,is_deleted,flow_end_date
         from project_node_flow
         <where>
             <if test="id != null"> id = #{id}</if>
@@ -34,6 +34,7 @@
             <if test="status != null">status = #{status},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+            <if test="flowEndDate != null">flow_end_date = #{flowEndDate},</if>
         </set>
         <where>
             id = #{id}
@@ -43,7 +44,7 @@
     <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ProjectNodeFlowDO">
         select id,project_id, flow_id, last_flow_id,status,stage,reason,pd_id,pd,biz_id,biz,po_id,po,d_id,d,change_type,flow_type,other_reason
         ,publish_date,change_publish_date,delay_day,unreviewed_id,unreviewed,review_fail_id,review_fail,review_fail_reason
-        ,create_man ,create_man_id,modify_man_id,modify_man,create_date,modify_date,is_deleted
+        ,create_man ,create_man_id,modify_man_id,modify_man,create_date,modify_date,is_deleted,flow_end_date
         from project_node_flow
         where project_id = #{projectId} and is_deleted=false order by id desc
     </select>

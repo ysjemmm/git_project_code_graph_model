@@ -131,10 +131,13 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode());
             String rejectReason = flowData.get("rejectReason") == null ? StringUtils.EMPTY : String.valueOf(flowData.get("rejectReason"));
             projectNodeFlowDO.setReviewFailReason(rejectReason);
+            projectNodeFlowDO.setFlowEndDate(new Date());
         } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
             projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.WITHDRAW.getCode());
+            projectNodeFlowDO.setFlowEndDate(new Date());
         } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
             projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode());
+            projectNodeFlowDO.setFlowEndDate(new Date());
 
         }
         //1审核人员处理

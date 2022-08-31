@@ -144,5 +144,10 @@ public class ProjectNodeFlowDO extends BaseDO {
      */
     private String otherReason;
 
+    /**
+     *变更类型为其他时,填写
+     */
+    private Date flowEndDate;
+
 
 }
