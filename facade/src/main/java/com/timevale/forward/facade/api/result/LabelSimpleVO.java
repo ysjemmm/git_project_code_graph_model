@@ -26,9 +26,6 @@ public class LabelSimpleVO extends ToString {
     @ApiModelProperty("类别id")
     private Long labelCategoryId;
 
-    @ApiModelProperty("类别名称")
-    private String labelCategoryName;
-
     @ApiModelProperty("名称")
     private String name;
 

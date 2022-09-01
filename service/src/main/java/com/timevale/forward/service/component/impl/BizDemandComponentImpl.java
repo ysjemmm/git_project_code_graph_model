@@ -6,10 +6,7 @@ import com.google.common.collect.Maps;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
-import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.facade.api.result.LabelSimpleVO;
-import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
-import com.timevale.forward.facade.api.result.QueryResultVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
@@ -283,7 +280,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             return ResultUtil.queryResultEmpty();
         }
         //标签信息
-        Map<Long, List<LabelSimpleVO>> labelMap = bizLabelComponent
+        Map<Long, List<BizLabelSimpleVO>> labelMap = bizLabelComponent
                 .getBizLabelMap(bizDemandIds, BizTypeEnum.BIZ_DEMAND.getCode());
 
         // 如果查询条件没有部门id，收集完整名
@@ -305,7 +302,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             bizDemandVO.setPriorityText(PriorityEnum.getTextChineseByCode(bizDemandVO.getPriority()));
             bizDemandVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandVO.getPlanReleaseDate()));
 
-            List<LabelSimpleVO> list = labelMap.get(bizDemandVO.getId());
+            List<BizLabelSimpleVO> list = labelMap.get(bizDemandVO.getId());
             if (CollectionUtils.isNotEmpty(list)) {
                 bizDemandVO.setLabelNames(list);
             }

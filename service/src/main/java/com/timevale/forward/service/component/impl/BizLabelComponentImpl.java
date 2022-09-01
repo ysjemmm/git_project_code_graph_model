@@ -2,6 +2,7 @@ package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.LabelSimpleVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizLabelComponent;
@@ -119,8 +120,8 @@ public class BizLabelComponentImpl implements BizLabelComponent {
     }
 
     @Override
-    public Map<Long, List<LabelSimpleVO>> getBizLabelMap(List<Long> bizIds, Integer type) {
-        Map<Long, List<LabelSimpleVO>> resultMap = new HashMap<>();
+    public Map<Long, List<BizLabelSimpleVO>> getBizLabelMap(List<Long> bizIds, Integer type) {
+        Map<Long, List<BizLabelSimpleVO>> resultMap = new HashMap<>();
 
         List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByBizIdInType(bizIds, BizTypeEnum.BIZ_DEMAND.getCode());
         Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream()
@@ -151,10 +152,10 @@ public class BizLabelComponentImpl implements BizLabelComponent {
                         .map(labelNameMap::get)
                         .collect(Collectors.toList());
 
-                List<LabelSimpleVO> simpleVOList = LabelCopier.INSTANCE.convert(labelList);
+                List<BizLabelSimpleVO> simpleVOList = LabelCopier.INSTANCE.convert2BizLabel(labelList);
 
                 if (CollectionUtils.isNotEmpty(labelCategoryDOList)) {
-                    for (LabelSimpleVO labelSimpleVO : simpleVOList) {
+                    for (BizLabelSimpleVO labelSimpleVO : simpleVOList) {
                         List<LabelCategoryDO> list = labelCategoryMap.get(labelSimpleVO.getLabelCategoryId());
                         if (CollectionUtils.isNotEmpty(list)) {
                             LabelCategoryDO labelCategoryDO = list.get(0);

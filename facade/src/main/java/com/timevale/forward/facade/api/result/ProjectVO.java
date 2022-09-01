@@ -115,5 +115,5 @@ public class ProjectVO extends ToString {
     private Date actualTestDate;
 
     @ApiModelProperty("标签名称")
-    private List<LabelSimpleVO> labelNames;
+    private List<BizLabelSimpleVO> labelNames;
 }

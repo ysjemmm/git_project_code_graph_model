@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component;
 
+import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.LabelSimpleVO;
 
 import java.util.List;
@@ -30,6 +31,6 @@ public interface BizLabelComponent {
      * @param type
      * @return
      */
-    Map<Long, List<LabelSimpleVO>> getBizLabelMap(List<Long> bizIds, Integer type);
+    Map<Long, List<BizLabelSimpleVO>> getBizLabelMap(List<Long> bizIds, Integer type);
 
 }

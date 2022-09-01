@@ -169,7 +169,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         List<Long> bugOfflineIds = bugOfflineDOList.stream().map(BugOfflineListDO::getId).collect(Collectors.toList());
 
-        Map<Long, List<LabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(bugOfflineIds, BizTypeEnum.BUG_OFFLINE.getCode());
+        Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(bugOfflineIds, BizTypeEnum.BUG_OFFLINE.getCode());
 
         // 信息填充
         for (BugOfflineVO e : bugOfflineVOList) {
@@ -181,7 +181,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             e.setPriorityName(PriorityEnum.getTextChineseByCode(e.getPriority()));
             e.setUnHandleReasonName(BugUnHandleReasonEnum.getTextByCode(e.getUnHandleReason()));
 
-            List<LabelSimpleVO> labelSimpleVOList = bizLabelMap.get(e.getId());
+            List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(e.getId());
             if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
                 e.setLabelNames(labelSimpleVOList);
             }

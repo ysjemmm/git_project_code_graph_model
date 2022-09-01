@@ -232,13 +232,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
         List<Long> productDemandIds = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
 
-        Map<Long, List<LabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(productDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+        Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(productDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
 
         for (ProductDemandVO a : productDemandVOList) {
             a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
             a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
 
-            List<LabelSimpleVO> labelSimpleVOList = bizLabelMap.get(a.getId());
+            List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(a.getId());
             if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
                 a.setLabelNames(labelSimpleVOList);
             }

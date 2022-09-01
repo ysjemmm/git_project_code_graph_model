@@ -5,10 +5,7 @@ import com.github.pagehelper.PageInfo;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
-import com.timevale.forward.facade.api.result.LabelSimpleVO;
-import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
-import com.timevale.forward.facade.api.result.ProjectVO;
-import com.timevale.forward.facade.api.result.QueryResultVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.ProjectComponent;
@@ -182,18 +179,8 @@ public class ProjectComponentImpl implements ProjectComponent {
                 return ResultUtil.queryResultEmpty();
             }
         }
-//        bizLabelDOList = bizLabelMapper.getByBizIdInType(projectIds, BizTypeEnum.PROJECT.getCode());
-//        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
-//                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
-//
-//        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
-//        Map<Long, LabelDO> labelNameMap = new HashMap<>();
-//        if (CollectionUtils.isNotEmpty(labelIds)) {
-//            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
-//            labelNameMap = labelDOList.stream()
-//                    .collect(Collectors.toMap(LabelDO::getId, Function.identity()));
-//        }
-        Map<Long, List<LabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(projectIds, BizTypeEnum.PROJECT.getCode());
+
+        Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(projectIds, BizTypeEnum.PROJECT.getCode());
 
         buildConditionBeforeQuery(projectIds, condition);
 
@@ -311,7 +298,7 @@ public class ProjectComponentImpl implements ProjectComponent {
                 a.setContainRisk(riskSet.contains(a.getId()));
             }
 
-            List<LabelSimpleVO> labelSimpleVOList = bizLabelMap.get(a.getId());
+            List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(a.getId());
             if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
                 a.setLabelNames(labelSimpleVOList);
             }

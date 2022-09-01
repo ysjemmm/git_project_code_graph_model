@@ -92,5 +92,5 @@ public class BizDemandVO extends ToString {
     private Date projectEndDate;
 
     @ApiModelProperty("标签名称")
-    private List<LabelSimpleVO> labelNames;
+    private List<BizLabelSimpleVO> labelNames;
 }

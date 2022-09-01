@@ -249,7 +249,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //标签
         List<Long> bugOnlineIds = bugOnlineDOList.stream().map(BugOnlineListDO::getId).collect(Collectors.toList());
 
-        Map<Long, List<LabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(bugOnlineIds, BizTypeEnum.BUG_ONLINE.getCode());
+        Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(bugOnlineIds, BizTypeEnum.BUG_ONLINE.getCode());
 
         // 查询对应产品线和业务域
         List<Long> bugOnlineIdList = bugOnlineVOList.stream().map(BugOnlineVO::getId).collect(Collectors.toList());
@@ -332,7 +332,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             e.setPriorityName(BugOnlinePriorityEnum.getTextByCode(e.getPriority()));
             e.setDismissCauseName(BugOnlineDismissCauseEnum.getTextByCode(e.getDismissCause()));
 
-            List<LabelSimpleVO> labelSimpleVOList = bizLabelMap.get(e.getId());
+            List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(e.getId());
             if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
                 e.setLabelNames(labelSimpleVOList);
             }
