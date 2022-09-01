@@ -3,7 +3,9 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.ProductDemandDocumentQueryList;
+import com.timevale.forward.facade.api.request.ProjectDocumentReq;
 import com.timevale.forward.facade.api.result.ProductDemandDocumentVO;
+import com.timevale.forward.facade.api.result.ProjectDocumentVO;
 import com.timevale.forward.facade.api.result.ProjectFlowDocumentVO;
 import com.timevale.forward.facade.api.result.TestBillDocumentVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -44,5 +46,19 @@ public interface ProjectDocumentService {
      * @return 测试文档对象
      */
     BaseResult<TestBillDocumentVO> queryTestBillDocument(Long projectId);
+
+    /**
+     * 查询文档
+     * @param projectId 项目id
+     * @return 测试文档对象
+     */
+    BaseResult<ProjectDocumentVO> queryDocument(Long projectId, Integer type);
+
+    /**
+     * 保存文档
+     * @param req
+     * @return
+     */
+    BaseResult<Void> saveDocument(ProjectDocumentReq req);
 
 }

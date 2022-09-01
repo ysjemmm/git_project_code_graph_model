@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.timevale.forward.dal.dao.ProjectDocumentMapper">
+  <resultMap id="BaseResultMap" type="com.timevale.forward.dal.entity.ProjectDocument">
+    <!--@mbg.generated-->
+    <!--@Table project_document-->
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="project_id" jdbcType="BIGINT" property="projectId" />
+    <result column="type" jdbcType="BOOLEAN" property="type" />
+    <result column="url" jdbcType="VARCHAR" property="url" />
+    <result column="is_deleted" jdbcType="BOOLEAN" property="isDeleted" />
+    <result column="create_man_id" jdbcType="VARCHAR" property="createManId" />
+    <result column="create_man" jdbcType="VARCHAR" property="createMan" />
+    <result column="create_date" jdbcType="TIMESTAMP" property="createDate" />
+    <result column="modify_man_id" jdbcType="VARCHAR" property="modifyManId" />
+    <result column="modify_man" jdbcType="VARCHAR" property="modifyMan" />
+    <result column="modify_date" jdbcType="TIMESTAMP" property="modifyDate" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    id, project_id, `type`, url, is_deleted, create_man_id, create_man, create_date, 
+    modify_man_id, modify_man, modify_date
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    <!--@mbg.generated-->
+    select 
+    <include refid="Base_Column_List" />
+    from project_document
+    where id = #{id,jdbcType=BIGINT}
+    and is_deleted = false
+  </select>
+  <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.timevale.forward.dal.entity.ProjectDocument" useGeneratedKeys="true">
+    <!--@mbg.generated-->
+    insert into project_document (project_id, `type`, url, 
+      is_deleted, create_man_id, create_man, 
+      create_date, modify_man_id, modify_man, 
+      modify_date)
+    values (#{projectId,jdbcType=BIGINT}, #{type,jdbcType=BOOLEAN}, #{url,jdbcType=VARCHAR}, 
+      #{isDeleted,jdbcType=BOOLEAN}, #{createManId,jdbcType=VARCHAR}, #{createMan,jdbcType=VARCHAR}, 
+      #{createDate,jdbcType=TIMESTAMP}, #{modifyManId,jdbcType=VARCHAR}, #{modifyMan,jdbcType=VARCHAR}, 
+      #{modifyDate,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.timevale.forward.dal.entity.ProjectDocument" useGeneratedKeys="true">
+    <!--@mbg.generated-->
+    insert into project_document
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="projectId != null">
+        project_id,
+      </if>
+      <if test="type != null">
+        `type`,
+      </if>
+      <if test="url != null">
+        url,
+      </if>
+      <if test="isDeleted != null">
+        is_deleted,
+      </if>
+      <if test="createManId != null">
+        create_man_id,
+      </if>
+      <if test="createMan != null">
+        create_man,
+      </if>
+      <if test="createDate != null">
+        create_date,
+      </if>
+      <if test="modifyManId != null">
+        modify_man_id,
+      </if>
+      <if test="modifyMan != null">
+        modify_man,
+      </if>
+      <if test="modifyDate != null">
+        modify_date,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="projectId != null">
+        #{projectId,jdbcType=BIGINT},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=BOOLEAN},
+      </if>
+      <if test="url != null">
+        #{url,jdbcType=VARCHAR},
+      </if>
+      <if test="isDeleted != null">
+        #{isDeleted,jdbcType=BOOLEAN},
+      </if>
+      <if test="createManId != null">
+        #{createManId,jdbcType=VARCHAR},
+      </if>
+      <if test="createMan != null">
+        #{createMan,jdbcType=VARCHAR},
+      </if>
+      <if test="createDate != null">
+        #{createDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifyManId != null">
+        #{modifyManId,jdbcType=VARCHAR},
+      </if>
+      <if test="modifyMan != null">
+        #{modifyMan,jdbcType=VARCHAR},
+      </if>
+      <if test="modifyDate != null">
+        #{modifyDate,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.timevale.forward.dal.entity.ProjectDocument">
+    <!--@mbg.generated-->
+    update project_document
+    <set>
+      <if test="projectId != null">
+        project_id = #{projectId,jdbcType=BIGINT},
+      </if>
+      <if test="type != null">
+        `type` = #{type,jdbcType=BOOLEAN},
+      </if>
+      <if test="url != null">
+        url = #{url,jdbcType=VARCHAR},
+      </if>
+      <if test="isDeleted != null">
+        is_deleted = #{isDeleted,jdbcType=BOOLEAN},
+      </if>
+      <if test="createManId != null">
+        create_man_id = #{createManId,jdbcType=VARCHAR},
+      </if>
+      <if test="createMan != null">
+        create_man = #{createMan,jdbcType=VARCHAR},
+      </if>
+      <if test="createDate != null">
+        create_date = #{createDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifyManId != null">
+        modify_man_id = #{modifyManId,jdbcType=VARCHAR},
+      </if>
+      <if test="modifyMan != null">
+        modify_man = #{modifyMan,jdbcType=VARCHAR},
+      </if>
+      <if test="modifyDate != null">
+        modify_date = #{modifyDate,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.timevale.forward.dal.entity.ProjectDocument">
+    <!--@mbg.generated-->
+    update project_document
+    set project_id = #{projectId,jdbcType=BIGINT},
+      `type` = #{type,jdbcType=BOOLEAN},
+      url = #{url,jdbcType=VARCHAR},
+      is_deleted = #{isDeleted,jdbcType=BOOLEAN},
+      create_man_id = #{createManId,jdbcType=VARCHAR},
+      create_man = #{createMan,jdbcType=VARCHAR},
+      create_date = #{createDate,jdbcType=TIMESTAMP},
+      modify_man_id = #{modifyManId,jdbcType=VARCHAR},
+      modify_man = #{modifyMan,jdbcType=VARCHAR},
+      modify_date = #{modifyDate,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="batchInsert" keyColumn="id" keyProperty="id" parameterType="map" useGeneratedKeys="true">
+    <!--@mbg.generated-->
+    insert into project_document
+    (project_id, `type`, url, is_deleted, create_man_id, create_man, create_date, modify_man_id, 
+      modify_man, modify_date)
+    values
+    <foreach collection="list" item="item" separator=",">
+      (#{item.projectId,jdbcType=BIGINT}, #{item.type,jdbcType=BOOLEAN}, #{item.url,jdbcType=VARCHAR}, 
+        #{item.isDeleted,jdbcType=BOOLEAN}, #{item.createManId,jdbcType=VARCHAR}, #{item.createMan,jdbcType=VARCHAR}, 
+        #{item.createDate,jdbcType=TIMESTAMP}, #{item.modifyManId,jdbcType=VARCHAR}, #{item.modifyMan,jdbcType=VARCHAR}, 
+        #{item.modifyDate,jdbcType=TIMESTAMP})
+    </foreach>
+  </insert>
+
+  <select id="getByProjectId" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"></include>
+    from project_document
+    where project_id = #{projectId,jdbcType=BIGINT}
+    and type = #{type,jdbcType=INTEGER}
+    and is_deleted = false
+    limit 1
+  </select>
+</mapper>

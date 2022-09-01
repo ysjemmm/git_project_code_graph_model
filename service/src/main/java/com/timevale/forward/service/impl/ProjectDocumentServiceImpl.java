@@ -4,36 +4,34 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimaps;
+import com.timevale.crm.sdk.common.entity.AccountInfo;
+import com.timevale.crm.sdk.common.utils.SessionLocalUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.ProjectDocumentMapper;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
 import com.timevale.forward.dal.dao.TestBillMapper;
-import com.timevale.forward.dal.entity.FileDO;
-import com.timevale.forward.dal.entity.ProductDemandDO;
-import com.timevale.forward.dal.entity.ProjectFlowDO;
-import com.timevale.forward.dal.entity.TestBillDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectDocumentService;
 import com.timevale.forward.facade.api.query.ProductDemandDocumentQueryList;
-import com.timevale.forward.facade.api.result.FileVO;
-import com.timevale.forward.facade.api.result.ProductDemandDocumentVO;
-import com.timevale.forward.facade.api.result.ProjectFlowDocumentVO;
-import com.timevale.forward.facade.api.result.TestBillDocumentVO;
+import com.timevale.forward.facade.api.request.ProjectDocumentReq;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.FileTypeEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.ProjectDocumentComponent;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.FileCopier;
-import com.timevale.forward.service.copy.ProductDemandCopier;
-import com.timevale.forward.service.copy.ProjectFlowCopier;
-import com.timevale.forward.service.copy.TestBillCopier;
+import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 
 import javax.annotation.Resource;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestService
@@ -45,9 +43,10 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
     private FileComponent fileComponent;
     @Resource
     private TestBillMapper testBillMapper;
-
     @Resource
     private ProjectFlowMapper projectFlowMapper;
+    @Resource
+    private ProjectDocumentComponent projectDocumentComponent;
 
 
     @Override
@@ -94,6 +93,39 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
         List<FileDO> files = fileComponent.select(testBill.getProjectId(), FileTypeEnum.TEST_BILL_CASE.getCode());
         document.setFiles(FileCopier.INSTANCE.transform(files));
         return BaseResult.success(document);
+    }
+
+    @Override
+    public BaseResult<ProjectDocumentVO> queryDocument(Long projectId, Integer type) {
+        ProjectDocument projectDocument = projectDocumentComponent.getByProjectId(projectId, type);
+
+        ProjectDocumentVO projectDocumentVO = ProjectDocumentCopier.INSTANCE.do2Vo(projectDocument);
+
+        return BaseResult.success(projectDocumentVO);
+    }
+
+    @Override
+    public BaseResult<Void> saveDocument(ProjectDocumentReq req) {
+        Long id = req.getId();
+        AccountInfo account = SessionLocalUtil.getUserSession();
+
+        ProjectDocument projectDocument = ProjectDocumentCopier.INSTANCE.req2Do(req);
+
+        if (Objects.isNull(id)) {
+            //新增
+            projectDocument.setCreateMan(account.getAlias());
+            projectDocument.setCreateManId(account.getAccount());
+
+            projectDocumentComponent.insert(projectDocument);
+        } else {
+            //更新
+            projectDocument.setModifyMan(account.getAlias());
+            projectDocument.setModifyManId(account.getAccount());
+
+            projectDocumentComponent.updateSelective(projectDocument);
+        }
+
+        return BaseResult.success();
     }
 
     private ProjectFlowDocumentVO queryFlowDocument(Long projectId, Integer flowType) {
