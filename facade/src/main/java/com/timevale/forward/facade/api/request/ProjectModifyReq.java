@@ -39,4 +39,6 @@ public class ProjectModifyReq extends ProjectAddReq {
     @ApiModelProperty("立项预期上线时间")
     private Date pjEstablishPublishDate;
 
+    @ApiModelProperty("项目暂停/作废原因")
+    private String suspendReason;
 }
