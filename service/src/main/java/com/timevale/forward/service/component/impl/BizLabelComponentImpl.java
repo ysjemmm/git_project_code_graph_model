@@ -123,7 +123,7 @@ public class BizLabelComponentImpl implements BizLabelComponent {
     public Map<Long, List<BizLabelSimpleVO>> getBizLabelMap(List<Long> bizIds, Integer type) {
         Map<Long, List<BizLabelSimpleVO>> resultMap = new HashMap<>();
 
-        List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByBizIdInType(bizIds, BizTypeEnum.BIZ_DEMAND.getCode());
+        List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByBizIdInType(bizIds, type);
         Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream()
                 .collect(Collectors.groupingBy(BizLabelDO::getBizId,
                         Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
