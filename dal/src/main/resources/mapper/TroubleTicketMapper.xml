@@ -1,19 +1,81 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
 <mapper namespace="com.timevale.forward.dal.dao.TroubleTicketMapper">
-
-
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO trouble_ticket(name, influence, type, product_line_id, occurrence_time,
-                                   influence_count, influence_client, during_time, failure_time, influence_scope, reason,
-                                   restore_time, replay_time, asset_loss, amount_loss, time_line, reason_analysis, trouble_rank,
-                                   prime_principal, prime_principal_id, minor_principal, minor_principal_id, duty_team, is_monitor_detect,
-                                   create_man_id, create_man)
-        VALUES (#{name}, #{influence}, #{type}, #{productLineId}, #{occurrenceTime},
-                #{influenceCount}, #{influenceClient}, #{duringTime}, #{failureTime}, #{influenceScope}, #{reason},
-                #{restoreTime}, #{replayTime}, #{assetLoss}, #{amountLoss}, #{timeLine}, #{reasonAnalysis}, #{troubleRank},
-                #{primePrincipal}, #{primePrincipalId}, #{minorPrincipal}, #{minorPrincipalId}, #{dutyTeam}, #{isMonitorDetect},
-                #{createManId}, #{createMan})
+        INSERT INTO trouble_ticket
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">name,</if>
+            <if test="influence != null">influence,</if>
+            <if test="type != null">type,</if>
+            <if test="productLineId != null">product_line_id,</if>
+            <if test="occurrenceTime != null">occurrence_time,</if>
+            <if test="influenceCount != null">influence_count,</if>
+            <if test="influenceClient != null">influence_client,</if>
+            <if test="duringTime != null">during_time,</if>
+            <if test="failureTime != null">failure_time,</if>
+            <if test="influenceScope != null">influence_scope,</if>
+            <if test="reason != null">reason,</if>
+            <if test="timeLine != null">time_line,</if>
+            <if test="restoreTime != null">restore_time,</if>
+            <if test="replayTime != null">replay_time,</if>
+            <if test="assetLoss != null">asset_loss,</if>
+            <if test="amountLoss != null">amount_loss,</if>
+            <if test="reasonAnalysis != null">reason_analysis,</if>
+            <if test="troubleRank != null">trouble_rank,</if>
+            <if test="primePrincipal != null">prime_principal,</if>
+            <if test="primePrincipalId != null">prime_principal_id,</if>
+            <if test="minorPrincipal != null">minor_principal,</if>
+            <if test="minorPrincipalId != null">minor_principal_id,</if>
+            <if test="dutyTeam != null">duty_team,</if>
+            <if test="isMonitorDetect != null">is_monitor_detect,</if>
+            <if test="durationTime != null">duration_time,</if>
+            <if test="reportTime != null">report_time,</if>
+            <if test="responseTime != null">response_time,</if>
+            <if test="locationTime != null">location_time,</if>
+            <if test="solveTime != null">solve_time,</if>
+            <if test="cause != null">cause,</if>
+            <if test="deductPoints != null">deduct_points,</if>
+            <if test="dataStatistics != null">data_statistics,</if>
+            <if test="createManId != null">create_man_id,</if>
+            <if test="createMan != null">create_man,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">#{name},</if>
+            <if test="influence != null">#{influence},</if>
+            <if test="type != null">#{type},</if>
+            <if test="productLineId != null">#{productLineId},</if>
+            <if test="occurrenceTime != null">#{occurrenceTime},</if>
+            <if test="influenceCount != null">#{influenceCount},</if>
+            <if test="influenceClient != null">#{influenceClient},</if>
+            <if test="duringTime != null">#{duringTime},</if>
+            <if test="failureTime != null">#{failureTime},</if>
+            <if test="influenceScope != null">#{influenceScope},</if>
+            <if test="reason != null">#{reason},</if>
+            <if test="timeLine != null">#{timeLine},</if>
+            <if test="restoreTime != null">#{restoreTime},</if>
+            <if test="replayTime != null">#{replayTime},</if>
+            <if test="assetLoss != null">#{assetLoss},</if>
+            <if test="amountLoss != null">#{amountLoss},</if>
+            <if test="reasonAnalysis != null">#{reasonAnalysis},</if>
+            <if test="troubleRank != null">#{troubleRank},</if>
+            <if test="primePrincipal != null">#{primePrincipal},</if>
+            <if test="primePrincipalId != null">#{primePrincipalId},</if>
+            <if test="minorPrincipal != null">#{minorPrincipal},</if>
+            <if test="minorPrincipalId != null">#{minorPrincipalId},</if>
+            <if test="dutyTeam != null">#{dutyTeam},</if>
+            <if test="isMonitorDetect != null">#{isMonitorDetect},</if>
+            <if test="durationTime != null">#{durationTime},</if>
+            <if test="reportTime != null">#{reportTime},</if>
+            <if test="responseTime != null">#{responseTime},</if>
+            <if test="locationTime != null">#{locationTime},</if>
+            <if test="solveTime != null">#{solveTime},</if>
+            <if test="cause != null">#{cause},</if>
+            <if test="deductPoints != null">#{deductPoints},</if>
+            <if test="dataStatistics != null">#{dataStatistics},</if>
+            <if test="createManId != null">#{createManId},</if>
+            <if test="createMan != null">#{createMan},</if>
+        </trim>
     </insert>
 
     <update id="update">
@@ -32,17 +94,25 @@
             <if test="minorPrincipal != null">minor_principal = #{minorPrincipal},</if>
             <if test="minorPrincipalId != null">minor_principal_id = #{minorPrincipalId},</if>
             <if test="isMonitorDetect != null">is_monitor_detect = #{isMonitorDetect},</if>
-            <if test="true">influence_count = #{influenceCount},</if>
-            <if test="true">during_time = #{duringTime},</if>
-            <if test="true">failure_time = #{failureTime},</if>
-            <if test="true">influence_scope = #{influenceScope},</if>
-            <if test="true">reason = #{reason},</if>
-            <if test="true">restore_time = #{restoreTime},</if>
-            <if test="true">replay_time = #{replayTime},</if>
-            <if test="true">asset_loss = #{assetLoss},</if>
-            <if test="true">amount_loss = #{amountLoss},</if>
-            <if test="true">trouble_rank = #{troubleRank},</if>
-            <if test="true">duty_team = #{dutyTeam},</if>
+            <if test="influenceCount  != null">influence_count = #{influenceCount},</if>
+            <if test="duringTime != null">during_time = #{duringTime},</if>
+            <if test="failureTime != null">failure_time = #{failureTime},</if>
+            <if test="influenceScope != null">influence_scope = #{influenceScope},</if>
+            <if test="reason != null">reason = #{reason},</if>
+            <if test="restoreTime != null">restore_time = #{restoreTime},</if>
+            <if test="replayTime != null">replay_time = #{replayTime},</if>
+            <if test="assetLoss != null">asset_loss = #{assetLoss},</if>
+            <if test="amountLoss != null">amount_loss = #{amountLoss},</if>
+            <if test="troubleRank != null">trouble_rank = #{troubleRank},</if>
+            <if test="dutyTeam != null">duty_team = #{dutyTeam},</if>
+            <if test="durationTime != null">duration_time = #{durationTime},</if>
+            <if test="reportTime != null">report_time = #{reportTime},</if>
+            <if test="responseTime != null">response_time = #{responseTime},</if>
+            <if test="locationTime != null">location_time = #{locationTime},</if>
+            <if test="solveTime != null">solve_time = #{solveTime},</if>
+            <if test="cause != null">cause = #{cause},</if>
+            <if test="deductPoints != null">deduct_points = #{deductPoints},</if>
+            <if test="dataStatistics != null">data_statistics = #{dataStatistics},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
@@ -52,12 +122,59 @@
         </where>
     </update>
 
+    <update id="allUpdate">
+        UPDATE trouble_ticket
+        <set>
+            name = #{name},
+            influence = #{influence},
+            product_line_id = #{productLineId},
+            occurrence_time = #{occurrenceTime},
+            influence_client = #{influenceClient},
+            type = #{type},
+            time_line = #{timeLine},
+            reason_analysis = #{reasonAnalysis},
+            prime_principal = #{primePrincipal},
+            prime_principal_id = #{primePrincipalId},
+            minor_principal = #{minorPrincipal},
+            minor_principal_id = #{minorPrincipalId},
+            is_monitor_detect = #{isMonitorDetect},
+            influence_count = #{influenceCount},
+            during_time = #{duringTime},
+            failure_time = #{failureTime},
+            influence_scope = #{influenceScope},
+            reason = #{reason},
+            restore_time = #{restoreTime},
+            replay_time = #{replayTime},
+            asset_loss = #{assetLoss},
+            amount_loss = #{amountLoss},
+            trouble_rank = #{troubleRank},
+            duty_team = #{dutyTeam},
+            duration_time = #{durationTime},
+            report_time = #{reportTime},
+            response_time = #{responseTime},
+            location_time = #{locationTime},
+            solve_time = #{solveTime},
+            cause = #{cause},
+            deduct_points = #{deductPoints},
+            data_statistics = #{dataStatistics},
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId},
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <update id="updateDurationTime">
+        UPDATE trouble_ticket
+        SET duration_time = #{durationTime},
+            modify_man = modify_man,
+            modify_man_id = modify_man_id
+        WHERE id = #{id}
+    </update>
+
     <select id="selectById" resultType="com.timevale.forward.dal.entity.TroubleTicketDO">
-        SELECT id, name, influence, type, product_line_id, occurrence_time, influence_count,
-               influence_client, during_time, failure_time, influence_scope, reason, restore_time, replay_time, asset_loss,
-               amount_loss, time_line, reason_analysis, trouble_rank, prime_principal, prime_principal_id, minor_principal,
-               minor_principal_id, duty_team, is_monitor_detect,
-               create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        SELECT *
         FROM trouble_ticket
         WHERE id = #{id} AND is_deleted = false
     </select>
@@ -144,5 +261,10 @@
                 AND tt.is_deleted = false
             </if>
         </where>
+    </select>
+
+    <select id="selectAll" resultType="com.timevale.forward.dal.entity.TroubleTicketDO">
+        SELECT *
+        FROM trouble_ticket;
     </select>
 </mapper>

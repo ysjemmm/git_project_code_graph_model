@@ -50,6 +50,12 @@ public enum TabEnum {
      * 业务需求路由
      */
     CUSTOM_MANAGEMENT("customerManagement"),
+
+    /**
+     * 人天路由
+     */
+    MAN_DAY_MANAGEMENT("manDayManagement"),
+
     ;
 
     private final String text;

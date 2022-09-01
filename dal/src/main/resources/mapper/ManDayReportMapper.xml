@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.timevale.forward.dal.dao.ManDayReportMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO man_day_report(man_day_id, audit_man_day, audit_status, auditor, auditor_id, create_man_id, create_man)
+        VALUES (#{manDayId}, #{auditManDay}, #{auditStatus}, #{auditor}, #{auditorId}, #{createManId}, #{createMan})
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE man_day_report
+        SET audit_status    = #{auditStatus},
+            modify_man      = #{modifyMan},
+            modify_man_id   = #{modifyManId}
+        WHERE id in
+        <foreach collection="ids" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <update id="updateById">
+        UPDATE man_day_report
+        <set>
+            <if test="manDayId    != null">man_day_id      = #{manDayId},</if>
+            <if test="auditManDay != null">audit_man_day   = #{auditManDay},</if>
+            <if test="auditStatus  != null">audit_status    = #{auditStatus},</if>
+            <if test="rejectReason != null">reject_reason   = #{rejectReason},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    <update id="updateAuditor">
+        UPDATE man_day_report
+        SET auditor         = #{auditor},
+            auditor_id      = #{auditorId},
+            modify_man      = #{modifyMan},
+            modify_man_id   = #{modifyManId}
+        WHERE id in
+        <foreach collection="ids" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="selectCondition" resultType="com.timevale.forward.dal.entity.ManDayReportListDO">
+        SELECT mdr.id, mdr.audit_status, mdr.audit_man_day, mdr.reject_reason, mdr.auditor, mdr.auditor_id,
+               mdr.create_date, mdr.create_man, mdr.create_man_id,
+               md.week_start_date, md.week_end_date,
+               p.name projectName
+        FROM man_day_report mdr
+            LEFT JOIN man_day md on mdr.man_day_id = md.id
+            LEFT JOIN project p on md.project_id = p.id
+        <where>
+            <if test="projectName != null and projectName != ''">AND p.name like concat('%',#{projectName},'%')</if>
+            <if test="rejectReason != null and rejectReason != ''">AND mdr.reject_reason like concat('%',#{rejectReason},'%')</if>
+            <if test="auditStatuses != null and auditStatuses.size() > 0">
+                AND mdr.audit_status in
+                <foreach collection="auditStatuses" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="createManIds != null and createManIds.size() > 0">
+                AND mdr.create_man_id in
+                <foreach collection="createManIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="auditorIds != null and auditorIds.size() > 0">
+                AND mdr.auditor_id in
+                <foreach collection="auditorIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="createStartDate != null and createEndDate != null">
+                AND mdr.create_date &gt;= #{createStartDate}
+                AND mdr.create_date &lt;= #{createEndDate}
+            </if>
+            <if test="weekStartDate != null and weekEndDate != null">
+                AND md.week_start_date &gt;= #{weekStartDate}
+                AND md.week_end_date &lt;= #{weekEndDate}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectById" resultType="com.timevale.forward.dal.entity.ManDayReportDO">
+        SELECT *
+        FROM man_day_report
+        WHERE id = #{id}
+          AND is_deleted = false
+    </select>
+    <select id="selectByIds" resultType="com.timevale.forward.dal.entity.ManDayReportDO">
+        SELECT *
+        FROM man_day_report
+        WHERE id in
+            <foreach collection="ids" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+          AND is_deleted = false
+    </select>
+    <select id="selectByManDayIdsLast" resultType="com.timevale.forward.dal.entity.ManDayReportDO">
+        SELECT *
+        FROM man_day_report mdr
+            INNER JOIN (SELECT max(id) id FROM man_day_report GROUP BY man_day_id) tmdr ON mdr.id = tmdr.id
+        WHERE man_day_id IN
+        <foreach collection="manDayIds" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        AND is_deleted = false
+    </select>
+    <select id="selectByStatus" resultType="com.timevale.forward.dal.entity.ManDayReportDO">
+        SELECT *
+        FROM man_day_report
+        WHERE man_day_id = #{manDayId}
+          AND audit_status = #{auditStatus}
+          AND is_deleted = false
+    </select>
+
+</mapper>

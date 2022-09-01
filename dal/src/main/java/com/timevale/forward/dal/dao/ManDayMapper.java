@@ -15,6 +15,9 @@ import java.util.List;
  */
 public interface ManDayMapper {
 
+    ManDayDO getById(@Param("id") Long id);
+    List<ManDayDO> getByIds(@Param("ids") List<Long> ids);
+
     List<ManDayDO> getByProjectId(@Param("projectId") Long projectId);
 
     List<ManDayDO> getByProjectIdAndStartDates(@Param("projectId") Long projectId,
@@ -26,6 +29,8 @@ public interface ManDayMapper {
     void delete(ManDayDO manDayDO);
 
     void updateActualManDay(ManDayDO manDayDO);
+
+    void updateAudit(ManDayDO manDayDO);
 
     void insert(ManDayDO setWeekEndDate);
 

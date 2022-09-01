@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.timevale.forward.dal.dao.ManDayMapper">
-    <insert id="insert">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert man_day (project_id, member_id, member_name, actual_man_day, week_start_date, week_end_date,
                         create_man_id, create_man)
         values (#{projectId}, #{memberId}, #{memberName}, #{actualManDay}, #{weekStartDate}, #{weekEndDate},
@@ -26,7 +26,33 @@
         where id = #{id}
     </update>
 
+    <update id="updateAudit">
+        update man_day
+        <set>
+            <if test="auditManDay != null">audit_man_day = #{auditManDay},</if>
+            <if test="auditStatus != null">audit_status = #{auditStatus},</if>
+            <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
+            modify_man_id  = #{modifyManId},
+            modify_man     = #{modifyMan}
+        </set>
+        where id = #{id}
+    </update>
 
+    <select id="getById" resultType="com.timevale.forward.dal.entity.ManDayDO">
+        select *
+        from man_day
+        where id = #{id}
+          and is_deleted = false
+    </select>
+    <select id="getByIds" resultType="com.timevale.forward.dal.entity.ManDayDO">
+        select *
+        from man_day
+        where id in
+            <foreach collection="ids" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+          and is_deleted = false
+    </select>
     <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ManDayDO">
         select *
         from man_day

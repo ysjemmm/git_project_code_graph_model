@@ -19,6 +19,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,6 +64,8 @@ public class DataCorrectServiceImpl implements DataCorrectService {
 
     @Resource
     private TestBillMapper testBillMapper;
+    @Resource
+    private TroubleTicketMapper troubleTicketMapper;
 
     @Resource
     private BugOnlineMapper bugOnlineMapper;
@@ -202,6 +205,32 @@ public class DataCorrectServiceImpl implements DataCorrectService {
         log.info("更新模块id完成");
         if(!CollectionUtils.isEmpty(bugOnlineModelDOList)){
              bugOnlineModelMapper.batchInsert(bugOnlineModelDOList);
+        }
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> troubleTicketTime() {
+        List<TroubleTicketDO> troubleTicketDOS = troubleTicketMapper.selectAll();
+
+        // 只保存仅有的时间
+        troubleTicketDOS = troubleTicketDOS.stream()
+                .filter(e -> e.getOccurrenceTime() != null && e.getRestoreTime() != null)
+                .collect(Collectors.toList());
+
+        for (TroubleTicketDO e : troubleTicketDOS) {
+            Date occurrenceTime = e.getOccurrenceTime();
+            Date restoreTime = e.getRestoreTime();
+
+            long occurrenceTimeTime = occurrenceTime.getTime();
+            long restoreTimeTime = restoreTime.getTime();
+
+            long differ = Math.max(restoreTimeTime - occurrenceTimeTime, 0L);
+            long result = differ / DateFormatConst.ONE_MINUTE;
+            BigDecimal durationTime = BigDecimal.valueOf(result);
+
+            log.info("[DataCorrectServiceImpl][troubleTicketTime]更新故障单{}持续时间{}", e.getId(), durationTime);
+            troubleTicketMapper.updateDurationTime(e.getId(), durationTime);
         }
         return BaseResult.success(true);
     }

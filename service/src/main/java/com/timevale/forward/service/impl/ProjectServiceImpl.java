@@ -163,6 +163,8 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private LabelCategoryMapper labelCategoryMapper;
 
+    @Resource
+    private ManDayReportComponent manDayReportComponent;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -429,6 +431,12 @@ public class ProjectServiceImpl implements ProjectService {
 
         //流程与版本信息处理
         processFlow(projectModifyReq);
+
+        // 人天如果更换项目经理
+        if (!Objects.equals(oldProject.getPmId(), newProject.getPmId())) {
+            manDayReportComponent.updateAuditor(newProject.getId());
+            manDayReportComponent.batchMsg(newProject.getId());
+        }
 
         return BaseResult.success(true);
     }
