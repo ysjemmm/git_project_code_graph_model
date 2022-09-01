@@ -29,7 +29,7 @@ public class ProjectDocument {
     /**
     * 文档类型：1.产品需求文档
     */
-    private Boolean type;
+    private Integer type;
 
     /**
     * 文档链接

@@ -6,7 +6,7 @@
     <!--@Table project_document-->
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="project_id" jdbcType="BIGINT" property="projectId" />
-    <result column="type" jdbcType="BOOLEAN" property="type" />
+    <result column="type" jdbcType="TINYINT" property="type" />
     <result column="url" jdbcType="VARCHAR" property="url" />
     <result column="is_deleted" jdbcType="BOOLEAN" property="isDeleted" />
     <result column="create_man_id" jdbcType="VARCHAR" property="createManId" />
@@ -35,7 +35,7 @@
       is_deleted, create_man_id, create_man, 
       create_date, modify_man_id, modify_man, 
       modify_date)
-    values (#{projectId,jdbcType=BIGINT}, #{type,jdbcType=BOOLEAN}, #{url,jdbcType=VARCHAR}, 
+    values (#{projectId,jdbcType=BIGINT}, #{type,jdbcType=INTEGER}, #{url,jdbcType=VARCHAR},
       #{isDeleted,jdbcType=BOOLEAN}, #{createManId,jdbcType=VARCHAR}, #{createMan,jdbcType=VARCHAR}, 
       #{createDate,jdbcType=TIMESTAMP}, #{modifyManId,jdbcType=VARCHAR}, #{modifyMan,jdbcType=VARCHAR}, 
       #{modifyDate,jdbcType=TIMESTAMP})
@@ -80,7 +80,7 @@
         #{projectId,jdbcType=BIGINT},
       </if>
       <if test="type != null">
-        #{type,jdbcType=BOOLEAN},
+        #{type,jdbcType=INTEGER},
       </if>
       <if test="url != null">
         #{url,jdbcType=VARCHAR},
@@ -116,7 +116,7 @@
         project_id = #{projectId,jdbcType=BIGINT},
       </if>
       <if test="type != null">
-        `type` = #{type,jdbcType=BOOLEAN},
+        `type` = #{type,jdbcType=INTEGER},
       </if>
       <if test="url != null">
         url = #{url,jdbcType=VARCHAR},
@@ -149,7 +149,7 @@
     <!--@mbg.generated-->
     update project_document
     set project_id = #{projectId,jdbcType=BIGINT},
-      `type` = #{type,jdbcType=BOOLEAN},
+      `type` = #{type,jdbcType=INTEGER},
       url = #{url,jdbcType=VARCHAR},
       is_deleted = #{isDeleted,jdbcType=BOOLEAN},
       create_man_id = #{createManId,jdbcType=VARCHAR},
@@ -167,7 +167,7 @@
       modify_man, modify_date)
     values
     <foreach collection="list" item="item" separator=",">
-      (#{item.projectId,jdbcType=BIGINT}, #{item.type,jdbcType=BOOLEAN}, #{item.url,jdbcType=VARCHAR}, 
+      (#{item.projectId,jdbcType=BIGINT}, #{item.type,jdbcType=INTEGER}, #{item.url,jdbcType=VARCHAR},
         #{item.isDeleted,jdbcType=BOOLEAN}, #{item.createManId,jdbcType=VARCHAR}, #{item.createMan,jdbcType=VARCHAR}, 
         #{item.createDate,jdbcType=TIMESTAMP}, #{item.modifyManId,jdbcType=VARCHAR}, #{item.modifyMan,jdbcType=VARCHAR}, 
         #{item.modifyDate,jdbcType=TIMESTAMP})
