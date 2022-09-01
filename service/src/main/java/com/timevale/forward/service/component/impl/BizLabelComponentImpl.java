@@ -147,6 +147,10 @@ public class BizLabelComponentImpl implements BizLabelComponent {
 
             for (Long bizId : bizIds) {
                 List<Long> labelIdList = labelIdMap.get(bizId);
+                if (CollectionUtils.isEmpty(labelIdList)) {
+                    continue;
+                }
+
                 List<LabelDO> labelList = labelIdList.stream()
                         .filter(labelNameMap::containsKey)
                         .map(labelNameMap::get)
