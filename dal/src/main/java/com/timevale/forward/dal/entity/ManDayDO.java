@@ -46,4 +46,18 @@ public class ManDayDO extends BaseDO {
      */
     private Date weekEndDate;
 
+    /**
+     * 审核状态
+     */
+    private Integer auditStatus;
+
+    /**
+     * 审核人天
+     */
+    private BigDecimal auditManDay;
+
+    /**
+     * 拒绝理由
+     */
+    private String rejectReason;
 }

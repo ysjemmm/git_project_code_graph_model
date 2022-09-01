@@ -57,4 +57,9 @@ public class TroubleTicketQueryList extends QueryBase {
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
     private String ascription;
 
+    @ApiModelProperty("排序字段")
+    private String orderFiled;
+
+    @ApiModelProperty("排序规则：0正序，1逆序")
+    private Integer orderCollation;
 }

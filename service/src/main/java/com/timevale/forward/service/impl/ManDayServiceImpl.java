@@ -5,14 +5,8 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.BizChangeLogMapper;
-import com.timevale.forward.dal.dao.ManDayMapper;
-import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.entity.BizChangeLogDO;
-import com.timevale.forward.dal.entity.ManDayDO;
-import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ManDayService;
 import com.timevale.forward.facade.api.query.ManDayQueryList;
 import com.timevale.forward.facade.api.query.ProjectManDayQueryList;
@@ -21,9 +15,11 @@ import com.timevale.forward.facade.api.result.ManDayListVO;
 import com.timevale.forward.facade.api.result.ManDayVO;
 import com.timevale.forward.facade.api.result.ProjectManDayVO;
 import com.timevale.forward.facade.api.result.ProjectTotalManDayVO;
+import com.timevale.forward.model.enums.AuditStatusEnum;
 import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 import com.timevale.forward.model.enums.ButtonActionEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.service.component.ManDayReportComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ManDayCopier;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -33,6 +29,7 @@ import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -61,6 +58,10 @@ public class ManDayServiceImpl implements ManDayService {
     private PersonMapper personMapper;
     @Resource
     private ManDayMapper manDayMapper;
+    @Resource
+    private ManDayReportMapper manDayReportMapper;
+    @Resource
+    private ManDayReportComponent manDayReportComponent;
 
     @Override
     public BaseResult<List<ManDayListVO>> list(ManDayQueryList manDayQueryList) {
@@ -72,9 +73,12 @@ public class ManDayServiceImpl implements ManDayService {
         Date endDate = dateRange.getRight();
         List<ManDayListVO> res = new ArrayList<>();
 
+        // 查询对于开始时间的人天数据
         List<ManDayDO> suitRangeManDays = manDayMapper.getByStartDate(startDate);
+        // 查询当前用户参与的项目
         List<Long> myProjectIds = personMapper.getMainIds(Collections.singletonList(userInfo.getId()),
                 null, PersonTypeEnum.PROJECT_MEMBER.getCode());
+
         if (projectId == null) {
             // 登陆人有人天录入的项目
             projectIds.addAll(suitRangeManDays.stream().filter(m -> userInfo.getId().equals(m.getMemberId()))
@@ -88,6 +92,8 @@ public class ManDayServiceImpl implements ManDayService {
         if (projectIds.isEmpty()) {
             return BaseResult.success(res);
         }
+
+        // 人天id-实体 Map
         ListMultimap<Long, ManDayDO> manDaysByProjectId = Multimaps.index(suitRangeManDays, ManDayDO::getProjectId);
 
         // 处理所有可能的项目
@@ -101,18 +107,22 @@ public class ManDayServiceImpl implements ManDayService {
                         .setProjectId(project.getId())
                         .setProjectName(project.getName())
                         .setProjectCreateDate(project.getCreateDate());
+
+                // pm时查询项目下成员
                 if (project.getPmId().equals(userInfo.getId())) {
-                    // pm时查询项目下成员
                     manDayListVO.setPm(true);
                     List<ManDayVO> resManDays = new ArrayList<>();
                     Set<String> existsMemberIds = projectManDays.stream().map(ManDayDO::getMemberId)
                             .collect(Collectors.toSet());
+                    // 添加已有数据的人天信息
                     for (ManDayDO projectManDay : projectManDays) {
                         ManDayVO manDayVO = ManDayCopier.INSTANCE.convert(projectManDay);
                         resManDays.add(manDayVO);
                     }
+                    // 获取成员信息
                     List<PersonDO> persons = personMapper.get(Collections.singletonList(project.getId()),
                             PersonTypeEnum.PROJECT_MEMBER.getCode());
+                    // 由于数据0不入库，所以去除已有数据的成员，新建人天信息
                     persons.removeIf(person -> existsMemberIds.contains(person.getUserId()));
                     for (PersonDO person : persons) {
                         resManDays.add(new ManDayVO()
@@ -123,8 +133,8 @@ public class ManDayServiceImpl implements ManDayService {
                                 .setWeekEndDate(endDate)
                                 .setWeekDateRange(DateUtil.formDateRange(startDate, endDate)));
                     }
+                    // 判断是否为pm
                     for (ManDayVO resManDay : resManDays) {
-                        resManDay.setEditable(true);
                         if (resManDay.getMemberId().equals(userInfo.getId())) {
                             resManDay.setPm(true);
                         }
@@ -166,7 +176,6 @@ public class ManDayServiceImpl implements ManDayService {
                             .setProjectCreateDate(project.getCreateDate());
                     manDayListVO.setManDays(ManDayCopier.INSTANCE.convert(projectManDays));
                     for (ManDayVO resManDay : manDayListVO.getManDays()) {
-                        resManDay.setEditable(true);
                         if (resManDay.getMemberId().equals(userInfo.getId())) {
                             resManDay.setPm(true);
                         }
@@ -197,6 +206,28 @@ public class ManDayServiceImpl implements ManDayService {
         res.sort(Comparator.comparing(ManDayListVO::isPm).reversed()
                 .thenComparing(ManDayListVO::getProjectCreateDate));
 
+        // 项目pm，pm名称，项目名称Map
+        String userId = userInfo.getId();
+        Map<Long, String> projectPmMap = projects.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getPmId, (a, b) -> a));
+        Map<Long, String> projectPmNameMap = projects.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getPmName, (a, b) -> a));
+
+        // 编辑权限
+        for (ManDayListVO manDayListVO : res) {
+            List<ManDayVO> manDays = manDayListVO.getManDays();
+            for (ManDayVO manDay : manDays) {
+                // 只有自己的人天，或者自己为PM，并且不在审核中的才可以编辑
+                boolean isMember = userId.equals(manDay.getMemberId());
+                boolean isPM = userId.equals(projectPmMap.get(manDay.getProjectId()));
+                boolean auditing = AuditStatusEnum.AUDITING.getCode().equals(manDay.getAuditStatus());
+                manDay.setEditable((isMember || isPM) && !auditing);
+                // 项目名称
+                manDay.setProjectName(manDayListVO.getProjectName());
+                // 项目PM
+                manDay.setPmId(projectPmMap.get(manDay.getProjectId()));
+                manDay.setPmName(projectPmNameMap.get(manDay.getProjectId()));
+            }
+        }
+
         return BaseResult.success(res);
     }
 
@@ -205,19 +236,22 @@ public class ManDayServiceImpl implements ManDayService {
         Long projectId = projectManDayQueryList.getProjectId();
         ProjectDO project = projectMapper.get(projectId);
         AssertUtil.notNull(project, "您查询的项目不存在，无法查询人天数据");
+
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        boolean pm = userInfo.getId().equals(project.getPmId());
         List<Date> startDates = null;
         if (projectManDayQueryList.getWeekDateRanges() != null) {
             startDates = projectManDayQueryList.getWeekDateRanges().stream()
                     .map(ManDayServiceImpl::parseAndCheckDateRange)
                     .map(Pair::getLeft).collect(Collectors.toList());
         }
+
         List<ManDayDO> manDays = manDayMapper.getByProjectIdAndStartDates(projectId,
                 startDates, projectManDayQueryList.getUserIds());
         ProjectTotalManDayVO res = new ProjectTotalManDayVO();
+
         // 项目总人天总是返回
         res.setProjectActualManDay(manDayMapper.sumProjectActualDays(projectId));
+
         if (manDays.isEmpty()) {
             if (res.getProjectActualManDay() == null) {
                 res.setProjectActualManDay(BigDecimal.ZERO);
@@ -229,7 +263,7 @@ public class ManDayServiceImpl implements ManDayService {
 
         List<ManDayVO> manDayVOList = ManDayCopier.INSTANCE.convert(manDays);
         for (ManDayVO manDayVO : manDayVOList) {
-            if (pm) {
+            if (manDayVO.getMemberId().equals(userInfo.getId())) {
                 manDayVO.setEditable(true);
             }
             if (project.getPmId().equals(manDayVO.getMemberId())) {
@@ -254,57 +288,121 @@ public class ManDayServiceImpl implements ManDayService {
 
         res.getProjectManDays().sort(Comparator.comparing(ProjectManDayVO::isPm).reversed()
                 .thenComparing(ProjectManDayVO::getMemberId));
+
+        // 用户id
+        String userId = userInfo.getId();
+        boolean isPm = userId.equals(project.getPmId());
+
+        List<ProjectManDayVO> projectManDayVOS = res.getProjectManDays();
+        for (ProjectManDayVO projectManDayVO : projectManDayVOS) {
+            List<ManDayVO> manDayVOS = projectManDayVO.getManDays();
+            for (ManDayVO manDayVO : manDayVOS) {
+                // 只有自己的人天，或者自己为PM，并且不在审核中的才可以编辑
+                boolean isMember = userId.equals(manDayVO.getMemberId());
+                boolean auditing = AuditStatusEnum.AUDITING.getCode().equals(manDayVO.getAuditStatus());
+                manDayVO.setEditable((isMember || isPm) && !auditing);
+                manDayVO.setPmId(project.getPmId());
+                manDayVO.setPmName(project.getPmName());
+                manDayVO.setProjectName(project.getName());
+            }
+        }
+
         return BaseResult.success(res);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(ManDayModifyReq manDayModifyReq) {
         Long projectId = manDayModifyReq.getProjectId();
         String memberId = manDayModifyReq.getMemberId();
         ProjectDO project = projectMapper.get(projectId);
         AssertUtil.notNull(project, "更改的项目id不存在");
-        AssertUtil.checkState(project.getPmId().equals(LocalSessionUtils.getUserInfo().getId()),
-                "您不是项目的项目经理，无权修改人天数据");
+        // AssertUtil.checkState(project.getPmId().equals(LocalSessionUtils.getUserInfo().getId()),
+        //         "您不是项目的项目经理，无权修改人天数据");
         BigDecimal actualManDay = manDayModifyReq.getActualManDay();
         Pair<Date, Date> dateRange = parseAndCheckDateRange(manDayModifyReq.getWeekDateRange());
         Date startDate = dateRange.getLeft();
         Date endDate = dateRange.getRight();
         List<ManDayDO> oldManDays = manDayMapper.getByProjectIdAndStartDates(project.getId(),
                 Collections.singleton(startDate), null);
+
+        boolean isPM = project.getPmId().equals(LocalSessionUtils.getUserInfo().getId());
         Optional<ManDayDO> modifiedManDay = oldManDays.stream().filter(manDay -> manDay.getMemberId().equals(memberId))
                 .findFirst();
         if (modifiedManDay.isPresent()) {
             // 原本已经存在的数据直接更新或者删除
             ManDayDO oldManDay = modifiedManDay.get();
-            if (actualManDay == null || actualManDay.compareTo(BigDecimal.ZERO) == 0) {
-                manDayMapper.delete(oldManDay);
+            // 判断审核状态是否为审核中
+            AssertUtil.checkState(!AuditStatusEnum.AUDITING.getCode().equals(oldManDay.getAuditStatus()),
+                    "审核中状态不可编辑。若需要修改，请联系项目经理驳回后，再编辑提交");
+
+            AssertUtil.checkState(oldManDay.getActualManDay().compareTo(actualManDay) != 0,
+                    "相同天数无需修改");
+
+            // 如果是PM直接修改
+            if (isPM) {
+                if (actualManDay == null || actualManDay.compareTo(BigDecimal.ZERO) == 0) {
+                    manDayMapper.delete(oldManDay);
+                } else {
+                    // 更新实际人天
+                    oldManDay.setActualManDay(actualManDay);
+                    manDayMapper.updateActualManDay(oldManDay);
+                    // 重置审核状态
+                    oldManDay.setRejectReason("");
+                    oldManDay.setAuditManDay(BigDecimal.ZERO);
+                    oldManDay.setAuditStatus(AuditStatusEnum.APPROVE.getCode());
+                    manDayMapper.updateAudit(oldManDay);
+                }
             } else {
-                oldManDay.setActualManDay(actualManDay);
-                manDayMapper.updateActualManDay(oldManDay);
+                // 非PM走审批
+                if (actualManDay == null) {
+                    actualManDay = BigDecimal.ZERO;
+                }
+                manDayReportComponent.add(oldManDay.getId(), actualManDay);
+                // 更新审核状态
+                oldManDay.setAuditManDay(actualManDay);
+                oldManDay.setAuditStatus(AuditStatusEnum.AUDITING.getCode());
+                manDayMapper.updateAudit(oldManDay);
             }
             return BaseResult.success(true);
         }
-        if (actualManDay == null || actualManDay.compareTo(BigDecimal.ZERO) == 0) {
-            // 不存在且入参为空或者0不做处理
+
+        // 不存在且入参为空或者0不做处理
+        if (isPM && (actualManDay == null || actualManDay.compareTo(BigDecimal.ZERO) == 0)) {
             return BaseResult.success(true);
         }
+
+        // 根据当前用户在当前项目中的数据
         Optional<PersonDO> member = personMapper.get(Collections.singletonList(project.getId()),
                         PersonTypeEnum.PROJECT_MEMBER.getCode()).stream()
                 .filter(person -> person.getUserId().equals(memberId))
                 .findFirst();
+
         // 校验项目时间
         AssertUtil.checkState(checkProjectSuiteDate(project, startDate, endDate),
                 "您提供的开始截至时间不在项目时间范围内，请修改");
         // 校验项目成员
         AssertUtil.checkState(member.isPresent(), "您提交的用户id不是该项目成员，请核对");
+
         // 原本不存在则新增
-        manDayMapper.insert(new ManDayDO()
+        ManDayDO newManDayDO = new ManDayDO()
                 .setProjectId(projectId)
                 .setMemberId(memberId)
                 .setMemberName(member.get().getUserName())
-                .setActualManDay(actualManDay)
+                .setActualManDay(isPM ? actualManDay : BigDecimal.ZERO)
                 .setWeekStartDate(startDate)
-                .setWeekEndDate(endDate));
+                .setWeekEndDate(endDate);
+        manDayMapper.insert(newManDayDO);
+
+        // 如果不是PM
+        if (!isPM) {
+            // 增加审批
+            manDayReportComponent.add(newManDayDO.getId(), actualManDay);
+            // 修改人天审核状态
+            newManDayDO.setAuditManDay(actualManDay);
+            newManDayDO.setAuditStatus(AuditStatusEnum.AUDITING.getCode());
+            manDayMapper.updateAudit(newManDayDO);
+        }
         return BaseResult.success(true);
     }
 

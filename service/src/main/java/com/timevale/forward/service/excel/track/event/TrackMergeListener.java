@@ -15,8 +15,8 @@ import java.util.*;
 @Slf4j
 public class TrackMergeListener extends AnalysisEventListener<TrackRow> {
 
-    private List<TrackEvent> trackEventList;
-    private Map<Integer, Integer> indexMap = new HashMap<>();
+    private final List<TrackEvent> trackEventList;
+    private final Map<Integer, Integer> indexMap = new HashMap<>();
 
     public TrackMergeListener(List<TrackEvent> trackEventList) {
         this.trackEventList = trackEventList;

@@ -38,6 +38,12 @@ public enum MessageTitleEnum {
     BUG_ONLINE_REPAIR_FAIL("线上bug修复失败通知"),
     BUG_ONLINE_LINK_BUG_PROCESS("关联的线上bug处理进度通知"),
 
+    // 人天通知标题
+    MAN_DAY_AUDIT("人天审核通知"),
+    MAN_DAY_REJECT("人天驳回通知"),
+    MAN_DAY_APPROVE("人天通过通知"),
+    MAN_DAY_URGE("您收到一条催办消息"),
+
     // 改进措施
     IMPROVEMENT_MEASURE("您收到了一条故障改进事项"),
 
