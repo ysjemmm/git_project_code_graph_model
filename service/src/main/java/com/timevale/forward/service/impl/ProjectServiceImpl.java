@@ -547,25 +547,17 @@ public class ProjectServiceImpl implements ProjectService {
         if (CollectionUtils.isEmpty(productDemandListDO)) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
-        List<Long>pids = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
-        bizLabelDOList = bizLabelMapper.getByBizIdInType(pids, BizTypeEnum.PRODUCT_DEMAND.getCode());
-        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
-                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
+        List<Long> pids = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
 
-        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
-        Map<Long, String> labelNameMap = new HashMap<>();
-        if (CollectionUtils.isNotEmpty(labelIds)) {
-            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
-            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
-        }
+        Map<Long, List<LabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(pids, BizTypeEnum.PRODUCT_DEMAND.getCode());
+
         for (ProductDemandVO a : productDemandVOList) {
             a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
             a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
 
-            if (labelIdMap.containsKey(a.getId())) {
-                List<Long> labelIdList = labelIdMap.get(a.getId());
-                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
-                a.setLabelNames(labelNames);
+            List<LabelSimpleVO> labelSimpleVOList = bizLabelMap.get(a.getId());
+            if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
+                a.setLabelNames(labelSimpleVOList);
             }
         }
         PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);
