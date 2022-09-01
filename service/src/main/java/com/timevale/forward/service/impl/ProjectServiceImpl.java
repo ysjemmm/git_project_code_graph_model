@@ -355,7 +355,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         Date oldPjEstablishPublishDate = oldProject.getPjEstablishPublishDate();
 
-        if (projectModifyReq.getDelayType().compareTo(1) >= 0) {
+        if (projectModifyReq.getDelayType() >= 1) {
             //有流程,计划时间不能变
             ProjectDO oldProjectDO = projectMapper.get(projectModifyReq.getId());
             newProject.setPlanStartDate(oldProjectDO.getPlanStartDate());
@@ -388,15 +388,7 @@ public class ProjectServiceImpl implements ProjectService {
             if (match && !checkProductRelease(projectModifyReq.getId())) {
                 throw new BaseBizRuntimeException("该项目还有bug未关闭，请关闭后再发布");
             }
-            if (match && Integer.valueOf(1).equals(projectModifyReq.getIsPlatformPublish())) {
-                if (!projectPublishPlanComponent.linkPublishPlan(projectModifyReq.getId())) {
-                    throw new BaseBizRuntimeException("请关联发布计划");
-                }
-                if (projectPublishPlanComponent.anyMatchNotFinished(projectModifyReq.getId())) {
-                    throw new BaseBizRuntimeException("您的发布计划还未结束，请前往发布平台处理");
-                }
-            }
-            if (projectModifyReq.getDelayType().compareTo(1) >= 0) {
+            if (projectModifyReq.getDelayType() >= 1) {
                 //需要审批,只更新实际时间
                 projectNodeComponent.updateNodeActualDate(projectNodeDOList, newProject.getId());
             } else {
@@ -741,9 +733,11 @@ public class ProjectServiceImpl implements ProjectService {
         if (released && YesOrNoEnum.YES.getCode().equals(newProject.getIsAcceptance())) {
             ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().projectId(newProject.getId()).build();
             List<ProjectAcceptanceDO> list = projectAcceptanceMapper.list(c);
-            if (CollectionUtils.isEmpty(list)) {
+            boolean allWithdraw = list.stream().allMatch(a -> FlowStatusEnum.WITHDRAW.getCode().equals(a.getStatus()));
+            if (CollectionUtils.isEmpty(list)||allWithdraw) {
                 throw new BaseBizRuntimeException("您还没有发起项目验收,请验收通过后再发布");
             }
+
             Map<String, List<ProjectAcceptanceDO>> groupMap = list.stream().collect(Collectors.groupingBy(ProjectAcceptanceDO::getAcceptorId));
             groupMap.forEach((k, v) -> {
                 List<ProjectAcceptanceDO> order = v.stream().sorted(Comparator.comparing(ProjectAcceptanceDO::getCreateDate).reversed()).collect(Collectors.toList());
@@ -752,6 +746,14 @@ public class ProjectServiceImpl implements ProjectService {
                     throw new BaseBizRuntimeException("请确保所有验收人员验收通过后再发布");
                 }
             });
+        }
+        if (released && Integer.valueOf(1).equals(newProject.getIsPlatformPublish())) {
+            if (!projectPublishPlanComponent.linkPublishPlan(newProject.getId())) {
+                throw new BaseBizRuntimeException("请关联发布计划");
+            }
+            if (projectPublishPlanComponent.anyMatchNotFinished(newProject.getId())) {
+                throw new BaseBizRuntimeException("您的发布计划还未结束，请前往发布平台处理");
+            }
         }
     }
 
