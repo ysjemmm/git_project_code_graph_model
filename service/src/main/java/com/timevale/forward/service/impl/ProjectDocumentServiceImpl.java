@@ -102,6 +102,10 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
 
         ProjectDocumentVO projectDocumentVO = ProjectDocumentCopier.INSTANCE.do2Vo(projectDocument);
 
+        List<FileDO> fileDOList = fileComponent.select(projectDocument.getId(), FileTypeEnum.PROJECT_DOCUMENT.getCode());
+        List<FileVO> fileVOList = FileCopier.INSTANCE.transform(fileDOList);
+        projectDocumentVO.setFiles(fileVOList);
+
         return BaseResult.success(projectDocumentVO);
     }
 
