@@ -169,7 +169,7 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
         log.info("项目验收催办,参数:{}", id);
         ProjectAcceptanceDO projectAcceptanceDO = projectAcceptanceMapper.get(id);
         if (!FlowStatusEnum.AUDITING.getCode().equals(projectAcceptanceDO.getStatus())) {
-            throw new BaseBizRuntimeException("状态不是验收中,不能进行催办操作");
+            throw new BaseBizRuntimeException("状态不是验收中,不能进行催办操作,请刷新后重试");
         }
         ProjectDO projectDO = projectMapper.get(projectAcceptanceDO.getProjectId());
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -189,7 +189,7 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
         log.info("项目验收撤回,参数:{}", id);
         ProjectAcceptanceDO projectAcceptanceDO = projectAcceptanceMapper.get(id);
         if (!FlowStatusEnum.AUDITING.getCode().equals(projectAcceptanceDO.getStatus())) {
-            throw new BaseBizRuntimeException("状态不是验收中,不能进行撤回操作");
+            throw new BaseBizRuntimeException("状态不是验收中,不能进行撤回操作,请刷新后重试");
         }
         projectAcceptanceDO.setStatus(FlowStatusEnum.WITHDRAW.getCode());
         projectAcceptanceMapper.update(projectAcceptanceDO);
@@ -210,7 +210,7 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
     private void acceptOrUnAccept(ProjectAcceptanceModifyReq req, boolean accept) {
         ProjectAcceptanceDO projectAcceptanceDO = projectAcceptanceMapper.get(req.getId());
         if (!FlowStatusEnum.AUDITING.getCode().equals(projectAcceptanceDO.getStatus())) {
-            throw new BaseBizRuntimeException("状态不是验收中,不能进行验收操作");
+            throw new BaseBizRuntimeException("状态不是验收中,不能进行验收操作,请刷新后重试");
         }
         ProjectAcceptanceDO o = new ProjectAcceptanceDO();
         o.setId(req.getId());
