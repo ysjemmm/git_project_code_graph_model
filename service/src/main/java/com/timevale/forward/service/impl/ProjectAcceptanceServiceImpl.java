@@ -168,6 +168,9 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
     public BaseResult<Boolean> remind(Long id) {
         log.info("项目验收催办,参数:{}", id);
         ProjectAcceptanceDO projectAcceptanceDO = projectAcceptanceMapper.get(id);
+        if (!FlowStatusEnum.AUDITING.getCode().equals(projectAcceptanceDO.getStatus())) {
+            throw new BaseBizRuntimeException("状态不是验收中,不能进行催办操作");
+        }
         ProjectDO projectDO = projectMapper.get(projectAcceptanceDO.getProjectId());
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String operator = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
@@ -185,6 +188,9 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
     public BaseResult<Boolean> revoke(Long id) {
         log.info("项目验收撤回,参数:{}", id);
         ProjectAcceptanceDO projectAcceptanceDO = projectAcceptanceMapper.get(id);
+        if (!FlowStatusEnum.AUDITING.getCode().equals(projectAcceptanceDO.getStatus())) {
+            throw new BaseBizRuntimeException("状态不是验收中,不能进行撤回操作");
+        }
         projectAcceptanceDO.setStatus(FlowStatusEnum.WITHDRAW.getCode());
         projectAcceptanceMapper.update(projectAcceptanceDO);
 
