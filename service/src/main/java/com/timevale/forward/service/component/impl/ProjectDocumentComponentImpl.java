@@ -24,8 +24,8 @@ public class ProjectDocumentComponentImpl implements ProjectDocumentComponent {
     }
 
     @Override
-    public void insert(ProjectDocument projectDocument) {
-        projectDocumentMapper.insert(projectDocument);
+    public Long insert(ProjectDocument projectDocument) {
+        return projectDocumentMapper.insert(projectDocument);
     }
 
     @Override

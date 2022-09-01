@@ -20,7 +20,7 @@ public interface ProjectDocumentComponent {
      * 新增
      * @param projectDocument
      */
-    void insert(ProjectDocument projectDocument);
+    Long insert(ProjectDocument projectDocument);
 
     /**
      * 更新Selective

@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Param;
  * @date 2022/8/31/031 18:11
  */
 public interface ProjectDocumentMapper {
-    int insert(ProjectDocument record);
+    Long insert(ProjectDocument record);
 
     int insertSelective(ProjectDocument record);
 

@@ -116,13 +116,17 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
             projectDocument.setCreateMan(account.getAlias());
             projectDocument.setCreateManId(account.getAccount());
 
-            projectDocumentComponent.insert(projectDocument);
+            id = projectDocumentComponent.insert(projectDocument);
+
+            fileComponent.add(req.getFileList(), id, FileTypeEnum.PROJECT_DOCUMENT.getCode());
         } else {
             //更新
             projectDocument.setModifyMan(account.getAlias());
             projectDocument.setModifyManId(account.getAccount());
 
             projectDocumentComponent.updateSelective(projectDocument);
+
+            fileComponent.update(req.getFileList(), id, FileTypeEnum.PROJECT_DOCUMENT.getCode());
         }
 
         return BaseResult.success();
