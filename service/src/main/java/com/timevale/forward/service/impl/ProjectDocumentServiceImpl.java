@@ -30,6 +30,7 @@ import org.assertj.core.util.Lists;
 
 import javax.annotation.Resource;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -115,6 +116,8 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
             //新增
             projectDocument.setCreateMan(account.getAlias());
             projectDocument.setCreateManId(account.getAccount());
+            projectDocument.setCreateDate(new Date());
+            projectDocument.setIsDeleted(false);
 
             id = projectDocumentComponent.insert(projectDocument);
 
@@ -123,6 +126,7 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
             //更新
             projectDocument.setModifyMan(account.getAlias());
             projectDocument.setModifyManId(account.getAccount());
+            projectDocument.setModifyDate(new Date());
 
             projectDocumentComponent.updateSelective(projectDocument);
 
