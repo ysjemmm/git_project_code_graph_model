@@ -1,5 +1,7 @@
 package com.timevale.forward.service.impl;
 
+import com.timevale.crm.sdk.common.entity.AccountInfo;
+import com.timevale.crm.sdk.common.utils.SessionLocalUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.BizLabelMapper;
 import com.timevale.forward.dal.dao.LabelMapper;
@@ -7,6 +9,7 @@ import com.timevale.forward.dal.entity.BizLabelDO;
 import com.timevale.forward.dal.entity.LabelDO;
 import com.timevale.forward.facade.api.client.BizLabelService;
 import com.timevale.forward.facade.api.query.BizLabelQueryList;
+import com.timevale.forward.facade.api.request.BizLabelAddListReq;
 import com.timevale.forward.facade.api.request.BizLabelAddReq;
 import com.timevale.forward.facade.api.result.LabelDetailVO;
 import com.timevale.forward.service.component.BizLabelComponent;
@@ -19,6 +22,7 @@ import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -70,6 +74,69 @@ public class BizLabelServiceImpl implements BizLabelService {
         bizLabelComponent.addLog(bizLabelDO.getBizId(), Lists.newArrayList(labelDO.getId()), bizLabelDO.getType(), bizLabelAddReq.getAdd());
 
         return BaseResult.success(true);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> batchAddLabels(BizLabelAddListReq req) {
+        List<Long> labelIdList = req.getLabelIdList();
+        if (CollectionUtils.isEmpty(labelIdList)) {
+            return BaseResult.success(true);
+        }
+
+        log.info("batchMarkOrUnMark, req:{}", req);
+
+        List<LabelDO> labelDOList = labelMapper.getByIds(labelIdList);
+        if (labelDOList.size() < labelIdList.size()) {
+            throw new BaseBizRuntimeException("存在已被删除的标签，请刷新后重试");
+        }
+
+        List<BizLabelDO> list = bizLabelMapper.list(req.getBizId(), req.getType());
+
+        if (CollectionUtils.isNotEmpty(list)) {
+            boolean match;
+            for (Long labelId : labelIdList) {
+                match = list.stream()
+                        .map(BizLabelDO::getLabelId)
+                        .anyMatch(a -> Objects.equals(a, labelId));
+
+                if (match) {
+                    throw new BaseBizRuntimeException("同个标签不能重复添加, 请刷新后重试");
+                }
+            }
+        }
+
+        int currentSize = list.size() + labelDOList.size();
+        if (currentSize > MAX_COUNT) {
+            throw new BaseBizRuntimeException("添加的标签数量不能超过20");
+        }
+
+        List<BizLabelDO> bizLabelDOList = convert2BizLabelDOList(req);
+
+        bizLabelMapper.batchInsert(bizLabelDOList);
+
+        bizLabelComponent.addLog(req.getBizId(), req.getLabelIdList(), req.getType(), true);
+
+        return BaseResult.success(true);
+    }
+
+    private List<BizLabelDO> convert2BizLabelDOList(BizLabelAddListReq req) {
+        AccountInfo accountInfo = SessionLocalUtil.getUserSession();
+        List<BizLabelDO> bizLabelDOList = Lists.newArrayList();
+
+        for (Long labelId : req.getLabelIdList()) {
+            BizLabelDO bizLabelDO = new BizLabelDO();
+            bizLabelDO.setLabelId(labelId);
+            bizLabelDO.setType(req.getType());
+            bizLabelDO.setBizId(req.getBizId());
+            bizLabelDO.setCreateMan(accountInfo.getAlias());
+            bizLabelDO.setCreateManId(accountInfo.getAccount());
+            bizLabelDO.setCreateDate(new Date());
+
+            bizLabelDOList.add(bizLabelDO);
+        }
+
+        return bizLabelDOList;
     }
 
     @Override

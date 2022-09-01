@@ -3,6 +3,7 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BizLabelQueryList;
+import com.timevale.forward.facade.api.request.BizLabelAddListReq;
 import com.timevale.forward.facade.api.request.BizLabelAddReq;
 import com.timevale.forward.facade.api.result.LabelDetailVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -25,6 +26,13 @@ public interface BizLabelService {
      * @return Boolean
      */
     BaseResult<Boolean> markOrUnMark(BizLabelAddReq bizLabelAddReq);
+
+    /**
+     * 批量新增
+     * @param req
+     * @return
+     */
+    BaseResult<Boolean> batchAddLabels(BizLabelAddListReq req);
 
     /**
      * 已选中标签id
