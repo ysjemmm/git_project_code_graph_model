@@ -737,11 +737,12 @@ public class ProjectServiceImpl implements ProjectService {
             if (CollectionUtils.isEmpty(list)||allWithdraw) {
                 throw new BaseBizRuntimeException("您还没有发起项目验收,请验收通过后再发布");
             }
-
+            list=list.stream().filter(a->!FlowStatusEnum.WITHDRAW.getCode().equals(a.getStatus())).collect(Collectors.toList());
             Map<String, List<ProjectAcceptanceDO>> groupMap = list.stream().collect(Collectors.groupingBy(ProjectAcceptanceDO::getAcceptorId));
             groupMap.forEach((k, v) -> {
                 List<ProjectAcceptanceDO> order = v.stream().sorted(Comparator.comparing(ProjectAcceptanceDO::getCreateDate).reversed()).collect(Collectors.toList());
                 ProjectAcceptanceDO last = order.get(0);
+                //去除已撤回的验收,最新一条不是已通过 不能发布
                 if (FlowStatusEnum.AUDITING.getCode().equals(last.getStatus()) || FlowStatusEnum.REJECT.getCode().equals(last.getStatus())) {
                     throw new BaseBizRuntimeException("请确保所有验收人员验收通过后再发布");
                 }
