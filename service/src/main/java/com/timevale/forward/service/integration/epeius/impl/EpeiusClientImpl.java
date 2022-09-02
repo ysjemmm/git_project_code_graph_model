@@ -3,9 +3,11 @@ package com.timevale.forward.service.integration.epeius.impl;
 import com.alibaba.fastjson.JSON;
 import com.timevale.epeius.service.api.FlowService;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
+import com.timevale.epeius.service.model.base.PageResult;
 import com.timevale.epeius.service.model.request.ProcessInstanceRequest;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.epeius.service.model.request.TerminateRequest;
+import com.timevale.epeius.service.model.response.FlowResponse;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.lowcode.support.api.ProcessQueryRpcService;
@@ -16,10 +18,13 @@ import com.timevale.lowcode.support.response.RpcResponse;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.lowcode.support.response.task.TaskHandleUserResponse;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * @author xingyun
@@ -68,6 +73,25 @@ public class EpeiusClientImpl implements EpeiusClient {
             }
             log.info("查询工作流 response: {}", response.getData());
             return response.getData();
+        } catch (Exception e) {
+            log.warn("查询工作流失败: ", e);
+            throw new BaseBizRuntimeException("查询工作流失败");
+        }
+    }
+
+    @Override
+    public FlowResponse getProcessInfoByEpeius(String processInstanceId) {
+        try {
+            log.info("查询工作流 processInstanceId: {}", processInstanceId);
+
+            BaseResult<FlowResponse> result = flowService.getOneProcessInstance(processInstanceId);
+            if (!result.ifSuccess() || Objects.isNull(result.getData())) {
+                log.error("查询工作流 response: {}", result);
+                throw new BaseBizRuntimeException("查询工作流失败");
+            }
+
+            log.info("查询工作流 response: {}", result);
+            return result.getData();
         } catch (Exception e) {
             log.warn("查询工作流失败: ", e);
             throw new BaseBizRuntimeException("查询工作流失败");

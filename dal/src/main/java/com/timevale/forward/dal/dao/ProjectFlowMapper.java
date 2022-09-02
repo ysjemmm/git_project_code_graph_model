@@ -16,13 +16,15 @@ public interface ProjectFlowMapper {
 
     /**
      * 查询
+     *
      * @param id id
      * @return 项目流程信息
      */
-    ProjectFlowDO get(@Param("id") Long id,@Param("flowId") String flowId);
+    ProjectFlowDO get(@Param("id") Long id, @Param("flowId") String flowId);
 
     /**
      * 查询
+     *
      * @param projectId projectId
      * @return 项目流程信息
      */
@@ -39,10 +41,26 @@ public interface ProjectFlowMapper {
 
     /**
      * 根据项目id和流程类型获取
+     *
      * @param projectId 项目id
-     * @param flowType 流程类型
+     * @param flowType  流程类型
      * @return 流程列表
      */
     List<ProjectFlowDO> getByProjectIdAndType(@Param("projectId") Long projectId,
                                               @Param("flowType") Integer flowType);
+
+    /**
+     * 查询所有已完结的流程
+     *
+     * @return
+     */
+    List<ProjectFlowDO> pageCompleteFlow();
+
+    /**
+     * 批量更新
+     *
+     * @param projectFlowDOList
+     */
+    void batchUpdateFlowEndTime(@Param("projectFlowDOList") List<ProjectFlowDO> projectFlowDOList);
+
 }
