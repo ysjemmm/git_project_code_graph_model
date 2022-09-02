@@ -126,9 +126,9 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
             projectDocument.setCreateDate(new Date());
             projectDocument.setIsDeleted(false);
 
-            id = projectDocumentComponent.insert(projectDocument);
+            projectDocumentComponent.insert(projectDocument);
 
-            fileComponent.add(req.getFileList(), id, FileTypeEnum.PROJECT_DOCUMENT.getCode());
+            fileComponent.add(req.getFileList(), projectDocument.getId(), FileTypeEnum.PROJECT_DOCUMENT.getCode());
         } else {
             //更新
             projectDocument.setModifyMan(account.getAlias());
