@@ -94,7 +94,7 @@
     <select id="listAlreadyCreateProject" resultType="java.lang.Long">
         select project_id
         from man_day
-        where week_end_date = #{yesterday,jdbcType=VARCHAR}
+        where week_end_date = #{sunday,jdbcType=VARCHAR}
         <if test="projectList != null and projectList.size() > 0">
             and project_id in
             <foreach collection="projectList" item="item" open="(" separator="," close=")">

@@ -2024,17 +2024,24 @@ public class DateUtil implements DateFormatConst {
         return dateStr(date, "yyyy-MM-dd");
     }
 
-    public static Date getDayBefore(int before) {
+    public static Date getDayBefore(Date date, int before) {
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
+        calendar.setTime(date);
         calendar.add(Calendar.DATE, before);
 
         return calendar.getTime();
     }
 
-    public static String getDayBeforeStr(int before) {
-        Date dayBefore = getDayBefore(before);
+    public static String getDayBeforeStr(Date date, int before) {
+        Date dayBefore = getDayBefore(date, before);
 
         return getShotDate(dayBefore);
+    }
+
+    public static String getLastSunDay() {
+        Date monday = getMondayOfWeek(new Date());
+
+        return getDayBeforeStr(monday, -1);
+
     }
 }

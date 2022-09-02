@@ -18,6 +18,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -47,9 +48,9 @@ public class ProjectManDayRemindJob extends IJobHandler {
             return projectList;
         }
 
-        String yesterday = DateUtil.getDayBeforeStr(-1);
+        String sunday = DateUtil.getLastSunDay();
 
-        List<Long> alreadyProjectIdList = manDayMapper.listAlreadyCreateProject(projectList, yesterday);
+        List<Long> alreadyProjectIdList = manDayMapper.listAlreadyCreateProject(projectList, sunday);
 
         for (ProjectDO projectDO : projectList) {
             if (alreadyProjectIdList.contains(projectDO.getId())) {
