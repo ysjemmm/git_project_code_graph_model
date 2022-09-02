@@ -49,7 +49,7 @@ public class ProjectManDayRemindJob extends IJobHandler {
 
         String yesterday = DateUtil.getDayBeforeStr(-1);
 
-        List<String> alreadyProjectIdList = manDayMapper.listAlreadyCreateProject(projectList, yesterday);
+        List<Long> alreadyProjectIdList = manDayMapper.listAlreadyCreateProject(projectList, yesterday);
 
         for (ProjectDO projectDO : projectList) {
             if (alreadyProjectIdList.contains(projectDO.getId())) {

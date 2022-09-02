@@ -99,6 +99,9 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
     @Override
     public BaseResult<ProjectDocumentVO> queryDocument(Long projectId, Integer type) {
         ProjectDocument projectDocument = projectDocumentComponent.getByProjectId(projectId, type);
+        if (Objects.isNull(projectDocument)) {
+            return BaseResult.success();
+        }
 
         ProjectDocumentVO projectDocumentVO = ProjectDocumentCopier.INSTANCE.do2Vo(projectDocument);
 

@@ -36,5 +36,5 @@ public interface ManDayMapper {
 
     BigDecimal sumProjectActualDays(@Param("projectId") Long projectId);
 
-    List<String> listAlreadyCreateProject(@Param("projectList") List<ProjectDO> projectList, @Param("yesterday") String yesterday);
+    List<Long> listAlreadyCreateProject(@Param("projectList") List<ProjectDO> projectList, @Param("yesterday") String yesterday);
 }
