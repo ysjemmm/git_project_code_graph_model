@@ -176,8 +176,8 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
             Date endTime;
 
             try {
-                FlowResponse flowResponse = epeiusClient.getProcessInfoByEpeius(projectFlowDO.getFlowId());
-                endTime = flowResponse.getEndTime();
+                ProcessResponse processInfo = epeiusClient.getProcessInfo(projectFlowDO.getFlowId());
+                endTime = processInfo.getEndTime();
             } catch (Exception e) {
                 //使用更新时间更新
                 endTime = projectFlowDO.getModifyDate();
@@ -188,7 +188,7 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
             projectFlowDO.setFlowEndDate(endTime);
         }
 
-        projectFlowMapper.batchUpdateFlowEndTime(projectFlowDOList);
+//        projectFlowMapper.batchUpdateFlowEndTime(projectFlowDOList);
 
         return pageInfo.getList();
     }

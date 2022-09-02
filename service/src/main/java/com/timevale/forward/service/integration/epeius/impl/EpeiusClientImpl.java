@@ -80,7 +80,7 @@ public class EpeiusClientImpl implements EpeiusClient {
     }
 
     @Override
-    public FlowResponse getProcessInfoByEpeius(String processInstanceId) {
+    public FlowResponse getOldProcessInfo(String processInstanceId) {
         try {
             log.info("查询工作流 processInstanceId: {}", processInstanceId);
 

@@ -295,7 +295,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             Date endTime;
 
             try {
-                FlowResponse flowResponse = epeiusClient.getProcessInfoByEpeius(projectNodeFlowDO.getFlowId());
+                FlowResponse flowResponse = epeiusClient.getOldProcessInfo(projectNodeFlowDO.getFlowId());
                 endTime = flowResponse.getEndTime();
             } catch (Exception e) {
                 //使用更新时间更新

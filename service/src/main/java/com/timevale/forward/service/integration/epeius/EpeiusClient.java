@@ -32,7 +32,7 @@ public interface EpeiusClient {
      * @param processInstanceId processInstanceId
      * @return 流程信息
      */
-    FlowResponse getProcessInfoByEpeius(String processInstanceId);
+    FlowResponse getOldProcessInfo(String processInstanceId);
 
     /**
      *
