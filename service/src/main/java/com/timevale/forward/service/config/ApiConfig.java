@@ -15,8 +15,9 @@ public class ApiConfig {
     @Bean
     public RestTemplate restTemplate() {
         OkHttp3ClientHttpRequestFactory simpleClientHttpRequestFactory = new OkHttp3ClientHttpRequestFactory();
-        simpleClientHttpRequestFactory.setReadTimeout(10000);
-        simpleClientHttpRequestFactory.setConnectTimeout(10000);
+        simpleClientHttpRequestFactory.setReadTimeout(20000);
+        simpleClientHttpRequestFactory.setWriteTimeout(20000);
+        simpleClientHttpRequestFactory.setConnectTimeout(20000);
         return new RestTemplate(simpleClientHttpRequestFactory);
     }
 }

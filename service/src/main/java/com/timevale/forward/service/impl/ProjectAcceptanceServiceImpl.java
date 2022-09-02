@@ -74,7 +74,7 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
         });
 
         List<ProjectAcceptanceVO> projectAcceptanceVOList = ProjectAcceptanceCopier.INSTANCE.convert(result);
-
+        projectAcceptanceVOList.sort(Comparator.comparing(ProjectAcceptanceVO::getCreateDate));
         return BaseResult.success(projectAcceptanceVOList);
     }
 
