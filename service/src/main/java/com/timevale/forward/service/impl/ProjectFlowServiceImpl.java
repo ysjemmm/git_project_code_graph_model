@@ -259,9 +259,9 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
 
     @Override
     public BaseResult<Void> flushFlowEndDate() {
-//        PageUtil.page((queryBase) -> projectFlowComponent.flushCompleteFlow(queryBase));
-//
-//        PageUtil.page((queryBase) -> projectNodeFlowComponent.flushCompleteFlow(queryBase));
+        PageUtil.page((queryBase) -> projectFlowComponent.flushCompleteFlow(queryBase));
+
+        PageUtil.page((queryBase) -> projectNodeFlowComponent.flushCompleteFlow(queryBase));
 
         return BaseResult.success();
     }

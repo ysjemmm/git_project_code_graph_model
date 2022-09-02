@@ -29,7 +29,7 @@ public class ProjectManDayRemindEvent extends MessageEvent{
     public void run() {
         List<String> receivers = Lists.newArrayList(receiver);
         String title = MessageTitleEnum.PROJECT_MAN_DAY_REMIND.getText();
-        String singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_MANAGEMENT.getText(), bizDemandId);
+        String singleUrl = domainName + String.format(PARAM, TabEnum.PROJECT_MANAGEMENT.getText(), bizDemandId);
         String markdown = String.format(BIZ_DEMAND_TO_RECEIVE_MSG, title, name, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
