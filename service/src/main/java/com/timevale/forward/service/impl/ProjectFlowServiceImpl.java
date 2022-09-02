@@ -25,6 +25,7 @@ import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.component.ProjectLogComponent;
+import com.timevale.forward.service.component.ProjectNodeFlowComponent;
 import com.timevale.forward.service.copy.ProjectFlowCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.utils.PageUtil;
@@ -87,6 +88,9 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
 
     @Value("${domain_name:http://forward-front-forward-itm-v1.projectk8s.tsign.cn/}")
     private String domainName;
+
+    @Resource
+    private ProjectNodeFlowComponent projectNodeFlowComponent;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -255,8 +259,9 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
 
     @Override
     public BaseResult<Void> flushFlowEndDate() {
-//        PageUtil.page(this::flushFlow);
-//        List<ProjectFlowDO> projectFlowDOList = flushFlow(new QueryBase());
+        PageUtil.page((queryBase) -> projectFlowComponent.flushCompleteFlow(queryBase));
+
+        PageUtil.page((queryBase) -> projectNodeFlowComponent.flushCompleteFlow(queryBase));
 
         return BaseResult.success();
     }

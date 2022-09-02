@@ -45,4 +45,7 @@ public interface ProjectNodeFlowMapper {
     List<ProjectNodeFlowDO> getByProjectId(@Param("projectId") Long projectId);
 
 
+    List<ProjectNodeFlowDO> pageCompleteFlow();
+
+    void batchUpdateFlowEndTime(List<ProjectNodeFlowDO> projectNodeFlowDOList);
 }

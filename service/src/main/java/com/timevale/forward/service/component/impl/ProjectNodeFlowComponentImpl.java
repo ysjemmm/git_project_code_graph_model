@@ -1,8 +1,11 @@
 package com.timevale.forward.service.component.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
+import com.timevale.epeius.service.model.response.FlowResponse;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectNodeFlowMapper;
@@ -25,6 +28,7 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.lowcode.support.response.task.TaskHandleUserResponse;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.common.query.QueryBase;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -273,6 +277,39 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         projectNodeFlowDO.setCreateMan(operator);
         projectNodeFlowDO.setCreateManId(userInfo.getId());
         insertProjectNodeRecord(projectId, projectNodes, projectNodeFlowDO);
+    }
+
+    @Override
+    public List flushCompleteFlow(QueryBase queryBase) {
+        PageHelper.startPage(queryBase.getPageNum(), queryBase.getPageSize());
+
+        List<ProjectNodeFlowDO> projectNodeFlowDOList = projectNodeFlowMapper.pageCompleteFlow();
+
+        PageInfo<ProjectNodeFlowDO> pageInfo = new PageInfo<>(projectNodeFlowDOList);
+
+        if (CollectionUtils.isEmpty(projectNodeFlowDOList)) {
+            return projectNodeFlowDOList;
+        }
+
+        for (ProjectNodeFlowDO projectNodeFlowDO : projectNodeFlowDOList) {
+            Date endTime;
+
+            try {
+                FlowResponse flowResponse = epeiusClient.getProcessInfoByEpeius(projectNodeFlowDO.getFlowId());
+                endTime = flowResponse.getEndTime();
+            } catch (Exception e) {
+                //使用更新时间更新
+                endTime = projectNodeFlowDO.getModifyDate();
+            }
+
+            projectNodeFlowDO.setFlowId(null);
+            projectNodeFlowDO.setModifyDate(null);
+            projectNodeFlowDO.setFlowEndDate(endTime);
+        }
+
+        projectNodeFlowMapper.batchUpdateFlowEndTime(projectNodeFlowDOList);
+
+        return pageInfo.getList();
     }
 
     private void insertProjectNodeRecord(Long projectId, List<ProjectNodeDO> projectNodes, ProjectNodeFlowDO projectNodeFlowDO) {
