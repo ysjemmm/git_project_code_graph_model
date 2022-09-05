@@ -41,4 +41,19 @@ public interface BizDomainMapper {
      * @return 业务域DO 列表
      */
     List<BizDomainDO> selectByIdList(@Param("idList") List<Long> idList);
+
+    /**
+     *
+     * @param bizDomainDO bizDomainDO
+     * @return int
+     */
+    int insert(BizDomainDO modelDO);
+
+
+    /**
+     *
+     * @param bizDomainDO bizDomainDO
+     * @return int
+     */
+    int update(BizDomainDO bizDomainDO);
 }

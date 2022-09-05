@@ -26,6 +26,9 @@ public class ModelVO extends ToString {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long productLineId;
 
+    @ApiModelProperty("产品线名称")
+    private String productLineName;
+
     @ApiModelProperty("名称")
     private String name;
 

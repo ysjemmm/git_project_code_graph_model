@@ -2,7 +2,9 @@ package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ModelMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.ModelDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.client.ModelService;
 import com.timevale.forward.facade.api.request.ModelAddReq;
 import com.timevale.forward.facade.api.request.ModelModifyReq;
@@ -13,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author by YangXu
@@ -25,10 +29,21 @@ public class ModelServiceImpl implements ModelService {
     @Resource
     ModelMapper modelMapper;
 
+    @Resource
+    ProductLineMapper productLineMapper;
+
     @Override
     public BaseResult<List<ModelVO>> modelList() {
+        List<ProductLineDO> productLineDOList = productLineMapper.selectAllProductLine();
+        Map<Long, ProductLineDO> productLineMap = productLineDOList.stream()
+                .collect(Collectors.toMap(ProductLineDO::getId, a -> a, (v1, v2) -> v2));
+
         List<ModelDO> modelDOList = modelMapper.selectAllModel();
         List<ModelVO> modelVOList = ModelCopier.INSTANCE.convert(modelDOList);
+        modelVOList.forEach(e -> {
+            ProductLineDO productLineDO = productLineMap.get(e.getProductLineId());
+            e.setProductLineName(productLineDO.getName());
+        });
         return BaseResult.success(modelVOList);
     }
 

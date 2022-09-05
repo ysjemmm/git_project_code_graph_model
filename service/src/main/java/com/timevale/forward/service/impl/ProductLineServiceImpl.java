@@ -65,6 +65,7 @@ public class ProductLineServiceImpl implements ProductLineService {
             BizDomainDO bizDomainDO = bizDomainIdMap.get(e.getBizDomainId());
             e.setBizDomainOwner(bizDomainDO.getOwner());
             e.setBizDomainOwnerId(bizDomainDO.getOwnerId());
+            e.setBizDomainName(bizDomainDO.getName());
         });
 
         return BaseResult.success(productLineVOList);

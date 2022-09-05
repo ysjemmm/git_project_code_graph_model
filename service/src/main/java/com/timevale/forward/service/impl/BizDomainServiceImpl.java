@@ -2,15 +2,23 @@ package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.BizDomainMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.entity.BizDomainDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.client.BizDomainService;
+import com.timevale.forward.facade.api.request.BizDomainAddReq;
+import com.timevale.forward.facade.api.request.BizDomainModifyReq;
 import com.timevale.forward.facade.api.result.BizDomainVO;
 import com.timevale.forward.service.copy.BizDomainCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author by YangXu
@@ -24,9 +32,45 @@ public class BizDomainServiceImpl implements BizDomainService {
     @Resource
     BizDomainMapper bizDomainMapper;
 
+    @Resource
+    ProductLineMapper productLineMapper;
+
     @Override
     public BaseResult<List<BizDomainVO>> bizDomainList() {
         List<BizDomainVO> result = BizDomainCopier.INSTANCE.convert(bizDomainMapper.selectAllBizDomain());
         return BaseResult.success(result);
+    }
+
+    @Override
+    public BaseResult<Boolean> add(BizDomainAddReq bizDomainAddReq) {
+        BizDomainDO bizDomainDO = BizDomainCopier.INSTANCE.convert(bizDomainAddReq);
+        bizDomainMapper.insert(bizDomainDO);
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> update(BizDomainModifyReq bizDomainModifyReq) {
+        BizDomainDO bizDomainDO = BizDomainCopier.INSTANCE.convert(bizDomainModifyReq);
+        bizDomainMapper.update(bizDomainDO);
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> delOrUnDelete(Long bizDomainId) {
+        BizDomainDO bizDomainDO = bizDomainMapper.selectById(bizDomainId);
+        if(!bizDomainDO.getIsDeleted()){
+            List<ProductLineDO> productLineDOList = productLineMapper.getBizDomainId(bizDomainId);
+            if(CollectionUtils.isNotEmpty(productLineDOList)){
+                List<String> names = productLineDOList.stream().map(ProductLineDO::getName).collect(Collectors.toList());
+                throw new BaseBizRuntimeException("该业务域下存在产品线:"+names+",不能删除");
+            }
+            bizDomainDO.setIsDeleted(true);
+            bizDomainMapper.update(bizDomainDO);
+            return BaseResult.success(true);
+        }
+        //恢复
+        bizDomainDO.setIsDeleted(false);
+        bizDomainMapper.update(bizDomainDO);
+        return BaseResult.success(true);
     }
 }
