@@ -136,8 +136,11 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("是否是pmo")
     private Boolean isPMO;
 
-    @ApiModelProperty("项目暂停/作废原因")
+    @ApiModelProperty("项目暂停原因")
     private String suspendReason;
+
+    @ApiModelProperty("项目作废原因")
+    private String invalidReason;
 
     @ApiModelProperty("是否需要项目验收")
     private Integer isAcceptance;
