@@ -205,7 +205,8 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<Boolean> updateStatus(ProjectUpdateStatusReq req) {
         Long projectId = req.getProjectId();
         Integer type = req.getType();
-        String reason = req.getSuspendReason();
+        String suspendReason = req.getSuspendReason();
+        String invalidReason = req.getInvalidReason();
         log.info("项目暂停或作废接收参数:{},{}", projectId, type);
         if (!ProjectStatusEnum.SUSPEND.getCode().equals(type)
                 && !ProjectStatusEnum.INVALID.getCode().equals(type)) {
@@ -224,7 +225,8 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO updateStatusDO = new ProjectDO();
         updateStatusDO.setId(projectId);
         updateStatusDO.setStatus(type);
-        updateStatusDO.setSuspendReason(reason);
+        updateStatusDO.setSuspendReason(suspendReason);
+        updateStatusDO.setInvalidReason(invalidReason);
         projectMapper.update(updateStatusDO);
 
         //修改产品需求状态
@@ -239,6 +241,8 @@ public class ProjectServiceImpl implements ProjectService {
         //记录暂停/作废原因更新日志
         String field = ProjectStatusEnum.SUSPEND.getCode().equals(type) ?
                 BizChangeLogFieldEnum.SUSPEND_REASON.getText() : BizChangeLogFieldEnum.INVALID_REASON.getText();
+        String reason = ProjectStatusEnum.SUSPEND.getCode().equals(type) ?
+                suspendReason : invalidReason;
         projectLogComponent.addLogWhenContentChange(CommonConstant.NULL, reason, projectId, field);
         // 更新任务状态
         taskComponent.updateStatusAsProjectStatusChange(projectId, type, false);
