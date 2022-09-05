@@ -62,5 +62,5 @@ public class BizDemandLinkProductDemandVO extends ToString {
     private String statusText;
 
     @ApiModelProperty("标签名称")
-    private List<String> labelNames;
+    private List<BizLabelSimpleVO> labelNames;
 }
