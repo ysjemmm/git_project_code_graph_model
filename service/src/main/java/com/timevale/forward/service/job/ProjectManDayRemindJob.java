@@ -37,7 +37,11 @@ public class ProjectManDayRemindJob extends IJobHandler {
 
     @Override
     public ReturnT<String> execute(String s) throws Exception {
+        log.info("projectManDayRemindJob start");
+
         PageUtil.page(this::page);
+
+        log.info("projectManDayRemindJob end");
 
         return null;
     }
