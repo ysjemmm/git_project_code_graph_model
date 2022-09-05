@@ -188,7 +188,7 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
             projectFlowDO.setFlowEndDate(endTime);
         }
 
-//        projectFlowMapper.batchUpdateFlowEndTime(projectFlowDOList);
+        projectFlowMapper.batchUpdateFlowEndTime(projectFlowDOList);
 
         return pageInfo.getList();
     }
