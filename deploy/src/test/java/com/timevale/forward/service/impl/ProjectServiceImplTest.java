@@ -82,6 +82,25 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
     @Mock
     private TaskProductDemandComponent taskProductDemandComponent;
 
+    @Mock
+    private ProjectLogComponent projectLogComponent;
+
+    @Mock
+    private ProductDemandLogComponent productDemandLogComponent;
+
+    @Mock
+    private ProjectFlowMapper projectFlowMapper;
+
+    @Mock
+    private ProjectPublishPlanComponent projectPublishPlanComponent;
+
+    @Mock
+    private TaskProductDemandMapper taskProductDemandMapper;
+
+    @Mock
+    private BugOfflineComponent bugOfflineComponent;
+
+
     @Test
     public void testList() {
         UserInfo userInfo = new UserInfo();
@@ -115,7 +134,7 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
         projectProductDemandDO.setProductDemandId(1L);
         when(projectProductDemandMapper.getByProjectId(any())).thenReturn(Collections.singletonList(projectProductDemandDO));
 
-        when(productDemandMapper.updateByIds(any(), any(),any())).thenReturn(1);
+        when(productDemandMapper.updateByIds(null,null,true)).thenReturn(1);
 
         List<Long> list = new ArrayList<>();
         list.add(1L);

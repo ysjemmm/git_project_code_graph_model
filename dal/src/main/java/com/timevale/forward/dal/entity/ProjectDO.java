@@ -127,4 +127,9 @@ public class ProjectDO extends BaseDO {
      */
     private String invalidReason;
 
+    /**
+     * 是否需要验收
+     */
+    private Integer isAcceptance;
+
 }

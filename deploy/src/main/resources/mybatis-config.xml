@@ -105,5 +105,6 @@
         <mapper resource="mapper/TrackImportLogMapper.xml" />
         <mapper resource="mapper/ManDayReportMapper.xml" />
         <mapper resource="mapper/ProjectDocumentMapper.xml" />
+        <mapper resource="mapper/ProjectAcceptanceMapper.xml" />
     </mappers>
 </configuration>

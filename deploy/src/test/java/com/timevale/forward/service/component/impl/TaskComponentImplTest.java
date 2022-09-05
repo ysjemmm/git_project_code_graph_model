@@ -19,6 +19,7 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.Test;
@@ -75,6 +76,9 @@ public class TaskComponentImplTest extends AbstractTestNGSpringContextTests {
     @Mock
     private PersonComponent personComponent;
 
+    @Mock
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
 
     @Test
     public void testPage() {
@@ -86,7 +90,7 @@ public class TaskComponentImplTest extends AbstractTestNGSpringContextTests {
         when(personMapper.getMainIds(any(),any(),any())).thenReturn(taskIds);
         when(taskMapper.getByProjectIds(any(),any())).thenReturn(taskIds);
         when(taskMapper.getByProductLineIds(any(),any())).thenReturn(taskIds);
-        when(taskMapper.list(any())).thenReturn(Collections.singletonList(new TaskDO(){{setProjectId(1L);}}));
+        when(taskMapper.list(any())).thenReturn(Collections.singletonList(new TaskDO(){{setProjectId(1L);setPlanEndDate(new Date());}}));
         when(personMapper.get(any(),any())).thenReturn(Collections.singletonList(new PersonDO(){{setMainId(1L);}}));
         when(productLineMapper.selectByIds(any())).thenReturn(Collections.singletonList(new ProductLineDO(){{setName("");}}));
         when(projectMapper.getByIds(any())).thenReturn(Collections.singletonList(new ProjectDO(){{setId(1L);}}));

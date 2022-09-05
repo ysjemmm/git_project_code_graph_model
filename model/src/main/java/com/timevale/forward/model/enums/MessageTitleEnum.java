@@ -55,7 +55,19 @@ public enum MessageTitleEnum {
 
     PROJECT_NODE_DELAY_UNINPUT("项目节点逾期未录入通知"),
 
-    PROJECT_MAN_DAY_REMIND("您收到一条项目人天填报提醒");
+    PROJECT_MAN_DAY_REMIND("您收到一条项目人天填报提醒"),
+
+    //项目验收
+    PROJECT_ACCEPTANCE_START("项目验收发起通知"),
+
+    PROJECT_ACCEPTANCE_REMIND("项目验收催办通知"),
+
+    PROJECT_ACCEPTANCE_REVOKE("项目验收撤回通知"),
+
+    PROJECT_ACCEPTANCE_ACCEPT("项目验收通过通知"),
+
+    PROJECT_ACCEPTANCE_UNACCEPT("项目验收不通过通知"),
+    ;
 
     private String text;
 

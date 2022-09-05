@@ -15,11 +15,15 @@ import com.timevale.forward.facade.api.request.BizDemandLinkProductDemandReq;
 import com.timevale.forward.facade.api.request.BizDemandUnlinkProductDemandReq;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.BizDemandPlanReleaseDateMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
@@ -59,6 +63,12 @@ public class BizDemandProductDemandServiceImplTest extends AbstractTestNGSpringC
 
     @Mock
     private InnerUserPersonClient innerUserPersonClient;
+
+    @Mock
+    private BizDemandLogComponent bizDemandLogComponent;
+
+    @Mock
+    private MessageEventPublisher messageEventPublisher;
 
     @Test
     public void testLinkedProductDemandList() {
@@ -115,7 +125,18 @@ public class BizDemandProductDemandServiceImplTest extends AbstractTestNGSpringC
         bizDemandLinkProductDemandReq.setId(1L);
         bizDemandLinkProductDemandReq.setProductDemandIdList(Arrays.asList(1L, 2L));
 
-        assert bizDemandProductDemandService.linkProductDemand(bizDemandLinkProductDemandReq).ifSuccess();
+        doNothing().when(bizDemandLogComponent).addLogWhenModifyData(any(),any());
+
+        MockedConstruction<BizDemandPlanReleaseDateMsgEvent> construction = mockConstruction(BizDemandPlanReleaseDateMsgEvent.class);
+        construction.constructed();
+        doNothing().when(messageEventPublisher).publish(any());
+        try {
+            assert bizDemandProductDemandService.linkProductDemand(bizDemandLinkProductDemandReq).ifSuccess();
+        } finally {
+            construction.close();
+        }
+
+
     }
 
     @Test
@@ -147,7 +168,14 @@ public class BizDemandProductDemandServiceImplTest extends AbstractTestNGSpringC
         bizDemandUnlinkProductDemandReq.setBizDemandId(1L);
         bizDemandUnlinkProductDemandReq.setProductDemandId(1L);
 
-        assert bizDemandProductDemandService.unlinkProductDemand(bizDemandUnlinkProductDemandReq).ifSuccess();
+        MockedConstruction<BizDemandPlanReleaseDateMsgEvent> construction = mockConstruction(BizDemandPlanReleaseDateMsgEvent.class);
+        construction.constructed();
+        doNothing().when(messageEventPublisher).publish(any());
+        try {
+            assert bizDemandProductDemandService.unlinkProductDemand(bizDemandUnlinkProductDemandReq).ifSuccess();
+        } finally {
+            construction.close();
+        }
     }
 
     @Test

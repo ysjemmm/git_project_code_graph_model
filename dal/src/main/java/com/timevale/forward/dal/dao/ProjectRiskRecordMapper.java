@@ -19,6 +19,13 @@ public interface ProjectRiskRecordMapper {
     int batchInsert(List<ProjectRiskRecordDO> projectRiskRecordDOList);
 
 
-    List<ProjectRiskRecordDO> get(@Param("mainId") Long mainId, @Param("type") Integer type);
+    /**
+     *
+     * @param mainId mainId
+     * @param type  type
+     * @param date date
+     * @return List
+     */
+    List<ProjectRiskRecordDO> get(@Param("mainId") Long mainId, @Param("type") Integer type,@Param("date") String date);
 
 }

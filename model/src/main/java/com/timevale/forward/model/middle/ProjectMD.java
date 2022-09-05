@@ -89,4 +89,7 @@ public class ProjectMD extends BaseMD{
 
     @FieldCompare(fieldName = "项目暂停状态")
     private String suspendReason;
+
+    @FieldCompare(fieldName = "是否需要项目验收",enumClass = YesOrNoEnum.class)
+    private Integer isAcceptance;
 }
