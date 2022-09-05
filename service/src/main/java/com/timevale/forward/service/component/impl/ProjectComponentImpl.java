@@ -254,6 +254,11 @@ public class ProjectComponentImpl implements ProjectComponent {
             if (CollectionUtils.isNotEmpty(pds)) {
                 String pdName = pds.stream().map(PersonDO::getUserName).collect(Collectors.joining(","));
                 a.setPdName(pdName);
+
+                List<String> pdIdList = pds.stream()
+                        .map(PersonDO::getUserId)
+                        .collect(Collectors.toList());
+                a.setPdId(pdIdList);
             }
 
             List<PersonDO> teamMembers = teamMemberMap.get(a.getId());
