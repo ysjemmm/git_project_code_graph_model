@@ -126,7 +126,7 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
             projectDocument.setCreateMan(account.getAlias());
             projectDocument.setCreateManId(account.getAccount());
             projectDocument.setCreateDate(current);
-            projectDocument.setModifyMan(account.getAlias());
+            projectDocument.setModifyMan(account.getAlias() + CommonConstant.JOIN_LINE + account.getName());
             projectDocument.setModifyManId(account.getAccount());
             projectDocument.setModifyDate(current);
             projectDocument.setIsDeleted(false);
