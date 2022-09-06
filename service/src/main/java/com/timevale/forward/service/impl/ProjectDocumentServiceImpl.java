@@ -121,9 +121,14 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
 
         if (Objects.isNull(id)) {
             //新增
+            Date current = new Date();
+
             projectDocument.setCreateMan(account.getAlias());
             projectDocument.setCreateManId(account.getAccount());
-            projectDocument.setCreateDate(new Date());
+            projectDocument.setCreateDate(current);
+            projectDocument.setModifyMan(account.getAlias());
+            projectDocument.setModifyManId(account.getAccount());
+            projectDocument.setModifyDate(current);
             projectDocument.setIsDeleted(false);
 
             projectDocumentComponent.insert(projectDocument);
