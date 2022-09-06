@@ -18,6 +18,7 @@ import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.ImprovementMeasureComponent;
+import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.component.impl.PersonComponentImpl;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
@@ -52,27 +53,23 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
     @Resource
     private TroubleTicketMapper troubleTicketMapper;
-
     @Resource
     private FileComponent fileComponent;
-
     @Resource
     private ImprovementMeasureMapper improvementMeasureMapper;
-
     @Resource
     private ImprovementMeasureComponent improvementMeasureComponent;
-
     @Resource
     private PersonComponentImpl personComponent;
-
     @Resource
     private PersonMapper personMapper;
-
     @Resource
     private ProductLineMapper productLineMapper;
-
     @Resource
     private BizDemandComponent bizDemandComponent;
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -114,7 +111,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
         // 故障单信息
         TroubleTicketDO newTroubleTicketDO = TroubleTicketCopier.INSTANCE.convert(troubleTicketModifyReq);
-        troubleTicketMapper.update(newTroubleTicketDO);
+        troubleTicketMapper.allUpdate(newTroubleTicketDO);
 
         // 修改处理人
         List<PersonAddReq> handlerList = troubleTicketModifyReq.getHandlerList();
@@ -145,6 +142,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         // 填充描述数据
         ticketDetailVO.setProductLineName(productLineDO.getName());
         ticketDetailVO.setTypeName(TroubleTicketTypeEnum.getTextByCode(ticketDetailVO.getType()));
+        ticketDetailVO.setCauseName(TroubleTicketCauseEnum.getTextByCode(ticketDetailVO.getCause()));
         ticketDetailVO.setReasonName(TroubleTicketReasonEnum.getTextByCode(troubleTicketDO.getReason()));
         ticketDetailVO.setTroubleRankName(TroubleTicketRankEnum.getTextByCode(ticketDetailVO.getTroubleRank()));
         ticketDetailVO.setDuringTimeName(TroubleTicketDuringTimeEnum.getTextByCode(ticketDetailVO.getDuringTime()));
@@ -242,8 +240,22 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
             troubleTicketCondition.setDutyTeamList(Lists.newArrayList(deptNodeMap.keySet()));
         }
 
+        // 列表排序规则
+        String collation;
+        String orderFiled = troubleTicketQueryList.getOrderFiled();
+        Integer orderCollation = troubleTicketQueryList.getOrderCollation();
+        if (Objects.equals(orderFiled, "troubleRank")) {
+            collation = "FIELD(COALESCE(trouble_rank, -20), -20, -10, 50, 40, 30, 20, 10, 0)";
+            if (Objects.equals(OrderCollationEnum.DESC.getCode(), orderCollation)) {
+                collation += "desc";
+            }
+            collation += ", modify_date desc, id desc";
+        } else {
+            collation = sqlOrderComponent.build(orderFiled, orderCollation);
+        }
+
         // 分页查询
-        PageHelper.startPage(troubleTicketQueryList.pageNum, troubleTicketQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        PageHelper.startPage(troubleTicketQueryList.pageNum, troubleTicketQueryList.pageSize, collation);
         List<TroubleTicketListDO> troubleTicketDOList = troubleTicketMapper.selectList(troubleTicketCondition);
 
         if(CollectionUtils.isEmpty(troubleTicketDOList)){

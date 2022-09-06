@@ -15,7 +15,7 @@ public enum PlatformTypeEnum {
     /**
      * 项目流程状态
      */
-    IOS(0, "IOS"),
+    IOS(0, "iOS"),
 
     ANDROID(1, "Android"),
 

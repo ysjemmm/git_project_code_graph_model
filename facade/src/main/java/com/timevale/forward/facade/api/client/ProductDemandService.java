@@ -69,18 +69,18 @@ public interface ProductDemandService {
     /**
      * 查询满足条件的产品需求列表
      *
-     * @param productDemandLinkProjectQueryList 产品需求id
+     * @param query 产品需求id
      * @return 列表
      */
-    BaseResult<PageQueryResult<ProjectVO>> matchProjectList(ProductDemandLinkProjectQueryList productDemandLinkProjectQueryList);
+    BaseResult<PageQueryResult<ProjectVO>> matchProjectList(ProductDemandLinkProjectQueryList query);
 
     /**
      * 查询满足条件的业务需求列表
      *
-     * @param productDemandLinkBizDemandQueryList 产品需求id
+     * @param query 产品需求id
      * @return 列表
      */
-    BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(ProductDemandLinkBizDemandQueryList productDemandLinkBizDemandQueryList);
+    BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(ProductDemandLinkBizDemandQueryList query);
 
     /**
      * 关联业务需求
@@ -101,10 +101,10 @@ public interface ProductDemandService {
     /**
      * 产品需求-业务需求清单
      *
-     * @param productBizDemandQueryList 产品需求id
+     * @param query 产品需求id
      * @return 列表
      */
-    BaseResult<PageQueryResult<BizDemandVO>> linkBizDemandList(ProductBizDemandQueryList productBizDemandQueryList);
+    BaseResult<PageQueryResult<BizDemandVO>> linkBizDemandList(ProductBizDemandQueryList query);
 
     /**
      * 产品需求-批量转交-接收人

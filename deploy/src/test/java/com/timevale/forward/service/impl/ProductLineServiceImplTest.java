@@ -1,8 +1,10 @@
 package com.timevale.forward.service.impl;
 
 import com.timevale.forward.dal.dao.BizDomainMapper;
+import com.timevale.forward.dal.dao.ModelMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.BizDomainDO;
+import com.timevale.forward.dal.entity.ModelDO;
 import com.timevale.forward.dal.entity.ProductLineDO;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -10,6 +12,7 @@ import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.Test;
+import org.testng.collections.Lists;
 
 import java.util.Collections;
 
@@ -31,6 +34,9 @@ public class ProductLineServiceImplTest extends AbstractTestNGSpringContextTests
     @Mock
     private BizDomainMapper bizDomainMapper;
 
+    @Mock
+    ModelMapper modelMapper;
+
     @Test
     public void testProductLineList() {
         BizDomainDO bizDomainDO = new BizDomainDO();
@@ -51,6 +57,16 @@ public class ProductLineServiceImplTest extends AbstractTestNGSpringContextTests
         when(productLineMapper.get(any())).thenReturn(Collections.singletonList(productLineDO));
 
         assert productLineService.getProductLines(1L).ifSuccess();
+    }
+
+    @Test
+    public void testListProductLineModes() {
+        ProductLineDO productLineDO = new ProductLineDO();
+        productLineDO.setName("www");
+        when(productLineMapper.selectAllProductLine()).thenReturn(Lists.newArrayList(new ProductLineDO()));
+        when(modelMapper.selectAllModel()).thenReturn(Lists.newArrayList(new ModelDO(){{setProductLineId(1L);}}));
+
+        assert productLineService.listProductLineModes().ifSuccess();
     }
 
 

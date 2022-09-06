@@ -117,4 +117,9 @@ public class ProjectDO extends BaseDO {
      */
     private Date pjEstablishPublishDate;
 
+    /**
+     * 是否需要验收
+     */
+    private Integer isAcceptance;
+
 }

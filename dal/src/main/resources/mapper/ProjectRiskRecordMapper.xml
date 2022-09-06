@@ -18,6 +18,7 @@
         <where>
             <if test="mainId!=null">and main_id = #{mainId}</if>
             <if test="type!=null">and type = #{type}</if>
+            and create_date>= #{date}
             and is_deleted=false
         </where>
     </select>

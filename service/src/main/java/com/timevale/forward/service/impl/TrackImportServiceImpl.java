@@ -74,9 +74,6 @@ public class TrackImportServiceImpl implements TrackImportService {
     @Resource
     private TrackImportComponent trackImportComponent;
 
-    @Value("${templateFileId:d3a98af8ea754d11ae27d50b563d9c1f}")
-    private String templateFileId;
-
     @Override
     public BaseResult<Boolean> importEvent(TrackImportReq trackImportReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -290,7 +287,7 @@ public class TrackImportServiceImpl implements TrackImportService {
             log.error("[template]:文件上传失败");
             throw new BaseBizRuntimeException("模板文件创建失败");
         } finally {
-            if (template != null && !template.delete()) {
+            if (!template.delete()) {
                 log.error("[TrackImportServiceImpl][template]:模板临时文件删除失败");
             }
         }
