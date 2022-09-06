@@ -44,6 +44,12 @@ public class ProductLineVO extends ToString {
     @ApiModelProperty("业务域负责人id")
     private String bizDomainOwnerId;
 
+    @ApiModelProperty("产品线bug负责人")
+    private String bugOnlineOwner;
+
+    @ApiModelProperty("产品线bug负责人id")
+    private String bugOnlineOwnerId;
+
     @ApiModelProperty("是否废弃")
     private Boolean isDeleted;
 }

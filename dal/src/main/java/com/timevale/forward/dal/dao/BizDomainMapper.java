@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.BizDomainCondition;
 import com.timevale.forward.dal.entity.BizDomainDO;
 import org.apache.ibatis.annotations.Param;
 
@@ -47,7 +48,7 @@ public interface BizDomainMapper {
      * @param bizDomainDO bizDomainDO
      * @return int
      */
-    int insert(BizDomainDO modelDO);
+    int insert(BizDomainDO bizDomainDO);
 
 
     /**
@@ -56,4 +57,12 @@ public interface BizDomainMapper {
      * @return int
      */
     int update(BizDomainDO bizDomainDO);
+
+    /**
+     * 获取业务域
+     *
+     * @param condition condition
+     * @return {@link BizDomainDO }
+     */
+    List<BizDomainDO> selectByCondition(BizDomainCondition condition);
 }

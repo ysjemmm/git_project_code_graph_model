@@ -1,18 +1,25 @@
 package com.timevale.forward.service.impl;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.BizDomainCondition;
 import com.timevale.forward.dal.dao.BizDomainMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.BizDomainDO;
 import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.client.BizDomainService;
+import com.timevale.forward.facade.api.query.BizDomainQueryList;
 import com.timevale.forward.facade.api.request.BizDomainAddReq;
 import com.timevale.forward.facade.api.request.BizDomainModifyReq;
 import com.timevale.forward.facade.api.result.BizDomainVO;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDomainCopier;
+import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
+import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 
@@ -39,6 +46,20 @@ public class BizDomainServiceImpl implements BizDomainService {
     public BaseResult<List<BizDomainVO>> bizDomainList() {
         List<BizDomainVO> result = BizDomainCopier.INSTANCE.convert(bizDomainMapper.selectAllBizDomain());
         return BaseResult.success(result);
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<BizDomainVO>> bizDomainList(BizDomainQueryList bizDomainQueryList) {
+        BizDomainCondition condition = BizDomainCopier.INSTANCE.convert(bizDomainQueryList);
+        PageHelper.startPage(bizDomainQueryList.pageNum, bizDomainQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByCondition(condition);
+        List<BizDomainVO> bizDomainVOList = BizDomainCopier.INSTANCE.convert(bizDomainDOList);
+        PageInfo<BizDomainDO> pageInfo = new PageInfo<>(bizDomainDOList);
+        PageQueryResult<BizDomainVO> pageQueryResult = new PageQueryResult<>();
+        pageQueryResult.setResultList(bizDomainVOList);
+        ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
+        return BaseResult.success(pageQueryResult);
     }
 
     @Override

@@ -1,6 +1,8 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.ModelCondition;
 import com.timevale.forward.dal.entity.ModelDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -54,5 +56,13 @@ public interface ModelMapper {
      */
     int update(ModelDO modelDO);
 
+
+    /**
+     * 获取模块
+     *
+     * @param name name
+     * @return {@link ProductLineDO }
+     */
+    List<ModelDO> selectByCondition(ModelCondition condition);
 
 }

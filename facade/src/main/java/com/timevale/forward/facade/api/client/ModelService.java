@@ -2,12 +2,13 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.query.ModelQueryList;
 import com.timevale.forward.facade.api.request.ModelAddReq;
 import com.timevale.forward.facade.api.request.ModelModifyReq;
 import com.timevale.forward.facade.api.result.ModelVO;
+import com.timevale.forward.facade.api.result.ProductLineVO;
 import com.timevale.mandarin.common.annotation.RestClient;
-
-import java.util.List;
+import com.timevale.mandarin.common.result.PageQueryResult;
 
 /**
  * @author by YangXu
@@ -21,7 +22,7 @@ public interface ModelService {
      *
      * @return 返回产品线列表
      */
-    BaseResult<List<ModelVO>> modelList();
+    BaseResult<PageQueryResult<ModelVO>> modelList(ModelQueryList modelQueryList);
     /**
      * 新增
      *

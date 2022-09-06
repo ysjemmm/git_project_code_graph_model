@@ -58,4 +58,20 @@
         </where>
     </update>
 
+    <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.BizDomainDO">
+        select id, name, owner, owner_id,is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        from biz_domain
+        <where>
+            <if test="name != null and name!=''">
+                name like concat('%',#{name},'%')
+            </if>
+            <if test="ownerIds != null and ownerIds.size() > 0">
+                AND owner_id IN
+                <foreach collection="ownerIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
 </mapper>

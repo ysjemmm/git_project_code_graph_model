@@ -95,4 +95,26 @@
             </if>
         </where>
     </select>
+
+    <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.ProductLineDO">
+        select id, biz_domain_id, name, owner, owner_id,bug_online_owner_id,bug_online_owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        from product_line
+        <where>
+            <if test="name != null and name!=''">
+                name like concat('%',#{name},'%')
+            </if>
+            <if test="ownerIds != null and ownerIds.size() > 0">
+                AND owner_id IN
+                <foreach collection="ownerIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="bugOnlineOwnerIds != null and bugOnlineOwnerIds.size() > 0">
+                AND bug_online_owner_id IN
+                <foreach collection="bugOnlineOwnerIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
 </mapper>

@@ -1,6 +1,8 @@
 package com.timevale.forward.service.copy;
 
+import com.timevale.forward.dal.condition.ModelCondition;
 import com.timevale.forward.dal.entity.ModelDO;
+import com.timevale.forward.facade.api.query.ModelQueryList;
 import com.timevale.forward.facade.api.request.ModelAddReq;
 import com.timevale.forward.facade.api.request.ModelModifyReq;
 import com.timevale.forward.facade.api.result.ModelVO;
@@ -41,6 +43,13 @@ public interface ModelCopier {
      * @return return
      */
     ModelDO convert(ModelModifyReq modelModifyReq);
+
+    /**
+     *
+     * @param modelModifyReq modelModifyReq
+     * @return return
+     */
+    ModelCondition convert(ModelQueryList modelQueryList);
 
 
 }
