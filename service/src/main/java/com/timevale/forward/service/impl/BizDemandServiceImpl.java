@@ -999,6 +999,16 @@ public class BizDemandServiceImpl implements BizDemandService {
         return BaseResult.success(true);
     }
 
+    @Override
+    public BaseResult<List<BizDemandSimpleVO>> getBizDemandByIds(BizDemandGetReq bizDemandGetReq) {
+        if(CollectionUtils.isEmpty(bizDemandGetReq.getIds())){
+            return BaseResult.success(Lists.emptyList());
+        }
+        List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(bizDemandGetReq.getIds());
+        List<BizDemandSimpleVO> bizDemandVOList = bizDemandDOList.stream().map(BizDemandCopier.INSTANCE::convertT).collect(Collectors.toList());
+        return BaseResult.success(bizDemandVOList);
+    }
+
     /**
      * 新增业务需求的时候特殊处理线上bug的方法
      */

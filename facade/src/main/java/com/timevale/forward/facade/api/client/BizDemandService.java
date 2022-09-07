@@ -4,10 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.BizDemandDetailVO;
-import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
-import com.timevale.forward.facade.api.result.QueryResultVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 
 import java.util.List;
@@ -134,5 +131,13 @@ public interface BizDemandService {
      * @return Boolean
      */
     BaseResult<Boolean> reSubmit(BizDemandResubmitReq bizDemandResubmitReq);
+
+    /**
+     * 通过id获取业务需求,客开项目用
+     *
+     * @param bizDemandGetReq 业务需求id
+     * @return 多个业务需求详情
+     */
+    BaseResult<List<BizDemandSimpleVO>> getBizDemandByIds(BizDemandGetReq bizDemandGetReq);
 
 }
