@@ -33,6 +33,7 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -277,8 +278,10 @@ public class ProjectServiceImpl implements ProjectService {
 
         projectLogComponent.addLogWhenStatusChange(oldStatus, projectDO.getStatus(), projectId, ButtonActionEnum.ENABLE.getText());
         //记录开启日志更新日志
-        projectLogComponent.addLogWhenContentChange(oldReason, CommonConstant.NULL, projectId,
-                BizChangeLogFieldEnum.SUSPEND_REASON.getText());
+        if (StringUtils.isNotBlank(oldReason)) {
+            projectLogComponent.addLogWhenContentChange(oldReason, CommonConstant.NULL, projectId,
+                    BizChangeLogFieldEnum.SUSPEND_REASON.getText());
+        }
 
         return BaseResult.success(true);
     }
