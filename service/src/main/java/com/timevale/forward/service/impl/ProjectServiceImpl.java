@@ -264,11 +264,12 @@ public class ProjectServiceImpl implements ProjectService {
         }
         Integer oldStatus = projectDO.getStatus();
         String oldReason = projectDO.getSuspendReason();
+        projectDO.setSuspendReason(null);
+
         List<ProjectNodeDO> projectNode = projectNodeComponent.get(projectId);
         log.info("项目开启,节点信息:projectNode={}", projectNode);
         if (CollectionUtils.isEmpty(projectNode)) {
             projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
-            projectDO.setSuspendReason(null);
             projectMapper.fullUpdateById(projectDO);
         } else {
             fillInfoWhenEnable(projectNode, projectDO);
