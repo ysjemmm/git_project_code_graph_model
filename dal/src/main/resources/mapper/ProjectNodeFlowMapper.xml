@@ -54,7 +54,7 @@
         where flow_type = 100
         and status in (-1, 1, 2)
         and is_deleted = false
-        and flow_end_date is null
+<!--        and flow_end_date is null-->
         <!--          and project_id = 1642-->
     </select>
 
