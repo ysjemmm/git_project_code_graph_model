@@ -87,7 +87,7 @@ public class ProjectMD extends BaseMD{
     @FieldCompare(fieldName = "立项预期上线时间")
     private Date pjEstablishPublishDate;
 
-    @FieldCompare(fieldName = "项目暂停状态")
+    @FieldCompare(fieldName = "项目暂停原因")
     private String suspendReason;
 
     @FieldCompare(fieldName = "是否需要项目验收",enumClass = YesOrNoEnum.class)
