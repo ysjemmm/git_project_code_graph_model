@@ -73,7 +73,7 @@
             modify_man_id = #{modifyManId},
             pj_establish_start_date = #{pjEstablishStartDate},
             pj_establish_publish_date = #{pjEstablishPublishDate},
-            suspend_reason = #{suspendReason,jdbcType=VARCHAR}
+            suspend_reason = #{suspendReason}
         </set>
         <where>
             id = #{id}
