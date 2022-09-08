@@ -23,6 +23,7 @@
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="content != null and content != ''">content = #{content},</if>
         </set>
         <where>
             id = #{id}
@@ -46,7 +47,7 @@
     </update>
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.ImprovementMeasureDO">
-        SELECT id, trouble_ticket_id, name, executor, executor_id, implementation_time, todo, todo_id, status,
+        SELECT id, trouble_ticket_id, name, executor, executor_id, implementation_time, todo, todo_id, status,content,
                is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
         FROM improvement_measure
         <where>

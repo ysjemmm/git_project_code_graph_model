@@ -258,4 +258,11 @@
          JOIN product_custom_demand b ON a.id = b.product_demand_id AND b.is_deleted = false
          WHERE b.custom_demand_id = #{customDemandId}
     </select>
+
+    <select id="getByOwnerId" resultType="com.timevale.forward.dal.entity.ProductDemandDO">
+         select  a.id,a.name,a.priority,a.type,a.owner,a.owner_id,a.status,a.create_man,a.create_man_id
+         ,a.create_date,a.modify_date, a.product_line_id,`desc`
+        from product_demand a
+        where a.owner_id = #{ownerId} and a.is_deleted=false order by a.id  desc limit 0,3
+    </select>
 </mapper>

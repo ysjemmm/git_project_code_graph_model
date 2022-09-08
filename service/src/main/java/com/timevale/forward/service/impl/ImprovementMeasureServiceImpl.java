@@ -18,10 +18,8 @@ import com.timevale.forward.service.component.ImprovementMeasureComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ImprovementMeasureCopier;
 import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
-import com.timevale.forward.service.integration.erp.model.DeleteTodoTaskMsg;
 import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.job.ImprovementMeasureStatusJob;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -134,8 +132,12 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
         }
         ImprovementMeasureDO improvementMeasureDO = improvementMeasureDOList.get(0);
 
+        if(!ImprovementMeasureStatusEnum.PENDING.getCode().equals(improvementMeasureDO.getStatus())){
+            throw new BaseBizRuntimeException("状态不是待处理,不能完成");
+        }
         // 修改事项逻辑删除标志
         improvementMeasureDO.setStatus(ImprovementMeasureStatusEnum.COMPLETED.getCode());
+        improvementMeasureDO.setContent(improvementMeasureCompleteReq.getContent());
         improvementMeasureMapper.update(improvementMeasureDO);
 
         // 待办处理

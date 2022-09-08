@@ -109,4 +109,12 @@ public interface InnerUserPersonClient {
      * @return 指定用户
      */
     BaseInfoResponse getSelfInfo(String account, Boolean isLeave);
+
+    /**
+     *
+     * @param accounts accounts
+     * @param isLeave isLeave
+     * @return BaseInfoResponse
+     */
+    List<String> batchGetStaffs(List<String> accounts, Boolean isLeave);
 }

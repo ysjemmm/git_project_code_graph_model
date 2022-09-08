@@ -91,9 +91,18 @@ public interface BugOnlineMapper {
     List<BugOnlineDO> selectByName(@Param("name") String name);
 
     /**
-     * 根据线上bug的业务需求id查询线上bug
+     * 查询线上bug
      *
+     * @param status status
      * @return 返回值
      */
-    List<BugOnlineDO> getModelIds();
+    List<BugOnlineDO> selectByStatus(@Param("status") List<Integer> status);
+
+    /**
+     * 批量更新关联的bug
+     * @param ids ids
+     * @param status status
+     * @return int
+     */
+    int updateStatusByIds(@Param("ids") List<Long> ids,@Param("status") Integer status);
 }
