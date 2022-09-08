@@ -97,21 +97,29 @@
     </select>
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.ProductLineDO">
-        select id, biz_domain_id, name, owner, owner_id,bug_online_owner_id,bug_online_owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
-        from product_line
+        select a.id, a.biz_domain_id, a.name, a.owner, a.owner_id,a.bug_online_owner_id,a.bug_online_owner, a.is_deleted
+        , a.create_man_id, a.create_man, a.create_date, a.modify_man_id, a.modify_man, a.modify_date
+        from product_line a
+        left join biz_domain b on a.biz_domain_id=b.id
         <where>
             <if test="name != null and name!=''">
-                name like concat('%',#{name},'%')
+                a.name like concat('%',#{name},'%')
             </if>
             <if test="ownerIds != null and ownerIds.size() > 0">
-                AND owner_id IN
+                AND a.owner_id IN
                 <foreach collection="ownerIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
             <if test="bugOnlineOwnerIds != null and bugOnlineOwnerIds.size() > 0">
-                AND bug_online_owner_id IN
+                AND a.bug_online_owner_id IN
                 <foreach collection="bugOnlineOwnerIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="bizDomainIds != null and bizDomainIds.size() > 0">
+                AND b.id IN
+                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>

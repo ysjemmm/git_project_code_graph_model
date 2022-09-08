@@ -25,4 +25,9 @@ public class ModelCondition {
      */
     private List<String> ownerIds;
 
+    /**
+     * 产品线id
+     */
+    private List<Integer> productLineIds;
+
 }

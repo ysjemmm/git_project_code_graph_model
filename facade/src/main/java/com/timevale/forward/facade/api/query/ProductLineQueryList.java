@@ -26,4 +26,7 @@ public class ProductLineQueryList extends QueryBase {
     @ApiModelProperty("线上bug负责人id")
     private List<String> bugOnlineOwnerIds;
 
+    @ApiModelProperty("业务域id")
+    private List<Long> bizDomainIds;
+
 }

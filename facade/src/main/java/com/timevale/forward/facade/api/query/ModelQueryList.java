@@ -23,4 +23,7 @@ public class ModelQueryList extends QueryBase {
     @ApiModelProperty("负责人id")
     private List<String> ownerIds;
 
+    @ApiModelProperty("产品线id")
+    private List<Long> productLineIds;
+
 }

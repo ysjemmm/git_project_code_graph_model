@@ -30,4 +30,9 @@ public class ProductLineCondition {
      */
     private List<String> bugOnlineOwnerIds;
 
+    /**
+     * 业务域id
+     */
+    private List<Long> bizDomainIds;
+
 }

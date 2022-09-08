@@ -60,7 +60,7 @@ public interface ModelMapper {
     /**
      * 获取模块
      *
-     * @param name name
+     * @param condition condition
      * @return {@link ProductLineDO }
      */
     List<ModelDO> selectByCondition(ModelCondition condition);

@@ -60,15 +60,22 @@
     </update>
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.ModelDO">
-        select id, product_line_id, name, owner, owner_id, is_deleted,create_man ,create_date ,modify_man ,modify_date
-        from model
+        select a.id, a.product_line_id, a.name, a.owner, a.owner_id, a.is_deleted,a.create_man ,a.create_date ,a.modify_man ,a.modify_date
+        from model a
+        left join product_line b on a.product_line_id=b.id
         <where>
             <if test="name != null and name!=''">
-                name like concat('%',#{name},'%')
+                a.name like concat('%',#{name},'%')
             </if>
             <if test="ownerIds != null and ownerIds.size() > 0">
-                AND owner_id IN
+                AND a.owner_id IN
                 <foreach collection="ownerIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="productLineIds != null and productLineIds.size() > 0">
+                AND b.id IN
+                <foreach collection="productLineIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
