@@ -264,7 +264,7 @@
                count(*)                     as wait_repair_count,
                sum(IF(priority &lt; 20, 1, 0)) as urgent_repair_count
         from bug_offline
-        where status = 1
+        where status in ( 0,1 )
           and project_id = #{projectId}
           and is_deleted = false
         group by operator_id

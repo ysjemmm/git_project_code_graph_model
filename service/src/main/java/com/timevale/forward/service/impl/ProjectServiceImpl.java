@@ -160,9 +160,6 @@ public class ProjectServiceImpl implements ProjectService {
     private BizLabelMapper bizLabelMapper;
 
     @Resource
-    private LabelMapper labelMapper;
-
-    @Resource
     private ProjectAcceptanceMapper projectAcceptanceMapper;
 
     @Resource

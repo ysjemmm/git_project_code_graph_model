@@ -346,6 +346,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
     @Override
     public BaseResult<BugOfflineAllCountVO> getBugOfflineAllCount(Long projectId) {
+        //统计状态为打开和待修复的bug
         List<BugOfflineCountDTO> countList = bugOfflineMapper.getBugCount(projectId);
         long waitRepairCount = countList.stream().mapToLong(BugOfflineCountDTO::getWaitRepairCount).sum();
         long urgentRepairCount = countList.stream().mapToLong(BugOfflineCountDTO::getUrgentRepairCount).sum();

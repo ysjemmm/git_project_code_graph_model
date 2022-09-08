@@ -89,4 +89,7 @@ public class BugOnlineAddReq extends BaseReq {
 
     @ApiModelProperty("详细版本号")
     private String detailVersionId;
+
+    @ApiModelProperty("标签id")
+    private List<Long> labelIds;
 }
