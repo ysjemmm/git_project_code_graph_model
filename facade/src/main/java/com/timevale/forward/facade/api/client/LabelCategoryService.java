@@ -21,8 +21,6 @@ import java.util.List;
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface LabelCategoryService {
 
-
-
     /**
      * 列表
      *

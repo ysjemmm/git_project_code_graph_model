@@ -30,7 +30,7 @@
 
     <select id="get" resultType="com.timevale.forward.dal.entity.LabelCategoryDO">
         select id,name,type, mark_man, mark_man_id,dept_id,
-        is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
+        is_deleted,create_man ,create_man_id,protection,create_date ,modify_man ,modify_man_id,modify_date
         from label_category a
         <where>
             <if test="ids!=null and ids.size()>0">
@@ -45,13 +45,16 @@
 
 
     <select id="list" resultType="com.timevale.forward.dal.entity.LabelCategoryDO">
-        select a.id,a.name,type, a.mark_man, a.mark_man_id,a.dept_id,
+        select a.id,a.name,type, a.mark_man, a.mark_man_id,a.dept_id,a.protection,
         a.is_deleted,a.create_man ,a.create_man_id,a.create_date ,a.modify_man ,a.modify_man_id,a.modify_date
         from label_category a
         <if test="bizDomainIds != null and bizDomainIds.size() > 0">
         left join label_category_biz_domain b on a.id=b.label_category_id and b.is_deleted=false
         </if>
         <where>
+            <if test="protection != null">
+                and protection = #{protection}
+            </if>
             <if test="names!=null and names.size()>0">
                 and a.name in
                 <foreach collection="names" item="item" separator="," open="(" close=")">
@@ -77,13 +80,13 @@
     </select>
 
     <select id="getAll" resultType="com.timevale.forward.dal.entity.LabelCategoryDO">
-        select id,name,type, mark_man, mark_man_id,dept_id,
+        select id,name,type, mark_man, mark_man_id,dept_id,protection,
         is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
-        from label_category where is_deleted=false
+        from label_category where is_deleted=false and protection != 1
     </select>
 
     <select id="getByName" resultType="com.timevale.forward.dal.entity.LabelCategoryDO">
-        select id,name,type, mark_man, mark_man_id,dept_id,
+        select id,name,type, mark_man, mark_man_id,dept_id,protection,
         is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
         from label_category
         <where>

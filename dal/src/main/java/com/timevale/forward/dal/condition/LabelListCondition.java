@@ -24,6 +24,11 @@ public class LabelListCondition extends QueryBase {
     private String name;
 
     /**
+     * 保护方式 0-不保护 1-保护写入和删除
+     */
+    private Integer protection;
+
+    /**
      * categoryNames
      */
     private List<String> categoryNames;

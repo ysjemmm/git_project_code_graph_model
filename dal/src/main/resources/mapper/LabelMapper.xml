@@ -35,6 +35,9 @@
             left join label_category_biz_domain c on b.id=c.label_category_id and c.is_deleted=false
         </if>
         <where>
+            <if test="protection != null">
+                and b.protection = #{protection}
+            </if>
             <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
             <if test="categoryNames!=null and categoryNames.size()>0">
                 and b.name in

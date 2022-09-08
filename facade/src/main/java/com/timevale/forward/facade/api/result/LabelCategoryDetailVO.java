@@ -42,6 +42,9 @@ public class LabelCategoryDetailVO extends ToString {
     @ApiModelProperty("打标部门")
     private List<String> deptIds;
 
+    @ApiModelProperty("保护类型: 0-无保护 1-禁止更改和删除")
+    private Integer protection;
+
     @ApiModelProperty("提交人")
     private String createMan;
 

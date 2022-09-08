@@ -17,6 +17,10 @@ import java.util.List;
 public class LabelCategoryListCondition extends QueryBase {
 
     /**
+     * 保护方式
+     */
+    private Integer protection;
+    /**
      * names
      */
     private List<String> names;
