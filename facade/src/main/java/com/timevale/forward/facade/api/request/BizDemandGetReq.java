@@ -5,7 +5,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
@@ -18,7 +17,9 @@ import java.util.List;
 public class BizDemandGetReq extends BaseReq {
 
     @ApiModelProperty("业务需求id")
-    @NotNull(message = "业务需求id不能为空")
     private List<Long>ids;
+
+    @ApiModelProperty("业务需求状态")
+    private List<Integer>status;
 
 }

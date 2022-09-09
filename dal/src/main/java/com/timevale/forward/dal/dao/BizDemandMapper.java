@@ -140,4 +140,12 @@ public interface BizDemandMapper {
     @Select("select count(*) from biz_demand where biz_id = #{bizId} and is_deleted = false")
     boolean bizIdExists(@Param("bizId") String bizId);
 
+    /**
+     *
+     * @param ids id
+     * @param status 状态
+     * @return 业务需求DO
+     */
+    List<BizDemandDO> selectByIdAndStatus(@Param("ids") List<Long> ids,@Param("status") List<Integer> status);
+
 }
