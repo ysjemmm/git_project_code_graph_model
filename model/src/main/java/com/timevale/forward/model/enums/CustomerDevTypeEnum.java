@@ -1,34 +1,32 @@
 package com.timevale.forward.model.enums;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author by YangXu
  * @date 2021/12/21 14:46
  */
 @Getter
+@AllArgsConstructor
 public enum CustomerDevTypeEnum {
     /**
      * 预期上线时间
      */
     CONTRACT(0, "基于销售合同"),
-    
-    PROJECT(1, "没有合同，基于项目");
 
-    Integer code;
-    String text;
+    PROJECT(1, "基于项目");
 
-    CustomerDevTypeEnum(Integer code, String text){
-        this.code = code;
-        this.text = text;
-    }
+    private final Integer code;
+    private final String text;
 
-    public static String getTextByCode(Integer code){
-        for (CustomerDevTypeEnum e : CustomerDevTypeEnum.values()){
-            if(e.getCode().equals(code)){
+    public static String getTextByCode(Integer code) {
+        for (CustomerDevTypeEnum e : CustomerDevTypeEnum.values()) {
+            if (e.getCode().equals(code)) {
                 return e.text;
             }
         }
-        return "";
+        return StringUtils.EMPTY;
     }
 }
