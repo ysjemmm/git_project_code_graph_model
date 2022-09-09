@@ -49,16 +49,16 @@ public class OutBizDealComponent {
      * 发送业务需求关联消息
      */
     public void sendBizDemandRelMsg(@RequestBody BizDemandDO bizDemandDO) {
-        mqProducer.asyncSend(CommonConstant.DEMAND_RELATION_TOPIC,
-                JsonUtils.obj2json(new ForwardRelationMsg(bizDemandDO.getId(), bizDemandDO.getBizId())));
+        mqProducer.asyncSend(CommonConstant.FORWARD_BIZ_RELATION_TOPIC,
+                JsonUtils.obj2json(new ForwardRelationMsg(bizDemandDO.getId(), bizDemandDO.getBizId(), 1)));
     }
 
     /**
      * 发送线上BUG关联消息
      */
     public void sendBugOnlineRelMsg(@RequestBody BugOnlineDO bugOnlineDO) {
-        mqProducer.asyncSend(CommonConstant.BUG_ONLINE_RELATION_TOPIC,
-                JsonUtils.obj2json(new ForwardRelationMsg(bugOnlineDO.getId(), bugOnlineDO.getBizId())));
+        mqProducer.asyncSend(CommonConstant.FORWARD_BIZ_RELATION_TOPIC,
+                JsonUtils.obj2json(new ForwardRelationMsg(bugOnlineDO.getId(), bugOnlineDO.getBizId(), 2)));
     }
 }
 
@@ -70,5 +70,8 @@ class ForwardRelationMsg {
     private Long id;
 
     private String bizId;
+
+    // 类型 1-业务需求; 2-线上BUG
+    private Integer type;
 
 }
