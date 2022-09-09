@@ -31,4 +31,8 @@ public class CommonConstant {
     public static final String SYSTEM_DEFAULT = "系统默认";
 
     public static final String PMO = "PMO";
+
+    public static final String DEMAND_RELATION_TOPIC = "forward-demand-rel";
+
+    public static final String BUG_ONLINE_RELATION_TOPIC = "forward-bug-online-rel";
 }

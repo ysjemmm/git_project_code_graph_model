@@ -173,45 +173,25 @@ public class BugOnlineDO extends BaseDO {
      * 关联的bug_id
      */
     private Long linkBugId;
+
+    /**
+     * 来源id(客开项目id或者合同id)
+     */
+    private String sourceId;
+
+    /**
+     * 来源名称
+     */
+    private String sourceName;
+
+    /**
+     * 工单id
+     */
+    private String bizId;
+
+    /**
+     * 工单标题
+     */
+    private String bizName;
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

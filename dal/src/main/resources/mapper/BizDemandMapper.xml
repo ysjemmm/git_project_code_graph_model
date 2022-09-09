@@ -5,10 +5,12 @@
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into biz_demand (name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status,
                                 priority, receive_man, receive_man_id, submit_man_id, submit_man,  create_man_id, create_man,
-                                customer_dev_demand,customer_dev_type,customer_dev_sale_contract,customer_dev_project_name, source_id)
+                                customer_dev_demand,customer_dev_type,customer_dev_sale_contract,customer_dev_project_name, source_id,
+                                biz_id, biz_name)
         values (#{name}, #{productLineId}, #{dataIndicators}, #{targetCustomer}, #{createCustomer}, #{deptId}, #{desc}, #{status},
                 #{priority}, #{receiveMan}, #{receiveManId}, #{submitManId}, #{submitMan}, #{createManId}, #{createMan},
-                #{customerDevDemand}, #{customerDevType}, #{customerDevSaleContract}, #{customerDevProjectName}, #{sourceId})
+                #{customerDevDemand}, #{customerDevType}, #{customerDevSaleContract}, #{customerDevProjectName}, #{sourceId},
+                #{bizId}, #{bizName})
     </insert>
 
     <update id="update">

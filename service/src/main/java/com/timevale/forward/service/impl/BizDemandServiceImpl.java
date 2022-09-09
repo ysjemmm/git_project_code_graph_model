@@ -92,6 +92,9 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Resource
     private LabelComponent labelComponent;
 
+    @Resource
+    private OutBizDealComponent outBizDealComponent;
+
     @Override
     public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -302,6 +305,9 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (bizDemandAddReq.getTargetCustomer().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("目标客户/用户/项目中请勿包含空格");
         }
+        if (StringUtils.isNotBlank(bizDemandAddReq.getBizId())) {
+            outBizDealComponent.checkBizIdExistence(bizDemandAddReq.getBizId());
+        }
 
         // 新增业务需求
         BizDemandDO bizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandAddReq);
@@ -349,6 +355,9 @@ public class BizDemandServiceImpl implements BizDemandService {
                 true,
                 ButtonActionEnum.SUBMIT.getText());
 
+        if (StringUtils.isNotBlank(bizDemandAddReq.getBizId())) {
+            outBizDealComponent.sendBizDemandRelMsg(bizDemandDO);
+        }
         return BaseResult.success(true);
     }
 

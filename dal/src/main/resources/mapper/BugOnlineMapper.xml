@@ -1,8 +1,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.timevale.forward.dal.dao.BugOnlineMapper">
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
-        select * from bug_online
-        where id = #{id} and is_deleted = 0
+        select *
+        from bug_online
+        where id = #{id}
+          and is_deleted = 0
     </select>
 
     <select id="selectListByCondition" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
@@ -11,12 +13,12 @@
         bo.create_date, bo.modify_date
         from bug_online bo
         left join bug_online_product_line bopl on bo.id = bopl.bug_online_id
-        left join bug_online_model mo on bo.id = mo.bug_online_id  and mo.is_deleted = false
+        left join bug_online_model mo on bo.id = mo.bug_online_id and mo.is_deleted = false
         left join product_line pl on bopl.product_line_id = pl.id
         left join biz_domain bdm on pl.biz_domain_id = bdm.id
         <where>
             <if test="containIds!=null and containIds.size()>0">
-                and bo.id  in
+                and bo.id in
                 <foreach collection="containIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
@@ -129,14 +131,17 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="bugOnlineDO.id">
-        insert into bug_online(name,operator,operator_id,last_operator,last_operator_id,proposer
-        ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
-        ,create_man,create_man_id,source,  detail_version_id)
-        values(#{bugOnlineDO.name},#{bugOnlineDO.operator},#{bugOnlineDO.operatorId},#{bugOnlineDO.lastOperator}
-        ,#{bugOnlineDO.lastOperatorId},#{bugOnlineDO.proposer},#{bugOnlineDO.proposerId},#{bugOnlineDO.customerName}
-        ,#{bugOnlineDO.env},#{bugOnlineDO.belong},#{bugOnlineDO.priority},#{bugOnlineDO.recurrent}
-        ,#{bugOnlineDO.reason},#{bugOnlineDO.expectDate},#{bugOnlineDO.business},#{bugOnlineDO.describe},#{bugOnlineDO.systemMenuName}
-        ,#{createMan},#{createManId},#{bugOnlineDO.source}, #{bugOnlineDO.detailVersionId})
+        insert into bug_online(name, operator, operator_id, last_operator, last_operator_id, proposer, proposer_id,
+                               customer_name, env, belong, priority, recurrent, reason, expect_date, business,
+                               `describe`, system_menu_name, create_man, create_man_id, source, detail_version_id,
+                               source_id, source_name, biz_id, biz_name)
+        values (#{bugOnlineDO.name}, #{bugOnlineDO.operator}, #{bugOnlineDO.operatorId}, #{bugOnlineDO.lastOperator},
+                #{bugOnlineDO.lastOperatorId}, #{bugOnlineDO.proposer}, #{bugOnlineDO.proposerId},
+                #{bugOnlineDO.customerName}, #{bugOnlineDO.env}, #{bugOnlineDO.belong}, #{bugOnlineDO.priority},
+                #{bugOnlineDO.recurrent}, #{bugOnlineDO.reason}, #{bugOnlineDO.expectDate}, #{bugOnlineDO.business},
+                #{bugOnlineDO.describe}, #{bugOnlineDO.systemMenuName}, #{createMan}, #{createManId},
+                #{bugOnlineDO.source}, #{bugOnlineDO.detailVersionId}, #{bugOnlineDO.sourceId},
+                #{bugOnlineDO.sourceName}, #{bugOnlineDO.bizId}, #{bugOnlineDO.bizName})
     </insert>
 
     <update id="update">
@@ -275,11 +280,32 @@
     </update>
 
     <select id="selectByLinkBugId" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
-        SELECT id, name,operator,operator_id,last_operator,last_operator_id,proposer
-        ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
-        ,create_man,create_man_id,source,  detail_version_id,link_bug_id
+        SELECT id
+             , name
+             , operator
+             , operator_id
+             , last_operator
+             , last_operator_id
+             , proposer
+             , proposer_id
+             , customer_name
+             , env
+             , belong
+             , priority
+             , recurrent
+             , reason
+             , expect_date
+             , business
+             , `describe`
+             , system_menu_name
+             , create_man
+             , create_man_id
+             , source
+             , detail_version_id
+             , link_bug_id
         FROM bug_online
-        WHERE link_bug_id = #{linkBugId} and is_deleted=false
+        WHERE link_bug_id = #{linkBugId}
+          and is_deleted = false
     </select>
 
     <update id="updateByIds">
@@ -298,7 +324,7 @@
     <select id="selectByIds" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
         SELECT id, name,operator,operator_id,last_operator,last_operator_id,proposer
         ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
-        ,create_man,create_man_id,source,  detail_version_id,link_bug_id
+        ,create_man,create_man_id,source, detail_version_id,link_bug_id
         FROM bug_online
         <where>
             id in
@@ -314,7 +340,7 @@
     <select id="selectByName" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
         SELECT id, name,operator,operator_id,last_operator,last_operator_id,proposer
         ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
-        ,create_man,create_man_id,source,  detail_version_id,link_bug_id
+        ,create_man,create_man_id,source, detail_version_id,link_bug_id
         FROM bug_online
         <where>
             name like concat('%',#{name},'%') and is_deleted = false
@@ -324,7 +350,7 @@
     <select id="getModelIds" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
         SELECT id, name,operator,operator_id,last_operator,last_operator_id,proposer,model_id
         ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
-        ,create_man,create_man_id,source,  detail_version_id,link_bug_id
+        ,create_man,create_man_id,source, detail_version_id,link_bug_id
         FROM bug_online
         <where>
             model_id != ''
