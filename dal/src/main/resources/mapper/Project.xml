@@ -292,6 +292,6 @@
         select id, name, pm_id from project
         where status in (10, 20, 30)
         and is_deleted = false
-<!--        and pm_id in ('xiaoyun', 'nianci')-->
+        and pm_id in ('xiaoyun', 'nianci')
     </select>
 </mapper>
