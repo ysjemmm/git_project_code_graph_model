@@ -71,6 +71,9 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="sourceId != null and sourceId != ''">
+                and bo.source_id = #{sourceId}
+            </if>
             <if test="dismissCauseList != null and dismissCauseList.size() > 0">
                 and bo.dismiss_cause in
                 <foreach collection="dismissCauseList" item="item" separator="," open="(" close=")">

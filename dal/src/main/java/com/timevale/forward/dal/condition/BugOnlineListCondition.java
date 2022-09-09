@@ -116,5 +116,9 @@ public class BugOnlineListCondition {
      */
     private List<Long> modelIds;
 
+    /**
+     * 来源id
+     */
+    private String sourceId;
 
 }

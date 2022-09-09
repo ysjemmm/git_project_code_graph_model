@@ -90,4 +90,7 @@ public class BugOnlineQueryList extends QueryBase {
 
     @ApiModelProperty("模块id")
     private List<Long> modelIds;
+
+    @ApiModelProperty("来源id")
+    private String sourceId;
 }
