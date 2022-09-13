@@ -92,5 +92,13 @@ public interface TaskCopier {
      * @param TaskDO 对象
      * @return TaskDO
      */
-    HomePageSingleTaskWorkTimeVO convertT(TaskDO TaskDO);
+    HomePageSingleTaskWorkTimeVO convert2HomePage(TaskDO TaskDO);
+
+    /**
+     * 转换转换DO
+     *
+     * @param TaskDO 对象
+     * @return TaskDO
+     */
+    ProjectBoardTaskVO convert2ProjectBoard(TaskDO TaskDO);
 }

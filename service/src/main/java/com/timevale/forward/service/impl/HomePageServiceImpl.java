@@ -507,7 +507,7 @@ public class HomePageServiceImpl implements HomePageService {
         Map<String, List<HomePageSingleTaskWorkTimeVO>> taskWorkTimePersonProjectMap = new HashMap<>();
         personDOList.forEach(a -> {
             TaskDO taskDO = taskMap.get(a.getMainId());
-            HomePageSingleTaskWorkTimeVO taskWorkTimeVO = TaskCopier.INSTANCE.convertT(taskDO);
+            HomePageSingleTaskWorkTimeVO taskWorkTimeVO = TaskCopier.INSTANCE.convert2HomePage(taskDO);
             taskWorkTimeVO.setExecutor(a.getUserName());
             taskWorkTimeVO.setExecutorId(a.getUserId());
             boolean delay = (taskDO.getActualEndDate() == null && new Date().after(taskDO.getPlanEndDate())) ||
@@ -527,7 +527,7 @@ public class HomePageServiceImpl implements HomePageService {
                 if (!projectIds.contains(a.getProjectId())) {
                     //计算每个人每个项目所有任务工时
                     HomePageSingleProjectWorkTimeVO projectWorkTimeVO = new HomePageSingleProjectWorkTimeVO();
-                    List<HomePageSingleTaskWorkTimeVO> taskWorkTimeVOList = taskWorkTimePersonProjectMap.get(v + "#" + a.getProjectId());
+                    List<HomePageSingleTaskWorkTimeVO> taskWorkTimeVOList = taskWorkTimePersonProjectMap.get(a.getExecutorId() + "#" + a.getProjectId());
 
                     BigDecimal planUseTime = taskWorkTimeVOList.stream().filter(aa -> aa.getPlanUseTime() != null)
                             .map(HomePageSingleTaskWorkTimeVO::getPlanUseTime).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);

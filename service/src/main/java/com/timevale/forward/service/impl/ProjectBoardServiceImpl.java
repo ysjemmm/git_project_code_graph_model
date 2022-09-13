@@ -265,10 +265,8 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         Map<String, List<ProjectBoardTaskVO>> projectBoardTaskVoMap = new HashMap<>();
         Date current=new Date();
         personDOList.forEach(a -> {
-            ProjectBoardTaskVO projectBoardTaskVO = new ProjectBoardTaskVO();
             TaskDO taskDO = taskMap.get(a.getMainId());
-            projectBoardTaskVO.setPlanStartDate(taskDO.getPlanStartDate());
-            projectBoardTaskVO.setPlanEndDate(taskDO.getPlanEndDate());
+            ProjectBoardTaskVO projectBoardTaskVO = TaskCopier.INSTANCE.convert2ProjectBoard(taskDO);
             if(taskDO.getActualStartDate()==null){
                 projectBoardTaskVO.setStartDate(taskDO.getPlanStartDate());
                 projectBoardTaskVO.setEndDate(taskDO.getPlanEndDate());
@@ -280,12 +278,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
                 projectBoardTaskVO.setStartDate(taskDO.getActualStartDate());
                 projectBoardTaskVO.setEndDate(current);
             }
-            projectBoardTaskVO.setId(taskDO.getId());
-            projectBoardTaskVO.setName(taskDO.getName());
-            projectBoardTaskVO.setStatus(taskDO.getStatus());
             projectBoardTaskVO.setStatusName(TaskStatusEnum.getTextByCode(taskDO.getStatus()));
-            projectBoardTaskVO.setPlanUseTime(taskDO.getPlanUseTime());
-            projectBoardTaskVO.setTaskUseTime(taskDO.getTaskUseTime());
             projectBoardTaskVO.setExecutor(a.getUserName());
             projectBoardTaskVO.setExecutorId(a.getUserId());
             boolean delay = (taskDO.getActualEndDate() == null && new Date().after(taskDO.getPlanEndDate())) ||
