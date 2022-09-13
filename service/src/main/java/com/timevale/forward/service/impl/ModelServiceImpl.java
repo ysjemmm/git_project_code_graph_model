@@ -40,6 +40,13 @@ public class ModelServiceImpl implements ModelService {
     ProductLineMapper productLineMapper;
 
     @Override
+    public BaseResult<List<ModelVO>> modelList() {
+        List<ModelDO> modelDOList = modelMapper.selectAllModel();
+        List<ModelVO> modelVOList = ModelCopier.INSTANCE.convert(modelDOList);
+        return BaseResult.success(modelVOList);
+    }
+
+    @Override
     public BaseResult<PageQueryResult<ModelVO>> modelList(ModelQueryList modelQueryList) {
         ModelCondition condition = ModelCopier.INSTANCE.convert(modelQueryList);
 

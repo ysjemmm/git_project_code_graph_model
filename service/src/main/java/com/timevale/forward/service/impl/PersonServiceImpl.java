@@ -24,6 +24,7 @@ import org.assertj.core.util.Lists;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -87,7 +88,7 @@ public class PersonServiceImpl implements PersonService {
         }
         List<String> accounts = personDOList.stream().map(PersonDO::getUserId).collect(Collectors.toList());
         List<String> onJobAccounts = innerUserPersonClient.batchGetStaffs(accounts, false);
-
+        personDOList.sort(Comparator.comparing(PersonDO::getCreateDate).reversed());
         List<PersonDO> resultList = new ArrayList<>();
         List<String> distinct = new ArrayList<>();
         personDOList.forEach(a -> {

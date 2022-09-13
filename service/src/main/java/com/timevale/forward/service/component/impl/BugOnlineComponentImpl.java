@@ -19,6 +19,7 @@ import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -46,19 +47,28 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
     public void autoCloseBugIfBeConfirm(int autoCloseLimitDay) {
         log.info("待确认线上bug自动关闭-开始");
         List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByStatus(Lists.newArrayList(BugOnlineStatusEnum.BE_CONFIRM.getCode()));
-        Date today=new Date();
-        List<Long> filterIds = bugOnlineDOList.stream()
-                .filter(e -> DateUtil.getIntervalDays(today, e.getCreateDate()) >= autoCloseLimitDay)
-                .map(BugOnlineDO::getId)
-                .collect(Collectors.toList());
-        if(CollectionUtils.isNotEmpty(filterIds)){
-            bugOnlineMapper.updateStatusByIds(filterIds,BugOnlineStatusEnum.CLOSE.getCode());
-            filterIds.forEach(this::addLog);
+        Date today = new Date();
+        List<Long> updateBugIds = new ArrayList<>();
+        List<Long> bugOnlineIds = bugOnlineDOList.stream().map(BugOnlineDO::getId).collect(Collectors.toList());
+        bugOnlineIds.forEach(a -> {
+            List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(a, BugLogTypeEnum.ONLINE.getCode(), true)
+                    .stream().filter(b -> BugOnlineStatusEnum.BE_CONFIRM.getText().equals(b.getNewValue())).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(bugLogDOList)) {
+                bugLogDOList.sort(Comparator.comparing(BugLogDO::getCreateDate).reversed());
+                Date createDate = bugLogDOList.get(0).getCreateDate();
+                if (DateUtil.getIntervalDays(today, createDate) >= autoCloseLimitDay) {
+                    updateBugIds.add(a);
+                }
+            }
+        });
+        if (CollectionUtils.isNotEmpty(updateBugIds)) {
+            bugOnlineMapper.updateStatusByIds(updateBugIds, BugOnlineStatusEnum.CLOSE.getCode());
+            updateBugIds.forEach(this::addLog);
         }
-        log.info("待确认线上bug自动关闭-完成");
+        log.info("待确认线上bug自动关闭-完成,更新id:{}",updateBugIds);
     }
 
-    private void addLog(Long bugOnlineId){
+    private void addLog(Long bugOnlineId) {
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.AGREE.getText());
         bugLogDO.setOldValue(BugOnlineStatusEnum.BE_CONFIRM.getText());
@@ -73,7 +83,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
                 , BugLogTypeEnum.ONLINE.getCode(), true);
 
         //按创建时间逆序排列，筛选出最后一条状态变更记录
-        List<BugLogDO> collect = bugLogDOS.stream().filter(a->BugLogFieldEnum.STATUS.getText().equals(a.getField()))
+        List<BugLogDO> collect = bugLogDOS.stream().filter(a -> BugLogFieldEnum.STATUS.getText().equals(a.getField()))
                 .sorted(Comparator.comparing(BugLogDO::getCreateDate).reversed()).collect(Collectors.toList());
         BugLogDO lastStatusBugLogDO = collect.get(0);
 

@@ -6,9 +6,10 @@ import com.timevale.forward.facade.api.query.ModelQueryList;
 import com.timevale.forward.facade.api.request.ModelAddReq;
 import com.timevale.forward.facade.api.request.ModelModifyReq;
 import com.timevale.forward.facade.api.result.ModelVO;
-import com.timevale.forward.facade.api.result.ProductLineVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
+
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -16,6 +17,14 @@ import com.timevale.mandarin.common.result.PageQueryResult;
  */
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface ModelService {
+
+
+    /**
+     * 列表
+     *
+     * @return 返回产品线列表
+     */
+    BaseResult<List<ModelVO>> modelList();
 
     /**
      * 列表
