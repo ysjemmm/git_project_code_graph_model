@@ -72,6 +72,16 @@ public class TaskDO extends BaseDO {
     private List<Long> productDemandIds;
 
     /**
+     * startDate
+     */
+    private Date startDate;
+
+    /**
+     * endDate
+     */
+    private Date endDate;
+
+    /**
      * 创建待办
      */
     private Boolean todo;

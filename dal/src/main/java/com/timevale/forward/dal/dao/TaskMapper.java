@@ -7,6 +7,7 @@ import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.dal.entity.TaskStatusUpdateDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -121,5 +122,10 @@ public interface TaskMapper {
      * @return TaskDO List
      */
     List<TaskDO> getByNameAndPid(@Param("names") List<String> names,@Param("projectId") Long projectId);
+
+    /**
+     * 查询用户逾期任务数量、时间
+     */
+    List<TaskDO> getByDate(@Param("startDate") Date startDate,@Param("endDate") Date endDate,@Param("accounts") List<String> accounts);
 
 }

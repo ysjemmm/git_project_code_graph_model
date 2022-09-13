@@ -11,6 +11,7 @@ import com.timevale.forward.facade.api.client.HomePageService;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
 import com.timevale.forward.facade.api.request.HomePageBaseReq;
 import com.timevale.forward.facade.api.request.HomePageProjectBoardReq;
+import com.timevale.forward.facade.api.request.HomePageTaskBoardReq;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
@@ -18,7 +19,6 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.integration.superset.model.base.PageResult;
-import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -85,13 +85,16 @@ public class HomePageServiceImpl implements HomePageService {
     @Resource
     private BugOnlineMapper bugOnlineMapper;
 
+    @Resource
+    private PersonMapper personMapper;
+
     @Override
     public BaseResult<HomePageDataIndicatorVO> getDataIndicator(HomePageBaseReq homePageBaseReq) {
         HomePageDataIndicatorDTO dataIndicator = homePageDataIndicatorComponent.getDataIndicator(homePageBaseReq);
         HomePageDataIndicatorVO dataIndicatorVO = HomePageDataIndicatorCopier.INSTANCE.convert(dataIndicator);
 
         // 如果为团队tab
-        if(HomePageTabEnum.TEAM.getCode().equals(homePageBaseReq.getTabType())){
+        if (HomePageTabEnum.TEAM.getCode().equals(homePageBaseReq.getTabType())) {
             // 成员信息
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
             List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), false);
@@ -100,24 +103,24 @@ public class HomePageServiceImpl implements HomePageService {
             List<ProjectDO> projectDOList = projectMapper.selectByTeamMember(allMyStaffWithSelf);
             projectDOList = projectDOList.stream().filter(e -> !ProjectStatusEnum.INVALID.getCode().equals(e.getStatus())).collect(Collectors.toList());
 
-            dataIndicatorVO.setProjectReadyStartCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_START.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectReadyInternalAuditCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_INTERNAL_AUDIT.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectReadyConstrueCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_CONSTRUE.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectReadyConstrueReverseCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_CONSTRUE_REVERSE.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectReadyUedAuditCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_UED_AUDIT.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectReadyTechnicalDetailReviewCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_TECHNICAL_DETAIL_REVIEW.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectReadyDevelopCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_DEVELOP.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectDevelopingCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.DEVELOPING.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectReadyTestCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_TEST.getCode().equals(e.getNodeStatus())).count());
-            dataIndicatorVO.setProjectTestingCount((int)projectDOList.stream().filter(e -> ProjectNodeStatusEnum.TESTING.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyStartCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_START.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyInternalAuditCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_INTERNAL_AUDIT.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyConstrueCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_CONSTRUE.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyConstrueReverseCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_CONSTRUE_REVERSE.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyUedAuditCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_UED_AUDIT.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyTechnicalDetailReviewCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_TECHNICAL_DETAIL_REVIEW.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyDevelopCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_DEVELOP.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectDevelopingCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.DEVELOPING.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectReadyTestCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_TEST.getCode().equals(e.getNodeStatus())).count());
+            dataIndicatorVO.setProjectTestingCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.TESTING.getCode().equals(e.getNodeStatus())).count());
 
             // 需求信息
             List<BizDemandListDO> bizdemandDOList = bizDemandMapper.selectList(BizDemandListCondition
                     .builder()
                     .receiveManIdList(allMyStaffWithSelf)
                     .build());
-            dataIndicatorVO.setBizDemandReadyDealWithCount((int)bizdemandDOList.stream().filter(e -> BizDemandStatusEnum.EVALUATE.getCode().equals(e.getStatus())).count());
-            dataIndicatorVO.setBizDemandReadyScheduleCount((int)bizdemandDOList.stream().filter(e -> BizDemandStatusEnum.RECEIVED.getCode().equals(e.getStatus())).count());
+            dataIndicatorVO.setBizDemandReadyDealWithCount((int) bizdemandDOList.stream().filter(e -> BizDemandStatusEnum.EVALUATE.getCode().equals(e.getStatus())).count());
+            dataIndicatorVO.setBizDemandReadyScheduleCount((int) bizdemandDOList.stream().filter(e -> BizDemandStatusEnum.RECEIVED.getCode().equals(e.getStatus())).count());
         }
 
         return BaseResult.success(dataIndicatorVO);
@@ -154,18 +157,18 @@ public class HomePageServiceImpl implements HomePageService {
             taskCount = (int) taskDOList.stream().filter(e -> TaskStatusEnum.ongoing(e.getStatus())).count();
 
             /*
-            * 添加待验证bug
-            * 用户身份为研发：我的-待解决线下bug = （ bug打开 +待修复）且（经办人=我）
-            * 用户身份为测试：我的-待验证线下bug = （待验收 + 待确认）且（提出人=我）
-            * */
+             * 添加待验证bug
+             * 用户身份为研发：我的-待解决线下bug = （ bug打开 +待修复）且（经办人=我）
+             * 用户身份为测试：我的-待验证线下bug = （待验收 + 待确认）且（提出人=我）
+             * */
             List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByMembers(allMyStaffWithSelf);
-            if(UserTypeEnum.RD.getCode().equals(homePageBaseReq.getUserType())){
-                bugOfflineCount = (int)bugOfflineDOList.stream()
+            if (UserTypeEnum.RD.getCode().equals(homePageBaseReq.getUserType())) {
+                bugOfflineCount = (int) bugOfflineDOList.stream()
                         .filter(e -> e.getOperatorId().equals(userInfo.getId())
                                 && (BugStatusEnum.OPEN.getCode().equals(e.getStatus()) || BugStatusEnum.REPAIR.getCode().equals(e.getStatus())))
                         .count();
-            }else{
-                bugOfflineCount = (int)bugOfflineDOList.stream()
+            } else {
+                bugOfflineCount = (int) bugOfflineDOList.stream()
                         .filter(e -> e.getProposerId().equals(userInfo.getId())
                                 && (BugStatusEnum.ACCEPTANCE.getCode().equals(e.getStatus()) || BugStatusEnum.CONFIRM.getCode().equals(e.getStatus())))
                         .count();
@@ -176,7 +179,7 @@ public class HomePageServiceImpl implements HomePageService {
         List<BugOnlineListDO> bugOnlineListDOList = bugOnlineMapper.selectListByCondition(BugOnlineListCondition.builder()
                 .operatorIdList(Lists.newArrayList(userInfo.getId()))
                 .build());
-        bugOnLineCount = (int)bugOnlineListDOList.stream()
+        bugOnLineCount = (int) bugOnlineListDOList.stream()
                 .filter(e -> {
                     boolean filter = Objects.equals(BugOnlineStatusEnum.COMPLETE.getCode(), e.getStatus())
                             || Objects.equals(BugOnlineStatusEnum.CLOSE.getCode(), e.getStatus())
@@ -249,16 +252,16 @@ public class HomePageServiceImpl implements HomePageService {
         Map<Long, List<HomePageRiskWarningSubmitTestDTO>> riskWarningSubmitTestGroup = submitTestDTOList.stream()
                 .collect(Collectors.groupingBy(HomePageRiskWarningSubmitTestDTO::getProjectId));
 
-        log.info("[getRiskWarning]项目风险map：{}",riskWarningGroup);
+        log.info("[getRiskWarning]项目风险map：{}", riskWarningGroup);
 
         // TL 身份保留一个
-        if(HomePageTabEnum.TEAM.getCode().equals(homePageBaseReq.getTabType())){
+        if (HomePageTabEnum.TEAM.getCode().equals(homePageBaseReq.getTabType())) {
             riskWarningGroup.forEach((k, v) -> {
                 Optional<HomePageRiskWarningDTO> max = v.stream()
                         .filter(e -> ProjectRiskTypeEnum.NODE_OVERDUE.getCode().equals(e.getRiskType()))
                         .max((a, b) -> {
                             int compare = a.getNodeActualDate().compareTo(b.getNodeActualDate());
-                            if(compare == 0){
+                            if (compare == 0) {
                                 Integer aCode = ProjectNodeEnum.getCodeByName(a.getNodeName());
                                 Integer bCode = ProjectNodeEnum.getCodeByName(b.getNodeName());
                                 return aCode.compareTo(bCode);
@@ -270,7 +273,7 @@ public class HomePageServiceImpl implements HomePageService {
             });
         }
 
-        log.info("[getRiskWarning]项目风险过滤过程预期：{}",riskWarningGroup);
+        log.info("[getRiskWarning]项目风险过滤过程预期：{}", riskWarningGroup);
 
         // 节点排序
         riskWarningGroup.forEach((k, v) -> v.sort((x, y) -> {
@@ -307,7 +310,7 @@ public class HomePageServiceImpl implements HomePageService {
             riskWarningVO.setHomePageSubmitTestVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
         });
 
-        log.info("[getRiskWarning]项目风险结果：{}",resultMap);
+        log.info("[getRiskWarning]项目风险结果：{}", resultMap);
 
         // 按项目计划上线时间排序
         List<HomePageRiskWarningVO> resultList = Lists.newArrayList(resultMap.values());
@@ -328,16 +331,16 @@ public class HomePageServiceImpl implements HomePageService {
 
         // 个人 或者 我和我的所有下属信息
         List<BaseInfoResponse> allMyStaffInfoWithSelfInfo;
-        if(HomePageTabEnum.INDIVIDUAL.getCode().equals(homePageProjectBoardReq.getTabType())){
+        if (HomePageTabEnum.INDIVIDUAL.getCode().equals(homePageProjectBoardReq.getTabType())) {
             allMyStaffInfoWithSelfInfo = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(userInfo.getId()));
-        }else{
+        } else {
             allMyStaffInfoWithSelfInfo = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
         }
         //我和我所有下属的职能类型 Map(userid,jobFunction)
         Map<String, String> allMyStaffInfoWithSelfJobFunction = allMyStaffInfoWithSelfInfo
                 .stream()
                 .collect(Collectors.toMap(BaseInfoResponse::getAccount,
-                        e -> e.getJobFunction() == null ? "": e.getJobFunction(),
+                        e -> e.getJobFunction() == null ? "" : e.getJobFunction(),
                         (old, curr) -> curr));
         // 我和我的下属的所有名字
         Set<String> allMyStaffNameWithSelf = allMyStaffInfoWithSelfInfo
@@ -385,7 +388,7 @@ public class HomePageServiceImpl implements HomePageService {
             List<HomePageProjectDateVO> homePageProjectDateVOList = HomePageProjectBoardCopier.INSTANCE.convert(value);
 
             // 填充数据
-            if(!CollectionUtils.isEmpty(value)){
+            if (!CollectionUtils.isEmpty(value)) {
                 homePageProjectBoardVO.setUserId(key);
                 homePageProjectBoardVO.setUserName(value.get(0).getUserName());
                 homePageProjectBoardVO.setUserType(userType.toString());
@@ -394,27 +397,27 @@ public class HomePageServiceImpl implements HomePageService {
             }
         });
 
-       if(HomePageTabEnum.TEAM.getCode().equals(homePageProjectBoardReq.getTabType())){
-           // 团队面板,团队成员无项目信息时,也需要展示人员信息
-           Map<String, BaseInfoResponse> baseInfoResponseMap = allMyStaffInfoWithSelfInfo
-                   .stream().collect(Collectors.toMap(BaseInfoResponse::getAccount, Function.identity()));
-           List<String> containProjectInfo = result.stream().map(HomePageProjectBoardVO::getUserId).collect(Collectors.toList());
+        if (HomePageTabEnum.TEAM.getCode().equals(homePageProjectBoardReq.getTabType())) {
+            // 团队面板,团队成员无项目信息时,也需要展示人员信息
+            Map<String, BaseInfoResponse> baseInfoResponseMap = allMyStaffInfoWithSelfInfo
+                    .stream().collect(Collectors.toMap(BaseInfoResponse::getAccount, Function.identity()));
+            List<String> containProjectInfo = result.stream().map(HomePageProjectBoardVO::getUserId).collect(Collectors.toList());
 
-           allMyStaffNameWithSelf.removeAll(containProjectInfo);
+            allMyStaffNameWithSelf.removeAll(containProjectInfo);
 
-           for (String userId : allMyStaffNameWithSelf) {
-               BaseInfoResponse baseInfo = baseInfoResponseMap.get(userId);
+            for (String userId : allMyStaffNameWithSelf) {
+                BaseInfoResponse baseInfo = baseInfoResponseMap.get(userId);
 
-               UserTypeEnum userType = JobFunctionEnum.getType(baseInfo.getJobFunction());
+                UserTypeEnum userType = JobFunctionEnum.getType(baseInfo.getJobFunction());
 
-               HomePageProjectBoardVO homePageProjectBoardVO = new HomePageProjectBoardVO();
-               homePageProjectBoardVO.setUserId(baseInfo.getAccount());
-               homePageProjectBoardVO.setUserName(baseInfo.getAlias() + CommonConstant.JOIN_LINE + baseInfo.getName());
-               homePageProjectBoardVO.setUserType(userType.toString());
-               homePageProjectBoardVO.setHomePageProjectDateVOList(Lists.emptyList());
-               result.add(homePageProjectBoardVO);
-           }
-       }
+                HomePageProjectBoardVO homePageProjectBoardVO = new HomePageProjectBoardVO();
+                homePageProjectBoardVO.setUserId(baseInfo.getAccount());
+                homePageProjectBoardVO.setUserName(baseInfo.getAlias() + CommonConstant.JOIN_LINE + baseInfo.getName());
+                homePageProjectBoardVO.setUserType(userType.toString());
+                homePageProjectBoardVO.setHomePageProjectDateVOList(Lists.emptyList());
+                result.add(homePageProjectBoardVO);
+            }
+        }
 
         return BaseResult.success(result);
     }
@@ -427,11 +430,126 @@ public class HomePageServiceImpl implements HomePageService {
         return BaseResult.success(updateTimeVO);
     }
 
+    @Override
+    public BaseResult<List<HomePageSingleWorkTimeVO>> getTaskWorkTimeBoard(HomePageTaskBoardReq req) {
+        log.info("首页任务看板,参数:{}", req);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        Date startDate = DateUtil.getStartOfDay(req.getStartDate());
+        Date endDate = DateUtil.getEndOfDay(req.getEndDate());
+        List<Long> deptIds = req.getDeptIds();
+        List<String> teamMembers = req.getTeamMembers();
+
+        // 个人 或者 我和我的所有下属信息
+        List<BaseInfoResponse> allMyStaffInfoWithSelfInfo;
+        if (HomePageTabEnum.INDIVIDUAL.getCode().equals(req.getTabType())) {
+            allMyStaffInfoWithSelfInfo = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(userInfo.getId()));
+        } else {
+            allMyStaffInfoWithSelfInfo = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
+        }
+        // 我和我的下属的所有名字
+        Set<String> allMyStaffNameWithSelf = allMyStaffInfoWithSelfInfo
+                .stream()
+                .map(BaseInfoResponse::getAccount)
+                .collect(Collectors.toSet());
+
+        // 部门id、员工id非空取交集
+        if (!CollectionUtils.isEmpty(deptIds)) {
+            Set<String> deptAllMyStaff = Sets.newHashSet();
+            for (Long deptId : deptIds) {
+                deptAllMyStaff.addAll(innerUserPersonClient.getByGroupIdNew(String.valueOf(deptId)));
+            }
+            allMyStaffNameWithSelf.retainAll(deptAllMyStaff);
+        }
+        if (!CollectionUtils.isEmpty(teamMembers)) {
+            allMyStaffNameWithSelf.retainAll(teamMembers);
+        }
+
+        // 如果查询条件为空直接返回空数据
+        if (CollectionUtils.isEmpty(allMyStaffNameWithSelf)) {
+            return BaseResult.success(Lists.emptyList());
+        }
+
+        List<TaskDO> taskDOList = taskMapper.getByDate(startDate, endDate, Lists.newArrayList(allMyStaffNameWithSelf));
+        Date current = new Date();
+        taskDOList.forEach(a -> {
+            if (a.getActualStartDate() == null) {
+                a.setStartDate(a.getPlanStartDate());
+                a.setEndDate(a.getPlanEndDate());
+            } else if (a.getActualStartDate().before(a.getPlanEndDate())) {
+                //实际开始时间小于计划结束时间
+                a.setStartDate(a.getActualStartDate());
+                a.setEndDate(a.getPlanEndDate());
+            } else {
+                a.setStartDate(a.getActualStartDate());
+                a.setEndDate(current);
+            }
+        });
+
+        List<TaskDO> filter = taskDOList.stream()
+                .filter(a -> a.getPlanStartDate() != null && a.getPlanEndDate() != null
+                        && DateUtil.haveOverlap(a.getStartDate(), a.getEndDate(), startDate, endDate))
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(filter)) {
+            return BaseResult.success(Lists.emptyList());
+        }
+
+        List<Long> filterIds = filter.stream().map(TaskDO::getId).collect(Collectors.toList());
+        Map<Long, TaskDO> taskMap = filter.stream().collect(Collectors.toMap(TaskDO::getId, k -> k, (v1, v2) -> v2));
+        log.info("首页任务看板,任务id:{}", filterIds);
+        List<PersonDO> personDOList = personMapper.get(filterIds, PersonTypeEnum.TASK_EXECUTOR.getCode());
+
+        Map<String, List<HomePageSingleTaskWorkTimeVO>> taskWorkTimeOnePersonMap = new HashMap<>();
+        Map<String, List<HomePageSingleTaskWorkTimeVO>> taskWorkTimePersonProjectMap = new HashMap<>();
+        personDOList.forEach(a -> {
+            TaskDO taskDO = taskMap.get(a.getMainId());
+            HomePageSingleTaskWorkTimeVO taskWorkTimeVO = TaskCopier.INSTANCE.convertT(taskDO);
+            taskWorkTimeVO.setExecutor(a.getUserName());
+            taskWorkTimeVO.setExecutorId(a.getUserId());
+            boolean delay = (taskDO.getActualEndDate() == null && new Date().after(taskDO.getPlanEndDate())) ||
+                    (taskDO.getActualEndDate() != null && taskDO.getActualEndDate().after(taskDO.getPlanEndDate()));
+            taskWorkTimeVO.setIsDelay(delay);
+            //每人所有任务数
+            taskWorkTimeOnePersonMap.computeIfAbsent(a.getUserId(), v -> new ArrayList<>()).add(taskWorkTimeVO);
+            //每人每个项目中任务
+            taskWorkTimePersonProjectMap.computeIfAbsent(a.getUserId() + "#" + taskDO.getProjectId(), v -> new ArrayList<>()).add(taskWorkTimeVO);
+        });
+        List<HomePageSingleWorkTimeVO> result = new ArrayList<>();
+        taskWorkTimeOnePersonMap.forEach((k, v) -> {
+            HomePageSingleWorkTimeVO workTimeVO = new HomePageSingleWorkTimeVO();
+            List<Long> projectIds = new ArrayList<>();
+            List<HomePageSingleProjectWorkTimeVO> projectWorkTimeVOList = new ArrayList<>();
+            v.forEach(a -> {
+                if (!projectIds.contains(a.getProjectId())) {
+                    //计算每个人每个项目所有任务工时
+                    HomePageSingleProjectWorkTimeVO projectWorkTimeVO = new HomePageSingleProjectWorkTimeVO();
+                    List<HomePageSingleTaskWorkTimeVO> taskWorkTimeVOList = taskWorkTimePersonProjectMap.get(v + "#" + a.getProjectId());
+
+                    BigDecimal planUseTime = taskWorkTimeVOList.stream().filter(aa -> aa.getPlanUseTime() != null)
+                            .map(HomePageSingleTaskWorkTimeVO::getPlanUseTime).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+
+                    projectWorkTimeVO.setTotalPlanUseTime(planUseTime);
+                    projectWorkTimeVO.setTaskCount(taskWorkTimeVOList.size());
+                    projectWorkTimeVO.setTaskWorkTimeVos(taskWorkTimeVOList);
+                    projectIds.add(a.getProjectId());
+                    projectWorkTimeVOList.add(projectWorkTimeVO);
+                }
+            });
+            BigDecimal planUseTime = projectWorkTimeVOList.stream().filter(aa -> aa.getTotalPlanUseTime() != null)
+                    .map(HomePageSingleProjectWorkTimeVO::getTotalPlanUseTime).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+
+            workTimeVO.setTotalPlanUseTime(planUseTime);
+            workTimeVO.setTaskCount(projectWorkTimeVOList.size());
+            workTimeVO.setProjectWorkTimeVos(projectWorkTimeVOList);
+            result.add(workTimeVO);
+        });
+        return BaseResult.success(result);
+    }
+
     public List<HomePageProjectBoardDTO> filterByDate(UserTypeEnum userType, Date startDate, Date endDate, List<HomePageProjectBoardDTO> list) {
         if (userType.equals(UserTypeEnum.PD)) {
             return list.stream().filter(e -> {
-                Date nodeStart = DateUtil.min(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(),e.getDemandConstrueReverse(),e.getUedAudit());
-                Date nodeEnd = DateUtil.max(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(),e.getDemandConstrueReverse(),e.getUedAudit());
+                Date nodeStart = DateUtil.min(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(), e.getDemandConstrueReverse(), e.getUedAudit());
+                Date nodeEnd = DateUtil.max(e.getStartPlan(), e.getDemandInternalAudit(), e.getDemandConstrue(), e.getDemandConstrueReverse(), e.getUedAudit());
                 return DateUtil.haveOverlap(nodeStart, nodeEnd, startDate, endDate);
             }).collect(Collectors.toList());
         } else if (userType.equals(UserTypeEnum.RD)) {
@@ -440,7 +558,7 @@ public class HomePageServiceImpl implements HomePageService {
                 Date nodeEnd = DateUtil.max(e.getTechnicalDetailReview(), e.getDevelopStart(), e.getSubmitTest());
                 return DateUtil.haveOverlap(nodeStart, nodeEnd, startDate, endDate);
             }).collect(Collectors.toList());
-        } else if(userType.equals(UserTypeEnum.QA)){
+        } else if (userType.equals(UserTypeEnum.QA)) {
             return list.stream().filter(e -> {
                 Date nodeStart = DateUtil.min(e.getWriteTestCases(), e.getUseCaseReview());
                 Date nodeEnd = DateUtil.max(e.getWriteTestCases(), e.getUseCaseReview());
@@ -448,11 +566,11 @@ public class HomePageServiceImpl implements HomePageService {
 
                 nodeStart = DateUtil.min(e.getTestStart(), e.getPublishSimulate(), e.getPublishOfficial());
                 nodeEnd = DateUtil.max(e.getTestStart(), e.getPublishSimulate(), e.getPublishOfficial());
-                filter = filter ||  DateUtil.haveOverlap(nodeStart, nodeEnd, startDate, endDate);
+                filter = filter || DateUtil.haveOverlap(nodeStart, nodeEnd, startDate, endDate);
 
                 return filter;
             }).collect(Collectors.toList());
-        } else{
+        } else {
             return Lists.emptyList();
         }
     }

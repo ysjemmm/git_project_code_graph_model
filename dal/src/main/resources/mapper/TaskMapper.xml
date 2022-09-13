@@ -263,4 +263,28 @@
             and is_deleted = false
         </where>
     </select>
+
+    <select id="getByDate" resultType="com.timevale.forward.dal.entity.TaskDO">
+        select distinct a.id, project_id, product_line_id, name, stage, status, todo, todo_id, plan_start_date, plan_end_date,
+        plan_use_time, actual_start_date, actual_end_date, task_use_time, a.is_deleted, a.create_man_id, a.create_man,
+        a.create_date, a.modify_man_id, a.modify_man, a.modify_date
+        from task a
+        join person b on a.id=b.main_id and b.type=40 and b.is_deleted = false
+        join project c on a.project_id=c.id
+        <where>
+        (
+            (plan_start_date &gt;=#{startDate} and plan_start_date &lt;= #{endDate}) or
+            (plan_end_date &gt;=#{startDate} and plan_end_date &lt;= #{endDate}) or
+            (actual_start_date &gt;=#{startDate} and actual_start_date &lt;= #{endDate}) or
+            (actual_end_date &gt;=#{startDate} and actual_end_date &lt;= #{endDate})
+         )
+        and a.status not in (-10,-20)
+        and b.user_id in
+            <foreach collection="accounts" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        and c.status not in (-10,-20)
+        and a.is_deleted = false
+        </where>
+    </select>
 </mapper>

@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 
 
@@ -17,17 +16,14 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("项目维度看板-单人人员工期")
-public class ProjectBoardSinglelWorkTimeVO extends ToString {
+@ApiModel("首页任务看板-单人工时")
+public class HomePageSingleWorkTimeVO extends ToString {
 
     @ApiModelProperty("执行人")
     private String executor;
 
     @ApiModelProperty("执行人id")
     private String executorId;
-
-    @ApiModelProperty("是否pm")
-    private Boolean isPm;
 
     @ApiModelProperty("任务数量")
     private Integer taskCount;
@@ -38,14 +34,14 @@ public class ProjectBoardSinglelWorkTimeVO extends ToString {
     @ApiModelProperty("任务实际总耗时")
     private BigDecimal totalTaskUseTime;
 
-    @ApiModelProperty("项目开始时间")
-    private Date projectStartDate;
-
-    @ApiModelProperty("项目结束时间")
-    private Date projectEndDate;
+//    @ApiModelProperty("项目开始时间")
+//    private Date projectStartDate;
+//
+//    @ApiModelProperty("项目结束时间")
+//    private Date projectEndDate;
 
     @ApiModelProperty("项目任务")
-    private List<ProjectBoardTaskVO> projectBoardTaskVos;
+    private List<HomePageSingleProjectWorkTimeVO> projectWorkTimeVos;
 
 
 }

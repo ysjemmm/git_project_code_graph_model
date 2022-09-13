@@ -40,7 +40,7 @@ public class ProductLineVO extends ToString {
     @ApiModelProperty("业务域名称")
     private String bizDomainName;
 
-    @ApiModelProperty("业务域负责人信息")
+    @ApiModelProperty("业务域负责人")
     private String bizDomainOwner;
 
     @ApiModelProperty("业务域负责人id")

@@ -260,21 +260,32 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         List<Long> taskIds = filtered.stream().map(TaskDO::getId).collect(Collectors.toList());
         Map<Long, TaskDO> taskMap = filtered.stream().collect(Collectors.toMap(TaskDO::getId, k -> k, (v1, v2) -> v2));
 
-        List<PersonDO> personDos = personMapper.get(taskIds, PersonTypeEnum.TASK_EXECUTOR.getCode());
+        List<PersonDO> personDOList = personMapper.get(taskIds, PersonTypeEnum.TASK_EXECUTOR.getCode());
 
         Map<String, List<ProjectBoardTaskVO>> projectBoardTaskVoMap = new HashMap<>();
-        personDos.forEach(a -> {
+        Date current=new Date();
+        personDOList.forEach(a -> {
             ProjectBoardTaskVO projectBoardTaskVO = new ProjectBoardTaskVO();
             TaskDO taskDO = taskMap.get(a.getMainId());
             projectBoardTaskVO.setPlanStartDate(taskDO.getPlanStartDate());
             projectBoardTaskVO.setPlanEndDate(taskDO.getPlanEndDate());
-            projectBoardTaskVO.setActualStartDate(taskDO.getActualStartDate());
-            projectBoardTaskVO.setActualEndDate(taskDO.getActualEndDate());
+            if(taskDO.getActualStartDate()==null){
+                projectBoardTaskVO.setStartDate(taskDO.getPlanStartDate());
+                projectBoardTaskVO.setEndDate(taskDO.getPlanEndDate());
+            }else if(taskDO.getActualStartDate().before(taskDO.getPlanEndDate())){
+                //实际开始时间小于计划结束时间
+                projectBoardTaskVO.setStartDate(taskDO.getActualStartDate());
+                projectBoardTaskVO.setEndDate(taskDO.getPlanEndDate());
+            }else {
+                projectBoardTaskVO.setStartDate(taskDO.getActualStartDate());
+                projectBoardTaskVO.setEndDate(current);
+            }
             projectBoardTaskVO.setId(taskDO.getId());
             projectBoardTaskVO.setName(taskDO.getName());
             projectBoardTaskVO.setStatus(taskDO.getStatus());
             projectBoardTaskVO.setStatusName(TaskStatusEnum.getTextByCode(taskDO.getStatus()));
             projectBoardTaskVO.setPlanUseTime(taskDO.getPlanUseTime());
+            projectBoardTaskVO.setTaskUseTime(taskDO.getTaskUseTime());
             projectBoardTaskVO.setExecutor(a.getUserName());
             projectBoardTaskVO.setExecutorId(a.getUserId());
             boolean delay = (taskDO.getActualEndDate() == null && new Date().after(taskDO.getPlanEndDate())) ||
@@ -288,20 +299,14 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         projectBoardTaskVoMap.forEach((k, v) -> {
             ProjectBoardSinglelWorkTimeVO singleWorkTimeVO = new ProjectBoardSinglelWorkTimeVO();
 
-            Optional<ProjectBoardTaskVO> min = v.stream().min(Comparator.comparing(ProjectBoardTaskVO::getPlanStartDate));
-            min.ifPresent(projectBoardTaskVO -> singleWorkTimeVO.setMinPlanStartDate(projectBoardTaskVO.getPlanStartDate()));
-
-            Optional<ProjectBoardTaskVO> max = v.stream().max(Comparator.comparing(ProjectBoardTaskVO::getPlanEndDate));
-            max.ifPresent(projectBoardTaskVO -> singleWorkTimeVO.setMaxPlanEndDate(projectBoardTaskVO.getPlanEndDate()));
-
-            BigDecimal bigDecimal = v.stream().map(ProjectBoardTaskVO::getPlanUseTime).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+            BigDecimal planUseTime = v.stream().filter(a->a.getPlanUseTime()!=null).map(ProjectBoardTaskVO::getPlanUseTime).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
             singleWorkTimeVO.setExecutor(v.get(0).getExecutor());
             singleWorkTimeVO.setExecutorId(v.get(0).getExecutorId());
             singleWorkTimeVO.setIsPm(Objects.equals(v.get(0).getExecutorId(), projectDO.getPmId()));
             singleWorkTimeVO.setTaskCount(v.size());
             singleWorkTimeVO.setProjectStartDate(projectStartDate);
             singleWorkTimeVO.setProjectEndDate(projectEndDate.get(0));
-            singleWorkTimeVO.setTotalPlanUseTime(bigDecimal);
+            singleWorkTimeVO.setTotalPlanUseTime(planUseTime);
             List<ProjectBoardTaskVO> sort = v.stream().sorted(Comparator.comparing(ProjectBoardTaskVO::getPlanStartDate)).collect(Collectors.toList());
             singleWorkTimeVO.setProjectBoardTaskVos(sort);
             result.add(singleWorkTimeVO);

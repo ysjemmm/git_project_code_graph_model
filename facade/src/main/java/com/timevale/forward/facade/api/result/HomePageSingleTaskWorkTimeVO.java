@@ -17,12 +17,16 @@ import java.util.Date;
  **/
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("项目维度看板-任务")
-public class ProjectBoardTaskVO extends ToString {
+@ApiModel("首页任务看板-任务工时")
+public class HomePageSingleTaskWorkTimeVO extends ToString {
     
     @ApiModelProperty("id")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
+
+    @ApiModelProperty("项目id")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long projectId;
 
     @ApiModelProperty("名称")
     private String name;

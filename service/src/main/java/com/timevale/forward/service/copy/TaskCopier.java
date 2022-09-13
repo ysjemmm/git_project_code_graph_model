@@ -7,10 +7,7 @@ import com.timevale.forward.facade.api.query.TaskQueryList;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
 import com.timevale.forward.facade.api.request.TaskSimpleAddReq;
-import com.timevale.forward.facade.api.result.TaskDetailVO;
-import com.timevale.forward.facade.api.result.TaskListVO;
-import com.timevale.forward.facade.api.result.TaskOverdueCountVO;
-import com.timevale.forward.facade.api.result.TaskVO;
+import com.timevale.forward.facade.api.result.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -88,4 +85,12 @@ public interface TaskCopier {
      * @return TaskDO
      */
     TaskDO convert(TaskSimpleAddReq taskSimpleAddReq);
+
+    /**
+     * 转换转换DO
+     *
+     * @param TaskDO 对象
+     * @return TaskDO
+     */
+    HomePageSingleTaskWorkTimeVO convertT(TaskDO TaskDO);
 }
