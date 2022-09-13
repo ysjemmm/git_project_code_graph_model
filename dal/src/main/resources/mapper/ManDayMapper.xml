@@ -101,7 +101,6 @@
                 #{item.id,jdbcType=BIGINT}
             </foreach>
         </if>
-        and audit_status = 0
         and is_deleted = false
     </select>
 </mapper>

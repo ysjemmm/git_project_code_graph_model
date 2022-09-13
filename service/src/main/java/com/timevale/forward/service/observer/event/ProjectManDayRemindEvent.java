@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.timevale.forward.model.enums.MessageTitleEnum;
 import com.timevale.forward.model.enums.TabEnum;
 import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
@@ -11,6 +12,7 @@ import java.util.List;
  * @author xiaoyun
  * @date 2022/8/29/029 16:37
  */
+@Slf4j
 public class ProjectManDayRemindEvent extends MessageEvent{
     private final Long bizDemandId;
     private final String receiver;
@@ -37,6 +39,8 @@ public class ProjectManDayRemindEvent extends MessageEvent{
                 .content(markdown)
                 .receivers(receivers)
                 .build();
+
+        log.info("PROJECT_MAN_DAY_REMIND, title:{}, pm:{}", name, receiver);
 
         erpMessageClient.sendMarkdownMsg(markdownMsg);
     }
