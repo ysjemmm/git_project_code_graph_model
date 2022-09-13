@@ -10,6 +10,7 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.HomePageService;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
 import com.timevale.forward.facade.api.request.HomePageBaseReq;
+import com.timevale.forward.facade.api.request.HomePageHolidayReq;
 import com.timevale.forward.facade.api.request.HomePageProjectBoardReq;
 import com.timevale.forward.facade.api.request.HomePageTaskBoardReq;
 import com.timevale.forward.facade.api.result.*;
@@ -550,8 +551,8 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     @Override
-    public BaseResult<List<String>> getHolidays(Date startTime, Date endTime) {
-        List<String> holidays = elapsedTimeClient.getHolidays(startTime, endTime, true);
+    public BaseResult<List<String>> getHolidays(HomePageHolidayReq homePageHolidayReq) {
+        List<String> holidays = elapsedTimeClient.getHolidays(homePageHolidayReq.getStartDate(), homePageHolidayReq.getEndDate(), true);
         return BaseResult.success(holidays);
     }
 

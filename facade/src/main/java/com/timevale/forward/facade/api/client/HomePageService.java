@@ -4,13 +4,13 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
 import com.timevale.forward.facade.api.request.HomePageBaseReq;
+import com.timevale.forward.facade.api.request.HomePageHolidayReq;
 import com.timevale.forward.facade.api.request.HomePageProjectBoardReq;
 import com.timevale.forward.facade.api.request.HomePageTaskBoardReq;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -80,9 +80,8 @@ public interface HomePageService {
 
     /**
      *
-     * @param startTime  开始时间
-     * @param endTime 结束时间
-     * @return 日期
+     * @param homePageHolidayReq  homePageHolidayReq
+     * @return 节假日期
      */
-    BaseResult<List<String>> getHolidays(Date startTime, Date endTime);
+    BaseResult<List<String>> getHolidays(HomePageHolidayReq homePageHolidayReq);
 }
