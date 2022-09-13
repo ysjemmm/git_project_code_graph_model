@@ -1,5 +1,6 @@
 package com.timevale.forward.service.integration.http.impl;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -14,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author xingyun
@@ -36,7 +38,7 @@ public class ElapsedTimeClientImpl implements ElapsedTimeClient {
 
     @Override
     public Long getElapsedTime(Date startTime, Date endTime) {
-        log.info("workTime: startTime: {},endTime: {}", startTime, endTime);
+        log.info("secondTime: startTime: {},endTime: {}", startTime, endTime);
         JSONObject param = new JSONObject();
         param.put("startTime", DateUtil.parseToString(startTime));
         param.put("endTime", DateUtil.parseToString(endTime));
@@ -45,11 +47,22 @@ public class ElapsedTimeClientImpl implements ElapsedTimeClient {
 
     @Override
     public String getElapsedEndTime(Date startTime, Long seconds) {
-        log.info("workTime: startTime: {},seconds: {}", startTime, seconds);
+        log.info("endTime: startTime: {},seconds: {}", startTime, seconds);
         JSONObject param = new JSONObject();
         param.put("startTime", DateUtil.parseToString(startTime));
         param.put("seconds", seconds);
         return getTime(param, baseUrl + "deadlineV2/").getString("deadline");
+    }
+
+    @Override
+    public List<String> getHolidays(Date startTime, Date endTime, boolean holiday) {
+        log.info("holiday: startTime: {},endTime: {}", startTime, endTime);
+        JSONObject param = new JSONObject();
+        param.put("startTime", DateUtil.parseToString(startTime));
+        param.put("endTime", DateUtil.parseToString(endTime));
+        String url = holiday ? "holidayList/" : "workdayList/";
+        JSONArray dayList = getTime(param, baseUrl + url).getJSONArray("dayList");
+        return JSONObject.parseArray(dayList.toJSONString(), String.class);
     }
 
     private JSONObject getTime(JSONObject param, String url) {

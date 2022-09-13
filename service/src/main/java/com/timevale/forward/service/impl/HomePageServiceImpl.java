@@ -17,6 +17,7 @@ import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.integration.superset.model.base.PageResult;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -87,6 +88,9 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Resource
     private PersonMapper personMapper;
+
+    @Resource
+    private ElapsedTimeClient elapsedTimeClient;
 
     @Override
     public BaseResult<HomePageDataIndicatorVO> getDataIndicator(HomePageBaseReq homePageBaseReq) {
@@ -543,6 +547,12 @@ public class HomePageServiceImpl implements HomePageService {
             result.add(workTimeVO);
         });
         return BaseResult.success(result);
+    }
+
+    @Override
+    public BaseResult<List<String>> getHolidays(Date startTime, Date endTime) {
+        List<String> holidays = elapsedTimeClient.getHolidays(startTime, endTime, true);
+        return BaseResult.success(holidays);
     }
 
     public List<HomePageProjectBoardDTO> filterByDate(UserTypeEnum userType, Date startDate, Date endDate, List<HomePageProjectBoardDTO> list) {

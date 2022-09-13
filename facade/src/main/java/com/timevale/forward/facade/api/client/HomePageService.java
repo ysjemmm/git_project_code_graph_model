@@ -10,6 +10,7 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -76,4 +77,12 @@ public interface HomePageService {
      * @return 列表
      */
     BaseResult<List<HomePageSingleWorkTimeVO>> getTaskWorkTimeBoard(HomePageTaskBoardReq req);
+
+    /**
+     *
+     * @param startTime  开始时间
+     * @param endTime 结束时间
+     * @return 日期
+     */
+    BaseResult<List<String>> getHolidays(Date startTime, Date endTime);
 }
