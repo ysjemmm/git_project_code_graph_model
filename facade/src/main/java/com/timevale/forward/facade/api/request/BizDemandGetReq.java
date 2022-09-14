@@ -22,4 +22,7 @@ public class BizDemandGetReq extends BaseReq {
     @ApiModelProperty("业务需求状态")
     private List<Integer>status;
 
+    @ApiModelProperty("来源id(客开项目id)")
+    private String sourceId;
+
 }

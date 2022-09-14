@@ -1009,11 +1009,13 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
-    public BaseResult<List<BizDemandSimpleVO>> getBizDemandByIds(BizDemandGetReq bizDemandGetReq) {
-        if(CollectionUtils.isEmpty(bizDemandGetReq.getIds())&&CollectionUtils.isEmpty(bizDemandGetReq.getStatus())){
+    public BaseResult<List<BizDemandSimpleVO>> getSimpleBizDemands(BizDemandGetReq bizDemandGetReq) {
+        if(CollectionUtils.isEmpty(bizDemandGetReq.getIds())
+                &&CollectionUtils.isEmpty(bizDemandGetReq.getStatus())
+                &&StringUtils.isEmpty(bizDemandGetReq.getSourceId())){
             return BaseResult.success(Lists.emptyList());
         }
-        List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIdAndStatus(bizDemandGetReq.getIds(),bizDemandGetReq.getStatus());
+        List<BizDemandDO> bizDemandDOList = bizDemandMapper.getSimpleBizDemands(bizDemandGetReq.getIds(),bizDemandGetReq.getStatus(),bizDemandGetReq.getSourceId());
         List<BizDemandSimpleVO> bizDemandVOList = bizDemandDOList.stream().map(BizDemandCopier.INSTANCE::convertT).collect(Collectors.toList());
         return BaseResult.success(bizDemandVOList);
     }

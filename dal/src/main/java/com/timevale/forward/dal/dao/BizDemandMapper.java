@@ -146,6 +146,6 @@ public interface BizDemandMapper {
      * @param status 状态
      * @return 业务需求DO
      */
-    List<BizDemandDO> selectByIdAndStatus(@Param("ids") List<Long> ids,@Param("status") List<Integer> status);
+    List<BizDemandDO> getSimpleBizDemands(@Param("ids") List<Long> ids,@Param("status") List<Integer> status,@Param("sourceId") String sourceId);
 
 }

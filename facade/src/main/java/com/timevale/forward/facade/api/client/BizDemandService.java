@@ -138,6 +138,6 @@ public interface BizDemandService {
      * @param bizDemandGetReq 业务需求id
      * @return 多个业务需求详情
      */
-    BaseResult<List<BizDemandSimpleVO>> getBizDemandByIds(BizDemandGetReq bizDemandGetReq);
+    BaseResult<List<BizDemandSimpleVO>> getSimpleBizDemands(BizDemandGetReq bizDemandGetReq);
 
 }
