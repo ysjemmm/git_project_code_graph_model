@@ -264,10 +264,10 @@
         </where>
     </select>
 
-    <select id="getByDate" resultType="com.timevale.forward.dal.entity.TaskDO">
+    <select id="getByDate" resultType="com.timevale.forward.dal.dto.TaskBoardDTO">
         select distinct a.id, a.project_id, a.product_line_id, a.name, a.stage, a.status, a.todo, a.todo_id, a.plan_start_date, a.plan_end_date,
         a.plan_use_time, a.actual_start_date, a.actual_end_date, a.task_use_time, a.is_deleted, a.create_man_id, a.create_man,
-        a.create_date, a.modify_man_id, a.modify_man, a.modify_date
+        a.create_date, a.modify_man_id, a.modify_man, a.modify_date,c.plan_end_date projectPlanEndDate
         from task a
         join person b on a.id=b.main_id and b.type=40 and b.is_deleted = false
         join project c on a.project_id=c.id

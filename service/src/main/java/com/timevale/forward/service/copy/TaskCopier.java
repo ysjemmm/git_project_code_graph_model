@@ -1,6 +1,7 @@
 package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.condition.TaskListCondition;
+import com.timevale.forward.dal.dto.TaskBoardDTO;
 import com.timevale.forward.dal.dto.TaskOverdueDTO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.query.TaskQueryList;
@@ -87,12 +88,12 @@ public interface TaskCopier {
     TaskDO convert(TaskSimpleAddReq taskSimpleAddReq);
 
     /**
-     * 转换转换DO
+     * 转换转换VO
      *
-     * @param TaskDO 对象
-     * @return TaskDO
+     * @param taskBoardDTO 对象
+     * @return HomePageSingleTaskWorkTimeVO
      */
-    HomePageSingleTaskWorkTimeVO convert2HomePage(TaskDO TaskDO);
+    HomePageSingleTaskWorkTimeVO convert2HomePage(TaskBoardDTO taskBoardDTO);
 
     /**
      * 转换转换DO

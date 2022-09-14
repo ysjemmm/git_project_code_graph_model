@@ -2,6 +2,7 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.TaskCondition;
 import com.timevale.forward.dal.condition.TaskListCondition;
+import com.timevale.forward.dal.dto.TaskBoardDTO;
 import com.timevale.forward.dal.dto.TaskOverdueDTO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.dal.entity.TaskStatusUpdateDO;
@@ -126,6 +127,6 @@ public interface TaskMapper {
     /**
      * 查询用户逾期任务数量、时间
      */
-    List<TaskDO> getByDate(@Param("startDate") Date startDate,@Param("endDate") Date endDate,@Param("accounts") List<String> accounts);
+    List<TaskBoardDTO> getByDate(@Param("startDate") Date startDate, @Param("endDate") Date endDate, @Param("accounts") List<String> accounts);
 
 }

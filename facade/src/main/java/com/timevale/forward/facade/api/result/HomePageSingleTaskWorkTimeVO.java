@@ -34,9 +34,6 @@ public class HomePageSingleTaskWorkTimeVO extends ToString {
     @ApiModelProperty("项目状态:0待执行、10进行中、20已完成、-10已暂停、-20已作废")
     private Integer status;
 
-    @ApiModelProperty("项目状态")
-    private String statusName;
-
     @ApiModelProperty("是否逾期")
     private Boolean isDelay;
 

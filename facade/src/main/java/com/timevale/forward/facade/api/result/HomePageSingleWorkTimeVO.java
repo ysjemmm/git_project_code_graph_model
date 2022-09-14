@@ -31,15 +31,6 @@ public class HomePageSingleWorkTimeVO extends ToString {
     @ApiModelProperty("任务计划总耗时")
     private BigDecimal totalPlanUseTime;
 
-    @ApiModelProperty("任务实际总耗时")
-    private BigDecimal totalTaskUseTime;
-
-//    @ApiModelProperty("项目开始时间")
-//    private Date projectStartDate;
-//
-//    @ApiModelProperty("项目结束时间")
-//    private Date projectEndDate;
-
     @ApiModelProperty("项目任务")
     private List<HomePageSingleProjectWorkTimeVO> projectWorkTimeVos;
 

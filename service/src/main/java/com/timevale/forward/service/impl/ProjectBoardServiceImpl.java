@@ -300,7 +300,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             singleWorkTimeVO.setProjectStartDate(projectStartDate);
             singleWorkTimeVO.setProjectEndDate(projectEndDate.get(0));
             singleWorkTimeVO.setTotalPlanUseTime(planUseTime);
-            List<ProjectBoardTaskVO> sort = v.stream().sorted(Comparator.comparing(ProjectBoardTaskVO::getPlanStartDate)).collect(Collectors.toList());
+            List<ProjectBoardTaskVO> sort = v.stream().sorted(Comparator.comparing(ProjectBoardTaskVO::getStartDate)).collect(Collectors.toList());
             singleWorkTimeVO.setProjectBoardTaskVos(sort);
             result.add(singleWorkTimeVO);
         });

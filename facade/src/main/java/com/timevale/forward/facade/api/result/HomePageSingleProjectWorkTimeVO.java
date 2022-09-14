@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 
@@ -28,6 +29,9 @@ public class HomePageSingleProjectWorkTimeVO extends ToString {
 
     @ApiModelProperty("任务实际总耗时")
     private BigDecimal totalTaskUseTime;
+
+    @ApiModelProperty("项目结束时间")
+    private Date projectPlanEndDate;
 
     @ApiModelProperty("项目任务")
     private List<HomePageSingleTaskWorkTimeVO> taskWorkTimeVos;
