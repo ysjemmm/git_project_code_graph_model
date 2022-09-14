@@ -263,18 +263,23 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         List<PersonDO> personDOList = personMapper.get(taskIds, PersonTypeEnum.TASK_EXECUTOR.getCode());
 
         Map<String, List<ProjectBoardTaskVO>> projectBoardTaskVoMap = new HashMap<>();
-        Date current=new Date();
+        Date current = new Date();
         personDOList.forEach(a -> {
             TaskDO taskDO = taskMap.get(a.getMainId());
             ProjectBoardTaskVO projectBoardTaskVO = TaskCopier.INSTANCE.convert2ProjectBoard(taskDO);
-            if(taskDO.getActualStartDate()==null){
+            if (taskDO.getActualStartDate() == null) {
                 projectBoardTaskVO.setStartDate(taskDO.getPlanStartDate());
                 projectBoardTaskVO.setEndDate(taskDO.getPlanEndDate());
-            }else if(taskDO.getActualStartDate().before(taskDO.getPlanEndDate())){
-                //实际开始时间小于计划结束时间
+            } else if (taskDO.getActualEndDate() != null) {
+                //实际开始和结束都不为空
+                projectBoardTaskVO.setStartDate(taskDO.getActualStartDate());
+                projectBoardTaskVO.setEndDate(taskDO.getActualEndDate());
+            } else if (taskDO.getActualStartDate().before(taskDO.getPlanEndDate())) {
+                //实际开始不空,结束为空,实际开始小于计划结束时间
                 projectBoardTaskVO.setStartDate(taskDO.getActualStartDate());
                 projectBoardTaskVO.setEndDate(taskDO.getPlanEndDate());
-            }else {
+            } else {
+                //实际开始不空,结束为空,实际开始大于计划结束时间
                 projectBoardTaskVO.setStartDate(taskDO.getActualStartDate());
                 projectBoardTaskVO.setEndDate(current);
             }
@@ -292,7 +297,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         projectBoardTaskVoMap.forEach((k, v) -> {
             ProjectBoardSinglelWorkTimeVO singleWorkTimeVO = new ProjectBoardSinglelWorkTimeVO();
 
-            BigDecimal planUseTime = v.stream().filter(a->a.getPlanUseTime()!=null).map(ProjectBoardTaskVO::getPlanUseTime).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+            BigDecimal planUseTime = v.stream().filter(a -> a.getPlanUseTime() != null).map(ProjectBoardTaskVO::getPlanUseTime).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
             singleWorkTimeVO.setExecutor(v.get(0).getExecutor());
             singleWorkTimeVO.setExecutorId(v.get(0).getExecutorId());
             singleWorkTimeVO.setIsPm(Objects.equals(v.get(0).getExecutorId(), projectDO.getPmId()));

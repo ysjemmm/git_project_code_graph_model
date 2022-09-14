@@ -454,7 +454,7 @@ public class HomePageServiceImpl implements HomePageService {
         // 我和我的下属的所有名字
         Set<String> allMyStaffNameWithSelf = responses.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toSet());
         Map<String, String> personMap = responses.stream()
-                .collect(Collectors.toMap(BaseInfoResponse::getAccount, a->a.getAlias()+"-"+a.getName(), (v1, v2) -> v2));
+                .collect(Collectors.toMap(BaseInfoResponse::getAccount, a -> a.getAlias() + "-" + a.getName(), (v1, v2) -> v2));
 
         // 部门id、员工id非空取交集
         if (!CollectionUtils.isEmpty(deptIds)) {
@@ -479,11 +479,16 @@ public class HomePageServiceImpl implements HomePageService {
             if (a.getActualStartDate() == null) {
                 a.setStartDate(a.getPlanStartDate());
                 a.setEndDate(a.getPlanEndDate());
+            } else if (a.getActualEndDate() != null) {
+                //实际开始和结束都不为空
+                a.setStartDate(a.getActualStartDate());
+                a.setEndDate(a.getActualEndDate());
             } else if (a.getActualStartDate().before(a.getPlanEndDate())) {
-                //实际开始时间小于计划结束时间
+                //实际开始不空,结束为空,实际开始小于计划结束时间
                 a.setStartDate(a.getActualStartDate());
                 a.setEndDate(a.getPlanEndDate());
             } else {
+                //实际开始不空,结束为空,实际开始大于计划结束时间
                 a.setStartDate(a.getActualStartDate());
                 a.setEndDate(current);
             }
@@ -496,7 +501,7 @@ public class HomePageServiceImpl implements HomePageService {
             List<Long> filterIds = filter.stream().map(TaskBoardDTO::getId).collect(Collectors.toList());
             Map<Long, TaskBoardDTO> taskMap = filter.stream().collect(Collectors.toMap(TaskBoardDTO::getId, k -> k, (v1, v2) -> v2));
             Map<Long, Date> projectDateMap = filter.stream().collect(Collectors.toMap(TaskBoardDTO::getProjectId, TaskBoardDTO::getProjectPlanEndDate, (v1, v2) -> v2));
-            log.info("首页任务看板,任务id:{},执行人{}", filterIds,allMyStaffNameWithSelf);
+            log.info("首页任务看板,任务id:{},执行人{}", filterIds, allMyStaffNameWithSelf);
             List<PersonDO> personDOList = personMapper.getPersons(Lists.newArrayList(allMyStaffNameWithSelf), filterIds, PersonTypeEnum.TASK_EXECUTOR.getCode());
 
             Map<String, List<HomePageSingleTaskWorkTimeVO>> taskWorkTimeOnePersonMap = new HashMap<>();
@@ -549,7 +554,7 @@ public class HomePageServiceImpl implements HomePageService {
                 result.add(workTimeVO);
             });
             return BaseResult.success(result);
-        }else if(HomePageTabEnum.INDIVIDUAL.getCode().equals(req.getTabType())){
+        } else if (HomePageTabEnum.INDIVIDUAL.getCode().equals(req.getTabType())) {
             //没有任务,个人直接返回
             return BaseResult.success(Lists.emptyList());
         }
