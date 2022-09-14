@@ -3,6 +3,7 @@ package com.timevale.forward.service.copy;
 import com.timevale.forward.dal.condition.LabelListCondition;
 import com.timevale.forward.dal.entity.LabelDO;
 import com.timevale.forward.facade.api.query.LabelQueryList;
+import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.LabelSimpleVO;
 import com.timevale.forward.facade.api.result.LabelVO;
 import org.mapstruct.Mapper;
@@ -26,6 +27,13 @@ public interface LabelCopier {
      * @return LabelSimpleVO
      */
     List<LabelSimpleVO> convert(List<LabelDO> labelDOList);
+
+    /**
+     *
+     * @param labelDOList
+     * @return
+     */
+    List<BizLabelSimpleVO> convert2BizLabel(List<LabelDO> labelDOList);
 
     /**
      *

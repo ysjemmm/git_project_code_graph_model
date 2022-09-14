@@ -132,6 +132,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Resource
     private LabelCategoryMapper labelCategoryMapper;
 
+    @Resource
+    private BizLabelComponent bizLabelComponent;
+
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
         log.info("线上bug-从配置中心获取信息，接收参数：{}", bugOnlineGetFieldReq.getProductLineIdList());
@@ -245,16 +248,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
         //标签
         List<Long> bugOnlineIds = bugOnlineDOList.stream().map(BugOnlineListDO::getId).collect(Collectors.toList());
-        bizLabelDOList = bizLabelMapper.getByBizIdInType(bugOnlineIds, BizTypeEnum.BUG_ONLINE.getCode());
-        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
-                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
 
-        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
-        Map<Long, String> labelNameMap = new HashMap<>();
-        if (CollectionUtils.isNotEmpty(labelIds)) {
-            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
-            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
-        }
+        Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(bugOnlineIds, BizTypeEnum.BUG_ONLINE.getCode());
 
         // 查询对应产品线和业务域
         List<Long> bugOnlineIdList = bugOnlineVOList.stream().map(BugOnlineVO::getId).collect(Collectors.toList());
@@ -337,10 +332,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             e.setPriorityName(BugOnlinePriorityEnum.getTextByCode(e.getPriority()));
             e.setDismissCauseName(BugOnlineDismissCauseEnum.getTextByCode(e.getDismissCause()));
 
-            if (labelIdMap.containsKey(e.getId())) {
-                List<Long> labelIdList = labelIdMap.get(e.getId());
-                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
-                e.setLabelNames(labelNames);
+            List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(e.getId());
+            if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
+                e.setLabelNames(labelSimpleVOList);
             }
         }
 

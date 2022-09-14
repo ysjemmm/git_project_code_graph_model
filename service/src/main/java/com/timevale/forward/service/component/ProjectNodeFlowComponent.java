@@ -2,6 +2,7 @@ package com.timevale.forward.service.component;
 
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import com.timevale.forward.dal.entity.ProjectNodeFlowDO;
+import com.timevale.mandarin.common.query.QueryBase;
 
 import java.util.List;
 
@@ -26,4 +27,5 @@ public interface ProjectNodeFlowComponent {
 
     void  insertProjectNodeRecord(Long projectId,List<ProjectNodeDO> projectNodes);
 
+    List flushCompleteFlow(QueryBase queryBase);
 }

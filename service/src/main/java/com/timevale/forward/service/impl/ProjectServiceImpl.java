@@ -33,6 +33,7 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -203,7 +204,11 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> updateStatus(Long projectId, Integer type) {
+    public BaseResult<Boolean> updateStatus(ProjectUpdateStatusReq req) {
+        Long projectId = req.getProjectId();
+        Integer type = req.getType();
+        String suspendReason = req.getSuspendReason();
+        String invalidReason = req.getInvalidReason();
         log.info("项目暂停或作废接收参数:{},{}", projectId, type);
         if (!ProjectStatusEnum.SUSPEND.getCode().equals(type)
                 && !ProjectStatusEnum.INVALID.getCode().equals(type)) {
@@ -222,6 +227,8 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO updateStatusDO = new ProjectDO();
         updateStatusDO.setId(projectId);
         updateStatusDO.setStatus(type);
+        updateStatusDO.setSuspendReason(suspendReason);
+        updateStatusDO.setInvalidReason(invalidReason);
         projectMapper.update(updateStatusDO);
 
         //修改产品需求状态
@@ -232,6 +239,13 @@ public class ProjectServiceImpl implements ProjectService {
         }
         String action = ProjectStatusEnum.SUSPEND.getCode().equals(type) ? ButtonActionEnum.SUSPEND.getText() : ButtonActionEnum.INVALID.getText();
         projectLogComponent.addLogWhenStatusChange(oldStatus, type, projectId, action);
+
+        //记录暂停/作废原因更新日志
+        String field = ProjectStatusEnum.SUSPEND.getCode().equals(type) ?
+                BizChangeLogFieldEnum.SUSPEND_REASON.getText() : BizChangeLogFieldEnum.INVALID_REASON.getText();
+        String reason = ProjectStatusEnum.SUSPEND.getCode().equals(type) ?
+                suspendReason : invalidReason;
+        projectLogComponent.addLogWhenContentChange(CommonConstant.NULL, reason, projectId, field);
         // 更新任务状态
         taskComponent.updateStatusAsProjectStatusChange(projectId, type, false);
         return BaseResult.success(true);
@@ -249,6 +263,9 @@ public class ProjectServiceImpl implements ProjectService {
             throw new BaseBizRuntimeException("项目状态不是暂停,不能开启");
         }
         Integer oldStatus = projectDO.getStatus();
+        String oldReason = projectDO.getSuspendReason();
+        projectDO.setSuspendReason(null);
+
         List<ProjectNodeDO> projectNode = projectNodeComponent.get(projectId);
         log.info("项目开启,节点信息:projectNode={}", projectNode);
         if (CollectionUtils.isEmpty(projectNode)) {
@@ -261,6 +278,12 @@ public class ProjectServiceImpl implements ProjectService {
         taskComponent.updateStatusAsProjectStatusChange(projectId, projectDO.getStatus(), enableTask);
 
         projectLogComponent.addLogWhenStatusChange(oldStatus, projectDO.getStatus(), projectId, ButtonActionEnum.ENABLE.getText());
+        //记录开启日志更新日志
+        if (StringUtils.isNotBlank(oldReason)) {
+            projectLogComponent.addLogWhenContentChange(oldReason, CommonConstant.NULL, projectId,
+                    BizChangeLogFieldEnum.SUSPEND_REASON.getText());
+        }
+
         return BaseResult.success(true);
     }
 
@@ -526,24 +549,16 @@ public class ProjectServiceImpl implements ProjectService {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
         List<Long> pids = productDemandListDO.stream().map(ProductDemandListDO::getId).collect(Collectors.toList());
-        bizLabelDOList = bizLabelMapper.getByBizIdInType(pids, BizTypeEnum.PRODUCT_DEMAND.getCode());
-        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
-                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
 
-        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
-        Map<Long, String> labelNameMap = new HashMap<>();
-        if (CollectionUtils.isNotEmpty(labelIds)) {
-            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
-            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
-        }
+        Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(pids, BizTypeEnum.PRODUCT_DEMAND.getCode());
+
         for (ProductDemandVO a : productDemandVOList) {
             a.setStatusName(ProductDemandStatusEnum.getTextByCode(a.getStatus()));
             a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
 
-            if (labelIdMap.containsKey(a.getId())) {
-                List<Long> labelIdList = labelIdMap.get(a.getId());
-                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
-                a.setLabelNames(labelNames);
+            List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(a.getId());
+            if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
+                a.setLabelNames(labelSimpleVOList);
             }
         }
         PageInfo<ProductDemandListDO> pageInfo = new PageInfo<>(productDemandListDO);

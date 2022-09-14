@@ -5,6 +5,7 @@ import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
+import com.timevale.mandarin.common.query.QueryBase;
 
 import java.util.List;
 
@@ -43,4 +44,10 @@ public interface ProjectComponent {
      * @return Long
      */
     List<Long> getLinkProductDemandIds(Long projectId);
+
+    /**
+     * 获得所有进行中的项目id
+     * @return
+     */
+    List<ProjectDO> pageAllOngoingProjects(QueryBase queryBase);
 }

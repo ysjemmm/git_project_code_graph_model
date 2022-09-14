@@ -81,4 +81,7 @@ public class ProjectNodeFlowDetailVO extends ToString {
 
     @ApiModelProperty("变更类型为其他时,填写")
     private String otherReason;
+
+    @ApiModelProperty("流程结束时间")
+    private Date flowEndDate;
 }

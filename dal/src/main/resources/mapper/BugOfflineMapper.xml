@@ -221,6 +221,9 @@
             <if test="true">
                 and bo.is_deleted = false
             </if>
+            <if test="proposerLike != null and proposerLike != ''">
+                and bo.proposer like concat('%',#{proposerLike},'%')
+            </if>
         </where>
     </select>
 

@@ -13,7 +13,7 @@
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
         select id,project_id, flow_id,flow_type,proposer_id,proposer,review_date,review_id,review ,reviewed_id,reviewed,
         unreviewed_id,unreviewed,review_fail_id, review_fail, review_fail_reason,review_url,status,is_deleted,create_man_id,
-        create_man,create_date,modify_man_id,modify_man,modify_date
+        create_man,create_date,modify_man_id,modify_man,modify_date, flow_end_date
         from project_flow
         <where>
             <if test="id != null"> id = #{id}</if>
@@ -25,7 +25,7 @@
     <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
         select id,project_id, flow_id,flow_type,proposer_id,proposer,review_date,review_id,review ,reviewed_id,reviewed,
         unreviewed_id,unreviewed,review_fail_id, review_fail, review_fail_reason,review_url,status,is_deleted,create_man_id,
-        create_man,create_date,modify_man_id,modify_man,modify_date
+        create_man,create_date,modify_man_id,modify_man,modify_date, flow_end_date
         from project_flow
         where project_id = #{projectId} and is_deleted=false
     </select>
@@ -60,10 +60,36 @@
             <if test="docModifyManId != null">doc_modify_man_id = #{docModifyManId},</if>
             <if test="docModifyMan != null">doc_modify_man = #{docModifyMan},</if>
             <if test="docModifyDate != null">doc_modify_date = #{docModifyDate},</if>
+            <if test="flowEndDate != null">flow_end_date = #{flowEndDate},</if>
         </set>
         <where>
             id = #{id}
         </where>
     </update>
 
+    <select id="pageCompleteFlow" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
+        select id, flow_id, modify_date from project_flow pf
+        where flow_type in (10, 20, 30)
+          and status in (-1, 1, 2)
+          and is_deleted = false
+<!--          and flow_end_date is null-->
+<!--          and project_id = 1642-->
+    </select>
+
+    <update id="batchUpdateFlowEndTime">
+        update project_flow
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="flow_end_date = case" suffix="end,">
+                <foreach collection="projectFlowDOList" index="index" item="item">
+                    <if test="item.flowEndDate != null">
+                        when id = #{item.id,jdbcType=BIGINT} then #{item.flowEndDate,jdbcType=TIMESTAMP}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where id in
+        <foreach close=")" collection="projectFlowDOList" item="item" open="(" separator=", ">
+            #{item.id,jdbcType=BIGINT}
+        </foreach>
+    </update>
 </mapper>

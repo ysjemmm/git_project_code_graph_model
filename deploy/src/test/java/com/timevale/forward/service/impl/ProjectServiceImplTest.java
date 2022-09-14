@@ -142,7 +142,11 @@ public class ProjectServiceImplTest extends AbstractTestNGSpringContextTests {
 
         doNothing().when(taskComponent).updateStatusAsProjectStatusChange(any(), any(), any());
 
-        assert projectService.updateStatus(1L, -10).ifSuccess();
+        ProjectUpdateStatusReq req = new ProjectUpdateStatusReq();
+        req.setProjectId(1L);
+        req.setType(-10);
+
+        assert projectService.updateStatus(req).ifSuccess();
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.timevale.forward.service.integration.epeius;
 import com.timevale.epeius.service.model.request.ProcessInstanceRequest;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.epeius.service.model.request.TerminateRequest;
+import com.timevale.epeius.service.model.response.FlowResponse;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.lowcode.support.response.task.TaskHandleUserResponse;
 
@@ -25,6 +26,13 @@ public interface EpeiusClient {
      * @return 流程信息
      */
     ProcessResponse getProcessInfo(String processInstanceId);
+
+    /**
+     * 流程
+     * @param processInstanceId processInstanceId
+     * @return 流程信息
+     */
+    FlowResponse getOldProcessInfo(String processInstanceId);
 
     /**
      *

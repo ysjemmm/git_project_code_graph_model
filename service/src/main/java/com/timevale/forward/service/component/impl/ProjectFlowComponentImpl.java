@@ -1,9 +1,12 @@
 package com.timevale.forward.service.component.impl;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.google.common.base.Objects;
 
 import com.alibaba.fastjson.JSONObject;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
+import com.timevale.epeius.service.model.response.FlowResponse;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectNodeMapper;
@@ -19,14 +22,13 @@ import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.lowcode.support.response.task.TaskHandleUserResponse;
 
+import com.timevale.mandarin.common.query.QueryBase;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -82,11 +84,14 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
             projectFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode());
             String rejectReason = flowData.get("rejectReason") == null ? StringUtils.EMPTY : String.valueOf(flowData.get("rejectReason"));
             projectFlowDO.setReviewFailReason(rejectReason);
+            projectFlowDO.setFlowEndDate(new Date());
         } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
             projectFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.WITHDRAW.getCode());
+            projectFlowDO.setFlowEndDate(new Date());
         } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
             ProjectDO oldProjectDO = projectMapper.get(projectFlowDO.getProjectId());
             projectFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode());
+            projectFlowDO.setFlowEndDate(new Date());
             ProjectNodeDO projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), ProjectNodeEnum.getNameByCode(projectFlowDO.getFlowType()));
             if (projectNodeDo != null) {
                 projectNodeMapper.updateActualDateById(projectNodeDo.getId(), processInfo.getEndTime());
@@ -153,6 +158,39 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
         projectFlowDO.setUnreviewed(CollectionUtils.isEmpty(unReviewAlias) ? StringUtils.EMPTY : JSONObject.toJSONString(unReviewAlias));
         log.info("更新的数据 projectFlowDO={}", projectFlowDO);
         projectFlowMapper.update(projectFlowDO);
+    }
+
+    @Override
+    public List<ProjectFlowDO> flushCompleteFlow(QueryBase queryBase) {
+        PageHelper.startPage(queryBase.getPageNum(), queryBase.getPageSize());
+
+        List<ProjectFlowDO> projectFlowDOList = projectFlowMapper.pageCompleteFlow();
+
+        PageInfo<ProjectFlowDO> pageInfo = new PageInfo<>(projectFlowDOList);
+
+        if (CollectionUtils.isEmpty(projectFlowDOList)) {
+            return projectFlowDOList;
+        }
+
+        for (ProjectFlowDO projectFlowDO : projectFlowDOList) {
+            Date endTime;
+
+            try {
+                ProcessResponse processInfo = epeiusClient.getProcessInfo(projectFlowDO.getFlowId());
+                endTime = processInfo.getEndTime();
+            } catch (Exception e) {
+                //使用更新时间更新
+                endTime = projectFlowDO.getModifyDate();
+            }
+
+            projectFlowDO.setFlowId(null);
+            projectFlowDO.setModifyDate(null);
+            projectFlowDO.setFlowEndDate(endTime);
+        }
+
+        projectFlowMapper.batchUpdateFlowEndTime(projectFlowDOList);
+
+        return pageInfo.getList();
     }
 
 }

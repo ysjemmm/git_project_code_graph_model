@@ -14,10 +14,7 @@ import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOfflineMD;
-import com.timevale.forward.service.component.FileComponent;
-import com.timevale.forward.service.component.LabelComponent;
-import com.timevale.forward.service.component.PersonComponent;
-import com.timevale.forward.service.component.SqlOrderComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
@@ -98,6 +95,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Resource
     private BugOnlineMapper bugOnlineMapper;
 
+    @Resource
+    private BizLabelComponent bizLabelComponent;
+
     @Override
     public BaseResult<PageQueryResult<BugOfflineVO>> list(BugOfflineQueryList bugOfflineQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -168,16 +168,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
 
         List<Long> bugOfflineIds = bugOfflineDOList.stream().map(BugOfflineListDO::getId).collect(Collectors.toList());
-        bizLabelDOList = bizLabelMapper.getByBizIdInType(bugOfflineIds, BizTypeEnum.BUG_OFFLINE.getCode());
-        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
-                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
 
-        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
-        Map<Long, String> labelNameMap = new HashMap<>();
-        if (CollectionUtils.isNotEmpty(labelIds)) {
-            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
-            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
-        }
+        Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(bugOfflineIds, BizTypeEnum.BUG_OFFLINE.getCode());
 
         // 信息填充
         for (BugOfflineVO e : bugOfflineVOList) {
@@ -189,10 +181,9 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             e.setPriorityName(PriorityEnum.getTextChineseByCode(e.getPriority()));
             e.setUnHandleReasonName(BugUnHandleReasonEnum.getTextByCode(e.getUnHandleReason()));
 
-            if (labelIdMap.containsKey(e.getId())) {
-                List<Long> labelIdList = labelIdMap.get(e.getId());
-                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
-                e.setLabelNames(labelNames);
+            List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(e.getId());
+            if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
+                e.setLabelNames(labelSimpleVOList);
             }
         }
 

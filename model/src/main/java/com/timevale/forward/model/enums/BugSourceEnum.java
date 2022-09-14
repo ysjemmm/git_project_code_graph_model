@@ -34,7 +34,12 @@ public enum BugSourceEnum {
     /**
      * 代码review
      */
-    CODE_REVIEW(4,"代码review");
+    CODE_REVIEW(4,"代码review"),
+
+    /**
+     * 冒烟用例bug
+     */
+    SMOKING_CASE(5, "冒烟用例bug");
 
     private final Integer code;
     private final String text;

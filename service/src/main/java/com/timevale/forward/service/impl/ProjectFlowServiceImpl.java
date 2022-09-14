@@ -25,17 +25,21 @@ import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.component.ProjectLogComponent;
+import com.timevale.forward.service.component.ProjectNodeFlowComponent;
 import com.timevale.forward.service.copy.ProjectFlowCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
+import com.timevale.forward.service.utils.PageUtil;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.base.util.DateUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 
+import com.timevale.mandarin.common.query.QueryBase;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,6 +88,9 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
 
     @Value("${domain_name:http://forward-front-forward-itm-v1.projectk8s.tsign.cn/}")
     private String domainName;
+
+    @Resource
+    private ProjectNodeFlowComponent projectNodeFlowComponent;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -248,6 +255,19 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
          }
         });
         return  BaseResult.success(projectFlowNodeVos);
+    }
+
+    @Override
+    public BaseResult<Void> flushFlowEndDate() {
+        log.info("flushFlowEndDate, flush start");
+
+        PageUtil.page((queryBase) -> projectFlowComponent.flushCompleteFlow(queryBase));
+
+        PageUtil.page((queryBase) -> projectNodeFlowComponent.flushCompleteFlow(queryBase));
+
+        log.info("flushFlowEndDate, flush end");
+
+        return BaseResult.success();
     }
 
 

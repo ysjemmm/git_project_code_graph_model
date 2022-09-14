@@ -77,7 +77,14 @@ public enum BizChangeLogFieldEnum {
 
     DESC("需求描述"),
 
-    LABEL("标签");
+    LABEL("标签"),
+
+    ATTACHMENT("附件名称"),
+
+    SUSPEND_REASON("项目暂停原因"),
+
+    INVALID_REASON("项目作废原因"),
+    ;
 
     private final String text;
 
