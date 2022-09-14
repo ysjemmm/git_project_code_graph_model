@@ -26,7 +26,7 @@ public abstract class MessageEvent extends ApplicationEvent {
         config = (CommonConfig) SpringContextUtil.getBean(CommonConfig.class);
 
         if(StringUtils.isEmpty(domainName)){
-            domainName = "http://forward-front-forward-v3.projectk8s.tsign.cn/";
+            domainName = "http://forward-opt-0915.projectk8s.tsign.cn/";
         }
     }
 

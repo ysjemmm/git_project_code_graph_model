@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.entity.ManDayDO;
+import com.timevale.forward.dal.entity.ProjectDO;
 import org.apache.ibatis.annotations.Param;
 
 import java.math.BigDecimal;
@@ -34,4 +35,6 @@ public interface ManDayMapper {
     void insert(ManDayDO setWeekEndDate);
 
     BigDecimal sumProjectActualDays(@Param("projectId") Long projectId);
+
+    List<Long> listAlreadyCreateProject(@Param("projectList") List<ProjectDO> projectList, @Param("sunday") String sunday);
 }

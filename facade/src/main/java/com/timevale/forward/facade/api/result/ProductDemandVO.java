@@ -77,5 +77,5 @@ public class ProductDemandVO extends ToString {
     private Long projectId;
 
     @ApiModelProperty("标签名称")
-    private List<String> labelNames;
+    private List<BizLabelSimpleVO> labelNames;
 }

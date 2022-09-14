@@ -5,10 +5,7 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
-import com.timevale.forward.facade.api.request.ProjectAddReq;
-import com.timevale.forward.facade.api.request.ProjectDateModifyReq;
-import com.timevale.forward.facade.api.request.ProjectModifyReq;
-import com.timevale.forward.facade.api.request.ProjectProductDemandLinkReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -32,11 +29,10 @@ public interface ProjectService {
     /**
      * 修改状态
      *
-     * @param projectId, 项目id
-     * @param type       操作类型 暂停,作废
+     * @param req 暂停/作废更新
      * @return 数量
      */
-    BaseResult<Boolean> updateStatus(Long projectId, Integer type);
+    BaseResult<Boolean> updateStatus(ProjectUpdateStatusReq req);
 
     /**
      * 开启项目

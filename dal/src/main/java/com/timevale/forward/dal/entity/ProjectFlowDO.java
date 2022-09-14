@@ -111,5 +111,9 @@ public class ProjectFlowDO extends BaseDO {
      */
     private Date docModifyDate;
 
+    /**
+     * 流程结束时间
+     */
+    private Date flowEndDate;
 
 }

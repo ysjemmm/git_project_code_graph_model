@@ -13,6 +13,8 @@ public interface BizDemandLogComponent{
 
     void addLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active, String action);
 
+    void addLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active, String action, String identity);
+
     void addLogWhenBizDemandInvalid(Long bizDemandId);
 
     void addLogWhenBizDemandLinkProductDemand(Long bizDemandId, List<Long> productDemandIdList);

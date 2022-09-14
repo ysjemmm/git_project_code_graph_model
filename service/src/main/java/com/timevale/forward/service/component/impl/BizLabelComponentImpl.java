@@ -1,25 +1,27 @@
 package com.timevale.forward.service.component.impl;
 
-import com.timevale.forward.dal.dao.BizChangeLogMapper;
-import com.timevale.forward.dal.dao.BizLabelMapper;
-import com.timevale.forward.dal.dao.BugLogMapper;
-import com.timevale.forward.dal.dao.LabelMapper;
-import com.timevale.forward.dal.entity.BizChangeLogDO;
-import com.timevale.forward.dal.entity.BizLabelDO;
-import com.timevale.forward.dal.entity.BugLogDO;
-import com.timevale.forward.dal.entity.LabelDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
+import com.timevale.forward.facade.api.result.LabelSimpleVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.service.copy.LabelCopier;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.assertj.core.util.Lists;
+import org.assertj.core.util.Maps;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -42,6 +44,9 @@ public class BizLabelComponentImpl implements BizLabelComponent {
 
     @Resource
     private BugLogMapper bugLogMapper;
+
+    @Resource
+    private LabelCategoryMapper labelCategoryMapper;
 
     @Override
     public void addLog(Long mainId, List<Long> labelIds, Integer type, Boolean add) {
@@ -112,5 +117,62 @@ public class BizLabelComponentImpl implements BizLabelComponent {
         if (CollectionUtils.isNotEmpty(bizLabelDOList)) {
             bizLabelMapper.batchInsert(bizLabelDOList);
         }
+    }
+
+    @Override
+    public Map<Long, List<BizLabelSimpleVO>> getBizLabelMap(List<Long> bizIds, Integer type) {
+        Map<Long, List<BizLabelSimpleVO>> resultMap = new HashMap<>();
+
+        List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByBizIdInType(bizIds, type);
+        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream()
+                .collect(Collectors.groupingBy(BizLabelDO::getBizId,
+                        Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
+
+        List<Long> labelIds = bizLabelDOList.stream()
+                .map(BizLabelDO::getLabelId)
+                .collect(Collectors.toList());
+
+        if (CollectionUtils.isNotEmpty(labelIds)) {
+            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
+            Map<Long, LabelDO> labelNameMap = labelDOList.stream()
+                    .collect(Collectors.toMap(LabelDO::getId, Function.identity()));
+
+            List<Long> labelCategoryIdList = labelDOList.stream()
+                    .map(LabelDO::getLabelCategoryId).distinct()
+                    .collect(Collectors.toList());
+            List<LabelCategoryDO> labelCategoryDOList = labelCategoryMapper.get(labelCategoryIdList);
+
+            Map<Long, List<LabelCategoryDO>> labelCategoryMap = labelCategoryDOList.stream()
+                    .collect(Collectors.groupingBy(LabelCategoryDO::getId));
+
+            for (Long bizId : bizIds) {
+                List<Long> labelIdList = labelIdMap.get(bizId);
+                if (CollectionUtils.isEmpty(labelIdList)) {
+                    continue;
+                }
+
+                List<LabelDO> labelList = labelIdList.stream()
+                        .filter(labelNameMap::containsKey)
+                        .map(labelNameMap::get)
+                        .collect(Collectors.toList());
+
+                List<BizLabelSimpleVO> simpleVOList = LabelCopier.INSTANCE.convert2BizLabel(labelList);
+
+                if (CollectionUtils.isNotEmpty(labelCategoryDOList)) {
+                    for (BizLabelSimpleVO labelSimpleVO : simpleVOList) {
+                        List<LabelCategoryDO> list = labelCategoryMap.get(labelSimpleVO.getLabelCategoryId());
+                        if (CollectionUtils.isNotEmpty(list)) {
+                            LabelCategoryDO labelCategoryDO = list.get(0);
+
+                            labelSimpleVO.setLabelCategoryName(labelCategoryDO.getName());
+                        }
+                    }
+                }
+
+                resultMap.put(bizId, simpleVOList);
+            }
+        }
+
+        return resultMap;
     }
 }

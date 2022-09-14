@@ -62,5 +62,8 @@ public class ProjectFlowDetailVO extends ToString {
 
     @ApiModelProperty("流程id")
     private String flowId;
+
+    @ApiModelProperty("流程结束时间")
+    private Date flowEndDate;
     
 }

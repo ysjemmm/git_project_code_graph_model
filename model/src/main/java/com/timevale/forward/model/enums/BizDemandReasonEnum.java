@@ -20,7 +20,8 @@ public enum BizDemandReasonEnum {
     REPEAT_SUBMIT(4,"重复提交"),
     ISSUER_ONLINE(5,"线上问题，请提交线上bug"),
     UNREASONABLE(6,"需求不合理"),
-    UNABLE(7,"无法实现");
+    UNABLE(7,"无法实现"),
+    NO_RESPONSE_ON_DEMAND_SIDE(8, "需求方无响应");
 
     private final Integer code;
     private final String text;

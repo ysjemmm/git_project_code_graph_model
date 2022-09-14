@@ -16,10 +16,12 @@ import com.timevale.forward.facade.api.request.BizDemandLinkProductDemandReq;
 import com.timevale.forward.facade.api.request.BizDemandUnlinkProductDemandReq;
 import com.timevale.forward.facade.api.result.BizDemandLinkProductDemandVO;
 import com.timevale.forward.facade.api.result.BizDemandStatusVO;
+import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
+import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.LabelComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
@@ -89,6 +91,9 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
     @Resource
     private LabelMapper labelMapper;
+
+    @Resource
+    private BizLabelComponent bizLabelComponent;
 
     @Override
     public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> linkedProductDemandList(BizDemandProductDemandQueryList bizDemandProductDemandQueryList) {
@@ -367,26 +372,17 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
             return BaseResult.success(ResultUtil.pageEmpty());
         }
         List<Long>bizDemandIds = productDemandDOList.stream().map(BizDemandLinkProductDemandListDO::getId).collect(Collectors.toList());
-        bizLabelDOList = bizLabelMapper.getByBizIdInType(bizDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
-        Map<Long, List<Long>> labelIdMap = bizLabelDOList.stream().collect(Collectors.groupingBy(BizLabelDO::getBizId
-                , Collectors.mapping(BizLabelDO::getLabelId, Collectors.toList())));
 
-        List<Long> labelIds = bizLabelDOList.stream().map(BizLabelDO::getLabelId).collect(Collectors.toList());
-        Map<Long, String> labelNameMap = new HashMap<>();
-        if (CollectionUtils.isNotEmpty(labelIds)) {
-            List<LabelDO> labelDOList = labelMapper.getByIds(labelIds);
-            labelNameMap = labelDOList.stream().collect(Collectors.toMap(LabelDO::getId, LabelDO::getName, (v1, v2) -> v2));
-        }
+        Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(bizDemandIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
 
         // 业务需求状态信息赋值
         for (BizDemandLinkProductDemandVO e : bizDemandLinkProductDemandVOList) {
             e.setPriorityText(PriorityEnum.getTextByCode(e.getPriority()));
             e.setStatusText(ProductDemandStatusEnum.getTextByCode(e.getStatus()));
 
-            if (labelIdMap.containsKey(e.getId())) {
-                List<Long> labelIdList = labelIdMap.get(e.getId());
-                List<String> labelNames = labelIdList.stream().filter(labelNameMap::containsKey).map(labelNameMap::get).collect(Collectors.toList());
-                e.setLabelNames(labelNames);
+            List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(e.getId());
+            if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
+                e.setLabelNames(labelSimpleVOList);
             }
         }
 

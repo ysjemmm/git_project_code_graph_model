@@ -48,4 +48,10 @@ public interface ProjectFlowService {
      */
     BaseResult<List<ProjectFlowNodeVO>> getFlowNodeInfo(Long projectId);
 
+    /**
+     * 刷流程结束时间
+     * @return
+     */
+    BaseResult<Void> flushFlowEndDate();
+
 }

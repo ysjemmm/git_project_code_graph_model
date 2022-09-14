@@ -93,4 +93,7 @@ public class BugOfflineQueryList extends QueryBase {
 
     @ApiModelProperty("选中为标签类别时填写,类别id")
     private List<Long> labelCategoryIds;
+
+    @ApiModelProperty("提出人花名Like")
+    private String proposerLike;
 }

@@ -66,6 +66,10 @@ public class ProjectListDO extends BaseDO {
      */
     private String pdName;
 
+    /**
+     * pmId
+     */
+    private String pmId;
 
     /**
      * pm名称

@@ -46,7 +46,7 @@ public class BugOfflineVO extends ToString {
     @ApiModelProperty(value = "优先级-描述")
     private String priorityName;
 
-    @ApiModelProperty(value = "bug来源:0预演bug,1测试阶段bug,2历史版本bug,3自动化脚本执行发现bug")
+    @ApiModelProperty(value = "bug来源:0预演bug,1测试阶段bug,2历史版本bug,3自动化脚本执行发现bug,4代码review,5冒烟用例")
     private Integer source;
 
     @ApiModelProperty(value = "bug来源-描述")
@@ -110,5 +110,5 @@ public class BugOfflineVO extends ToString {
     private Date expectSolveDate;
 
     @ApiModelProperty("标签名称")
-    private List<String> labelNames;
+    private List<BizLabelSimpleVO> labelNames;
 }

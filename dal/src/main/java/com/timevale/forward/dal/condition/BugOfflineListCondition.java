@@ -125,4 +125,9 @@ public class BugOfflineListCondition {
      *包含的id
      */
     private List<Long> containIds;
+
+    /**
+     * 提出人like
+     */
+    private String proposerLike;
 }
