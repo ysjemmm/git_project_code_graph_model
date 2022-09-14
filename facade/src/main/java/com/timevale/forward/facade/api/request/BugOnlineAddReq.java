@@ -93,8 +93,8 @@ public class BugOnlineAddReq extends BaseReq {
     @ApiModelProperty("来源数据id")
     private String sourceId;
 
-    @ApiModelProperty("来源数据名称")
-    private String sourceName;
+    @ApiModelProperty("客开项目名称")
+    private String customerDevProjectName;
 
     @ApiModelProperty("业务id")
     private String bizId;

@@ -137,14 +137,14 @@
         insert into bug_online(name, operator, operator_id, last_operator, last_operator_id, proposer, proposer_id,
                                customer_name, env, belong, priority, recurrent, reason, expect_date, business,
                                `describe`, system_menu_name, create_man, create_man_id, source, detail_version_id,
-                               source_id, source_name, biz_id, biz_name)
+                               source_id, customer_dev_project_name, biz_id, biz_name)
         values (#{bugOnlineDO.name}, #{bugOnlineDO.operator}, #{bugOnlineDO.operatorId}, #{bugOnlineDO.lastOperator},
                 #{bugOnlineDO.lastOperatorId}, #{bugOnlineDO.proposer}, #{bugOnlineDO.proposerId},
                 #{bugOnlineDO.customerName}, #{bugOnlineDO.env}, #{bugOnlineDO.belong}, #{bugOnlineDO.priority},
                 #{bugOnlineDO.recurrent}, #{bugOnlineDO.reason}, #{bugOnlineDO.expectDate}, #{bugOnlineDO.business},
                 #{bugOnlineDO.describe}, #{bugOnlineDO.systemMenuName}, #{createMan}, #{createManId},
                 #{bugOnlineDO.source}, #{bugOnlineDO.detailVersionId}, #{bugOnlineDO.sourceId},
-                #{bugOnlineDO.sourceName}, #{bugOnlineDO.bizId}, #{bugOnlineDO.bizName})
+                #{bugOnlineDO.customerDevProjectName}, #{bugOnlineDO.bizId}, #{bugOnlineDO.bizName})
     </insert>
 
     <update id="update">
@@ -233,6 +233,12 @@
             </if>
             <if test="bugOnlineDO.expectLaunchDate != null">
                 expect_launch_date = #{bugOnlineDO.expectLaunchDate},
+            </if>
+            <if test="sourceId != null and sourceId != ''">
+                source_id = #{sourceId},
+            </if>
+            <if test="customerDevProjectName != null and customerDevProjectName != ''">
+                customer_dev_project_name = #{customerDevProjectName},
             </if>
             <if test="true">
                 modify_man_id = #{modifyManId},

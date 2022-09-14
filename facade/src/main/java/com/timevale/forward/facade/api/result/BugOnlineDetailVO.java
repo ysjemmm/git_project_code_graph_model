@@ -75,6 +75,9 @@ public class BugOnlineDetailVO extends ToString {
     @ApiModelProperty("来源-描述")
     private String sourceName;
 
+    @ApiModelProperty("项目名称")
+    private String customerDevProjectName;
+
     @ApiModelProperty("是否复现：0是，1否")
     private Integer recurrent;
 

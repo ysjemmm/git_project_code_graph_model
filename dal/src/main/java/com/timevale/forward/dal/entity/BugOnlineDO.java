@@ -182,7 +182,7 @@ public class BugOnlineDO extends BaseDO {
     /**
      * 来源名称
      */
-    private String sourceName;
+    private String customerDevProjectName;
 
     /**
      * 工单id
