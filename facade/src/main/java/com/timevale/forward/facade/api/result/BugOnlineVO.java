@@ -68,6 +68,9 @@ public class BugOnlineVO extends ToString {
     @ApiModelProperty("来源: forward 产研系统， support 运营支撑平台， duty 值班反馈")
     private String source;
 
+    @ApiModelProperty("来源数据id")
+    private String sourceId;
+
     @ApiModelProperty("来源-描述")
     private String sourceName;
 
