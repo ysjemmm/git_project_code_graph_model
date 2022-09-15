@@ -5,7 +5,10 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
+import com.timevale.forward.dal.dao.ManDayMapper;
+import com.timevale.forward.dal.dao.PersonMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ManDayService;
 import com.timevale.forward.facade.api.query.ManDayQueryList;
@@ -38,6 +41,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -58,8 +62,6 @@ public class ManDayServiceImpl implements ManDayService {
     private PersonMapper personMapper;
     @Resource
     private ManDayMapper manDayMapper;
-    @Resource
-    private ManDayReportMapper manDayReportMapper;
     @Resource
     private ManDayReportComponent manDayReportComponent;
 
@@ -418,6 +420,9 @@ public class ManDayServiceImpl implements ManDayService {
     }
 
     private static Pair<Date, Date> parseAndCheckDateRange(String dateRange) {
+        String regex = "^\\s*\\d{4}-\\d{2}-\\d{2}\\s*~\\s*\\d{4}-\\d{2}-\\d{2}\\s*$";
+        AssertUtil.checkState(Pattern.matches(regex, dateRange),
+                "日期范围输入格式不符合规则: yyyy-MM-dd ~ yyyy-MM-dd");
         Pair<LocalDate, LocalDate> localDatePair = parseDateRange(dateRange);
         LocalDate startLocalDate = localDatePair.getLeft();
         LocalDate endLocalDate = localDatePair.getRight();
