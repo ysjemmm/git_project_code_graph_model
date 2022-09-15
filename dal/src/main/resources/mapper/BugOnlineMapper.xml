@@ -237,8 +237,8 @@
             <if test="bugOnlineDO.sourceId != null and bugOnlineDO.sourceId != ''">
                 source_id = #{bugOnlineDO.sourceId},
             </if>
-            <if test="customerDevProjectName != null and customerDevProjectName != ''">
-                customer_dev_project_name = #{customerDevProjectName},
+            <if test="bugOnlineDO.customerDevProjectName != null and bugOnlineDO.customerDevProjectName != ''">
+                customer_dev_project_name = #{bugOnlineDO.customerDevProjectName},
             </if>
             <if test="true">
                 modify_man_id = #{modifyManId},
