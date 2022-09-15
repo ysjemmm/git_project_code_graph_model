@@ -234,8 +234,8 @@
             <if test="bugOnlineDO.expectLaunchDate != null">
                 expect_launch_date = #{bugOnlineDO.expectLaunchDate},
             </if>
-            <if test="sourceId != null and sourceId != ''">
-                source_id = #{sourceId},
+            <if test="bugOnlineDO.sourceId != null and bugOnlineDO.sourceId != ''">
+                source_id = #{bugOnlineDO.sourceId},
             </if>
             <if test="customerDevProjectName != null and customerDevProjectName != ''">
                 customer_dev_project_name = #{customerDevProjectName},
