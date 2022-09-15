@@ -73,5 +73,10 @@ public class TaskBoardDTO {
      */
     private Date endDate;
 
+    /**
+     * 项目名称
+     */
+    private String projectName;
+
 
 }

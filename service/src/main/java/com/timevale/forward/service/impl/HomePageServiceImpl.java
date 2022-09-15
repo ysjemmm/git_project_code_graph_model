@@ -533,6 +533,8 @@ public class HomePageServiceImpl implements HomePageService {
                                 .map(HomePageSingleTaskWorkTimeVO::getPlanUseTime).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
                         //每个项目的任务按开始时间排序
                         taskWorkTimeVOList.sort(Comparator.comparing(HomePageSingleTaskWorkTimeVO::getStartDate));
+                        projectWorkTimeVO.setProjectId(a.getProjectId());
+                        projectWorkTimeVO.setProjectName(a.getProjectName());
                         projectWorkTimeVO.setTotalPlanUseTime(planUseTime);
                         projectWorkTimeVO.setTaskCount(taskWorkTimeVOList.size());
                         projectWorkTimeVO.setProjectPlanEndDate(projectDateMap.get(a.getProjectId()));
@@ -553,6 +555,19 @@ public class HomePageServiceImpl implements HomePageService {
                 workTimeVO.setExecutorId(k);
                 result.add(workTimeVO);
             });
+            // 团队中无任务的人
+            List<HomePageSingleWorkTimeVO> noneTaskList = allMyStaffNameWithSelf.stream()
+                    .filter(a->!taskWorkTimeOnePersonMap.containsKey(a))
+                    .map(a -> {
+                HomePageSingleWorkTimeVO o = new HomePageSingleWorkTimeVO();
+                o.setExecutor(personMap.get(a));
+                o.setExecutorId(a);
+                o.setTotalPlanUseTime(BigDecimal.ZERO);
+                o.setTaskCount(0);
+                o.setProjectWorkTimeVos(Lists.emptyList());
+                return o;
+            }).collect(Collectors.toList());
+            result.addAll(noneTaskList);
             return BaseResult.success(result);
         } else if (HomePageTabEnum.INDIVIDUAL.getCode().equals(req.getTabType())) {
             //没有任务,个人直接返回

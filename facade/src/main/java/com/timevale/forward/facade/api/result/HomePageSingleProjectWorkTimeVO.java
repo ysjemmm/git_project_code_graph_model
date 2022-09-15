@@ -33,6 +33,12 @@ public class HomePageSingleProjectWorkTimeVO extends ToString {
     @ApiModelProperty("项目结束时间")
     private Date projectPlanEndDate;
 
+    @ApiModelProperty("项目id")
+    private Long projectId;
+
+    @ApiModelProperty("项目名称")
+    private String projectName;
+
     @ApiModelProperty("项目任务")
     private List<HomePageSingleTaskWorkTimeVO> taskWorkTimeVos;
 

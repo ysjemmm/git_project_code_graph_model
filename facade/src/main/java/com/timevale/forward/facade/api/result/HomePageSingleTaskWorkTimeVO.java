@@ -24,9 +24,12 @@ public class HomePageSingleTaskWorkTimeVO extends ToString {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
-    @ApiModelProperty("项目id")
+    @ApiModelProperty(value = "项目id", hidden = true)
     @JsonSerialize(using = ToStringSerializer.class)
     private Long projectId;
+
+    @ApiModelProperty(value = "项目名称", hidden = true)
+    private String projectName;
 
     @ApiModelProperty("名称")
     private String name;
