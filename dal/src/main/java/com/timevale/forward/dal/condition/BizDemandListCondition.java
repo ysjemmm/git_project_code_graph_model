@@ -132,6 +132,11 @@ public class BizDemandListCondition extends QueryBase {
     private List<Long> containIds;
 
     /**
+     * 来源id
+     */
+    private String sourceId;
+
+    /**
      * 排序
      */
     private String collation;

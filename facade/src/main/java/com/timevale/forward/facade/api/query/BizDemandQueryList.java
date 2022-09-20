@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -59,7 +58,6 @@ public class BizDemandQueryList extends QueryBase {
     private List<String> receiveManIdList;
 
     @ApiModelProperty("需求部门id")
-    @NotNull
     private List<Long> deptIdList;
     
     @ApiModelProperty("CURRENT_USER:我的,FOLLOWER:我下属的,TEAM:我团队的,DEPARTMENT:我部门的,COPIER:抄送我的,RECEIVE:我接收的,ALL:全部")
@@ -76,6 +74,9 @@ public class BizDemandQueryList extends QueryBase {
 
     @ApiModelProperty("排序规则：0正序，1逆序")
     private Integer orderCollation;
+
+    @ApiModelProperty("来源id")
+    private String sourceId;
 
     @ApiModelProperty("选中为标签时填写,标签id")
     private List<Long> labelIds;
