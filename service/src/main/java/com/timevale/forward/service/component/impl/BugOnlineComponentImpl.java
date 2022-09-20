@@ -45,7 +45,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
 
     @Override
     public void autoCloseBugIfBeConfirm(int autoCloseLimitDay) {
-        log.info("待确认线上bug自动关闭-开始");
+        log.info("待确认线上bug自动关闭-开始:{}",autoCloseLimitDay);
         List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByStatus(Lists.newArrayList(BugOnlineStatusEnum.BE_CONFIRM.getCode()));
         Date today = new Date();
         List<Long> updateBugIds = new ArrayList<>();
