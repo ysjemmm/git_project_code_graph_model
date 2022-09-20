@@ -180,8 +180,6 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         }
 
-        Map<Long, List<BizLabelSimpleVO>> bizLabelMap = bizLabelComponent.getBizLabelMap(projectIds, BizTypeEnum.PROJECT.getCode());
-
         buildConditionBeforeQuery(projectIds, condition);
 
         // 产品线分析
@@ -216,6 +214,9 @@ public class ProjectComponentImpl implements ProjectComponent {
         if (CollectionUtils.isEmpty(projectIds)) {
             return ResultUtil.queryResultEmpty();
         }
+
+        Map<Long, List<BizLabelSimpleVO>> bizLabelMap =
+                bizLabelComponent.getBizLabelMap(projectIds, BizTypeEnum.PROJECT.getCode());
 
         //填充人员信息
         Map<Long, List<PersonDO>> pdMap = personMapper.get(projectIds, PersonTypeEnum.PROJECT_PD.getCode())
