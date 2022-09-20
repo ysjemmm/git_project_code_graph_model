@@ -46,7 +46,7 @@ public class BizDemandAutoConfirmJob extends IJobHandler {
     @Resource
     private BizDemandLogComponent bizDemandLogComponent;
 
-    @Value("${autoConfirmLimitDay:5}")
+    @Value("${auto.confirm.limit:7}")
     private Integer autoConfirmLimitDay;
 
     @Resource
