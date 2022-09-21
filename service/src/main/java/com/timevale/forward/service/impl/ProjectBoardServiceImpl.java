@@ -274,14 +274,15 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
                 //实际开始和结束都不为空
                 projectBoardTaskVO.setStartDate(taskDO.getActualStartDate());
                 projectBoardTaskVO.setEndDate(taskDO.getActualEndDate());
-            } else if (taskDO.getActualStartDate().before(taskDO.getPlanEndDate())) {
-                //实际开始不空,结束为空,实际开始小于计划结束时间
-                projectBoardTaskVO.setStartDate(taskDO.getActualStartDate());
-                projectBoardTaskVO.setEndDate(taskDO.getPlanEndDate());
-            } else {
+            } else if (taskDO.getActualStartDate().after(taskDO.getPlanEndDate())) {
                 //实际开始不空,结束为空,实际开始大于计划结束时间
                 projectBoardTaskVO.setStartDate(taskDO.getActualStartDate());
                 projectBoardTaskVO.setEndDate(current);
+
+            } else {
+                //实际开始不空,结束为空,实际开始小于计划结束时间
+                projectBoardTaskVO.setStartDate(taskDO.getActualStartDate());
+                projectBoardTaskVO.setEndDate(taskDO.getPlanEndDate());
             }
             projectBoardTaskVO.setStatusName(TaskStatusEnum.getTextByCode(taskDO.getStatus()));
             projectBoardTaskVO.setExecutor(a.getUserName());

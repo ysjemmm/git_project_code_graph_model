@@ -483,14 +483,14 @@ public class HomePageServiceImpl implements HomePageService {
                 //实际开始和结束都不为空
                 a.setStartDate(a.getActualStartDate());
                 a.setEndDate(a.getActualEndDate());
-            } else if (a.getActualStartDate().before(a.getPlanEndDate())) {
-                //实际开始不空,结束为空,实际开始小于计划结束时间
-                a.setStartDate(a.getActualStartDate());
-                a.setEndDate(a.getPlanEndDate());
-            } else {
+            } else if (a.getActualStartDate().after(a.getPlanEndDate())) {
                 //实际开始不空,结束为空,实际开始大于计划结束时间
                 a.setStartDate(a.getActualStartDate());
                 a.setEndDate(current);
+            } else {
+                //实际开始不空,结束为空,实际开始小于计划结束时间
+                a.setStartDate(a.getActualStartDate());
+                a.setEndDate(a.getPlanEndDate());
             }
         });
 
