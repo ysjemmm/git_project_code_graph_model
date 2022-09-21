@@ -275,14 +275,15 @@
         (
             (a.plan_start_date &gt;=#{startDate} and a.plan_start_date &lt;= #{endDate}) or
             (a.plan_end_date &gt;=#{startDate} and a.plan_end_date &lt;= #{endDate}) or
-            (a.plan_start_date &lt;=#{startDate} and a.plan_end_date &gt;= #{endDate}) or
-
             (a.actual_start_date &gt;=#{startDate} and a.actual_start_date &lt;= #{endDate}) or
             (a.actual_end_date &gt;=#{startDate} and a.actual_end_date &lt;= #{endDate}) or
-            (a.actual_start_date &lt;=#{startDate} and a.actual_end_date &gt;= #{endDate}) or
 
-            (a.actual_start_date &gt; a.plan_end_date and now()&gt;=#{startDate} and now() &lt;= #{endDate})
-         )
+            (a.plan_start_date &lt;=#{startDate} and a.plan_end_date &gt;= #{endDate}) or
+            (a.actual_start_date &lt;=#{startDate} and a.actual_end_date &gt;= #{endDate}) or
+            (a.plan_start_date &lt;=#{startDate} and a.actual_end_date &gt;= #{endDate}) or
+            (now()&gt;=#{startDate})
+
+            )
         and a.status not in (-10,-20)
         and b.user_id in
             <foreach collection="accounts" item="item" separator="," open="(" close=")">
