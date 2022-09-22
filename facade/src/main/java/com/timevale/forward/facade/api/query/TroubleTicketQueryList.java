@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -62,4 +63,8 @@ public class TroubleTicketQueryList extends QueryBase {
 
     @ApiModelProperty("排序规则：0正序，1逆序")
     private Integer orderCollation;
+
+    @ApiModelProperty("改进措施未完成")
+    @NotNull(message = "改进措施未完成不能为空")
+    private Boolean disComplete;
 }
