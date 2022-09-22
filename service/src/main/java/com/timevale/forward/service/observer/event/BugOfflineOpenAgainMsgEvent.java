@@ -13,7 +13,7 @@ import java.util.List;
  * @Author 望轩
  */
 public class BugOfflineOpenAgainMsgEvent extends MessageEvent {
-    private final String BUG_OFFLINE_OPEN_AGAIN = "### %s \n **%s**重新打开【线下bug】**%s**，请确认修复。\n *** \n[查看详情](%s) \n <!--%s-->";
+    private final String BUG_OFFLINE_OPEN_AGAIN = "### %s \n **%s**重新打开【线下bug】**%s**，请确认修复。\n *** \n[查看详情](%s)  <!--%s-->";
     /**
      * 提交人，花名-真名
      */

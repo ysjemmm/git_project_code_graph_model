@@ -13,7 +13,7 @@ import java.util.List;
  * @Author 望轩
  */
 public class BugOfflineNoRepairMsgEvent extends MessageEvent {
-    private final String BUG_OFFLINE_NO_REPAIR = "### %s \n %s申请不用修复【线下bug】：**%s**，请确认。\n *** \n[查看详情](%s) \n <!--%s-->";
+    private final String BUG_OFFLINE_NO_REPAIR = "### %s \n %s申请不用修复【线下bug】：**%s**，请确认。\n *** \n[查看详情](%s)  <!--%s-->";
     /**
      * 操作人，花名-真名
      */
