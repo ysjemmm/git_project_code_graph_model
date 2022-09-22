@@ -186,4 +186,17 @@ public class ProjectListCondition extends QueryBase {
      */
     private List<Long> labelIds;
 
+    /**
+     * 项目节点名称
+     */
+    private String nodeName;
+    /**
+     * 节点实际时间左区间
+     */
+    private Date actualDateLeft;
+    /**
+     * 节点实际时间右区间
+     */
+    private Date actualDateRight;
+
 }

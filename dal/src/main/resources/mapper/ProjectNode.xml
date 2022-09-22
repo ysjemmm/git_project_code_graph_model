@@ -52,17 +52,20 @@
         where id=#{id}
     </update>
 
-    <select id="listByName" resultType="com.timevale.forward.dal.entity.ProjectNodeDO">
+    <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.ProjectNodeDO">
         SELECT id,project_id,name, plan_date, actual_date
         FROM project_node
         <where>
-            <if test="projectIds!=null and projectIds.size()>0">
+            <if test="c.projectIds!=null and c.projectIds.size()>0">
                 and project_id in
-                <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                <foreach collection="c.projectIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
-            and name = #{name}
+            and name = #{c.nodeName}
+            <if test="c.actualDateLeft!=null and c.actualDateRight!=null">
+                and actual_date &gt;= #{c.actualDateLeft} and actual_date &lt;= #{c.actualDateRight}
+            </if>
         </where>
     </select>
 

@@ -3,15 +3,18 @@ package com.timevale.forward.service.component.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.forward.dal.condition.ProjectListCondition;
+import com.timevale.forward.dal.condition.ProjectNodeCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
-import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
+import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
+import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.component.SqlOrderComponent;
-import com.timevale.forward.service.copy.LabelCopier;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
@@ -22,12 +25,12 @@ import com.timevale.mandarin.common.query.QueryBase;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -77,9 +80,6 @@ public class ProjectComponentImpl implements ProjectComponent {
     @Resource
     private BizLabelComponent bizLabelComponent;
 
-    @Resource
-    private LabelMapper labelMapper;
-
 
     @Override
     public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -114,11 +114,12 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
 
         //提测实际时间
-        List<ProjectNodeDO> projectNodeDos = projectNodeMapper.listByName(projectIds, ProjectNodeEnum.SUBMIT_TEST.getText());
+        ProjectNodeCondition c = ProjectNodeCondition.builder().projectIds(projectIds).nodeName(ProjectNodeEnum.SUBMIT_TEST.getText()).build();
+        List<ProjectNodeDO> projectNodeDOList = projectNodeMapper.selectByCondition(c);
         if (condition.getActualTestDateLeft() != null && condition.getActualTestDateRight() != null) {
             Date startOfDay = DateUtil.getStartOfDay(condition.getActualTestDateLeft());
             Date endOfDay = DateUtil.getEndOfDay(condition.getActualTestDateRight());
-            projectIds = projectNodeDos.stream().filter(a -> a.getActualDate() != null && a.getActualDate().after(startOfDay) && a.getActualDate().before(endOfDay))
+            projectIds = projectNodeDOList.stream().filter(a -> a.getActualDate() != null && a.getActualDate().after(startOfDay) && a.getActualDate().before(endOfDay))
                     .map(ProjectNodeDO::getProjectId).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(projectIds)) {
                 return ResultUtil.queryResultEmpty();
@@ -169,10 +170,10 @@ public class ProjectComponentImpl implements ProjectComponent {
         if (CollectionUtils.isNotEmpty(condition.getLabelIds())) {
             bizLabelDOList = bizLabelMapper.getByLabelIdInType(condition.getLabelIds(), BizTypeEnum.PROJECT.getCode());
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
-            if(CollectionUtils.isEmpty(projectIds)){
+            if (CollectionUtils.isEmpty(projectIds)) {
                 //产品需求关联项目时,projectIds可能为空
-                projectIds=bizIds;
-            }else{
+                projectIds = bizIds;
+            } else {
                 projectIds.retainAll(bizIds);
             }
             if (CollectionUtils.isEmpty(projectIds)) {
@@ -180,6 +181,16 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         }
 
+        if (StringUtils.isNotEmpty(condition.getNodeName())) {
+            Date startOfDay = DateUtil.getStartOfDay(condition.getActualDateLeft());
+            Date endOfDay = DateUtil.getEndOfDay(condition.getActualDateRight());
+            c = ProjectNodeCondition.builder()
+                    .projectIds(projectIds).nodeName(condition.getNodeName()).actualDateLeft(startOfDay).actualDateRight(endOfDay).build();
+            projectIds = projectNodeMapper.selectByCondition(c).stream().map(ProjectNodeDO::getProjectId).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(projectIds)) {
+                return ResultUtil.queryResultEmpty();
+            }
+        }
         buildConditionBeforeQuery(projectIds, condition);
 
         // 产品线分析
@@ -191,7 +202,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             Set<Long> resultProductLineIdSet = analyseVOList.stream().map(ProductLineAnalyseVO::getProductLineId).collect(Collectors.toSet());
             List<Long> queryProductLineIdList = conditionSubProductLineIdList.stream().filter(resultProductLineIdSet::contains).collect(Collectors.toList());
             boolean pageEmpty = CollectionUtils.isEmpty(queryProductLineIdList);
-            if(!pageEmpty) {
+            if (!pageEmpty) {
                 projectIds = projectMapper.getProjectIds(projectIds, queryProductLineIdList, condition.getBizDomainIds());
                 pageEmpty = CollectionUtils.isEmpty(projectIds);
             }
@@ -229,10 +240,10 @@ public class ProjectComponentImpl implements ProjectComponent {
                 .stream().collect(Collectors.groupingBy(ProjectProductLineBizDomain::getProjectId));
 
         //提测实际时间
-        Map<Long, List<ProjectNodeDO>> testNodeMap = projectNodeDos.stream().collect(Collectors.groupingBy(ProjectNodeDO::getProjectId));
+        Map<Long, List<ProjectNodeDO>> testNodeMap = projectNodeDOList.stream().collect(Collectors.groupingBy(ProjectNodeDO::getProjectId));
 
         //填充打回次,填充是否逾期
-        Map<Long, List<TestBillDO>> testMap = testBillMapper.list(projectIds).stream().collect(Collectors.groupingBy(TestBillDO::getProjectId));
+        Map<Long, List<TestBillDO>> testBillMap = testBillMapper.list(projectIds).stream().collect(Collectors.groupingBy(TestBillDO::getProjectId));
 
         List<ProjectVO> projectVOList = ProjectCopier.INSTANCE.convert(projectDos);
 
@@ -280,7 +291,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             a.setPriorityName(PriorityEnum.getTextByCode(a.getPriority()));
             a.setLevelName(ProjectLevelEnum.getTextByCode(a.getLevel()));
 
-            List<TestBillDO> testBillDos = testMap.get(a.getId());
+            List<TestBillDO> testBillDos = testBillMap.get(a.getId());
             if (CollectionUtils.isEmpty(testBillDos)) {
                 a.setReturnCount(0);
                 a.setIsDelay(false);

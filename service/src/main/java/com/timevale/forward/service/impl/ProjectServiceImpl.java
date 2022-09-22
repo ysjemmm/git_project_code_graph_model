@@ -165,6 +165,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private ManDayReportComponent manDayReportComponent;
 
+    @Resource
+    private ProjectProductLineMapper projectProductLineMapper;
+
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -717,6 +720,35 @@ public class ProjectServiceImpl implements ProjectService {
         sendDingMsgIfPublishDateForward(projectDO.getId(), oldPublishDate);
 
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<List<ProjectProductLineVO>> getByName(String name) {
+        List<ProjectDO> projectDOList = projectMapper.getByLikeName(name);
+        if(CollectionUtils.isEmpty(projectDOList)){
+            return BaseResult.success(Lists.emptyList());
+        }
+        List<Long> projectIdList = projectDOList.stream().map(ProjectDO::getId).collect(Collectors.toList());
+        List<ProjectProductLineDO> ppLines = projectProductLineMapper.getByProjectIdList(projectIdList);
+        if(CollectionUtils.isEmpty(ppLines)){
+            return BaseResult.success(Lists.emptyList());
+        }
+        Map<Long, Set<Long>> ppIdMap = ppLines.stream()
+                .collect(Collectors.groupingBy(ProjectProductLineDO::getProjectId,Collectors.mapping(ProjectProductLineDO::getProductLineId,Collectors.toSet())));
+
+        List<Long> productLineIds = ppLines.stream().map(ProjectProductLineDO::getProductLineId).collect(Collectors.toList());
+        List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIds);
+        Map<Long, ProductLineDO> pdlMap = productLineDOList.stream().collect(Collectors.toMap(ProductLineDO::getId, a -> a, (v1, v2) -> v2));
+
+        List<ProjectProductLineVO> result = projectDOList.stream().map(a -> {
+            ProjectProductLineVO o = new ProjectProductLineVO();
+            o.setId(a.getId());
+            o.setName(a.getName());
+            List<ProductLineDO> pdls = ppIdMap.get(a.getId()).stream().filter(pdlMap::containsKey).map(pdlMap::get).collect(Collectors.toList());
+            o.setProductLines(ProductLineCopier.INSTANCE.convert(pdls));
+            return o;
+        }).collect(Collectors.toList());
+        return BaseResult.success(result);
     }
 
 

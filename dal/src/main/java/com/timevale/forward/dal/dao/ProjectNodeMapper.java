@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.ProjectNodeCondition;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import org.apache.ibatis.annotations.Param;
 
@@ -67,8 +68,12 @@ public interface ProjectNodeMapper {
      */
     void updateActualDateById(@Param("id") Long id, @Param("actualDate") Date actualDate);
 
-
-    List<ProjectNodeDO> listByName(@Param("projectIds") List<Long> projectIds,@Param("name") String name);
+    /**
+     *
+     * @param condition condition
+     * @return List
+     */
+    List<ProjectNodeDO> selectByCondition(@Param("c")ProjectNodeCondition condition);
 
     /**
      * 查询 by 项目id列表

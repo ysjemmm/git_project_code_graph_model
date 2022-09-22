@@ -292,6 +292,11 @@
         select id, name, pm_id from project
         where status in (10, 20, 30)
         and is_deleted = false
-<!--        and pm_id in ('xiaoyun', 'nianci')-->
+    </select>
+
+    <select id="getByLikeName" resultType="com.timevale.forward.dal.entity.ProjectDO">
+        select id, name from project
+        where name like concat('%',#{name},'%')
+        and is_deleted = false
     </select>
 </mapper>

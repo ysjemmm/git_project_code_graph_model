@@ -108,4 +108,12 @@ public interface ProjectService {
      * @return Boolean
      */
     BaseResult<Boolean> modifyProjectDate(ProjectDateModifyReq projectDateModifyReq);
+
+    /**
+     * 查列表
+     *
+     * @param name name
+     * @return 列表
+     */
+    BaseResult<List<ProjectProductLineVO>> getByName(String name);
 }

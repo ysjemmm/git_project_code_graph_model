@@ -139,4 +139,12 @@ public interface ProjectMapper {
      */
     List<ProjectDO> pageAllOngoingProjects();
 
+    /**
+     * 查询
+     *
+     * @param name name
+     * @return 产品需求DO
+     */
+    List<ProjectDO> getByLikeName(@Param("name") String name);
+
 }

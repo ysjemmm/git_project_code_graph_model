@@ -123,4 +123,12 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("选中为标签类别时填写,类别id")
     private List<Long> labelCategoryIds;
 
+    @ApiModelProperty("项目节点名称")
+    private String nodeName;
+
+    @ApiModelProperty("节点实际时间左区间")
+    private Date actualDateLeft;
+
+    @ApiModelProperty("节点实际时间右区间")
+    private Date actualDateRight;
 }
