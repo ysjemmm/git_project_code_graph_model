@@ -588,7 +588,13 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Override
     public BaseResult<List<String>> getHolidays(HomePageHolidayReq homePageHolidayReq) {
-        List<String> holidays = elapsedTimeClient.getHolidays(homePageHolidayReq.getStartDate(), homePageHolidayReq.getEndDate(), true);
+        Date startDate=homePageHolidayReq.getStartDate();
+        Date endDate=homePageHolidayReq.getEndDate();
+        if(homePageHolidayReq.getStartDate().after(homePageHolidayReq.getEndDate())){
+            startDate=homePageHolidayReq.getEndDate();
+            endDate=homePageHolidayReq.getStartDate();
+        }
+        List<String> holidays = elapsedTimeClient.getHolidays(startDate, endDate, true);
         return BaseResult.success(holidays);
     }
 

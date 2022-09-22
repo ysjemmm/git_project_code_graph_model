@@ -303,13 +303,8 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
             singleWorkTimeVO.setExecutorId(v.get(0).getExecutorId());
             singleWorkTimeVO.setIsPm(Objects.equals(v.get(0).getExecutorId(), projectDO.getPmId()));
             singleWorkTimeVO.setTaskCount(v.size());
-            if (projectStartDate.after(projectEndDate.get(0))) {
-                singleWorkTimeVO.setProjectStartDate(projectEndDate.get(0));
-                singleWorkTimeVO.setProjectEndDate(projectStartDate);
-            } else {
-                singleWorkTimeVO.setProjectStartDate(projectStartDate);
-                singleWorkTimeVO.setProjectEndDate(projectEndDate.get(0));
-            }
+            singleWorkTimeVO.setProjectStartDate(projectStartDate);
+            singleWorkTimeVO.setProjectEndDate(projectEndDate.get(0));
             singleWorkTimeVO.setTotalPlanUseTime(planUseTime);
             List<ProjectBoardTaskVO> sort = v.stream().sorted(Comparator.comparing(ProjectBoardTaskVO::getStartDate)).collect(Collectors.toList());
             singleWorkTimeVO.setProjectBoardTaskVos(sort);
