@@ -148,4 +148,12 @@ public interface TaskService {
      * @return 产品线id
      */
     BaseResult<List<Long>> getProductLineIdsUnLimited();
+
+    /**
+     * 转移任务到其他项目
+     *
+     * @param transferReq transferReq
+     * @return Boolean
+     */
+    BaseResult<Boolean> transferTask(TaskTransferReq transferReq);
 }

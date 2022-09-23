@@ -586,6 +586,12 @@ public class TaskServiceImpl implements TaskService {
         return BaseResult.success(productLineIds);
     }
 
+    @Override
+    public BaseResult<Boolean> transferTask(TaskTransferReq transferReq) {
+//        taskMapper.update()
+        return null;
+    }
+
     /**
      * 名称重复
      *
