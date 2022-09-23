@@ -13,7 +13,7 @@ import java.util.List;
  * @Author 望轩
  */
 public class BugOnlineResubmitNoRepairMsgEvent extends MessageEvent {
-    private static final String BUG_ONLINE_NO_REPAIR = "### %s \n 相关的【线上bug】**%s**申请不用修复，请知悉 。 \n *** \n[查看详情](%s) \n <!--%s-->";
+    private static final String BUG_ONLINE_NO_REPAIR = "### %s \n 相关的【线上bug】**%s**申请不用修复，请知悉 。 \n *** \n[查看详情](%s)  <!--%s-->";
     /**
      * bug标题
      */

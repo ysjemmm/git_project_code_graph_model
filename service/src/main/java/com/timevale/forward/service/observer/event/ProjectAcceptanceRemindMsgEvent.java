@@ -13,7 +13,7 @@ import java.util.List;
  **/
 public class ProjectAcceptanceRemindMsgEvent extends MessageEvent {
 
-    private static final String  ACCEPTANCE_REMIND = "### %s \n **%s**提醒您验收项目**%s**，请及时处理。 \n *** \n[查看详情](%s) \n <!--%s-->";
+    private static final String  ACCEPTANCE_REMIND = "### %s \n **%s**提醒您验收项目**%s**，请及时处理。 \n *** \n[查看详情](%s)  <!--%s-->";
 
     private static final String ACCEPTANCE_ANCHOR = "&anchor=acceptance";
     /**

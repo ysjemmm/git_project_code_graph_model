@@ -13,7 +13,7 @@ import java.util.List;
  * @Author 望轩
  */
 public class BugOnlineAddMsgEvent extends MessageEvent {
-    private final String BUG_ONLINE_TRANS = "### %s \n 您有一条【线上bug】**%s**，优先级 **%s**，请处理。 \n *** \n[查看详情](%s) \n <!--%s-->";
+    private final String BUG_ONLINE_TRANS = "### %s \n 您有一条【线上bug】**%s**，优先级 **%s**，请处理。 \n *** \n[查看详情](%s)  <!--%s-->";
     /**
      * bug标题
      */

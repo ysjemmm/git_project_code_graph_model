@@ -13,7 +13,7 @@ import java.util.List;
  * @Author 望轩
  */
 public class BugOnlineRepairFinishedMsgEvent extends MessageEvent {
-    private final String BUG_OFFLINE_TRANS = "### %s \n **%s**修复完毕【线上bug】**%s**,请确认。 \n *** \n[查看详情](%s) \n <!--%s-->";
+    private final String BUG_OFFLINE_TRANS = "### %s \n **%s**修复完毕【线上bug】**%s**,请确认。 \n *** \n[查看详情](%s)  <!--%s-->";
     /**
      * 操作人，花名-真名
      */

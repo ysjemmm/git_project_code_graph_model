@@ -13,7 +13,7 @@ import java.util.List;
  **/
 public class ProjectAcceptanceRevokeMsgEvent extends MessageEvent {
 
-    private static final String  ACCEPTANCE_REVOKE = "### %s \n **%s**撤回验收项目**%s**。 \n *** \n[查看详情](%s) \n <!--%s-->";
+    private static final String  ACCEPTANCE_REVOKE = "### %s \n **%s**撤回验收项目**%s**。 \n *** \n[查看详情](%s)  <!--%s-->";
 
     private static final String ACCEPTANCE_ANCHOR = "&anchor=acceptance";
     /**
