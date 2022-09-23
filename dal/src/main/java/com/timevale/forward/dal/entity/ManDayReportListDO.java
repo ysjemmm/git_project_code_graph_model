@@ -1,6 +1,5 @@
 package com.timevale.forward.dal.entity;
 
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -39,6 +38,16 @@ public class ManDayReportListDO extends BaseDO {
     private String auditor;
 
     private String auditorId;
+
+    /**
+     * 提报人
+     */
+    private String reportor;
+
+    /**
+     * 提报人id
+     */
+    private String reportorId;
 
     private String rejectReason;
 }

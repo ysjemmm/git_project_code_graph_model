@@ -51,10 +51,10 @@ public class ManDayReportListVO extends ToString {
     @ApiModelProperty("提报时间")
     private Date createDate;
 
-    @ApiModelProperty("提报人")
+    @ApiModelProperty("创建人")
     private String createMan;
 
-    @ApiModelProperty("提报人id")
+    @ApiModelProperty("创建人id")
     private String createManId;
 
     @ApiModelProperty("提报人天")
@@ -68,4 +68,10 @@ public class ManDayReportListVO extends ToString {
 
     @ApiModelProperty("驳回原因")
     private String rejectReason;
+
+    @ApiModelProperty("提报人")
+    private String reportor;
+
+    @ApiModelProperty("提报人id")
+    private String reportorId;
 }

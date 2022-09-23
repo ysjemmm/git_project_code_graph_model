@@ -18,6 +18,11 @@ public enum ManDayReportTabEnum {
      * 我提报的人天
      */
     REPORT,
+
+    /**
+     * 我团队提报的人天
+     */
+    TEAM,
     /**
      * 全部人天
      */

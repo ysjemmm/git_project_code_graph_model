@@ -5,8 +5,8 @@
 <mapper namespace="com.timevale.forward.dal.dao.ManDayReportMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO man_day_report(man_day_id, audit_man_day, audit_status, auditor, auditor_id, create_man_id, create_man)
-        VALUES (#{manDayId}, #{auditManDay}, #{auditStatus}, #{auditor}, #{auditorId}, #{createManId}, #{createMan})
+        INSERT INTO man_day_report(man_day_id, audit_man_day, audit_status, auditor, auditor_id,reportor,reportor_id, create_man_id, create_man)
+        VALUES (#{manDayId}, #{auditManDay}, #{auditStatus}, #{auditor}, #{auditorId},#{reportor},#{reportorId}, #{createManId}, #{createMan})
     </insert>
 
     <update id="updateStatus">
@@ -44,7 +44,7 @@
 
     <select id="selectCondition" resultType="com.timevale.forward.dal.entity.ManDayReportListDO">
         SELECT mdr.id, mdr.audit_status, mdr.audit_man_day, mdr.reject_reason, mdr.auditor, mdr.auditor_id,
-               mdr.create_date, mdr.create_man, mdr.create_man_id,
+               mdr.create_date, mdr.create_man, mdr.create_man_id,mdr.reportor,mdr.reportor_id,
                md.week_start_date, md.week_end_date,
                p.name projectName
         FROM man_day_report mdr
@@ -59,9 +59,9 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="createManIds != null and createManIds.size() > 0">
-                AND mdr.create_man_id in
-                <foreach collection="createManIds" item="item" separator="," open="(" close=")">
+            <if test="reportorIds != null and reportorIds.size() > 0">
+                AND mdr.reportor_id in
+                <foreach collection="reportorIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>

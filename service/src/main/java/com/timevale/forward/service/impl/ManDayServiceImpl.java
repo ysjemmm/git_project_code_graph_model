@@ -360,12 +360,12 @@ public class ManDayServiceImpl implements ManDayService {
                 if (actualManDay == null) {
                     actualManDay = BigDecimal.ZERO;
                 }
-                manDayReportComponent.add(oldManDay.getId(), actualManDay);
                 // 更新审核状态
                 oldManDay.setAuditManDay(actualManDay);
                 oldManDay.setAuditStatus(AuditStatusEnum.AUDITING.getCode());
                 manDayMapper.updateAudit(oldManDay);
             }
+            manDayReportComponent.add(oldManDay.getId(), actualManDay);
             return BaseResult.success(true);
         }
 
@@ -398,13 +398,13 @@ public class ManDayServiceImpl implements ManDayService {
 
         // 如果不是PM
         if (!isPM) {
-            // 增加审批
-            manDayReportComponent.add(newManDayDO.getId(), actualManDay);
             // 修改人天审核状态
             newManDayDO.setAuditManDay(actualManDay);
             newManDayDO.setAuditStatus(AuditStatusEnum.AUDITING.getCode());
             manDayMapper.updateAudit(newManDayDO);
         }
+        // 增加审批
+        manDayReportComponent.add(newManDayDO.getId(), actualManDay);
         return BaseResult.success(true);
     }
 

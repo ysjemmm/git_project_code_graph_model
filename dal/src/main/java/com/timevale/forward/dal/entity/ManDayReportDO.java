@@ -42,4 +42,14 @@ public class ManDayReportDO extends BaseDO {
      * 审核员id
      */
     private String auditorId;
+
+    /**
+     * 提报人
+     */
+    private String reportor;
+
+    /**
+     * 提报人id
+     */
+    private String reportorId;
 }

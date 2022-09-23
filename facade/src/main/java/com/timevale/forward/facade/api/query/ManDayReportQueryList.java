@@ -25,7 +25,8 @@ public class ManDayReportQueryList extends QueryBase {
     private List<Integer> auditStatuses;
 
     @ApiModelProperty("提报人")
-    private List<String> createManIds;
+    @NotNull(message = "提报人不能为空")
+    private List<String> reportorIds;
 
     @ApiModelProperty("审批人")
     private List<String> pmIds;

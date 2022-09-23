@@ -49,31 +49,38 @@ public class ManDayReportComponentImpl implements ManDayReportComponent {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ManDayDO manDayDO = manDayMapper.getById(manDayId);
         ProjectDO projectDO = projectMapper.get(manDayDO.getProjectId());
+        boolean isPM = projectDO.getPmId().equals(userInfo.getId());
 
         ManDayReportDO reportDO = new ManDayReportDO()
                 .setManDayId(manDayId)
                 .setAuditManDay(auditManDay)
-                .setAuditStatus(AuditStatusEnum.AUDITING.getCode())
+                .setAuditStatus(isPM ? AuditStatusEnum.APPROVE.getCode() : AuditStatusEnum.AUDITING.getCode())
                 .setAuditor(projectDO.getPmName())
-                .setAuditorId(projectDO.getPmId());
+                .setAuditorId(projectDO.getPmId())
+                .setReportor(manDayDO.getMemberId())
+                .setReportorId(manDayDO.getMemberName());
         manDayReportMapper.insert(reportDO);
 
         // 发送消息
-        messageEventPublisher.publish(new ManDayReportAddMsgEvent(
-                this,
-                userInfo.getAlias() + "-" + userInfo.getName(),
-                reportDO.getAuditorId(),
-                DateUtil.formDateRange(manDayDO.getWeekStartDate(), manDayDO.getWeekEndDate()),
-                projectDO.getName(),
-                auditManDay.toString()
-        ));
+        if (!isPM) {
+            messageEventPublisher.publish(new ManDayReportAddMsgEvent(
+                    this,
+                    userInfo.getAlias() + "-" + userInfo.getName(),
+                    reportDO.getAuditorId(),
+                    DateUtil.formDateRange(manDayDO.getWeekStartDate(), manDayDO.getWeekEndDate()),
+                    projectDO.getName(),
+                    auditManDay.toString()
+            ));
+        }
     }
 
     @Override
     public void updateAuditor(Long projectId) {
         // 查询对应项目
         ProjectDO projectDO = projectMapper.get(projectId);
-        if (projectDO == null) {return;}
+        if (projectDO == null) {
+            return;
+        }
 
         // 查询对应项目审核中的人天
         List<ManDayDO> manDayDOs = manDayMapper.getByProjectId(projectId);
@@ -81,7 +88,9 @@ public class ManDayReportComponentImpl implements ManDayReportComponent {
                 .filter(e -> Objects.equals(e.getAuditStatus(), AuditStatusEnum.AUDITING.getCode()))
                 .map(BaseDO::getId)
                 .collect(Collectors.toList());
-        if (CollectionUtil.isEmpty(manDayIds)) {return;}
+        if (CollectionUtil.isEmpty(manDayIds)) {
+            return;
+        }
 
         // 查询对应人天最新的提报
         List<ManDayReportDO> reportDOs = manDayReportMapper.selectByManDayIdsLast(manDayIds);

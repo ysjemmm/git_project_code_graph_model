@@ -21,6 +21,7 @@ import com.timevale.forward.model.enums.AuditStatusEnum;
 import com.timevale.forward.model.enums.ManDayReportTabEnum;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ManDayReportCopier;
+import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.ManDayReportApproveMsgEvent;
 import com.timevale.forward.service.observer.event.ManDayReportRejectMsgEvent;
 import com.timevale.forward.service.observer.event.ManDayReportUrgeMsgEvent;
@@ -33,6 +34,7 @@ import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,6 +67,9 @@ public class ManDayReportServiceImpl implements ManDayReportService {
     @Resource
     private MessageEventPublisher messageEventPublisher;
 
+    @Resource
+    private InnerUserPersonClient innerUserPersonClient;
+
     @Override
     public BaseResult<PageQueryResult<ManDayReportListVO>> page(ManDayReportQueryList manDayReportQueryList) {
         String userId = LocalSessionUtils.getUserInfo().getId();
@@ -76,7 +81,19 @@ public class ManDayReportServiceImpl implements ManDayReportService {
             condition.setAuditorIds(Collections.singletonList(userId));
             condition.setAuditStatuses(Collections.singletonList(AuditStatusEnum.AUDITING.getCode()));
         } else if (ManDayReportTabEnum.REPORT.toString().equals(tabTag)) {
-            condition.setCreateManIds(Collections.singletonList(userId));
+            condition.setReportorIds(Collections.singletonList(userId));
+        }else if (ManDayReportTabEnum.TEAM.toString().equals(tabTag)) {
+            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userId, true);
+            log.info("我和我的下属:{}", allMyStaffWithSelf);
+            if (!CollectionUtils.isEmpty(condition.getReportorIds())) {
+                allMyStaffWithSelf.retainAll(condition.getReportorIds());
+                log.info("我和我的下属,过滤后:{}", allMyStaffWithSelf);
+            }
+            if (CollectionUtils.isEmpty(allMyStaffWithSelf)) {
+                //所选人员不在我的团队中
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            condition.setReportorIds(allMyStaffWithSelf);
         }
 
         Pair<Date, Date> dateDatePair = parseAndCheckDateRange(manDayReportQueryList.getWeekDateRange());
