@@ -137,9 +137,9 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
         // 开始分页
         String collation = sqlOrderComponent.build(bizDemandQueryList.getOrderFiled(), bizDemandQueryList.getOrderCollation());
-        if(CollectionUtils.isNotEmpty(bizDemandQueryList.getLabelIds())||CollectionUtils.isNotEmpty(bizDemandQueryList.getLabelCategoryIds())){
+        if (CollectionUtils.isNotEmpty(bizDemandQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(bizDemandQueryList.getLabelCategoryIds())) {
             List<Long> labelIds = labelComponent.getLabelIds(bizDemandQueryList.getLabelIds(), bizDemandQueryList.getLabelCategoryIds());
-            if(CollectionUtils.isEmpty(labelIds)){
+            if (CollectionUtils.isEmpty(labelIds)) {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
             bizDemandListCondition.setLabelIds(labelIds);
@@ -209,7 +209,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         log.info("业务查询产品线分析：{}", bizDemandListDOMap);
 
         List<ProductLineAnalyseVO> result = new ArrayList<>();
-        bizDemandListDOMap.forEach((k,v) -> {
+        bizDemandListDOMap.forEach((k, v) -> {
             ProductLineAnalyseVO bizDemandProductLineVO = new ProductLineAnalyseVO();
             Optional<BizDemandListDO> any = v.stream().findAny();
             any.ifPresent(e -> {
@@ -270,7 +270,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 true,
                 ButtonActionEnum.INVALID.getText());
 
-        if(oldPlanReleaseDate != null){
+        if (oldPlanReleaseDate != null) {
             bizDemandLogComponent.addLogWhenModifyData(
                     PlanReleaseDateEnum.getTextByCode(oldPlanReleaseDate),
                     StringUtils.EMPTY,
@@ -279,7 +279,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                     false);
         }
 
-        if(oldProjectEndDate != null){
+        if (oldProjectEndDate != null) {
             bizDemandLogComponent.addLogWhenModifyData(
                     DateUtil.parseToString(oldProjectEndDate, DateStyle.YYYY_MM_DD),
                     StringUtils.EMPTY,
@@ -461,7 +461,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 接收人变更,被驳回 重新提交给接收人
         if (!Objects.equal(oldBizDemandDO.getReceiveManId(), newBizDemandDO.getReceiveManId())) {
             // 判断当前状态≠作废
-            if(BizDemandStatusEnum.INVALID.getCode().equals(oldBizDemandDO.getStatus())){
+            if (BizDemandStatusEnum.INVALID.getCode().equals(oldBizDemandDO.getStatus())) {
                 throw new BaseBizRuntimeException("已作废业务需求不可修改接收人");
             }
 
@@ -487,7 +487,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 预期上线时间变更带来的通知
-        if(!Objects.equal(oldBizDemandDO.getPlanReleaseDate(), newBizDemandDO.getPlanReleaseDate())){
+        if (!Objects.equal(oldBizDemandDO.getPlanReleaseDate(), newBizDemandDO.getPlanReleaseDate())) {
             messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
                     this,
                     oldBizDemandDO.getId(),
@@ -515,7 +515,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         Integer planReleaseDate = bizDemandAgreeReq.getPlanReleaseDate();
         Long productLineId = bizDemandAgreeReq.getProductLineId();
 
-        if(productLineId == null){
+        if (productLineId == null) {
             throw new BaseBizRuntimeException("产品线不能为空");
         }
 
@@ -576,7 +576,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             Optional<ProductLineDO> oldOpt = productLineDOList.stream().filter(e -> oldProductLineId.equals(e.getId())).findAny();
             Optional<ProductLineDO> newOpt = productLineDOList.stream().filter(e -> productLineId.equals(e.getId())).findAny();
 
-            if(oldOpt.isPresent() && newOpt.isPresent()){
+            if (oldOpt.isPresent() && newOpt.isPresent()) {
                 bizDemandLogComponent.addLogWhenModifyData(
                         oldOpt.get().getName(),
                         newOpt.get().getName(),
@@ -584,8 +584,8 @@ public class BizDemandServiceImpl implements BizDemandService {
                         BizChangeLogFieldEnum.PRODUCT_LINE.getText(),
                         true
                 );
-            } else{
-                log.error("对应产品线不存在: {},{}",oldProductLineId, productLineId);
+            } else {
+                log.error("对应产品线不存在: {},{}", oldProductLineId, productLineId);
             }
         }
 
@@ -801,7 +801,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         String solvePlan = bizDemandCompleted.getSolvePlan() == null ? StringUtils.EMPTY : bizDemandCompleted.getSolvePlan();
         Long productLineId = bizDemandCompleted.getProductLineId();
 
-        if(productLineId == null){
+        if (productLineId == null) {
             throw new BaseBizRuntimeException("产品线不能为空");
         }
 
@@ -832,7 +832,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 true,
                 ButtonActionEnum.COMPLETED_NOT_DEV.getText());
 
-        if(!Objects.equal(oldSolvePlan,bizDemandCompleted.getSolvePlan())){
+        if (!Objects.equal(oldSolvePlan, bizDemandCompleted.getSolvePlan())) {
             bizDemandLogComponent.addLogWhenModifyData(
                     oldSolvePlan,
                     bizDemandCompleted.getSolvePlan(),
@@ -848,7 +848,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             Optional<ProductLineDO> oldOpt = productLineDOList.stream().filter(e -> oldProductLineId.equals(e.getId())).findAny();
             Optional<ProductLineDO> newOpt = productLineDOList.stream().filter(e -> productLineId.equals(e.getId())).findAny();
 
-            if(oldOpt.isPresent() && newOpt.isPresent()){
+            if (oldOpt.isPresent() && newOpt.isPresent()) {
                 bizDemandLogComponent.addLogWhenModifyData(
                         oldOpt.get().getName(),
                         newOpt.get().getName(),
@@ -856,8 +856,8 @@ public class BizDemandServiceImpl implements BizDemandService {
                         BizChangeLogFieldEnum.PRODUCT_LINE.getText(),
                         true
                 );
-            } else{
-                log.error("对应产品线不存在: {},{}",oldProductLineId, productLineId);
+            } else {
+                log.error("对应产品线不存在: {},{}", oldProductLineId, productLineId);
             }
         }
 
@@ -1010,13 +1010,18 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<List<BizDemandSimpleVO>> getSimpleBizDemands(BizDemandGetReq bizDemandGetReq) {
-        if(CollectionUtils.isEmpty(bizDemandGetReq.getIds())
-                &&CollectionUtils.isEmpty(bizDemandGetReq.getStatus())
-                &&StringUtils.isEmpty(bizDemandGetReq.getSourceId())){
+        if (CollectionUtils.isEmpty(bizDemandGetReq.getIds())
+                && CollectionUtils.isEmpty(bizDemandGetReq.getStatus())
+                && StringUtils.isEmpty(bizDemandGetReq.getSourceId())) {
             return BaseResult.success(Lists.emptyList());
         }
-        List<BizDemandDO> bizDemandDOList = bizDemandMapper.getSimpleBizDemands(bizDemandGetReq.getIds(),bizDemandGetReq.getStatus(),bizDemandGetReq.getSourceId());
+        List<BizDemandDO> bizDemandDOList = bizDemandMapper.getSimpleBizDemands(bizDemandGetReq.getIds(), bizDemandGetReq.getStatus(), bizDemandGetReq.getSourceId());
+
         List<BizDemandSimpleVO> bizDemandVOList = bizDemandDOList.stream().map(BizDemandCopier.INSTANCE::convertT).collect(Collectors.toList());
+        bizDemandVOList.forEach(a -> {
+            a.setPriorityText(PriorityEnum.getTextChineseByCode(a.getPriority()));
+            a.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(a.getPlanReleaseDate()));
+        });
         return BaseResult.success(bizDemandVOList);
     }
 

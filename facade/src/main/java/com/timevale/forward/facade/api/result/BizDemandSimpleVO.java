@@ -32,8 +32,14 @@ public class BizDemandSimpleVO extends ToString {
     @ApiModelProperty("优先级：0-紧急，10-高，20-中，30低")
     private Integer priority;
 
+    @ApiModelProperty("优先级名称")
+    private String priorityText;
+
     @ApiModelProperty("预计上线时间:0~11 分别对应1~12月,20:暂时无法评估")
     private Integer planReleaseDate;
+
+    @ApiModelProperty("预计上线时间名称")
+    private String planReleaseDateText;
 
     @ApiModelProperty("创建时间")
     private Date createDate;
