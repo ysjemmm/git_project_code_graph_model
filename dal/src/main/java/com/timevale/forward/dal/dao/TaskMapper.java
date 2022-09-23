@@ -129,4 +129,12 @@ public interface TaskMapper {
      */
     List<TaskBoardDTO> getByDate(@Param("startDate") Date startDate, @Param("endDate") Date endDate, @Param("accounts") List<String> accounts);
 
+    /**
+     *
+     * @param idList idList
+     * @param productLineId productLineId
+     * @return int
+     */
+    int updateProductLineId(@Param("idList") List<Long> idList,@Param("productLineId") Long productLineId,@Param("projectId") Long projectId);
+
 }

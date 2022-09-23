@@ -588,15 +588,10 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public BaseResult<Boolean> transferTask(TaskTransferReq transferReq) {
-//        taskMapper.update()
-        return null;
+        taskMapper.updateProductLineId(transferReq.getIds(),transferReq.getProductLineId(),transferReq.getProjectId());
+        return BaseResult.success(true);
     }
 
-    /**
-     * 名称重复
-     *
-     * @param taskDO
-     */
     private void checkNameExisted(TaskDO taskDO) {
         TaskCondition condition = TaskCondition.builder().projectId(taskDO.getProjectId()).name(taskDO.getName()).build();
         TaskDO existTaskDO = taskMapper.get(condition);
@@ -617,11 +612,7 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
-    /**
-     * 名称重复
-     *
-     * @param taskDO
-     */
+
     private void checkTaskStage(TaskDO taskDO) {
         List<ProjectNodeDO> projectNodeDos = projectNodeMapper.get(taskDO.getProjectId());
         List<String> sureNode = Lists.newArrayList(ProjectNodeEnum.START_PLAN.getText()

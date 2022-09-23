@@ -293,4 +293,19 @@
         and a.is_deleted = false
         </where>
     </select>
+
+    <update id="updateProductLineId">
+        update task
+        <set>
+            <if test="productLineId != null">product_line_id = #{productLineId},</if>
+            <if test="projectId != null">project_id = #{projectId},</if>
+        </set>
+        <where>
+             id in
+            <foreach collection="idList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            and is_deleted=false
+        </where>
+    </update>
 </mapper>
