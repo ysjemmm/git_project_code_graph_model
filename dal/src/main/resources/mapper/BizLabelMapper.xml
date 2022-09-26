@@ -33,7 +33,9 @@
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
         </set>
         <where>
-            biz_id = #{bizId} and label_id = #{labelId} and type = #{type}
+            <if test="bizId!=null">and biz_id = #{bizId}</if>
+            <if test="labelId!=null">and label_id = #{labelId}</if>
+            <if test="type!=null">and type = #{type}</if>
         </where>
     </update>
 

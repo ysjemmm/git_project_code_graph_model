@@ -233,6 +233,8 @@ public class ProjectServiceImpl implements ProjectService {
         if (ProjectStatusEnum.INVALID.getCode().equals(type)) {
             // 作废解除关联
             projectProductDemandComponent.update(projectId, null);
+
+            bizLabelComponent.deleteLabel(projectDO.getId(), BizTypeEnum.PROJECT.getCode());
         }
         String action = ProjectStatusEnum.SUSPEND.getCode().equals(type) ? ButtonActionEnum.SUSPEND.getText() : ButtonActionEnum.INVALID.getText();
         projectLogComponent.addLogWhenStatusChange(oldStatus, type, projectId, action);

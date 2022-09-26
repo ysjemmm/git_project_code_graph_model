@@ -92,6 +92,9 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Resource
     private LabelComponent labelComponent;
 
+    @Resource
+    private BizLabelComponent bizLabelComponent;
+
     @Override
     public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -285,6 +288,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                     false);
         }
 
+        bizLabelComponent.deleteLabel(bizDemandId, BizTypeEnum.BIZ_DEMAND.getCode());
         return BaseResult.success(true);
     }
 
