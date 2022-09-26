@@ -1,12 +1,10 @@
 package com.timevale.forward.service.component.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.base.Objects;
-
-import com.alibaba.fastjson.JSONObject;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
-import com.timevale.epeius.service.model.response.FlowResponse;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectNodeMapper;
@@ -21,19 +19,15 @@ import com.timevale.forward.service.component.ProjectLogComponent;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.lowcode.support.response.task.TaskHandleUserResponse;
-
 import com.timevale.mandarin.common.query.QueryBase;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xingyun
@@ -94,7 +88,7 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
             projectFlowDO.setFlowEndDate(new Date());
             ProjectNodeDO projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), ProjectNodeEnum.getNameByCode(projectFlowDO.getFlowType()));
             if (projectNodeDo != null) {
-                projectNodeMapper.updateActualDateById(projectNodeDo.getId(), processInfo.getEndTime());
+                projectNodeMapper.updateActualDateById(projectNodeDo.getId(), projectFlowDO.getReviewDate());
                 //更新节点状态
                 projectComponent.updateNodeStatus(projectFlowDO.getProjectId());
                 projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), ProjectNodeEnum.START_PLAN.getText());
