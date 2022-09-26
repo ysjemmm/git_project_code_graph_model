@@ -13,7 +13,7 @@ import java.util.List;
  * @Author 望轩
  */
 public class BugOfflineRejectMsgEvent extends MessageEvent {
-    private final String BUG_OFFLINE_REJECT = "### %s \n **%s**拒绝您申请不用修复【线下bug】：**%s**，请及时处理。\n *** \n[查看详情](%s) \n <!--%s-->";
+    private final String BUG_OFFLINE_REJECT = "### %s \n **%s**拒绝您申请不用修复【线下bug】：**%s**，请及时处理。\n *** \n[查看详情](%s)  <!--%s-->";
     /**
      * 操作人，花名-真名
      */

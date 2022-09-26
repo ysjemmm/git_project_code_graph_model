@@ -6,6 +6,7 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.security.facade.api.RpcPersonService;
 import com.timevale.security.facade.request.AccountRequest;
+import com.timevale.security.facade.request.BatchGetStaffsRequest;
 import com.timevale.security.facade.request.GroupRequest;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -224,5 +225,28 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             log.error("调用内部用户中心失败 getByGroupIdNew groupId: " + groupId + " error: " + e.getMessage(), e);
         }
         throw new BaseBizRuntimeException("调用内部用户中心失败! " + groupId);
+    }
+
+    @Override
+    public List<String> batchGetStaffs(List<String> accounts, Boolean isLeave) {
+        if (CollectionUtils.isEmpty(accounts)) {
+            throw new BaseBizRuntimeException("用户花名不能为空" + accounts);
+        }
+        List<String> accountIds = new ArrayList<>();
+        BatchGetStaffsRequest request=new BatchGetStaffsRequest();
+        request.setAccounts(accounts);
+        request.setIsLeave(isLeave);
+        try {
+            BaseResult<List<BaseInfoResponse>> batchGetStaffs = rpcPersonService.batchGetStaffs(request);
+            if (batchGetStaffs.ifSuccess() && !CollectionUtils.isEmpty(batchGetStaffs.getData())) {
+                batchGetStaffs.getData().forEach(t -> accountIds.add(t.getAccount()));
+                return accountIds;
+            }
+            log.error("调用内部用户中心失败 batchGetStaffs accounts: " + accounts + " error: " + batchGetStaffs);
+            return Lists.emptyList();
+        } catch (Exception e) {
+            log.error("调用内部用户中心失败 batchGetStaffs accounts: " + accounts + " error: " + e.getMessage(), e);
+        }
+        throw new BaseBizRuntimeException("调用内部用户中心失败! " + accounts);
     }
 }

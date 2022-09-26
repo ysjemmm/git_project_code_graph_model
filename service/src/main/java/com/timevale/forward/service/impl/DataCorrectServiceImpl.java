@@ -1,6 +1,5 @@
 package com.timevale.forward.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -18,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
@@ -42,10 +40,7 @@ public class DataCorrectServiceImpl implements DataCorrectService {
     private ProjectNodeMapper projectNodeMapper;
 
     @Resource
-    private ProductDemandComponent productDemandComponent;
-
-    @Resource
-    private ProductBizDemandMapper productBizDemandMapper;
+    private TestBillMapper testBillMapper;
 
     @Resource
     private BizDemandMapper bizDemandMapper;
@@ -61,21 +56,8 @@ public class DataCorrectServiceImpl implements DataCorrectService {
 
     @Resource
     private ProjectNodeComponent projectNodeComponent;
-
-    @Resource
-    private TestBillMapper testBillMapper;
     @Resource
     private TroubleTicketMapper troubleTicketMapper;
-
-    @Resource
-    private BugOnlineMapper bugOnlineMapper;
-
-    @Resource
-    private BugOnlineModelMapper bugOnlineModelMapper;
-
-    @Resource
-    private BugOnlineModelComponent bugOnlineModelComponent;
-
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -183,29 +165,14 @@ public class DataCorrectServiceImpl implements DataCorrectService {
     }
 
     @Override
-    public BaseResult<Boolean> updateNodeDate(ProjectNodeModifyReq projectNodeModifyReq) {
-        projectNodeMapper.updateActualDateById(projectNodeModifyReq.getId(),projectNodeModifyReq.getActualDate());
-        return BaseResult.success(true);
-    }
-
-    @Override
-    public BaseResult<Boolean> updateModelIdInBugOnline() {
-        List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.getModelIds();
-        List<BugOnlineModelDO> bugOnlineModelDOList = new ArrayList<>();
-        log.info("更新模块id开始,数量:{}",bugOnlineDOList.size());
-        bugOnlineDOList.forEach(a->{
-            List<Long> modelIds = JSONObject.parseArray(a.getModelId(), Long.class);
-            modelIds.forEach(modelId -> {
-                BugOnlineModelDO bugOnlineModelDO = new BugOnlineModelDO();
-                bugOnlineModelDO.setBugOnlineId(a.getId());
-                bugOnlineModelDO.setModelId(modelId);
-                bugOnlineModelDOList.add(bugOnlineModelDO);
-            });
-        });
-        log.info("更新模块id完成");
-        if(!CollectionUtils.isEmpty(bugOnlineModelDOList)){
-             bugOnlineModelMapper.batchInsert(bugOnlineModelDOList);
-        }
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> updateNodeDate(ProjectNodeModifyReq req) {
+        projectNodeMapper.updateActualDateById(req.getId(),req.getActualDate());
+        ProjectNodeDO projectNodeDO = projectNodeMapper.getById(req.getId());
+        TestBillDO testBillDO = new TestBillDO();
+        testBillDO.setProjectId(projectNodeDO.getProjectId());
+        testBillDO.setDelayDay(0);
+        testBillMapper.updateDelayDay(testBillDO,true);
         return BaseResult.success(true);
     }
 

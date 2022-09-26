@@ -75,4 +75,7 @@ public class BugOfflineAddReq extends BaseReq {
 
     @ApiModelProperty(value = "bug平台来源")
     private String origin;
+
+    @ApiModelProperty("标签id")
+    private List<Long> labelIds;
 }

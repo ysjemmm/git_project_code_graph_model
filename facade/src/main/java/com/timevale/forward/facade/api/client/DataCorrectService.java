@@ -45,10 +45,10 @@ public interface DataCorrectService {
 
     /**
      * 节点时间更新
-     * @param projectNodeModifyReq projectNodeModifyReq
+     * @param req req
      * @return
      */
-    BaseResult<Boolean> updateNodeDate(ProjectNodeModifyReq projectNodeModifyReq);
+    BaseResult<Boolean> updateNodeDate(ProjectNodeModifyReq req);
 
     /**
      * 故障单刷新持续时间
@@ -56,10 +56,4 @@ public interface DataCorrectService {
      * @return {@link BaseResult}<{@link Boolean}>
      */
     BaseResult<Boolean> troubleTicketTime();
-
-    /**
-     * 更新逾期天数
-     * @return return
-     */
-    BaseResult<Boolean> updateModelIdInBugOnline();
 }

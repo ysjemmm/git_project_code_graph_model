@@ -13,7 +13,7 @@ import java.util.List;
  * @Author 望轩
  */
 public class BugOfflineSelfTestPassMsgEvent extends MessageEvent {
-    private final String BUG_OFFLINE_SELF_PASS = "### %s \n **%s**自测通过【线下bug】**%s**,请验收。\n *** \n[查看详情](%s) \n <!--%s-->";
+    private final String BUG_OFFLINE_SELF_PASS = "### %s \n **%s**自测通过【线下bug】**%s**,请验收。\n *** \n[查看详情](%s)  <!--%s-->";
     /**
      * 操作人，花名-真名
      */

@@ -242,6 +242,12 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         bugLogDO.setAction(ButtonActionEnum.SUBMIT.getText());
         bugLogMapper.insert(bugLogDO);
 
+        //标签
+        if (CollectionUtils.isNotEmpty(bugOfflineAddReq.getLabelIds())) {
+            bizLabelComponent.addLabel(bugOfflineDO.getId(), bugOfflineAddReq.getLabelIds(), BizTypeEnum.BUG_OFFLINE.getCode());
+            bizLabelComponent.addLog(bugOfflineDO.getId(), bugOfflineAddReq.getLabelIds(), BizTypeEnum.BUG_OFFLINE.getCode(), true);
+        }
+
         //5.消息通知
         messageEventPublisher.publish(new BugOfflineAddMsg(
                 this,

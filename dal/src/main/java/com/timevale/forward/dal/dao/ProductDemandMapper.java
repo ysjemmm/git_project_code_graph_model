@@ -120,4 +120,12 @@ public interface ProductDemandMapper {
      * @return 项目产品需求清单
      */
     List<ProductDemandListDO> linkProductDemandInCustomDemand(@Param("customDemandId") Long customDemandId);
+
+    /**
+     * 查询产品需求
+     *
+     * @param ownerId ownerId
+     * @return list
+     */
+    List<ProductDemandDO> getByOwnerId(@Param("ownerId") String ownerId);
 }

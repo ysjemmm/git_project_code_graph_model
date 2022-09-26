@@ -55,4 +55,9 @@ public class ImprovementMeasureDO extends BaseDO{
      */
     private Integer status;
 
+    /**
+     * 说明
+     */
+    private String content;
+
 }

@@ -504,6 +504,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //bug状态处理人员表插入数据
         insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
+        //标签
+        if (CollectionUtils.isNotEmpty(bugOnlineAddReq.getLabelIds())) {
+            bizLabelComponent.addLabel(bugOnlineDO.getId(), bugOnlineAddReq.getLabelIds(), BizTypeEnum.BUG_ONLINE.getCode());
+            bizLabelComponent.addLog(bugOnlineDO.getId(), bugOnlineAddReq.getLabelIds(), BizTypeEnum.BUG_ONLINE.getCode(), true);
+        }
+
         //发送消息
         messageEventPublisher.publish(
                 new BugOnlineAddMsgEvent(

@@ -78,4 +78,12 @@ public interface ProjectNodeMapper {
      */
     List<ProjectNodeDO> selectByProjectIdListFilterDate(@Param("projectIdList") List<Long> projectIdList);
 
+    /**
+     * 查询
+     *
+     * @param id id
+     * @return int
+     */
+    ProjectNodeDO getById(@Param("id") Long id);
+
 }

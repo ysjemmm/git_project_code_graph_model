@@ -1,16 +1,14 @@
 package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.condition.TaskListCondition;
+import com.timevale.forward.dal.dto.TaskBoardDTO;
 import com.timevale.forward.dal.dto.TaskOverdueDTO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.query.TaskQueryList;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
 import com.timevale.forward.facade.api.request.TaskSimpleAddReq;
-import com.timevale.forward.facade.api.result.TaskDetailVO;
-import com.timevale.forward.facade.api.result.TaskListVO;
-import com.timevale.forward.facade.api.result.TaskOverdueCountVO;
-import com.timevale.forward.facade.api.result.TaskVO;
+import com.timevale.forward.facade.api.result.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -88,4 +86,20 @@ public interface TaskCopier {
      * @return TaskDO
      */
     TaskDO convert(TaskSimpleAddReq taskSimpleAddReq);
+
+    /**
+     * 转换转换VO
+     *
+     * @param taskBoardDTO 对象
+     * @return HomePageSingleTaskWorkTimeVO
+     */
+    HomePageSingleTaskWorkTimeVO convert2HomePage(TaskBoardDTO taskBoardDTO);
+
+    /**
+     * 转换转换DO
+     *
+     * @param TaskDO 对象
+     * @return TaskDO
+     */
+    ProjectBoardTaskVO convert2ProjectBoard(TaskDO TaskDO);
 }

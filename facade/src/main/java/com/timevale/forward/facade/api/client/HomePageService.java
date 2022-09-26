@@ -4,7 +4,9 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.HomePageProjectOnlineLatelyQueryList;
 import com.timevale.forward.facade.api.request.HomePageBaseReq;
+import com.timevale.forward.facade.api.request.HomePageHolidayReq;
 import com.timevale.forward.facade.api.request.HomePageProjectBoardReq;
+import com.timevale.forward.facade.api.request.HomePageTaskBoardReq;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -66,4 +68,20 @@ public interface HomePageService {
      * @return {@link BaseResult}<{@link UpdateTimeVO}>
      */
     BaseResult<UpdateTimeVO> getUpdateTime();
+
+
+    /**
+     * 任务工时看板查询
+     *
+     * @param req 查询条件
+     * @return 列表
+     */
+    BaseResult<List<HomePageSingleWorkTimeVO>> getTaskWorkTimeBoard(HomePageTaskBoardReq req);
+
+    /**
+     *
+     * @param homePageHolidayReq  homePageHolidayReq
+     * @return 节假日期
+     */
+    BaseResult<List<String>> getHolidays(HomePageHolidayReq homePageHolidayReq);
 }
