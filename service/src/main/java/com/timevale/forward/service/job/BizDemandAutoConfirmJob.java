@@ -10,6 +10,7 @@ import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.ButtonActionEnum;
 import com.timevale.forward.service.component.BizDemandLogComponent;
+import com.timevale.forward.service.component.BugOnlineComponent;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
@@ -45,8 +46,11 @@ public class BizDemandAutoConfirmJob extends IJobHandler {
     @Resource
     private BizDemandLogComponent bizDemandLogComponent;
 
-    @Value("${autoConfirmLimitDay:7}")
+    @Value("${auto.confirm.limit:7}")
     private Integer autoConfirmLimitDay;
+
+    @Resource
+    private BugOnlineComponent bugOnlineComponent;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -99,6 +103,8 @@ public class BizDemandAutoConfirmJob extends IJobHandler {
             }
             bizChangeLogMapper.batchInsert(logDOList);
         }
+
+        bugOnlineComponent.autoCloseBugIfBeConfirm(autoConfirmLimitDay);
 
         log.info("[BizDemandAutoConfirmJob]业务需求更新待确认-完成");
         return ReturnT.SUCCESS;

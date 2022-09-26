@@ -8,6 +8,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
+
 /**
  * @author by YangXu
  * @date 2021/12/13 16:38
@@ -32,4 +34,10 @@ public class BizDomainVO extends ToString {
 
     @ApiModelProperty("是否废弃")
     private Boolean isDeleted;
+
+    @ApiModelProperty("创建时间")
+    private Date createDate;
+
+    @ApiModelProperty("修改时间")
+    private Date modifyDate;
 }

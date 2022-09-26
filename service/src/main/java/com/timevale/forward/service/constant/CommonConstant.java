@@ -33,4 +33,5 @@ public class CommonConstant {
     public static final String PMO = "PMO";
 
     public static final String FORWARD_BIZ_RELATION_TOPIC = "forward-biz-rel";
+
 }

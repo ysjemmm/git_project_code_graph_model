@@ -356,15 +356,34 @@
         </where>
     </select>
 
-    <select id="getModelIds" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
-        SELECT id, name,operator,operator_id,last_operator,last_operator_id,proposer,model_id
+    <select id="selectByStatus" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+        SELECT id, name,operator,operator_id,last_operator,last_operator_id,proposer
         ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
         ,create_man,create_man_id,source, detail_version_id,link_bug_id
+        ,is_deleted,create_man ,create_man_id,create_date ,modify_man ,modify_man_id,modify_date
         FROM bug_online
         <where>
-            model_id != ''
+            status in
+            <foreach collection="status" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            and is_deleted = false
         </where>
     </select>
+
+    <update id="updateStatusByIds">
+        update bug_online
+        <set>
+            status =#{status}
+        </set>
+        <where>
+            and id IN
+            <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </where>
+    </update>
+
 </mapper>
 
 

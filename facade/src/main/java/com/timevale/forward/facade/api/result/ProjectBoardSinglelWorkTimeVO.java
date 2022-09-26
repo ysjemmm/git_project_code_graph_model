@@ -32,14 +32,11 @@ public class ProjectBoardSinglelWorkTimeVO extends ToString {
     @ApiModelProperty("任务数量")
     private Integer taskCount;
 
-    @ApiModelProperty("最早计划开始时间")
-    private Date minPlanStartDate;
-
-    @ApiModelProperty("最晚计划完成时间")
-    private Date maxPlanEndDate;
-
     @ApiModelProperty("任务计划总耗时")
     private BigDecimal totalPlanUseTime;
+
+    @ApiModelProperty("任务实际总耗时")
+    private BigDecimal totalTaskUseTime;
 
     @ApiModelProperty("项目开始时间")
     private Date projectStartDate;

@@ -30,6 +30,8 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.TaskDoneMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.date.DateFormatConst;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -48,7 +50,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import static com.timevale.forward.service.constant.CommonConstant.SECONDS_PER_HOUR;
+import static com.timevale.forward.service.constant.CommonConstant.*;
 
 /**
  * @author xingyun
@@ -114,6 +116,10 @@ public class TaskServiceImpl implements TaskService {
 
     @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+    public static final String ON_WORK_HOUR = " 09:00:00";
+
+    public static final String OFF_WORK_HOUR = " 18:30:00";
 
     @Override
     public BaseResult<PageQueryResult<TaskVO>> list(TaskQueryList taskQueryList) {
@@ -525,7 +531,7 @@ public class TaskServiceImpl implements TaskService {
 
         checkPlanDate(taskDos.get(0));
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        List<PersonAddReq> executors=new ArrayList<>();
+        List<PersonAddReq> executors = new ArrayList<>();
         taskSimples.forEach(a -> {
             threadPoolTaskExecutor.execute(() -> {
                 TaskDO taskDO = TaskCopier.INSTANCE.convert(a);
@@ -559,6 +565,16 @@ public class TaskServiceImpl implements TaskService {
         Date startTime = elapsedEndTimeQueryReq.getStartTime();
         BigDecimal planUseTime = elapsedEndTimeQueryReq.getPlanUseTime();
         String elaspedEndTime = elapsedTimeClient.getElapsedEndTime(startTime, planUseTime.multiply(new BigDecimal(SECONDS_PER_HOUR)).longValue());
+        if (elaspedEndTime.contains(ON_WORK_HOUR)) {
+            List<String> workDays = elapsedTimeClient.getHolidays(startTime, DateUtil.parseToDate(elaspedEndTime, DateFormatConst.DEFAULT_DATE_FORMAT), false);
+            Optional<String> max = workDays.stream().filter(a -> !Objects.equals(a, DateUtil.getDate(elaspedEndTime))).max(String::compareTo);
+            if (max.isPresent()) {
+                //如果当天是ON_WORK_HOUR,则返回前一天的OFF_WORK_HOUR
+                String result = max.get() + OFF_WORK_HOUR;
+                log.info("接口返回时间{},最终得到时间:{}", elaspedEndTime, result);
+                return BaseResult.success(result);
+            }
+        }
         return BaseResult.success(elaspedEndTime);
     }
 

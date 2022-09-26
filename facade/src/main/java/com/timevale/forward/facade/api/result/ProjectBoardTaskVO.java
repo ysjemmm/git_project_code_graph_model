@@ -54,7 +54,16 @@ public class ProjectBoardTaskVO extends ToString {
     @ApiModelProperty("实际结束时间")
     private Date actualEndDate;
 
+    @ApiModelProperty("显示开始时间")
+    private Date startDate;
+
+    @ApiModelProperty("显示结束时间")
+    private Date endDate;
+
     @ApiModelProperty("计划耗时")
     private BigDecimal planUseTime;
+
+    @ApiModelProperty("实际耗时")
+    private BigDecimal taskUseTime;
 
 }

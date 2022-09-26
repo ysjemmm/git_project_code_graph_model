@@ -78,4 +78,11 @@
         </where>
     </select>
 
+    <select id="getById" resultType="com.timevale.forward.dal.entity.ProjectNodeDO">
+        select id,project_id,name, plan_date, actual_date ,create_man_id, create_man
+        from project_node
+        <where>
+            <if test="id!=null">and id = #{id}</if>
+        </where>
+    </select>
 </mapper>

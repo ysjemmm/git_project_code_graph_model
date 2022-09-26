@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.ProductLineCondition;
 import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
 import org.apache.ibatis.annotations.Param;
@@ -84,4 +85,12 @@ public interface ProductLineMapper {
      * @return int
      */
     int update(ProductLineDO productLineDO);
+
+    /**
+     * 获取产品线
+     *
+     * @param condition condition
+     * @return {@link ProductLineDO }
+     */
+    List<ProductLineDO> selectByCondition( ProductLineCondition condition);
 }

@@ -8,6 +8,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
+
 
 /**
  * @author by YangXu
@@ -35,12 +37,27 @@ public class ProductLineVO extends ToString {
     @ApiModelProperty("产品线负责人id")
     private String productLineOwnerId;
 
-    @ApiModelProperty("业务域负责人信息")
+    @ApiModelProperty("业务域名称")
+    private String bizDomainName;
+
+    @ApiModelProperty("业务域负责人")
     private String bizDomainOwner;
 
     @ApiModelProperty("业务域负责人id")
     private String bizDomainOwnerId;
 
+    @ApiModelProperty("产品线bug负责人")
+    private String bugOnlineOwner;
+
+    @ApiModelProperty("产品线bug负责人id")
+    private String bugOnlineOwnerId;
+
     @ApiModelProperty("是否废弃")
     private Boolean isDeleted;
+
+    @ApiModelProperty("创建时间")
+    private Date createDate;
+
+    @ApiModelProperty("修改时间")
+    private Date modifyDate;
 }
