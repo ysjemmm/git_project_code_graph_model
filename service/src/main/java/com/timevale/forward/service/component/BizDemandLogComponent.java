@@ -30,4 +30,6 @@ public interface BizDemandLogComponent{
     BizChangeLogDO buildLogWhenPublishDateChange(String oldValue, String newValue, Long id);
 
     BizChangeLogDO buildLogWhenPublishDateChange(String oldValue, String newValue, Long id,Integer type);
+
+    BizChangeLogDO buildLogWhenUpdateFiles(String oldValue, String newValue, Long id,String action);
 }

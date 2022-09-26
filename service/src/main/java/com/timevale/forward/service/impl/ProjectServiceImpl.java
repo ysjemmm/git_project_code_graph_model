@@ -727,16 +727,17 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public BaseResult<List<ProjectProductLineVO>> getByName(String name) {
         List<ProjectDO> projectDOList = projectMapper.getByLikeName(name);
-        if(CollectionUtils.isEmpty(projectDOList)){
+        projectDOList = projectDOList.stream().filter(a -> !ProjectStatusEnum.INVALID.getCode().equals(a.getStatus())).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(projectDOList)) {
             return BaseResult.success(Lists.emptyList());
         }
         List<Long> projectIdList = projectDOList.stream().map(ProjectDO::getId).collect(Collectors.toList());
         List<ProjectProductLineDO> ppLines = projectProductLineMapper.getByProjectIdList(projectIdList);
-        if(CollectionUtils.isEmpty(ppLines)){
+        if (CollectionUtils.isEmpty(ppLines)) {
             return BaseResult.success(Lists.emptyList());
         }
         Map<Long, Set<Long>> ppIdMap = ppLines.stream()
-                .collect(Collectors.groupingBy(ProjectProductLineDO::getProjectId,Collectors.mapping(ProjectProductLineDO::getProductLineId,Collectors.toSet())));
+                .collect(Collectors.groupingBy(ProjectProductLineDO::getProjectId, Collectors.mapping(ProjectProductLineDO::getProductLineId, Collectors.toSet())));
 
         List<Long> productLineIds = ppLines.stream().map(ProjectProductLineDO::getProductLineId).collect(Collectors.toList());
         List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIds);
@@ -780,10 +781,10 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().projectId(newProject.getId()).build();
             List<ProjectAcceptanceDO> list = projectAcceptanceMapper.list(c);
             boolean allWithdraw = list.stream().allMatch(a -> FlowStatusEnum.WITHDRAW.getCode().equals(a.getStatus()));
-            if (CollectionUtils.isEmpty(list)||allWithdraw) {
+            if (CollectionUtils.isEmpty(list) || allWithdraw) {
                 throw new BaseBizRuntimeException("您还没有发起项目验收,请验收通过后再发布");
             }
-            list=list.stream().filter(a->!FlowStatusEnum.WITHDRAW.getCode().equals(a.getStatus())).collect(Collectors.toList());
+            list = list.stream().filter(a -> !FlowStatusEnum.WITHDRAW.getCode().equals(a.getStatus())).collect(Collectors.toList());
             Map<String, List<ProjectAcceptanceDO>> groupMap = list.stream().collect(Collectors.groupingBy(ProjectAcceptanceDO::getAcceptorId));
             groupMap.forEach((k, v) -> {
                 List<ProjectAcceptanceDO> order = v.stream().sorted(Comparator.comparing(ProjectAcceptanceDO::getCreateDate).reversed()).collect(Collectors.toList());

@@ -5,7 +5,6 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.CommentQueryList;
 import com.timevale.forward.facade.api.request.CommentAddReq;
 import com.timevale.forward.facade.api.request.CommentBatchAddReq;
-import com.timevale.forward.facade.api.request.CommentModifyReq;
 import com.timevale.forward.facade.api.result.CommentVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 
@@ -41,11 +40,4 @@ public interface CommentService {
      */
     BaseResult<Boolean> add(CommentBatchAddReq commentBatchAddReq);
 
-    /**
-     * 修改
-     *
-     * @param commentModifyReq 评价修改请求
-     * @return {@link BaseResult}<{@link Boolean}>
-     */
-    BaseResult<Boolean> modify(CommentModifyReq commentModifyReq);
 }

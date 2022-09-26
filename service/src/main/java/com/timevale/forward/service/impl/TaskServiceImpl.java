@@ -588,6 +588,13 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public BaseResult<Boolean> transferTask(TaskTransferReq transferReq) {
+        log.info("任务转移:{}", transferReq);
+        List<TaskDO> taskDOList = taskMapper.getByIdList(transferReq.getIds());
+        boolean anyMatch = taskDOList.stream().anyMatch(a -> TaskStatusEnum.DONE.getCode().equals(a.getStatus())
+                || TaskStatusEnum.INVALID.getCode().equals(a.getStatus()));
+        if(anyMatch){
+            throw new BaseBizRuntimeException("存在已作废或已完成任务,不能转移,请修改后重试");
+        }
         taskMapper.updateProductLineId(transferReq.getIds(),transferReq.getProductLineId(),transferReq.getProjectId());
         return BaseResult.success(true);
     }

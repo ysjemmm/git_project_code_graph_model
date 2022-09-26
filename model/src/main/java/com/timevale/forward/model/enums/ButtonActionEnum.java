@@ -174,6 +174,11 @@ public enum ButtonActionEnum {
      * 添加
      */
     ADD("添加"),
+
+    /**
+     * 修改
+     */
+    UPDATE("修改"),
     /**
      *删除
      */
