@@ -107,5 +107,7 @@
         <mapper resource="mapper/ManDayReportMapper.xml" />
         <mapper resource="mapper/ProjectDocumentMapper.xml" />
         <mapper resource="mapper/ProjectAcceptanceMapper.xml" />
+        <mapper resource="mapper/BizDemandCustomMapper.xml" />
+        <mapper resource="mapper/BugOnlineCustomMapper.xml" />
     </mappers>
 </configuration>

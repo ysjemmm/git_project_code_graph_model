@@ -330,6 +330,18 @@
             model_id != ''
         </where>
     </select>
+
+
+
+
+    <select id="selectByCustomId" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
+        select bo.id, bo.name, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env,
+        bo.reason, bo.belong, bo.dismiss_cause, bo.customer_name, bo.expect_launch_date, bo.source,
+        bo.create_date, bo.modify_date
+        from bug_online bo
+         left join bug_online_custom bc on bo.id = bc.bug_online_id where bc.custom_id = #{customId} and bc.is_deleted=0 and bo.is_deleted=0
+
+    </select>
 </mapper>
 
 

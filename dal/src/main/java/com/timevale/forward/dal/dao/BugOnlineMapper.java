@@ -1,8 +1,9 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.BugOnlineListCondition;
-import com.timevale.forward.dal.entity.BugOnlineListDO;
 import com.timevale.forward.dal.entity.BugOnlineDO;
+import com.timevale.forward.dal.entity.BugOnlineListDO;
+
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -96,4 +97,11 @@ public interface BugOnlineMapper {
      * @return 返回值
      */
     List<BugOnlineDO> getModelIds();
+
+    /**
+     * 根据客户id查询
+     * @param customId
+     * @return
+     */
+    List<BugOnlineListDO> selectByCustomId(@Param("customId") Long customId);
 }

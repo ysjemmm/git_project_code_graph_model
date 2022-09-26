@@ -1,13 +1,14 @@
 package com.timevale.forward.facade.api.result;
 
 import com.timevale.mandarin.common.result.ToString;
+
+import java.util.Date;
+import java.util.List;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.Date;
-import java.util.List;
 
 /**
  * @Date 2022/3/17 13:46
@@ -155,4 +156,7 @@ public class BugOnlineDetailVO extends ToString {
 
     @ApiModelProperty("关联bug")
     private BugOnlineLinkVO linkBug;
+
+    @ApiModelProperty("客户信息")
+    private List<BugOnlineCustomVO> customList;
 }

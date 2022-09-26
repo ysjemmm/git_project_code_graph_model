@@ -1,22 +1,85 @@
 package com.timevale.forward.service.impl;
 
 import com.google.common.base.Objects;
+
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.BugLogMapper;
+import com.timevale.forward.dal.dao.BugOnlineMapper;
+import com.timevale.forward.dal.dao.BugStatusOperatorMapper;
+import com.timevale.forward.dal.dao.ProductBizDemandMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.entity.BizChangeLogDO;
+import com.timevale.forward.dal.entity.BizDemandCustomDO;
+import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.BizDemandListDO;
+import com.timevale.forward.dal.entity.BugLogDO;
+import com.timevale.forward.dal.entity.BugOnlineDO;
+import com.timevale.forward.dal.entity.BugStatusOperatorDO;
+import com.timevale.forward.dal.entity.FileDO;
+import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
-import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.facade.api.request.BatchTransferReq;
+import com.timevale.forward.facade.api.request.BizDemandAddReq;
+import com.timevale.forward.facade.api.request.BizDemandAgreeReq;
+import com.timevale.forward.facade.api.request.BizDemandCompletedAgreeReq;
+import com.timevale.forward.facade.api.request.BizDemandCompletedRejectReq;
+import com.timevale.forward.facade.api.request.BizDemandCompletedReq;
+import com.timevale.forward.facade.api.request.BizDemandCustomAddReq;
+import com.timevale.forward.facade.api.request.BizDemandModifyReq;
+import com.timevale.forward.facade.api.request.BizDemandRejectReq;
+import com.timevale.forward.facade.api.request.BizDemandResubmitReq;
+import com.timevale.forward.facade.api.request.BizDemandTransferReq;
+import com.timevale.forward.facade.api.request.BizDemandUpdateStatusReq;
+import com.timevale.forward.facade.api.request.FileAddReq;
+import com.timevale.forward.facade.api.request.PersonAddReq;
+import com.timevale.forward.facade.api.result.BizDemandDetailVO;
+import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.FileVO;
+import com.timevale.forward.facade.api.result.PersonVO;
+import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
+import com.timevale.forward.facade.api.result.QueryResultVO;
+import com.timevale.forward.model.enums.AscriptionEnum;
+import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
+import com.timevale.forward.model.enums.BizDemandReasonEnum;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.BugLogFieldEnum;
+import com.timevale.forward.model.enums.BugLogTypeEnum;
+import com.timevale.forward.model.enums.BugOnlineReasonEnum;
+import com.timevale.forward.model.enums.BugOnlineStatusEnum;
+import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.model.enums.CustomerDevTypeEnum;
+import com.timevale.forward.model.enums.FileTypeEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.PlanReleaseDateEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
+import com.timevale.forward.model.enums.YesOrNoEnum;
+import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDemandCustomComponent;
+import com.timevale.forward.service.component.BizDemandLogComponent;
+import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.LabelComponent;
+import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
+import com.timevale.forward.service.copy.BizDemandCustomCopier;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.observer.event.*;
+import com.timevale.forward.service.observer.event.BizDemandCompletedMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandCompletedRejectMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandInvalidMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandModifyMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandPlanReleaseDateMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandReceivedMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandRejectMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandToReceiveAaginMsgEvent;
+import com.timevale.forward.service.observer.event.BizDemandToReceiveMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -28,15 +91,25 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author by YangXu
@@ -91,6 +164,9 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Resource
     private LabelComponent labelComponent;
+
+    @Resource
+    private BizDemandCustomComponent bizDemandCustomComponent;
 
     @Override
     public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
@@ -317,6 +393,13 @@ public class BizDemandServiceImpl implements BizDemandService {
             personComponent.add(recipientInfoList, bizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
         }
 
+        // 添加客户信息
+        List<BizDemandCustomAddReq> bizDemandCustomAddReqs = bizDemandAddReq.getCustomList();
+
+        if(CollectionUtils.isNotEmpty(bizDemandCustomAddReqs)){
+            bizDemandCustomComponent.add(bizDemandCustomAddReqs,bizDemandDO.getId());
+        }
+
         // 判断是否为线上bug转换
         Long bugOnlineId = bizDemandAddReq.getBugOnlineId();
         if (bugOnlineId != null) {
@@ -407,6 +490,12 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizDemandDetailVO.setBugOnlineName(bugOnlineDO.getName());
         }
 
+        // 获取客户信息
+        List<BizDemandCustomDO> bizDemandCustomDOList = bizDemandCustomComponent.selectByBizDemandId(bizDemandId);
+
+        if(CollectionUtils.isNotEmpty(bizDemandCustomDOList)){
+            bizDemandDetailVO.setCustomList(BizDemandCustomCopier.INSTANCE.convertListToVO(bizDemandCustomDOList));
+        }
         return BaseResult.success(bizDemandDetailVO);
     }
 
@@ -444,6 +533,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (!CollectionUtils.isEmpty(recipientInfoList)) {
             personComponent.update(recipientInfoList, bizDemandModifyReq.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
         }
+
+        // 客户信息
+        bizDemandCustomComponent.update(bizDemandModifyReq.getCustomList(),bizDemandModifyReq.getId());
+
 
         // 添加附件
         List<FileAddReq> fileIdList = bizDemandModifyReq.getFileList();
@@ -997,6 +1090,25 @@ public class BizDemandServiceImpl implements BizDemandService {
                 name
         ));
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<List<BizDemandVO>> getBizDemandByCustomId(Long customId) {
+        if(customId == null){
+            throw new BaseBizRuntimeException("参数有误");
+        }
+        List<BizDemandListDO> bizDemandDOS = bizDemandMapper.selectByCustomId(customId);
+        if(CollectionUtils.isEmpty(bizDemandDOS)){
+            return  BaseResult.success(new ArrayList<>());
+        }
+        List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandDOS);
+        // 信息填充
+        for (BizDemandVO bizDemandVO : bizDemandVOList) {
+
+            bizDemandVO.setStatusText(BizDemandStatusEnum.getTextByCode(bizDemandVO.getStatus()));
+            bizDemandVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandVO.getPlanReleaseDate()));
+        }
+        return BaseResult.success(bizDemandVOList);
     }
 
     /**

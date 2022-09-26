@@ -136,4 +136,11 @@ public interface BizDemandMapper {
      */
     List<BizDemandDO> selectByStatus(@Param("status") List<Integer> status);
 
+    /**
+     * 根据客户id查询
+     * @param customId
+     * @return
+     */
+    List<BizDemandListDO> selectByCustomId(@Param("customId") Long customId);
+
 }

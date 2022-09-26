@@ -135,4 +135,11 @@ public interface BizDemandService {
      */
     BaseResult<Boolean> reSubmit(BizDemandResubmitReq bizDemandResubmitReq);
 
+
+    /**
+     * 根据客户id查询业务数据
+     * @param customId
+     * @return
+     */
+    BaseResult<List<BizDemandVO>> getBizDemandByCustomId(Long customId);
 }

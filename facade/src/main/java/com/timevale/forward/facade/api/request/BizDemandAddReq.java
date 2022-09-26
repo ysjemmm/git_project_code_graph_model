@@ -1,13 +1,14 @@
 package com.timevale.forward.facade.api.request;
 
+import java.util.List;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import java.util.List;
 
 /**
  * @author by YangXu
@@ -84,4 +85,7 @@ public class BizDemandAddReq extends BaseReq {
 
     @ApiModelProperty("来源id")
     private String sourceId;
+
+    @ApiModelProperty("客户信息")
+    private List<BizDemandCustomAddReq> customList;
 }
