@@ -1119,6 +1119,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         fileDO.setType(FileTypeEnum.BUG_OFFLINE.getCode());
         fileMapper.update(fileDO);
 
+        bizLabelComponent.deleteLabel(bugOfflineReq.getId(), BizTypeEnum.BUG_OFFLINE.getCode());
         return BaseResult.success(true);
     }
 

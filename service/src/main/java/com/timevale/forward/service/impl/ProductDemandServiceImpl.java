@@ -309,6 +309,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 productDemandLogComponent.addLogWhenLinkOrUnlinkCustomDemand(productDemand.getName(), productDemand.getId(), cdNameMap, null);
                 productCustomDemandComponent.update(productDemandId, null, relation == null);
             }
+
+            bizLabelComponent.deleteLabel(productDemandId, BizTypeEnum.PRODUCT_DEMAND.getCode());
         }
         String action = ProductDemandStatusEnum.SUSPEND.getCode().equals(type) ? ButtonActionEnum.SUSPEND.getText() : ButtonActionEnum.INVALID.getText();
         productDemandLogComponent.addLogWhenStatusChange(oldStatus, type, productDemandId, action);

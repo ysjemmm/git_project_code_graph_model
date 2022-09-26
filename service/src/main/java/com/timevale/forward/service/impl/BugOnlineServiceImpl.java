@@ -477,6 +477,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         deleteLinkBug(bugOnlineDO.getId(),bugOnlineDO.getLinkBugId(),true);
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
+
+        bizLabelComponent.deleteLabel(bugOnlineReq.getId(), BizTypeEnum.BUG_ONLINE.getCode());
         return businessResult;
     }
 

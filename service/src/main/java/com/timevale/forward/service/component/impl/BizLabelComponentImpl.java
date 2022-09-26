@@ -3,7 +3,6 @@ package com.timevale.forward.service.component.impl;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
-import com.timevale.forward.facade.api.result.LabelSimpleVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -12,8 +11,6 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.assertj.core.util.Lists;
-import org.assertj.core.util.Maps;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -174,5 +171,14 @@ public class BizLabelComponentImpl implements BizLabelComponent {
         }
 
         return resultMap;
+    }
+
+    @Override
+    public void deleteLabel(Long bizId, Integer type) {
+        BizLabelDO bizLabelDO = new BizLabelDO();
+        bizLabelDO.setBizId(bizId);
+        bizLabelDO.setType(type);
+        bizLabelDO.setIsDeleted(true);
+        bizLabelMapper.update(bizLabelDO);
     }
 }
