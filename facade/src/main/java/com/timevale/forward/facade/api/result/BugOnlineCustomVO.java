@@ -20,6 +20,6 @@ public class BugOnlineCustomVO extends ToString {
     private String customName;
 
     @ApiModelProperty("客户id")
-    private Long customId;
+    private String customId;
 
 }
