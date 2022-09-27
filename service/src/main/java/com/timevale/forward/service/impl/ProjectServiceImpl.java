@@ -727,7 +727,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public BaseResult<List<ProjectProductLineVO>> getByName(String name) {
         List<ProjectDO> projectDOList = projectMapper.getByLikeName(name);
-        projectDOList = projectDOList.stream().filter(a -> !ProjectStatusEnum.INVALID.getCode().equals(a.getStatus())).collect(Collectors.toList());
+        projectDOList = projectDOList.stream()
+                .filter(a -> !ProjectStatusEnum.INVALID.getCode().equals(a.getStatus())
+                        && !ProjectStatusEnum.RELEASED.getCode().equals(a.getStatus())).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(projectDOList)) {
             return BaseResult.success(Lists.emptyList());
         }

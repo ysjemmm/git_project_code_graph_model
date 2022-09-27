@@ -295,7 +295,7 @@
     </select>
 
     <select id="getByLikeName" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select id, name from project
+        select id, name,status from project
         where name like concat('%',#{name},'%')
         and is_deleted = false
     </select>
