@@ -57,8 +57,8 @@ public class ManDayReportComponentImpl implements ManDayReportComponent {
                 .setAuditStatus(isPM ? AuditStatusEnum.APPROVE.getCode() : AuditStatusEnum.AUDITING.getCode())
                 .setAuditor(projectDO.getPmName())
                 .setAuditorId(projectDO.getPmId())
-                .setReportor(manDayDO.getMemberId())
-                .setReportorId(manDayDO.getMemberName());
+                .setReportor(manDayDO.getMemberName())
+                .setReportorId(manDayDO.getMemberId());
         manDayReportMapper.insert(reportDO);
 
         // 发送消息
