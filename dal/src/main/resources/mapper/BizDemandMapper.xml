@@ -344,7 +344,6 @@
                b.submit_man, b.submit_man_id, b.plan_release_date, b.project_end_date,
                b.create_date
         from biz_demand b
-          left join biz_demand_custom bc on b.id = bc.biz_demand_id where bc.custom_id = #{customId} and bc.is_deleted=0 and b.is_deleted=0
+          left join biz_demand_custom bc on b.id = bc.biz_demand_id where bc.custom_id = #{customId} and bc.is_deleted=0 and b.is_deleted=0  order by b.create_date desc
     </select>
-
 </mapper>

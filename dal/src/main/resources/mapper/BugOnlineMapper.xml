@@ -354,7 +354,7 @@
         bo.reason, bo.belong, bo.dismiss_cause, bo.customer_name, bo.expect_launch_date, bo.source,
         bo.create_date, bo.modify_date
         from bug_online bo
-         left join bug_online_custom bc on bo.id = bc.bug_online_id where bc.custom_id = #{customId} and bc.is_deleted=0 and bo.is_deleted=0
+         left join bug_online_custom bc on bo.id = bc.bug_online_id where bc.custom_id = #{customId} and bc.is_deleted=0 and bo.is_deleted=0 order by bo.create_date desc
 
     </select>
 </mapper>
