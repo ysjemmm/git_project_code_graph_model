@@ -187,9 +187,9 @@ public class ProjectListCondition extends QueryBase {
     private List<Long> labelIds;
 
     /**
-     * 项目节点名称
+     * 项目节点code
      */
-    private String nodeName;
+    private Integer nodeCode;
     /**
      * 节点实际时间左区间
      */

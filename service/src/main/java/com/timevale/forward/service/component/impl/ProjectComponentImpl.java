@@ -25,7 +25,6 @@ import com.timevale.mandarin.common.query.QueryBase;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
@@ -181,11 +180,12 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         }
 
-        if (StringUtils.isNotEmpty(condition.getNodeName())) {
+        if (condition.getNodeCode() != null) {
+            String nodeName = ProjectNodeEnum.getNameByCode(condition.getNodeCode());
             Date startOfDay = DateUtil.getStartOfDay(condition.getActualDateLeft());
             Date endOfDay = DateUtil.getEndOfDay(condition.getActualDateRight());
             c = ProjectNodeCondition.builder()
-                    .projectIds(projectIds).nodeName(condition.getNodeName()).actualDateLeft(startOfDay).actualDateRight(endOfDay).build();
+                    .projectIds(projectIds).nodeName(nodeName).actualDateLeft(startOfDay).actualDateRight(endOfDay).build();
             projectIds = projectNodeMapper.selectByCondition(c).stream().map(ProjectNodeDO::getProjectId).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(projectIds)) {
                 return ResultUtil.queryResultEmpty();
