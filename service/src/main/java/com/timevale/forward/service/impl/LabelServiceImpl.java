@@ -15,12 +15,14 @@ import com.timevale.forward.facade.api.request.LabelModifyReq;
 import com.timevale.forward.facade.api.result.LabelDetailVO;
 import com.timevale.forward.facade.api.result.LabelVO;
 import com.timevale.forward.model.enums.AscriptionEnum;
+import com.timevale.forward.model.enums.LabelCategoryProtectionEnum;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.LabelCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
@@ -65,6 +67,7 @@ public class LabelServiceImpl implements LabelService {
     public BaseResult<PageQueryResult<LabelVO>> list(LabelQueryList labelQueryList) {
         log.info("标签列表,参数:{}", labelQueryList);
         LabelListCondition condition = LabelCopier.INSTANCE.convert(labelQueryList);
+        condition.setProtection(LabelCategoryProtectionEnum.NONE.getCode());
         if (AscriptionEnum.CURRENT_USER.toString().equals(labelQueryList.getAscription())) {
             condition.setCreateManId(LocalSessionUtils.getUserInfo().getId());
         }
@@ -171,6 +174,12 @@ public class LabelServiceImpl implements LabelService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> delete(Long labelId) {
         log.info("标签删除,参数:{}", labelId);
+        LabelDO label = labelMapper.get(labelId);
+        if (label != null) {
+            LabelCategoryDO category = labelCategoryMapper.get(Collections.singletonList(label.getLabelCategoryId())).get(0);
+            AssertUtil.checkState(category.getProtection().equals(LabelCategoryProtectionEnum.NONE.getCode()),
+                    "您删除的标签已被系统保护，无法删除");
+        }
         List<BizLabelDO> bizLabelDOList = bizLabelMapper.get(labelId);
         if (CollectionUtils.isNotEmpty(bizLabelDOList)) {
             throw new BaseBizRuntimeException("标签名称已被引用,不可删除");
@@ -209,6 +218,9 @@ public class LabelServiceImpl implements LabelService {
     public BaseResult<Boolean> modify(LabelModifyReq labelModifyReq) {
         log.info("标签修改,参数:{}", labelModifyReq);
         LabelDO labelDO = labelMapper.get(labelModifyReq.getId());
+        LabelCategoryDO category = labelCategoryMapper.get(Collections.singletonList(labelDO.getLabelCategoryId())).get(0);
+        AssertUtil.checkState(category.getProtection().equals(LabelCategoryProtectionEnum.NONE.getCode()),
+                "您删除的标签已被系统保护，无法删除");
 
         checkName(labelDO.getLabelCategoryId(),Lists.newArrayList(labelModifyReq.getName()));
 

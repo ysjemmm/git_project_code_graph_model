@@ -18,6 +18,7 @@ import com.timevale.forward.facade.api.result.LabelCategoryVO;
 import com.timevale.forward.facade.api.result.LabelSimpleVO;
 import com.timevale.forward.model.enums.AscriptionEnum;
 import com.timevale.forward.model.enums.BizTypeEnum;
+import com.timevale.forward.model.enums.LabelCategoryProtectionEnum;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.LabelCategoryCopier;
 import com.timevale.forward.service.copy.LabelCopier;
@@ -26,6 +27,7 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.BaseInfoResponse;
@@ -74,6 +76,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     public BaseResult<PageQueryResult<LabelCategoryVO>> list(LabelCategoryQueryList labelCategoryQueryList) {
         log.info("类别列表,参数:{}", labelCategoryQueryList);
         LabelCategoryListCondition condition = LabelCategoryCopier.INSTANCE.convert(labelCategoryQueryList);
+        condition.setProtection(LabelCategoryProtectionEnum.NONE.getCode());
         if (AscriptionEnum.CURRENT_USER.toString().equals(labelCategoryQueryList.getAscription())) {
             condition.setCreateManId(LocalSessionUtils.getUserInfo().getId());
         }
@@ -105,14 +108,14 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         if (CollectionUtils.isNotEmpty(allDeptIds)) {
             List<GroupResponse> gdata = innerGroupClient.getGroupListTree(false);
             Map<String, GroupResponse> groupMap = gdata.stream().collect(Collectors.toMap(GroupResponse::getGroupId, a -> a, (v1, v2) -> v2));
-            allDeptIds.forEach(a->{
-                if(groupMap.containsKey(a)){
+            allDeptIds.forEach(a -> {
+                if (groupMap.containsKey(a)) {
                     GroupResponse response = groupMap.get(a);
                     String groupName = response.getGroupName();
-                    if(response.getDeleteFlag()==1){
-                        groupName=groupName+"（已删除）";
+                    if (response.getDeleteFlag() == 1) {
+                        groupName = groupName + "（已删除）";
                     }
-                    deptMap.put(a,groupName);
+                    deptMap.put(a, groupName);
                 }
             });
         }
@@ -141,10 +144,8 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
 
         Map<String, List<LabelCategoryDO>> labelMap = all.stream().collect(Collectors.groupingBy(LabelCategoryDO::getName));
 
-        List<LabelCategoryDO> result=new ArrayList<>();
-        labelMap.forEach((k,v)->{
-            result.add(v.get(0));
-        });
+        List<LabelCategoryDO> result = new ArrayList<>();
+        labelMap.forEach((k, v) -> result.add(v.get(0)));
 
         List<LabelCategorySimpleVO> labelSimpleVOList = LabelCategoryCopier.INSTANCE.changeT(result);
         return BaseResult.success(labelSimpleVOList);
@@ -200,14 +201,12 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         List<LabelCategorySimpleVO> labelCategorySimpleVos = LabelCategoryCopier.INSTANCE.convert(labelCategoryDOList);
 
         List<Long> categoryIds = labelCategoryDOList.stream().map(LabelCategoryDO::getId).collect(Collectors.toList());
-        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(categoryIds,condition.getContainDeleted());
+        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(categoryIds, condition.getContainDeleted());
         List<LabelSimpleVO> labelSimpleVos = LabelCopier.INSTANCE.convert(labelDOList);
 
         Map<Long, List<LabelSimpleVO>> labelMap = labelSimpleVos.stream().collect(Collectors.groupingBy(LabelSimpleVO::getLabelCategoryId));
 
-        labelCategorySimpleVos.forEach(a -> {
-            a.setLabelSimples(labelMap.get(a.getId()));
-        });
+        labelCategorySimpleVos.forEach(a -> a.setLabelSimples(labelMap.get(a.getId())));
         return BaseResult.success(labelCategorySimpleVos);
     }
 
@@ -231,8 +230,11 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> delete(Long categoryId) {
         log.info("类别删除,参数:{}", categoryId);
-        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(Lists.newArrayList(categoryId),false);
-
+        List<LabelCategoryDO> categories = labelCategoryMapper.get(Collections.singletonList(categoryId));
+        AssertUtil.checkState(categories.isEmpty() ||
+                        !LabelCategoryProtectionEnum.WD.getCode().equals(categories.get(0).getProtection()),
+                "该类别已被系统保护，无法删除");
+        List<LabelDO> labelDOList = labelMapper.getByCategoryIds(Lists.newArrayList(categoryId), false);
         if (CollectionUtils.isNotEmpty(labelDOList)) {
             throw new BaseBizRuntimeException("该类别下已存在标签名称,不可删除。");
         }
@@ -268,7 +270,10 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
     public BaseResult<Boolean> modify(LabelCategoryModifyReq labelCategoryModifyReq) {
         log.info("类别修改,参数:{}", labelCategoryModifyReq);
         LabelCategoryDO labelCategoryDO = LabelCategoryCopier.INSTANCE.convert(labelCategoryModifyReq);
-
+        List<LabelCategoryDO> categories = labelCategoryMapper.get(Collections.singletonList(labelCategoryDO.getId()));
+        AssertUtil.checkState(categories.isEmpty() ||
+                        !LabelCategoryProtectionEnum.WD.getCode().equals(categories.get(0).getProtection()),
+                "该类别已被系统保护，无法修改");
         checkBeforeInsert(labelCategoryDO);
 
         labelCategoryMapper.update(labelCategoryDO);

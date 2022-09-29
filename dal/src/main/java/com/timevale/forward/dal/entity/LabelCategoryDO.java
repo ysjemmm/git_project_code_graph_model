@@ -36,5 +36,10 @@ public class LabelCategoryDO extends BaseDO {
      */
     private String deptId;
 
+    /**
+     * 保护状态 0-不保护 1-不可编辑和删除
+     */
+    private Integer protection;
+
 
 }

@@ -4,6 +4,7 @@ import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.BizDemandListDO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.Date;
 import java.util.List;
@@ -135,5 +136,16 @@ public interface BizDemandMapper {
      * @return 业务需求DO
      */
     List<BizDemandDO> selectByStatus(@Param("status") List<Integer> status);
+
+    @Select("select count(*) from biz_demand where biz_id = #{bizId} and is_deleted = false")
+    boolean bizIdExists(@Param("bizId") String bizId);
+
+    /**
+     *
+     * @param ids id
+     * @param status 状态
+     * @return 业务需求DO
+     */
+    List<BizDemandDO> getSimpleBizDemands(@Param("ids") List<Long> ids,@Param("status") List<Integer> status,@Param("sourceId") String sourceId);
 
 }

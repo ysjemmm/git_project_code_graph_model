@@ -1,9 +1,10 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.BugOnlineListCondition;
-import com.timevale.forward.dal.entity.BugOnlineListDO;
 import com.timevale.forward.dal.entity.BugOnlineDO;
+import com.timevale.forward.dal.entity.BugOnlineListDO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -105,4 +106,7 @@ public interface BugOnlineMapper {
      * @return int
      */
     int updateStatusByIds(@Param("ids") List<Long> ids,@Param("status") Integer status);
+
+    @Select("select count(*) from bug_online where biz_id = #{bizId} and is_deleted = false")
+    boolean bizIdExists(@Param("bizId") String bizId);
 }

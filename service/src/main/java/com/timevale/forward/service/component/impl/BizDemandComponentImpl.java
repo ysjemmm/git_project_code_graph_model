@@ -21,8 +21,6 @@ import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
-import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
-import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
@@ -77,14 +75,10 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     private LabelMapper labelMapper;
 
     @Resource
-    private LabelCategoryMapper labelCategoryMapper;
-
-    @Resource
     private SqlOrderComponent sqlOrderComponent;
 
     @Override
     public void updateBizDemandStatusByLinkedProductDemand(Long bizDemandId) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByBizDemandId(bizDemandId);
         List<Long> productDemandIdList = productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList());

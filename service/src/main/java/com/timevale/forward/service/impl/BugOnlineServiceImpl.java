@@ -130,7 +130,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     private LabelMapper labelMapper;
 
     @Resource
-    private LabelCategoryMapper labelCategoryMapper;
+    private OutBizDealComponent outBizDealComponent;
 
     @Resource
     private BizLabelComponent bizLabelComponent;
@@ -362,6 +362,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugOnlineAddReq.setOperatorId(defaultOperators[0]);
             bugOnlineAddReq.setOperator(defaultOperators[1]);
         }
+        if (StringUtils.isNotBlank(bugOnlineAddReq.getBizId())) {
+            outBizDealComponent.checkBizIdExistence(bugOnlineAddReq.getBizId());
+        }
         //将BugOnlineAddReq转化为BugOnlineDO
         BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.transfer(bugOnlineAddReq);
 
@@ -412,6 +415,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                         bugOnlineDO.getId()
                 )
         );
+        if (StringUtils.isNotBlank(bugOnlineAddReq.getBizId())) {
+            outBizDealComponent.sendBugOnlineRelMsg(bugOnlineDO);
+        }
 
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -983,16 +989,14 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         );
 
         List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(bugOnlineDO.getId());
-        bugOnlineDOList.forEach(a->{
-            messageEventPublisher.publish(
-                    new BugOnlineResubmitOnlineMsgEvent(
-                            this,
-                            bugOnlineDO.getName(),
-                            a.getProposerId(),
-                            bugOnlineDO.getId()
-                    )
-            );
-        });
+        bugOnlineDOList.forEach(a-> messageEventPublisher.publish(
+                new BugOnlineResubmitOnlineMsgEvent(
+                        this,
+                        bugOnlineDO.getName(),
+                        a.getProposerId(),
+                        bugOnlineDO.getId()
+                )
+        ));
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
@@ -1183,16 +1187,14 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         );
 
         List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(bugOnlineDO.getId());
-        bugOnlineDOList.forEach(a->{
-            messageEventPublisher.publish(
-                    new BugOnlineResubmitNoRepairMsgEvent(
-                            this,
-                            bugOnlineDO.getName(),
-                            a.getProposerId(),
-                            bugOnlineDO.getId()
-                    )
-            );
-        });
+        bugOnlineDOList.forEach(a-> messageEventPublisher.publish(
+                new BugOnlineResubmitNoRepairMsgEvent(
+                        this,
+                        bugOnlineDO.getName(),
+                        a.getProposerId(),
+                        bugOnlineDO.getId()
+                )
+        ));
 
         String tips = updateLinkBug(bugOnlineNoRepairReq.getId(), bugOnlineNoRepairReq.getLinkBugId());
 
@@ -1806,9 +1808,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
         if(deleteLinked){
             List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(id);
-            bugOnlineDOList.forEach(a->{
-                bugLogDOList.add(createBugLog(a.getId(),a.getId(),id,ButtonActionEnum.UN_LINK.getText()));
-            });
+            bugOnlineDOList.forEach(a->
+                    bugLogDOList.add(createBugLog(a.getId(),a.getId(),id,ButtonActionEnum.UN_LINK.getText())));
             List<Long> updateIds = bugOnlineDOList.stream().map(BugOnlineDO::getId).collect(Collectors.toList());
             if(CollectionUtils.isNotEmpty(updateIds)){
                 bugOnlineMapper.updateByIds(updateIds,null);

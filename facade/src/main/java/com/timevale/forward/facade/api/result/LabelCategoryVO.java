@@ -48,6 +48,9 @@ public class LabelCategoryVO extends ToString {
     @ApiModelProperty("提交人id")
     private String createManId;
 
+    @ApiModelProperty("保护类型: 0-无保护 1-禁止更改和删除")
+    private Integer protection;
+
     @ApiModelProperty("创建时间")
     private Date createDate;
 

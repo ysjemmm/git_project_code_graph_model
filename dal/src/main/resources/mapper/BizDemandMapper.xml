@@ -5,10 +5,12 @@
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into biz_demand (name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status,
                                 priority, receive_man, receive_man_id, submit_man_id, submit_man,  create_man_id, create_man,
-                                customer_dev_demand,customer_dev_type,customer_dev_sale_contract,customer_dev_project_name, source_id)
+                                customer_dev_demand,customer_dev_type,customer_dev_sale_contract,customer_dev_project_name, source_id,
+                                biz_id, biz_name)
         values (#{name}, #{productLineId}, #{dataIndicators}, #{targetCustomer}, #{createCustomer}, #{deptId}, #{desc}, #{status},
                 #{priority}, #{receiveMan}, #{receiveManId}, #{submitManId}, #{submitMan}, #{createManId}, #{createMan},
-                #{customerDevDemand}, #{customerDevType}, #{customerDevSaleContract}, #{customerDevProjectName}, #{sourceId})
+                #{customerDevDemand}, #{customerDevType}, #{customerDevSaleContract}, #{customerDevProjectName}, #{sourceId},
+                #{bizId}, #{bizName})
     </insert>
 
     <update id="update">
@@ -337,6 +339,29 @@
     <select id="selectAll" resultType="com.timevale.forward.dal.entity.BizDemandDO">
         SELECT *
         FROM biz_demand;
+    </select>
+
+    <select id="getSimpleBizDemands" resultType="com.timevale.forward.dal.entity.BizDemandDO">
+        select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status, priority,
+        receive_man, receive_man_id, submit_man, submit_man_id, plan_release_date, reason,
+        is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date, source_id
+        from biz_demand
+        <where>
+            <if test="ids!=null and ids.size()>0">
+                and id in
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="status!=null and status.size()>0">
+                and status in
+                <foreach collection="status" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="sourceId != null and sourceId!=''">and source_id = #{sourceId}</if>
+            and is_deleted = false
+        </where>
     </select>
 
 </mapper>

@@ -72,8 +72,14 @@ public class BugOnlineDetailVO extends ToString {
     @ApiModelProperty("来源: forward 产研系统， support 运营支撑平台， duty 值班反馈")
     private String source;
 
+    @ApiModelProperty("来源数据id")
+    private String sourceId;
+
     @ApiModelProperty("来源-描述")
     private String sourceName;
+
+    @ApiModelProperty("项目名称")
+    private String customerDevProjectName;
 
     @ApiModelProperty("是否复现：0是，1否")
     private Integer recurrent;
