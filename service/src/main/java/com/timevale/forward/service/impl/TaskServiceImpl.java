@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import com.alibaba.fastjson.JSONArray;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
@@ -111,7 +112,10 @@ public class TaskServiceImpl implements TaskService {
     @Resource
     private ProjectNodeMapper projectNodeMapper;
 
-    @Value("${excludeBizDomain:混合云电子签章;安全风控}")
+    @Resource
+    private BizDomainMapper bizDomainMapper;
+
+    @Value("${excludeBizDomain:[1,13,32]}")
     private String excludeBizDomain;
 
     @Resource
@@ -580,9 +584,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public BaseResult<List<Long>> getProductLineIdsUnLimited() {
-        List<String> excludeBizDomains = Arrays.asList(excludeBizDomain.split(";"));
-        List<ProductLineDO> productLineDOList = productLineMapper.getByBizDomainName(excludeBizDomains);
-        List<Long> productLineIds = productLineDOList.stream().map(ProductLineDO::getId).collect(Collectors.toList());
+        List<Long> excludeBizDomainIds = JSONArray.parseArray(excludeBizDomain, Long.class);
+        List<ProjectProductLineBizDomain>  plineAndBizDomainList = productLineMapper.getPlineAndBizDomain(excludeBizDomainIds);
+        List<Long> productLineIds = plineAndBizDomainList.stream().map(ProjectProductLineBizDomain::getProductLineId).collect(Collectors.toList());
         return BaseResult.success(productLineIds);
     }
 
@@ -590,12 +594,37 @@ public class TaskServiceImpl implements TaskService {
     public BaseResult<Boolean> transferTask(TaskTransferReq transferReq) {
         log.info("任务转移:{}", transferReq);
         List<TaskDO> taskDOList = taskMapper.getByIdList(transferReq.getIds());
-        boolean anyMatch = taskDOList.stream().anyMatch(a -> TaskStatusEnum.DONE.getCode().equals(a.getStatus())
-                || TaskStatusEnum.INVALID.getCode().equals(a.getStatus()));
-        if(anyMatch){
-            throw new BaseBizRuntimeException("存在已作废或已完成任务,不能转移,请修改后重试");
+        boolean matchStatus = taskDOList.stream().anyMatch(a -> TaskStatusEnum.DONE.getCode().equals(a.getStatus())
+                || TaskStatusEnum.INVALID.getCode().equals(a.getStatus())
+                || TaskStatusEnum.PROGRESS.getCode().equals(a.getStatus()));
+        if (matchStatus) {
+            throw new BaseBizRuntimeException("只能转移待执行,已暂停的任务,请修改后重试");
         }
-        taskMapper.updateProductLineId(transferReq.getIds(),transferReq.getProductLineId(),transferReq.getProjectId());
+
+        boolean exceed= taskDOList.stream().anyMatch(a -> a.getPlanUseTime().compareTo(BigDecimal.valueOf(16)) > 0);
+        if(exceed){
+            Long bizDomainId = productLineMapper.selectById(transferReq.getProductLineId()).getBizDomainId();
+            List<Long> excludeBizDomainIds = JSONArray.parseArray(excludeBizDomain, Long.class);
+            if (!excludeBizDomainIds.contains(bizDomainId)) {
+                //除xx业务域外,计划时间不能超过16h
+                List<String> names = bizDomainMapper.selectByIdList(excludeBizDomainIds).stream().map(BizDomainDO::getName).collect(Collectors.toList());
+                throw new BaseBizRuntimeException("存在计划耗时超过16小时的任务,且业务域不属于" + names + ",请修改后重试");
+            }
+        }
+
+        List<ProjectNodeDO> projectNodeDos = projectNodeMapper.get(transferReq.getProjectId());
+        List<String> sureNode = Lists.newArrayList(ProjectNodeEnum.START_PLAN.getText()
+                , ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText()
+                , ProjectNodeEnum.DEMAND_CONSTRUE.getText()
+                , ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText()
+                , ProjectNodeEnum.UED_AUDIT.getText());
+        boolean matchNode = projectNodeDos.stream().anyMatch(a -> sureNode.contains(a.getName()));
+        boolean matchStage = taskDOList.stream().anyMatch(a -> TaskStageEnum.DEMAND.getCode().equals(a.getStage()));
+        if (!matchNode && matchStage) {
+            throw new BaseBizRuntimeException("项目无需求规划阶段,不能转移含该阶段的任务,请修改后重试");
+        }
+
+        taskMapper.updateProductLineId(transferReq.getIds(), transferReq.getProductLineId(), transferReq.getProjectId());
         return BaseResult.success(true);
     }
 
@@ -649,12 +678,15 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void checkPlanDate(TaskDO taskDO) {
-        List<String> excludeBizDomains = Arrays.asList(excludeBizDomain.split(";"));
-        ProjectProductLineBizDomain bizDomain = productLineMapper.getById(taskDO.getProductLineId());
-        if (!excludeBizDomains.contains(bizDomain.getBizDomainName())
-                && taskDO.getPlanUseTime().compareTo(BigDecimal.valueOf(16)) > 0) {
-            //除私有云业务域外,计划时间不能超过16h
-            throw new BaseBizRuntimeException("除" + excludeBizDomains + "外,计划耗时不能超过16小时");
+        if(taskDO.getPlanUseTime().compareTo(BigDecimal.valueOf(16)) <= 0){
+            return;
+        }
+        List<Long> excludeBizDomainIds = JSONArray.parseArray(excludeBizDomain, Long.class);
+        Long bizDomainId = productLineMapper.selectById(taskDO.getProductLineId()).getBizDomainId();
+        if (!excludeBizDomainIds.contains(bizDomainId)) {
+            //除xx业务域外,计划时间不能超过16h
+            List<String> names = bizDomainMapper.selectByIdList(excludeBizDomainIds).stream().map(BizDomainDO::getName).collect(Collectors.toList());
+            throw new BaseBizRuntimeException("除" + names + "外,计划耗时不能超过16小时");
         }
     }
 

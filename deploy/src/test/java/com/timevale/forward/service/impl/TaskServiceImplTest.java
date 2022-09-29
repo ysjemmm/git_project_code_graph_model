@@ -126,7 +126,7 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         when(projectNodeMapper.get(any())).thenReturn(Collections.emptyList());
         when(projectProductDemandMapper.getByProjectId(any())).thenReturn(Collections.emptyList());
         FieldUtils.setFieldValue("excludeBizDomain", taskServiceImp, "1");
-        when(productLineMapper.getById(any())).thenReturn(new ProjectProductLineBizDomain());
+        when(productLineMapper.getPlineAndBizDomain(any())).thenReturn(Lists.newArrayList(new ProjectProductLineBizDomain()));
         doNothing().when(taskComponent).addTodoTask(any(),any(),any());
         when(taskMapper.insert(any())).thenReturn(0);
         TaskTimeDO t1 = new TaskTimeDO();
@@ -170,7 +170,7 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         when(projectNodeMapper.get(any())).thenReturn(Collections.emptyList());
         when(projectProductDemandMapper.getByProjectId(any())).thenReturn(Collections.emptyList());
         FieldUtils.setFieldValue("excludeBizDomain", taskServiceImp, "1");
-        when(productLineMapper.getById(any())).thenReturn(new ProjectProductLineBizDomain());
+        when(productLineMapper.getPlineAndBizDomain(any())).thenReturn(Lists.newArrayList(new ProjectProductLineBizDomain()));
         doNothing().when(taskComponent).addTodoTask(any(),any(),any());
         when(taskMapper.insert(any())).thenReturn(0);
         TaskTimeDO t1 = new TaskTimeDO();
