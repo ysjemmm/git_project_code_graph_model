@@ -591,6 +591,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> transferTask(TaskTransferReq transferReq) {
         log.info("任务转移:{}", transferReq);
         List<TaskDO> taskDOList = taskMapper.getByIdList(transferReq.getIds());
@@ -612,19 +613,19 @@ public class TaskServiceImpl implements TaskService {
             }
         }
 
-        List<ProjectNodeDO> projectNodeDos = projectNodeMapper.get(transferReq.getProjectId());
-        List<String> sureNode = Lists.newArrayList(ProjectNodeEnum.START_PLAN.getText()
-                , ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText()
-                , ProjectNodeEnum.DEMAND_CONSTRUE.getText()
-                , ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText()
-                , ProjectNodeEnum.UED_AUDIT.getText());
-        boolean matchNode = projectNodeDos.stream().anyMatch(a -> sureNode.contains(a.getName()));
         boolean matchStage = taskDOList.stream().anyMatch(a -> TaskStageEnum.DEMAND.getCode().equals(a.getStage()));
-        if (!matchNode && matchStage) {
+        if (!matchTaskStage(transferReq.getProjectId()) && matchStage) {
             throw new BaseBizRuntimeException("项目无需求规划阶段,不能转移含该阶段的任务,请修改后重试");
         }
 
         taskMapper.updateProductLineId(transferReq.getIds(), transferReq.getProductLineId(), transferReq.getProjectId());
+
+        // 若执行人不在项目成员中,需新增
+        List<PersonAddReq> executors = personMapper.get(transferReq.getIds(), PersonTypeEnum.TASK_EXECUTOR.getCode())
+                .stream().map(PersonCopier.INSTANCE::convert).collect(Collectors.toList());
+        personComponent.addIfNotExisted(executors, transferReq.getProjectId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
+
+        taskProductDemandComponent.update(transferReq.getIds(),null);
         return BaseResult.success(true);
     }
 
@@ -650,16 +651,19 @@ public class TaskServiceImpl implements TaskService {
 
 
     private void checkTaskStage(TaskDO taskDO) {
-        List<ProjectNodeDO> projectNodeDos = projectNodeMapper.get(taskDO.getProjectId());
+        if (!matchTaskStage(taskDO.getProjectId()) && TaskStageEnum.DEMAND.getCode().equals(taskDO.getStage())) {
+            throw new BaseBizRuntimeException("项目无需求规划阶段,不能创建该阶段的任务,请修改后重试");
+        }
+    }
+
+    private boolean matchTaskStage(Long projectId) {
+        List<ProjectNodeDO> projectNodeDos = projectNodeMapper.get(projectId);
         List<String> sureNode = Lists.newArrayList(ProjectNodeEnum.START_PLAN.getText()
                 , ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText()
                 , ProjectNodeEnum.DEMAND_CONSTRUE.getText()
                 , ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText()
                 , ProjectNodeEnum.UED_AUDIT.getText());
-        boolean match = projectNodeDos.stream().anyMatch(a -> sureNode.contains(a.getName()));
-        if (!match && TaskStageEnum.DEMAND.getCode().equals(taskDO.getStage())) {
-            throw new BaseBizRuntimeException("项目无需求规划阶段,不能创建该阶段的任务,请修改后重试");
-        }
+        return projectNodeDos.stream().anyMatch(a -> sureNode.contains(a.getName()));
     }
 
     /**

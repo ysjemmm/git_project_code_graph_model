@@ -22,6 +22,7 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.ProjectEstablishDateChangeMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.StringUtil;
 import com.timevale.forward.service.utils.date.DateStyle;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -726,7 +727,8 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public BaseResult<List<ProjectProductLineVO>> getByName(String name) {
-        List<ProjectDO> projectDOList = projectMapper.getByLikeName(name);
+        String likeName = StringUtil.toLikeStr(name);
+        List<ProjectDO> projectDOList = projectMapper.getByLikeName(likeName);
         projectDOList = projectDOList.stream()
                 .filter(a -> !ProjectStatusEnum.INVALID.getCode().equals(a.getStatus())
                         && !ProjectStatusEnum.RELEASED.getCode().equals(a.getStatus())).collect(Collectors.toList());

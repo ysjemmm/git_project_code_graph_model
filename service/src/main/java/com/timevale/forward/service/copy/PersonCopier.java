@@ -41,4 +41,12 @@ public interface PersonCopier {
      */
     PersonVO change(PersonDO personDO);
 
+    /**
+     * PersonDO  -->  PersonVO
+     *
+     * @param personDO 参数
+     * @return PersonAddReq 返回值
+     */
+    PersonAddReq convert(PersonDO personDO);
+
 }
