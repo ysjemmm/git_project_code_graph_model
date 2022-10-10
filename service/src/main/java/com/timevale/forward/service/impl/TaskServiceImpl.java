@@ -131,6 +131,8 @@ public class TaskServiceImpl implements TaskService {
         log.info("任务列表接收参数:{}", taskQueryList);
         String currentUser = LocalSessionUtils.getUserInfo().getId();
         TaskListCondition condition = TaskCopier.INSTANCE.convert(taskQueryList);
+        List<Long> projectIds = taskQueryList.getProjectIds().stream().map(Long::valueOf).collect(Collectors.toList());
+        condition.setProjectIdsL(projectIds);
         condition.setPageNum(taskQueryList.getPageNum());
         condition.setPageSize(taskQueryList.getPageSize());
         List<Long> taskIds = new ArrayList<>();

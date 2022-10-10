@@ -36,9 +36,14 @@ public class TaskListCondition extends QueryBase {
     private List<Integer>stages;
 
     /**
-     * 产品线
+     * 项目id
      */
-    private List<Long> projectIds;
+    private List<String> projectIds;
+
+    /**
+     * 项目id
+     */
+    private List<Long> projectIdsL;
     /**
      * 产品线
      */

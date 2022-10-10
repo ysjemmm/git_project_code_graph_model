@@ -100,8 +100,8 @@ public class TaskComponentImpl implements TaskComponent {
             }
         }
         // 所属项目
-        if (CollectionUtils.isNotEmpty(condition.getProjectIds())) {
-            taskIds = taskMapper.getByProjectIds(taskIds, condition.getProjectIds());
+        if (CollectionUtils.isNotEmpty(condition.getProjectIdsL())) {
+            taskIds = taskMapper.getByProjectIds(taskIds, condition.getProjectIdsL());
             if (CollectionUtils.isEmpty(taskIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
