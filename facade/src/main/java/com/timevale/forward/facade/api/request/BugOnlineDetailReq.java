@@ -19,5 +19,5 @@ public class BugOnlineDetailReq extends BaseReq {
     @ApiModelProperty("线上bug id")
     @NotNull(message = "线上bug id不能为空")
     @Pattern(regexp = "^[1-9]+[0-9]*$", message = "id只能为正整数")
-    private Long id;
+    private String id;
 }

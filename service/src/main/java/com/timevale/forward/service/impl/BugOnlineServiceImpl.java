@@ -560,7 +560,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         log.info("线上bug-得到线上bug详情，接收参数:{}", bugOnlineDetailReq);
 
         //查询线上bug
-        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineDetailReq.getId());
+        Long bugOnlineId = Long.valueOf(bugOnlineDetailReq.getId());
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineId);
         if (bugOnlineDO == null) {
             throw new BaseBizRuntimeException("该线上bug不存在");
         }
@@ -569,7 +570,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDetailVO bugOnlineDetailVO = BugOnlineCopier.INSTANCE.convert(bugOnlineDO);
 
         //通过线上bug和产品线映射表查询所有的产品线id
-        List<Long> productLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineDetailReq.getId());
+        List<Long> productLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineId);
 
         //如果产品线id不为空，批量查询产品线并进行类型转换
         if (CollectionUtils.isNotEmpty(productLineIdList)) {
@@ -592,7 +593,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         //查询附件
-        List<FileDO> fileDOList = fileMapper.select(bugOnlineDetailReq.getId(), FileTypeEnum.BUG_ONLINE.getCode());
+        List<FileDO> fileDOList = fileMapper.select(bugOnlineId, FileTypeEnum.BUG_ONLINE.getCode());
         //如果附件不为空，转化附件
         if (CollectionUtils.isNotEmpty(fileDOList)) {
             List<FileVO> fileVOList = fileDOList.stream().map(FileCopier.INSTANCE::change).collect(Collectors.toList());
@@ -602,7 +603,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //查询抄送人
         List<PersonDO> personDOList = personMapper.select(PersonListCondition.builder()
-                .mainId(bugOnlineDetailReq.getId())
+                .mainId(bugOnlineId)
                 .type(PersonTypeEnum.BUG_ONLINE_CC.getCode())
                 .build());
         //如果存在抄送人转化类型
@@ -615,7 +616,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //查询评论
         List<CommentDO> commentDOList = commentMapper
-                .select(bugOnlineDetailReq.getId(), CommentTypeEnum.BUG_ONLINE.getCode());
+                .select(bugOnlineId, CommentTypeEnum.BUG_ONLINE.getCode());
         //如果评论表不为空，转化并添加到详情参数中
         if (CollectionUtils.isNotEmpty(commentDOList)) {
             List<CommentVO> commentVOList = commentDOList.stream().map(CommentCopier.INSTANCE::change)
@@ -623,7 +624,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugOnlineDetailVO.setCommentVOList(commentVOList);
         }
         //模块名称
-        List<Long> modelIdList = bugOnlineModelMapper.selectModelIds(bugOnlineDetailReq.getId());
+        List<Long> modelIdList = bugOnlineModelMapper.selectModelIds(bugOnlineId);
         if (!CollectionUtils.isEmpty(modelIdList)) {
             String modelName = modelMapper.getByIds(modelIdList).stream().map(ModelDO::getName).collect(Collectors.joining(","));
             bugOnlineDetailVO.setModelName(modelName);
