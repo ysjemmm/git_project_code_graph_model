@@ -20,6 +20,5 @@ public class ImprovementMeasureQueryList extends QueryBase {
 
     @NotNull(message = "故障工单id不能为空")
     @ApiModelProperty("故障工单id")
-    @Pattern(regexp = "^[1-9]+[0-9]*$", message = "id只能为正整数")
-    private String troubleTicketId;
+    private Long troubleTicketId;
 }

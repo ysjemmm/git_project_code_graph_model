@@ -122,7 +122,7 @@ public class ImprovementMeasureServiceImplTest extends AbstractTestNGSpringConte
         ImprovementMeasureQueryList req = new ImprovementMeasureQueryList();
         req.setPageNum(1);
         req.setPageSize(10);
-        req.setTroubleTicketId("1L");
+        req.setTroubleTicketId(1L);
 
         ImprovementMeasureDO improvementMeasureDO = new ImprovementMeasureDO();
         improvementMeasureDO.setStatus(ImprovementMeasureStatusEnum.PENDING.getCode());

@@ -560,7 +560,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         log.info("线上bug-得到线上bug详情，接收参数:{}", bugOnlineDetailReq);
 
         //查询线上bug
-        Long bugOnlineId = Long.valueOf(bugOnlineDetailReq.getId());
+        Long bugOnlineId = bugOnlineDetailReq.getId();
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineId);
         if (bugOnlineDO == null) {
             throw new BaseBizRuntimeException("该线上bug不存在");

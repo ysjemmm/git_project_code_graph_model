@@ -38,12 +38,7 @@ public class TaskListCondition extends QueryBase {
     /**
      * 项目id
      */
-    private List<String> projectIds;
-
-    /**
-     * 项目id
-     */
-    private List<Long> projectIdsL;
+    private List<Long> projectIds;
     /**
      * 产品线
      */
