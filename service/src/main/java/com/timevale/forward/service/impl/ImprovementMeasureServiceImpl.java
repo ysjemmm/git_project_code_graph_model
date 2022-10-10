@@ -174,7 +174,7 @@ public class ImprovementMeasureServiceImpl implements ImprovementMeasureService 
 
         // 读取数据
         ImprovementMeasureCondition condition = ImprovementMeasureCondition.builder()
-                .troubleTicketId(improvementMeasureQueryList.getTroubleTicketId())
+                .troubleTicketId(Long.valueOf(improvementMeasureQueryList.getTroubleTicketId()))
                 .isDeleted(false)
                 .build();
         List<ImprovementMeasureDO> improvementMeasureDOList = improvementMeasureMapper.selectByCondition(condition);

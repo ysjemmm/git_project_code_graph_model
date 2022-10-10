@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
 /**
  * @author by YangXu
@@ -19,5 +20,6 @@ public class ImprovementMeasureQueryList extends QueryBase {
 
     @NotNull(message = "故障工单id不能为空")
     @ApiModelProperty("故障工单id")
-    private Long troubleTicketId;
+    @Pattern(regexp = "^[1-9]+[0-9]*$", message = "id只能为正整数")
+    private String troubleTicketId;
 }
