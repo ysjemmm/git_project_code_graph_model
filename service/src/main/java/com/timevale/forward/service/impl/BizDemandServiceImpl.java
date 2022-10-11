@@ -93,6 +93,9 @@ public class BizDemandServiceImpl implements BizDemandService {
     private LabelComponent labelComponent;
 
     @Resource
+    private BizDemandCustomComponent bizDemandCustomComponent;
+
+    @Resource
     private OutBizDealComponent outBizDealComponent;
 
     @Resource
@@ -327,6 +330,13 @@ public class BizDemandServiceImpl implements BizDemandService {
             personComponent.add(recipientInfoList, bizDemandDO.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
         }
 
+        // 添加客户信息
+        List<BizDemandCustomAddReq> bizDemandCustomAddReqs = bizDemandAddReq.getCustomList();
+
+        if(CollectionUtils.isNotEmpty(bizDemandCustomAddReqs)){
+            bizDemandCustomComponent.add(bizDemandCustomAddReqs,bizDemandDO.getId());
+        }
+
         // 判断是否为线上bug转换
         Long bugOnlineId = bizDemandAddReq.getBugOnlineId();
         if (bugOnlineId != null) {
@@ -420,6 +430,12 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizDemandDetailVO.setBugOnlineName(bugOnlineDO.getName());
         }
 
+        // 获取客户信息
+        List<BizDemandCustomDO> bizDemandCustomDOList = bizDemandCustomComponent.selectByBizDemandId(bizDemandId);
+
+        if(CollectionUtils.isNotEmpty(bizDemandCustomDOList)){
+            bizDemandDetailVO.setCustomList(BizDemandCustomCopier.INSTANCE.convertListToVO(bizDemandCustomDOList));
+        }
         return BaseResult.success(bizDemandDetailVO);
     }
 
@@ -457,6 +473,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (!CollectionUtils.isEmpty(recipientInfoList)) {
             personComponent.update(recipientInfoList, bizDemandModifyReq.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
         }
+
+        // 客户信息
+        bizDemandCustomComponent.update(bizDemandModifyReq.getCustomList(),bizDemandModifyReq.getId());
+
 
         // 添加附件
         List<FileAddReq> fileIdList = bizDemandModifyReq.getFileList();
@@ -860,8 +880,8 @@ public class BizDemandServiceImpl implements BizDemandService {
                         BizChangeLogFieldEnum.PRODUCT_LINE.getText(),
                         true
                 );
-            } else {
-                log.error("对应产品线不存在: {},{}", oldProductLineId, productLineId);
+            } else{
+                log.error("对应产品线不存在: {},{}",oldProductLineId, productLineId);
             }
         }
 
@@ -1026,6 +1046,25 @@ public class BizDemandServiceImpl implements BizDemandService {
             a.setPriorityText(PriorityEnum.getTextChineseByCode(a.getPriority()));
             a.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(a.getPlanReleaseDate()));
         });
+        return BaseResult.success(bizDemandVOList);
+    }
+
+    @Override
+    public BaseResult<List<BizDemandVO>> getBizDemandByCustomId(Long customId) {
+        if(customId == null){
+            throw new BaseBizRuntimeException("参数有误");
+        }
+        List<BizDemandListDO> bizDemandDOS = bizDemandMapper.selectByCustomId(customId);
+        if(CollectionUtils.isEmpty(bizDemandDOS)){
+            return  BaseResult.success(new ArrayList<>());
+        }
+        List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandDOS);
+        // 信息填充
+        for (BizDemandVO bizDemandVO : bizDemandVOList) {
+
+            bizDemandVO.setStatusText(BizDemandStatusEnum.getTextByCode(bizDemandVO.getStatus()));
+            bizDemandVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandVO.getPlanReleaseDate()));
+        }
         return BaseResult.success(bizDemandVOList);
     }
 

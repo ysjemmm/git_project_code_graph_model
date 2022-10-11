@@ -9,8 +9,11 @@ import com.timevale.forward.facade.api.request.BugOnlineModifyReq;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
 import com.timevale.forward.model.middle.BugOnlineMD;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @Date 2022/3/18 13:54
@@ -83,4 +86,11 @@ public interface BugOnlineCopier {
      * @return 返回值
      */
     BugOnlineMD change(BugOnlineDO bugOnlineDO);
+
+    /**
+     *
+     * @param bugOnlineListDOList 参数
+     * @return 返回值
+     */
+    List<BugOnlineVO> convert(List<BugOnlineListDO> bugOnlineListDOList);
 }

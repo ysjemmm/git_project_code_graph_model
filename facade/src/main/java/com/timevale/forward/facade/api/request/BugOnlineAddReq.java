@@ -1,13 +1,14 @@
 package com.timevale.forward.facade.api.request;
 
+import java.util.Date;
+import java.util.List;
+
+import javax.validation.constraints.NotNull;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import javax.validation.constraints.NotNull;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @Date 2022/3/17 14:34
@@ -104,4 +105,8 @@ public class BugOnlineAddReq extends BaseReq {
 
     @ApiModelProperty("标签id")
     private List<Long> labelIds;
+
+
+    @ApiModelProperty("客户信息")
+    private List<BugOnlineCustomAddReq> customList;
 }

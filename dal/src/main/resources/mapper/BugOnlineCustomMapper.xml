@@ -1,0 +1,31 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.timevale.forward.dal.dao.BugOnlineCustomMapper">
+
+    <sql id="BASE_COLUMN">
+        id,custom_id,custom_name,bug_online_id,create_man,create_man_id,modify_man,modify_man_id,create_date,modify_date,is_deleted
+    </sql>
+    
+    <insert id="batchInsert">
+        insert into bug_online_custom(custom_id,custom_name,bug_online_id,create_man,create_man_id) values
+        <foreach collection="bugOnlineCustomDOList" item="bugOnlineCustomDO" separator=",">
+            (#{bugOnlineCustomDO.customId},#{bugOnlineCustomDO.customName},#{bugOnlineCustomDO.bugOnlineId},#{createMan},#{createManId})
+        </foreach>
+    </insert>
+
+    <update id="delete">
+        update bug_online_custom
+        <set>
+
+                is_deleted = 1,
+                modify_man_id = #{bugOnlineCustomDO.modifyManId},
+                modify_man = #{bugOnlineCustomDO.modifyMan},
+
+        </set>
+        where bug_online_id = #{bugOnlineCustomDO.bugOnlineId}
+    </update>
+
+    <select id="selectByBugOnlineId" resultType="com.timevale.forward.dal.entity.BugOnlineCustomDO">
+        select <include refid="BASE_COLUMN"></include> from bug_online_custom
+        where bug_online_id = #{bugOnlineId} and is_deleted = 0
+    </select>
+</mapper>

@@ -1,0 +1,31 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.timevale.forward.dal.dao.BizDemandCustomMapper">
+
+    <sql id="BASE_COLUMN">
+        id,custom_id,custom_name,biz_demand_id,create_man,create_man_id,modify_man,modify_man_id,create_date,modify_date,is_deleted
+    </sql>
+    
+    <insert id="batchInsert">
+        insert into biz_demand_custom(custom_id,custom_name,biz_demand_id,create_man,create_man_id) values
+        <foreach collection="bizDemandCustomDOList" item="bizDemandCustomDO" separator=",">
+            (#{bizDemandCustomDO.customId},#{bizDemandCustomDO.customName},#{bizDemandCustomDO.bizDemandId},#{createMan},#{createManId})
+        </foreach>
+    </insert>
+
+    <update id="delete">
+        update biz_demand_custom
+        <set>
+
+                is_deleted = 1,
+                modify_man_id = #{bizDemandCustomDO.modifyManId},
+                modify_man = #{bizDemandCustomDO.modifyMan},
+
+        </set>
+        where biz_demand_id = #{bizDemandCustomDO.bizDemandId}
+    </update>
+
+    <select id="selectByBizDemandId" resultType="com.timevale.forward.dal.entity.BizDemandCustomDO">
+        select <include refid="BASE_COLUMN"></include> from biz_demand_custom
+        where biz_demand_id = #{bizDemandId} and is_deleted = 0
+    </select>
+</mapper>
