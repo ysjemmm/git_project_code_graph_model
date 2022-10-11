@@ -586,7 +586,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public BaseResult<List<Long>> getProductLineIdsUnLimited() {
         List<Long> excludeBizDomainIds = JSONArray.parseArray(excludeBizDomain, Long.class);
-        List<ProjectProductLineBizDomain>  plineAndBizDomainList = productLineMapper.getPlineAndBizDomain(excludeBizDomainIds);
+        List<ProjectProductLineBizDomain> plineAndBizDomainList = productLineMapper.getPlineAndBizDomain(excludeBizDomainIds);
         List<Long> productLineIds = plineAndBizDomainList.stream().map(ProjectProductLineBizDomain::getProductLineId).collect(Collectors.toList());
         return BaseResult.success(productLineIds);
     }
@@ -602,9 +602,16 @@ public class TaskServiceImpl implements TaskService {
         if (matchStatus) {
             throw new BaseBizRuntimeException("只能转移待执行,已暂停的任务,请修改后重试");
         }
-
-        boolean exceed= taskDOList.stream().anyMatch(a -> a.getPlanUseTime().compareTo(BigDecimal.valueOf(16)) > 0);
-        if(exceed){
+        Map<Long, String> nameMap = taskDOList.stream().collect(Collectors.toMap(TaskDO::getId, TaskDO::getName, (v1, v2) -> v1));
+        transferReq.getIds().forEach(a -> {
+            TaskCondition condition = TaskCondition.builder().projectId(transferReq.getProjectId()).name(nameMap.get(a)).build();
+            TaskDO existTaskDO = taskMapper.get(condition);
+            if (existTaskDO != null) {
+                throw new BaseBizRuntimeException("任务名称: " + nameMap.get(a) + ",已存在该项目中,同一项目任务名称不能重复");
+            }
+        });
+        boolean exceed = taskDOList.stream().anyMatch(a -> a.getPlanUseTime().compareTo(BigDecimal.valueOf(16)) > 0);
+        if (exceed) {
             Long bizDomainId = productLineMapper.selectById(transferReq.getProductLineId()).getBizDomainId();
             List<Long> excludeBizDomainIds = JSONArray.parseArray(excludeBizDomain, Long.class);
             if (!excludeBizDomainIds.contains(bizDomainId)) {
@@ -626,7 +633,7 @@ public class TaskServiceImpl implements TaskService {
                 .stream().map(PersonCopier.INSTANCE::convert).collect(Collectors.toList());
         personComponent.addIfNotExisted(executors, transferReq.getProjectId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
 
-        taskProductDemandComponent.update(transferReq.getIds(),null);
+        taskProductDemandComponent.update(transferReq.getIds(), null);
         return BaseResult.success(true);
     }
 
@@ -683,7 +690,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void checkPlanDate(TaskDO taskDO) {
-        if(taskDO.getPlanUseTime().compareTo(BigDecimal.valueOf(16)) <= 0){
+        if (taskDO.getPlanUseTime().compareTo(BigDecimal.valueOf(16)) <= 0) {
             return;
         }
         List<Long> excludeBizDomainIds = JSONArray.parseArray(excludeBizDomain, Long.class);
