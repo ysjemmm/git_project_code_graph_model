@@ -43,7 +43,12 @@ public enum BugStatusEnum {
     /**
      * 关闭
      */
-    CLOSE(6, "关闭");
+    CLOSE(6, "关闭"),
+
+    /**
+     * 已转需求
+     */
+    REQUIRED(7, "已转需求");
 
     private final Integer code;
     private final String text;

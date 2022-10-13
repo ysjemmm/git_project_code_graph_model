@@ -99,4 +99,12 @@ public interface BugOfflineMapper {
      * @return 线下bug分布列表
      */
     List<BugOfflineBelongDistributionDTO> getBelongDistribution(@Param("projectId") Long projectId);
+
+    /**
+     * 根据线下bug的业务需求id查询线上bug
+     *
+     * @param bizDemandId 业务需求id
+     * @return 返回值
+     */
+    BugOfflineDO selectByBizDemandId(@Param("bizDemandId") Long bizDemandId);
 }

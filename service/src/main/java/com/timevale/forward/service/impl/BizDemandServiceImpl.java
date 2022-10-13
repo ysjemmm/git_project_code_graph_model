@@ -76,6 +76,9 @@ public class BizDemandServiceImpl implements BizDemandService {
     private BugOnlineMapper bugOnlineMapper;
 
     @Resource
+    private BugOfflineMapper bugOfflineMapper;
+
+    @Resource
     private BugLogMapper bugLogMapper;
 
     @Resource
@@ -101,6 +104,9 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Resource
     private BizLabelComponent bizLabelComponent;
+
+    @Resource
+    private BugLogComponent bugLogComponent;
 
     @Override
     public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
@@ -338,19 +344,8 @@ public class BizDemandServiceImpl implements BizDemandService {
             bizDemandCustomComponent.add(bizDemandCustomAddReqs,bizDemandDO.getId());
         }
 
-        // 判断是否为线上bug转换
-        Long bugOnlineId = bizDemandAddReq.getBugOnlineId();
-        if (bugOnlineId != null) {
-            BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineId);
-            if (bugOnlineDO == null) {
-                throw new BaseBizRuntimeException("转换需求失败，原线上bug不存在");
-            }
-        }
-
         //判断线上bug id是否有值，如果有值的话需要进行和线上bug相关的一些列操作
-        if (bizDemandAddReq.getBugOnlineId() != null) {
-            special(bizDemandAddReq.getBugOnlineId(), bizDemandDO.getId());
-        }
+        processBugInfo(bizDemandAddReq.getBugOfflineId(),bizDemandAddReq.getBugOnlineId(), bizDemandDO.getId());
 
         // 通知需求接收人
         messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
@@ -429,6 +424,12 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (bugOnlineDO != null) {
             bizDemandDetailVO.setBugOnlineId(bugOnlineDO.getId());
             bizDemandDetailVO.setBugOnlineName(bugOnlineDO.getName());
+        }
+
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectByBizDemandId(bizDemandId);
+        if (bugOfflineDO != null) {
+            bizDemandDetailVO.setBugOfflineId(bugOfflineDO.getId());
+            bizDemandDetailVO.setBugOnlineName(bugOfflineDO.getName());
         }
 
         // 获取客户信息
@@ -1072,78 +1073,104 @@ public class BizDemandServiceImpl implements BizDemandService {
     /**
      * 新增业务需求的时候特殊处理线上bug的方法
      */
-    public void special(Long bugOnlineId, Long bizDemandId) {
-        //查询线上bug
-        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineId);
-        if (bugOnlineDO == null) {
-            throw new BaseBizRuntimeException("线上bug不存在");
-        }
-
-        //判断当前状态是否为“挂起”，“问题上报”，“问题确认”状态
-        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.HANG_UP.getCode())
-                && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.PROBLEM_REPORT.getCode())
-                && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode())) {
-            throw new BaseBizRuntimeException("当前状态不允许转化业务需求");
-        }
-
-        //保存老的状态
-        String oldStatusName = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
-        Integer oldStatus = bugOnlineDO.getStatus();
-
-        // 保存旧的bug原因
-        String oldReasonName = BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason());
-
-        bugOnlineDO.setStatus(BugOnlineStatusEnum.REQUIRED.getCode());
-        bugOnlineDO.setReason(BugOnlineReasonEnum.DEMAND_QUESTION.getCode());
-        bugOnlineDO.setPrevStatus(oldStatus);
-        bugOnlineDO.setBizDemandId(bizDemandId);
-        //线上bug表更新
-        bugOnlineMapper.update(bugOnlineDO);
-
-        BugLogDO bugLogDO = new BugLogDO();
-        bugLogDO.setAction(ButtonActionEnum.SHIFT_BUSINESS.getText());
-        bugLogDO.setOldValue(oldStatusName);
-        bugLogDO.setNewValue(BugOnlineStatusEnum.REQUIRED.getText());
-        bugLogDO.setMainId(bugOnlineId);
-        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
-        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
-        //往bug日志表中插入一条线上bug状态变更数据
-        bugLogMapper.insert(bugLogDO);
-
-        BugLogDO reasonBugLogDO = new BugLogDO();
-        reasonBugLogDO.setOldValue(oldReasonName);
-        reasonBugLogDO.setNewValue(BugOnlineReasonEnum.DEMAND_QUESTION.getText());
-        reasonBugLogDO.setMainId(bugOnlineId);
-        reasonBugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
-        reasonBugLogDO.setField(BugLogFieldEnum.REASON.getText());
-        //往bug日志表中插入一条线上bug状态变更数据
-        bugLogMapper.insert(reasonBugLogDO);
-
-        //bug状态处理人员表插入数据
-        insertToBugStatusOperator(bugOnlineDO.getId());
-    }
-
-    /**
-     * 根据线上bug的id，往bug状态人员处理表中插入一条数据
-     */
-    public void insertToBugStatusOperator(Long bugId) {
+    public void processBugInfo(Long bugOfflineId,Long bugOnlineId, Long bizDemandId) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        // 判断是否为线下bug转换
+        if (bugOfflineId != null) {
+            BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineId);
+            if (bugOfflineDO == null) {
+                throw new BaseBizRuntimeException("转换需求失败，原线下bug不存在");
+            }
+//            if () {
+//                throw new BaseBizRuntimeException("当前状态不允许转化业务需求");
+//            }
+            //保存老的状态
+            String oldStatusName = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
+            // 保存旧的bug原因
+            String oldReasonName = BugOnlineReasonEnum.getTextByCode(bugOfflineDO.getReason());
 
-        //查询当前线上bug对应的所有状态变更记录
-        List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugId
-                , BugLogTypeEnum.ONLINE.getCode(), true);
+            bugOfflineDO.setStatus(BugStatusEnum.REQUIRED.getCode());
+            bugOfflineDO.setReason(BugReasonEnum.DEMAND.getCode());
+            bugOfflineDO.setBizDemandId(bizDemandId);
+            //线上bug表更新
+            bugOfflineMapper.update(bugOfflineDO);
 
-        //按创建时间逆序排列，筛选出最后一条状态变更记录
-        List<BugLogDO> collect = bugLogDOList.stream()
-                .sorted(Comparator.comparing(BugLogDO::getCreateDate).reversed()).collect(Collectors.toList());
-        BugLogDO lastStatusBugLogDO = collect.get(0);
+            BugLogDO bugLogDO = createBugLog(bugOnlineId
+                    , oldStatusName
+                    , BugStatusEnum.REQUIRED.getText()
+                    , ButtonActionEnum.SHIFT_BUSINESS.getText()
+                    , BugLogFieldEnum.STATUS.getText()
+                    , BugLogTypeEnum.OFFLINE.getCode());
+            bugLogMapper.insert(bugLogDO);
 
-        BugStatusOperatorDO bugStatusOperatorDO = new BugStatusOperatorDO();
-        bugStatusOperatorDO.setBugLogId(lastStatusBugLogDO.getId());
-        bugStatusOperatorDO.setOperator(userInfo.getAlias() + "-" + userInfo.getName());
-        bugStatusOperatorDO.setOperatorId(userInfo.getId());
-        //往状态人员处理表里面插入一条数据记录
-        bugStatusOperatorMapper.insert(bugStatusOperatorDO);
+            BugLogDO reasonBugLogDO = createBugLog(bugOnlineId
+                    , oldReasonName
+                    , BugReasonEnum.DEMAND.getText()
+                    , null
+                    , BugLogFieldEnum.REASON.getText()
+                    , BugLogTypeEnum.OFFLINE.getCode());
+
+            bugLogMapper.insert(reasonBugLogDO);
+
+            //bug状态处理人员表插入数据
+            bugLogComponent.insertToBugStatusOperator(bugOfflineDO.getId(),userInfo.getId(),userInfo.getFullAlias(),BugLogTypeEnum.OFFLINE.getCode());
+        }
+        if (bugOnlineId != null) {
+            BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineId);
+            if (bugOnlineDO == null) {
+                throw new BaseBizRuntimeException("转换需求失败，原线上bug不存在");
+            }
+            //判断当前状态是否为“挂起”，“问题上报”，“问题确认”状态
+            if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.HANG_UP.getCode())
+                    && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.PROBLEM_REPORT.getCode())
+                    && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode())) {
+                throw new BaseBizRuntimeException("当前状态不允许转化业务需求");
+            }
+
+            //保存老的状态
+            String oldStatusName = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+            Integer oldStatus = bugOnlineDO.getStatus();
+
+            // 保存旧的bug原因
+            String oldReasonName = BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason());
+
+            bugOnlineDO.setStatus(BugOnlineStatusEnum.REQUIRED.getCode());
+            bugOnlineDO.setReason(BugOnlineReasonEnum.DEMAND_QUESTION.getCode());
+            bugOnlineDO.setPrevStatus(oldStatus);
+            bugOnlineDO.setBizDemandId(bizDemandId);
+            //线上bug表更新
+            bugOnlineMapper.update(bugOnlineDO);
+
+            BugLogDO bugLogDO = createBugLog(bugOnlineId
+                    , oldStatusName
+                    , BugOnlineStatusEnum.REQUIRED.getText()
+                    , ButtonActionEnum.SHIFT_BUSINESS.getText()
+                    , BugLogFieldEnum.STATUS.getText()
+                    , BugLogTypeEnum.ONLINE.getCode());
+            bugLogMapper.insert(bugLogDO);
+
+            BugLogDO reasonBugLogDO = createBugLog(bugOnlineId
+                    , oldReasonName
+                    , BugOnlineReasonEnum.DEMAND_QUESTION.getText()
+                    , null
+                    , BugLogFieldEnum.REASON.getText()
+                    , BugLogTypeEnum.ONLINE.getCode());
+
+            bugLogMapper.insert(reasonBugLogDO);
+
+            //bug状态处理人员表插入数据
+            bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(),userInfo.getId(),userInfo.getFullAlias());
+        }
     }
 
+    private BugLogDO createBugLog(Long mainId,String oldValue,String newValue,String action,String field,Integer bugType){
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction(action);
+        bugLogDO.setField(field);
+        bugLogDO.setMainId(mainId);
+        bugLogDO.setType(bugType);
+        bugLogDO.setOldValue(oldValue);
+        bugLogDO.setNewValue(newValue);
+        return bugLogDO;
+    }
 }

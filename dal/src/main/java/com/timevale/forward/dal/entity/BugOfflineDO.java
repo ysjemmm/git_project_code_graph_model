@@ -3,7 +3,6 @@ package com.timevale.forward.dal.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -137,5 +136,10 @@ public class BugOfflineDO extends BaseDO {
      * 预计解决完成日期
      */
     private Date expectSolveDate;
+
+    /**
+     * 业务需求id
+     */
+    private Long bizDemandId;
 
 }

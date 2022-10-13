@@ -78,6 +78,9 @@
             <if test="expectSolveDate != null">
                 expect_solve_date = #{expectSolveDate},
             </if>
+            <if test="bizDemandId != null">
+                biz_demand_id = #{bizDemandId},
+            </if>
             <if test="true">
                 delay_handle_reason = #{delayHandleReason},
             </if>
@@ -95,7 +98,7 @@
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
         select id, project_id, product_line_id, name, status, last_operator, last_operator_id, operator, operator_id,
                proposer, proposer_id, priority, env, reason, source, belong, frequency, `desc`, open_count, return_count,
-               delay_handle_reason, unhandle_reason, cause, solve_plan, expect_solve_date,
+               delay_handle_reason, unhandle_reason, cause, solve_plan, expect_solve_date,biz_demand_id,
                is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
         from bug_offline
         where id = #{id} and is_deleted = false
@@ -310,4 +313,10 @@
             </foreach>
         </if>
     </update>
+
+    <select id="selectByBizDemandId" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
+        SELECT id, name
+        FROM bug_online
+        WHERE biz_demand_id = #{bizDemandId}
+    </select>
 </mapper>

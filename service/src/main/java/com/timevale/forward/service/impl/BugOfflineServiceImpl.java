@@ -90,13 +90,13 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     private BizLabelMapper bizLabelMapper;
 
     @Resource
-    private LabelMapper labelMapper;
-
-    @Resource
     private BugOnlineMapper bugOnlineMapper;
 
     @Resource
     private BizLabelComponent bizLabelComponent;
+
+    @Resource
+    private BizDemandMapper bizDemandMapper;
 
     @Override
     public BaseResult<PageQueryResult<BugOfflineVO>> list(BugOfflineQueryList bugOfflineQueryList) {
@@ -1087,6 +1087,14 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         if (CollectionUtils.isNotEmpty(commentDOList)) {
             List<CommentVO> commentVOList = commentDOList.stream().map(CommentCopier.INSTANCE::change).collect(Collectors.toList());
             bugOfflineDetailVO.setCommentVOList(commentVOList);
+        }
+
+        Long bizDemandId = bugOfflineDO.getBizDemandId();
+        //如果线上bug转化了业务需求，则查询并转化业务需求
+        if (bizDemandId != 0) {
+            BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+            bugOfflineDetailVO.setBizDemandId(bizDemandDO.getId());
+            bugOfflineDetailVO.setBizDemandName(bizDemandDO.getName());
         }
 
         return BaseResult.success(bugOfflineDetailVO);
