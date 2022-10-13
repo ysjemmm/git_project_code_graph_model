@@ -119,6 +119,11 @@
             customer_dev_type = #{customerDevType},
             customer_dev_sale_contract = #{customerDevSaleContract},
             customer_dev_project_name = #{customerDevProjectName},
+            ued_time = #{uedTime},
+            back_time = #{backTime},
+            front_time = #{frontTime},
+            qa_time = #{qaTime},
+            total_time = #{totalTime},
             modify_man_id = #{modifyManId},
             modify_man = #{modifyMan},
         </set>
@@ -127,10 +132,10 @@
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BizDemandDO">
         select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status,
-               priority, receive_man, receive_man_id, processor, os, plan_release_date, reason, submit_man,
+               priority, receive_man, receive_man_id, plan_release_date, reason, submit_man,
                submit_man_id,solve_plan, reject_reason, project_end_date,is_deleted, create_man_id, create_man,
                create_date, modify_man_id, modify_man, modify_date,customer_dev_demand,customer_dev_type,
-               customer_dev_sale_contract,customer_dev_project_name, source_id
+               customer_dev_sale_contract,customer_dev_project_name, source_id,ued_time,back_time,front_time,qa_time,total_time
         from biz_demand
         where id = #{id}
     </select>
@@ -147,7 +152,7 @@
                bd.submit_man, bd.submit_man_id, bd.plan_release_date, bd.project_end_date,
                bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date, bd.source_id,
                pl.id productLineId, pl.name productLineName,
-               b.id bizDomainId , b.name bizDomainName
+               b.id bizDomainId , b.name bizDomainName,bd.ued_time,bd.back_time,bd.front_time,bd.qa_time,bd.total_time
         from biz_demand bd
         left join product_line pl on pl.id = bd.product_line_id
         left join biz_domain b    on pl.biz_domain_id = b.id

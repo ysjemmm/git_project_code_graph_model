@@ -194,4 +194,9 @@ public class BugOnlineDO extends BaseDO {
      */
     private String bizName;
 
+    /**
+     * 0华南大区，1华北大区，2华东大区，3西南大区，9其他大区
+     */
+    private Integer area;
+
 }
