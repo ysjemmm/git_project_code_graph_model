@@ -71,4 +71,9 @@ public enum BugOnlineStatusEnum {
         }
         return "error code";
     }
+
+    public static boolean canConvertBizDemand(Integer code) {
+        return HANG_UP.getCode().equals(code) || PROBLEM_REPORT.getCode().equals(code) || QUESTION_CONFIRM.getCode().equals(code);
+    }
+
 }

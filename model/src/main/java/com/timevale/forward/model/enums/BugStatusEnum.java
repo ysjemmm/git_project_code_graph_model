@@ -61,4 +61,14 @@ public enum BugStatusEnum {
         }
         return OPEN.text;
     }
+
+    public static boolean canConvertBizDemand(Integer code) {
+        return OPEN.getCode().equals(code) || REPAIR.getCode().equals(code) || POSTPONE_REPAIR.getCode().equals(code);
+    }
+
+
+    public static boolean canRelease(Integer code) {
+        return COMPLETE.getCode().equals(code) || CLOSE.getCode().equals(code)
+                || POSTPONE_REPAIR.getCode().equals(code) || REQUIRED.getCode().equals(code);
+    }
 }

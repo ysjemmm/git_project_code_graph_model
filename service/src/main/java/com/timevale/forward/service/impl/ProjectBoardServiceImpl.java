@@ -121,7 +121,8 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
         // 总产品需求数、总任务数、总线下bug数
         result.setProductDemandCount(productDemandIdList.size());
         result.setTaskCount(taskDOList.size());
-        result.setBugOfflineCount(bugOfflineDOList.size());
+        int bugOfflineCount = (int) bugOfflineDOList.stream().filter(e -> !BugStatusEnum.REQUIRED.getCode().equals(e.getStatus())).count();
+        result.setBugOfflineCount(bugOfflineCount);
 
         // 提测结果
         if (testBillDO == null || TestBillStatusEnum.PRE_SUBMIT_TEST_CASE.getCode().equals(testBillDO.getStatus())) {
@@ -178,6 +179,7 @@ public class ProjectBoardServiceImpl implements ProjectBoardService {
 
         // 线下bug
         List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);
+        bugOfflineDOList = bugOfflineDOList.stream().filter(a -> !BugStatusEnum.REQUIRED.getCode().equals(a.getStatus())).collect(Collectors.toList());
         List<Long> bugOfflineIdList = bugOfflineDOList.stream().map(BugOfflineDO::getId).collect(Collectors.toList());
 
         // 线下bug日志

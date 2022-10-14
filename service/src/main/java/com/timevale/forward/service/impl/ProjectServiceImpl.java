@@ -813,9 +813,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);
 
         List<BugOfflineDO> releaseList = bugOfflineDOList.stream()
-                .filter(e -> BugStatusEnum.COMPLETE.getCode().equals(e.getStatus())
-                        || BugStatusEnum.CLOSE.getCode().equals(e.getStatus())
-                        || BugStatusEnum.POSTPONE_REPAIR.getCode().equals(e.getStatus()))
+                .filter(e ->BugStatusEnum.canRelease(e.getStatus()))
                 .collect(Collectors.toList());
         // 如果不仅为完成、关闭、延期修复，返回报错
         if (releaseList.size() != bugOfflineDOList.size()) {

@@ -1074,7 +1074,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     /**
      * 新增业务需求的时候特殊处理线上bug的方法
      */
-    public void processBugInfo(Long bugOfflineId,Long bugOnlineId, Long bizDemandId) {
+    private void processBugInfo(Long bugOfflineId,Long bugOnlineId, Long bizDemandId) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         // 判断是否为线下bug转换
         if (bugOfflineId != null) {
@@ -1082,9 +1082,9 @@ public class BizDemandServiceImpl implements BizDemandService {
             if (bugOfflineDO == null) {
                 throw new BaseBizRuntimeException("转换需求失败，原线下bug不存在");
             }
-//            if () {
-//                throw new BaseBizRuntimeException("当前状态不允许转化业务需求");
-//            }
+            if (!BugStatusEnum.canConvertBizDemand(bugOfflineDO.getStatus())) {
+                throw new BaseBizRuntimeException("当前状态不允许转化业务需求");
+            }
             //保存老的状态
             String oldStatusName = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
             // 保存旧的bug原因
@@ -1122,12 +1122,9 @@ public class BizDemandServiceImpl implements BizDemandService {
                 throw new BaseBizRuntimeException("转换需求失败，原线上bug不存在");
             }
             //判断当前状态是否为“挂起”，“问题上报”，“问题确认”状态
-            if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.HANG_UP.getCode())
-                    && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.PROBLEM_REPORT.getCode())
-                    && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode())) {
+            if (!BugOnlineStatusEnum.canConvertBizDemand(bugOnlineDO.getStatus())) {
                 throw new BaseBizRuntimeException("当前状态不允许转化业务需求");
             }
-
             //保存老的状态
             String oldStatusName = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
             Integer oldStatus = bugOnlineDO.getStatus();

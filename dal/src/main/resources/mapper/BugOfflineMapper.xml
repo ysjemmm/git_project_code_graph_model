@@ -277,7 +277,7 @@
         select reason, count(*) as count
         from bug_offline
         where project_id = #{projectId}
-          and status != 6
+          and status not in  (6,7)
           and is_deleted = false
         group by reason
         order by count desc
@@ -287,7 +287,7 @@
         select belong, count(*) as count
         from bug_offline
         where project_id = #{projectId}
-          and status != 6
+          and status not in  (6,7)
           and is_deleted = false
         group by belong
         order by count desc
