@@ -39,7 +39,6 @@ import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -187,13 +186,13 @@ public class ManDayServiceImpl implements ManDayService {
                     // 非pm时，如果数据包含本人则返回
                     projectManDays.stream().filter(m -> m.getMemberId().equals(userInfo.getId()))
                             .findFirst().ifPresent(m -> {
-                                ManDayListVO manDayListVO = new ManDayListVO()
-                                        .setProjectId(project.getId())
-                                        .setProjectName(project.getName())
-                                        .setProjectCreateDate(project.getCreateDate());
-                                manDayListVO.setManDays(Collections.singletonList(ManDayCopier.INSTANCE.convert(m)));
-                                res.add(manDayListVO);
-                            });
+                        ManDayListVO manDayListVO = new ManDayListVO()
+                                .setProjectId(project.getId())
+                                .setProjectName(project.getName())
+                                .setProjectCreateDate(project.getCreateDate());
+                        manDayListVO.setManDays(Collections.singletonList(ManDayCopier.INSTANCE.convert(m)));
+                        res.add(manDayListVO);
+                    });
                 }
             }
 
@@ -376,7 +375,7 @@ public class ManDayServiceImpl implements ManDayService {
 
         // 根据当前用户在当前项目中的数据
         Optional<PersonDO> member = personMapper.get(Collections.singletonList(project.getId()),
-                        PersonTypeEnum.PROJECT_MEMBER.getCode()).stream()
+                PersonTypeEnum.PROJECT_MEMBER.getCode()).stream()
                 .filter(person -> person.getUserId().equals(memberId))
                 .findFirst();
 
@@ -426,12 +425,16 @@ public class ManDayServiceImpl implements ManDayService {
         Pair<LocalDate, LocalDate> localDatePair = parseDateRange(dateRange);
         LocalDate startLocalDate = localDatePair.getLeft();
         LocalDate endLocalDate = localDatePair.getRight();
-        AssertUtil.checkState(startLocalDate.getDayOfWeek() == DayOfWeek.MONDAY,
-                "传入时间开始时间必须为周一");
-        AssertUtil.checkState(endLocalDate.getDayOfWeek() == DayOfWeek.SUNDAY,
-                "传入时间开始时间必须为周日");
-        AssertUtil.checkState(ChronoUnit.DAYS.between(startLocalDate, endLocalDate) == 6L,
-                "结束时间和开始时间需要在同一周");
+        //跨月拆分:9.26~10.2 =>9.26~9.30,10.1~10.2
+        AssertUtil.checkState(startLocalDate.getDayOfWeek() == DayOfWeek.MONDAY
+                        || endLocalDate.getDayOfWeek() == DayOfWeek.SUNDAY,
+                "开始时间为周一或结束时间为周日至少满足一项");
+//        AssertUtil.checkState(startLocalDate.getDayOfWeek() == DayOfWeek.MONDAY,
+//                "传入时间开始时间必须为周一");
+//        AssertUtil.checkState(endLocalDate.getDayOfWeek() == DayOfWeek.SUNDAY,
+//                "传入时间开始时间必须为周日");
+//        AssertUtil.checkState(ChronoUnit.DAYS.between(startLocalDate, endLocalDate) == 6L,
+//                "结束时间和开始时间需要在同一周");
         Date startDate = Date.from(startLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
         Date endDate = Date.from(endLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
         return Pair.of(startDate, endDate);

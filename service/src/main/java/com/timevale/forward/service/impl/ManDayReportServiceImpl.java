@@ -40,10 +40,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -295,19 +293,13 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         return BaseResult.success(true);
     }
 
-    private static Pair<Date, Date> parseAndCheckDateRange(String dateRange) {
+    private static Pair<Date, Date>parseAndCheckDateRange(String dateRange) {
         if (StrUtil.isEmpty(dateRange)) {
             return Pair.of(null,null);
         }
         Pair<LocalDate, LocalDate> localDatePair = parseDateRange(dateRange);
         LocalDate startLocalDate = localDatePair.getLeft();
         LocalDate endLocalDate = localDatePair.getRight();
-        AssertUtil.checkState(startLocalDate.getDayOfWeek() == DayOfWeek.MONDAY,
-                "传入时间开始时间必须为周一");
-        AssertUtil.checkState(endLocalDate.getDayOfWeek() == DayOfWeek.SUNDAY,
-                "传入时间开始时间必须为周日");
-        AssertUtil.checkState(ChronoUnit.DAYS.between(startLocalDate, endLocalDate) == 6L,
-                "结束时间和开始时间需要在同一周");
         Date startDate = Date.from(startLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
         Date endDate = Date.from(endLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
         return Pair.of(startDate, endDate);

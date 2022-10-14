@@ -149,4 +149,8 @@ public class BizDemandDetailVO extends ToString {
 
     @ApiModelProperty("客户信息")
     private List<BizDemandCustomVO> customList;
+
+    @ApiModelProperty("业务域id")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long bizDomainId;
 }

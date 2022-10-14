@@ -399,6 +399,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDetailVO.setRecipientInfoList(personVOList);
 
         bizDemandDetailVO.setProductLineName(productLineDO.getName());
+        bizDemandDetailVO.setBizDomainId(productLineDO.getBizDomainId());
         bizDemandDetailVO.setReasonText(BizDemandReasonEnum.getTextByCode(bizDemandDetailVO.getReason()));
         bizDemandDetailVO.setStatusText(BizDemandStatusEnum.getTextByCode(bizDemandDetailVO.getStatus()));
         bizDemandDetailVO.setPriorityText(PriorityEnum.getTextChineseByCode(bizDemandDetailVO.getPriority()));
