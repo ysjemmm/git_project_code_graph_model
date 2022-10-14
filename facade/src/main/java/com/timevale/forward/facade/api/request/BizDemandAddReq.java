@@ -98,16 +98,16 @@ public class BizDemandAddReq extends BaseReq {
     @ApiModelProperty("客户信息")
     private List<BizDemandCustomAddReq> customList;
 
-    @ApiModelProperty("UED资源评估（人天）默认:0")
+    @ApiModelProperty("UED资源评估（人天）")
     private BigDecimal uedTime;
 
-    @ApiModelProperty("后端资源评估（人天）默认:0")
+    @ApiModelProperty("后端资源评估（人天）")
     private BigDecimal backTime;
 
-    @ApiModelProperty("前端资源评估（人天）默认:0")
+    @ApiModelProperty("前端资源评估（人天）")
     private BigDecimal frontTime;
 
-    @ApiModelProperty("测试资源评估（人天）默认:0")
+    @ApiModelProperty("测试资源评估（人天）")
     private BigDecimal qaTime;
 
     @ApiModelProperty("总资源评估（人天）")
