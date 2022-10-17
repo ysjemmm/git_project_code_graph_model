@@ -316,7 +316,7 @@
 
     <select id="selectByBizDemandId" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
         SELECT id, name
-        FROM bug_online
+        FROM bug_offline
         WHERE biz_demand_id = #{bizDemandId}
     </select>
 </mapper>
