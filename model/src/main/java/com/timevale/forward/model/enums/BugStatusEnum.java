@@ -71,4 +71,8 @@ public enum BugStatusEnum {
         return COMPLETE.getCode().equals(code) || CLOSE.getCode().equals(code)
                 || POSTPONE_REPAIR.getCode().equals(code) || REQUIRED.getCode().equals(code);
     }
+
+    public static boolean completed(String text) {
+        return COMPLETE.getText().equals(text) || CLOSE.getText().equals(text) || REQUIRED.getText().equals(text);
+    }
 }

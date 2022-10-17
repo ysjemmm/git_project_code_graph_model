@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -153,4 +154,19 @@ public class BizDemandDetailVO extends ToString {
     @ApiModelProperty("业务域id")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long bizDomainId;
+
+    @ApiModelProperty("UED资源评估（人天）")
+    private BigDecimal uedTime;
+
+    @ApiModelProperty("后端资源评估（人天）")
+    private BigDecimal backTime;
+
+    @ApiModelProperty("前端资源评估（人天）")
+    private BigDecimal frontTime;
+
+    @ApiModelProperty("测试资源评估（人天）")
+    private BigDecimal qaTime;
+
+    @ApiModelProperty("总资源评估（人天）")
+    private BigDecimal totalTime;
 }
