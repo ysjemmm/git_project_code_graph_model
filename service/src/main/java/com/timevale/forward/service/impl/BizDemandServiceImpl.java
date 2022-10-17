@@ -430,7 +430,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectByBizDemandId(bizDemandId);
         if (bugOfflineDO != null) {
             bizDemandDetailVO.setBugOfflineId(bugOfflineDO.getId());
-            bizDemandDetailVO.setBugOnlineName(bugOfflineDO.getName());
+            bizDemandDetailVO.setBugOfflineName(bugOfflineDO.getName());
         }
 
         // 获取客户信息
