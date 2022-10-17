@@ -1096,7 +1096,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             //线上bug表更新
             bugOfflineMapper.update(bugOfflineDO);
 
-            BugLogDO bugLogDO = createBugLog(bugOnlineId
+            BugLogDO bugLogDO = createBugLog(bugOfflineId
                     , oldStatusName
                     , BugStatusEnum.REQUIRED.getText()
                     , ButtonActionEnum.SHIFT_BUSINESS.getText()
@@ -1104,7 +1104,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                     , BugLogTypeEnum.OFFLINE.getCode());
             bugLogMapper.insert(bugLogDO);
 
-            BugLogDO reasonBugLogDO = createBugLog(bugOnlineId
+            BugLogDO reasonBugLogDO = createBugLog(bugOfflineId
                     , oldReasonName
                     , BugReasonEnum.DEMAND.getText()
                     , null
@@ -1114,7 +1114,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             bugLogMapper.insert(reasonBugLogDO);
 
             //bug状态处理人员表插入数据
-            bugLogComponent.insertToBugStatusOperator(bugOfflineDO.getId(),userInfo.getId(),userInfo.getFullAlias(),BugLogTypeEnum.OFFLINE.getCode());
+            bugLogComponent.insertToBugStatusOperator(bugOfflineId,userInfo.getId(),userInfo.getFullAlias(),BugLogTypeEnum.OFFLINE.getCode());
         }
         if (bugOnlineId != null) {
             BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineId);
@@ -1157,7 +1157,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             bugLogMapper.insert(reasonBugLogDO);
 
             //bug状态处理人员表插入数据
-            bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(),userInfo.getId(),userInfo.getFullAlias());
+            bugLogComponent.insertToBugStatusOperator(bugOnlineId,userInfo.getId(),userInfo.getFullAlias());
         }
     }
 
