@@ -142,4 +142,9 @@ public class BugOfflineDO extends BaseDO {
      */
     private Long bizDemandId;
 
+    /**
+     * 上个状态
+     */
+    private Integer prevStatus;
+
 }

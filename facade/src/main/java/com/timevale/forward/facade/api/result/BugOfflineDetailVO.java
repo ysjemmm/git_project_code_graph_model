@@ -137,4 +137,7 @@ public class BugOfflineDetailVO extends ToString {
 
     @ApiModelProperty("业务需求名称")
     private String bizDemandName;
+
+    @ApiModelProperty("上一个状态:0bug打开、1待修复、2待验收、3待确认、4延期修复、5完成、6关闭、7已转需求")
+    private Integer prevStatus;
 }

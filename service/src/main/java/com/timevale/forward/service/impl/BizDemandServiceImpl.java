@@ -1093,6 +1093,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             bugOfflineDO.setStatus(BugStatusEnum.REQUIRED.getCode());
             bugOfflineDO.setReason(BugReasonEnum.DEMAND.getCode());
             bugOfflineDO.setBizDemandId(bizDemandId);
+            bugOfflineDO.setPrevStatus(bugOfflineDO.getStatus());
             //线上bug表更新
             bugOfflineMapper.update(bugOfflineDO);
 

@@ -87,4 +87,9 @@ public class BugOnlineListDO extends BaseDO {
      * 模块
      */
     private String modelId;
+
+    /**
+     * 大区
+     */
+    private Integer area;
 }

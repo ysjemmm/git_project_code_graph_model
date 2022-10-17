@@ -10,7 +10,7 @@
     <select id="selectListByCondition" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
         select bo.id, bo.name, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env,
         bo.reason, bo.belong, bo.dismiss_cause, bo.customer_name, bo.expect_launch_date, bo.source,
-        bo.create_date, bo.modify_date
+        bo.create_date, bo.modify_date,bo.area
         from bug_online bo
         left join bug_online_product_line bopl on bo.id = bopl.bug_online_id
         left join bug_online_model mo on bo.id = mo.bug_online_id and mo.is_deleted = false
