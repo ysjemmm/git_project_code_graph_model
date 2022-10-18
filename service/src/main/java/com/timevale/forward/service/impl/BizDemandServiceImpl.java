@@ -1086,14 +1086,15 @@ public class BizDemandServiceImpl implements BizDemandService {
                 throw new BaseBizRuntimeException("当前状态不允许转化业务需求");
             }
             //保存老的状态
-            String oldStatusName = BugStatusEnum.getTextByCode(bugOfflineDO.getStatus());
+            Integer oldStatus = bugOfflineDO.getStatus();
+            String oldStatusName = BugStatusEnum.getTextByCode(oldStatus);
             // 保存旧的bug原因
             String oldReasonName = BugOnlineReasonEnum.getTextByCode(bugOfflineDO.getReason());
 
             bugOfflineDO.setStatus(BugStatusEnum.REQUIRED.getCode());
             bugOfflineDO.setReason(BugReasonEnum.DEMAND.getCode());
             bugOfflineDO.setBizDemandId(bizDemandId);
-            bugOfflineDO.setPrevStatus(bugOfflineDO.getStatus());
+            bugOfflineDO.setPrevStatus(oldStatus);
             //线上bug表更新
             bugOfflineMapper.update(bugOfflineDO);
 
