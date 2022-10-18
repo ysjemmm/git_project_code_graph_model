@@ -76,8 +76,7 @@
                 AND mdr.create_date &lt;= #{createEndDate}
             </if>
             <if test="weekStartDate != null and weekEndDate != null">
-                AND md.week_start_date &gt;= #{weekStartDate}
-                AND md.week_end_date &lt;= #{weekEndDate}
+                AND md.week_start_date = #{weekStartDate}
             </if>
         </where>
     </select>
