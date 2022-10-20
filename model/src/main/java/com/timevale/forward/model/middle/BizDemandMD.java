@@ -7,8 +7,6 @@ import com.timevale.forward.model.enums.PlanReleaseDateEnum;
 import com.timevale.forward.model.enums.YesOrNoEnum;
 import lombok.Data;
 
-import java.math.BigDecimal;
-
 
 /**
  * @author yangxu
@@ -62,18 +60,4 @@ public class BizDemandMD extends BaseMD {
     @FieldCompare(fieldName = "项目名称")
     private String customerDevProjectName;
 
-    @FieldCompare(fieldName = "UED资源评估（人天）")
-    private BigDecimal uedTime;
-
-    @FieldCompare(fieldName = "后端资源评估（人天）")
-    private BigDecimal backTime;
-
-    @FieldCompare(fieldName = "前端资源评估（人天）")
-    private BigDecimal frontTime;
-
-    @FieldCompare(fieldName = "测试资源评估（人天）")
-    private BigDecimal qaTime;
-
-    @FieldCompare(fieldName = "总资源评估（人天）")
-    private BigDecimal totalTime;
 }

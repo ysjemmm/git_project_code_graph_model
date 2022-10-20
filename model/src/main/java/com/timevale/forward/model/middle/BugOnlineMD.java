@@ -131,4 +131,10 @@ public class BugOnlineMD extends BaseMD{
      */
     @FieldCompare(fieldName = "预计上线日期")
     private Date expectLaunchDate;
+
+    /**
+     * 所在大区
+     */
+    @FieldCompare(fieldName = "所在大区", enumClass = AreaEnum.class)
+    private Integer area ;
 }
