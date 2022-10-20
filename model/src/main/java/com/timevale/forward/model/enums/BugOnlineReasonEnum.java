@@ -61,9 +61,9 @@ public enum BugOnlineReasonEnum {
     DOCUMENT_MISTAKE(9, "接口文档编写错误"),
 
     /**
-     * 外包项目
+     * ISV问题
      */
-    OUT_PROJECT(10, "外包项目"),
+    ISV(10, "ISV问题"),
 
     /**
      * 历史版本
@@ -98,9 +98,27 @@ public enum BugOnlineReasonEnum {
     /**
      * 无法重现但客户环境必现
      */
-    CUSTOMER_ENV_MUST(17, "无法重现但客户环境必现")
+    CUSTOMER_ENV_MUST(17, "无法重现但客户环境必现"),
 
+    /**
+     * 公有云问题
+     */
+    OPEN_CLOUD(18, "公有云问题"),
 
+    /**
+     * 中间件问题
+     */
+    MIDDLEWARE(19, "中间件问题"),
+
+    /**
+     * 产品设计问题
+     */
+    PRODUCT_DESIGN(20, "产品设计问题"),
+
+    /**
+     * 用户体验
+     */
+    USER_EXPERIENCE(21, "用户体验"),
     ;
 
     private final Integer code;

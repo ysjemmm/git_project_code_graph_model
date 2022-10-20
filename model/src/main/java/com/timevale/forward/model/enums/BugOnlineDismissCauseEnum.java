@@ -66,9 +66,9 @@ public enum BugOnlineDismissCauseEnum {
     CUSTOMER_FAULT(10, "客户自身缺陷"),
 
     /**
-     * 实施给客户项目的配置错误
+     * 项目配置错误
      */
-    PROJECT_CONFIGURE_FAULT(11, "实施给客户项目的配置错误"),
+    PROJECT_CONFIGURE_FAULT(11, "项目配置错误"),
 
     /**
      * 实施对业务理解错误
@@ -136,9 +136,34 @@ public enum BugOnlineDismissCauseEnum {
     TECHNOLOGY_SUPPORT(24, "技术咨询"),
 
     /**
-     * 外包项目
+     * ISV问题
      */
-    OUTSOURCING_PROJECT(25, "外包项目");
+    ISV(25, "ISV问题"),
+
+    /**
+     * SQL执行遗漏或错误
+     */
+    SQL_EXCEPTION(26, "SQL执行遗漏或错误"),
+
+    /**
+     * 交付操作错误
+     */
+    DELIVER_EXCEPTION(27, "交付操作错误"),
+
+    /**
+     * 客户对接错误
+     */
+    DOCKING_EXCEPTION(28, "客户对接错误"),
+
+    /**
+     * 客户侧数据问题
+     */
+    DATA_PROJECT(29, "客户侧数据问题"),
+
+    /**
+     * 产品设计如此
+     */
+    PRODUCT_AS_SO(30, "产品设计如此");
 
     private final Integer code;
     private final String text;
