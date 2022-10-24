@@ -33,12 +33,6 @@ public class TroubleTicketVO extends ToString {
     @ApiModelProperty("故障定级描述")
     private String troubleRankName;
 
-    @ApiModelProperty("业务域名称")
-    private String bizDomainName;
-
-    @ApiModelProperty("产品线名称")
-    private String productLineName;
-
     @ApiModelProperty("主责任人")
     private String primePrincipal;
 
@@ -75,5 +69,11 @@ public class TroubleTicketVO extends ToString {
 
     @ApiModelProperty("更新时间")
     private Date modifyDate;
+
+    @ApiModelProperty("产品线")
+    private List<String> productLineNames;
+
+    @ApiModelProperty("业务域")
+    private List<String> bizDomainNames;
 
 }

@@ -83,4 +83,7 @@ public class BizDemandQueryList extends QueryBase {
 
     @ApiModelProperty("选中为标签类别时填写,类别id")
     private List<Long> labelCategoryIds;
+
+    @ApiModelProperty("需求描述")
+    private String desc;
 }

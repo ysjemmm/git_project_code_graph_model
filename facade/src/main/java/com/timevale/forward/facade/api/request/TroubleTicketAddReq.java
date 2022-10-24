@@ -38,7 +38,7 @@ public class TroubleTicketAddReq extends BaseReq {
 
     @ApiModelProperty("产品线id")
     @NotNull(message = "产品线不能为空")
-    private Long productLineId;
+    private List<Long> productLineIds;
 
     @ApiModelProperty("影响客户数（家）")
     private Integer influenceCount;

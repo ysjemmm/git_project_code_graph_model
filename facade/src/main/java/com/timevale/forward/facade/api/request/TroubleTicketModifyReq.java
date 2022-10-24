@@ -3,13 +3,11 @@ package com.timevale.forward.facade.api.request;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -45,7 +43,7 @@ public class TroubleTicketModifyReq extends BaseReq {
 
     @ApiModelProperty("产品线id")
     @NotNull(message = "产品线不能为空")
-    private Long productLineId;
+    private List<Long> productLineIds;
 
     @ApiModelProperty("影响客户数（家）")
     private Integer influenceCount;

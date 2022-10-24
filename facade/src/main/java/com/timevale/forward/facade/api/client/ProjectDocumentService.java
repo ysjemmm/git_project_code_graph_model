@@ -11,6 +11,8 @@ import com.timevale.forward.facade.api.result.TestBillDocumentVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
+import java.util.List;
+
 /**
  * 项目文档查询接口
  * @author jingchun
@@ -60,5 +62,13 @@ public interface ProjectDocumentService {
      * @return
      */
     BaseResult<Void> saveDocument(ProjectDocumentReq req);
+
+    /**
+     * 发布前检查
+     * @param projectId 项目id
+     * @return UED文档
+     */
+    BaseResult<List<String>> checkDocBeforeRelease(Long projectId);
+
 
 }

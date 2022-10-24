@@ -141,4 +141,10 @@ public class BizDemandListCondition extends QueryBase {
      */
     private String collation;
 
+    /**
+     * 需求描述
+     */
+    @WildcardEscape
+    private String desc;
+
 }

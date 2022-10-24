@@ -113,5 +113,10 @@ public class BizDemandListDO extends BaseDO {
      * 总资源评估（人天）
      */
     private BigDecimal totalTime;
+
+    /**
+     * 需求描述
+     */
+    private String desc;
 }
 

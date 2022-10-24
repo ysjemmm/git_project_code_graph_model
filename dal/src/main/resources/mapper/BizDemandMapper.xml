@@ -151,8 +151,9 @@
         select bd.id, bd.name, bd.dept_id, bd.status, bd.priority, bd.receive_man,  bd.receive_man_id, bd.target_customer,
                bd.submit_man, bd.submit_man_id, bd.plan_release_date, bd.project_end_date,
                bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date, bd.source_id,
+               bd.ued_time,bd.back_time,bd.front_time,bd.qa_time,bd.total_time,bd.`desc`,
                pl.id productLineId, pl.name productLineName,
-               b.id bizDomainId , b.name bizDomainName,bd.ued_time,bd.back_time,bd.front_time,bd.qa_time,bd.total_time
+               b.id bizDomainId , b.name bizDomainName
         from biz_demand bd
         left join product_line pl on pl.id = bd.product_line_id
         left join biz_domain b    on pl.biz_domain_id = b.id
@@ -168,6 +169,9 @@
             </if>
             <if test="name!=null and name!='' ">
                 and bd.name like concat('%',#{name},'%')
+            </if>
+            <if test="desc!=null and desc!='' ">
+                and bd.`desc` like concat('%',#{desc},'%')
             </if>
             <if test="targetCustomer!=null and targetCustomer!='' ">
                 and bd.target_customer like concat('%',#{targetCustomer},'%')

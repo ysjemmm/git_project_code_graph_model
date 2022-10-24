@@ -109,4 +109,7 @@ public class BizDemandVO extends ToString {
 
     @ApiModelProperty("总资源评估（人天）")
     private BigDecimal totalTime;
+
+    @ApiModelProperty("需求描述")
+    private String desc;
 }
