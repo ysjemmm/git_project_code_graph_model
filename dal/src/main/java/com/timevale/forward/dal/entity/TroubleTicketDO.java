@@ -1,9 +1,10 @@
 package com.timevale.forward.dal.entity;
 
-import java.math.BigDecimal;
-import java.util.Date;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * 故障工单(TroubleTicketDO)实体类
@@ -29,11 +30,6 @@ public class TroubleTicketDO extends BaseDO {
      */
     private Integer type;
     
-    /**
-     * 产品线id
-     */
-    private Long productLineId;
-
     /**
      * 故障发生时间
      */

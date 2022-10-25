@@ -36,7 +36,7 @@ public class BugOnlineProductLineComponentImpl implements BugOnlineProductLineCo
                 BugOnlineProductLineDO bugOnlineProductLine = new BugOnlineProductLineDO();
                 bugOnlineProductLine.setBugOnlineId(id);
                 bugOnlineProductLine.setProductLineId(productLineId);
-                bugOnlineProductLineDO.setType(type);
+                bugOnlineProductLine.setType(type);
                 bugOnlineProductLineDOList.add(bugOnlineProductLine);
             });
             //插入新的数据

@@ -5,24 +5,19 @@ import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.condition.TroubleTicketCondition;
-import com.timevale.forward.dal.dao.ImprovementMeasureMapper;
-import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.dao.TroubleTicketMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TroubleTicketService;
 import com.timevale.forward.facade.api.query.TroubleTicketQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.BizDemandComponent;
-import com.timevale.forward.service.component.FileComponent;
-import com.timevale.forward.service.component.ImprovementMeasureComponent;
-import com.timevale.forward.service.component.SqlOrderComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.component.impl.PersonComponentImpl;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
+import com.timevale.forward.service.copy.ProductLineCopier;
 import com.timevale.forward.service.copy.TroubleTicketCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -40,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -70,6 +66,15 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
     @Resource
     private SqlOrderComponent sqlOrderComponent;
 
+    @Resource
+    private BugOnlineProductLineComponent bugOnlineProductLineComponent;
+
+    @Resource
+    private BugOnlineProductLineMapper bugOnlineProductLineMapper;
+
+    @Resource
+    private BizDomainMapper bizDomainMapper;
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -82,6 +87,8 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         // 转换后行插入数据
         TroubleTicketDO troubleTicketDO = TroubleTicketCopier.INSTANCE.convert(troubleTicketAddReq);
         troubleTicketMapper.insert(troubleTicketDO);
+        //关联关系
+        bugOnlineProductLineComponent.add(troubleTicketAddReq.getProductLineIds(), troubleTicketDO.getId(),BizProductLineTypeEnum.TROUBLE_TICKET.getCode());
 
         // 添加改进措施
         List<ImprovementMeasureAddReq> improvementMeasureAddReqList = troubleTicketAddReq.getImprovementMeasureAddReqList();
@@ -113,6 +120,9 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         TroubleTicketDO newTroubleTicketDO = TroubleTicketCopier.INSTANCE.convert(troubleTicketModifyReq);
         troubleTicketMapper.allUpdate(newTroubleTicketDO);
 
+        bugOnlineProductLineComponent.update(troubleTicketModifyReq.getProductLineIds(), troubleTicketModifyReq.getId(),BizProductLineTypeEnum.TROUBLE_TICKET.getCode());
+
+
         // 修改处理人
         List<PersonAddReq> handlerList = troubleTicketModifyReq.getHandlerList();
         personComponent.update(handlerList, newTroubleTicketDO.getId(), PersonTypeEnum.TROUBLE_TICKET_HANDLER.getCode());
@@ -131,16 +141,16 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         if(troubleTicketDO == null){
             throw new BaseBizRuntimeException("不存在对应的故障工单");
         }
-        ProductLineDO productLineDO = productLineMapper.selectById(troubleTicketDO.getProductLineId());
-        if(productLineDO == null){
-            throw new BaseBizRuntimeException("不存在对应的产品线");
-        }
-
         // 转换格式
         TroubleTicketDetailVO ticketDetailVO = TroubleTicketCopier.INSTANCE.convert(troubleTicketDO);
 
         // 填充描述数据
-        ticketDetailVO.setProductLineName(productLineDO.getName());
+        List<Long> productLineIdList = bugOnlineProductLineMapper.selectProductLineIds(troubleTicketId,BizProductLineTypeEnum.TROUBLE_TICKET.getCode());
+        if (CollectionUtils.isNotEmpty(productLineIdList)) {
+            List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIdList);
+            List<ProductLineVO> productLineVOList = productLineDOList.stream().map(ProductLineCopier.INSTANCE::convert).collect(Collectors.toList());
+            ticketDetailVO.setProductLineList(productLineVOList);
+        }
         ticketDetailVO.setTypeName(TroubleTicketTypeEnum.getTextByCode(ticketDetailVO.getType()));
         ticketDetailVO.setCauseName(TroubleTicketCauseEnum.getTextByCode(ticketDetailVO.getCause()));
         ticketDetailVO.setReasonName(TroubleTicketReasonEnum.getTextByCode(troubleTicketDO.getReason()));
@@ -201,7 +211,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         // tab页面条件
         String ascription = troubleTicketQueryList.getAscription();
         if(AscriptionEnum.CURRENT_USER.toString().equals(ascription)){
-            troubleTicketCondition.setCreateMandIdList(Lists.newArrayList(userId));
+            troubleTicketCondition.setCreateMandIdList(Lists.newArrayList("xingyun"));
         }else if(AscriptionEnum.RECEIVE.toString().equals(ascription)){
             troubleTicketQueryList.getHandlerIdList().add(userId);
         }
@@ -272,16 +282,44 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         List<TroubleTicketVO> troubleTicketVOList = troubleTicketDOList.stream()
                 .map(TroubleTicketCopier.INSTANCE::convert).collect(Collectors.toList());
 
+        List<Long> troubleTicketIds = troubleTicketVOList.stream().map(TroubleTicketVO::getId).collect(Collectors.toList());
+        List<BugOnlineProductLineDO> troubleTicketProductLineDOList = bugOnlineProductLineMapper.selectByBugOnlineIdList(troubleTicketIds,BizProductLineTypeEnum.TROUBLE_TICKET.getCode());
+
+
+        List<Long> productLineIdList = troubleTicketProductLineDOList.stream().map(BugOnlineProductLineDO::getProductLineId).collect(Collectors.toList());
+        List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIdList);
+
+        List<Long> bizDomainIdList = productLineDOList.stream().map(ProductLineDO::getBizDomainId).collect(Collectors.toList());
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByIdList(bizDomainIdList);
+
+        Map<Long, ProductLineDO> productLineMap = productLineDOList.stream().collect(Collectors.toMap(ProductLineDO::getId, Function.identity()));
+        Map<Long, BizDomainDO> bizDomainDOMap = bizDomainDOList.stream().collect(Collectors.toMap(BizDomainDO::getId, Function.identity()));
+        Map<Long, List<BugOnlineProductLineDO>> troubleTicketProductLineMap =
+                troubleTicketProductLineDOList.stream().collect(Collectors.groupingBy(BugOnlineProductLineDO::getBugOnlineId));
+
+
         // 查询处理人
         Map<Long, List<PersonDO>> personMap = personDOList.stream().collect(Collectors.groupingBy(PersonDO::getMainId));
-        troubleTicketVOList.forEach(e -> {
+        for (TroubleTicketVO e : troubleTicketVOList) {
             List<PersonDO> handlerDOList = personMap.get(e.getId());
             List<PersonVO> handlerVOList = PersonCopier.INSTANCE.transform(handlerDOList);
             e.setHandlerList(handlerVOList);
-        });
 
-        // 描述数据填充
-        for (TroubleTicketVO e : troubleTicketVOList) {
+            if(troubleTicketProductLineMap.containsKey(e.getId())){
+                List<Long> productLineIds = troubleTicketProductLineMap.get(e.getId())
+                        .stream().map(BugOnlineProductLineDO::getProductLineId).collect(Collectors.toList());
+                List<String> productLineNames = productLineIds.stream().map(productLineMap::get).map(ProductLineDO::getName).collect(Collectors.toList());
+
+                List<ProductLineDO> productLines = productLineIds.stream().filter(productLineMap::containsKey)
+                        .map(productLineMap::get).collect(Collectors.toList());
+
+                List<Long> bizDomainIds = productLines.stream().map(ProductLineDO::getBizDomainId).collect(Collectors.toList());
+                List<String> bizDomainNames = bizDomainIds.stream()
+                        .filter(bizDomainDOMap::containsKey).map(bizDomainDOMap::get).map(BizDomainDO::getName).collect(Collectors.toList());
+
+                e.setProductLineNames(productLineNames);
+                e.setBizDomainNames(bizDomainNames);
+            }
             e.setIsMonitorDetectText(YesOrNoEnum.getTextByCode(e.getIsMonitorDetect()));
             e.setTroubleRankName(TroubleTicketRankEnum.getTextByCode(e.getTroubleRank()));
 
@@ -297,7 +335,6 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
                 e.setDutyTeamFlag(response.getDeleteFlag());
             }
         }
-
         // 返回分页数据
         PageInfo<TroubleTicketListDO> pageInfo = new PageInfo<>(troubleTicketDOList);
         PageQueryResult<TroubleTicketVO> pageQueryResult = new PageQueryResult<>();

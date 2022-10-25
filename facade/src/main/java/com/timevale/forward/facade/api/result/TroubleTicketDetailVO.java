@@ -1,6 +1,5 @@
 package com.timevale.forward.facade.api.result;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.timevale.mandarin.common.result.ToString;
@@ -59,11 +58,8 @@ public class TroubleTicketDetailVO extends ToString {
     @ApiModelProperty("处理人")
     private List<PersonVO> handlerList;
 
-    @ApiModelProperty("产品线id")
-    private Long productLineId;
-
-    @ApiModelProperty("产品线名称")
-    private String productLineName;
+    @ApiModelProperty("产品线")
+    private List<ProductLineVO> productLineList;
 
     @ApiModelProperty("影响客户数（家）")
     private Integer influenceCount;

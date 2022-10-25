@@ -98,7 +98,6 @@ public class TroubleTicketServiceImplTest extends AbstractTestNGSpringContextTes
     public void testGet(){
 
         TroubleTicketDO troubleTicketDO = new TroubleTicketDO();
-        troubleTicketDO.setProductLineId(1L);
         troubleTicketDO.setType(TroubleTicketTypeEnum.BIZ_TROUBLE.getCode());
         troubleTicketDO.setReason(TroubleTicketReasonEnum.FUNCTION_PROBLEM.getCode());
         troubleTicketDO.setTroubleRank(TroubleTicketRankEnum.P0.getCode());
