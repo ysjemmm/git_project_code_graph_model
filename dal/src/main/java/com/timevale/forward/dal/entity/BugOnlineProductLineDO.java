@@ -19,4 +19,10 @@ public class BugOnlineProductLineDO extends BaseDO {
      * 产品线id
      */
     private Long productLineId;
+
+
+    /**
+     * type
+     */
+    private Integer type;
 }

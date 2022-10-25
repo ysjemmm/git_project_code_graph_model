@@ -182,8 +182,8 @@
                pl.name productLineName,
                bd.name bizDomainName
         FROM trouble_ticket tt
-        LEFT JOIN trouble_ticket_product_line tp ON tt.id = tp.trouble_ticket_id AND tp.is_deleted = false
-        LEFT JOIN product_line pl ON tp.product_line_id = pl.id
+        LEFT JOIN bug_online_product_line bp ON tt.id = bp.bug_online_id AND bp.type =1  AND bp.is_deleted = false
+        LEFT JOIN product_line pl ON bp.product_line_id = pl.id
         LEFT JOIN biz_domain bd ON pl.biz_domain_id = bd.id
         <if test="disComplete != null and disComplete == true ">
         LEFT JOIN improvement_measure im ON tt.id = im.trouble_ticket_id  AND im.is_deleted = false

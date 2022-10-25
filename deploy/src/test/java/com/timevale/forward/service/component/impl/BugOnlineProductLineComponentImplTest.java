@@ -24,7 +24,7 @@ public class BugOnlineProductLineComponentImplTest extends AbstractTestNGSpringC
 
     @Test
     public void testUpdateEndDate() {
-        bugOnlineProductLineComponent.update(Lists.newArrayList(1L),1L);
+        bugOnlineProductLineComponent.update(Lists.newArrayList(1L),1L,1);
     }
 
 

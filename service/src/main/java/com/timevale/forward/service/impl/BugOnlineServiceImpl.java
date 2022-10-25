@@ -256,7 +256,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         // 查询对应产品线和业务域
         List<Long> bugOnlineIdList = bugOnlineVOList.stream().map(BugOnlineVO::getId).collect(Collectors.toList());
-        List<BugOnlineProductLineDO> bugOnlineProductLineDOList = bugOnlineProductLineMapper.selectByBugOnlineIdList(bugOnlineIdList);
+        List<BugOnlineProductLineDO> bugOnlineProductLineDOList = bugOnlineProductLineMapper.selectByBugOnlineIdList(bugOnlineIdList,BizProductLineTypeEnum.BUG_ONLINE.getCode());
 
 
         List<Long> productLineIdList = bugOnlineProductLineDOList.stream().map(BugOnlineProductLineDO::getProductLineId).collect(Collectors.toList());
@@ -373,7 +373,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         bugOnlineMapper.insert(bugOnlineDO);
 
-        bugOnlineProductLineComponent.add(bugOnlineAddReq.getProductLineIdList(), bugOnlineDO.getId());
+        bugOnlineProductLineComponent.add(bugOnlineAddReq.getProductLineIdList(), bugOnlineDO.getId(),BizProductLineTypeEnum.BUG_ONLINE.getCode());
 
         bugOnlineModelComponent.add(bugOnlineAddReq.getModelIds(), bugOnlineDO.getId());
 
@@ -452,6 +452,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         BugOnlineProductLineDO bugOnlineProductLineDO = new BugOnlineProductLineDO();
         bugOnlineProductLineDO.setBugOnlineId(bugOnlineReq.getId());
+        bugOnlineProductLineDO.setType(BizProductLineTypeEnum.BUG_ONLINE.getCode());
         bugOnlineProductLineDO.setIsDeleted(true);
         //删除线上bug产品线映射表里面的数据
         bugOnlineProductLineMapper.update(bugOnlineProductLineDO);
@@ -505,7 +506,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineMD oldBugOnlineMD = BugOnlineCopier.INSTANCE.change(bugOnlineDO);
 
         //保存老的产品线列表
-        List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineModifyReq.getId());
+        List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineModifyReq.getId(),BizProductLineTypeEnum.BUG_ONLINE.getCode());
 
         List<Long> oldModelList = bugOnlineModelMapper.selectModelIds(bugOnlineModifyReq.getId());
 
@@ -523,7 +524,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<PersonAddReq> recipients = bugOnlineModifyReq.getRecipients();
         personComponent.update(recipients, bugOnlineModifyReq.getId(), PersonTypeEnum.BUG_ONLINE_CC.getCode());
 
-        bugOnlineProductLineComponent.update(bugOnlineModifyReq.getProductLineIdList(), bugOnlineModifyReq.getId());
+        bugOnlineProductLineComponent.update(bugOnlineModifyReq.getProductLineIdList(), bugOnlineModifyReq.getId(),BizProductLineTypeEnum.BUG_ONLINE.getCode());
 
         bugOnlineModelComponent.update(bugOnlineModifyReq.getModelIds(), bugOnlineModifyReq.getId());
 
@@ -580,7 +581,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDetailVO bugOnlineDetailVO = BugOnlineCopier.INSTANCE.convert(bugOnlineDO);
 
         //通过线上bug和产品线映射表查询所有的产品线id
-        List<Long> productLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineId);
+        List<Long> productLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineId,BizProductLineTypeEnum.BUG_ONLINE.getCode());
 
         //如果产品线id不为空，批量查询产品线并进行类型转换
         if (CollectionUtils.isNotEmpty(productLineIdList)) {

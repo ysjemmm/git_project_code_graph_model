@@ -117,7 +117,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
         when(bugOnlineMapper.selectListByCondition(any())).thenReturn(Lists.newArrayList(new BugOnlineListDO() {{
             setId(1L);
         }}));
-        when(bugOnlineProductLineMapper.selectByBugOnlineIdList(any())).thenReturn(Lists.newArrayList(new BugOnlineProductLineDO() {{
+        when(bugOnlineProductLineMapper.selectByBugOnlineIdList(any(),any())).thenReturn(Lists.newArrayList(new BugOnlineProductLineDO() {{
             setProductLineId(1L);
             setBugOnlineId(1L);
         }}));
@@ -174,7 +174,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
             setOperatorId("2");
         }});
         when(bugLogMapper.selectByBugOfflineIdAndType(any(), any(), any())).thenReturn(Lists.newArrayList(new BugLogDO()));
-        when(bugOnlineProductLineMapper.selectProductLineIds(any())).thenReturn(Lists.newArrayList(2L));
+        when(bugOnlineProductLineMapper.selectProductLineIds(any(),any())).thenReturn(Lists.newArrayList(2L));
 
         MockedConstruction<BugOnlineModifyMsgEvent> construction = mockConstruction(BugOnlineModifyMsgEvent.class);
         construction.constructed();
@@ -199,7 +199,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
         when(fileMapper.select(any(), any())).thenReturn(Lists.newArrayList(new FileDO()));
         when(personMapper.select(any())).thenReturn(Lists.newArrayList(new PersonDO()));
         when(commentMapper.select(any(), any())).thenReturn(Lists.newArrayList(new CommentDO()));
-        when(bugOnlineProductLineMapper.selectProductLineIds(any())).thenReturn(Lists.newArrayList(2L));
+        when(bugOnlineProductLineMapper.selectProductLineIds(any(),any())).thenReturn(Lists.newArrayList(2L));
 
         bugOnlineService.get(bugOnlineDetailReq);
     }

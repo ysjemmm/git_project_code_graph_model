@@ -2,7 +2,7 @@
 <mapper namespace="com.timevale.forward.dal.dao.BugOnlineProductLineMapper">
     <select id="selectProductLineIds" resultType="Long">
         select product_line_id from bug_online_product_line
-        where bug_online_id = #{id} and is_deleted = 0
+        where bug_online_id = #{id} and type = #{type} and is_deleted = 0
     </select>
 
     <select id="selectByBugOnlineIdList" resultType="com.timevale.forward.dal.entity.BugOnlineProductLineDO">
@@ -16,15 +16,15 @@
                 </foreach>
             </if>
             <if test="true">
-                AND is_deleted = false
+                and type = #{type}   AND is_deleted = false
             </if>
         </where>
     </select>
 
     <insert id="batchInsert">
-        insert into bug_online_product_line(bug_online_id,product_line_id,create_man,create_man_id) values
+        insert into bug_online_product_line(bug_online_id,product_line_id,type,create_man,create_man_id) values
         <foreach collection="bugOnlineProductLineDOList" item="bugOnlineProductLineDO" separator=",">
-            (#{bugOnlineProductLineDO.bugOnlineId},#{bugOnlineProductLineDO.productLineId},#{createMan},#{createManId})
+            (#{bugOnlineProductLineDO.bugOnlineId},#{bugOnlineProductLineDO.productLineId},#{bugOnlineProductLineDO.type},#{createMan},#{createManId})
         </foreach>
     </insert>
 
@@ -43,6 +43,6 @@
                 modify_man = #{bugOnlineProductLineDO.modifyMan},
             </if>
         </set>
-        where bug_online_id = #{bugOnlineProductLineDO.bugOnlineId}
+        where bug_online_id = #{bugOnlineProductLineDO.bugOnlineId} and type = #{bugOnlineProductLineDO.type}
     </update>
 </mapper>

@@ -22,10 +22,11 @@ public class BugOnlineProductLineComponentImpl implements BugOnlineProductLineCo
     private BugOnlineProductLineMapper bugOnlineProductLineMapper;
 
     @Override
-    public void update(List<Long> productLineIdList, Long id) {
+    public void update(List<Long> productLineIdList, Long id,Integer type) {
         if (CollectionUtils.isNotEmpty(productLineIdList)) {
             BugOnlineProductLineDO bugOnlineProductLineDO = new BugOnlineProductLineDO();
             bugOnlineProductLineDO.setBugOnlineId(id);
+            bugOnlineProductLineDO.setType(type);
             bugOnlineProductLineDO.setIsDeleted(true);
             //删除之前的数据
             bugOnlineProductLineMapper.update(bugOnlineProductLineDO);
@@ -35,6 +36,7 @@ public class BugOnlineProductLineComponentImpl implements BugOnlineProductLineCo
                 BugOnlineProductLineDO bugOnlineProductLine = new BugOnlineProductLineDO();
                 bugOnlineProductLine.setBugOnlineId(id);
                 bugOnlineProductLine.setProductLineId(productLineId);
+                bugOnlineProductLineDO.setType(type);
                 bugOnlineProductLineDOList.add(bugOnlineProductLine);
             });
             //插入新的数据
@@ -43,7 +45,7 @@ public class BugOnlineProductLineComponentImpl implements BugOnlineProductLineCo
     }
 
     @Override
-    public void add(List<Long> productLineIdList, Long id) {
+    public void add(List<Long> productLineIdList, Long id,Integer type) {
         List<BugOnlineProductLineDO> bugOnlineProductLineDOList = new ArrayList<>();
         //如果产品线id不为空往线上bug和产品线的映射表中插入信息
         if (CollectionUtils.isNotEmpty(productLineIdList)) {
@@ -51,6 +53,7 @@ public class BugOnlineProductLineComponentImpl implements BugOnlineProductLineCo
                 BugOnlineProductLineDO bugOnlineProductLineDO = new BugOnlineProductLineDO();
                 bugOnlineProductLineDO.setBugOnlineId(id);
                 bugOnlineProductLineDO.setProductLineId(productLineId);
+                bugOnlineProductLineDO.setType(type);
                 bugOnlineProductLineDOList.add(bugOnlineProductLineDO);
             });
             bugOnlineProductLineMapper.batchInsert(bugOnlineProductLineDOList);

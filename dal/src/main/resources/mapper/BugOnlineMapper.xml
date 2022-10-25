@@ -12,7 +12,7 @@
         bo.reason, bo.belong, bo.dismiss_cause, bo.customer_name, bo.expect_launch_date, bo.source,
         bo.create_date, bo.modify_date,bo.area
         from bug_online bo
-        left join bug_online_product_line bopl on bo.id = bopl.bug_online_id
+        left join bug_online_product_line bopl on bo.id = bopl.bug_online_id AND bopl.type =0  AND bopl.is_deleted = false
         left join bug_online_model mo on bo.id = mo.bug_online_id and mo.is_deleted = false
         left join product_line pl on bopl.product_line_id = pl.id
         left join biz_domain bdm on pl.biz_domain_id = bdm.id

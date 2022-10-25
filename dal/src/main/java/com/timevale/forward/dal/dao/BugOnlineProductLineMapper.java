@@ -17,7 +17,7 @@ public interface BugOnlineProductLineMapper {
      * @param id 线上bug的id
      * @return 返回值
      */
-    List<Long> selectProductLineIds(@Param("id") Long id);
+    List<Long> selectProductLineIds(@Param("id") Long id,@Param("type") Integer type);
 
     /**
      * 选择通过id列表
@@ -25,7 +25,7 @@ public interface BugOnlineProductLineMapper {
      * @param bugOnlineIdList 错误在线id列表
      * @return BugOnlineProductLineDO 列表
      */
-    List<BugOnlineProductLineDO> selectByBugOnlineIdList(@Param("bugOnlineIdList") List<Long> bugOnlineIdList);
+    List<BugOnlineProductLineDO> selectByBugOnlineIdList(@Param("bugOnlineIdList") List<Long> bugOnlineIdList,@Param("type") Integer type);
 
     /**
      * 批量插入数据
