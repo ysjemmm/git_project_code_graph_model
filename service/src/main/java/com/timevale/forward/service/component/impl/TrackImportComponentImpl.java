@@ -32,6 +32,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.service.retry.RetryCallback;
 import com.timevale.mandarin.common.service.retry.RetryTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.core.io.ClassPathResource;
@@ -93,6 +94,8 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     private static final String TRACK_IMPORT_RESULT = "forward:track:import:result:";
     private static final String TRACK_IMPORT_RESULT_MESSAGE = "forward:track:import:result:message:";
 
+    private static final String PREPARED_PROP = "$预置属性";
+
     @Override
     public Integer getProgress(String userId) {
         String progressTag = TRACK_IMPORT_PROGRESS + userId;
@@ -108,7 +111,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
 
         Boolean cancel = TedisUtil.get(cancelTag);
         if (cancel != null) {
-            log.info("查询到用户{}取消操作，取消更新进度",userId);
+            log.info("查询到用户{}取消操作，取消更新进度", userId);
             return false;
         }
         log.info("更新用户{}导入进度：{}%", userId, progress);
@@ -118,14 +121,14 @@ public class TrackImportComponentImpl implements TrackImportComponent {
 
     @Override
     public void setExceptionMessage(String message, String userId) {
-        log.info("用户{}导入异常:{}",userId,message);
+        log.info("用户{}导入异常:{}", userId, message);
         String resultMessageTag = TRACK_IMPORT_RESULT_MESSAGE + userId;
         TedisUtil.set(resultMessageTag, message, 10, TimeUnit.MINUTES);
     }
 
     @Override
     public void deleteExceptionMessage(String userId) {
-        log.info("用户{}删除异常消息",userId);
+        log.info("用户{}删除异常消息", userId);
         String resultMessageTag = TRACK_IMPORT_RESULT_MESSAGE + userId;
         TedisUtil.delete(resultMessageTag);
     }
@@ -248,12 +251,24 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                     .doRead();
 
             // 校验
-            if (setProgress(RandomUtil.randomInt(1,10), userId)) {classifyCheck(trackEventList);}
-            if (setProgress(RandomUtil.randomInt(10,20), userId)) {eventNameCheck(trackEventList);}
-            if (setProgress(RandomUtil.randomInt(20,30), userId)) {propCheck(trackEventList, newTrackPropSet, userInfo);}
-            if (setProgress(RandomUtil.randomInt(30,40), userId)) {platformCheck(trackEventList);}
-            if (setProgress(RandomUtil.randomInt(40,50), userId)) {touchMomentCheck(trackEventList);}
-            if (setProgress(RandomUtil.randomInt(50,60), userId)) {envCheck(trackEventList);}
+            if (setProgress(RandomUtil.randomInt(1, 10), userId)) {
+                classifyCheck(trackEventList);
+            }
+            if (setProgress(RandomUtil.randomInt(10, 20), userId)) {
+                eventNameCheck(trackEventList);
+            }
+            if (setProgress(RandomUtil.randomInt(20, 30), userId)) {
+                propCheck(trackEventList, newTrackPropSet, userInfo);
+            }
+            if (setProgress(RandomUtil.randomInt(30, 40), userId)) {
+                platformCheck(trackEventList);
+            }
+            if (setProgress(RandomUtil.randomInt(40, 50), userId)) {
+                touchMomentCheck(trackEventList);
+            }
+            if (setProgress(RandomUtil.randomInt(50, 60), userId)) {
+                envCheck(trackEventList);
+            }
 
             // 判断是否有错误信息
             boolean failImport = trackEventList.stream().anyMatch(e -> CollectionUtil.isNotEmpty(e.getFailInfoList()));
@@ -287,7 +302,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 log.info("埋点导入失败：{}", e.getMessage());
             }
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-        }  finally {
+        } finally {
             // 配置导入结束状态，删除临时文件
             importEnd(userId);
             if (!importFile.delete()) {
@@ -311,20 +326,21 @@ public class TrackImportComponentImpl implements TrackImportComponent {
         FileDownloadDTO info;
         // 重试下载
         RetryTemplate retryTemplate = new RetryTemplate();
-        info = (FileDownloadDTO)retryTemplate.execute(new RetryCallback() {
+        info = (FileDownloadDTO) retryTemplate.execute(new RetryCallback() {
             @Override
             public Object doWithRetry() {
                 return FileUtil.getFileDownloadInfo(fileId, envUtils.getEnv());
             }
+
             @Override
             public boolean isComplete(Object result) {
                 FileDownloadDTO infoResult = (FileDownloadDTO) result;
-                log.info("获取文件信息请求，fileId: {}，result: {}",fileId,result);
+                log.info("获取文件信息请求，fileId: {}，result: {}", fileId, result);
                 return StringUtils.isNotEmpty(infoResult.getDownloadUrl());
             }
         });
-        if(info == null){
-            log.error("文件下载异常，fileId:{}",fileId);
+        if (info == null) {
+            log.error("文件下载异常，fileId:{}", fileId);
             throw new BaseBizRuntimeException("获取文件异常，导入失败");
         }
 
@@ -343,7 +359,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
         // 数据复制
         String downloadUrl = info.getDownloadUrl();
         try (InputStream ins = URLUtil.getStream(new URL(downloadUrl));
-             OutputStream ous = Files.newOutputStream(importFile.toPath())){
+             OutputStream ous = Files.newOutputStream(importFile.toPath())) {
             IoUtil.copy(ins, ous);
         } catch (IOException e) {
             log.error("复制数据时失败");
@@ -595,22 +611,31 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             List<TrackProp> trackPropList = trackEvent.getTrackPropList();
             if (CollectionUtil.isEmpty(trackPropList)) {
                 failInfoList.add("【格式错误】事件属性为必填字段，请检查后修改");
+            } else if (!PREPARED_PROP.equals(trackPropList.get(0).getPropNameCn())) {
+                failInfoList.add("【格式错误】事件首个属性中文名必须为 $预置属性，请检查后修改");
+            }
+            List<TrackProp> preparedProp = trackPropList.stream().filter(a -> PREPARED_PROP.equals(a.getPropNameCn())).collect(Collectors.toList());
+            if (preparedProp.size() > 1) {
+                failInfoList.add("【格式错误】事件属性中文名为 $预置属性 有且只能有一个 ，请检查后修改");
             }
             for (TrackProp e : trackPropList) {
                 String dataType = e.getDataType();
                 String propNameCn = e.getPropNameCn();
                 String propNameEn = e.getPropNameEn();
-
+                if (PREPARED_PROP.equals(propNameCn)) {
+                    //$预置属性无需检查,不用导入
+                    continue;
+                }
                 int failTag = failInfoList.size();
 
                 if (StrUtil.isEmpty(propNameCn)) {
                     failInfoList.add("【格式错误】属性中文名为必填字段，请检查后修改");
-                } else if(propNameCn.length() > 100) {
+                } else if (propNameCn.length() > 100) {
                     failInfoList.add("【格式错误】属性中文名字数已超过100字，请检查后修改");
                 }
                 if (StrUtil.isEmpty(propNameEn)) {
                     failInfoList.add("【格式错误】属性英文名为必填字段，请检查后修改");
-                } else if(propNameEn.length() > 100) {
+                } else if (propNameEn.length() > 100) {
                     failInfoList.add("【格式错误】属性英文名字数已超过100字，请检查后修改");
                 }
                 if (StrUtil.isEmpty(dataType)) {
@@ -618,13 +643,15 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 } else {
                     dataType = dataType.toUpperCase();
                     e.setDataType(dataType);
-                    if(!dateTypeSet.contains(dataType)) {
+                    if (!dateTypeSet.contains(dataType)) {
                         failInfoList.add("【属性错误】属性数据类型" + dataType + "不存在，请检查后修改");
                     }
                 }
 
                 // 格式正确，验证属性
-                if (failTag != failInfoList.size()) {continue;}
+                if (failTag != failInfoList.size()) {
+                    continue;
+                }
 
                 // 判断是否为默认属性
                 TrackPropDO defaultCmp = new TrackPropDO();
@@ -721,7 +748,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 platformList = new ArrayList<>(insertPlatformSet);
 
                 for (String s : platformList) {
-                    if(!platformSet.contains(s)) {
+                    if (!platformSet.contains(s)) {
                         failInfoList.add("【属性错误】" + s + "埋点平台不存在，请检查后修改");
                     } else if (s.equals(PlatformTypeEnum.SERVER.getText())) {
                         includeServer = true;
@@ -729,7 +756,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                         if (StrUtil.isEmpty(apiName) && failApiName) {
                             failApiName = false;
                             failInfoList.add("【格式错误】埋点平台含服务端时，接口名称为必填字段，请检查后修改");
-                        } else if(StrUtil.length(apiName) > 100 && failApiName) {
+                        } else if (StrUtil.length(apiName) > 100 && failApiName) {
                             failApiName = false;
                             failInfoList.add("【格式错误】接口名称字数已超过100字符，请检查后修改");
                         }
@@ -738,7 +765,8 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                         if (StrUtil.isEmpty(explanation) && failExplanation) {
                             failExplanation = false;
                             failInfoList.add("【格式错误】埋点平台含非服务端时，埋点位置说明为必填字段，请检查后修改");
-                        } if (StrUtil.length(explanation) > 500 && failExplanation) {
+                        }
+                        if (StrUtil.length(explanation) > 500 && failExplanation) {
                             failApiName = false;
                             failInfoList.add("【格式错误】埋点位置说明字数已超过500字符，请检查后修改");
                         }
@@ -820,7 +848,9 @@ public class TrackImportComponentImpl implements TrackImportComponent {
     private void outputFailInfo(List<TrackEvent> trackEventList, UserInfo userInfo) {
         log.info("埋点导入输出失败信息开始");
 
-        if (!setProgress(RandomUtil.randomInt(80,100), userInfo.getId())) {return;}
+        if (!setProgress(RandomUtil.randomInt(80, 100), userInfo.getId())) {
+            return;
+        }
         File outputFile = null;
         try {
             // 创建临时文件
@@ -867,7 +897,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
 
             log.info("写出错误信息");
             ClassPathResource resource = new ClassPathResource("TRACK-FAIL-TEMPLATE.xlsx");
-            try (InputStream ins = resource.getInputStream()){
+            try (InputStream ins = resource.getInputStream()) {
                 EasyExcel.write(outputFile)
                         .withTemplate(ins)
                         .registerWriteHandler(new TrackStyleStrategy())
@@ -900,11 +930,13 @@ public class TrackImportComponentImpl implements TrackImportComponent {
      *
      * @param trackEventList 跟踪事件列表
      */
-    private List<TrackEventDO> importInfo(List<TrackEvent> trackEventList,  Set<TrackPropDO> newTrackPropSet, String importFileId, UserInfo userInfo) {
+    private List<TrackEventDO> importInfo(List<TrackEvent> trackEventList, Set<TrackPropDO> newTrackPropSet, String importFileId, UserInfo userInfo) {
         log.info("开始导入数据");
 
         // 导入属性
-        if (!setProgress(RandomUtil.randomInt(70,80), userInfo.getId())) {return new ArrayList<>();}
+        if (!setProgress(RandomUtil.randomInt(70, 80), userInfo.getId())) {
+            return new ArrayList<>();
+        }
         List<TrackEventDO> trackEventDOList = new ArrayList<>();
         for (TrackEvent e : trackEventList) {
             TrackEventDO trackEventDO = new TrackEventDO();
@@ -929,7 +961,9 @@ public class TrackImportComponentImpl implements TrackImportComponent {
         trackEventMapper.batchInsert(trackEventDOList);
 
         // 属性新增
-        if (!setProgress(RandomUtil.randomInt(80,90), userInfo.getId())) {return new ArrayList<>();}
+        if (!setProgress(RandomUtil.randomInt(80, 90), userInfo.getId())) {
+            return new ArrayList<>();
+        }
         List<TrackPropDO> newTrackPropList = new ArrayList<>(newTrackPropSet);
         if (CollectionUtil.isNotEmpty(newTrackPropList)) {
             log.info("导入新属性");
@@ -940,28 +974,36 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                 .collect(Collectors.toMap(e -> (e.getCnName() + "-" + e.getEgName() + "-" + e.getDataType()), Function.identity(), (a, b) -> a));
 
         // 属性与事件关联
-        if (!setProgress(RandomUtil.randomInt(90,100), userInfo.getId())) {return new ArrayList<>();}
+        if (!setProgress(RandomUtil.randomInt(90, 100), userInfo.getId())) {
+            return new ArrayList<>();
+        }
         List<TrackEventPropDO> relationList = new ArrayList<>();
         for (int i = 0; i < trackEventDOList.size(); i++) {
             Long trackEventId = trackEventDOList.get(i).getId();
             List<TrackProp> trackPropList = trackEventList.get(i).getTrackPropList();
-            for (TrackProp trackProp : trackPropList) {
-                TrackEventPropDO trackEventPropDO = new TrackEventPropDO();
-                trackEventPropDO.setTrackEventId(trackEventId);
-                trackEventPropDO.setCreateMan(userInfo.getAlias() + "-" + userInfo.getName());
-                trackEventPropDO.setCreateManId(userInfo.getId());
+                for (TrackProp trackProp : trackPropList) {
+                    if (PREPARED_PROP.equals(trackProp.getPropNameCn())) {
+                        //因为首个属性为预置属性无需导入,无需建立关系
+                        continue;
+                    }
+                    TrackEventPropDO trackEventPropDO = new TrackEventPropDO();
+                    trackEventPropDO.setTrackEventId(trackEventId);
+                    trackEventPropDO.setCreateMan(userInfo.getAlias() + "-" + userInfo.getName());
+                    trackEventPropDO.setCreateManId(userInfo.getId());
 
-                Long trackPropId = trackProp.getId();
-                if (trackPropId == null) {
-                    TrackPropDO trackPropDO = newTrackPropMap.get(trackProp.getPropNameCn() + "-" + trackProp.getPropNameEn() + "-" + trackProp.getDataType());
-                    trackPropId = trackPropDO.getId();
+                    Long trackPropId = trackProp.getId();
+                    if (trackPropId == null) {
+                        TrackPropDO trackPropDO = newTrackPropMap.get(trackProp.getPropNameCn() + "-" + trackProp.getPropNameEn() + "-" + trackProp.getDataType());
+                        trackPropId = trackPropDO.getId();
+                    }
+                    trackEventPropDO.setTrackPropId(trackPropId);
+                    relationList.add(trackEventPropDO);
                 }
-                trackEventPropDO.setTrackPropId(trackPropId);
-                relationList.add(trackEventPropDO);
-            }
         }
-        log.info("导入事件属性关联关系");
-        trackEvenPropMapper.batchInsertNotIC(relationList);
+        if (CollectionUtils.isNotEmpty(relationList)) {
+            log.info("导入事件属性关联关系");
+            trackEvenPropMapper.batchInsertNotIC(relationList);
+        }
 
         // 导入记录
         trackImportLogComponent.successLog(importFileId, trackEventList.size(), userInfo);
