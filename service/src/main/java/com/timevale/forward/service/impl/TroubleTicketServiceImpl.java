@@ -315,7 +315,8 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
                 List<Long> bizDomainIds = productLines.stream().map(ProductLineDO::getBizDomainId).collect(Collectors.toList());
                 List<String> bizDomainNames = bizDomainIds.stream()
-                        .filter(bizDomainDOMap::containsKey).map(bizDomainDOMap::get).map(BizDomainDO::getName).collect(Collectors.toList());
+                        .filter(bizDomainDOMap::containsKey)
+                        .map(bizDomainDOMap::get).map(BizDomainDO::getName).distinct().collect(Collectors.toList());
 
                 e.setProductLineNames(productLineNames);
                 e.setBizDomainNames(bizDomainNames);
