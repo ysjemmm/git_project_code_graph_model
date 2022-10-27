@@ -3,6 +3,7 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.ProductDemandDocumentQueryList;
+import com.timevale.forward.facade.api.request.ProjectDocumentCheckReq;
 import com.timevale.forward.facade.api.request.ProjectDocumentReq;
 import com.timevale.forward.facade.api.result.ProductDemandDocumentVO;
 import com.timevale.forward.facade.api.result.ProjectDocumentVO;
@@ -65,10 +66,10 @@ public interface ProjectDocumentService {
 
     /**
      * 发布前检查
-     * @param projectId 项目id
-     * @return UED文档
+     * @param checkReq checkReq
+     * @return 异常信息
      */
-    BaseResult<List<String>> checkDocBeforeRelease(Long projectId);
+    BaseResult<List<String>> checkDocBeforeRelease(ProjectDocumentCheckReq checkReq);
 
 
 }

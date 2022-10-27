@@ -62,9 +62,6 @@ public class ProjectComponentImpl implements ProjectComponent {
     private ProjectProductDemandMapper projectProductDemandMapper;
 
     @Resource
-    private ProductBizDemandMapper productBizDemandMapper;
-
-    @Resource
     private ProjectProductLineMapper projectProductLineMapper;
 
     @Resource
@@ -78,6 +75,9 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Resource
     private BizLabelComponent bizLabelComponent;
+
+    @Resource
+    private ProjectFlowMapper projectFlowMapper;
 
 
     @Override
@@ -335,9 +335,9 @@ public class ProjectComponentImpl implements ProjectComponent {
     }
 
     @Override
-    public void fillInfo(List<ProjectNodeDO> projectNodes, ProjectDO projectDO) {
+    public void fillInfo(List<ProjectNodeDO> newProjectNodes, ProjectDO projectDO) {
         // 计算项目状态,新逻辑
-        Map<String, ProjectNodeDO> nodeMap = projectNodes.stream().collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
+        Map<String, ProjectNodeDO> nodeMap = newProjectNodes.stream().collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
         log.info("nodeMap={},,projectDO={}", nodeMap, projectDO);
         ProjectNodeDO demandStart = nodeMap.get(ProjectNodeEnum.START_PLAN.getText());
         ProjectNodeDO demandAudit = nodeMap.get(ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText());
@@ -391,6 +391,22 @@ public class ProjectComponentImpl implements ProjectComponent {
         } else if (devStart != null) {
             projectDO.setActualStartDate(devStart.getActualDate());
         }
+
+        List<ProjectNodeDO> projectNodeDOList = projectNodeMapper.get(projectDO.getId());
+        Map<String, ProjectNodeDO> projectNodeMap = projectNodeDOList.stream().collect(Collectors.toMap(ProjectNodeDO::getName, a -> a, (v1, v2) -> v1));
+        //找出可以发起审批的节点
+        List<ProjectNodeDO> startFlowNodes = newProjectNodes.stream().filter(a -> ProjectNodeEnum.canStartFlow(a.getName())).collect(Collectors.toList());
+        List<ProjectFlowDO> projectFlowDOList = projectFlowMapper.getByProjectId(projectDO.getId());
+        List<Integer> flowTypes = projectFlowDOList.stream().filter(a -> !FlowStatusEnum.PRE_EDIT.getCode().equals(a.getStatus()))
+                .map(ProjectFlowDO::getFlowType).collect(Collectors.toList());
+        startFlowNodes.forEach(a -> {
+            //有流程且有实际时间,实际时间不能修改
+            if (flowTypes.contains(ProjectNodeEnum.getCodeByName(a.getName())) && projectNodeMap.containsKey(a.getName())
+                    && !Objects.equals(projectNodeMap.get(a.getName()).getActualDate(), a.getActualDate())) {
+                throw new BaseBizRuntimeException(String.format("%s节点存在审批流程,不能修改实际时间,请刷新后重试", a.getName()));
+            }
+        });
+
         //提测节点
         if (submitTest != null) {
             ProjectNodeDO oldSubmitTest = projectNodeMapper.getByName(projectDO.getId(), ProjectNodeEnum.SUBMIT_TEST.getText());

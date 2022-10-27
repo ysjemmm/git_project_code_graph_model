@@ -187,7 +187,6 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         List<ImprovementMeasureDO> improvementMeasureDOList = improvementMeasureMapper.selectByTroubleTicketId(id);
         improvementMeasureDOList.parallelStream().forEach(e -> {
             improvementMeasureComponent.delete(e.getId());
-            improvementMeasureComponent.deleteTodoTask(e);
         });
 
         // 逻辑删除
@@ -310,7 +309,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
                         .stream().map(BugOnlineProductLineDO::getProductLineId).collect(Collectors.toList());
                 List<String> productLineNames = productLineIds.stream()
                         .filter(productLineMap::containsKey)
-                        .map(productLineMap::get).map(ProductLineDO::getName).collect(Collectors.toList());
+                        .map(productLineMap::get).map(ProductLineDO::getName).distinct().collect(Collectors.toList());
 
                 List<ProductLineDO> productLines = productLineIds.stream().filter(productLineMap::containsKey)
                         .map(productLineMap::get).collect(Collectors.toList());

@@ -11,6 +11,7 @@ import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectDocumentService;
 import com.timevale.forward.facade.api.query.ProductDemandDocumentQueryList;
+import com.timevale.forward.facade.api.request.ProjectDocumentCheckReq;
 import com.timevale.forward.facade.api.request.ProjectDocumentReq;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.FileTypeEnum;
@@ -21,7 +22,6 @@ import com.timevale.forward.service.component.ProjectDocumentComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.utils.ResultUtil;
-import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import org.apache.commons.collections.CollectionUtils;
@@ -155,19 +155,17 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
     }
 
     @Override
-    public BaseResult<List<String>> checkDocBeforeRelease(Long projectId) {
-        ProjectDO projectDO = projectMapper.get(projectId);
-        if (projectDO == null) {
-            throw new BaseBizRuntimeException("不存在该项目");
-        }
+    public BaseResult<List<String>> checkDocBeforeRelease(ProjectDocumentCheckReq checkReq) {
+        Long projectId=checkReq.getId();
+
         List<String> result = new ArrayList<>();
-        if (!ProjectTypeEnum.OPTIMIZE.getCode().equals(projectDO.getType())) {
+        if (!ProjectTypeEnum.OPTIMIZE.getCode().equals(checkReq.getType())) {
             ProjectDocument projectDocument = projectDocumentComponent.getByProjectId(projectId, 1);
             if (projectDocument == null) {
                 result.add("产品需求文档");
             }
         }
-        List<ProjectNodeDO> projectNodeDOList = projectNodeMapper.get(projectId);
+        List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(checkReq.getProjectNodes());
         List<Integer> codes = projectNodeDOList.stream()
                 .filter(a -> ProjectNodeEnum.UED_AUDIT.getText().equals(a.getName())
                         || ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText().equals(a.getName()))
@@ -185,9 +183,7 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
             }
         });
         TestBillDO testBillDO = testBillMapper.selectByProjectId(projectId);
-        boolean anyMatch = projectNodeDOList.stream().anyMatch(a -> ProjectNodeEnum.SUBMIT_TEST.getText().equals(a.getName()));
-        if (anyMatch && (testBillDO == null || StringUtils.isEmpty(testBillDO.getDocCreateManId()))) {
-            //有提测节点,没有提测单 或者提测单没有上传文件
+        if (testBillDO == null || StringUtils.isEmpty(testBillDO.getDocCreateManId())) {
             result.add("测试文档");
         }
         if (CollectionUtils.isNotEmpty(result)) {
