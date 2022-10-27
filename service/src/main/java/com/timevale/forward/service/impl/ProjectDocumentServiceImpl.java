@@ -185,7 +185,9 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
             }
         });
         TestBillDO testBillDO = testBillMapper.selectByProjectId(projectId);
-        if (testBillDO == null || StringUtils.isEmpty(testBillDO.getDocCreateManId())) {
+        boolean anyMatch = projectNodeDOList.stream().anyMatch(a -> ProjectNodeEnum.SUBMIT_TEST.getText().equals(a.getName()));
+        if (anyMatch && (testBillDO == null || StringUtils.isEmpty(testBillDO.getDocCreateManId()))) {
+            //有提测节点,没有提测单 或者提测单没有上传文件
             result.add("测试文档");
         }
         if (CollectionUtils.isNotEmpty(result)) {

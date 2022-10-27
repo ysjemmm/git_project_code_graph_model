@@ -308,7 +308,9 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
             if(troubleTicketProductLineMap.containsKey(e.getId())){
                 List<Long> productLineIds = troubleTicketProductLineMap.get(e.getId())
                         .stream().map(BugOnlineProductLineDO::getProductLineId).collect(Collectors.toList());
-                List<String> productLineNames = productLineIds.stream().map(productLineMap::get).map(ProductLineDO::getName).collect(Collectors.toList());
+                List<String> productLineNames = productLineIds.stream()
+                        .filter(productLineMap::containsKey)
+                        .map(productLineMap::get).map(ProductLineDO::getName).collect(Collectors.toList());
 
                 List<ProductLineDO> productLines = productLineIds.stream().filter(productLineMap::containsKey)
                         .map(productLineMap::get).collect(Collectors.toList());
