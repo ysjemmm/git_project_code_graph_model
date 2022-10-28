@@ -400,7 +400,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         List<Integer> flowTypes = projectFlowDOList.stream().filter(a -> !FlowStatusEnum.PRE_EDIT.getCode().equals(a.getStatus()))
                 .map(ProjectFlowDO::getFlowType).collect(Collectors.toList());
         startFlowNodes.forEach(a -> {
-            //有流程且有实际时间,实际时间不能修改
+            //有流程,实际时间不能修改
             if (flowTypes.contains(ProjectNodeEnum.getCodeByName(a.getName())) && projectNodeMap.containsKey(a.getName())
                     && !Objects.equals(projectNodeMap.get(a.getName()).getActualDate(), a.getActualDate())) {
                 throw new BaseBizRuntimeException(String.format("%s节点存在审批流程,不能修改实际时间,请刷新后重试", a.getName()));
