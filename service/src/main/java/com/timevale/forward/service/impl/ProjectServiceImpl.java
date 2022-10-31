@@ -491,7 +491,7 @@ public class ProjectServiceImpl implements ProjectService {
         // 节点状态
         projectDetailVO.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(projectDetailVO.getNodeStatus()));
         //详设
-        List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectId(projectId);
+        List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectIdAndType(projectId,ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getCode());
         if (CollectionUtils.isNotEmpty(projectFlowDos)) {
             projectFlowDos.sort(Comparator.comparing(ProjectFlowDO::getCreateDate).reversed());
             ProjectFlowDO oldFlowDo = projectFlowDos.get(0);

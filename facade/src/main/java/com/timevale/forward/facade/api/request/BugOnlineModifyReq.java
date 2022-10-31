@@ -40,6 +40,9 @@ public class BugOnlineModifyReq extends BugOnlineAddReq {
 
     @ApiModelProperty("关联的线上bug id")
     private Long linkBugId;
+
+    @ApiModelProperty("线上bug日志最新创建时间")
+    private Date bugLogLastCreateDate;
 }
 
 

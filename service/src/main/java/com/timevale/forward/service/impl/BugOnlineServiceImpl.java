@@ -256,7 +256,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         // 查询对应产品线和业务域
         List<Long> bugOnlineIdList = bugOnlineVOList.stream().map(BugOnlineVO::getId).collect(Collectors.toList());
-        List<BugOnlineProductLineDO> bugOnlineProductLineDOList = bugOnlineProductLineMapper.selectByBugOnlineIdList(bugOnlineIdList,BizProductLineTypeEnum.BUG_ONLINE.getCode());
+        List<BugOnlineProductLineDO> bugOnlineProductLineDOList = bugOnlineProductLineMapper.selectByBugOnlineIdList(bugOnlineIdList, BizProductLineTypeEnum.BUG_ONLINE.getCode());
 
 
         List<Long> productLineIdList = bugOnlineProductLineDOList.stream().map(BugOnlineProductLineDO::getProductLineId).collect(Collectors.toList());
@@ -373,7 +373,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         bugOnlineMapper.insert(bugOnlineDO);
 
-        bugOnlineProductLineComponent.add(bugOnlineAddReq.getProductLineIdList(), bugOnlineDO.getId(),BizProductLineTypeEnum.BUG_ONLINE.getCode());
+        bugOnlineProductLineComponent.add(bugOnlineAddReq.getProductLineIdList(), bugOnlineDO.getId(), BizProductLineTypeEnum.BUG_ONLINE.getCode());
 
         bugOnlineModelComponent.add(bugOnlineAddReq.getModelIds(), bugOnlineDO.getId());
 
@@ -390,8 +390,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         // 客户信息
-        if(CollectionUtils.isNotEmpty(bugOnlineAddReq.getCustomList())){
-            bugOnlineCustomComponent.add(bugOnlineAddReq.getCustomList(),bugOnlineDO.getId());
+        if (CollectionUtils.isNotEmpty(bugOnlineAddReq.getCustomList())) {
+            bugOnlineCustomComponent.add(bugOnlineAddReq.getCustomList(), bugOnlineDO.getId());
         }
         //bug日志表记录一条新增数据
         BugLogDO bugLogDO = new BugLogDO();
@@ -483,7 +483,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         if (CollectionUtils.isNotEmpty(bugLogStatusIdList)) {
             bugStatusOperatorMapper.deleteByBugLogId(bugLogStatusIdList);
         }
-        deleteLinkBug(bugOnlineDO.getId(),bugOnlineDO.getLinkBugId(),true);
+        deleteLinkBug(bugOnlineDO.getId(), bugOnlineDO.getLinkBugId(), true);
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
 
@@ -502,11 +502,19 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             throw new BaseBizRuntimeException("线上bug不存在");
         }
 
+        List<BugLogDO> checkBugLogList = bugLogMapper.selectByBugOfflineIdAndType(bugOnlineDO.getId(), BugLogTypeEnum.ONLINE.getCode(), false);
+        if (CollectionUtils.isNotEmpty(checkBugLogList)) {
+            checkBugLogList.sort(Comparator.comparing(BugLogDO::getCreateDate).reversed());
+            if (!Objects.equals(bugOnlineModifyReq.getBugLogLastCreateDate(), checkBugLogList.get(0).getCreateDate())) {
+                throw new BaseBizRuntimeException("当前页面数据发生变化,请刷新后重试");
+            }
+        }
+
         //老的线上bug比较对象
         BugOnlineMD oldBugOnlineMD = BugOnlineCopier.INSTANCE.change(bugOnlineDO);
 
         //保存老的产品线列表
-        List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineModifyReq.getId(),BizProductLineTypeEnum.BUG_ONLINE.getCode());
+        List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineModifyReq.getId(), BizProductLineTypeEnum.BUG_ONLINE.getCode());
 
         List<Long> oldModelList = bugOnlineModelMapper.selectModelIds(bugOnlineModifyReq.getId());
 
@@ -518,13 +526,13 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<FileAddReq> files = bugOnlineModifyReq.getFiles();
         fileComponent.update(files, bugOnlineModifyReq.getId(), FileTypeEnum.BUG_ONLINE.getCode());
 
-        bugOnlineCustomComponent.update(bugOnlineModifyReq.getCustomList(),bugOnlineModifyReq.getId());
+        bugOnlineCustomComponent.update(bugOnlineModifyReq.getCustomList(), bugOnlineModifyReq.getId());
 
         //更新抄送人表
         List<PersonAddReq> recipients = bugOnlineModifyReq.getRecipients();
         personComponent.update(recipients, bugOnlineModifyReq.getId(), PersonTypeEnum.BUG_ONLINE_CC.getCode());
 
-        bugOnlineProductLineComponent.update(bugOnlineModifyReq.getProductLineIdList(), bugOnlineModifyReq.getId(),BizProductLineTypeEnum.BUG_ONLINE.getCode());
+        bugOnlineProductLineComponent.update(bugOnlineModifyReq.getProductLineIdList(), bugOnlineModifyReq.getId(), BizProductLineTypeEnum.BUG_ONLINE.getCode());
 
         bugOnlineModelComponent.update(bugOnlineModifyReq.getModelIds(), bugOnlineModifyReq.getId());
 
@@ -581,7 +589,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDetailVO bugOnlineDetailVO = BugOnlineCopier.INSTANCE.convert(bugOnlineDO);
 
         //通过线上bug和产品线映射表查询所有的产品线id
-        List<Long> productLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineId,BizProductLineTypeEnum.BUG_ONLINE.getCode());
+        List<Long> productLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineId, BizProductLineTypeEnum.BUG_ONLINE.getCode());
 
         //如果产品线id不为空，批量查询产品线并进行类型转换
         if (CollectionUtils.isNotEmpty(productLineIdList)) {
@@ -660,18 +668,18 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDetailVO.setRecurrentName(BugOnlineRecurrentEnum.getTextByCode(bugOnlineDO.getRecurrent()));
         List<BugOnlineCustomDO> customDOList = bugOnlineCustomComponent.selectByBugOnlineId(bugOnlineDO.getId());
 
-        if(CollectionUtils.isNotEmpty(customDOList)){
+        if (CollectionUtils.isNotEmpty(customDOList)) {
             bugOnlineDetailVO.setCustomList(BugOnlineCustomCopier.INSTANCE.convertListToVO(customDOList));
         }
 
         //关联的bug/被关联的bug
-        if(bugOnlineDO.getLinkBugId()!=null){
+        if (bugOnlineDO.getLinkBugId() != null) {
             BugOnlineDO linkBug = bugOnlineMapper.selectById(bugOnlineDO.getLinkBugId());
-            BugOnlineLinkVO bugOnlineLinkVO=new BugOnlineLinkVO();
+            BugOnlineLinkVO bugOnlineLinkVO = new BugOnlineLinkVO();
             bugOnlineLinkVO.setId(linkBug.getId());
             bugOnlineLinkVO.setName(linkBug.getName());
             bugOnlineDetailVO.setLinkBug(bugOnlineLinkVO);
-        }else{
+        } else {
             List<BugOnlineDO> linkedBug = bugOnlineMapper.selectByLinkBugId(bugOnlineDO.getId());
             List<BugOnlineLinkVO> linkedBugs = linkedBug.stream().map(a -> {
                 BugOnlineLinkVO o = new BugOnlineLinkVO();
@@ -680,6 +688,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 return o;
             }).collect(Collectors.toList());
             bugOnlineDetailVO.setLinkedBugs(linkedBugs);
+        }
+        //日志最新时间
+        List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugOnlineDO.getId(), BugLogTypeEnum.ONLINE.getCode(), false);
+        if (CollectionUtils.isNotEmpty(bugLogDOList)) {
+            bugLogDOList.sort(Comparator.comparing(BugLogDO::getCreateDate).reversed());
+            bugOnlineDetailVO.setBugLogLastCreateDate(bugLogDOList.get(0).getCreateDate());
         }
         BusinessResult<BugOnlineDetailVO> businessResult = new BusinessResult<>();
         businessResult.setData(bugOnlineDetailVO);
@@ -1006,7 +1020,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         );
 
         List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(bugOnlineDO.getId());
-        bugOnlineDOList.forEach(a-> messageEventPublisher.publish(
+        bugOnlineDOList.forEach(a -> messageEventPublisher.publish(
                 new BugOnlineResubmitOnlineMsgEvent(
                         this,
                         bugOnlineDO.getName(),
@@ -1103,7 +1117,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                         bugOnlineDO.getId()
                 )
         );
-        deleteLinkBug(bugOnlineDO.getId(),bugOnlineDO.getLinkBugId(),false);
+        deleteLinkBug(bugOnlineDO.getId(), bugOnlineDO.getLinkBugId(), false);
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
@@ -1204,7 +1218,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         );
 
         List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(bugOnlineDO.getId());
-        bugOnlineDOList.forEach(a-> messageEventPublisher.publish(
+        bugOnlineDOList.forEach(a -> messageEventPublisher.publish(
                 new BugOnlineResubmitNoRepairMsgEvent(
                         this,
                         bugOnlineDO.getName(),
@@ -1418,7 +1432,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                         bugOnlineDO.getId()
                 )
         );
-        deleteLinkBug(bugOnlineDO.getId(),bugOnlineDO.getLinkBugId(),false);
+        deleteLinkBug(bugOnlineDO.getId(), bugOnlineDO.getLinkBugId(), false);
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
@@ -1610,10 +1624,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     public BaseResult<List<BugOnlineVO>> getByName(BugOnlineGetReq bugOnlineGetReq) {
         List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByName(bugOnlineGetReq.getLinkBugName());
         List<BugOnlineDO> filter = bugOnlineDOList.stream()
-                .filter(a -> !Objects.equals(a.getId(), bugOnlineGetReq.getId())&&!Objects.equals(a.getLinkBugId(), bugOnlineGetReq.getId()))
+                .filter(a -> !Objects.equals(a.getId(), bugOnlineGetReq.getId()) && !Objects.equals(a.getLinkBugId(), bugOnlineGetReq.getId()))
                 .collect(Collectors.toList());
-        if(CollectionUtils.isEmpty(filter)){
-           return BaseResult.success(Lists.emptyList());
+        if (CollectionUtils.isEmpty(filter)) {
+            return BaseResult.success(Lists.emptyList());
         }
         List<BugOnlineVO> result = filter.stream().map(BugOnlineCopier.INSTANCE::convertT).collect(Collectors.toList());
         return BaseResult.success(result);
@@ -1621,12 +1635,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
     public BaseResult<List<BugOnlineVO>> getBugOnlineByCustomId(Long customId) {
-        if(customId == null){
+        if (customId == null) {
             throw new BaseBizRuntimeException("参数有误");
         }
         List<BugOnlineListDO> bugOnlineListDOS = bugOnlineMapper.selectByCustomId(customId);
-        if(CollectionUtils.isEmpty(bugOnlineListDOS)){
-            return  BaseResult.success(new ArrayList<>());
+        if (CollectionUtils.isEmpty(bugOnlineListDOS)) {
+            return BaseResult.success(new ArrayList<>());
         }
         List<BugOnlineVO> bugOnlineVOList = BugOnlineCopier.INSTANCE.convert(bugOnlineListDOS);
         // 信息填充
@@ -1747,12 +1761,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         return bugLogDOList;
     }
 
-    private String updateLinkBug(Long id,Long linkBugId){
+    private String updateLinkBug(Long id, Long linkBugId) {
         BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(id);
         Long oldLinkBugId = bugOnlineDO.getLinkBugId();
         Long finalBugId = null;
-        String tips=StringUtils.EMPTY;
-        if(linkBugId!=null){
+        String tips = StringUtils.EMPTY;
+        if (linkBugId != null) {
             List<BugLogDO> bugLogDOList = new ArrayList<>();
             //查找哪些bug关联了当前bug,要将这些bug,重新关联到新的bug上
             List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(id);
@@ -1763,83 +1777,83 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             if (linkBug == null) {
                 throw new BaseBizRuntimeException("关联的线上bug不存在");
             }
-            finalBugId=linkBug.getId();
+            finalBugId = linkBug.getId();
             if (linkBug.getLinkBugId() != null) {
                 //要关联的bug B可能有关联的bug C   最终取C
-                finalBugId=linkBug.getLinkBugId();
-                tips="您关联的bug已存在关联关系，系统直接关联到它关联的bug~";
+                finalBugId = linkBug.getLinkBugId();
+                tips = "您关联的bug已存在关联关系，系统直接关联到它关联的bug~";
             }
-            if(updateIdA.contains(finalBugId)){
+            if (updateIdA.contains(finalBugId)) {
                 throw new BaseBizRuntimeException("关联的bug或其上级bug与当前bug相同,请修改后重试");
             }
-            bugOnlineMapper.updateByIds(updateIdA,finalBugId);
+            bugOnlineMapper.updateByIds(updateIdA, finalBugId);
 
             updateIdA.remove(id);
             //处理bug-a: a->关联了当前bugA,现关联finalBugId
             for (Long a : updateIdA) {
                 //a删除当前bugA
-                bugLogDOList.add(createBugLog(a,a,id,ButtonActionEnum.UN_LINK.getText()));
-                bugLogDOList.add(createBugLog(id,a,id,ButtonActionEnum.UN_LINK.getText()));
+                bugLogDOList.add(createBugLog(a, a, id, ButtonActionEnum.UN_LINK.getText()));
+                bugLogDOList.add(createBugLog(id, a, id, ButtonActionEnum.UN_LINK.getText()));
                 //a关联finalBugId
-                bugLogDOList.add(createBugLog(a,a,finalBugId,ButtonActionEnum.LINK.getText()));
-                bugLogDOList.add(createBugLog(finalBugId,a,finalBugId,ButtonActionEnum.LINK.getText()));
+                bugLogDOList.add(createBugLog(a, a, finalBugId, ButtonActionEnum.LINK.getText()));
+                bugLogDOList.add(createBugLog(finalBugId, a, finalBugId, ButtonActionEnum.LINK.getText()));
             }
-            if(CollectionUtils.isNotEmpty(bugLogDOList)){
+            if (CollectionUtils.isNotEmpty(bugLogDOList)) {
                 bugLogMapper.batchInsert(bugLogDOList);
             }
-        }else{
-            bugOnlineMapper.updateByIds(Lists.newArrayList(id),null);
+        } else {
+            bugOnlineMapper.updateByIds(Lists.newArrayList(id), null);
         }
-        log.info("更新关联bug,id:{},oldLinkBugId:{},linkBugId:{},finalBugId:{}",id,oldLinkBugId,linkBugId,finalBugId);
+        log.info("更新关联bug,id:{},oldLinkBugId:{},linkBugId:{},finalBugId:{}", id, oldLinkBugId, linkBugId, finalBugId);
         if (!Objects.equals(oldLinkBugId, finalBugId)) {
             //处理当前bug
             List<BugLogDO> bugLogDOList = new ArrayList<>();
-            if(oldLinkBugId!=null&&finalBugId==null){
+            if (oldLinkBugId != null && finalBugId == null) {
                 //由A->B 变成 A->无
-                bugLogDOList.add(createBugLog(id,id,oldLinkBugId,ButtonActionEnum.UN_LINK.getText()));
-                bugLogDOList.add(createBugLog(oldLinkBugId,id,oldLinkBugId,ButtonActionEnum.UN_LINK.getText()));
-            } else if(oldLinkBugId==null&&finalBugId!=null){
+                bugLogDOList.add(createBugLog(id, id, oldLinkBugId, ButtonActionEnum.UN_LINK.getText()));
+                bugLogDOList.add(createBugLog(oldLinkBugId, id, oldLinkBugId, ButtonActionEnum.UN_LINK.getText()));
+            } else if (oldLinkBugId == null && finalBugId != null) {
                 //由A->无 变成 A->B
-                bugLogDOList.add(createBugLog(id,id,finalBugId,ButtonActionEnum.LINK.getText()));
-                bugLogDOList.add(createBugLog(finalBugId,id,finalBugId,ButtonActionEnum.LINK.getText()));
-            }else if(oldLinkBugId!=null&&finalBugId!=null){
+                bugLogDOList.add(createBugLog(id, id, finalBugId, ButtonActionEnum.LINK.getText()));
+                bugLogDOList.add(createBugLog(finalBugId, id, finalBugId, ButtonActionEnum.LINK.getText()));
+            } else if (oldLinkBugId != null && finalBugId != null) {
                 //由A->B 变成 A->finalBugId
                 //删除老的
-                bugLogDOList.add(createBugLog(id,id,oldLinkBugId,ButtonActionEnum.UN_LINK.getText()));
-                bugLogDOList.add(createBugLog(oldLinkBugId,id,oldLinkBugId,ButtonActionEnum.UN_LINK.getText()));
+                bugLogDOList.add(createBugLog(id, id, oldLinkBugId, ButtonActionEnum.UN_LINK.getText()));
+                bugLogDOList.add(createBugLog(oldLinkBugId, id, oldLinkBugId, ButtonActionEnum.UN_LINK.getText()));
 
-                bugLogDOList.add(createBugLog(id,id,finalBugId,ButtonActionEnum.LINK.getText()));
-                bugLogDOList.add(createBugLog(finalBugId,id,finalBugId,ButtonActionEnum.LINK.getText()));
+                bugLogDOList.add(createBugLog(id, id, finalBugId, ButtonActionEnum.LINK.getText()));
+                bugLogDOList.add(createBugLog(finalBugId, id, finalBugId, ButtonActionEnum.LINK.getText()));
             }
             bugLogMapper.batchInsert(bugLogDOList);
         }
         return tips;
     }
 
-    private void deleteLinkBug(Long id,Long linkBugId,boolean deleteLinked){
+    private void deleteLinkBug(Long id, Long linkBugId, boolean deleteLinked) {
         //删除关联
-        log.info("删除关联bug,id:{},linkBugId:{},deleteLinked:{},",id,linkBugId,deleteLinked);
+        log.info("删除关联bug,id:{},linkBugId:{},deleteLinked:{},", id, linkBugId, deleteLinked);
         List<BugLogDO> bugLogDOList = new ArrayList<>();
-        if(linkBugId!=null){
-            bugOnlineMapper.updateByIds(Lists.newArrayList(id),null);
-            bugLogDOList.add(createBugLog(id,id,linkBugId,ButtonActionEnum.UN_LINK.getText()));
-            bugLogDOList.add(createBugLog(linkBugId,id,linkBugId,ButtonActionEnum.UN_LINK.getText()));
+        if (linkBugId != null) {
+            bugOnlineMapper.updateByIds(Lists.newArrayList(id), null);
+            bugLogDOList.add(createBugLog(id, id, linkBugId, ButtonActionEnum.UN_LINK.getText()));
+            bugLogDOList.add(createBugLog(linkBugId, id, linkBugId, ButtonActionEnum.UN_LINK.getText()));
         }
-        if(deleteLinked){
+        if (deleteLinked) {
             List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(id);
-            bugOnlineDOList.forEach(a->
-                    bugLogDOList.add(createBugLog(a.getId(),a.getId(),id,ButtonActionEnum.UN_LINK.getText())));
+            bugOnlineDOList.forEach(a ->
+                    bugLogDOList.add(createBugLog(a.getId(), a.getId(), id, ButtonActionEnum.UN_LINK.getText())));
             List<Long> updateIds = bugOnlineDOList.stream().map(BugOnlineDO::getId).collect(Collectors.toList());
-            if(CollectionUtils.isNotEmpty(updateIds)){
-                bugOnlineMapper.updateByIds(updateIds,null);
+            if (CollectionUtils.isNotEmpty(updateIds)) {
+                bugOnlineMapper.updateByIds(updateIds, null);
             }
         }
-        if(CollectionUtils.isNotEmpty(bugLogDOList)){
+        if (CollectionUtils.isNotEmpty(bugLogDOList)) {
             bugLogMapper.batchInsert(bugLogDOList);
         }
     }
 
-    private BugLogDO createBugLog(Long mainId,Long oldValue,Long newValue,String action){
+    private BugLogDO createBugLog(Long mainId, Long oldValue, Long newValue, String action) {
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(action);
         bugLogDO.setField(BugFieldEnum.LINK_BUG.getText());
@@ -1847,7 +1861,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
         bugLogDO.setOldValue(String.valueOf(oldValue));
         bugLogDO.setNewValue(String.valueOf(newValue));
-        return  bugLogDO;
+        return bugLogDO;
     }
 }
 
