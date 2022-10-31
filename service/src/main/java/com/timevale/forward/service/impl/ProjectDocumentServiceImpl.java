@@ -156,7 +156,7 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
 
     @Override
     public BaseResult<List<String>> checkDocBeforeRelease(ProjectDocumentCheckReq checkReq) {
-        Long projectId=checkReq.getId();
+        Long projectId = checkReq.getId();
 
         List<String> result = new ArrayList<>();
         if (!ProjectTypeEnum.OPTIMIZE.getCode().equals(checkReq.getType())) {
@@ -182,8 +182,10 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
                 result.add("详设文档");
             }
         });
+        boolean anyMatch = projectNodeDOList.stream().anyMatch(a -> ProjectNodeEnum.WRITE_TEST_CASES.getText().equals(a.getName()));
         TestBillDO testBillDO = testBillMapper.selectByProjectId(projectId);
-        if (testBillDO == null || StringUtils.isEmpty(testBillDO.getDocCreateManId())) {
+        if (anyMatch && (testBillDO == null || StringUtils.isEmpty(testBillDO.getDocCreateManId()))) {
+            //有编写测试用例节点,无文档
             result.add("测试文档");
         }
         if (CollectionUtils.isNotEmpty(result)) {
