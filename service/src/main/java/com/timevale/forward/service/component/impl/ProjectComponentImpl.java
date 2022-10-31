@@ -18,9 +18,7 @@ import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
-import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
-import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.query.QueryBase;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -390,45 +388,6 @@ public class ProjectComponentImpl implements ProjectComponent {
             projectDO.setActualStartDate(review.getActualDate());
         } else if (devStart != null) {
             projectDO.setActualStartDate(devStart.getActualDate());
-        }
-
-        List<ProjectNodeDO> projectNodeDOList = projectNodeMapper.get(projectDO.getId());
-        Map<String, ProjectNodeDO> projectNodeMap = projectNodeDOList.stream().collect(Collectors.toMap(ProjectNodeDO::getName, a -> a, (v1, v2) -> v1));
-        //找出可以发起审批的节点
-        List<ProjectNodeDO> startFlowNodes = newProjectNodes.stream().filter(a -> ProjectNodeEnum.canStartFlow(a.getName())).collect(Collectors.toList());
-        List<ProjectFlowDO> projectFlowDOList = projectFlowMapper.getByProjectId(projectDO.getId());
-        List<Integer> flowTypes = projectFlowDOList.stream().filter(a -> !FlowStatusEnum.PRE_EDIT.getCode().equals(a.getStatus()))
-                .map(ProjectFlowDO::getFlowType).collect(Collectors.toList());
-        startFlowNodes.forEach(a -> {
-            //有流程,实际时间不能修改
-            if (flowTypes.contains(ProjectNodeEnum.getCodeByName(a.getName())) && projectNodeMap.containsKey(a.getName())
-                    && !Objects.equals(projectNodeMap.get(a.getName()).getActualDate(), a.getActualDate())) {
-                throw new BaseBizRuntimeException(String.format("%s节点存在审批流程,不能修改实际时间,请刷新后重试", a.getName()));
-            }
-        });
-
-        //提测节点
-        if (submitTest != null) {
-            ProjectNodeDO oldSubmitTest = projectNodeMapper.getByName(projectDO.getId(), ProjectNodeEnum.SUBMIT_TEST.getText());
-            TestBillDO oldTestBillDO = testBillMapper.selectByProjectId(projectDO.getId());
-            if (submitTest.getActualDate() == null && oldSubmitTest != null && oldSubmitTest.getActualDate() != null && oldTestBillDO != null) {
-                throw new BaseBizRuntimeException("提测后,不能修改提测节点的实际时间,请刷新后重试");
-            }
-
-            if (oldTestBillDO != null && TestBillStatusEnum.TEST_SUCCESS.getCode().equals(oldTestBillDO.getStatus())
-                    && oldSubmitTest != null && !Objects.equals(submitTest.getPlanDate(), oldSubmitTest.getPlanDate())) {
-                //提测已经通过,修改计划时间,重算逾期时长
-                TestBillDO testBillDO = new TestBillDO();
-                if (submitTest.getActualDate().after(submitTest.getPlanDate())) {
-                    String planDate = DateUtil.parseToString(submitTest.getPlanDate(), DateFormatConst.DATE_FORMAT);
-                    String actualDate = DateUtil.parseToString(submitTest.getActualDate(), DateFormatConst.DATE_FORMAT);
-                    testBillDO.setDelayDay(DateUtil.getIntervalDays(planDate, actualDate));
-                } else {
-                    testBillDO.setDelayDay(0);
-                }
-                testBillDO.setProjectId(projectDO.getId());
-                testBillMapper.updateDelayDay(testBillDO, false);
-            }
         }
     }
 
