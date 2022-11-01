@@ -188,9 +188,6 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
             //有编写测试用例节点,无文档
             result.add("测试文档");
         }
-        if (CollectionUtils.isNotEmpty(result)) {
-            return BaseResult.success(result);
-        }
 
         List<ManDayDO> manDayDOList = manDayMapper.getByProjectId(projectId);
         if (CollectionUtils.isEmpty(manDayDOList)) {
