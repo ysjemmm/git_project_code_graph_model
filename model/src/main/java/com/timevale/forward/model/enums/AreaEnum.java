@@ -20,7 +20,7 @@ public enum AreaEnum {
 
     EAST_CHINA(2,"华东大区"),
 
-    SOUTH_WEST(3,"西南大区"),
+    WEST(3,"西部大区"),
 
     OTHER(9,"其他大区");
 

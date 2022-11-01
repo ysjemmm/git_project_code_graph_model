@@ -94,6 +94,6 @@ public class BugOnlineQueryList extends QueryBase {
     @ApiModelProperty("来源id")
     private String sourceId;
 
-    @ApiModelProperty("0华南大区，1华北大区，2华东大区，3西南大区，9其他大区")
+    @ApiModelProperty("0华南大区，1华北大区，2华东大区，3西部大区，9其他大区")
     private List<Integer> areas;
 }
