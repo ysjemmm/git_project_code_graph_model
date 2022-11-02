@@ -265,7 +265,10 @@ public class TrackEventComponentImpl implements TrackEventComponent {
             // 关联属性
             List<TrackEventPropDO> eventPropDOList = trackEvenPropMapper.select(TrackEventPropCondition.builder().trackEventId(e.getId()).build());
             List<Long> propIdList = eventPropDOList.stream().map(TrackEventPropDO::getTrackPropId).collect(Collectors.toList());
-            List<TrackPropDO> trackPropDOList = trackPropMapper.selectByIds(propIdList);
+            List<TrackPropDO> trackPropDOList = new ArrayList<>();
+            if (CollectionUtils.isNotEmpty(propIdList)) {
+                trackPropDOList = trackPropMapper.selectByIds(propIdList);
+            }
             trackPropDOList.addAll(defaultProps);
 
             List<TrackPropItemDO> trackPropItemDOList = new ArrayList<>();
@@ -297,13 +300,13 @@ public class TrackEventComponentImpl implements TrackEventComponent {
 
             try {
                 // 测试使用
-                if(e.getCnName().equals("工作流出错校验")) {
-                    int i  = 1 /0;
+                if (e.getCnName().equals("工作流出错校验")) {
+                    int i = 1 / 0;
                 }
 
-                log.info("[updateFlowId]:发起工作流，start:{}",start);
+                log.info("[updateFlowId]:发起工作流，start:{}", start);
                 String flowId = epeiusClient.start(start);
-                log.info("[updateFlowId]:工作流启动成功, 事件id:{},工作流id:{}", e.getId(),flowId);
+                log.info("[updateFlowId]:工作流启动成功, 事件id:{},工作流id:{}", e.getId(), flowId);
                 TrackEventDO eventDO = new TrackEventDO();
                 eventDO.setId(e.getId());
                 eventDO.setFlowId(flowId);
