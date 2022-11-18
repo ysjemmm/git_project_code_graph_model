@@ -49,4 +49,7 @@ public class ManDayReportQueryList extends QueryBase {
     @NotNull(message = "Tab标识必填")
     @ApiModelProperty(value = "提报tab标识：AUDIT待我审核的，REPORT我提报的人天，All全部人天", required = true)
     private String tabTag;
+
+    @ApiModelProperty("最新填报人天数据")
+    private Boolean lastReport;
 }

@@ -44,4 +44,7 @@ public class ProjectModifyReq extends ProjectAddReq {
 
     @ApiModelProperty("项目作废原因")
     private String invalidReason;
+
+    @ApiModelProperty("文档未填写原因")
+    private String unWriteReason;
 }

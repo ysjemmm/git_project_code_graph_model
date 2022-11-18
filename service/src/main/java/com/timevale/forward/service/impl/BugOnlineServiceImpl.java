@@ -1148,6 +1148,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         String operator = bugOnlineDO.getOperator();
         //保存老的修复失败原因
         String oldRepairFailReason = bugOnlineDO.getRepairFailReason();
+        Integer oldReason = bugOnlineDO.getReason();
 
         bugOnlineDO.setStatus(BugOnlineStatusEnum.BE_CONFIRM.getCode());
         bugOnlineDO.setLastOperatorId(bugOnlineDO.getOperatorId());
@@ -1155,54 +1156,41 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setOperatorId(bugOnlineDO.getProposerId());
         bugOnlineDO.setOperator(bugOnlineDO.getProposer());
         bugOnlineDO.setDismissCause(bugOnlineNoRepairReq.getDismissCause());
-        if (bugOnlineDO.getRepairFailReason() != null && !"".equals(bugOnlineDO.getRepairFailReason())) {
-            bugOnlineDO.setRepairFailReason("");
-        }
+        bugOnlineDO.setReason(null);
+        bugOnlineDO.setRepairFailReason(null);
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
 
-        BugLogDO bugLogDO = new BugLogDO();
-        bugLogDO.setAction(ButtonActionEnum.NO_REPAIR.getText());
-        bugLogDO.setOldValue(oldStatus);
-        bugLogDO.setNewValue(BugOnlineStatusEnum.BE_CONFIRM.getText());
-        bugLogDO.setMainId(bugOnlineNoRepairReq.getId());
-        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
-        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
-        //往bug日志表中插入一条线上bug状态变更数据
-        bugLogMapper.insert(bugLogDO);
+        //状态
+        List<BugLogDO> bugLogDOList = new ArrayList<>();
+        bugLogDOList.add(createBugLog(bugOnlineNoRepairReq.getId(), oldStatus, BugOnlineStatusEnum.BE_CONFIRM.getText()
+                , ButtonActionEnum.NO_REPAIR.getText(), BugLogFieldEnum.STATUS.getText()));
 
         //因为新增了驳回原因所以这里需要加入一条内容变更记录
-        BugLogDO bugLog = new BugLogDO();
-        bugLog.setField(BugFieldEnum.DISMISS_CAUSE.getText());
-        bugLog.setNewValue(BugOnlineDismissCauseEnum.getTextByCode(bugOnlineDO.getDismissCause()));
-        bugLog.setMainId(bugOnlineNoRepairReq.getId());
-        bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
-        //往bug日志表中插入一条线上bug内容变更数据
-        bugLogMapper.insert(bugLog);
+        String dismissCause = BugOnlineDismissCauseEnum.getTextByCode(bugOnlineDO.getDismissCause());
+        bugLogDOList.add(createBugLog(bugOnlineNoRepairReq.getId(), null, dismissCause
+                , null, BugFieldEnum.DISMISS_CAUSE.getText()));
 
         //如果修复失败原因有值还需要记录一条日志内容记录
-        if (oldRepairFailReason != null && !"".equals(oldRepairFailReason)) {
-            BugLogDO bug = new BugLogDO();
-            bug.setField(BugFieldEnum.REPAIR_FAIL_REASON.getText());
-            bug.setOldValue(oldRepairFailReason);
-            bug.setMainId(bugOnlineNoRepairReq.getId());
-            bug.setType(BugLogTypeEnum.ONLINE.getCode());
-            //往bug日志表中插入一条线上bug内容变更数据
-            bugLogMapper.insert(bug);
+        if (StringUtils.isNotEmpty(oldRepairFailReason)) {
+            bugLogDOList.add(createBugLog(bugOnlineNoRepairReq.getId(), oldRepairFailReason, null
+                    , null, BugFieldEnum.REPAIR_FAIL_REASON.getText()));
         }
 
         //如果经办人变了，则添加一条内容变更记录
         if (!operator.equals(bugOnlineDO.getOperator())) {
-            BugLogDO bug = new BugLogDO();
-            bug.setField(BugFieldEnum.OPERATOR.getText());
-            bug.setOldValue(operator);
-            bug.setNewValue(bugOnlineDO.getOperator());
-            bug.setMainId(bugOnlineNoRepairReq.getId());
-            bug.setType(BugLogTypeEnum.ONLINE.getCode());
-            //插入bug日志内容变更记录
-            bugLogMapper.insert(bug);
+            bugLogDOList.add(createBugLog(bugOnlineNoRepairReq.getId(), operator, bugOnlineDO.getOperator()
+                    , null, BugFieldEnum.OPERATOR.getText()));
         }
 
+        //bug原因
+        if (oldReason != null) {
+            String reasonText = BugOnlineReasonEnum.getTextByCode(oldReason);
+            bugLogDOList.add(createBugLog(bugOnlineNoRepairReq.getId(), reasonText, null
+                    , null, BugLogFieldEnum.REASON.getText()));
+        }
+
+        bugLogMapper.batchInsert(bugLogDOList);
         //bug状态处理人员表插入数据
         bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
@@ -1854,13 +1842,17 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     private BugLogDO createBugLog(Long mainId, Long oldValue, Long newValue, String action) {
+        return createBugLog(mainId, String.valueOf(oldValue), String.valueOf(newValue), action, BugFieldEnum.LINK_BUG.getText());
+    }
+
+    private BugLogDO createBugLog(Long mainId, String oldValue, String newValue, String action, String field) {
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(action);
-        bugLogDO.setField(BugFieldEnum.LINK_BUG.getText());
+        bugLogDO.setField(field);
         bugLogDO.setMainId(mainId);
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
-        bugLogDO.setOldValue(String.valueOf(oldValue));
-        bugLogDO.setNewValue(String.valueOf(newValue));
+        bugLogDO.setOldValue(oldValue);
+        bugLogDO.setNewValue(newValue);
         return bugLogDO;
     }
 }

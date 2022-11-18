@@ -876,6 +876,10 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
+        if (ProjectStatusEnum.canNotUpdate(oldStatus)) {
+            throw new BaseBizRuntimeException("项目处于发布或作废中，不可编辑，请刷新后重试");
+        }
+
     }
 
     private void checkPjEstablishPublishDateChange(ProjectDO oldProjectDO, Date pjEstablishPublishDate) {

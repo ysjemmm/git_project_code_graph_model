@@ -119,6 +119,11 @@ public enum BugOnlineReasonEnum {
      * 用户体验
      */
     USER_EXPERIENCE(21, "用户体验"),
+
+    /**
+     * 特殊文档问题
+     */
+    SPECIAL_DOC(22, "特殊文档问题"),
     ;
 
     private final Integer code;

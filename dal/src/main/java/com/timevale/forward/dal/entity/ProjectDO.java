@@ -132,4 +132,9 @@ public class ProjectDO extends BaseDO {
      */
     private Integer isAcceptance;
 
+    /**
+     * 文档未填写原因
+     */
+    private String unWriteReason;
+
 }

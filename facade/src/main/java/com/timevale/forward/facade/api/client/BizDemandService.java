@@ -147,4 +147,11 @@ public interface BizDemandService {
      * @return
      */
     BaseResult<List<BizDemandVO>> getBizDemandByCustomId(Long customId);
+
+    /**
+     * CRM开发资源申请流程通过,发送消息通知接收人
+     * @param receiverReq receiverReq
+     * @return Boolean
+     */
+    BaseResult<Boolean> noticeReceiver(BizDemandNoticeReceiverReq receiverReq);
 }

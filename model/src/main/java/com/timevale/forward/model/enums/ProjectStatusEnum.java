@@ -51,4 +51,8 @@ public enum ProjectStatusEnum {
         return code.equals(RELEASED.code) || code.equals(SUSPEND.code) || code.equals(INVALID.code);
     }
 
+    public static Boolean canNotUpdate(Integer code){
+        return code.equals(RELEASED.code) || code.equals(INVALID.code);
+    }
+
 }

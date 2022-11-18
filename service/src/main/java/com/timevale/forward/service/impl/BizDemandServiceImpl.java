@@ -1071,6 +1071,11 @@ public class BizDemandServiceImpl implements BizDemandService {
         return BaseResult.success(bizDemandVOList);
     }
 
+    @Override
+    public BaseResult<Boolean> noticeReceiver(BizDemandNoticeReceiverReq receiverReq) {
+        return BaseResult.success(true);
+    }
+
     /**
      * 新增业务需求的时候特殊处理线上bug的方法
      */
