@@ -37,4 +37,6 @@ public class ManDayReportCondition extends QueryBase {
     private Date weekEndDate;
 
     private List<String> reportorIds;
+
+    private Boolean lastReport;
 }

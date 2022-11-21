@@ -47,7 +47,24 @@
                mdr.create_date, mdr.create_man, mdr.create_man_id,mdr.reportor,mdr.reportor_id,
                md.week_start_date, md.week_end_date,
                p.name projectName
-        FROM man_day_report mdr
+        FROM
+
+        <if test="lastReport == null or lastReport == false ">
+            man_day_report mdr
+        </if>
+        <if test="lastReport != null and lastReport == true ">
+        <!-- 去重逻辑: 审核中20>通过0>驳回10-->
+             (select  * from
+             (select  * from
+             (select  max(id)  id,man_day_id, audit_status,audit_man_day, reject_reason,auditor, auditor_id,
+            create_date,create_man, create_man_id,reportor,reportor_id,
+            case when audit_status=20 then 3 when audit_status=0 then 2 when audit_status=10 then 1 end  as status
+            from man_day_report
+            group by man_day_id,audit_status) a
+            order by  status desc) b
+            group by man_day_id) mdr
+
+        </if>
             LEFT JOIN man_day md on mdr.man_day_id = md.id
             LEFT JOIN project p on md.project_id = p.id
         <where>
