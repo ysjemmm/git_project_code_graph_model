@@ -60,6 +60,14 @@
             create_date,create_man, create_man_id,reportor,reportor_id,
             case when audit_status=20 then 3 when audit_status=0 then 2 when audit_status=10 then 1 end  as status
             from man_day_report
+            <where>
+                <if test="auditStatuses != null and auditStatuses.size() > 0">
+                    AND audit_status in
+                    <foreach collection="auditStatuses" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
             group by man_day_id,audit_status) a
             order by  status desc) b
             group by man_day_id) mdr

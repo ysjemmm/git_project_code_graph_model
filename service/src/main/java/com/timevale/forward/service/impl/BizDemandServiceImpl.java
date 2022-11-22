@@ -340,12 +340,12 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 添加客户信息
         List<BizDemandCustomAddReq> bizDemandCustomAddReqs = bizDemandAddReq.getCustomList();
 
-        if(CollectionUtils.isNotEmpty(bizDemandCustomAddReqs)){
-            bizDemandCustomComponent.add(bizDemandCustomAddReqs,bizDemandDO.getId());
+        if (CollectionUtils.isNotEmpty(bizDemandCustomAddReqs)) {
+            bizDemandCustomComponent.add(bizDemandCustomAddReqs, bizDemandDO.getId());
         }
 
         //判断线上bug id是否有值，如果有值的话需要进行和线上bug相关的一些列操作
-        processBugInfo(bizDemandAddReq.getBugOfflineId(),bizDemandAddReq.getBugOnlineId(), bizDemandDO.getId());
+        processBugInfo(bizDemandAddReq.getBugOfflineId(), bizDemandAddReq.getBugOnlineId(), bizDemandDO.getId());
 
         // 通知需求接收人
         messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
@@ -436,7 +436,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 获取客户信息
         List<BizDemandCustomDO> bizDemandCustomDOList = bizDemandCustomComponent.selectByBizDemandId(bizDemandId);
 
-        if(CollectionUtils.isNotEmpty(bizDemandCustomDOList)){
+        if (CollectionUtils.isNotEmpty(bizDemandCustomDOList)) {
             bizDemandDetailVO.setCustomList(BizDemandCustomCopier.INSTANCE.convertListToVO(bizDemandCustomDOList));
         }
         return BaseResult.success(bizDemandDetailVO);
@@ -478,7 +478,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         // 客户信息
-        bizDemandCustomComponent.update(bizDemandModifyReq.getCustomList(),bizDemandModifyReq.getId());
+        bizDemandCustomComponent.update(bizDemandModifyReq.getCustomList(), bizDemandModifyReq.getId());
 
 
         // 添加附件
@@ -883,8 +883,8 @@ public class BizDemandServiceImpl implements BizDemandService {
                         BizChangeLogFieldEnum.PRODUCT_LINE.getText(),
                         true
                 );
-            } else{
-                log.error("对应产品线不存在: {},{}",oldProductLineId, productLineId);
+            } else {
+                log.error("对应产品线不存在: {},{}", oldProductLineId, productLineId);
             }
         }
 
@@ -1054,12 +1054,12 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<List<BizDemandVO>> getBizDemandByCustomId(Long customId) {
-        if(customId == null){
+        if (customId == null) {
             throw new BaseBizRuntimeException("参数有误");
         }
         List<BizDemandListDO> bizDemandDOS = bizDemandMapper.selectByCustomId(customId);
-        if(CollectionUtils.isEmpty(bizDemandDOS)){
-            return  BaseResult.success(new ArrayList<>());
+        if (CollectionUtils.isEmpty(bizDemandDOS)) {
+            return BaseResult.success(new ArrayList<>());
         }
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandDOS);
         // 信息填充
@@ -1073,13 +1073,23 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<Boolean> noticeReceiver(BizDemandNoticeReceiverReq receiverReq) {
+        log.info("开发资源申请流程通过,通知需求接收人:{}",receiverReq.getBizDemandIds());
+        List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(receiverReq.getBizDemandIds());
+        bizDemandDOList.forEach(a -> {
+            messageEventPublisher.publish(new BizDemandApprovedMsgEvent(
+                    this,
+                    a.getId(),
+                    a.getReceiveManId(),
+                    a.getName())
+            );
+        });
         return BaseResult.success(true);
     }
 
     /**
      * 新增业务需求的时候特殊处理线上bug的方法
      */
-    private void processBugInfo(Long bugOfflineId,Long bugOnlineId, Long bizDemandId) {
+    private void processBugInfo(Long bugOfflineId, Long bugOnlineId, Long bizDemandId) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         // 判断是否为线下bug转换
         if (bugOfflineId != null) {
@@ -1121,7 +1131,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             bugLogMapper.insert(reasonBugLogDO);
 
             //bug状态处理人员表插入数据
-            bugLogComponent.insertToBugStatusOperator(bugOfflineId,userInfo.getId(),userInfo.getFullAlias(),BugLogTypeEnum.OFFLINE.getCode());
+            bugLogComponent.insertToBugStatusOperator(bugOfflineId, userInfo.getId(), userInfo.getFullAlias(), BugLogTypeEnum.OFFLINE.getCode());
         }
         if (bugOnlineId != null) {
             BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineId);
@@ -1164,11 +1174,11 @@ public class BizDemandServiceImpl implements BizDemandService {
             bugLogMapper.insert(reasonBugLogDO);
 
             //bug状态处理人员表插入数据
-            bugLogComponent.insertToBugStatusOperator(bugOnlineId,userInfo.getId(),userInfo.getFullAlias());
+            bugLogComponent.insertToBugStatusOperator(bugOnlineId, userInfo.getId(), userInfo.getFullAlias());
         }
     }
 
-    private BugLogDO createBugLog(Long mainId,String oldValue,String newValue,String action,String field,Integer bugType){
+    private BugLogDO createBugLog(Long mainId, String oldValue, String newValue, String action, String field, Integer bugType) {
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(action);
         bugLogDO.setField(field);
