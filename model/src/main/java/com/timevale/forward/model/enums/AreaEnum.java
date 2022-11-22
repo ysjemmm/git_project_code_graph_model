@@ -22,9 +22,9 @@ public enum AreaEnum {
 
     WEST(3,"西部大区"),
 
-    SHANG_HAI(4,"上海"),
+    SHANG_HAI(4,"上海大区"),
 
-    MIDDLE_CHINA(5,"华中"),
+    MIDDLE_CHINA(5,"华中大区"),
 
     OTHER(9,"其他大区");
 

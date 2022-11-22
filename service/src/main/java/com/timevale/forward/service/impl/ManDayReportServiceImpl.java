@@ -96,7 +96,6 @@ public class ManDayReportServiceImpl implements ManDayReportService {
 
         Pair<Date, Date> dateDatePair = parseAndCheckDateRange(manDayReportQueryList.getWeekDateRange());
         condition.setWeekStartDate(dateDatePair.getLeft());
-        condition.setWeekEndDate(dateDatePair.getRight());
         condition.setCreateStartDate(DateUtil.getStartOfDay(condition.getCreateStartDate()));
         condition.setCreateEndDate(DateUtil.getEndOfDay(condition.getCreateEndDate()));
 

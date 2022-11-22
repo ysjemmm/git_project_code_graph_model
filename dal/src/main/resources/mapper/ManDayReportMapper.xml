@@ -42,6 +42,30 @@
         </foreach>
     </update>
 
+    <sql id="where_condition">
+        <if test="auditStatuses != null and auditStatuses.size() > 0">
+            AND mdr.audit_status in
+            <foreach collection="auditStatuses" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="reportorIds != null and reportorIds.size() > 0">
+            AND mdr.reportor_id in
+            <foreach collection="reportorIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="auditorIds != null and auditorIds.size() > 0">
+            AND mdr.auditor_id in
+            <foreach collection="auditorIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="createStartDate != null and createEndDate != null">
+            AND mdr.create_date &gt;= #{createStartDate}
+            AND mdr.create_date &lt;= #{createEndDate}
+        </if>
+    </sql>
     <select id="selectCondition" resultType="com.timevale.forward.dal.entity.ManDayReportListDO">
         SELECT mdr.id, mdr.audit_status, mdr.audit_man_day, mdr.reject_reason, mdr.auditor, mdr.auditor_id,
                mdr.create_date, mdr.create_man, mdr.create_man_id,mdr.reportor,mdr.reportor_id,
@@ -54,22 +78,19 @@
         </if>
         <if test="lastReport != null and lastReport == true ">
         <!-- 去重逻辑: 审核中20>通过0>驳回10-->
-             (select  * from
-             (select  * from
-             (select  max(id)  id,man_day_id, audit_status,audit_man_day, reject_reason,auditor, auditor_id,
-            create_date,create_man, create_man_id,reportor,reportor_id,
-            case when audit_status=20 then 3 when audit_status=0 then 2 when audit_status=10 then 1 end  as status
-            from man_day_report
-            <where>
-                <if test="auditStatuses != null and auditStatuses.size() > 0">
-                    AND audit_status in
-                    <foreach collection="auditStatuses" item="item" separator="," open="(" close=")">
-                        #{item}
-                    </foreach>
-                </if>
-            </where>
-            group by man_day_id,audit_status) a
-            order by  status desc) b
+            (select  * from
+                (select  * from
+                    (select  * from
+                        (select    id,man_day_id, audit_status,audit_man_day, reject_reason,auditor, auditor_id,
+                            create_date,create_man, create_man_id,reportor,reportor_id,
+                            case when audit_status=20 then 3 when audit_status=0 then 2 when audit_status=10 then 1 end  as status
+                            from man_day_report mdr
+                            <where>
+                                <include refid="where_condition"></include>
+                            </where>
+                             order by id desc)a
+                    group by man_day_id,audit_status) b
+                order by  status desc) c
             group by man_day_id) mdr
 
         </if>
@@ -78,27 +99,8 @@
         <where>
             <if test="projectName != null and projectName != ''">AND p.name like concat('%',#{projectName},'%')</if>
             <if test="rejectReason != null and rejectReason != ''">AND mdr.reject_reason like concat('%',#{rejectReason},'%')</if>
-            <if test="auditStatuses != null and auditStatuses.size() > 0">
-                AND mdr.audit_status in
-                <foreach collection="auditStatuses" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="reportorIds != null and reportorIds.size() > 0">
-                AND mdr.reportor_id in
-                <foreach collection="reportorIds" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="auditorIds != null and auditorIds.size() > 0">
-                AND mdr.auditor_id in
-                <foreach collection="auditorIds" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="createStartDate != null and createEndDate != null">
-                AND mdr.create_date &gt;= #{createStartDate}
-                AND mdr.create_date &lt;= #{createEndDate}
+            <if test="lastReport == null or lastReport == false ">
+                <include refid="where_condition"></include>
             </if>
             <if test="weekStartDate != null and weekEndDate != null">
                 AND md.week_start_date = #{weekStartDate}
