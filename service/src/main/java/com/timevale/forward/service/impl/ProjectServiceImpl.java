@@ -37,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -175,6 +176,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private TestBillMapper testBillMapper;
+
+    @Resource
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -386,7 +390,7 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO newProject = ProjectCopier.INSTANCE.convert(projectModifyReq);
         List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
 
-        Date oldPjEstablishPublishDate = oldProject.getPjEstablishPublishDate();
+        updateUnWriteReason(newProject);
 
         if (projectModifyReq.getDelayType() >= 1) {
             //有流程,计划时间不能变
@@ -438,7 +442,7 @@ public class ProjectServiceImpl implements ProjectService {
         personComponent.update(projectModifyReq.getPds(), newProject.getId(), PersonTypeEnum.PROJECT_PD.getCode());
 
         //立项时间变化
-        sendDingMsgIfPublishDateForward(newProject.getId(), oldPjEstablishPublishDate);
+        sendDingMsgIfPublishDateForward(newProject.getId(), oldProject.getPjEstablishPublishDate());
 
         //流程与版本信息处理
         processFlow(projectModifyReq);
@@ -1037,5 +1041,12 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
         return false;
+    }
+
+    //更新文档未填写原因,无论是发布是否成功,原因需要更新
+    private void updateUnWriteReason(ProjectDO newProject) {
+        if(StringUtils.isNotEmpty(newProject.getUnWriteReason())){
+            threadPoolTaskExecutor.execute(()->{projectMapper.update(newProject);});
+        }
     }
 }

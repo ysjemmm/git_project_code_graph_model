@@ -40,8 +40,9 @@
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             <if test="actualStartDate != null">actual_start_date = #{actualStartDate},</if>
             <if test="actualEndDate != null">actual_end_date = #{actualEndDate},</if>
-            <if test="suspendReason != null"> suspend_reason = #{suspendReason,jdbcType=VARCHAR},</if>
-            <if test="invalidReason != null"> invalid_reason = #{invalidReason,jdbcType=VARCHAR},</if>
+            <if test="suspendReason != null"> suspend_reason = #{suspendReason},</if>
+            <if test="invalidReason != null"> invalid_reason = #{invalidReason},</if>
+            <if test="unWriteReason != null"> un_write_reason = #{unWriteReason},</if>
         </set>
         <where>
             id = #{id}
@@ -74,7 +75,6 @@
             pj_establish_start_date = #{pjEstablishStartDate},
             pj_establish_publish_date = #{pjEstablishPublishDate},
             suspend_reason = #{suspendReason},
-            un_write_reason = #{unWriteReason}
         </set>
         <where>
             id = #{id}
