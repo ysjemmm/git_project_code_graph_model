@@ -105,8 +105,8 @@
             <if test="weekStartDate != null and weekEndDate != null">
                 AND md.week_start_date = #{weekStartDate}
             </if>
-            /*keep orderby*/
         </where>
+        /*keep orderby*/
     </select>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.ManDayReportDO">
