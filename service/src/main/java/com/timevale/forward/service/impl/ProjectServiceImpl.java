@@ -1046,7 +1046,10 @@ public class ProjectServiceImpl implements ProjectService {
     //更新文档未填写原因,无论是发布是否成功,原因需要更新
     private void updateUnWriteReason(ProjectDO newProject) {
         if(StringUtils.isNotEmpty(newProject.getUnWriteReason())){
-            threadPoolTaskExecutor.execute(()->{projectMapper.update(newProject);});
+            ProjectDO update=new ProjectDO();
+            update.setId(newProject.getId());
+            update.setUnWriteReason(newProject.getUnWriteReason());
+            threadPoolTaskExecutor.execute(()->{projectMapper.update(update);});
         }
     }
 }
