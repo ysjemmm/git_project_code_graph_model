@@ -42,13 +42,7 @@
         </foreach>
     </update>
 
-    <sql id="where_condition">
-        <if test="auditStatuses != null and auditStatuses.size() > 0">
-            AND mdr.audit_status in
-            <foreach collection="auditStatuses" item="item" separator="," open="(" close=")">
-                #{item}
-            </foreach>
-        </if>
+    <sql id="page_condition">
         <if test="reportorIds != null and reportorIds.size() > 0">
             AND mdr.reportor_id in
             <foreach collection="reportorIds" item="item" separator="," open="(" close=")">
@@ -86,7 +80,7 @@
                             case when audit_status=20 then 3 when audit_status=0 then 2 when audit_status=10 then 1 end  as status
                             from man_day_report mdr
                             <where>
-                                <include refid="where_condition"></include>
+                                <include refid="page_condition"></include>
                             </where>
                              order by id desc)a
                     group by man_day_id,audit_status) b
@@ -100,11 +94,18 @@
             <if test="projectName != null and projectName != ''">AND p.name like concat('%',#{projectName},'%')</if>
             <if test="rejectReason != null and rejectReason != ''">AND mdr.reject_reason like concat('%',#{rejectReason},'%')</if>
             <if test="lastReport == null or lastReport == false ">
-                <include refid="where_condition"></include>
+                <include refid="page_condition"></include>
+            </if>
+            <if test="auditStatuses != null and auditStatuses.size() > 0">
+                AND mdr.audit_status in
+                <foreach collection="auditStatuses" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
             </if>
             <if test="weekStartDate != null and weekEndDate != null">
                 AND md.week_start_date = #{weekStartDate}
             </if>
+            /*keep orderby*/
         </where>
     </select>
 
