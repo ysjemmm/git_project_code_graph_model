@@ -102,7 +102,7 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="weekStartDate != null and weekEndDate != null">
+            <if test="weekStartDate != null">
                 AND md.week_start_date = #{weekStartDate}
             </if>
         </where>
