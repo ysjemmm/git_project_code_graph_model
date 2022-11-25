@@ -116,4 +116,12 @@ public interface ProjectService {
      * @return 列表
      */
     BaseResult<List<ProjectProductLineVO>> getByName(String name);
+
+    /**
+     * 项目文档未填写原因
+     *
+     * @param reasonModifyReq 项目文档未填写原因
+     * @return Boolean
+     */
+    BaseResult<Boolean> modifyUnWriteReason(ProjectUnWriteReasonModifyReq reasonModifyReq);
 }
