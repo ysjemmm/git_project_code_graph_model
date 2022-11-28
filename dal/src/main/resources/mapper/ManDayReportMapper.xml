@@ -73,9 +73,9 @@
         <if test="lastReport != null and lastReport == true ">
         <!-- 去重逻辑: 审核中20>通过0>驳回10-->
             (select  * from
-                (select  distinct (b.status)bstatus,b.* from
+                (select * from
                     (select  * from
-                        (select    id,man_day_id, audit_status,audit_man_day, reject_reason,auditor, auditor_id,
+                        (select id,man_day_id, audit_status,audit_man_day, reject_reason,auditor, auditor_id,
                             create_date,create_man, create_man_id,reportor,reportor_id,
                             case when audit_status=20 then 3 when audit_status=0 then 2 when audit_status=10 then 1 end  as status
                             from man_day_report mdr
