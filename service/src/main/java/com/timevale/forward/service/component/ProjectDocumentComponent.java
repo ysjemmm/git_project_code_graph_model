@@ -1,6 +1,9 @@
 package com.timevale.forward.service.component;
 
 import com.timevale.forward.dal.entity.ProjectDocument;
+import com.timevale.forward.dal.entity.ProjectNodeDO;
+
+import java.util.List;
 
 /**
  * @author xiaoyun
@@ -27,4 +30,14 @@ public interface ProjectDocumentComponent {
      * @param projectDocument
      */
     void updateSelective(ProjectDocument projectDocument);
+
+    /**
+     *
+     * @param projectId 项目id
+     * @param projectNodeDOList 节点
+     * @param type 项目类型
+     * @return boolean
+     */
+    List<String> docNeedFillIn(Long projectId , List<ProjectNodeDO> projectNodeDOList, Integer type);
+
 }

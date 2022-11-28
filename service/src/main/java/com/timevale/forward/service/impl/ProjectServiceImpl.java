@@ -176,6 +176,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private TestBillMapper testBillMapper;
 
+    @Resource
+    private ProjectDocumentComponent projectDocumentComponent;
+
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
@@ -824,11 +827,8 @@ public class ProjectServiceImpl implements ProjectService {
 
         projectComponent.fillInfo(projectNodes, newProject);
 
-        if (ProjectStatusEnum.SUSPEND.getCode().equals(oldStatus)) {
-            // 编辑项目时，当状态是暂停,不修改项目状态
-            newProject.setStatus(oldStatus);
-        }
-        newProject.setNodeStatus(oldProject.getNodeStatus());
+        fieldUpdate(newProject, projectNodes,oldProject);
+
         projectMapper.fullUpdateById(newProject);
 
         if (!Objects.equals(newProject.getStatus(), oldStatus)) {
@@ -978,6 +978,21 @@ public class ProjectServiceImpl implements ProjectService {
                 }
                 testBillDO.setProjectId(id);
                 testBillMapper.updateDelayDay(testBillDO, false);
+            }
+        }
+    }
+
+    private void fieldUpdate(ProjectDO newProject,List<ProjectNodeDO> projectNodes,ProjectDO oldProject) {
+        newProject.setNodeStatus(oldProject.getNodeStatus());
+        newProject.setUnWriteReason(oldProject.getUnWriteReason());
+        if (ProjectStatusEnum.SUSPEND.getCode().equals(oldProject.getStatus())) {
+            // 编辑项目时，当状态是暂停,不修改项目状态
+            newProject.setStatus(oldProject.getStatus());
+        }else if (ProjectStatusEnum.RELEASED.getCode().equals(newProject.getStatus())) {
+            List<String> needFillIn = projectDocumentComponent.docNeedFillIn(newProject.getId(), projectNodes, newProject.getType());
+            if(CollectionUtils.isEmpty(needFillIn)){
+                //文档都已填写,清空未填写原因
+                newProject.setUnWriteReason(null);
             }
         }
     }

@@ -7,7 +7,10 @@ import com.google.common.collect.Multimaps;
 import com.timevale.crm.sdk.common.entity.AccountInfo;
 import com.timevale.crm.sdk.common.utils.SessionLocalUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dao.ManDayMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.ProjectFlowMapper;
+import com.timevale.forward.dal.dao.TestBillMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectDocumentService;
 import com.timevale.forward.facade.api.query.ProductDemandDocumentQueryList;
@@ -16,7 +19,6 @@ import com.timevale.forward.facade.api.request.ProjectDocumentReq;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.FileTypeEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
-import com.timevale.forward.model.enums.ProjectTypeEnum;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.ProjectDocumentComponent;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -25,11 +27,13 @@ import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestService
@@ -45,12 +49,6 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
     private ProjectFlowMapper projectFlowMapper;
     @Resource
     private ProjectDocumentComponent projectDocumentComponent;
-
-    @Resource
-    private ProjectMapper projectMapper;
-
-    @Resource
-    private ProjectNodeMapper projectNodeMapper;
 
     @Resource
     private ManDayMapper manDayMapper;
@@ -156,40 +154,10 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
 
     @Override
     public BaseResult<List<String>> checkDocBeforeRelease(ProjectDocumentCheckReq checkReq) {
-        Long projectId = checkReq.getId();
-
-        List<String> result = new ArrayList<>();
-        if (!ProjectTypeEnum.OPTIMIZE.getCode().equals(checkReq.getType())) {
-            ProjectDocument projectDocument = projectDocumentComponent.getByProjectId(projectId, 1);
-            if (projectDocument == null) {
-                result.add("产品需求文档");
-            }
-        }
         List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(checkReq.getProjectNodes());
-        List<Integer> codes = projectNodeDOList.stream()
-                .filter(a -> ProjectNodeEnum.UED_AUDIT.getText().equals(a.getName())
-                        || ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getText().equals(a.getName()))
-                .map(a -> ProjectNodeEnum.getCodeByName(a.getName())).collect(Collectors.toList());
+        List<String> result = projectDocumentComponent.docNeedFillIn(checkReq.getId(), projectNodeDOList, checkReq.getType());
 
-        List<ProjectFlowDO> projectFlowDOList = projectFlowMapper.getByProjectId(projectId);
-        List<Integer> types = projectFlowDOList.stream().map(ProjectFlowDO::getFlowType).collect(Collectors.toList());
-
-        codes.removeAll(types);
-        codes.forEach(a -> {
-            if (ProjectNodeEnum.UED_AUDIT.getCode().equals(a)) {
-                result.add("UED设计文档");
-            } else if (ProjectNodeEnum.TECHNICAL_DETAIL_REVIEW.getCode().equals(a)) {
-                result.add("详设文档");
-            }
-        });
-        boolean anyMatch = projectNodeDOList.stream().anyMatch(a -> ProjectNodeEnum.WRITE_TEST_CASES.getText().equals(a.getName()));
-        TestBillDO testBillDO = testBillMapper.selectByProjectId(projectId);
-        if (anyMatch && (testBillDO == null || StringUtils.isEmpty(testBillDO.getDocCreateManId()))) {
-            //有编写测试用例节点,无文档
-            result.add("测试文档");
-        }
-
-        List<ManDayDO> manDayDOList = manDayMapper.getByProjectId(projectId);
+        List<ManDayDO> manDayDOList = manDayMapper.getByProjectId(checkReq.getId());
         if (CollectionUtils.isEmpty(manDayDOList)) {
             result.add("人天明细");
         }
