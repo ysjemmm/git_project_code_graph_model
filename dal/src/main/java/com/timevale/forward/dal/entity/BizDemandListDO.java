@@ -1,10 +1,10 @@
 package com.timevale.forward.dal.entity;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
 import java.math.BigDecimal;
 import java.util.Date;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @author by YangXu
@@ -118,5 +118,10 @@ public class BizDemandListDO extends BaseDO {
      * 需求描述
      */
     private String desc;
+
+    /**
+     * 期望上线时间
+     */
+    private Integer hopeReleaseDate;
 }
 
