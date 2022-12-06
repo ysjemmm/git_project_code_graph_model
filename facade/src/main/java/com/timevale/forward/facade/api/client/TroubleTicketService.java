@@ -6,12 +6,11 @@ import com.timevale.forward.facade.api.query.TroubleTicketQueryList;
 import com.timevale.forward.facade.api.request.TroubleTicketAddReq;
 import com.timevale.forward.facade.api.request.TroubleTicketDeleteReq;
 import com.timevale.forward.facade.api.request.TroubleTicketModifyReq;
+import com.timevale.forward.facade.api.request.TroubleTicketRemindReq;
 import com.timevale.forward.facade.api.result.TroubleTicketDetailVO;
 import com.timevale.forward.facade.api.result.TroubleTicketVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
-
-import java.util.List;
 
 
 /**
@@ -60,5 +59,12 @@ public interface TroubleTicketService {
      * @return 故障单列表
      */
     BaseResult<PageQueryResult<TroubleTicketVO>> list(TroubleTicketQueryList troubleTicketQueryList);
+
+    /**
+     * 故障单催办
+     * @param troubleTicketRemindReq
+     * @return
+     */
+    BaseResult<Boolean>  remind(TroubleTicketRemindReq troubleTicketRemindReq);
 
 }

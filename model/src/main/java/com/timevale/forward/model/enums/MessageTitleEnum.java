@@ -59,6 +59,8 @@ public enum MessageTitleEnum {
 
     PROJECT_MAN_DAY_REMIND("您收到一条项目人天填报提醒"),
 
+    TROUBLE_TICKET_REMIND("故障改进措施未处理通知"),
+
     //项目验收
     PROJECT_ACCEPTANCE_START("项目验收发起通知"),
 

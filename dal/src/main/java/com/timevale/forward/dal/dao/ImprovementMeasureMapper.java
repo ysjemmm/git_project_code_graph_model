@@ -52,4 +52,11 @@ public interface ImprovementMeasureMapper {
      */
     List<ImprovementMeasureDO> selectByCondition(ImprovementMeasureCondition condition);
 
+    /**
+     * 根据ids查询
+     * @param ids
+     * @return
+     */
+    List<ImprovementMeasureDO> selectByIds(@Param("ids") List<Long> ids);
+
 }

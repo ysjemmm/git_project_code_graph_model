@@ -5,38 +5,89 @@ import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.condition.TroubleTicketCondition;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.BizDomainMapper;
+import com.timevale.forward.dal.dao.BugOnlineProductLineMapper;
+import com.timevale.forward.dal.dao.ImprovementMeasureMapper;
+import com.timevale.forward.dal.dao.PersonMapper;
+import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.dao.TroubleTicketMapper;
+import com.timevale.forward.dal.entity.BizDomainDO;
+import com.timevale.forward.dal.entity.BugOnlineProductLineDO;
+import com.timevale.forward.dal.entity.FileDO;
+import com.timevale.forward.dal.entity.ImprovementMeasureDO;
+import com.timevale.forward.dal.entity.PersonDO;
+import com.timevale.forward.dal.entity.ProductLineDO;
+import com.timevale.forward.dal.entity.TroubleTicketDO;
+import com.timevale.forward.dal.entity.TroubleTicketListDO;
 import com.timevale.forward.facade.api.client.TroubleTicketService;
 import com.timevale.forward.facade.api.query.TroubleTicketQueryList;
-import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.facade.api.request.FileAddReq;
+import com.timevale.forward.facade.api.request.ImprovementMeasureAddReq;
+import com.timevale.forward.facade.api.request.PersonAddReq;
+import com.timevale.forward.facade.api.request.TroubleTicketAddReq;
+import com.timevale.forward.facade.api.request.TroubleTicketDeleteReq;
+import com.timevale.forward.facade.api.request.TroubleTicketModifyReq;
+import com.timevale.forward.facade.api.request.TroubleTicketRemindReq;
+import com.timevale.forward.facade.api.result.FileVO;
+import com.timevale.forward.facade.api.result.PersonVO;
+import com.timevale.forward.facade.api.result.ProductLineVO;
+import com.timevale.forward.facade.api.result.TroubleTicketDetailVO;
+import com.timevale.forward.facade.api.result.TroubleTicketVO;
+import com.timevale.forward.model.enums.AscriptionEnum;
+import com.timevale.forward.model.enums.BizProductLineTypeEnum;
+import com.timevale.forward.model.enums.FileTypeEnum;
+import com.timevale.forward.model.enums.ImprovementMeasureStatusEnum;
+import com.timevale.forward.model.enums.OrderCollationEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.TroubleTicketCauseEnum;
+import com.timevale.forward.model.enums.TroubleTicketDuringTimeEnum;
+import com.timevale.forward.model.enums.TroubleTicketInfluenceScopeEnum;
+import com.timevale.forward.model.enums.TroubleTicketRankEnum;
+import com.timevale.forward.model.enums.TroubleTicketReasonEnum;
+import com.timevale.forward.model.enums.TroubleTicketTypeEnum;
+import com.timevale.forward.model.enums.YesOrNoEnum;
+import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BugOnlineProductLineComponent;
+import com.timevale.forward.service.component.FileComponent;
+import com.timevale.forward.service.component.ImprovementMeasureComponent;
+import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.component.impl.PersonComponentImpl;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProductLineCopier;
 import com.timevale.forward.service.copy.TroubleTicketCopier;
+import com.timevale.forward.service.observer.event.TroubleTicketRemindMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.CollectionUtils;
+import com.timevale.mandarin.base.util.DateUtils;
+import com.timevale.mandarin.base.util.StringUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
-import lombok.extern.slf4j.Slf4j;
+
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author by YangXu
@@ -74,6 +125,10 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
     @Resource
     private BizDomainMapper bizDomainMapper;
+
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
+
 
 
     @Override
@@ -344,5 +399,31 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
         return BaseResult.success(pageQueryResult);
+    }
+
+    @Override
+    public BaseResult<Boolean> remind(TroubleTicketRemindReq troubleTicketRemindReq) {
+        Long id = troubleTicketRemindReq.getId();
+        TroubleTicketDO troubleTicketDO = troubleTicketMapper.selectById(id);
+        if(troubleTicketDO == null){
+            throw new BaseBizRuntimeException("不存在对应的故障工单");
+        }
+        // 自己提的故障单才可以催办
+        String userId = LocalSessionUtils.getUserInfo().getId();
+        if(!StringUtils.equals(troubleTicketDO.getCreateManId(),userId)){
+            throw new BaseBizRuntimeException("抱歉，由于故障单不是您创建的，无法催办");
+        }
+        List<ImprovementMeasureDO> improvementMeasureDOList = improvementMeasureMapper.selectByIds(troubleTicketRemindReq.getImprovementMeasureIds());
+        if(CollectionUtils.isEmpty(improvementMeasureDOList)){
+            throw new BaseBizRuntimeException("没有改进措施可以催办");
+        }
+        improvementMeasureDOList = improvementMeasureDOList.stream().filter(improvementMeasureDO -> ImprovementMeasureStatusEnum.PENDING.getCode().equals(improvementMeasureDO.getStatus())).collect(Collectors.toList());
+        if(CollectionUtils.isEmpty(improvementMeasureDOList)){
+            throw new BaseBizRuntimeException("没有改进措施可以催办");
+        }
+        Map<String,List<ImprovementMeasureDO>> executorImprovementMeasureGroupMap = improvementMeasureDOList.stream().collect(Collectors.groupingBy(ImprovementMeasureDO::getExecutorId));
+
+        executorImprovementMeasureGroupMap.forEach((k,v)-> messageEventPublisher.publish(new TroubleTicketRemindMsgEvent(this,troubleTicketDO.getName(),k,troubleTicketDO.getId(), DateUtils.getNewFormatDateString(DateUtils.now()),v.size())));
+        return  BaseResult.success(true);
     }
 }

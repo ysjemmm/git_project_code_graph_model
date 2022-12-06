@@ -126,7 +126,7 @@
                 )
             </if>
             <if test="isSystemCloseBug!=null and isSystemCloseBug==true">
-                and  bo.status =2 and  bo.id in (select bl.main_id from bug_log bl where b1.new_value='关闭' and bl.create_man_id ='SYSTEM' and b1.is_deleted = false)
+                and  bo.status =2 and  bo.id in (select bl.main_id from bug_log bl where bl.new_value='关闭' and bl.create_man_id ='SYSTEM' and bl.is_deleted = false)
              </if>
             <if test="true">
                 and bo.is_deleted = false

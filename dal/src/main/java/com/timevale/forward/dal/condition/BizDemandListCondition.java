@@ -2,11 +2,12 @@ package com.timevale.forward.dal.condition;
 
 import com.timevale.forward.dal.annotation.WildcardEscape;
 import com.timevale.mandarin.common.query.QueryBase;
-import lombok.Builder;
-import lombok.Data;
 
 import java.util.Date;
 import java.util.List;
+
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * @author by YangXu
@@ -146,5 +147,10 @@ public class BizDemandListCondition extends QueryBase {
      */
     @WildcardEscape
     private String desc;
+
+    /**
+     * 期望上线日期列表
+     */
+    private List<Integer> hopeReleaseDateList;
 
 }

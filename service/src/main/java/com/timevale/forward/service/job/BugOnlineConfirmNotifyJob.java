@@ -30,7 +30,6 @@ public class BugOnlineConfirmNotifyJob extends IJobHandler {
 
     @Override
     public ReturnT<String> execute(String s) {
-        autoConfirmLimitDay = 1;
         bugOnlineComponent.autoNoticeCloseBugIfBeConfirm(autoConfirmLimitDay-1);
         return ReturnT.SUCCESS;
     }
