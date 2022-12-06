@@ -60,4 +60,8 @@ public class BizDemandMD extends BaseMD {
     @FieldCompare(fieldName = "项目名称")
     private String customerDevProjectName;
 
+    @FieldCompare(fieldName = "期望上线时间", enumClass = PlanReleaseDateEnum.class)
+    private Integer hopeReleaseDate;
+
+
 }
