@@ -1,11 +1,12 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.forward.dal.annotation.WildcardEscape;
-import lombok.Builder;
-import lombok.Data;
 
 import java.util.Date;
 import java.util.List;
+
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * @author xingyun
@@ -125,5 +126,10 @@ public class BugOnlineListCondition {
      * 0华南大区，1华北大区，2华东大区，3西部大区，9其他大区
      */
     private List<Integer> areas;
+
+    /**
+     * 是否是系统关闭的bug
+     */
+    private Boolean isSystemCloseBug;
 
 }

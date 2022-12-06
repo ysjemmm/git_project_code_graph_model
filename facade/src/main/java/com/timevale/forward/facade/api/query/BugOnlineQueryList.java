@@ -2,13 +2,14 @@ package com.timevale.forward.facade.api.query;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.timevale.mandarin.common.query.QueryBase;
+
+import java.util.Date;
+import java.util.List;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.Date;
-import java.util.List;
 
 /**
  * @Date 2022/3/17 14:20
@@ -96,4 +97,7 @@ public class BugOnlineQueryList extends QueryBase {
 
     @ApiModelProperty("0华南大区，1华北大区，2华东大区，3西部大区，9其他大区")
     private List<Integer> areas;
+
+    @ApiModelProperty("是否是系统关闭bug")
+    private Boolean isSystemCloseBug;
 }

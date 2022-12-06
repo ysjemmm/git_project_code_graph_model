@@ -11,18 +11,23 @@ import com.timevale.forward.model.enums.ButtonActionEnum;
 import com.timevale.forward.service.component.BugLogComponent;
 import com.timevale.forward.service.component.BugOnlineComponent;
 import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.service.observer.event.BugOnlineConfirmMsgEvent;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.date.DateUtil;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xingyun
@@ -40,6 +45,10 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
 
     @Resource
     private BugLogComponent bugLogComponent;
+
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
+
 
 
     @Override
@@ -65,6 +74,38 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
             updateBugIds.forEach(this::addLog);
         }
         log.info("待确认线上bug自动关闭-完成,更新id:{}",updateBugIds);
+    }
+
+    @Override
+    public void autoNoticeCloseBugIfBeConfirm(int autoCloseLimitDay) {
+        log.info("待确认线上bug自动关闭前钉钉通知-开始:{}",autoCloseLimitDay);
+        List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByStatus(Lists.newArrayList(BugOnlineStatusEnum.BE_CONFIRM.getCode()));
+        Date today = new Date();
+        List<BugOnlineDO> noticeBugOnlies = new ArrayList<>();
+        List<Long> noticeIds = new ArrayList<>();
+        bugOnlineDOList.forEach(a -> {
+            List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(a.getId(), BugLogTypeEnum.ONLINE.getCode(), true)
+                    .stream().filter(b -> BugOnlineStatusEnum.BE_CONFIRM.getText().equals(b.getNewValue())).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(bugLogDOList)) {
+                bugLogDOList.sort(Comparator.comparing(BugLogDO::getCreateDate).reversed());
+                Date createDate = bugLogDOList.get(0).getCreateDate();
+                if (DateUtil.getIntervalDays(today, createDate) >= autoCloseLimitDay) {
+                    noticeBugOnlies.add(a);
+                    noticeIds.add(a.getId());
+                }
+            }
+        });
+        if(CollectionUtils.isNotEmpty(noticeBugOnlies)){
+            // 发送通知
+            noticeBugOnlies.forEach(n-> messageEventPublisher.publish(new BugOnlineConfirmMsgEvent(
+                    this,
+                    n.getName(),
+                   n.getProposerId(),
+                    n.getId()
+            )));
+        }
+        log.info("待确认线上bug自动关闭前钉钉通知-结束:{}",noticeIds);
+
     }
 
     private void addLog(Long bugOnlineId) {
