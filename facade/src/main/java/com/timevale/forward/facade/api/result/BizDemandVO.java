@@ -3,14 +3,15 @@ package com.timevale.forward.facade.api.result;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.timevale.mandarin.common.result.ToString;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @author by YangXu
@@ -112,4 +113,10 @@ public class BizDemandVO extends ToString {
 
     @ApiModelProperty("需求描述")
     private String desc;
+
+    @ApiModelProperty("期望上线时间0(1月),1(2月),2(3月),3(4月),4(5月),5(6月),7(8月),8(9月),9(10月),10(11月),11(12月)")
+    private Integer hopeReleaseDate;
+
+    @ApiModelProperty("期望上线时间名称")
+    private String hopeReleaseDateText;
 }
