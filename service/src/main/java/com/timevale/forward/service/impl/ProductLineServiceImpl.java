@@ -23,13 +23,15 @@ import com.timevale.forward.service.copy.ProductLineCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
-import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author by YangXu
@@ -87,14 +89,24 @@ public class ProductLineServiceImpl implements ProductLineService {
 
         List<ProductLineDO> productLineDOList = productLineMapper.selectAllProductLine();
 
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectAllBizDomain();
+
+
         List<ProductLineModelVO> productLineVOList = ProductLineCopier.INSTANCE.change(productLineDOList);
 
         List<ModelDO> modelDOList = modelMapper.selectAllModel();
         List<ModelVO> modelVOList = ModelCopier.INSTANCE.convert(modelDOList);
         Map<Long, List<ModelVO>> modelMap = modelVOList.stream().collect(Collectors.groupingBy(ModelVO::getProductLineId));
 
+        Map<Long, BizDomainDO> bizDomainIdMap = bizDomainDOList.stream()
+                .collect(Collectors.toMap(BizDomainDO::getId, Function.identity()));
+
         productLineVOList.forEach(e -> {
             e.setModels(modelMap.get(e.getId()));
+            BizDomainDO bizDomainDO = bizDomainIdMap.get(e.getBizDomainId());
+            if(bizDomainDO!=null){
+                e.setBizDomainName(bizDomainDO.getName());
+            }
         });
         return BaseResult.success(productLineVOList);
     }

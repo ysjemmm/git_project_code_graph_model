@@ -3,12 +3,13 @@ package com.timevale.forward.facade.api.result;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.timevale.mandarin.common.result.ToString;
+
+import java.util.List;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.List;
 
 
 /**
@@ -44,4 +45,13 @@ public class ProductLineModelVO extends ToString {
 
     @ApiModelProperty("是否废弃")
     private Boolean isDeleted;
+
+
+    @ApiModelProperty("业务域id")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long bizDomainId;
+
+    @ApiModelProperty("业务域名称")
+    private String bizDomainName;
+
 }
