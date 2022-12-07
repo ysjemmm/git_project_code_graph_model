@@ -68,4 +68,12 @@ public interface TroubleTicketMapper {
      * @param durationTime 持续时间
      */
     void updateDurationTime(@Param("id")Long id, @Param("durationTime")BigDecimal durationTime);
+
+    /**
+     * 根据ids查询
+     *
+     * @param ids 故障工单ids
+     * @return 故障工单DO
+     */
+    List<TroubleTicketDO> selectByIds(@Param("ids") List<Long> ids);
 }

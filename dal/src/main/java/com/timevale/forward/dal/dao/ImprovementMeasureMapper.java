@@ -59,4 +59,13 @@ public interface ImprovementMeasureMapper {
      */
     List<ImprovementMeasureDO> selectByIds(@Param("ids") List<Long> ids);
 
+    /**
+     * 改进措施-查询 by 故障单ids
+     *
+     * @param troubleTicketIds 故障单id
+     * @return 改进措施 List
+     */
+    List<ImprovementMeasureDO> selectByTroubleTicketIds(@Param("troubleTicketIds") List<Long> troubleTicketIds);
+
+
 }

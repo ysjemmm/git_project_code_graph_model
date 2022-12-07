@@ -17,13 +17,9 @@ import lombok.EqualsAndHashCode;
 @Data
 @ApiModel("故障工单-催办")
 public class TroubleTicketRemindReq extends BaseReq {
-
-    @ApiModelProperty("故障工单id")
+    
+    @ApiModelProperty("故障工单ids")
     @NotNull(message = "故障工单id不能为空")
-    private Long id;
-
-    @ApiModelProperty("改进事项ids")
-    @NotNull(message = "改进事项id不能为空")
-    private List<Long> improvementMeasureIds;
+    private List<Long> ids;
 
     }

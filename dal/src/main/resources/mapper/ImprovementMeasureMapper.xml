@@ -77,6 +77,17 @@
         AND is_deleted = false
     </select>
 
+    <select id="selectByTroubleTicketIds" resultType="com.timevale.forward.dal.entity.ImprovementMeasureDO">
+        SELECT id, executor, executor_id, todo, todo_id,status,trouble_ticket_id
+        FROM improvement_measure
+        WHERE trouble_ticket_id in
+        <foreach collection="troubleTicketIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        AND is_deleted = false
+    </select>
+
+
     <select id="selectByIds" resultType="com.timevale.forward.dal.entity.ImprovementMeasureDO">
         SELECT id, executor, executor_id, todo, todo_id,status
         FROM improvement_measure

@@ -130,12 +130,11 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
     private MessageEventPublisher messageEventPublisher;
 
 
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> add(TroubleTicketAddReq troubleTicketAddReq) {
 
-        if(troubleTicketAddReq.getName().contains(CommonConstant.BLANK)){
+        if (troubleTicketAddReq.getName().contains(CommonConstant.BLANK)) {
             throw new BaseBizRuntimeException("故障单名称中请勿包含空格");
         }
 
@@ -143,7 +142,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         TroubleTicketDO troubleTicketDO = TroubleTicketCopier.INSTANCE.convert(troubleTicketAddReq);
         troubleTicketMapper.insert(troubleTicketDO);
         //关联关系
-        bugOnlineProductLineComponent.add(troubleTicketAddReq.getProductLineIds(), troubleTicketDO.getId(),BizProductLineTypeEnum.TROUBLE_TICKET.getCode());
+        bugOnlineProductLineComponent.add(troubleTicketAddReq.getProductLineIds(), troubleTicketDO.getId(), BizProductLineTypeEnum.TROUBLE_TICKET.getCode());
 
         // 添加改进措施
         List<ImprovementMeasureAddReq> improvementMeasureAddReqList = troubleTicketAddReq.getImprovementMeasureAddReqList();
@@ -167,7 +166,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
         Long id = troubleTicketModifyReq.getId();
         TroubleTicketDO oldTroubleTicketDO = troubleTicketMapper.selectById(id);
-        if(oldTroubleTicketDO == null){
+        if (oldTroubleTicketDO == null) {
             throw new BaseBizRuntimeException("不存在对应的故障工单");
         }
 
@@ -175,7 +174,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         TroubleTicketDO newTroubleTicketDO = TroubleTicketCopier.INSTANCE.convert(troubleTicketModifyReq);
         troubleTicketMapper.allUpdate(newTroubleTicketDO);
 
-        bugOnlineProductLineComponent.update(troubleTicketModifyReq.getProductLineIds(), troubleTicketModifyReq.getId(),BizProductLineTypeEnum.TROUBLE_TICKET.getCode());
+        bugOnlineProductLineComponent.update(troubleTicketModifyReq.getProductLineIds(), troubleTicketModifyReq.getId(), BizProductLineTypeEnum.TROUBLE_TICKET.getCode());
 
 
         // 修改处理人
@@ -193,14 +192,14 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
     public BaseResult<TroubleTicketDetailVO> get(Long troubleTicketId) {
         // 读取数据，判断是否存在
         TroubleTicketDO troubleTicketDO = troubleTicketMapper.selectById(troubleTicketId);
-        if(troubleTicketDO == null){
+        if (troubleTicketDO == null) {
             throw new BaseBizRuntimeException("不存在对应的故障工单");
         }
         // 转换格式
         TroubleTicketDetailVO ticketDetailVO = TroubleTicketCopier.INSTANCE.convert(troubleTicketDO);
 
         // 填充描述数据
-        List<Long> productLineIdList = bugOnlineProductLineMapper.selectProductLineIds(troubleTicketId,BizProductLineTypeEnum.TROUBLE_TICKET.getCode());
+        List<Long> productLineIdList = bugOnlineProductLineMapper.selectProductLineIds(troubleTicketId, BizProductLineTypeEnum.TROUBLE_TICKET.getCode());
         if (CollectionUtils.isNotEmpty(productLineIdList)) {
             List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIdList);
             List<ProductLineVO> productLineVOList = productLineDOList.stream().map(ProductLineCopier.INSTANCE::convert).collect(Collectors.toList());
@@ -234,7 +233,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
     public BaseResult<Boolean> delete(TroubleTicketDeleteReq troubleTicketDeleteReq) {
         Long id = troubleTicketDeleteReq.getId();
         TroubleTicketDO troubleTicketDO = troubleTicketMapper.selectById(id);
-        if(troubleTicketDO == null){
+        if (troubleTicketDO == null) {
             throw new BaseBizRuntimeException("不存在对应的故障工单");
         }
 
@@ -264,9 +263,9 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
         // tab页面条件
         String ascription = troubleTicketQueryList.getAscription();
-        if(AscriptionEnum.CURRENT_USER.toString().equals(ascription)){
+        if (AscriptionEnum.CURRENT_USER.toString().equals(ascription)) {
             troubleTicketCondition.setCreateMandIdList(Lists.newArrayList(userId));
-        }else if(AscriptionEnum.RECEIVE.toString().equals(ascription)){
+        } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
             troubleTicketQueryList.getHandlerIdList().add(userId);
         }
 
@@ -276,14 +275,14 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
                 .build());
 
         List<String> handlerIdList = troubleTicketQueryList.getHandlerIdList();
-        if(!CollectionUtils.isEmpty(handlerIdList)){
+        if (!CollectionUtils.isEmpty(handlerIdList)) {
             Set<String> handlerIdSet = new HashSet<>(handlerIdList);
             List<Long> troubleTicketIdList = personDOList.stream()
                     .filter(e -> handlerIdSet.contains(e.getUserId()))
                     .map(PersonDO::getMainId)
                     .distinct()
                     .collect(Collectors.toList());
-            if(CollectionUtils.isEmpty(troubleTicketIdList)){
+            if (CollectionUtils.isEmpty(troubleTicketIdList)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
             troubleTicketCondition.setTroubleTicketIdList(troubleTicketIdList);
@@ -291,7 +290,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
         // 故障定级-未定级,特殊处理
         List<Integer> troubleRankList = troubleTicketCondition.getTroubleRankList();
-        boolean contain = CollectionUtils.isNotEmpty(troubleRankList) &&  troubleRankList.contains(TroubleTicketRankEnum.UN_CERTAIN.getCode());
+        boolean contain = CollectionUtils.isNotEmpty(troubleRankList) && troubleRankList.contains(TroubleTicketRankEnum.UN_CERTAIN.getCode());
         troubleTicketCondition.setTroubleRankIsNull(contain);
 
         Map<Long, GroupResponse> deptNodeMap = new HashMap<>();
@@ -322,7 +321,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         PageHelper.startPage(troubleTicketQueryList.pageNum, troubleTicketQueryList.pageSize, collation);
         List<TroubleTicketListDO> troubleTicketDOList = troubleTicketMapper.selectList(troubleTicketCondition);
 
-        if(CollectionUtils.isEmpty(troubleTicketDOList)){
+        if (CollectionUtils.isEmpty(troubleTicketDOList)) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
 
@@ -337,7 +336,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
                 .map(TroubleTicketCopier.INSTANCE::convert).collect(Collectors.toList());
 
         List<Long> troubleTicketIds = troubleTicketVOList.stream().map(TroubleTicketVO::getId).collect(Collectors.toList());
-        List<BugOnlineProductLineDO> troubleTicketProductLineDOList = bugOnlineProductLineMapper.selectByBugOnlineIdList(troubleTicketIds,BizProductLineTypeEnum.TROUBLE_TICKET.getCode());
+        List<BugOnlineProductLineDO> troubleTicketProductLineDOList = bugOnlineProductLineMapper.selectByBugOnlineIdList(troubleTicketIds, BizProductLineTypeEnum.TROUBLE_TICKET.getCode());
 
 
         List<Long> productLineIdList = troubleTicketProductLineDOList.stream().map(BugOnlineProductLineDO::getProductLineId).collect(Collectors.toList());
@@ -359,7 +358,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
             List<PersonVO> handlerVOList = PersonCopier.INSTANCE.transform(handlerDOList);
             e.setHandlerList(handlerVOList);
 
-            if(troubleTicketProductLineMap.containsKey(e.getId())){
+            if (troubleTicketProductLineMap.containsKey(e.getId())) {
                 List<Long> productLineIds = troubleTicketProductLineMap.get(e.getId())
                         .stream().map(BugOnlineProductLineDO::getProductLineId).collect(Collectors.toList());
                 List<String> productLineNames = productLineIds.stream()
@@ -380,7 +379,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
             e.setIsMonitorDetectText(YesOrNoEnum.getTextByCode(e.getIsMonitorDetect()));
             e.setTroubleRankName(TroubleTicketRankEnum.getTextByCode(e.getTroubleRank()));
 
-            if(e.getDutyTeam() == null){
+            if (e.getDutyTeam() == null) {
                 continue;
             }
             GroupResponse response = deptNodeMap.get(e.getDutyTeam());
@@ -403,27 +402,41 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
     @Override
     public BaseResult<Boolean> remind(TroubleTicketRemindReq troubleTicketRemindReq) {
-        Long id = troubleTicketRemindReq.getId();
-        TroubleTicketDO troubleTicketDO = troubleTicketMapper.selectById(id);
-        if(troubleTicketDO == null){
+        List<Long> ids = troubleTicketRemindReq.getIds();
+        List<TroubleTicketDO> troubleTicketDOList = troubleTicketMapper.selectByIds(ids);
+        if (CollectionUtils.isEmpty(troubleTicketDOList)) {
             throw new BaseBizRuntimeException("不存在对应的故障工单");
         }
         // 自己提的故障单才可以催办
         String userId = LocalSessionUtils.getUserInfo().getId();
-        if(!StringUtils.equals(troubleTicketDO.getCreateManId(),userId)){
-            throw new BaseBizRuntimeException("抱歉，由于故障单不是您创建的，无法催办");
+        List<Long> troubleTicketIds = troubleTicketDOList.stream().filter(troubleTicketDO -> StringUtils.equals(userId, troubleTicketDO.getCreateManId())).map(TroubleTicketDO::getId).collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(troubleTicketIds)) {
+            throw new BaseBizRuntimeException("抱歉，您不是故障单的创建人，无法催办");
         }
-        List<ImprovementMeasureDO> improvementMeasureDOList = improvementMeasureMapper.selectByIds(troubleTicketRemindReq.getImprovementMeasureIds());
-        if(CollectionUtils.isEmpty(improvementMeasureDOList)){
+        List<ImprovementMeasureDO> improvementMeasureDOList = improvementMeasureMapper.selectByTroubleTicketIds(troubleTicketIds);
+        if (CollectionUtils.isEmpty(improvementMeasureDOList)) {
             throw new BaseBizRuntimeException("没有改进措施可以催办");
         }
         improvementMeasureDOList = improvementMeasureDOList.stream().filter(improvementMeasureDO -> ImprovementMeasureStatusEnum.PENDING.getCode().equals(improvementMeasureDO.getStatus())).collect(Collectors.toList());
-        if(CollectionUtils.isEmpty(improvementMeasureDOList)){
+        if (CollectionUtils.isEmpty(improvementMeasureDOList)) {
             throw new BaseBizRuntimeException("没有改进措施可以催办");
         }
-        Map<String,List<ImprovementMeasureDO>> executorImprovementMeasureGroupMap = improvementMeasureDOList.stream().collect(Collectors.groupingBy(ImprovementMeasureDO::getExecutorId));
 
-        executorImprovementMeasureGroupMap.forEach((k,v)-> messageEventPublisher.publish(new TroubleTicketRemindMsgEvent(this,troubleTicketDO.getName(),k,troubleTicketDO.getId(), DateUtils.getNewFormatDateString(DateUtils.now()),v.size())));
-        return  BaseResult.success(true);
+        Map<Long, String> troubleTicketNameMap = troubleTicketDOList.stream().collect(Collectors.toMap(TroubleTicketDO::getId, TroubleTicketDO::getName));
+
+        Map<Long, List<ImprovementMeasureDO>> troubleTicketImprovementMeasureGroupMap = improvementMeasureDOList.stream().collect(Collectors.groupingBy(ImprovementMeasureDO::getTroubleTicketId));
+        troubleTicketImprovementMeasureGroupMap.forEach((k, v) -> {
+                    String troubleTicketName = troubleTicketNameMap.get(k);
+                    Map<String, List<ImprovementMeasureDO>> executorImprovementMeasureGroupMap = v.stream().collect(Collectors.groupingBy(ImprovementMeasureDO::getExecutorId));
+                    executorImprovementMeasureGroupMap.forEach((k1, v1) -> {
+                        messageEventPublisher.publish(new TroubleTicketRemindMsgEvent(this, troubleTicketName, k1, k, DateUtils.getNewFormatDateString(DateUtils.now()), v1.size()));
+                    });
+
+                }
+        );
+
+
+        return BaseResult.success(true);
     }
 }

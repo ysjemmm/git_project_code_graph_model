@@ -175,6 +175,19 @@
         WHERE id = #{id} AND is_deleted = false
     </select>
 
+
+    <select id="selectByIds" resultType="com.timevale.forward.dal.entity.TroubleTicketDO">
+        SELECT *
+        FROM trouble_ticket
+        WHERE id in
+        <foreach collection="ids" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+         AND is_deleted = false
+    </select>
+
+
+
     <select id="selectList" resultType="com.timevale.forward.dal.entity.TroubleTicketListDO">
         SELECT tt.id, tt.name, tt.trouble_rank, tt.create_man, tt.create_man_id, tt.occurrence_time,
                tt.prime_principal, tt.duty_team ,tt.is_monitor_detect,
