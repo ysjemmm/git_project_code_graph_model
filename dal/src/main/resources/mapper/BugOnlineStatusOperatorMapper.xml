@@ -1,0 +1,15 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.timevale.forward.dal.dao.BugOnlineStatusOperatorMapper">
+
+    <insert id="insert">
+        insert into bug_online_status_operator(bug_online_id,status,operator,operator_id,create_man,create_man_id)
+        values(#{bugOnlineStatusOperatorDO.bugOnlineId},#{bugOnlineStatusOperatorDO.status},#{bugOnlineStatusOperatorDO.operator},#{bugOnlineStatusOperatorDO.operatorId}
+        ,#{createMan},#{createManId})
+    </insert>
+
+    <update id="deleteByBugOnlineId">
+        update bug_online_status_operator
+        set is_deleted = 1
+        where bug_online_id =#{bugOnlineId}
+    </update>
+</mapper>

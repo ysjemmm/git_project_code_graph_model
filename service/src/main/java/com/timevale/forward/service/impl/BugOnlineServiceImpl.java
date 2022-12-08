@@ -28,6 +28,7 @@ import com.timevale.forward.dal.entity.BugOnlineDO;
 import com.timevale.forward.dal.entity.BugOnlineListDO;
 import com.timevale.forward.dal.entity.BugOnlineModelDO;
 import com.timevale.forward.dal.entity.BugOnlineProductLineDO;
+import com.timevale.forward.dal.entity.BugOnlineStatusOperatorDO;
 import com.timevale.forward.dal.entity.CommentDO;
 import com.timevale.forward.dal.entity.FileDO;
 import com.timevale.forward.dal.entity.ModelDO;
@@ -88,6 +89,7 @@ import com.timevale.forward.service.component.BugLogComponent;
 import com.timevale.forward.service.component.BugOnlineCustomComponent;
 import com.timevale.forward.service.component.BugOnlineModelComponent;
 import com.timevale.forward.service.component.BugOnlineProductLineComponent;
+import com.timevale.forward.service.component.BugOnlineStatusOperatorComponent;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.LabelComponent;
 import com.timevale.forward.service.component.OutBizDealComponent;
@@ -238,6 +240,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Resource
     private BugLogComponent bugLogComponent;
+
+    @Resource
+    private BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
 
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
@@ -588,6 +593,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         businessResult.setData(true);
 
         bizLabelComponent.deleteLabel(bugOnlineReq.getId(), BizTypeEnum.BUG_ONLINE.getCode());
+
+        bugOnlineStatusOperatorComponent.delete(bugOnlineReq.getId());
         return businessResult;
     }
 
@@ -1426,6 +1433,14 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
+
+        BugOnlineStatusOperatorDO bugOnlineStatusOperatorDO = new BugOnlineStatusOperatorDO();
+        bugOnlineStatusOperatorDO.setBugOnlineId(bugOnlineReq.getId());
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        bugOnlineStatusOperatorDO.setOperator(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        bugOnlineStatusOperatorDO.setStatus(BugOnlineStatusEnum.CLOSE.getCode());
+        bugOnlineStatusOperatorDO.setOperatorId(userInfo.getId());
+        bugOnlineStatusOperatorComponent.add(bugOnlineStatusOperatorDO);
 
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);

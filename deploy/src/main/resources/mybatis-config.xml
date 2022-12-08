@@ -109,5 +109,6 @@
         <mapper resource="mapper/ProjectAcceptanceMapper.xml" />
         <mapper resource="mapper/BizDemandCustomMapper.xml" />
         <mapper resource="mapper/BugOnlineCustomMapper.xml" />
+        <mapper resource="mapper/BugOnlineStatusOperatorMapper.xml"/>
     </mappers>
 </configuration>

@@ -16,6 +16,10 @@
         left join bug_online_model mo on bo.id = mo.bug_online_id and mo.is_deleted = false
         left join product_line pl on bopl.product_line_id = pl.id
         left join biz_domain bdm on pl.biz_domain_id = bdm.id
+
+        <if test="isSystemCloseBug!=null and isSystemCloseBug==true">
+        left join bug_online_status_operator boso on bo.id = boso.bug_online_id and boso.is_deleted = false
+        </if>
         <where>
             <if test="containIds!=null and containIds.size()>0">
                 and bo.id in
@@ -126,7 +130,7 @@
                 )
             </if>
             <if test="isSystemCloseBug!=null and isSystemCloseBug==true">
-                and  bo.status =2 and  bo.id in (select bl.main_id from bug_log bl where bl.new_value='关闭' and bl.create_man_id ='SYSTEM' and bl.is_deleted = false)
+                and  bo.status =2 and boso.status=2 and boso.operator_id='SYSTEM'
              </if>
             <if test="true">
                 and bo.is_deleted = false

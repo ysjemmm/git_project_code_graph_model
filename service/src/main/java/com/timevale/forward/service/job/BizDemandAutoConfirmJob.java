@@ -16,18 +16,21 @@ import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
 import com.timevale.mandarin.base.util.CollectionUtils;
-import lombok.extern.slf4j.Slf4j;
+
 import org.assertj.core.util.Lists;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author by YangXu
@@ -103,7 +106,6 @@ public class BizDemandAutoConfirmJob extends IJobHandler {
             }
             bizChangeLogMapper.batchInsert(logDOList);
         }
-
         bugOnlineComponent.autoCloseBugIfBeConfirm(autoConfirmLimitDay);
 
         log.info("[BizDemandAutoConfirmJob]业务需求更新待确认-完成");

@@ -4,16 +4,20 @@ import com.timevale.forward.dal.dao.BugLogMapper;
 import com.timevale.forward.dal.dao.BugOnlineMapper;
 import com.timevale.forward.dal.entity.BugLogDO;
 import com.timevale.forward.dal.entity.BugOnlineDO;
+import com.timevale.forward.dal.entity.BugOnlineStatusOperatorDO;
 import com.timevale.forward.model.enums.BugLogFieldEnum;
 import com.timevale.forward.model.enums.BugLogTypeEnum;
 import com.timevale.forward.model.enums.BugOnlineStatusEnum;
 import com.timevale.forward.model.enums.ButtonActionEnum;
 import com.timevale.forward.service.component.BugLogComponent;
 import com.timevale.forward.service.component.BugOnlineComponent;
+import com.timevale.forward.service.component.BugOnlineStatusOperatorComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.observer.event.BugOnlineConfirmMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.date.DateUtil;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
@@ -49,6 +53,8 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
     @Resource
     private MessageEventPublisher messageEventPublisher;
 
+    @Resource
+    private BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
 
 
     @Override
@@ -119,6 +125,14 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         bugLogMapper.insert(bugLogDO);
 
         bugLogComponent.insertToBugStatusOperator(bugOnlineId,CommonConstant.SYSTEM,CommonConstant.SYSTEM);
+
+        BugOnlineStatusOperatorDO bugOnlineStatusOperatorDO = new BugOnlineStatusOperatorDO();
+        bugOnlineStatusOperatorDO.setBugOnlineId(bugOnlineId);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        bugOnlineStatusOperatorDO.setOperator(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+        bugOnlineStatusOperatorDO.setStatus(BugOnlineStatusEnum.CLOSE.getCode());
+        bugOnlineStatusOperatorDO.setOperatorId(userInfo.getId());
+        bugOnlineStatusOperatorComponent.add(bugOnlineStatusOperatorDO);
     }
 
 }
