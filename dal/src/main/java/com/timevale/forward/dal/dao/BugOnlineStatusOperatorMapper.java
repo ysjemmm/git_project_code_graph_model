@@ -6,6 +6,8 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+import java.util.List;
+
 /**
  * @Description:
  * @ClassName: BugOnlineStatusOperatorMapper
@@ -47,4 +49,7 @@ public interface BugOnlineStatusOperatorMapper {
      */
     @Update("update bug_online_status_operator set operator_id=#{operatorId},operator=#{operator} where id=#{id}")
     void updateOperatorById(@Param("operatorId") String operatorId, @Param("operator") String operator, @Param("id") Long id);
+
+
+    List<Long> selectInitInfo(@Param("limitCount")Integer limitCount);
 }

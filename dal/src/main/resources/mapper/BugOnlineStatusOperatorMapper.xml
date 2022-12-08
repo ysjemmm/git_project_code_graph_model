@@ -12,4 +12,8 @@
         set is_deleted = 1
         where bug_online_id =#{bugOnlineId}
     </update>
+
+    <select id="selectInitInfo" resultType="Long">
+        select b.id from bug_online  b left join bug_online_status_operator bo on b.id=bo.bug_online_id where  b.status=2 and b.is_deleted=false and bo.id is null limit #{limitCount}
+    </select>
 </mapper>

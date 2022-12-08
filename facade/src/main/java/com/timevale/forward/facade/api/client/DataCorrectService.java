@@ -34,4 +34,11 @@ public interface DataCorrectService {
      * @return {@link BaseResult}<{@link Boolean}>
      */
     BaseResult<Boolean> troubleTicketTime();
+
+    /**
+     * 线上bug 关闭状态操作人初始化
+     * @param count
+     * @return
+     */
+    BaseResult<Boolean> bugOnlineCloseStatusOperatorInit(Integer count);
 }

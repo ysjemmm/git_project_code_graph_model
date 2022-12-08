@@ -1,25 +1,47 @@
 package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.BugLogMapper;
+import com.timevale.forward.dal.dao.BugOnlineStatusOperatorMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.ProjectNodeMapper;
+import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
+import com.timevale.forward.dal.dao.TestBillMapper;
+import com.timevale.forward.dal.dao.TroubleTicketMapper;
+import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.BugLogDO;
+import com.timevale.forward.dal.entity.BugOnlineStatusOperatorDO;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectNodeDO;
+import com.timevale.forward.dal.entity.TestBillDO;
+import com.timevale.forward.dal.entity.TroubleTicketDO;
 import com.timevale.forward.facade.api.client.DataCorrectService;
 import com.timevale.forward.facade.api.request.ProjectNodeModifyReq;
+import com.timevale.forward.model.enums.BugLogTypeEnum;
+import com.timevale.forward.model.enums.BugOnlineStatusEnum;
 import com.timevale.forward.model.enums.ProjectNodeStatusEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BugOnlineStatusOperatorComponent;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.common.annotation.RestService;
-import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xingyun
@@ -57,6 +79,15 @@ public class DataCorrectServiceImpl implements DataCorrectService {
     private ProjectNodeComponent projectNodeComponent;
     @Resource
     private TroubleTicketMapper troubleTicketMapper;
+
+    @Resource
+    private BugOnlineStatusOperatorMapper bugOnlineStatusOperatorMapper;
+
+    @Resource
+    private BugLogMapper bugLogMapper;
+
+    @Resource
+    private BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
 
 
     @Override
@@ -136,6 +167,29 @@ public class DataCorrectServiceImpl implements DataCorrectService {
             log.info("[DataCorrectServiceImpl][troubleTicketTime]更新故障单{}持续时间{}", e.getId(), durationTime);
             troubleTicketMapper.updateDurationTime(e.getId(), durationTime);
         }
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> bugOnlineCloseStatusOperatorInit(Integer count) {
+        List<Long> bugOnlineIds = bugOnlineStatusOperatorMapper.selectInitInfo(count);
+        if(CollectionUtils.isEmpty(bugOnlineIds)){
+            BaseResult.success(false);
+        }
+        bugOnlineIds.forEach(a->{
+            List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(a, BugLogTypeEnum.ONLINE.getCode(), true)
+                    .stream().filter(b -> BugOnlineStatusEnum.CLOSE.getText().equals(b.getNewValue())).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(bugLogDOList)) {
+                bugLogDOList.sort(Comparator.comparing(BugLogDO::getCreateDate).reversed());
+                BugLogDO bugLogDO = bugLogDOList.get(0);
+                BugOnlineStatusOperatorDO bugOnlineStatusOperatorDO = new BugOnlineStatusOperatorDO();
+                bugOnlineStatusOperatorDO.setBugOnlineId(a);
+                bugOnlineStatusOperatorDO.setOperator(bugLogDO.getCreateMan());
+                bugOnlineStatusOperatorDO.setStatus(BugOnlineStatusEnum.CLOSE.getCode());
+                bugOnlineStatusOperatorDO.setOperatorId(bugLogDO.getCreateManId());
+                bugOnlineStatusOperatorComponent.add(bugOnlineStatusOperatorDO);            }
+
+        });
         return BaseResult.success(true);
     }
 
