@@ -14,7 +14,7 @@ import java.util.List;
  * @Author 望轩
  */
 public class BugOnlineConfirmMsgEvent extends MessageEvent {
-    private final String BUG_ONLINE_TRANS = "### %s \n【线上bug】**%s** \n\n 此bug不用修复,等待您确认，若不确认，1天后会自动关闭，请及时确认。\n *** \n[点击跳转到线上bug查看页面](%s)  <!--%s-->";
+    private final String BUG_ONLINE_TRANS = "### %s \n【线上bug】**%s** \n\n 此bug不用修复,等待您确认，若不确认，1天后会自动关闭，请及时确认。\n *** \n[查看详情](%s)  <!--%s-->";
 
     /**
      * bug标题
