@@ -1,32 +1,16 @@
 package com.timevale.forward.service.component.impl;
 
-import com.google.common.collect.Maps;
-
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.Maps;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.BizLabelMapper;
-import com.timevale.forward.dal.dao.LabelMapper;
-import com.timevale.forward.dal.dao.ProductBizDemandMapper;
-import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.entity.BizDemandDO;
-import com.timevale.forward.dal.entity.BizDemandListDO;
-import com.timevale.forward.dal.entity.BizLabelDO;
-import com.timevale.forward.dal.entity.ProductBizDemandDO;
-import com.timevale.forward.dal.entity.ProductDemandDO;
-import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
-import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
-import com.timevale.forward.model.enums.BizDemandStatusEnum;
-import com.timevale.forward.model.enums.BizTypeEnum;
-import com.timevale.forward.model.enums.PlanReleaseDateEnum;
-import com.timevale.forward.model.enums.PriorityEnum;
-import com.timevale.forward.model.enums.ProductDemandStatusEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.component.BizLabelComponent;
@@ -43,29 +27,16 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author by YangXu
@@ -261,7 +232,12 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             if (CollectionUtils.isEmpty(bizIds)) {
                 return ResultUtil.queryResultEmpty();
             }
-            bizDemandListCondition.setContainIds(bizIds);
+            Boolean containLabel = bizDemandListCondition.getContainLabel();
+            if (containLabel) {
+                bizDemandListCondition.setContainIds(bizIds);
+            } else {
+                bizDemandListCondition.setExclusiveIds(bizIds);
+            }
         }
 
         // 产品线分析信息
@@ -308,6 +284,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         if (CollectionUtils.isEmpty(bizDemandVOList)) {
             return ResultUtil.queryResultEmpty();
         }
+
         //标签信息
         Map<Long, List<BizLabelSimpleVO>> labelMap = bizLabelComponent
                 .getBizLabelMap(bizDemandIds, BizTypeEnum.BIZ_DEMAND.getCode());

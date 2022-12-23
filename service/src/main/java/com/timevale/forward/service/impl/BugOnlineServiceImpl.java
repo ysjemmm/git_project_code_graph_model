@@ -1,9 +1,11 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.BugOnlineLinkCondition;
 import com.timevale.forward.dal.condition.BugOnlineListCondition;
 import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.dao.BizDemandMapper;
@@ -135,13 +137,7 @@ import org.assertj.core.util.Sets;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -158,91 +154,65 @@ import lombok.extern.slf4j.Slf4j;
 @RestService
 public class BugOnlineServiceImpl implements BugOnlineService {
     @Resource
-    private BugOnlineMapper bugOnlineMapper;
-
-    @Resource
-    private BugOnlineProductLineMapper bugOnlineProductLineMapper;
-
-    @Resource
-    private BugOnlineModelMapper bugOnlineModelMapper;
-
-    @Resource
-    private ProductLineMapper productLineMapper;
-
-    @Resource
-    private BizDomainMapper bizDomainMapper;
-
-    @Resource
-    private BizDemandMapper bizDemandMapper;
-
-    @Resource
     private FileMapper fileMapper;
-
-    @Resource
-    private PersonMapper personMapper;
-
-    @Resource
-    private CommentMapper commentMapper;
-
-    @Resource
-    private BugLogMapper bugLogMapper;
-
-    @Resource
-    private BugStatusOperatorMapper bugStatusOperatorMapper;
-
-    @Resource
-    private MessageEventPublisher messageEventPublisher;
-
-    @Resource
-    private InnerUserPersonClient innerUserPersonClient;
-
-    @Resource
-    private FileComponent fileComponent;
-
-    @Resource
-    private PersonComponent personComponent;
-
     @Resource
     private ModelMapper modelMapper;
+    @Resource
+    private BugLogMapper bugLogMapper;
+    @Resource
+    private PersonMapper personMapper;
+    @Resource
+    private CommentMapper commentMapper;
+    @Resource
+    private FileComponent fileComponent;
+    @Resource
+    private LabelComponent labelComponent;
+    @Resource
+    private BizLabelMapper bizLabelMapper;
+    @Resource
+    private PersonComponent personComponent;
+    @Resource
+    private BugOnlineMapper bugOnlineMapper;
+    @Resource
+    private BizDomainMapper bizDomainMapper;
+    @Resource
+    private BizDemandMapper bizDemandMapper;
+    @Resource
+    private BugLogComponent bugLogComponent;
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
+    @Resource
+    private ProductLineMapper productLineMapper;
+    @Resource
+    private BizLabelComponent bizLabelComponent;
+    @Resource
+    private OutBizDealComponent outBizDealComponent;
+    @Resource
+    private BugOnlineModelMapper bugOnlineModelMapper;
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
+    @Resource
+    private InnerUserPersonClient innerUserPersonClient;
+    @Resource
+    private BugOnlineModelComponent bugOnlineModelComponent;
+    @Resource
+    private BugStatusOperatorMapper bugStatusOperatorMapper;
+    @Resource
+    private BugOnlineCustomComponent bugOnlineCustomComponent;
+    @Resource
+    private BugOnlineProductLineMapper bugOnlineProductLineMapper;
+    @Resource
+    private BugOnlineProductLineComponent bugOnlineProductLineComponent;
+    @Resource
+    private BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
 
     @Value("${business}")
     private String business;
-
-    @Resource
-    private SqlOrderComponent sqlOrderComponent;
-
     /**
      * 默认经办人,来自运营支撑提报bug
      */
     @Value("${default.operator:shifeng;释沣-余文杰}")
     private String defaultOperator;
-
-    @Resource
-    private BugOnlineProductLineComponent bugOnlineProductLineComponent;
-
-    @Resource
-    private BugOnlineModelComponent bugOnlineModelComponent;
-
-    @Resource
-    private LabelComponent labelComponent;
-
-    @Resource
-    private BizLabelMapper bizLabelMapper;
-
-    @Resource
-    private OutBizDealComponent outBizDealComponent;
-
-    @Resource
-    private BizLabelComponent bizLabelComponent;
-
-    @Resource
-    private BugOnlineCustomComponent bugOnlineCustomComponent;
-
-    @Resource
-    private BugLogComponent bugLogComponent;
-
-    @Resource
-    private BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
 
     @Override
     public BusinessResult<ProductLineToFieldVO> getAllDisplayField(BugOnlineGetFieldReq bugOnlineGetFieldReq) {
@@ -288,15 +258,18 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     public BaseResult<PageQueryResult<BugOnlineVO>> list(BugOnlineQueryList bugOnlineQueryList) {
         log.info("线上bug-获取线上bug列表，接收参数：{}", bugOnlineQueryList);
 
+        // 用户信息
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 转换查询条件
         BugOnlineListCondition condition = BugOnlineCopier.INSTANCE.convert(bugOnlineQueryList);
+
         // 时间处理
         condition.setCreateDateLeft(DateUtil.getStartOfDay(condition.getCreateDateLeft()));
         condition.setCreateDateRight(DateUtil.getEndOfDay(condition.getCreateDateRight()));
         condition.setModifyDateLeft(DateUtil.getStartOfDay(condition.getModifyDateLeft()));
         condition.setModifyDateRight(DateUtil.getEndOfDay(condition.getModifyDateRight()));
+
         // 标志是否有对应数据
         boolean resultIsEmpty = false;
         // 根据tabs添加不同的效果
@@ -336,13 +309,22 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             if (CollectionUtils.isEmpty(newLabelIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
+
             bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_ONLINE.getCode());
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(bizIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
-            condition.setContainIds(bizIds);
+
+            // 设置包含和不包含
+            Boolean containLabel = bugOnlineQueryList.getContainLabel();
+            if (containLabel) {
+                condition.setContainIds(bizIds);
+            } else {
+                condition.setExclusiveIds(bizIds);
+            }
         }
+
         // 开始分页
         String collation = sqlOrderComponent.build(bugOnlineQueryList.getOrderFiled(), bugOnlineQueryList.getOrderCollation());
         PageHelper.startPage(bugOnlineQueryList.pageNum, bugOnlineQueryList.pageSize, collation);
@@ -354,6 +336,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         if (CollectionUtils.isEmpty(bugOnlineVOList)) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
+
         //标签
         List<Long> bugOnlineIds = bugOnlineDOList.stream().map(BugOnlineListDO::getId).collect(Collectors.toList());
 

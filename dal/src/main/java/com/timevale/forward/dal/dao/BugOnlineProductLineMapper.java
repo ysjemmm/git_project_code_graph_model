@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.dao;
 
+import com.timevale.forward.dal.condition.BugOnlineLinkCondition;
 import com.timevale.forward.dal.entity.BugOnlineProductLineDO;
 import org.apache.ibatis.annotations.Param;
 
@@ -40,4 +41,12 @@ public interface BugOnlineProductLineMapper {
      * @param bugOnlineProductLineDO 参数
      */
     void update(@Param("bugOnlineProductLineDO") BugOnlineProductLineDO bugOnlineProductLineDO);
+
+    /**
+     * 选择 by 条件
+     *
+     * @param condition 条件
+     * @return {@link List}<{@link Long}>
+     */
+    List<Long> selectByCondition(BugOnlineLinkCondition condition);
 }

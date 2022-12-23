@@ -27,11 +27,23 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="exclusiveIds!=null and exclusiveIds.size()>0">
+                and bo.id not in
+                <foreach collection="exclusiveIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="name != null and name != '' ">
                 and bo.name like concat('%',#{name},'%')
             </if>
             <if test="customerName!= null and customerName != '' ">
                 and bo.customer_name like concat('%',#{customerName},'%')
+            </if>
+            <if test="idList != null and idList.size() > 0">
+                and bo.id in
+                <foreach collection="idList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
             </if>
             <if test="status != null and status.size() > 0">
                 and bo.status in
@@ -407,6 +419,12 @@
         from bug_online bo
          left join bug_online_custom bc on bo.id = bc.bug_online_id where bc.custom_id = #{customId} and bc.is_deleted=0 and bo.is_deleted=0 order by bo.create_date desc
 
+    </select>
+
+    <select id="selectAllId" resultType="java.lang.Long">
+        SELECT id
+        FROM bug_online
+        WHERE is_deleted = false
     </select>
 </mapper>
 

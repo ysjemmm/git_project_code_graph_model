@@ -6,8 +6,11 @@ import com.timevale.mandarin.common.query.QueryBase;
 import java.util.Date;
 import java.util.List;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * @author by YangXu
@@ -128,9 +131,19 @@ public class BizDemandListCondition extends QueryBase {
     private List<Long> labelIds;
 
     /**
+     * 包含标签
+     */
+    private Boolean containLabel;
+
+    /**
      *包含的id
      */
     private List<Long> containIds;
+
+    /**
+     * 不包含的id
+     */
+    private List<Long> exclusiveIds;
 
     /**
      * 来源id

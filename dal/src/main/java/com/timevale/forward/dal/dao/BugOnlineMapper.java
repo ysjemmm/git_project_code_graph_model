@@ -22,6 +22,13 @@ public interface BugOnlineMapper {
     BugOnlineDO selectById(@Param("id") Long id);
 
     /**
+     * 选择所有id
+     *
+     * @return {@link List}<{@link Long}>
+     */
+    List<Long> selectAllId();
+
+    /**
      * 选择列表通过条件
      *
      * @param bugOnlineListCondition 线上bug列表条件

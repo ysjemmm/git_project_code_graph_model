@@ -93,4 +93,10 @@ public class ProductDemandListCondition extends QueryBase {
     private List<Long> inProductDemandIds;
 
 
+    /**
+     * 不需要包含的产品需求
+     */
+    private List<Long> notInProductDemandIds;
+
+
 }

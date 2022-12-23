@@ -10,6 +10,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * @author by YangXu
  * @date 2021/12/14 15:20
@@ -78,6 +80,10 @@ public class BizDemandQueryList extends QueryBase {
 
     @ApiModelProperty("来源id")
     private String sourceId;
+
+    @ApiModelProperty("是否包含标签")
+    @NotNull(message = "是否包含标签不能为空")
+    private Boolean containLabel;
 
     @ApiModelProperty("选中为标签时填写,标签id")
     private List<Long> labelIds;

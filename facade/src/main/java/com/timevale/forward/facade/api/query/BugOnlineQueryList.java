@@ -11,6 +11,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * @Date 2022/3/17 14:20
  * @Author 望轩
@@ -82,6 +84,10 @@ public class BugOnlineQueryList extends QueryBase {
 
     @ApiModelProperty("排序规则：0正序，1逆序")
     private Integer orderCollation;
+
+    @ApiModelProperty("是否包含标签")
+    @NotNull(message = "是否包含标签不能为空")
+    private Boolean containLabel;
 
     @ApiModelProperty("选中为标签时填写,标签id")
     private List<Long> labelIds;

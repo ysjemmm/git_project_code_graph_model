@@ -168,6 +168,12 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="exclusiveIds!=null and exclusiveIds.size()>0">
+                and bd.id not in
+                <foreach collection="exclusiveIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="name!=null and name!='' ">
                 and bd.name like concat('%',#{name},'%')
             </if>

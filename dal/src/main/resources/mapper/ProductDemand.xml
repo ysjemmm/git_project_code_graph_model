@@ -73,6 +73,12 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="notInProductDemandIds!=null and notInProductDemandIds.size()>0">
+                and a.id not in
+                <foreach collection="notInProductDemandIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             and  a.is_deleted =false
         </where>
     </select>

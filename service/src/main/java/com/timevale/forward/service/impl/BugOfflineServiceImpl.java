@@ -153,7 +153,14 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             if (CollectionUtils.isEmpty(bizIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
-            condition.setContainIds(bizIds);
+
+            // 判断包含和不包含
+            Boolean containLabel = bugOfflineQueryList.getContainLabel();
+            if (containLabel) {
+                condition.setContainIds(bizIds);
+            } else {
+                condition.setExclusiveIds(bizIds);
+            }
         }
 
         // 开始分页

@@ -185,7 +185,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             if (CollectionUtils.isEmpty(bizIds)) {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
-            condition.setInProductDemandIds(bizIds);
+            Boolean containLabel = productDemandQueryList.getContainLabel();
+            if (containLabel) {
+                condition.setInProductDemandIds(bizIds);
+            } else {
+                condition.setNotInProductDemandIds(bizIds);
+            }
+
         }
 
         // 完整查询

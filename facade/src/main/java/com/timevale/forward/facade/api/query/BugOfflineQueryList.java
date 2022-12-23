@@ -88,6 +88,10 @@ public class BugOfflineQueryList extends QueryBase {
     @ApiModelProperty("排序规则：0正序，1逆序")
     private Integer orderCollation;
 
+    @ApiModelProperty("是否包含标签")
+    @NotNull(message = "是否包含标签不可为空")
+    private Boolean containLabel;
+
     @ApiModelProperty("选中为标签时填写,标签id")
     private List<Long> labelIds;
 

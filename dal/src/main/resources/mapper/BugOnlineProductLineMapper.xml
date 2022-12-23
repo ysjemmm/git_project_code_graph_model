@@ -21,6 +21,30 @@
         </where>
     </select>
 
+    <select id="selectByCondition" resultType="java.lang.Long">
+        SELECT bopl.bug_online_id
+        FROM bug_online_product_line bopl
+        LEFT JOIN product_line pl ON bopl.product_line_id = pl.id
+        <where>
+            <if test="productLineIdList != null and productLineIdList.size() > 0">
+                AND bopl.product_line_id IN
+                <foreach collection="productLineIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="bizDomainIdList != null and bizDomainIdList.size() > 0">
+                AND pl.biz_domain_id IN
+                <foreach collection="bizDomainIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="true">
+                AND bopl.is_deleted = false
+                AND pl.is_deleted = false
+            </if>
+        </where>
+    </select>
+
     <insert id="batchInsert">
         insert into bug_online_product_line(bug_online_id,product_line_id,type,create_man,create_man_id) values
         <foreach collection="bugOnlineProductLineDOList" item="bugOnlineProductLineDO" separator=",">

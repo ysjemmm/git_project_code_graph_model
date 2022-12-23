@@ -113,6 +113,11 @@ public class BugOnlineListCondition {
     private List<Long> containIds;
 
     /**
+     *不包含的id
+     */
+    private List<Long> exclusiveIds;
+
+    /**
      * 模块id
      */
     private List<Long> modelIds;
