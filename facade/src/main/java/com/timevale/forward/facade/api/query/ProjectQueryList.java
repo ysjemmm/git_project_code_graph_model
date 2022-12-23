@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -116,6 +117,10 @@ public class ProjectQueryList extends QueryBase {
 
     @ApiModelProperty("是否有项目风险")
     private Boolean includeRisk;
+
+    @ApiModelProperty("是否有项目风险")
+    @NotNull(message = "是否包含标签不能为空")
+    private Boolean containLabel;
 
     @ApiModelProperty("选中为标签时填写,标签id")
     private List<Long> labelIds;

@@ -182,6 +182,11 @@ public class ProjectListCondition extends QueryBase {
     private Integer orderCollation;
 
     /**
+     * 是否包含标签
+     */
+    private Boolean containLabel;
+
+    /**
      * 标签id
      */
     private List<Long> labelIds;

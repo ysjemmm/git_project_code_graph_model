@@ -165,7 +165,11 @@ public class ProjectComponentImpl implements ProjectComponent {
         //是否打标
         List<BizLabelDO> bizLabelDOList;
         if (CollectionUtils.isNotEmpty(condition.getLabelIds())) {
-            bizLabelDOList = bizLabelMapper.getByLabelIdInType(condition.getLabelIds(), BizTypeEnum.PROJECT.getCode());
+            if (condition.getContainLabel()) {
+                bizLabelDOList = bizLabelMapper.getByLabelIdInType(condition.getLabelIds(), BizTypeEnum.PROJECT.getCode());
+            } else {
+                bizLabelDOList = bizLabelMapper.getByLabelIdNotInType(condition.getLabelIds(), BizTypeEnum.PROJECT.getCode());
+            }
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
             if (CollectionUtils.isEmpty(projectIds)) {
                 //产品需求关联项目时,projectIds可能为空
