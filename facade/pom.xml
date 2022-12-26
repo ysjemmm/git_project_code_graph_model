@@ -12,7 +12,7 @@
     <artifactId>forward-facade</artifactId>
     <name>forward/facade</name>
     <packaging>jar</packaging>
-    <version>${parent.version}</version>
+    <version>1.0.0</version>
 
     <dependencies>
         <dependency>

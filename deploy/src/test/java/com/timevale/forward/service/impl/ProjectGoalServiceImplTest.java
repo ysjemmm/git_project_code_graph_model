@@ -10,10 +10,12 @@ import com.timevale.forward.dal.entity.ProjectGoalDO;
 import com.timevale.forward.facade.api.request.ProjectGoalAddReq;
 import com.timevale.forward.facade.api.request.ProjectGoalFinishReq;
 import com.timevale.forward.facade.api.request.ProjectGoalModifyReq;
+import com.timevale.forward.service.integration.inneruser.InnerUserPermissionClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.security.facade.response.BaseInfoResponse;
+import com.timevale.security.facade.response.RoleResponse;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -49,6 +51,8 @@ public class ProjectGoalServiceImplTest extends AbstractTestNGSpringContextTests
     private PersonMapper personMapper;
     @Mock
     private InnerUserPersonClient innerUserPersonClient;
+    @Mock
+    private InnerUserPermissionClient innerUserPermissionClient;
     @Mock
     private BizChangeLogMapper bizChangeLogMapper;
 
@@ -174,6 +178,11 @@ public class ProjectGoalServiceImplTest extends AbstractTestNGSpringContextTests
         res.setAccount("test");
         when(innerUserPersonClient.getAllMyStaffWithSelfInfo(any(), eq(false)))
                 .thenReturn(Lists.newArrayList(res));
+
+        RoleResponse roleResponse = new RoleResponse();
+        roleResponse.setName("完成情况按钮");
+        when(innerUserPermissionClient.getFunctionRoleInfo(any()))
+                .thenReturn(Lists.newArrayList(roleResponse));
         try (MockedStatic<LocalSessionUtils> mocked = mockStatic(LocalSessionUtils.class)) {
             UserInfo userInfo = new UserInfo();
             userInfo.setId("test");
