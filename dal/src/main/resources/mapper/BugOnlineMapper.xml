@@ -39,12 +39,6 @@
             <if test="customerName!= null and customerName != '' ">
                 and bo.customer_name like concat('%',#{customerName},'%')
             </if>
-            <if test="idList != null and idList.size() > 0">
-                and bo.id in
-                <foreach collection="idList" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
             <if test="status != null and status.size() > 0">
                 and bo.status in
                 <foreach collection="status" item="item" separator="," open="(" close=")">
