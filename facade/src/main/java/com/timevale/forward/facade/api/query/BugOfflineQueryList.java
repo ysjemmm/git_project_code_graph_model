@@ -89,8 +89,7 @@ public class BugOfflineQueryList extends QueryBase {
     private Integer orderCollation;
 
     @ApiModelProperty("是否包含标签")
-    @NotNull(message = "是否包含标签不可为空")
-    private Boolean containLabel;
+    private Boolean containLabel = true;
 
     @ApiModelProperty("选中为标签时填写,标签id")
     private List<Long> labelIds;

@@ -119,8 +119,7 @@ public class ProjectQueryList extends QueryBase {
     private Boolean includeRisk;
 
     @ApiModelProperty("是否有项目风险")
-    @NotNull(message = "是否包含标签不能为空")
-    private Boolean containLabel;
+    private Boolean containLabel = true;
 
     @ApiModelProperty("选中为标签时填写,标签id")
     private List<Long> labelIds;

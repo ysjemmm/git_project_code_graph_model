@@ -82,8 +82,7 @@ public class BizDemandQueryList extends QueryBase {
     private String sourceId;
 
     @ApiModelProperty("是否包含标签")
-    @NotNull(message = "是否包含标签不能为空")
-    private Boolean containLabel;
+    private Boolean containLabel = true;
 
     @ApiModelProperty("选中为标签时填写,标签id")
     private List<Long> labelIds;
