@@ -127,7 +127,7 @@
                 </foreach>
             </if>
             <if test="exclusiveIds!=null and exclusiveIds.size()>0">
-                and bo.id  in
+                and bo.id not in
                 <foreach collection="exclusiveIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
