@@ -173,20 +173,24 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         //是否打标
-        List<BizLabelDO> bizLabelDOList;
-        if(CollectionUtils.isNotEmpty(productDemandQueryList.getLabelIds())||CollectionUtils.isNotEmpty(productDemandQueryList.getLabelCategoryIds())){
-            List<Long> newLabelIds = labelComponent.getLabelIds(productDemandQueryList.getLabelIds(), productDemandQueryList.getLabelCategoryIds());
-            if(CollectionUtils.isEmpty(newLabelIds)){
-                //类别下没有标签
-                return BaseResult.success(ResultUtil.queryResultEmpty());
-            }
-            bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
-            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(bizIds)) {
-                return BaseResult.success(ResultUtil.queryResultEmpty());
-            }
+        if(CollectionUtils.isNotEmpty(productDemandQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(productDemandQueryList.getLabelCategoryIds())){
             Boolean containLabel = productDemandQueryList.getContainLabel();
+
+            List<Long> newLabelIds = labelComponent.getLabelIds(productDemandQueryList.getLabelIds(), productDemandQueryList.getLabelCategoryIds());
+
+            // 查询包含且类别下没有标签
+            if(CollectionUtils.isEmpty(newLabelIds) && containLabel){
+                return BaseResult.success(ResultUtil.queryResultEmpty());
+            }
+
+            // 查询使用这些标签的需求id
+            List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.PRODUCT_DEMAND.getCode());
+            List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
+
             if (containLabel) {
+                if (CollectionUtils.isEmpty(bizIds)) {
+                    return BaseResult.success(ResultUtil.queryResultEmpty());
+                }
                 condition.setInProductDemandIds(bizIds);
             } else {
                 condition.setNotInProductDemandIds(bizIds);

@@ -148,18 +148,20 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (resultIsEmpty) {
             return BaseResult.success(ResultUtil.queryResultEmpty());
         }
-        // 开始分页
-        String collation = sqlOrderComponent.build(bizDemandQueryList.getOrderFiled(), bizDemandQueryList.getOrderCollation());
+
+        // 标签
         if (CollectionUtils.isNotEmpty(bizDemandQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(bizDemandQueryList.getLabelCategoryIds())) {
             List<Long> labelIds = labelComponent.getLabelIds(bizDemandQueryList.getLabelIds(), bizDemandQueryList.getLabelCategoryIds());
-            if (CollectionUtils.isEmpty(labelIds)) {
+            if (bizDemandQueryList.getContainLabel()) {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
             bizDemandListCondition.setLabelIds(labelIds);
         }
+
+        // 分页参数
         bizDemandListCondition.setPageNum(bizDemandQueryList.getPageNum());
         bizDemandListCondition.setPageSize(bizDemandQueryList.getPageSize());
-        bizDemandListCondition.setCollation(collation);
+
         return BaseResult.success(bizDemandComponent.page(bizDemandListCondition));
     }
 

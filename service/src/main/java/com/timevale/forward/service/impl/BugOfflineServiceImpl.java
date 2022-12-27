@@ -142,21 +142,20 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
         //是否打标
-        List<BizLabelDO> bizLabelDOList;
         if (CollectionUtils.isNotEmpty(bugOfflineQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(bugOfflineQueryList.getLabelCategoryIds())) {
+            Boolean containLabel = bugOfflineQueryList.getContainLabel();
             List<Long> newLabelIds = labelComponent.getLabelIds(bugOfflineQueryList.getLabelIds(), bugOfflineQueryList.getLabelCategoryIds());
-            if (CollectionUtils.isEmpty(newLabelIds)) {
+            if (CollectionUtils.isEmpty(newLabelIds) && containLabel) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
-            bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_OFFLINE.getCode());
+            List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_OFFLINE.getCode());
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(bizIds)) {
-                return BaseResult.success(ResultUtil.pageEmpty());
-            }
 
             // 判断包含和不包含
-            Boolean containLabel = bugOfflineQueryList.getContainLabel();
             if (containLabel) {
+                if (CollectionUtils.isEmpty(bizIds)) {
+                    return BaseResult.success(ResultUtil.pageEmpty());
+                }
                 condition.setContainIds(bizIds);
             } else {
                 condition.setExclusiveIds(bizIds);

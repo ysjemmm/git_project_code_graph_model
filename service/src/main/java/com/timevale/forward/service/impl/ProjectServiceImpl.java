@@ -205,7 +205,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         if (CollectionUtils.isNotEmpty(projectQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(projectQueryList.getLabelCategoryIds())) {
             List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelIds(), projectQueryList.getLabelCategoryIds());
-            if (CollectionUtils.isEmpty(labelIds)) {
+            if (CollectionUtils.isEmpty(labelIds) && projectQueryList.getContainLabel()) {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
             condition.setLabelIds(labelIds);

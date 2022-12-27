@@ -3,6 +3,7 @@ package com.timevale.forward.service.component.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
+import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -11,10 +12,7 @@ import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.BizDemandComponent;
-import com.timevale.forward.service.component.BizDemandLogComponent;
-import com.timevale.forward.service.component.BizLabelComponent;
-import com.timevale.forward.service.component.SqlOrderComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
@@ -76,6 +74,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Resource
     private LabelMapper labelMapper;
+
+    @Resource
+    private LabelComponent labelComponent;
 
     @Resource
     private SqlOrderComponent sqlOrderComponent;
@@ -224,16 +225,17 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         bizDemandListCondition.setCreateDateEnd(DateUtil.getEndOfDay(bizDemandListCondition.getCreateDateEnd()));
         bizDemandListCondition.setProjectEndDateStart(DateUtil.getStartOfDay(bizDemandListCondition.getProjectEndDateStart()));
         bizDemandListCondition.setProjectEndDateEnd(DateUtil.getEndOfDay(bizDemandListCondition.getProjectEndDateEnd()));
+
         //是否打标
         List<BizLabelDO> bizLabelDOList;
         if (CollectionUtils.isNotEmpty(bizDemandListCondition.getLabelIds())) {
             bizLabelDOList = bizLabelMapper.getByLabelIdInType(bizDemandListCondition.getLabelIds(), BizTypeEnum.BIZ_DEMAND.getCode());
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(bizIds)) {
-                return ResultUtil.queryResultEmpty();
-            }
             Boolean containLabel = bizDemandListCondition.getContainLabel();
             if (containLabel) {
+                if (CollectionUtils.isEmpty(bizIds)) {
+                    return ResultUtil.queryResultEmpty();
+                }
                 bizDemandListCondition.setContainIds(bizIds);
             } else {
                 bizDemandListCondition.setExclusiveIds(bizIds);
