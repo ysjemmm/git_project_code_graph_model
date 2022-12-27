@@ -152,7 +152,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 标签
         if (CollectionUtils.isNotEmpty(bizDemandQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(bizDemandQueryList.getLabelCategoryIds())) {
             List<Long> labelIds = labelComponent.getLabelIds(bizDemandQueryList.getLabelIds(), bizDemandQueryList.getLabelCategoryIds());
-            if (bizDemandQueryList.getContainLabel()) {
+            if (CollectionUtils.isEmpty(labelIds) && bizDemandQueryList.getContainLabel()) {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
             bizDemandListCondition.setLabelIds(labelIds);
