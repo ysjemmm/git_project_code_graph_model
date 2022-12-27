@@ -164,20 +164,22 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         //是否打标
         if (CollectionUtils.isNotEmpty(condition.getLabelIds())) {
-            List<BizLabelDO> bizLabelDOList;
-            bizLabelDOList = bizLabelMapper.getByLabelIdInType(condition.getLabelIds(), BizTypeEnum.PROJECT.getCode());
+            List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(condition.getLabelIds(), BizTypeEnum.PROJECT.getCode());
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
 
-            if (CollectionUtils.isEmpty(projectIds)) {
-                //产品需求关联项目时,projectIds可能为空
-                projectIds = bizIds;
-            } else {
-                if (condition.getContainLabel()) {
-                    projectIds.retainAll(bizIds);
+            if (condition.getContainLabel()) {
+                if (CollectionUtils.isEmpty(projectIds)) {
+                    projectIds = bizIds;
                 } else {
-                    projectIds.removeAll(bizIds);
+                    projectIds.retainAll(bizIds);
                 }
+            } else {
+                if (CollectionUtils.isEmpty(projectIds)) {
+                    projectIds = projectMapper.getAllId();
+                }
+                projectIds.removeAll(bizIds);
             }
+
             if (CollectionUtils.isEmpty(projectIds)) {
                 return ResultUtil.queryResultEmpty();
             }
@@ -358,7 +360,7 @@ public class ProjectComponentImpl implements ProjectComponent {
                 && (demandConstrue == null || demandConstrue.getActualDate() != null)
                 && (demandConstrueReverse == null || demandConstrueReverse.getActualDate() != null)
                 && (demandUedAudit == null || demandUedAudit.getActualDate() != null);
-        ;
+
         if (dev) {
             status = ProjectStatusEnum.DEVING.getCode();
         }
