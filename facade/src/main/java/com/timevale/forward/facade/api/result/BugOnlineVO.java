@@ -109,4 +109,7 @@ public class BugOnlineVO extends ToString {
 
     @ApiModelProperty("区域:0华南大区，1华北大区，2华东大区，3西部大区，9其他大区")
     private Integer area;
+
+    @ApiModelProperty("详情描述")
+    private String describe;
 }

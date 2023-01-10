@@ -5,6 +5,7 @@ import com.timevale.forward.dal.annotation.WildcardEscape;
 import java.util.Date;
 import java.util.List;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -108,12 +109,12 @@ public class BugOnlineListCondition {
     private List<String> sourceList;
 
     /**
-     *包含的id
+     * 包含的id
      */
     private List<Long> containIds;
 
     /**
-     *不包含的id
+     * 不包含的id
      */
     private List<Long> exclusiveIds;
 
@@ -136,5 +137,10 @@ public class BugOnlineListCondition {
      * 是否是系统关闭的bug
      */
     private Boolean isSystemCloseBug;
+
+    /**
+     * 描述
+     */
+    private String describe;
 
 }

@@ -92,4 +92,9 @@ public class BugOnlineListDO extends BaseDO {
      * 大区
      */
     private Integer area;
+
+    /**
+     * 描述
+     */
+    private String describe;
 }

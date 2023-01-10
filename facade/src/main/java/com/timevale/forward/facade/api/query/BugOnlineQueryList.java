@@ -105,4 +105,7 @@ public class BugOnlineQueryList extends QueryBase {
 
     @ApiModelProperty("是否是系统关闭bug")
     private Boolean isSystemCloseBug;
+
+    @ApiModelProperty("详情描述")
+    private String describe;
 }
