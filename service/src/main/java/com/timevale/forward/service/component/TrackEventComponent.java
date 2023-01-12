@@ -17,7 +17,15 @@ import java.util.List;
 public interface TrackEventComponent {
 
     /**
-     * 埋点地图
+     * 埋点查询-全部
+     *
+     * @param condition 条件
+     * @return {@link List}<{@link TrackEventVO}>
+     */
+    List<TrackEventVO> listAll(TrackEventListCondition condition);
+
+    /**
+     * 埋点查询-分页
      *
      * @return 埋点事件
      */

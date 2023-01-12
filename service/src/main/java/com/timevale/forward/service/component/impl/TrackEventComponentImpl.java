@@ -94,6 +94,20 @@ public class TrackEventComponentImpl implements TrackEventComponent {
     }
 
     @Override
+    public List<TrackEventVO> listAll(TrackEventListCondition condition) {
+        log.info("埋点事件查询全部,参数:{}", condition);
+        buildConditionBeforeQuery(condition);
+        List<TrackEventDO> list = trackEventMapper.list(condition);
+        List<TrackEventVO> trackEventVOList = TrackEventCopier.INSTANCE.convert(list);
+        trackEventVOList.forEach(a -> {
+            a.setStatusName(com.timevale.forward.model.enums.FlowStatusEnum.getTextByCode(a.getStatus()));
+            a.setEnvNames(EnvEnum.getTextByCode(JSONObject.parseArray(a.getEnv(), Integer.class)));
+            a.setPlatformNames(PlatformTypeEnum.getTextByCode(JSONObject.parseArray(a.getPlatform(), Integer.class)));
+        });
+        return trackEventVOList;
+    }
+
+    @Override
     public void updateTrackEventInfo(String processInstanceId) {
         if (StringUtils.isEmpty(processInstanceId)) {
             log.info("流程id为空");

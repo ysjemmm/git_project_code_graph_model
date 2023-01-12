@@ -226,31 +226,40 @@ public class TrackEventServiceImpl implements TrackEventService {
     public BaseResult<TrackExportLogFileVO> exportList(TrackEventQueryList trackEventQueryList) {
         // 完整查询
         log.info("埋点事件列表,参数:{}", trackEventQueryList);
+
+        // 埋点地图参数
         TrackEventListCondition condition = TrackEventCopier.INSTANCE.convert(trackEventQueryList);
         List<Long> trackMapChildrenWithSelf = getTrackMapChildrenWithSelf(trackEventQueryList);
         if (trackEventQueryList.getTrackMapId() != null && CollectionUtils.isEmpty(trackMapChildrenWithSelf)) {
-            throw new BaseBizRuntimeException("导出数据为空，请检查后重试");
+            throw new BaseBizRuntimeException("需要导出数据为空，请检查后重试");
         }
         condition.setTrackMapIds(trackMapChildrenWithSelf);
-        // 临时分页
-        PageHelper.startPage(trackEventQueryList.getPageNum(), trackEventQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
-        BaseResult<PageQueryResult<TrackEventVO>> list = trackEventComponent.list(condition);
-        List<TrackEventVO> trackEventVOList = list.getData().getResultList();
 
-        // 查询埋点事件
+        // 查询埋点事件，判空
+        List<TrackEventVO> trackEventVOList = trackEventComponent.listAll(condition);
+        if (CollUtil.isEmpty(trackEventVOList)) {
+            throw new BaseBizRuntimeException("需要导出数据为空，请检查后重试");
+        }
+        log.info("[TrackEventServiceImpl.exportList]需要导出的事件数:{}",trackEventVOList.size());
+
+        // 查询埋点关联属性
         List<Long> trackEventIdList = trackEventVOList.stream().map(TrackEventVO::getId).collect(Collectors.toList());
         List<TrackEventPropDO> trackEventPropDOList = trackEvenPropMapper.selectByEventIdList(trackEventIdList);
 
         // 查询对应属性
         List<Long> trackPropIdList = trackEventPropDOList.stream().map(TrackEventPropDO::getTrackPropId).distinct().collect(Collectors.toList());
-        List<TrackPropDO> trackPropDOList = trackPropMapper.selectByIds(trackPropIdList);
+        List<TrackPropDO> trackPropDOList = new ArrayList<>();
+        if (CollUtil.isNotEmpty(trackPropIdList)) {
+            trackPropDOList = trackPropMapper.selectByIds(trackPropIdList);
+        }
+        log.info("[TrackEventServiceImpl.exportList]事件相关的属性数量:{}",trackPropDOList.size());
 
         // 属性id-属性 Map
         Map<Long, TrackPropDO> trackPropMap = trackPropDOList.stream().collect(Collectors.toMap(BaseDO::getId, Function.identity(), (a, b) -> a));
         // 事件id-属性idList Map
         Map<Long, List<TrackEventPropDO>> trackEventPropMap = trackEventPropDOList.stream().collect(Collectors.groupingBy(TrackEventPropDO::getTrackEventId));
 
-        // 数据处理
+        // 数据处理，firstRow指模板中写入的起始行，serialNumber指事件编号
         int firstRow = 3;
         long serialNumber = 1L;
         Map<Integer, Integer> mergeInfo = new HashMap<>();
@@ -301,6 +310,7 @@ public class TrackEventServiceImpl implements TrackEventService {
             serialNumber ++;
         }
 
+        log.info("[TrackEventServiceImpl.uploadFile]合并单元格信息mergeInfo:{}",mergeInfo);
         TrackExportLogFileVO trackExportLogFileVO = uploadFile(sensorTrackRowList, mergeInfo);
 
         return BaseResult.success(trackExportLogFileVO);
