@@ -141,6 +141,7 @@ public class BugOnlineListCondition {
     /**
      * 描述
      */
+    @WildcardEscape
     private String describe;
 
 }
