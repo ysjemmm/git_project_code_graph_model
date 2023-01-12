@@ -51,6 +51,9 @@ public class TrackEventVO extends ToString {
     @ApiModelProperty("埋点所属端:1测试环境,2模拟环境,3生产环境")
     private List<String> envNames;
 
+    @ApiModelProperty("触发时机")
+    private String touchMoment;
+
     @ApiModelProperty("提交人")
     private String createMan;
 

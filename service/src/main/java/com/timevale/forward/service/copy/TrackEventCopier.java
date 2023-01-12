@@ -1,6 +1,7 @@
 package com.timevale.forward.service.copy;
 
 import com.alibaba.fastjson.JSONObject;
+import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
 import com.timevale.forward.dal.condition.TrackEventListCondition;
 import com.timevale.forward.dal.entity.TrackEventDO;
 import com.timevale.forward.facade.api.query.ProductDemandLinkTrackEventQueryList;
@@ -9,6 +10,8 @@ import com.timevale.forward.facade.api.request.TrackEventAddReq;
 import com.timevale.forward.facade.api.request.TrackEventModifyReq;
 import com.timevale.forward.facade.api.result.TrackEventDetailVO;
 import com.timevale.forward.facade.api.result.TrackEventVO;
+import com.timevale.forward.facade.api.result.TrackExportLogFileVO;
+import com.timevale.forward.facade.api.result.TrackImportLogFileVO;
 import com.timevale.forward.service.excel.track.event.TrackEvent;
 import com.timevale.forward.service.excel.track.event.TrackFailRow;
 import com.timevale.forward.service.excel.track.event.TrackProp;
@@ -69,6 +72,8 @@ public interface TrackEventCopier {
     TrackFailRow convert(TrackEvent trackEvent);
 
     TrackFailRow convert(TrackProp trackProp);
+
+    TrackExportLogFileVO convert(FileDownloadDTO fileDownloadDTO);
 
     /**
      *

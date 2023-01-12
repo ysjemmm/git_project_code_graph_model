@@ -72,4 +72,14 @@
         </where>
     </select>
 
+    <select id="selectByEventIdList" resultType="com.timevale.forward.dal.entity.TrackEventPropDO">
+        SELECT track_event_id, track_prop_id
+        FROM track_event_prop
+        WHERE is_deleted = false
+          AND track_event_id IN
+          <foreach collection="eventIdList" item="item" separator="," open="(" close=")">
+              #{item}
+          </foreach>
+    </select>
+
 </mapper>

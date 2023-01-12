@@ -8,10 +8,9 @@ import com.timevale.forward.facade.api.request.TrackEventDeleteReq;
 import com.timevale.forward.facade.api.request.TrackEventModifyReq;
 import com.timevale.forward.facade.api.result.TrackEventDetailVO;
 import com.timevale.forward.facade.api.result.TrackEventVO;
+import com.timevale.forward.facade.api.result.TrackExportLogFileVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
-
-import java.util.List;
 
 /**
  * @author xingyun
@@ -27,6 +26,14 @@ public interface TrackEventService {
      * @return 埋点事件
      */
     BaseResult<PageQueryResult<TrackEventVO>> list(TrackEventQueryList trackEventQueryList);
+
+    /**
+     * 导出
+     *
+     * @param trackEventQueryList 跟踪事件查询列表
+     * @return {@link BaseResult}<{@link Void}>
+     */
+    BaseResult<TrackExportLogFileVO> exportList(TrackEventQueryList trackEventQueryList);
 
     /**
      * 新增

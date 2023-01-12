@@ -1,7 +1,13 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.StrUtil;
+import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
+import com.timevale.crm.sdk.common.entity.integration.dto.FileDownloadDTO;
+import com.timevale.crm.sdk.common.utils.file.FileUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandTrackEventCondition;
 import com.timevale.forward.dal.condition.TrackEventCondition;
@@ -15,13 +21,18 @@ import com.timevale.forward.facade.api.request.TrackEventDeleteReq;
 import com.timevale.forward.facade.api.request.TrackEventModifyReq;
 import com.timevale.forward.facade.api.result.TrackEventDetailVO;
 import com.timevale.forward.facade.api.result.TrackEventVO;
+import com.timevale.forward.facade.api.result.TrackExportLogFileVO;
 import com.timevale.forward.facade.api.result.TrackPropVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.copy.TrackPropCopier;
+import com.timevale.forward.service.excel.track.sensor.SensorTrackOutputStrategy;
+import com.timevale.forward.service.excel.track.sensor.SensorTrackRow;
+import com.timevale.forward.service.excel.track.sensor.SensorTrackStyleStrategy;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
+import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -30,13 +41,17 @@ import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -88,6 +103,9 @@ public class TrackEventServiceImpl implements TrackEventService {
 
     @Resource
     private ProductDemandTrackEventComponent productDemandTrackEventComponent;
+
+    @Resource
+    private EnvUtils envUtils;
 
     @Override
     public BaseResult<PageQueryResult<TrackEventVO>> list(TrackEventQueryList trackEventQueryList) {
@@ -202,6 +220,138 @@ public class TrackEventServiceImpl implements TrackEventService {
             productDemandLogComponent.addLogWhenLinkOrUnlinkTrackEvent(a, Lists.newArrayList(oldTrackEventDO.getFullCnName()), ButtonActionEnum.UN_LINK.getText());
         });
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<TrackExportLogFileVO> exportList(TrackEventQueryList trackEventQueryList) {
+        // 完整查询
+        log.info("埋点事件列表,参数:{}", trackEventQueryList);
+        TrackEventListCondition condition = TrackEventCopier.INSTANCE.convert(trackEventQueryList);
+        List<Long> trackMapChildrenWithSelf = getTrackMapChildrenWithSelf(trackEventQueryList);
+        if (trackEventQueryList.getTrackMapId() != null && CollectionUtils.isEmpty(trackMapChildrenWithSelf)) {
+            throw new BaseBizRuntimeException("导出数据为空，请检查后重试");
+        }
+        condition.setTrackMapIds(trackMapChildrenWithSelf);
+        // 临时分页
+        PageHelper.startPage(trackEventQueryList.getPageNum(), trackEventQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        BaseResult<PageQueryResult<TrackEventVO>> list = trackEventComponent.list(condition);
+        List<TrackEventVO> trackEventVOList = list.getData().getResultList();
+
+        // 查询埋点事件
+        List<Long> trackEventIdList = trackEventVOList.stream().map(TrackEventVO::getId).collect(Collectors.toList());
+        List<TrackEventPropDO> trackEventPropDOList = trackEvenPropMapper.selectByEventIdList(trackEventIdList);
+
+        // 查询对应属性
+        List<Long> trackPropIdList = trackEventPropDOList.stream().map(TrackEventPropDO::getTrackPropId).distinct().collect(Collectors.toList());
+        List<TrackPropDO> trackPropDOList = trackPropMapper.selectByIds(trackPropIdList);
+
+        // 属性id-属性 Map
+        Map<Long, TrackPropDO> trackPropMap = trackPropDOList.stream().collect(Collectors.toMap(BaseDO::getId, Function.identity(), (a, b) -> a));
+        // 事件id-属性idList Map
+        Map<Long, List<TrackEventPropDO>> trackEventPropMap = trackEventPropDOList.stream().collect(Collectors.groupingBy(TrackEventPropDO::getTrackEventId));
+
+        // 数据处理
+        int firstRow = 1;
+        long serialNumber = 1L;
+        Map<Integer, Integer> mergeInfo = new HashMap<>();
+
+        List<SensorTrackRow> sensorTrackRowList = new ArrayList<>();
+        for (TrackEventVO event : trackEventVOList) {
+            // 基础属性
+            SensorTrackRow eventRow = new SensorTrackRow();
+            eventRow.setSerialNumber(serialNumber);
+            eventRow.setEventNameEn(event.getEgName());
+            eventRow.setEventNameCn(event.getFullCnName());
+            eventRow.setPropNameCn("$预置属性");
+            eventRow.setTouchMoment(event.getTouchMoment());
+
+            // 埋点平台
+            List<String> platformNames = event.getPlatformNames();
+            String platformNamesStr = String.join("/", platformNames);
+            eventRow.setPlatform(platformNamesStr);
+
+            // 添加到导入列表中
+            sensorTrackRowList.add(eventRow);
+
+            // 获取与属性的关联关系
+            Long eventId = event.getId();
+            List<TrackEventPropDO> linkList = trackEventPropMap.get(eventId);
+            if (CollUtil.isNotEmpty(linkList)) {
+                // 遍历填充数据
+                List<Long> propIdList = linkList.stream().map(TrackEventPropDO::getTrackPropId).collect(Collectors.toList());
+                for (Long propId : propIdList) {
+                    TrackPropDO trackPropDO = trackPropMap.get(propId);
+                    // 验空
+                    if (trackPropDO == null) {
+                        continue;
+                    }
+                    // 填充数据
+                    SensorTrackRow propRow = new SensorTrackRow();
+                    propRow.setPropNameEn(trackPropDO.getEgName());
+                    propRow.setPropNameCn(trackPropDO.getCnName());
+                    propRow.setDataType(trackPropDO.getDataType());
+                    // 添加到导入列表中
+                    sensorTrackRowList.add(propRow);
+                }
+            }
+
+            // 合并行信息，事件编号
+            mergeInfo.put(firstRow, firstRow + CollUtil.size(linkList));
+            firstRow += CollUtil.size(linkList) + 1;
+            serialNumber ++;
+        }
+
+        TrackExportLogFileVO trackExportLogFileVO = uploadFile(sensorTrackRowList, mergeInfo);
+
+        return BaseResult.success(trackExportLogFileVO);
+    }
+
+    private TrackExportLogFileVO uploadFile(List<SensorTrackRow> sensorTrackRowList, Map<Integer, Integer> mergeInfo) {
+        File tempFile = null;
+        InputStream tempFileIns = null;
+        InputStream templateIns = null;
+        TrackExportLogFileVO result = new TrackExportLogFileVO();
+        try {
+            tempFile = File.createTempFile("埋点事件导出", ".xlsx");
+            tempFile.deleteOnExit();
+            log.info("[TrackEventServiceImpl.uploadFile]埋点事件导出临时文件创建成功");
+
+            // 读取模板文件
+            ClassPathResource resource = new ClassPathResource("TRACK-EXPORT-TEMPLATE.xlsx");
+            templateIns = resource.getInputStream();
+
+            // 数据写入到临时文件
+            EasyExcel.write(tempFile)
+                    .withTemplate(templateIns)
+                    .registerWriteHandler(new SensorTrackOutputStrategy(mergeInfo))
+                    .registerWriteHandler(new SensorTrackStyleStrategy())
+                    .sheet("Sheet1")
+                    .doWrite(sensorTrackRowList);
+            log.info("[TrackEventServiceImpl.uploadFile]数据写入临时文件成功");
+
+            // 上传文件
+            tempFileIns = Files.newInputStream(tempFile.toPath());
+            FileDownloadDTO info = FileUtil.uploadFileToOSS(tempFileIns, "埋点事件表.xlsx", envUtils.getEnv());
+            if (info == null || StrUtil.isEmpty(info.getDownloadUrl())) {
+                throw new BaseBizRuntimeException("埋点事件导出失败");
+            }
+            log.info("[TrackEventServiceImpl.uploadFile]文件上传成功");
+
+            // 结果转化
+            result = TrackEventCopier.INSTANCE.convert(info);
+        } catch (IOException e) {
+            throw new BaseBizRuntimeException("埋点事件导出失败");
+        } finally {
+            // 关闭IO且删除临时文件
+            IoUtil.closeIfPosible(tempFileIns);
+            IoUtil.closeIfPosible(templateIns);
+            if (tempFile != null && !tempFile.delete()) {
+                log.error("[TrackImportServiceImpl][template]:模板临时文件删除失败");
+            }
+        }
+
+        // 返回文件
+        return result;
     }
 
     private void buildTrackMapIds(Long trackMapId, List<Long> elementIds, List<String> elementNames) {

@@ -22,6 +22,14 @@ public interface TrackEvenPropMapper {
     List<TrackEventPropDO> select(TrackEventPropCondition condition);
 
     /**
+     * 选择 by 事件id列表
+     *
+     * @param eventIdList 事件id列表
+     * @return 列表
+     */
+    List<TrackEventPropDO> selectByEventIdList(@Param("eventIdList")List<Long>eventIdList);
+
+    /**
      * 更新单条事件-属性
      *
      * @param trackEventPropDO trackEventPropDO
