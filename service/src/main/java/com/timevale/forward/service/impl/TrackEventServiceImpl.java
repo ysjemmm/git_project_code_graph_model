@@ -251,7 +251,7 @@ public class TrackEventServiceImpl implements TrackEventService {
         Map<Long, List<TrackEventPropDO>> trackEventPropMap = trackEventPropDOList.stream().collect(Collectors.groupingBy(TrackEventPropDO::getTrackEventId));
 
         // 数据处理
-        int firstRow = 1;
+        int firstRow = 3;
         long serialNumber = 1L;
         Map<Integer, Integer> mergeInfo = new HashMap<>();
 
@@ -323,9 +323,10 @@ public class TrackEventServiceImpl implements TrackEventService {
             // 数据写入到临时文件
             EasyExcel.write(tempFile)
                     .withTemplate(templateIns)
+                    .relativeHeadRowIndex(0)
                     .registerWriteHandler(new SensorTrackOutputStrategy(mergeInfo))
                     .registerWriteHandler(new SensorTrackStyleStrategy())
-                    .sheet("Sheet1")
+                    .sheet("自定义事件表")
                     .doWrite(sensorTrackRowList);
             log.info("[TrackEventServiceImpl.uploadFile]数据写入临时文件成功");
 
