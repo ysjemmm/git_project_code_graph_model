@@ -296,9 +296,14 @@ public class TrackEventServiceImpl implements TrackEventService {
                     }
                     // 填充数据
                     SensorTrackRow propRow = new SensorTrackRow();
+                    propRow.setSerialNumber(serialNumber);
+                    propRow.setEventNameEn(event.getEgName());
+                    propRow.setEventNameCn(event.getFullCnName());
+                    propRow.setTouchMoment(event.getTouchMoment());
                     propRow.setPropNameEn(trackPropDO.getEgName());
                     propRow.setPropNameCn(trackPropDO.getCnName());
                     propRow.setDataType(trackPropDO.getDataType());
+                    propRow.setPlatform(platformNamesStr);
                     // 添加到导入列表中
                     sensorTrackRowList.add(propRow);
                 }
