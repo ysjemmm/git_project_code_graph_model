@@ -30,7 +30,6 @@ import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.copy.TrackPropCopier;
 import com.timevale.forward.service.excel.track.sensor.SensorTrackOutputStrategy;
 import com.timevale.forward.service.excel.track.sensor.SensorTrackRow;
-import com.timevale.forward.service.excel.track.sensor.SensorTrackStyleStrategy;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -340,7 +339,6 @@ public class TrackEventServiceImpl implements TrackEventService {
                     .withTemplate(templateIns)
                     .relativeHeadRowIndex(0)
                     .registerWriteHandler(new SensorTrackOutputStrategy(mergeInfo))
-                    .registerWriteHandler(new SensorTrackStyleStrategy())
                     .sheet("自定义事件表")
                     .doWrite(sensorTrackRowList);
             log.info("[TrackEventServiceImpl.uploadFile]数据写入临时文件成功");
