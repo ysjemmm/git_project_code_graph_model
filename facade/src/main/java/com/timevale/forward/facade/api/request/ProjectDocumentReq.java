@@ -32,6 +32,12 @@ public class ProjectDocumentReq extends BaseReq {
     @ApiModelProperty("文档类型：1.产品需求文档")
     private Integer type;
 
+    @ApiModelProperty("文件名称")
+    private String docName;
+
+    @ApiModelProperty("文档所属项目阶段:11:启动阶段;12:规划阶段;13:执行阶段;14:收尾阶段;15:运营阶段")
+    private Integer stage;
+
     @ApiModelProperty(value = "上传附件集合")
     private List<FileAddReq> fileList;
 

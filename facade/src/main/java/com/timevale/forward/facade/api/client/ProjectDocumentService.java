@@ -59,10 +59,15 @@ public interface ProjectDocumentService {
 
     /**
      * 保存文档
-     * @param req
-     * @return
      */
     BaseResult<Void> saveDocument(ProjectDocumentReq req);
+
+    /**
+     * 查询项目下所有文档列表
+     * @param projectId 项目id
+     * @return 项目下所有文档
+     */
+    BaseResult<ProjectDocumentVO> listDocuments(Long projectId);
 
     /**
      * 发布前检查

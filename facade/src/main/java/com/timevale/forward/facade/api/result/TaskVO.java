@@ -36,16 +36,16 @@ public class TaskVO extends ToString {
     @ApiModelProperty("名称")
     private String name;
 
-    @ApiModelProperty("项目状态:0待执行、10进行中、20已完成、-10已暂停、-20已作废")
+    @ApiModelProperty("任务状态:0待执行、10进行中、20已完成、-10已暂停、-20已作废")
     private Integer status;
 
-    @ApiModelProperty("项目状态")
+    @ApiModelProperty("任务状态")
     private String statusName;
 
-    @ApiModelProperty("项目阶段:0需求规划阶段,1研发阶段,2测试阶段")
+    @ApiModelProperty("任务所属阶段:0需求规划阶段,1研发阶段,2测试阶段")
     private Integer stage;
 
-    @ApiModelProperty("项目阶段")
+    @ApiModelProperty("任务所属阶段")
     private String stageName;
 
     @ApiModelProperty("执行人")
@@ -54,16 +54,16 @@ public class TaskVO extends ToString {
     @ApiModelProperty("执行人id")
     private String executorId;
 
-    @ApiModelProperty("项目计划开始时间")
+    @ApiModelProperty("任务计划开始时间")
     private Date planStartDate;
 
-    @ApiModelProperty("项目计划结束时间")
+    @ApiModelProperty("任务计划结束时间")
     private Date planEndDate;
 
-    @ApiModelProperty("项目实际开始时间")
+    @ApiModelProperty("任务实际开始时间")
     private Date actualStartDate;
 
-    @ApiModelProperty("项目实际结束时间")
+    @ApiModelProperty("任务实际结束时间")
     private Date actualEndDate;
 
     @ApiModelProperty("创建人id")

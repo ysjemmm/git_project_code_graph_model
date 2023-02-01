@@ -100,7 +100,7 @@ public class ProjectDO extends BaseDO {
     private Integer isWithGoal;
 
     /**
-     * 项目等级：0普通，1重点，2S级别，3A级别，4B级别
+     * 项目等级：0普通，10重点，20S级别，30A级别，40B级别
      */
     private Integer level;
 
@@ -156,6 +156,11 @@ public class ProjectDO extends BaseDO {
     private String parentIds;
 
     /**
+     * 内部项目类型: 0空, 1战略项目, 2LTC项目, 3PBG项目, 4CBG项目, 5管理后台项目
+     */
+    private Integer innerType;
+
+    /**
      * 返回父节点id列表
      */
     public LinkedList<Long> getParentList() {
@@ -166,12 +171,18 @@ public class ProjectDO extends BaseDO {
                 .collect(Collectors.toCollection(LinkedList::new));
     }
 
-    public Long parentId() {
+    public Long getParentId() {
         LinkedList<Long> parentIds = getParentList();
         if (parentIds.size() < 2) {
             return null;
         }
         return parentIds.get(parentIds.size() - 2);
+    }
+
+    public void setParentIds(List<Long> parentIds) {
+        this.parentIds = parentIds.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
     }
 
 }

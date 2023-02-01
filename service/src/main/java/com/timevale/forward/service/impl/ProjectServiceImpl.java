@@ -454,6 +454,31 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    public BaseResult<Boolean> simpleModify(ProjectSimpleModifyReq projectSimpleModifyReq) {
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<ProjectVO>> listChildren(ProjectChildListReq projectChildListReq) {
+        return BaseResult.success();
+    }
+
+    @Override
+    public BaseResult<ProjectTreeVO> getTree(Long projectId) {
+        return BaseResult.success();
+    }
+
+    @Override
+    public BaseResult<Void> appendChildren(ListReq<Long> projectIds) {
+        return BaseResult.success();
+    }
+
+    @Override
+    public BaseResult<ProjectTabCountVO> countTabTodos(Long projectId) {
+        return BaseResult.success();
+    }
+
+    @Override
     public BaseResult<ProjectDetailVO> get(Long projectId) {
         log.info("项目查看接收参数:{}", projectId);
         ProjectDO projectDO = projectMapper.get(projectId);

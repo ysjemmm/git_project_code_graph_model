@@ -61,6 +61,39 @@ public interface ProjectService {
     BaseResult<Boolean> modify(ProjectModifyReq projectModifyReq);
 
     /**
+     * 简单修改
+     * @param projectSimpleModifyReq 项目信息
+     * @return 是否成功
+     */
+    BaseResult<Boolean> simpleModify(ProjectSimpleModifyReq projectSimpleModifyReq);
+
+    /**
+     * 查询子项目列表
+     * @param projectChildListReq 分页查询参数
+     * @return 子项目列表
+     */
+    BaseResult<PageQueryResult<ProjectVO>> listChildren(ProjectChildListReq projectChildListReq);
+
+    /**
+     * 根据项目id获取项目树
+     * @param projectId 项目id
+     * @return 项目树结构内容
+     */
+    BaseResult<ProjectTreeVO> getTree(Long projectId);
+
+    /**
+     * 添加子项目列表
+     * @param projectIds 子项目id列表
+     */
+    BaseResult<Void> appendChildren(ListReq<Long> projectIds);
+
+    /**
+     * 查询项目标签页的todo数量列表
+     * @param projectId 项目id
+     */
+    BaseResult<ProjectTabCountVO> countTabTodos(Long projectId);
+
+    /**
      * 查看
      *
      * @param projectId 项目信息

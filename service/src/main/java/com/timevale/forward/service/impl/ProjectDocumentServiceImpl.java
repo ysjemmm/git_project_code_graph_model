@@ -153,6 +153,11 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
     }
 
     @Override
+    public BaseResult<ProjectDocumentVO> listDocuments(Long projectId) {
+        return BaseResult.success();
+    }
+
+    @Override
     public BaseResult<List<String>> checkDocBeforeRelease(ProjectDocumentCheckReq checkReq) {
         List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(checkReq.getProjectNodes());
         List<String> result = projectDocumentComponent.docNeedFillIn(checkReq.getId(), projectNodeDOList, checkReq.getType());

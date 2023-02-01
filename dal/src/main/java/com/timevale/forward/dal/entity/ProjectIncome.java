@@ -22,9 +22,9 @@ public class ProjectIncome {
     private Long projectId;
 
     /**
-     * 成本金额（元）
+     * 收益金额（元）
      */
-    private BigDecimal amount;
+    private BigDecimal incomeAmount;
 
     /**
      * 收益日期

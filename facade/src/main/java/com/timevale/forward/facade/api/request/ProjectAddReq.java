@@ -6,7 +6,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Digits;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
@@ -30,6 +32,10 @@ public class ProjectAddReq extends BaseReq {
     @ApiModelProperty("优先级:0(P0),10(P1),20(P2)")
     @NotNull(message = "优先级不能为空")
     private Integer priority;
+
+    @NotNull(message = "项目类型必填")
+    @ApiModelProperty(value = "项目类型: 0-产研项目; 1-内部项目", required = true)
+    private Integer category = 0;
 
     @ApiModelProperty("产品线")
     @NotNull(message = "产品线不能为空")
@@ -70,12 +76,25 @@ public class ProjectAddReq extends BaseReq {
     @ApiModelProperty("项目目标列表")
     private List<ProjectGoalAddReq> projectGoals;
 
-    @ApiModelProperty("项目等级：0普通 10重点")
+    @Valid
+    @ApiModelProperty("项目预算列表")
+    private List<ProjectBudgetSaveReq> projectBudgets;
+
+    @ApiModelProperty(value = "项目等级：0普通 10重点 20S级别 30A级别 40B级别", required = true)
     @NotNull(message = "项目等级不能为空")
     private Integer level;
 
     @ApiModelProperty("产品技术资源评估（人天）")
     private BigDecimal resourceAssessment;
+
+    @Digits(integer = 15, fraction = 2, message = "请输入15位以内整数，2位以内小数")
+    @PositiveOrZero(message = "预计收益金额不可为负数")
+    @ApiModelProperty("项目预计收益金额")
+    private BigDecimal expectedIncome;
+
+    @NotNull(message = "内部项目类型必填")
+    @ApiModelProperty(value = "内部项目类型: 0空, 1战略项目, 2LTC项目, 3PBG项目, 4CBG项目, 5管理后台项目", required = true)
+    private Integer innerType = 0;
 
     @ApiModelProperty("标签id")
     private List<Long> labelIds;

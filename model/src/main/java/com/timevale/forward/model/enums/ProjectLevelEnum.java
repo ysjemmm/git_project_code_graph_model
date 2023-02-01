@@ -13,10 +13,13 @@ public enum ProjectLevelEnum {
 
     COMMON(0,"普通项目"),
 
-    IMPORTANT(10,"重点项目");
+    IMPORTANT(10,"重点项目"),
+    S(20, "S级"),
+    A(30, "A级"),
+    B(40, "B级");
 
-    private Integer code;
-    private String text;
+    private final Integer code;
+    private final String text;
 
     public static String getTextByCode(Integer code){
         for (ProjectLevelEnum e : ProjectLevelEnum.values()) {
