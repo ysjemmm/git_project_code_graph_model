@@ -164,7 +164,7 @@ public class ProjectDO extends BaseDO {
      * 返回父节点id列表
      */
     public LinkedList<Long> getParentList() {
-        return Stream.of(parentIds.split(","))
+        return Stream.of(parentIds.substring(1, parentIds.length() - 1).split(","))
                 // prevent in case someone directly update table with space accidentally
                 .map(String::trim)
                 .map(Long::parseLong)
@@ -180,9 +180,15 @@ public class ProjectDO extends BaseDO {
     }
 
     public void setParentIds(List<Long> parentIds) {
-        this.parentIds = parentIds.stream()
-                .map(String::valueOf)
-                .collect(Collectors.joining(","));
+        this.parentIds = "," +
+                parentIds.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(",")) +
+                ",";
+    }
+
+    public void setParentIds(String parentIds) {
+        this.parentIds = parentIds;
     }
 
 }
