@@ -5,7 +5,10 @@ import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author xingyun
@@ -34,7 +37,7 @@ public class ProjectDO extends BaseDO {
     private Integer type;
 
     /**
-     * 0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废
+     * 项目状态:0待启动,10规划中,15执行中,20研发中,25收尾中,30测试中,35运营中,40已发布,45已完成,-10已暂停,-20已作废
      */
     private Integer status;
 
@@ -97,7 +100,7 @@ public class ProjectDO extends BaseDO {
     private Integer isWithGoal;
 
     /**
-     * 项目等级
+     * 项目等级：0普通，1重点，2S级别，3A级别，4B级别
      */
     private Integer level;
 
@@ -136,5 +139,39 @@ public class ProjectDO extends BaseDO {
      * 文档未填写原因
      */
     private String unWriteReason;
+
+    /**
+     * 项目类型 0:产研项目; 1:内部项目
+     */
+    private Integer category;
+
+    /**
+     * 项目预计收益金额（元）
+     */
+    private BigDecimal expectedIncome;
+
+    /**
+     * 父节点id列表，用逗号分隔，包含自身
+     */
+    private String parentIds;
+
+    /**
+     * 返回父节点id列表
+     */
+    public LinkedList<Long> getParentList() {
+        return Stream.of(parentIds.split(","))
+                // prevent in case someone directly update table with space accidentally
+                .map(String::trim)
+                .map(Long::parseLong)
+                .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    public Long parentId() {
+        LinkedList<Long> parentIds = getParentList();
+        if (parentIds.size() < 2) {
+            return null;
+        }
+        return parentIds.get(parentIds.size() - 2);
+    }
 
 }

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.timevale.forward.dal.dao.ProjectBudgetMapper">
+
+    <resultMap id="BaseResultMap" type="com.timevale.forward.dal.entity.ProjectBudget">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="projectId" column="project_id" jdbcType="BIGINT"/>
+            <result property="costType" column="cost_type" jdbcType="VARCHAR"/>
+            <result property="expectedAmount" column="expected_amount" jdbcType="DECIMAL"/>
+            <result property="costAmount" column="cost_amount" jdbcType="DECIMAL"/>
+            <result property="expectedDesc" column="expected_desc" jdbcType="VARCHAR"/>
+            <result property="costDesc" column="cost_desc" jdbcType="VARCHAR"/>
+            <result property="costDate" column="cost_date" jdbcType="TIMESTAMP"/>
+            <result property="isDeleted" column="is_deleted" jdbcType="TINYINT"/>
+            <result property="createManId" column="create_man_id" jdbcType="VARCHAR"/>
+            <result property="createMan" column="create_man" jdbcType="VARCHAR"/>
+            <result property="createDate" column="create_date" jdbcType="TIMESTAMP"/>
+            <result property="modifyManId" column="modify_man_id" jdbcType="VARCHAR"/>
+            <result property="modifyMan" column="modify_man" jdbcType="VARCHAR"/>
+            <result property="modifyDate" column="modify_date" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,project_id,cost_type,
+        expected_amount,cost_amount,expected_desc,
+        cost_desc,cost_date,is_deleted,
+        create_man_id,create_man,create_date,
+        modify_man_id,modify_man,modify_date
+    </sql>
+</mapper>
