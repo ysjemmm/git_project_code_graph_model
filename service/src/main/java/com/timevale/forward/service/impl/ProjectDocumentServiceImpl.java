@@ -153,7 +153,7 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
     }
 
     @Override
-    public BaseResult<ProjectDocumentVO> listDocuments(Long projectId) {
+    public BaseResult<List<ProjectDocumentVO>> listDocuments(Long projectId) {
         return BaseResult.success();
     }
 

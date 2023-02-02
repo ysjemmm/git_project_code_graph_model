@@ -67,7 +67,7 @@ public interface ProjectDocumentService {
      * @param projectId 项目id
      * @return 项目下所有文档
      */
-    BaseResult<ProjectDocumentVO> listDocuments(Long projectId);
+    BaseResult<List<ProjectDocumentVO>> listDocuments(Long projectId);
 
     /**
      * 发布前检查
