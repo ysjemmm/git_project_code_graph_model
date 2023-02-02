@@ -26,6 +26,6 @@ public class ProjectUpdateStatusReq extends BaseReq {
     @ApiModelProperty("项目暂停原因")
     private String suspendReason;
 
-    @ApiModelProperty("项目暂停原因")
+    @ApiModelProperty("项目作废原因")
     private String invalidReason;
 }

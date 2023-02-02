@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -135,4 +134,8 @@ public class ProjectQueryList extends QueryBase {
 
     @ApiModelProperty("节点实际时间右区间")
     private Date actualDateRight;
+
+    @ApiModelProperty("是否只展示一级项目")
+    private Boolean onlyFirstLevel = false;
+
 }
