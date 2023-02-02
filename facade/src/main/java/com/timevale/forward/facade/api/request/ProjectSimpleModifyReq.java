@@ -45,12 +45,6 @@ public class ProjectSimpleModifyReq extends ToString {
     @ApiModelProperty("描述")
     private String desc;
 
-    @ApiModelProperty("是否子项目，null返回所有项目，true仅返回子项目，false返回非子项目")
-    private Boolean isChild;
-
-    @ApiModelProperty("是否已关联里程碑，null返回所有，true仅返回已关联里程碑项目，false返回未关联里程碑项目")
-    private Boolean hasMilestone;
-
     @Digits(integer = 15, fraction = 2, message = "请输入15位以内整数，2位以内小数")
     @PositiveOrZero(message = "预计收益金额不可为负数")
     @ApiModelProperty("项目预计收益金额")
