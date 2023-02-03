@@ -38,6 +38,9 @@ public class ManDayVO extends ToString {
     @ApiModelProperty("实际人天")
     private BigDecimal actualManDay;
 
+    @ApiModelProperty("工时说明")
+    private String manDayDesc;
+
     @ApiModelProperty("周开始日期")
     private Date weekStartDate;
 

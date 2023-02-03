@@ -37,6 +37,11 @@ public class ManDayDO extends BaseDO {
     private BigDecimal actualManDay;
 
     /**
+     * 人天填报说明
+     */
+    private String manDayDesc;
+
+    /**
      * 周开始日期
      */
     private Date weekStartDate;

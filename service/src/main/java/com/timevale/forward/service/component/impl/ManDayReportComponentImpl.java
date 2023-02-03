@@ -54,6 +54,7 @@ public class ManDayReportComponentImpl implements ManDayReportComponent {
         ManDayReportDO reportDO = new ManDayReportDO()
                 .setManDayId(manDayId)
                 .setAuditManDay(auditManDay)
+                .setManDayDesc(manDayDO.getManDayDesc())
                 .setAuditStatus(isPM ? AuditStatusEnum.APPROVE.getCode() : AuditStatusEnum.AUDITING.getCode())
                 .setAuditor(projectDO.getPmName())
                 .setAuditorId(projectDO.getPmId())

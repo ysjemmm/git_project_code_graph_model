@@ -5,9 +5,9 @@
 <mapper namespace="com.timevale.forward.dal.dao.ManDayMapper">
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert man_day (project_id, member_id, member_name, actual_man_day, week_start_date, week_end_date,
-                        create_man_id, create_man)
+                        create_man_id, create_man, man_day_desc)
         values (#{projectId}, #{memberId}, #{memberName}, #{actualManDay}, #{weekStartDate}, #{weekEndDate},
-                #{createManId}, #{createMan})
+                #{createManId}, #{createMan}, #{manDayDesc})
     </insert>
 
     <update id="delete">
@@ -23,6 +23,14 @@
         set actual_man_day = #{actualManDay},
             modify_man_id  = #{modifyManId},
             modify_man     = #{modifyMan}
+        where id = #{id}
+    </update>
+
+    <update id="updateManDayDesc">
+        update man_day
+        set man_day_desc  = #{manDayDesc},
+            modify_man_id = #{modifyManId},
+            modify_man    = #{modifyMan}
         where id = #{id}
     </update>
 

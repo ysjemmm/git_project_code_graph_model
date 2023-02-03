@@ -30,6 +30,8 @@ public interface ManDayMapper {
 
     void updateActualManDay(ManDayDO manDayDO);
 
+    void updateManDayDesc(ManDayDO manDayDO);
+
     void updateAudit(ManDayDO manDayDO);
 
     void insert(ManDayDO setWeekEndDate);

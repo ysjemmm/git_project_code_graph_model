@@ -24,6 +24,11 @@ public class ManDayReportDO extends BaseDO {
     private BigDecimal auditManDay;
 
     /**
+     * 工时说明
+     */
+    private String manDayDesc;
+
+    /**
      * 审计状态
      */
     private Integer auditStatus;

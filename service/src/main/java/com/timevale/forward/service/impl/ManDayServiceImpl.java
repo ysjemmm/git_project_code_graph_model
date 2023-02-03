@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
@@ -186,13 +187,13 @@ public class ManDayServiceImpl implements ManDayService {
                     // 非pm时，如果数据包含本人则返回
                     projectManDays.stream().filter(m -> m.getMemberId().equals(userInfo.getId()))
                             .findFirst().ifPresent(m -> {
-                        ManDayListVO manDayListVO = new ManDayListVO()
-                                .setProjectId(project.getId())
-                                .setProjectName(project.getName())
-                                .setProjectCreateDate(project.getCreateDate());
-                        manDayListVO.setManDays(Collections.singletonList(ManDayCopier.INSTANCE.convert(m)));
-                        res.add(manDayListVO);
-                    });
+                                ManDayListVO manDayListVO = new ManDayListVO()
+                                        .setProjectId(project.getId())
+                                        .setProjectName(project.getName())
+                                        .setProjectCreateDate(project.getCreateDate());
+                                manDayListVO.setManDays(Collections.singletonList(ManDayCopier.INSTANCE.convert(m)));
+                                res.add(manDayListVO);
+                            });
                 }
             }
 
@@ -316,10 +317,9 @@ public class ManDayServiceImpl implements ManDayService {
     public BaseResult<Boolean> modify(ManDayModifyReq manDayModifyReq) {
         Long projectId = manDayModifyReq.getProjectId();
         String memberId = manDayModifyReq.getMemberId();
+        String manDayDesc = manDayModifyReq.getManDayDesc();
         ProjectDO project = projectMapper.get(projectId);
         AssertUtil.notNull(project, "更改的项目id不存在");
-        // AssertUtil.checkState(project.getPmId().equals(LocalSessionUtils.getUserInfo().getId()),
-        //         "您不是项目的项目经理，无权修改人天数据");
         BigDecimal actualManDay = manDayModifyReq.getActualManDay();
         Pair<Date, Date> dateRange = parseAndCheckDateRange(manDayModifyReq.getWeekDateRange());
         Date startDate = dateRange.getLeft();
@@ -328,7 +328,8 @@ public class ManDayServiceImpl implements ManDayService {
                 Collections.singleton(startDate), null);
 
         boolean isPM = project.getPmId().equals(LocalSessionUtils.getUserInfo().getId());
-        Optional<ManDayDO> modifiedManDay = oldManDays.stream().filter(manDay -> manDay.getMemberId().equals(memberId))
+        Optional<ManDayDO> modifiedManDay = oldManDays.stream()
+                .filter(manDay -> manDay.getMemberId().equals(memberId))
                 .findFirst();
         if (modifiedManDay.isPresent()) {
             // 原本已经存在的数据直接更新或者删除
@@ -337,8 +338,14 @@ public class ManDayServiceImpl implements ManDayService {
             AssertUtil.checkState(!AuditStatusEnum.AUDITING.getCode().equals(oldManDay.getAuditStatus()),
                     "审核中状态不可编辑。若需要修改，请联系项目经理驳回后，再编辑提交");
 
-            AssertUtil.checkState(oldManDay.getActualManDay().compareTo(actualManDay) != 0,
-                    "相同天数无需修改");
+            if (manDayDesc != null && !Objects.equals(oldManDay.getManDayDesc(), manDayDesc)) {
+                oldManDay.setManDayDesc(manDayDesc);
+                manDayMapper.updateManDayDesc(oldManDay);
+            }
+            if (oldManDay.getActualManDay().compareTo(actualManDay) == 0) {
+                // 人天不更新则只更新描述
+                return BaseResult.success();
+            }
 
             // 如果是PM直接修改
             if (isPM) {
@@ -375,7 +382,7 @@ public class ManDayServiceImpl implements ManDayService {
 
         // 根据当前用户在当前项目中的数据
         Optional<PersonDO> member = personMapper.get(Collections.singletonList(project.getId()),
-                PersonTypeEnum.PROJECT_MEMBER.getCode()).stream()
+                        PersonTypeEnum.PROJECT_MEMBER.getCode()).stream()
                 .filter(person -> person.getUserId().equals(memberId))
                 .findFirst();
 
@@ -391,6 +398,7 @@ public class ManDayServiceImpl implements ManDayService {
                 .setMemberId(memberId)
                 .setMemberName(member.get().getUserName())
                 .setActualManDay(isPM ? actualManDay : BigDecimal.ZERO)
+                .setManDayDesc(Strings.nullToEmpty(manDayDesc))
                 .setWeekStartDate(startDate)
                 .setWeekEndDate(endDate);
         manDayMapper.insert(newManDayDO);
@@ -425,16 +433,10 @@ public class ManDayServiceImpl implements ManDayService {
         Pair<LocalDate, LocalDate> localDatePair = parseDateRange(dateRange);
         LocalDate startLocalDate = localDatePair.getLeft();
         LocalDate endLocalDate = localDatePair.getRight();
-        //跨月拆分:9.26~10.2 =>9.26~9.30,10.1~10.2
+        // 跨月拆分: 9.26~10.2 => 9.26~9.30,10.1~10.2
         AssertUtil.checkState(startLocalDate.getDayOfWeek() == DayOfWeek.MONDAY
                         || endLocalDate.getDayOfWeek() == DayOfWeek.SUNDAY,
                 "开始时间为周一或结束时间为周日至少满足一项");
-//        AssertUtil.checkState(startLocalDate.getDayOfWeek() == DayOfWeek.MONDAY,
-//                "传入时间开始时间必须为周一");
-//        AssertUtil.checkState(endLocalDate.getDayOfWeek() == DayOfWeek.SUNDAY,
-//                "传入时间开始时间必须为周日");
-//        AssertUtil.checkState(ChronoUnit.DAYS.between(startLocalDate, endLocalDate) == 6L,
-//                "结束时间和开始时间需要在同一周");
         Date startDate = Date.from(startLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
         Date endDate = Date.from(endLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
         return Pair.of(startDate, endDate);
