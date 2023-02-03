@@ -22,6 +22,12 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("名称")
     private String name;
 
+    @ApiModelProperty("父项目id")
+    private Long parentId;
+
+    @ApiModelProperty("父项目名称")
+    private String parentProjectName;
+
     @ApiModelProperty("是否为客户开发项目：0否，1是")
     private Integer customerDev;
 
