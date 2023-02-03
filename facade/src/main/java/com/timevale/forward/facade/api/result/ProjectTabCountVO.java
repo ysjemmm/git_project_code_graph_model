@@ -18,4 +18,6 @@ public class ProjectTabCountVO extends ToString {
     @ApiModelProperty("项目风险数量")
     private Long projectRiskCount;
 
+    @ApiModelProperty("子项目数")
+    private Long childrenCount;
 }
