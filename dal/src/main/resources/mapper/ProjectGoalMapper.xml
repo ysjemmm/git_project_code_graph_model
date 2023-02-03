@@ -15,7 +15,7 @@
         values
         <foreach collection="list" item="item" separator=",">
             (#{item.projectId}, #{item.name}, #{item.type}, #{item.isMain}, #{item.measurement}, #{item.reachValue},
-            #{item.reachDate}, #{item.createManId}, #{item.createMan})
+            #{item.reachDate}, #{createManId}, #{createMan})
         </foreach>
     </insert>
 

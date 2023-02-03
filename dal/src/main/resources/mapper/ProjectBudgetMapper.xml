@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.timevale.forward.dal.dao.ProjectBudgetMapper">
 
-    <resultMap id="BaseResultMap" type="com.timevale.forward.dal.entity.ProjectBudget">
+    <resultMap id="BaseResultMap" type="com.timevale.forward.dal.entity.ProjectBudgetDO">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="projectId" column="project_id" jdbcType="BIGINT"/>
             <result property="costType" column="cost_type" jdbcType="VARCHAR"/>
@@ -29,4 +29,14 @@
         create_man_id,create_man,create_date,
         modify_man_id,modify_man,modify_date
     </sql>
+
+    <insert id="insertBatch">
+        INSERT INTO project_budget(project_id, cost_type, expected_amount, cost_amount, expected_desc, cost_desc, cost_date,
+                                   create_man, create_man_id)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.projectId}, #{item.costType}, #{item.expectedAmount}, #{item.costAmount}, #{item.expectedDesc},
+             #{item.costDesc}, #{item.costDate}, #{createMan}, #{createManId})
+        </foreach>
+    </insert>
 </mapper>

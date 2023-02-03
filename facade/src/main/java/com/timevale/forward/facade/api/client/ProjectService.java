@@ -51,6 +51,13 @@ public interface ProjectService {
      */
     BaseResult<Boolean> add(ProjectAddReq projectAddReq);
 
+    /**
+     * 内部项目新增
+     *
+     * @param projectInnerAddReq 项目内部添加请求
+     * @return 是否成功
+     */
+    BaseResult<Boolean> innerAdd(ProjectInnerAddReq projectInnerAddReq);
 
     /**
      * 修改

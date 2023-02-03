@@ -161,6 +161,11 @@ public class ProjectDO extends BaseDO {
     private Integer innerType;
 
     /**
+     * 有效阶段
+     */
+    private String validStages;
+
+    /**
      * 返回父节点id列表
      */
     public LinkedList<Long> getParentList() {

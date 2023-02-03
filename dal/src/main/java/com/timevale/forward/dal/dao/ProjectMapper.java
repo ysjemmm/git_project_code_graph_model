@@ -18,6 +18,14 @@ public interface ProjectMapper {
     int insert(ProjectDO projectDO);
 
     /**
+     * 内部项目-新增
+     *
+     * @param projectDO 项目
+     * @return int
+     */
+    int innerInsert(ProjectDO projectDO);
+
+    /**
      * 查询
      *
      * @param id id

@@ -17,11 +17,12 @@ import java.util.List;
  */
 @Mapper
 public interface ProjectGoalCopier {
-
-
     ProjectGoalCopier INSTANCE = Mappers.getMapper(ProjectGoalCopier.class);
 
     ProjectGoalDO convert(ProjectGoalAddReq projectGoalAddReq);
+
+    @Mapping(source = "projectId", target = "projectId")
+    ProjectGoalDO convert(ProjectGoalAddReq projectGoalAddReq, Long projectId);
 
     List<ProjectGoalDO> convert(List<ProjectGoalAddReq> projectGoalAddReq);
 

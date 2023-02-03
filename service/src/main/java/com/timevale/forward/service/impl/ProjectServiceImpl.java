@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -178,6 +179,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private ProjectDocumentComponent projectDocumentComponent;
+
+    @Resource
+    private ProjectBudgetMapper projectBudgetMapper;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -368,6 +372,69 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         return BaseResult.success(true);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> innerAdd(ProjectInnerAddReq projectInnerAddReq) {
+        // 校验参数
+        innerAddValidate(projectInnerAddReq);
+
+        // 转换，配置项目类型，有效阶段
+        ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectInnerAddReq);
+        projectDO.setCategory(ProjectCategoryEnum.INNER_PROJECT.getCode());
+        projectDO.setValidStages(ProjectValidStages.getAllStageJson());
+        projectMapper.innerInsert(projectDO);
+
+        // 获取项目id
+        Long projectId = projectDO.getId();
+
+        // 取出项目成员参数
+        List<PersonAddReq> teamMembers = projectInnerAddReq.getTeamMembers();
+        // 去除pm
+        PersonAddReq pm = projectInnerAddReq.getPm();
+        teamMembers.removeIf(e-> Objects.equals(e.getUserId(), pm.getUserId()));
+        // 项目成员落库
+        personComponent.add(teamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+
+        // 添加项目目标信息
+        List<ProjectGoalAddReq> projectGoals = projectInnerAddReq.getProjectGoals();
+        if (CollUtil.isNotEmpty(projectGoals)) {
+            // 转换
+            List<ProjectGoalDO> projectGoalDOs = projectGoals.stream()
+                    .map(e -> ProjectGoalCopier.INSTANCE.convert(e, projectId)).collect(Collectors.toList());
+            // 项目目标落库
+            projectGoalMapper.batchInsert(projectGoalDOs);
+        }
+
+        // 添加项目预算信息
+        List<ProjectBudgetSaveReq> projectBudgets = projectInnerAddReq.getProjectBudgets();
+        if (CollUtil.isNotEmpty(projectBudgets)) {
+            // 转换
+            List<ProjectBudgetDO> projectBudgetDOs = projectBudgets.stream()
+                    .map(e -> ProjectBudgetsCopier.INSTANCE.convert(e, projectId)).collect(Collectors.toList());
+            // 项目预算落库
+            projectBudgetMapper.insertBatch(projectBudgetDOs);
+        }
+
+        // 记录项目状态日志
+        Integer status = ProjectStatusEnum.WAITING.getCode();
+        projectLogComponent.addLogWhenStatusChange(status, status, projectDO.getId(), ButtonActionEnum.SUBMIT.getText());
+
+        return BaseResult.success(true);
+    }
+
+    /**
+     * 内部项目新增，参数检验
+     *
+     * @param projectInnerAddReq 项目内部添加请求
+     */
+    private void innerAddValidate(ProjectInnerAddReq projectInnerAddReq) {
+        String name = projectInnerAddReq.getName();
+        AssertUtil.checkState(!name.contains(CommonConstant.BLANK), "项目名称中请勿包含空格");
+
+        ProjectDO byName = projectMapper.getByName(name);
+        AssertUtil.checkState(byName == null, "该项目名称已存在,请修改后重试");
     }
 
     @Override
