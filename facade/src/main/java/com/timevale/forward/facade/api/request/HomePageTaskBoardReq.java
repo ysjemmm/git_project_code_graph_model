@@ -19,7 +19,6 @@ import java.util.List;
 public class HomePageTaskBoardReq extends BaseReq {
 
     @ApiModelProperty("tab类型：0为个人，1为团队")
-    @NotNull(message = "tab类型不能为空")
     Integer tabType;
 
     @ApiModelProperty("部门id")

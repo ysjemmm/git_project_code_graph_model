@@ -587,6 +587,11 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     @Override
+    public BaseResult<List<HomePageGroupWorkTimeVO>> getGroupTaskWorkTimeBoard(HomePageTaskBoardReq req) {
+        return null;
+    }
+
+    @Override
     public BaseResult<List<String>> getHolidays(HomePageHolidayReq homePageHolidayReq) {
         Date startDate=homePageHolidayReq.getStartDate();
         Date endDate=homePageHolidayReq.getEndDate();
