@@ -110,5 +110,6 @@
         <mapper resource="mapper/BizDemandCustomMapper.xml" />
         <mapper resource="mapper/BugOnlineCustomMapper.xml" />
         <mapper resource="mapper/BugOnlineStatusOperatorMapper.xml"/>
+        <mapper resource="mapper/BugOnlineBizDemandMapper.xml"/>
     </mappers>
 </configuration>

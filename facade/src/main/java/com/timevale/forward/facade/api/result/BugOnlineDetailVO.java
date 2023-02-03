@@ -170,4 +170,8 @@ public class BugOnlineDetailVO extends ToString {
 
     @ApiModelProperty("线上bug日志最新创建时间")
     private Date bugLogLastCreateDate;
+
+    @ApiModelProperty("业务需求列表")
+    private List<BizDemandVO> bizDemands;
+
 }

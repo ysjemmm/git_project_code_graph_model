@@ -1,14 +1,14 @@
 package com.timevale.forward.service.component.impl;
 
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.BugLogMapper;
+import com.timevale.forward.dal.dao.BugOnlineBizDemandMapper;
 import com.timevale.forward.dal.dao.BugOnlineMapper;
+import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.BugLogDO;
 import com.timevale.forward.dal.entity.BugOnlineDO;
 import com.timevale.forward.dal.entity.BugOnlineStatusOperatorDO;
-import com.timevale.forward.model.enums.BugLogFieldEnum;
-import com.timevale.forward.model.enums.BugLogTypeEnum;
-import com.timevale.forward.model.enums.BugOnlineStatusEnum;
-import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BugLogComponent;
 import com.timevale.forward.service.component.BugOnlineComponent;
 import com.timevale.forward.service.component.BugOnlineStatusOperatorComponent;
@@ -18,20 +18,14 @@ import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author xingyun
@@ -56,10 +50,15 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
     @Resource
     private BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
 
+    @Resource
+    private BugOnlineBizDemandMapper bugOnlineBizDemandMapper;
+
+    @Resource
+    private BizChangeLogMapper bizChangeLogMapper;
 
     @Override
     public void autoCloseBugIfBeConfirm(int autoCloseLimitDay) {
-        log.info("待确认线上bug自动关闭-开始:{}",autoCloseLimitDay);
+        log.info("待确认线上bug自动关闭-开始:{}", autoCloseLimitDay);
         List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByStatus(Lists.newArrayList(BugOnlineStatusEnum.BE_CONFIRM.getCode()));
         Date today = new Date();
         List<Long> updateBugIds = new ArrayList<>();
@@ -79,12 +78,12 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
             bugOnlineMapper.updateStatusByIds(updateBugIds, BugOnlineStatusEnum.CLOSE.getCode());
             updateBugIds.forEach(this::addLog);
         }
-        log.info("待确认线上bug自动关闭-完成,更新id:{}",updateBugIds);
+        log.info("待确认线上bug自动关闭-完成,更新id:{}", updateBugIds);
     }
 
     @Override
     public void autoNoticeCloseBugIfBeConfirm(int autoCloseLimitDay) {
-        log.info("待确认线上bug自动关闭前钉钉通知-开始:{}",autoCloseLimitDay);
+        log.info("待确认线上bug自动关闭前钉钉通知-开始:{}", autoCloseLimitDay);
         List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByStatus(Lists.newArrayList(BugOnlineStatusEnum.BE_CONFIRM.getCode()));
         Date today = new Date();
         List<BugOnlineDO> noticeBugOnlies = new ArrayList<>();
@@ -101,17 +100,77 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
                 }
             }
         });
-        if(CollectionUtils.isNotEmpty(noticeBugOnlies)){
+        if (CollectionUtils.isNotEmpty(noticeBugOnlies)) {
             // 发送通知
-            noticeBugOnlies.forEach(n-> messageEventPublisher.publish(new BugOnlineConfirmMsgEvent(
+            noticeBugOnlies.forEach(n -> messageEventPublisher.publish(new BugOnlineConfirmMsgEvent(
                     this,
                     n.getName(),
-                   n.getProposerId(),
+                    n.getProposerId(),
                     n.getId()
             )));
         }
-        log.info("待确认线上bug自动关闭前钉钉通知-结束:{}",noticeIds);
+        log.info("待确认线上bug自动关闭前钉钉通知-结束:{}", noticeIds);
 
+    }
+
+    @Override
+    public void attachToBizDemands(BugOnlineDO bugOnlineDO, Collection<Long> bizDemandIds, boolean logToBizDemands) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        Long bugOnlineId = bugOnlineDO.getId();
+        String oldStatusName = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+        Integer oldStatus = bugOnlineDO.getStatus();
+
+        // 保存旧的bug原因
+        String oldReasonName = BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason());
+
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.REQUIRED.getCode());
+        bugOnlineDO.setReason(BugOnlineReasonEnum.DEMAND_QUESTION.getCode());
+        bugOnlineDO.setPrevStatus(oldStatus);
+        //线上bug表更新
+        bugOnlineMapper.update(bugOnlineDO);
+        bugOnlineBizDemandMapper.addRelations(bugOnlineId, bizDemandIds);
+
+        BugLogDO bugLogDO = new BugLogDO()
+                .setMainId(bugOnlineId)
+                .setOldValue(oldStatusName)
+                .setNewValue(BugOnlineStatusEnum.REQUIRED.getText())
+                .setAction(ButtonActionEnum.SHIFT_BUSINESS.getText())
+                .setField(BugLogFieldEnum.STATUS.getText())
+                .setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogMapper.insert(bugLogDO);
+
+        BugLogDO reasonBugLogDO = new BugLogDO()
+                .setMainId(bugOnlineId)
+                .setOldValue(oldReasonName)
+                .setNewValue(BugOnlineReasonEnum.DEMAND_QUESTION.getText())
+                .setField(BugLogFieldEnum.REASON.getText())
+                .setType(BugLogTypeEnum.ONLINE.getCode());
+
+        bugLogMapper.insert(reasonBugLogDO);
+
+        // bug状态处理人员表插入数据
+        bugLogComponent.insertToBugStatusOperator(bugOnlineId, userInfo.getId(), userInfo.getFullAlias());
+        if (logToBizDemands) {
+            // 业务需求变更日志
+            addBizDemandAttachLogs(bugOnlineDO, bizDemandIds);
+        }
+    }
+
+    private void addBizDemandAttachLogs(BugOnlineDO bugOnlineDO, Collection<Long> bizDemandIds) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        List<BizChangeLogDO> changeLogs = bizDemandIds.stream().map(id -> {
+            BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
+            bizChangeLogDO.setCreateManId(userInfo.getId());
+            bizChangeLogDO.setCreateMan(userInfo.getAlias());
+            bizChangeLogDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode())
+                    .setMainId(id)
+                    .setAction(ButtonActionEnum.LINK.getText())
+                    .setField(BizChangeLogTypeEnum.BUG_ONLINE.getText())
+                    .setOldValue(bugOnlineDO.getName())
+                    .setNewValue(bugOnlineDO.getName());
+            return bizChangeLogDO;
+        }).collect(Collectors.toList());
+        bizChangeLogMapper.batchInsert(changeLogs);
     }
 
     private void addLog(Long bugOnlineId) {
@@ -124,7 +183,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
         bugLogMapper.insert(bugLogDO);
 
-        bugLogComponent.insertToBugStatusOperator(bugOnlineId,CommonConstant.SYSTEM,CommonConstant.SYSTEM);
+        bugLogComponent.insertToBugStatusOperator(bugOnlineId, CommonConstant.SYSTEM, CommonConstant.SYSTEM);
 
         BugOnlineStatusOperatorDO bugOnlineStatusOperatorDO = new BugOnlineStatusOperatorDO();
         bugOnlineStatusOperatorDO.setBugOnlineId(bugOnlineId);

@@ -1,122 +1,27 @@
 package com.timevale.forward.service.impl;
 
-import cn.hutool.core.collection.CollUtil;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.condition.BugOnlineLinkCondition;
 import com.timevale.forward.dal.condition.BugOnlineListCondition;
 import com.timevale.forward.dal.condition.PersonListCondition;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.BizDomainMapper;
-import com.timevale.forward.dal.dao.BizLabelMapper;
-import com.timevale.forward.dal.dao.BugLogMapper;
-import com.timevale.forward.dal.dao.BugOnlineMapper;
-import com.timevale.forward.dal.dao.BugOnlineModelMapper;
-import com.timevale.forward.dal.dao.BugOnlineProductLineMapper;
-import com.timevale.forward.dal.dao.BugStatusOperatorMapper;
-import com.timevale.forward.dal.dao.CommentMapper;
-import com.timevale.forward.dal.dao.FileMapper;
-import com.timevale.forward.dal.dao.ModelMapper;
-import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.entity.BizDemandDO;
-import com.timevale.forward.dal.entity.BizDomainDO;
-import com.timevale.forward.dal.entity.BizLabelDO;
-import com.timevale.forward.dal.entity.BugLogDO;
-import com.timevale.forward.dal.entity.BugOnlineCustomDO;
-import com.timevale.forward.dal.entity.BugOnlineDO;
-import com.timevale.forward.dal.entity.BugOnlineListDO;
-import com.timevale.forward.dal.entity.BugOnlineModelDO;
-import com.timevale.forward.dal.entity.BugOnlineProductLineDO;
-import com.timevale.forward.dal.entity.BugOnlineStatusOperatorDO;
-import com.timevale.forward.dal.entity.CommentDO;
-import com.timevale.forward.dal.entity.FileDO;
-import com.timevale.forward.dal.entity.ModelDO;
-import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.dal.entity.ProductLineDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BugOnlineService;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
-import com.timevale.forward.facade.api.request.BugOnlineAddReq;
-import com.timevale.forward.facade.api.request.BugOnlineConfirmRepairReq;
-import com.timevale.forward.facade.api.request.BugOnlineDetailReq;
-import com.timevale.forward.facade.api.request.BugOnlineGetFieldReq;
-import com.timevale.forward.facade.api.request.BugOnlineGetReq;
-import com.timevale.forward.facade.api.request.BugOnlineModifyReq;
-import com.timevale.forward.facade.api.request.BugOnlineNoRepairReq;
-import com.timevale.forward.facade.api.request.BugOnlineOnlineReq;
-import com.timevale.forward.facade.api.request.BugOnlineOpenAgainReq;
-import com.timevale.forward.facade.api.request.BugOnlineRepairFailedReasonReq;
-import com.timevale.forward.facade.api.request.BugOnlineRepairFinishedReq;
-import com.timevale.forward.facade.api.request.BugOnlineReq;
-import com.timevale.forward.facade.api.request.BugOnlineStartRepairReq;
-import com.timevale.forward.facade.api.request.BugOnlineTransferReq;
-import com.timevale.forward.facade.api.request.FileAddReq;
-import com.timevale.forward.facade.api.request.PersonAddReq;
-import com.timevale.forward.facade.api.result.BizDemandVO;
-import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
-import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
-import com.timevale.forward.facade.api.result.BugOnlineLinkVO;
-import com.timevale.forward.facade.api.result.BugOnlineVO;
-import com.timevale.forward.facade.api.result.CommentVO;
-import com.timevale.forward.facade.api.result.FileVO;
-import com.timevale.forward.facade.api.result.PersonVO;
-import com.timevale.forward.facade.api.result.ProductLineToFieldVO;
-import com.timevale.forward.facade.api.result.ProductLineVO;
+import com.timevale.forward.facade.api.request.*;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.bo.BusinessBO;
-import com.timevale.forward.model.enums.AscriptionEnum;
-import com.timevale.forward.model.enums.BizProductLineTypeEnum;
-import com.timevale.forward.model.enums.BizTypeEnum;
-import com.timevale.forward.model.enums.BugFieldEnum;
-import com.timevale.forward.model.enums.BugLogFieldEnum;
-import com.timevale.forward.model.enums.BugLogTypeEnum;
-import com.timevale.forward.model.enums.BugOnlineBeloneEnum;
-import com.timevale.forward.model.enums.BugOnlineDismissCauseEnum;
-import com.timevale.forward.model.enums.BugOnlineEnvEnum;
-import com.timevale.forward.model.enums.BugOnlinePriorityEnum;
-import com.timevale.forward.model.enums.BugOnlineReasonEnum;
-import com.timevale.forward.model.enums.BugOnlineRecurrentEnum;
-import com.timevale.forward.model.enums.BugOnlineSourceEnum;
-import com.timevale.forward.model.enums.BugOnlineStatusEnum;
-import com.timevale.forward.model.enums.ButtonActionEnum;
-import com.timevale.forward.model.enums.CommentTypeEnum;
-import com.timevale.forward.model.enums.FileTypeEnum;
-import com.timevale.forward.model.enums.JobFunctionEnum;
-import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOnlineMD;
 import com.timevale.forward.model.middle.BusinessMD;
-import com.timevale.forward.service.component.BizLabelComponent;
-import com.timevale.forward.service.component.BugLogComponent;
-import com.timevale.forward.service.component.BugOnlineCustomComponent;
-import com.timevale.forward.service.component.BugOnlineModelComponent;
-import com.timevale.forward.service.component.BugOnlineProductLineComponent;
-import com.timevale.forward.service.component.BugOnlineStatusOperatorComponent;
-import com.timevale.forward.service.component.FileComponent;
-import com.timevale.forward.service.component.LabelComponent;
-import com.timevale.forward.service.component.OutBizDealComponent;
-import com.timevale.forward.service.component.PersonComponent;
-import com.timevale.forward.service.component.SqlOrderComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.BizDemandCopier;
-import com.timevale.forward.service.copy.BugOnlineCopier;
-import com.timevale.forward.service.copy.BugOnlineCustomCopier;
-import com.timevale.forward.service.copy.CommentCopier;
-import com.timevale.forward.service.copy.FileCopier;
-import com.timevale.forward.service.copy.PersonCopier;
-import com.timevale.forward.service.copy.ProductLineCopier;
+import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
-import com.timevale.forward.service.observer.event.BugOnlineAddMsgEvent;
-import com.timevale.forward.service.observer.event.BugOnlineModifyMsgEvent;
-import com.timevale.forward.service.observer.event.BugOnlineNoRepairMsgEvent;
-import com.timevale.forward.service.observer.event.BugOnlineOnlineMsgEvent;
-import com.timevale.forward.service.observer.event.BugOnlineOpenAgainMsgEvent;
-import com.timevale.forward.service.observer.event.BugOnlineRejectMsgEvent;
-import com.timevale.forward.service.observer.event.BugOnlineRepairFailedMsgEvent;
-import com.timevale.forward.service.observer.event.BugOnlineRepairFinishedMsgEvent;
-import com.timevale.forward.service.observer.event.BugOnlineResubmitNoRepairMsgEvent;
-import com.timevale.forward.service.observer.event.BugOnlineResubmitOnlineMsgEvent;
-import com.timevale.forward.service.observer.event.BugOnlineTransferMsgEvent;
+import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.compare.FieldCompareUtil;
@@ -129,22 +34,19 @@ import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.request.AccountRequest;
 import com.timevale.security.facade.response.BaseInfoResponse;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
+import javax.annotation.Resource;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-
-import cn.hutool.json.JSONUtil;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * @Date 2022/3/17 16:59
@@ -197,6 +99,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     private BugOnlineModelComponent bugOnlineModelComponent;
     @Resource
     private BugStatusOperatorMapper bugStatusOperatorMapper;
+    @Resource
+    private BugOnlineComponent bugOnlineComponent;
+    @Resource
+    private BugOnlineBizDemandMapper bugOnlineBizDemandMapper;
     @Resource
     private BugOnlineCustomComponent bugOnlineCustomComponent;
     @Resource
@@ -689,14 +595,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugOnlineDetailVO.setProductLineVOList(productLineVOList);
         }
 
-        Long bizDemandId = bugOnlineDO.getBizDemandId();
         //如果线上bug转化了业务需求，则查询并转化业务需求
-        if (bizDemandId != 0) {
-            BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
-            //bizDemandDO --> bizDemandVO
-            BizDemandVO bizDemandVO = BizDemandCopier.INSTANCE.transfer(bizDemandDO);
-            //业务需求信息存储到详情参数里面
-            bugOnlineDetailVO.setBizDemandVO(bizDemandVO);
+        List<Long> bizDemandIds = bugOnlineBizDemandMapper.getBizDemandIds(bugOnlineId);
+        if (CollectionUtils.isNotEmpty(bizDemandIds)) {
+            List<BizDemandDO> bizDemands = bizDemandMapper.selectByIds(bizDemandIds);
+            List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.transfer(bizDemands);
+            bugOnlineDetailVO.setBizDemands(bizDemandVOList);
         }
 
         //查询附件
@@ -1740,6 +1644,21 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         return BaseResult.success(bugOnlineVOList);
     }
 
+    @Override
+    public BaseResult<Void> attachToBizDemand(BugOnlineAttachToBizReq attachToBizReq) {
+        Long id = attachToBizReq.getId();
+        List<Long> bizDemandIds = attachToBizReq.getBizDemandIds();
+        BugOnlineDO bugOnline = bugOnlineMapper.selectById(id);
+        Assert.state(BugOnlineStatusEnum.canConvertBizDemand(bugOnline.getStatus()),
+                "当前状态不允许转化业务需求");
+        Assert.state(isPermission(bugOnline.getOperatorId()), "您没有权限将该bug转为业务需求");
+        Assert.notNull(bugOnline, "您选择的线上bug不存在，请刷新后重试");
+        List<BizDemandDO> bizDemands = bizDemandMapper.selectByIds(bizDemandIds);
+        Assert.notEmpty(bizDemands, "关联的业务需求不存在，请重新勾选");
+        bugOnlineComponent.attachToBizDemands(bugOnline, bizDemandIds, true);
+        return BaseResult.success();
+    }
+
     /**
      * 判断当前操作人是否为personId或者personId的上级
      */
@@ -1952,24 +1871,3 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         return bugLogDO;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

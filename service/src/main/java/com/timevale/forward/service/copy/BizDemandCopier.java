@@ -80,6 +80,14 @@ public interface BizDemandCopier {
      */
     BizDemandVO transfer(BizDemandDO bizDemandDO);
 
+    /**
+     * 业务需求DO转换为VO
+     *
+     * @param bizDemandDO 业务需求DO
+     * @return 业务需求详细VO
+     */
+    List<BizDemandVO> transfer(List<BizDemandDO> bizDemandDO);
+
 
     /**
      * 转换

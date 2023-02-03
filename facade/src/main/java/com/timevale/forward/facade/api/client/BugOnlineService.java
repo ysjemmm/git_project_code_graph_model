@@ -3,20 +3,7 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
-import com.timevale.forward.facade.api.request.BugOnlineAddReq;
-import com.timevale.forward.facade.api.request.BugOnlineConfirmRepairReq;
-import com.timevale.forward.facade.api.request.BugOnlineDetailReq;
-import com.timevale.forward.facade.api.request.BugOnlineGetFieldReq;
-import com.timevale.forward.facade.api.request.BugOnlineGetReq;
-import com.timevale.forward.facade.api.request.BugOnlineModifyReq;
-import com.timevale.forward.facade.api.request.BugOnlineNoRepairReq;
-import com.timevale.forward.facade.api.request.BugOnlineOnlineReq;
-import com.timevale.forward.facade.api.request.BugOnlineOpenAgainReq;
-import com.timevale.forward.facade.api.request.BugOnlineRepairFailedReasonReq;
-import com.timevale.forward.facade.api.request.BugOnlineRepairFinishedReq;
-import com.timevale.forward.facade.api.request.BugOnlineReq;
-import com.timevale.forward.facade.api.request.BugOnlineStartRepairReq;
-import com.timevale.forward.facade.api.request.BugOnlineTransferReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
 import com.timevale.forward.facade.api.result.ProductLineToFieldVO;
@@ -198,36 +185,10 @@ public interface BugOnlineService {
      * @return
      */
     BaseResult<List<BugOnlineVO>> getBugOnlineByCustomId(Long customId);
+
+    /**
+     * bug 关联需求列表转需求接口
+     */
+    BaseResult<Void> attachToBizDemand(BugOnlineAttachToBizReq attachToBizReq);
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

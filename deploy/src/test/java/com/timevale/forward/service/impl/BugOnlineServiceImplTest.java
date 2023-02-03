@@ -191,7 +191,6 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
         BugOnlineDetailReq bugOnlineDetailReq = new BugOnlineDetailReq();
         when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
             setOperatorId("2");
-            setBizDemandId(1L);
             setDismissCause(1);
             setRepairFailReason("2");
             setReason(1);

@@ -53,11 +53,6 @@ public class BugOnlineDO extends BaseDO {
     private String customerName;
 
     /**
-     * 业务需求id
-     */
-    private Long bizDemandId;
-
-    /**
      * bug环境：0生产环境，1模拟环境
      */
     private Integer env;

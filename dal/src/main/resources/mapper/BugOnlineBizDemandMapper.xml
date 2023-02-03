@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.timevale.forward.dal.dao.BugOnlineBizDemandMapper">
+    <insert id="addRelations">
+        insert into bug_online_biz_demand
+        (bug_online_id, biz_demand_id, create_man_id, create_man, modify_man_id, modify_man)
+        values
+        <foreach collection="bizDemandIds" item="bizDemandId" separator=",">
+            (#{bugId}, #{bizDemandId}, #{createManId}, #{createMan}, #{modifyManId}, #{modifyMan})
+        </foreach>
+    </insert>
+    <update id="deleteByBugId">
+        update bug_online_biz_demand
+        set is_deleted    = true,
+            modify_man_id = #{modifyManId},
+            modify_man    = #{modifyMan}
+        where bug_online_id = #{bugId}
+          and is_deleted = false
+    </update>
+</mapper>
