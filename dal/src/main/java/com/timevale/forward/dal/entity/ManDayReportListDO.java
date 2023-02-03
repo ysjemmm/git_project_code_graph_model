@@ -33,6 +33,8 @@ public class ManDayReportListDO extends BaseDO {
 
     private BigDecimal auditManDay;
 
+    private String manDayDesc;
+
     private Integer auditStatus;
 
     private String auditor;
