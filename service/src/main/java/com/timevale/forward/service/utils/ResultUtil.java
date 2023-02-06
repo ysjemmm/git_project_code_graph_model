@@ -1,10 +1,10 @@
 package com.timevale.forward.service.utils;
 
+import com.github.pagehelper.Page;
 import com.github.pagehelper.PageInfo;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.mandarin.common.result.ListResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
-import com.timevale.mandarin.common.result.QueryResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,14 +23,11 @@ public class ResultUtil {
         pageQueryResult.setItemsPerPage(pageInfo.getPageSize());
     }
 
-    public static <T> PageQueryResult<T> pageSuccess(PageInfo<T> data) {
-        PageQueryResult<T> result = new PageQueryResult<>(true);
-        result.setResultList(data.getList());
-        result.setTotalItems(Math.toIntExact(data.getTotal()));
-        result.setCurrentPage(data.getPageNum());
-        result.setTotalPages(data.getPages());
-        result.setItemsPerPage(data.getPageSize());
-        return result;
+    public static <T, R> void fillPageInfo(PageQueryResult<R> pageQueryResult, Page<T> page) {
+        pageQueryResult.setTotalItems(Math.toIntExact(page.getTotal()));
+        pageQueryResult.setCurrentPage(page.getPageNum());
+        pageQueryResult.setTotalPages(page.getPages());
+        pageQueryResult.setItemsPerPage(page.getPageSize());
     }
 
     public static <T> PageQueryResult<T> pageEmpty() {
@@ -40,25 +37,13 @@ public class ResultUtil {
     }
 
 
-    public static <T> QueryResult<T> querySuccess(T data) {
-        QueryResult<T> result = new QueryResult<>(true);
-        result.setResultObject(data);
-        return result;
-    }
-
-    public static <T> QueryResult<T> queryFail(String msg) {
-        QueryResult<T> result = new QueryResult<>(false);
-        result.setMessage(msg);
-        return result;
-    }
-
     public static <T> ListResult<T> success(List<T> data) {
         ListResult<T> result = new ListResult<>(true);
         result.setResultList(data);
         return result;
     }
 
-    public static <T> QueryResultVO<T> queryResultEmpty(){
+    public static <T> QueryResultVO<T> queryResultEmpty() {
         QueryResultVO<T> empty = new QueryResultVO<>();
         empty.setAnalyseVOList(new ArrayList<>());
         empty.setPageQueryResult(ResultUtil.pageEmpty());

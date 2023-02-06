@@ -1,6 +1,7 @@
 package com.timevale.forward.service.copy;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.timevale.forward.dal.condition.ProjectListChildCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
@@ -11,20 +12,22 @@ import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.ProjectBaseVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
-import com.timevale.forward.model.enums.ProjectCategoryEnum;
-import com.timevale.forward.model.enums.ProjectValidStages;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.ProjectMD;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.mapstruct.ValueMapping;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 
 @Mapper(imports = {
         ProjectCategoryEnum.class,
-        ProjectValidStages.class
+        ProjectValidStages.class,
+        ProjectStatusEnum.class,
+        ProjectLevelEnum.class,
+        ProjectTypeEnum.class,
+        PriorityEnum.class,
 })
 public interface ProjectCopier {
 
@@ -39,6 +42,11 @@ public interface ProjectCopier {
     @Mapping(source = "pm.userId", target = "pmId")
     @Mapping(source = "pm.userName", target = "pmName")
     ProjectDO convert(ProjectAddReq projectAddReq);
+
+    @Mapping(target = "status", source = "req.status")
+    @Mapping(target = "parentIds", expression = "java(project.getParentList())")
+    @Mapping(target = "parentIdsRegexp", expression = "java(\"^\" + project.getParentIds() + \".\")")
+    ProjectListChildCondition convert(ProjectChildListReq req, ProjectDO project);
 
     @Mapping(source = "pm.userId", target = "pmId")
     @Mapping(source = "pm.userName", target = "pmName")
@@ -83,6 +91,10 @@ public interface ProjectCopier {
      * @param projectListDO 对象
      * @return ProjectDetailVO
      */
+    @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectListDO.getStatus()))")
+    @Mapping(target = "typeName", expression = "java(ProjectTypeEnum.getTextByCode(projectListDO.getType()))")
+    @Mapping(target = "priorityName", expression = "java(PriorityEnum.getTextByCode(projectListDO.getPriority()))")
+    @Mapping(target = "levelName", expression = "java(ProjectLevelEnum.getTextByCode(projectListDO.getLevel()))")
     ProjectVO convert(ProjectListDO projectListDO);
 
     /**

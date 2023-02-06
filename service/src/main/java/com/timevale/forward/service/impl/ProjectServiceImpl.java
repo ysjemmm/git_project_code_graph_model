@@ -2,11 +2,13 @@ package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectAcceptanceListCondition;
+import com.timevale.forward.dal.condition.ProjectListChildCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -38,6 +40,7 @@ import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.util.Asserts;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -531,7 +534,14 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> listChildren(ProjectChildListReq projectChildListReq) {
-        return BaseResult.success();
+        ProjectDO project = projectMapper.get(projectChildListReq.getProjectId());
+        Asserts.notNull(project, "您查询的项目不存在，请检查");
+        ProjectListChildCondition condition = ProjectCopier.INSTANCE.convert(projectChildListReq, project);
+        PageHelper.startPage(projectChildListReq.getPageNum(), projectChildListReq.getPageSize());
+        Page<ProjectListDO> projects = projectMapper.listChildren(condition);
+        PageQueryResult<ProjectVO> res = PageQueryResult.resResult(ProjectCopier.INSTANCE.convert(projects));
+        ResultUtil.fillPageInfo(res, projects);
+        return BaseResult.success(res);
     }
 
     @Override
