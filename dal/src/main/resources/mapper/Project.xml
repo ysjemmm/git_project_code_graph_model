@@ -164,7 +164,6 @@
             <if test="id != null">and a.id = #{id}</if>
             <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
             <if test="customerDev != null">and a.customer_dev = #{customerDev}</if>
-            <if test="level != null">and a.level = #{level}</if>
             <if test="planStartDateLeft != null and planStartDateRight != null">
                 and a.plan_start_date &gt;= #{planStartDateLeft} and a.plan_start_date &lt;= #{planStartDateRight}
             </if>
@@ -207,6 +206,12 @@
             <if test="pms!=null and pms.size()>0">
                 and a.pm_id in
                 <foreach collection="pms" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="levels!=null and levels.size()>0">
+                and a.level in
+                <foreach collection="levels" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>

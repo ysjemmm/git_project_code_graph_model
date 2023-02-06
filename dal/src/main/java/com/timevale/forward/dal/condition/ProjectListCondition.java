@@ -162,9 +162,9 @@ public class ProjectListCondition extends QueryBase {
     private Date actualTestDateRight;
 
     /**
-     * 项目等级：0普通 10重点
+     * 项目等级：0普通，1重点，2S级别，3A级别，4B级别
      */
-    private Integer level;
+    private List<Integer> levels;
 
     /**
      * 是否有项目风险

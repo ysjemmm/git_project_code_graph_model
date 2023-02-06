@@ -111,8 +111,8 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("排序规则：0正序，1逆序")
     private Integer orderCollation;
 
-    @ApiModelProperty("项目等级：0普通 10重点")
-    private Integer level;
+    @ApiModelProperty("项目等级：0普通，1重点，2S级别，3A级别，4B级别")
+    private List<Integer> levels;
 
     @ApiModelProperty("是否有项目风险")
     private Boolean includeRisk;
