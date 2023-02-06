@@ -1,5 +1,7 @@
 package com.timevale.forward.dal.dao;
 
+import com.github.pagehelper.Page;
+import com.timevale.forward.dal.condition.ProjectListChildCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
@@ -143,7 +145,6 @@ public interface ProjectMapper {
 
     /**
      * 获得所有进行中的项目id
-     * @return
      */
     List<ProjectDO> pageAllOngoingProjects();
 
@@ -155,4 +156,5 @@ public interface ProjectMapper {
      */
     List<ProjectDO> getByLikeName(@Param("name") String name);
 
+    Page<ProjectListDO> listChildren(ProjectListChildCondition condition);
 }

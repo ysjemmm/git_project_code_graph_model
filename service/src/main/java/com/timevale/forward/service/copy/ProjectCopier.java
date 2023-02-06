@@ -12,6 +12,7 @@ import com.timevale.forward.facade.api.result.ProjectBaseVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.facade.api.result.ProjectInnerDetailVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.enums.ProjectCategoryEnum;
 import com.timevale.forward.model.enums.ProjectInnerTypeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
@@ -28,7 +29,11 @@ import java.util.List;
         ProjectCategoryEnum.class,
         ProjectValidStageEnum.class,
         ProjectStatusEnum.class,
-        ProjectInnerTypeEnum.class
+        ProjectInnerTypeEnum.class,
+        ProjectStatusEnum.class,
+        ProjectLevelEnum.class,
+        ProjectTypeEnum.class,
+        PriorityEnum.class,
 })
 public interface ProjectCopier {
 
@@ -43,6 +48,11 @@ public interface ProjectCopier {
     @Mapping(source = "pm.userId", target = "pmId")
     @Mapping(source = "pm.userName", target = "pmName")
     ProjectDO convert(ProjectAddReq projectAddReq);
+
+    @Mapping(target = "status", source = "req.status")
+    @Mapping(target = "parentIds", expression = "java(project.getParentList())")
+    @Mapping(target = "parentIdsRegexp", expression = "java(\"^\" + project.getParentIds() + \".\")")
+    ProjectListChildCondition convert(ProjectChildListReq req, ProjectDO project);
 
     @Mapping(source = "pm.userId", target = "pmId")
     @Mapping(source = "pm.userName", target = "pmName")
@@ -87,6 +97,10 @@ public interface ProjectCopier {
      * @param projectListDO 对象
      * @return ProjectDetailVO
      */
+    @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectListDO.getStatus()))")
+    @Mapping(target = "typeName", expression = "java(ProjectTypeEnum.getTextByCode(projectListDO.getType()))")
+    @Mapping(target = "priorityName", expression = "java(PriorityEnum.getTextByCode(projectListDO.getPriority()))")
+    @Mapping(target = "levelName", expression = "java(ProjectLevelEnum.getTextByCode(projectListDO.getLevel()))")
     ProjectVO convert(ProjectListDO projectListDO);
 
     /**

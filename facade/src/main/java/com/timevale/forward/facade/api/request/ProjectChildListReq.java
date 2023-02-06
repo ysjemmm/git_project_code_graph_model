@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.validation.constraints.NotNull;
 import java.util.Collection;
 
 /**
@@ -15,7 +16,8 @@ import java.util.Collection;
 @Setter
 public class ProjectChildListReq extends QueryBase {
 
-    @ApiModelProperty("根节点项目id")
+    @NotNull(message = "根节点id不能为空")
+    @ApiModelProperty(value = "根节点项目id", required = true)
     private Long projectId;
 
     @ApiModelProperty("项目名称")

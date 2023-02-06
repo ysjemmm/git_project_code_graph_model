@@ -5,18 +5,18 @@
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectDO" useGeneratedKeys="true"
             keyProperty="id" keyColumn="id">
         insert into project (name, customer_dev, is_platform_publish, is_with_goal, priority, type, status, pm, pm_id,
-                             plan_start_date, plan_end_date, `desc`, level, resource_assessment,
-                             pj_establish_start_date, pj_establish_publish_date, is_acceptance, create_man_id,
-                             create_man, parent_ids)
+        plan_start_date, plan_end_date, `desc`, level, resource_assessment,
+        pj_establish_start_date, pj_establish_publish_date, is_acceptance, create_man_id,
+        create_man, parent_ids)
         values (#{name}, #{customerDev}, #{isPlatformPublish}, #{isWithGoal}, #{priority}, #{type}, #{status},
-                #{pmName}, #{pmId}, #{planStartDate}, #{planEndDate},
-                #{desc}, #{level}, #{resourceAssessment}, #{pjEstablishStartDate}, #{pjEstablishPublishDate},
-                #{isAcceptance}, #{createManId}, #{createMan},
-                <!-- 获取当前自增id -->
-                concat(',', (select `AUTO_INCREMENT`
-                             from information_schema.TABLES
-                             where TABLE_SCHEMA = 'info_forward'
-                               and TABLE_NAME = 'project'), ','))
+        #{pmName}, #{pmId}, #{planStartDate}, #{planEndDate},
+        #{desc}, #{level}, #{resourceAssessment}, #{pjEstablishStartDate}, #{pjEstablishPublishDate},
+        #{isAcceptance}, #{createManId}, #{createMan},
+        <!-- 获取当前自增id -->
+        concat(',', (select `AUTO_INCREMENT`
+        from information_schema.TABLES
+        where TABLE_SCHEMA = 'info_forward'
+        and TABLE_NAME = 'project'), ','))
     </insert>
 
     <insert id="innerInsert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
@@ -400,5 +400,72 @@
         from project
         where name like concat('%', #{name}, '%')
           and is_deleted = false
+    </select>
+    <select id="listChildren" resultType="com.timevale.forward.dal.entity.ProjectListDO">
+        select a.id,a.name, a.customer_dev,is_platform_publish, is_with_goal, a.priority, a.type
+        ,a.status,a.node_status, a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
+        a.actual_start_date,a.actual_end_date,a.`desc`,
+        a.level,pj_establish_start_date,pj_establish_publish_date,is_acceptance,
+        a.create_man_id, a.create_man,a.create_date,a.modify_date
+        from project a
+        <where>
+            <if test="projectName != null and projectName != ''">
+                and name like concat('%', #{projectName}, '%')
+            </if>
+            <if test="childProjectId != null">
+                and id = #{childProjectId}
+            </if>
+            <if test="innerTypes != null and innerTypes.size > 0">
+                and inner_type in
+                <foreach collection="innerTypes" item="innerType" open="(" separator="," close=")">
+                    #{innerType}
+                </foreach>
+            </if>
+            <if test="pms != null and pms.size > 0">
+                and pm_id in
+                <foreach collection="pms" item="pm" open="(" separator="," close=")">
+                    #{pm}
+                </foreach>
+            </if>
+            <if test="levels != null and levels.size > 0">
+                and `level` in
+                <foreach collection="levels" item="level" open="(" separator="," close=")">
+                    #{level}
+                </foreach>
+            </if>
+            <if test="status != null and status.size > 0">
+                and `status` in
+                <foreach collection="status" item="singleStatus" open="(" separator="," close=")">
+                    #{singleStatus}
+                </foreach>
+            </if>
+            <if test="searchType != null">
+                <choose>
+                    <when test="searchType = 2">
+                        <!-- 查询可以添加为子项目的项目列表 -->
+                        parent_ids = concat(',', id, ',') and id not in
+                        <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
+                            #{parentId}
+                        </foreach>
+                    </when>
+                    <when test="searchType = 3">
+                        <!-- 查询可以关联到当前项目里程碑的项目列表 -->
+                        id not in (select relation_id from project_milestone where type = 1 and is_deleted = false)
+                        and (
+                        # 子项目列表
+                        id in (select id from project where parent_ids regexp #{parentIdsRegexp})
+                        or
+                        # 无父节点项目
+                        parent_ids = concat(',', id, ',')
+                        )
+                    </when>
+                    <otherwise>
+                        <!-- 查询当前项目的子项目 -->
+                        parent_ids regexp #{parentIdsRegexp}
+                    </otherwise>
+                </choose>
+            </if>
+
+        </where>
     </select>
 </mapper>
