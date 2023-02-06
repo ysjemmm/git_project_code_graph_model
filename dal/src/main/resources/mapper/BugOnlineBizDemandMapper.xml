@@ -8,7 +8,7 @@
         (bug_online_id, biz_demand_id, create_man_id, create_man, modify_man_id, modify_man)
         values
         <foreach collection="bizDemandIds" item="bizDemandId" separator=",">
-            (#{bugId}, #{bizDemandId}, #{createManId}, #{createMan}, #{modifyManId}, #{modifyMan})
+            (#{bugId}, #{bizDemandId}, #{createManId}, #{createMan}, #{createManId}, #{createMan})
         </foreach>
     </insert>
     <update id="deleteByBugId">
