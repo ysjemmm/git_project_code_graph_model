@@ -11,6 +11,7 @@ import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.ProjectBaseVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
+import com.timevale.forward.facade.api.result.ProjectInnerDetailVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.ProjectMD;
@@ -146,6 +147,9 @@ public interface ProjectCopier {
      * @return ProjectDO
      */
     ProjectDO convert(ProjectDateModifyReq projectDateModifyReq);
+
+    @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectDO.getStatus()))")
+    ProjectInnerDetailVO do2Vo(ProjectDO projectDO);
 
 
     @Named("mapping")

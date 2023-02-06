@@ -23,47 +23,25 @@
         INSERT INTO project
         <trim prefix="(" suffix=")" suffixOverrides=",">
             `name`, inner_type, `level`, `desc`, plan_start_date, plan_end_date, pm, pm_id, valid_stages, create_man_id,
-            create_man,
+            create_man, parent_ids,
             <if test="expectedIncome != null">expected_income,</if>
         </trim>
         VALUES
         <trim prefix="(" suffix=")" suffixOverrides=",">
             #{name}, #{innerType}, #{level}, #{desc}, #{planStartDate}, #{planEndDate}, #{pmName}, #{pmId},
             #{validStages}, #{createManId}, #{createMan},
+            # 获取当前自增id
+            concat(',', (select `AUTO_INCREMENT`
+            from information_schema.TABLES
+            where TABLE_SCHEMA = 'info_forward'
+            and TABLE_NAME = 'project'), ','))
+            # 新增可选
             <if test="expectedIncome != null">#{expectedIncome},</if>
         </trim>
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select id,
-               name,
-               customer_dev,
-               is_platform_publish,
-               is_with_goal,
-               priority,
-               type,
-               status,
-               node_status,
-               pm_id,
-               pm pmName,
-               plan_start_date,
-               plan_end_date,
-               actual_start_date,
-               actual_end_date,
-               `desc`,
-               level,
-               resource_assessment,
-               pj_establish_start_date,
-               pj_establish_publish_date,
-               is_acceptance,
-               create_man_id,
-               create_man,
-               create_date,
-               modify_date,
-               suspend_reason,
-               invalid_reason,
-               un_write_reason,
-               parent_ids
+        select *
         from project
         where id = #{id}
           and is_deleted = false
