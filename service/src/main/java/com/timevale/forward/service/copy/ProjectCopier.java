@@ -1,6 +1,7 @@
 package com.timevale.forward.service.copy;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.timevale.forward.dal.condition.ProjectListChildCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
@@ -13,10 +14,6 @@ import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.facade.api.result.ProjectInnerDetailVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.model.enums.*;
-import com.timevale.forward.model.enums.ProjectCategoryEnum;
-import com.timevale.forward.model.enums.ProjectInnerTypeEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
-import com.timevale.forward.model.enums.ProjectValidStageEnum;
 import com.timevale.forward.model.middle.ProjectMD;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
