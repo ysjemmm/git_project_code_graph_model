@@ -18,9 +18,6 @@ import java.util.Date;
 @ApiModel("项目收益新增入参")
 public class ProjectIncomeSaveReq extends ToString {
 
-    @ApiModelProperty(value = "收益id")
-    private Long id;
-
     @ApiModelProperty(value = "项目id")
     private Long projectId;
 
