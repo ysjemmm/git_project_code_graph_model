@@ -6,11 +6,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.validation.constraints.Digits;
-import javax.validation.constraints.NotBlank;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PositiveOrZero;
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -48,6 +45,7 @@ public class ProjectSimpleModifyReq extends ToString {
     @ApiModelProperty("描述")
     private String desc;
 
+    @Valid
     @ApiModelProperty("团队成员")
     private List<PersonAddReq> teamMembers;
 

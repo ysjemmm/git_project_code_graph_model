@@ -108,6 +108,14 @@ public interface ProjectService {
      */
     BaseResult<ProjectDetailVO> get(Long projectId);
 
+    /**
+     * 查看内部项目
+     *
+     * @param projectId 项目信息
+     * @return 详情信息
+     */
+    BaseResult<ProjectInnerDetailVO> getInner(Long projectId);
+
 
     /**
      * 查询满足条件的产品需求列表

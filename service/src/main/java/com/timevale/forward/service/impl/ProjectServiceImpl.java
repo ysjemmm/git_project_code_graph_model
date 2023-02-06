@@ -622,6 +622,30 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    public BaseResult<ProjectInnerDetailVO> getInner(Long projectId) {
+        ProjectDO projectDO = projectMapper.get(projectId);
+        AssertUtil.notNull(projectDO, "该项目不存在");
+
+        // 转换
+        ProjectInnerDetailVO projectInnerDetailVO = ProjectCopier.INSTANCE.do2Vo(projectDO);
+
+        // 团队成员
+        List<PersonDO> teamMemberDOs = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        List<PersonVO> teamMemberVOs = PersonCopier.INSTANCE.transform(teamMemberDOs);
+        projectInnerDetailVO.setTeamMember(teamMemberVOs);
+
+        // 上级项目信息
+        Long parentId = projectDO.getParentId();
+        if (parentId != null) {
+            ProjectDO parentProjectDO = projectMapper.get(parentId);
+            projectInnerDetailVO.setParentId(parentProjectDO.getId());
+            projectInnerDetailVO.setParentProjectName(parentProjectDO.getName());
+        }
+
+        return BaseResult.success(projectInnerDetailVO);
+    }
+
+    @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(ProjectLinkProductDemandQueryList query) {
         log.info("项目-产品需求匹配,接收参数:{}", query);
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(query);
