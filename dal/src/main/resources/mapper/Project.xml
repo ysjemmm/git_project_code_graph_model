@@ -2,33 +2,70 @@
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
 <mapper namespace="com.timevale.forward.dal.dao.ProjectMapper">
 
-    <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        insert into project (name, customer_dev,is_platform_publish, is_with_goal, priority, type ,status,pm,pm_id,plan_start_date,plan_end_date,
-        `desc`, level, resource_assessment ,pj_establish_start_date,pj_establish_publish_date,is_acceptance,create_man_id, create_man)
-        values
-        (#{name}, #{customerDev}, #{isPlatformPublish}, #{isWithGoal}, #{priority}, #{type},#{status}, #{pmName},#{pmId},#{planStartDate},#{planEndDate},
-        #{desc}, #{level}, #{resourceAssessment},#{pjEstablishStartDate},#{pjEstablishPublishDate},#{isAcceptance}, #{createManId}, #{createMan})
+    <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectDO" useGeneratedKeys="true"
+            keyProperty="id" keyColumn="id">
+        insert into project (name, customer_dev, is_platform_publish, is_with_goal, priority, type, status, pm, pm_id,
+                             plan_start_date, plan_end_date, `desc`, level, resource_assessment,
+                             pj_establish_start_date, pj_establish_publish_date, is_acceptance, create_man_id,
+                             create_man, parent_ids)
+        values (#{name}, #{customerDev}, #{isPlatformPublish}, #{isWithGoal}, #{priority}, #{type}, #{status},
+                #{pmName}, #{pmId}, #{planStartDate}, #{planEndDate},
+                #{desc}, #{level}, #{resourceAssessment}, #{pjEstablishStartDate}, #{pjEstablishPublishDate},
+                #{isAcceptance}, #{createManId}, #{createMan},
+                <!-- 获取当前自增id -->
+                concat(',', (select `AUTO_INCREMENT`
+                             from information_schema.TABLES
+                             where TABLE_SCHEMA = 'info_forward'
+                               and TABLE_NAME = 'project'), ','))
     </insert>
 
     <insert id="innerInsert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO project
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            `name`, inner_type, `level`, `desc`, plan_start_date, plan_end_date, pm, pm_id, valid_stages, create_man_id, create_man,
-            <if test="expectedIncome != null"> expected_income,</if>
+            `name`, inner_type, `level`, `desc`, plan_start_date, plan_end_date, pm, pm_id, valid_stages, create_man_id,
+            create_man,
+            <if test="expectedIncome != null">expected_income,</if>
         </trim>
         VALUES
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            #{name}, #{innerType}, #{level}, #{desc}, #{planStartDate}, #{planEndDate}, #{pmName}, #{pmId}, #{validStages}, #{createManId}, #{createMan},
+            #{name}, #{innerType}, #{level}, #{desc}, #{planStartDate}, #{planEndDate}, #{pmName}, #{pmId},
+            #{validStages}, #{createManId}, #{createMan},
             <if test="expectedIncome != null">#{expectedIncome},</if>
         </trim>
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select id,name, customer_dev, is_platform_publish, is_with_goal, priority, type ,status, node_status, pm_id,pm pmName ,plan_start_date,plan_end_date,
-        actual_start_date,actual_end_date,`desc`, level, resource_assessment,pj_establish_start_date,pj_establish_publish_date,is_acceptance,
-        create_man_id, create_man,create_date,modify_date, suspend_reason, invalid_reason,un_write_reason
+        select id,
+               name,
+               customer_dev,
+               is_platform_publish,
+               is_with_goal,
+               priority,
+               type,
+               status,
+               node_status,
+               pm_id,
+               pm pmName,
+               plan_start_date,
+               plan_end_date,
+               actual_start_date,
+               actual_end_date,
+               `desc`,
+               level,
+               resource_assessment,
+               pj_establish_start_date,
+               pj_establish_publish_date,
+               is_acceptance,
+               create_man_id,
+               create_man,
+               create_date,
+               modify_date,
+               suspend_reason,
+               invalid_reason,
+               un_write_reason
         from project
-        where id = #{id} and is_deleted=false
+        where id = #{id}
+          and is_deleted = false
     </select>
 
     <update id="update" parameterType="com.timevale.forward.dal.entity.ProjectDO">
@@ -53,10 +90,10 @@
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             <if test="actualStartDate != null">actual_start_date = #{actualStartDate},</if>
             <if test="actualEndDate != null">actual_end_date = #{actualEndDate},</if>
-            <if test="suspendReason != null"> suspend_reason = #{suspendReason},</if>
-            <if test="invalidReason != null"> invalid_reason = #{invalidReason},</if>
-            <if test="unWriteReason != null"> un_write_reason = #{unWriteReason},</if>
-            <if test="innerType != null"> inner_type = #{innerType},</if>
+            <if test="suspendReason != null">suspend_reason = #{suspendReason},</if>
+            <if test="invalidReason != null">invalid_reason = #{invalidReason},</if>
+            <if test="unWriteReason != null">un_write_reason = #{unWriteReason},</if>
+            <if test="innerType != null">inner_type = #{innerType},</if>
         </set>
         <where>
             id = #{id}
@@ -98,16 +135,33 @@
 
 
     <select id="getByProductDemandId" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select a.id,a.name, a.customer_dev, a.priority, a.type ,a.status,a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
-        a.actual_start_date,a.actual_end_date,a.`desc`,
-        a.create_man_id, a.create_man,a.create_date,a.modify_date
+        select a.id,
+               a.name,
+               a.customer_dev,
+               a.priority,
+               a.type,
+               a.status,
+               a.pm_id,
+               a.pm pmName,
+               a.plan_start_date,
+               a.plan_end_date,
+               a.actual_start_date,
+               a.actual_end_date,
+               a.`desc`,
+               a.create_man_id,
+               a.create_man,
+               a.create_date,
+               a.modify_date
         from project a
-        left join project_product_demand b on a.id=b.project_id and b.is_deleted=false
-        where b.product_demand_id = #{productDemandId} and a.is_deleted=false
+                 left join project_product_demand b on a.id = b.project_id and b.is_deleted = false
+        where b.product_demand_id = #{productDemandId}
+          and a.is_deleted = false
     </select>
 
     <select id="selectByProductDemandIdList" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select distinct p.id, p.name, p.customer_dev, p.priority, p.type, p.status, p.pm, p.pm_id, p.plan_start_date, p.plan_end_date, p.actual_start_date, p.actual_end_date, p.`desc`, p.is_deleted, p.create_man_id, p.create_man, p.create_date, p.modify_man_id, p.modify_man, p.modify_date
+        select distinct p.id, p.name, p.customer_dev, p.priority, p.type, p.status, p.pm, p.pm_id, p.plan_start_date,
+        p.plan_end_date, p.actual_start_date, p.actual_end_date, p.`desc`, p.is_deleted, p.create_man_id, p.create_man,
+        p.create_date, p.modify_man_id, p.modify_man, p.modify_date
         from project_product_demand ppd
         join project p on ppd.project_id = p.id
         where ppd.is_deleted = false
@@ -121,8 +175,8 @@
 
     <select id="getProjectIds" resultType="long">
         select distinct b.project_id
-         from project_product_line b
-         left join product_line c on b.product_line_id=c.id
+        from project_product_line b
+        left join product_line c on b.product_line_id=c.id
         <if test="bizDomainIds!=null and bizDomainIds.size()>0">
             left join biz_domain d on c.biz_domain_id=d.id
         </if>
@@ -150,8 +204,10 @@
     </select>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProjectListDO">
-        select a.id,a.name, a.customer_dev,is_platform_publish, is_with_goal, a.priority, a.type ,a.status,a.node_status, a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
-        a.actual_start_date,a.actual_end_date,a.`desc`, a.level,pj_establish_start_date,pj_establish_publish_date,is_acceptance,
+        select a.id,a.name, a.customer_dev,is_platform_publish, is_with_goal, a.priority, a.type
+        ,a.status,a.node_status, a.pm_id,a.pm pmName ,a.plan_start_date,a.plan_end_date,
+        a.actual_start_date,a.actual_end_date,a.`desc`,
+        a.level,pj_establish_start_date,pj_establish_publish_date,is_acceptance,
         a.create_man_id, a.create_man,a.create_date,a.modify_date
         from project a
         <where>
@@ -172,7 +228,8 @@
                 and a.plan_end_date &gt;= #{planEndDateLeft} and a.plan_end_date &lt;= #{planEndDateRight}
             </if>
             <if test="actualStartDateLeft != null and actualStartDateRight != null">
-                and a.actual_start_date &gt;= #{actualStartDateLeft} and a.actual_start_date &lt;= #{actualStartDateRight}
+                and a.actual_start_date &gt;= #{actualStartDateLeft} and a.actual_start_date &lt;=
+                #{actualStartDateRight}
             </if>
             <if test="actualEndDateLeft != null and actualEndDateRight != null">
                 and a.actual_end_date &gt;= #{actualEndDateLeft} and a.actual_end_date &lt;= #{actualEndDateRight}
@@ -216,19 +273,44 @@
     </select>
 
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select id,name,is_platform_publish, is_with_goal, customer_dev, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date,
-        actual_start_date,actual_end_date,`desc`,level, resource_assessment,pj_establish_start_date,pj_establish_publish_date,is_acceptance,
-        create_man_id, create_man,create_date,modify_date,suspend_reason,invalid_reason
+        select id,
+               name,
+               is_platform_publish,
+               is_with_goal,
+               customer_dev,
+               priority,
+               type,
+               status,
+               pm_id,
+               pm pmName,
+               plan_start_date,
+               plan_end_date,
+               actual_start_date,
+               actual_end_date,
+               `desc`,
+               level,
+               resource_assessment,
+               pj_establish_start_date,
+               pj_establish_publish_date,
+               is_acceptance,
+               create_man_id,
+               create_man,
+               create_date,
+               modify_date,
+               suspend_reason,
+               invalid_reason
         from project
-        where name = #{name} and is_deleted=false
+        where name = #{name}
+          and is_deleted = false
     </select>
 
     <select id="getByIds" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select id,name, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date, is_with_goal,is_acceptance,
+        select id,name, priority, type ,status,pm_id,pm pmName ,plan_start_date,plan_end_date,
+        is_with_goal,is_acceptance,
         actual_start_date,actual_end_date,`desc`, create_man_id, create_man,create_date,modify_date, is_deleted
         from project
         <where>
-             id in
+            id in
             <foreach collection="ids" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
@@ -236,34 +318,50 @@
     </select>
 
     <select id="selectByTeamMember" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select  pj.id, pj.name, pj.customer_dev, pj.priority, pj.type, pj.status, pj.pm, pj.pm_id, pj.plan_start_date,
-                pj.plan_end_date, pj.actual_start_date, pj.actual_end_date, pj.`desc`, pj.node_status, pj.is_deleted,
-                pj.create_man_id, pj.create_man, pj.create_date, pj.modify_man_id, pj.modify_man, pj.modify_date
+        select pj.id, pj.name, pj.customer_dev, pj.priority, pj.type, pj.status, pj.pm, pj.pm_id, pj.plan_start_date,
+        pj.plan_end_date, pj.actual_start_date, pj.actual_end_date, pj.`desc`, pj.node_status, pj.is_deleted,
+        pj.create_man_id, pj.create_man, pj.create_date, pj.modify_man_id, pj.modify_man, pj.modify_date
         from person p
         join project pj on pj.id = p.main_id
         where
-            p.user_id in
-            <foreach collection="teamMemberList" item="item" separator="," open="(" close=")">
-                #{item}
-            </foreach>
-            and p.type &lt; 20
-            and p.is_deleted = false
-            and pj.is_deleted = false
+        p.user_id in
+        <foreach collection="teamMemberList" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        and p.type &lt; 20
+        and p.is_deleted = false
+        and pj.is_deleted = false
         group by pj.id
     </select>
 
     <select id="selectByProductLine" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select pj.id, pj.name, pj.customer_dev, pj.priority, pj.type, pj.status, pj.pm, pj.pm_id,
-               pj.plan_start_date, pj.plan_end_date, pj.actual_start_date, pj.actual_end_date, pj.`desc`,
-               pj.is_deleted, pj.create_man_id, pj.create_man, pj.create_date, pj.modify_man_id, pj.modify_man, pj.modify_date
+        select pj.id,
+               pj.name,
+               pj.customer_dev,
+               pj.priority,
+               pj.type,
+               pj.status,
+               pj.pm,
+               pj.pm_id,
+               pj.plan_start_date,
+               pj.plan_end_date,
+               pj.actual_start_date,
+               pj.actual_end_date,
+               pj.`desc`,
+               pj.is_deleted,
+               pj.create_man_id,
+               pj.create_man,
+               pj.create_date,
+               pj.modify_man_id,
+               pj.modify_man,
+               pj.modify_date
         from person p
-            join project pj on p.main_id = pj.id
-            join project_product_line ppl on pj.id = ppl.project_id
-        where
-            p.user_id = #{userId}
-            and pj.status != 40
-            and pj.status != -20
-            and ppl.product_line_id = #{productLineId}
+                 join project pj on p.main_id = pj.id
+                 join project_product_line ppl on pj.id = ppl.project_id
+        where p.user_id = #{userId}
+          and pj.status != 40
+          and pj.status != -20
+          and ppl.product_line_id = #{productLineId}
     </select>
 
     <select id="getByStatus" resultType="com.timevale.forward.dal.entity.ProjectDO">
@@ -279,7 +377,8 @@
     </select>
 
     <select id="getAllId" resultType="java.lang.Long">
-        SELECT id FROM project
+        SELECT id
+        FROM project
     </select>
 
     <update id="updateStatus" parameterType="com.timevale.forward.dal.entity.ProjectDO">
@@ -306,14 +405,16 @@
     </update>
 
     <select id="pageAllOngoingProjects" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select id, name, pm_id from project
+        select id, name, pm_id
+        from project
         where status in (10, 20, 30)
-        and is_deleted = false
+          and is_deleted = false
     </select>
 
     <select id="getByLikeName" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select id, name,status from project
-        where name like concat('%',#{name},'%')
-        and is_deleted = false
+        select id, name, status
+        from project
+        where name like concat('%', #{name}, '%')
+          and is_deleted = false
     </select>
 </mapper>
