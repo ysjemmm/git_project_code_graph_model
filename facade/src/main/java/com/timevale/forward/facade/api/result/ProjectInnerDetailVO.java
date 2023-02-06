@@ -69,4 +69,7 @@ public class ProjectInnerDetailVO extends ToString {
 
     @ApiModelProperty("项目作废原因")
     private String invalidReason;
+
+    @ApiModelProperty("是否是项目经理和PMO及其上级")
+    private Boolean isLeaderOrPMO;
 }

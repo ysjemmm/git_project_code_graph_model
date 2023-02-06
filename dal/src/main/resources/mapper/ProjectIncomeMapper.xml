@@ -3,26 +3,37 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.timevale.forward.dal.dao.ProjectIncomeMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO project_income (project_id, income_amount, income_date, situation, create_man_id, create_man)
+        VALUES (#{projectId}, #{incomeAmount}, #{incomeDate}, #{situation}, #{createManId}, #{createMan})
+    </insert>
 
-    <resultMap id="BaseResultMap" type="com.timevale.forward.dal.entity.ProjectIncome">
-            <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="projectId" column="project_id" jdbcType="BIGINT"/>
-            <result property="amount" column="amount" jdbcType="DECIMAL"/>
-            <result property="incomeDate" column="income_date" jdbcType="TIMESTAMP"/>
-            <result property="situation" column="situation" jdbcType="VARCHAR"/>
-            <result property="isDeleted" column="is_deleted" jdbcType="TINYINT"/>
-            <result property="createManId" column="create_man_id" jdbcType="VARCHAR"/>
-            <result property="createMan" column="create_man" jdbcType="VARCHAR"/>
-            <result property="createDate" column="create_date" jdbcType="TIMESTAMP"/>
-            <result property="modifyManId" column="modify_man_id" jdbcType="VARCHAR"/>
-            <result property="modifyMan" column="modify_man" jdbcType="VARCHAR"/>
-            <result property="modifyDate" column="modify_date" jdbcType="TIMESTAMP"/>
-    </resultMap>
+    <update id="update">
+        UPDATE project_income
+        <set>
+            <if test="incomeAmount != null">income_amount = #{incomeAmount},</if>
+            <if test="income_date != null">income_date = #{incomeDate},</if>
+            <if test="situation != null">situation = #{situation},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modifyManId = #{modifyManId},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
 
-    <sql id="Base_Column_List">
-        id,project_id,amount,
-        income_date,situation,is_deleted,
-        create_man_id,create_man,create_date,
-        modify_man_id,modify_man,modify_date
-    </sql>
+    <update id="delete">
+        UPDATE project_income
+        SET is_deleted = true
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectIncomeDO">
+        SELECT id, project_id, income_amount, income_date, situation
+        FROM project_income
+        WHERE project_id = #{projectId}
+          AND is_deleted = false
+    </select>
+
+
 </mapper>
