@@ -37,6 +37,12 @@ public class ProjectInnerDetailVO extends ToString {
     @ApiModelProperty("项目状态")
     private String statusName;
 
+    @ApiModelProperty("内部项目类型: 0空, 1战略项目, 2LTC项目, 3PBG项目, 4CBG项目, 5管理后台项目")
+    private Integer innerType;
+
+    @ApiModelProperty("内部项目类型")
+    private String innerTypeName;
+
     @ApiModelProperty("项目经理id")
     private String pmId;
 
