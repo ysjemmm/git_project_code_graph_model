@@ -210,7 +210,7 @@ public class ManDayServiceImpl implements ManDayService {
         // 项目pm，pm名称，项目名称Map
         String userId = userInfo.getId();
         Map<Long, String> projectPmMap = projects.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getPmId, (a, b) -> a));
-        Map<Long, String> projectPmNameMap = projects.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getPmName, (a, b) -> a));
+        Map<Long, String> projectPmNameMap = projects.stream().collect(Collectors.toMap(BaseDO::getId, ProjectDO::getPm, (a, b) -> a));
 
         // 编辑权限
         for (ManDayListVO manDayListVO : res) {
@@ -303,7 +303,7 @@ public class ManDayServiceImpl implements ManDayService {
                 boolean auditing = AuditStatusEnum.AUDITING.getCode().equals(manDayVO.getAuditStatus());
                 manDayVO.setEditable((isMember || isPm) && !auditing);
                 manDayVO.setPmId(project.getPmId());
-                manDayVO.setPmName(project.getPmName());
+                manDayVO.setPmName(project.getPm());
                 manDayVO.setProjectName(project.getName());
             }
         }

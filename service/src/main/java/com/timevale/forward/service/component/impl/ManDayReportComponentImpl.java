@@ -55,7 +55,7 @@ public class ManDayReportComponentImpl implements ManDayReportComponent {
                 .setManDayId(manDayId)
                 .setAuditManDay(auditManDay)
                 .setAuditStatus(isPM ? AuditStatusEnum.APPROVE.getCode() : AuditStatusEnum.AUDITING.getCode())
-                .setAuditor(projectDO.getPmName())
+                .setAuditor(projectDO.getPm())
                 .setAuditorId(projectDO.getPmId())
                 .setReportor(manDayDO.getMemberName())
                 .setReportorId(manDayDO.getMemberId());
@@ -96,7 +96,7 @@ public class ManDayReportComponentImpl implements ManDayReportComponent {
         List<ManDayReportDO> reportDOs = manDayReportMapper.selectByManDayIdsLast(manDayIds);
         List<Long> reportIds = reportDOs.stream().map(BaseDO::getId).collect(Collectors.toList());
 
-        manDayReportMapper.updateAuditor(reportIds, projectDO.getPmName(), projectDO.getPmId());
+        manDayReportMapper.updateAuditor(reportIds, projectDO.getPm(), projectDO.getPmId());
     }
 
     @Override

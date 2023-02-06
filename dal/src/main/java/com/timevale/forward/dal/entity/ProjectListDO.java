@@ -74,7 +74,7 @@ public class ProjectListDO extends BaseDO {
     /**
      * pm名称
      */
-    private String pmName;
+    private String pm;
 
 
     /**

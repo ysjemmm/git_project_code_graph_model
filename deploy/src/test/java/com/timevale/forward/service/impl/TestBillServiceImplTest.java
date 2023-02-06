@@ -136,7 +136,7 @@ public class TestBillServiceImplTest extends AbstractTestNGSpringContextTests {
 
         ProjectDO projectDO = new ProjectDO();
         projectDO.setName("www");
-        projectDO.setPmName("www");
+        projectDO.setPm("www");
         when(projectMapper.get(any())).thenReturn(projectDO);
 
         FileDO fileDO = new FileDO();
