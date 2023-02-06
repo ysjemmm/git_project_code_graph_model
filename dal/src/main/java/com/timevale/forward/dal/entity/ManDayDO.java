@@ -42,6 +42,11 @@ public class ManDayDO extends BaseDO {
     private String manDayDesc;
 
     /**
+     * 审核中人天填报说明
+     */
+    private String auditManDayDesc;
+
+    /**
      * 周开始日期
      */
     private Date weekStartDate;

@@ -32,6 +32,7 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -317,7 +318,7 @@ public class ManDayServiceImpl implements ManDayService {
     public BaseResult<Boolean> modify(ManDayModifyReq manDayModifyReq) {
         Long projectId = manDayModifyReq.getProjectId();
         String memberId = manDayModifyReq.getMemberId();
-        String manDayDesc = manDayModifyReq.getManDayDesc();
+        String manDayDesc = Strings.nullToEmpty(manDayModifyReq.getManDayDesc());
         ProjectDO project = projectMapper.get(projectId);
         AssertUtil.notNull(project, "更改的项目id不存在");
         BigDecimal actualManDay = manDayModifyReq.getActualManDay();
@@ -338,12 +339,12 @@ public class ManDayServiceImpl implements ManDayService {
             AssertUtil.checkState(!AuditStatusEnum.AUDITING.getCode().equals(oldManDay.getAuditStatus()),
                     "审核中状态不可编辑。若需要修改，请联系项目经理驳回后，再编辑提交");
 
-            if (manDayDesc != null && !Objects.equals(oldManDay.getManDayDesc(), manDayDesc)) {
-                oldManDay.setManDayDesc(manDayDesc);
-                manDayMapper.updateManDayDesc(oldManDay);
-            }
             if (oldManDay.getActualManDay().compareTo(actualManDay) == 0) {
-                // 人天不更新则只更新描述
+                if(!Objects.equals(oldManDay.getManDayDesc(), manDayDesc)) {
+                    // 人天不更新则只更新描述
+                    oldManDay.setManDayDesc(manDayDesc);
+                    manDayMapper.updateActualManDay(oldManDay);
+                }
                 return BaseResult.success();
             }
 
@@ -357,21 +358,19 @@ public class ManDayServiceImpl implements ManDayService {
                     manDayMapper.updateActualManDay(oldManDay);
                     // 重置审核状态
                     oldManDay.setRejectReason("");
+                    oldManDay.setAuditManDayDesc(StringUtils.EMPTY);
                     oldManDay.setAuditManDay(BigDecimal.ZERO);
                     oldManDay.setAuditStatus(AuditStatusEnum.APPROVE.getCode());
                     manDayMapper.updateAudit(oldManDay);
                 }
             } else {
                 // 非PM走审批
-                if (actualManDay == null) {
-                    actualManDay = BigDecimal.ZERO;
-                }
-                // 更新审核状态
-                oldManDay.setAuditManDay(actualManDay);
+                oldManDay.setAuditManDay(Optional.ofNullable(actualManDay).orElse(BigDecimal.ZERO));
+                oldManDay.setAuditManDayDesc(manDayDesc);
                 oldManDay.setAuditStatus(AuditStatusEnum.AUDITING.getCode());
                 manDayMapper.updateAudit(oldManDay);
             }
-            manDayReportComponent.add(oldManDay.getId(), actualManDay);
+            manDayReportComponent.add(oldManDay.getId(), actualManDay, manDayDesc);
             return BaseResult.success(true);
         }
 
@@ -398,7 +397,7 @@ public class ManDayServiceImpl implements ManDayService {
                 .setMemberId(memberId)
                 .setMemberName(member.get().getUserName())
                 .setActualManDay(isPM ? actualManDay : BigDecimal.ZERO)
-                .setManDayDesc(Strings.nullToEmpty(manDayDesc))
+                .setManDayDesc(isPM ? manDayDesc : StringUtils.EMPTY)
                 .setWeekStartDate(startDate)
                 .setWeekEndDate(endDate);
         manDayMapper.insert(newManDayDO);
@@ -407,11 +406,12 @@ public class ManDayServiceImpl implements ManDayService {
         if (!isPM) {
             // 修改人天审核状态
             newManDayDO.setAuditManDay(actualManDay);
+            newManDayDO.setAuditManDayDesc(manDayDesc);
             newManDayDO.setAuditStatus(AuditStatusEnum.AUDITING.getCode());
             manDayMapper.updateAudit(newManDayDO);
         }
         // 增加审批
-        manDayReportComponent.add(newManDayDO.getId(), actualManDay);
+        manDayReportComponent.add(newManDayDO.getId(), actualManDay, manDayDesc);
         return BaseResult.success(true);
     }
 

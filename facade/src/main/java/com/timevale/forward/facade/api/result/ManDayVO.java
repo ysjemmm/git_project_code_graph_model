@@ -65,6 +65,9 @@ public class ManDayVO extends ToString {
     @ApiModelProperty("审计人天")
     private BigDecimal auditManDay;
 
+    @ApiModelProperty("审核人天说明")
+    private String auditManDayDesc;
+
     @ApiModelProperty("审计状态：0审核通过，10已驳回，20审核中")
     private Integer auditStatus;
 

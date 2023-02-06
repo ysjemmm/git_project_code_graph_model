@@ -44,7 +44,7 @@ public class ManDayReportComponentImpl implements ManDayReportComponent {
     private MessageEventPublisher messageEventPublisher;
 
     @Override
-    public void add(Long manDayId, BigDecimal auditManDay) {
+    public void add(Long manDayId, BigDecimal auditManDay, String auditManDayDesc) {
 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ManDayDO manDayDO = manDayMapper.getById(manDayId);
@@ -54,7 +54,7 @@ public class ManDayReportComponentImpl implements ManDayReportComponent {
         ManDayReportDO reportDO = new ManDayReportDO()
                 .setManDayId(manDayId)
                 .setAuditManDay(auditManDay)
-                .setManDayDesc(manDayDO.getManDayDesc())
+                .setManDayDesc(auditManDayDesc)
                 .setAuditStatus(isPM ? AuditStatusEnum.APPROVE.getCode() : AuditStatusEnum.AUDITING.getCode())
                 .setAuditor(projectDO.getPmName())
                 .setAuditorId(projectDO.getPmId())

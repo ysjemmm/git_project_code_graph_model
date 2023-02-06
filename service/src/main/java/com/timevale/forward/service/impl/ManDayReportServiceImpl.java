@@ -35,6 +35,7 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -148,6 +149,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
 
         // 判断审批状态
         BigDecimal auditManDay = manDayReportDO.getAuditManDay();
+        String auditManDayDesc = manDayReportDO.getManDayDesc();
         if (AuditStatusEnum.APPROVE.getCode().equals(manDayReportModifyReq.getAuditStatus())) {
             // 如果更新人天为0，则逻辑删除
             if (BigDecimal.ZERO.compareTo(auditManDay) == 0) {
@@ -157,10 +159,12 @@ public class ManDayReportServiceImpl implements ManDayReportService {
             } else {
                 // 否则更新实际人天
                 manDayDO.setActualManDay(auditManDay);
+                manDayDO.setManDayDesc(auditManDayDesc);
                 manDayMapper.updateActualManDay(manDayDO);
                 // 重置当前审核状态
                 manDayDO.setRejectReason("");
                 manDayDO.setAuditManDay(BigDecimal.ZERO);
+                manDayDO.setAuditManDayDesc(StringUtils.EMPTY);
                 manDayDO.setAuditStatus(AuditStatusEnum.APPROVE.getCode());
                 manDayMapper.updateAudit(manDayDO);
                 // 更新提报状态

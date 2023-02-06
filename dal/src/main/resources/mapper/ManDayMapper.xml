@@ -21,16 +21,11 @@
     <update id="updateActualManDay">
         update man_day
         set actual_man_day = #{actualManDay},
+            <if test="manDayDesc != null">
+                man_day_desc   = #{manDayDesc},
+            </if>
             modify_man_id  = #{modifyManId},
             modify_man     = #{modifyMan}
-        where id = #{id}
-    </update>
-
-    <update id="updateManDayDesc">
-        update man_day
-        set man_day_desc  = #{manDayDesc},
-            modify_man_id = #{modifyManId},
-            modify_man    = #{modifyMan}
         where id = #{id}
     </update>
 
@@ -38,6 +33,7 @@
         update man_day
         <set>
             <if test="auditManDay != null">audit_man_day = #{auditManDay},</if>
+            <if test="auditManDayDesc != null">audit_man_day_desc = #{auditManDayDesc},</if>
             <if test="auditStatus != null">audit_status = #{auditStatus},</if>
             <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
             modify_man_id  = #{modifyManId},
