@@ -11,10 +11,16 @@
     </insert>
 
     <insert id="innerInsert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        INSERT INTO project(name, inner_type, level, `desc`, plan_start_date, plan_end_date, expected_income, pm, pm_id,
-                            valid_stages, create_man_id, create_man)
-        VALUES (#{name}, #{innerType}, #{level}, #{desc}, #{planStartDate}, #{planEndDate}, #{expectedIncome},
-                #{pmName}, #{pmId}, #{validStages}, #{createManId}, #{createMan})
+        INSERT INTO project
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            `name`, inner_type, `level`, `desc`, plan_start_date, plan_end_date, pm, pm_id, valid_stages, create_man_id, create_man,
+            <if test="expectedIncome != null"> expected_income,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            #{name}, #{innerType}, #{level}, #{desc}, #{planStartDate}, #{planEndDate}, #{pmName}, #{pmId}, #{validStages}, #{createManId}, #{createMan},
+            <if test="expectedIncome != null">#{expectedIncome},</if>
+        </trim>
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectDO">
@@ -34,14 +40,14 @@
             <if test="isWithGoal != null">is_with_goal = #{isWithGoal},</if>
             <if test="priority != null">priority = #{priority},</if>
             <if test="type != null">type = #{type},</if>
+            <if test="pmId != null">pm_id = #{pmId},</if>
             <if test="pmName != null">pm = #{pmName},</if>
             <if test="status != null">status = #{status},</if>
             <if test="nodeStatus != null">node_status = #{nodeStatus},</if>
-            <if test="pmId != null">pm_id = #{pmId},</if>
             <if test="planStartDate != null">plan_start_date = #{planStartDate},</if>
             <if test="planEndDate != null">plan_end_date = #{planEndDate},</if>
             <if test="desc != null">`desc` = #{desc},</if>
-            <if test="level != null">level = #{level},</if>
+            <if test="level != null">`level` = #{level},</if>
             <if test="resourceAssessment != null">resource_assessment = #{resourceAssessment},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
@@ -50,6 +56,7 @@
             <if test="suspendReason != null"> suspend_reason = #{suspendReason},</if>
             <if test="invalidReason != null"> invalid_reason = #{invalidReason},</if>
             <if test="unWriteReason != null"> un_write_reason = #{unWriteReason},</if>
+            <if test="innerType != null"> inner_type = #{innerType},</if>
         </set>
         <where>
             id = #{id}
@@ -203,6 +210,7 @@
                     #{item}
                 </foreach>
             </if>
+            and category = 0
             and a.is_deleted =false
         </where>
     </select>

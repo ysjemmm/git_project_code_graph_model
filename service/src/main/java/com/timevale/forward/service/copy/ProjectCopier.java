@@ -12,6 +12,7 @@ import com.timevale.forward.facade.api.result.ProjectBaseVO;
 import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.model.enums.ProjectCategoryEnum;
+import com.timevale.forward.model.enums.ProjectValidStages;
 import com.timevale.forward.model.middle.ProjectMD;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -21,7 +22,10 @@ import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 
-@Mapper
+@Mapper(imports = {
+        ProjectCategoryEnum.class,
+        ProjectValidStages.class
+})
 public interface ProjectCopier {
 
     ProjectCopier INSTANCE = Mappers.getMapper(ProjectCopier.class);
@@ -38,7 +42,13 @@ public interface ProjectCopier {
 
     @Mapping(source = "pm.userId", target = "pmId")
     @Mapping(source = "pm.userName", target = "pmName")
+    @Mapping(target = "validStages", expression = "java(ProjectValidStages.getAllStageJson())")
+    @Mapping(target = "category", expression = "java(ProjectCategoryEnum.INNER_PROJECT.getCode())")
     ProjectDO convert(ProjectInnerAddReq projectInnerAddReq);
+
+    @Mapping(source = "pm.userId", target = "pmId")
+    @Mapping(source = "pm.userName", target = "pmName")
+    ProjectDO convert(ProjectSimpleModifyReq projectSimpleModifyReq);
 
     /**
      * 转换转换DO

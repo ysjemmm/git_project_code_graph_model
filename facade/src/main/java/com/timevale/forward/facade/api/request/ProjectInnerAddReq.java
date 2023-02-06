@@ -42,7 +42,6 @@ public class ProjectInnerAddReq extends ToString {
     private PersonAddReq pm;
 
     @Valid
-    @NotEmpty(message = "团队成员不能为空")
     @ApiModelProperty("团队成员")
     private List<PersonAddReq> teamMembers;
 

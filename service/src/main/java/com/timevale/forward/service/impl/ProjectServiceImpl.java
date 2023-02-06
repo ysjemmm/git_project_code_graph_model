@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -377,24 +378,20 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> innerAdd(ProjectInnerAddReq projectInnerAddReq) {
-        // 校验参数
-        innerAddValidate(projectInnerAddReq);
+        // 校验名称参数
+        projectNameValidate(projectInnerAddReq.getName());
 
         // 转换，配置项目类型，有效阶段
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectInnerAddReq);
-        projectDO.setCategory(ProjectCategoryEnum.INNER_PROJECT.getCode());
-        projectDO.setValidStages(ProjectValidStages.getAllStageJson());
+
+        // 项目落库
         projectMapper.innerInsert(projectDO);
 
         // 获取项目id
         Long projectId = projectDO.getId();
 
-        // 取出项目成员参数
+        // 取出项目成员参数, 落库
         List<PersonAddReq> teamMembers = projectInnerAddReq.getTeamMembers();
-        // 去除pm
-        PersonAddReq pm = projectInnerAddReq.getPm();
-        teamMembers.removeIf(e-> Objects.equals(e.getUserId(), pm.getUserId()));
-        // 项目成员落库
         personComponent.add(teamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         // 添加项目目标信息
@@ -422,19 +419,6 @@ public class ProjectServiceImpl implements ProjectService {
         projectLogComponent.addLogWhenStatusChange(status, status, projectDO.getId(), ButtonActionEnum.SUBMIT.getText());
 
         return BaseResult.success(true);
-    }
-
-    /**
-     * 内部项目新增，参数检验
-     *
-     * @param projectInnerAddReq 项目内部添加请求
-     */
-    private void innerAddValidate(ProjectInnerAddReq projectInnerAddReq) {
-        String name = projectInnerAddReq.getName();
-        AssertUtil.checkState(!name.contains(CommonConstant.BLANK), "项目名称中请勿包含空格");
-
-        ProjectDO byName = projectMapper.getByName(name);
-        AssertUtil.checkState(byName == null, "该项目名称已存在,请修改后重试");
     }
 
     @Override
@@ -521,7 +505,27 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> simpleModify(ProjectSimpleModifyReq projectSimpleModifyReq) {
+        // 校验名称参数
+        String projectName = projectSimpleModifyReq.getName();
+        if (StrUtil.isNotBlank(projectName)) {
+            projectNameValidate(projectName);
+        }
+
+        // 目标项目id
+        Long projectId = projectSimpleModifyReq.getId();
+
+        // 更新项目成员, 为null不做变更
+        List<PersonAddReq> teamMembers = projectSimpleModifyReq.getTeamMembers();
+        if (teamMembers != null) {
+            personComponent.update(teamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        }
+
+        // 转换，更新落库
+        ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectSimpleModifyReq);
+        projectMapper.update(projectDO);
+
         return BaseResult.success(true);
     }
 
@@ -1136,6 +1140,18 @@ public class ProjectServiceImpl implements ProjectService {
                     DateUtil.parseToString(newPjEstablishPublishDate, DateStyle.YYYY_MM_DD))
             );
         }
+    }
+
+    /**
+     * 项目名称校验
+     *
+     * @param projectName 项目名称
+     */
+    private void projectNameValidate(String projectName) {
+        AssertUtil.checkState(!projectName.contains(CommonConstant.BLANK), "项目名称中请勿包含空格");
+
+        ProjectDO byName = projectMapper.getByName(projectName);
+        AssertUtil.checkState(byName == null, "该项目名称已存在,请修改后重试");
     }
 
     /**

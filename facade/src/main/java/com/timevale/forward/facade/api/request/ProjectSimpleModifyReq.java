@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.constraints.Digits;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
@@ -24,9 +25,11 @@ public class ProjectSimpleModifyReq extends ToString {
 
     @NotNull(message = "项目id必填")
     @ApiModelProperty(value = "项目id", required = true)
-    private Long projectId;
+    private Long id;
 
-    @NotNull
+    @ApiModelProperty(value = "项目名称")
+    private String name;
+
     @ApiModelProperty("内部项目类型: 0空, 1战略项目, 2LTC项目, 3PBG项目, 4CBG项目, 5管理后台项目")
     private Integer innerType;
 
@@ -44,11 +47,6 @@ public class ProjectSimpleModifyReq extends ToString {
 
     @ApiModelProperty("描述")
     private String desc;
-
-    @Digits(integer = 15, fraction = 2, message = "请输入15位以内整数，2位以内小数")
-    @PositiveOrZero(message = "预计收益金额不可为负数")
-    @ApiModelProperty("项目预计收益金额")
-    private BigDecimal expectedIncome;
 
     @ApiModelProperty("团队成员")
     private List<PersonAddReq> teamMembers;
