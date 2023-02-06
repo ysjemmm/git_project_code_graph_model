@@ -19,6 +19,6 @@ public interface BugOnlineBizDemandMapper {
     @Select("select biz_demand_id from bug_online_biz_demand where bug_online_id = #{bugId} and is_deleted = false")
     List<Long> getBizDemandIds(@Param("bugId") Long bugId);
 
-    @Select("select bug_online_id from bug_online_biz_demand where bug_online_id = #{bugId} and is_deleted = false")
-    List<Long> getBugOnlineIds(Long bizDemandId);
+    @Select("select bug_online_id from bug_online_biz_demand where biz_demand_id = #{bizDemandId} and is_deleted = false")
+    List<Long> getBugOnlineIds(@Param("bizDemandId") Long bizDemandId);
 }

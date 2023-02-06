@@ -424,10 +424,12 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 查看是否为线上bug转换
         List<Long> bugOnlineIds = bugOnlineBizDemandMapper.getBugOnlineIds(bizDemandId);
-        List<BugOnlineDO> bugOnlineList = bugOnlineMapper.selectByIds(bugOnlineIds, false);
-        bizDemandDetailVO.setBugOnlineList(bugOnlineList.stream()
-                .map(x -> new BugOnlineLinkVO(x.getId(), x.getName()))
-                .collect(Collectors.toList()));
+        if (!bugOnlineIds.isEmpty()) {
+            List<BugOnlineDO> bugOnlineList = bugOnlineMapper.selectByIds(bugOnlineIds, false);
+            bizDemandDetailVO.setBugOnlineList(bugOnlineList.stream()
+                    .map(x -> new BugOnlineLinkVO(x.getId(), x.getName()))
+                    .collect(Collectors.toList()));
+        }
 
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectByBizDemandId(bizDemandId);
         if (bugOfflineDO != null) {
