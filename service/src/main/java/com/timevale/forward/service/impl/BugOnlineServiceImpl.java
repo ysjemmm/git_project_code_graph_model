@@ -1649,10 +1649,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         Long id = attachToBizReq.getId();
         List<Long> bizDemandIds = attachToBizReq.getBizDemandIds();
         BugOnlineDO bugOnline = bugOnlineMapper.selectById(id);
+        Assert.notNull(bugOnline, "您选择的线上bug不存在，请刷新后重试");
         Assert.state(BugOnlineStatusEnum.canConvertBizDemand(bugOnline.getStatus()),
                 "当前状态不允许转化业务需求");
         Assert.state(isPermission(bugOnline.getOperatorId()), "您没有权限将该bug转为业务需求");
-        Assert.notNull(bugOnline, "您选择的线上bug不存在，请刷新后重试");
         List<BizDemandDO> bizDemands = bizDemandMapper.selectByIds(bizDemandIds);
         Assert.notEmpty(bizDemands, "关联的业务需求不存在，请重新勾选");
         bugOnlineComponent.attachToBizDemands(bugOnline, bizDemandIds, true);
