@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ManDayReportCondition;
 import com.timevale.forward.dal.dao.ManDayMapper;
@@ -43,10 +44,7 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -81,7 +79,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
             condition.setAuditStatuses(Collections.singletonList(AuditStatusEnum.AUDITING.getCode()));
         } else if (ManDayReportTabEnum.REPORT.toString().equals(tabTag)) {
             condition.setReportorIds(Collections.singletonList(userId));
-        }else if (ManDayReportTabEnum.TEAM.toString().equals(tabTag)) {
+        } else if (ManDayReportTabEnum.TEAM.toString().equals(tabTag)) {
             List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userId, true);
             log.info("我和我的下属:{}", allMyStaffWithSelf);
             if (!CollectionUtils.isEmpty(condition.getReportorIds())) {
@@ -134,7 +132,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
 
         Long projectId = manDayDO.getProjectId();
         ProjectDO projectDO = projectMapper.get(projectId);
-        AssertUtil.notNull(projectDO,"对应项目不存在");
+        AssertUtil.notNull(projectDO, "对应项目不存在");
 
         String pmId = projectDO.getPmId();
         String userId = userInfo.getId();
@@ -210,7 +208,13 @@ public class ManDayReportServiceImpl implements ManDayReportService {
 
 
         List<Long> ids = manDayReportBatchApproveReq.getIds();
-        List<ManDayReportDO> manDayReportDOS = manDayReportMapper.selectByIds(ids);
+        List<ManDayReportDO> manDayReportDOS = manDayReportMapper.selectByIds(ids)
+                .stream().filter(mdr ->
+                        Objects.equals(mdr.getAuditStatus(), AuditStatusEnum.AUDITING.getCode()))
+                .collect(Collectors.toList());
+        if (manDayReportDOS.isEmpty()) {
+            return BaseResult.success();
+        }
 
         // 对应人天数据
         List<Long> manDayIds = manDayReportDOS.stream().map(ManDayReportDO::getManDayId).collect(Collectors.toList());
@@ -219,20 +223,23 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         // 对应项目数据
         List<Long> projectIds = manDayDOS.stream().map(ManDayDO::getProjectId).distinct().collect(Collectors.toList());
         List<ProjectDO> projectDOS = projectMapper.getByIds(projectIds);
-        projectDOS = projectDOS.stream().filter(e->!e.getIsDeleted()).collect(Collectors.toList());
+        projectDOS = projectDOS.stream().filter(e -> !e.getIsDeleted()).collect(Collectors.toList());
 
         // 判断对应项目是否全为自己pm
         String userId = userInfo.getId();
         AssertUtil.checkState(projectDOS.stream().allMatch(e -> userId.equals(e.getPmId())), "您无法审批您不是项目经理的项目");
 
-        Map<Long, BigDecimal> auditDayMap = manDayReportDOS.stream()
-                .collect(Collectors.toMap(ManDayReportDO::getManDayId, ManDayReportDO::getAuditManDay, (a, b) -> a));
+        Map<Long, ManDayReportDO> reportByManDayId = Maps.uniqueIndex(manDayReportDOS, ManDayReportDO::getManDayId);
 
-        log.info("[ManDayReportServiceImpl][batchApprove]批量更新人天{}",auditDayMap);
+        log.info("[ManDayReportServiceImpl][batchApprove]批量更新人天{}", reportByManDayId);
         for (ManDayDO manDayDO : manDayDOS) {
+            ManDayReportDO report = reportByManDayId.get(manDayDO.getId());
+            if (report == null) {
+                continue;
+            }
             // 对应审核人天天数
-            BigDecimal auditManDay = auditDayMap.get(manDayDO.getId());
-
+            BigDecimal auditManDay = report.getAuditManDay();
+            String auditManDayDesc = report.getManDayDesc();
             // 如果比较为0，删除人天
             if (BigDecimal.ZERO.compareTo(auditManDay) == 0) {
                 manDayMapper.delete(manDayDO);
@@ -240,11 +247,13 @@ public class ManDayReportServiceImpl implements ManDayReportService {
 
             // 更新人天实际天数
             manDayDO.setActualManDay(auditManDay);
+            manDayDO.setManDayDesc(auditManDayDesc);
             manDayMapper.updateActualManDay(manDayDO);
 
             // 更新人天当前审核状态
             manDayDO.setRejectReason("");
             manDayDO.setAuditManDay(BigDecimal.ZERO);
+            manDayDO.setAuditManDayDesc(StringUtils.EMPTY);
             manDayDO.setAuditStatus(AuditStatusEnum.APPROVE.getCode());
             manDayMapper.updateAudit(manDayDO);
         }
@@ -286,7 +295,7 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         AssertUtil.notNull(manDayDO, "该提报对应的项目不存在");
 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        log.info("[ManDayReportServiceImpl][urge]{}发送提报{}催办信息",userInfo.getId(),manDayReportDO.getId());
+        log.info("[ManDayReportServiceImpl][urge]{}发送提报{}催办信息", userInfo.getId(), manDayReportDO.getId());
         messageEventPublisher.publish(new ManDayReportUrgeMsgEvent(
                 this,
                 userInfo.getAlias() + "-" + userInfo.getName(),
@@ -296,9 +305,9 @@ public class ManDayReportServiceImpl implements ManDayReportService {
         return BaseResult.success(true);
     }
 
-    private static Pair<Date, Date>parseAndCheckDateRange(String dateRange) {
+    private static Pair<Date, Date> parseAndCheckDateRange(String dateRange) {
         if (StrUtil.isEmpty(dateRange)) {
-            return Pair.of(null,null);
+            return Pair.of(null, null);
         }
         Pair<LocalDate, LocalDate> localDatePair = parseDateRange(dateRange);
         LocalDate startLocalDate = localDatePair.getLeft();
