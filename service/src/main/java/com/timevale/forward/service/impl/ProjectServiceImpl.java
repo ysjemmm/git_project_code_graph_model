@@ -652,6 +652,11 @@ public class ProjectServiceImpl implements ProjectService {
             projectInnerDetailVO.setParentProjectName(parentProjectDO.getName());
         }
 
+        // 是否为项目经理和PMO及其上级
+        String pmId = projectDO.getPmId();
+        boolean isLeaderOrPMO = isPMO() && isLeader(pmId);
+        projectInnerDetailVO.setIsLeaderOrPMO(isLeaderOrPMO);
+
         return BaseResult.success(projectInnerDetailVO);
     }
 
@@ -1186,6 +1191,22 @@ public class ProjectServiceImpl implements ProjectService {
 
         ProjectDO byName = projectMapper.getByName(projectName);
         AssertUtil.checkState(byName == null, "该项目名称已存在,请修改后重试");
+    }
+
+    /**
+     * 用户是否是查询人或者查询人的上级
+     *
+     * @param queryUserId 查询用户id
+     * @return boolean
+     */
+    private boolean isLeader(String queryUserId) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String localUserId = userInfo.getId();
+        if (Objects.equals(queryUserId, localUserId)) {
+            return true;
+        }
+        Set<String> allSuperiorByAccount = innerUserPersonClient.getAllSuperiorByAccount(queryUserId, false);
+        return allSuperiorByAccount.contains(localUserId);
     }
 
     /**
