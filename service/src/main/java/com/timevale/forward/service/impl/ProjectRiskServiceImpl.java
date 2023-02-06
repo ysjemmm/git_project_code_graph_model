@@ -484,7 +484,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
                     //其他阶段,消息接收人找pm
                     String key = projectRiskDO.getProjectId() + "-" + projectRiskDO.getName() + "-" + projectDO.getPmId();
                     if (!riskRecordMap.containsKey(key)) {
-                        result.add(createProjectRiskRecordDO(projectRiskDO.getProjectId(), projectRiskDO.getName(), projectDO.getPmName(), projectDO.getPmId()));
+                        result.add(createProjectRiskRecordDO(projectRiskDO.getProjectId(), projectRiskDO.getName(), projectDO.getPm(), projectDO.getPmId()));
                         send(projectRiskDO.getProjectId(), projectRiskDO.getName(), projectDO.getName(), nodeDO.getPlanDate(), projectDO.getPmId());
                     }
 

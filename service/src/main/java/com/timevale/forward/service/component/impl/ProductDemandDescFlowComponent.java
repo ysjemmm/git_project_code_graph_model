@@ -108,7 +108,7 @@ public class ProductDemandDescFlowComponent {
         variables.put("reason", descChangeReq.getReason());
         variables.put("previousDesc", StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(productDemand.getDesc())));
         variables.put("changeDesc", StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(descChangeReq.getChangeDesc())));
-        variables.put("pm", project.getPmName());
+        variables.put("pm", project.getPm());
         variables.put("auditUserId", project.getPmId());
         variables.put("poId", descChangeReq.getPoId());
         variables.put("po", poName);
@@ -130,7 +130,7 @@ public class ProductDemandDescFlowComponent {
                 .setChangeType(descChangeReq.getProductDemandDescChangeType())
                 .setOtherReason(descChangeReq.getOtherReason())
                 .setPmId(project.getPmId())
-                .setPm(project.getPmName())
+                .setPm(project.getPm())
                 .setPoId(po.getAccount())
                 .setPo(poName);
         flow.setCreateManId(userInfo.getId());

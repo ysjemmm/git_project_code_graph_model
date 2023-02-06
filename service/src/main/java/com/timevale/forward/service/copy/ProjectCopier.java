@@ -41,7 +41,7 @@ public interface ProjectCopier {
      * @return ProductDemandDO
      */
     @Mapping(source = "pm.userId", target = "pmId")
-    @Mapping(source = "pm.userName", target = "pmName")
+    @Mapping(source = "pm.userName", target = "pm")
     ProjectDO convert(ProjectAddReq projectAddReq);
 
     @Mapping(target = "status", source = "req.status")
@@ -50,13 +50,13 @@ public interface ProjectCopier {
     ProjectListChildCondition convert(ProjectChildListReq req, ProjectDO project);
 
     @Mapping(source = "pm.userId", target = "pmId")
-    @Mapping(source = "pm.userName", target = "pmName")
+    @Mapping(source = "pm.userName", target = "pm")
     @Mapping(target = "validStages", expression = "java(ProjectValidStages.getAllStageJson())")
     @Mapping(target = "category", expression = "java(ProjectCategoryEnum.INNER_PROJECT.getCode())")
     ProjectDO convert(ProjectInnerAddReq projectInnerAddReq);
 
     @Mapping(source = "pm.userId", target = "pmId")
-    @Mapping(source = "pm.userName", target = "pmName")
+    @Mapping(source = "pm.userName", target = "pm")
     ProjectDO convert(ProjectSimpleModifyReq projectSimpleModifyReq);
 
     /**
@@ -67,7 +67,7 @@ public interface ProjectCopier {
      */
     @Mapping(source = "pds", target = "pds", qualifiedByName = "mapping")
     @Mapping(source = "pm.userId", target = "pmId")
-    @Mapping(source = "pm.userName", target = "pmName")
+    @Mapping(source = "pm.userName", target = "pm")
     ProjectDO convert(ProjectModifyReq projectModifyReq);
     
     /**
@@ -76,6 +76,7 @@ public interface ProjectCopier {
      * @param projectDO 对象
      * @return ProjectDetailVO
      */
+    @Mapping(source = "pm", target = "pmName")
     ProjectDetailVO convert(ProjectDO projectDO);
 
     /**
@@ -92,6 +93,7 @@ public interface ProjectCopier {
      * @param projectListDO 对象
      * @return ProjectDetailVO
      */
+    @Mapping(target = "pmName", source = "pm")
     @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectListDO.getStatus()))")
     @Mapping(target = "typeName", expression = "java(ProjectTypeEnum.getTextByCode(projectListDO.getType()))")
     @Mapping(target = "priorityName", expression = "java(PriorityEnum.getTextByCode(projectListDO.getPriority()))")
@@ -130,6 +132,7 @@ public interface ProjectCopier {
      * @param projectDO 对象
      * @return ProjectVO
      */
+    @Mapping(source = "pm", target = "pmName")
     ProjectVO transform(ProjectDO projectDO);
 
 
@@ -139,6 +142,7 @@ public interface ProjectCopier {
      * @param projectDO 对象
      * @return ProjectDO
      */
+    @Mapping(target = "pmName", source = "pm")
     ProjectMD change(ProjectDO projectDO);
 
     /**
@@ -148,6 +152,7 @@ public interface ProjectCopier {
      */
     ProjectDO convert(ProjectDateModifyReq projectDateModifyReq);
 
+    @Mapping(target = "pmName", source = "pm")
     @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectDO.getStatus()))")
     ProjectInnerDetailVO do2Vo(ProjectDO projectDO);
 

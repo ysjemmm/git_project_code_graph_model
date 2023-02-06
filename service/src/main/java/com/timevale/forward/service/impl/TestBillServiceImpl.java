@@ -208,7 +208,7 @@ public class TestBillServiceImpl implements TestBillService {
         //提测单主题
         ProjectDO projectDO = projectMapper.get(projectId);
         testBillVO.setSubmitTestName(projectDO.getName() + CommonConstant.TESTBILL_SUFFIX);
-        testBillVO.setProjectManager(projectDO.getPmName());
+        testBillVO.setProjectManager(projectDO.getPm());
 
         //附件集合
         List<Integer> types = Arrays.asList(FileTypeEnum.TEST_BILL_CASE.getCode(), FileTypeEnum.TEST_BILL_PASS.getCode());
