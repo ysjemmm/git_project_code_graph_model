@@ -424,11 +424,10 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 查看是否为线上bug转换
         List<Long> bugOnlineIds = bugOnlineBizDemandMapper.getBugOnlineIds(bizDemandId);
-        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectByBizDemandId(bizDemandId);
-        if (bugOnlineDO != null) {
-            bizDemandDetailVO.setBugOnlineId(bugOnlineDO.getId());
-            bizDemandDetailVO.setBugOnlineName(bugOnlineDO.getName());
-        }
+        List<BugOnlineDO> bugOnlineList = bugOnlineMapper.selectByIds(bugOnlineIds, false);
+        bizDemandDetailVO.setBugOnlineList(bugOnlineList.stream()
+                .map(x -> new BugOnlineLinkVO(x.getId(), x.getName()))
+                .collect(Collectors.toList()));
 
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectByBizDemandId(bizDemandId);
         if (bugOfflineDO != null) {
@@ -1078,14 +1077,13 @@ public class BizDemandServiceImpl implements BizDemandService {
     public BaseResult<Boolean> noticeReceiver(BizDemandNoticeReceiverReq receiverReq) {
         log.info("开发资源申请流程通过,通知需求接收人:{}", receiverReq.getBizDemandIds());
         List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(receiverReq.getBizDemandIds());
-        bizDemandDOList.forEach(a -> {
-            messageEventPublisher.publish(new BizDemandApprovedMsgEvent(
-                    this,
-                    a.getId(),
-                    a.getReceiveManId(),
-                    a.getName())
-            );
-        });
+        bizDemandDOList.forEach(a ->
+                messageEventPublisher.publish(new BizDemandApprovedMsgEvent(
+                        this,
+                        a.getId(),
+                        a.getReceiveManId(),
+                        a.getName())
+                ));
         return BaseResult.success(true);
     }
 

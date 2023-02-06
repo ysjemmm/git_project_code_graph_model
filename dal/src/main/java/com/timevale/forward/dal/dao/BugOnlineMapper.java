@@ -59,14 +59,6 @@ public interface BugOnlineMapper {
     Long insert(@Param("bugOnlineDO") BugOnlineDO bugOnlineDO);
 
     /**
-     * 根据线上bug的业务需求id查询线上bug
-     *
-     * @param bizDemandId 业务需求id
-     * @return 返回值
-     */
-    BugOnlineDO selectByBizDemandId(@Param("bizDemandId") Long bizDemandId);
-
-    /**
      * 根据线上bug的id查询线上bug
      *
      * @param linkBugId 关联的线上bug的id
@@ -120,8 +112,6 @@ public interface BugOnlineMapper {
 
     /**
      * 根据客户id查询
-     * @param customId
-     * @return
      */
     List<BugOnlineListDO> selectByCustomId(@Param("customId") Long customId);
 }

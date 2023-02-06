@@ -149,12 +149,6 @@
         group by bo.id
     </select>
 
-    <select id="selectByBizDemandId" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
-        SELECT id, name
-        FROM bug_online
-        WHERE biz_demand_id = #{bizDemandId}
-    </select>
-
     <insert id="insert" useGeneratedKeys="true" keyProperty="bugOnlineDO.id">
         insert into bug_online(name, operator, operator_id, last_operator, last_operator_id, proposer, proposer_id,
                                customer_name, env, belong, priority, recurrent, reason, expect_date, business,
@@ -195,9 +189,6 @@
             </if>
             <if test="true">
                 customer_name = #{bugOnlineDO.customerName},
-            </if>
-            <if test="bugOnlineDO.bizDemandId != null">
-                biz_demand_id = #{bugOnlineDO.bizDemandId},
             </if>
             <if test="bugOnlineDO.env != null">
                 env = #{bugOnlineDO.env},
@@ -286,7 +277,6 @@
             proposer = #{bugOnlineDO.proposer},
             proposer_id = #{bugOnlineDO.proposerId},
             customer_name = #{bugOnlineDO.customerName},
-            biz_demand_id = #{bugOnlineDO.bizDemandId},
             env = #{bugOnlineDO.env},
             belong = #{bugOnlineDO.belong},
             priority = #{bugOnlineDO.priority},
