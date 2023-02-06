@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 @Getter
 @AllArgsConstructor
-public enum ProjectValidStages {
+public enum ProjectValidStageEnum {
     START("启动阶段"),
 
     PLAN("规划阶段"),
@@ -29,8 +29,8 @@ public enum ProjectValidStages {
      * @return {@link String}
      */
     public static String getAllStageJson() {
-        ProjectValidStages[] values = ProjectValidStages.values();
-        List<String> stages = Arrays.stream(values).map(ProjectValidStages::getText).collect(Collectors.toList());
+        ProjectValidStageEnum[] values = ProjectValidStageEnum.values();
+        List<String> stages = Arrays.stream(values).map(ProjectValidStageEnum::getText).collect(Collectors.toList());
         return JsonUtils.obj2json(stages);
     }
 }

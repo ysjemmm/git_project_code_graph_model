@@ -1,7 +1,6 @@
 package com.timevale.forward.service.copy;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.timevale.forward.dal.condition.ProjectListChildCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
@@ -14,6 +13,10 @@ import com.timevale.forward.facade.api.result.ProjectDetailVO;
 import com.timevale.forward.facade.api.result.ProjectInnerDetailVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.enums.ProjectCategoryEnum;
+import com.timevale.forward.model.enums.ProjectInnerTypeEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.ProjectValidStageEnum;
 import com.timevale.forward.model.middle.ProjectMD;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -24,7 +27,8 @@ import java.util.List;
 
 @Mapper(imports = {
         ProjectCategoryEnum.class,
-        ProjectValidStages.class,
+        ProjectValidStageEnum.class,
+        ProjectInnerTypeEnum.class,
         ProjectStatusEnum.class,
         ProjectLevelEnum.class,
         ProjectTypeEnum.class,
@@ -51,7 +55,7 @@ public interface ProjectCopier {
 
     @Mapping(source = "pm.userId", target = "pmId")
     @Mapping(source = "pm.userName", target = "pm")
-    @Mapping(target = "validStages", expression = "java(ProjectValidStages.getAllStageJson())")
+    @Mapping(target = "validStages", expression = "java(ProjectValidStageEnum.getAllStageJson())")
     @Mapping(target = "category", expression = "java(ProjectCategoryEnum.INNER_PROJECT.getCode())")
     ProjectDO convert(ProjectInnerAddReq projectInnerAddReq);
 
@@ -154,6 +158,7 @@ public interface ProjectCopier {
 
     @Mapping(target = "pmName", source = "pm")
     @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectDO.getStatus()))")
+    @Mapping(target = "innerTypeName", expression = "java(ProjectInnerTypeEnum.getTextByCode(projectDO.getStatus()))")
     ProjectInnerDetailVO do2Vo(ProjectDO projectDO);
 
 
