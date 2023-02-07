@@ -4,16 +4,18 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * @author by YangXu
- * @date 2023/02/03 11:41
+ * @author jingchun
+ * created on 2023/2/7
  */
 @Getter
 @AllArgsConstructor
-public enum ProjectCategoryEnum {
-    NULL(-1, "未知"),
-    PRODUCT_PROJECT(0,"产研项目"),
-    INNER_PROJECT(1,"内部项目");
+public enum MilestoneTypeEnum {
+
+    TASK(0, "任务"),
+    PROJECT(1, "项目");
 
     private final Integer code;
     private final String text;
+
+
 }

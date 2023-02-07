@@ -1,9 +1,11 @@
 package com.timevale.forward.model.enums;
 
+import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.timevale.forward.model.enums.ProjectCategoryEnum.INNER_PROJECT;
@@ -13,6 +15,7 @@ import static com.timevale.forward.model.enums.ProjectCategoryEnum.PRODUCT_PROJE
 @AllArgsConstructor
 public enum ProjectStageEnum {
 
+    NULL(-1, "未知", ProjectCategoryEnum.NULL),
     DEMAND(0, "需求规划阶段", PRODUCT_PROJECT),
     DEV(1, "研发阶段", PRODUCT_PROJECT),
     TEST(2, "测试阶段", PRODUCT_PROJECT),
@@ -26,6 +29,24 @@ public enum ProjectStageEnum {
     private final String text;
     // 区分阶段属于内部项目还是产研项目
     private final ProjectCategoryEnum category;
+
+    // 由于用code查询比较平凡，缓存到一个map以提升性能
+    private static final Map<Integer, ProjectStageEnum> CODE_STAGE_MAP =
+            Maps.uniqueIndex(Arrays.asList(values()), ProjectStageEnum::getCode);
+
+    /**
+     * 根据code查询text
+     */
+    public static String getTextByCode(Integer code) {
+        return getByCode(code).text;
+    }
+
+    /**
+     * 根据code查询项目阶段
+     */
+    public static ProjectStageEnum getByCode(Integer code) {
+        return CODE_STAGE_MAP.getOrDefault(code, NULL);
+    }
 
     /**
      * 得到所有阶段json
@@ -41,4 +62,5 @@ public enum ProjectStageEnum {
                         .collect(Collectors.joining(",")) +
                 "]";
     }
+
 }

@@ -33,7 +33,7 @@ public class ProjectMilestoneVO extends ToString {
     private Integer stage;
 
     @ApiModelProperty("里程碑所属项目阶段")
-    private Integer stageName;
+    private String stageName;
 
     @ApiModelProperty("关联数据id")
     private Long relationId;
