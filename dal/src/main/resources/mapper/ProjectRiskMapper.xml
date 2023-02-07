@@ -127,4 +127,12 @@
         WHERE status = #{status} AND type = #{type} AND is_deleted = false
     </select>
 
+    <select id="count" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM project_risk
+        WHERE status = #{status}
+          AND project_id = #{projectId}
+          AND is_deleted = false
+    </select>
+
 </mapper>

@@ -157,4 +157,6 @@ public interface ProjectMapper {
     List<ProjectDO> getByLikeName(@Param("name") String name);
 
     Page<ProjectListDO> listChildren(ProjectListChildCondition condition);
+
+    Long countChildren(@Param("parentIds")String parentIds);
 }

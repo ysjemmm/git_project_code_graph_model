@@ -51,11 +51,11 @@
         UPDATE project_budget
         <set>
             <if test="costType">cost_type = #{costType},</if>
-            <if test="expectedAmount">cost_type = #{expectedAmount},</if>
-            <if test="costAmount">cost_type = #{costAmount},</if>
-            <if test="expectedDesc">cost_type = #{expectedDesc},</if>
-            <if test="costDesc">cost_type = #{costDesc},</if>
-            <if test="costDate">cost_type = #{costDate},</if>
+            <if test="expectedAmount">expected_amount = #{expectedAmount},</if>
+            <if test="costAmount">cost_amount = #{costAmount},</if>
+            <if test="expectedDesc">expected_desc = #{expectedDesc},</if>
+            <if test="costDesc">cost_desc = #{costDesc},</if>
+            <if test="costDate">cost_date = #{costDate},</if>
             <if test="true">
                 modify_man = #{modifyMan},
                 modify_man_id = #{modifyManId}

@@ -145,6 +145,8 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectDocumentComponent projectDocumentComponent;
     @Resource
     private ProjectBudgetMapper projectBudgetMapper;
+    @Resource
+    private ProjectRiskMapper projectRiskMapper;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -515,9 +517,20 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public BaseResult<ProjectTabCountVO> countTabTodos(Long projectId) {
+        ProjectDO projectDO = projectMapper.get(projectId);
+        AssertUtil.notNull(projectDO, "项目不存在");
+
+        // 项目风险个数
+        Long riskCount = projectRiskMapper.count(projectId, ProjectRiskStatusEnum.PENDING.getCode());
+
+        // 子项目个数，查询包含自身，需要减一
+        String parentIds = projectDO.getParentIds();
+        Long childrenCount = projectMapper.countChildren(parentIds) - 1;
+
+        // 返回数据
         ProjectTabCountVO tabCountVO = new ProjectTabCountVO();
-        tabCountVO.setChildrenCount(RandomUtil.randomLong(0,9));
-        tabCountVO.setProjectRiskCount(RandomUtil.randomLong(0,9));
+        tabCountVO.setProjectRiskCount(riskCount);
+        tabCountVO.setChildrenCount(childrenCount);
         return BaseResult.success(tabCountVO);
     }
 

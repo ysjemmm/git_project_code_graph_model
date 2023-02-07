@@ -100,4 +100,13 @@ public interface ProjectRiskMapper {
      */
     List<ProjectRiskDO> selectByStatusType(@Param("status") Integer status,@Param("type") Integer type);
 
+    /**
+     * 统计个数
+     *
+     * @param projectId 项目id
+     * @param status    状态
+     * @return {@link Long}
+     */
+    Long count(@Param("projectId") Long projectId, @Param("status") Integer status);
+
 }

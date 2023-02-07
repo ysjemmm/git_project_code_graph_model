@@ -34,7 +34,7 @@
             concat(',', (select `AUTO_INCREMENT`
             from information_schema.TABLES
             where TABLE_SCHEMA = 'info_forward'
-            and TABLE_NAME = 'project'), ','))
+            and TABLE_NAME = 'project'), ','),
             # 新增可选
             <if test="expectedIncome != null">#{expectedIncome},</if>
         </trim>
@@ -467,5 +467,11 @@
             </if>
 
         </where>
+    </select>
+
+    <select id="countChildren" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM project
+        WHERE parent_ids LIKE CONCAT(#{parentIds}, '%')
     </select>
 </mapper>
