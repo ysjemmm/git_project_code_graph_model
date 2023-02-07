@@ -7,7 +7,7 @@ import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 /**
  * @author xingyun
@@ -19,13 +19,13 @@ import java.util.List;
 public class HomePageTaskBoardReq extends BaseReq {
 
     @ApiModelProperty("tab类型：0为个人，1为团队")
-    Integer tabType;
+    private Integer tabType;
 
     @ApiModelProperty("部门id")
-    private List<Long> deptIds;
+    private Set<String> deptIds;
 
     @ApiModelProperty("团队成员:花名id")
-    private List<String> teamMembers;
+    private Set<String> teamMembers;
 
     @ApiModelProperty("开始时间")
     @NotNull(message = "开始时间不能为空")

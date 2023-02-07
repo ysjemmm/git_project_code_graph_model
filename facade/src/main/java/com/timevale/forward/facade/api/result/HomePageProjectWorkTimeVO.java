@@ -8,26 +8,23 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Date;
 import java.util.List;
 
 /**
  * @author jingchun
- * created on 2023/2/3
+ * created on 2023/2/7
  */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ApiOperation("团队项目工时看板")
-public class HomePageGroupWorkTimeVO extends ToString {
+@ApiOperation("团队项目工时个人项目")
+public class HomePageProjectWorkTimeVO extends ToString {
 
-    @ApiModelProperty("用户账户")
-    private String executorId;
+    @ApiModelProperty("日期")
+    private Date date;
 
-    @ApiModelProperty("用户花名")
-    private String executor;
-
-    @ApiModelProperty("项目任务列表")
-    private List<HomePageProjectWorkTimeVO> list;
+    private List<HomePageSingleProjectWorkTimeVO> projectInfo;
 
 }
