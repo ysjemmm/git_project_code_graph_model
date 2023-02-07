@@ -30,6 +30,13 @@
         modify_man_id,modify_man,modify_date
     </sql>
 
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO project_budget(project_id, cost_type, expected_amount, cost_amount, expected_desc, cost_desc, cost_date,
+                                   create_man, create_man_id)
+        VALUES (#{projectId}, #{costType}, #{expectedAmount}, #{costAmount}, #{expectedDesc},#{costDesc}, #{costDate},
+                #{createMan}, #{createManId})
+    </insert>
+
     <insert id="insertBatch">
         INSERT INTO project_budget(project_id, cost_type, expected_amount, cost_amount, expected_desc, cost_desc, cost_date,
                                    create_man, create_man_id)
@@ -39,4 +46,38 @@
              #{item.costDesc}, #{item.costDate}, #{createMan}, #{createManId})
         </foreach>
     </insert>
+
+    <update id="update">
+        UPDATE project_budget
+        <set>
+            <if test="costType">cost_type = #{costType},</if>
+            <if test="expectedAmount">cost_type = #{expectedAmount},</if>
+            <if test="costAmount">cost_type = #{costAmount},</if>
+            <if test="expectedDesc">cost_type = #{expectedDesc},</if>
+            <if test="costDesc">cost_type = #{costDesc},</if>
+            <if test="costDate">cost_type = #{costDate},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modify_man_id = #{modifyManId}
+            </if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <update id="delete">
+        UPDATE project_budget
+        SET is_deleted = true
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectBudgetDO">
+        SELECT id, project_id, cost_type, expected_amount, cost_amount, expected_desc, cost_desc, cost_date
+        FROM project_budget
+        WHERE project_id = #{projectId}
+          AND is_deleted = false
+    </select>
+
+
 </mapper>

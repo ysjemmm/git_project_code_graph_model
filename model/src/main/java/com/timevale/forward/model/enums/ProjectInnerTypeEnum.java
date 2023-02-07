@@ -11,7 +11,7 @@ public enum ProjectInnerTypeEnum {
 
     NULL(0,"空"),
 
-    strategy(1,"战略项目"),
+    STRATEGY(1,"战略项目"),
 
     LTC(2,"LTC项目"),
 

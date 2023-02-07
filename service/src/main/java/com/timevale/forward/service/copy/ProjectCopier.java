@@ -155,7 +155,7 @@ public interface ProjectCopier {
 
     @Mapping(target = "pmName", source = "pm")
     @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectDO.getStatus()))")
-    @Mapping(target = "innerTypeName", expression = "java(ProjectInnerTypeEnum.getTextByCode(projectDO.getStatus()))")
+    @Mapping(target = "innerTypeName", expression = "java(ProjectInnerTypeEnum.getTextByCode(projectDO.getInnerType()))")
     ProjectInnerDetailVO do2Vo(ProjectDO projectDO);
 
 

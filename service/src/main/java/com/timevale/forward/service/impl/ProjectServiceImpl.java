@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -60,130 +61,88 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private PersonComponent personComponent;
-
     @Resource
     private ProjectMapper projectMapper;
-
     @Resource
     private ProjectNodeComponent projectNodeComponent;
-
     @Resource
     private ProjectProductLineComponent projectProductLineComponent;
-
     @Resource
     private InnerUserPersonClient innerUserPersonClient;
-
     @Resource
     private ProjectProductDemandComponent projectProductDemandComponent;
-
     @Resource
     private ProductDemandComponent productDemandComponent;
-
     @Resource
     private ProductDemandMapper productDemandMapper;
-
     @Resource
     private ProductLineMapper productLineMapper;
-
     @Resource
     private ProjectComponent projectComponent;
-
     @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
-
     @Resource
     private ProductBizDemandMapper productBizDemandMapper;
-
     @Resource
     private PersonMapper personMapper;
-
     @Resource
     private TaskMapper taskMapper;
-
     @Resource
     private TaskComponent taskComponent;
-
     @Resource
     private TaskProductDemandComponent taskProductDemandComponent;
-
     @Resource
     private TaskProductDemandMapper taskProductDemandMapper;
-
     @Resource
     private BugOfflineMapper bugOfflineMapper;
-
     @Resource
     protected BugLogMapper bugLogMapper;
-
     @Resource
     private BugOfflineComponent bugOfflineComponent;
-
     @Resource
     private ProjectLogComponent projectLogComponent;
-
     @Resource
     private ProductDemandLogComponent productDemandLogComponent;
-
     @Resource
     private ProjectFlowMapper projectFlowMapper;
-
     @Resource
     private ProjectPublishPlanComponent projectPublishPlanComponent;
-
     @Resource
     private BizDemandComponent bizDemandComponent;
-
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
-
     @Resource
     private ProjectGoalMapper projectGoalMapper;
-
     @Resource
     private ProjectNodeFlowComponent projectNodeFlowComponent;
-
     @Resource
     private ProjectNodeFlowMapper projectNodeFlowMapper;
-
     @Resource
     private ProjectNodeRecordMapper projectNodeRecordMapper;
-
     @Resource
     private MessageEventPublisher messageEventPublisher;
-
     @Resource
     private CustomDemandComponent customDemandComponent;
-
     @Resource
     private BizDemandMapper bizDemandMapper;
-
     @Resource
     private LabelComponent labelComponent;
-
     @Resource
     private BizLabelComponent bizLabelComponent;
-
     @Resource
     private BizLabelMapper bizLabelMapper;
-
     @Resource
     private ProjectAcceptanceMapper projectAcceptanceMapper;
-
     @Resource
     private ManDayReportComponent manDayReportComponent;
-
     @Resource
     private ProjectProductLineMapper projectProductLineMapper;
-
     @Resource
     private ProjectNodeMapper projectNodeMapper;
-
     @Resource
     private TestBillMapper testBillMapper;
-
     @Resource
     private ProjectDocumentComponent projectDocumentComponent;
-
     @Resource
     private ProjectBudgetMapper projectBudgetMapper;
 
@@ -412,7 +371,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (CollUtil.isNotEmpty(projectBudgets)) {
             // 转换
             List<ProjectBudgetDO> projectBudgetDOs = projectBudgets.stream()
-                    .map(e -> ProjectBudgetsCopier.INSTANCE.convert(e, projectId)).collect(Collectors.toList());
+                    .map(e -> ProjectBudgetsCopier.INSTANCE.req2do(e, projectId)).collect(Collectors.toList());
             // 项目预算落库
             projectBudgetMapper.insertBatch(projectBudgetDOs);
         }
@@ -556,7 +515,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public BaseResult<ProjectTabCountVO> countTabTodos(Long projectId) {
-        return BaseResult.success();
+        ProjectTabCountVO tabCountVO = new ProjectTabCountVO();
+        tabCountVO.setChildrenCount(RandomUtil.randomLong(0,9));
+        tabCountVO.setProjectRiskCount(RandomUtil.randomLong(0,9));
+        return BaseResult.success(tabCountVO);
     }
 
     @Override

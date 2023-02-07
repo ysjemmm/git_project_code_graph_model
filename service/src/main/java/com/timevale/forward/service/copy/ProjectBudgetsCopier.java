@@ -2,9 +2,12 @@ package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.entity.ProjectBudgetDO;
 import com.timevale.forward.facade.api.request.ProjectBudgetSaveReq;
+import com.timevale.forward.facade.api.result.ProjectBudgetVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 
 /**
@@ -17,5 +20,11 @@ public interface ProjectBudgetsCopier {
     ProjectBudgetsCopier INSTANCE = Mappers.getMapper(ProjectBudgetsCopier.class);
 
     @Mapping(source = "projectId", target = "projectId")
-    ProjectBudgetDO convert(ProjectBudgetSaveReq projectBudgetSaveReq, Long projectId);
+    ProjectBudgetDO req2do(ProjectBudgetSaveReq req, Long projectId);
+
+    ProjectBudgetDO req2do(ProjectBudgetSaveReq req);
+
+    ProjectBudgetVO do2vo(ProjectBudgetDO budgetDO);
+
+    List<ProjectBudgetVO> do2vo(List<ProjectBudgetDO> doList);
 }
