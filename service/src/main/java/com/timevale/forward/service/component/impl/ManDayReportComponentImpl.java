@@ -44,18 +44,17 @@ public class ManDayReportComponentImpl implements ManDayReportComponent {
     private MessageEventPublisher messageEventPublisher;
 
     @Override
-    public void add(Long manDayId, BigDecimal auditManDay, String auditManDayDesc) {
+    public void add(Long manDayId, BigDecimal auditManDay, String auditManDayDesc, boolean audit) {
 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         ManDayDO manDayDO = manDayMapper.getById(manDayId);
         ProjectDO projectDO = projectMapper.get(manDayDO.getProjectId());
-        boolean isPM = projectDO.getPmId().equals(userInfo.getId());
 
         ManDayReportDO reportDO = new ManDayReportDO()
                 .setManDayId(manDayId)
                 .setAuditManDay(auditManDay)
                 .setManDayDesc(auditManDayDesc)
-                .setAuditStatus(isPM ? AuditStatusEnum.APPROVE.getCode() : AuditStatusEnum.AUDITING.getCode())
+                .setAuditStatus(audit ? AuditStatusEnum.AUDITING.getCode() : AuditStatusEnum.APPROVE.getCode())
                 .setAuditor(projectDO.getPmName())
                 .setAuditorId(projectDO.getPmId())
                 .setReportor(manDayDO.getMemberName())
@@ -63,7 +62,7 @@ public class ManDayReportComponentImpl implements ManDayReportComponent {
         manDayReportMapper.insert(reportDO);
 
         // 发送消息
-        if (!isPM) {
+        if (audit) {
             messageEventPublisher.publish(new ManDayReportAddMsgEvent(
                     this,
                     userInfo.getAlias() + "-" + userInfo.getName(),

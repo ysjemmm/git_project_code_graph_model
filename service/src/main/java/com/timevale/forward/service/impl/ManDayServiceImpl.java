@@ -344,6 +344,8 @@ public class ManDayServiceImpl implements ManDayService {
                     // 人天不更新则只更新描述
                     oldManDay.setManDayDesc(manDayDesc);
                     manDayMapper.updateActualManDay(oldManDay);
+                    // 插入一条审批记录
+                    manDayReportComponent.add(oldManDay.getId(), actualManDay, manDayDesc, false);
                 }
                 return BaseResult.success();
             }
@@ -370,7 +372,7 @@ public class ManDayServiceImpl implements ManDayService {
                 oldManDay.setAuditStatus(AuditStatusEnum.AUDITING.getCode());
                 manDayMapper.updateAudit(oldManDay);
             }
-            manDayReportComponent.add(oldManDay.getId(), actualManDay, manDayDesc);
+            manDayReportComponent.add(oldManDay.getId(), actualManDay, manDayDesc, !isPM);
             return BaseResult.success(true);
         }
 
@@ -411,7 +413,7 @@ public class ManDayServiceImpl implements ManDayService {
             manDayMapper.updateAudit(newManDayDO);
         }
         // 增加审批
-        manDayReportComponent.add(newManDayDO.getId(), actualManDay, manDayDesc);
+        manDayReportComponent.add(newManDayDO.getId(), actualManDay, manDayDesc, !isPM);
         return BaseResult.success(true);
     }
 
