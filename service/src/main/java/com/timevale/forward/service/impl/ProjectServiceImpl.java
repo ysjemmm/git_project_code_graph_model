@@ -60,130 +60,88 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Resource
     private PersonComponent personComponent;
-
     @Resource
     private ProjectMapper projectMapper;
-
     @Resource
     private ProjectNodeComponent projectNodeComponent;
-
     @Resource
     private ProjectProductLineComponent projectProductLineComponent;
-
     @Resource
     private InnerUserPersonClient innerUserPersonClient;
-
     @Resource
     private ProjectProductDemandComponent projectProductDemandComponent;
-
     @Resource
     private ProductDemandComponent productDemandComponent;
-
     @Resource
     private ProductDemandMapper productDemandMapper;
-
     @Resource
     private ProductLineMapper productLineMapper;
-
     @Resource
     private ProjectComponent projectComponent;
-
     @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
-
     @Resource
     private ProductBizDemandMapper productBizDemandMapper;
-
     @Resource
     private PersonMapper personMapper;
-
     @Resource
     private TaskMapper taskMapper;
-
     @Resource
     private TaskComponent taskComponent;
-
     @Resource
     private TaskProductDemandComponent taskProductDemandComponent;
-
     @Resource
     private TaskProductDemandMapper taskProductDemandMapper;
-
     @Resource
     private BugOfflineMapper bugOfflineMapper;
-
     @Resource
     protected BugLogMapper bugLogMapper;
-
     @Resource
     private BugOfflineComponent bugOfflineComponent;
-
     @Resource
     private ProjectLogComponent projectLogComponent;
-
     @Resource
     private ProductDemandLogComponent productDemandLogComponent;
-
     @Resource
     private ProjectFlowMapper projectFlowMapper;
-
     @Resource
     private ProjectPublishPlanComponent projectPublishPlanComponent;
-
     @Resource
     private BizDemandComponent bizDemandComponent;
-
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
-
     @Resource
     private ProjectGoalMapper projectGoalMapper;
-
     @Resource
     private ProjectNodeFlowComponent projectNodeFlowComponent;
-
     @Resource
     private ProjectNodeFlowMapper projectNodeFlowMapper;
-
     @Resource
     private ProjectNodeRecordMapper projectNodeRecordMapper;
-
     @Resource
     private MessageEventPublisher messageEventPublisher;
-
     @Resource
     private CustomDemandComponent customDemandComponent;
-
     @Resource
     private BizDemandMapper bizDemandMapper;
-
     @Resource
     private LabelComponent labelComponent;
-
     @Resource
     private BizLabelComponent bizLabelComponent;
-
     @Resource
     private BizLabelMapper bizLabelMapper;
-
     @Resource
     private ProjectAcceptanceMapper projectAcceptanceMapper;
-
     @Resource
     private ManDayReportComponent manDayReportComponent;
-
     @Resource
     private ProjectProductLineMapper projectProductLineMapper;
-
     @Resource
     private ProjectNodeMapper projectNodeMapper;
-
     @Resource
     private TestBillMapper testBillMapper;
-
     @Resource
     private ProjectDocumentComponent projectDocumentComponent;
-
     @Resource
     private ProjectBudgetMapper projectBudgetMapper;
 
