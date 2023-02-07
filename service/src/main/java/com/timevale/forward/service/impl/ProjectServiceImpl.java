@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -514,7 +515,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public BaseResult<ProjectTabCountVO> countTabTodos(Long projectId) {
-        return BaseResult.success();
+        ProjectTabCountVO tabCountVO = new ProjectTabCountVO();
+        tabCountVO.setChildrenCount(RandomUtil.randomLong(0,9));
+        tabCountVO.setProjectRiskCount(RandomUtil.randomLong(0,9));
+        return BaseResult.success(tabCountVO);
     }
 
     @Override
