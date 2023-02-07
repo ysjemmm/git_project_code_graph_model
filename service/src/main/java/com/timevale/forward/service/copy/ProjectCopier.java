@@ -24,7 +24,7 @@ import java.util.List;
 
 @Mapper(imports = {
         ProjectCategoryEnum.class,
-        ProjectValidStageEnum.class,
+        ProjectStageEnum.class,
         ProjectInnerTypeEnum.class,
         ProjectStatusEnum.class,
         ProjectLevelEnum.class,
@@ -52,7 +52,7 @@ public interface ProjectCopier {
 
     @Mapping(source = "pm.userId", target = "pmId")
     @Mapping(source = "pm.userName", target = "pm")
-    @Mapping(target = "validStages", expression = "java(ProjectValidStageEnum.getAllStageJson())")
+    @Mapping(target = "validStages", expression = "java(ProjectStageEnum.getAllStageJson(ProjectCategoryEnum.INNER_PROJECT))")
     @Mapping(target = "category", expression = "java(ProjectCategoryEnum.INNER_PROJECT.getCode())")
     ProjectDO convert(ProjectInnerAddReq projectInnerAddReq);
 
