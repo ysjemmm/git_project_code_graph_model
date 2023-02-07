@@ -39,7 +39,7 @@ public interface TaskService {
      * @param taskAddReq 任务信息
      * @return 数量
      */
-    BaseResult<Boolean> add(TaskAddReq taskAddReq);
+    BaseResult<Long> add(TaskAddReq taskAddReq);
 
 
     /**

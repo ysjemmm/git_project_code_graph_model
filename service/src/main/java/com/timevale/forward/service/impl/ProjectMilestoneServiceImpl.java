@@ -11,15 +11,22 @@ import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.client.ProjectMilestoneService;
+import com.timevale.forward.facade.api.client.TaskService;
 import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
+import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.MilestoneTypeEnum;
+import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
+import com.timevale.forward.service.copy.TaskCopier;
+import com.timevale.forward.service.integration.http.ElapsedTimeClient;
+import com.timevale.mandarin.base.util.AssertUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,19 +41,52 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
 
+    private final ProjectComponent projectComponent;
+    private final TaskService taskService;
+    private final ElapsedTimeClient elapsedTimeClient;
     private final TaskMapper taskMapper;
     private final ProjectMapper projectMapper;
     private final ProjectMilestoneMapper milestoneMapper;
 
     @Override
     public BaseResult<Void> add(ProjectMilestoneAddReq projectMilestoneAddReq) {
-        return null;
+        ProjectDO project = projectMapper.get(projectMilestoneAddReq.getProjectId());
+        AssertUtil.notNull(project, "您添加的里程碑所属项目不存在，请刷新后重试");
+        if (MilestoneTypeEnum.TASK.getCode().equals(projectMilestoneAddReq.getType())) {
+            // 任务类型新增，先新增任务
+            TaskAddReq req = TaskCopier.INSTANCE.convert(projectMilestoneAddReq);
+            Long elapsedTime = elapsedTimeClient.getElapsedTime(projectMilestoneAddReq.getPlanStartDate(),
+                    projectMilestoneAddReq.getPlanEndDate());
+            req.setPlanUseTime(new BigDecimal(elapsedTime)
+                    .divide(new BigDecimal(60 * 60 * 1000), 2, RoundingMode.DOWN));
+            Long taskId = taskService.add(req).getData();
+            projectMilestoneAddReq.setRelationId(taskId);
+        } else if (MilestoneTypeEnum.PROJECT.getCode().equals(projectMilestoneAddReq.getType())) {
+            Long relateProjectId = projectMilestoneAddReq.getRelationId();
+            ProjectDO relateProject = projectMapper.get(relateProjectId);
+            AssertUtil.notNull(relateProject, "您关联的项目不存在，请刷新后重试");
+            AssertUtil.checkState(relateProject.getParentId() == null ||
+                    relateProject.getParentList().contains(project.getId()),
+                    "您关联里程碑的项目已经被其他项目关联");
+            AssertUtil.checkState(project.getParentList().contains(relateProject.getId()),
+                    "您关联的项目为当前项目父项目，不可关联");
+
+            if (relateProject.getParentId() == null) {
+                // 项目无父节点，则添加该项目为子节点
+                projectComponent.attachChildProject(project, relateProject);
+            }
+        } else {
+            return BaseResult.success();
+        }
+        ProjectMilestone entity = ProjectMilestoneCopier.INSTANCE.convert(projectMilestoneAddReq);
+        milestoneMapper.insert(entity);
+        return BaseResult.success();
     }
 
     @Override
     public BaseResult<List<ProjectMilestoneVO>> listMilestones(Long projectId) {
         ProjectDO currentProject = projectMapper.get(projectId);
-        Assert.notNull(currentProject, "当前项目不存在或者已经被删除，请刷新后重试");
+        AssertUtil.notNull(currentProject, "当前项目不存在或者已经被删除，请刷新后重试");
         List<ProjectMilestoneVO> res = new ArrayList<>();
         List<ProjectMilestone> milestones = milestoneMapper.selectByProjectId(projectId);
         if (milestones.isEmpty()) {

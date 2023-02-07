@@ -74,9 +74,6 @@ public class ProjectComponentImpl implements ProjectComponent {
     @Resource
     private BizLabelComponent bizLabelComponent;
 
-    @Resource
-    private ProjectFlowMapper projectFlowMapper;
-
 
     @Override
     public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -480,6 +477,13 @@ public class ProjectComponentImpl implements ProjectComponent {
         PageInfo<ProjectDO> pageInfo = new PageInfo<>(projectDOList);
 
         return pageInfo.getList();
+    }
+
+    @Override
+    public void attachChildProject(ProjectDO parent, ProjectDO child) {
+        String prepend = parent.getParentIds().substring(0, parent.getParentIds().length() - 1);
+        String prefixRegexp = "^" + child.getParentIds();
+        projectMapper.attachChildProject(prepend, prefixRegexp);
     }
 
     private List<ProductLineAnalyseVO> analyse(ProjectListCondition condition) {

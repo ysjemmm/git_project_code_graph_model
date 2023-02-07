@@ -3,6 +3,7 @@ package com.timevale.forward.service.copy;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
 import com.timevale.forward.dal.entity.TaskDO;
+import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.ProjectStageEnum;
 import org.mapstruct.Mapper;
@@ -37,5 +38,15 @@ public interface ProjectMilestoneCopier {
     @Mapping(target = "stageName", expression = "java(ProjectStageEnum.getTextByCode(milestone.getStage()))")
     @Mapping(target = "relationName", source = "task.name")
     ProjectMilestoneVO convert(ProjectMilestone milestone, TaskDO task);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "modifyManId", ignore = true)
+    @Mapping(target = "modifyMan", ignore = true)
+    @Mapping(target = "modifyDate", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "createManId", ignore = true)
+    @Mapping(target = "createMan", ignore = true)
+    @Mapping(target = "createDate", ignore = true)
+    ProjectMilestone convert(ProjectMilestoneAddReq req);
 
 }

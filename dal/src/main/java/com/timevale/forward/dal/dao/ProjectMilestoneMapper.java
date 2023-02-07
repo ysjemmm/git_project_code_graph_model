@@ -17,6 +17,7 @@ public interface ProjectMilestoneMapper {
     @Select("select * from project_milestone where project_id = #{projectId} and is_deleted = false")
     List<ProjectMilestone> selectByProjectId(@Param("projectId") Long projectId);
 
+    void insert(ProjectMilestone entity);
 }
 
 

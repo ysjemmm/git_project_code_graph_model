@@ -47,11 +47,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import static com.timevale.forward.service.constant.CommonConstant.*;
+import static com.timevale.forward.service.constant.CommonConstant.SECONDS_PER_HOUR;
 
 /**
  * @author xingyun
@@ -131,7 +132,6 @@ public class TaskServiceImpl implements TaskService {
         log.info("任务列表接收参数:{}", taskQueryList);
         String currentUser = LocalSessionUtils.getUserInfo().getId();
         TaskListCondition condition = TaskCopier.INSTANCE.convert(taskQueryList);
-        List<Long> projectIds = taskQueryList.getProjectIds().stream().map(Long::valueOf).collect(Collectors.toList());
         condition.setPageNum(taskQueryList.getPageNum());
         condition.setPageSize(taskQueryList.getPageSize());
         List<Long> taskIds = new ArrayList<>();
@@ -155,7 +155,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> add(TaskAddReq taskAddReq) {
+    public BaseResult<Long> add(TaskAddReq taskAddReq) {
         log.info("任务新增接收参数:{}", taskAddReq);
 
         if (taskAddReq.getName().contains(CommonConstant.BLANK)) {
@@ -205,7 +205,7 @@ public class TaskServiceImpl implements TaskService {
         taskProductDemandComponent.batchInsert(taskDO.getId(), taskAddReq.getProductDemandIds());
 
         sendDingMsg(taskDO, executorIds);
-        return BaseResult.success(true);
+        return BaseResult.success(taskDO.getId());
     }
 
     @Override
@@ -781,7 +781,7 @@ public class TaskServiceImpl implements TaskService {
                 }
             }
             BigDecimal elapsedTime = new BigDecimal(String.valueOf(totalTime.get()));
-            BigDecimal decimal = elapsedTime.divide(new BigDecimal(SECONDS_PER_HOUR), 2, BigDecimal.ROUND_HALF_UP);
+            BigDecimal decimal = elapsedTime.divide(new BigDecimal(SECONDS_PER_HOUR), 2, RoundingMode.HALF_UP);
             taskDO.setTaskUseTime(decimal);
         }
     }

@@ -27,4 +27,10 @@
         create_date,modify_man_id,modify_man,
         modify_date
     </sql>
+    <insert id="insert">
+        insert into project_milestone (project_id, milestone_name, type, stage, relation_id, create_man_id, create_man,
+                                       modify_man_id, modify_man)
+        values (#{projectId}, #{milestoneName}, #{type}, #{stage}, #{relationId}, #{createManId}, #{createMan},
+                #{createManId}, #{createMan})
+    </insert>
 </mapper>
