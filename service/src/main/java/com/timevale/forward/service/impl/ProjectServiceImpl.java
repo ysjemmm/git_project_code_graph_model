@@ -412,7 +412,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (CollUtil.isNotEmpty(projectBudgets)) {
             // 转换
             List<ProjectBudgetDO> projectBudgetDOs = projectBudgets.stream()
-                    .map(e -> ProjectBudgetsCopier.INSTANCE.convert(e, projectId)).collect(Collectors.toList());
+                    .map(e -> ProjectBudgetsCopier.INSTANCE.req2do(e, projectId)).collect(Collectors.toList());
             // 项目预算落库
             projectBudgetMapper.insertBatch(projectBudgetDOs);
         }

@@ -40,4 +40,6 @@ public class ProjectBudgetVO extends ToString {
     @ApiModelProperty("发生日期")
     private Date costDate;
 
+    @ApiModelProperty("执行进度")
+    private BigDecimal progress;
 }

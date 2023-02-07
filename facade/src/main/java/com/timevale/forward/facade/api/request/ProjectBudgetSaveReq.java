@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.Digits;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -30,7 +31,6 @@ public class ProjectBudgetSaveReq extends ToString {
     @Length(max = 20, message = "成本类型不可超过20字")
     @ApiModelProperty("成本类型")
     private String costType;
-
 
     @Digits(integer = 15, fraction = 2, message = "请输入15位以内整数，2位以内小数")
     @PositiveOrZero(message = "预计成本金额不可为负数")

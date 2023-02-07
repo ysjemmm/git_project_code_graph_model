@@ -14,11 +14,39 @@ import java.util.List;
 public interface ProjectBudgetMapper {
 
     /**
+     * 单条插入
+     *
+     * @param projectBudgetDO 项目预算DO
+     */
+    void insert(ProjectBudgetDO projectBudgetDO);
+
+    /**
      * 批量新增
      *
      * @param list 列表
      */
     void insertBatch(@Param("list") List<ProjectBudgetDO> list);
+
+    /**
+     * 更新
+     *
+     * @param projectBudgetDO 项目预算DO
+     */
+    void update(ProjectBudgetDO projectBudgetDO);
+
+    /**
+     * 删除
+     *
+     * @param id id
+     */
+    void delete(@Param("id") Long id);
+
+    /**
+     * 选择 by 项目id
+     *
+     * @param projectId 项目id
+     */
+    List<ProjectBudgetDO> selectByProjectId(@Param("projectId") Long projectId);
 }
 
 
