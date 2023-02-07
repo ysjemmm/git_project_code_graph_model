@@ -20,10 +20,10 @@ import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
+import com.timevale.mandarin.base.util.AssertUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -51,7 +51,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
     @Override
     public BaseResult<Void> add(ProjectMilestoneAddReq projectMilestoneAddReq) {
         ProjectDO project = projectMapper.get(projectMilestoneAddReq.getProjectId());
-        Assert.notNull(project, "您添加的里程碑所属项目不存在，请刷新后重试");
+        AssertUtil.notNull(project, "您添加的里程碑所属项目不存在，请刷新后重试");
         if (MilestoneTypeEnum.TASK.getCode().equals(projectMilestoneAddReq.getType())) {
             // 任务类型新增，先新增任务
             TaskAddReq req = TaskCopier.INSTANCE.convert(projectMilestoneAddReq);
@@ -64,11 +64,11 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
         } else if (MilestoneTypeEnum.PROJECT.getCode().equals(projectMilestoneAddReq.getType())) {
             Long relateProjectId = projectMilestoneAddReq.getRelationId();
             ProjectDO relateProject = projectMapper.get(relateProjectId);
-            Assert.notNull(relateProject, "您关联的项目不存在，请刷新后重试");
-            Assert.state(relateProject.getParentId() == null ||
+            AssertUtil.notNull(relateProject, "您关联的项目不存在，请刷新后重试");
+            AssertUtil.checkState(relateProject.getParentId() == null ||
                     relateProject.getParentList().contains(project.getId()),
                     "您关联里程碑的项目已经被其他项目关联");
-            Assert.state(project.getParentList().contains(relateProject.getId()),
+            AssertUtil.checkState(project.getParentList().contains(relateProject.getId()),
                     "您关联的项目为当前项目父项目，不可关联");
 
             if (relateProject.getParentId() == null) {
@@ -86,7 +86,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
     @Override
     public BaseResult<List<ProjectMilestoneVO>> listMilestones(Long projectId) {
         ProjectDO currentProject = projectMapper.get(projectId);
-        Assert.notNull(currentProject, "当前项目不存在或者已经被删除，请刷新后重试");
+        AssertUtil.notNull(currentProject, "当前项目不存在或者已经被删除，请刷新后重试");
         List<ProjectMilestoneVO> res = new ArrayList<>();
         List<ProjectMilestone> milestones = milestoneMapper.selectByProjectId(projectId);
         if (milestones.isEmpty()) {
