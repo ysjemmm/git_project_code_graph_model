@@ -70,6 +70,12 @@ public class ProjectInnerDetailVO extends ToString {
     @ApiModelProperty("项目作废原因")
     private String invalidReason;
 
+    @ApiModelProperty("项目等级：0普通，1重点，2S级别，3A级别，4B级别")
+    private Integer level;
+
+    @ApiModelProperty("项目等级描述")
+    private String levelName;
+
     @ApiModelProperty("是否是项目经理和PMO及其上级")
     private Boolean isLeaderOrPMO;
 }
