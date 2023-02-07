@@ -47,8 +47,9 @@ public class ProjectMilestoneAddReq extends ToString {
     @ApiModelProperty(value = "任务执行人")
     private List<PersonAddReq> executors;
 
+    @NotNull(message = "是否创建代办必填")
     @ApiModelProperty("是否创建待办")
-    private boolean todo;
+    private Boolean todo;
 
     @ApiModelProperty("任务描述")
     private String desc;

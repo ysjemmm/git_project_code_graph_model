@@ -5,11 +5,13 @@ import com.timevale.forward.dal.dto.TaskBoardDTO;
 import com.timevale.forward.dal.dto.TaskOverdueDTO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.query.TaskQueryList;
+import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
 import com.timevale.forward.facade.api.request.TaskSimpleAddReq;
 import com.timevale.forward.facade.api.result.*;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
@@ -26,6 +28,20 @@ public interface TaskCopier {
      * @return TaskListCondition
      */
     TaskListCondition convert(TaskQueryList taskQueryList);
+
+    /**
+     * 里程碑转换为任务入参
+     */
+    @Mapping(target = "name", source = "milestoneName")
+    @Mapping(target = "productLineId", ignore = true)
+    @Mapping(target = "productDemandIds", ignore = true)
+    @Mapping(target = "planUseTime", ignore = true)
+    @Mapping(target = "files", ignore = true)
+    @Mapping(target = "alias", ignore = true)
+    @Mapping(target = "account", ignore = true)
+    @Mapping(target = "actualEndDate", ignore = true)
+    @Mapping(target = "actualStartDate", ignore = true)
+    TaskAddReq convert(ProjectMilestoneAddReq req);
 
     /**
      *

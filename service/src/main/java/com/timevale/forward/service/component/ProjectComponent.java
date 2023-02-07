@@ -47,7 +47,12 @@ public interface ProjectComponent {
 
     /**
      * 获得所有进行中的项目id
-     * @return
      */
     List<ProjectDO> pageAllOngoingProjects(QueryBase queryBase);
+
+    /**
+     * 添加子项目节点
+     */
+    void attachChildProject(ProjectDO parent, ProjectDO child);
+
 }
