@@ -29,6 +29,7 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -41,7 +42,6 @@ import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -1649,12 +1649,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         Long id = attachToBizReq.getId();
         List<Long> bizDemandIds = attachToBizReq.getBizDemandIds();
         BugOnlineDO bugOnline = bugOnlineMapper.selectById(id);
-        Assert.notNull(bugOnline, "您选择的线上bug不存在，请刷新后重试");
-        Assert.state(BugOnlineStatusEnum.canConvertBizDemand(bugOnline.getStatus()),
+        AssertUtil.notNull(bugOnline, "您选择的线上bug不存在，请刷新后重试");
+        AssertUtil.checkState(BugOnlineStatusEnum.canConvertBizDemand(bugOnline.getStatus()),
                 "当前状态不允许转化业务需求");
-        Assert.state(isPermission(bugOnline.getOperatorId()), "您没有权限将该bug转为业务需求");
+        AssertUtil.checkState(isPermission(bugOnline.getOperatorId()), "您没有权限将该bug转为业务需求");
         List<BizDemandDO> bizDemands = bizDemandMapper.selectByIds(bizDemandIds);
-        Assert.notEmpty(bizDemands, "关联的业务需求不存在，请重新勾选");
+        AssertUtil.notEmpty(bizDemands, "关联的业务需求不存在，请重新勾选");
         bugOnlineComponent.attachToBizDemands(bugOnline, bizDemandIds, true);
         return BaseResult.success();
     }

@@ -21,10 +21,10 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ModelCopier;
 import com.timevale.forward.service.copy.ProductLineCopier;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -114,7 +114,7 @@ public class ProductLineServiceImpl implements ProductLineService {
     @Override
     public BaseResult<Boolean> add(ProductLineAddReq productLineAddReq) {
         ProductLineDO exists = productLineMapper.selectByName(productLineAddReq.getName());
-        Assert.isNull(exists, "产品线名称已存在");
+        AssertUtil.checkState(exists == null, "产品线名称已存在");
         ProductLineDO productLineDO = ProductLineCopier.INSTANCE.convert(productLineAddReq);
         productLineMapper.insert(productLineDO);
         return BaseResult.success(true);
@@ -124,7 +124,7 @@ public class ProductLineServiceImpl implements ProductLineService {
     public BaseResult<Boolean> update(ProductLineModifyReq productLineModifyReq) {
         if (productLineModifyReq.getName() != null) {
             ProductLineDO exists = productLineMapper.selectByName(productLineModifyReq.getName());
-            Assert.state(exists == null ||
+            AssertUtil.checkState(exists == null ||
                             Objects.equals(exists.getId(), productLineModifyReq.getId()),
                     "产品线名称已存在");
         }
