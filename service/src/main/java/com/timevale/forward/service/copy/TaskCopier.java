@@ -38,7 +38,7 @@ public interface TaskCopier {
     @Mapping(target = "planUseTime", ignore = true)
     @Mapping(target = "actualEndDate", ignore = true)
     @Mapping(target = "actualStartDate", ignore = true)
-    @Mapping(target = "productLineId", constant = "0")
+    @Mapping(target = "productLineId", constant = "0L")
     @Mapping(target = "name", source = "milestoneName")
     @Mapping(target = "productDemandIds", expression = "java(new java.util.ArrayList<>())")
     TaskAddReq convert(ProjectMilestoneAddReq req);
