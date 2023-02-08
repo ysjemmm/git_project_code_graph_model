@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -180,7 +181,7 @@ public class ProjectDO extends BaseDO {
 
     public List<Integer> getValidStageList() {
         if (StringUtils.isEmpty(validStages)) {
-            return null;
+            return Collections.emptyList();
         }
         return JsonUtils.json2list(validStages, Integer.class);
     }
