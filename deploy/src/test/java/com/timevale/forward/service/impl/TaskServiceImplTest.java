@@ -149,7 +149,7 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         when(projectMapper.get(any())).thenReturn(projectDO);
         MockedConstruction<TaskDoneMsgEvent> construction = mockConstruction(TaskDoneMsgEvent.class);
         doNothing().when(messageEventPublisher).publish(any());
-        BaseResult<Boolean> baseResult = taskServiceImp.add(taskAddReq);
+        BaseResult<Long> baseResult = taskServiceImp.add(taskAddReq);
         construction.close();
         assert baseResult.ifSuccess();
     }
