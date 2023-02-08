@@ -165,7 +165,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
             bizChangeLogDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode())
                     .setMainId(id)
                     .setAction(ButtonActionEnum.LINK.getText())
-                    .setField(BizChangeLogTypeEnum.BUG_ONLINE.getText())
+                    .setField(BizChangeLogTypeEnum.ORIGIN_BUG_ONLINE.getText())
                     .setOldValue(bugOnlineDO.getName())
                     .setNewValue(bugOnlineDO.getName());
             return bizChangeLogDO;
