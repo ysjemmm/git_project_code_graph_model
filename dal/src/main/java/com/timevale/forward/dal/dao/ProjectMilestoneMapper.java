@@ -3,6 +3,7 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.entity.ProjectMilestone;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -18,6 +19,12 @@ public interface ProjectMilestoneMapper {
     List<ProjectMilestone> selectByProjectId(@Param("projectId") Long projectId);
 
     void insert(ProjectMilestone entity);
+
+    @Select("select * from project_milestone where id = #{id} and is_deleted = false")
+    ProjectMilestone selectById(@Param("id") Long id);
+
+    @Update("update project_milestone set is_deleted = true where id = #{id} and is_deleted = false")
+    void deleteById(@Param("id") Long id);
 }
 
 

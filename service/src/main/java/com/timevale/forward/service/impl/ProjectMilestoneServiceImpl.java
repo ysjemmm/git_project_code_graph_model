@@ -17,6 +17,7 @@ import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.result.ProjectMilestoneListVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.MilestoneTypeEnum;
+import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import com.timevale.forward.service.copy.TaskCopier;
@@ -28,9 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -131,5 +130,21 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
             m.setProjectName(currentProject.getName());
         });
         return BaseResult.success(res);
+    }
+
+    @Override
+    public BaseResult<Void> deleteMilestone(Long milestoneId) {
+        Optional<ProjectMilestone> milestone = Optional.ofNullable(milestoneMapper.selectById(milestoneId));
+        milestone.ifPresent(m -> {
+            if (Objects.equals(m.getType(), MilestoneTypeEnum.TASK.getCode())) {
+                // 任务类未作废则需要先作废任务
+                TaskDO task = taskMapper.getById(m.getRelationId());
+                if (task != null && !Objects.equals(task.getStatus(), TaskStatusEnum.INVALID.getCode())) {
+                    taskService.updateStatus(m.getRelationId(), TaskStatusEnum.INVALID.getCode());
+                }
+            }
+            milestoneMapper.deleteById(m.getId());
+        });
+        return BaseResult.success();
     }
 }

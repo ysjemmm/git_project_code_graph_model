@@ -23,4 +23,9 @@ public interface ProjectMilestoneService {
      */
     BaseResult<ProjectMilestoneListVO> listMilestones(Long projectId);
 
+    /**
+     * 里程碑删除
+     */
+    BaseResult<Void> deleteMilestone(Long milestoneId);
+
 }
