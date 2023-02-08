@@ -31,10 +31,34 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO project_budget(project_id, cost_type, expected_amount, cost_amount, expected_desc, cost_desc, cost_date,
-                                   create_man, create_man_id)
-        VALUES (#{projectId}, #{costType}, #{expectedAmount}, #{costAmount}, #{expectedDesc},#{costDesc}, #{costDate},
-                #{createMan}, #{createManId})
+        INSERT INTO project
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="projectId != null">project_id,</if>
+            <if test="costType != null">cost_type,</if>
+            <if test="expectedAmount != null">expected_amount,</if>
+            <if test="costAmount != null">cost_amount,</if>
+            <if test="expectedDesc != null">expected_desc,</if>
+            <if test="costDesc != null">cost_desc,</if>
+            <if test="costDate != null">cost_date,</if>
+            <if test="true">
+                create_man,
+                create_man_id,
+            </if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="projectId != null">projectId,</if>
+            <if test="costType != null">costType,</if>
+            <if test="expectedAmount != null">expectedAmount,</if>
+            <if test="costAmount != null">costAmount,</if>
+            <if test="expectedDesc != null">expectedDesc,</if>
+            <if test="costDesc != null">costDesc,</if>
+            <if test="costDate != null">costDate,</if>
+            <if test="true">
+                createMan,
+                createManId,
+            </if>
+        </trim>
     </insert>
 
     <insert id="insertBatch">
