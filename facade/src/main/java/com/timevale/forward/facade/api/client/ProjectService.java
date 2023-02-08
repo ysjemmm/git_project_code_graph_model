@@ -90,9 +90,8 @@ public interface ProjectService {
 
     /**
      * 添加子项目列表
-     * @param projectIds 子项目id列表
      */
-    BaseResult<Void> appendChildren(ListReq<Long> projectIds);
+    BaseResult<Void> appendChildren(ProjectAppendChildrenReq projectAppendChildrenReq);
 
     /**
      * 查询项目标签页的todo数量列表

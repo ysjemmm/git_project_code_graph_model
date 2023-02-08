@@ -1,7 +1,6 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -511,7 +510,21 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<Void> appendChildren(ListReq<Long> projectIds) {
+    public BaseResult<Void> appendChildren(ProjectAppendChildrenReq projectAppendChildrenReq) {
+        Long projectId = projectAppendChildrenReq.getProjectId();
+        List<Long> childIds = projectAppendChildrenReq.getChildIds();
+        ProjectDO parentProject = projectMapper.get(projectId);
+        AssertUtil.notNull(parentProject, "父项目不存在，请刷新后重试");
+        List<ProjectDO> childProjects = projectMapper.getByIds(childIds);
+        AssertUtil.notEmpty(childProjects, "子项目不存在，请刷新后重试");
+        AssertUtil.checkState(childProjects.stream().map(ProjectDO::getParentId).allMatch(Objects::isNull),
+                "存在子项目已有父项目，无法再次关联");
+        Set<Long> childIdsSet = new HashSet<>(childIds);
+        AssertUtil.checkState(parentProject.getParentList().stream().noneMatch(childIdsSet::contains),
+                "存在子项目为当前项目父节点，无法关联");
+        for (ProjectDO childProject : childProjects) {
+            projectComponent.attachChildProject(parentProject, childProject);
+        }
         return BaseResult.success();
     }
 
