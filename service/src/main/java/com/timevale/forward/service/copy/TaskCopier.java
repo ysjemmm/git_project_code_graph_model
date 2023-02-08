@@ -32,15 +32,15 @@ public interface TaskCopier {
     /**
      * 里程碑转换为任务入参
      */
-    @Mapping(target = "name", source = "milestoneName")
-    @Mapping(target = "productLineId", ignore = true)
-    @Mapping(target = "productDemandIds", ignore = true)
-    @Mapping(target = "planUseTime", ignore = true)
     @Mapping(target = "files", ignore = true)
     @Mapping(target = "alias", ignore = true)
     @Mapping(target = "account", ignore = true)
+    @Mapping(target = "planUseTime", ignore = true)
+    @Mapping(target = "productLineId", ignore = true)
     @Mapping(target = "actualEndDate", ignore = true)
     @Mapping(target = "actualStartDate", ignore = true)
+    @Mapping(target = "name", source = "milestoneName")
+    @Mapping(target = "productDemandIds", expression = "java(new java.util.ArrayList<>())")
     TaskAddReq convert(ProjectMilestoneAddReq req);
 
     /**
