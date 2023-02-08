@@ -124,6 +124,11 @@ public enum ButtonActionEnum {
     SHIFT_BUSINESS("转业务需求"),
 
     /**
+     * 关联业务需求
+     */
+    ATTACH_BUSINESS("关联业务需求"),
+
+    /**
      * 关联
      */
     LINK("关联"),

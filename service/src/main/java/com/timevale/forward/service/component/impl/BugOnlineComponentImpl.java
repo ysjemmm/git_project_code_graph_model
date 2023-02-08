@@ -134,7 +134,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
                 .setMainId(bugOnlineId)
                 .setOldValue(oldStatusName)
                 .setNewValue(BugOnlineStatusEnum.REQUIRED.getText())
-                .setAction(ButtonActionEnum.SHIFT_BUSINESS.getText())
+                .setAction(ButtonActionEnum.ATTACH_BUSINESS.getText())
                 .setField(BugLogFieldEnum.STATUS.getText())
                 .setType(BugLogTypeEnum.ONLINE.getCode());
         bugLogMapper.insert(bugLogDO);
