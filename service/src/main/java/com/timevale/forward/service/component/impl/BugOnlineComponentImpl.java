@@ -161,7 +161,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         List<BizChangeLogDO> changeLogs = bizDemandIds.stream().map(id -> {
             BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
             bizChangeLogDO.setCreateManId(userInfo.getId());
-            bizChangeLogDO.setCreateMan(userInfo.getAlias());
+            bizChangeLogDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
             bizChangeLogDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode())
                     .setMainId(id)
                     .setAction(ButtonActionEnum.LINK.getText())
