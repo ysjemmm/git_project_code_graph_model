@@ -694,11 +694,14 @@ public class TaskServiceImpl implements TaskService {
             return;
         }
         List<Long> excludeBizDomainIds = JSONArray.parseArray(excludeBizDomain, Long.class);
-        Long bizDomainId = productLineMapper.selectById(taskDO.getProductLineId()).getBizDomainId();
-        if (!excludeBizDomainIds.contains(bizDomainId)) {
-            //除xx业务域外,计划时间不能超过16h
-            List<String> names = bizDomainMapper.selectByIdList(excludeBizDomainIds).stream().map(BizDomainDO::getName).collect(Collectors.toList());
-            throw new BaseBizRuntimeException("除" + names + "外,计划耗时不能超过16小时");
+        ProductLineDO productLine = productLineMapper.selectById(taskDO.getProductLineId());
+        if (productLine != null) {
+            if (!excludeBizDomainIds.contains(productLine.getBizDomainId())) {
+                // 除xx业务域外,计划时间不能超过16h
+                List<String> names = bizDomainMapper.selectByIdList(excludeBizDomainIds)
+                        .stream().map(BizDomainDO::getName).collect(Collectors.toList());
+                throw new BaseBizRuntimeException("除" + names + "外,计划耗时不能超过16小时");
+            }
         }
     }
 
