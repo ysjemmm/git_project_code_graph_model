@@ -17,6 +17,8 @@ public enum ProjectStatusEnum {
 
     PLANING(10,"规划中"),
 
+    EXECUTING(15,"执行中"),
+
     DEVING(20,"研发中"),
 
     FINISHING(25,"收尾中"),
