@@ -1,7 +1,9 @@
 package com.timevale.forward.dal.entity;
 
+import com.timevale.mandarin.base.util.JsonUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -174,6 +176,13 @@ public class ProjectDO extends BaseDO {
                 .map(String::trim)
                 .map(Long::parseLong)
                 .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    public List<Integer> getValidStageList() {
+        if (StringUtils.isEmpty(validStages)) {
+            return null;
+        }
+        return JsonUtils.json2list(validStages, Integer.class);
     }
 
     public Long getParentId() {

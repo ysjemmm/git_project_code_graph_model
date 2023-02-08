@@ -14,6 +14,7 @@ import com.timevale.forward.facade.api.client.ProjectMilestoneService;
 import com.timevale.forward.facade.api.client.TaskService;
 import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
 import com.timevale.forward.facade.api.request.TaskAddReq;
+import com.timevale.forward.facade.api.result.ProjectMilestoneListVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.service.component.ProjectComponent;
@@ -84,10 +85,13 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
     }
 
     @Override
-    public BaseResult<List<ProjectMilestoneVO>> listMilestones(Long projectId) {
+    public BaseResult<ProjectMilestoneListVO> listMilestones(Long projectId) {
         ProjectDO currentProject = projectMapper.get(projectId);
         AssertUtil.notNull(currentProject, "当前项目不存在或者已经被删除，请刷新后重试");
-        List<ProjectMilestoneVO> res = new ArrayList<>();
+        ProjectMilestoneListVO res = new ProjectMilestoneListVO();
+        List<ProjectMilestoneVO> resList = new ArrayList<>();
+        res.setValidStages(currentProject.getValidStageList());
+        res.setList(resList);
         List<ProjectMilestone> milestones = milestoneMapper.selectByProjectId(projectId);
         if (milestones.isEmpty()) {
             return BaseResult.success(res);
@@ -105,7 +109,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
                 if (relateProject == null) {
                     continue;
                 }
-                res.add(ProjectMilestoneCopier.INSTANCE.convert(projectMilestone, relateProject));
+                resList.add(ProjectMilestoneCopier.INSTANCE.convert(projectMilestone, relateProject));
             }
         }
         List<ProjectMilestone> taskMilestones = milestonesByType.get(MilestoneTypeEnum.TASK.getCode());
@@ -119,10 +123,10 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
                 if (task == null) {
                     continue;
                 }
-                res.add(ProjectMilestoneCopier.INSTANCE.convert(taskMilestone, task));
+                resList.add(ProjectMilestoneCopier.INSTANCE.convert(taskMilestone, task));
             }
         }
-        res.forEach(m -> {
+        resList.forEach(m -> {
             m.setProjectId(currentProject.getId());
             m.setProjectName(currentProject.getName());
         });

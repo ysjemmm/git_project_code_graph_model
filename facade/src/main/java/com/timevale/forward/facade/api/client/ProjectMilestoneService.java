@@ -3,10 +3,8 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
-import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
+import com.timevale.forward.facade.api.result.ProjectMilestoneListVO;
 import com.timevale.mandarin.common.annotation.RestClient;
-
-import java.util.List;
 
 /**
  * @author jingchun
@@ -23,6 +21,6 @@ public interface ProjectMilestoneService {
     /**
      * 里程碑列表查询
      */
-    BaseResult<List<ProjectMilestoneVO>> listMilestones(Long projectId);
+    BaseResult<ProjectMilestoneListVO> listMilestones(Long projectId);
 
 }
