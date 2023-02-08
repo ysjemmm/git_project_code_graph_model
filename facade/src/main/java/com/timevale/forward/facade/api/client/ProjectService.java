@@ -157,6 +157,16 @@ public interface ProjectService {
     BaseResult<Boolean> modifyProjectDate(ProjectDateModifyReq projectDateModifyReq);
 
     /**
+     * 添加阶段
+     */
+    BaseResult<Void> addStage(ProjectStageChangeReq addStageReq);
+
+    /**
+     * 添加阶段
+     */
+    BaseResult<Void> deleteStage(ProjectStageChangeReq deleteStageReq);
+
+    /**
      * 查列表
      *
      * @param name name

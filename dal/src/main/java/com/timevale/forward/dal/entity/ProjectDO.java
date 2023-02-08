@@ -186,6 +186,14 @@ public class ProjectDO extends BaseDO {
         return JsonUtils.json2list(validStages, Integer.class);
     }
 
+    public void setValidStageList(List<Integer> stageList) {
+        validStages = "[" +
+                stageList.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(",")) +
+                "]";
+    }
+
     public Long getParentId() {
         LinkedList<Long> parentIds = getParentList();
         if (parentIds.size() < 2) {

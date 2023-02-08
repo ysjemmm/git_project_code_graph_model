@@ -12,6 +12,7 @@ import com.timevale.forward.dal.condition.ProjectListChildCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.facade.api.client.ProjectMilestoneService;
 import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
@@ -146,6 +147,10 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectBudgetMapper projectBudgetMapper;
     @Resource
     private ProjectRiskMapper projectRiskMapper;
+    @Resource
+    private ProjectMilestoneService projectMilestoneService;
+    @Resource
+    private ProjectMilestoneMapper projectMilestoneMapper;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -854,6 +859,52 @@ public class ProjectServiceImpl implements ProjectService {
         sendDingMsgIfPublishDateForward(projectDO.getId(), oldPublishDate);
 
         return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Void> addStage(ProjectStageChangeReq addStageReq) {
+        Long projectId = addStageReq.getProjectId();
+        Integer stage = addStageReq.getStage();
+        ProjectDO project = projectMapper.get(projectId);
+        AssertUtil.notNull(project, "项目不存在");
+        AssertUtil.checkState(Objects.equals(project.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode()),
+                "只有内部项目才能添加阶段");
+        AssertUtil.checkState(Objects.equals(ProjectStageEnum.OPERATE.getCode(), stage), "目前仅支持添加运营阶段");
+        List<Integer> stageList = project.getValidStageList();
+        if (stageList.contains(stage)) {
+            return BaseResult.success();
+        }
+        stageList.add(stage);
+        ProjectDO updateCond = new ProjectDO();
+        updateCond.setId(projectId);
+        updateCond.setValidStageList(stageList);
+        projectMapper.update(updateCond);
+        return BaseResult.success();
+    }
+
+    @Override
+    public BaseResult<Void> deleteStage(ProjectStageChangeReq deleteStageReq) {
+        Long projectId = deleteStageReq.getProjectId();
+        Integer stage = deleteStageReq.getStage();
+        ProjectDO project = projectMapper.get(projectId);
+        AssertUtil.notNull(project, "项目不存在");
+        AssertUtil.checkState(Objects.equals(project.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode()),
+                "只有内部项目才能删除阶段");
+        AssertUtil.checkState(Objects.equals(ProjectStageEnum.OPERATE.getCode(), stage), "目前仅支持删除运营阶段");
+        List<Integer> stageList = project.getValidStageList();
+        if (!stageList.contains(stage)) {
+            return BaseResult.success();
+        }
+        // 删除阶段，同时删除阶段下的里程碑
+        projectMilestoneMapper.selectByProjectId(projectId)
+                        .stream().filter(m -> Objects.equals(m.getStage(), stage))
+                        .forEach(m -> projectMilestoneService.deleteMilestone(m.getId()));
+        stageList.remove(stage);
+        ProjectDO updateCond = new ProjectDO();
+        updateCond.setId(projectId);
+        updateCond.setValidStageList(stageList);
+        projectMapper.update(updateCond);
+        return BaseResult.success();
     }
 
     @Override
