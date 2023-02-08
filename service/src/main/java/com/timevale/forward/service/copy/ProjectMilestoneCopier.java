@@ -6,6 +6,8 @@ import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.ProjectStageEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.model.enums.TaskStatusEnum;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -15,7 +17,9 @@ import org.mapstruct.factory.Mappers;
  * created on 2023/2/7
  */
 @Mapper(imports = {
-        ProjectStageEnum.class
+        ProjectStageEnum.class,
+        ProjectStatusEnum.class,
+        TaskStatusEnum.class
 })
 public interface ProjectMilestoneCopier {
 
@@ -26,8 +30,9 @@ public interface ProjectMilestoneCopier {
     @Mapping(target = "id", source = "milestone.id")
     @Mapping(target = "type", source = "milestone.type")
     @Mapping(target = "stage", source = "milestone.stage")
-    @Mapping(target = "stageName", expression = "java(ProjectStageEnum.getTextByCode(milestone.getStage()))")
     @Mapping(target = "relationName", source = "relateProject.name")
+    @Mapping(target = "stageName", expression = "java(ProjectStageEnum.getTextByCode(milestone.getStage()))")
+    @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(relateProject.getStatus()))")
     ProjectMilestoneVO convert(ProjectMilestone milestone, ProjectDO relateProject);
 
     @Mapping(target = "projectId", ignore = true)
@@ -35,8 +40,9 @@ public interface ProjectMilestoneCopier {
     @Mapping(target = "id", source = "milestone.id")
     @Mapping(target = "type", source = "milestone.type")
     @Mapping(target = "stage", source = "milestone.stage")
-    @Mapping(target = "stageName", expression = "java(ProjectStageEnum.getTextByCode(milestone.getStage()))")
     @Mapping(target = "relationName", source = "task.name")
+    @Mapping(target = "statusName", expression = "java(TaskStatusEnum.getTextByCode(task.getStatus()))")
+    @Mapping(target = "stageName", expression = "java(ProjectStageEnum.getTextByCode(milestone.getStage()))")
     ProjectMilestoneVO convert(ProjectMilestone milestone, TaskDO task);
 
     @Mapping(target = "id", ignore = true)

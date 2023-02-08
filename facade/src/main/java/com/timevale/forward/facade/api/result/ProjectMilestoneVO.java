@@ -35,6 +35,12 @@ public class ProjectMilestoneVO extends ToString {
     @ApiModelProperty("里程碑所属项目阶段")
     private String stageName;
 
+    @ApiModelProperty("里程碑状态")
+    private Integer status;
+
+    @ApiModelProperty("里程碑状态名称")
+    private String statusName;
+
     @ApiModelProperty("关联数据id")
     private Long relationId;
 
