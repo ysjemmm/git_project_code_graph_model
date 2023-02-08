@@ -15,7 +15,6 @@ import com.timevale.forward.facade.api.request.BizDomainModifyReq;
 import com.timevale.forward.facade.api.result.BizDomainVO;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDomainCopier;
-import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -25,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,16 +37,12 @@ import java.util.stream.Collectors;
 public class BizDomainServiceImpl implements BizDomainService {
 
     @Resource
-    private ElapsedTimeClient elapsedTimeClient;
-    @Resource
     BizDomainMapper bizDomainMapper;
     @Resource
     ProductLineMapper productLineMapper;
 
     @Override
     public BaseResult<List<BizDomainVO>> bizDomainList() {
-        Long elapsedTime = elapsedTimeClient.getElapsedTime(new Date(1675699200000L), new Date(1675785600000L));
-        log.error("[bizDomainList]elapsedTime:{}",elapsedTime);
         List<BizDomainVO> result = BizDomainCopier.INSTANCE.convert(bizDomainMapper.selectAllBizDomain());
         return BaseResult.success(result);
     }

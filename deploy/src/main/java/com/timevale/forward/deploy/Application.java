@@ -27,7 +27,6 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
 @UniversalService
 @EnableFeignClients(basePackages = {
         "com.timevale.filesystem.common.service.api",
-        "com.timevale.forward.facade.api",
         "com.timevale.security.facade.api",
         "com.timevale.erp.message.service.api",
         "com.timevale.lowcode.support.api",
