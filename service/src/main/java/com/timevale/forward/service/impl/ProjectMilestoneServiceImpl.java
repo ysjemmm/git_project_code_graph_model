@@ -21,9 +21,9 @@ import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.mandarin.base.util.AssertUtil;
+import com.timevale.mandarin.common.annotation.RestService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * created on 2023/2/7
  */
 @Slf4j
-@Service
+@RestService
 @RequiredArgsConstructor
 public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
 
