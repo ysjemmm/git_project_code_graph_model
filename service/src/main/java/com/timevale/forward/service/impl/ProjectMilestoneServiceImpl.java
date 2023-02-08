@@ -58,7 +58,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
             Long elapsedTime = elapsedTimeClient.getElapsedTime(projectMilestoneAddReq.getPlanStartDate(),
                     projectMilestoneAddReq.getPlanEndDate());
             req.setPlanUseTime(new BigDecimal(elapsedTime)
-                    .divide(new BigDecimal(60 * 60 * 1000), 2, RoundingMode.DOWN));
+                    .divide(new BigDecimal(60 * 60), 2, RoundingMode.DOWN));
             Long taskId = taskService.add(req).getData();
             projectMilestoneAddReq.setRelationId(taskId);
         } else if (MilestoneTypeEnum.PROJECT.getCode().equals(projectMilestoneAddReq.getType())) {
