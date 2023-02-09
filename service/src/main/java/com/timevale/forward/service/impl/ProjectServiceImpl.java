@@ -502,7 +502,7 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO project = projectMapper.get(projectChildListReq.getProjectId());
         Asserts.notNull(project, "您查询的项目不存在，请检查");
         ProjectListChildCondition condition = ProjectCopier.INSTANCE.convert(projectChildListReq, project);
-        PageHelper.startPage(projectChildListReq.getPageNum(), projectChildListReq.getPageSize());
+        PageHelper.startPage(condition.getPageNum(), condition.getPageSize());
         Page<ProjectListDO> projects = projectMapper.listChildren(condition);
         PageQueryResult<ProjectVO> res = PageQueryResult.resResult(ProjectCopier.INSTANCE.convert(projects));
         ResultUtil.fillPageInfo(res, projects);

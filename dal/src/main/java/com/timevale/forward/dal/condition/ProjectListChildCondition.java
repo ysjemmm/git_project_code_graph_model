@@ -43,4 +43,8 @@ public class ProjectListChildCondition {
     // 父节点id列表
     private Collection<Long> parentIds;
 
+    private Integer pageNum;
+
+    private Integer pageSize;
+
 }
