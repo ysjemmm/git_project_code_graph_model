@@ -45,4 +45,16 @@
             AND is_deleted = false
         </where>
     </select>
+
+    <select id="selectByIds" resultType="com.timevale.forward.dal.entity.ProjectMilestone">
+        SELECT *
+        FROM project_milestone
+        <where>
+            id IN
+            <foreach collection="list" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            AND is_deleted = false
+        </where>
+    </select>
 </mapper>

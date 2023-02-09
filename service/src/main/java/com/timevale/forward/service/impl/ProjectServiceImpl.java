@@ -361,6 +361,9 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 取出项目成员参数, 落库
         List<PersonAddReq> teamMembers = projectInnerAddReq.getTeamMembers();
+        PersonAddReq pm = projectInnerAddReq.getPm();
+        teamMembers.removeIf(e -> Objects.equals(e.getUserId(), pm.getUserId()));
+        teamMembers.add(projectInnerAddReq.getPm());
         personComponent.add(teamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         // 添加项目目标信息
@@ -478,18 +481,14 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<Boolean> simpleModify(ProjectSimpleModifyReq projectSimpleModifyReq) {
         // 校验名称参数
         String projectName = projectSimpleModifyReq.getName();
-        if (StrUtil.isNotBlank(projectName)) {
-            projectNameValidate(projectName);
-        }
+        projectNameValidate(projectName);
 
         // 目标项目id
         Long projectId = projectSimpleModifyReq.getId();
 
-        // 更新项目成员, 为null不做变更
+        // 更新项目成员
         List<PersonAddReq> teamMembers = projectSimpleModifyReq.getTeamMembers();
-        if (teamMembers != null) {
-            personComponent.update(teamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
-        }
+        personComponent.update(teamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         // 转换，更新落库
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectSimpleModifyReq);
@@ -1240,6 +1239,7 @@ public class ProjectServiceImpl implements ProjectService {
      * @param projectName 项目名称
      */
     private void projectNameValidate(String projectName) {
+        AssertUtil.checkState(StrUtil.isNotBlank(projectName), "项目名称不能为空");
         AssertUtil.checkState(!projectName.contains(CommonConstant.BLANK), "项目名称中请勿包含空格");
 
         ProjectDO byName = projectMapper.getByName(projectName);

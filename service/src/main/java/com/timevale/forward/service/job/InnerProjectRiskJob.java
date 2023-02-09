@@ -1,7 +1,10 @@
 package com.timevale.forward.service.job;
 
 import cn.hutool.core.collection.CollUtil;
-import com.google.common.collect.*;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableTable;
+import com.google.common.collect.Maps;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.dao.ProjectRiskMapper;
@@ -14,7 +17,6 @@ import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -22,7 +24,6 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -211,16 +212,14 @@ public class InnerProjectRiskJob extends IJobHandler {
 
         // 区分获取数据
         if (o instanceof TaskDO) {
-            actualStartDate = ((TaskDO) o).getActualStartDate();
-            planStartDate = ((TaskDO) o).getPlanStartDate();
             planEndDate = ((TaskDO) o).getPlanEndDate();
-
+            planStartDate = ((TaskDO) o).getPlanStartDate();
+            actualStartDate = ((TaskDO) o).getActualStartDate();
             milestone = milestoneTable.get(MilestoneTypeEnum.TASK.getCode(), ((TaskDO) o).getId());
         } else {
-            actualStartDate = ((ProjectDO) o).getActualStartDate();
-            planStartDate = ((ProjectDO) o).getPlanStartDate();
             planEndDate = ((ProjectDO) o).getPlanEndDate();
-
+            planStartDate = ((ProjectDO) o).getPlanStartDate();
+            actualStartDate = ((ProjectDO) o).getActualStartDate();
             milestone = milestoneTable.get(MilestoneTypeEnum.PROJECT.getCode(), ((ProjectDO) o).getId());
         }
 

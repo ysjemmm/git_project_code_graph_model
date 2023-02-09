@@ -76,7 +76,7 @@
             <if test="invalidReason != null">invalid_reason = #{invalidReason},</if>
             <if test="unWriteReason != null">un_write_reason = #{unWriteReason},</if>
             <if test="innerType != null">inner_type = #{innerType},</if>
-            <if test="validStage!= null">valid_stages = #{validStages},</if>
+            <if test="validStages!= null">valid_stages = #{validStages},</if>
         </set>
         <where>
             id = #{id}
