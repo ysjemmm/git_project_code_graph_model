@@ -29,7 +29,6 @@ public class TaskAddReq extends BaseReq {
     private Long projectId;
 
     @ApiModelProperty(value = "产品线id")
-    @NotNull(message = "产品线id不能为空")
     private Long productLineId;
 
     @ApiModelProperty(value = "0需求规划阶段,1研发阶段,2测试阶段")

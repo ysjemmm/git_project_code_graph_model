@@ -514,7 +514,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public BaseResult<ProjectTreeVO> getTree(Long projectId) {
         AssertUtil.notNull(projectId, "请提供项目id");
-        List<ProjectDO> projects = projectMapper.selectByParentIdsRegexp("^" + projectId);
+        ProjectDO project = projectMapper.get(projectId);
+        AssertUtil.notNull(project, "项目不存在");
+        List<ProjectDO> projects = projectMapper.selectByParentIdsRegexp("^" + project.getParentIds());
         List<ProjectTreeVO> treeList = ProjectCopier.INSTANCE.convertTree(projects);
         Map<Long, ProjectTreeVO> projectById = Maps.uniqueIndex(treeList, ProjectTreeVO::getProjectId);
         Map<Long, List<ProjectTreeVO>> treeByParentId = treeList.stream()
