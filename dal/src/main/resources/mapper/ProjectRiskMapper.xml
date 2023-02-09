@@ -112,12 +112,8 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="statusList != null and statusList.size() > 0">
-                AND `status` in
-                <foreach collection="statusList" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
+            AND `status` = #{status}
+            AND is_deleted = false
         </where>
     </select>
 

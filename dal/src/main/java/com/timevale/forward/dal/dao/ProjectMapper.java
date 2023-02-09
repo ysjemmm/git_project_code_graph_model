@@ -127,7 +127,7 @@ public interface ProjectMapper {
      * @param status status
      * @return 项目信息
      */
-    List<ProjectDO> getByStatus(@Param("status") List<Integer> status);
+    List<ProjectDO> getByStatus(@Param("status") List<Integer> status, @Param("category")Integer category);
 
     /**
      * 状态重算时使用

@@ -83,7 +83,7 @@ public interface ProjectRiskMapper {
      *
      * @param projectIdList 项目id列表
      */
-    List<ProjectRiskDO> selectByProjectIdListStatus(@Param("projectIdList") List<Long>projectIdList, @Param("statusList") List<Integer> statusList);
+    List<ProjectRiskDO> selectByProjectIdListStatus(@Param("projectIdList") List<Long>projectIdList, @Param("status") Integer status);
 
     /**
      * 查询 by 状态, 不包含类型：其它

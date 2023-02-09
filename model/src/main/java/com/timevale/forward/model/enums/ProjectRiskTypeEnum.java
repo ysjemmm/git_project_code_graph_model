@@ -19,7 +19,13 @@ public enum ProjectRiskTypeEnum {
 
     NODE_OVERDUE(30, "项目过程逾期"),
 
-    NODE_ENTRY_OVERDUE(40, "项目关键节点逾期未录入");
+    NODE_ENTRY_OVERDUE(40, "项目关键节点逾期未录入"),
+
+    MILE_STONE_START(50, "里程碑开始逾期未录入"),
+
+    MILE_STONE_END(60, "里程碑结束逾期未录入"),
+
+    MILE_STONE_NONE(70,"里程碑未录入");
 
     private Integer code;
     private String text;

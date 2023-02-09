@@ -85,7 +85,10 @@ public class ProjectIncomeServiceImpl implements ProjectIncomeService {
         BigDecimal expectedIncome = projectDO.getExpectedIncome();
 
         // 计算收益进度：已收益金额的累计值/预计收益金额*100%,四舍五入
-        BigDecimal progress = incomeAmountSum.divide(expectedIncome,4, RoundingMode.HALF_UP);
+        BigDecimal progress = BigDecimal.ZERO;
+        if (BigDecimal.ZERO.compareTo(expectedIncome) <= 0) {
+            progress = incomeAmountSum.divide(expectedIncome,4, RoundingMode.HALF_UP);
+        }
 
         // 组合结果,返回
         List<ProjectIncomeVO> projectIncomeVOs = ProjectIncomeCopier.INSTANCE.do2Vo(projectIncomeDOs);

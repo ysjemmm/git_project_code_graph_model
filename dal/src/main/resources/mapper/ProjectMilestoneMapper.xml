@@ -33,4 +33,16 @@
         values (#{projectId}, #{milestoneName}, #{type}, #{stage}, #{relationId}, #{createManId}, #{createMan},
                 #{createManId}, #{createMan})
     </insert>
+
+    <select id="selectByProjectIds" resultType="com.timevale.forward.dal.entity.ProjectMilestone">
+        SELECT *
+        FROM project_milestone
+        <where>
+            project_id IN
+            <foreach collection="projectIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            AND is_deleted = false
+        </where>
+    </select>
 </mapper>
