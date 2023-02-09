@@ -447,14 +447,14 @@
             </if>
             <if test="searchType != null">
                 <choose>
-                    <when test="searchType = 2">
+                    <when test="searchType == 2">
                         <!-- 查询可以添加为子项目的项目列表 -->
                         and parent_ids = concat(',', id, ',') and id not in
                         <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
                             #{parentId}
                         </foreach>
                     </when>
-                    <when test="searchType = 3">
+                    <when test="searchType == 3">
                         <!-- 查询可以关联到当前项目里程碑的项目列表 -->
                         and id not in (select relation_id from project_milestone where type = 1 and is_deleted = false)
                         and (
