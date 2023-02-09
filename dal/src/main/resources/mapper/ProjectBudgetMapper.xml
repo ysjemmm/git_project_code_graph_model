@@ -47,16 +47,16 @@
         </trim>
         VALUES
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="projectId != null">projectId,</if>
-            <if test="costType != null">costType,</if>
-            <if test="expectedAmount != null">expectedAmount,</if>
-            <if test="costAmount != null">costAmount,</if>
+            <if test="projectId != null">#{projectId},</if>
+            <if test="costType != null">#{costType},</if>
+            <if test="expectedAmount != null">#{expectedAmount},</if>
+            <if test="costAmount != null">#{costAmount},</if>
             <if test="expectedDesc != null">expectedDesc,</if>
-            <if test="costDesc != null">costDesc,</if>
-            <if test="costDate != null">costDate,</if>
+            <if test="costDesc != null">#{costDesc},</if>
+            <if test="costDate != null">#{costDate},</if>
             <if test="true">
-                createMan,
-                createManId,
+                #{createMan},
+                #{createManId},
             </if>
         </trim>
     </insert>
