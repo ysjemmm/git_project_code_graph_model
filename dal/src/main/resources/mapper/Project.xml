@@ -22,21 +22,22 @@
     <insert id="innerInsert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO project
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            `name`, inner_type, `level`, `desc`, plan_start_date, plan_end_date, pm, pm_id, valid_stages, create_man_id,
-            create_man, parent_ids,
+            `name`, inner_type, `level`, `desc`, plan_start_date, plan_end_date, pm, pm_id,
+            valid_stages, create_man_id, create_man,
             <if test="expectedIncome != null">expected_income,</if>
+            parent_ids
         </trim>
         VALUES
         <trim prefix="(" suffix=")" suffixOverrides=",">
             #{name}, #{innerType}, #{level}, #{desc}, #{planStartDate}, #{planEndDate}, #{pm}, #{pmId},
             #{validStages}, #{createManId}, #{createMan},
+            # 新增可选
+            <if test="expectedIncome != null">#{expectedIncome},</if>
             # 获取当前自增id
             concat(',', (select `AUTO_INCREMENT`
             from information_schema.TABLES
             where TABLE_SCHEMA = 'info_forward'
-            and TABLE_NAME = 'project'), ','),
-            # 新增可选
-            <if test="expectedIncome != null">#{expectedIncome},</if>
+            and TABLE_NAME = 'project'), ',')
         </trim>
     </insert>
 
