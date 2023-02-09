@@ -100,6 +100,16 @@ public interface ProjectRiskMapper {
      */
     List<ProjectRiskDO> selectByStatusType(@Param("status") Integer status,@Param("type") Integer type);
 
+
+    /**
+     * 选择 by 状态类型
+     *
+     * @param status status
+     * @param types  类型
+     * @return 列表
+     */
+    List<ProjectRiskDO> selectByStatusTypes(@Param("status") Integer status,@Param("types") List<Integer> types);
+
     /**
      * 统计个数
      *

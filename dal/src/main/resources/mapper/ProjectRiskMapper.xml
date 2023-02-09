@@ -123,6 +123,19 @@
         WHERE status = #{status} AND type = #{type} AND is_deleted = false
     </select>
 
+    <select id="selectByStatusTypes" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
+        SELECT id, project_id, main_id, type, name, sign, status, create_man_id, create_man, create_date, modify_date
+        FROM project_risk
+        <where>
+            AND `status` = #{status}
+            AND is_deleted = false
+            AND type IN
+            <foreach collection="types" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </select>
+
     <select id="count" resultType="java.lang.Long">
         SELECT COUNT(*)
         FROM project_risk
