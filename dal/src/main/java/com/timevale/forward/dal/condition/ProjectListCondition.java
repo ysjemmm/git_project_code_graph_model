@@ -40,6 +40,11 @@ public class ProjectListCondition extends QueryBase {
     private String name;
 
     /**
+     * 类别 0-产研项目 1-内部项目
+     */
+    private Integer category;
+
+    /**
      * 优先级:0(P0),1(P1),2(P2)
      */
     private List<Integer> priorities;

@@ -27,6 +27,9 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("是否为客户开发项目：0否，1是")
     private Integer customerDev;
 
+    @ApiModelProperty(value = "项目类型: 0-产研项目; 1-内部项目")
+    private Integer category = 0;
+
     @ApiModelProperty("优先级:0(P0),1(P1),2(P2)")
     private List<Integer> priorities;
 
