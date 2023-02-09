@@ -77,6 +77,7 @@
             <if test="unWriteReason != null">un_write_reason = #{unWriteReason},</if>
             <if test="innerType != null">inner_type = #{innerType},</if>
             <if test="validStages!= null">valid_stages = #{validStages},</if>
+            <if test="expectedIncome != null">expected_income = #{expectedIncome}</if>
         </set>
         <where>
             id = #{id}

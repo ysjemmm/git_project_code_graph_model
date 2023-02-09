@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -44,6 +45,9 @@ public class ProjectSimpleModifyReq extends ToString {
 
     @ApiModelProperty("描述")
     private String desc;
+
+    @ApiModelProperty("项目收益")
+    private BigDecimal expectedIncome;
 
     @Valid
     @ApiModelProperty("团队成员")

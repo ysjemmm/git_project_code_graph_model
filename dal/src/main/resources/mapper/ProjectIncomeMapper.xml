@@ -12,11 +12,11 @@
         UPDATE project_income
         <set>
             <if test="incomeAmount != null">income_amount = #{incomeAmount},</if>
-            <if test="income_date != null">income_date = #{incomeDate},</if>
+            <if test="incomeDate != null">income_date = #{incomeDate},</if>
             <if test="situation != null">situation = #{situation},</if>
             <if test="true">
                 modify_man = #{modifyMan},
-                modifyManId = #{modifyManId},
+                modify_man_id = #{modifyManId},
             </if>
         </set>
         WHERE id = #{id}
