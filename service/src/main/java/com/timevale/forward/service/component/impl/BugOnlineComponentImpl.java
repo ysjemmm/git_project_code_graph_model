@@ -114,7 +114,8 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
     }
 
     @Override
-    public void attachToBizDemands(BugOnlineDO bugOnlineDO, Collection<Long> bizDemandIds, boolean logToBizDemands) {
+    public void attachToBizDemands(BugOnlineDO bugOnlineDO, Collection<Long> bizDemandIds,
+                                   ButtonActionEnum actionEnum) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         Long bugOnlineId = bugOnlineDO.getId();
         String oldStatusName = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
@@ -134,7 +135,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
                 .setMainId(bugOnlineId)
                 .setOldValue(oldStatusName)
                 .setNewValue(BugOnlineStatusEnum.REQUIRED.getText())
-                .setAction(ButtonActionEnum.ATTACH_BUSINESS.getText())
+                .setAction(actionEnum.getText())
                 .setField(BugLogFieldEnum.STATUS.getText())
                 .setType(BugLogTypeEnum.ONLINE.getCode());
         bugLogMapper.insert(bugLogDO);
@@ -150,7 +151,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
 
         // bug状态处理人员表插入数据
         bugLogComponent.insertToBugStatusOperator(bugOnlineId, userInfo.getId(), userInfo.getFullAlias());
-        if (logToBizDemands) {
+        if (actionEnum == ButtonActionEnum.ATTACH_BUSINESS) {
             // 业务需求变更日志
             addBizDemandAttachLogs(bugOnlineDO, bizDemandIds);
         }

@@ -1146,7 +1146,8 @@ public class BizDemandServiceImpl implements BizDemandService {
                 throw new BaseBizRuntimeException("当前状态不允许转化业务需求");
             }
             //保存老的状态
-            bugOnlineComponent.attachToBizDemands(bugOnlineDO, Collections.singletonList(bizDemandId), false);
+            bugOnlineComponent.attachToBizDemands(bugOnlineDO, Collections.singletonList(bizDemandId),
+                    ButtonActionEnum.SHIFT_BUSINESS);
         }
     }
 

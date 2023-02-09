@@ -1,6 +1,7 @@
 package com.timevale.forward.service.component;
 
 import com.timevale.forward.dal.entity.BugOnlineDO;
+import com.timevale.forward.model.enums.ButtonActionEnum;
 
 import java.util.Collection;
 
@@ -19,6 +20,6 @@ public interface BugOnlineComponent {
     /**
      * 关联业务需求转需求
      */
-    void attachToBizDemands(BugOnlineDO bugOnline, Collection<Long> bizDemandIds, boolean logToBizDemands);
+    void attachToBizDemands(BugOnlineDO bugOnline, Collection<Long> bizDemandIds, ButtonActionEnum actionEnum);
 
 }

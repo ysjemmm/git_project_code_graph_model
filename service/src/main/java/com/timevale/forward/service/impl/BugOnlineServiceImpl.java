@@ -1652,11 +1652,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         AssertUtil.notNull(bugOnline, "您选择的线上bug不存在，请刷新后重试");
         AssertUtil.checkState(BugOnlineStatusEnum.canConvertBizDemand(bugOnline.getStatus()),
                 "当前状态不允许转化业务需求");
-        //得到当前操作人账户
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         List<BizDemandDO> bizDemands = bizDemandMapper.selectByIds(bizDemandIds);
         AssertUtil.notEmpty(bizDemands, "关联的业务需求不存在，请重新勾选");
-        bugOnlineComponent.attachToBizDemands(bugOnline, bizDemandIds, true);
+        bugOnlineComponent.attachToBizDemands(bugOnline, bizDemandIds, ButtonActionEnum.ATTACH_BUSINESS);
         return BaseResult.success();
     }
 
