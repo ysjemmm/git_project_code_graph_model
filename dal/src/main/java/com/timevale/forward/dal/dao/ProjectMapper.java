@@ -3,6 +3,7 @@ package com.timevale.forward.dal.dao;
 import com.github.pagehelper.Page;
 import com.timevale.forward.dal.condition.ProjectListChildCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
+import com.timevale.forward.dal.entity.ProjectChildCountDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
 import org.apache.ibatis.annotations.Param;
@@ -160,7 +161,7 @@ public interface ProjectMapper {
 
     Page<ProjectListDO> listChildren(ProjectListChildCondition condition);
 
-    Long countChildren(@Param("parentIds")String parentIds);
+    List<ProjectChildCountDO> countChildren(@Param("projectIds")Collection<Long> projectIds);
 
     @Update("update project set parent_ids = concat(#{prepend}, parent_ids) " +
             "where parent_ids regexp #{prefixRegexp} and is_deleted = false")

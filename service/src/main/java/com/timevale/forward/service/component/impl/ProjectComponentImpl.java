@@ -2,6 +2,7 @@ package com.timevale.forward.service.component.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.Maps;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.condition.ProjectNodeCondition;
 import com.timevale.forward.dal.dao.*;
@@ -320,6 +321,19 @@ public class ProjectComponentImpl implements ProjectComponent {
             List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(a.getId());
             if (CollectionUtils.isNotEmpty(labelSimpleVOList)) {
                 a.setLabelNames(labelSimpleVOList);
+            }
+        }
+
+        // 项目子项目数量
+        if (Objects.equals(condition.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode())) {
+            List<ProjectChildCountDO> projectChildCounts = projectMapper.countChildren(projectIds);
+            Map<Long, ProjectChildCountDO> countById =
+                    Maps.uniqueIndex(projectChildCounts, ProjectChildCountDO::getId);
+            for (ProjectVO projectVO : projectVOList) {
+                ProjectChildCountDO count = countById.get(projectVO.getId());
+                if (count != null) {
+                    projectVO.setChildrenCount(count.getChildCount());
+                }
             }
         }
 

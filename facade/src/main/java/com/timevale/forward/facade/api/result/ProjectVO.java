@@ -115,7 +115,7 @@ public class ProjectVO extends ToString {
     private Integer returnCount;
 
     @ApiModelProperty("子项目节点数")
-    private Integer childrenCount;
+    private Long childrenCount;
 
     @ApiModelProperty("提测是否延期")
     private Boolean isDelay;

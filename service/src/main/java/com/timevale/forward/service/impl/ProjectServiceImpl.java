@@ -557,8 +557,10 @@ public class ProjectServiceImpl implements ProjectService {
         Long riskCount = projectRiskMapper.count(projectId, ProjectRiskStatusEnum.PENDING.getCode());
 
         // 子项目个数，查询包含自身，需要减一
-        String parentIds = projectDO.getParentIds();
-        Long childrenCount = projectMapper.countChildren(parentIds) - 1;
+        Long childrenCount = projectMapper.countChildren(Collections.singleton(projectId))
+                .stream()
+                .map(ProjectChildCountDO::getChildCount)
+                .findFirst().orElse(0L);
 
         // 返回数据
         ProjectTabCountVO tabCountVO = new ProjectTabCountVO();
@@ -912,8 +914,8 @@ public class ProjectServiceImpl implements ProjectService {
         }
         // 删除阶段，同时删除阶段下的里程碑
         projectMilestoneMapper.selectByProjectId(projectId)
-                        .stream().filter(m -> Objects.equals(m.getStage(), stage))
-                        .forEach(m -> projectMilestoneService.deleteMilestone(m.getId()));
+                .stream().filter(m -> Objects.equals(m.getStage(), stage))
+                .forEach(m -> projectMilestoneService.deleteMilestone(m.getId()));
         stageList.remove(stage);
         ProjectDO updateCond = new ProjectDO();
         updateCond.setId(projectId);
@@ -1016,7 +1018,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         projectComponent.fillInfo(projectNodes, newProject);
 
-        fieldUpdate(newProject, projectNodes,oldProject);
+        fieldUpdate(newProject, projectNodes, oldProject);
 
         projectMapper.fullUpdateById(newProject);
 
@@ -1171,15 +1173,15 @@ public class ProjectServiceImpl implements ProjectService {
         }
     }
 
-    private void fieldUpdate(ProjectDO newProject,List<ProjectNodeDO> projectNodes,ProjectDO oldProject) {
+    private void fieldUpdate(ProjectDO newProject, List<ProjectNodeDO> projectNodes, ProjectDO oldProject) {
         newProject.setNodeStatus(oldProject.getNodeStatus());
         newProject.setUnWriteReason(oldProject.getUnWriteReason());
         if (ProjectStatusEnum.SUSPEND.getCode().equals(oldProject.getStatus())) {
             // 编辑项目时，当状态是暂停,不修改项目状态
             newProject.setStatus(oldProject.getStatus());
-        }else if (ProjectStatusEnum.RELEASED.getCode().equals(newProject.getStatus())) {
+        } else if (ProjectStatusEnum.RELEASED.getCode().equals(newProject.getStatus())) {
             List<String> needFillIn = projectDocumentComponent.docNeedFillIn(newProject.getId(), projectNodes, newProject.getType());
-            if(CollectionUtils.isEmpty(needFillIn)){
+            if (CollectionUtils.isEmpty(needFillIn)) {
                 //文档都已填写,清空未填写原因
                 newProject.setUnWriteReason(null);
             }

@@ -475,9 +475,14 @@
         </where>
     </select>
 
-    <select id="countChildren" resultType="java.lang.Long">
-        SELECT COUNT(*)
-        FROM project
-        WHERE parent_ids LIKE CONCAT(#{parentIds}, '%')
+    <select id="countChildren" resultType="com.timevale.forward.dal.entity.ProjectChildCountDO">
+        select p.id as id, count(pr.id) as child_count
+        from project p
+                 left join project pr on pr.parent_ids regexp concat('^', p.parent_ids, '.')
+        where p.id in
+              <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+                #{projectId}
+              </foreach>
+        group by p.id;
     </select>
 </mapper>
