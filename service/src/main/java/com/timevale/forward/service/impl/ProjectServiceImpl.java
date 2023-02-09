@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProjectAcceptanceListCondition;
@@ -511,7 +512,20 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public BaseResult<ProjectTreeVO> getTree(Long projectId) {
-        return BaseResult.success();
+        AssertUtil.notNull(projectId, "请提供项目id");
+        List<ProjectDO> projects = projectMapper.selectByParentIdsRegexp("^" + projectId);
+        List<ProjectTreeVO> treeList = ProjectCopier.INSTANCE.convertTree(projects);
+        Map<Long, ProjectTreeVO> projectById = Maps.uniqueIndex(treeList, ProjectTreeVO::getProjectId);
+        Map<Long, List<ProjectTreeVO>> treeByParentId = treeList.stream()
+                .filter(t -> Objects.nonNull(t.getParentId()))
+                .collect(Collectors.groupingBy(ProjectTreeVO::getParentId));
+        for (Map.Entry<Long, List<ProjectTreeVO>> treeEntry : treeByParentId.entrySet()) {
+            ProjectTreeVO parentProject = projectById.get(treeEntry.getKey());
+            if (parentProject != null) {
+                parentProject.setChildren(treeEntry.getValue());
+            }
+        }
+        return BaseResult.success(projectById.get(projectId));
     }
 
     @Override

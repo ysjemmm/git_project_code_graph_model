@@ -9,10 +9,7 @@ import com.timevale.forward.dal.entity.ProjectListDO;
 import com.timevale.forward.facade.api.query.ProductDemandLinkProjectQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.ProjectBaseVO;
-import com.timevale.forward.facade.api.result.ProjectDetailVO;
-import com.timevale.forward.facade.api.result.ProjectInnerDetailVO;
-import com.timevale.forward.facade.api.result.ProjectVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.ProjectMD;
 import org.mapstruct.Mapper;
@@ -165,4 +162,9 @@ public interface ProjectCopier {
         return BeanUtil.copyToList(list, PersonDO.class);
     }
 
+    @Mapping(target = "children", ignore = true)
+    @Mapping(target = "projectId", source = "id")
+    @Mapping(target = "projectName", source = "name")
+    ProjectTreeVO convertTree(ProjectDO project);
+    List<ProjectTreeVO> convertTree(List<ProjectDO> projects);
 }

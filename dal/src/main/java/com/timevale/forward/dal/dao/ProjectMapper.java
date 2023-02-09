@@ -6,6 +6,7 @@ import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.Collection;
@@ -164,4 +165,7 @@ public interface ProjectMapper {
     @Update("update project set parent_ids = concat(#{prepend}, parent_ids) " +
             "where parent_ids regexp #{prefixRegexp} and is_deleted = false")
     void attachChildProject(@Param("prepend") String prepend, @Param("prefixRegexp") String prefixRegexp);
+
+    @Select("select * from project where parent_ids regexp #{parentIdsRegexp} and is_deleted = false")
+    List<ProjectDO> selectByParentIdsRegexp(@Param("parentIdsRegexp") String parentIdsRegexp);
 }

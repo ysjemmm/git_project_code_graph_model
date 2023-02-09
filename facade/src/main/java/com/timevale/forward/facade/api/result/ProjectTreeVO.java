@@ -23,6 +23,9 @@ public class ProjectTreeVO extends ToString {
     @ApiModelProperty("当前节点项目名称")
     private String projectName;
 
+    @ApiModelProperty("父节点id")
+    private Long parentId;
+
     @ApiModelProperty("子节点列表")
     private List<ProjectTreeVO> children;
 
