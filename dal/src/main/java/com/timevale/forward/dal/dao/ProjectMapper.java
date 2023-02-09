@@ -169,4 +169,7 @@ public interface ProjectMapper {
 
     @Select("select * from project where parent_ids regexp #{parentIdsRegexp} and is_deleted = false")
     List<ProjectDO> selectByParentIdsRegexp(@Param("parentIdsRegexp") String parentIdsRegexp);
+
+    @Update("update project set parent_ids = substr(parent_ids, #{parentLen}) where parent_ids regexp #{parentRegexp}")
+    void deleteChildren(@Param("parentLen") Integer parentLen, @Param("parentRegexp") String parentRegexp);
 }

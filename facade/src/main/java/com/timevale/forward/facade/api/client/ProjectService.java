@@ -91,7 +91,12 @@ public interface ProjectService {
     /**
      * 添加子项目列表
      */
-    BaseResult<Void> appendChildren(ProjectAppendChildrenReq projectAppendChildrenReq);
+    BaseResult<Void> appendChildren(ProjectAppendChildReq projectAppendChildReq);
+
+    /**
+     * 删除子项目
+     */
+    BaseResult<Void> deleteChild(ProjectDeleteChildReq projectDeleteChildReq);
 
     /**
      * 查询项目标签页的todo数量列表

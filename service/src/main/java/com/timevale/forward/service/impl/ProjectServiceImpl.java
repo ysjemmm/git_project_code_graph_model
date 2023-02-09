@@ -532,9 +532,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<Void> appendChildren(ProjectAppendChildrenReq projectAppendChildrenReq) {
-        Long projectId = projectAppendChildrenReq.getProjectId();
-        List<Long> childIds = projectAppendChildrenReq.getChildIds();
+    public BaseResult<Void> appendChildren(ProjectAppendChildReq projectAppendChildReq) {
+        Long projectId = projectAppendChildReq.getProjectId();
+        List<Long> childIds = projectAppendChildReq.getChildIds();
         ProjectDO parentProject = projectMapper.get(projectId);
         AssertUtil.notNull(parentProject, "父项目不存在，请刷新后重试");
         List<ProjectDO> childProjects = projectMapper.getByIds(childIds);
@@ -547,6 +547,16 @@ public class ProjectServiceImpl implements ProjectService {
         for (ProjectDO childProject : childProjects) {
             projectComponent.attachChildProject(parentProject, childProject);
         }
+        return BaseResult.success();
+    }
+
+    @Override
+    public BaseResult<Void> deleteChild(ProjectDeleteChildReq projectDeleteChildReq) {
+        ProjectDO parentProject = projectMapper.get(projectDeleteChildReq.getProjectId());
+        AssertUtil.notNull(parentProject, "父项目不存在");
+        ProjectDO childProject = projectMapper.get(projectDeleteChildReq.getChildId());
+        AssertUtil.notNull(childProject, "子项目不存在");
+        projectComponent.deleteChildProject(parentProject, childProject);
         return BaseResult.success();
     }
 

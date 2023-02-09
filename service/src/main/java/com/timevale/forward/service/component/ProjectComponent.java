@@ -55,4 +55,8 @@ public interface ProjectComponent {
      */
     void attachChildProject(ProjectDO parent, ProjectDO child);
 
+    /**
+     * 删除子项目节点
+     */
+    void deleteChildProject(ProjectDO parent, ProjectDO child);
 }

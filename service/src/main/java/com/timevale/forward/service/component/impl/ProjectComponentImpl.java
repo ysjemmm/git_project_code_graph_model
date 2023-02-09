@@ -7,6 +7,7 @@ import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.condition.ProjectNodeCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.facade.api.client.ProjectMilestoneService;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
@@ -75,6 +76,11 @@ public class ProjectComponentImpl implements ProjectComponent {
     @Resource
     private BizLabelComponent bizLabelComponent;
 
+    @Resource
+    private ProjectMilestoneMapper projectMilestoneMapper;
+
+    @Resource
+    private ProjectMilestoneService milestoneService;
 
     @Override
     public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -498,6 +504,17 @@ public class ProjectComponentImpl implements ProjectComponent {
         String prepend = parent.getParentIds().substring(0, parent.getParentIds().length() - 1);
         String prefixRegexp = "^" + child.getParentIds();
         projectMapper.attachChildProject(prepend, prefixRegexp);
+    }
+
+    @Override
+    public void deleteChildProject(ProjectDO parent, ProjectDO child) {
+        List<ProjectDO> childList = projectMapper.selectByParentIdsRegexp("^" + child.getParentIds());
+        List<Long> childIds = childList.stream().map(ProjectDO::getId).collect(Collectors.toList());
+        List<ProjectMilestone> milestones = projectMilestoneMapper.selectByProjectIds(childIds);
+        if (!milestones.isEmpty()) {
+            milestones.stream().map(ProjectMilestone::getId).forEach(milestoneService::deleteMilestone);
+        }
+        projectMapper.deleteChildren(parent.getParentIds().length(), "^" + child.getParentIds());
     }
 
     private List<ProductLineAnalyseVO> analyse(ProjectListCondition condition) {
