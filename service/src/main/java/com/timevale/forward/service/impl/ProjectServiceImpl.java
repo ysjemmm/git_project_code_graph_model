@@ -481,7 +481,9 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<Boolean> simpleModify(ProjectSimpleModifyReq projectSimpleModifyReq) {
         // 校验名称参数
         String projectName = projectSimpleModifyReq.getName();
-        projectNameValidate(projectName);
+        if (StrUtil.isNotBlank(projectName)) {
+            projectNameValidate(projectName);
+        }
 
         // 目标项目id
         Long projectId = projectSimpleModifyReq.getId();
@@ -1239,7 +1241,6 @@ public class ProjectServiceImpl implements ProjectService {
      * @param projectName 项目名称
      */
     private void projectNameValidate(String projectName) {
-        AssertUtil.checkState(StrUtil.isNotBlank(projectName), "项目名称不能为空");
         AssertUtil.checkState(!projectName.contains(CommonConstant.BLANK), "项目名称中请勿包含空格");
 
         ProjectDO byName = projectMapper.getByName(projectName);
