@@ -7,7 +7,7 @@ import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.model.enums.ProjectNodeStatusEnum;
 import com.timevale.forward.service.component.ProjectNodeComponent;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -108,6 +108,9 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
 
     @Override
     public Date getRecentPlanDate(List<ProjectNodeDO> nodeDOList) {
+        if (CollectionUtils.isEmpty(nodeDOList)) {
+            return null;
+        }
         nodeDOList = sort(nodeDOList);
         for (ProjectNodeDO e : nodeDOList) {
             if(e.getActualDate() == null){
@@ -140,8 +143,6 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
     }
 
     private void fillValue(Long projectId, List<ProjectNodeDO> projectNodeDO) {
-        projectNodeDO.forEach(t -> {
-            t.setProjectId(projectId);
-        });
+        projectNodeDO.forEach(t -> t.setProjectId(projectId));
     }
 }
