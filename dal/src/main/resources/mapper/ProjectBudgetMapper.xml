@@ -31,7 +31,7 @@
     </sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO project
+        INSERT INTO project_budget
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="projectId != null">project_id,</if>
             <if test="costType != null">cost_type,</if>
