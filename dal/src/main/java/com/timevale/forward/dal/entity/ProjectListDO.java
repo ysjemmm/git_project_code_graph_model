@@ -34,6 +34,11 @@ public class ProjectListDO extends BaseDO {
     private Integer type;
 
     /**
+     * 内部项目类型: 0空, 1战略项目, 2LTC项目, 3PBG项目, 4CBG项目, 5管理后台项目
+     */
+    private Integer innerType;
+
+    /**
      * 0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废
      */
     private Integer status;

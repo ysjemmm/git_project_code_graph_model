@@ -123,6 +123,12 @@ public class ProjectVO extends ToString {
     @ApiModelProperty("提测实际时间")
     private Date actualTestDate;
 
+    @ApiModelProperty("内部项目类型")
+    private Integer innerType;
+
+    @ApiModelProperty("内部项目类型名称")
+    private String innerTypeName;
+
     @ApiModelProperty("标签名称")
     private List<BizLabelSimpleVO> labelNames;
 }
