@@ -1,10 +1,7 @@
 package com.timevale.forward.service.job;
 
 import cn.hutool.core.collection.CollUtil;
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableTable;
-import com.google.common.collect.Maps;
+import com.google.common.collect.*;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.dao.ProjectRiskMapper;
@@ -25,6 +22,7 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -69,8 +67,8 @@ public class InnerProjectRiskJob extends IJobHandler {
         statusList.add(ProjectStatusEnum.EXECUTING.getCode());
         statusList.add(ProjectStatusEnum.FINISHING.getCode());
         statusList.add(ProjectStatusEnum.OPERATING.getCode());
-        List<ProjectDO> projectDOList = projectMapper.getByStatus(statusList, ProjectCategoryEnum.INNER_PROJECT.getCode());
-        List<Long> projectIds = projectDOList.stream().map(ProjectDO::getId).collect(Collectors.toList());
+        List<ProjectDO> projectDOs = projectMapper.getByStatus(statusList, ProjectCategoryEnum.INNER_PROJECT.getCode());
+        List<Long> projectIds = projectDOs.stream().map(ProjectDO::getId).collect(Collectors.toList());
 
         // 待处理的风险
         List<ProjectRiskDO> riskDOs = projectRiskMapper.selectByProjectIdListStatus(projectIds, ProjectRiskStatusEnum.PENDING.getCode());
@@ -116,6 +114,37 @@ public class InnerProjectRiskJob extends IJobHandler {
             for (ProjectDO mProjectDO : mProjectDOs) {
                 solveRisk(nowDate, mProjectDO, riskMap, milestoneTable, insertRisks, updateRisks);
             }
+        }
+
+        {
+            // 里程碑未录入风险
+            ImmutableMap<Long, ProjectDO> projectDOMap = Maps.uniqueIndex(projectDOs, BaseDO::getId);
+            Map<Long, Set<Integer>> milestoneGroup = milestones.stream()
+                    .collect(Collectors.groupingBy(ProjectMilestone::getProjectId, Collectors.collectingAndThen(Collectors.toList(),
+                                    projectMilestones -> projectMilestones.stream().map(ProjectMilestone::getStage).collect(Collectors.toSet()))));
+
+            milestoneGroup.forEach((projectId, stageSet) -> {
+                Optional<List<Integer>> validStageOpt = Optional.ofNullable(projectDOMap.get(projectId)).map(ProjectDO::getValidStageList);
+                validStageOpt.ifPresent(validStages -> {
+                    int preStage = 0;
+                    boolean previous = true;
+                    for (Integer validStage : validStages) {
+                        boolean contains = stageSet.contains(validStage);
+                        // 如果上一个阶段没有里程碑，当前阶段有里程碑，则是里程碑未录入
+                        if (!previous && contains) {
+                            ProjectRiskDO newRisk = new ProjectRiskDO();
+                            newRisk.setSign("");
+                            newRisk.setMainId(projectId);
+                            newRisk.setProjectId(projectId);
+                            newRisk.setName(ProjectStageEnum.getTextByCode(preStage));
+                            newRisk.setType(ProjectRiskTypeEnum.MILE_STONE_NONE.getCode());
+                            insertRisks.add(newRisk);
+                        }
+                        previous = contains;
+                        preStage = validStage;
+                    }
+                });
+            });
         }
 
         // 更新任务和项目

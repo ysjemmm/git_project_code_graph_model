@@ -51,7 +51,7 @@
             <if test="costType != null">#{costType},</if>
             <if test="expectedAmount != null">#{expectedAmount},</if>
             <if test="costAmount != null">#{costAmount},</if>
-            <if test="expectedDesc != null">expectedDesc,</if>
+            <if test="expectedDesc != null">#{expectedDesc},</if>
             <if test="costDesc != null">#{costDesc},</if>
             <if test="costDate != null">#{costDate},</if>
             <if test="true">
