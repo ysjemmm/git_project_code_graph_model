@@ -1,5 +1,6 @@
 package com.timevale.forward.service.copy;
 
+import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
 import com.timevale.forward.dal.entity.TaskDO;
@@ -11,6 +12,8 @@ import com.timevale.forward.model.enums.TaskStatusEnum;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author jingchun
@@ -25,7 +28,9 @@ public interface ProjectMilestoneCopier {
 
     ProjectMilestoneCopier INSTANCE = Mappers.getMapper(ProjectMilestoneCopier.class);
 
+    @Mapping(target = "executor", ignore = true)
     @Mapping(target = "projectId", ignore = true)
+    @Mapping(target = "executorId", ignore = true)
     @Mapping(target = "projectName", ignore = true)
     @Mapping(target = "id", source = "milestone.id")
     @Mapping(target = "type", source = "milestone.type")
@@ -43,7 +48,9 @@ public interface ProjectMilestoneCopier {
     @Mapping(target = "relationName", source = "task.name")
     @Mapping(target = "statusName", expression = "java(TaskStatusEnum.getTextByCode(task.getStatus()))")
     @Mapping(target = "stageName", expression = "java(ProjectStageEnum.getTextByCode(milestone.getStage()))")
-    ProjectMilestoneVO convert(ProjectMilestone milestone, TaskDO task);
+    @Mapping(target = "executorId", expression = "java(executors.stream().map(PersonDO::getUserId).collect(Collectors.joining(\",\")))")
+    @Mapping(target = "executor", expression = "java(executors.stream().map(PersonDO::getUserName).collect(Collectors.joining(\",\")))")
+    ProjectMilestoneVO convert(ProjectMilestone milestone, TaskDO task, List<PersonDO> executors);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "modifyManId", ignore = true)

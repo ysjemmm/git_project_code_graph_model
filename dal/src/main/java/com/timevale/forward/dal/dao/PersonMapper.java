@@ -4,6 +4,7 @@ import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.entity.PersonDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -63,7 +64,7 @@ public interface PersonMapper {
      * @param type    产品经理or团队成员
      * @return list
      */
-    List<PersonDO> get(@Param("mainIds") List<Long> mainIds, @Param("type") Integer type);
+    List<PersonDO> get(@Param("mainIds") Collection<Long> mainIds, @Param("type") Integer type);
 
 
     /**

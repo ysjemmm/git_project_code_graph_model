@@ -4,9 +4,11 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
+import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
 import com.timevale.forward.dal.entity.TaskDO;
@@ -17,6 +19,7 @@ import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.result.ProjectMilestoneListVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.MilestoneTypeEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
@@ -47,6 +50,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
     private final TaskMapper taskMapper;
     private final ProjectMapper projectMapper;
     private final ProjectMilestoneMapper milestoneMapper;
+    private final PersonMapper personMapper;
 
     @Override
     public BaseResult<Void> add(ProjectMilestoneAddReq projectMilestoneAddReq) {
@@ -66,7 +70,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
             ProjectDO relateProject = projectMapper.get(relateProjectId);
             AssertUtil.notNull(relateProject, "您关联的项目不存在，请刷新后重试");
             AssertUtil.checkState(relateProject.getParentId() == null ||
-                    relateProject.getParentList().contains(project.getId()),
+                            relateProject.getParentList().contains(project.getId()),
                     "您关联里程碑的项目已经被其他项目关联");
             AssertUtil.checkState(project.getParentList().contains(relateProject.getId()),
                     "您关联的项目为当前项目父项目，不可关联");
@@ -89,6 +93,8 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
         AssertUtil.notNull(currentProject, "当前项目不存在或者已经被删除，请刷新后重试");
         ProjectMilestoneListVO res = new ProjectMilestoneListVO();
         List<ProjectMilestoneVO> resList = new ArrayList<>();
+        res.setPmId(currentProject.getPmId());
+        res.setPm(currentProject.getPm());
         res.setValidStages(currentProject.getValidStageList());
         res.setList(resList);
         List<ProjectMilestone> milestones = milestoneMapper.selectByProjectId(projectId);
@@ -116,13 +122,17 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
             List<Long> relationIds = taskMilestones.stream().map(ProjectMilestone::getRelationId)
                     .collect(Collectors.toList());
             List<TaskDO> tasks = taskMapper.getByIdList(relationIds);
+            //1.填充人员信息
             Map<Long, TaskDO> taskById = Maps.uniqueIndex(tasks, TaskDO::getId);
+            Map<Long, List<PersonDO>> executorMap = personMapper.get(taskById.keySet(),
+                            PersonTypeEnum.TASK_EXECUTOR.getCode())
+                    .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
             for (ProjectMilestone taskMilestone : taskMilestones) {
                 TaskDO task = taskById.get(taskMilestone.getRelationId());
                 if (task == null) {
                     continue;
                 }
-                resList.add(ProjectMilestoneCopier.INSTANCE.convert(taskMilestone, task));
+                resList.add(ProjectMilestoneCopier.INSTANCE.convert(taskMilestone, task, executorMap.get(task.getId())));
             }
         }
         resList.forEach(m -> {

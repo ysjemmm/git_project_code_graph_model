@@ -17,6 +17,12 @@ import java.util.List;
 @ApiModel("里程碑列表接口")
 public class ProjectMilestoneListVO extends ToString {
 
+    @ApiModelProperty("项目经理id")
+    private String pmId;
+
+    @ApiModelProperty("项目经理")
+    private String pm;
+
     @ApiModelProperty("有效阶段列表")
     private List<Integer> validStages;
 
