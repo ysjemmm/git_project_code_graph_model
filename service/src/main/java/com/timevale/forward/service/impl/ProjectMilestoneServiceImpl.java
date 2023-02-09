@@ -72,7 +72,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
             AssertUtil.checkState(relateProject.getParentId() == null ||
                             relateProject.getParentList().contains(project.getId()),
                     "您关联里程碑的项目已经被其他项目关联");
-            AssertUtil.checkState(project.getParentList().contains(relateProject.getId()),
+            AssertUtil.checkState(!project.getParentList().contains(relateProject.getId()),
                     "您关联的项目为当前项目父项目，不可关联");
 
             if (relateProject.getParentId() == null) {
