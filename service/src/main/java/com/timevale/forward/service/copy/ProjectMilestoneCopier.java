@@ -14,6 +14,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author jingchun
@@ -22,7 +23,8 @@ import java.util.List;
 @Mapper(imports = {
         ProjectStageEnum.class,
         ProjectStatusEnum.class,
-        TaskStatusEnum.class
+        TaskStatusEnum.class,
+        Collectors.class
 })
 public interface ProjectMilestoneCopier {
 
