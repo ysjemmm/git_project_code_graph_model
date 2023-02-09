@@ -587,7 +587,9 @@ public class HomePageServiceImpl implements HomePageService {
         }
         users.removeIf(u -> !userIds.contains(u.getAccount()));
         List<HomePageGroupWorkTimeVO> res = users.stream().map(u ->
-                new HomePageGroupWorkTimeVO(u.getAccount(), u.getAlias(), new ArrayList<>())
+                new HomePageGroupWorkTimeVO(u.getAccount(),
+                        userInfo.getAlias() + CommonConstant.JOIN_LINE + u.getName(),
+                        new ArrayList<>())
         ).collect(Collectors.toList());
         List<TaskBoardDTO> tasks = listTasksSuitDateRange(req.getStartDate(), req.getEndDate(), userIds);
         if (tasks.isEmpty()) {
