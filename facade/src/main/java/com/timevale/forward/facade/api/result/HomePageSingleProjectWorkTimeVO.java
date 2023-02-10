@@ -20,7 +20,6 @@ import java.util.List;
 @ApiModel("首页任务看板-项目工时")
 public class HomePageSingleProjectWorkTimeVO extends ToString {
 
-
     @ApiModelProperty("任务数量")
     private Integer taskCount;
 
@@ -41,6 +40,5 @@ public class HomePageSingleProjectWorkTimeVO extends ToString {
 
     @ApiModelProperty("项目任务")
     private List<HomePageSingleTaskWorkTimeVO> taskWorkTimeVos;
-
 
 }

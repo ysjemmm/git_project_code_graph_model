@@ -1,6 +1,8 @@
 package com.timevale.forward.service.impl;
 
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimaps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.BugOnlineListCondition;
@@ -29,7 +31,7 @@ import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 
@@ -135,9 +137,9 @@ public class HomePageServiceImpl implements HomePageService {
     public BaseResult<HomePageTodoCardVO> getTodoCard(HomePageBaseReq homePageBaseReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         int taskCount = 0;
-        int projectCount = 0;
+        int projectCount;
         int bizDemandCount = 0;
-        int bugOnLineCount = 0;
+        int bugOnLineCount;
         int bugOfflineCount = 0;
         int bizDemandReceivedCount = 0;
 
@@ -408,7 +410,7 @@ public class HomePageServiceImpl implements HomePageService {
                     .stream().collect(Collectors.toMap(BaseInfoResponse::getAccount, Function.identity()));
             List<String> containProjectInfo = result.stream().map(HomePageProjectBoardVO::getUserId).collect(Collectors.toList());
 
-            allMyStaffNameWithSelf.removeAll(containProjectInfo);
+            containProjectInfo.forEach(allMyStaffNameWithSelf::remove);
 
             for (String userId : allMyStaffNameWithSelf) {
                 BaseInfoResponse baseInfo = baseInfoResponseMap.get(userId);
@@ -441,8 +443,8 @@ public class HomePageServiceImpl implements HomePageService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         Date startDate = DateUtil.getStartOfDay(req.getStartDate());
         Date endDate = DateUtil.getEndOfDay(req.getEndDate());
-        List<Long> deptIds = req.getDeptIds();
-        List<String> teamMembers = req.getTeamMembers();
+        Set<String> deptIds = req.getDeptIds();
+        Set<String> teamMembers = req.getTeamMembers();
 
         // 个人 或者 我和我的所有下属信息
         List<BaseInfoResponse> responses;
@@ -459,8 +461,8 @@ public class HomePageServiceImpl implements HomePageService {
         // 部门id、员工id非空取交集
         if (!CollectionUtils.isEmpty(deptIds)) {
             Set<String> deptAllMyStaff = Sets.newHashSet();
-            for (Long deptId : deptIds) {
-                deptAllMyStaff.addAll(innerUserPersonClient.getByGroupIdNew(String.valueOf(deptId)));
+            for (String deptId : deptIds) {
+                deptAllMyStaff.addAll(innerUserPersonClient.getByGroupIdNew(deptId));
             }
             allMyStaffNameWithSelf.retainAll(deptAllMyStaff);
         }
@@ -472,30 +474,7 @@ public class HomePageServiceImpl implements HomePageService {
         if (CollectionUtils.isEmpty(allMyStaffNameWithSelf)) {
             return BaseResult.success(Lists.emptyList());
         }
-
-        List<TaskBoardDTO> taskBoardDTOList = taskMapper.getByDate(startDate, endDate, Lists.newArrayList(allMyStaffNameWithSelf));
-        Date current = new Date();
-        taskBoardDTOList.forEach(a -> {
-            if (a.getActualStartDate() == null) {
-                a.setStartDate(a.getPlanStartDate());
-                a.setEndDate(a.getPlanEndDate());
-            } else if (a.getActualEndDate() != null) {
-                //实际开始和结束都不为空
-                a.setStartDate(a.getActualStartDate());
-                a.setEndDate(a.getActualEndDate());
-            } else if (a.getActualStartDate().after(a.getPlanEndDate())) {
-                //实际开始不空,结束为空,实际开始大于计划结束时间
-                a.setStartDate(a.getActualStartDate());
-                a.setEndDate(current);
-            } else {
-                //实际开始不空,结束为空,实际开始小于计划结束时间
-                a.setStartDate(a.getActualStartDate());
-                a.setEndDate(a.getPlanEndDate());
-            }
-        });
-
-        List<TaskBoardDTO> filter = taskBoardDTOList.stream().filter(a -> a.getPlanStartDate() != null && a.getPlanEndDate() != null
-                && DateUtil.haveOverlap(a.getStartDate(), a.getEndDate(), startDate, endDate)).collect(Collectors.toList());
+        List<TaskBoardDTO> filter = listTasksSuitDateRange(startDate, endDate, allMyStaffNameWithSelf);
         if (!CollectionUtils.isEmpty(filter)) {
             List<HomePageSingleWorkTimeVO> result = new ArrayList<>();
             List<Long> filterIds = filter.stream().map(TaskBoardDTO::getId).collect(Collectors.toList());
@@ -529,8 +508,8 @@ public class HomePageServiceImpl implements HomePageService {
                         HomePageSingleProjectWorkTimeVO projectWorkTimeVO = new HomePageSingleProjectWorkTimeVO();
                         List<HomePageSingleTaskWorkTimeVO> taskWorkTimeVOList = taskWorkTimePersonProjectMap.get(a.getExecutorId() + "#" + a.getProjectId());
 
-                        BigDecimal planUseTime = taskWorkTimeVOList.stream().filter(aa -> aa.getPlanUseTime() != null)
-                                .map(HomePageSingleTaskWorkTimeVO::getPlanUseTime).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+                        BigDecimal planUseTime = taskWorkTimeVOList.stream().map(HomePageSingleTaskWorkTimeVO::getPlanUseTime)
+                                .filter(Objects::nonNull).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
                         //每个项目的任务按开始时间排序
                         taskWorkTimeVOList.sort(Comparator.comparing(HomePageSingleTaskWorkTimeVO::getStartDate));
                         projectWorkTimeVO.setProjectId(a.getProjectId());
@@ -543,8 +522,8 @@ public class HomePageServiceImpl implements HomePageService {
                         projectWorkTimeVOList.add(projectWorkTimeVO);
                     }
                 });
-                BigDecimal planUseTime = projectWorkTimeVOList.stream().filter(aa -> aa.getTotalPlanUseTime() != null)
-                        .map(HomePageSingleProjectWorkTimeVO::getTotalPlanUseTime).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+                BigDecimal planUseTime = projectWorkTimeVOList.stream().map(HomePageSingleProjectWorkTimeVO::getTotalPlanUseTime)
+                        .filter(Objects::nonNull).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
                 //每个人的项目按项目计划结束时间倒序
                 projectWorkTimeVOList.sort(Comparator.comparing(HomePageSingleProjectWorkTimeVO::getProjectPlanEndDate).reversed());
                 int count = projectWorkTimeVOList.stream().map(HomePageSingleProjectWorkTimeVO::getTaskCount).reduce(Integer::sum).orElse(0);
@@ -557,16 +536,16 @@ public class HomePageServiceImpl implements HomePageService {
             });
             // 团队中无任务的人
             List<HomePageSingleWorkTimeVO> noneTaskList = allMyStaffNameWithSelf.stream()
-                    .filter(a->!taskWorkTimeOnePersonMap.containsKey(a))
+                    .filter(a -> !taskWorkTimeOnePersonMap.containsKey(a))
                     .map(a -> {
-                HomePageSingleWorkTimeVO o = new HomePageSingleWorkTimeVO();
-                o.setExecutor(personMap.get(a));
-                o.setExecutorId(a);
-                o.setTotalPlanUseTime(BigDecimal.ZERO);
-                o.setTaskCount(0);
-                o.setProjectWorkTimeVos(Lists.emptyList());
-                return o;
-            }).collect(Collectors.toList());
+                        HomePageSingleWorkTimeVO o = new HomePageSingleWorkTimeVO();
+                        o.setExecutor(personMap.get(a));
+                        o.setExecutorId(a);
+                        o.setTotalPlanUseTime(BigDecimal.ZERO);
+                        o.setTaskCount(0);
+                        o.setProjectWorkTimeVos(Lists.emptyList());
+                        return o;
+                    }).collect(Collectors.toList());
             result.addAll(noneTaskList);
             return BaseResult.success(result);
         } else if (HomePageTabEnum.INDIVIDUAL.getCode().equals(req.getTabType())) {
@@ -587,12 +566,90 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     @Override
+    public BaseResult<List<HomePageGroupWorkTimeVO>> getGroupTaskWorkTimeBoard(HomePageTaskBoardReq req) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        List<BaseInfoResponse> users = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
+        if (CollectionUtils.isEmpty(users)) {
+            log.warn("getGroupTaskWorkTimeBoard users are empty, userInfo: {}", userInfo);
+            return BaseResult.success();
+        }
+        Set<String> userIds = users.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toSet());
+        // 部门id、员工id非空取交集
+        if (CollectionUtils.isNotEmpty(req.getDeptIds())) {
+            Set<String> deptAllMyStaff = Sets.newHashSet();
+            for (String deptId : req.getDeptIds()) {
+                deptAllMyStaff.addAll(innerUserPersonClient.getByGroupIdNew(deptId));
+            }
+            userIds.retainAll(deptAllMyStaff);
+        }
+        if (CollectionUtils.isNotEmpty(req.getTeamMembers())) {
+            userIds.retainAll(req.getTeamMembers());
+        }
+        users.removeIf(u -> !userIds.contains(u.getAccount()));
+        List<HomePageGroupWorkTimeVO> res = users.stream().map(u ->
+                new HomePageGroupWorkTimeVO(u.getAccount(),
+                        u.getAlias() + CommonConstant.JOIN_LINE + u.getName(),
+                        new ArrayList<>())
+        ).collect(Collectors.toList());
+        List<TaskBoardDTO> tasks = listTasksSuitDateRange(req.getStartDate(), req.getEndDate(), userIds);
+        if (tasks.isEmpty()) {
+            return BaseResult.success(res);
+        }
+        List<Long> taskIds = tasks.stream().map(TaskBoardDTO::getId).collect(Collectors.toList());
+        List<ProjectDO> projects = projectMapper.getByIds(tasks.stream().map(TaskBoardDTO::getProjectId).collect(Collectors.toSet()));
+        Map<Long, ProjectDO> projectById = Maps.uniqueIndex(projects, ProjectDO::getId);
+        List<PersonDO> persons = personMapper.getPersons(userIds, taskIds, PersonTypeEnum.TASK_EXECUTOR.getCode());
+        ListMultimap<Long, PersonDO> personsByMainId = Multimaps.index(persons, PersonDO::getMainId);
+        Map<String, HomePageGroupWorkTimeVO> resByExecutorId = Maps.uniqueIndex(res, HomePageGroupWorkTimeVO::getExecutorId);
+        for (Date iterDate = req.getStartDate();
+             iterDate.before(req.getEndDate());
+             iterDate = DateUtil.getStartOfNextDay(iterDate)) {
+            final Date iterStartDate = iterDate;
+            Date iterEndDate = DateUtil.getEndOfDay(iterDate);
+            List<TaskBoardDTO> currentDayTasks = tasks.stream()
+                    .filter(task ->
+                            DateUtil.haveOverlap(task.getStartDate(), task.getEndDate(), iterStartDate, iterEndDate))
+                    .collect(Collectors.toList());
+            Map<String, List<TaskBoardDTO>> tasksByPersonId = new HashMap<>();
+            for (TaskBoardDTO currentDayTask : currentDayTasks) {
+                for (PersonDO personTask : personsByMainId.get(currentDayTask.getId())) {
+                    tasksByPersonId.computeIfAbsent(personTask.getUserId(), k -> new ArrayList<>());
+                    tasksByPersonId.get(personTask.getUserId()).add(currentDayTask);
+                }
+            }
+            for (Map.Entry<String, List<TaskBoardDTO>> userEntry : tasksByPersonId.entrySet()) {
+                HomePageGroupWorkTimeVO userRes = resByExecutorId.get(userEntry.getKey());
+                if (userRes == null) {
+                    continue;
+                }
+                HomePageProjectWorkTimeVO userPerDateWorkTime = new HomePageProjectWorkTimeVO(iterDate, new ArrayList<>());
+                userRes.getList().add(userPerDateWorkTime);
+                ListMultimap<Long, TaskBoardDTO> tasksByProjectId = Multimaps.index(userEntry.getValue(), TaskBoardDTO::getProjectId);
+                for (Long key : tasksByProjectId.keySet()) {
+                    List<TaskBoardDTO> value = tasksByProjectId.get(key);
+                    HomePageSingleProjectWorkTimeVO projectDateWorkTime = new HomePageSingleProjectWorkTimeVO();
+                    projectDateWorkTime.setProjectId(key);
+                    Optional.ofNullable(projectById.get(key)).ifPresent(p -> {
+                        projectDateWorkTime.setProjectName(p.getName());
+                        projectDateWorkTime.setProjectPlanEndDate(p.getPlanEndDate());
+                    });
+                    userPerDateWorkTime.getProjectInfo().add(projectDateWorkTime);
+                    projectDateWorkTime.setTaskWorkTimeVos(value.stream().map(
+                            TaskCopier.INSTANCE::convert2HomePage
+                    ).collect(Collectors.toList()));
+                }
+            }
+        }
+        return BaseResult.success(res);
+    }
+
+    @Override
     public BaseResult<List<String>> getHolidays(HomePageHolidayReq homePageHolidayReq) {
-        Date startDate=homePageHolidayReq.getStartDate();
-        Date endDate=homePageHolidayReq.getEndDate();
-        if(homePageHolidayReq.getStartDate().after(homePageHolidayReq.getEndDate())){
-            startDate=homePageHolidayReq.getEndDate();
-            endDate=homePageHolidayReq.getStartDate();
+        Date startDate = homePageHolidayReq.getStartDate();
+        Date endDate = homePageHolidayReq.getEndDate();
+        if (homePageHolidayReq.getStartDate().after(homePageHolidayReq.getEndDate())) {
+            startDate = homePageHolidayReq.getEndDate();
+            endDate = homePageHolidayReq.getStartDate();
         }
         List<String> holidays = elapsedTimeClient.getHolidays(startDate, endDate, true);
         return BaseResult.success(holidays);
@@ -626,6 +683,34 @@ public class HomePageServiceImpl implements HomePageService {
         } else {
             return Lists.emptyList();
         }
+    }
+
+    private List<TaskBoardDTO> listTasksSuitDateRange(Date startDate, Date endDate, Collection<String> staffIds) {
+
+        List<TaskBoardDTO> taskBoardDTOList = taskMapper.getByDate(startDate, endDate, staffIds);
+        Date current = new Date();
+        taskBoardDTOList.forEach(a -> {
+            if (a.getActualStartDate() == null) {
+                a.setStartDate(a.getPlanStartDate());
+                a.setEndDate(a.getPlanEndDate());
+            } else if (a.getActualEndDate() != null) {
+                //实际开始和结束都不为空
+                a.setStartDate(a.getActualStartDate());
+                a.setEndDate(a.getActualEndDate());
+            } else if (a.getActualStartDate().after(a.getPlanEndDate())) {
+                //实际开始不空,结束为空,实际开始大于计划结束时间
+                a.setStartDate(a.getActualStartDate());
+                a.setEndDate(current);
+            } else {
+                //实际开始不空,结束为空,实际开始小于计划结束时间
+                a.setStartDate(a.getActualStartDate());
+                a.setEndDate(a.getPlanEndDate());
+            }
+        });
+        return taskBoardDTOList.stream()
+                .filter(a -> a.getPlanStartDate() != null && a.getPlanEndDate() != null
+                        && DateUtil.haveOverlap(a.getStartDate(), a.getEndDate(), startDate, endDate))
+                .collect(Collectors.toList());
     }
 
 }

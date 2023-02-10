@@ -76,22 +76,22 @@ public class BizDemandServiceImpl implements BizDemandService {
     private BugOnlineMapper bugOnlineMapper;
 
     @Resource
+    private BugOnlineBizDemandMapper bugOnlineBizDemandMapper;
+
+    @Resource
+    private BugOnlineComponent bugOnlineComponent;
+
+    @Resource
     private BugOfflineMapper bugOfflineMapper;
 
     @Resource
     private BugLogMapper bugLogMapper;
 
     @Resource
-    private BugStatusOperatorMapper bugStatusOperatorMapper;
-
-    @Resource
     private BizDemandLogComponent bizDemandLogComponent;
 
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
-
-    @Resource
-    private SqlOrderComponent sqlOrderComponent;
 
     @Resource
     private LabelComponent labelComponent;
@@ -423,10 +423,12 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDetailVO.setEndDate(bizDemandDO.getProjectEndDate());
 
         // 查看是否为线上bug转换
-        BugOnlineDO bugOnlineDO = bugOnlineMapper.selectByBizDemandId(bizDemandId);
-        if (bugOnlineDO != null) {
-            bizDemandDetailVO.setBugOnlineId(bugOnlineDO.getId());
-            bizDemandDetailVO.setBugOnlineName(bugOnlineDO.getName());
+        List<Long> bugOnlineIds = bugOnlineBizDemandMapper.getBugOnlineIds(bizDemandId);
+        if (!bugOnlineIds.isEmpty()) {
+            List<BugOnlineDO> bugOnlineList = bugOnlineMapper.selectByIds(bugOnlineIds, false);
+            bizDemandDetailVO.setBugOnlineList(bugOnlineList.stream()
+                    .map(x -> new BugOnlineLinkVO(x.getId(), x.getName()))
+                    .collect(Collectors.toList()));
         }
 
         BugOfflineDO bugOfflineDO = bugOfflineMapper.selectByBizDemandId(bizDemandId);
@@ -1075,16 +1077,15 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<Boolean> noticeReceiver(BizDemandNoticeReceiverReq receiverReq) {
-        log.info("开发资源申请流程通过,通知需求接收人:{}",receiverReq.getBizDemandIds());
+        log.info("开发资源申请流程通过,通知需求接收人:{}", receiverReq.getBizDemandIds());
         List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(receiverReq.getBizDemandIds());
-        bizDemandDOList.forEach(a -> {
-            messageEventPublisher.publish(new BizDemandApprovedMsgEvent(
-                    this,
-                    a.getId(),
-                    a.getReceiveManId(),
-                    a.getName())
-            );
-        });
+        bizDemandDOList.forEach(a ->
+                messageEventPublisher.publish(new BizDemandApprovedMsgEvent(
+                        this,
+                        a.getId(),
+                        a.getReceiveManId(),
+                        a.getName())
+                ));
         return BaseResult.success(true);
     }
 
@@ -1145,38 +1146,8 @@ public class BizDemandServiceImpl implements BizDemandService {
                 throw new BaseBizRuntimeException("当前状态不允许转化业务需求");
             }
             //保存老的状态
-            String oldStatusName = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
-            Integer oldStatus = bugOnlineDO.getStatus();
-
-            // 保存旧的bug原因
-            String oldReasonName = BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason());
-
-            bugOnlineDO.setStatus(BugOnlineStatusEnum.REQUIRED.getCode());
-            bugOnlineDO.setReason(BugOnlineReasonEnum.DEMAND_QUESTION.getCode());
-            bugOnlineDO.setPrevStatus(oldStatus);
-            bugOnlineDO.setBizDemandId(bizDemandId);
-            //线上bug表更新
-            bugOnlineMapper.update(bugOnlineDO);
-
-            BugLogDO bugLogDO = createBugLog(bugOnlineId
-                    , oldStatusName
-                    , BugOnlineStatusEnum.REQUIRED.getText()
-                    , ButtonActionEnum.SHIFT_BUSINESS.getText()
-                    , BugLogFieldEnum.STATUS.getText()
-                    , BugLogTypeEnum.ONLINE.getCode());
-            bugLogMapper.insert(bugLogDO);
-
-            BugLogDO reasonBugLogDO = createBugLog(bugOnlineId
-                    , oldReasonName
-                    , BugOnlineReasonEnum.DEMAND_QUESTION.getText()
-                    , null
-                    , BugLogFieldEnum.REASON.getText()
-                    , BugLogTypeEnum.ONLINE.getCode());
-
-            bugLogMapper.insert(reasonBugLogDO);
-
-            //bug状态处理人员表插入数据
-            bugLogComponent.insertToBugStatusOperator(bugOnlineId, userInfo.getId(), userInfo.getFullAlias());
+            bugOnlineComponent.attachToBizDemands(bugOnlineDO, Collections.singletonList(bizDemandId),
+                    ButtonActionEnum.SHIFT_BUSINESS);
         }
     }
 

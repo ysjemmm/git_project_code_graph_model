@@ -1,5 +1,10 @@
 package com.timevale.forward.service.component;
 
+import com.timevale.forward.dal.entity.BugOnlineDO;
+import com.timevale.forward.model.enums.ButtonActionEnum;
+
+import java.util.Collection;
+
 public interface BugOnlineComponent {
     /**
      *
@@ -9,8 +14,12 @@ public interface BugOnlineComponent {
 
     /**
      * 自动钉钉通知关闭线上bug确认
-     * @param autoCloseLimitDay
      */
     void autoNoticeCloseBugIfBeConfirm(int autoCloseLimitDay);
+
+    /**
+     * 关联业务需求转需求
+     */
+    void attachToBizDemands(BugOnlineDO bugOnline, Collection<Long> bizDemandIds, ButtonActionEnum actionEnum);
 
 }

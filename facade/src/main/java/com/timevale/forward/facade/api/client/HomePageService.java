@@ -79,6 +79,11 @@ public interface HomePageService {
     BaseResult<List<HomePageSingleWorkTimeVO>> getTaskWorkTimeBoard(HomePageTaskBoardReq req);
 
     /**
+     * 团队任务工时看板
+     */
+    BaseResult<List<HomePageGroupWorkTimeVO>> getGroupTaskWorkTimeBoard(HomePageTaskBoardReq req);
+
+    /**
      *
      * @param homePageHolidayReq  homePageHolidayReq
      * @return 节假日期

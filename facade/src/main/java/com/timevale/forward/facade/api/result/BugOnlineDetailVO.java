@@ -141,9 +141,6 @@ public class BugOnlineDetailVO extends ToString {
     @ApiModelProperty("修复失败原因")
     private String repairFailReason;
 
-    @ApiModelProperty("关联业务需求")
-    private BizDemandVO bizDemandVO;
-
     @ApiModelProperty("模块id")
     private List<Long> modelIds;
 
@@ -170,4 +167,8 @@ public class BugOnlineDetailVO extends ToString {
 
     @ApiModelProperty("线上bug日志最新创建时间")
     private Date bugLogLastCreateDate;
+
+    @ApiModelProperty("业务需求列表")
+    private List<BizDemandVO> bizDemands;
+
 }

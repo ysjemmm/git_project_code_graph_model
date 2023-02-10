@@ -13,7 +13,7 @@ public interface ManDayReportComponent {
      * @param manDayId    人天id
      * @param auditManDay 审核人天
      */
-    void add(Long manDayId, BigDecimal auditManDay);
+    void add(Long manDayId, BigDecimal auditManDay, String auditManDayDesc, boolean audit);
 
     /**
      * 批量通知

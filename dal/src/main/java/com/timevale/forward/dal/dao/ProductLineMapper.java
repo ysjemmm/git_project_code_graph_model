@@ -4,6 +4,7 @@ import com.timevale.forward.dal.condition.ProductLineCondition;
 import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -93,4 +94,10 @@ public interface ProductLineMapper {
      * @return {@link ProductLineDO }
      */
     List<ProductLineDO> selectByCondition( ProductLineCondition condition);
+
+    /**
+     * 根据名称获取产品线
+     */
+    @Select("select * from product_line where `name` = #{name} and is_deleted = false")
+    ProductLineDO selectByName(@Param("name") String name);
 }

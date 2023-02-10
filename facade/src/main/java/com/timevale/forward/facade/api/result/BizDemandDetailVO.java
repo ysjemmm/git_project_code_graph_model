@@ -3,15 +3,14 @@ package com.timevale.forward.facade.api.result;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.timevale.mandarin.common.result.ToString;
-
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -96,12 +95,8 @@ public class BizDemandDetailVO extends ToString {
     @ApiModelProperty("驳回理由文本")
     private String reasonText;
 
-    @ApiModelProperty("线上bug id")
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long bugOnlineId;
-
-    @ApiModelProperty("线上bug 名称")
-    private String bugOnlineName;
+    @ApiModelProperty("关联线上bug列表")
+    private List<BugOnlineLinkVO> bugOnlineList;
 
     @ApiModelProperty("线下bug id")
     @JsonSerialize(using = ToStringSerializer.class)

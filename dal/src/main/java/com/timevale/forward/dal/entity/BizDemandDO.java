@@ -1,10 +1,10 @@
 package com.timevale.forward.dal.entity;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * @author by YangXu

@@ -21,17 +21,17 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ModelCopier;
 import com.timevale.forward.service.copy.ProductLineCopier;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
-
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author by YangXu
@@ -57,7 +57,7 @@ public class ProductLineServiceImpl implements ProductLineService {
 
         List<ProductLineDO> productLineDOList = productLineMapper.selectAllProductLine();
 
-        return BaseResult.success(build(productLineDOList,bizDomainDOList));
+        return BaseResult.success(build(productLineDOList, bizDomainDOList));
     }
 
     @Override
@@ -104,7 +104,7 @@ public class ProductLineServiceImpl implements ProductLineService {
         productLineVOList.forEach(e -> {
             e.setModels(modelMap.get(e.getId()));
             BizDomainDO bizDomainDO = bizDomainIdMap.get(e.getBizDomainId());
-            if(bizDomainDO!=null){
+            if (bizDomainDO != null) {
                 e.setBizDomainName(bizDomainDO.getName());
             }
         });
@@ -113,6 +113,8 @@ public class ProductLineServiceImpl implements ProductLineService {
 
     @Override
     public BaseResult<Boolean> add(ProductLineAddReq productLineAddReq) {
+        ProductLineDO exists = productLineMapper.selectByName(productLineAddReq.getName());
+        AssertUtil.checkState(exists == null, "产品线名称已存在");
         ProductLineDO productLineDO = ProductLineCopier.INSTANCE.convert(productLineAddReq);
         productLineMapper.insert(productLineDO);
         return BaseResult.success(true);
@@ -120,12 +122,18 @@ public class ProductLineServiceImpl implements ProductLineService {
 
     @Override
     public BaseResult<Boolean> update(ProductLineModifyReq productLineModifyReq) {
+        if (productLineModifyReq.getName() != null) {
+            ProductLineDO exists = productLineMapper.selectByName(productLineModifyReq.getName());
+            AssertUtil.checkState(exists == null ||
+                            Objects.equals(exists.getId(), productLineModifyReq.getId()),
+                    "产品线名称已存在");
+        }
         ProductLineDO productLineDO = ProductLineCopier.INSTANCE.convert(productLineModifyReq);
         productLineMapper.update(productLineDO);
         return BaseResult.success(true);
     }
 
-    private List<ProductLineVO> build(List<ProductLineDO> productLineDOList,List<BizDomainDO> bizDomainDOList){
+    private List<ProductLineVO> build(List<ProductLineDO> productLineDOList, List<BizDomainDO> bizDomainDOList) {
         // 获取业务域及其负责人
         Map<Long, BizDomainDO> bizDomainIdMap = bizDomainDOList.stream()
                 .collect(Collectors.toMap(BizDomainDO::getId, Function.identity()));

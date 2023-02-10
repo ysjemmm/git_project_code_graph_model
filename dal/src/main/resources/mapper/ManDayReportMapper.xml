@@ -5,8 +5,8 @@
 <mapper namespace="com.timevale.forward.dal.dao.ManDayReportMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO man_day_report(man_day_id, audit_man_day, audit_status, auditor, auditor_id,reportor,reportor_id, create_man_id, create_man)
-        VALUES (#{manDayId}, #{auditManDay}, #{auditStatus}, #{auditor}, #{auditorId},#{reportor},#{reportorId}, #{createManId}, #{createMan})
+        INSERT INTO man_day_report(man_day_id, audit_man_day, audit_status, auditor, auditor_id,reportor,reportor_id, create_man_id, create_man, man_day_desc)
+        VALUES (#{manDayId}, #{auditManDay}, #{auditStatus}, #{auditor}, #{auditorId},#{reportor},#{reportorId}, #{createManId}, #{createMan}, #{manDayDesc})
     </insert>
 
     <update id="updateStatus">
@@ -62,7 +62,7 @@
     </sql>
     <select id="selectCondition" resultType="com.timevale.forward.dal.entity.ManDayReportListDO">
         SELECT mdr.id, mdr.audit_status, mdr.audit_man_day, mdr.reject_reason, mdr.auditor, mdr.auditor_id,
-               mdr.create_date, mdr.create_man, mdr.create_man_id,mdr.reportor,mdr.reportor_id,
+               mdr.create_date, mdr.create_man, mdr.create_man_id,mdr.reportor,mdr.reportor_id, mdr.man_day_desc,
                md.week_start_date, md.week_end_date,
                p.name projectName
         FROM
@@ -75,12 +75,12 @@
             (select  * from
                 (select * from
                     (select  * from
-                        (select id,man_day_id, audit_status,audit_man_day, reject_reason,auditor, auditor_id,
+                        (select id,man_day_id, audit_status,audit_man_day, reject_reason,auditor, auditor_id, man_day_desc,
                             create_date,create_man, create_man_id,reportor,reportor_id,
                             case when audit_status=20 then 3 when audit_status=0 then 2 when audit_status=10 then 1 end  as status
                             from man_day_report mdr
                             <where>
-                                <include refid="page_condition"></include>
+                                <include refid="page_condition" />
                             </where>
                              order by id desc)a
                     group by man_day_id,audit_status) b
@@ -94,7 +94,7 @@
             <if test="projectName != null and projectName != ''">AND p.name like concat('%',#{projectName},'%')</if>
             <if test="rejectReason != null and rejectReason != ''">AND mdr.reject_reason like concat('%',#{rejectReason},'%')</if>
             <if test="lastReport == null or lastReport == false ">
-                <include refid="page_condition"></include>
+                <include refid="page_condition" />
             </if>
             <if test="auditStatuses != null and auditStatuses.size() > 0">
                 AND mdr.audit_status in

@@ -41,5 +41,6 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
 @EnablePuppeteerConfig({"application", "JSBZ.SOA_PUBLIC"})
 @EnableLogMonitor
 public class Application {
+
     public static void main(String[] args) {SpringApplication.run(Application.class, args);}
 }

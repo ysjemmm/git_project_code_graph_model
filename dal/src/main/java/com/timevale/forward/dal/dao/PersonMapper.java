@@ -75,5 +75,5 @@ public interface PersonMapper {
      * @param type    产品经理or团队成员or执行人
      * @return list
      */
-    List<PersonDO> getPersons(@Param("userIds") List<String> userIds, @Param("mainIds") List<Long> mainIds, @Param("type") Integer type);
+    List<PersonDO> getPersons(@Param("userIds") Collection<String> userIds, @Param("mainIds") List<Long> mainIds, @Param("type") Integer type);
 }
