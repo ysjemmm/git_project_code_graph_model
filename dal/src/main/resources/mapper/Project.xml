@@ -416,6 +416,7 @@
         a.create_man_id, a.create_man,a.create_date,a.modify_date
         from project a
         <where>
+            is_deleted = false
             <if test="projectName != null and projectName != ''">
                 and name like concat('%', #{projectName}, '%')
             </if>
