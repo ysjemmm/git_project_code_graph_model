@@ -18,10 +18,7 @@ import com.timevale.forward.facade.api.result.ManDayListVO;
 import com.timevale.forward.facade.api.result.ManDayVO;
 import com.timevale.forward.facade.api.result.ProjectManDayVO;
 import com.timevale.forward.facade.api.result.ProjectTotalManDayVO;
-import com.timevale.forward.model.enums.AuditStatusEnum;
-import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
-import com.timevale.forward.model.enums.ButtonActionEnum;
-import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ManDayReportComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ManDayCopier;
@@ -99,6 +96,8 @@ public class ManDayServiceImpl implements ManDayService {
 
         // 处理所有可能的项目
         List<ProjectDO> projects = projectMapper.getByIds(projectIds);
+        // 暂时过滤内部项目
+        projects.removeIf(p -> Objects.equals(p.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode()));
         for (ProjectDO project : projects) {
             // 获取该项目下已填写人天数据
             List<ManDayDO> projectManDays = manDaysByProjectId.get(project.getId());

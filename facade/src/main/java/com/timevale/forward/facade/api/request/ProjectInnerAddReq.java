@@ -3,13 +3,14 @@ package com.timevale.forward.facade.api.request;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.Valid;
-import javax.validation.constraints.*;
+import javax.validation.constraints.Digits;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
@@ -55,6 +56,9 @@ public class ProjectInnerAddReq extends ToString {
     @ApiModelProperty("项目计划结束时间")
     @NotNull(message = "项目计划结束时间不能为空")
     private Date planEndDate;
+
+    @ApiModelProperty("父级项目id")
+    private Long parentId;
 
     @Valid
     @ApiModelProperty("项目目标列表")

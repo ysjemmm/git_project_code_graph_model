@@ -5,6 +5,7 @@ import com.timevale.forward.dal.dao.ProjectGoalMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectGoalDO;
+import com.timevale.forward.model.enums.ProjectCategoryEnum;
 import com.timevale.forward.model.enums.ProjectGoalStatusEnum;
 import com.timevale.forward.model.enums.YesOrNoEnum;
 import com.timevale.forward.service.integration.erp.ErpMessageClient;
@@ -50,7 +51,9 @@ public class ProjectGoalReachDateNotifyJob extends IJobHandler {
         Map<Long, ProjectDO> projectById = Maps.uniqueIndex(projects, ProjectDO::getId);
         for (ProjectGoalDO projectGoal : projectGoals) {
             ProjectDO project = projectById.get(projectGoal.getProjectId());
-            if (project == null || YesOrNoEnum.NO.getCode().equals(project.getIsWithGoal())) {
+            if (project == null || YesOrNoEnum.NO.getCode().equals(project.getIsWithGoal()) ||
+                    // 过滤内部项目
+                    Objects.equals(project.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode())) {
                 // 无项目或者无项目目标，过滤
                 log.info("项目无项目目标，过滤目标: {}", projectGoal);
                 continue;
