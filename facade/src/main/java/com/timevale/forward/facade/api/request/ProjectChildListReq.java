@@ -20,6 +20,9 @@ public class ProjectChildListReq extends QueryBase {
     @ApiModelProperty(value = "根节点项目id", required = true)
     private Long projectId;
 
+    @ApiModelProperty(value = "子项目树浏览id")
+    private Long navigateProjectId;
+
     @ApiModelProperty("项目名称")
     private String projectName;
 

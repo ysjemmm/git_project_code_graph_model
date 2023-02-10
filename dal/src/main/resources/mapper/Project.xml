@@ -423,6 +423,9 @@
             <if test="childProjectId != null">
                 and id = #{childProjectId}
             </if>
+            <if test="navigateParentIdsPrefix != null">
+                and parent_ids like concat(#{navigateParentIdsPrefix}, '%')
+            </if>
             <if test="innerTypes != null and innerTypes.size > 0">
                 and inner_type in
                 <foreach collection="innerTypes" item="innerType" open="(" separator="," close=")">
