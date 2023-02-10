@@ -315,6 +315,13 @@ public class ProjectServiceImpl implements ProjectService {
         personComponent.add(projectAddReq.getPds(), projectDO.getId(), PersonTypeEnum.PROJECT_PD.getCode());
         List<String> pdUserIds = projectAddReq.getPds().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
 
+        // 父级项目
+        if (projectAddReq.getParentId() != null) {
+            ProjectDO parentProject = projectMapper.get(projectAddReq.getParentId());
+            AssertUtil.notNull(parentProject, "父级项目不存在，请检查参数");
+            projectComponent.attachChildProject(parentProject, projectDO);
+        }
+
         // 团队成员
         List<PersonAddReq> teamMembers = projectAddReq.getTeamMembers();
         //过滤掉重复选择的项目经理,产品经理
@@ -364,6 +371,13 @@ public class ProjectServiceImpl implements ProjectService {
         teamMembers.removeIf(e -> Objects.equals(e.getUserId(), pm.getUserId()));
         teamMembers.add(projectInnerAddReq.getPm());
         personComponent.add(teamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+
+        // 父级项目
+        if (projectInnerAddReq.getParentId() != null) {
+            ProjectDO parentProject = projectMapper.get(projectInnerAddReq.getParentId());
+            AssertUtil.notNull(parentProject, "父级项目不存在，请检查参数");
+            projectComponent.attachChildProject(parentProject, projectDO);
+        }
 
         // 添加项目目标信息
         List<ProjectGoalAddReq> projectGoals = projectInnerAddReq.getProjectGoals();
