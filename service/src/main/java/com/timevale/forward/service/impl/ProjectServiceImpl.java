@@ -42,7 +42,6 @@ import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.util.Asserts;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -502,8 +501,13 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> listChildren(ProjectChildListReq projectChildListReq) {
         ProjectDO project = projectMapper.get(projectChildListReq.getProjectId());
-        Asserts.notNull(project, "您查询的项目不存在，请检查");
+        AssertUtil.notNull(project, "您查询的项目不存在，请检查");
         ProjectListChildCondition condition = ProjectCopier.INSTANCE.convert(projectChildListReq, project);
+        if (projectChildListReq.getNavigateProjectId() != null) {
+            ProjectDO navigateProject = projectMapper.get(projectChildListReq.getNavigateProjectId());
+            AssertUtil.notNull(navigateProject, "您选择的项目树节点不存在，请检查");
+            condition.setNavigateParentIdsPrefix(navigateProject.getParentIds());
+        }
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize());
         Page<ProjectListDO> projects = projectMapper.listChildren(condition);
         PageQueryResult<ProjectVO> res = PageQueryResult.resResult(ProjectCopier.INSTANCE.convert(projects));

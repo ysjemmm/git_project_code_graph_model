@@ -17,6 +17,9 @@ public class ProjectListChildCondition {
     // 根节点项目id
     private Long projectId;
 
+    // 节点树所在id
+    private String navigateParentIdsPrefix;
+
     // 项目名称
     private String projectName;
 
