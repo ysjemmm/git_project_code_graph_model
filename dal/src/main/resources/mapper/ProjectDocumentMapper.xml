@@ -31,13 +31,25 @@
   </select>
   <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.timevale.forward.dal.entity.ProjectDocument" useGeneratedKeys="true">
     <!--@mbg.generated-->
-    insert into project_document (project_id, `type`, url, 
-      is_deleted, create_man_id, create_man, 
-      create_date, modify_man_id, modify_man, 
+    insert into project_document (project_id, `type`, url,
+    <if test="docName != null and docName != ''">
+      doc_name,
+    </if>
+    <if test="stage != null and stage != ''">
+      stage,
+    </if>
+      is_deleted, create_man_id, create_man,
+      create_date, modify_man_id, modify_man,
       modify_date)
     values (#{projectId,jdbcType=BIGINT}, #{type,jdbcType=INTEGER}, #{url,jdbcType=VARCHAR},
-      #{isDeleted,jdbcType=BOOLEAN}, #{createManId,jdbcType=VARCHAR}, #{createMan,jdbcType=VARCHAR}, 
-      #{createDate,jdbcType=TIMESTAMP}, #{modifyManId,jdbcType=VARCHAR}, #{modifyMan,jdbcType=VARCHAR}, 
+    <if test="docName != null and docName != ''">
+      #{docName},
+    </if>
+    <if test="stage != null and stage != ''">
+      #{stage},
+    </if>
+      #{isDeleted,jdbcType=BOOLEAN}, #{createManId,jdbcType=VARCHAR}, #{createMan,jdbcType=VARCHAR},
+      #{createDate,jdbcType=TIMESTAMP}, #{modifyManId,jdbcType=VARCHAR}, #{modifyMan,jdbcType=VARCHAR},
       #{modifyDate,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.timevale.forward.dal.entity.ProjectDocument" useGeneratedKeys="true">
@@ -120,6 +132,9 @@
       </if>
       <if test="url != null">
         url = #{url,jdbcType=VARCHAR},
+      </if>
+      <if test="docName != null and docName != ''">
+        doc_name = #{docName},
       </if>
       <if test="isDeleted != null">
         is_deleted = #{isDeleted,jdbcType=BOOLEAN},
