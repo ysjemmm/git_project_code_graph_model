@@ -46,8 +46,6 @@ public class InnerProjectRiskBackJob extends IJobHandler {
     @Resource
     private TransactionTemplate transactionTemplate;
 
-    // 两个工作日
-    private final BigDecimal TWO_WORK_DAY = new BigDecimal(2);
     // 一个的工作日毫秒数
     private final BigDecimal WORK_DAY_SECONDS = new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND);
 
