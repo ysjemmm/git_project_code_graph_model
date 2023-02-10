@@ -979,7 +979,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<Boolean> innerComplete(Long projectId) {
+    public BaseResult<Boolean> innerComplete(ProjectInnerCompleteReq req) {
         return BaseResult.success();
     }
 
