@@ -417,7 +417,6 @@
         from project a
         <where>
             is_deleted = false
-            and `status` != -20
             <if test="projectName != null and projectName != ''">
                 and name like concat('%', #{projectName}, '%')
             </if>

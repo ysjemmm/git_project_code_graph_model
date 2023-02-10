@@ -19,12 +19,14 @@ import com.timevale.forward.facade.api.request.ProjectDocumentCheckReq;
 import com.timevale.forward.facade.api.request.ProjectDocumentReq;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.FileTypeEnum;
+import com.timevale.forward.model.enums.ProjectDocumentTypeEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.service.component.FileComponent;
 import com.timevale.forward.service.component.ProjectDocumentComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import org.apache.commons.collections.CollectionUtils;
@@ -123,7 +125,15 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
         AccountInfo account = SessionLocalUtil.getUserSession();
 
         ProjectDocument projectDocument = ProjectDocumentCopier.INSTANCE.req2Do(req);
-
+        if (projectDocument.getType() >= ProjectDocumentTypeEnum.SET_UP.getCode()) {
+            // 内部项目需要添加项目名称校验
+            projectDocumentComponent.list(req.getProjectId())
+                    .stream().filter(p -> p.getDocName() != null &&
+                            Objects.equals(p.getDocName(), req.getDocName()))
+                    .findFirst().ifPresent(p ->
+                            AssertUtil.checkState(Objects.equals(p.getId(), id),
+                                    "该文档名称已经存在，请修改文档名称"));
+        }
         if (Objects.isNull(id)) {
             //新增
             Date current = new Date();
