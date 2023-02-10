@@ -190,8 +190,8 @@ public interface ProjectService {
     /**
      * 内部项目完成
      *
-     * @param projectId 项目id
+     * @param req 请求
      * @return {@link BaseResult}<{@link Boolean}>
      */
-    BaseResult<Boolean> innerComplete(Long projectId);
+    BaseResult<Boolean> innerComplete(ProjectInnerCompleteReq req);
 }
