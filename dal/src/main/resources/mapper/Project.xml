@@ -486,6 +486,7 @@
               <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
                 #{projectId}
               </foreach>
+        and p.is_deleted = false
         group by p.id;
     </select>
 </mapper>
