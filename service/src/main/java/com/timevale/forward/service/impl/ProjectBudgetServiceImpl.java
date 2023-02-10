@@ -36,7 +36,9 @@ public class ProjectBudgetServiceImpl implements ProjectBudgetService {
             if (BigDecimal.ZERO.compareTo(expectedAmount) >= 0) {
                 e.setProgress(BigDecimal.ZERO);
             } else {
-                BigDecimal progress = costAmount.divide(expectedAmount, 4, RoundingMode.HALF_UP);
+                BigDecimal progress = costAmount
+                        .multiply(BigDecimal.valueOf(100))
+                        .divide(expectedAmount, 2, RoundingMode.HALF_UP);
                 e.setProgress(progress);
             }
         }
