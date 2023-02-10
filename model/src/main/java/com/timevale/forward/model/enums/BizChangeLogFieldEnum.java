@@ -27,6 +27,8 @@ public enum BizChangeLogFieldEnum {
 
     PJ_ESTABLISH_START_DATE("立项开始时间"),
 
+    PJ_MEMBER("项目成员"),
+
     /**
      * 项目目标
      */

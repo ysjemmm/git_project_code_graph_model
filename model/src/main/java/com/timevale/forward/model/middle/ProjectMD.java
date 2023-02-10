@@ -1,10 +1,7 @@
 package com.timevale.forward.model.middle;
 
 import com.timevale.forward.dal.annotation.FieldCompare;
-import com.timevale.forward.model.enums.PriorityEnum;
-import com.timevale.forward.model.enums.ProjectLevelEnum;
-import com.timevale.forward.model.enums.ProjectTypeEnum;
-import com.timevale.forward.model.enums.YesOrNoEnum;
+import com.timevale.forward.model.enums.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -92,4 +89,7 @@ public class ProjectMD extends BaseMD{
 
     @FieldCompare(fieldName = "是否需要项目验收",enumClass = YesOrNoEnum.class)
     private Integer isAcceptance;
+
+    @FieldCompare(fieldName = "项目类型", enumClass = ProjectInnerTypeEnum.class)
+    private Integer innerType;
 }

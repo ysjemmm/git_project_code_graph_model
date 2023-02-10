@@ -27,6 +27,8 @@ public enum CommentTypeEnum {
     TROUBLE_TICKET(6,"故障单"),
     // 7 客户需求
     CUSTOM_DEMAND(7,"客户需求"),
+    // 8 内部项目
+    INNER_PROJECT(8,"内部项目"),
     ;
 
     private final Integer code;
