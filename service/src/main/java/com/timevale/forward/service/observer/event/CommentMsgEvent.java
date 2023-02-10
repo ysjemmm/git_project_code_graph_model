@@ -51,8 +51,12 @@ public class CommentMsgEvent extends MessageEvent {
             singleUrl = domainName + String.format(PARAM, TabEnum.BUG_ONLINE_MANAGEMENT.getText(), mainId);
         } else if(CommentTypeEnum.TROUBLE_TICKET.getText().equals(type)){
             singleUrl = domainName + String.format(PARAM, TabEnum.TROUBLE_MANAGEMENT.getText(), mainId);
-        }else{
+        } else if(CommentTypeEnum.CUSTOM_DEMAND.getText().equals(type)){
             singleUrl = domainName + String.format(PARAM, TabEnum.CUSTOM_MANAGEMENT.getText(), mainId);
+        } else if(CommentTypeEnum.INNER_PROJECT.getText().equals(type)){
+            singleUrl = domainName + String.format(PARAM, TabEnum.INNER_PROJECT_MANAGEMENT.getText(), mainId);
+        } else {
+            return;
         }
 
         // 评论添加定位

@@ -56,6 +56,10 @@ public enum TabEnum {
      */
     MAN_DAY_MANAGEMENT("manDayManagement"),
 
+    /**
+     * 内部项目路由
+     */
+    INNER_PROJECT_MANAGEMENT(""),
     ;
 
     private final String text;

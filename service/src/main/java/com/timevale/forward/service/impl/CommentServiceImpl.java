@@ -135,6 +135,8 @@ public class CommentServiceImpl implements CommentService {
             name = troubleTicketMapper.selectById(toId).getName();
         }else if(CommentTypeEnum.CUSTOM_DEMAND.getCode().equals(type)){
             name = customDemandMapper.selectById(toId).getName();
+        }else if(CommentTypeEnum.INNER_PROJECT.getCode().equals(type)) {
+            name = projectMapper.get(toId).getName();
         }
 
         // 发送通知

@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -486,14 +487,38 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 目标项目id
         Long projectId = projectSimpleModifyReq.getId();
+        ProjectDO oldProjectDO = projectMapper.get(projectId);
+        AssertUtil.notNull(oldProjectDO, "项目不存在");
 
         // 更新项目成员
-        List<PersonAddReq> teamMembers = projectSimpleModifyReq.getTeamMembers();
-        personComponent.update(teamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        List<PersonAddReq> newMembers = projectSimpleModifyReq.getTeamMembers();
+        personComponent.update(newMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         // 转换，更新落库
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectSimpleModifyReq);
         projectMapper.update(projectDO);
+
+        // 成员更新日志
+        List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        String addMembers = newMembers.stream()
+                .map(PersonAddReq::getUserName)
+                .filter(e -> oldMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
+                .collect(Collectors.joining(","));
+        String deleteMembers = oldMembers.stream()
+                .map(PersonDO::getUserName)
+                .filter(e -> newMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
+                .collect(Collectors.joining(","));
+        if (StrUtil.isNotBlank(deleteMembers)) {
+            projectLogComponent.addLogWhenContentChange(deleteMembers, "", projectId, BizChangeLogFieldEnum.PJ_MEMBER.getText());
+        }
+        if (StrUtil.isNotBlank(addMembers)) {
+            projectLogComponent.addLogWhenContentChange("", addMembers, projectId, BizChangeLogFieldEnum.PJ_MEMBER.getText());
+        }
+
+        // 项目日志
+        projectLogComponent.addLogWhenModifyData(oldProjectDO, projectDO);
+
+        // 上级名称日志
 
         return BaseResult.success(true);
     }
