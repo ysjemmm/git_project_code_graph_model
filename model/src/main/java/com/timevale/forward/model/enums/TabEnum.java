@@ -59,7 +59,7 @@ public enum TabEnum {
     /**
      * 内部项目路由
      */
-    INNER_PROJECT_MANAGEMENT(""),
+    INNER_PROJECT_MANAGEMENT("internalProjectManagement"),
     ;
 
     private final String text;
