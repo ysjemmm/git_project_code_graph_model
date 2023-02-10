@@ -16,21 +16,13 @@
     <result column="modify_man" jdbcType="VARCHAR" property="modifyMan" />
     <result column="modify_date" jdbcType="TIMESTAMP" property="modifyDate" />
   </resultMap>
-  <sql id="Base_Column_List">
-    <!--@mbg.generated-->
-    id, project_id, `type`, url, is_deleted, create_man_id, create_man, create_date, 
-    modify_man_id, modify_man, modify_date
-  </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
-    <!--@mbg.generated-->
-    select 
-    <include refid="Base_Column_List" />
+    select *
     from project_document
     where id = #{id,jdbcType=BIGINT}
     and is_deleted = false
   </select>
   <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.timevale.forward.dal.entity.ProjectDocument" useGeneratedKeys="true">
-    <!--@mbg.generated-->
     insert into project_document (project_id, `type`, url,
     <if test="docName != null and docName != ''">
       doc_name,
@@ -53,7 +45,6 @@
       #{modifyDate,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.timevale.forward.dal.entity.ProjectDocument" useGeneratedKeys="true">
-    <!--@mbg.generated-->
     insert into project_document
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="projectId != null">
@@ -190,7 +181,7 @@
   </insert>
 
   <select id="getByProjectId" resultMap="BaseResultMap">
-    select <include refid="Base_Column_List"></include>
+    select *
     from project_document
     where project_id = #{projectId,jdbcType=BIGINT}
     and type = #{type,jdbcType=INTEGER}
