@@ -1,10 +1,10 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.entity.ProjectDocument;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
-
-import org.apache.ibatis.annotations.Param;
 
 /**
  * @author xiaoyun
@@ -24,4 +24,8 @@ public interface ProjectDocumentMapper {
     int batchInsert(@Param("list") List<ProjectDocument> list);
 
     ProjectDocument getByProjectId(@Param("projectId") Long projectId, @Param("type") Integer type);
+
+    @Select("select * from project_document where project_id = #{projectId} and is_deleted = false")
+    List<ProjectDocument> selectByProjectId(@Param("projectId") Long projectId);
+
 }

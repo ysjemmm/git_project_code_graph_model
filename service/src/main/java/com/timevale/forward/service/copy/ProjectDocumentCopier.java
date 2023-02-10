@@ -3,10 +3,11 @@ package com.timevale.forward.service.copy;
 import com.timevale.forward.dal.entity.ProjectDocument;
 import com.timevale.forward.facade.api.request.ProjectDocumentReq;
 import com.timevale.forward.facade.api.result.ProjectDocumentVO;
-import com.timevale.forward.model.enums.BugBelongEnum;
-import com.timevale.forward.model.enums.BugReasonEnum;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author xiaoyun
@@ -17,7 +18,10 @@ public interface ProjectDocumentCopier {
 
     ProjectDocumentCopier INSTANCE = Mappers.getMapper(ProjectDocumentCopier.class);
 
+    @Mapping(target = "files", ignore = true)
     ProjectDocumentVO do2Vo(ProjectDocument projectDocument);
+
+    List<ProjectDocumentVO> do2Vo(List<ProjectDocument> projectDocument);
 
     ProjectDocument req2Do(ProjectDocumentReq req);
 }

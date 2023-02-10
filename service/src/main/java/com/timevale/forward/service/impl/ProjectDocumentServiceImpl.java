@@ -2,6 +2,7 @@ package com.timevale.forward.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimaps;
 import com.timevale.crm.sdk.common.entity.AccountInfo;
@@ -154,7 +155,16 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
 
     @Override
     public BaseResult<List<ProjectDocumentVO>> listDocuments(Long projectId) {
-        return BaseResult.success();
+        List<ProjectDocument> documents = projectDocumentComponent.list(projectId);
+        List<FileDO> files = fileComponent.select(documents.stream().map(ProjectDocument::getId)
+                .collect(Collectors.toList()), FileTypeEnum.PROJECT_DOCUMENT.getCode());
+        List<FileVO> fileVOList = FileCopier.INSTANCE.transform(files);
+        ImmutableListMultimap<Long, FileVO> fileByAttachId = Multimaps.index(fileVOList, FileVO::getAttacheId);
+        List<ProjectDocumentVO> documentVOList = ProjectDocumentCopier.INSTANCE.do2Vo(documents);
+        for (ProjectDocumentVO projectDocumentVO : documentVOList) {
+            projectDocumentVO.setFiles(fileByAttachId.get(projectDocumentVO.getId()));
+        }
+        return BaseResult.success(documentVOList);
     }
 
     @Override

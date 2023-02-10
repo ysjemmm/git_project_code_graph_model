@@ -84,4 +84,9 @@ public class ProjectDocumentComponentImpl implements ProjectDocumentComponent {
         }
         return result;
     }
+
+    @Override
+    public List<ProjectDocument> list(Long projectId) {
+        return projectDocumentMapper.selectByProjectId(projectId);
+    }
 }

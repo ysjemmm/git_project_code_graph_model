@@ -13,21 +13,16 @@ public interface ProjectDocumentComponent {
 
     /**
      * 根据项目id获取
-     * @param projectId
-     * @param type
-     * @return
      */
     ProjectDocument getByProjectId(Long projectId, Integer type);
 
     /**
      * 新增
-     * @param projectDocument
      */
     Long insert(ProjectDocument projectDocument);
 
     /**
      * 更新Selective
-     * @param projectDocument
      */
     void updateSelective(ProjectDocument projectDocument);
 
@@ -40,4 +35,8 @@ public interface ProjectDocumentComponent {
      */
     List<String> docNeedFillIn(Long projectId , List<ProjectNodeDO> projectNodeDOList, Integer type);
 
+    /**
+     * 项目文档列表接口
+     */
+    List<ProjectDocument> list(Long projectId);
 }
