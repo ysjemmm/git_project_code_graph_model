@@ -67,7 +67,6 @@ public class DrcRiskListener implements Listener {
     }
 
     private void solveRisk(DrcMsgBody body) {
-        Long projectId;
         Date planEndDate;
         Date planStartDate;
         Date actualEndDate;
@@ -79,22 +78,22 @@ public class DrcRiskListener implements Listener {
         String tableName = body.getTableName();
         if (Objects.equals(tableName, "task")) {
             TaskDO taskDO = JSON.parseObject(body.getAfter(), TaskDO.class);
-            projectId = taskDO.getProjectId();
             milestoneRelationId = taskDO.getId();
             milestoneType = MilestoneTypeEnum.TASK;
             planEndDate = taskDO.getPlanEndDate();
             planStartDate = taskDO.getPlanStartDate();
             actualEndDate = taskDO.getActualEndDate();
             actualStartDate = taskDO.getActualStartDate();
-        } else {
+        } else if (Objects.equals(tableName, "project")) {
             ProjectDO projectDO = JSON.parseObject(body.getAfter(), ProjectDO.class);
-            projectId = projectDO.getId();
             milestoneRelationId = projectDO.getId();
             milestoneType = MilestoneTypeEnum.PROJECT;
             planEndDate = projectDO.getPlanEndDate();
             planStartDate = projectDO.getPlanStartDate();
             actualEndDate = projectDO.getActualEndDate();
             actualStartDate = projectDO.getActualStartDate();
+        } else {
+            return;
         }
 
         // 关联的里程碑
@@ -130,6 +129,7 @@ public class DrcRiskListener implements Listener {
                 projectRiskMapper.update(updateRiskDO);
             }
         } else if (Objects.equals(action, "INSERT")){
+            Long projectId = milestone.getProjectId();
             // 查询未处理的里程碑为了录入风险
             List<ProjectRiskDO> risks = projectRiskMapper.selectByProject(projectId,
                     ProjectRiskTypeEnum.MILE_STONE_NONE.getCode(),

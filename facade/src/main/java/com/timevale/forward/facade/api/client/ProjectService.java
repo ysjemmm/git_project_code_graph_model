@@ -186,4 +186,12 @@ public interface ProjectService {
      * @return Boolean
      */
     BaseResult<Boolean> modifyUnWriteReason(ProjectUnWriteReasonModifyReq reasonModifyReq);
+
+    /**
+     * 内部项目完成
+     *
+     * @param projectId 项目id
+     * @return {@link BaseResult}<{@link Boolean}>
+     */
+    BaseResult<Boolean> innerComplete(Long projectId);
 }

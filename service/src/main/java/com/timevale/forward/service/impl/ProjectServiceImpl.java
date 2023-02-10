@@ -978,6 +978,11 @@ public class ProjectServiceImpl implements ProjectService {
         return BaseResult.success(true);
     }
 
+    @Override
+    public BaseResult<Boolean> innerComplete(Long projectId) {
+        return BaseResult.success();
+    }
+
     private boolean checkProductRelease(Long projectId) {
         List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);
 
