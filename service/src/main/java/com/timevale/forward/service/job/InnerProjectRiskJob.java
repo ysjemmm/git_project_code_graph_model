@@ -73,6 +73,9 @@ public class InnerProjectRiskJob extends IJobHandler {
 
         // 待处理的风险
         List<ProjectRiskDO> riskDOs = projectRiskMapper.selectByProjectIdListStatus(projectIds, ProjectRiskStatusEnum.PENDING.getCode());
+        HashBasedTable<Long, String, ProjectRiskDO> riskTable = riskDOs.stream()
+                .map(e -> ImmutableTable.of(e.getMainId(), e.getName(), e))
+                .collect(HashBasedTable::create, HashBasedTable::putAll, HashBasedTable::putAll);
         ImmutableMap<Long, ProjectRiskDO> riskMap = Maps.uniqueIndex(riskDOs, ProjectRiskDO::getMainId);
 
         // 项目相关的里程碑
@@ -95,7 +98,7 @@ public class InnerProjectRiskJob extends IJobHandler {
                     .collect(Collectors.toList());
 
             for (TaskDO mTaskDO : mTaskDOs) {
-                solveRisk(nowDate, mTaskDO, riskMap, milestoneTable, insertRisks, updateRisks);
+                solveRisk(nowDate, mTaskDO, riskTable, milestoneTable, insertRisks, updateRisks);
             }
         }
 
@@ -113,7 +116,7 @@ public class InnerProjectRiskJob extends IJobHandler {
                     .collect(Collectors.toList());
 
             for (ProjectDO mProjectDO : mProjectDOs) {
-                solveRisk(nowDate, mProjectDO, riskMap, milestoneTable, insertRisks, updateRisks);
+                solveRisk(nowDate, mProjectDO, riskTable, milestoneTable, insertRisks, updateRisks);
             }
         }
 
@@ -125,26 +128,29 @@ public class InnerProjectRiskJob extends IJobHandler {
                                     projectMilestones -> projectMilestones.stream().map(ProjectMilestone::getStage).collect(Collectors.toSet()))));
 
             milestoneGroup.forEach((projectId, stageSet) -> {
-                Optional<List<Integer>> validStageOpt = Optional.ofNullable(projectDOMap.get(projectId)).map(ProjectDO::getValidStageList);
-                validStageOpt.ifPresent(validStages -> {
-                    int preStage = 0;
-                    boolean previous = true;
-                    for (Integer validStage : validStages) {
-                        boolean contains = stageSet.contains(validStage);
-                        // 如果上一个阶段没有里程碑，当前阶段有里程碑，则是里程碑未录入
-                        if (!previous && contains) {
-                            ProjectRiskDO newRisk = new ProjectRiskDO();
-                            newRisk.setSign("");
-                            newRisk.setMainId(projectId);
-                            newRisk.setProjectId(projectId);
-                            newRisk.setName(ProjectStageEnum.getTextByCode(preStage));
-                            newRisk.setType(ProjectRiskTypeEnum.MILE_STONE_NONE.getCode());
-                            insertRisks.add(newRisk);
-                        }
-                        previous = contains;
-                        preStage = validStage;
+                ProjectDO projectDO = projectDOMap.get(projectId);
+                if (projectDO == null) {
+                    return;
+                }
+
+                int preStage = 0;
+                boolean previous = true;
+                List<Integer> validStages = projectDO.getValidStageList();
+                for (Integer validStage : validStages) {
+                    boolean contains = stageSet.contains(validStage);
+                    // 如果上一个阶段没有里程碑，当前阶段有里程碑，则是里程碑未录入
+                    if (!previous && contains && !riskTable.contains(projectId, ProjectStageEnum.getTextByCode(validStage))) {
+                        ProjectRiskDO newRisk = new ProjectRiskDO();
+                        newRisk.setSign("");
+                        newRisk.setMainId(projectId);
+                        newRisk.setProjectId(projectId);
+                        newRisk.setName(ProjectStageEnum.getTextByCode(preStage));
+                        newRisk.setType(ProjectRiskTypeEnum.MILE_STONE_NONE.getCode());
+                        insertRisks.add(newRisk);
                     }
-                });
+                    previous = contains;
+                    preStage = validStage;
+                }
             });
         }
 
@@ -195,16 +201,18 @@ public class InnerProjectRiskJob extends IJobHandler {
      *
      * @param nowDate        当前时间日期
      * @param o              数据
-     * @param riskMap        风险Map
      * @param milestoneTable 里程碑Table
      * @param insertRisks    新增风险列表
      * @param updateRisks    更新风险列表
+     * @param riskTable      风险表
      */
-    private void solveRisk(Date nowDate, Object o, ImmutableMap<Long, ProjectRiskDO> riskMap,
+    private void solveRisk(Date nowDate, Object o,
+                           HashBasedTable<Long, String, ProjectRiskDO> riskTable,
                            HashBasedTable<Integer, Long, ProjectMilestone> milestoneTable,
                            List<ProjectRiskDO> insertRisks, List<ProjectRiskDO> updateRisks) {
         Date planEndDate;
         Date planStartDate;
+        Date actualEndDate;
         Date actualStartDate;
         BigDecimal overdueDay;
         ProjectMilestone milestone;
@@ -214,11 +222,13 @@ public class InnerProjectRiskJob extends IJobHandler {
         if (o instanceof TaskDO) {
             planEndDate = ((TaskDO) o).getPlanEndDate();
             planStartDate = ((TaskDO) o).getPlanStartDate();
+            actualEndDate = ((TaskDO) o).getActualEndDate();
             actualStartDate = ((TaskDO) o).getActualStartDate();
             milestone = milestoneTable.get(MilestoneTypeEnum.TASK.getCode(), ((TaskDO) o).getId());
         } else {
             planEndDate = ((ProjectDO) o).getPlanEndDate();
             planStartDate = ((ProjectDO) o).getPlanStartDate();
+            actualEndDate = ((ProjectDO) o).getActualEndDate();
             actualStartDate = ((ProjectDO) o).getActualStartDate();
             milestone = milestoneTable.get(MilestoneTypeEnum.PROJECT.getCode(), ((ProjectDO) o).getId());
         }
@@ -227,9 +237,11 @@ public class InnerProjectRiskJob extends IJobHandler {
         if (actualStartDate == null) {
             overdueDay = getOverdueDay(planStartDate, nowDate);
             riskTypeEnum = ProjectRiskTypeEnum.MILE_STONE_START;
-        } else {
+        } else if(actualEndDate == null) {
             overdueDay = getOverdueDay(planEndDate, nowDate);
             riskTypeEnum = ProjectRiskTypeEnum.MILE_STONE_END;
+        } else {
+            return;
         }
 
         // 如果逾期不超过两个工作日，直接跳过
@@ -239,7 +251,7 @@ public class InnerProjectRiskJob extends IJobHandler {
 
         // 判断是否已存在风险
         if (milestone != null) {
-            ProjectRiskDO riskDO = riskMap.get(milestone.getId());
+            ProjectRiskDO riskDO = riskTable.get(milestone.getId(), milestone.getMilestoneName());
             if (riskDO == null) {
                 ProjectRiskDO newRisk = new ProjectRiskDO();
                 newRisk.setMainId(milestone.getId());

@@ -354,8 +354,7 @@
     </select>
 
     <select id="getByStatus" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select id,name, priority, type ,status,pm_id,pm ,plan_start_date,plan_end_date,
-        actual_start_date,actual_end_date,`desc`, create_man_id, create_man,create_date,modify_date
+        select *
         from project
         <where>
             status in

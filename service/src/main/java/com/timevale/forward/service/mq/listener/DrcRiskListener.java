@@ -1,7 +1,6 @@
 package com.timevale.forward.service.mq.listener;
 
 import com.alibaba.fastjson.JSON;
-import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.dao.ProjectRiskMapper;
 import com.timevale.forward.dal.entity.ProjectDO;
@@ -11,6 +10,7 @@ import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.model.enums.ProjectRiskStatusEnum;
 import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
+import com.timevale.forward.model.enums.ProjectStageEnum;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
 import com.timevale.forward.service.utils.date.DateFormatConst;
@@ -136,9 +136,9 @@ public class DrcRiskListener implements Listener {
                     ProjectRiskStatusEnum.PENDING.getCode());
 
             // 判断是否有相同名称的未录入风险，处理风险
-            String milestoneName = milestone.getMilestoneName();
+            String stageName = ProjectStageEnum.getTextByCode(milestone.getStage());
             for (ProjectRiskDO risk : risks) {
-                if (Objects.equals(milestoneName, risk.getName())) {
+                if (Objects.equals(stageName, risk.getName())) {
                     projectRiskMapper.updateStatus(risk.getId(), ProjectRiskStatusEnum.COMPLETE.getCode());
                 }
             }

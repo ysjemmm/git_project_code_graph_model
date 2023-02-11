@@ -106,7 +106,6 @@ public class InnerProjectRiskBackJob extends IJobHandler {
                 }
             } else {
                 // 开始或结束时间未录入
-
                 ProjectMilestone milestone = milestoneMap.get(riskMainId);
                 if (milestone == null) {
                     continue;

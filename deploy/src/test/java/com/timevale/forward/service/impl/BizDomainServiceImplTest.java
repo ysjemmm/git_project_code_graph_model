@@ -29,6 +29,6 @@ public class BizDomainServiceImplTest extends AbstractTestNGSpringContextTests {
         BizDomainDO bizDomainDO = new BizDomainDO();
         when(bizDomainMapper.selectAllBizDomain()).thenReturn(Collections.singletonList(bizDomainDO));
 
-        assert bizDomainService.bizDomainList().ifSuccess();
+        assert bizDomainService.bizDomainList(1).ifSuccess();
     }
 }

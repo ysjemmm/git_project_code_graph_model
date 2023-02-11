@@ -15,15 +15,21 @@ import com.timevale.forward.facade.api.request.BizDomainModifyReq;
 import com.timevale.forward.facade.api.result.BizDomainVO;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDomainCopier;
+import com.timevale.forward.service.job.InnerProjectRiskBackJob;
+import com.timevale.forward.service.job.InnerProjectRiskJob;
+import com.timevale.forward.service.mq.listener.DrcRiskListener;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.framework.mq.client.producer.Msg;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.assertj.core.util.Lists;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,12 +43,36 @@ import java.util.stream.Collectors;
 public class BizDomainServiceImpl implements BizDomainService {
 
     @Resource
-    BizDomainMapper bizDomainMapper;
+    private BizDomainMapper bizDomainMapper;
     @Resource
-    ProductLineMapper productLineMapper;
+    private ProductLineMapper productLineMapper;
+
+    @Resource
+    private DrcRiskListener riskListener;
+    @Resource
+    private InnerProjectRiskJob innerProjectRiskJob;
+    @Resource
+    private InnerProjectRiskBackJob innerProjectRiskBackJob;
 
     @Override
-    public BaseResult<List<BizDomainVO>> bizDomainList() {
+    public BaseResult<List<BizDomainVO>> bizDomainList(Integer type) {
+        try {
+            if (type == 0) {
+                innerProjectRiskJob.execute("");
+            } else if (type == 1) {
+                innerProjectRiskBackJob.execute("");
+            } else {
+                String message = "{\"action\":\"INSERT\",\"dbName\":\"info_forward\",\"tableName\":\"task\",\"rowKey\":\"id\",\"after\":{\"create_man_id\":\"yangxu\",\"modify_man\":\"\",\"todo\":\"0\",\"is_deleted\":\"0\",\"stage\":\"14\",\"project_id\":\"3082\",\"product_line_id\":\"0\",\"create_man\":\"杨絮-蔡炳旭\",\"modify_man_id\":\"\",\"name\":\"杨絮里程碑风险-任务6\",\"plan_end_date\":\"2023-02-02 09:00:00\",\"id\":\"4229\",\"plan_use_time\":\"8.0\",\"create_date\":\"2023-02-11 21:55:50\",\"plan_start_date\":\"2023-02-01 09:00:00\",\"modify_date\":\"2023-02-11 21:55:50\",\"status\":\"0\",\"desc\":\"\"},\"content\":{\"create_man_id\":\"yangxu\",\"modify_man\":\"\",\"todo\":\"0\",\"is_deleted\":\"0\",\"stage\":\"14\",\"project_id\":\"3082\",\"product_line_id\":\"0\",\"create_man\":\"杨絮-蔡炳旭\",\"modify_man_id\":\"\",\"name\":\"杨絮里程碑风险-任务6\",\"plan_end_date\":\"2023-02-02 09:00:00\",\"id\":\"4229\",\"plan_use_time\":\"8.0\",\"create_date\":\"2023-02-11 21:55:50\",\"plan_start_date\":\"2023-02-01 09:00:00\",\"modify_date\":\"2023-02-11 21:55:50\",\"status\":\"0\",\"desc\":\"\"},\"gtId\":\"74ce2a37-03bd-11e9-bb3e-7cd30ae3fe5c:1-141639153,48782717-9bd8-11e8-95c3-6c92bf21bbbd:1-22460378,4e3863e2-5a65-11ec-8050-98039b9cee40:1-4888966419,4e74b1c7-f87c-11e8-b1db-008cfac1c3c4:1-1817190,d3f9f7ad-a17c-11ea-8539-7cd30ae00680:1-282505862,fbbea55f-a17c-11ea-853a-7cd30adae8ac:1-1741140951,9042d989-5a64-11ec-804b-0c42a1b78f5e:1-684761086,d22f796d-72da-11e9-8fce-7cd30adfe86a:1-151622494\",\"originalSql\":\"\"}";
+                Msg msg = new Msg();
+                msg.setMsgId("1");
+                msg.setBody(message.getBytes());
+
+                riskListener.receive(Lists.newArrayList(msg));
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         List<BizDomainVO> result = BizDomainCopier.INSTANCE.convert(bizDomainMapper.selectAllBizDomain());
         return BaseResult.success(result);
     }
