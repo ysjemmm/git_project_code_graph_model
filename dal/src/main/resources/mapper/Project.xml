@@ -373,13 +373,11 @@
     </select>
 
     <update id="updateStatus" parameterType="com.timevale.forward.dal.entity.ProjectDO">
-        update project
-        <set>
-            <if test="status != null">status = #{status},</if>
-        </set>
-        <where>
-            id = #{id}
-        </where>
+        UPDATE project
+        SET status = #{status},
+            modify_man = #{modifyMan},
+            modify_man_id = #{modify_man_id}
+        WHERE id = #{id}
     </update>
 
     <update id="updateNodeStatus">

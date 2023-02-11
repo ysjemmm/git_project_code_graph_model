@@ -1023,6 +1023,41 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public BaseResult<Boolean> innerComplete(ProjectInnerCompleteReq req) {
+        Long projectId = req.getProjectId();
+        ProjectDO projectDO = projectMapper.get(projectId);
+        AssertUtil.notNull(projectDO, "项目不存在");
+        AssertUtil.checkState(Objects.equals(projectDO.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode()),
+                "该项目不是内部项目");
+        AssertUtil.checkState(!Objects.equals(projectDO.getStatus(), ProjectStatusEnum.SUSPEND.getCode())
+                && !Objects.equals(projectDO.getStatus(), ProjectStatusEnum.INVALID.getCode()),
+                "项目暂停或作废时，不能进行此操作");
+
+        // 里程碑关联的任务与项目
+        List<ProjectMilestone> projectMilestones = projectMilestoneMapper.selectByProjectId(projectId);
+        List<Long> taskIds = projectMilestones.stream()
+                .filter(e -> Objects.equals(MilestoneTypeEnum.TASK.getCode(), e.getType()))
+                .map(ProjectMilestone::getRelationId)
+                .collect(Collectors.toList());
+        List<Long> projectIds = projectMilestones.stream()
+                .filter(e -> Objects.equals(MilestoneTypeEnum.TASK.getCode(), e.getType()))
+                .map(ProjectMilestone::getRelationId)
+                .collect(Collectors.toList());
+
+        // 里程碑是否全部完成
+        boolean unfinished = false;
+        if (CollUtil.isNotEmpty(taskIds)) {
+            List<TaskDO> taskDOs = taskMapper.getByIdList(taskIds);
+            unfinished = unfinished || taskDOs.stream().anyMatch(e -> Objects.isNull(e.getActualEndDate()));
+        }
+        if (CollUtil.isNotEmpty(projectIds)) {
+            List<ProjectDO> projectDos = projectMapper.getByIds(projectIds);
+            unfinished = unfinished || projectDos.stream().anyMatch(e -> Objects.isNull(e.getActualEndDate()));
+        }
+        AssertUtil.checkState(!unfinished, "存在未完成的里程碑，无法关闭项目");
+
+        // 修改项目状态
+        projectMapper.updateStatus(projectId, ProjectStatusEnum.COMPLETE.getCode());
+
         return BaseResult.success();
     }
 

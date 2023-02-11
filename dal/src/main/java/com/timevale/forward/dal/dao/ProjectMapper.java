@@ -132,12 +132,13 @@ public interface ProjectMapper {
     List<ProjectDO> getByStatus(@Param("status") List<Integer> status, @Param("category")Integer category);
 
     /**
-     * 状态重算时使用
+     * 更新状态
      *
-     * @param projectDO 项目
+     * @param id     id
+     * @param status 状态
      * @return int
      */
-    int updateStatus(ProjectDO projectDO);
+    int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 
     /**
      * 节点状态计算-不修改更新时间
