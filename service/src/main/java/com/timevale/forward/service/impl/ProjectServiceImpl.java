@@ -509,8 +509,8 @@ public class ProjectServiceImpl implements ProjectService {
         personComponent.update(newMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         // 转换，更新落库
-        ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectSimpleModifyReq);
-        projectMapper.update(projectDO);
+        ProjectDO newProjectDO = ProjectCopier.INSTANCE.convert(projectSimpleModifyReq);
+        projectMapper.update(newProjectDO);
 
         // 成员更新日志
         List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
@@ -530,9 +530,7 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         // 项目日志
-        projectLogComponent.addLogWhenModifyData(oldProjectDO, projectDO);
-
-        // 上级名称日志
+        projectLogComponent.addLogWhenModifyData(oldProjectDO, newProjectDO);
 
         return BaseResult.success(true);
     }
