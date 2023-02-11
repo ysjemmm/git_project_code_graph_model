@@ -1047,7 +1047,7 @@ public class ProjectServiceImpl implements ProjectService {
         boolean unfinished = false;
         if (CollUtil.isNotEmpty(taskIds)) {
             List<TaskDO> taskDOs = taskMapper.getByIdList(taskIds);
-            unfinished = unfinished || taskDOs.stream().anyMatch(e -> Objects.isNull(e.getActualEndDate()));
+            unfinished = taskDOs.stream().anyMatch(e -> Objects.isNull(e.getActualEndDate()));
         }
         if (CollUtil.isNotEmpty(projectIds)) {
             List<ProjectDO> projectDos = projectMapper.getByIds(projectIds);
@@ -1057,6 +1057,13 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 修改项目状态
         projectMapper.updateStatus(projectId, ProjectStatusEnum.COMPLETE.getCode());
+
+        // 项目状态日志
+        projectLogComponent.addLogWhenContentChange(
+                ProjectStatusEnum.getTextByCode(projectDO.getStatus()),
+                ProjectStatusEnum.COMPLETE.getText(),
+                projectId,
+                BizChangeLogFieldEnum.PROJECT_STATUS.getText());
 
         return BaseResult.success();
     }
