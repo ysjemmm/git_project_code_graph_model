@@ -12,6 +12,7 @@ import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -97,21 +98,22 @@ public class ProjectMilestoneComponent {
         addMilestoneLog(relationId, type, ButtonActionEnum.MILESTONE_INVALID);
     }
 
-    private void addMilestoneLog(ProjectMilestone entity, ButtonActionEnum action) {
-        BizChangeLogDO log = new BizChangeLogDO()
-                .setMainId(entity.getProjectId())
-                .setType(BizChangeLogTypeEnum.PROJECT.getCode())
-                .setAction(action.getText())
-                .setNewValue(entity.getMilestoneName());
-        bizChangeLogMapper.insert(log);
-    }
-
     private void addMilestoneLog(Long relationId, Integer type, ButtonActionEnum action) {
         ProjectMilestone entity = milestoneMapper.selectByRelation(relationId, type);
         if (entity == null) {
             return;
         }
         addMilestoneLog(entity, action);
+    }
+
+    private void addMilestoneLog(ProjectMilestone entity, ButtonActionEnum action) {
+        BizChangeLogDO log = new BizChangeLogDO()
+                .setMainId(entity.getProjectId())
+                .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                .setAction(action.getText())
+                .setField(StringUtils.EMPTY)
+                .setNewValue(entity.getMilestoneName());
+        bizChangeLogMapper.insert(log);
     }
 
 }
