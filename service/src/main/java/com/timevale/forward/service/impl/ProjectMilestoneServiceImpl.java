@@ -13,7 +13,6 @@ import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.result.ProjectMilestoneListVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.MilestoneTypeEnum;
-import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.InnerProjectStatusUpdateComponent;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectMilestoneComponent;
@@ -56,8 +55,6 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
     public BaseResult<Void> add(ProjectMilestoneAddReq projectMilestoneAddReq) {
         ProjectDO project = projectMapper.get(projectMilestoneAddReq.getProjectId());
         AssertUtil.notNull(project, "您添加的里程碑所属项目不存在，请刷新后重试");
-        AssertUtil.checkState(!ProjectStatusEnum.suspendOrTerminated(project.getStatus()),
-                "项目已经作废或者暂停，无法新增里程碑");
         AssertUtil.checkState(project.getValidStageList().contains(projectMilestoneAddReq.getStage()),
                 "新增里程碑选择的阶段不存在或已删除，请检查");
         if (MilestoneTypeEnum.TASK.getCode().equals(projectMilestoneAddReq.getType())) {
