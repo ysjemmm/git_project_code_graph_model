@@ -27,7 +27,7 @@ public class InnerProjectStatusUpdateComponent {
     private final ProjectMilestoneMapper projectMilestoneMapper;
 
     public void updateFromProject(ProjectDO project) {
-        List<ProjectMilestone> milestones = projectMilestoneMapper.selectByRelation(
+        List<ProjectMilestone> milestones = projectMilestoneMapper.selectByRelations(
                 Collections.singleton(project.getId()), MilestoneTypeEnum.PROJECT.getCode());
         milestones.stream().findFirst().ifPresent(m -> updateProjectDateAndStatus(m.getProjectId()));
     }

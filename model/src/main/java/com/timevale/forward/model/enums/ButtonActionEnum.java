@@ -218,7 +218,14 @@ public enum ButtonActionEnum {
     /**
      * 删除项目已收益金额
      */
-    PROJECT_INCOME_DELETE("删除项目已收益金额");
+    PROJECT_INCOME_DELETE("删除项目已收益金额"),
+
+    MILESTONE_ADD("新增里程碑"),
+    MILESTONE_DELETE("删除里程碑"),
+    MILESTONE_SUSPEND("暂停里程碑"),
+    MILESTONE_INVALID("作废里程碑"),
+    MILESTONE_ENABLE("开启里程碑"),
+    ;
 
     private final String text;
 

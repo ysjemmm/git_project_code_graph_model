@@ -57,7 +57,7 @@
             AND is_deleted = false
         </where>
     </select>
-    <select id="selectByRelation" resultType="com.timevale.forward.dal.entity.ProjectMilestone">
+    <select id="selectByRelations" resultType="com.timevale.forward.dal.entity.ProjectMilestone">
         SELECT * FROM project_milestone
         WHERE
           relation_id in

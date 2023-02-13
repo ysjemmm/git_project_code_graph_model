@@ -108,7 +108,7 @@ public class TaskServiceImpl implements TaskService {
     private TaskTimeComponent taskTimeComponent;
 
     @Resource
-    MessageEventPublisher messageEventPublisher;
+    private MessageEventPublisher messageEventPublisher;
 
     @Resource
     private ProjectNodeMapper projectNodeMapper;
@@ -121,6 +121,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Resource
     private InnerProjectStatusUpdateComponent innerProjectStatusUpdateComponent;
+
+    @Resource
+    private ProjectMilestoneComponent projectMilestoneComponent;
 
     @Value("${excludeBizDomain:[1,13,32]}")
     private String excludeBizDomain;
@@ -323,6 +326,11 @@ public class TaskServiceImpl implements TaskService {
         taskComponent.deleteTodoTask(taskDO.getTodoId());
         taskDO.setStatus(type);
         taskMapper.update(taskDO);
+        if (TaskStatusEnum.SUSPEND.getCode().equals(type)) {
+            projectMilestoneComponent.addMilestoneSuspendLog(taskId, MilestoneTypeEnum.TASK.getCode());
+        } else {
+            projectMilestoneComponent.addMilestoneInvalidLog(taskId, MilestoneTypeEnum.TASK.getCode());
+        }
         innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
         return BaseResult.success(true);
     }
@@ -351,6 +359,7 @@ public class TaskServiceImpl implements TaskService {
             taskComponent.addTodoTask(taskDO, existExecutorIds, LocalSessionUtils.getUserInfo().getId());
         }
         taskMapper.update(taskDO);
+        projectMilestoneComponent.addMilestoneEnableLog(taskId, MilestoneTypeEnum.TASK.getCode());
         return BaseResult.success(true);
     }
 

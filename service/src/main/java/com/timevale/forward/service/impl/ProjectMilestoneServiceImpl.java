@@ -88,6 +88,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
         ProjectMilestone entity = ProjectMilestoneCopier.INSTANCE.convert(projectMilestoneAddReq);
         milestoneMapper.insert(entity);
         innerProjectStatusUpdateComponent.updateProjectDateAndStatus(entity.getProjectId());
+        projectMilestoneComponent.addMilestoneCreateLog(entity);
         return BaseResult.success();
     }
 
@@ -116,7 +117,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
             return BaseResult.success();
         }
         List<ProjectDO> projects = projectMapper.selectByParentIdsRegexp("^" + project.getParentIds());
-        List<ProjectMilestone> milestones = milestoneMapper.selectByRelation(projects.stream().map(ProjectDO::getId)
+        List<ProjectMilestone> milestones = milestoneMapper.selectByRelations(projects.stream().map(ProjectDO::getId)
                 .collect(Collectors.toList()), MilestoneTypeEnum.PROJECT.getCode());
         return BaseResult.success(ProjectMilestoneCopier.INSTANCE.convert(milestones));
     }
@@ -131,6 +132,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
             }
             milestoneMapper.deleteById(m.getId());
             innerProjectStatusUpdateComponent.updateProjectDateAndStatus(m.getProjectId());
+            projectMilestoneComponent.addMilestoneDeleteLog(m);
         });
         return BaseResult.success();
     }
