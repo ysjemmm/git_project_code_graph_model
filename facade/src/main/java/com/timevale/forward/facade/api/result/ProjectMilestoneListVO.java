@@ -23,6 +23,9 @@ public class ProjectMilestoneListVO extends ToString {
     @ApiModelProperty("项目经理")
     private String pm;
 
+    @ApiModelProperty("当前登陆人是否为pmo")
+    private Boolean isPMO;
+
     @ApiModelProperty("有效阶段列表")
     private List<Integer> validStages;
 

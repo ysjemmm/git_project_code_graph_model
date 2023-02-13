@@ -76,5 +76,7 @@ public interface ProjectDocumentService {
      */
     BaseResult<List<String>> checkDocBeforeRelease(ProjectDocumentCheckReq checkReq);
 
+    BaseResult<Void> deleteDocument(Long projectDocumentId);
+
 
 }

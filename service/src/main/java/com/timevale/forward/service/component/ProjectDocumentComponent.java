@@ -39,4 +39,9 @@ public interface ProjectDocumentComponent {
      * 项目文档列表接口
      */
     List<ProjectDocument> list(Long projectId);
+
+    /**
+     * 删除项目文档
+     */
+    void deleteDocument(Long projectDocumentId);
 }

@@ -28,4 +28,5 @@ public interface ProjectDocumentMapper {
     @Select("select * from project_document where project_id = #{projectId} and is_deleted = false")
     List<ProjectDocument> selectByProjectId(@Param("projectId") Long projectId);
 
+    void delete(@Param("id") Long id);
 }

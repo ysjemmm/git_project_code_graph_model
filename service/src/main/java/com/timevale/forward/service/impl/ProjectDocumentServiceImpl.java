@@ -189,6 +189,12 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
         return BaseResult.success(result);
     }
 
+    @Override
+    public BaseResult<Void> deleteDocument(Long projectDocumentId) {
+        projectDocumentComponent.deleteDocument(projectDocumentId);
+        return BaseResult.success();
+    }
+
     private ProjectFlowDocumentVO queryFlowDocument(Long projectId, Integer flowType) {
         List<ProjectFlowDO> flows = projectFlowMapper.getByProjectIdAndType(projectId, flowType);
         if (flows.isEmpty()) {

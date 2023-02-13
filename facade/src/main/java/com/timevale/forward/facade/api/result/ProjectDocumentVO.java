@@ -14,7 +14,7 @@ import java.util.List;
 @ApiModel("项目文档查询对象")
 public class ProjectDocumentVO extends ToString {
 
-    @ApiModelProperty("项目流程id")
+    @ApiModelProperty("项目文档id")
     private Long id;
 
     @ApiModelProperty("文档类型：1.产品需求文档;11.立项申请报告;12.项目方案报告;13审计计划;14.项目复盘报告;15:运营计划;16:其他")

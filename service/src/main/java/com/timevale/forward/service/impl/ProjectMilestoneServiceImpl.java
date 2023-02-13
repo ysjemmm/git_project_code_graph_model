@@ -22,6 +22,7 @@ import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
+import com.timevale.forward.service.component.UserComponent;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
@@ -51,6 +52,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
     private final ProjectMapper projectMapper;
     private final ProjectMilestoneMapper milestoneMapper;
     private final PersonMapper personMapper;
+    private final UserComponent userComponent;
 
     @Override
     public BaseResult<Void> add(ProjectMilestoneAddReq projectMilestoneAddReq) {
@@ -98,6 +100,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
         res.setValidStages(currentProject.getValidStageList());
         res.setList(resList);
         List<ProjectMilestone> milestones = milestoneMapper.selectByProjectId(projectId);
+        res.setIsPMO(userComponent.isPMO());
         if (milestones.isEmpty()) {
             return BaseResult.success(res);
         }

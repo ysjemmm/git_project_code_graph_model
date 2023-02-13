@@ -89,4 +89,9 @@ public class ProjectDocumentComponentImpl implements ProjectDocumentComponent {
     public List<ProjectDocument> list(Long projectId) {
         return projectDocumentMapper.selectByProjectId(projectId);
     }
+
+    @Override
+    public void deleteDocument(Long projectDocumentId) {
+        projectDocumentMapper.delete(projectDocumentId);
+    }
 }

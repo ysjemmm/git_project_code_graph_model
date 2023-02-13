@@ -16,6 +16,13 @@
     <result column="modify_man" jdbcType="VARCHAR" property="modifyMan" />
     <result column="modify_date" jdbcType="TIMESTAMP" property="modifyDate" />
   </resultMap>
+  <update id="delete">
+  update project_document
+    set is_deleted = true,
+        modify_man_id = #{modifyManId,jdbcType=VARCHAR},
+        modify_man = #{modifyMan,jdbcType=VARCHAR}
+    where id = #{id} and is_deleted = false
+  </update>
   <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
     select *
     from project_document

@@ -1,7 +1,6 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -39,7 +38,6 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
-import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -152,6 +150,8 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectMilestoneService projectMilestoneService;
     @Resource
     private ProjectMilestoneMapper projectMilestoneMapper;
+    @Resource
+    private UserComponent userComponent;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -690,7 +690,7 @@ public class ProjectServiceImpl implements ProjectService {
             long count = projectNodeFlows.stream().filter(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
             projectDetailVO.setPublishChangeCount(count);
         }
-        projectDetailVO.setIsPMO(isPMO());
+        projectDetailVO.setIsPMO(userComponent.isPMO());
         return BaseResult.success(projectDetailVO);
     }
 
@@ -717,7 +717,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 是否为项目经理和PMO及其上级
         String pmId = projectDO.getPmId();
-        boolean isLeaderOrPMO = isPMO() && isLeader(pmId);
+        boolean isLeaderOrPMO = userComponent.isPMO() && isLeader(pmId);
         projectInnerDetailVO.setIsLeaderOrPMO(isLeaderOrPMO);
 
         return BaseResult.success(projectInnerDetailVO);
@@ -1027,7 +1027,7 @@ public class ProjectServiceImpl implements ProjectService {
         AssertUtil.checkState(Objects.equals(projectDO.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode()),
                 "该项目不是内部项目");
         AssertUtil.checkState(!Objects.equals(projectDO.getStatus(), ProjectStatusEnum.SUSPEND.getCode())
-                && !Objects.equals(projectDO.getStatus(), ProjectStatusEnum.INVALID.getCode()),
+                        && !Objects.equals(projectDO.getStatus(), ProjectStatusEnum.INVALID.getCode()),
                 "项目暂停或作废时，不能进行此操作");
 
         // 里程碑关联的任务与项目
@@ -1363,21 +1363,6 @@ public class ProjectServiceImpl implements ProjectService {
         }
         Set<String> allSuperiorByAccount = innerUserPersonClient.getAllSuperiorByAccount(queryUserId, false);
         return allSuperiorByAccount.contains(localUserId);
-    }
-
-    /**
-     * PMO 和 PMO 的上级才有权限编辑立项时间
-     */
-    private boolean isPMO() {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        List<BaseInfoResponse> users =
-                innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
-        for (BaseInfoResponse user : users) {
-            if (CommonConstant.PMO.equalsIgnoreCase(user.getJobClassification())) {
-                return true;
-            }
-        }
-        return false;
     }
 
 }
