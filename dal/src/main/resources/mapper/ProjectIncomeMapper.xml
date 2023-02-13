@@ -35,5 +35,12 @@
           AND is_deleted = false
     </select>
 
+    <select id="selectById" resultType="com.timevale.forward.dal.entity.ProjectIncomeDO">
+        SELECT *
+        FROM project_income
+        WHERE id = #{id}
+          AND is_deleted = false
+    </select>
+
 
 </mapper>

@@ -35,6 +35,14 @@ public interface ProjectIncomeMapper {
     void delete(@Param("id") Long id);
 
     /**
+     * 选择 by id
+     *
+     * @param id id
+     * @return {@link ProjectIncomeDO}
+     */
+    ProjectIncomeDO selectById(@Param("id") Long id);
+
+    /**
      * 选择 by 项目id
      *
      * @param projectId 项目id

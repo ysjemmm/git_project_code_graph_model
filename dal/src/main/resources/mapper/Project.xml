@@ -265,32 +265,7 @@
     </select>
 
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select id,
-               name,
-               is_platform_publish,
-               is_with_goal,
-               customer_dev,
-               priority,
-               type,
-               status,
-               pm_id,
-               pm,
-               plan_start_date,
-               plan_end_date,
-               actual_start_date,
-               actual_end_date,
-               `desc`,
-               level,
-               resource_assessment,
-               pj_establish_start_date,
-               pj_establish_publish_date,
-               is_acceptance,
-               create_man_id,
-               create_man,
-               create_date,
-               modify_date,
-               suspend_reason,
-               invalid_reason
+        select *
         from project
         where name = #{name}
           and is_deleted = false

@@ -476,7 +476,7 @@ public class ProjectServiceImpl implements ProjectService {
             projectComponent.updateNodeStatus(projectModifyReq.getId());
         }
         // log
-        projectLogComponent.addLogWhenModifyData(oldProject, newProject);
+        projectLogComponent.addLogWhenModifyData(oldProject, projectMapper.get(oldProject.getId()));
         // 产品线
         projectProductLineComponent.update(newProject.getProductLineIds(), newProject.getId());
         // 产品经理

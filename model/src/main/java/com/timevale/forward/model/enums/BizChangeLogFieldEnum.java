@@ -29,6 +29,8 @@ public enum BizChangeLogFieldEnum {
 
     PJ_MEMBER("项目成员"),
 
+    PJ_INCOME("项目已收益金额"),
+
     /**
      * 项目目标
      */

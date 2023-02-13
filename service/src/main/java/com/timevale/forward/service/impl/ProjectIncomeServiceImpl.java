@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import com.netflix.ribbon.proxy.annotation.ContentTransformerClass;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectIncomeMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
@@ -9,12 +10,17 @@ import com.timevale.forward.facade.api.client.ProjectIncomeService;
 import com.timevale.forward.facade.api.request.ProjectIncomeSaveReq;
 import com.timevale.forward.facade.api.result.ProjectIncomeDetailVO;
 import com.timevale.forward.facade.api.result.ProjectIncomeVO;
+import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
+import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.service.component.ProjectLogComponent;
 import com.timevale.forward.service.copy.ProjectIncomeCopier;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import javax.validation.constraints.AssertTrue;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -32,8 +38,11 @@ public class ProjectIncomeServiceImpl implements ProjectIncomeService {
     private ProjectMapper projectMapper;
     @Resource
     private ProjectIncomeMapper projectIncomeMapper;
+    @Resource
+    private ProjectLogComponent projectLogComponent;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<ProjectIncomeVO> addIncome(ProjectIncomeSaveReq req) {
         // 判断关联项目是否存在
         Long projectId = req.getProjectId();
@@ -43,6 +52,16 @@ public class ProjectIncomeServiceImpl implements ProjectIncomeService {
         // 转换，落库
         ProjectIncomeDO projectIncomeDO = ProjectIncomeCopier.INSTANCE.req2Do(req);
         projectIncomeMapper.insert(projectIncomeDO);
+
+        // 日志记录
+        BigDecimal incomeAmount = projectIncomeDO.getIncomeAmount();
+        projectLogComponent.addLogWhenContentChange(
+                incomeAmount.setScale(2, RoundingMode.HALF_UP).toString(),
+                incomeAmount.setScale(2, RoundingMode.HALF_UP).toString(),
+                projectId,
+                BizChangeLogFieldEnum.PJ_INCOME.getText(),
+                ButtonActionEnum.APPEND.getText()
+        );
 
         // 转换，返回数据
         ProjectIncomeVO projectIncomeVO = ProjectIncomeCopier.INSTANCE.do2Vo(projectIncomeDO);
@@ -61,8 +80,22 @@ public class ProjectIncomeServiceImpl implements ProjectIncomeService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Void> deleteIncome(Long id) {
+
+        // 日志记录
+        ProjectIncomeDO projectIncomeDO = projectIncomeMapper.selectById(id);
+        BigDecimal incomeAmount = projectIncomeDO.getIncomeAmount();
+        projectLogComponent.addLogWhenContentChange(
+                incomeAmount.setScale(2, RoundingMode.HALF_UP).toString(),
+                incomeAmount.setScale(2, RoundingMode.HALF_UP).toString(),
+                projectIncomeDO.getProjectId(),
+                BizChangeLogFieldEnum.PJ_INCOME.getText(),
+                ButtonActionEnum.DELETE.getText()
+        );
+
         projectIncomeMapper.delete(id);
+
         return BaseResult.success();
     }
 

@@ -93,6 +93,6 @@ public class ProjectMD extends BaseMD{
     @FieldCompare(fieldName = "项目类型", enumClass = ProjectInnerTypeEnum.class)
     private Integer innerType;
 
-    @FieldCompare(fieldName = "项目收益", scale = 2)
+    @FieldCompare(fieldName = "项目预计收益金额", scale = 2)
     private BigDecimal expectedIncome;
 }
