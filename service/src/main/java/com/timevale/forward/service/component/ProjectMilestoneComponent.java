@@ -6,13 +6,12 @@ import com.google.common.collect.Multimaps;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
-import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
-import com.timevale.forward.model.enums.ButtonActionEnum;
-import com.timevale.forward.model.enums.MilestoneTypeEnum;
-import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -107,12 +106,15 @@ public class ProjectMilestoneComponent {
     }
 
     private void addMilestoneLog(ProjectMilestone entity, ButtonActionEnum action) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         BizChangeLogDO log = new BizChangeLogDO()
                 .setMainId(entity.getProjectId())
                 .setType(BizChangeLogTypeEnum.PROJECT.getCode())
                 .setAction(action.getText())
-                .setField(StringUtils.EMPTY)
+                .setField(BizChangeLogFieldEnum.PJ_MILESTONE.getText())
                 .setNewValue(entity.getMilestoneName());
+        log.setCreateManId(userInfo.getId());
+        log.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         bizChangeLogMapper.insert(log);
     }
 
