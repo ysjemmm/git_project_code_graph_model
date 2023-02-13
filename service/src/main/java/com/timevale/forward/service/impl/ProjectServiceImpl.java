@@ -532,8 +532,14 @@ public class ProjectServiceImpl implements ProjectService {
         AssertUtil.notNull(oldProjectDO, "项目不存在");
 
         // 转换，更新落库
-        ProjectDO updateProjectDO = ProjectCopier.INSTANCE.convert(projectSimpleModifyReq);
+        ProjectDO updateProjectDO = ProjectCopier.INSTANCE.sreq2do(projectSimpleModifyReq);
         projectMapper.update(updateProjectDO);
+
+        // 项目预算
+        String expectedIncome = projectSimpleModifyReq.getExpectedIncome();
+        if (expectedIncome != null) {
+            projectMapper.updateExpectIncome(projectId, expectedIncome);
+        }
 
         // 更新项目成员
         List<PersonAddReq> newMembers = projectSimpleModifyReq.getTeamMembers();

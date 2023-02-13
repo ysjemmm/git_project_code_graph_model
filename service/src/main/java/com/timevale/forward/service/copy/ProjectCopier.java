@@ -17,6 +17,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Mapper(imports = {
@@ -27,6 +28,7 @@ import java.util.List;
         ProjectLevelEnum.class,
         ProjectTypeEnum.class,
         PriorityEnum.class,
+        BigDecimal.class
 })
 public interface ProjectCopier {
 
@@ -55,7 +57,8 @@ public interface ProjectCopier {
 
     @Mapping(source = "pm.userId", target = "pmId")
     @Mapping(source = "pm.userName", target = "pm")
-    ProjectDO convert(ProjectSimpleModifyReq projectSimpleModifyReq);
+    @Mapping(target = "expectedIncome", ignore = true)
+    ProjectDO sreq2do(ProjectSimpleModifyReq req);
 
     /**
      * 转换转换DO

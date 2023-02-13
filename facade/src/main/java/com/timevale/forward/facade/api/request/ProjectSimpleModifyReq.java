@@ -47,7 +47,7 @@ public class ProjectSimpleModifyReq extends ToString {
     private String desc;
 
     @ApiModelProperty("项目收益")
-    private BigDecimal expectedIncome;
+    private String expectedIncome;
 
     @ApiModelProperty("项目暂停原因")
     private String suspendReason;

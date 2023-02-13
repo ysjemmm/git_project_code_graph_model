@@ -16,9 +16,7 @@ import java.util.List;
  * @author by YangXu
  * @date 2023/02/03 16:00
  */
-@Mapper(imports = {
-        BigDecimal.class
-})
+@Mapper
 public interface ProjectBudgetsCopier {
 
     ProjectBudgetsCopier INSTANCE = Mappers.getMapper(ProjectBudgetsCopier.class);
@@ -26,7 +24,6 @@ public interface ProjectBudgetsCopier {
     @Mapping(source = "projectId", target = "projectId")
     ProjectBudgetDO req2do(ProjectBudgetSaveReq req, Long projectId);
 
-    @Mapping(target = "costAmount", expression = "java(req.getCostAmount() == null? BigDecimal.ZERO: req.getCostAmount())")
     ProjectBudgetDO req2do(ProjectBudgetSaveReq req);
 
     ProjectBudgetVO do2vo(ProjectBudgetDO budgetDO);
