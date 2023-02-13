@@ -77,8 +77,8 @@
             <if test="costType != null">cost_type = #{costType},</if>
             <if test="expectedAmount != null">expected_amount = #{expectedAmount},</if>
             <if test="costAmount != null">cost_amount = #{costAmount},</if>
-            <if test="expectedDesc != ">expected_desc = #{expectedDesc},</if>
-            <if test="costDesc">cost_desc = #{costDesc},</if>
+            <if test="expectedDesc != null">expected_desc = #{expectedDesc},</if>
+            <if test="costDesc != null">cost_desc = #{costDesc},</if>
             <if test="true">
                 cost_date = #{costDate},
                 modify_man = #{modifyMan},
