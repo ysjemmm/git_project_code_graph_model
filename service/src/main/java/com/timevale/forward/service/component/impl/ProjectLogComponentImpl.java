@@ -149,6 +149,22 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
         }
     }
 
+    @Override
+    public void addLogWhenSimpleModifyData(ProjectDO oldObj, ProjectDO newObj) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        //{操作人} 把{字段名称} 从{原内容}改为{最新内容}
+        ProjectMD oldProject = ProjectCopier.INSTANCE.change(oldObj);
+        ProjectMD newProject = ProjectCopier.INSTANCE.change(newObj);
+        List<BizChangeLogDO> logs = FieldCompareUtil.commonCompare(oldProject, newProject, BizChangeLogDO.class);
+        logs.forEach(a -> {
+            a.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            a.setCreateManId(userInfo.getId());
+        });
+        if (CollectionUtil.isNotEmpty(logs)) {
+            bizChangeLogMapper.batchInsert(logs);
+        }
+    }
+
     /**
      * 按钮点击时引起的项目状态变化
      *
