@@ -47,7 +47,7 @@ public class ProjectBudgetServiceImpl implements ProjectBudgetService {
             BigDecimal costAmount = e.getCostAmount();
             BigDecimal expectedAmount = e.getExpectedAmount();
 
-            if (BigDecimal.ZERO.compareTo(expectedAmount) >= 0) {
+            if (costAmount == null || BigDecimal.ZERO.compareTo(expectedAmount) >= 0) {
                 e.setProgress(BigDecimal.ZERO);
             } else {
                 BigDecimal progress = costAmount
