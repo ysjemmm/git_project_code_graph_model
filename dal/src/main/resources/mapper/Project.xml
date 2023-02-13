@@ -458,7 +458,7 @@
                         id in (select id from project where parent_ids regexp #{parentIdsRegexp})
                         or
                         # 无父节点项目
-                        parent_ids = concat(',', id, ',')
+                        (parent_ids = concat(',', id, ',') and id != #{projectId})
                         )
                     </when>
                     <otherwise>
