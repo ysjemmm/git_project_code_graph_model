@@ -1,5 +1,6 @@
 package com.timevale.forward.service.mq.consumer;
 
+import com.timevale.forward.service.mq.listener.DrcRiskListener;
 import com.timevale.forward.service.mq.listener.MqListener;
 import com.timevale.framework.mq.client.Group;
 import com.timevale.framework.mq.client.Topic;
@@ -29,7 +30,7 @@ public class MqConsumer {
     private ConsumerFactory consumerFactory;
 
     @Resource
-    private MqListener mqListener;
+    private DrcRiskListener drcRiskListener;
 
     private final AtomicReference<Consumer> consumer = new AtomicReference<>();
 
@@ -38,7 +39,7 @@ public class MqConsumer {
         if (consumer.get() == null) {
             Consumer consumer = consumerFactory.createConsumer(new Group(groupName));
             consumer.subscribe(new Topic(topicName));
-            consumer.registerListener(mqListener);
+            consumer.registerListener(drcRiskListener);
             consumer.start();
             this.consumer.compareAndSet(null, consumer);
         }
