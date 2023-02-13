@@ -1,16 +1,28 @@
-/config/
-/logs/
-/deploy/config/
-/deploy/logs/
-**/mandarin/ahas/**
-**/mq_backup_db/**
+# IDE
 .idea
-/metadata/*
-target/
-/mandarin/*
-/deploy/mandarin/*
-/deploy/metadata/*
-.classpath
-.factorypath
-.project
+.vscode
 .settings
+.classpath
+.project
+.factorypath
+*.iml
+*.ipr
+*.iws
+
+# Binary
+target
+build
+bin
+
+# Logs 使用目录不使用*.log是为了方便IDE排除搜索目录
+/logs
+/deploy/logs
+
+# Framework
+/config/*
+/deploy/config/*
+/metadata/*
+/deploy/metadata/*
+mandarin
+mq_backup_db
+allure-results

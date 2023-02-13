@@ -20,7 +20,6 @@ import com.timevale.forward.facade.api.result.ProjectMilestoneListVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
-import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.UserComponent;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
@@ -162,11 +161,8 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
         Optional<ProjectMilestone> milestone = Optional.ofNullable(milestoneMapper.selectById(milestoneId));
         milestone.ifPresent(m -> {
             if (Objects.equals(m.getType(), MilestoneTypeEnum.TASK.getCode())) {
-                // 任务类未作废则需要先作废任务
-                TaskDO task = taskMapper.getById(m.getRelationId());
-                if (task != null && !Objects.equals(task.getStatus(), TaskStatusEnum.INVALID.getCode())) {
-                    taskService.updateStatus(m.getRelationId(), TaskStatusEnum.INVALID.getCode());
-                }
+                // 删除对应任务
+                taskMapper.deleteById(m.getRelationId());
             }
             milestoneMapper.deleteById(m.getId());
         });

@@ -2,6 +2,13 @@
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
 <mapper namespace="com.timevale.forward.dal.dao.TaskMapper">
 
+    <update id="deleteById">
+    update task set is_deleted = true,
+                    modify_man_id = #{modifyManId},
+                    modify_man = #{modifyMan}
+    where id = #{id} and is_deleted = false
+    </update>
+
     <select id="getByProjectIds" resultType="long">
         select distinct id from task
         <where>
