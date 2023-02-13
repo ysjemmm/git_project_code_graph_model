@@ -467,7 +467,6 @@
                     </otherwise>
                 </choose>
             </if>
-
         </where>
     </select>
 
