@@ -146,6 +146,18 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
     }
 
     @Override
+    public BaseResult<List<ProjectMilestoneVO>> getRelatedMilestones(Long projectId) {
+        ProjectDO project = projectMapper.get(projectId);
+        if (project == null) {
+            return BaseResult.success();
+        }
+        List<ProjectDO> projects = projectMapper.selectByParentIdsRegexp("^" + project.getParentIds());
+        List<ProjectMilestone> milestones = milestoneMapper.selectByRelation(projects.stream().map(ProjectDO::getId)
+                .collect(Collectors.toList()), MilestoneTypeEnum.PROJECT.getCode());
+        return BaseResult.success(ProjectMilestoneCopier.INSTANCE.convert(milestones));
+    }
+
+    @Override
     public BaseResult<Void> deleteMilestone(Long milestoneId) {
         Optional<ProjectMilestone> milestone = Optional.ofNullable(milestoneMapper.selectById(milestoneId));
         milestone.ifPresent(m -> {

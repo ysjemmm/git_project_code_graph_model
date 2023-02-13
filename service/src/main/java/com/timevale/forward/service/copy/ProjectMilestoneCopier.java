@@ -64,4 +64,19 @@ public interface ProjectMilestoneCopier {
     @Mapping(target = "createDate", ignore = true)
     ProjectMilestone convert(ProjectMilestoneAddReq req);
 
+    @Mapping(target = "statusName", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "relationName", ignore = true)
+    @Mapping(target = "projectName", ignore = true)
+    @Mapping(target = "planStartDate", ignore = true)
+    @Mapping(target = "planEndDate", ignore = true)
+    @Mapping(target = "executorId", ignore = true)
+    @Mapping(target = "executor", ignore = true)
+    @Mapping(target = "actualStartDate", ignore = true)
+    @Mapping(target = "actualEndDate", ignore = true)
+    @Mapping(target = "stageName", expression = "java(ProjectStageEnum.getTextByCode(milestone.getStage()))")
+    ProjectMilestoneVO convert(ProjectMilestone milestone);
+
+    List<ProjectMilestoneVO> convert(List<ProjectMilestone> milestones);
+
 }

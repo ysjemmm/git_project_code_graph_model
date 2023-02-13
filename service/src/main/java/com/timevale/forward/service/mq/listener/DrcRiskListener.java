@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -97,7 +98,9 @@ public class DrcRiskListener implements Listener {
         }
 
         // 关联的里程碑
-        ProjectMilestone milestone = projectMilestoneMapper.selectByRelation(milestoneRelationId, milestoneType.getCode());
+        List<ProjectMilestone> milestones = projectMilestoneMapper.selectByRelation(Collections.singleton(milestoneRelationId),
+                milestoneType.getCode());
+        ProjectMilestone milestone = milestones.stream().findFirst().orElse(null);
         if (milestone == null) {
             return;
         }
