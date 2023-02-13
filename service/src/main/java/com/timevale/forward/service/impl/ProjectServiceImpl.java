@@ -293,6 +293,7 @@ public class ProjectServiceImpl implements ProjectService {
                     BizChangeLogFieldEnum.SUSPEND_REASON.getText());
         }
         projectMilestoneComponent.addMilestoneEnableLog(projectId, MilestoneTypeEnum.PROJECT.getCode());
+        innerProjectStatusUpdateComponent.updateProjectDateAndStatus(projectId);
 
         return BaseResult.success(true);
     }
