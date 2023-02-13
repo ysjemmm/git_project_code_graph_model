@@ -153,4 +153,16 @@
           AND is_deleted = false
     </select>
 
+    <select id="selectByMain" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
+        SELECT *
+        FROM project_risk
+        WHERE main_id = #{mainId}
+          AND status = #{status}
+          AND type IN
+          <foreach collection="types" item="item" separator="," open="(" close=")">
+              #{item}
+          </foreach>
+          AND is_deleted = false
+    </select>
+
 </mapper>

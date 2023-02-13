@@ -20,10 +20,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author by YangXu
@@ -138,7 +135,10 @@ public class DrcRiskListener implements Listener {
 
             // 关联的待处理风险
             Long milestoneId = milestone.getId();
-            ProjectRiskDO riskDO = projectRiskMapper.selectByMain(milestoneId, ProjectRiskStatusEnum.PENDING.getCode());
+            ArrayList<Integer> types = new ArrayList<>();
+            types.add(ProjectRiskTypeEnum.MILE_STONE_START.getCode());
+            types.add(ProjectRiskTypeEnum.MILE_STONE_END.getCode());
+            ProjectRiskDO riskDO = projectRiskMapper.selectByMain(milestoneId, ProjectRiskStatusEnum.PENDING.getCode(),types);
             if (riskDO == null) {
                 return;
             }
