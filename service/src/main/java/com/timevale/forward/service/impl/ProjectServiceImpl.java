@@ -590,7 +590,7 @@ public class ProjectServiceImpl implements ProjectService {
             AssertUtil.notNull(navigateProject, "您选择的项目树节点不存在，请检查");
             condition.setNavigateParentIdsPrefix(navigateProject.getParentIds());
         }
-        PageHelper.startPage(condition.getPageNum(), condition.getPageSize());
+        PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         Page<ProjectListDO> projects = projectMapper.listChildren(condition);
         PageQueryResult<ProjectVO> res = PageQueryResult.resResult(ProjectCopier.INSTANCE.convert(projects));
         ResultUtil.fillPageInfo(res, projects);
