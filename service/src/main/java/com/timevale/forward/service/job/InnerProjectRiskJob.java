@@ -76,7 +76,6 @@ public class InnerProjectRiskJob extends IJobHandler {
         HashBasedTable<Long, String, ProjectRiskDO> riskTable = riskDOs.stream()
                 .map(e -> ImmutableTable.of(e.getMainId(), e.getName(), e))
                 .collect(HashBasedTable::create, HashBasedTable::putAll, HashBasedTable::putAll);
-        ImmutableMap<Long, ProjectRiskDO> riskMap = Maps.uniqueIndex(riskDOs, ProjectRiskDO::getMainId);
 
         // 项目相关的里程碑
         List<ProjectMilestone> milestones = projectMilestoneMapper.selectByProjectIds(projectIds);
@@ -139,7 +138,7 @@ public class InnerProjectRiskJob extends IJobHandler {
                 for (Integer validStage : validStages) {
                     boolean contains = stageSet.contains(validStage);
                     // 如果上一个阶段没有里程碑，当前阶段有里程碑，则是里程碑未录入
-                    if (!previous && contains && !riskTable.contains(projectId, ProjectStageEnum.getTextByCode(validStage))) {
+                    if (!previous && contains && !riskTable.contains(projectId, ProjectStageEnum.getTextByCode(preStage))) {
                         ProjectRiskDO newRisk = new ProjectRiskDO();
                         newRisk.setSign("");
                         newRisk.setMainId(projectId);
