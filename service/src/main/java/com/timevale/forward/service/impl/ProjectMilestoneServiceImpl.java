@@ -21,6 +21,7 @@ import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.service.component.InnerProjectStatusUpdateComponent;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.UserComponent;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
@@ -53,7 +54,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
     private final ProjectMilestoneMapper milestoneMapper;
     private final PersonMapper personMapper;
     private final UserComponent userComponent;
-
+    private final InnerProjectStatusUpdateComponent innerProjectStatusUpdateComponent;
     @Override
     public BaseResult<Void> add(ProjectMilestoneAddReq projectMilestoneAddReq) {
         ProjectDO project = projectMapper.get(projectMilestoneAddReq.getProjectId());
@@ -90,6 +91,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
         }
         ProjectMilestone entity = ProjectMilestoneCopier.INSTANCE.convert(projectMilestoneAddReq);
         milestoneMapper.insert(entity);
+        innerProjectStatusUpdateComponent.updateProjectDateAndStatus(entity.getProjectId());
         return BaseResult.success();
     }
 
@@ -170,6 +172,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
                 taskMapper.deleteById(m.getRelationId());
             }
             milestoneMapper.deleteById(m.getId());
+            innerProjectStatusUpdateComponent.updateProjectDateAndStatus(m.getProjectId());
         });
         return BaseResult.success();
     }

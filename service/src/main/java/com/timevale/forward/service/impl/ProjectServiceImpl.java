@@ -153,7 +153,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private UserComponent userComponent;
     @Resource
-    private InnerProjectEventListener innerProjectEventListener;
+    private InnerProjectStatusUpdateComponent innerProjectStatusUpdateComponent;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -232,6 +232,8 @@ public class ProjectServiceImpl implements ProjectService {
                     projectComponent.deleteChildProject(projectDO, child);
                 }
             }
+            // 作废项目更新里程碑内部项目状态
+            innerProjectStatusUpdateComponent.updateFromProject(projectDO);
         }
         String action = ProjectStatusEnum.SUSPEND.getCode().equals(type) ? ButtonActionEnum.SUSPEND.getText() : ButtonActionEnum.INVALID.getText();
         projectLogComponent.addLogWhenStatusChange(oldStatus, type, projectId, action);
@@ -526,6 +528,7 @@ public class ProjectServiceImpl implements ProjectService {
             manDayReportComponent.updateAuditor(newProject.getId());
             manDayReportComponent.batchMsg(newProject.getId());
         }
+        innerProjectStatusUpdateComponent.updateFromProject(newProject);
 
         return BaseResult.success(true);
     }
@@ -586,6 +589,7 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO newProjectDO = projectMapper.get(projectId);
         projectLogComponent.addLogWhenSimpleModifyData(oldProjectDO, newProjectDO);
 
+        innerProjectStatusUpdateComponent.updateFromProject(newProjectDO);
         return BaseResult.success(true);
     }
 
@@ -981,7 +985,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         projectMapper.fullUpdateById(oldProjectDO);
         sendDingMsgIfPublishDateForward(projectDO.getId(), oldPublishDate);
-
+        innerProjectStatusUpdateComponent.updateFromProject(projectDO);
         return BaseResult.success(true);
     }
 
@@ -1003,6 +1007,9 @@ public class ProjectServiceImpl implements ProjectService {
         updateCond.setId(projectId);
         updateCond.setValidStageList(stageList);
         projectMapper.update(updateCond);
+        // 添加阶段需要同时更新自身和父级项目的时间
+        innerProjectStatusUpdateComponent.updateProjectDateAndStatus(project.getId());
+        innerProjectStatusUpdateComponent.updateFromProject(project);
         return BaseResult.success();
     }
 
@@ -1028,6 +1035,9 @@ public class ProjectServiceImpl implements ProjectService {
         updateCond.setId(projectId);
         updateCond.setValidStageList(stageList);
         projectMapper.update(updateCond);
+        // 删除阶段需要同时更新自身和父级项目的时间
+        innerProjectStatusUpdateComponent.updateProjectDateAndStatus(project.getId());
+        innerProjectStatusUpdateComponent.updateFromProject(project);
         return BaseResult.success();
     }
 
@@ -1127,14 +1137,10 @@ public class ProjectServiceImpl implements ProjectService {
                 projectId,
                 BizChangeLogFieldEnum.PROJECT_STATUS.getText());
 
+        innerProjectStatusUpdateComponent.updateFromProject(projectDO);
         return BaseResult.success();
     }
 
-    @Override
-    public BaseResult<Void> updateInnerProjectStatusAndDate(Long projectId) {
-        innerProjectEventListener.updateProjectDateAndStatus(projectId);
-        return BaseResult.success();
-    }
 
     private boolean checkProductRelease(Long projectId) {
         List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);

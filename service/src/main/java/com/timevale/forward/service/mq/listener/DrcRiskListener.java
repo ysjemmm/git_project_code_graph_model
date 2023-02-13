@@ -13,14 +13,11 @@ import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
-import com.timevale.forward.service.mq.dto.ProjectUpdateEvent;
-import com.timevale.forward.service.mq.dto.TaskUpdateEvent;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.framework.mq.client.consumer.Listener;
 import com.timevale.framework.mq.client.consumer.ReceiveResult;
 import com.timevale.framework.mq.client.producer.Msg;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -44,8 +41,6 @@ public class DrcRiskListener implements Listener {
     private ProjectRiskMapper projectRiskMapper;
     @Resource
     private ProjectMilestoneMapper projectMilestoneMapper;
-    @Resource
-    private ApplicationEventPublisher applicationEventPublisher;
 
     // 一个的工作日毫秒数
     private final BigDecimal WORK_DAY_SECONDS = new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND);
@@ -56,7 +51,6 @@ public class DrcRiskListener implements Listener {
             String msgId = msg.getMsgId();
             String message = new String(msg.getBody());
             log.info("收到消息, msgId={}, message={}", msgId, message);
-
 
             DrcMsgBody body = JSON.parseObject(message, DrcMsgBody.class);
             try {
@@ -119,7 +113,6 @@ public class DrcRiskListener implements Listener {
                 planStartDate = taskDO.getPlanStartDate();
                 actualEndDate = taskDO.getActualEndDate();
                 actualStartDate = taskDO.getActualStartDate();
-                applicationEventPublisher.publishEvent(new TaskUpdateEvent(this, taskDO));
             } else if (Objects.equals(tableName, "project")) {
                 ProjectDO projectDO = JSON.parseObject(body.getAfter(), ProjectDO.class);
                 milestoneRelationId = projectDO.getId();
@@ -128,7 +121,6 @@ public class DrcRiskListener implements Listener {
                 planStartDate = projectDO.getPlanStartDate();
                 actualEndDate = projectDO.getActualEndDate();
                 actualStartDate = projectDO.getActualStartDate();
-                applicationEventPublisher.publishEvent(new ProjectUpdateEvent(this, projectDO));
             } else {
                 return;
             }

@@ -4,16 +4,12 @@ import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
-import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.client.ProjectMilestoneService;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.mq.dto.ProjectUpdateEvent;
-import com.timevale.forward.service.mq.dto.TaskUpdateEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -26,26 +22,12 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class InnerProjectEventListener {
+public class InnerProjectStatusUpdateComponent {
     private final ProjectMapper projectMapper;
     private final ProjectMilestoneService projectMilestoneService;
     private final ProjectMilestoneMapper projectMilestoneMapper;
 
-    @EventListener(TaskUpdateEvent.class)
-    public void taskUpdateHandler(TaskUpdateEvent event) {
-        TaskDO task = event.getData();
-        if (task == null) {
-            return;
-        }
-        updateProjectDateAndStatus(task.getProjectId());
-    }
-
-    @EventListener(ProjectUpdateEvent.class)
-    public void projectUpdateHandler(ProjectUpdateEvent event) {
-        ProjectDO project = event.getData();
-        if (project == null) {
-            return;
-        }
+    public void updateFromProject(ProjectDO project) {
         List<ProjectMilestone> milestones = projectMilestoneMapper.selectByRelation(
                 Collections.singleton(project.getId()), MilestoneTypeEnum.PROJECT.getCode());
         milestones.stream().findFirst().ifPresent(m -> updateProjectDateAndStatus(m.getProjectId()));
