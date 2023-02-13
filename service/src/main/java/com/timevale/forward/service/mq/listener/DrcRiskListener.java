@@ -10,14 +10,11 @@ import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
-import com.timevale.forward.service.mq.dto.ProjectUpdateEvent;
-import com.timevale.forward.service.mq.dto.TaskUpdateEvent;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.framework.mq.client.consumer.Listener;
 import com.timevale.framework.mq.client.consumer.ReceiveResult;
 import com.timevale.framework.mq.client.producer.Msg;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -41,8 +38,6 @@ public class DrcRiskListener implements Listener {
     private ProjectRiskMapper projectRiskMapper;
     @Resource
     private ProjectMilestoneMapper projectMilestoneMapper;
-    @Resource
-    private ApplicationEventPublisher applicationEventPublisher;
 
     // 一个的工作日毫秒数
     private final BigDecimal WORK_DAY_SECONDS = new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND);
@@ -53,7 +48,6 @@ public class DrcRiskListener implements Listener {
             String msgId = msg.getMsgId();
             String message = new String(msg.getBody());
             log.info("收到消息, msgId={}, message={}", msgId, message);
-
 
             DrcMsgBody body = JSON.parseObject(message, DrcMsgBody.class);
             try {
