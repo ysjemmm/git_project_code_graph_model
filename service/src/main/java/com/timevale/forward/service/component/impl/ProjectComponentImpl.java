@@ -13,10 +13,7 @@ import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.BizLabelComponent;
-import com.timevale.forward.service.component.ProjectComponent;
-import com.timevale.forward.service.component.ProjectNodeComponent;
-import com.timevale.forward.service.component.SqlOrderComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
@@ -81,6 +78,9 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Resource
     private ProjectMilestoneService milestoneService;
+
+    @Resource
+    private ProjectLogComponent projectLogComponent;
 
     @Override
     public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -504,6 +504,8 @@ public class ProjectComponentImpl implements ProjectComponent {
         String prepend = parent.getParentIds().substring(0, parent.getParentIds().length() - 1);
         String prefixRegexp = "^" + child.getParentIds();
         projectMapper.attachChildProject(prepend, prefixRegexp);
+        projectLogComponent.addAppendChildLog(parent.getId(), child.getName());
+        projectLogComponent.addAttachParentLog(child.getId(), parent.getName());
     }
 
     @Override
@@ -515,6 +517,8 @@ public class ProjectComponentImpl implements ProjectComponent {
             milestones.stream().map(ProjectMilestone::getId).forEach(milestoneService::deleteMilestone);
         }
         projectMapper.deleteChildren(parent.getParentIds().length(), "^" + child.getParentIds());
+        projectLogComponent.addDeleteChildLog(parent.getId(), child.getName());
+        projectLogComponent.addDetachParentLog(child.getId(), parent.getName());
     }
 
     private List<ProductLineAnalyseVO> analyse(ProjectListCondition condition) {

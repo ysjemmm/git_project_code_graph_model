@@ -21,4 +21,9 @@ public interface ProjectLogComponent{
     void addAppendChildLog(Long id, String childName);
 
     void addAttachParentLog(Long id, String parentName);
+
+    void addDeleteChildLog(Long id, String childName);
+
+    void addDetachParentLog(Long id, String parentName);
+
 }
