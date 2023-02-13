@@ -397,6 +397,21 @@ public class ProjectServiceImpl implements ProjectService {
                     .map(e -> ProjectGoalCopier.INSTANCE.convert(e, projectId)).collect(Collectors.toList());
             // 项目目标落库
             projectGoalMapper.batchInsert(projectGoalDOs);
+            for (ProjectGoalDO projectGoalDO : projectGoalDOs) {
+                UserInfo userInfo = LocalSessionUtils.getUserInfo();
+                BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
+                bizChangeLogDO.setCreateManId(userInfo.getId());
+                bizChangeLogDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+                // 日志
+                bizChangeLogMapper.insert(bizChangeLogDO
+                        .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                        .setField(BizChangeLogFieldEnum.PROJECT_GOAL.getText())
+                        .setMainId(projectId)
+                        .setIdentity(BizChangeLogFieldEnum.PROJECT_GOAL.getText() + CommonConstant.WIDE_COLON + projectGoalDO.getName())
+                        .setOldValue(projectGoalDO.getName())
+                        .setNewValue(projectGoalDO.getName())
+                        .setAction(ButtonActionEnum.LINK.getText()));
+            }
         }
 
         // 添加项目预算信息
@@ -407,6 +422,22 @@ public class ProjectServiceImpl implements ProjectService {
                     .map(e -> ProjectBudgetsCopier.INSTANCE.req2do(e, projectId)).collect(Collectors.toList());
             // 项目预算落库
             projectBudgetMapper.insertBatch(projectBudgetDOs);
+            // 日志
+            for (ProjectBudgetDO projectBudgetDO : projectBudgetDOs) {
+                UserInfo userInfo = LocalSessionUtils.getUserInfo();
+                BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
+                bizChangeLogDO.setCreateManId(userInfo.getId());
+                bizChangeLogDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+                bizChangeLogMapper.insert(bizChangeLogDO
+                        .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                        .setField(BizChangeLogFieldEnum.PJ_BUDGET.getText())
+                        .setMainId(projectId)
+                        .setIdentity(BizChangeLogFieldEnum.PJ_BUDGET.getText() + projectBudgetDO.getCostType())
+                        .setOldValue(projectBudgetDO.getCostType())
+                        .setNewValue(projectBudgetDO.getCostType())
+                        .setAction(ButtonActionEnum.PROJECT_BUDGET_ADD.getText())
+                );
+            }
         }
 
         // 记录项目状态日志
