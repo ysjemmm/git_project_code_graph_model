@@ -256,6 +256,20 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
         }
     }
 
+    @Override
+    public void addLogWhenContentChange(String oldValue, String newValue, Long id, String field, String action) {
+        //1){操作人}把{字段}由{旧值}改为{新值}
+        if (!Objects.equals(oldValue, newValue)) {
+            BizChangeLogDO logDO = createLog(id, field, oldValue, newValue, action);
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
+            String createMan = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
+            String createManId = userInfo.getId();
+            logDO.setCreateMan(createMan);
+            logDO.setCreateManId(createManId);
+            bizChangeLogMapper.insert(logDO);
+        }
+    }
+
     private BizChangeLogDO createLog(Long mainId, String field, String oldValue, String newValue, String action) {
         BizChangeLogDO logDO = new BizChangeLogDO();
         logDO.setType(BizChangeLogTypeEnum.PROJECT.getCode());

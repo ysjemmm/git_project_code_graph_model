@@ -187,7 +187,12 @@ public enum ButtonActionEnum {
     /**
      *删除
      */
-    DELETE("删除");
+    DELETE("删除"),
+
+    /**
+     * 新增
+     */
+    APPEND("新增");
 
     private final String text;
 

@@ -529,10 +529,20 @@ public class ProjectServiceImpl implements ProjectService {
                     .filter(e -> newMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
             if (StrUtil.isNotBlank(deleteMembers)) {
-                projectLogComponent.addLogWhenContentChange(deleteMembers, "", projectId, BizChangeLogFieldEnum.PJ_MEMBER.getText());
+                projectLogComponent.addLogWhenContentChange(
+                        deleteMembers,
+                        deleteMembers,
+                        projectId,
+                        BizChangeLogFieldEnum.PJ_MEMBER.getText(),
+                        ButtonActionEnum.DELETE.getText());
             }
             if (StrUtil.isNotBlank(addMembers)) {
-                projectLogComponent.addLogWhenContentChange("", addMembers, projectId, BizChangeLogFieldEnum.PJ_MEMBER.getText());
+                projectLogComponent.addLogWhenContentChange(
+                        addMembers,
+                        addMembers,
+                        projectId,
+                        BizChangeLogFieldEnum.PJ_MEMBER.getText(),
+                        ButtonActionEnum.APPEND.getText());
             }
 
             // 实际更新落库
