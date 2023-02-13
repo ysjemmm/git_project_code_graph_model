@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -107,6 +108,8 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
             m.setProjectId(currentProject.getId());
             m.setProjectName(currentProject.getName());
         });
+        resList.sort(Comparator.comparing(ProjectMilestoneVO::getStage)
+                .thenComparing(ProjectMilestoneVO::getPlanStartDate));
         return BaseResult.success(res);
     }
 
