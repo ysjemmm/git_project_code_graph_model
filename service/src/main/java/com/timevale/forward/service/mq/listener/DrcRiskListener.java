@@ -20,7 +20,10 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * @author by YangXu
@@ -126,9 +129,8 @@ public class DrcRiskListener implements Listener {
             }
 
             // 关联的里程碑
-            List<ProjectMilestone> milestones = projectMilestoneMapper.selectByRelations(Collections.singleton(milestoneRelationId),
-                    milestoneType.getCode());
-            ProjectMilestone milestone = milestones.stream().findFirst().orElse(null);
+            ProjectMilestone milestone =
+                    projectMilestoneMapper.selectByRelation(milestoneRelationId, milestoneType.getCode());
             if (milestone == null) {
                 return;
             }

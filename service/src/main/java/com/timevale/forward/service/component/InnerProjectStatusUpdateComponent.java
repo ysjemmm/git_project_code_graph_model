@@ -29,7 +29,8 @@ public class InnerProjectStatusUpdateComponent {
     private final ProjectMilestoneMapper projectMilestoneMapper;
 
     public void updateFromProject(ProjectDO project) {
-        ProjectMilestone milestone = projectMilestoneMapper.selectByRelation(project.getId(), MilestoneTypeEnum.PROJECT.getCode());
+        ProjectMilestone milestone =
+                projectMilestoneMapper.selectByRelation(project.getId(), MilestoneTypeEnum.PROJECT.getCode());
         if (milestone == null) {
             return;
         }
