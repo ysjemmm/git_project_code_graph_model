@@ -43,14 +43,16 @@ public class ProjectSimpleModifyReq extends ToString {
     @ApiModelProperty("项目计划结束时间")
     private Date planEndDate;
 
-    @ApiModelProperty("描述")
+        @ApiModelProperty("描述")
     private String desc;
 
     @ApiModelProperty("项目收益")
     private BigDecimal expectedIncome;
 
+    @ApiModelProperty("项目暂停原因")
+    private String suspendReason;
+
     @Valid
     @ApiModelProperty("团队成员")
     private List<PersonAddReq> teamMembers;
-
 }

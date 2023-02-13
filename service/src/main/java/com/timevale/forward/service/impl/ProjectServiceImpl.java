@@ -511,33 +511,37 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO oldProjectDO = projectMapper.get(projectId);
         AssertUtil.notNull(oldProjectDO, "项目不存在");
 
+        // 转换，更新落库
+        ProjectDO updateProjectDO = ProjectCopier.INSTANCE.convert(projectSimpleModifyReq);
+        projectMapper.update(updateProjectDO);
+
         // 更新项目成员
         List<PersonAddReq> newMembers = projectSimpleModifyReq.getTeamMembers();
-        personComponent.update(newMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        if (CollUtil.isNotEmpty(newMembers)) {
+            // 成员更新日志
+            List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            String addMembers = newMembers.stream()
+                    .map(PersonAddReq::getUserName)
+                    .filter(e -> oldMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
+                    .collect(Collectors.joining(","));
+            String deleteMembers = oldMembers.stream()
+                    .map(PersonDO::getUserName)
+                    .filter(e -> newMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
+                    .collect(Collectors.joining(","));
+            if (StrUtil.isNotBlank(deleteMembers)) {
+                projectLogComponent.addLogWhenContentChange(deleteMembers, "", projectId, BizChangeLogFieldEnum.PJ_MEMBER.getText());
+            }
+            if (StrUtil.isNotBlank(addMembers)) {
+                projectLogComponent.addLogWhenContentChange("", addMembers, projectId, BizChangeLogFieldEnum.PJ_MEMBER.getText());
+            }
 
-        // 转换，更新落库
-        ProjectDO newProjectDO = ProjectCopier.INSTANCE.convert(projectSimpleModifyReq);
-        projectMapper.update(newProjectDO);
-
-        // 成员更新日志
-        List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
-        String addMembers = newMembers.stream()
-                .map(PersonAddReq::getUserName)
-                .filter(e -> oldMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
-                .collect(Collectors.joining(","));
-        String deleteMembers = oldMembers.stream()
-                .map(PersonDO::getUserName)
-                .filter(e -> newMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
-                .collect(Collectors.joining(","));
-        if (StrUtil.isNotBlank(deleteMembers)) {
-            projectLogComponent.addLogWhenContentChange(deleteMembers, "", projectId, BizChangeLogFieldEnum.PJ_MEMBER.getText());
-        }
-        if (StrUtil.isNotBlank(addMembers)) {
-            projectLogComponent.addLogWhenContentChange("", addMembers, projectId, BizChangeLogFieldEnum.PJ_MEMBER.getText());
+            // 实际更新落库
+            personComponent.update(newMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
         }
 
         // 项目日志
-        projectLogComponent.addLogWhenModifyData(oldProjectDO, newProjectDO);
+        ProjectDO newProjectDO = projectMapper.get(projectId);
+        projectLogComponent.addLogWhenSimpleModifyData(oldProjectDO, newProjectDO);
 
         return BaseResult.success(true);
     }

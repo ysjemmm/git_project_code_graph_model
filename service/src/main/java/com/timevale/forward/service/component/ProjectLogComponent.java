@@ -8,6 +8,8 @@ public interface ProjectLogComponent{
 
     void addLogWhenModifyData(ProjectDO oldObj, ProjectDO newObj) ;
 
+    void addLogWhenSimpleModifyData(ProjectDO oldObj, ProjectDO newObj) ;
+
     void addLogWhenStatusChange(Integer oldStatus,Integer newStatus,Long id,String action) ;
 
     void addLogWhenLinkOrUnlink(String name, Long id,Map<Long, String> pdNameMap,String linkOrUnlink)  ;
