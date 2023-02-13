@@ -422,10 +422,12 @@ public class ProjectServiceImpl implements ProjectService {
             // 转换
             List<ProjectBudgetDO> projectBudgetDOs = projectBudgets.stream()
                     .map(e -> ProjectBudgetsCopier.INSTANCE.req2do(e, projectId)).collect(Collectors.toList());
-            // 项目预算落库
-            projectBudgetMapper.insertBatch(projectBudgetDOs);
-            // 日志
+
             for (ProjectBudgetDO projectBudgetDO : projectBudgetDOs) {
+                // 落库
+                projectBudgetMapper.insert(projectBudgetDO);
+
+                // 日志
                 UserInfo userInfo = LocalSessionUtils.getUserInfo();
                 BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
                 bizChangeLogDO.setCreateManId(userInfo.getId());
