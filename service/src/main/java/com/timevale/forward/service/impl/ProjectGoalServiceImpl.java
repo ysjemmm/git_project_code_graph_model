@@ -318,15 +318,6 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         return false;
     }
 
-    /**
-     * PMO 和 PMO 的上级才有权限编辑完成情况
-     */
-    private boolean hasGoalFinishPermission() {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        List<RoleResponse> roleInfoList = innerUserPermissionClient.getFunctionRoleInfo(userInfo.getId());
-        return roleInfoList.stream().anyMatch(e -> e.getName().equals("完成情况按钮"));
-    }
-
     private BizChangeLogDO createCommonChangeLog() {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();

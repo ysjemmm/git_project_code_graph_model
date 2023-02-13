@@ -3,6 +3,7 @@ package com.timevale.forward.service.copy;
 import com.timevale.forward.dal.entity.ProjectBudgetDO;
 import com.timevale.forward.facade.api.request.ProjectBudgetSaveReq;
 import com.timevale.forward.facade.api.result.ProjectBudgetVO;
+import com.timevale.forward.model.middle.ProjectBudgetMD;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -25,6 +26,8 @@ public interface ProjectBudgetsCopier {
     ProjectBudgetDO req2do(ProjectBudgetSaveReq req);
 
     ProjectBudgetVO do2vo(ProjectBudgetDO budgetDO);
+
+    ProjectBudgetMD do2md(ProjectBudgetDO budgetDO);
 
     List<ProjectBudgetVO> do2vo(List<ProjectBudgetDO> doList);
 }
