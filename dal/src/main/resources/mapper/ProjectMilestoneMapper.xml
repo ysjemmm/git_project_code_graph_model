@@ -33,6 +33,20 @@
         values (#{projectId}, #{milestoneName}, #{type}, #{stage}, #{relationId}, #{createManId}, #{createMan},
                 #{createManId}, #{createMan})
     </insert>
+    <update id="update">
+        update project_milestone
+        <set>
+            <if test="milestoneName != null and milestoneName != ''">
+                milestone_name = #{milestoneName},
+            </if>
+            <if test="stage != null">
+                stage = #{stage},
+            </if>
+            modify_man_id = #{modifyManId},
+            modify_man = #{modifyMan}
+        </set>
+        where id = #{id}
+    </update>
 
     <select id="selectByProjectIds" resultType="com.timevale.forward.dal.entity.ProjectMilestone">
         SELECT *

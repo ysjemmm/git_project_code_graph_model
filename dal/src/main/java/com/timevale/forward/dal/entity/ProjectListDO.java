@@ -92,4 +92,6 @@ public class ProjectListDO extends BaseDO {
      */
     private Integer level;
 
+    private Integer category;
+
 }

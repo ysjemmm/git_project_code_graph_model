@@ -38,6 +38,9 @@ public class ProjectMilestoneVO extends ToString {
     @ApiModelProperty("里程碑所属项目阶段:11:启动阶段;12:规划阶段;13:执行阶段;14:收尾阶段;15:运营阶段")
     private Integer stage;
 
+    @ApiModelProperty("项目类型: 0-产研项目; 1-内部项目")
+    private Integer category;
+
     @ApiModelProperty("里程碑所属项目阶段")
     private String stageName;
 

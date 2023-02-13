@@ -108,6 +108,9 @@ public class ProjectVO extends ToString {
     @ApiModelProperty("项目等级")
     private Integer level;
 
+    @ApiModelProperty("类别")
+    private Integer category;
+
     @ApiModelProperty("项目等级-描述")
     private String levelName;
 

@@ -35,6 +35,8 @@ public interface ProjectMilestoneMapper {
 
     @Update("update project_milestone set is_deleted = true where id = #{id} and is_deleted = false")
     void deleteById(@Param("id") Long id);
+
+    void update(ProjectMilestone milestone);
 }
 
 
