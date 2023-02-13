@@ -276,6 +276,9 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("项目开启,节点信息:projectNode={}", projectNode);
         if (CollectionUtils.isEmpty(projectNode)) {
             projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
+            if (Objects.equals(projectDO.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode())) {
+                projectDO.setStatus(innerProjectStatusUpdateComponent.calcProjectStatus(projectDO.getId()));
+            }
             projectMapper.fullUpdateById(projectDO);
         } else {
             fillInfoWhenEnable(projectNode, projectDO);

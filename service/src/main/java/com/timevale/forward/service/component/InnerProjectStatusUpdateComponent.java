@@ -8,7 +8,6 @@ import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -42,28 +41,10 @@ public class InnerProjectStatusUpdateComponent {
             return;
         }
         try {
-            List<ProjectMilestoneVO> milestones = projectMilestoneComponent.listByProjectId(projectId);
-            if (CollectionUtils.isEmpty(milestones)) {
-                log.info("no milestones in project, projectId: {}", projectId);
-                return;
-            }
+            List<ProjectMilestoneVO> validMilestones = getValidMilestones(projectId);
             Date actualStartDate = null;
             Date actualEndDate = null;
             Integer status = ProjectStatusEnum.WAITING.getCode();
-            List<ProjectMilestoneVO> validMilestones = milestones.stream()
-                    // 存在实际开始时间
-                    .filter(m -> Objects.nonNull(m.getActualStartDate()))
-                    // 非作废里程碑
-                    .filter(m -> {
-                        if (Objects.equals(m.getType(), MilestoneTypeEnum.TASK.getCode())) {
-                            return !Objects.equals(m.getStatus(), TaskStatusEnum.INVALID.getCode());
-                        }
-                        if (Objects.equals(m.getType(), MilestoneTypeEnum.PROJECT.getCode())) {
-                            return !Objects.equals(m.getStatus(), ProjectStatusEnum.INVALID.getCode());
-                        }
-                        return false;
-                    })
-                    .collect(Collectors.toList());
             if (!validMilestones.isEmpty()) {
                 status = validMilestones.stream().max(Comparator.comparing(ProjectMilestoneVO::getStage))
                         .map(m -> ProjectStageEnum.getByCode(m.getStage()).getStatus().getCode())
@@ -92,6 +73,31 @@ public class InnerProjectStatusUpdateComponent {
                     projectId, e.getMessage());
         }
 
+    }
+
+    public Integer calcProjectStatus(Long projectId) {
+        return getValidMilestones(projectId).stream()
+                .max(Comparator.comparing(ProjectMilestoneVO::getStage))
+                .map(m -> ProjectStageEnum.getByCode(m.getStage()).getStatus().getCode())
+                .orElse(ProjectStatusEnum.WAITING.getCode());
+    }
+
+    List<ProjectMilestoneVO> getValidMilestones(Long projectId) {
+        List<ProjectMilestoneVO> milestones = projectMilestoneComponent.listByProjectId(projectId);
+        return milestones.stream()
+                // 存在实际开始时间
+                .filter(m -> Objects.nonNull(m.getActualStartDate()))
+                // 非作废里程碑
+                .filter(m -> {
+                    if (Objects.equals(m.getType(), MilestoneTypeEnum.TASK.getCode())) {
+                        return !Objects.equals(m.getStatus(), TaskStatusEnum.INVALID.getCode());
+                    }
+                    if (Objects.equals(m.getType(), MilestoneTypeEnum.PROJECT.getCode())) {
+                        return !Objects.equals(m.getStatus(), ProjectStatusEnum.INVALID.getCode());
+                    }
+                    return false;
+                })
+                .collect(Collectors.toList());
     }
 
 }
