@@ -127,6 +127,9 @@
       <if test="docName != null and docName != ''">
         doc_name = #{docName},
       </if>
+      <if test="stage != null">
+        stage = #{stage},
+      </if>
       <if test="isDeleted != null">
         is_deleted = #{isDeleted,jdbcType=BOOLEAN},
       </if>
