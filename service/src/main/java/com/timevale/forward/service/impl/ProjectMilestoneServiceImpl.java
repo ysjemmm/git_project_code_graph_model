@@ -129,9 +129,6 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
     public BaseResult<Void> deleteMilestone(Long milestoneId) {
         Optional<ProjectMilestone> milestone = Optional.ofNullable(milestoneMapper.selectById(milestoneId));
         milestone.ifPresent(m -> {
-            ProjectDO project = projectMapper.get(m.getProjectId());
-            AssertUtil.checkState(!ProjectStatusEnum.getByCode(project.getStatus()).isTerminated(),
-                    "项目已完成或者作废，无法新增里程碑");
             if (Objects.equals(m.getType(), MilestoneTypeEnum.TASK.getCode())) {
                 // 删除对应任务
                 taskMapper.deleteById(m.getRelationId());

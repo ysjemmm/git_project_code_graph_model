@@ -326,6 +326,7 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
         projectDO.setStatus(ProjectStatusEnum.WAITING.getCode());
         projectMapper.insert(projectDO);
+        projectDO.setParentIds(Collections.singletonList(projectDO.getId()));
 
         //标签
         if (CollectionUtils.isNotEmpty(projectAddReq.getLabelIds())) {
@@ -386,6 +387,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 项目落库
         projectMapper.innerInsert(projectDO);
+        projectDO.setParentIds(Collections.singletonList(projectDO.getId()));
 
         // 获取项目id
         Long projectId = projectDO.getId();
