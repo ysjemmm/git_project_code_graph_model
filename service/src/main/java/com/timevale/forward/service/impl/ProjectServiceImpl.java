@@ -538,7 +538,7 @@ public class ProjectServiceImpl implements ProjectService {
                     .collect(Collectors.joining(","));
             if (StrUtil.isNotBlank(deleteMembers)) {
                 projectLogComponent.addLogWhenContentChange(
-                        deleteMembers,
+                        "",
                         deleteMembers,
                         projectId,
                         BizChangeLogFieldEnum.PJ_MEMBER.getText(),
@@ -546,7 +546,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
             if (StrUtil.isNotBlank(addMembers)) {
                 projectLogComponent.addLogWhenContentChange(
-                        addMembers,
+                        "",
                         addMembers,
                         projectId,
                         BizChangeLogFieldEnum.PJ_MEMBER.getText(),

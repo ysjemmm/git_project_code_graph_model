@@ -54,7 +54,7 @@ public class ProjectIncomeServiceImpl implements ProjectIncomeService {
         // 日志记录
         BigDecimal incomeAmount = projectIncomeDO.getIncomeAmount();
         projectLogComponent.addLogWhenContentChange(
-                incomeAmount.setScale(2, RoundingMode.HALF_UP).toString(),
+                "",
                 incomeAmount.setScale(2, RoundingMode.HALF_UP).toString(),
                 projectId,
                 BizChangeLogFieldEnum.PJ_INCOME_AMOUNT.getText(),
@@ -85,7 +85,7 @@ public class ProjectIncomeServiceImpl implements ProjectIncomeService {
         ProjectIncomeDO projectIncomeDO = projectIncomeMapper.selectById(id);
         BigDecimal incomeAmount = projectIncomeDO.getIncomeAmount();
         projectLogComponent.addLogWhenContentChange(
-                incomeAmount.setScale(2, RoundingMode.HALF_UP).toString(),
+                "",
                 incomeAmount.setScale(2, RoundingMode.HALF_UP).toString(),
                 projectIncomeDO.getProjectId(),
                 BizChangeLogFieldEnum.PJ_INCOME_AMOUNT.getText(),
