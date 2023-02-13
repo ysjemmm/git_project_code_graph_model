@@ -92,6 +92,12 @@ public class ProjectBudgetServiceImpl implements ProjectBudgetService {
         projectBudgetMapper.update(budgetDO);
         ProjectBudgetDO newLogBudget = projectBudgetMapper.selectById(req.getId());
 
+        if (!Objects.equals(oldLogBudget.getCostType(), newLogBudget.getCostType())) {
+            // 修改identity
+            bizChangeLogMapper.updateIdentity(oldLogBudget.getProjectId(), formIdentity(oldLogBudget.getCostDesc()),
+                    formIdentity(newLogBudget.getCostDesc()));
+        }
+
         // 生成修改记录
         ProjectBudgetMD oldMd = ProjectBudgetsCopier.INSTANCE.do2md(oldLogBudget);
         ProjectBudgetMD newMd = ProjectBudgetsCopier.INSTANCE.do2md(newLogBudget);
