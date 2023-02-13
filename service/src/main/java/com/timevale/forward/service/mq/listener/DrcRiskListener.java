@@ -77,36 +77,60 @@ public class DrcRiskListener implements Listener {
 
         // 判断是任务还是项目
         String tableName = body.getTableName();
-        if (Objects.equals(tableName, "task")) {
-            TaskDO taskDO = JSON.parseObject(body.getAfter(), TaskDO.class);
-            milestoneRelationId = taskDO.getId();
-            milestoneType = MilestoneTypeEnum.TASK;
-            planEndDate = taskDO.getPlanEndDate();
-            planStartDate = taskDO.getPlanStartDate();
-            actualEndDate = taskDO.getActualEndDate();
-            actualStartDate = taskDO.getActualStartDate();
-        } else if (Objects.equals(tableName, "project")) {
-            ProjectDO projectDO = JSON.parseObject(body.getAfter(), ProjectDO.class);
-            milestoneRelationId = projectDO.getId();
-            milestoneType = MilestoneTypeEnum.PROJECT;
-            planEndDate = projectDO.getPlanEndDate();
-            planStartDate = projectDO.getPlanStartDate();
-            actualEndDate = projectDO.getActualEndDate();
-            actualStartDate = projectDO.getActualStartDate();
-        } else {
-            return;
+
+        // 里程碑新增，处理里程碑未录入风险
+        {
+            if (Objects.equals(tableName, "project_milestone")) {
+                if (!Objects.equals(body.getAction(), "INSERT")) {
+                    return;
+                }
+                ProjectMilestone milestone = JSON.parseObject(body.getAfter(), ProjectMilestone.class);
+                Long projectId = milestone.getProjectId();
+                // 查询未处理的里程碑为了录入风险
+                List<ProjectRiskDO> risks = projectRiskMapper.selectByProject(projectId,
+                        ProjectRiskTypeEnum.MILE_STONE_NONE.getCode(),
+                        ProjectRiskStatusEnum.PENDING.getCode());
+
+                // 判断是否有相同名称的未录入风险，处理风险
+                String stageName = ProjectStageEnum.getTextByCode(milestone.getStage());
+                for (ProjectRiskDO risk : risks) {
+                    if (Objects.equals(stageName, risk.getName())) {
+                        projectRiskMapper.updateStatus(risk.getId(), ProjectRiskStatusEnum.COMPLETE.getCode());
+                    }
+                }
+            }
         }
 
-        // 关联的里程碑
-        List<ProjectMilestone> milestones = projectMilestoneMapper.selectByRelation(Collections.singleton(milestoneRelationId),
-                milestoneType.getCode());
-        ProjectMilestone milestone = milestones.stream().findFirst().orElse(null);
-        if (milestone == null) {
-            return;
-        }
+        // 项目、任务更新，处理里程碑逾期风险
+        {
+            if (Objects.equals(tableName, "task")) {
+                TaskDO taskDO = JSON.parseObject(body.getAfter(), TaskDO.class);
+                milestoneRelationId = taskDO.getId();
+                milestoneType = MilestoneTypeEnum.TASK;
+                planEndDate = taskDO.getPlanEndDate();
+                planStartDate = taskDO.getPlanStartDate();
+                actualEndDate = taskDO.getActualEndDate();
+                actualStartDate = taskDO.getActualStartDate();
+            } else if (Objects.equals(tableName, "project")) {
+                ProjectDO projectDO = JSON.parseObject(body.getAfter(), ProjectDO.class);
+                milestoneRelationId = projectDO.getId();
+                milestoneType = MilestoneTypeEnum.PROJECT;
+                planEndDate = projectDO.getPlanEndDate();
+                planStartDate = projectDO.getPlanStartDate();
+                actualEndDate = projectDO.getActualEndDate();
+                actualStartDate = projectDO.getActualStartDate();
+            } else {
+                return;
+            }
 
-        String action = body.getAction();
-        if (Objects.equals(action, "UPDATE")) {
+            // 关联的里程碑
+            List<ProjectMilestone> milestones = projectMilestoneMapper.selectByRelation(Collections.singleton(milestoneRelationId),
+                    milestoneType.getCode());
+            ProjectMilestone milestone = milestones.stream().findFirst().orElse(null);
+            if (milestone == null) {
+                return;
+            }
+
             // 关联的待处理风险
             Long milestoneId = milestone.getId();
             ProjectRiskDO riskDO = projectRiskMapper.selectByMain(milestoneId, ProjectRiskStatusEnum.PENDING.getCode());
@@ -130,20 +154,6 @@ public class DrcRiskListener implements Listener {
                 updateRiskDO.setSign(overdueDay.toString());
                 updateRiskDO.setStatus(ProjectRiskStatusEnum.COMPLETE.getCode());
                 projectRiskMapper.update(updateRiskDO);
-            }
-        } else if (Objects.equals(action, "INSERT")){
-            Long projectId = milestone.getProjectId();
-            // 查询未处理的里程碑为了录入风险
-            List<ProjectRiskDO> risks = projectRiskMapper.selectByProject(projectId,
-                    ProjectRiskTypeEnum.MILE_STONE_NONE.getCode(),
-                    ProjectRiskStatusEnum.PENDING.getCode());
-
-            // 判断是否有相同名称的未录入风险，处理风险
-            String stageName = ProjectStageEnum.getTextByCode(milestone.getStage());
-            for (ProjectRiskDO risk : risks) {
-                if (Objects.equals(stageName, risk.getName())) {
-                    projectRiskMapper.updateStatus(risk.getId(), ProjectRiskStatusEnum.COMPLETE.getCode());
-                }
             }
         }
     }
