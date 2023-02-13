@@ -511,6 +511,9 @@ public class ProjectComponentImpl implements ProjectComponent {
     @Override
     public void deleteChildProject(ProjectDO parent, ProjectDO child) {
         List<ProjectDO> childList = projectMapper.selectByParentIdsRegexp("^" + child.getParentIds());
+        if (childList.isEmpty()) {
+            return;
+        }
         List<Long> childIds = childList.stream().map(ProjectDO::getId).collect(Collectors.toList());
         List<ProjectMilestone> milestones = projectMilestoneMapper.selectByProjectIds(childIds);
         if (!milestones.isEmpty()) {
