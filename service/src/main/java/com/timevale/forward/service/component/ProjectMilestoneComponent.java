@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -75,6 +76,20 @@ public class ProjectMilestoneComponent {
             }
         }
         return resList;
+    }
+
+    public void updateMilestoneNameAndStage(TaskDO task) {
+        ProjectMilestone milestone = milestoneMapper.selectByRelation(task.getId(), MilestoneTypeEnum.TASK.getCode());
+        if (milestone == null) {
+            return;
+        }
+        if (Objects.equals(milestone.getStage(), task.getStage()) &&
+                Objects.equals(milestone.getMilestoneName(), task.getName())) {
+            return;
+        }
+        milestone.setMilestoneName(task.getName());
+        milestone.setStage(task.getStage());
+        milestoneMapper.update(milestone);
     }
 
     public void addMilestoneCreateLog(ProjectMilestone entity) {

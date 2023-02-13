@@ -255,6 +255,7 @@ public class TaskServiceImpl implements TaskService {
 
         innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
         sendDingMsg(taskDO, executorIds);
+        projectMilestoneComponent.updateMilestoneNameAndStage(taskDO);
         return BaseResult.success(true);
     }
 
