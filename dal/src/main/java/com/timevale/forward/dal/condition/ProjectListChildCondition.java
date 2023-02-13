@@ -29,6 +29,9 @@ public class ProjectListChildCondition {
     // 内部项目类型: 0空, 1战略项目, 2LTC项目, 3PBG项目, 4CBG项目, 5管理后台项目
     private Collection<Integer> innerTypes;
 
+    // 项目类型:0产品研发项目,1技术优化项目,2日常迭代
+    private Collection<Integer> types;
+
     // 项目经理
     private Collection<String> pms;
 
