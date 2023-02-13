@@ -100,7 +100,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
         res.setValidStages(currentProject.getValidStageList());
         res.setList(resList);
         List<ProjectMilestone> milestones = milestoneMapper.selectByProjectId(projectId);
-        res.setIsPMO(userComponent.isPMO());
+        res.setIsPMO(userComponent.isPmo());
         if (milestones.isEmpty()) {
             return BaseResult.success(res);
         }

@@ -690,7 +690,7 @@ public class ProjectServiceImpl implements ProjectService {
             long count = projectNodeFlows.stream().filter(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
             projectDetailVO.setPublishChangeCount(count);
         }
-        projectDetailVO.setIsPMO(userComponent.isPMO());
+        projectDetailVO.setIsPMO(userComponent.isPmoOrPmoLeader());
         return BaseResult.success(projectDetailVO);
     }
 
@@ -717,7 +717,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 是否为项目经理和PMO及其上级
         String pmId = projectDO.getPmId();
-        boolean isLeaderOrPMO = userComponent.isPMO() && isLeader(pmId);
+        boolean isLeaderOrPMO = userComponent.isPmoOrPmoLeader() && isLeader(pmId);
         projectInnerDetailVO.setIsLeaderOrPMO(isLeaderOrPMO);
 
         return BaseResult.success(projectInnerDetailVO);

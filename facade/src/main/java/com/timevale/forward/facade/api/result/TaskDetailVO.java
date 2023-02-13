@@ -70,6 +70,9 @@ public class TaskDetailVO extends ToString {
     @ApiModelProperty("状态:0待执行、10进行中、20已完成、-10已暂停、-20已作废")
     private Integer status;
 
+    @ApiModelProperty("是否为PMO")
+    private Boolean isPMO;
+
     @ApiModelProperty("状态")
     private String statusName;
 

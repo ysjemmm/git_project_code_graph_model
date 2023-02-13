@@ -116,6 +116,9 @@ public class TaskServiceImpl implements TaskService {
     @Resource
     private BizDomainMapper bizDomainMapper;
 
+    @Resource
+    private UserComponent userComponent;
+
     @Value("${excludeBizDomain:[1,13,32]}")
     private String excludeBizDomain;
 
@@ -283,6 +286,7 @@ public class TaskServiceImpl implements TaskService {
             List<TaskTimeDTO> useTime = taskTimeComponent.getUseTime(taskDO);
             taskDetailVO.setTaskTimeVO(TaskTimeCopier.INSTANCE.convert(useTime));
         }
+        taskDetailVO.setIsPMO(userComponent.isPmo());
         return BaseResult.success(taskDetailVO);
     }
 

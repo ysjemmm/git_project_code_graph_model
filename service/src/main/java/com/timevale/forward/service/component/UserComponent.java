@@ -8,6 +8,7 @@ import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -22,12 +23,23 @@ public class UserComponent {
     /**
      * 查询是否PMO或者PMO上级
      */
-    public boolean isPMO() {
+    public boolean isPmoOrPmoLeader() {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         List<BaseInfoResponse> users =
                 personClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
         for (BaseInfoResponse user : users) {
             if (CommonConstant.PMO.equalsIgnoreCase(user.getJobClassification())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isPmo() {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        List<BaseInfoResponse> personList = personClient.getPersonByAccountNew(Collections.singletonList(userInfo.getId()));
+        for (BaseInfoResponse person : personList) {
+            if (CommonConstant.PMO.equalsIgnoreCase(person.getJobClassification())) {
                 return true;
             }
         }
