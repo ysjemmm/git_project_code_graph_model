@@ -223,6 +223,13 @@ public class ProjectServiceImpl implements ProjectService {
             projectProductDemandComponent.update(projectId, null);
 
             bizLabelComponent.deleteLabel(projectDO.getId(), BizTypeEnum.PROJECT.getCode());
+            // 删除子项目关联关系
+            if (Objects.equals(projectDO.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode())) {
+                List<ProjectDO> children = projectMapper.selectByParentIdsRegexp("^" + projectDO.getParentIds() + ".");
+                for (ProjectDO child : children) {
+                    projectComponent.deleteChildProject(projectDO, child);
+                }
+            }
         }
         String action = ProjectStatusEnum.SUSPEND.getCode().equals(type) ? ButtonActionEnum.SUSPEND.getText() : ButtonActionEnum.INVALID.getText();
         projectLogComponent.addLogWhenStatusChange(oldStatus, type, projectId, action);
