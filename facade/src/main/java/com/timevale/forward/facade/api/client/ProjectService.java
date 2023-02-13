@@ -194,4 +194,9 @@ public interface ProjectService {
      * @return {@link BaseResult}<{@link Boolean}>
      */
     BaseResult<Boolean> innerComplete(ProjectInnerCompleteReq req);
+
+    /**
+     * 更新内部项目起止时间和状态
+     */
+    BaseResult<Void> updateInnerProjectStatusAndDate(Long projectId);
 }

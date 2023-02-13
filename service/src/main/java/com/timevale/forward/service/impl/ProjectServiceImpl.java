@@ -152,6 +152,8 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectMilestoneMapper projectMilestoneMapper;
     @Resource
     private UserComponent userComponent;
+    @Resource
+    private InnerProjectEventListener innerProjectEventListener;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -1094,6 +1096,12 @@ public class ProjectServiceImpl implements ProjectService {
                 projectId,
                 BizChangeLogFieldEnum.PROJECT_STATUS.getText());
 
+        return BaseResult.success();
+    }
+
+    @Override
+    public BaseResult<Void> updateInnerProjectStatusAndDate(Long projectId) {
+        innerProjectEventListener.updateProjectDateAndStatus(projectId);
         return BaseResult.success();
     }
 

@@ -260,6 +260,9 @@
             <if test="category != null">
                 and category = #{category}
             </if>
+            <if test="onlyFirstLevel != null and onlyFirstLevel == true">
+                and parent_ids = concat(',', id, ',')
+            </if>
             and a.is_deleted =false
         </where>
     </select>

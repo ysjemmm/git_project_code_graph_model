@@ -209,4 +209,6 @@ public class ProjectListCondition extends QueryBase {
      */
     private Date actualDateRight;
 
+    private Boolean onlyFirstLevel;
+
 }
