@@ -1185,7 +1185,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
-        if (ProjectStatusEnum.canNotUpdate(oldStatus)) {
+        if (ProjectStatusEnum.terminated(oldStatus)) {
             throw new BaseBizRuntimeException("项目处于发布或作废中，不可编辑，请刷新后重试");
         }
 
@@ -1336,7 +1336,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProjectNodeRecordDO> list = projectNodeRecordMapper.list(id);
         if (CollectionUtils.isEmpty(list) && newPjEstablishPublishDate != null
                 && planEndDate != null && newPjEstablishPublishDate.before(planEndDate)
-                && !ProjectStatusEnum.terminated(oldProjectDO.getStatus())
+                && !ProjectStatusEnum.suspendOrTerminated(oldProjectDO.getStatus())
                 && !Objects.equals(oldPjEstablishPublishDate, newPjEstablishPublishDate)) {
             messageEventPublisher.publish(new ProjectEstablishDateChangeMsgEvent(
                     this,

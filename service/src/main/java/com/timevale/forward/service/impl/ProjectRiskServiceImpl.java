@@ -417,7 +417,7 @@ public class ProjectRiskServiceImpl implements ProjectRiskService {
         List<Long> projectIds = projectRiskDOList.stream().map(ProjectRiskDO::getProjectId).distinct().collect(Collectors.toList());
         List<ProjectDO> projectDOList = projectMapper.getByIds(projectIds);
 
-        List<ProjectDO> filterProject = projectDOList.stream().filter(a -> !ProjectStatusEnum.terminated(a.getStatus())).collect(Collectors.toList());
+        List<ProjectDO> filterProject = projectDOList.stream().filter(a -> !ProjectStatusEnum.suspendOrTerminated(a.getStatus())).collect(Collectors.toList());
         List<Long> filterIds = filterProject.stream().map(ProjectDO::getId).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(filterIds)) {
             log.info("没有需要处理的项目");
