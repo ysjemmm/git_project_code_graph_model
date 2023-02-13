@@ -103,5 +103,13 @@
           AND is_deleted = false
     </select>
 
+    <select id="selectByCostType" resultType="com.timevale.forward.dal.entity.ProjectBudgetDO">
+        SELECT *
+        FROM project_budget
+        WHERE project_id = #{projectId}
+          AND cost_type = #{costType}
+          AND is_deleted = false
+        LIMIT 1
+    </select>
 
 </mapper>

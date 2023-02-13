@@ -47,6 +47,15 @@ public interface ProjectBudgetMapper {
      * @param projectId 项目id
      */
     List<ProjectBudgetDO> selectByProjectId(@Param("projectId") Long projectId);
+
+
+    /**
+     * 选择 by 成本类型 limit 1
+     *
+     * @param projectId 项目id
+     * @param costType  成本类型
+     */
+    ProjectBudgetDO selectByCostType(@Param("projectId") Long projectId, @Param("costType") String costType);
 }
 
 
