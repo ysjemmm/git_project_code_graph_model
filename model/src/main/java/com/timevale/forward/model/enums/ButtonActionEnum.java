@@ -192,7 +192,27 @@ public enum ButtonActionEnum {
     /**
      * 新增
      */
-    APPEND("新增");
+    APPEND("新增"),
+
+    /**
+     * 新增项目预算
+     */
+    PROJECT_BUDGET_ADD("新增项目预算"),
+
+    /**
+     * 删除项目预算
+     */
+    PROJECT_BUDGET_DELETE("删除项目预算"),
+
+    /**
+     * 新增项目已收益金额
+     */
+    PROJECT_INCOME_ADD("新增项目已收益金额"),
+
+    /**
+     * 删除项目已收益金额
+     */
+    PROJECT_INCOME_DELETE("删除项目已收益金额");
 
     private final String text;
 

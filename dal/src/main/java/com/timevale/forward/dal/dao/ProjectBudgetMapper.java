@@ -2,6 +2,7 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.entity.ProjectBudgetDO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -40,6 +41,15 @@ public interface ProjectBudgetMapper {
      * @param id id
      */
     void delete(@Param("id") Long id);
+
+    /**
+     * 选择 by id
+     *
+     * @param id id
+     * @return {@link ProjectBudgetDO}
+     */
+    @Select("SELECT * FROM project_budget WHERE id = #{id} AND is_deleted = false")
+    ProjectBudgetDO selectById(@Param("id")Long id);
 
     /**
      * 选择 by 项目id

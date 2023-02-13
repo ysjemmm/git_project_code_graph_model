@@ -1,6 +1,5 @@
 package com.timevale.forward.service.impl;
 
-import com.netflix.ribbon.proxy.annotation.ContentTransformerClass;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectIncomeMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
@@ -20,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import javax.validation.constraints.AssertTrue;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -59,8 +57,8 @@ public class ProjectIncomeServiceImpl implements ProjectIncomeService {
                 incomeAmount.setScale(2, RoundingMode.HALF_UP).toString(),
                 incomeAmount.setScale(2, RoundingMode.HALF_UP).toString(),
                 projectId,
-                BizChangeLogFieldEnum.PJ_INCOME.getText(),
-                ButtonActionEnum.APPEND.getText()
+                BizChangeLogFieldEnum.PJ_INCOME_AMOUNT.getText(),
+                ButtonActionEnum.PROJECT_INCOME_ADD.getText()
         );
 
         // 转换，返回数据
@@ -90,10 +88,9 @@ public class ProjectIncomeServiceImpl implements ProjectIncomeService {
                 incomeAmount.setScale(2, RoundingMode.HALF_UP).toString(),
                 incomeAmount.setScale(2, RoundingMode.HALF_UP).toString(),
                 projectIncomeDO.getProjectId(),
-                BizChangeLogFieldEnum.PJ_INCOME.getText(),
-                ButtonActionEnum.DELETE.getText()
+                BizChangeLogFieldEnum.PJ_INCOME_AMOUNT.getText(),
+                ButtonActionEnum.PROJECT_INCOME_DELETE.getText()
         );
-
         projectIncomeMapper.delete(id);
 
         return BaseResult.success();
