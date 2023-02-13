@@ -1053,6 +1053,16 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 里程碑关联的任务与项目
         List<ProjectMilestone> projectMilestones = projectMilestoneMapper.selectByProjectId(projectId);
+        // 首个阶段和最后一个阶段都需要存在里程碑
+        List<Integer> validStages = projectDO.getValidStageList();
+        Integer initStage = validStages.get(0);
+        Integer completeStage = validStages.get(validStages.size() - 1);
+        Set<Integer> milestoneStages = projectMilestones.stream().map(ProjectMilestone::getStage)
+                .collect(Collectors.toSet());
+        AssertUtil.checkState(milestoneStages.contains(initStage),
+                ProjectStageEnum.getByCode(initStage).getText() + "无里程碑，无法完成项目");
+        AssertUtil.checkState(milestoneStages.contains(completeStage),
+                ProjectStageEnum.getByCode(completeStage).getText() + "无里程碑，无法完成项目");
         List<Long> taskIds = projectMilestones.stream()
                 .filter(e -> Objects.equals(MilestoneTypeEnum.TASK.getCode(), e.getType()))
                 .map(ProjectMilestone::getRelationId)

@@ -1,12 +1,11 @@
 package com.timevale.forward.model.enums;
 
+import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * @author: xingyun
@@ -15,7 +14,7 @@ import java.util.stream.Collectors;
 @Getter
 @AllArgsConstructor
 public enum ProjectStatusEnum {
-    UNKNOWN(-1, "", false, false),
+    NULL(-1, "", false, false),
     /**
      * 0待启动,10规划中,15执行中,20研发中,25收尾中,30测试中,35运营中,40已发布,45已完成,-10已暂停,-20已作废
      */
@@ -54,17 +53,11 @@ public enum ProjectStatusEnum {
 
 
     // 枚举项较多，初始化时放入map提升性能
-    private static final Map<Integer, ProjectStatusEnum> map;
-    static {
-        map = Arrays.stream(values()).collect(Collectors.toMap(ProjectStatusEnum::getCode, Function.identity()));
-    }
+    private static final Map<Integer, ProjectStatusEnum> MAP =
+            Maps.uniqueIndex(Arrays.asList(values()), ProjectStatusEnum::getCode);
 
     public static ProjectStatusEnum getByCode(Integer code) {
-        ProjectStatusEnum res = map.get(code);
-        if (res == null) {
-            return UNKNOWN;
-        }
-        return res;
+        return MAP.getOrDefault(code, NULL);
     }
 
     public static String getTextByCode(Integer code) {

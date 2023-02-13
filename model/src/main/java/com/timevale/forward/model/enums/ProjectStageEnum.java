@@ -31,7 +31,7 @@ public enum ProjectStageEnum {
     private final ProjectCategoryEnum category;
 
     // 由于用code查询比较平凡，缓存到一个map以提升性能
-    private static final Map<Integer, ProjectStageEnum> CODE_STAGE_MAP =
+    private static final Map<Integer, ProjectStageEnum> MAP =
             Maps.uniqueIndex(Arrays.asList(values()), ProjectStageEnum::getCode);
 
     /**
@@ -45,7 +45,7 @@ public enum ProjectStageEnum {
      * 根据code查询项目阶段
      */
     public static ProjectStageEnum getByCode(Integer code) {
-        return CODE_STAGE_MAP.getOrDefault(code, NULL);
+        return MAP.getOrDefault(code, NULL);
     }
 
     /**
