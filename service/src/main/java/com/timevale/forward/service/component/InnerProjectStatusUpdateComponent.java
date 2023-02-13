@@ -62,7 +62,7 @@ public class InnerProjectStatusUpdateComponent {
                         .min(Comparator.comparing(ProjectMilestoneVO::getActualStartDate))
                         .map(ProjectMilestoneVO::getActualStartDate).orElse(null);
                 actualEndDate = validMilestones.stream()
-                        .filter(m -> Objects.equals(m.getStatus(), endStage) && m.getActualEndDate() != null)
+                        .filter(m -> Objects.equals(m.getStage(), endStage) && m.getActualEndDate() != null)
                         .max(Comparator.comparing(ProjectMilestoneVO::getActualEndDate))
                         .map(ProjectMilestoneVO::getActualEndDate).orElse(null);
             }
