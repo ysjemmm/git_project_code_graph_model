@@ -7,10 +7,7 @@ import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
 import com.timevale.forward.dal.entity.ProjectRiskDO;
 import com.timevale.forward.dal.entity.TaskDO;
-import com.timevale.forward.model.enums.MilestoneTypeEnum;
-import com.timevale.forward.model.enums.ProjectRiskStatusEnum;
-import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
-import com.timevale.forward.model.enums.ProjectStageEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
 import com.timevale.forward.service.mq.dto.ProjectUpdateEvent;
@@ -86,23 +83,30 @@ public class DrcRiskListener implements Listener {
         // 里程碑新增，处理里程碑未录入风险
         {
             if (Objects.equals(tableName, "project_milestone")) {
-                if (!Objects.equals(body.getAction(), "INSERT")) {
-                    return;
-                }
                 ProjectMilestone milestone = JSON.parseObject(body.getAfter(), ProjectMilestone.class);
-                Long projectId = milestone.getProjectId();
-                // 查询未处理的里程碑为了录入风险
-                List<ProjectRiskDO> risks = projectRiskMapper.selectByProject(projectId,
-                        ProjectRiskTypeEnum.MILE_STONE_NONE.getCode(),
-                        ProjectRiskStatusEnum.PENDING.getCode());
+                if (Objects.equals(body.getAction(), "UPDATE")) {
+                    // 里程碑被删除，风险作废
+                    if (Objects.equals(milestone.getIsDeleted(), YesOrNoEnum.YES.getCode())) {
+                        Long milestoneId = milestone.getId();
+                        ProjectRiskDO riskDO = projectRiskMapper.selectByMain(milestoneId, ProjectRiskStatusEnum.PENDING.getCode());
+                        projectRiskMapper.updateStatus(riskDO.getId(), ProjectRiskStatusEnum.INVALID.getCode());
+                    }
+                } else if (Objects.equals(body.getAction(), "INSERT")) {
+                    Long projectId = milestone.getProjectId();
+                    // 查询未处理的里程碑为了录入风险
+                    List<ProjectRiskDO> risks = projectRiskMapper.selectByProject(projectId,
+                            ProjectRiskTypeEnum.MILE_STONE_NONE.getCode(),
+                            ProjectRiskStatusEnum.PENDING.getCode());
 
-                // 判断是否有相同名称的未录入风险，处理风险
-                String stageName = ProjectStageEnum.getTextByCode(milestone.getStage());
-                for (ProjectRiskDO risk : risks) {
-                    if (Objects.equals(stageName, risk.getName())) {
-                        projectRiskMapper.updateStatus(risk.getId(), ProjectRiskStatusEnum.COMPLETE.getCode());
+                    // 判断是否有相同名称的未录入风险，处理风险
+                    String stageName = ProjectStageEnum.getTextByCode(milestone.getStage());
+                    for (ProjectRiskDO risk : risks) {
+                        if (Objects.equals(stageName, risk.getName())) {
+                            projectRiskMapper.updateStatus(risk.getId(), ProjectRiskStatusEnum.COMPLETE.getCode());
+                        }
                     }
                 }
+                return;
             }
         }
 
@@ -119,7 +123,6 @@ public class DrcRiskListener implements Listener {
                 planStartDate = taskDO.getPlanStartDate();
                 actualEndDate = taskDO.getActualEndDate();
                 actualStartDate = taskDO.getActualStartDate();
-                applicationEventPublisher.publishEvent(new TaskUpdateEvent(this, taskDO));
             } else if (Objects.equals(tableName, "project")) {
                 ProjectDO projectDO = JSON.parseObject(body.getAfter(), ProjectDO.class);
                 milestoneRelationId = projectDO.getId();
@@ -128,7 +131,6 @@ public class DrcRiskListener implements Listener {
                 planStartDate = projectDO.getPlanStartDate();
                 actualEndDate = projectDO.getActualEndDate();
                 actualStartDate = projectDO.getActualStartDate();
-                applicationEventPublisher.publishEvent(new ProjectUpdateEvent(this, projectDO));
             } else {
                 return;
             }
