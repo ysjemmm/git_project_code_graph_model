@@ -1,17 +1,11 @@
 package com.timevale.forward.service.impl;
 
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimaps;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
-import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
-import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.client.ProjectMilestoneService;
 import com.timevale.forward.facade.api.client.TaskService;
 import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
@@ -19,10 +13,10 @@ import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.result.ProjectMilestoneListVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.MilestoneTypeEnum;
-import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.InnerProjectStatusUpdateComponent;
 import com.timevale.forward.service.component.ProjectComponent;
+import com.timevale.forward.service.component.ProjectMilestoneComponent;
 import com.timevale.forward.service.component.UserComponent;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import com.timevale.forward.service.copy.TaskCopier;
@@ -34,7 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -52,9 +48,9 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
     private final TaskMapper taskMapper;
     private final ProjectMapper projectMapper;
     private final ProjectMilestoneMapper milestoneMapper;
-    private final PersonMapper personMapper;
     private final UserComponent userComponent;
     private final InnerProjectStatusUpdateComponent innerProjectStatusUpdateComponent;
+    private final ProjectMilestoneComponent projectMilestoneComponent;
     @Override
     public BaseResult<Void> add(ProjectMilestoneAddReq projectMilestoneAddReq) {
         ProjectDO project = projectMapper.get(projectMilestoneAddReq.getProjectId());
@@ -100,50 +96,12 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
         ProjectDO currentProject = projectMapper.get(projectId);
         AssertUtil.notNull(currentProject, "当前项目不存在或者已经被删除，请刷新后重试");
         ProjectMilestoneListVO res = new ProjectMilestoneListVO();
-        List<ProjectMilestoneVO> resList = new ArrayList<>();
+        List<ProjectMilestoneVO> resList = projectMilestoneComponent.listByProjectId(projectId);
         res.setPmId(currentProject.getPmId());
         res.setPm(currentProject.getPm());
         res.setValidStages(currentProject.getValidStageList());
         res.setList(resList);
-        List<ProjectMilestone> milestones = milestoneMapper.selectByProjectId(projectId);
         res.setIsPMO(userComponent.isPmo());
-        if (milestones.isEmpty()) {
-            return BaseResult.success(res);
-        }
-        ListMultimap<Integer, ProjectMilestone> milestonesByType =
-                Multimaps.index(milestones, ProjectMilestone::getType);
-        List<ProjectMilestone> projectMilestones = milestonesByType.get(MilestoneTypeEnum.PROJECT.getCode());
-        if (!projectMilestones.isEmpty()) {
-            List<Long> relationIds = projectMilestones.stream().map(ProjectMilestone::getRelationId)
-                    .collect(Collectors.toList());
-            List<ProjectDO> projects = projectMapper.getByIds(relationIds);
-            Map<Long, ProjectDO> projectById = Maps.uniqueIndex(projects, ProjectDO::getId);
-            for (ProjectMilestone projectMilestone : projectMilestones) {
-                ProjectDO relateProject = projectById.get(projectMilestone.getRelationId());
-                if (relateProject == null) {
-                    continue;
-                }
-                resList.add(ProjectMilestoneCopier.INSTANCE.convert(projectMilestone, relateProject));
-            }
-        }
-        List<ProjectMilestone> taskMilestones = milestonesByType.get(MilestoneTypeEnum.TASK.getCode());
-        if (!taskMilestones.isEmpty()) {
-            List<Long> relationIds = taskMilestones.stream().map(ProjectMilestone::getRelationId)
-                    .collect(Collectors.toList());
-            List<TaskDO> tasks = taskMapper.getByIdList(relationIds);
-            //1.填充人员信息
-            Map<Long, TaskDO> taskById = Maps.uniqueIndex(tasks, TaskDO::getId);
-            Map<Long, List<PersonDO>> executorMap = personMapper.get(taskById.keySet(),
-                            PersonTypeEnum.TASK_EXECUTOR.getCode())
-                    .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
-            for (ProjectMilestone taskMilestone : taskMilestones) {
-                TaskDO task = taskById.get(taskMilestone.getRelationId());
-                if (task == null) {
-                    continue;
-                }
-                resList.add(ProjectMilestoneCopier.INSTANCE.convert(taskMilestone, task, executorMap.get(task.getId())));
-            }
-        }
         resList.forEach(m -> {
             m.setProjectId(currentProject.getId());
             m.setProjectName(currentProject.getName());

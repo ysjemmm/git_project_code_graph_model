@@ -17,4 +17,8 @@ public interface ProjectLogComponent{
     void addLogWhenContentChange(String oldValue,String newValue,Long id,String field) ;
 
     void addLogWhenContentChange(String oldValue,String newValue,Long id,String field, String action) ;
+
+    void addAppendChildLog(Long id, String childName);
+
+    void addAttachParentLog(Long id, String parentName);
 }

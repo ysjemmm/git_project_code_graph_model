@@ -5,7 +5,9 @@ import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.ProjectMD;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.component.BizDemandLogComponent;
+import com.timevale.forward.service.component.PersonComponent;
+import com.timevale.forward.service.component.ProjectLogComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.compare.FieldCompareUtil;
@@ -268,6 +270,25 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             logDO.setCreateManId(createManId);
             bizChangeLogMapper.insert(logDO);
         }
+    }
+
+    @Override
+    public void addAppendChildLog(Long id, String childName) {
+        BizChangeLogDO log = new BizChangeLogDO();
+        log.setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                .setMainId(id)
+                .setAction(ButtonActionEnum.APPEND_CHILD.getText())
+                .setNewValue(childName);
+    }
+
+    @Override
+    public void addAttachParentLog(Long id, String parentName) {
+        BizChangeLogDO log = new BizChangeLogDO();
+        log.setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                .setMainId(id)
+                .setField(StringUtils.EMPTY)
+                .setAction(ButtonActionEnum.LINK_PARENT.getText())
+                .setNewValue(parentName);
     }
 
     private BizChangeLogDO createLog(Long mainId, String field, String oldValue, String newValue, String action) {

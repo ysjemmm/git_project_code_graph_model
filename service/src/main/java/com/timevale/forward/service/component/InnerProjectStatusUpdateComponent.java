@@ -4,7 +4,6 @@ import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
-import com.timevale.forward.facade.api.client.ProjectMilestoneService;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.*;
 import lombok.RequiredArgsConstructor;
@@ -24,14 +23,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class InnerProjectStatusUpdateComponent {
     private final ProjectMapper projectMapper;
-    private final ProjectMilestoneService projectMilestoneService;
+    private final ProjectMilestoneComponent projectMilestoneComponent;
     private final ProjectMilestoneMapper projectMilestoneMapper;
 
     public void updateFromProject(ProjectDO project) {
         List<ProjectMilestone> milestones = projectMilestoneMapper.selectByRelation(
                 Collections.singleton(project.getId()), MilestoneTypeEnum.PROJECT.getCode());
         milestones.stream().findFirst().ifPresent(m -> updateProjectDateAndStatus(m.getProjectId()));
-
     }
 
     public void updateProjectDateAndStatus(Long projectId) {
@@ -44,7 +42,7 @@ public class InnerProjectStatusUpdateComponent {
             return;
         }
         try {
-            List<ProjectMilestoneVO> milestones = projectMilestoneService.listMilestones(projectId).getData().getList();
+            List<ProjectMilestoneVO> milestones = projectMilestoneComponent.listByProjectId(projectId);
             if (CollectionUtils.isEmpty(milestones)) {
                 log.info("no milestones in project, projectId: {}", projectId);
                 return;

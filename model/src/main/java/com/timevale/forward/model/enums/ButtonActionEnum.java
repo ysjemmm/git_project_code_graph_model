@@ -194,6 +194,10 @@ public enum ButtonActionEnum {
      */
     APPEND("新增"),
 
+    APPEND_CHILD("新增子项目"),
+
+    LINK_PARENT("关联上级项目"),
+
     /**
      * 新增项目预算
      */
