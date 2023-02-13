@@ -10,7 +10,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -26,9 +29,11 @@ public class InnerProjectStatusUpdateComponent {
     private final ProjectMilestoneMapper projectMilestoneMapper;
 
     public void updateFromProject(ProjectDO project) {
-        List<ProjectMilestone> milestones = projectMilestoneMapper.selectByRelations(
-                Collections.singleton(project.getId()), MilestoneTypeEnum.PROJECT.getCode());
-        milestones.stream().findFirst().ifPresent(m -> updateProjectDateAndStatus(m.getProjectId()));
+        ProjectMilestone milestone = projectMilestoneMapper.selectByRelation(project.getId(), MilestoneTypeEnum.PROJECT.getCode());
+        if (milestone == null) {
+            return;
+        }
+        updateProjectDateAndStatus(milestone.getProjectId());
     }
 
     public void updateProjectDateAndStatus(Long projectId) {
@@ -68,6 +73,7 @@ public class InnerProjectStatusUpdateComponent {
                 return;
             }
             projectMapper.updateStatusAndDate(projectId, status, actualStartDate, actualEndDate);
+            updateFromProject(project);
         } catch (Exception e) {
             log.warn("update project date and status error，get milestones throws exception，projectId: {}, message: {}",
                     projectId, e.getMessage());
