@@ -279,6 +279,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 .setMainId(id)
                 .setAction(ButtonActionEnum.APPEND_CHILD.getText())
                 .setNewValue(childName);
+        bizChangeLogMapper.insert(log);
     }
 
     @Override
@@ -289,6 +290,27 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 .setField(StringUtils.EMPTY)
                 .setAction(ButtonActionEnum.LINK_PARENT.getText())
                 .setNewValue(parentName);
+        bizChangeLogMapper.insert(log);
+    }
+
+    @Override
+    public void addDeleteChildLog(Long id, String childName) {
+        BizChangeLogDO log = new BizChangeLogDO();
+        log.setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                .setMainId(id)
+                .setAction(ButtonActionEnum.DELETE_CHILD.getText())
+                .setNewValue(childName);
+        bizChangeLogMapper.insert(log);
+    }
+
+    @Override
+    public void addDetachParentLog(Long id, String parentName) {
+        BizChangeLogDO log = new BizChangeLogDO();
+        log.setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                .setMainId(id)
+                .setAction(ButtonActionEnum.UNLINK_PARENT.getText())
+                .setNewValue(parentName);
+        bizChangeLogMapper.insert(log);
     }
 
     private BizChangeLogDO createLog(Long mainId, String field, String oldValue, String newValue, String action) {

@@ -195,8 +195,10 @@ public enum ButtonActionEnum {
     APPEND("新增"),
 
     APPEND_CHILD("新增子项目"),
+    DELETE_CHILD("删除子项目"),
 
     LINK_PARENT("关联上级项目"),
+    UNLINK_PARENT("取消关联上级项目"),
 
     /**
      * 新增项目预算
