@@ -74,13 +74,13 @@
     <update id="update">
         UPDATE project_budget
         <set>
-            <if test="costType">cost_type = #{costType},</if>
-            <if test="expectedAmount">expected_amount = #{expectedAmount},</if>
-            <if test="costAmount">cost_amount = #{costAmount},</if>
-            <if test="expectedDesc">expected_desc = #{expectedDesc},</if>
+            <if test="costType != null">cost_type = #{costType},</if>
+            <if test="expectedAmount != null">expected_amount = #{expectedAmount},</if>
+            <if test="costAmount != null">cost_amount = #{costAmount},</if>
+            <if test="expectedDesc != ">expected_desc = #{expectedDesc},</if>
             <if test="costDesc">cost_desc = #{costDesc},</if>
-            <if test="costDate">cost_date = #{costDate},</if>
             <if test="true">
+                cost_date = #{costDate},
                 modify_man = #{modifyMan},
                 modify_man_id = #{modifyManId}
             </if>

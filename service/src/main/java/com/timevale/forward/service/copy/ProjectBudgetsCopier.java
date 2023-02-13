@@ -8,6 +8,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 
@@ -15,7 +16,9 @@ import java.util.List;
  * @author by YangXu
  * @date 2023/02/03 16:00
  */
-@Mapper
+@Mapper(imports = {
+        BigDecimal.class
+})
 public interface ProjectBudgetsCopier {
 
     ProjectBudgetsCopier INSTANCE = Mappers.getMapper(ProjectBudgetsCopier.class);
@@ -23,6 +26,7 @@ public interface ProjectBudgetsCopier {
     @Mapping(source = "projectId", target = "projectId")
     ProjectBudgetDO req2do(ProjectBudgetSaveReq req, Long projectId);
 
+    @Mapping(target = "costAmount", expression = "java(req.getCostAmount() == null? BigDecimal.ZERO: req.getCostAmount())")
     ProjectBudgetDO req2do(ProjectBudgetSaveReq req);
 
     ProjectBudgetVO do2vo(ProjectBudgetDO budgetDO);
