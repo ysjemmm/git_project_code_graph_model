@@ -13,7 +13,6 @@ import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
-import com.timevale.forward.service.mq.dto.MilestoneInsertEvent;
 import com.timevale.forward.service.mq.dto.ProjectUpdateEvent;
 import com.timevale.forward.service.mq.dto.TaskUpdateEvent;
 import com.timevale.forward.service.utils.date.DateFormatConst;
@@ -104,7 +103,6 @@ public class DrcRiskListener implements Listener {
                         projectRiskMapper.updateStatus(risk.getId(), ProjectRiskStatusEnum.COMPLETE.getCode());
                     }
                 }
-                applicationEventPublisher.publishEvent(new MilestoneInsertEvent(this, milestone));
             }
         }
 

@@ -11,6 +11,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 public interface ProjectMapper {
@@ -139,6 +140,11 @@ public interface ProjectMapper {
      * @return int
      */
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
+
+    void updateStatusAndDate(@Param("id") Long id,
+                             @Param("status") Integer status,
+                             @Param("actualStartDate") Date actualStartDate,
+                             @Param("actualEndDate") Date actualEndDate);
 
     /**
      * 节点状态计算-不修改更新时间

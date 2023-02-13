@@ -15,20 +15,22 @@ import static com.timevale.forward.model.enums.ProjectCategoryEnum.PRODUCT_PROJE
 @AllArgsConstructor
 public enum ProjectStageEnum {
 
-    NULL(-1, "未知", ProjectCategoryEnum.NULL),
-    DEMAND(0, "需求规划阶段", PRODUCT_PROJECT),
-    DEV(1, "研发阶段", PRODUCT_PROJECT),
-    TEST(2, "测试阶段", PRODUCT_PROJECT),
-    START(11, "启动阶段", INNER_PROJECT),
-    PLAN(12, "规划阶段", INNER_PROJECT),
-    EXECUTE(13, "执行阶段", INNER_PROJECT),
-    FINISH(14, "收尾阶段", INNER_PROJECT),
-    OPERATE(15, "运营阶段", INNER_PROJECT);
+    NULL(-1, "未知", ProjectCategoryEnum.NULL, ProjectStatusEnum.NULL),
+    DEMAND(0, "需求规划阶段", PRODUCT_PROJECT, ProjectStatusEnum.WAITING),
+    DEV(1, "研发阶段", PRODUCT_PROJECT, ProjectStatusEnum.PLANING),
+    TEST(2, "测试阶段", PRODUCT_PROJECT, ProjectStatusEnum.TESTING),
+    START(11, "启动阶段", INNER_PROJECT, ProjectStatusEnum.WAITING),
+    PLAN(12, "规划阶段", INNER_PROJECT, ProjectStatusEnum.PLANING),
+    EXECUTE(13, "执行阶段", INNER_PROJECT, ProjectStatusEnum.EXECUTING),
+    FINISH(14, "收尾阶段", INNER_PROJECT, ProjectStatusEnum.FINISHING),
+    OPERATE(15, "运营阶段", INNER_PROJECT, ProjectStatusEnum.OPERATING);
 
     private final Integer code;
     private final String text;
     // 区分阶段属于内部项目还是产研项目
     private final ProjectCategoryEnum category;
+    // 阶段所对应项目阶段
+    private final ProjectStatusEnum status;
 
     // 由于用code查询比较平凡，缓存到一个map以提升性能
     private static final Map<Integer, ProjectStageEnum> MAP =
