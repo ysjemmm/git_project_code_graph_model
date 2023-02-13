@@ -8,8 +8,8 @@ import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.TaskVO;
 import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.ProjectStageEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
-import com.timevale.forward.model.enums.TaskStageEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.TaskComponent;
@@ -37,6 +37,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -150,7 +151,7 @@ public class TaskComponentImpl implements TaskComponent {
             a.setStatusName(TaskStatusEnum.getTextByCode(a.getStatus()));
             a.setProjectName(projectMap.get(a.getProjectId()).getName());
             a.setPmId(projectMap.get(a.getProjectId()).getPmId());
-            a.setStageName(TaskStageEnum.getTextByCode(a.getStage()));
+            a.setStageName(ProjectStageEnum.getTextByCode(a.getStage()));
             if(a.getPlanEndDate()==null){
                 //老数据
                 a.setIsDelay(false);
@@ -207,9 +208,7 @@ public class TaskComponentImpl implements TaskComponent {
             preUpdate.remove(TaskStatusEnum.SUSPEND.getCode());
             // 待执行,进行中任务变成作废时,需要删除钉钉待办
             existTaskDO = existTaskDO.stream().filter(a -> (preUpdate.contains(a.getStatus()))).collect(Collectors.toList());
-            existTaskDO.forEach(a -> {
-                deleteTodoTask(a.getTodoId());
-            });
+            existTaskDO.forEach(a -> deleteTodoTask(a.getTodoId()));
         }
         if (enableTask) {
             //开启暂停的任务
@@ -237,8 +236,7 @@ public class TaskComponentImpl implements TaskComponent {
     public BigDecimal getElapsedTime(Date startTime, Date endTime) {
         Long result = elapsedTimeClient.getElapsedTime(startTime, endTime);
         BigDecimal elapsedTime = new BigDecimal(result.toString());
-        BigDecimal decimal = elapsedTime.divide(new BigDecimal(SECONDS_PER_HOUR), 2, BigDecimal.ROUND_HALF_UP);
-        return decimal;
+        return elapsedTime.divide(new BigDecimal(SECONDS_PER_HOUR), 2, RoundingMode.HALF_UP);
     }
 
     @Override

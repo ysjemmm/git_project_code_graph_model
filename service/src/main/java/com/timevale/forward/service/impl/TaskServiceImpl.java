@@ -269,7 +269,7 @@ public class TaskServiceImpl implements TaskService {
         }
         TaskDetailVO taskDetailVO = TaskCopier.INSTANCE.convert(taskDO);
         taskDetailVO.setStatusName(TaskStatusEnum.getTextByCode(taskDetailVO.getStatus()));
-        taskDetailVO.setStageName(TaskStageEnum.getTextByCode(taskDetailVO.getStage()));
+        taskDetailVO.setStageName(ProjectStageEnum.getTextByCode(taskDetailVO.getStage()));
         //项目
         ProjectDO projectDO = projectMapper.get(taskDO.getProjectId());
         taskDetailVO.setProjectId(projectDO.getId());
@@ -642,7 +642,7 @@ public class TaskServiceImpl implements TaskService {
             }
         }
 
-        boolean matchStage = taskDOList.stream().anyMatch(a -> TaskStageEnum.DEMAND.getCode().equals(a.getStage()));
+        boolean matchStage = taskDOList.stream().anyMatch(a -> ProjectStageEnum.DEMAND.getCode().equals(a.getStage()));
         if (!matchTaskStage(transferReq.getProjectId()) && matchStage) {
             throw new BaseBizRuntimeException("项目无需求规划阶段,不能转移含该阶段的任务,请修改后重试");
         }
@@ -680,7 +680,7 @@ public class TaskServiceImpl implements TaskService {
 
 
     private void checkTaskStage(TaskDO taskDO) {
-        if (!matchTaskStage(taskDO.getProjectId()) && TaskStageEnum.DEMAND.getCode().equals(taskDO.getStage())) {
+        if (!matchTaskStage(taskDO.getProjectId()) && ProjectStageEnum.DEMAND.getCode().equals(taskDO.getStage())) {
             throw new BaseBizRuntimeException("项目无需求规划阶段,不能创建该阶段的任务,请修改后重试");
         }
     }
