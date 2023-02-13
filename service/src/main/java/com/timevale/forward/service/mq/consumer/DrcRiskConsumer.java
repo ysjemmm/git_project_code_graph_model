@@ -1,6 +1,6 @@
 package com.timevale.forward.service.mq.consumer;
 
-import com.timevale.forward.service.mq.listener.MqListener;
+import com.timevale.forward.service.mq.listener.DrcRiskListener;
 import com.timevale.framework.mq.client.Group;
 import com.timevale.framework.mq.client.Topic;
 import com.timevale.framework.mq.client.consumer.Consumer;
@@ -22,12 +22,12 @@ import java.util.concurrent.atomic.AtomicReference;
 public class DrcRiskConsumer {
 
     private final String GROUP_NAME = "forward-drc-risk-group";
-    private final String TOPIC_NAME = "DRC_DS_PROJECT_TASK_RISK_TOPIC";
+    private final String TOPIC_NAME = "DRC_DS_PROJECT_TASK_RISK";
 
     @Resource
     private ConsumerFactory consumerFactory;
     @Resource
-    private MqListener mqListener;
+    private DrcRiskListener drcRiskListener;
 
     private final AtomicReference<Consumer> consumer = new AtomicReference<>();
 
@@ -36,7 +36,7 @@ public class DrcRiskConsumer {
         if (consumer.get() == null) {
             Consumer consumer = consumerFactory.createConsumer(new Group(GROUP_NAME));
             consumer.subscribe(new Topic(TOPIC_NAME));
-            consumer.registerListener(mqListener);
+            consumer.registerListener(drcRiskListener);
             consumer.start();
             this.consumer.compareAndSet(null, consumer);
         }

@@ -15,9 +15,6 @@ import com.timevale.forward.facade.api.request.BizDomainModifyReq;
 import com.timevale.forward.facade.api.result.BizDomainVO;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDomainCopier;
-import com.timevale.forward.service.job.InnerProjectRiskBackJob;
-import com.timevale.forward.service.job.InnerProjectRiskJob;
-import com.timevale.forward.service.mq.listener.DrcRiskListener;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -43,13 +40,6 @@ public class BizDomainServiceImpl implements BizDomainService {
     private BizDomainMapper bizDomainMapper;
     @Resource
     private ProductLineMapper productLineMapper;
-
-    @Resource
-    private DrcRiskListener riskListener;
-    @Resource
-    private InnerProjectRiskJob innerProjectRiskJob;
-    @Resource
-    private InnerProjectRiskBackJob innerProjectRiskBackJob;
 
     @Override
     public BaseResult<List<BizDomainVO>> bizDomainList() {

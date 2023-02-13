@@ -13,11 +13,15 @@ import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
+import com.timevale.forward.service.mq.dto.MilestoneInsertEvent;
+import com.timevale.forward.service.mq.dto.ProjectUpdateEvent;
+import com.timevale.forward.service.mq.dto.TaskUpdateEvent;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.framework.mq.client.consumer.Listener;
 import com.timevale.framework.mq.client.consumer.ReceiveResult;
 import com.timevale.framework.mq.client.producer.Msg;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -41,6 +45,8 @@ public class DrcRiskListener implements Listener {
     private ProjectRiskMapper projectRiskMapper;
     @Resource
     private ProjectMilestoneMapper projectMilestoneMapper;
+    @Resource
+    private ApplicationEventPublisher applicationEventPublisher;
 
     // 一个的工作日毫秒数
     private final BigDecimal WORK_DAY_SECONDS = new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND);
@@ -61,7 +67,7 @@ public class DrcRiskListener implements Listener {
 
                 log.info("消费完成,{}", body.getGtId());
             } catch (Exception e) {
-                log.error("DRC消费失败,消息={},错误信息={}",msg,e);
+                log.error("DRC消费失败,消息={},错误信息={}", msg, e);
             }
         }
         return ReceiveResult.success();
@@ -98,11 +104,15 @@ public class DrcRiskListener implements Listener {
                         projectRiskMapper.updateStatus(risk.getId(), ProjectRiskStatusEnum.COMPLETE.getCode());
                     }
                 }
+                applicationEventPublisher.publishEvent(new MilestoneInsertEvent(this, milestone));
             }
         }
 
         // 项目、任务更新，处理里程碑逾期风险
         {
+            if (!Objects.equals(body.getAction(), "UPDATE")) {
+                return;
+            }
             if (Objects.equals(tableName, "task")) {
                 TaskDO taskDO = JSON.parseObject(body.getAfter(), TaskDO.class);
                 milestoneRelationId = taskDO.getId();
@@ -111,6 +121,7 @@ public class DrcRiskListener implements Listener {
                 planStartDate = taskDO.getPlanStartDate();
                 actualEndDate = taskDO.getActualEndDate();
                 actualStartDate = taskDO.getActualStartDate();
+                applicationEventPublisher.publishEvent(new TaskUpdateEvent(this, taskDO));
             } else if (Objects.equals(tableName, "project")) {
                 ProjectDO projectDO = JSON.parseObject(body.getAfter(), ProjectDO.class);
                 milestoneRelationId = projectDO.getId();
@@ -119,6 +130,7 @@ public class DrcRiskListener implements Listener {
                 planStartDate = projectDO.getPlanStartDate();
                 actualEndDate = projectDO.getActualEndDate();
                 actualStartDate = projectDO.getActualStartDate();
+                applicationEventPublisher.publishEvent(new ProjectUpdateEvent(this, projectDO));
             } else {
                 return;
             }
@@ -143,7 +155,7 @@ public class DrcRiskListener implements Listener {
             Integer riskType = riskDO.getType();
             if (Objects.equals(ProjectRiskTypeEnum.MILE_STONE_START.getCode(), riskType) && actualStartDate != null) {
                 overdueDay = getOverdueDay(planStartDate, actualStartDate);
-            } else if(Objects.equals(ProjectRiskTypeEnum.MILE_STONE_END.getCode(), riskType) && actualEndDate != null) {
+            } else if (Objects.equals(ProjectRiskTypeEnum.MILE_STONE_END.getCode(), riskType) && actualEndDate != null) {
                 overdueDay = getOverdueDay(planEndDate, actualEndDate);
             }
 
