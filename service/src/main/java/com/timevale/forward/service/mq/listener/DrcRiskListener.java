@@ -129,7 +129,7 @@ public class DrcRiskListener implements Listener {
             }
 
             // 关联的里程碑
-            List<ProjectMilestone> milestones = projectMilestoneMapper.selectByRelation(Collections.singleton(milestoneRelationId),
+            List<ProjectMilestone> milestones = projectMilestoneMapper.selectByRelations(Collections.singleton(milestoneRelationId),
                     milestoneType.getCode());
             ProjectMilestone milestone = milestones.stream().findFirst().orElse(null);
             if (milestone == null) {

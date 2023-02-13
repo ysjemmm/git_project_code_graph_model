@@ -154,6 +154,8 @@ public class ProjectServiceImpl implements ProjectService {
     private UserComponent userComponent;
     @Resource
     private InnerProjectStatusUpdateComponent innerProjectStatusUpdateComponent;
+    @Resource
+    private ProjectMilestoneComponent projectMilestoneComponent;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -235,7 +237,8 @@ public class ProjectServiceImpl implements ProjectService {
             // 作废项目更新里程碑内部项目状态
             innerProjectStatusUpdateComponent.updateFromProject(projectDO);
         }
-        String action = ProjectStatusEnum.SUSPEND.getCode().equals(type) ? ButtonActionEnum.SUSPEND.getText() : ButtonActionEnum.INVALID.getText();
+        String action = ProjectStatusEnum.SUSPEND.getCode().equals(type) ?
+                ButtonActionEnum.SUSPEND.getText() : ButtonActionEnum.INVALID.getText();
         projectLogComponent.addLogWhenStatusChange(oldStatus, type, projectId, action);
 
         //记录暂停/作废原因更新日志
@@ -246,6 +249,11 @@ public class ProjectServiceImpl implements ProjectService {
         projectLogComponent.addLogWhenContentChange(CommonConstant.NULL, reason, projectId, field);
         // 更新任务状态
         taskComponent.updateStatusAsProjectStatusChange(projectId, type, false);
+        if (ProjectStatusEnum.SUSPEND.getCode().equals(type)) {
+            projectMilestoneComponent.addMilestoneSuspendLog(projectId, MilestoneTypeEnum.PROJECT.getCode());
+        } else {
+            projectMilestoneComponent.addMilestoneInvalidLog(projectId, MilestoneTypeEnum.PROJECT.getCode());
+        }
         return BaseResult.success(true);
     }
 
@@ -281,6 +289,7 @@ public class ProjectServiceImpl implements ProjectService {
             projectLogComponent.addLogWhenContentChange(oldReason, CommonConstant.NULL, projectId,
                     BizChangeLogFieldEnum.SUSPEND_REASON.getText());
         }
+        projectMilestoneComponent.addMilestoneEnableLog(projectId, MilestoneTypeEnum.PROJECT.getCode());
 
         return BaseResult.success(true);
     }

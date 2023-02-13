@@ -3,19 +3,16 @@ package com.timevale.forward.service.component;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
-import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
-import com.timevale.forward.dal.dao.TaskMapper;
-import com.timevale.forward.dal.entity.PersonDO;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectMilestone;
-import com.timevale.forward.dal.entity.TaskDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
+import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
+import com.timevale.forward.model.enums.ButtonActionEnum;
 import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -35,6 +32,7 @@ public class ProjectMilestoneComponent {
     private final ProjectMapper projectMapper;
     private final TaskMapper taskMapper;
     private final PersonMapper personMapper;
+    private final BizChangeLogMapper bizChangeLogMapper;
 
     public List<ProjectMilestoneVO> listByProjectId(Long projectId) {
         List<ProjectMilestoneVO> resList = new ArrayList<>();
@@ -78,6 +76,44 @@ public class ProjectMilestoneComponent {
             }
         }
         return resList;
+    }
+
+    public void addMilestoneCreateLog(ProjectMilestone entity) {
+        addMilestoneLog(entity, ButtonActionEnum.MILESTONE_ADD);
+    }
+
+    public void addMilestoneDeleteLog(ProjectMilestone entity) {
+        addMilestoneLog(entity, ButtonActionEnum.MILESTONE_DELETE);
+    }
+
+    public void addMilestoneSuspendLog(Long relationId, Integer type) {
+        addMilestoneLog(relationId, type, ButtonActionEnum.MILESTONE_SUSPEND);
+    }
+
+    public void addMilestoneEnableLog(Long relationId, Integer type) {
+        addMilestoneLog(relationId, type, ButtonActionEnum.MILESTONE_ENABLE);
+    }
+
+    public void addMilestoneInvalidLog(Long relationId, Integer type) {
+        addMilestoneLog(relationId, type, ButtonActionEnum.MILESTONE_INVALID);
+    }
+
+    private void addMilestoneLog(Long relationId, Integer type, ButtonActionEnum action) {
+        ProjectMilestone entity = milestoneMapper.selectByRelation(relationId, type);
+        if (entity == null) {
+            return;
+        }
+        addMilestoneLog(entity, action);
+    }
+
+    private void addMilestoneLog(ProjectMilestone entity, ButtonActionEnum action) {
+        BizChangeLogDO log = new BizChangeLogDO()
+                .setMainId(entity.getProjectId())
+                .setType(BizChangeLogTypeEnum.PROJECT.getCode())
+                .setAction(action.getText())
+                .setField(StringUtils.EMPTY)
+                .setNewValue(entity.getMilestoneName());
+        bizChangeLogMapper.insert(log);
     }
 
 }

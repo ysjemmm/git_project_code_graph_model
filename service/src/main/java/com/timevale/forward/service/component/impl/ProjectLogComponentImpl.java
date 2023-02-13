@@ -277,6 +277,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
         BizChangeLogDO log = new BizChangeLogDO();
         log.setType(BizChangeLogTypeEnum.PROJECT.getCode())
                 .setMainId(id)
+                .setField(StringUtils.EMPTY)
                 .setAction(ButtonActionEnum.APPEND_CHILD.getText())
                 .setNewValue(childName);
         bizChangeLogMapper.insert(log);
@@ -298,6 +299,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
         BizChangeLogDO log = new BizChangeLogDO();
         log.setType(BizChangeLogTypeEnum.PROJECT.getCode())
                 .setMainId(id)
+                .setField(StringUtils.EMPTY)
                 .setAction(ButtonActionEnum.DELETE_CHILD.getText())
                 .setNewValue(childName);
         bizChangeLogMapper.insert(log);
@@ -308,6 +310,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
         BizChangeLogDO log = new BizChangeLogDO();
         log.setType(BizChangeLogTypeEnum.PROJECT.getCode())
                 .setMainId(id)
+                .setField(StringUtils.EMPTY)
                 .setAction(ButtonActionEnum.UNLINK_PARENT.getText())
                 .setNewValue(parentName);
         bizChangeLogMapper.insert(log);
