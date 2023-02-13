@@ -4,6 +4,7 @@ import com.timevale.forward.dal.condition.ProjectRiskCondition;
 import com.timevale.forward.dal.entity.ProjectRiskDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.Date;
 import java.util.List;
@@ -33,6 +34,9 @@ public interface ProjectRiskMapper {
      * @param projectRiskDO 项目风险DO
      */
     int update(ProjectRiskDO projectRiskDO);
+
+    @Update("UPDATE project_risk SET status = #{status} WHERE main_id = #{mainId}")
+    void updateStatusByMainId(@Param("mainId") Long mainId, @Param("status") Integer status);
 
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 

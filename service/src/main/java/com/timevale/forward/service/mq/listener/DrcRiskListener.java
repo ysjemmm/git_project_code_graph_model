@@ -82,8 +82,7 @@ public class DrcRiskListener implements Listener {
                     // 里程碑被删除，风险作废
                     if (Objects.equals(milestone.getIsDeleted(), YesOrNoEnum.YES.getCode())) {
                         Long milestoneId = milestone.getId();
-                        ProjectRiskDO riskDO = projectRiskMapper.selectByMain(milestoneId, ProjectRiskStatusEnum.PENDING.getCode());
-                        projectRiskMapper.updateStatus(riskDO.getId(), ProjectRiskStatusEnum.INVALID.getCode());
+                        projectRiskMapper.updateStatusByMainId(milestoneId, ProjectRiskStatusEnum.INVALID.getCode());
                     }
                 } else if (Objects.equals(body.getAction(), "INSERT")) {
                     Long projectId = milestone.getProjectId();
