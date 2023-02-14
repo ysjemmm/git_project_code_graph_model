@@ -127,6 +127,8 @@ public interface ProjectRiskMapper {
 
     ProjectRiskDO selectByMain(@Param("mainId") Long mainId, @Param("status") Integer status, @Param("types") List<Integer> types);
 
+    ProjectRiskDO selectByMainType(@Param("mainId") Long mainId, @Param("statuses") List<Integer> status, @Param("types") List<Integer> types);
+
     @Select("SELECT * FROM project_risk WHERE project_id = #{projectId} AND type = #{type} AND status = #{status} AND is_deleted = false")
     List<ProjectRiskDO> selectByProject(@Param("projectId") Long projectId, @Param("type") Integer type, @Param("status") Integer status);
 }

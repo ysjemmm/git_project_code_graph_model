@@ -15,6 +15,7 @@ import com.timevale.framework.mq.client.consumer.Listener;
 import com.timevale.framework.mq.client.consumer.ReceiveResult;
 import com.timevale.framework.mq.client.producer.Msg;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -81,13 +82,24 @@ public class DrcRiskListener implements Listener {
                 if (Objects.equals(body.getAction(), "UPDATE")) {
                     // 里程碑被删除，风险作废
                     if (Objects.equals(milestone.getIsDeleted(), YesOrNoEnum.YES.getCode())) {
-                        // 关联的全部风险
+                        // 关联的风险
                         Long milestoneId = milestone.getId();
                         ArrayList<Integer> types = new ArrayList<>();
                         types.add(ProjectRiskTypeEnum.MILE_STONE_START.getCode());
                         types.add(ProjectRiskTypeEnum.MILE_STONE_END.getCode());
                         types.add(ProjectRiskTypeEnum.MILE_STONE_NONE.getCode());
                         projectRiskMapper.updateStatusByMainId(milestoneId, ProjectRiskStatusEnum.INVALID.getCode(), types);
+
+                        // 上一个阶段的未录入风险
+                        ProjectStageEnum preByCode = ProjectStageEnum.getPreByCode(milestone.getStage());
+                        Long projectId = milestone.getProjectId();
+                        List<ProjectMilestone> projectMilestones = projectMilestoneMapper.selectByStage(projectId, preByCode.getCode());
+                        for (ProjectMilestone projectMilestone : projectMilestones) {
+                            projectRiskMapper.updateStatusByMainId(
+                                    projectMilestone.getId(),
+                                    ProjectRiskStatusEnum.COMPLETE.getCode(),
+                                    Lists.newArrayList(ProjectRiskTypeEnum.MILE_STONE_NONE.getCode()));
+                        }
                     }
                 } else if (Objects.equals(body.getAction(), "INSERT")) {
                     Long projectId = milestone.getProjectId();
