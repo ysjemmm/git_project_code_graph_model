@@ -14,9 +14,9 @@ public enum ProjectLevelEnum {
     COMMON(0,"普通项目"),
 
     IMPORTANT(10,"重点项目"),
-    S(20, "S级"),
-    A(30, "A级"),
-    B(40, "B级");
+    S(20, "S"),
+    A(30, "A"),
+    B(40, "B");
 
     private final Integer code;
     private final String text;
