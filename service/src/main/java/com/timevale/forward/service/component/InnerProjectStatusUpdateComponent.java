@@ -49,7 +49,6 @@ public class InnerProjectStatusUpdateComponent {
         try {
             List<ProjectMilestoneVO> validMilestones = getValidMilestones(projectId);
             Date actualStartDate = null;
-            Date actualEndDate = null;
             Integer status = ProjectStatusEnum.WAITING.getCode();
             if (!validMilestones.isEmpty()) {
                 status = validMilestones.stream().max(Comparator.comparing(ProjectMilestoneVO::getStage))
@@ -57,23 +56,17 @@ public class InnerProjectStatusUpdateComponent {
                         .orElse(ProjectStatusEnum.WAITING.getCode());
                 List<Integer> validStageList = project.getValidStageList();
                 Integer startStage = validStageList.get(0);
-                Integer endStage = validStageList.get(validStageList.size() - 1);
                 actualStartDate = validMilestones.stream().filter(m -> Objects.equals(m.getStage(), startStage))
                         .min(Comparator.comparing(ProjectMilestoneVO::getActualStartDate))
                         .map(ProjectMilestoneVO::getActualStartDate).orElse(null);
-                actualEndDate = validMilestones.stream()
-                        .filter(m -> Objects.equals(m.getStage(), endStage) && m.getActualEndDate() != null)
-                        .max(Comparator.comparing(ProjectMilestoneVO::getActualEndDate))
-                        .map(ProjectMilestoneVO::getActualEndDate).orElse(null);
             }
             if (Objects.equals(project.getStatus(), status) &&
-                    Objects.equals(project.getActualStartDate(), actualStartDate) &&
-                    Objects.equals(project.getActualEndDate(), actualEndDate)) {
-                log.info("project status and date not updating cause data is identity, projectId: {}, status: {}, actualStartDate: {}, actualEndDate: {}",
-                        projectId, status, actualStartDate, actualEndDate);
+                    Objects.equals(project.getActualStartDate(), actualStartDate)) {
+                log.info("project status and date not updating cause data is identity, projectId: {}, status: {}, actualStartDate: {}",
+                        projectId, status, actualStartDate);
                 return;
             }
-            projectMapper.updateStatusAndDate(projectId, status, actualStartDate, actualEndDate);
+            projectMapper.updateStatusAndStartDate(projectId, status, actualStartDate);
             updateFromProject(project);
         } catch (Exception e) {
             log.warn("update project date and status error，get milestones throws exception，projectId: {}, message: {}",

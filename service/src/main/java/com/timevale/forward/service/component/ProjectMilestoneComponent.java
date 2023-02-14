@@ -112,6 +112,10 @@ public class ProjectMilestoneComponent {
         addMilestoneLog(relationId, type, ButtonActionEnum.MILESTONE_INVALID);
     }
 
+    public void addMilestoneDoneLog(Long relationId, Integer type) {
+        addMilestoneLog(relationId, type, ButtonActionEnum.MILESTONE_DONE);
+    }
+
     private void addMilestoneLog(Long relationId, Integer type, ButtonActionEnum action) {
         ProjectMilestone entity = milestoneMapper.selectByRelation(relationId, type);
         if (entity == null) {

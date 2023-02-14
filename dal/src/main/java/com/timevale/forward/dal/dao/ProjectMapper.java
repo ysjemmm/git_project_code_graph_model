@@ -10,7 +10,6 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -145,11 +144,13 @@ public interface ProjectMapper {
      */
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 
-    void updateStatusAndDate(@Param("id") Long id,
-                             @Param("status") Integer status,
-                             @Param("actualStartDate") Date actualStartDate,
-                             @Param("actualEndDate") Date actualEndDate);
+    void updateStatusAndStartDate(@Param("id") Long id,
+                                  @Param("status") Integer status,
+                                  @Param("actualStartDate") Date actualStartDate);
 
+    void updateStatusAndEndDate(@Param("id") Long id,
+                                  @Param("status") Integer status,
+                                  @Param("actualEndDate") Date actualEndDate);
     /**
      * 节点状态计算-不修改更新时间
      *

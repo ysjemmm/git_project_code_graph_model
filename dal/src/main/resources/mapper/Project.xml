@@ -392,10 +392,18 @@
             id = #{id}
         </where>
     </update>
-    <update id="updateStatusAndDate">
+    <update id="updateStatusAndStartDate">
         update project
         set status            = #{status},
             actual_start_date = #{actualStartDate},
+            modify_man_id     = #{modifyManId},
+            modify_man        = #{modifyMan}
+        where id = #{id}
+          and is_deleted = false
+    </update>
+    <update id="updateStatusAndEndDate">
+        update project
+        set status            = #{status},
             actual_end_date   = #{actualEndDate},
             modify_man_id     = #{modifyManId},
             modify_man        = #{modifyMan}

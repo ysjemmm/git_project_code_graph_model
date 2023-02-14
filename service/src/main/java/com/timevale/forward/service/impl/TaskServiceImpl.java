@@ -415,6 +415,7 @@ public class TaskServiceImpl implements TaskService {
         }
         sendDingMsg(taskDO, existExecutorIds);
         innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
+        projectMilestoneComponent.addMilestoneDoneLog(taskId, MilestoneTypeEnum.TASK.getCode());
         return BaseResult.success(true);
     }
 
