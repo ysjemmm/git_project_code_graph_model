@@ -225,6 +225,7 @@ public enum ButtonActionEnum {
     MILESTONE_SUSPEND("暂停"),
     MILESTONE_INVALID("作废"),
     MILESTONE_ENABLE("开启"),
+    MILESTONE_DONE("完成"),
     ;
 
     private final String text;
