@@ -178,12 +178,12 @@
   </update>
   <insert id="batchInsert" keyColumn="id" keyProperty="id" parameterType="map" useGeneratedKeys="true">
       insert into project_document
-      (project_id, `type`, url, stage, is_deleted, create_man_id, create_man, modify_man_id, modify_man)
+      (project_id, `type`, url, stage, is_deleted, create_man_id, create_man,modify_man_id, modify_man, modify_date)
       values
       <foreach collection="list" item="item" separator=",">
           (#{item.projectId,jdbcType=BIGINT}, #{item.type,jdbcType=INTEGER}, #{item.url,jdbcType=VARCHAR}, #{item.stage},
           #{item.isDeleted,jdbcType=BOOLEAN}, #{item.createManId,jdbcType=VARCHAR}, #{item.createMan,jdbcType=VARCHAR},
-          #{item.modifyManId,jdbcType=VARCHAR}, #{item.modifyMan,jdbcType=VARCHAR})
+          , #{item.modifyManId,jdbcType=VARCHAR}, #{item.modifyMan,jdbcType=VARCHAR}, #{item.modifyDate})
       </foreach>
   </insert>
 
