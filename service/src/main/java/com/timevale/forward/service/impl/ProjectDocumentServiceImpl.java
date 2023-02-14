@@ -27,6 +27,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.mandarin.base.util.AssertUtil;
+import com.timevale.mandarin.base.util.StringUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import org.apache.commons.collections.CollectionUtils;
@@ -126,10 +127,14 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
 
         ProjectDocument projectDocument = ProjectDocumentCopier.INSTANCE.req2Do(req);
         if (projectDocument.getType() >= ProjectDocumentTypeEnum.SET_UP.getCode()) {
+            if (StringUtils.isBlank(req.getDocName())) {
+                req.setDocName(ProjectDocumentTypeEnum.getTextByCode(projectDocument.getType()));
+            }
             // 内部项目需要添加项目名称校验
             projectDocumentComponent.list(req.getProjectId())
                     .stream().filter(p -> p.getDocName() != null &&
-                            Objects.equals(p.getDocName(), req.getDocName()))
+                            Objects.equals(p.getDocName(), req.getDocName()) &&
+                            Objects.equals(p.getStage(), req.getStage()))
                     .findFirst().ifPresent(p ->
                             AssertUtil.checkState(Objects.equals(p.getId(), id),
                                     "该文档名称已经存在，请修改文档名称"));

@@ -3,6 +3,8 @@ package com.timevale.forward.model.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.Objects;
+
 /**
  * @author jingchun
  * created on 2023/2/10
@@ -11,6 +13,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ProjectDocumentTypeEnum {
 
+    NULL(0, "未知"),
     PRODUCT(1, "产品需求文档"),
     SET_UP(11, "立项申请报告"),
     SCHEME(12, "项目方案报告"),
@@ -21,5 +24,18 @@ public enum ProjectDocumentTypeEnum {
 
     private final Integer code;
     private final String text;
+
+    public static ProjectDocumentTypeEnum getByCode(Integer code) {
+        for (ProjectDocumentTypeEnum value : values()) {
+            if (Objects.equals(value.code, code)) {
+                return value;
+            }
+        }
+        return NULL;
+    }
+
+    public static String getTextByCode(Integer code) {
+        return getByCode(code).text;
+    }
 
 }
