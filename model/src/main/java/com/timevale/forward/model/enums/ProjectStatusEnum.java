@@ -20,7 +20,7 @@ public enum ProjectStatusEnum {
      */
     WAITING(0, "待启动", false, false),
 
-    PLANING(10, "规划中", false, false),
+    PLANING(10, "规划中", true, false),
 
     EXECUTING(15, "执行中", true, false),
 
