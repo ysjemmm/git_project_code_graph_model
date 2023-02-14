@@ -464,7 +464,11 @@
                         id in (select id from project where parent_ids regexp #{parentIdsRegexp})
                         or
                         # 无父节点项目
-                        (parent_ids = concat(',', id, ',') and id != #{projectId})
+                        (parent_ids = concat(',', id, ',') and id not in
+                            <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
+                                #{parentId}
+                            </foreach>
+                        )
                         )
                     </when>
                     <otherwise>
