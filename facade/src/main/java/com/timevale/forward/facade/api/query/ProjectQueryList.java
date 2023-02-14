@@ -45,6 +45,9 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
     private List<Integer> types;
 
+    @ApiModelProperty("内部项目类型: 0空, 1战略项目, 2LTC项目, 3PBG项目, 4CBG项目, 5管理后台项目")
+    private List<Integer> innerTypes;
+
     @ApiModelProperty("项目状态:0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废")
     private List<Integer> status;
 

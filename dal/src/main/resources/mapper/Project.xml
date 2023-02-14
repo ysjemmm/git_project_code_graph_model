@@ -245,6 +245,12 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="innerTypes != null and innerTypes.size()>0">
+                and a.inner_type in
+                <foreach collection="innerTypes" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="pms!=null and pms.size()>0">
                 and a.pm_id in
                 <foreach collection="pms" item="item" separator="," open="(" close=")">

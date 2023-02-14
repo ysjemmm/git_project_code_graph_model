@@ -70,6 +70,11 @@ public class ProjectListCondition extends QueryBase {
     private List<Integer> types;
 
     /**
+     * 内部项目类型
+     */
+    private List<Integer> innerTypes;
+
+    /**
      * 项目状态:0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废
      */
     private List<Integer> status;
