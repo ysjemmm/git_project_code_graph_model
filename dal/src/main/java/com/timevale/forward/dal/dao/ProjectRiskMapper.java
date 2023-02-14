@@ -35,8 +35,7 @@ public interface ProjectRiskMapper {
      */
     int update(ProjectRiskDO projectRiskDO);
 
-    @Update("UPDATE project_risk SET status = #{status} WHERE main_id = #{mainId}")
-    void updateStatusByMainId(@Param("mainId") Long mainId, @Param("status") Integer status);
+    void updateStatusByMainId(@Param("mainId") Long mainId, @Param("status") Integer status, @Param("types")List<Integer> types);
 
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 
