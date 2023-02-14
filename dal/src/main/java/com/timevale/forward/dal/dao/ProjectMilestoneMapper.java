@@ -21,6 +21,9 @@ public interface ProjectMilestoneMapper {
 
     List<ProjectMilestone> selectByProjectIds(@Param("projectIds") List<Long> projectIds);
 
+    @Select("select * from project_milestone where project_id = #{projectId} and stage = #{stage} and is_deleted = false")
+    List<ProjectMilestone> selectByStage(@Param("projectId") Long projectId, @Param("stage")Integer stage);
+
     void insert(ProjectMilestone entity);
 
     @Select("select * from project_milestone where id = #{id} and is_deleted = false")

@@ -50,6 +50,20 @@ public enum ProjectStageEnum {
         return MAP.getOrDefault(code, NULL);
     }
 
+    public static ProjectStageEnum getPreByCode(Integer code) {
+        if (code == 15) {
+            return FINISH;
+        } else if (code == 14) {
+            return EXECUTE;
+        } else if (code == 13) {
+            return PLAN;
+        } else if (code == 12) {
+            return START;
+        } else {
+            return START;
+        }
+    }
+
     /**
      * 得到所有阶段json
      *
