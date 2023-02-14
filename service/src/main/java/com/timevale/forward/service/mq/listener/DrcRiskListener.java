@@ -192,6 +192,7 @@ public class DrcRiskListener implements Listener {
         if (actualDate.compareTo(planDate) <= 0) {
             return BigDecimal.ZERO;
         }
+        log.info("[DrcRiskListener.getOverdueDay]planDate:{}, actualDate:{}", planDate, actualDate);
 
         // 计算实际工作日
         Long elapsedTimeStamp = elapsedTimeClient.getElapsedTime(planDate, actualDate);

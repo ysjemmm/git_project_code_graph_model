@@ -524,13 +524,16 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> simpleModify(ProjectSimpleModifyReq projectSimpleModifyReq) {
         // 校验名称参数
+        Long projectId = projectSimpleModifyReq.getId();
         String projectName = projectSimpleModifyReq.getName();
         if (StrUtil.isNotBlank(projectName)) {
-            projectNameValidate(projectName);
+            AssertUtil.checkState(!projectName.contains(CommonConstant.BLANK), "项目名称中请勿包含空格");
+
+            ProjectDO byName = projectMapper.getByName(projectName);
+            AssertUtil.checkState(byName == null || Objects.equals(projectId, byName.getId()), "该项目名称已存在,请修改后重试");
         }
 
         // 目标项目id
-        Long projectId = projectSimpleModifyReq.getId();
         ProjectDO oldProjectDO = projectMapper.get(projectId);
         AssertUtil.notNull(oldProjectDO, "项目不存在");
 

@@ -317,6 +317,7 @@
         <foreach collection="teamMemberList" item="item" separator="," open="(" close=")">
             #{item}
         </foreach>
+        and pj.category = 0
         and p.type &lt; 20
         and p.is_deleted = false
         and pj.is_deleted = false

@@ -118,6 +118,7 @@
                     #{item}
                 </foreach>
             </if>
+        AND is_deleted = false
         </where>
     </select>
 
