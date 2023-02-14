@@ -15,7 +15,9 @@ public enum ProjectTypeEnum {
 
     OPTIMIZE(1,"技术优化项目"),
 
-    RENEW(2,"日常迭代");
+    RENEW(2,"日常迭代"),
+
+    INNER(10, "内部项目");
 
     final private Integer code;
 
