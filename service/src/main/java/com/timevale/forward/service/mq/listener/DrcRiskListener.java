@@ -81,8 +81,13 @@ public class DrcRiskListener implements Listener {
                 if (Objects.equals(body.getAction(), "UPDATE")) {
                     // 里程碑被删除，风险作废
                     if (Objects.equals(milestone.getIsDeleted(), YesOrNoEnum.YES.getCode())) {
+                        // 关联的全部风险
                         Long milestoneId = milestone.getId();
-                        projectRiskMapper.updateStatusByMainId(milestoneId, ProjectRiskStatusEnum.INVALID.getCode());
+                        ArrayList<Integer> types = new ArrayList<>();
+                        types.add(ProjectRiskTypeEnum.MILE_STONE_START.getCode());
+                        types.add(ProjectRiskTypeEnum.MILE_STONE_END.getCode());
+                        types.add(ProjectRiskTypeEnum.MILE_STONE_NONE.getCode());
+                        projectRiskMapper.updateStatusByMainId(milestoneId, ProjectRiskStatusEnum.INVALID.getCode(), types);
                     }
                 } else if (Objects.equals(body.getAction(), "INSERT")) {
                     Long projectId = milestone.getProjectId();

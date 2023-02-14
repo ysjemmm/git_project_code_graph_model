@@ -62,6 +62,16 @@
         </foreach>
     </update>
 
+    <update id="updateStatusByMainId">
+        UPDATE project_risk
+        SET status = #{status}
+        WHERE main_id = #{mainId}
+          AND type IN
+        <foreach collection="types" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </update>
+
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
         SELECT id, project_id, main_id, type, name, sign, status, create_man_id, create_man, create_date, modify_date
         FROM project_risk
@@ -163,6 +173,7 @@
               #{item}
           </foreach>
           AND is_deleted = false
+        LIMIT 1
     </select>
 
 </mapper>

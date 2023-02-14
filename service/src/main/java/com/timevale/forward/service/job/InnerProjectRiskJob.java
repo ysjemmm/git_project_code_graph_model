@@ -178,21 +178,22 @@ public class InnerProjectRiskJob extends IJobHandler {
      * @return {@link BigDecimal}
      */
     private BigDecimal getOverdueDay(Date planDate, Date nowDate) {
-        //  计划结束时间 >= 如果当前时间, 直接跳过
-        if (planDate.compareTo(nowDate) >= 0) {
-            return null;
-        }
-
-        // 计算实际工作日
-        Long elapsedTimeStamp = elapsedTimeClient.getElapsedTime(planDate, nowDate);
-        BigDecimal elapsedTime = new BigDecimal(elapsedTimeStamp);
-        BigDecimal elapsedDay = elapsedTime.divide(WORK_DAY_SECONDS, 0, RoundingMode.DOWN);
-
-        // 如果大于两个工作日，逾期
-        if (TWO_WORK_DAY.compareTo(elapsedDay) < 0) {
-            return elapsedDay;
-        }
-        return null;
+        return BigDecimal.TEN;
+        // //  计划结束时间 >= 如果当前时间, 直接跳过
+        // if (planDate.compareTo(nowDate) >= 0) {
+        //     return null;
+        // }
+        //
+        // // 计算实际工作日
+        // Long elapsedTimeStamp = elapsedTimeClient.getElapsedTime(planDate, nowDate);
+        // BigDecimal elapsedTime = new BigDecimal(elapsedTimeStamp);
+        // BigDecimal elapsedDay = elapsedTime.divide(WORK_DAY_SECONDS, 0, RoundingMode.DOWN);
+        //
+        // // 如果大于两个工作日，逾期
+        // if (TWO_WORK_DAY.compareTo(elapsedDay) < 0) {
+        //     return elapsedDay;
+        // }
+        // return null;
     }
 
     /**
