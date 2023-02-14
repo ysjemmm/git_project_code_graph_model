@@ -1,13 +1,10 @@
 package com.timevale.forward.service.impl;
 
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.condition.PersonListCondition;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
-import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProjectGoalMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
-import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectGoalDO;
 import com.timevale.forward.facade.api.client.ProjectGoalService;
@@ -19,25 +16,18 @@ import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.ProjectGoalMD;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectGoalCopier;
-import com.timevale.forward.service.integration.inneruser.InnerUserPermissionClient;
-import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.compare.FieldCompareUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
-import com.timevale.security.facade.response.BaseInfoResponse;
-import com.timevale.security.facade.response.RoleResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * @author jingchun
@@ -52,14 +42,7 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
     @Resource
     private ProjectGoalMapper projectGoalMapper;
     @Resource
-    private PersonMapper personMapper;
-    @Resource
     private BizChangeLogMapper bizChangeLogMapper;
-
-    @Resource
-    private InnerUserPersonClient innerUserPersonClient;
-    @Resource
-    private InnerUserPermissionClient innerUserPermissionClient;
 
     @Override
     public BaseResult<List<ProjectGoalVO>> list(Long projectGoalProjectId) {
@@ -76,8 +59,6 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         AssertUtil.notNull(projectId, "项目id不能为空");
         ProjectDO project = projectMapper.get(projectId);
         AssertUtil.notNull(project, "对应添加的项目不存在，请刷新后重试");
-        // 权限校验
-        AssertUtil.checkState(hasProjectEditPermission(getPermittedUserIds(project)), "您没有该操作权限");
         // 名称校验
         AssertUtil.checkState(Objects.isNull(projectGoalMapper.getByName(projectId, name)),
                 "项目目标名称重复，请重新修改");
@@ -119,7 +100,6 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         ProjectDO project = projectMapper.get(oldGoal.getProjectId());
         AssertUtil.checkState(ProjectGoalStatusEnum.IN_PROGRESS.getCode().equals(oldGoal.getStatus()),
                 "目标只有在进行中时可以修改");
-        AssertUtil.checkState(hasProjectEditPermission(getPermittedUserIds(project)), "您没有该操作权限");
         String identity = oldGoal.getName();
         // 名称校验
         if (StringUtils.isNotEmpty(newGoal.getName()) && !oldGoal.getName().equals(newGoal.getName())) {
@@ -164,7 +144,6 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         ProjectGoalDO goal = projectGoalMapper.get(projectGoalId);
         AssertUtil.notNull(goal, "您更改的项目目标不存在，请刷新后重试");
         ProjectDO project = projectMapper.get(goal.getProjectId());
-        AssertUtil.checkState(hasProjectEditPermission(getPermittedUserIds(project)), "您没有该操作权限");
         AssertUtil.checkState(ProjectGoalStatusEnum.IN_PROGRESS.getCode().equals(goal.getStatus()),
                 "目标只有在进行中时可以删除");
         List<ProjectGoalDO> goals = projectGoalMapper.getByProjectId(project.getId());
@@ -221,7 +200,6 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
         ProjectGoalDO goal = projectGoalMapper.get(projectGoalId);
         AssertUtil.notNull(goal, "您更改的项目目标不存在，请刷新后重试");
         ProjectDO project = projectMapper.get(goal.getProjectId());
-        AssertUtil.checkState(hasProjectEditPermission(getPermittedUserIds(project)), "您没有该操作权限");
         if (YesOrNoEnum.YES.getCode().equals(goal.getIsMain())) {
             return BaseResult.success(true);
         }
@@ -289,33 +267,6 @@ public class ProjectGoalServiceImpl implements ProjectGoalService {
             );
         }
         return BaseResult.success(true);
-    }
-
-    /**
-     * 项目经理和产品经理以及他们的上级有权限编辑
-     */
-    private Set<String> getPermittedUserIds(ProjectDO project) {
-        Set<String> permittedUserIds = personMapper.select(PersonListCondition.builder().mainId(project.getId())
-                        .type(PersonTypeEnum.PROJECT_PD.getCode()).build())
-                .stream().map(PersonDO::getUserId).collect(Collectors.toSet());
-        permittedUserIds.add(project.getPmId());
-        return permittedUserIds;
-    }
-
-    private boolean hasProjectEditPermission(Collection<String> permittedUserIds) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        String userId = userInfo.getId();
-        if (permittedUserIds.contains(userId)) {
-            return true;
-        }
-        // 当前列表中无权限，则查询是否为上级修改
-        for (String permittedUser : permittedUserIds) {
-            Set<String> superiors = innerUserPersonClient.getAllSuperiorByAccount(permittedUser, false);
-            if (superiors.contains(userId)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private BizChangeLogDO createCommonChangeLog() {
