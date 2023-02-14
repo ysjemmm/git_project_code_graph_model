@@ -515,7 +515,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             return;
         }
         List<Long> childIds = childList.stream().map(ProjectDO::getId).collect(Collectors.toList());
-        List<ProjectMilestone> milestones = projectMilestoneMapper.selectByProjectIds(childIds);
+        List<ProjectMilestone> milestones = projectMilestoneMapper.selectByRelations(childIds, MilestoneTypeEnum.PROJECT.getCode());
         if (!milestones.isEmpty()) {
             milestones.stream().map(ProjectMilestone::getId).forEach(milestoneService::deleteMilestone);
         }
