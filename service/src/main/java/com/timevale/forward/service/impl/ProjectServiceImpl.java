@@ -1091,12 +1091,12 @@ public class ProjectServiceImpl implements ProjectService {
                 "项目暂停或作废时，不能进行此操作");
 
         // 里程碑关联的任务与项目
-        List<ProjectMilestone> projectMilestones = projectMilestoneMapper.selectByProjectId(projectId);
+        List<ProjectMilestoneVO> projectMilestones = projectMilestoneComponent.listByProjectId(projectId);
         // 首个阶段和最后一个阶段都需要存在里程碑
         List<Integer> validStages = projectDO.getValidStageList();
         Integer initStage = validStages.get(0);
         Integer completeStage = validStages.get(validStages.size() - 1);
-        Set<Integer> milestoneStages = projectMilestones.stream().map(ProjectMilestone::getStage)
+        Set<Integer> milestoneStages = projectMilestones.stream().map(ProjectMilestoneVO::getStage)
                 .collect(Collectors.toSet());
         AssertUtil.checkState(milestoneStages.contains(initStage),
                 ProjectStageEnum.getByCode(initStage).getText() + "无里程碑，无法完成项目");
@@ -1104,13 +1104,17 @@ public class ProjectServiceImpl implements ProjectService {
                 ProjectStageEnum.getByCode(completeStage).getText() + "无里程碑，无法完成项目");
         List<Long> taskIds = projectMilestones.stream()
                 .filter(e -> Objects.equals(MilestoneTypeEnum.TASK.getCode(), e.getType()))
-                .map(ProjectMilestone::getRelationId)
+                .map(ProjectMilestoneVO::getRelationId)
                 .collect(Collectors.toList());
         List<Long> projectIds = projectMilestones.stream()
                 .filter(e -> Objects.equals(MilestoneTypeEnum.TASK.getCode(), e.getType()))
-                .map(ProjectMilestone::getRelationId)
+                .map(ProjectMilestoneVO::getRelationId)
                 .collect(Collectors.toList());
-
+        Date projectActualEndDate = projectMilestones.stream()
+                .filter(m -> Objects.equals(m.getStage(), completeStage))
+                .map(ProjectMilestoneVO::getActualEndDate)
+                .max(Date::compareTo)
+                .orElse(new Date());
         // 里程碑是否全部完成
         boolean unfinished = false;
         if (CollUtil.isNotEmpty(taskIds)) {
@@ -1125,6 +1129,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 修改项目状态
         projectMapper.updateStatus(projectId, ProjectStatusEnum.COMPLETE.getCode());
+        projectMapper.updateStatusAndEndDate(projectId, ProjectStatusEnum.COMPLETE.getCode(), projectActualEndDate);
 
         // 项目状态日志
         projectLogComponent.addLogWhenContentChange(
