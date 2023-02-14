@@ -239,18 +239,33 @@
                     #{item}
                 </foreach>
             </if>
-            <if test="types!=null and types.size()>0">
-                and a.type in
-                <foreach collection="types" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="innerTypes != null and innerTypes.size()>0">
-                and a.inner_type in
-                <foreach collection="innerTypes" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
+            <choose>
+                <when test="types != null and types.size > 0 and innerTypes != null and innerTypes.size > 0">
+                    and (a.type in
+                    <foreach collection="types" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                    or a.inner_type in
+                    <foreach collection="innerTypes" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                    )
+                </when>
+                <otherwise>
+                    <if test="types!=null and types.size()>0">
+                        and a.type in
+                        <foreach collection="types" item="item" separator="," open="(" close=")">
+                            #{item}
+                        </foreach>
+                    </if>
+                    <if test="innerTypes != null and innerTypes.size()>0">
+                        and a.inner_type in
+                        <foreach collection="innerTypes" item="item" separator="," open="(" close=")">
+                            #{item}
+                        </foreach>
+                    </if>
+                </otherwise>
+            </choose>
             <if test="pms!=null and pms.size()>0">
                 and a.pm_id in
                 <foreach collection="pms" item="item" separator="," open="(" close=")">
@@ -358,8 +373,8 @@
 
     <update id="updateStatus" parameterType="com.timevale.forward.dal.entity.ProjectDO">
         UPDATE project
-        SET status = #{status},
-            modify_man = #{modifyMan},
+        SET status        = #{status},
+            modify_man    = #{modifyMan},
             modify_man_id = #{modifyManId}
         WHERE id = #{id}
     </update>
@@ -378,12 +393,13 @@
     </update>
     <update id="updateStatusAndDate">
         update project
-        set status = #{status},
+        set status            = #{status},
             actual_start_date = #{actualStartDate},
-            actual_end_date = #{actualEndDate},
-            modify_man_id = #{modifyManId},
-            modify_man = #{modifyMan}
-        where id = #{id} and is_deleted = false
+            actual_end_date   = #{actualEndDate},
+            modify_man_id     = #{modifyManId},
+            modify_man        = #{modifyMan}
+        where id = #{id}
+          and is_deleted = false
     </update>
 
     <select id="pageAllOngoingProjects" resultType="com.timevale.forward.dal.entity.ProjectDO">
@@ -417,18 +433,33 @@
             <if test="navigateParentIdsPrefix != null">
                 and parent_ids like concat(#{navigateParentIdsPrefix}, '%')
             </if>
-            <if test="innerTypes != null and innerTypes.size > 0">
-                and inner_type in
-                <foreach collection="innerTypes" item="innerType" open="(" separator="," close=")">
-                    #{innerType}
-                </foreach>
-            </if>
-            <if test="types != null and types.size > 0">
-                and type in
-                <foreach collection="types" item="type" open="(" separator="," close=")">
-                    #{type}
-                </foreach>
-            </if>
+            <choose>
+                <when test="types != null and types.size > 0 and innerTypes != null and innerTypes.size > 0">
+                    and (a.type in
+                    <foreach collection="types" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                    or a.inner_type in
+                    <foreach collection="innerTypes" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                    )
+                </when>
+                <otherwise>
+                    <if test="types!=null and types.size()>0">
+                        and a.type in
+                        <foreach collection="types" item="item" separator="," open="(" close=")">
+                            #{item}
+                        </foreach>
+                    </if>
+                    <if test="innerTypes != null and innerTypes.size()>0">
+                        and a.inner_type in
+                        <foreach collection="innerTypes" item="item" separator="," open="(" close=")">
+                            #{item}
+                        </foreach>
+                    </if>
+                </otherwise>
+            </choose>
             <if test="pms != null and pms.size > 0">
                 and pm_id in
                 <foreach collection="pms" item="pm" open="(" separator="," close=")">
@@ -465,9 +496,9 @@
                         or
                         <!-- 无父节点项目 -->
                         (parent_ids = concat(',', id, ',') and id not in
-                            <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
-                                #{parentId}
-                            </foreach>
+                        <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
+                            #{parentId}
+                        </foreach>
                         )
                         )
                     </when>
@@ -483,11 +514,11 @@
     <select id="countChildren" resultType="com.timevale.forward.dal.entity.ProjectChildCountDO">
         select p.id as id, count(pr.id) as child_count
         from project p
-                 left join project pr on pr.parent_ids regexp concat('^', p.parent_ids, '.')
+        left join project pr on pr.parent_ids regexp concat('^', p.parent_ids, '.')
         where p.id in
-              <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
-                #{projectId}
-              </foreach>
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
         and p.is_deleted = false
         group by p.id;
     </select>
