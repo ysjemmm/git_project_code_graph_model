@@ -541,6 +541,9 @@ public class ProjectServiceImpl implements ProjectService {
         // 项目预算
         String expectedIncome = projectSimpleModifyReq.getExpectedIncome();
         if (expectedIncome != null) {
+            if ("".equals(expectedIncome)) {
+                expectedIncome = null;
+            }
             projectMapper.updateExpectIncome(projectId, expectedIncome);
         }
 
