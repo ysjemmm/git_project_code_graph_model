@@ -53,7 +53,6 @@ public class ProjectDocumentServiceImpl implements ProjectDocumentService {
     private ProjectFlowMapper projectFlowMapper;
     @Resource
     private ProjectDocumentComponent projectDocumentComponent;
-
     @Resource
     private ManDayMapper manDayMapper;
 

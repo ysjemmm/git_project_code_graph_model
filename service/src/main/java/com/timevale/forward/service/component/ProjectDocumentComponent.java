@@ -44,4 +44,6 @@ public interface ProjectDocumentComponent {
      * 删除项目文档
      */
     void deleteDocument(Long projectDocumentId);
+
+    void initInnerProjectDocument(Long projectId);
 }

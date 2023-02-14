@@ -3,20 +3,20 @@ package com.timevale.forward.service.component.impl;
 import com.timevale.forward.dal.dao.ProjectDocumentMapper;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
 import com.timevale.forward.dal.dao.TestBillMapper;
-import com.timevale.forward.dal.entity.ProjectDocument;
-import com.timevale.forward.dal.entity.ProjectFlowDO;
-import com.timevale.forward.dal.entity.ProjectNodeDO;
-import com.timevale.forward.dal.entity.TestBillDO;
+import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.model.enums.ProjectCategoryEnum;
+import com.timevale.forward.model.enums.ProjectDocumentTypeEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.model.enums.ProjectTypeEnum;
+import com.timevale.forward.model.event.ProjectCreateEvent;
 import com.timevale.forward.service.component.ProjectDocumentComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -87,11 +87,47 @@ public class ProjectDocumentComponentImpl implements ProjectDocumentComponent {
 
     @Override
     public List<ProjectDocument> list(Long projectId) {
-        return projectDocumentMapper.selectByProjectId(projectId);
+        return projectDocumentMapper.listByProjectId(projectId);
     }
 
     @Override
     public void deleteDocument(Long projectDocumentId) {
         projectDocumentMapper.delete(projectDocumentId);
     }
+
+    @EventListener(ProjectCreateEvent.class)
+    public void initInnerProjectDocuments(ProjectCreateEvent event) {
+        ProjectDO project = event.getProject();
+        if (!Objects.equals(project.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode())) {
+            return;
+        }
+        initInnerProjectDocument(project.getId());
+    }
+
+    @Override
+    public void initInnerProjectDocument(Long projectId) {
+        List<ProjectDocument> documents = projectDocumentMapper.listByProjectId(projectId);
+        Set<Integer> existTypes = documents.stream().map(ProjectDocument::getType).collect(Collectors.toSet());
+        List<ProjectDocument> initDocuments = Arrays.stream(ProjectDocumentTypeEnum.values())
+                .filter(ProjectDocumentTypeEnum::isInner)
+                .filter(t -> !existTypes.contains(t.getCode()))
+                .map(t -> {
+                    ProjectDocument doc = new ProjectDocument();
+                    doc.setCreateManId(StringUtils.EMPTY);
+                    doc.setCreateMan(StringUtils.EMPTY);
+                    doc.setModifyManId(StringUtils.EMPTY);
+                    doc.setModifyMan(StringUtils.EMPTY);
+                    doc.setProjectId(projectId);
+                    doc.setType(t.getCode());
+                    doc.setUrl(StringUtils.EMPTY);
+                    doc.setDocName(t.getText());
+                    doc.setStage(t.getStage().getCode());
+                    doc.setIsDeleted(false);
+                    return doc;
+                }).collect(Collectors.toList());
+        if (!initDocuments.isEmpty()) {
+            projectDocumentMapper.batchInsert(initDocuments);
+        }
+    }
+
 }

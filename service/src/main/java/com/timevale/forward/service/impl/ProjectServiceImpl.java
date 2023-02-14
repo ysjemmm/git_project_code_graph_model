@@ -21,6 +21,7 @@ import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.event.ProjectCreateEvent;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
@@ -42,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -156,6 +158,8 @@ public class ProjectServiceImpl implements ProjectService {
     private InnerProjectStatusUpdateComponent innerProjectStatusUpdateComponent;
     @Resource
     private ProjectMilestoneComponent projectMilestoneComponent;
+    @Resource
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -433,6 +437,7 @@ public class ProjectServiceImpl implements ProjectService {
         Integer status = ProjectStatusEnum.WAITING.getCode();
         projectLogComponent.addLogWhenStatusChange(status, status, projectDO.getId(), ButtonActionEnum.SUBMIT.getText());
 
+        applicationEventPublisher.publishEvent(new ProjectCreateEvent(this, projectDO));
         return BaseResult.success(true);
     }
 

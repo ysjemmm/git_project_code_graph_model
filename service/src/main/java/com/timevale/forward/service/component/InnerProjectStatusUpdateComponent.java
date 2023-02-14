@@ -54,9 +54,7 @@ public class InnerProjectStatusUpdateComponent {
                 status = validMilestones.stream().max(Comparator.comparing(ProjectMilestoneVO::getStage))
                         .map(m -> ProjectStageEnum.getByCode(m.getStage()).getStatus().getCode())
                         .orElse(ProjectStatusEnum.WAITING.getCode());
-                List<Integer> validStageList = project.getValidStageList();
-                Integer startStage = validStageList.get(0);
-                actualStartDate = validMilestones.stream().filter(m -> Objects.equals(m.getStage(), startStage))
+                actualStartDate = validMilestones.stream()
                         .min(Comparator.comparing(ProjectMilestoneVO::getActualStartDate))
                         .map(ProjectMilestoneVO::getActualStartDate).orElse(null);
             }
