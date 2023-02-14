@@ -280,6 +280,9 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 .setField(StringUtils.EMPTY)
                 .setAction(ButtonActionEnum.APPEND_CHILD.getText())
                 .setNewValue(childName);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        log.setCreateManId(userInfo.getId());
+        log.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         bizChangeLogMapper.insert(log);
     }
 
@@ -305,6 +308,9 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 .setField(StringUtils.EMPTY)
                 .setAction(ButtonActionEnum.DELETE_CHILD.getText())
                 .setNewValue(childName);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        log.setCreateManId(userInfo.getId());
+        log.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         bizChangeLogMapper.insert(log);
     }
 
@@ -316,6 +322,9 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 .setField(StringUtils.EMPTY)
                 .setAction(ButtonActionEnum.UNLINK_PARENT.getText())
                 .setNewValue(parentName);
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        log.setCreateManId(userInfo.getId());
+        log.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         bizChangeLogMapper.insert(log);
     }
 

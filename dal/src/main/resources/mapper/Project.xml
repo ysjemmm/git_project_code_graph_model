@@ -22,7 +22,7 @@
     <insert id="innerInsert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO project
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            `name`, inner_type, `level`, `desc`, plan_start_date, plan_end_date, pm, pm_id,
+            `name`, type, inner_type, `level`, `desc`, plan_start_date, plan_end_date, pm, pm_id,
             valid_stages, create_man_id, create_man,
             <if test="expectedIncome != null">expected_income,</if>
             <if test="category != null">category,</if>
@@ -30,7 +30,7 @@
         </trim>
         VALUES
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            #{name}, #{innerType}, #{level}, #{desc}, #{planStartDate}, #{planEndDate}, #{pm}, #{pmId},
+            #{name}, 10, #{innerType}, #{level}, #{desc}, #{planStartDate}, #{planEndDate}, #{pm}, #{pmId},
             #{validStages}, #{createManId}, #{createMan},
             # 新增可选
             <if test="expectedIncome != null">#{expectedIncome},</if>

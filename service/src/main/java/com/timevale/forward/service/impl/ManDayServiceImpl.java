@@ -98,8 +98,10 @@ public class ManDayServiceImpl implements ManDayService {
 
         // 处理所有可能的项目
         List<ProjectDO> projects = projectMapper.getByIds(projectIds);
-        // 暂时过滤内部项目
-        projects.removeIf(p -> Objects.equals(p.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode()));
+        // 非项目查询暂时过滤内部项目
+        if (projectId == null) {
+            projects.removeIf(p -> Objects.equals(p.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode()));
+        }
         for (ProjectDO project : projects) {
             // 获取该项目下已填写人天数据
             List<ManDayDO> projectManDays = manDaysByProjectId.get(project.getId());
