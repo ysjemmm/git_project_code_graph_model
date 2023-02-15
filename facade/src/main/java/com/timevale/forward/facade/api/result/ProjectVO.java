@@ -132,6 +132,9 @@ public class ProjectVO extends ToString {
     @ApiModelProperty("内部项目类型名称")
     private String innerTypeName;
 
+    @ApiModelProperty("节点深度(相对)")
+    private Integer nodeDepth;
+
     @ApiModelProperty("标签名称")
     private List<BizLabelSimpleVO> labelNames;
 }

@@ -609,7 +609,12 @@ public class ProjectServiceImpl implements ProjectService {
         }
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         Page<ProjectListDO> projects = projectMapper.listChildren(condition);
-        PageQueryResult<ProjectVO> res = PageQueryResult.resResult(ProjectCopier.INSTANCE.convert(projects));
+        List<ProjectVO> resultList = ProjectCopier.INSTANCE.convert(projects);
+        int baseProjectDepth = project.getParentList().size();
+        for (ProjectVO projectVO : resultList) {
+            projectVO.setNodeDepth(projectVO.getNodeDepth() - baseProjectDepth + 1);
+        }
+        PageQueryResult<ProjectVO> res = PageQueryResult.resResult(resultList);
         ResultUtil.fillPageInfo(res, projects);
         return BaseResult.success(res);
     }

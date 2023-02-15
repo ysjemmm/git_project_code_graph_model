@@ -92,6 +92,14 @@ public class ProjectListDO extends BaseDO {
      */
     private Integer level;
 
+    /**
+     * 项目类别
+     */
     private Integer category;
+
+    /**
+     * 父节点id列表，用逗号分隔，包含自身
+     */
+    private String parentIds;
 
 }

@@ -12,6 +12,7 @@ import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.ProjectMD;
+import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -28,7 +29,8 @@ import java.util.List;
         ProjectLevelEnum.class,
         ProjectTypeEnum.class,
         PriorityEnum.class,
-        BigDecimal.class
+        BigDecimal.class,
+        StringUtils.class,
 })
 public interface ProjectCopier {
 
@@ -95,6 +97,7 @@ public interface ProjectCopier {
      * @return ProjectDetailVO
      */
     @Mapping(target = "pmName", source = "pm")
+    @Mapping(target = "nodeDepth", expression = "java(StringUtils.split(projectListDO.getParentIds(), ',').length)")
     @Mapping(target = "innerTypeName", expression = "java(ProjectInnerTypeEnum.getTextByCode(projectListDO.getInnerType()))")
     @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectListDO.getStatus()))")
     @Mapping(target = "typeName", expression = "java(ProjectTypeEnum.getTextByCode(projectListDO.getType()))")
