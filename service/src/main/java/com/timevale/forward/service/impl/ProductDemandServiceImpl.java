@@ -126,9 +126,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     private BizLabelMapper bizLabelMapper;
 
     @Resource
-    private LabelMapper labelMapper;
-
-    @Resource
     private BizLabelComponent bizLabelComponent;
 
     private static final Integer MAX_LENGTH = 20 * 1000;
