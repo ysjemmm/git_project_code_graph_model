@@ -42,8 +42,10 @@ public class FieldCompareUtil {
         CLAZZ_MAP.put(ProjectMD.class, BizChangeLogTypeEnum.PROJECT.getCode());
         CLAZZ_MAP.put(ProjectGoalMD.class, BizChangeLogTypeEnum.PROJECT.getCode());
         CLAZZ_MAP.put(BizDemandMD.class, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
-        CLAZZ_MAP.put(ProductDemandMD.class, BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+        CLAZZ_MAP.put(ProjectSimpleMD.class, BizChangeLogTypeEnum.PROJECT.getCode());
         CLAZZ_MAP.put(ProjectBudgetMD.class, BizChangeLogTypeEnum.PROJECT.getCode());
+        CLAZZ_MAP.put(ProductDemandMD.class, BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode());
+
     }
 
     /**
