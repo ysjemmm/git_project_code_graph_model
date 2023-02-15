@@ -186,7 +186,7 @@ public class DrcRiskListener implements Listener {
                 Date actualStartDate = milestoneDTO.getActualStartDate();
                 if (actualStartDate == null) {
                     overdueDay = getOverdueDay(planStartDate, nowDate);
-                    if (BigDecimal.ZERO.compareTo(overdueDay) >= 0) {
+                    if (nowDate.compareTo(planStartDate) <= 0) {
                         riskStatus = ProjectRiskStatusEnum.COMPLETE.getCode();
                     } else {
                         riskStatus = ProjectRiskStatusEnum.PENDING.getCode();
@@ -200,7 +200,7 @@ public class DrcRiskListener implements Listener {
                 Date actualEndDate = milestoneDTO.getActualEndDate();
                 if (actualEndDate == null) {
                     overdueDay = getOverdueDay(planEndDate, nowDate);
-                    if (BigDecimal.ZERO.compareTo(overdueDay) >= 0) {
+                    if (nowDate.compareTo(planEndDate) <= 0) {
                         riskStatus = ProjectRiskStatusEnum.COMPLETE.getCode();
                     } else {
                         riskStatus = ProjectRiskStatusEnum.PENDING.getCode();
