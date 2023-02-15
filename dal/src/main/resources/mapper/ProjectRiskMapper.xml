@@ -73,10 +73,10 @@
     </update>
 
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
-        SELECT id, project_id, main_id, type, name, sign, status, create_man_id, create_man, create_date, modify_date
+        SELECT *
         FROM project_risk
-        WHERE project_id = #{projectId} AND
-              is_deleted = false
+        WHERE project_id = #{projectId}
+          AND is_deleted = false
     </select>
 
     <select id="selectByStatus" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
@@ -174,7 +174,6 @@
               #{item}
           </foreach>
           AND is_deleted = false
-        LIMIT 1
     </select>
 
     <select id="selectByMainType" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">

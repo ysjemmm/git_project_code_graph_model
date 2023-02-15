@@ -12,6 +12,12 @@ import java.util.List;
 @Data
 @Builder
 public class ProjectRiskCondition{
+
+    /**
+     * 主体id
+     */
+    private Long mainId;
+
     /**
      * 项目id
      */
@@ -21,4 +27,9 @@ public class ProjectRiskCondition{
      * 状态列表
      */
     private List<Integer> statusList;
+
+    /**
+     * 类型列表
+     */
+    private List<Integer> typeList;
 }
