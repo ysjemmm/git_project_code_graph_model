@@ -183,7 +183,7 @@
       <foreach collection="list" item="item" separator=",">
           (#{item.projectId,jdbcType=BIGINT}, #{item.type,jdbcType=INTEGER}, #{item.url,jdbcType=VARCHAR}, #{item.stage},
           #{item.isDeleted,jdbcType=BOOLEAN}, #{item.createManId,jdbcType=VARCHAR}, #{item.createMan,jdbcType=VARCHAR},
-          , #{item.modifyManId,jdbcType=VARCHAR}, #{item.modifyMan,jdbcType=VARCHAR}, #{item.modifyDate})
+          #{item.modifyManId,jdbcType=VARCHAR}, #{item.modifyMan,jdbcType=VARCHAR}, #{item.modifyDate})
       </foreach>
   </insert>
 
