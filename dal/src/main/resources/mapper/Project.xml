@@ -421,6 +421,8 @@
         from project
         where name like concat('%', #{name}, '%')
           and is_deleted = false
+        <!-- 暂时去除内部项目 -->
+        and category = 0
     </select>
     <select id="listChildren" resultType="com.timevale.forward.dal.entity.ProjectListDO">
         select a.id,a.name, a.customer_dev,is_platform_publish, is_with_goal, a.priority, a.type
