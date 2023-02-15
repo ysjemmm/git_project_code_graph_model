@@ -186,7 +186,7 @@ public class DrcRiskListener implements Listener {
                 Date actualStartDate = milestoneDTO.getActualStartDate();
                 if (actualStartDate == null) {
                     overdueDay = getOverdueDay(planStartDate, nowDate);
-                    if (BigDecimal.ZERO.compareTo(overdueDay) <= 0) {
+                    if (BigDecimal.ZERO.compareTo(overdueDay) >= 0) {
                         riskStatus = ProjectRiskStatusEnum.COMPLETE.getCode();
                     } else {
                         riskStatus = ProjectRiskStatusEnum.PENDING.getCode();
@@ -200,7 +200,7 @@ public class DrcRiskListener implements Listener {
                 Date actualEndDate = milestoneDTO.getActualEndDate();
                 if (actualEndDate == null) {
                     overdueDay = getOverdueDay(planEndDate, nowDate);
-                    if (BigDecimal.ZERO.compareTo(overdueDay) <= 0) {
+                    if (BigDecimal.ZERO.compareTo(overdueDay) >= 0) {
                         riskStatus = ProjectRiskStatusEnum.COMPLETE.getCode();
                     } else {
                         riskStatus = ProjectRiskStatusEnum.PENDING.getCode();
@@ -276,10 +276,10 @@ public class DrcRiskListener implements Listener {
             return null;
         }
 
-        //  实际时间 <= 当前时间, 返回0
         if (actualDate.compareTo(planDate) <= 0) {
             return BigDecimal.ZERO;
         }
+
         log.info("[DrcRiskListener.getOverdueDay]planDate:{}, actualDate:{}", planDate, actualDate);
 
         // 计算实际工作日
