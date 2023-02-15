@@ -6,9 +6,11 @@ import com.timevale.forward.dal.entity.ProjectMilestone;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
+import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
+import com.timevale.forward.service.mq.dto.MilestoneDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -24,7 +26,8 @@ import java.util.stream.Collectors;
         ProjectStageEnum.class,
         ProjectStatusEnum.class,
         TaskStatusEnum.class,
-        Collectors.class
+        Collectors.class,
+        MilestoneTypeEnum.class
 })
 public interface ProjectMilestoneCopier {
 
@@ -76,6 +79,16 @@ public interface ProjectMilestoneCopier {
     @Mapping(target = "actualEndDate", ignore = true)
     @Mapping(target = "stageName", expression = "java(ProjectStageEnum.getTextByCode(milestone.getStage()))")
     ProjectMilestoneVO convert(ProjectMilestone milestone);
+
+    @Mapping(target = "milestoneRelationId", source = "id")
+    @Mapping(target = "milestoneType", expression = "java(MilestoneTypeEnum.TASK.getCode())")
+    @Mapping(target = "invalid", expression = "java(TaskStatusEnum.SUSPEND.getCode().equals(taskDO.getStatus()) || TaskStatusEnum.INVALID.getCode().equals(taskDO.getStatus()))")
+    MilestoneDTO task2dto(TaskDO taskDO);
+
+    @Mapping(target = "milestoneRelationId", source = "id")
+    @Mapping(target = "milestoneType", expression = "java(MilestoneTypeEnum.PROJECT.getCode())")
+    @Mapping(target = "invalid", expression = "java(ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus()) || ProjectStatusEnum.INVALID.getCode().equals(projectDO.getStatus()))")
+    MilestoneDTO project2dto(ProjectDO projectDO);
 
     List<ProjectMilestoneVO> convert(List<ProjectMilestone> milestones);
 

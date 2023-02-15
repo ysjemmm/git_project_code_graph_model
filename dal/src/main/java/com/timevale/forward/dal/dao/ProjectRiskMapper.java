@@ -4,7 +4,6 @@ import com.timevale.forward.dal.condition.ProjectRiskCondition;
 import com.timevale.forward.dal.entity.ProjectRiskDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
 
 import java.util.Date;
 import java.util.List;
@@ -125,10 +124,5 @@ public interface ProjectRiskMapper {
      */
     Long count(@Param("projectId") Long projectId, @Param("status") Integer status);
 
-    ProjectRiskDO selectByMain(@Param("mainId") Long mainId, @Param("status") Integer status, @Param("types") List<Integer> types);
-
-    ProjectRiskDO selectByMainType(@Param("mainId") Long mainId, @Param("statuses") List<Integer> status, @Param("types") List<Integer> types);
-
-    @Select("SELECT * FROM project_risk WHERE project_id = #{projectId} AND type = #{type} AND status = #{status} AND is_deleted = false")
-    List<ProjectRiskDO> selectByProject(@Param("projectId") Long projectId, @Param("type") Integer type, @Param("status") Integer status);
+    List<ProjectRiskDO> selectByMain(@Param("mainId") Long mainId, @Param("status") Integer status, @Param("types") List<Integer> types);
 }
