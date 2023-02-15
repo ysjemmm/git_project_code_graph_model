@@ -3,8 +3,10 @@ package com.timevale.forward.service.mq.listener;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
+import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.dao.ProjectRiskMapper;
+import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
@@ -34,9 +36,13 @@ import java.util.stream.Collectors;
 @Component
 public class DrcRiskListener implements Listener {
     @Resource
-    private ElapsedTimeClient elapsedTimeClient;
+    private TaskMapper taskMapper;
+    @Resource
+    private ProjectMapper projectMapper;
     @Resource
     private ProjectRiskMapper projectRiskMapper;
+    @Resource
+    private ElapsedTimeClient elapsedTimeClient;
     @Resource
     private ProjectMilestoneMapper projectMilestoneMapper;
 
@@ -103,10 +109,9 @@ public class DrcRiskListener implements Listener {
                         projectRiskMapper.updateStatuses(riskIdList, ProjectRiskStatusEnum.INVALID.getCode());
                     }
                 }
-
                 {
                     // 完成上一个阶段的未录入风险
-                    ProjectStageEnum preStage = ProjectStageEnum.getPreByCode(milestone.getStage());
+                    ProjectStageEnum preStage = ProjectStageEnum.getPreStage(milestone.getStage());
                     List<Long> riskIdList = riskDOList.stream()
                             .filter(e -> ObjectUtil.equal(e.getName(), preStage.getText()))
                             .map(BaseDO::getId)
@@ -120,6 +125,13 @@ public class DrcRiskListener implements Listener {
     }
 
     private void solveRisk(DrcMsgBody body) {
+        // 新增项目、任务无需处理
+        if (ObjectUtil.equal(DrcActionEnum.INSERT.toString(), body.getAction())) {
+            return;
+        }
+
+        log.info("[DrcRiskListener.solveRisk]处理项目、任务:{}", body.getGtId());
+
         MilestoneDTO milestoneDTO;
 
         // 项目、任务更新，处理里程碑逾期风险
@@ -145,14 +157,19 @@ public class DrcRiskListener implements Listener {
         Long milestoneId = milestone.getId();
         List<Integer> types = CollUtil.newArrayList(ProjectRiskTypeEnum.MILE_STONE_START.getCode(), ProjectRiskTypeEnum.MILE_STONE_END.getCode());
         List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByMain(milestoneId, ProjectRiskStatusEnum.PENDING.getCode(), types);
+        solveNoEntry(milestone.getProjectId(), milestone.getStage());
         if (CollUtil.isEmpty(riskDOList)) {
             return;
         }
 
         // 如果里程碑节点暂停或作废，对应风险作废
-        if (milestoneDTO.getInvalid()) {
+        if (milestoneDTO.getSuspend() || milestoneDTO.getInvalid()) {
             List<Long> riskIdList = riskDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
             projectRiskMapper.updateStatuses(riskIdList, ProjectRiskStatusEnum.INVALID.getCode());
+
+            if (milestoneDTO.getInvalid()) {
+                solveNoEntry(milestone.getProjectId(), milestone.getStage());
+            }
             return;
         }
 
@@ -173,6 +190,50 @@ public class DrcRiskListener implements Listener {
                 updateRiskDO.setStatus(ProjectRiskStatusEnum.COMPLETE.getCode());
                 projectRiskMapper.update(updateRiskDO);
             }
+        }
+    }
+
+    private void solveNoEntry(Long projectId, Integer stage) {
+        log.info("[DrcRiskListener.solveNoEntry]处理可能的未录入风险：projectId:{},stage:{}", projectId, stage);
+
+        // 查询当前阶段的全部里程碑
+        List<ProjectMilestone> milestoneList = projectMilestoneMapper.selectByStage(projectId, stage);
+
+        // 查询里程碑对应的任务及项目，判断是否全部作废
+        List<Long> taskIdList = milestoneList.stream()
+                .filter(e -> ObjectUtil.equal(MilestoneTypeEnum.TASK.getCode(), e.getType()))
+                .map(ProjectMilestone::getRelationId)
+                .collect(Collectors.toList());
+        List<Long> projectIdList = milestoneList.stream()
+                .filter(e -> ObjectUtil.equal(MilestoneTypeEnum.PROJECT.getCode(), e.getType()))
+                .map(ProjectMilestone::getRelationId)
+                .collect(Collectors.toList());
+
+        // 判断是否全部作废
+        boolean valid = false;
+        if (CollUtil.isNotEmpty(taskIdList)) {
+            List<TaskDO> taskDOList = taskMapper.getByIdList(taskIdList);
+            valid = !taskDOList.stream().allMatch(e-> ObjectUtil.equal(TaskStatusEnum.INVALID.getCode(), e.getStatus()));
+        }
+        if (CollUtil.isNotEmpty(projectIdList)) {
+            List<ProjectDO> projectDOList = projectMapper.getByIds(projectIdList);
+            valid |= !projectDOList.stream().allMatch(e -> ObjectUtil.equal(ProjectStatusEnum.INVALID.getCode(), e.getStatus()));
+        }
+
+        // 如果当前阶段仍然有有效的里程碑，返回
+        if (valid) {
+            return;
+        }
+
+        // 上一个阶段的未录入风险
+        ProjectStageEnum preStage = ProjectStageEnum.getPreStage(stage);
+        List<ProjectRiskDO> noEntryRiskDOList = projectRiskMapper.selectByName(projectId, preStage.getText());
+        List<Long> noEntryRiskIdList = noEntryRiskDOList.stream()
+                .filter(e -> ObjectUtil.equal(ProjectRiskStatusEnum.PENDING.getCode(), e.getStatus()))
+                .map(ProjectRiskDO::getId)
+                .collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(noEntryRiskIdList)) {
+            projectRiskMapper.updateStatuses(noEntryRiskIdList, ProjectRiskStatusEnum.COMPLETE.getCode());
         }
     }
 

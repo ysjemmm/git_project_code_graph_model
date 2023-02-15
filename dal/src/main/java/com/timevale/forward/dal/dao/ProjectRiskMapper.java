@@ -124,5 +124,8 @@ public interface ProjectRiskMapper {
      */
     Long count(@Param("projectId") Long projectId, @Param("status") Integer status);
 
+    @Select("SELECT * FROM info_forward.project_risk WHERE project_id = #{projectId} AND name = #{name} AND is_deleted = FALSE")
+    List<ProjectRiskDO> selectByName(@Param("projectId") Long projectId, @Param("name") String name);
+
     List<ProjectRiskDO> selectByMain(@Param("mainId") Long mainId, @Param("status") Integer status, @Param("types") List<Integer> types);
 }

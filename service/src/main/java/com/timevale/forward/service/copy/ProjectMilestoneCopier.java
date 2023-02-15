@@ -82,12 +82,14 @@ public interface ProjectMilestoneCopier {
 
     @Mapping(target = "milestoneRelationId", source = "id")
     @Mapping(target = "milestoneType", expression = "java(MilestoneTypeEnum.TASK.getCode())")
-    @Mapping(target = "invalid", expression = "java(TaskStatusEnum.SUSPEND.getCode().equals(taskDO.getStatus()) || TaskStatusEnum.INVALID.getCode().equals(taskDO.getStatus()))")
+    @Mapping(target = "suspend", expression = "java(TaskStatusEnum.SUSPEND.getCode().equals(taskDO.getStatus()))")
+    @Mapping(target = "invalid", expression = "java(TaskStatusEnum.INVALID.getCode().equals(taskDO.getStatus()))")
     MilestoneDTO task2dto(TaskDO taskDO);
 
     @Mapping(target = "milestoneRelationId", source = "id")
     @Mapping(target = "milestoneType", expression = "java(MilestoneTypeEnum.PROJECT.getCode())")
-    @Mapping(target = "invalid", expression = "java(ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus()) || ProjectStatusEnum.INVALID.getCode().equals(projectDO.getStatus()))")
+    @Mapping(target = "suspend", expression = "java(ProjectStatusEnum.SUSPEND.getCode().equals(projectDO.getStatus()))")
+    @Mapping(target = "invalid", expression = "java(ProjectStatusEnum.INVALID.getCode().equals(projectDO.getStatus()))")
     MilestoneDTO project2dto(ProjectDO projectDO);
 
     List<ProjectMilestoneVO> convert(List<ProjectMilestone> milestones);

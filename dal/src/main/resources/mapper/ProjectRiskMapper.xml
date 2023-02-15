@@ -176,20 +176,15 @@
           AND is_deleted = false
     </select>
 
-    <select id="selectByMainType" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
-        SELECT id, project_id, main_id, type, name, sign, status, create_man_id, create_man, create_date, modify_date
-        FROM project_risk
-        <where>
-            AND is_deleted = false
-            AND `status` IN
-            <foreach collection="statuses" item="item" separator="," open="(" close=")">
+    <select id="selectByMilestone" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
+        SELECT *
+        FROM info_forward.project_risk
+        WHERE is_deleted = FALSE
+          AND type IN (50, 60, 70)
+          AND main_id IN
+            <foreach collection="milestoneIdList" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
-            AND type IN
-            <foreach collection="types" item="item" separator="," open="(" close=")">
-                #{item}
-            </foreach>
-        </where>
     </select>
 
 </mapper>

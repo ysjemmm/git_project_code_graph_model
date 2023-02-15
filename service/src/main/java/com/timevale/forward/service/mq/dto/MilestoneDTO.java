@@ -16,6 +16,7 @@ public class MilestoneDTO {
     private Date planStartDate;
     private Date actualEndDate;
     private Date actualStartDate;
+    private Boolean suspend;
     private Boolean invalid;
     private Integer milestoneType;
     private Long milestoneRelationId;

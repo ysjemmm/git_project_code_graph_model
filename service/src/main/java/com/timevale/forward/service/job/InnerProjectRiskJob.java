@@ -2,6 +2,7 @@ package com.timevale.forward.service.job;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Pair;
+import cn.hutool.core.util.ObjectUtil;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableTable;
@@ -90,14 +91,14 @@ public class InnerProjectRiskJob extends IJobHandler {
                 solveRisk(nowDate, milestoneDTO, riskTable, milestoneTable, insertRiskList, updateRiskList);
             }
         } catch (Exception e) {
-            log.error("[InnerProjectRiskJob]处理判断逾期风险失败,e: {}", e);
+            log.error("[InnerProjectRiskJob]处理判断逾期风险失败,e: {}", e.getMessage());
         }
 
         try {
             List<ProjectRiskDO> noEntryRiskList = noEntryRisk(projectDOs, milestones, riskTable);
             insertRiskList.addAll(noEntryRiskList);
         } catch (Exception e) {
-            log.error("[InnerProjectRiskJob]判断未录入风险失败, e: {}", e);
+            log.error("[InnerProjectRiskJob]判断未录入风险失败, e: {}", e.getMessage());
         }
 
         // 更新任务和项目
