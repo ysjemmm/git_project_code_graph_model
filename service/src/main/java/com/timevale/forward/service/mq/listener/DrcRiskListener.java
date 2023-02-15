@@ -173,13 +173,42 @@ public class DrcRiskListener implements Listener {
             return;
         }
 
+        Date nowDate = new Date();
         for (ProjectRiskDO riskDO : riskDOList) {
+            Integer riskStatus = null;
             BigDecimal overdueDay = null;
+
             Integer riskType = riskDO.getType();
+
+            // 开始时间未录入
             if (Objects.equals(ProjectRiskTypeEnum.MILE_STONE_START.getCode(), riskType)) {
-                overdueDay = getOverdueDay(milestoneDTO.getPlanStartDate(), milestoneDTO.getActualStartDate());
+                Date planStartDate = milestoneDTO.getPlanStartDate();
+                Date actualStartDate = milestoneDTO.getActualStartDate();
+                if (actualStartDate == null) {
+                    overdueDay = getOverdueDay(planStartDate, nowDate);
+                    if (BigDecimal.ZERO.compareTo(overdueDay) <= 0) {
+                        riskStatus = ProjectRiskStatusEnum.COMPLETE.getCode();
+                    } else {
+                        riskStatus = ProjectRiskStatusEnum.PENDING.getCode();
+                    }
+                } else {
+                    overdueDay = getOverdueDay(planStartDate, actualStartDate);
+                    riskStatus = ProjectRiskStatusEnum.COMPLETE.getCode();
+                }
             } else if (Objects.equals(ProjectRiskTypeEnum.MILE_STONE_END.getCode(), riskType)) {
-                overdueDay = getOverdueDay(milestoneDTO.getPlanEndDate(), milestoneDTO.getActualEndDate());
+                Date planEndDate = milestoneDTO.getPlanEndDate();
+                Date actualEndDate = milestoneDTO.getActualEndDate();
+                if (actualEndDate == null) {
+                    overdueDay = getOverdueDay(planEndDate, nowDate);
+                    if (BigDecimal.ZERO.compareTo(overdueDay) <= 0) {
+                        riskStatus = ProjectRiskStatusEnum.COMPLETE.getCode();
+                    } else {
+                        riskStatus = ProjectRiskStatusEnum.PENDING.getCode();
+                    }
+                } else {
+                    overdueDay = getOverdueDay(planEndDate, actualEndDate);
+                    riskStatus = ProjectRiskStatusEnum.COMPLETE.getCode();
+                }
             }
 
             // 处理风险
@@ -187,7 +216,7 @@ public class DrcRiskListener implements Listener {
                 ProjectRiskDO updateRiskDO = new ProjectRiskDO();
                 updateRiskDO.setId(riskDO.getId());
                 updateRiskDO.setSign(overdueDay.toString());
-                updateRiskDO.setStatus(ProjectRiskStatusEnum.COMPLETE.getCode());
+                updateRiskDO.setStatus(riskStatus);
                 projectRiskMapper.update(updateRiskDO);
             }
         }
