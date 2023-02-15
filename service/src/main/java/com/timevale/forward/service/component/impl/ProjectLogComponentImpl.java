@@ -5,6 +5,7 @@ import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.ProjectMD;
+import com.timevale.forward.model.middle.ProjectSimpleMD;
 import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.ProjectLogComponent;
@@ -155,8 +156,8 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
     public void addLogWhenSimpleModifyData(ProjectDO oldObj, ProjectDO newObj) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         //{操作人} 把{字段名称} 从{原内容}改为{最新内容}
-        ProjectMD oldProject = ProjectCopier.INSTANCE.change(oldObj);
-        ProjectMD newProject = ProjectCopier.INSTANCE.change(newObj);
+        ProjectSimpleMD oldProject = ProjectCopier.INSTANCE.do2smd(oldObj);
+        ProjectSimpleMD newProject = ProjectCopier.INSTANCE.do2smd(newObj);
         List<BizChangeLogDO> logs = FieldCompareUtil.commonCompare(oldProject, newProject, BizChangeLogDO.class);
         logs.forEach(a -> {
             a.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
