@@ -12,6 +12,7 @@ import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.ProjectMD;
+import com.timevale.forward.model.middle.ProjectSimpleMD;
 import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -149,6 +150,8 @@ public interface ProjectCopier {
      */
     @Mapping(target = "pmName", source = "pm")
     ProjectMD change(ProjectDO projectDO);
+
+    ProjectSimpleMD do2smd(ProjectDO projectDO);
 
     /**
      *

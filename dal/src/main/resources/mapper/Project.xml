@@ -307,9 +307,7 @@
     </select>
 
     <select id="selectByTeamMember" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select pj.id, pj.name, pj.customer_dev, pj.priority, pj.type, pj.status, pj.pm, pj.pm_id, pj.plan_start_date,
-        pj.plan_end_date, pj.actual_start_date, pj.actual_end_date, pj.`desc`, pj.node_status, pj.is_deleted,
-        pj.create_man_id, pj.create_man, pj.create_date, pj.modify_man_id, pj.modify_man, pj.modify_date
+        select pj.*
         from person p
         join project pj on pj.id = p.main_id
         where
@@ -317,9 +315,9 @@
         <foreach collection="teamMemberList" item="item" separator="," open="(" close=")">
             #{item}
         </foreach>
-        and pj.category = 0
-        and p.type &lt; 20
+        and p.type IN (0,1)
         and p.is_deleted = false
+        and pj.category = 0
         and pj.is_deleted = false
         group by pj.id
     </select>

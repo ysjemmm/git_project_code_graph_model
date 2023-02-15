@@ -1,6 +1,7 @@
 package com.timevale.forward.service.job;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.Pair;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableTable;
@@ -17,6 +18,7 @@ import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -179,7 +181,7 @@ public class InnerProjectRiskJob extends IJobHandler {
      */
     private BigDecimal getOverdueDay(Date planDate, Date nowDate) {
         //  计划结束时间 >= 如果当前时间, 直接跳过
-        if (planDate.compareTo(nowDate) >= 0) {
+        if (planDate == null || nowDate == null || planDate.compareTo(nowDate) >= 0) {
             return null;
         }
 
@@ -213,9 +215,7 @@ public class InnerProjectRiskJob extends IJobHandler {
         Date planStartDate;
         Date actualEndDate;
         Date actualStartDate;
-        BigDecimal overdueDay;
         ProjectMilestone milestone;
-        ProjectRiskTypeEnum riskTypeEnum;
 
         // 区分获取数据
         if (o instanceof TaskDO) {
@@ -232,30 +232,38 @@ public class InnerProjectRiskJob extends IJobHandler {
             milestone = milestoneTable.get(MilestoneTypeEnum.PROJECT.getCode(), ((ProjectDO) o).getId());
         }
 
-        // 判断风险类型
-        if (actualStartDate == null) {
-            overdueDay = getOverdueDay(planStartDate, nowDate);
-            riskTypeEnum = ProjectRiskTypeEnum.MILE_STONE_START;
-        } else if(actualEndDate == null) {
-            overdueDay = getOverdueDay(planEndDate, nowDate);
-            riskTypeEnum = ProjectRiskTypeEnum.MILE_STONE_END;
-        } else {
+        // 不存在里程碑直接返回
+        if (milestone == null) {
             return;
         }
 
-        // 如果逾期不超过两个工作日，直接跳过
-        if (overdueDay == null) {
-           return;
+        // 判断风险类型
+        List<Pair<Integer, BigDecimal>> riskDates = new ArrayList<>();
+        if (actualStartDate == null) {
+            BigDecimal overdueDay = getOverdueDay(planStartDate, nowDate);
+            if (overdueDay != null) {
+                riskDates.add(Pair.of(ProjectRiskTypeEnum.MILE_STONE_START.getCode(), overdueDay));
+            }
+        }
+        if(actualEndDate == null) {
+            BigDecimal overdueDay = getOverdueDay(planEndDate, nowDate);
+            if (overdueDay != null) {
+                riskDates.add(Pair.of(ProjectRiskTypeEnum.MILE_STONE_END.getCode(), overdueDay));
+            }
         }
 
-        // 判断是否已存在风险
-        if (milestone != null) {
+        // 处理存在风险
+        for (Pair<Integer, BigDecimal> riskDate : riskDates) {
+            Integer riskType = riskDate.getKey();
+            BigDecimal overdueDay = riskDate.getValue();
+
+            // 判断是否已存在风险
             ProjectRiskDO riskDO = riskTable.get(milestone.getId(), milestone.getMilestoneName());
             if (riskDO == null) {
                 ProjectRiskDO newRisk = new ProjectRiskDO();
+                newRisk.setType(riskType);
                 newRisk.setMainId(milestone.getId());
                 newRisk.setSign(overdueDay.toString());
-                newRisk.setType(riskTypeEnum.getCode());
                 newRisk.setName(milestone.getMilestoneName());
                 newRisk.setProjectId(milestone.getProjectId());
                 insertRisks.add(newRisk);
@@ -264,6 +272,7 @@ public class InnerProjectRiskJob extends IJobHandler {
                 updateRisks.add(riskDO);
             }
         }
+
     }
 
 }

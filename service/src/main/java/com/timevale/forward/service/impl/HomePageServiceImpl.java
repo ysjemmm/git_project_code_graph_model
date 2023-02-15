@@ -104,7 +104,7 @@ public class HomePageServiceImpl implements HomePageService {
         if (HomePageTabEnum.TEAM.getCode().equals(homePageBaseReq.getTabType())) {
             // 成员信息
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
-            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), false);
+            List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
 
             // 项目信息
             List<ProjectDO> projectDOList = projectMapper.selectByTeamMember(allMyStaffWithSelf);
