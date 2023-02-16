@@ -90,7 +90,7 @@ public class CommentServiceImpl implements CommentService {
 
         for (CommentVO e : commentVOList) {
             List<FileVO> fileVOList = new ArrayList<>();
-            if(fileMap.containsKey(e.getId())){
+            if (fileMap.containsKey(e.getId())) {
                 fileVOList = FileCopier.INSTANCE.transform(fileMap.get(e.getId()));
             }
             e.setFileList(fileVOList);
@@ -113,30 +113,34 @@ public class CommentServiceImpl implements CommentService {
 
         // 评论接收人
         List<String> receivers = commentAddReq.getReceiverInfoList().stream().map(PersonQuery::getUserId).collect(Collectors.toList());
-        if(receivers.isEmpty()){return BaseResult.success(true);}
+        if (receivers.isEmpty()) {
+            return BaseResult.success(true);
+        }
 
         // 查询对应业务需求/产品需求/项目名称
         String name = "";
         Long toId = commentAddReq.getToId();
         Integer type = commentAddReq.getType();
-        if(CommentTypeEnum.PROJECT.getCode().equals(type)){
+        if (CommentTypeEnum.PROJECT.getCode().equals(type)) {
             name = projectMapper.get(toId).getName();
-        }else if(CommentTypeEnum.PRODUCT_DEMAND.getCode().equals(type)){
+        } else if (CommentTypeEnum.PRODUCT_DEMAND.getCode().equals(type)) {
             name = productDemandMapper.selectById(toId).getName();
-        }else if(CommentTypeEnum.BIZ_DEMAND.getCode().equals(type)){
+        } else if (CommentTypeEnum.BIZ_DEMAND.getCode().equals(type)) {
             name = bizDemandMapper.selectById(toId).getName();
-        }else if(CommentTypeEnum.TASK.getCode().equals(type)){
+        } else if (CommentTypeEnum.TASK.getCode().equals(type)) {
             name = taskMapper.getById(toId).getName();
-        }else if(CommentTypeEnum.BUG_OFFLINE.getCode().equals(type)) {
+        } else if (CommentTypeEnum.BUG_OFFLINE.getCode().equals(type)) {
             name = bugOfflineMapper.selectById(toId).getName();
-        }else if(CommentTypeEnum.BUG_ONLINE.getCode().equals(type)){
+        } else if (CommentTypeEnum.BUG_ONLINE.getCode().equals(type)) {
             name = bugOnlineMapper.selectById(toId).getName();
-        }else if(CommentTypeEnum.TROUBLE_TICKET.getCode().equals(type)){
+        } else if (CommentTypeEnum.TROUBLE_TICKET.getCode().equals(type)) {
             name = troubleTicketMapper.selectById(toId).getName();
-        }else if(CommentTypeEnum.CUSTOM_DEMAND.getCode().equals(type)){
+        } else if (CommentTypeEnum.CUSTOM_DEMAND.getCode().equals(type)) {
             name = customDemandMapper.selectById(toId).getName();
-        }else if(CommentTypeEnum.INNER_PROJECT.getCode().equals(type)) {
+        } else if (CommentTypeEnum.INNER_PROJECT.getCode().equals(type)) {
             name = projectMapper.get(toId).getName();
+        } else if (CommentTypeEnum.INNER_TASK.getCode().equals(type)) {
+            name = taskMapper.getById(toId).getName();
         }
 
         // 发送通知
@@ -156,8 +160,8 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public BaseResult<Boolean> add(CommentBatchAddReq commentBatchAddReq) {
         List<Long> toIds = commentBatchAddReq.getToIds();
-        toIds.forEach(a->{
-            CommentDO commentDO=new CommentDO();
+        toIds.forEach(a -> {
+            CommentDO commentDO = new CommentDO();
             commentDO.setContent(commentBatchAddReq.getContent());
             commentDO.setToId(a);
             commentDO.setType(commentBatchAddReq.getType());

@@ -878,7 +878,8 @@ public class TaskServiceImpl implements TaskService {
     private void sendDingMsg(TaskDO taskDO, List<String> executorIds) {
 //        // 通知需求接收人
         if (TaskStatusEnum.DONE.getCode().equals(taskDO.getStatus())) {
-            String pmId = projectMapper.get(taskDO.getProjectId()).getPmId();
+            ProjectDO project = projectMapper.get(taskDO.getProjectId());
+            String pmId = project.getPmId();
             executorIds.add(pmId);
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
             String operator = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
@@ -888,7 +889,7 @@ public class TaskServiceImpl implements TaskService {
                     executorIds,
                     taskDO.getName(),
                     taskDO.getId(),
-                    taskDO.getProjectId()
+                    project
             ));
         }
     }

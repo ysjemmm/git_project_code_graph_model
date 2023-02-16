@@ -41,20 +41,22 @@ public class CommentMsgEvent extends MessageEvent {
             singleUrl = domainName + String.format(PARAM, TabEnum.PROJECT_MANAGEMENT.getText(), mainId);
         } else if (CommentTypeEnum.PRODUCT_DEMAND.getText().equals(type)) {
             singleUrl = domainName + String.format(PARAM, TabEnum.PRODUCT_MANAGEMENT.getText(), mainId);
-        } else if (CommentTypeEnum.BIZ_DEMAND.getText().equals(type)){
+        } else if (CommentTypeEnum.BIZ_DEMAND.getText().equals(type)) {
             singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_MANAGEMENT.getText(), mainId);
-        } else if(CommentTypeEnum.TASK.getText().equals(type)){
+        } else if (CommentTypeEnum.TASK.getText().equals(type)) {
             singleUrl = domainName + String.format(PARAM, TabEnum.TASK_MANAGEMENT.getText(), mainId);
-        } else if(CommentTypeEnum.BUG_OFFLINE.getText().equals(type)){
+        } else if (CommentTypeEnum.BUG_OFFLINE.getText().equals(type)) {
             singleUrl = domainName + String.format(PARAM, TabEnum.BUG_MANAGEMENT.getText(), mainId);
-        } else if(CommentTypeEnum.BUG_ONLINE.getText().equals(type)){
+        } else if (CommentTypeEnum.BUG_ONLINE.getText().equals(type)) {
             singleUrl = domainName + String.format(PARAM, TabEnum.BUG_ONLINE_MANAGEMENT.getText(), mainId);
-        } else if(CommentTypeEnum.TROUBLE_TICKET.getText().equals(type)){
+        } else if (CommentTypeEnum.TROUBLE_TICKET.getText().equals(type)) {
             singleUrl = domainName + String.format(PARAM, TabEnum.TROUBLE_MANAGEMENT.getText(), mainId);
-        } else if(CommentTypeEnum.CUSTOM_DEMAND.getText().equals(type)){
+        } else if (CommentTypeEnum.CUSTOM_DEMAND.getText().equals(type)) {
             singleUrl = domainName + String.format(PARAM, TabEnum.CUSTOM_MANAGEMENT.getText(), mainId);
-        } else if(CommentTypeEnum.INNER_PROJECT.getText().equals(type)){
+        } else if (CommentTypeEnum.INNER_PROJECT.getText().equals(type)) {
             singleUrl = domainName + String.format(PARAM, TabEnum.INNER_PROJECT_MANAGEMENT.getText(), mainId);
+        } else if (CommentTypeEnum.INNER_TASK.getText().equals(type)) {
+            singleUrl = domainName + String.format(PARAM, TabEnum.INTERNAL_TASK_MANAGEMENT.getText(), mainId);
         } else {
             return;
         }

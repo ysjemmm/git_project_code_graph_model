@@ -32,6 +32,11 @@ public enum TabEnum {
     TASK_MANAGEMENT("taskManagement"),
 
     /**
+     * 内部项目任务
+     */
+    INTERNAL_TASK_MANAGEMENT("internalTaskManagement"),
+
+    /**
      * 线下bug路由
      */
     BUG_MANAGEMENT("bugManagement"),
