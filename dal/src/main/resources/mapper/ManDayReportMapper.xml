@@ -63,10 +63,8 @@
     <select id="selectCondition" resultType="com.timevale.forward.dal.entity.ManDayReportListDO">
         SELECT mdr.id, mdr.audit_status, mdr.audit_man_day, mdr.reject_reason, mdr.auditor, mdr.auditor_id,
                mdr.create_date, mdr.create_man, mdr.create_man_id,mdr.reportor,mdr.reportor_id, mdr.man_day_desc,
-               md.week_start_date, md.week_end_date,
-               p.name projectName
+               md.week_start_date, md.week_end_date, p.name projectName
         FROM
-
         <if test="lastReport == null or lastReport == false ">
             man_day_report mdr
         </if>
@@ -86,7 +84,6 @@
                     group by man_day_id,audit_status) b
                 order by  status desc) c
             group by man_day_id) mdr
-
         </if>
             LEFT JOIN man_day md on mdr.man_day_id = md.id
             LEFT JOIN project p on md.project_id = p.id
@@ -105,6 +102,8 @@
             <if test="weekStartDate != null">
                 AND md.week_start_date = #{weekStartDate}
             </if>
+            <!-- 暂时去除内部项目 -->
+            AND p.category != 1
         </where>
         /*keep orderby*/
     </select>
