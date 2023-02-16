@@ -11,6 +11,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum TabEnum {
+    NULL("null"),
     /**
      * 项目路由
      */

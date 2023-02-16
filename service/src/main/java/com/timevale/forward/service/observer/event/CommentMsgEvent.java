@@ -16,14 +16,14 @@ public class CommentMsgEvent extends MessageEvent {
     private final Long mainId;
     private final String operator;
     private final List<String> receivers;
-    private final String type;
+    private final CommentTypeEnum type;
     private final String name;
     private final String content;
 
     private static final String COMMENT_ANCHOR = "&anchor=comment";
     private static final String COMMENT_MSG = "### %s  \n  **%s**评论了%s **%s**  \n  > %s  \n\n  ***  \n  [查看详情](%s)";
 
-    public CommentMsgEvent(Object source, Long mainId, String operator, List<String> receivers, String type, String name, String content) {
+    public CommentMsgEvent(Object source, Long mainId, String operator, List<String> receivers, CommentTypeEnum type, String name, String content) {
         super(source);
         this.mainId = mainId;
         this.operator = operator;
@@ -35,31 +35,12 @@ public class CommentMsgEvent extends MessageEvent {
 
     @Override
     public void run() {
-        String title = type + MessageTitleEnum.COMMENT.getText();
-        String singleUrl;
-        if (CommentTypeEnum.PROJECT.getText().equals(type)) {
-            singleUrl = domainName + String.format(PARAM, TabEnum.PROJECT_MANAGEMENT.getText(), mainId);
-        } else if (CommentTypeEnum.PRODUCT_DEMAND.getText().equals(type)) {
-            singleUrl = domainName + String.format(PARAM, TabEnum.PRODUCT_MANAGEMENT.getText(), mainId);
-        } else if (CommentTypeEnum.BIZ_DEMAND.getText().equals(type)) {
-            singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_MANAGEMENT.getText(), mainId);
-        } else if (CommentTypeEnum.TASK.getText().equals(type)) {
-            singleUrl = domainName + String.format(PARAM, TabEnum.TASK_MANAGEMENT.getText(), mainId);
-        } else if (CommentTypeEnum.BUG_OFFLINE.getText().equals(type)) {
-            singleUrl = domainName + String.format(PARAM, TabEnum.BUG_MANAGEMENT.getText(), mainId);
-        } else if (CommentTypeEnum.BUG_ONLINE.getText().equals(type)) {
-            singleUrl = domainName + String.format(PARAM, TabEnum.BUG_ONLINE_MANAGEMENT.getText(), mainId);
-        } else if (CommentTypeEnum.TROUBLE_TICKET.getText().equals(type)) {
-            singleUrl = domainName + String.format(PARAM, TabEnum.TROUBLE_MANAGEMENT.getText(), mainId);
-        } else if (CommentTypeEnum.CUSTOM_DEMAND.getText().equals(type)) {
-            singleUrl = domainName + String.format(PARAM, TabEnum.CUSTOM_MANAGEMENT.getText(), mainId);
-        } else if (CommentTypeEnum.INNER_PROJECT.getText().equals(type)) {
-            singleUrl = domainName + String.format(PARAM, TabEnum.INNER_PROJECT_MANAGEMENT.getText(), mainId);
-        } else if (CommentTypeEnum.INNER_TASK.getText().equals(type)) {
-            singleUrl = domainName + String.format(PARAM, TabEnum.INTERNAL_TASK_MANAGEMENT.getText(), mainId);
-        } else {
+        if (type == null) {
             return;
         }
+        String title = type.getText() + MessageTitleEnum.COMMENT.getText();
+        TabEnum refTab = type.getRefTab();
+        String singleUrl = domainName + String.format(PARAM, refTab.getText(), mainId);
 
         // 评论添加定位
         singleUrl += COMMENT_ANCHOR;

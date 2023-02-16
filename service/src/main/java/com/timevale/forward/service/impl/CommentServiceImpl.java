@@ -26,10 +26,13 @@ import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -74,6 +77,23 @@ public class CommentServiceImpl implements CommentService {
     @Resource
     private CustomDemandMapper customDemandMapper;
 
+    private final Map<CommentTypeEnum, Function<Long, String>> commentMainNameFun =
+            new HashMap<>();
+
+    @PostConstruct
+    public void initNameMap() {
+        commentMainNameFun.put(CommentTypeEnum.PROJECT, id -> projectMapper.get(id).getName());
+        commentMainNameFun.put(CommentTypeEnum.PRODUCT_DEMAND, id -> productDemandMapper.selectById(id).getName());
+        commentMainNameFun.put(CommentTypeEnum.BIZ_DEMAND, id -> bizDemandMapper.selectById(id).getName());
+        commentMainNameFun.put(CommentTypeEnum.TASK, id -> taskMapper.getById(id).getName());
+        commentMainNameFun.put(CommentTypeEnum.BUG_OFFLINE, id -> bugOfflineMapper.selectById(id).getName());
+        commentMainNameFun.put(CommentTypeEnum.BUG_ONLINE, id -> bugOnlineMapper.selectById(id).getName());
+        commentMainNameFun.put(CommentTypeEnum.TROUBLE_TICKET, id -> troubleTicketMapper.selectById(id).getName());
+        commentMainNameFun.put(CommentTypeEnum.CUSTOM_DEMAND, id -> customDemandMapper.selectById(id).getName());
+        commentMainNameFun.put(CommentTypeEnum.INNER_PROJECT, id -> projectMapper.get(id).getName());
+        commentMainNameFun.put(CommentTypeEnum.INNER_TASK, id -> taskMapper.getById(id).getName());
+    }
+
     @Override
     public BaseResult<List<CommentVO>> list(CommentQueryList commentQueryList) {
 
@@ -117,31 +137,11 @@ public class CommentServiceImpl implements CommentService {
             return BaseResult.success(true);
         }
 
-        // 查询对应业务需求/产品需求/项目名称
-        String name = "";
         Long toId = commentAddReq.getToId();
         Integer type = commentAddReq.getType();
-        if (CommentTypeEnum.PROJECT.getCode().equals(type)) {
-            name = projectMapper.get(toId).getName();
-        } else if (CommentTypeEnum.PRODUCT_DEMAND.getCode().equals(type)) {
-            name = productDemandMapper.selectById(toId).getName();
-        } else if (CommentTypeEnum.BIZ_DEMAND.getCode().equals(type)) {
-            name = bizDemandMapper.selectById(toId).getName();
-        } else if (CommentTypeEnum.TASK.getCode().equals(type)) {
-            name = taskMapper.getById(toId).getName();
-        } else if (CommentTypeEnum.BUG_OFFLINE.getCode().equals(type)) {
-            name = bugOfflineMapper.selectById(toId).getName();
-        } else if (CommentTypeEnum.BUG_ONLINE.getCode().equals(type)) {
-            name = bugOnlineMapper.selectById(toId).getName();
-        } else if (CommentTypeEnum.TROUBLE_TICKET.getCode().equals(type)) {
-            name = troubleTicketMapper.selectById(toId).getName();
-        } else if (CommentTypeEnum.CUSTOM_DEMAND.getCode().equals(type)) {
-            name = customDemandMapper.selectById(toId).getName();
-        } else if (CommentTypeEnum.INNER_PROJECT.getCode().equals(type)) {
-            name = projectMapper.get(toId).getName();
-        } else if (CommentTypeEnum.INNER_TASK.getCode().equals(type)) {
-            name = taskMapper.getById(toId).getName();
-        }
+        // 查询对应业务需求/产品需求/项目名称
+        CommentTypeEnum commentType = CommentTypeEnum.getByCode(type);
+        String name = commentMainNameFun.getOrDefault(commentType, id -> "").apply(toId);
 
         // 发送通知
         messageEventPublisher.publish(new CommentMsgEvent(
@@ -149,7 +149,7 @@ public class CommentServiceImpl implements CommentService {
                 toId,
                 userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
                 receivers,
-                CommentTypeEnum.getTextByCode(type),
+                commentType,
                 name,
                 commentDO.getContent()
         ));
