@@ -78,6 +78,7 @@ public class DrcRiskListener implements Listener {
     private void milestoneHandler(DrcMsgBody body) {
         // 里程碑新增，处理里程碑未录入风险
         ProjectMilestone milestone = JSON.parseObject(body.getAfter(), ProjectMilestone.class);
+        log.info("[DrcRiskListener.milestoneHandler]处理里程碑：milestoneId: {}", milestone.getId());
 
         // 里程碑关联项目的所有风险，过滤已完成和作废的风险
         List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectId(milestone.getProjectId());
@@ -130,8 +131,6 @@ public class DrcRiskListener implements Listener {
             return;
         }
 
-        log.info("[DrcRiskListener.solveRisk]处理项目、任务:{}", body.getGtId());
-
         MilestoneDTO milestoneDTO;
 
         // 项目、任务更新，处理里程碑逾期风险
@@ -145,6 +144,8 @@ public class DrcRiskListener implements Listener {
         } else {
             return;
         }
+
+        log.info("[DrcRiskListener.solveRisk]里程碑类型:{}，里程碑关联id:{}", milestoneDTO.getMilestoneType(), milestoneDTO.getMilestoneRelationId());
 
         // 关联的里程碑
         ProjectMilestone milestone = projectMilestoneMapper

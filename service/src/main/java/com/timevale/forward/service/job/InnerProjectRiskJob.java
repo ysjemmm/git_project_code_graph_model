@@ -7,11 +7,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Maps;
 import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.dao.ProjectRiskMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.ProjectMilestoneComponent;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.mq.dto.MilestoneDTO;
@@ -45,7 +45,7 @@ public class InnerProjectRiskJob extends IJobHandler {
     @Resource
     private ProjectRiskMapper projectRiskMapper;
     @Resource
-    private ProjectMilestoneMapper projectMilestoneMapper;
+    private ProjectMilestoneComponent milestoneComponent;
 
     // 两个工作日
     private final BigDecimal TWO_WORK_DAY = new BigDecimal(2);
@@ -71,6 +71,9 @@ public class InnerProjectRiskJob extends IJobHandler {
         List<Long> projectIds = projectDOs.stream().map(ProjectDO::getId).collect(Collectors.toList());
 
         log.info("[InnerProjectRiskJob]本次更新相关的项目:{}", projectIds);
+        if (CollUtil.isEmpty(projectIds)) {
+            return ReturnT.SUCCESS;
+        }
 
         // 待处理的风险
         List<ProjectRiskDO> riskDOs = projectRiskMapper.selectByProjectIdListStatus(projectIds, ProjectRiskStatusEnum.PENDING.getCode());
@@ -79,7 +82,7 @@ public class InnerProjectRiskJob extends IJobHandler {
                 .collect(HashBasedTable::create, HashBasedTable::putAll, HashBasedTable::putAll);
 
         // 项目相关的里程碑
-        List<ProjectMilestone> milestones = getValidMilestone(projectIds);
+        List<ProjectMilestone> milestones = milestoneComponent.getValidMilestone(projectIds);
         HashBasedTable<Integer, Long, ProjectMilestone> milestoneTable = milestones.stream()
                 .map(e -> ImmutableTable.of(e.getType(), e.getRelationId(), e))
                 .collect(HashBasedTable::create, HashBasedTable::putAll, HashBasedTable::putAll);
@@ -273,58 +276,6 @@ public class InnerProjectRiskJob extends IJobHandler {
                 updateRisks.add(riskDO);
             }
         }
-    }
-
-    /**
-     * 得到有效里程碑，对应非任务或项目为非废除状态
-     *
-     * @param projectIdList 项目id列表
-     * @return {@link List}<{@link ProjectMilestone}>
-     */
-    List<ProjectMilestone> getValidMilestone(List<Long> projectIdList) {
-        if (CollUtil.isEmpty(projectIdList)) {
-            return new ArrayList<>();
-        }
-
-        List<ProjectMilestone> validMilestoneList = new ArrayList<>();
-        List<ProjectMilestone> milestoneList = projectMilestoneMapper.selectByProjectIds(projectIdList);
-
-        List<Long> mTaskIdList = milestoneList.stream()
-                .filter(e -> MilestoneTypeEnum.TASK.getCode().equals(e.getType()))
-                .map(ProjectMilestone::getRelationId)
-                .collect(Collectors.toList());
-
-        List<Long> mProjectIdList = milestoneList.stream()
-                .filter(e -> MilestoneTypeEnum.PROJECT.getCode().equals(e.getType()))
-                .map(ProjectMilestone::getRelationId)
-                .collect(Collectors.toList());
-
-        if (CollUtil.isNotEmpty(mTaskIdList)) {
-            List<TaskDO> mTaskDOList = taskMapper.getByIdList(mTaskIdList);
-            Set<Long> validTaskSet = mTaskDOList.stream()
-                    .filter(e -> !TaskStatusEnum.INVALID.getCode().equals(e.getStatus()))
-                    .map(BaseDO::getId)
-                    .collect(Collectors.toSet());
-            validMilestoneList = milestoneList.stream()
-                    .filter(e -> MilestoneTypeEnum.TASK.getCode().equals(e.getType())
-                            && validTaskSet.contains(e.getRelationId()))
-                    .collect(Collectors.toList());
-        }
-
-        if (CollUtil.isNotEmpty(mProjectIdList)) {
-            List<ProjectDO> mProjectDOList = projectMapper.getByIds(mProjectIdList);
-            Set<Long> validProjectSet = mProjectDOList.stream()
-                    .filter(e -> !ProjectStatusEnum.INVALID.getCode().equals(e.getStatus()))
-                    .map(BaseDO::getId)
-                    .collect(Collectors.toSet());
-            List<ProjectMilestone> projectMilestones = milestoneList.stream()
-                    .filter(e -> MilestoneTypeEnum.PROJECT.getCode().equals(e.getType())
-                            && validProjectSet.contains(e.getRelationId()))
-                    .collect(Collectors.toList());
-            validMilestoneList.addAll(projectMilestones);
-        }
-
-        return validMilestoneList;
     }
 
 }
