@@ -85,7 +85,7 @@ public class ProjectBudgetServiceImpl implements ProjectBudgetService {
     @Override
     public BaseResult<ProjectBudgetVO> updateBudget(ProjectBudgetSaveReq req) {
         ProjectBudgetDO sameBudget = projectBudgetMapper.selectByCostType(req.getProjectId(), req.getCostType());
-        AssertUtil.checkState(Objects.equals(sameBudget.getId(), req.getId()), "已有相同成本类型");
+        AssertUtil.checkState(sameBudget == null || sameBudget.getId().equals(req.getId()), "已有相同成本类型");
 
         ProjectBudgetDO oldLogBudget = projectBudgetMapper.selectById(req.getId());
         ProjectBudgetDO budgetDO = ProjectBudgetsCopier.INSTANCE.req2do(req);
