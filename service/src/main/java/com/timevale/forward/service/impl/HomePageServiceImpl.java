@@ -585,6 +585,10 @@ public class HomePageServiceImpl implements HomePageService {
         if (CollectionUtils.isNotEmpty(req.getTeamMembers())) {
             userIds.retainAll(req.getTeamMembers());
         }
+        if (userIds.isEmpty()) {
+            log.warn("getGroupTaskWorkTimeBoard filtered users are empty, userInfo: {}", userInfo);
+            return BaseResult.success();
+        }
         users.removeIf(u -> !userIds.contains(u.getAccount()));
         List<HomePageGroupWorkTimeVO> res = users.stream().map(u ->
                 new HomePageGroupWorkTimeVO(u.getAccount(),
