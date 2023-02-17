@@ -45,7 +45,7 @@ public class CommentMsgEvent extends MessageEvent {
         // 评论添加定位
         singleUrl += COMMENT_ANCHOR;
 
-        String markdown = String.format(COMMENT_MSG, title, operator, type, name, content, singleUrl);
+        String markdown = String.format(COMMENT_MSG, title, operator, type.getText(), name, content, singleUrl);
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(title)

@@ -571,7 +571,7 @@ public class HomePageServiceImpl implements HomePageService {
         List<BaseInfoResponse> users = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
         if (CollectionUtils.isEmpty(users)) {
             log.warn("getGroupTaskWorkTimeBoard users are empty, userInfo: {}", userInfo);
-            return BaseResult.success();
+            return BaseResult.success(Collections.emptyList());
         }
         Set<String> userIds = users.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toSet());
         // 部门id、员工id非空取交集
@@ -584,6 +584,10 @@ public class HomePageServiceImpl implements HomePageService {
         }
         if (CollectionUtils.isNotEmpty(req.getTeamMembers())) {
             userIds.retainAll(req.getTeamMembers());
+        }
+        if (userIds.isEmpty()) {
+            log.warn("getGroupTaskWorkTimeBoard filtered users are empty, userInfo: {}", userInfo);
+            return BaseResult.success(Collections.emptyList());
         }
         users.removeIf(u -> !userIds.contains(u.getAccount()));
         List<HomePageGroupWorkTimeVO> res = users.stream().map(u ->
