@@ -263,7 +263,7 @@ public class InnerProjectRiskJob extends IJobHandler {
 
             // 判断是否已存在风险
             ProjectRiskDO riskDO = riskTable.get(milestone.getId(), milestone.getMilestoneName());
-            if (riskDO == null) {
+            if (riskDO == null || !riskType.equals(riskDO.getType())) {
                 ProjectRiskDO newRisk = new ProjectRiskDO();
                 newRisk.setType(riskType);
                 newRisk.setMainId(milestone.getId());
