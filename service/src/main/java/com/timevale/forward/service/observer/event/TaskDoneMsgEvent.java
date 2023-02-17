@@ -38,7 +38,7 @@ public class TaskDoneMsgEvent extends MessageEvent {
         String title = MessageTitleEnum.TASK_DONE.getText();
         String singleUrl = domainName + String.format(param,
                 Objects.equals(project.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode()) ?
-                        TabEnum.INTERNAL_TASK_MANAGEMENT : TabEnum.TASK_MANAGEMENT.getText(),
+                        TabEnum.INNER_TASK_MANAGEMENT.getText() : TabEnum.TASK_MANAGEMENT.getText(),
                 taskId, project.getId());
         String markdown = String.format(TASK_DONE_MSG, title, operator, taskName, singleUrl);
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
