@@ -559,7 +559,14 @@ public class ProjectServiceImpl implements ProjectService {
         List<PersonAddReq> newMembers = projectSimpleModifyReq.getTeamMembers();
         if (newMembers != null) {
             // 成员更新日志
+            PersonAddReq pmReq = new PersonAddReq();
+            pmReq.setUserId(oldProjectDO.getPmId());
+            pmReq.setUserName(oldProjectDO.getPm());
+            newMembers.removeIf(e -> Objects.equals(e.getUserId(), pmReq.getUserId()));
+            newMembers.add(pmReq);
+
             List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+
             String addMembers = newMembers.stream()
                     .map(PersonAddReq::getUserName)
                     .filter(e -> oldMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
