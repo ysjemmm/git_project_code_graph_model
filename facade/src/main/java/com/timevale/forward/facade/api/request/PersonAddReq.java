@@ -11,7 +11,7 @@ import javax.validation.constraints.NotBlank;
  * @author by YangXu
  * @date 2021/12/15 14:42
  */
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 @Data
 @ApiModel("添加相关人员")
 public class PersonAddReq extends BaseReq {

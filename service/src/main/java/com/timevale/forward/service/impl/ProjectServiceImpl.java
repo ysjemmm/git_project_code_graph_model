@@ -556,25 +556,37 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         // 更新项目成员
+        PersonAddReq pm = projectSimpleModifyReq.getPm();
         List<PersonAddReq> newMembers = projectSimpleModifyReq.getTeamMembers();
-        if (newMembers != null) {
-            // 成员更新日志
-            PersonAddReq pmReq = new PersonAddReq();
-            pmReq.setUserId(oldProjectDO.getPmId());
-            pmReq.setUserName(oldProjectDO.getPm());
-            newMembers.removeIf(e -> Objects.equals(e.getUserId(), pmReq.getUserId()));
-            newMembers.add(pmReq);
-
+        if (newMembers != null || pm != null) {
+            // 旧版成员
             List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
 
-            String addMembers = newMembers.stream()
+            // 成员更新日志
+            if (newMembers == null) {
+                newMembers = oldMembers.stream()
+                        .map(PersonCopier.INSTANCE::convert)
+                        .collect(Collectors.toList());
+            } else if (pm == null){
+                pm = new PersonAddReq();
+                pm.setUserId(oldProjectDO.getPmId());
+                pm.setUserName(oldProjectDO.getPm());
+            }
+            newMembers.remove(pm);
+            newMembers.add(pm);
+
+            List<PersonAddReq> finalNewMembers = newMembers;
+
+            String addMembers = finalNewMembers.stream()
                     .map(PersonAddReq::getUserName)
                     .filter(e -> oldMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
+
             String deleteMembers = oldMembers.stream()
                     .map(PersonDO::getUserName)
-                    .filter(e -> newMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
+                    .filter(e -> finalNewMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
+
             if (StrUtil.isNotBlank(deleteMembers)) {
                 projectLogComponent.addLogWhenContentChange(
                         "",
@@ -593,7 +605,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
 
             // 实际更新落库
-            personComponent.update(newMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            personComponent.update(finalNewMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
         }
 
         // 项目日志
