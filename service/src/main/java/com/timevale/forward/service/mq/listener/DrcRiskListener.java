@@ -67,7 +67,7 @@ public class DrcRiskListener implements Listener {
 
                 log.info("[DrcRiskListener]消费完成,{}", body.getGtId());
             } catch (Exception e) {
-                log.error("[DrcRiskListener]消费失败, topic:{}, msgId:{}, message:{}",msg.getTopic(),msgId, message);
+                log.error("[DrcRiskListener]消费失败, topic:{}, msgId:{},e:{}",msg.getTopic(),msgId, e.getMessage());
             }
         }
         return ReceiveResult.success();
@@ -111,6 +111,9 @@ public class DrcRiskListener implements Listener {
                 {
                     // 完成上一个阶段的未录入风险
                     ProjectStageEnum preStage = ProjectStageEnum.getPreStage(milestone.getStage());
+                    if (preStage == null) {
+                        return;
+                    }
                     List<Long> riskIdList = riskDOList.stream()
                             .filter(e -> ObjectUtil.equal(e.getName(), preStage.getText()))
                             .map(BaseDO::getId)
@@ -263,14 +266,29 @@ public class DrcRiskListener implements Listener {
 
         // 当前项目里程碑未录入风险
         List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectId(projectId);
-        List<ProjectRiskDO> noEntryRiskList = riskDOList.stream()
+        Map<String, ProjectRiskDO> noEntryRiskMap = riskDOList.stream()
                 .filter(e -> ProjectRiskStatusEnum.PENDING.getCode().equals(e.getStatus())
                         && ProjectRiskTypeEnum.MILE_STONE_NONE.getCode().equals(e.getType()))
+                .collect(Collectors.toMap(ProjectRiskDO::getName, e -> e, (a, b) -> a));
+
+        // 内部里程碑
+        List<ProjectStageEnum> stageEnumList = Arrays.stream(ProjectStageEnum.values())
+                .filter(e -> ProjectCategoryEnum.INNER_PROJECT.equals(e.getCategory()))
                 .collect(Collectors.toList());
-        for (ProjectRiskDO riskDO : noEntryRiskList) {
+
+        for (int i = 0; i < stageEnumList.size(); i++) {
+            ProjectStageEnum stageEnum = stageEnumList.get(i);
+
+            ProjectRiskDO riskDO = noEntryRiskMap.get(stageEnum.getText());
+            if (riskDO == null) {
+                continue;
+            }
+
+            // 当前阶段包含里程碑，或者下一阶段不包含里程碑
             Long id = riskDO.getId();
             String name = riskDO.getName();
-            if (milestoneGroup.containsKey(name)) {
+            ProjectStageEnum nextStageEnum = stageEnumList.get(i + 1);
+            if (milestoneGroup.containsKey(name) || !milestoneGroup.containsKey(nextStageEnum.getText())) {
                 projectRiskMapper.updateStatus(id, ProjectRiskStatusEnum.COMPLETE.getCode());
             }
         }

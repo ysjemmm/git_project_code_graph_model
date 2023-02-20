@@ -5,8 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.timevale.forward.model.enums.ProjectCategoryEnum.INNER_PROJECT;
@@ -37,6 +37,11 @@ public enum ProjectStageEnum {
     private static final Map<Integer, ProjectStageEnum> MAP =
             Maps.uniqueIndex(Arrays.asList(values()), ProjectStageEnum::getCode);
 
+    // 内部项目阶段集合
+    private static final List<ProjectStageEnum> innerStageList = Arrays.stream(ProjectStageEnum.values())
+            .filter(e -> ProjectCategoryEnum.INNER_PROJECT.equals(e.getCategory()))
+            .collect(Collectors.toList());
+
     /**
      * 根据code查询text
      */
@@ -52,17 +57,18 @@ public enum ProjectStageEnum {
     }
 
     public static ProjectStageEnum getPreStage(Integer code) {
-        if (Objects.equals(code, OPERATE.code)) {
-            return FINISH;
-        } else if (Objects.equals(code, FINISH.code)) {
-            return EXECUTE;
-        } else if (Objects.equals(code, EXECUTE.code)) {
-            return PLAN;
-        } else if (Objects.equals(code, PLAN.code)) {
-            return START;
-        } else {
-            return START;
+        if (code == null) {
+            return null;
         }
+        int index = innerStageList.size() - 1;
+        for (int i = 0; i < innerStageList.size(); i++) {
+            ProjectStageEnum stageEnum = innerStageList.get(i);
+            if (stageEnum.code.equals(code)) {
+                index = i - 1;
+                break;
+            }
+        }
+        return index < 0 ? null : innerStageList.get(index);
     }
 
     /**

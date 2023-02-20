@@ -22,12 +22,12 @@ public class ThreadPoolExecutorConfig {
 
     @Bean(name = "threadPoolTaskExecutor")
     public ThreadPoolTaskExecutor threadPoolTaskExecutor() {
-        return initThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, 200, 30000, "ThreadPoolExecutor-");
+        return initThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, 200, 60, "ThreadPoolExecutor-");
     }
 
     @Bean(name = "trackImportExecutor")
     public ThreadPoolTaskExecutor trackImportExecutor() {
-        return initThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, 200, 30000, "TrackImportExecutor-");
+        return initThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, 200, 60, "TrackImportExecutor-");
     }
 
     public static ThreadPoolTaskExecutor initThreadPoolExecutor(int corePoolSize, int maxPoolSize, int queueCapacity, int keepAliveSeconds, String threadNamePrefix) {
