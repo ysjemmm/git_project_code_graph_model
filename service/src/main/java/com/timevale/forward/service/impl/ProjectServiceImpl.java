@@ -1143,11 +1143,8 @@ public class ProjectServiceImpl implements ProjectService {
         projectMapper.updateStatusAndEndDate(projectId, ProjectStatusEnum.COMPLETE.getCode(), projectActualEndDate);
 
         // 项目状态日志
-        projectLogComponent.addLogWhenContentChange(
-                ProjectStatusEnum.getTextByCode(projectDO.getStatus()),
-                ProjectStatusEnum.COMPLETE.getText(),
-                projectId,
-                BizChangeLogFieldEnum.PROJECT_STATUS.getText());
+        projectLogComponent.addLogWhenStatusChange(projectDO.getStatus(), ProjectStatusEnum.COMPLETE.getCode(),
+                projectId, ButtonActionEnum.INNER_FINISH.getText());
 
         innerProjectStatusUpdateComponent.updateFromProject(projectDO);
         return BaseResult.success();
