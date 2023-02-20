@@ -253,9 +253,9 @@ public class TaskServiceImpl implements TaskService {
         // 若执行人不在项目成员中,需新增
         personComponent.addIfNotExisted(taskModifyReq.getExecutors(), taskDO.getProjectId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
 
-        innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
         sendDingMsg(taskDO, executorIds);
         projectMilestoneComponent.updateMilestoneNameAndStage(taskDO);
+        innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
         return BaseResult.success(true);
     }
 
