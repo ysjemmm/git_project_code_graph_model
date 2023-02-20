@@ -104,6 +104,11 @@ public enum ButtonActionEnum {
     ONLINE("已上线"),
 
     /**
+     * 内部项目已完成按钮
+     */
+    INNER_FINISH("已完成"),
+
+    /**
      * 重新确认
      */
     REPEAT_CONFIRM("重新确认"),
