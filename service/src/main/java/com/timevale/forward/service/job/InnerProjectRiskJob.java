@@ -77,9 +77,7 @@ public class InnerProjectRiskJob extends IJobHandler {
 
         // 待处理的风险
         List<ProjectRiskDO> riskDOs = projectRiskMapper.selectByProjectIdListStatus(projectIds, ProjectRiskStatusEnum.PENDING.getCode());
-        HashBasedTable<Long, String, ProjectRiskDO> riskTable = riskDOs.stream()
-                .map(e -> ImmutableTable.of(e.getMainId(), e.getName(), e))
-                .collect(HashBasedTable::create, HashBasedTable::putAll, HashBasedTable::putAll);
+        Map<String, ProjectRiskDO> riskMap = riskDOs.stream().collect(Collectors.toMap(e -> uniqueKey(e.getProjectId(), e.getMainId(), e.getType(), e.getName()), e -> e, (a,b)->a));
 
         // 项目相关的里程碑
         List<ProjectMilestone> milestones = milestoneComponent.getValidMilestone(projectIds);
@@ -90,14 +88,14 @@ public class InnerProjectRiskJob extends IJobHandler {
         try {
             List<MilestoneDTO> milestoneDTOList = overDueRisk(milestones);
             for (MilestoneDTO milestoneDTO : milestoneDTOList) {
-                solveRisk(nowDate, milestoneDTO, riskTable, milestoneTable, insertRiskList, updateRiskList);
+                solveRisk(nowDate, milestoneDTO, riskMap, milestoneTable, insertRiskList, updateRiskList);
             }
         } catch (Exception e) {
             log.error("[InnerProjectRiskJob]处理判断逾期风险失败,e: {}", e.getMessage());
         }
 
         try {
-            List<ProjectRiskDO> noEntryRiskList = noEntryRisk(projectDOs, milestones, riskTable);
+            List<ProjectRiskDO> noEntryRiskList = noEntryRisk(projectDOs, milestones, riskMap);
             insertRiskList.addAll(noEntryRiskList);
         } catch (Exception e) {
             log.error("[InnerProjectRiskJob]判断未录入风险失败, e: {}", e.getMessage());
@@ -160,7 +158,7 @@ public class InnerProjectRiskJob extends IJobHandler {
         return milestoneDTOList;
     }
 
-    private List<ProjectRiskDO> noEntryRisk(List<ProjectDO> projectDOList, List<ProjectMilestone> milestoneList, HashBasedTable<Long, String, ProjectRiskDO> riskTable) {
+    private List<ProjectRiskDO> noEntryRisk(List<ProjectDO> projectDOList, List<ProjectMilestone> milestoneList, Map<String, ProjectRiskDO> riskMap) {
         // 里程碑未录入风险
         List<ProjectRiskDO> noEntryRiskList = new ArrayList<>();
 
@@ -168,6 +166,8 @@ public class InnerProjectRiskJob extends IJobHandler {
         Map<Long, Set<Integer>> milestoneGroup = milestoneList.stream()
                 .collect(Collectors.groupingBy(ProjectMilestone::getProjectId, Collectors.collectingAndThen(Collectors.toList(),
                         projectMilestones -> projectMilestones.stream().map(ProjectMilestone::getStage).collect(Collectors.toSet()))));
+
+        Integer riskType = ProjectRiskTypeEnum.MILE_STONE_NONE.getCode();
 
         milestoneGroup.forEach((projectId, stageSet) -> {
             ProjectDO projectDO = projectDOMap.get(projectId);
@@ -181,7 +181,8 @@ public class InnerProjectRiskJob extends IJobHandler {
             for (Integer validStage : validStages) {
                 boolean contains = stageSet.contains(validStage);
                 // 如果上一个阶段没有里程碑，当前阶段有里程碑，则是里程碑未录入
-                if (!previous && contains && !riskTable.contains(projectId, ProjectStageEnum.getTextByCode(preStage))) {
+                String uniqueKey = uniqueKey(projectId, projectId, riskType, ProjectStageEnum.getTextByCode(preStage));
+                if (!previous && contains && !riskMap.containsKey(uniqueKey)) {
                     ProjectRiskDO newRisk = new ProjectRiskDO();
                     newRisk.setSign("");
                     newRisk.setMainId(projectId);
@@ -228,10 +229,9 @@ public class InnerProjectRiskJob extends IJobHandler {
      * @param milestoneTable 里程碑Table
      * @param insertRisks    新增风险列表
      * @param updateRisks    更新风险列表
-     * @param riskTable      风险表
      */
     private void solveRisk(Date nowDate, MilestoneDTO milestoneDTO,
-                           HashBasedTable<Long, String, ProjectRiskDO> riskTable,
+                           Map<String, ProjectRiskDO> riskMap,
                            HashBasedTable<Integer, Long, ProjectMilestone> milestoneTable,
                            List<ProjectRiskDO> insertRisks, List<ProjectRiskDO> updateRisks) {
 
@@ -257,12 +257,13 @@ public class InnerProjectRiskJob extends IJobHandler {
         }
 
         // 处理存在风险
-        for (Pair<Integer, BigDecimal> riskDate : riskDates) {
-            Integer riskType = riskDate.getKey();
-            BigDecimal overdueDay = riskDate.getValue();
+        for (Pair<Integer, BigDecimal> riskData : riskDates) {
+            Integer riskType = riskData.getKey();
+            BigDecimal overdueDay = riskData.getValue();
 
             // 判断是否已存在风险
-            ProjectRiskDO riskDO = riskTable.get(milestone.getId(), milestone.getMilestoneName());
+            String uniqueKey = uniqueKey(milestone.getProjectId(), milestone.getId(), riskType, milestone.getMilestoneName());
+            ProjectRiskDO riskDO = riskMap.get(uniqueKey);
             if (riskDO == null || !riskType.equals(riskDO.getType())) {
                 ProjectRiskDO newRisk = new ProjectRiskDO();
                 newRisk.setType(riskType);
@@ -276,6 +277,10 @@ public class InnerProjectRiskJob extends IJobHandler {
                 updateRisks.add(riskDO);
             }
         }
+    }
+
+    private String uniqueKey(Long projectId, Long mainId, Integer type, String name) {
+        return projectId + "-" + mainId + "-" + type + "-" + name;
     }
 
 }

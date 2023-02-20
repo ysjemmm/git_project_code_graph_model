@@ -557,7 +557,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 更新项目成员
         List<PersonAddReq> newMembers = projectSimpleModifyReq.getTeamMembers();
-        if (CollUtil.isNotEmpty(newMembers)) {
+        if (newMembers != null) {
             // 成员更新日志
             List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
             String addMembers = newMembers.stream()
