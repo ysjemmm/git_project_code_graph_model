@@ -4,20 +4,23 @@ import cn.hutool.core.collection.CollUtil;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.dao.ProjectRiskMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.model.enums.ProjectRiskStatusEnum;
 import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
-import com.timevale.forward.model.enums.ProjectStageEnum;
-import com.timevale.forward.service.component.ProjectMilestoneComponent;
+import com.timevale.forward.service.component.ProjectRiskComponent;
+import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
+import com.timevale.forward.service.mq.dto.MilestoneDTO;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.framework.schedulerT.client.annotaion.JobHandler;
 import com.timevale.framework.schedulerT.core.biz.model.ReturnT;
 import com.timevale.framework.schedulerT.core.handler.IJobHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -43,7 +46,11 @@ public class InnerProjectRiskBackJob extends IJobHandler {
     @Resource
     private ProjectRiskMapper projectRiskMapper;
     @Resource
-    private ProjectMilestoneComponent milestoneComponent;
+    private ProjectMilestoneMapper milestoneMapper;
+    @Resource
+    private ProjectRiskComponent projectRiskComponent;
+    @Resource
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     // 一个的工作日毫秒数
     private final BigDecimal WORK_DAY_SECONDS = new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND);
@@ -65,26 +72,36 @@ public class InnerProjectRiskBackJob extends IJobHandler {
             return ReturnT.SUCCESS;
         }
 
-        // 风险的项目id
-        List<Long> projectIds = riskDOs.stream()
+        // 处理未录入风险的项目
+        List<Long> noEntryProjectIdList = riskDOs.stream()
+                .filter(e -> ProjectRiskTypeEnum.MILE_STONE_NONE.getCode().equals(e.getType()))
                 .map(ProjectRiskDO::getProjectId)
                 .distinct()
                 .collect(Collectors.toList());
+        for (Long projectId : noEntryProjectIdList) {
+            threadPoolTaskExecutor.execute(() -> projectRiskComponent.solveNoEntry(projectId));
+        }
+
+        // 逾期未录入风险的项目
+        List<Long> projectIds = riskDOs.stream()
+                .filter(e -> !ProjectRiskTypeEnum.MILE_STONE_NONE.getCode().equals(e.getType()))
+                .map(ProjectRiskDO::getProjectId)
+                .distinct()
+                .collect(Collectors.toList());
+        if (CollUtil.isEmpty(projectIds)) {
+            log.info("[InnerProjectRiskBackJob]任务执行结束,无逾期未录入风险");
+            return ReturnT.SUCCESS;
+        }
 
         // 风险项目的里程碑
-        List<ProjectMilestone> milestones = milestoneComponent.getValidMilestone(projectIds);
-        ImmutableMap<Long, ProjectMilestone> milestoneMap = Maps.uniqueIndex(milestones, ProjectMilestone::getId);
-
-        // 项目有里程碑的阶段, (项目id-项目阶段Set) Map
-        Map<Long, Set<String>> milestoneGroup = milestones.stream()
-                .collect(Collectors.groupingBy(ProjectMilestone::getProjectId, Collectors.collectingAndThen(Collectors.toList(),
-                        projectMilestones -> projectMilestones.stream().map(e -> ProjectStageEnum.getTextByCode(e.getStage()))
-                                .collect(Collectors.toSet()))));
+        List<ProjectMilestone> milestones = milestoneMapper.selectByProjectIds(projectIds);
+        Map<Long, ProjectMilestone> milestoneMap = milestones.stream()
+                .collect(Collectors.toMap(ProjectMilestone::getId, e -> e, (a, b) -> a));
 
         // 里程碑关联的任务
         List<TaskDO> mTaskDOs = new ArrayList<>();
-        List<Long> mTaskIds = milestones.stream().
-                filter(e -> Objects.equals(e.getType(), MilestoneTypeEnum.TASK.getCode()))
+        List<Long> mTaskIds = milestones.stream()
+                .filter(e -> Objects.equals(e.getType(), MilestoneTypeEnum.TASK.getCode()))
                 .map(ProjectMilestone::getRelationId)
                 .collect(Collectors.toList());
         if (CollUtil.isNotEmpty(mTaskIds)) {
@@ -105,69 +122,49 @@ public class InnerProjectRiskBackJob extends IJobHandler {
 
         // 已完成的风险
         List<ProjectRiskDO> completeRisks = new ArrayList<>();
-
         for (ProjectRiskDO riskDO : riskDOs) {
-            String riskName = riskDO.getName();
             Integer riskType = riskDO.getType();
             Long riskMainId = riskDO.getMainId();
 
-            // 判断是否是里程碑未录入
-            if (Objects.equals(ProjectRiskTypeEnum.MILE_STONE_NONE.getCode(), riskType)) {
-                Set<String> stageSet = milestoneGroup.get(riskMainId);
-                if (stageSet.contains(riskName)) {
-                    riskDO.setStatus(ProjectRiskStatusEnum.COMPLETE.getCode());
-                    completeRisks.add(riskDO);
+            // 查询对应的里程碑，不存在则作废该风险
+            ProjectMilestone milestone = milestoneMap.get(riskMainId);
+            if (milestone == null) {
+                projectRiskMapper.updateStatus(riskDO.getId(),ProjectRiskStatusEnum.INVALID.getCode());
+                continue;
+            }
+
+            // 获取关联对象的日期数据
+            MilestoneDTO milestoneDTO = null;
+            if (Objects.equals(MilestoneTypeEnum.TASK.getCode(), milestone.getType())) {
+                TaskDO taskDO = mTaskDOMap.get(milestone.getRelationId());
+                if (taskDO != null) {
+                    milestoneDTO = ProjectMilestoneCopier.INSTANCE.task2dto(taskDO);
                 }
+
             } else {
-                // 开始或结束时间未录入
-                ProjectMilestone milestone = milestoneMap.get(riskMainId);
-                if (milestone == null) {
-                    continue;
+                ProjectDO projectDO = mProjectDOMap.get(milestone.getRelationId());
+                if (projectDO != null) {
+                    milestoneDTO = ProjectMilestoneCopier.INSTANCE.project2dto(projectDO);
                 }
+            }
 
-                // 日期数据
-                Date planEndDate;
-                Date planStartDate;
-                Date actualEndDate;
-                Date actualStartDate;
+            // 不存在对应对象，或者状态为暂停或作废，风险同步作废
+            if (milestoneDTO == null || milestoneDTO.getInvalid() || milestoneDTO.getSuspend()) {
+                projectRiskMapper.updateStatus(riskDO.getId(),ProjectRiskStatusEnum.INVALID.getCode());
+                continue;
+            }
 
-                // 关联id 和 里程碑类型
-                Long relationId = milestone.getRelationId();
-                Integer milestoneType = milestone.getType();
-
-                // 获取关联对象的日期数据
-                if (Objects.equals(MilestoneTypeEnum.TASK.getCode(), milestoneType)) {
-                    TaskDO taskDO = mTaskDOMap.get(relationId);
-                    if (taskDO == null) {
-                        continue;
-                    }
-                    planEndDate = taskDO.getPlanEndDate();
-                    planStartDate = taskDO.getPlanStartDate();
-                    actualEndDate = taskDO.getActualEndDate();
-                    actualStartDate = taskDO.getActualStartDate();
-                } else {
-                    ProjectDO projectDO = mProjectDOMap.get(relationId);
-                    if (projectDO == null) {
-                        continue;
-                    }
-                    planEndDate = projectDO.getPlanEndDate();
-                    planStartDate = projectDO.getPlanStartDate();
-                    actualEndDate = projectDO.getActualEndDate();
-                    actualStartDate = projectDO.getActualStartDate();
-                }
-
-                // 处理风险
-                if (Objects.equals(ProjectRiskTypeEnum.MILE_STONE_START.getCode(), riskType)) {
-                    solveRisk(nowDate, planStartDate, actualStartDate, riskDO, completeRisks);
-                } else {
-                    solveRisk(nowDate, planEndDate, actualEndDate, riskDO, completeRisks);
-                }
+            // 处理风险
+            if (Objects.equals(ProjectRiskTypeEnum.MILE_STONE_START.getCode(), riskType)) {
+                solveRisk(nowDate, milestoneDTO.getPlanStartDate() , milestoneDTO.getActualStartDate(), riskDO, completeRisks);
+            } else {
+                solveRisk(nowDate, milestoneDTO.getPlanEndDate(), milestoneDTO.getActualEndDate(), riskDO, completeRisks);
             }
         }
 
         // 数据更新
         completeRisks.forEach(e -> projectRiskMapper.update(e));
-        log.info("[InnerProjectRiskBackJob]任务执行结束，处理风险个数: {}", completeRisks.size());
+        log.info("[InnerProjectRiskBackJob]任务执行结束");
         return ReturnT.SUCCESS;
     }
 
