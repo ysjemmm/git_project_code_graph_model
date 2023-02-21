@@ -1149,11 +1149,15 @@ public class ProjectServiceImpl implements ProjectService {
         boolean unfinished = false;
         if (CollUtil.isNotEmpty(taskIds)) {
             List<TaskDO> taskDOs = taskMapper.getByIdList(taskIds);
-            unfinished = taskDOs.stream().anyMatch(e -> Objects.isNull(e.getActualEndDate()));
+            unfinished = taskDOs.stream()
+                    .filter(e -> !TaskStatusEnum.INVALID.getCode().equals(e.getStatus()))
+                    .anyMatch(e -> Objects.isNull(e.getActualEndDate()));
         }
         if (CollUtil.isNotEmpty(projectIds)) {
             List<ProjectDO> projectDos = projectMapper.getByIds(projectIds);
-            unfinished = unfinished || projectDos.stream().anyMatch(e -> Objects.isNull(e.getActualEndDate()));
+            unfinished = unfinished || projectDos.stream()
+                    .filter(e -> !ProjectStatusEnum.INVALID.getCode().equals(e.getStatus()))
+                    .anyMatch(e -> Objects.isNull(e.getActualEndDate()));
         }
         AssertUtil.checkState(!unfinished, "存在未完成的里程碑，无法关闭项目");
 
