@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -1123,8 +1124,16 @@ public class ProjectServiceImpl implements ProjectService {
                         && !Objects.equals(projectDO.getStatus(), ProjectStatusEnum.INVALID.getCode()),
                 "项目暂停或作废时，不能进行此操作");
 
-        // 里程碑关联的任务与项目
+        // 里程碑关联的任务与项目,过滤作废里程碑
         List<ProjectMilestoneVO> projectMilestones = projectMilestoneComponent.listByProjectId(projectId);
+        projectMilestones = projectMilestones.stream().filter(e -> {
+            if (MilestoneTypeEnum.TASK.getCode().equals(e.getType())) {
+                return !TaskStatusEnum.INVALID.getCode().equals(e.getStatus());
+            } else {
+                return !ProjectStatusEnum.INVALID.getCode().equals(e.getStatus());
+            }
+        }).collect(Collectors.toList());
+
         // 首个阶段和最后一个阶段都需要存在里程碑
         List<Integer> validStages = projectDO.getValidStageList();
         Integer completeStage = validStages.get(validStages.size() - 1);
@@ -1132,33 +1141,13 @@ public class ProjectServiceImpl implements ProjectService {
                 .collect(Collectors.toSet());
         AssertUtil.checkState(milestoneStages.contains(completeStage),
                 ProjectStageEnum.getByCode(completeStage).getText() + "无里程碑，无法完成项目");
-        List<Long> taskIds = projectMilestones.stream()
-                .filter(e -> Objects.equals(MilestoneTypeEnum.TASK.getCode(), e.getType()))
-                .map(ProjectMilestoneVO::getRelationId)
-                .collect(Collectors.toList());
-        List<Long> projectIds = projectMilestones.stream()
-                .filter(e -> Objects.equals(MilestoneTypeEnum.TASK.getCode(), e.getType()))
-                .map(ProjectMilestoneVO::getRelationId)
-                .collect(Collectors.toList());
         Date projectActualEndDate = projectMilestones.stream()
                 .filter(m -> Objects.equals(m.getStage(), completeStage))
                 .map(ProjectMilestoneVO::getActualEndDate)
                 .max(Date::compareTo)
                 .orElse(new Date());
         // 里程碑是否全部完成
-        boolean unfinished = false;
-        if (CollUtil.isNotEmpty(taskIds)) {
-            List<TaskDO> taskDOs = taskMapper.getByIdList(taskIds);
-            unfinished = taskDOs.stream()
-                    .filter(e -> !TaskStatusEnum.INVALID.getCode().equals(e.getStatus()))
-                    .anyMatch(e -> Objects.isNull(e.getActualEndDate()));
-        }
-        if (CollUtil.isNotEmpty(projectIds)) {
-            List<ProjectDO> projectDos = projectMapper.getByIds(projectIds);
-            unfinished = unfinished || projectDos.stream()
-                    .filter(e -> !ProjectStatusEnum.INVALID.getCode().equals(e.getStatus()))
-                    .anyMatch(e -> Objects.isNull(e.getActualEndDate()));
-        }
+        boolean unfinished = projectMilestones.stream().anyMatch(e -> e.getActualEndDate() == null);
         AssertUtil.checkState(!unfinished, "存在未完成的里程碑，无法关闭项目");
 
         // 修改项目状态
