@@ -803,7 +803,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 是否为项目经理和PMO及其上级
         String pmId = projectDO.getPmId();
-        boolean isLeaderOrPMO = userComponent.isPmoOrPmoLeader() && isLeader(pmId);
+        boolean isLeaderOrPMO = userComponent.isPmoOrPmoLeader() || isLeader(pmId);
         projectInnerDetailVO.setIsLeaderOrPMO(isLeaderOrPMO);
 
         return BaseResult.success(projectInnerDetailVO);
