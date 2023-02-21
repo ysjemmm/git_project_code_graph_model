@@ -7,7 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ProjectInnerTypeEnum {
 
-    //0空, 1战役, 2LTC项目, 3PBG项目, 4CBG项目, 5战役
+    //0空, 1战役, 2LTC项目, 3PBG项目, 4CBG项目, 5职能后台项目
 
     NULL(0,"空"),
 
@@ -19,7 +19,7 @@ public enum ProjectInnerTypeEnum {
 
     CBG(4,"CBG项目"),
 
-    MANAGE(5,"战役");
+    MANAGE(5,"职能后台项目");
 
     final private Integer code;
     final private String text;
