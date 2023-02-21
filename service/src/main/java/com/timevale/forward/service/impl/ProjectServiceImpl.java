@@ -1,7 +1,6 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -1134,7 +1133,7 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }).collect(Collectors.toList());
 
-        // 首个阶段和最后一个阶段都需要存在里程碑
+        // 最后一个阶段存在里程碑
         List<Integer> validStages = projectDO.getValidStageList();
         Integer completeStage = validStages.get(validStages.size() - 1);
         Set<Integer> milestoneStages = projectMilestones.stream().map(ProjectMilestoneVO::getStage)
@@ -1147,8 +1146,8 @@ public class ProjectServiceImpl implements ProjectService {
                 .max(Date::compareTo)
                 .orElse(new Date());
         // 里程碑是否全部完成
-        boolean unfinished = projectMilestones.stream().anyMatch(e -> e.getActualEndDate() == null);
-        AssertUtil.checkState(!unfinished, "存在未完成的里程碑，无法关闭项目");
+        AssertUtil.checkState(projectMilestones.stream().noneMatch(e -> Objects.isNull(e.getActualEndDate())),
+                "存在未完成的里程碑，无法关闭项目");
 
         // 修改项目状态
         projectMapper.updateStatus(projectId, ProjectStatusEnum.COMPLETE.getCode());
