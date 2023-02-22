@@ -103,9 +103,11 @@ public class InnerProjectRiskJob extends IJobHandler {
 
         // 更新任务和项目
         if (CollUtil.isNotEmpty(insertRiskList)) {
+            log.info("[InnerProjectRiskJob]新增风险,size:{}", insertRiskList.size());
             projectRiskMapper.batchInsert(insertRiskList);
         }
         if (CollUtil.isNotEmpty(updateRiskList)) {
+            log.info("[InnerProjectRiskJob]更新风险,size:{}", updateRiskList.size());
             updateRiskList.forEach(i -> projectRiskMapper.update(i));
         }
 
@@ -115,26 +117,24 @@ public class InnerProjectRiskJob extends IJobHandler {
 
     private List<MilestoneDTO> overDueRisk(List<ProjectMilestone> milestoneList) {
         // 需要处理的里程碑
-        List<MilestoneDTO> milestoneDTOList;
+        List<MilestoneDTO> milestoneDTOList = new ArrayList<>();
 
         // 里程碑关联的任务
         List<Long> mTaskIds = milestoneList.stream()
                 .filter(e -> Objects.equals(MilestoneTypeEnum.TASK.getCode(), e.getType()))
                 .map(ProjectMilestone::getRelationId)
                 .collect(Collectors.toList());
-        if (CollUtil.isEmpty(mTaskIds)) {
-            return CollUtil.newArrayList();
+        if (CollUtil.isNotEmpty(mTaskIds)) {
+            // 筛选出待执行、进行中的任务
+            List<TaskDO> mTaskDOs = taskMapper.getByIdList(mTaskIds);
+            mTaskDOs = mTaskDOs.stream()
+                    .filter(e -> Objects.equals(TaskStatusEnum.WAITING.getCode(), e.getStatus())
+                            || Objects.equals(TaskStatusEnum.PROGRESS.getCode(), e.getStatus()))
+                    .collect(Collectors.toList());
+
+            // 转换为里程碑相关数据
+            milestoneDTOList = mTaskDOs.stream().map(ProjectMilestoneCopier.INSTANCE::task2dto).collect(Collectors.toList());
         }
-
-        // 筛选出待执行、进行中的任务
-        List<TaskDO> mTaskDOs = taskMapper.getByIdList(mTaskIds);
-        mTaskDOs = mTaskDOs.stream()
-                .filter(e -> Objects.equals(TaskStatusEnum.WAITING.getCode(), e.getStatus())
-                        || Objects.equals(TaskStatusEnum.PROGRESS.getCode(), e.getStatus()))
-                .collect(Collectors.toList());
-
-        // 转换为里程碑相关数据
-        milestoneDTOList = mTaskDOs.stream().map(ProjectMilestoneCopier.INSTANCE::task2dto).collect(Collectors.toList());
 
         // 里程碑关联的项目
         List<Long> mProjectIds = milestoneList.stream()
@@ -142,19 +142,18 @@ public class InnerProjectRiskJob extends IJobHandler {
                 .map(ProjectMilestone::getRelationId)
                 .collect(Collectors.toList());
         if (CollUtil.isEmpty(mProjectIds)) {
-            return CollUtil.newArrayList();
+            // 排除掉已暂停、已完成的项目
+            List<ProjectDO> mProjectDOs = projectMapper.getByIds(mProjectIds);
+            mProjectDOs = mProjectDOs.stream()
+                    .filter(e -> !Objects.equals(ProjectStatusEnum.SUSPEND.getCode(), e.getStatus())
+                            && !Objects.equals(ProjectStatusEnum.COMPLETE.getCode(), e.getStatus()))
+                    .collect(Collectors.toList());
+
+            // 转换为里程碑相关数据
+            milestoneDTOList.addAll(mProjectDOs.stream().map(ProjectMilestoneCopier.INSTANCE::project2dto).collect(Collectors.toList()));
         }
 
-        // 排除掉已暂停、已完成的项目
-        List<ProjectDO> mProjectDOs = projectMapper.getByIds(mProjectIds);
-        mProjectDOs = mProjectDOs.stream()
-                .filter(e -> !Objects.equals(ProjectStatusEnum.SUSPEND.getCode(), e.getStatus())
-                        && !Objects.equals(ProjectStatusEnum.COMPLETE.getCode(), e.getStatus()))
-                .collect(Collectors.toList());
-
-        // 转换为里程碑相关数据
-        milestoneDTOList.addAll(mProjectDOs.stream().map(ProjectMilestoneCopier.INSTANCE::project2dto).collect(Collectors.toList()));
-
+        log.info("[innerProjectRiskJob.overDueRisk]需要处理的里程碑, size:{}", milestoneDTOList.size());
         return milestoneDTOList;
     }
 

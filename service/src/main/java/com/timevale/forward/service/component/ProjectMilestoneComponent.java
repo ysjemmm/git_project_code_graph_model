@@ -13,6 +13,7 @@ import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
  * @author jingchun
  * created on 2023/2/13
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ProjectMilestoneComponent {
@@ -145,6 +147,7 @@ public class ProjectMilestoneComponent {
         if (CollUtil.isEmpty(projectIdList)) {
             return new ArrayList<>();
         }
+        log.info("[ProjectMilestoneComponent.getValidMilestone]projectIdList: {}", projectIdList);
 
         List<ProjectMilestone> validMilestoneList = new ArrayList<>();
         List<ProjectMilestone> milestoneList = milestoneMapper.selectByProjectIds(projectIdList);
