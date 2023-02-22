@@ -41,6 +41,7 @@ public class InnerProjectStatusUpdateComponent {
         ProjectDO project = projectMapper.get(projectId);
         if (!Objects.equals(project.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode())) {
             log.info("not inner project, skip update, projectId: {}", projectId);
+            return;
         }
         if (ProjectStatusEnum.suspendOrTerminated(project.getStatus())) {
             log.info("project is suspend or terminated, projectId: {}", projectId);
