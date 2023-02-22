@@ -141,7 +141,7 @@ public class InnerProjectRiskJob extends IJobHandler {
                 .filter(e -> Objects.equals(MilestoneTypeEnum.PROJECT.getCode(), e.getType()))
                 .map(ProjectMilestone::getRelationId)
                 .collect(Collectors.toList());
-        if (CollUtil.isEmpty(mProjectIds)) {
+        if (CollUtil.isNotEmpty(mProjectIds)) {
             // 排除掉已暂停、已完成的项目
             List<ProjectDO> mProjectDOs = projectMapper.getByIds(mProjectIds);
             mProjectDOs = mProjectDOs.stream()
