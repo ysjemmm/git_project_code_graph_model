@@ -23,4 +23,6 @@ public class TaskBatchAddReq extends BaseReq {
     @Valid
     private List<TaskSimpleAddReq> taskSimples;
 
+    @ApiModelProperty("是否为里程碑")
+    private Boolean milestoneFlag = false;
 }

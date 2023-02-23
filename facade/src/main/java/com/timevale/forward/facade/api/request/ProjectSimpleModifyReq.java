@@ -8,7 +8,6 @@ import lombok.Setter;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -53,6 +52,10 @@ public class ProjectSimpleModifyReq extends ToString {
     private String suspendReason;
 
     @Valid
-    @ApiModelProperty("团队成员")
+    @ApiModelProperty("核心成员")
     private List<PersonAddReq> teamMembers;
+
+    @Valid
+    @ApiModelProperty("扩展成员")
+    private List<PersonAddReq> extTeamMembers;
 }

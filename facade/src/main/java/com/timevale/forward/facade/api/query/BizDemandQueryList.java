@@ -1,16 +1,13 @@
 package com.timevale.forward.facade.api.query;
 
 import com.timevale.mandarin.common.query.QueryBase;
-
-import java.util.Date;
-import java.util.List;
-
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotNull;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -96,4 +93,6 @@ public class BizDemandQueryList extends QueryBase {
     @ApiModelProperty("期望上线时间0(1月),1(2月),2(3月),3(4月),4(5月),5(6月),7(8月),8(9月),9(10月),10(11月),11(12月)")
     private List<Integer> hopeReleaseDateList;
 
+    @ApiModelProperty("是否为客户开发项目：0否，1是")
+    private Integer customerDevDemand;
 }
