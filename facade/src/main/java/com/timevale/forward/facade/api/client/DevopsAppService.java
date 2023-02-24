@@ -2,7 +2,9 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.query.DevopsAppQueryList;
 import com.timevale.forward.facade.api.request.DevopsReq;
+import com.timevale.forward.facade.api.request.DevopsUpdateStatReq;
 import com.timevale.forward.facade.api.result.DevopsAppVO;
 import com.timevale.forward.facade.api.result.DevopsProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
@@ -40,16 +42,16 @@ public interface DevopsAppService {
     /**
      * 更新勾选统计
      *
-     * @param id id
+     * @param devopsReq devops点播
      * @return {@link BaseResult}<{@link Boolean}>
      */
-    BaseResult<Boolean> updateStatFlag(Long id);
+    BaseResult<Boolean> updateStatFlag(DevopsUpdateStatReq devopsReq);
 
     /**
      * 分页查询-发布平台项目下属应用数据
      *
-     * @param projectId 项目id
+     * @param appQueryList 应用程序查询列表
      * @return {@link BaseResult}<{@link QueryResultVO}<{@link DevopsAppVO}>>
      */
-    BaseResult<QueryResultVO<DevopsAppVO>> listDevopsApps(Long projectId);
+    BaseResult<QueryResultVO<DevopsAppVO>> listDevopsApps(DevopsAppQueryList appQueryList);
 }
