@@ -59,6 +59,10 @@ public class InnerProjectStatusUpdateComponent {
                         .min(Comparator.comparing(ProjectMilestoneVO::getActualStartDate))
                         .map(ProjectMilestoneVO::getActualStartDate).orElse(null);
             }
+            // 如果为待启动，并且存在实际开始时间，则为启动中
+            if (ProjectStatusEnum.WAITING.getCode().equals(status) && actualStartDate != null) {
+                status = ProjectStatusEnum.STARTING.getCode();
+            }
             if (Objects.equals(project.getStatus(), status) &&
                     Objects.equals(project.getActualStartDate(), actualStartDate)) {
                 log.info("project status and date not updating cause data is identity, projectId: {}, status: {}, actualStartDate: {}",
