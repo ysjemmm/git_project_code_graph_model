@@ -160,6 +160,7 @@ public class TaskComponentImpl implements TaskComponent {
                         || (a.getActualEndDate() != null && a.getActualEndDate().after(a.getPlanEndDate()));
                 a.setIsDelay(isDelay);
             }
+            a.setCategory(projectMap.get(a.getProjectId()).getCategory());
         });
         PageQueryResult<TaskVO> pageQueryResult = new PageQueryResult<>();
         PageInfo<TaskDO> pageInfo = new PageInfo<>(taskDos);
