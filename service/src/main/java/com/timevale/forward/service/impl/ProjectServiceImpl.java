@@ -1161,6 +1161,13 @@ public class ProjectServiceImpl implements ProjectService {
         return BaseResult.success();
     }
 
+    @Override
+    public BaseResult<List<PersonVO>> getTeamMember(Long projectId) {
+        List<PersonDO> personDOList = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        List<PersonVO> personVOList = PersonCopier.INSTANCE.transform(personDOList);
+        return BaseResult.success(personVOList);
+    }
+
 
     private boolean checkProductRelease(Long projectId) {
         List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);

@@ -195,4 +195,12 @@ public interface ProjectService {
      */
     BaseResult<Boolean> innerComplete(ProjectInnerCompleteReq req);
 
+    /**
+     * 获取团队成员
+     *
+     * @param projectId 项目id
+     * @return {@link BaseResult}<{@link List}<{@link PersonVO}>>
+     */
+    BaseResult<List<PersonVO>> getTeamMember(Long projectId);
+
 }
