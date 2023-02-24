@@ -166,4 +166,8 @@ public class BizDemandListCondition extends QueryBase {
      */
     private List<Integer> hopeReleaseDateList;
 
+    /**
+     * 是否为客开需求
+     */
+    private Boolean customerDevDemand;
 }
