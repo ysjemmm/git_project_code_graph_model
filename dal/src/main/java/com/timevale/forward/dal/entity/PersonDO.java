@@ -30,4 +30,9 @@ public class PersonDO extends BaseDO {
      * 用户类型
      */
     private Integer type;
+
+    /**
+     * 用户等级：0-核心，1-扩展
+     */
+    private Integer personLevel;
 }

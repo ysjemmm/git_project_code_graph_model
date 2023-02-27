@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -61,4 +60,7 @@ public class TaskSimpleAddReq extends BaseReq {
 
     @ApiModelProperty("执行人等级:1-核心，2-扩展")
     private Integer executorLevel = 1;
+
+    @ApiModelProperty("是否为里程碑")
+    private Boolean milestoneFlag = false;
 }

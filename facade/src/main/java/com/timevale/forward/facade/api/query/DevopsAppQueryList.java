@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotNull;
+
 
 /**
  * @author by YangXu
@@ -17,6 +19,7 @@ import lombok.EqualsAndHashCode;
 public class DevopsAppQueryList extends QueryBase {
 
     @ApiModelProperty("主体id")
+    @NotNull(message = "主体id必填")
     private Long mainId;
 
 }
