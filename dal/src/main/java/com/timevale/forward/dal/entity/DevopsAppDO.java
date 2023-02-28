@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class DevopsProjectDO extends BaseDO{
+public class DevopsAppDO extends BaseDO{
     private Long mainId;
 
     private String devopsProjectName;

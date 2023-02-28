@@ -1,8 +1,10 @@
 package com.timevale.forward.service.integration.publish.impl;
 
 import cn.hutool.core.util.CharsetUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.timevale.forward.dal.dto.DevopsProjectDTO;
 import com.timevale.forward.dal.dto.PublishPlanResultDTO;
 import com.timevale.forward.facade.api.query.PublishPlanQueryList;
 import com.timevale.forward.service.integration.publish.PublishPlatformClient;
@@ -17,6 +19,7 @@ import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author xingyun
@@ -30,7 +33,9 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
     private RestTemplate restTemplate;
 
     @Value("${publishPlan.baseUrl:http://poseidon-master.esign.cn/api/release_plan?}")
-    private String baseUrl;
+    private String publishPlanUrl;
+    @Value("${project.baseUrl:http://poseidon-master.esign.cn/api/project/}")
+    private String projectUrl;
 
     @Override
     public PublishPlanResultDTO list(PublishPlanQueryList publishPlanQueryList) {
@@ -52,8 +57,24 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
         paramMap.put("offset", (pageNum - 1) * pageSize);
         paramMap.put("limit", pageSize);
         String params = HttpUtil.toParams(paramMap, CharsetUtil.CHARSET_UTF_8, false);
-        String result = restTemplate.getForObject(baseUrl + params, String.class);
-        log.info("请求url :{},发布平台返回结果: {}", baseUrl + params, result);
+        String result = restTemplate.getForObject(publishPlanUrl + params, String.class);
+        log.info("请求url :{},发布平台返回结果: {}", publishPlanUrl + params, result);
         return JSONObject.parseObject(result, PublishPlanResultDTO.class);
+    }
+
+    @Override
+    public DevopsProjectDTO getProject(String projectSign) {
+        if (StrUtil.isBlank(projectSign)) {
+            return null;
+        }
+
+        log.info("[PublishPlatformClientImpl.getProject]项目标识:{}", projectSign);
+        JSONObject jsonObject = restTemplate.getForObject(projectUrl + projectSign, JSONObject.class);
+        log.info("[PublishPlatformClientImpl.getProject]返回参数:{}", jsonObject);
+
+        return Optional.ofNullable(jsonObject)
+                .flatMap(obj -> Optional.ofNullable(obj.getJSONObject("result")))
+                .flatMap(obj -> Optional.ofNullable(obj.toJavaObject(DevopsProjectDTO.class)))
+                .orElse(null);
     }
 }

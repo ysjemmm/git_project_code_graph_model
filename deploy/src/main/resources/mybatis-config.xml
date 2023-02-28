@@ -114,5 +114,6 @@
         <mapper resource="mapper/ProjectIncomeMapper.xml"/>
         <mapper resource="mapper/ProjectMilestoneMapper.xml"/>
         <mapper resource="mapper/BugOnlineBizDemandMapper.xml"/>
+        <mapper resource="mapper/DevopsAppMapper.xml"/>
     </mappers>
 </configuration>

@@ -9,6 +9,7 @@ import com.timevale.forward.facade.api.result.DevopsAppVO;
 import com.timevale.forward.facade.api.result.DevopsProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.mandarin.common.annotation.RestClient;
+import com.timevale.mandarin.common.result.PageQueryResult;
 
 import java.util.List;
 
@@ -53,5 +54,5 @@ public interface DevopsAppService {
      * @param appQueryList 应用程序查询列表
      * @return {@link BaseResult}<{@link QueryResultVO}<{@link DevopsAppVO}>>
      */
-    BaseResult<QueryResultVO<DevopsAppVO>> listDevopsApps(DevopsAppQueryList appQueryList);
+    BaseResult<PageQueryResult<DevopsAppVO>> listDevopsApps(DevopsAppQueryList appQueryList);
 }

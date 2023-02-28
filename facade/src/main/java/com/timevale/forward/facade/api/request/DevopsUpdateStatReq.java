@@ -17,8 +17,8 @@ import javax.validation.constraints.NotNull;
 @ApiModel("发布平台应用更新勾选状态")
 public class DevopsUpdateStatReq extends ToString {
 
-    @ApiModelProperty(value = "主体id")
-    @NotNull(message = "主体id必填")
+    @ApiModelProperty(value = "id")
+    @NotNull(message = "id必填")
     private Long id;
 
     @ApiModelProperty(value = "勾选状态")
