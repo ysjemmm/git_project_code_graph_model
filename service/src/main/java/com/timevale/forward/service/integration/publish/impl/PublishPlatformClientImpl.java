@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
@@ -64,13 +65,18 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
 
     @Override
     public DevopsProjectDTO getProject(String projectSign) {
+        log.info("[PublishPlatformClientImpl.getProject]projectSign:{}", projectSign);
         if (StrUtil.isBlank(projectSign)) {
             return null;
         }
 
-        log.info("[PublishPlatformClientImpl.getProject]项目标识:{}", projectSign);
-        JSONObject jsonObject = restTemplate.getForObject(projectUrl + projectSign, JSONObject.class);
-        log.info("[PublishPlatformClientImpl.getProject]返回参数:{}", jsonObject);
+        JSONObject jsonObject = null;
+        try {
+            jsonObject = restTemplate.getForObject(projectUrl + projectSign, JSONObject.class);
+            log.info("[PublishPlatformClientImpl.getProject]result:{}", jsonObject);
+        } catch (RestClientException e) {
+            log.error("[PublishPlatformClientImpl.getProject]发布平台查询项目信息失败，projectSign:{}", projectSign);
+        }
 
         return Optional.ofNullable(jsonObject)
                 .flatMap(obj -> Optional.ofNullable(obj.getJSONObject("result")))
