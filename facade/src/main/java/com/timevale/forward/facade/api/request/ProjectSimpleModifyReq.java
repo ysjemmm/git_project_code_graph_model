@@ -42,7 +42,7 @@ public class ProjectSimpleModifyReq extends ToString {
     @ApiModelProperty("项目计划结束时间")
     private Date planEndDate;
 
-        @ApiModelProperty("描述")
+    @ApiModelProperty("描述")
     private String desc;
 
     @ApiModelProperty("项目收益")

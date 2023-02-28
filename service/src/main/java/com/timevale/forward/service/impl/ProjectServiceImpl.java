@@ -804,9 +804,20 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectInnerDetailVO projectInnerDetailVO = ProjectCopier.INSTANCE.do2Vo(projectDO);
 
         // 团队成员
-        List<PersonDO> teamMemberDOs = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
-        List<PersonVO> teamMemberVOs = PersonCopier.INSTANCE.transform(teamMemberDOs);
-        projectInnerDetailVO.setTeamMember(teamMemberVOs);
+        List<PersonDO> teamMemberDOList = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+
+        List<PersonDO> coreTeamMemberDOList = teamMemberDOList.stream()
+                .filter(e -> PersonLevelEnum.CORE.getCode().equals(e.getPersonLevel()))
+                .collect(Collectors.toList());
+        List<PersonDO> extTeamMemberDOList = teamMemberDOList.stream()
+                .filter(e -> PersonLevelEnum.EXTENSION.getCode().equals(e.getPersonLevel()))
+                .collect(Collectors.toList());
+
+        List<PersonVO> coreTeamMemberVOList = PersonCopier.INSTANCE.transform(coreTeamMemberDOList);
+        List<PersonVO> extTeamMemberVOList = PersonCopier.INSTANCE.transform(extTeamMemberDOList);
+
+        projectInnerDetailVO.setTeamMember(coreTeamMemberVOList);
+        projectInnerDetailVO.setExtTeamMember(extTeamMemberVOList);
 
         // 上级项目信息
         Long parentId = projectDO.getParentId();
