@@ -11,10 +11,7 @@ import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
-import com.timevale.forward.service.component.PersonComponent;
-import com.timevale.forward.service.component.TaskComponent;
-import com.timevale.forward.service.component.TaskProductDemandComponent;
-import com.timevale.forward.service.component.TaskTimeComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
@@ -55,37 +52,28 @@ public class TaskComponentImpl implements TaskComponent {
 
     @Resource
     private ProjectMapper projectMapper;
-
     @Resource
     private PersonMapper personMapper;
-
     @Resource
     private ProductLineMapper productLineMapper;
-
     @Resource
     private TaskMapper taskMapper;
-
     @Resource
     private TaskProductDemandComponent taskProductDemandComponent;
-
     @Resource
     private ElapsedTimeClient elapsedTimeClient;
-
     @Resource
     private TaskTimeComponent taskTimeComponent;
-
     @Resource
     private TaskTimeMapper taskTimeMapper;
-
     @Resource
     private InnerUserPersonClient innerUserPersonClient;
-
     @Resource
     private DingWorkRecordClient dingWorkRecordClient;
-
     @Resource
     private PersonComponent personComponent;
-
+    @Resource
+    private UserComponent userComponent;
     @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
@@ -138,6 +126,9 @@ public class TaskComponentImpl implements TaskComponent {
         Map<Long, ProjectDO> projectMap = projectMapper.getByIds(projectIds).stream()
                 .collect(Collectors.toMap(ProjectDO::getId, p -> p, (v1, v2) -> v1));
 
+        //4.当前登陆人是否为PMO
+        boolean isPMO = userComponent.isPmo();
+
         List<TaskVO> taskVO = TaskCopier.INSTANCE.convert(taskDos);
         taskVO.forEach(a -> {
             List<PersonDO> executors = executorMap.get(a.getId());
@@ -152,6 +143,7 @@ public class TaskComponentImpl implements TaskComponent {
             a.setProjectName(projectMap.get(a.getProjectId()).getName());
             a.setPmId(projectMap.get(a.getProjectId()).getPmId());
             a.setStageName(ProjectStageEnum.getTextByCode(a.getStage()));
+            a.setIsPMO(isPMO);
             if(a.getPlanEndDate()==null){
                 //老数据
                 a.setIsDelay(false);

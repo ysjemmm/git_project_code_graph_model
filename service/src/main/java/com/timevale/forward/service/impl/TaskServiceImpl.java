@@ -37,13 +37,11 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
-import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.api.AssertionInfo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.Transactional;
@@ -195,13 +193,14 @@ public class TaskServiceImpl implements TaskService {
         personComponent.add(taskAddReq.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
 
         // 若执行人不在项目成员中,需新增
-        Optional<PersonLevelEnum> personLevelOpt = Optional.ofNullable(PersonLevelEnum.getByCode(taskAddReq.getExecutorLevel()));
-        personLevelOpt.orElse(PersonLevelEnum.CORE);
+        Integer personLevel = Optional.ofNullable(PersonLevelEnum.getByCode(taskAddReq.getExecutorLevel()))
+                .flatMap(obj -> Optional.ofNullable(obj.getCode()))
+                .orElse(PersonLevelEnum.CORE.getCode());
         personComponent.addIfNotExisted(
                 taskAddReq.getExecutors(),
                 taskDO.getProjectId(),
                 PersonTypeEnum.PROJECT_MEMBER.getCode(),
-                personLevelOpt.get().getCode());
+                personLevel);
 
         //关联产品需求
         taskProductDemandComponent.batchInsert(taskDO.getId(), taskAddReq.getProductDemandIds());
@@ -252,13 +251,14 @@ public class TaskServiceImpl implements TaskService {
         personComponent.update(taskModifyReq.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
 
         // 若执行人不在项目成员中,需新增
-        Optional<PersonLevelEnum> personLevelOpt = Optional.ofNullable(PersonLevelEnum.getByCode(taskModifyReq.getExecutorLevel()));
-        personLevelOpt.orElse(PersonLevelEnum.CORE);
+        Integer personLevel = Optional.ofNullable(PersonLevelEnum.getByCode(taskModifyReq.getExecutorLevel()))
+                .flatMap(obj -> Optional.ofNullable(obj.getCode()))
+                .orElse(PersonLevelEnum.CORE.getCode());
         personComponent.addIfNotExisted(
                 taskModifyReq.getExecutors(),
                 taskDO.getProjectId(),
                 PersonTypeEnum.PROJECT_MEMBER.getCode(),
-                personLevelOpt.get().getCode());
+                personLevel);
 
         sendDingMsg(taskDO, executorIds);
         projectMilestoneComponent.updateMilestoneNameAndStage(taskDO);
@@ -315,7 +315,14 @@ public class TaskServiceImpl implements TaskService {
             List<TaskTimeDTO> useTime = taskTimeComponent.getUseTime(taskDO);
             taskDetailVO.setTaskTimeVO(TaskTimeCopier.INSTANCE.convert(useTime));
         }
+
+        // 是否为PMO
         taskDetailVO.setIsPMO(userComponent.isPmo());
+
+        // 是否为里程碑
+        ProjectMilestone milestone = milestoneMapper.selectByRelation(taskId, MilestoneTypeEnum.TASK.getCode());
+        taskDetailVO.setMilestoneFlag(milestone != null);
+
         return BaseResult.success(taskDetailVO);
     }
 

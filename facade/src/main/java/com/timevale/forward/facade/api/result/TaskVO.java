@@ -92,4 +92,7 @@ public class TaskVO extends ToString {
 
     @ApiModelProperty("归属主体：0-产研项目，1-内部项目")
     private Integer category;
+
+    @ApiModelProperty("当前登陆人是否为PMO")
+    private Boolean isPMO;
 }
