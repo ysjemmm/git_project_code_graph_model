@@ -41,7 +41,7 @@ public class ProjectAddReq extends BaseReq {
     @NotNull(message = "产品线不能为空")
     private List<Long> productLineIds;
 
-    @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
+    @ApiModelProperty("项目性质:0产品研发项目,1技术优化项目,2日常迭代，3自研项目，4ISV项目")
     @NotNull(message = "项目类型不能为空")
     private Integer type;
 
@@ -105,4 +105,17 @@ public class ProjectAddReq extends BaseReq {
 
     @ApiModelProperty("父级项目id")
     private Long parentId;
+
+    @ApiModelProperty("项目类型，0-空，1-PBG项目/基线项目，2-PBG项目/1-N客开项目，3-职能后台项目/流程IT中心项目")
+    @NotNull(message = "项目类型必填")
+    private Integer kind;
+
+    @ApiModelProperty("sr")
+    private PersonAddReq sr;
+
+    @ApiModelProperty("负责人")
+    private PersonAddReq principal;
+
+    @ApiModelProperty("1-n负责人")
+    private PersonAddReq otnPrincipal;
 }
