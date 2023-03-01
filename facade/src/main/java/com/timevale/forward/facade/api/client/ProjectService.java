@@ -195,4 +195,21 @@ public interface ProjectService {
      */
     BaseResult<Boolean> innerComplete(ProjectInnerCompleteReq req);
 
+    /**
+     * 结项
+     *
+     * @param projectId 项目id
+     * @return {@link BaseResult}<{@link ConclusionFormVO}>
+     */
+    BaseResult<Boolean> conclusion(Long projectId);
+
+
+    /**
+     * 结项表单
+     *
+     * @param projectId 项目id
+     * @return {@link BaseResult}<{@link ConclusionFormVO}>
+     */
+    BaseResult<ConclusionFormVO> conclusionForm(Long projectId);
+
 }
