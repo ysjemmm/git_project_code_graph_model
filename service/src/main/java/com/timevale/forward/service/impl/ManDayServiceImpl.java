@@ -479,18 +479,7 @@ public class ManDayServiceImpl implements ManDayService {
             sourceManDay.setProjectId(projectId);
             sourceManDay.setProjectName(project.getName());
             List<ManDayDO> projectManDays = manDaysByProjectId.get(projectId);
-            ListMultimap<String, ManDayDO> manDaysByMemberId = Multimaps.index(projectManDays, ManDayDO::getMemberId);
-            List<SourceManDayVO> sourceManDays = new ArrayList<>();
-            for (String memberId : manDaysByMemberId.keySet()) {
-                List<ManDayDO> memberManDays = manDaysByMemberId.get(memberId);
-                SourceManDayVO sourceManDayVO = new SourceManDayVO();
-                sourceManDayVO.setMemberId(memberId);
-                sourceManDayVO.setMemberName(memberManDays.get(0).getMemberName());
-                sourceManDayVO.setActualManDay(memberManDays.stream().map(ManDayDO::getActualManDay)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add));
-                sourceManDays.add(sourceManDayVO);
-            }
-            sourceManDay.setManDays(sourceManDays);
+            sourceManDay.setManDays(ManDayCopier.INSTANCE.convert2Source(projectManDays));
             sourceManDayTemplates.add(sourceManDay);
         }
         List<SourceManDayRes> resultList = new ArrayList<>();

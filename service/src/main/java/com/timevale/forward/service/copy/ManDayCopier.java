@@ -3,6 +3,7 @@ package com.timevale.forward.service.copy;
 import com.timevale.forward.dal.entity.ManDayDO;
 import com.timevale.forward.facade.api.result.ManDayVO;
 import com.timevale.forward.facade.api.result.SourceManDayRes;
+import com.timevale.forward.facade.api.result.SourceManDayVO;
 import com.timevale.forward.service.utils.date.DateUtil;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -30,4 +31,7 @@ public interface ManDayCopier {
     List<ManDayVO> convert(List<ManDayDO> manDays);
 
     SourceManDayRes clone(SourceManDayRes sourceManDayTemplate);
+
+    SourceManDayVO convert2Source(ManDayDO projectManDay);
+    List<SourceManDayVO > convert2Source(List<ManDayDO> projectManDays);
 }

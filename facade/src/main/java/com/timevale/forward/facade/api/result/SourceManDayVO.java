@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * @author jingchun
@@ -22,5 +23,11 @@ public class SourceManDayVO extends ToString {
 
     // 实际人天
     private BigDecimal actualManDay;
+
+    // 周开始日期
+    private Date weekStartDate;
+
+    // 周结束日期
+    private Date weekEndDate;
 
 }
