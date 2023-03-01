@@ -22,9 +22,9 @@ import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
@@ -38,17 +38,26 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestService
-@RequiredArgsConstructor
 public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
 
-    private final ProjectComponent projectComponent;
-    private final TaskService taskService;
-    private final ElapsedTimeClient elapsedTimeClient;
-    private final ProjectMapper projectMapper;
-    private final ProjectMilestoneMapper milestoneMapper;
-    private final UserComponent userComponent;
-    private final InnerProjectStatusUpdateComponent innerProjectStatusUpdateComponent;
-    private final ProjectMilestoneComponent projectMilestoneComponent;
+    @Resource
+    private ProjectComponent projectComponent;
+    @Resource
+    private TaskService taskService;
+    @Resource
+    private ElapsedTimeClient elapsedTimeClient;
+    @Resource
+    private ProjectMapper projectMapper;
+    @Resource
+    private ProjectMilestoneMapper milestoneMapper;
+    @Resource
+    private UserComponent userComponent;
+    @Resource
+    private InnerProjectStatusUpdateComponent innerProjectStatusUpdateComponent;
+    @Resource
+    private ProjectMilestoneComponent projectMilestoneComponent;
+
+
     @Override
     public BaseResult<Void> add(ProjectMilestoneAddReq projectMilestoneAddReq) {
         ProjectDO project = projectMapper.get(projectMilestoneAddReq.getProjectId());
