@@ -48,7 +48,7 @@ public class ProjectChildListReq extends QueryBase {
     private Collection<Integer> status;
 
     @ApiModelProperty("项目类型")
-    private Collection<Integer> kind;
+    private Collection<Integer> kinds;
 
     @ApiModelProperty("1-子项目列表; 2-可添加为子项目列表; 3-里程碑可关联项目列表")
     private Integer searchType;
