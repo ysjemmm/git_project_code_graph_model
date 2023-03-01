@@ -194,5 +194,4 @@ public interface ProjectService {
      * @return {@link BaseResult}<{@link Boolean}>
      */
     BaseResult<Boolean> innerComplete(ProjectInnerCompleteReq req);
-
 }

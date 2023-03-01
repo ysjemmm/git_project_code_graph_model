@@ -12,6 +12,7 @@ import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.model.enums.YesOrNoEnum;
 import com.timevale.forward.model.middle.BizDemandMD;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import org.mapstruct.Mapper;
@@ -26,7 +27,11 @@ import java.util.stream.Collectors;
  * @author by YangXu
  * @date 2021/12/15 10:56
  */
-@Mapper
+@Mapper(
+        imports = {
+                YesOrNoEnum.class
+        }
+)
 public interface BizDemandCopier {
     BizDemandCopier INSTANCE = Mappers.getMapper(BizDemandCopier.class);
 
@@ -95,6 +100,7 @@ public interface BizDemandCopier {
      * @param bizDemandListDO 业务需求列表DO
      * @return VO
      */
+    @Mapping(target = "customerDevDemand", expression = "java(YesOrNoEnum.getTextByCode(bizDemandListDO.getCustomerDevDemand()))")
     BizDemandVO convert(BizDemandListDO bizDemandListDO);
 
     /**

@@ -14,6 +14,14 @@ public interface PersonComponent {
      */
     void add(List<PersonAddReq> list, Long mainId, Integer type);
 
+    /**
+     *
+     * @param list 人员列表
+     * @param mainId 所属主体id
+     * @param type 所属主体类型
+     */
+    void add(List<PersonAddReq> list, Long mainId, Integer type, Integer level);
+
 
     /**
      *
@@ -25,6 +33,14 @@ public interface PersonComponent {
 
     /**
      *
+     * @param list 人员列表
+     * @param mainId 所属主体id
+     * @param type 所属主体类型
+     */
+    void update(List<PersonAddReq> list, Long mainId, Integer type, Integer personLevel);
+
+    /**
+     *
      * @param mainId 所属主体id
      * @param type 所属主体类型
      * @return 列表
@@ -33,10 +49,20 @@ public interface PersonComponent {
 
     /**
      *
+     * @param mainId 所属主体id
+     * @param type 所属主体类型
+     * @return 列表
+     */
+    List<PersonDO> select(Long mainId, Integer type, Integer personLevel);
+
+    /**
+     *
      * @param list 人员列表
      * @param mainId 所属主体id
      * @param type 所属主体类型
      */
     List<PersonDO> addIfNotExisted(List<PersonAddReq> list, Long mainId, Integer type);
+
+    List<PersonDO> addIfNotExisted(List<PersonAddReq> list, Long mainId, Integer type, Integer personLevel);
 
 }

@@ -53,4 +53,7 @@ public class TaskListVO extends ToString {
     @ApiModelProperty("项目id")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long projectId;
+
+    @ApiModelProperty("项目类型:0-产研，1-核心")
+    private Integer category;
 }

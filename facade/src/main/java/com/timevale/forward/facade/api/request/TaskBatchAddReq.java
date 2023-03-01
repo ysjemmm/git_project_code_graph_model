@@ -23,4 +23,5 @@ public class TaskBatchAddReq extends BaseReq {
     @Valid
     private List<TaskSimpleAddReq> taskSimples;
 
+
 }

@@ -10,13 +10,18 @@ import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.request.TaskModifyReq;
 import com.timevale.forward.facade.api.request.TaskSimpleAddReq;
 import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.model.enums.PersonLevelEnum;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 
-@Mapper
+@Mapper(
+        imports = {
+                PersonLevelEnum.class
+        }
+)
 public interface TaskCopier {
 
     TaskCopier INSTANCE = Mappers.getMapper(TaskCopier.class);
@@ -40,6 +45,7 @@ public interface TaskCopier {
     @Mapping(target = "actualStartDate", ignore = true)
     @Mapping(target = "productLineId", constant = "0L")
     @Mapping(target = "name", source = "milestoneName")
+    @Mapping(target = "executorLevel", expression = "java(PersonLevelEnum.EXTENSION.getCode())")
     @Mapping(target = "productDemandIds", expression = "java(new java.util.ArrayList<>())")
     TaskAddReq convert(ProjectMilestoneAddReq req);
 

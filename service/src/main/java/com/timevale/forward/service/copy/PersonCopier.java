@@ -49,4 +49,20 @@ public interface PersonCopier {
      */
     PersonAddReq convert(PersonDO personDO);
 
+    /**
+     * req2do
+     *
+     * @param req 要求事情
+     * @return {@link PersonDO}
+     */
+    PersonDO req2do(PersonAddReq req, Long mainId, Integer type);
+
+    /**
+     * req2do
+     *
+     * @param req 要求事情
+     * @return {@link PersonDO}
+     */
+    PersonDO req2do(PersonAddReq req, Long mainId, Integer type, Integer personLevel);
+
 }

@@ -396,12 +396,16 @@ public class ProjectServiceImpl implements ProjectService {
         // 获取项目id
         Long projectId = projectDO.getId();
 
-        // 取出项目成员参数, 落库
+        // 核心成员, 避免pm重复
         List<PersonAddReq> teamMembers = projectInnerAddReq.getTeamMembers();
         PersonAddReq pm = projectInnerAddReq.getPm();
         teamMembers.removeIf(e -> Objects.equals(e.getUserId(), pm.getUserId()));
         teamMembers.add(projectInnerAddReq.getPm());
         personComponent.add(teamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+
+        // 扩展成员
+        List<PersonAddReq> extTeamMembers = projectInnerAddReq.getExtTeamMembers();
+        personComponent.add(extTeamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
 
         // 父级项目
         if (projectInnerAddReq.getParentId() != null) {
@@ -555,7 +559,31 @@ public class ProjectServiceImpl implements ProjectService {
             projectMapper.updateExpectIncome(projectId, expectedIncome);
         }
 
-        // 更新项目成员
+        // 扩展成员
+        List<PersonAddReq> extTeamMembers = projectSimpleModifyReq.getExtTeamMembers();
+        if (extTeamMembers != null) {
+            // 旧版成员
+            List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
+
+            String addMembers = extTeamMembers.stream()
+                    .map(PersonAddReq::getUserName)
+                    .filter(e -> oldMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
+                    .collect(Collectors.joining(","));
+
+            String deleteMembers = oldMembers.stream()
+                    .map(PersonDO::getUserName)
+                    .filter(e -> extTeamMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
+                    .collect(Collectors.joining(","));
+
+            // 日志
+            projectLogComponent.addNewProjectMemberLog(projectId, addMembers);
+            projectLogComponent.addDeleteProjectMemberLog(projectId, deleteMembers);
+
+            // 实际更新落库
+            personComponent.update(extTeamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
+        }
+
+        // 核心成员
         PersonAddReq pm = projectSimpleModifyReq.getPm();
         List<PersonAddReq> newMembers = projectSimpleModifyReq.getTeamMembers();
         if (newMembers != null || pm != null) {
@@ -587,22 +615,9 @@ public class ProjectServiceImpl implements ProjectService {
                     .filter(e -> finalNewMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
 
-            if (StrUtil.isNotBlank(deleteMembers)) {
-                projectLogComponent.addLogWhenContentChange(
-                        "",
-                        deleteMembers,
-                        projectId,
-                        BizChangeLogFieldEnum.PJ_MEMBER.getText(),
-                        ButtonActionEnum.DELETE.getText());
-            }
-            if (StrUtil.isNotBlank(addMembers)) {
-                projectLogComponent.addLogWhenContentChange(
-                        "",
-                        addMembers,
-                        projectId,
-                        BizChangeLogFieldEnum.PJ_MEMBER.getText(),
-                        ButtonActionEnum.APPEND.getText());
-            }
+            // 日志
+            projectLogComponent.addNewProjectMemberLog(projectId, addMembers);
+            projectLogComponent.addDeleteProjectMemberLog(projectId, deleteMembers);
 
             // 实际更新落库
             personComponent.update(finalNewMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
@@ -789,9 +804,20 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectInnerDetailVO projectInnerDetailVO = ProjectCopier.INSTANCE.do2Vo(projectDO);
 
         // 团队成员
-        List<PersonDO> teamMemberDOs = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
-        List<PersonVO> teamMemberVOs = PersonCopier.INSTANCE.transform(teamMemberDOs);
-        projectInnerDetailVO.setTeamMember(teamMemberVOs);
+        List<PersonDO> teamMemberDOList = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+
+        List<PersonDO> coreTeamMemberDOList = teamMemberDOList.stream()
+                .filter(e -> PersonLevelEnum.CORE.getCode().equals(e.getPersonLevel()))
+                .collect(Collectors.toList());
+        List<PersonDO> extTeamMemberDOList = teamMemberDOList.stream()
+                .filter(e -> PersonLevelEnum.EXTENSION.getCode().equals(e.getPersonLevel()))
+                .collect(Collectors.toList());
+
+        List<PersonVO> coreTeamMemberVOList = PersonCopier.INSTANCE.transform(coreTeamMemberDOList);
+        List<PersonVO> extTeamMemberVOList = PersonCopier.INSTANCE.transform(extTeamMemberDOList);
+
+        projectInnerDetailVO.setTeamMember(coreTeamMemberVOList);
+        projectInnerDetailVO.setExtTeamMember(extTeamMemberVOList);
 
         // 上级项目信息
         Long parentId = projectDO.getParentId();

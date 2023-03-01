@@ -112,8 +112,6 @@
                 )
             </if>
             and a.is_deleted =false
-            <!-- 暂时排除里程碑任务 -->
-            and id not in (select relation_id from project_milestone where type = 0 and is_deleted = false)
         </where>
     </select>
 

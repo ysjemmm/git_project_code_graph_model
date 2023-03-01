@@ -1,6 +1,7 @@
 package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.StrUtil;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.model.enums.*;
@@ -327,6 +328,32 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
         log.setCreateManId(userInfo.getId());
         log.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         bizChangeLogMapper.insert(log);
+    }
+
+    @Override
+    public void addNewProjectMemberLog(Long projectId, String members) {
+        if (StrUtil.isBlank(members)) {
+            return;
+        }
+        addLogWhenContentChange(
+                "",
+                members,
+                projectId,
+                BizChangeLogFieldEnum.PJ_MEMBER.getText(),
+                ButtonActionEnum.DELETE.getText());
+    }
+
+    @Override
+    public void addDeleteProjectMemberLog(Long projectId, String members) {
+        if (StrUtil.isBlank(members)) {
+            return;
+        }
+        addLogWhenContentChange(
+                "",
+                members,
+                projectId,
+                BizChangeLogFieldEnum.PJ_MEMBER.getText(),
+                ButtonActionEnum.APPEND.getText());
     }
 
     private BizChangeLogDO createLog(Long mainId, String field, String oldValue, String newValue, String action) {

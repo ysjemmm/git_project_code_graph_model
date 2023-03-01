@@ -3,7 +3,6 @@ package com.timevale.forward.service.impl;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
-import com.timevale.forward.dal.dao.TaskMapper;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
 import com.timevale.forward.facade.api.client.ProjectMilestoneService;
@@ -23,7 +22,6 @@ import com.timevale.forward.service.copy.TaskCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,7 +29,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -47,7 +44,6 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
     private final ProjectComponent projectComponent;
     private final TaskService taskService;
     private final ElapsedTimeClient elapsedTimeClient;
-    private final TaskMapper taskMapper;
     private final ProjectMapper projectMapper;
     private final ProjectMilestoneMapper milestoneMapper;
     private final UserComponent userComponent;
@@ -130,10 +126,6 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
     public BaseResult<Void> deleteMilestone(Long milestoneId) {
         Optional<ProjectMilestone> milestone = Optional.ofNullable(milestoneMapper.selectById(milestoneId));
         milestone.ifPresent(m -> {
-            if (Objects.equals(m.getType(), MilestoneTypeEnum.TASK.getCode())) {
-                // 删除对应任务
-                taskMapper.deleteById(m.getRelationId());
-            }
             milestoneMapper.deleteById(m.getId());
             innerProjectStatusUpdateComponent.updateProjectDateAndStatus(m.getProjectId());
             projectMilestoneComponent.addMilestoneDeleteLog(m);

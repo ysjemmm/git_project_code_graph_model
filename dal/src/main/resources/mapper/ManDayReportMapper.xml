@@ -102,8 +102,6 @@
             <if test="weekStartDate != null">
                 AND md.week_start_date = #{weekStartDate}
             </if>
-            <!-- 暂时去除内部项目 -->
-            AND p.category != 1
         </where>
         /*keep orderby*/
     </select>

@@ -92,6 +92,13 @@ public interface ProjectMilestoneCopier {
     @Mapping(target = "invalid", expression = "java(ProjectStatusEnum.INVALID.getCode().equals(projectDO.getStatus()))")
     MilestoneDTO project2dto(ProjectDO projectDO);
 
+    @Mapping(target = "stage", expression = "java(stage)")
+    @Mapping(target = "relationId", expression = "java(taskDO.getId())")
+    @Mapping(target = "milestoneName", expression = "java(taskDO.getName())")
+    @Mapping(target = "type", expression = "java(MilestoneTypeEnum.TASK.getCode())")
+    @Mapping(target = "isDeleted", ignore = true)
+    ProjectMilestone task2do(TaskDO taskDO, Integer stage);
+
     List<ProjectMilestoneVO> convert(List<ProjectMilestone> milestones);
 
 }

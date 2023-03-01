@@ -3,7 +3,12 @@ package com.timevale.forward.service.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.OkHttp3ClientHttpRequestFactory;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * @author yuankai
@@ -18,6 +23,17 @@ public class ApiConfig {
         simpleClientHttpRequestFactory.setReadTimeout(20000);
         simpleClientHttpRequestFactory.setWriteTimeout(20000);
         simpleClientHttpRequestFactory.setConnectTimeout(20000);
-        return new RestTemplate(simpleClientHttpRequestFactory);
+
+        RestTemplate restTemplate = new RestTemplate(simpleClientHttpRequestFactory);
+
+        // 配置UTF-8，防止中文乱码
+        List<HttpMessageConverter<?>> httpMessageConverters = restTemplate.getMessageConverters();
+        httpMessageConverters.forEach(httpMessageConverter -> {
+            if (httpMessageConverter instanceof StringHttpMessageConverter) {
+                StringHttpMessageConverter messageConverter = (StringHttpMessageConverter) httpMessageConverter;
+                messageConverter.setDefaultCharset(StandardCharsets.UTF_8);
+            }
+        });
+        return restTemplate;
     }
 }
