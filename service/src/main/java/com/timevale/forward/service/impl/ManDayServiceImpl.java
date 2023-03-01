@@ -14,11 +14,9 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ManDayService;
 import com.timevale.forward.facade.api.query.ManDayQueryList;
 import com.timevale.forward.facade.api.query.ProjectManDayQueryList;
+import com.timevale.forward.facade.api.query.SourceManDayQuery;
 import com.timevale.forward.facade.api.request.ManDayModifyReq;
-import com.timevale.forward.facade.api.result.ManDayListVO;
-import com.timevale.forward.facade.api.result.ManDayVO;
-import com.timevale.forward.facade.api.result.ProjectManDayVO;
-import com.timevale.forward.facade.api.result.ProjectTotalManDayVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ManDayReportComponent;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -427,6 +425,12 @@ public class ManDayServiceImpl implements ManDayService {
         }
         res = res.stream().distinct().collect(Collectors.toList());
         return BaseResult.success(res);
+    }
+
+    @Override
+    public BaseResult<SourceManDayRes> querySourceManDays(SourceManDayQuery query) {
+        // TODO jingchun 23.3.2
+        return BaseResult.success();
     }
 
     private static Pair<Date, Date> parseAndCheckDateRange(String dateRange) {

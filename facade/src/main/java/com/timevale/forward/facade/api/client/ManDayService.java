@@ -4,13 +4,14 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.ManDayQueryList;
 import com.timevale.forward.facade.api.query.ProjectManDayQueryList;
+import com.timevale.forward.facade.api.query.SourceManDayQuery;
 import com.timevale.forward.facade.api.request.ManDayModifyReq;
 import com.timevale.forward.facade.api.result.ManDayListVO;
 import com.timevale.forward.facade.api.result.ProjectTotalManDayVO;
+import com.timevale.forward.facade.api.result.SourceManDayRes;
 import com.timevale.mandarin.common.annotation.RestClient;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * 人天RPC接口
@@ -26,7 +27,7 @@ public interface ManDayService {
      */
     BaseResult<List<ManDayListVO>> list(ManDayQueryList manDayQueryList);
 
-    /**
+    /**\
      * 使用项目id查询人天列表
      */
     BaseResult<ProjectTotalManDayVO> listProjectManDays(ProjectManDayQueryList projectManDayQueryList);
@@ -40,5 +41,10 @@ public interface ManDayService {
      * 查询项目人天时间周期列表
      */
     BaseResult<List<String>> queryManDayDateRanges(Long projectId);
+
+    /**
+     * 查询来源数据的人天数据
+     */
+    BaseResult<SourceManDayRes> querySourceManDays(SourceManDayQuery query);
 
 }
