@@ -37,4 +37,7 @@ public interface ManDayMapper {
     BigDecimal sumProjectActualDays(@Param("projectId") Long projectId);
 
     List<Long> listAlreadyCreateProject(@Param("projectList") List<ProjectDO> projectList, @Param("sunday") String sunday);
+
+    List<ManDayDO> getByProjectIdsAndDateRange(@Param("projectIds") Collection<Long> projectIds,
+                                               @Param("startDate") Date startDate, @Param("endDate") Date endDate);
 }

@@ -396,4 +396,11 @@
         from biz_demand b
           left join biz_demand_custom bc on b.id = bc.biz_demand_id where bc.custom_id = #{customId} and bc.is_deleted=0 and b.is_deleted=0  order by b.create_date desc
     </select>
+    <select id="selectBySourceIds" resultType="com.timevale.forward.dal.entity.BizDemandDO">
+        select * from biz_demand where source_id in
+        <foreach collection="sourceIds" item="sourceId" open="(" separator="," close=")">
+            #{sourceId}
+        </foreach>
+        and is_deleted = false
+    </select>
 </mapper>

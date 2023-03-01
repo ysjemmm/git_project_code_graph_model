@@ -6,6 +6,7 @@ import com.timevale.forward.dal.entity.BizDemandListDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -150,9 +151,11 @@ public interface BizDemandMapper {
 
     /**
      * 根据客户id查询
-     * @param customId
-     * @return
      */
     List<BizDemandListDO> selectByCustomId(@Param("customId") Long customId);
 
+    /**
+     * 根据来源id列表查询业务需求列表
+     */
+    List<BizDemandDO> selectBySourceIds(Collection<String> sourceIds);
 }

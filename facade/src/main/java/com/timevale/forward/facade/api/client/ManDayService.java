@@ -45,6 +45,6 @@ public interface ManDayService {
     /**
      * 查询来源数据的人天数据
      */
-    BaseResult<SourceManDayRes> querySourceManDays(SourceManDayQuery query);
+    BaseResult<List<SourceManDayRes>> querySourceManDays(SourceManDayQuery query);
 
 }

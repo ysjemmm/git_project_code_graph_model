@@ -15,7 +15,10 @@ import java.util.List;
 public class SourceManDayRes extends ToString {
 
     // 产研项目id
-    private String projectId;
+    private Long projectId;
+
+    // 产研项目名称
+    private String projectName;
 
     // 来源数据id
     private String sourceId;
