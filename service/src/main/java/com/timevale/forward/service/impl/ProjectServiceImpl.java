@@ -562,8 +562,6 @@ public class ProjectServiceImpl implements ProjectService {
         List<PersonAddReq> extTeamMembers = projectSimpleModifyReq.getExtTeamMembers();
         if (extTeamMembers != null) {
             // 旧版成员
-            List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
-
             List<PersonDO> allMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
             String addMembers = extTeamMembers.stream()
                     .map(PersonAddReq::getUserName)
@@ -594,11 +592,10 @@ public class ProjectServiceImpl implements ProjectService {
         PersonAddReq pm = projectSimpleModifyReq.getPm();
         List<PersonAddReq> newMembers = projectSimpleModifyReq.getTeamMembers();
         if (newMembers != null || pm != null) {
-            // 旧版成员
-            List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
-
             // 成员更新日志
             if (newMembers == null) {
+                // 旧版成员
+                List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
                 newMembers = oldMembers.stream()
                         .map(PersonCopier.INSTANCE::convert)
                         .collect(Collectors.toList());
