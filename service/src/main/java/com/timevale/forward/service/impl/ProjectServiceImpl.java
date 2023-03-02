@@ -563,12 +563,14 @@ public class ProjectServiceImpl implements ProjectService {
         if (extTeamMembers != null) {
             // 旧版成员
             List<PersonDO> allMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            List<PersonDO> levelMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(),PersonLevelEnum.EXTENSION.getCode());
+
             String addMembers = extTeamMembers.stream()
                     .map(PersonAddReq::getUserName)
                     .filter(e -> allMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
 
-            String deleteMembers = allMembers.stream()
+            String deleteMembers = levelMembers.stream()
                     .map(PersonDO::getUserName)
                     .filter(e -> extTeamMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
@@ -592,11 +594,11 @@ public class ProjectServiceImpl implements ProjectService {
         PersonAddReq pm = projectSimpleModifyReq.getPm();
         List<PersonAddReq> newMembers = projectSimpleModifyReq.getTeamMembers();
         if (newMembers != null || pm != null) {
+            List<PersonDO> levelMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
             // 成员更新日志
             if (newMembers == null) {
                 // 旧版成员
-                List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
-                newMembers = oldMembers.stream()
+                newMembers = levelMembers.stream()
                         .map(PersonCopier.INSTANCE::convert)
                         .collect(Collectors.toList());
             } else if (pm == null){
@@ -614,7 +616,7 @@ public class ProjectServiceImpl implements ProjectService {
                     .filter(e -> allMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
 
-            String deleteMembers = allMembers.stream()
+            String deleteMembers = levelMembers.stream()
                     .map(PersonDO::getUserName)
                     .filter(e -> finalNewMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
