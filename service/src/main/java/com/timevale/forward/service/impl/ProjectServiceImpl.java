@@ -583,7 +583,10 @@ public class ProjectServiceImpl implements ProjectService {
 
             // 更新成员等级
             List<String> extMemberIdList = extTeamMembers.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
-            personMapper.updateLevel(extMemberIdList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
+            if (CollUtil.isNotEmpty(extMemberIdList)) {
+                personMapper.updateLevel(extMemberIdList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
+            }
+
         }
 
         // 核心成员
@@ -626,7 +629,9 @@ public class ProjectServiceImpl implements ProjectService {
 
             // 更新成员等级
             List<String> coreMemberIdList = finalNewMembers.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
-            personMapper.updateLevel(coreMemberIdList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
+            if (CollUtil.isNotEmpty(coreMemberIdList)) {
+                personMapper.updateLevel(coreMemberIdList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
+            }
         }
 
         // 项目日志
