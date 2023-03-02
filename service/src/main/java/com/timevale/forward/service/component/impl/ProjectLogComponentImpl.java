@@ -340,7 +340,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 members,
                 projectId,
                 BizChangeLogFieldEnum.PJ_MEMBER.getText(),
-                ButtonActionEnum.DELETE.getText());
+                ButtonActionEnum.APPEND.getText());
     }
 
     @Override
