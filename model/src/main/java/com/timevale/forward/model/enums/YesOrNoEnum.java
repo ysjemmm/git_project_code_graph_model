@@ -2,6 +2,7 @@ package com.timevale.forward.model.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.apache.commons.lang3.BooleanUtils;
 
 
 /**
@@ -32,7 +33,7 @@ public enum YesOrNoEnum {
     }
 
     public static String getTextByCode(Boolean code){
-        return code ? YES.text : NO.text;
+        return BooleanUtils.isTrue(code) ? YES.text : NO.text;
     }
 
 }
