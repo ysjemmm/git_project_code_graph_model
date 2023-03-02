@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -127,7 +128,7 @@ public class PersonComponentImpl implements PersonComponent {
             personMapper.inserts(addPersonList);
             log.info("新增人员:addPersonList:{}, mainId:{}, type:{}, personLevel:{}", addPersonList, mainId, type, personLevel);
         }
-        return existPersons;
+        return existPersons.stream().filter(e -> Objects.equals(personLevel, e.getPersonLevel())).collect(Collectors.toList());
     }
 
     private void delete(Long mainId, Integer type, Integer personLevel) {

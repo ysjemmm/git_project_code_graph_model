@@ -63,6 +63,14 @@ public interface PersonComponent {
      */
     List<PersonDO> addIfNotExisted(List<PersonAddReq> list, Long mainId, Integer type);
 
+    /**
+     *
+     * @param list        列表
+     * @param mainId      主要id
+     * @param type        类型
+     * @param personLevel 人水平
+     * @return {@link List}<{@link PersonDO}>
+     */
     List<PersonDO> addIfNotExisted(List<PersonAddReq> list, Long mainId, Integer type, Integer personLevel);
 
 }

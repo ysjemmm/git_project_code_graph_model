@@ -128,8 +128,9 @@ public class DrcRiskListener implements Listener {
     }
 
     private void solveRisk(DrcMsgBody body) {
-        // 新增项目、任务无需处理
-        if (ObjectUtil.equal(DrcActionEnum.INSERT.toString(), body.getAction())) {
+        // 新增、删除项目、任务无需处理
+        if (ObjectUtil.equal(DrcActionEnum.INSERT.toString(), body.getAction())
+                ||ObjectUtil.equal(DrcActionEnum.DELETE.toString(), body.getAction())) {
             return;
         }
 

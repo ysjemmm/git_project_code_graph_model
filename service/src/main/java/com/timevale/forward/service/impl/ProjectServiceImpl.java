@@ -405,7 +405,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 扩展成员
         List<PersonAddReq> extTeamMembers = projectInnerAddReq.getExtTeamMembers();
-        personComponent.add(extTeamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
+        personComponent.addIfNotExisted(extTeamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
 
         // 父级项目
         if (projectInnerAddReq.getParentId() != null) {
