@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.BooleanUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -209,7 +210,6 @@ public class TaskServiceImpl implements TaskService {
         if (taskAddReq.getMilestoneFlag()) {
             ProjectMilestone entity = ProjectMilestoneCopier.INSTANCE.task2do(taskDO, taskAddReq.getStage());
             milestoneMapper.insert(entity);
-            innerProjectStatusUpdateComponent.updateProjectDateAndStatus(entity.getProjectId());
             projectMilestoneComponent.addMilestoneCreateLog(entity);
         }
 
@@ -603,6 +603,13 @@ public class TaskServiceImpl implements TaskService {
                 taskMapper.insert(taskDO);
                 //执行人
                 personComponent.add(a.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
+
+                // 判断是否为里程碑
+                if (BooleanUtil.isTrue(a.getMilestoneFlag())) {
+                    ProjectMilestone entity = ProjectMilestoneCopier.INSTANCE.task2do(taskDO, a.getStage());
+                    milestoneMapper.insert(entity);
+                    projectMilestoneComponent.addMilestoneCreateLog(entity);
+                }
             });
         });
 
