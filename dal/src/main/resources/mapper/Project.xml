@@ -291,7 +291,7 @@
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProjectDO">
         select *
         from project
-        where name = #{name}
+        where `name` = #{name}
           and is_deleted = false
     </select>
 
@@ -303,6 +303,7 @@
             <foreach collection="ids" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
+            and is_deleted = false
         </where>
     </select>
 
