@@ -37,12 +37,12 @@ public class PersonComponentImpl implements PersonComponent {
 
     @Override
     public void add(List<PersonAddReq> list, Long mainId, Integer type, Integer personLevel) {
-        log.info("[PersonComponentImpl.add]人员新增接收参数:list={},mainId={},type={}", list, mainId, type);
+        log.info("[PersonComponentImpl.add]人员新增接收参数:list={},mainId={},type={}, personLevel= {}", list, mainId, type, personLevel);
         if (CollUtil.isEmpty(list)) {
             return;
         }
 
-        List<PersonDO> existPersons = select(mainId, type);
+        List<PersonDO> existPersons = select(mainId, type, personLevel);
         log.info("[PersonComponentImpl.add]已存在人员:existPersons={}", existPersons);
 
         if (CollUtil.isEmpty(existPersons)) {
@@ -55,7 +55,23 @@ public class PersonComponentImpl implements PersonComponent {
 
     @Override
     public void update(List<PersonAddReq> list, Long mainId, Integer type) {
-        update(list, mainId, type, PersonLevelEnum.CORE.getCode());
+        log.info("人员编辑接收参数:list={},mainId={},type={}", list, mainId, type);
+        if (CollectionUtils.isEmpty(list)) {
+            delete(mainId, type);
+            return;
+        }
+
+        // 当前人员
+        Set<String> updatePersonIdSet = list.stream().map(PersonAddReq::getUserId).collect(Collectors.toSet());
+        // 新增人员
+        List<PersonDO> existPersons = addIfNotExisted(list, mainId, type);
+        // 去除人员
+        existPersons.stream()
+                .filter(e -> !updatePersonIdSet.contains(e.getUserId()))
+                .forEach(e -> {
+                    e.setIsDeleted(true);
+                    personMapper.update(e);
+                });
     }
 
     @Override
@@ -68,10 +84,8 @@ public class PersonComponentImpl implements PersonComponent {
 
         // 当前人员
         Set<String> updatePersonIdSet = list.stream().map(PersonAddReq::getUserId).collect(Collectors.toSet());
-
         // 新增人员
         List<PersonDO> existPersons = addIfNotExisted(list, mainId, type, personLevel);
-
         // 去除人员
         existPersons.stream()
                 .filter(e -> !updatePersonIdSet.contains(e.getUserId()))
@@ -102,7 +116,29 @@ public class PersonComponentImpl implements PersonComponent {
 
     @Override
     public List<PersonDO> addIfNotExisted(List<PersonAddReq> list, Long mainId, Integer type) {
-        return addIfNotExisted(list, mainId, type, PersonLevelEnum.CORE.getCode());
+        List<PersonDO> existPersons = select(mainId, type);
+        Set<String> existUserIdSet = existPersons.stream().map(PersonDO::getUserId).collect(Collectors.toSet());
+        log.info("已存在人员:existUserIdSet={}", existUserIdSet);
+
+        List<PersonDO> addPersonList = new ArrayList<>();
+
+        if (CollUtil.isNotEmpty(list)) {
+            // 过滤重复人员
+            list.stream()
+                    .filter(e -> !existUserIdSet.contains(e.getUserId()))
+                    .forEach(e -> {
+                        PersonDO personDO = PersonCopier.INSTANCE.req2do(e, mainId, type);
+                        addPersonList.add(personDO);
+                        existUserIdSet.add(e.getUserId());
+                    });
+        }
+
+        // 如果人员不为空则新增
+        if (CollUtil.isNotEmpty(addPersonList)) {
+            personMapper.inserts(addPersonList);
+            log.info("新增人员:addPersonList:{}, mainId:{}, type:{}", addPersonList, mainId, type);
+        }
+        return existPersons;
     }
 
     @Override
@@ -133,8 +169,18 @@ public class PersonComponentImpl implements PersonComponent {
         return existPersons.stream().filter(e -> Objects.equals(personLevel, e.getPersonLevel())).collect(Collectors.toList());
     }
 
+    private void delete(Long mainId, Integer type) {
+        log.info("[PersonComponentImpl.delete]删除人员, type:{},mainId:{}", type, mainId);
+
+        PersonDO personDO = new PersonDO();
+        personDO.setIsDeleted(true);
+        personDO.setType(type);
+        personDO.setMainId(mainId);
+        personMapper.update(personDO);
+    }
+
     private void delete(Long mainId, Integer type, Integer personLevel) {
-        log.info("[PersonComponentImpl.delete]删除人员, type:{},mainId:{},personLevel:{}", type, mainId, personLevel);
+        log.info("[PersonComponentImpl.delete]删除人员, type:{},mainId:{}", type, mainId);
 
         PersonDO personDO = new PersonDO();
         personDO.setIsDeleted(true);
@@ -142,5 +188,11 @@ public class PersonComponentImpl implements PersonComponent {
         personDO.setMainId(mainId);
         personDO.setPersonLevel(personLevel);
         personMapper.update(personDO);
+    }
+
+    @Override
+    public void duplicateRemove(List<PersonAddReq> list, PersonAddReq duplicate) {
+        list.removeIf(e -> Objects.equals(e.getUserId(), duplicate.getUserId()));
+        list.add(duplicate);
     }
 }

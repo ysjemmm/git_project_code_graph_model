@@ -47,6 +47,15 @@ public interface PersonMapper {
     int update(PersonDO personDO);
 
     /**
+     * 更新水平
+     *
+     * @param userIdList  用户id列表
+     * @param personLevel 人水平
+     * @param mainId      主要id
+     */
+    void updateLevel(@Param("userIdList")List<String> userIdList, @Param("mainId")Long mainId, @Param("type") Integer type ,@Param("personLevel") Integer personLevel);
+
+    /**
      * 获取人员信息
      *
      * @param userIds 花名

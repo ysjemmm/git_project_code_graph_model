@@ -397,16 +397,14 @@ public class ProjectServiceImpl implements ProjectService {
         // 获取项目id
         Long projectId = projectDO.getId();
 
-        // 核心成员, 避免pm重复
+        // 核心成员
         List<PersonAddReq> teamMembers = projectInnerAddReq.getTeamMembers();
-        PersonAddReq pm = projectInnerAddReq.getPm();
-        teamMembers.removeIf(e -> Objects.equals(e.getUserId(), pm.getUserId()));
-        teamMembers.add(projectInnerAddReq.getPm());
-        personComponent.add(teamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        personComponent.duplicateRemove(teamMembers, projectInnerAddReq.getPm());
+        personComponent.add(teamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
 
         // 扩展成员
         List<PersonAddReq> extTeamMembers = projectInnerAddReq.getExtTeamMembers();
-        personComponent.addIfNotExisted(extTeamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
+        personComponent.add(teamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
 
         // 父级项目
         if (projectInnerAddReq.getParentId() != null) {
@@ -582,6 +580,10 @@ public class ProjectServiceImpl implements ProjectService {
 
             // 实际更新落库
             personComponent.update(extTeamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
+
+            // 更新成员等级
+            List<String> extMemberIdList = extTeamMembers.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+            personMapper.updateLevel(extMemberIdList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
         }
 
         // 核心成员
@@ -601,8 +603,7 @@ public class ProjectServiceImpl implements ProjectService {
                 pm.setUserId(oldProjectDO.getPmId());
                 pm.setUserName(oldProjectDO.getPm());
             }
-            newMembers.remove(pm);
-            newMembers.add(pm);
+            personComponent.duplicateRemove(newMembers, pm);
 
             List<PersonAddReq> finalNewMembers = newMembers;
 
@@ -621,7 +622,11 @@ public class ProjectServiceImpl implements ProjectService {
             projectLogComponent.addDeleteProjectMemberLog(projectId, deleteMembers);
 
             // 实际更新落库
-            personComponent.update(finalNewMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            personComponent.update(finalNewMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
+
+            // 更新成员等级
+            List<String> coreMemberIdList = finalNewMembers.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+            personMapper.updateLevel(coreMemberIdList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
         }
 
         // 项目日志
