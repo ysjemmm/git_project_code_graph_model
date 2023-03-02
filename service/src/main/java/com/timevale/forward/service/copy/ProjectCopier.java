@@ -177,4 +177,8 @@ public interface ProjectCopier {
     @Mapping(target = "projectName", source = "name")
     ProjectTreeVO convertTree(ProjectDO project);
     List<ProjectTreeVO> convertTree(List<ProjectDO> projects);
+
+    ProjectSimpleVO do2svo(ProjectDO projectDO);
+
+    List<ProjectSimpleVO> do2svo(List<ProjectDO> doList);
 }

@@ -16,6 +16,7 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectMilestoneService;
 import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
+import com.timevale.forward.facade.api.query.ProjectPageQuery;
 import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.*;
@@ -1098,7 +1099,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public BaseResult<List<ProjectProductLineVO>> getByName(String name) {
         String likeName = StringUtil.toLikeStr(name);
-        List<ProjectDO> projectDOList = projectMapper.getByLikeName(likeName);
+        List<ProjectDO> projectDOList = projectMapper.getByLikeName(likeName, ProjectCategoryEnum.PRODUCT_PROJECT.getCode());
         projectDOList = projectDOList.stream()
                 .filter(a -> !ProjectStatusEnum.INVALID.getCode().equals(a.getStatus())
                         && !ProjectStatusEnum.RELEASED.getCode().equals(a.getStatus()))
@@ -1185,6 +1186,21 @@ public class ProjectServiceImpl implements ProjectService {
 
         innerProjectStatusUpdateComponent.updateFromProject(projectDO);
         return BaseResult.success();
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<ProjectSimpleVO>> pageAll(ProjectPageQuery query) {
+        PageHelper.startPage(query.pageNum, query.pageSize);
+        List<ProjectDO> doList = projectMapper.getByLikeName(query.getName(), null);
+
+        List<ProjectSimpleVO> simpleVOList = ProjectCopier.INSTANCE.do2svo(doList);
+
+        // 分页数据
+        PageQueryResult<ProjectSimpleVO> result = new PageQueryResult<>();
+        PageInfo<ProjectDO> pageInfo = new PageInfo<>(doList);
+        result.setResultList(simpleVOList);
+        ResultUtil.fillPageInfo(result, pageInfo);
+        return BaseResult.success(result);
     }
 
 

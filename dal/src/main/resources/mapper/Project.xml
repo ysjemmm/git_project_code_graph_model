@@ -417,13 +417,15 @@
     </select>
 
     <select id="getByLikeName" resultType="com.timevale.forward.dal.entity.ProjectDO">
-        select id, name, status
+        select id, `name`, `status`
         from project
-        where name like concat('%', #{name}, '%')
-          and is_deleted = false
-        <!-- 暂时去除内部项目 -->
-        and category = 0
+        <where>
+            <if test="name != null and name != ''">and `name` like concat('%', #{name}, '%')</if>
+            <if test="category != null">and category = #{category}</if>
+            <if test="true">and is_deleted = false</if>
+        </where>
     </select>
+
     <select id="listChildren" resultType="com.timevale.forward.dal.entity.ProjectListDO">
         select a.id,a.name, a.customer_dev,is_platform_publish, is_with_goal, a.priority, a.type
         ,a.status,a.node_status, a.pm_id,a.pm ,a.plan_start_date,a.plan_end_date,
