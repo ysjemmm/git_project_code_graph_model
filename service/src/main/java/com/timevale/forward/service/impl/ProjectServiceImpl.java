@@ -564,12 +564,13 @@ public class ProjectServiceImpl implements ProjectService {
             // 旧版成员
             List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
 
+            List<PersonDO> allMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
             String addMembers = extTeamMembers.stream()
                     .map(PersonAddReq::getUserName)
-                    .filter(e -> oldMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
+                    .filter(e -> allMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
 
-            String deleteMembers = oldMembers.stream()
+            String deleteMembers = allMembers.stream()
                     .map(PersonDO::getUserName)
                     .filter(e -> extTeamMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
@@ -610,12 +611,13 @@ public class ProjectServiceImpl implements ProjectService {
 
             List<PersonAddReq> finalNewMembers = newMembers;
 
+            List<PersonDO> allMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
             String addMembers = finalNewMembers.stream()
                     .map(PersonAddReq::getUserName)
-                    .filter(e -> oldMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
+                    .filter(e -> allMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
 
-            String deleteMembers = oldMembers.stream()
+            String deleteMembers = allMembers.stream()
                     .map(PersonDO::getUserName)
                     .filter(e -> finalNewMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
@@ -625,10 +627,10 @@ public class ProjectServiceImpl implements ProjectService {
             projectLogComponent.addDeleteProjectMemberLog(projectId, deleteMembers);
 
             // 实际更新落库
-            personComponent.update(finalNewMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
+            personComponent.update(newMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
 
             // 更新成员等级
-            List<String> coreMemberIdList = finalNewMembers.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+            List<String> coreMemberIdList = newMembers.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
             if (CollUtil.isNotEmpty(coreMemberIdList)) {
                 personMapper.updateLevel(coreMemberIdList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
             }
