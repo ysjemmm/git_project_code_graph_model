@@ -114,14 +114,16 @@ public class PersonComponentImpl implements PersonComponent {
 
         List<PersonDO> addPersonList = new ArrayList<>();
 
-        // 过滤重复人员
-        list.stream()
-                .filter(e -> !existUserIdSet.contains(e.getUserId()))
-                .forEach(e -> {
-                    PersonDO personDO = PersonCopier.INSTANCE.req2do(e, mainId, type, personLevel);
-                    addPersonList.add(personDO);
-                    existUserIdSet.add(e.getUserId());
-                });
+        if (CollUtil.isNotEmpty(list)) {
+            // 过滤重复人员
+            list.stream()
+                    .filter(e -> !existUserIdSet.contains(e.getUserId()))
+                    .forEach(e -> {
+                        PersonDO personDO = PersonCopier.INSTANCE.req2do(e, mainId, type, personLevel);
+                        addPersonList.add(personDO);
+                        existUserIdSet.add(e.getUserId());
+                    });
+        }
 
         // 如果人员不为空则新增
         if (CollUtil.isNotEmpty(addPersonList)) {
