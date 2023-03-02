@@ -817,7 +817,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<PersonVO> extTeamMemberVOList = PersonCopier.INSTANCE.transform(extTeamMemberDOList);
 
         projectInnerDetailVO.setTeamMember(coreTeamMemberVOList);
-        projectInnerDetailVO.setExtTeamMember(extTeamMemberVOList);
+        projectInnerDetailVO.setExtTeamMembers(extTeamMemberVOList);
 
         // 上级项目信息
         Long parentId = projectDO.getParentId();

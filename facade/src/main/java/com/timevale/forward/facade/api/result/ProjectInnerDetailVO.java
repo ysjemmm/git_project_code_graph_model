@@ -50,7 +50,7 @@ public class ProjectInnerDetailVO extends ToString {
     private List<PersonVO> teamMember;
 
     @ApiModelProperty("扩展团队成员")
-    private List<PersonVO> extTeamMember;
+    private List<PersonVO> extTeamMembers;
 
     @ApiModelProperty("项目计划开始时间")
     private Date planStartDate;
