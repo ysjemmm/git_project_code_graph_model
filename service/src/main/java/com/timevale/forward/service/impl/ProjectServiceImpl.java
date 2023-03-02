@@ -591,7 +591,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<PersonAddReq> newMembers = projectSimpleModifyReq.getTeamMembers();
         if (newMembers != null || pm != null) {
             // 旧版成员
-            List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
 
             // 成员更新日志
             if (newMembers == null) {
