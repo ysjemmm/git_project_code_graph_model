@@ -194,14 +194,11 @@ public class TaskServiceImpl implements TaskService {
         personComponent.add(taskAddReq.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
 
         // 若执行人不在项目成员中,需新增
-        Integer personLevel = Optional.ofNullable(PersonLevelEnum.getByCode(taskAddReq.getExecutorLevel()))
-                .flatMap(obj -> Optional.ofNullable(obj.getCode()))
-                .orElse(PersonLevelEnum.CORE.getCode());
         personComponent.addIfNotExisted(
                 taskAddReq.getExecutors(),
                 taskDO.getProjectId(),
                 PersonTypeEnum.PROJECT_MEMBER.getCode(),
-                personLevel);
+                PersonLevelEnum.EXTENSION.getCode());
 
         //关联产品需求
         taskProductDemandComponent.batchInsert(taskDO.getId(), taskAddReq.getProductDemandIds());
@@ -613,22 +610,15 @@ public class TaskServiceImpl implements TaskService {
             });
         });
 
-        // 核心与扩展成员
-        List<PersonAddReq> coreExecutorList = taskSimples.stream()
-                .filter(e -> PersonLevelEnum.CORE.getCode().equals(e.getExecutorLevel()))
-                .flatMap(e -> e.getExecutors().stream())
-                .distinct()
-                .collect(Collectors.toList());
-        List<PersonAddReq> extensionExecutorList = taskSimples.stream()
-                .filter(e -> PersonLevelEnum.EXTENSION.getCode().equals(e.getExecutorLevel()))
+        // 执行人
+        List<PersonAddReq> executorList = taskSimples.stream()
                 .flatMap(e -> e.getExecutors().stream())
                 .distinct()
                 .collect(Collectors.toList());
 
         // 若执行人不在项目成员中,需新增
         Long projectId = CollUtil.getFirst(taskDos).getProjectId();
-        personComponent.addIfNotExisted(coreExecutorList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
-        personComponent.addIfNotExisted(extensionExecutorList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
+        personComponent.addIfNotExisted(executorList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
         
         return BaseResult.success(true);
 
