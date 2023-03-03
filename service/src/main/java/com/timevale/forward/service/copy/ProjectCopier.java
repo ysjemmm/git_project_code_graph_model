@@ -161,6 +161,7 @@ public interface ProjectCopier {
     ProjectDO convert(ProjectDateModifyReq projectDateModifyReq);
 
     @Mapping(target = "pmName", source = "pm")
+    @Mapping(target = "validStageList",expression = "java(projectDO.getValidStageList())")
     @Mapping(target = "levelName", expression = "java(ProjectLevelEnum.getTextByCode(projectDO.getLevel()))")
     @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectDO.getStatus()))")
     @Mapping(target = "innerTypeName", expression = "java(ProjectInnerTypeEnum.getTextByCode(projectDO.getInnerType()))")
