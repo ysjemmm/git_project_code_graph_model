@@ -88,7 +88,7 @@ public class DevopsAppServiceImpl implements DevopsAppService {
     @Override
     public BaseResult<PageQueryResult<DevopsAppVO>> listDevopsApps(DevopsAppQueryList appQueryList) {
         // 分页查询
-        PageHelper.startPage(appQueryList.pageNum, appQueryList.pageSize, CommonConstant.DEFAULT_ORDER_BY);
+        PageHelper.startPage(appQueryList.pageNum, appQueryList.pageSize, CommonConstant.CREATE_ORDER_BY);
         List<DevopsAppDO> appDOList = devopsAppMapper.selectByMainId(appQueryList.getMainId());
 
         // 数据转换
