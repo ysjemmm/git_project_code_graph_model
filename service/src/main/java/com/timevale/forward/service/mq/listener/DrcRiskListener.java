@@ -94,36 +94,19 @@ public class DrcRiskListener implements Listener {
                 projectRiskMapper.updateStatuses(riskIdList, ProjectRiskStatusEnum.COMPLETE.getCode());
             }
         } else if (Objects.equals(body.getAction(), DrcActionEnum.UPDATE.toString())) {
-            // 里程碑被删除，风险作废
+            // 里程碑被删除，作废关联的待处理的风险
             if (Objects.equals(milestone.getIsDeleted(), YesOrNoEnum.YES.getCode())) {
-                {
-                    // 作废关联的待处理的风险
-                    Long milestoneId = milestone.getId();
-                    List<Long> riskIdList = riskDOList.stream()
-                            .filter(e -> ObjectUtil.equal(milestoneId, e.getMainId()))
-                            .map(BaseDO::getId)
-                            .collect(Collectors.toList());
-                    if (CollUtil.isNotEmpty(riskIdList)) {
-                        projectRiskMapper.updateStatuses(riskIdList, ProjectRiskStatusEnum.INVALID.getCode());
-                    }
+                Long milestoneId = milestone.getId();
+                List<Long> riskIdList = riskDOList.stream()
+                        .filter(e -> ObjectUtil.equal(milestoneId, e.getMainId()))
+                        .map(BaseDO::getId)
+                        .collect(Collectors.toList());
+                if (CollUtil.isNotEmpty(riskIdList)) {
+                    projectRiskMapper.updateStatuses(riskIdList, ProjectRiskStatusEnum.INVALID.getCode());
                 }
-                {
-                    // 完成上一个阶段的未录入风险
-                    ProjectStageEnum preStage = ProjectStageEnum.getPreStage(milestone.getStage());
-                    if (preStage == null) {
-                        return;
-                    }
-                    List<Long> riskIdList = riskDOList.stream()
-                            .filter(e -> ObjectUtil.equal(e.getName(), preStage.getText()))
-                            .map(BaseDO::getId)
-                            .collect(Collectors.toList());
-                    if (CollUtil.isNotEmpty(riskIdList)) {
-                        projectRiskMapper.updateStatuses(riskIdList, ProjectRiskStatusEnum.COMPLETE.getCode());
-                    }
-                }
-            } else {
-                projectRiskComponent.solveNoEntry(milestone.getProjectId());
             }
+            // 处理未录入风险
+            projectRiskComponent.solveNoEntry(milestone.getProjectId());
         }
     }
 
