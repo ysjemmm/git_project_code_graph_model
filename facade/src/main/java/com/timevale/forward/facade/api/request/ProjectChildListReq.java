@@ -38,20 +38,20 @@ public class ProjectChildListReq extends QueryBase {
     @ApiModelProperty("项目经理")
     private Collection<String> pms;
 
-    @ApiModelProperty("产品经理")
-    private Collection<String> productPms;
-
     @ApiModelProperty("项目等级")
     private Collection<Integer> levels;
 
     @ApiModelProperty("项目状态")
     private Collection<Integer> status;
 
-    @ApiModelProperty("项目类型")
-    private Collection<Integer> kinds;
-
     @ApiModelProperty("1-子项目列表; 2-可添加为子项目列表; 3-里程碑可关联项目列表")
     private Integer searchType;
+
+    @ApiModelProperty("产品经理")
+    private Collection<String> productPms;
+
+    @ApiModelProperty("项目类型")
+    private Collection<Integer> kinds;
 
     @ApiModelProperty("业务域")
     private Collection<Long> bizDomains;

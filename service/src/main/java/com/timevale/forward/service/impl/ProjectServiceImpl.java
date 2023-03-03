@@ -1161,6 +1161,16 @@ public class ProjectServiceImpl implements ProjectService {
         return BaseResult.success();
     }
 
+    @Override
+    public BaseResult<Boolean> conclusion(Long projectId) {
+        return null;
+    }
+
+    @Override
+    public BaseResult<ConclusionFormVO> conclusionForm(Long projectId) {
+        return null;
+    }
+
 
     private boolean checkProductRelease(Long projectId) {
         List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);

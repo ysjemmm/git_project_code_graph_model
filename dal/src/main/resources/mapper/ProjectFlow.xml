@@ -72,8 +72,6 @@
         where flow_type in (10, 20, 30)
           and status in (-1, 1, 2)
           and is_deleted = false
-<!--          and flow_end_date is null-->
-<!--          and project_id = 1642-->
     </select>
 
     <update id="batchUpdateFlowEndTime">
