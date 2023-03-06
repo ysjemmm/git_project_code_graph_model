@@ -460,8 +460,8 @@ public class ManDayServiceImpl implements ManDayService {
         Set<Long> projectIds = projectBizDemandMap.keySet();
         List<ProjectDO> projects = projectMapper.getByIds(projectIds);
         Map<Long, ProjectDO> projectById = Maps.uniqueIndex(projects, ProjectDO::getId);
-        List<ManDayDO> manDays = manDayMapper.getByProjectIdsAndDateRange(projectIds, query.getStartDate(),
-                query.getEndDate());
+        List<ManDayDO> manDays = manDayMapper.getByProjectIdsAndUsersAndDateRange(projectIds,
+                query.getAccounts(), query.getStartDate(), query.getEndDate());
         manDays.removeIf(m -> m.getActualManDay().compareTo(BigDecimal.ZERO) == 0);
         if (CollectionUtils.isEmpty(manDays)) {
             return BaseResult.success(Collections.emptyList());

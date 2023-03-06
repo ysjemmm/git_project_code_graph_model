@@ -38,6 +38,7 @@ public interface ManDayMapper {
 
     List<Long> listAlreadyCreateProject(@Param("projectList") List<ProjectDO> projectList, @Param("sunday") String sunday);
 
-    List<ManDayDO> getByProjectIdsAndDateRange(@Param("projectIds") Collection<Long> projectIds,
+    List<ManDayDO> getByProjectIdsAndUsersAndDateRange(@Param("projectIds") Collection<Long> projectIds,
+                                               @Param("accounts") Collection<String> accounts,
                                                @Param("startDate") Date startDate, @Param("endDate") Date endDate);
 }

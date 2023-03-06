@@ -21,6 +21,9 @@ public class SourceManDayQuery extends ToString {
     // 查询结束时间
     private Date endDate;
 
+    // 工时所属人
+    private Collection<String> accounts;
+
     // 来源id列表
     private Collection<String> sourceIds;
 
