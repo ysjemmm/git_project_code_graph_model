@@ -32,6 +32,7 @@ import java.util.List;
         PriorityEnum.class,
         BigDecimal.class,
         StringUtils.class,
+        ProjectKindEnum.class
 })
 public interface ProjectCopier {
 
@@ -43,8 +44,15 @@ public interface ProjectCopier {
      * @param projectAddReq 对象
      * @return ProductDemandDO
      */
-    @Mapping(source = "pm.userId", target = "pmId")
     @Mapping(source = "pm.userName", target = "pm")
+    @Mapping(source = "pm.userId", target = "pmId")
+    @Mapping(source = "sr.userName", target = "sr")
+    @Mapping(source = "sr.userId", target = "srId")
+    @Mapping(source = "principal.userName", target = "principal")
+    @Mapping(source = "principal.userId", target = "principalId")
+    @Mapping(source = "otnPrincipal.userName", target = "otnPrincipal")
+    @Mapping(source = "otnPrincipal.userId", target = "otnPrincipalId")
+    @Mapping(target = "status", expression = "java(ProjectStatusEnum.WAITING.getCode())")
     ProjectDO convert(ProjectAddReq projectAddReq);
 
     @Mapping(target = "status", source = "req.status")
@@ -70,8 +78,14 @@ public interface ProjectCopier {
      * @return ProjectDO
      */
     @Mapping(source = "pds", target = "pds", qualifiedByName = "mapping")
-    @Mapping(source = "pm.userId", target = "pmId")
     @Mapping(source = "pm.userName", target = "pm")
+    @Mapping(source = "pm.userId", target = "pmId")
+    @Mapping(source = "sr.userName", target = "sr")
+    @Mapping(source = "sr.userId", target = "srId")
+    @Mapping(source = "principal.userName", target = "principal")
+    @Mapping(source = "principal.userId", target = "principalId")
+    @Mapping(source = "otnPrincipal.userName", target = "otnPrincipal")
+    @Mapping(source = "otnPrincipal.userId", target = "otnPrincipalId")
     ProjectDO convert(ProjectModifyReq projectModifyReq);
     
     /**
@@ -81,6 +95,11 @@ public interface ProjectCopier {
      * @return ProjectDetailVO
      */
     @Mapping(source = "pm", target = "pmName")
+    @Mapping(target = "kindName", expression = "java(ProjectKindEnum.getTextByCode(projectDO.getKind()))")
+    @Mapping(target = "typeName", expression = "java(ProjectTypeEnum.getTextByCode(projectDO.getType()))")
+    @Mapping(target = "levelName", expression = "java(ProjectLevelEnum.getTextByCode(projectDO.getLevel()))")
+    @Mapping(target = "priorityName", expression = "java(PriorityEnum.getTextByCode(projectDO.getPriority()))")
+    @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectDO.getStatus()))")
     ProjectDetailVO convert(ProjectDO projectDO);
 
     /**

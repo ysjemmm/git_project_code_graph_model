@@ -23,7 +23,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     }
 
     @Override
-    public BaseResult<ProjectMemberEvaluateVO> list(Long projectId) {
+    public BaseResult<ProjectMemberEvaluateVO> evaluateList(Long projectId) {
         return null;
     }
 

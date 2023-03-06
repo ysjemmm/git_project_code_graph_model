@@ -5,7 +5,6 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
-import com.timevale.epeius.service.model.response.FlowResponse;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectNodeFlowMapper;
@@ -90,9 +89,11 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         if (match) {
             throw new BaseBizRuntimeException("存在正在审核中的审批流程,请撤销后重新发起");
         }
+
         Date notNull = projectNodeFlowDO.getPjEstablishPublishDate() != null ? projectNodeFlowDO.getPjEstablishPublishDate() : projectNodeFlowDO.getPublishDate();
         Date oldPlanEndDate = DateUtil.getEndOfDay(notNull);
         Date planEndDate = DateUtil.getEndOfDay(projectNodeFlowDO.getChangePublishDate());
+
         if (oldPlanEndDate.before(planEndDate)) {
             Long seconds = elapsedTimeClient.getElapsedTime(oldPlanEndDate, planEndDate);
             BigDecimal elapsedTime = new BigDecimal(seconds.toString());
@@ -106,7 +107,11 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode());
             projectNodeFlowDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
             projectNodeFlowDO.setCreateManId(userInfo.getId());
-            projectNodeFlowDO.setFlowId(startFlow(projectNodeFlowDO, projectNodes));
+
+            // 发起流程
+            String flowId = startFlow(projectNodeFlowDO, projectNodes);
+            projectNodeFlowDO.setFlowId(flowId);
+
             projectNodeFlowMapper.insert(projectNodeFlowDO);
         }
     }

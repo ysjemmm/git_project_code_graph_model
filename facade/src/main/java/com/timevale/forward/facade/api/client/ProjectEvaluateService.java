@@ -34,7 +34,7 @@ public interface ProjectEvaluateService {
      * @param projectId 项目id
      * @return 列表
      */
-    BaseResult<ProjectMemberEvaluateVO> list(Long projectId);
+    BaseResult<ProjectMemberEvaluateVO> evaluateList(Long projectId);
 
     /**
      * 更新

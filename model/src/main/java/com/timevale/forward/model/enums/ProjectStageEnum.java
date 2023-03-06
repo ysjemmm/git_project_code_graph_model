@@ -33,7 +33,7 @@ public enum ProjectStageEnum {
     // 阶段所对应项目阶段
     private final ProjectStatusEnum status;
 
-    // 由于用code查询比较平凡，缓存到一个map以提升性能
+    // 由于用code查询比较频繁，缓存到一个map以提升性能
     private static final Map<Integer, ProjectStageEnum> MAP =
             Maps.uniqueIndex(Arrays.asList(values()), ProjectStageEnum::getCode);
 

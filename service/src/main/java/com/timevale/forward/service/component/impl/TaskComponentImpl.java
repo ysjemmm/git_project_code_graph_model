@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -27,6 +28,7 @@ import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -243,12 +245,7 @@ public class TaskComponentImpl implements TaskComponent {
     public void containProductLineInTask(Long projectId, List<Long> productLineIdsInProject) {
         List<Long> productLineIdsInTask = taskMapper.getByProjectId(projectId)
                 .stream().map(TaskDO::getProductLineId).collect(Collectors.toList());
-        productLineIdsInTask.forEach(a -> {
-            if (!productLineIdsInProject.contains(a)) {
-                throw new BaseBizRuntimeException("该产品线已关联任务，无法修改");
-            }
-        });
-
+        AssertUtil.checkState(CollUtil.containsAny(productLineIdsInTask, productLineIdsInProject),"该产品线已关联任务，无法修改");
     }
 
     @Override

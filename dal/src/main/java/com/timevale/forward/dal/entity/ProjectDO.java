@@ -169,6 +169,46 @@ public class ProjectDO extends BaseDO {
     private String validStages;
 
     /**
+     * 父级项目id
+     */
+    private Long parentId;
+
+    /**
+     * 项目类型，0-空，1-PBG项目/基线项目，2-PBG项目/1-N客开项目，3-职能后台项目/流程IT中心项目
+     */
+    private Integer kind;
+
+    /**
+     * sr
+     */
+    private String sr;
+
+    /**
+     * sr Id
+     */
+    private String srId;
+
+    /**
+     * 项目负责人
+     */
+    private String principal;
+
+    /**
+     * 项目负责人id
+     */
+    private String principalId;
+
+    /**
+     * 1-n负责人
+     */
+    private String otnPrincipal;
+
+    /**
+     * 1-n负责人Id
+     */
+    private String otnPrincipalId;
+
+    /**
      * 返回父节点id列表
      */
     public LinkedList<Long> getParentList() {

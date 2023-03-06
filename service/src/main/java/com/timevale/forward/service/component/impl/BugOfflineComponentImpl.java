@@ -1,9 +1,11 @@
 package com.timevale.forward.service.component.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.timevale.forward.dal.dao.BugOfflineMapper;
 import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.service.component.BugOfflineComponent;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -26,11 +28,8 @@ public class BugOfflineComponentImpl implements BugOfflineComponent {
     public void containProductLineInBugOffline(Long projectId, List<Long> productLineIdsInProject) {
         List<Long> productLineIdsInBugOffline = bugOfflineMapper.selectByProjectId(projectId)
                 .stream().map(BugOfflineDO::getProductLineId).collect(Collectors.toList());
-        productLineIdsInBugOffline.forEach(a -> {
-            if (!productLineIdsInProject.contains(a)) {
-                throw new BaseBizRuntimeException("该产品线已关联线下bug，无法修改");
-            }
-        });
+        AssertUtil.checkState(CollUtil.containsAny(productLineIdsInBugOffline, productLineIdsInProject),
+                "该产品线已关联线下bug，无法修改");
     }
 
 }
