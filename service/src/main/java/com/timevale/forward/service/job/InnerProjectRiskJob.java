@@ -65,8 +65,13 @@ public class InnerProjectRiskJob extends IJobHandler {
         List<ProjectRiskDO> updateRiskList = new ArrayList<>();
 
         // 需要更新项目风险的项目, 待启动、规划中、执行中、收尾中、运营中的内部项目
-        List<Integer> statusList = CollUtil.newArrayList(ProjectStatusEnum.WAITING.getCode(), ProjectStatusEnum.PLANING.getCode(),
-                ProjectStatusEnum.EXECUTING.getCode(), ProjectStatusEnum.FINISHING.getCode(), ProjectStatusEnum.OPERATING.getCode());
+        List<Integer> statusList = CollUtil.newArrayList(
+                ProjectStatusEnum.WAITING.getCode(),
+                ProjectStatusEnum.STARTING.getCode(),
+                ProjectStatusEnum.PLANING.getCode(),
+                ProjectStatusEnum.EXECUTING.getCode(),
+                ProjectStatusEnum.FINISHING.getCode(),
+                ProjectStatusEnum.OPERATING.getCode());
         List<ProjectDO> projectDOs = projectMapper.getByStatus(statusList, ProjectCategoryEnum.INNER_PROJECT.getCode());
         List<Long> projectIds = projectDOs.stream().map(ProjectDO::getId).collect(Collectors.toList());
 
