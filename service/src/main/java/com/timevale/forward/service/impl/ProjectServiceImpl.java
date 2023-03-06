@@ -165,14 +165,11 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
         log.info("项目列表接收参数:{}", projectQueryList);
         String currentUser = LocalSessionUtils.getUserInfo().getId();
-        ProjectListCondition condition = ProjectCopier.INSTANCE.convert(projectQueryList);
-        condition.setPageNum(projectQueryList.getPageNum());
-        condition.setPageSize(projectQueryList.getPageSize());
         List<Long> projectIds = new ArrayList<>();
         //1.查找我或我的团队所属项目id
         if (AscriptionEnum.CURRENT_USER.name().equals(projectQueryList.getAscription())) {
             projectIds = personMapper.getMainIds(Lists.newArrayList(currentUser), null, PersonTypeEnum.PROJECT_MEMBER.getCode());
-            if (CollectionUtils.isEmpty(projectIds)) {
+            if (CollUtil.isEmpty(projectIds)) {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
 
@@ -180,14 +177,16 @@ public class ProjectServiceImpl implements ProjectService {
             List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(currentUser, true);
             log.info("我和我的下属:{}", allMyStaffWithSelf);
             projectIds = personMapper.getMainIds(allMyStaffWithSelf, null, PersonTypeEnum.PROJECT_MEMBER.getCode());
-            if (CollectionUtils.isEmpty(projectIds)) {
+            if (CollUtil.isEmpty(projectIds)) {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
         }
 
-        if (CollectionUtils.isNotEmpty(projectQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(projectQueryList.getLabelCategoryIds())) {
+        ProjectListCondition condition = ProjectCopier.INSTANCE.convert(projectQueryList);
+
+        if (CollUtil.isNotEmpty(projectQueryList.getLabelIds()) || CollUtil.isNotEmpty(projectQueryList.getLabelCategoryIds())) {
             List<Long> labelIds = labelComponent.getLabelIds(projectQueryList.getLabelIds(), projectQueryList.getLabelCategoryIds());
-            if (CollectionUtils.isEmpty(labelIds) && projectQueryList.getContainLabel()) {
+            if (CollUtil.isEmpty(labelIds) && projectQueryList.getContainLabel()) {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
             condition.setLabelIds(labelIds);
@@ -309,8 +308,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 名称校验
         AssertUtil.checkState(!StrUtil.contains(projectAddReq.getName(),CommonConstant.BLANK), "项目名称中请勿包含空格");
-        AssertUtil.checkState(!Optional.ofNullable(projectMapper.getByName(projectAddReq.getName())).isPresent()
-                ,"该项目名称已存在,请修改后重试");
+        AssertUtil.checkState(projectMapper.getByName(projectAddReq.getName()) == null,"该项目名称已存在,请修改后重试");
 
         if (YesOrNoEnum.YES.getCode().equals(projectAddReq.getIsWithGoal())) {
             AssertUtil.notEmpty(projectAddReq.getProjectGoals(), "项目含有项目目标，请至少添加一条项目目标数据");

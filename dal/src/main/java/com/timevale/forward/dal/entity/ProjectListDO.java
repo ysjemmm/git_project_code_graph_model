@@ -102,4 +102,19 @@ public class ProjectListDO extends BaseDO {
      */
     private String parentIds;
 
+    /**
+     * 项目类型
+     */
+    private Integer kind;
+
+    /**
+     * SR
+     */
+    private String sr;
+
+    /**
+     * 结项时间
+     */
+    private Date conclusionDate;
+
 }

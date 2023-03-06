@@ -242,63 +242,59 @@
     </select>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProjectListDO">
-        select a.id,a.name, a.customer_dev,is_platform_publish, is_with_goal, a.priority, a.type
-        ,a.status,a.node_status, a.pm_id,a.pm,a.plan_start_date,a.plan_end_date,
-        a.actual_start_date,a.actual_end_date,a.`desc`,a.inner_type,a.parent_ids,
-        a.level,pj_establish_start_date,pj_establish_publish_date,is_acceptance,
-        a.create_man_id, a.create_man,a.create_date,a.modify_date
-        from project a
+        select *
+        from project
         <where>
             <if test="ids!=null and ids.size()>0">
-                and a.id in
+                and id in
                 <foreach collection="ids" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
-            <if test="id != null">and a.id = #{id}</if>
-            <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
-            <if test="customerDev != null">and a.customer_dev = #{customerDev}</if>
+            <if test="id != null">and id = #{id}</if>
+            <if test="name != null and name != ''">and name like concat('%',#{name},'%')</if>
+            <if test="customerDev != null">and customer_dev = #{customerDev}</if>
             <if test="planStartDateLeft != null and planStartDateRight != null">
-                and a.plan_start_date &gt;= #{planStartDateLeft} and a.plan_start_date &lt;= #{planStartDateRight}
+                and plan_start_date &gt;= #{planStartDateLeft} and plan_start_date &lt;= #{planStartDateRight}
             </if>
             <if test="planEndDateLeft != null and planEndDateRight != null">
-                and a.plan_end_date &gt;= #{planEndDateLeft} and a.plan_end_date &lt;= #{planEndDateRight}
+                and plan_end_date &gt;= #{planEndDateLeft} and plan_end_date &lt;= #{planEndDateRight}
             </if>
             <if test="actualStartDateLeft != null and actualStartDateRight != null">
-                and a.actual_start_date &gt;= #{actualStartDateLeft} and a.actual_start_date &lt;=
+                and actual_start_date &gt;= #{actualStartDateLeft} and actual_start_date &lt;=
                 #{actualStartDateRight}
             </if>
             <if test="actualEndDateLeft != null and actualEndDateRight != null">
-                and a.actual_end_date &gt;= #{actualEndDateLeft} and a.actual_end_date &lt;= #{actualEndDateRight}
+                and actual_end_date &gt;= #{actualEndDateLeft} and actual_end_date &lt;= #{actualEndDateRight}
             </if>
             <if test="createDateLeft != null and createDateRight != null">
-                and a.create_date &gt;= #{createDateLeft} and a.create_date &lt;= #{createDateRight}
+                and create_date &gt;= #{createDateLeft} and create_date &lt;= #{createDateRight}
             </if>
             <if test="priorities!=null and priorities.size()>0">
-                and a.priority in
+                and priority in
                 <foreach collection="priorities" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
             <if test="status!=null and status.size()>0">
-                and a.status in
+                and status in
                 <foreach collection="status" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
             <if test="nodeStatusList!=null and nodeStatusList.size()>0">
-                and a.node_status in
+                and node_status in
                 <foreach collection="nodeStatusList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
             <choose>
                 <when test="types != null and types.size > 0 and innerTypes != null and innerTypes.size > 0">
-                    and (a.type in
+                    and (type in
                     <foreach collection="types" item="item" separator="," open="(" close=")">
                         #{item}
                     </foreach>
-                    or a.inner_type in
+                    or inner_type in
                     <foreach collection="innerTypes" item="item" separator="," open="(" close=")">
                         #{item}
                     </foreach>
@@ -306,13 +302,13 @@
                 </when>
                 <otherwise>
                     <if test="types!=null and types.size()>0">
-                        and a.type in
+                        and type in
                         <foreach collection="types" item="item" separator="," open="(" close=")">
                             #{item}
                         </foreach>
                     </if>
                     <if test="innerTypes != null and innerTypes.size()>0">
-                        and a.inner_type in
+                        and inner_type in
                         <foreach collection="innerTypes" item="item" separator="," open="(" close=")">
                             #{item}
                         </foreach>
@@ -320,13 +316,13 @@
                 </otherwise>
             </choose>
             <if test="pms!=null and pms.size()>0">
-                and a.pm_id in
+                and pm_id in
                 <foreach collection="pms" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
             <if test="levels!=null and levels.size()>0">
-                and a.level in
+                and `level` in
                 <foreach collection="levels" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
@@ -337,7 +333,22 @@
             <if test="onlyFirstLevel != null and onlyFirstLevel == true">
                 and parent_ids = concat(',', id, ',')
             </if>
-            and a.is_deleted =false
+            <if test="conclusionDate != null">
+                and conclusion_date = #{conclusionDate}
+            </if>
+            <if test="srs!=null and srs.size()>0">
+                and sr_id in
+                <foreach collection="srs" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="kinds!=null and kinds.size()>0">
+                and kind in
+                <foreach collection="kinds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and is_deleted =false
         </where>
     </select>
 
