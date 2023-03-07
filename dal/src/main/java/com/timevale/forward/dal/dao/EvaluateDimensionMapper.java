@@ -4,6 +4,7 @@ import com.timevale.forward.dal.entity.EvaluateDimensionDO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -13,5 +14,7 @@ import java.util.List;
 public interface EvaluateDimensionMapper {
 
     List<EvaluateDimensionDO> selectByIds(@Param("ids")Collection<Long> ids);
+
+    List<EvaluateDimensionDO> selectByKind(@Param("kind")Integer kind, @Param("nowDate")Date nowDate);
 
 }

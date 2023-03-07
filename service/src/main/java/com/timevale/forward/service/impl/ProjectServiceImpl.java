@@ -161,6 +161,10 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private ApplicationEventPublisher applicationEventPublisher;
     @Resource
+    private ProjectEvaluateMapper evaluateMapper;
+    @Resource
+    private EvaluateDimensionMapper evaluateDimensionMapper;
+    @Resource
     private ProjectMemberEvaluateMapper memberEvaluateMapper;
 
     @Override
@@ -360,8 +364,12 @@ public class ProjectServiceImpl implements ProjectService {
         teamMembers = teamMembers.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList());
         personComponent.add(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
 
-        // 查询当前项目类型维度
-
+        // 添加对应的项目评价
+        List<EvaluateDimensionDO> dimensionDOList = evaluateDimensionMapper.selectByKind(projectDO.getKind(), new Date());
+        List<Long> dimensionIdList = dimensionDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(dimensionIdList)) {
+            evaluateMapper.batchInsert(projectDO.getId(), dimensionIdList);
+        }
 
         // 添加积分成员
         List<ProjectMemberEvaluateDO> memberEvaluateDOList = teamMembers.stream()

@@ -21,4 +21,12 @@
         </where>
     </update>
 
+    <insert id="batchInsert">
+        INSERT INTO project_evaluate (project_id, evaluate_dimension_id, create_man, create_man_id)
+        VALUES
+        <foreach collection="dimensionIds" item="item" separator=",">
+            (#{projectId}, #{item}, #{createMan}, #{createManId})
+        </foreach>
+    </insert>
+
 </mapper>
