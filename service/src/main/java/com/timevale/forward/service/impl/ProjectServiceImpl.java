@@ -160,6 +160,8 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectMilestoneComponent projectMilestoneComponent;
     @Resource
     private ApplicationEventPublisher applicationEventPublisher;
+    @Resource
+    private ProjectMemberEvaluateMapper memberEvaluateMapper;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -357,6 +359,15 @@ public class ProjectServiceImpl implements ProjectService {
         teamMembers.addAll(projectAddReq.getPds());
         teamMembers = teamMembers.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList());
         personComponent.add(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
+
+        // 查询当前项目类型维度
+
+
+        // 添加积分成员
+        List<ProjectMemberEvaluateDO> memberEvaluateDOList = teamMembers.stream()
+                .map(e -> ProjectMemberEvaluateCopier.INSTANCE.person2do(e, projectDO.getId()))
+                .collect(Collectors.toList());
+        memberEvaluateMapper.batchInsert(memberEvaluateDOList);
 
         //生成节点信息
         projectNodeComponent.buildDefaultNode(projectDO.getPlanStartDate(), projectDO.getPlanEndDate(), projectDO.getId());

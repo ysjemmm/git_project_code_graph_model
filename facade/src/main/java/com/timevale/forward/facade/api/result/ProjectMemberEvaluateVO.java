@@ -32,7 +32,7 @@ public class ProjectMemberEvaluateVO extends ToString {
     private BigDecimal planWorkloadSum;
 
     @ApiModelProperty("工作量(计算积分)")
-    private BigDecimal workloadPointsSum;
+    private BigDecimal pointsWorkloadSum;
 
     @ApiModelProperty("项目成员评分")
     private List<MemberEvaluateVO> memberEvaluateVOList;

@@ -29,12 +29,6 @@ public class MemberEvaluateVO extends ToString {
     @ApiModelProperty("用户名称")
     private String userName;
 
-    @ApiModelProperty("角色")
-    private String postRole;
-
-    @ApiModelProperty("部门")
-    private String group;
-
     @ApiModelProperty("计划工作量")
     private BigDecimal planWorkLoad;
 
@@ -49,4 +43,7 @@ public class MemberEvaluateVO extends ToString {
 
     @ApiModelProperty("评价说明")
     private String evaluateExplain;
+
+    @ApiModelProperty("是否纳入统计")
+    private Boolean includeStat;
 }

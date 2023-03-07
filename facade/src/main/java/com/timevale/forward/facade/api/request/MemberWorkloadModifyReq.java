@@ -15,27 +15,16 @@ import java.math.BigDecimal;
  */
 @Getter
 @Setter
-@ApiModel("成员评价请求")
-public class MemberEvaluateModifyReq extends ToString {
-
-    @ApiModelProperty("项目id")
-    @NotNull(message = "项目id必填")
-    private Long projectId;
+@ApiModel("成员工作量修改请求")
+public class MemberWorkloadModifyReq extends ToString {
 
     @ApiModelProperty("用户id")
     @NotNull(message = "用户id必填")
     private Long userId;
 
-    @ApiModelProperty("实际工作量")
-    private BigDecimal actualWorkload;
-
-    @ApiModelProperty("评级")
-    private Integer evaluateGrade;
-
-    @ApiModelProperty("评价说明")
-    private String evaluateExplain;
+    @ApiModelProperty("计划工作量")
+    private BigDecimal planWorkload;
 
     @ApiModelProperty("是否纳入积分统计")
     private Boolean includeStat;
-
 }

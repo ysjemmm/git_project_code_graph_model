@@ -1,0 +1,15 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.EvaluateDimensionMapper">
+    <select id="selectByIds" resultType="com.timevale.forward.dal.entity.EvaluateDimensionDO">
+        SELECT *
+        FROM evaluate_dimension
+        <where>
+            AND id IN
+            <foreach collection="ids" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            AND is_deleted = false
+        </where>
+    </select>
+</mapper>

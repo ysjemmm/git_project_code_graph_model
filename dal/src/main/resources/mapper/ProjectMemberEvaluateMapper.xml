@@ -1,0 +1,37 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.ProjectMemberEvaluateMapper">
+    <insert id="batchInsert">
+        INSERT INTO project_member_evaluate (project_id, user_id, user_name, include_stat, create_man_id, create_man)
+        VALUES
+        <foreach collection="coll" item="item" separator=",">
+            (#{item.projectId}, #{item.userId}, #{item.userName}, #{item.includeStat}, #{createManId}, #{createMan})
+        </foreach>
+    </insert>
+
+    <update id="update">
+        UPDATE project_member_evaluate
+        <set>
+            <if test="planWorkload != null">plan_workload = #{planWorkload},</if>
+            <if test="actualWorkload">actual_workload = #{actualWorkload},</if>
+            <if test="evaluateGrade">evaluate_grade = #{evaluateGrade},</if>
+            <if test="evaluateExplain">evaluate_explain = #{evaluateExplain},</if>
+            <if test="includeStat">include_stat = #{includeStat},</if>
+            <if test="true">
+                modify_man = #{modifyMan},
+                modify_man_id = #{modify_man_id}
+            </if>
+        </set>
+        <where>
+            AND userId = #{userId}
+            AND projectId = #{projectId}
+        </where>
+    </update>
+
+    <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectMemberEvaluateDO">
+        SELECT *
+        FROM project_member_evaluate
+        WHERE project_id = #{projectId}
+          AND is_deleted = false
+    </select>
+</mapper>
