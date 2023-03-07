@@ -50,61 +50,42 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Resource
     private BizDemandMapper bizDemandMapper;
-
     @Resource
     private ProductLineMapper productLineMapper;
-
     @Resource
     private ProductBizDemandMapper productBizDemandMapper;
-
     @Resource
     private InnerUserPersonClient innerUserPersonClient;
-
     @Resource
     private PersonComponent personComponent;
-
     @Resource
     private FileComponent fileComponent;
-
     @Resource
     private MessageEventPublisher messageEventPublisher;
-
     @Resource
     private BizDemandComponent bizDemandComponent;
-
     @Resource
     private BugOnlineMapper bugOnlineMapper;
-
     @Resource
     private BugOnlineBizDemandMapper bugOnlineBizDemandMapper;
-
     @Resource
     private BugOnlineComponent bugOnlineComponent;
-
     @Resource
     private BugOfflineMapper bugOfflineMapper;
-
     @Resource
     private BugLogMapper bugLogMapper;
-
     @Resource
     private BizDemandLogComponent bizDemandLogComponent;
-
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
-
     @Resource
     private LabelComponent labelComponent;
-
     @Resource
     private BizDemandCustomComponent bizDemandCustomComponent;
-
     @Resource
     private OutBizDealComponent outBizDealComponent;
-
     @Resource
     private BizLabelComponent bizLabelComponent;
-
     @Resource
     private BugLogComponent bugLogComponent;
 

@@ -3,11 +3,14 @@
 <mapper namespace="com.timevale.forward.dal.dao.PersonMapper">
 
     <select id="select" resultType="com.timevale.forward.dal.entity.PersonDO">
-        select id ,main_id,user_name,user_id, type,is_deleted,create_man ,create_date ,modify_man ,modify_date
+        select id ,main_id,user_name,user_id, type, person_level, is_deleted,create_man ,create_date ,modify_man ,modify_date
         from person
-        where is_deleted = false
-        <if test="mainId!=null">and main_id = #{mainId}</if>
-        <if test="type!=null">and type = #{type}</if>
+        <where>
+            <if  test="true">and is_deleted = false</if>
+            <if test="mainId!=null">and main_id = #{mainId}</if>
+            <if test="type!=null">and type = #{type}</if>
+            <if test="personLevel!=null">and person_level = #{personLevel}</if>
+        </where>
     </select>
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.PersonDO">
@@ -17,10 +20,10 @@
     </insert>
 
     <insert id="inserts" parameterType="java.util.List">
-        insert into person (main_id,user_name,user_id, type, create_man_id, create_man)
+        insert into person (main_id,user_name,user_id, type, person_level, create_man_id, create_man)
         values
         <foreach collection="list" item="i" open="" separator="," close="">
-            (#{i.mainId}, #{i.userName},#{i.userId},#{i.type}, #{i.createManId}, #{i.createMan})
+            (#{i.mainId}, #{i.userName},#{i.userId},#{i.type}, #{i.personLevel}, #{createManId}, #{createMan})
         </foreach>
     </insert>
 
@@ -35,6 +38,22 @@
             <if test="id != null">and id = #{id}</if>
             <if test="mainId!=null">and main_id = #{mainId}</if>
             <if test="type != null">and type = #{type}</if>
+            <if test="personLevel != null">and person_level = #{personLevel}</if>
+        </where>
+    </update>
+
+    <update id="updateLevel">
+        UPDATE person
+        SET person_level = #{personLevel},
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId}
+        <where>
+            AND main_id = #{mainId}
+            AND type = #{type}
+            AND user_id IN
+            <foreach collection="userIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
         </where>
     </update>
 

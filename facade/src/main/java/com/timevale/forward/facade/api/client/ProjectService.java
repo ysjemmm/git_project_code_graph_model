@@ -3,6 +3,7 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
+import com.timevale.forward.facade.api.query.ProjectPageQuery;
 import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.*;
@@ -212,4 +213,5 @@ public interface ProjectService {
      */
     BaseResult<ConclusionFormVO> conclusionForm(Long projectId);
 
+    BaseResult<PageQueryResult<ProjectSimpleVO>> pageAll(ProjectPageQuery query);
 }

@@ -123,5 +123,10 @@ public class BizDemandListDO extends BaseDO {
      * 期望上线时间
      */
     private Integer hopeReleaseDate;
+
+    /**
+     * 客户开发需求
+     */
+    private Boolean customerDevDemand;
 }
 

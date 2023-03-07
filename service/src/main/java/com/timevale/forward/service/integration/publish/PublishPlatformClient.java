@@ -1,5 +1,6 @@
 package com.timevale.forward.service.integration.publish;
 
+import com.timevale.forward.dal.dto.DevopsProjectDTO;
 import com.timevale.forward.dal.dto.PublishPlanResultDTO;
 import com.timevale.forward.facade.api.query.PublishPlanQueryList;
 
@@ -15,5 +16,7 @@ public interface PublishPlatformClient {
      * @return 结果
      */
     PublishPlanResultDTO list(PublishPlanQueryList publishPlanQueryListt);
+
+    DevopsProjectDTO getProject(String projectSign);
 
 }

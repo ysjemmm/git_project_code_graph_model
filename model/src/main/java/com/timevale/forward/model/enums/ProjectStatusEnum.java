@@ -16,9 +16,11 @@ import java.util.Map;
 public enum ProjectStatusEnum {
     NULL(-1, "", false, false),
     /**
-     * 0待启动,10规划中,15执行中,20研发中,25收尾中,30测试中,35运营中,40已发布,45已完成,50已结项，-10已暂停,-20已作废
+     * 0待启动,5启动中，10规划中,15执行中,20研发中,25收尾中,30测试中,35运营中,40已发布,45已完成,50已结项，-10已暂停,-20已作废
      */
     WAITING(0, "待启动", false, false),
+
+    STARTING(5, "启动中", false, false),
 
     PLANING(10, "规划中", true, false),
 

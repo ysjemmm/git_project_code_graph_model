@@ -43,8 +43,12 @@ public class ProjectInnerAddReq extends ToString {
     private PersonAddReq pm;
 
     @Valid
-    @ApiModelProperty("团队成员")
+    @ApiModelProperty("核心成员")
     private List<PersonAddReq> teamMembers;
+
+    @Valid
+    @ApiModelProperty("扩展成员")
+    private List<PersonAddReq> extTeamMembers;
 
     @ApiModelProperty("描述")
     private String desc;

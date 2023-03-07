@@ -1,5 +1,7 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.BooleanUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -64,66 +66,48 @@ public class TaskServiceImpl implements TaskService {
 
     @Resource
     private TaskComponent taskComponent;
-
     @Resource
     private InnerUserPersonClient innerUserPersonClient;
-
     @Resource
     private PersonMapper personMapper;
-
     @Resource
     private TaskMapper taskMapper;
-
     @Resource
     private TaskTimeMapper taskTimeMapper;
-
     @Resource
     private ProductLineMapper productLineMapper;
-
     @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
-
     @Resource
     private TaskProductDemandComponent taskProductDemandComponent;
-
     @Resource
     private FileComponent fileComponent;
-
     @Resource
     private PersonComponent personComponent;
-
     @Resource
     private ProjectMapper projectMapper;
-
     @Resource
     private TaskProductDemandMapper taskProductDemandMapper;
-
     @Resource
     private ProductDemandComponent productDemandComponent;
-
     @Resource
     private ElapsedTimeClient elapsedTimeClient;
-
     @Resource
     private TaskTimeComponent taskTimeComponent;
-
     @Resource
     private MessageEventPublisher messageEventPublisher;
-
     @Resource
     private ProjectNodeMapper projectNodeMapper;
-
     @Resource
     private BizDomainMapper bizDomainMapper;
-
     @Resource
     private UserComponent userComponent;
-
     @Resource
     private InnerProjectStatusUpdateComponent innerProjectStatusUpdateComponent;
-
     @Resource
     private ProjectMilestoneComponent projectMilestoneComponent;
+    @Resource
+    private ProjectMilestoneMapper milestoneMapper;
 
     @Value("${excludeBizDomain:[1,13,32]}")
     private String excludeBizDomain;
@@ -208,10 +192,23 @@ public class TaskServiceImpl implements TaskService {
         fileComponent.add(taskAddReq.getFiles(), taskDO.getId(), FileTypeEnum.TASK.getCode());
         //执行人
         personComponent.add(taskAddReq.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
+
         // 若执行人不在项目成员中,需新增
-        personComponent.addIfNotExisted(taskAddReq.getExecutors(), taskDO.getProjectId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
+        personComponent.addIfNotExisted(
+                taskAddReq.getExecutors(),
+                taskDO.getProjectId(),
+                PersonTypeEnum.PROJECT_MEMBER.getCode(),
+                PersonLevelEnum.EXTENSION.getCode());
+
         //关联产品需求
         taskProductDemandComponent.batchInsert(taskDO.getId(), taskAddReq.getProductDemandIds());
+
+        // 判断是否为里程碑
+        if (taskAddReq.getMilestoneFlag()) {
+            ProjectMilestone entity = ProjectMilestoneCopier.INSTANCE.task2do(taskDO, taskAddReq.getStage());
+            milestoneMapper.insert(entity);
+            projectMilestoneComponent.addMilestoneCreateLog(entity);
+        }
 
         sendDingMsg(taskDO, executorIds);
         return BaseResult.success(taskDO.getId());
@@ -251,11 +248,32 @@ public class TaskServiceImpl implements TaskService {
         personComponent.update(taskModifyReq.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
 
         // 若执行人不在项目成员中,需新增
-        personComponent.addIfNotExisted(taskModifyReq.getExecutors(), taskDO.getProjectId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
+        Integer personLevel = Optional.ofNullable(PersonLevelEnum.getByCode(taskModifyReq.getExecutorLevel()))
+                .flatMap(obj -> Optional.ofNullable(obj.getCode()))
+                .orElse(PersonLevelEnum.CORE.getCode());
+        personComponent.addIfNotExisted(
+                taskModifyReq.getExecutors(),
+                taskDO.getProjectId(),
+                PersonTypeEnum.PROJECT_MEMBER.getCode(),
+                personLevel);
 
         sendDingMsg(taskDO, executorIds);
         projectMilestoneComponent.updateMilestoneNameAndStage(taskDO);
         innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
+
+        // 里程碑处理
+        Boolean milestoneFlag = taskModifyReq.getMilestoneFlag();
+        ProjectMilestone milestone = milestoneMapper.selectByRelation(taskDO.getId(), MilestoneTypeEnum.TASK.getCode());
+        if (milestoneFlag && milestone == null) {
+            ProjectMilestone entity = ProjectMilestoneCopier.INSTANCE.task2do(taskDO, taskModifyReq.getStage());
+            milestoneMapper.insert(entity);
+            innerProjectStatusUpdateComponent.updateProjectDateAndStatus(entity.getProjectId());
+            projectMilestoneComponent.addMilestoneCreateLog(entity);
+        } else if (!milestoneFlag && milestone != null){
+            milestoneMapper.deleteById(milestone.getId());
+            innerProjectStatusUpdateComponent.updateProjectDateAndStatus(milestone.getProjectId());
+            projectMilestoneComponent.addMilestoneDeleteLog(milestone);
+        }
         return BaseResult.success(true);
     }
 
@@ -294,7 +312,14 @@ public class TaskServiceImpl implements TaskService {
             List<TaskTimeDTO> useTime = taskTimeComponent.getUseTime(taskDO);
             taskDetailVO.setTaskTimeVO(TaskTimeCopier.INSTANCE.convert(useTime));
         }
+
+        // 是否为PMO
         taskDetailVO.setIsPMO(userComponent.isPmo());
+
+        // 是否为里程碑
+        ProjectMilestone milestone = milestoneMapper.selectByRelation(taskId, MilestoneTypeEnum.TASK.getCode());
+        taskDetailVO.setMilestoneFlag(milestone != null);
+
         return BaseResult.success(taskDetailVO);
     }
 
@@ -558,7 +583,6 @@ public class TaskServiceImpl implements TaskService {
 
         checkPlanDate(taskDos.get(0));
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        List<PersonAddReq> executors = new ArrayList<>();
         taskSimples.forEach(a -> {
             threadPoolTaskExecutor.execute(() -> {
                 TaskDO taskDO = TaskCopier.INSTANCE.convert(a);
@@ -577,12 +601,25 @@ public class TaskServiceImpl implements TaskService {
                 //执行人
                 personComponent.add(a.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
 
+                // 判断是否为里程碑
+                if (BooleanUtil.isTrue(a.getMilestoneFlag())) {
+                    ProjectMilestone entity = ProjectMilestoneCopier.INSTANCE.task2do(taskDO, a.getStage());
+                    milestoneMapper.insert(entity);
+                    projectMilestoneComponent.addMilestoneCreateLog(entity);
+                }
             });
-            //添加每个人任务的执行人
-            executors.addAll(a.getExecutors());
         });
+
+        // 执行人
+        List<PersonAddReq> executorList = taskSimples.stream()
+                .flatMap(e -> e.getExecutors().stream())
+                .distinct()
+                .collect(Collectors.toList());
+
         // 若执行人不在项目成员中,需新增
-        personComponent.addIfNotExisted(executors, taskDos.get(0).getProjectId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
+        Long projectId = CollUtil.getFirst(taskDos).getProjectId();
+        personComponent.addIfNotExisted(executorList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
+        
         return BaseResult.success(true);
 
     }
@@ -702,9 +739,12 @@ public class TaskServiceImpl implements TaskService {
      * @param taskDO taskDO
      */
     private void checkProductDemandIdsByProjectLinked(TaskDO taskDO) {
+        List<Long> productDemandIds = taskDO.getProductDemandIds();
+        if (CollUtil.isEmpty(productDemandIds)) {
+            return;
+        }
         List<Long> existProductDemandIds = projectProductDemandMapper.getByProjectId(taskDO.getProjectId())
                 .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
-        List<Long> productDemandIds = taskDO.getProductDemandIds();
         productDemandIds.removeAll(existProductDemandIds);
         if (!CollectionUtils.isEmpty(productDemandIds)) {
             throw new BaseBizRuntimeException("产品需求id:" + productDemandIds + "没有被该项目关联,请刷新后重试");

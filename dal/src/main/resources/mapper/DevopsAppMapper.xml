@@ -1,0 +1,14 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.DevopsAppMapper">
+
+    <insert id="batchInsert">
+        INSERT INTO devops_app(main_id, devops_project_name, devops_project_sign, app_name, app_type, app_branch, app_domain,create_man_id, create_man)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.mainId},#{item.devopsProjectName},#{item.devopsProjectSign},#{item.appName},#{item.appType},
+             #{item.appBranch},#{item.appDomain},#{createManId},#{createMan})
+        </foreach>
+    </insert>
+
+</mapper>

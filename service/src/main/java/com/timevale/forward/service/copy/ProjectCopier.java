@@ -197,6 +197,7 @@ public interface ProjectCopier {
     ProjectDO convert(ProjectDateModifyReq projectDateModifyReq);
 
     @Mapping(target = "pmName", source = "pm")
+    @Mapping(target = "validStageList",expression = "java(projectDO.getValidStageList())")
     @Mapping(target = "levelName", expression = "java(ProjectLevelEnum.getTextByCode(projectDO.getLevel()))")
     @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectDO.getStatus()))")
     @Mapping(target = "innerTypeName", expression = "java(ProjectInnerTypeEnum.getTextByCode(projectDO.getInnerType()))")
@@ -213,4 +214,8 @@ public interface ProjectCopier {
     @Mapping(target = "projectName", source = "name")
     ProjectTreeVO convertTree(ProjectDO project);
     List<ProjectTreeVO> convertTree(List<ProjectDO> projects);
+
+    ProjectSimpleVO do2svo(ProjectDO projectDO);
+
+    List<ProjectSimpleVO> do2svo(List<ProjectDO> doList);
 }

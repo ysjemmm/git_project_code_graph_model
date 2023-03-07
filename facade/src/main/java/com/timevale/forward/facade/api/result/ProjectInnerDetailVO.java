@@ -49,6 +49,9 @@ public class ProjectInnerDetailVO extends ToString {
     @ApiModelProperty("团队成员")
     private List<PersonVO> teamMember;
 
+    @ApiModelProperty("扩展团队成员")
+    private List<PersonVO> extTeamMembers;
+
     @ApiModelProperty("项目计划开始时间")
     private Date planStartDate;
 
@@ -78,4 +81,7 @@ public class ProjectInnerDetailVO extends ToString {
 
     @ApiModelProperty("是否是项目经理和PMO及其上级")
     private Boolean isLeaderOrPMO;
+
+    @ApiModelProperty("有效阶段")
+    private List<Integer> validStageList;
 }
