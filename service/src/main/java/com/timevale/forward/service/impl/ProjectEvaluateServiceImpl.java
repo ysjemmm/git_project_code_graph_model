@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -20,6 +21,7 @@ import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -56,13 +58,16 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         // 工作量总和
         BigDecimal planWorkLoadSum = memberEvaluateVOList.stream()
                 .map(MemberEvaluateVO::getPlanWorkLoad)
+                .filter(ObjectUtil::isNotNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         result.setPlanWorkloadSum(planWorkLoadSum);
 
         // 需要计算积分的工作量总和
         BigDecimal workloadPointsSum = memberEvaluateVOList.stream()
                 .filter(MemberEvaluateVO::getIncludeStat)
-                .map(MemberEvaluateVO::getPlanWorkLoad).reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(MemberEvaluateVO::getPlanWorkLoad)
+                .filter(ObjectUtil::isNotNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         result.setPointsWorkloadSum(workloadPointsSum);
 
         return BaseResult.success(result);
@@ -102,7 +107,13 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO, "项目不存在");
 
+        // 查询对应的项目评价，旧数据判空处理
         List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.selectByProjectId(projectId);
+        if (CollUtil.isEmpty(evaluateDOList)) {
+            ProjectEvaluateVO result = new ProjectEvaluateVO();
+            result.setEvaluateItemVOList(new ArrayList<>());
+            return BaseResult.success(result);
+        }
 
         // 获取对应的维度
         List<Long> dimensionIdList = evaluateDOList.stream()
@@ -141,6 +152,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> evaluateUpdate(ProjectEvaluateReq req) {
         List<EvaluateReq> evaluateReqList = req.getEvaluateReqList();
         List<ProjectEvaluateDO> evaluateDOList = ProjectEvaluateCopier.INSTANCE.req2do(evaluateReqList);

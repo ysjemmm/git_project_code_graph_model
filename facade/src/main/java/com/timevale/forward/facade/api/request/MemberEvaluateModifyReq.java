@@ -24,7 +24,7 @@ public class MemberEvaluateModifyReq extends ToString {
 
     @ApiModelProperty("用户id")
     @NotNull(message = "用户id必填")
-    private Long userId;
+    private String userId;
 
     @ApiModelProperty("实际工作量")
     private BigDecimal actualWorkload;

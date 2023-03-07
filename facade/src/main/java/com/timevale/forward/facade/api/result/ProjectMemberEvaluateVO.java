@@ -19,9 +19,6 @@ import java.util.List;
 @ApiModel("项目成员评分详情")
 public class ProjectMemberEvaluateVO extends ToString {
 
-    @ApiModelProperty("工作量变更审批流程状态")
-    private Integer workloadFlowIdStatus;
-
     @ApiModelProperty("工作量变更审批流程id")
     private String workloadFlowId;
 

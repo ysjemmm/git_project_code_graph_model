@@ -2,7 +2,6 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.request.EvaluateReq;
 import com.timevale.forward.facade.api.request.MemberEvaluateModifyReq;
 import com.timevale.forward.facade.api.request.MemberWorkloadFillReq;
 import com.timevale.forward.facade.api.request.ProjectEvaluateReq;

@@ -20,7 +20,7 @@ public class ProjectMemberEvaluateDO extends BaseDO {
     /**
      * 项目成员id
      */
-    private Long userId;
+    private String userId;
     /**
      * 项目成员名称
      */

@@ -18,11 +18,11 @@
             <if test="pm != null">pm,</if>
             <if test="pmId != null">pm_id,</if>
             <if test="sr != null">sr,</if>
-            <if test="srId != null">`srId`,</if>
+            <if test="srId != null">`sr_id`,</if>
             <if test="principal != null">principal,</if>
-            <if test="principalId != null">principalId,</if>
-            <if test="otnPrincipal != null">otnPrincipal,</if>
-            <if test="otnPrincipalId != null">otnPrincipalId,</if>
+            <if test="principalId != null">principal_id,</if>
+            <if test="otnPrincipal != null">otn_principal,</if>
+            <if test="otnPrincipalId != null">otn_principal_id,</if>
             <if test="planStartDate != null">plan_start_date,</if>
             <if test="planEndDate != null">plan_end_date,</if>
             <if test="pjEstablishStartDate != null">pj_establish_start_date,</if>

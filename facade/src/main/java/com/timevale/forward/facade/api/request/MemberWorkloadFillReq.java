@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -23,6 +24,7 @@ public class MemberWorkloadFillReq extends ToString {
     private Long projectId;
 
     @ApiModelProperty("成员工作量信息")
+    @Valid
     private List<MemberWorkloadModifyReq> modifyReqList;
 
     @ApiModelProperty("变更事由")
