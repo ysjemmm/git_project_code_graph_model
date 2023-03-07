@@ -1,11 +1,24 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
 <mapper namespace="com.timevale.forward.dal.dao.ProjectEvaluateMapper">
-
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectEvaluateDO">
         SELECT *
         FROM project_evaluate
         WHERE is_deleted = false
     </select>
+
+    <update id="update">
+        UPDATE project_evaluate
+        <set>
+            <if test="scores != null">scores = #{scores},</if>
+            <if test="pmoScores != null">pmo_scores = #{pmoScores},</if>
+            <if test="scoresDesc != null and scoresDesc != ''">scores_desc = #{scoresDesc},</if>
+            <if test="pmoScoresDesc != null and pmoScoresDesc != ''">pmo_scores_desc = #{pmoScoresDesc},</if>
+        </set>
+        <where>
+            AND project_id = #{projectId}
+            AND evaluate_dimension_id = #{evaluateDimensionId}
+        </where>
+    </update>
 
 </mapper>

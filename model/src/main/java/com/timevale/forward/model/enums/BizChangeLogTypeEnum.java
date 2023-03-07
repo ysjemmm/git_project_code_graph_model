@@ -49,6 +49,6 @@ public enum BizChangeLogTypeEnum {
                 return e.text;
             }
         }
-        return "errorCode";
+        return "";
     }
 }

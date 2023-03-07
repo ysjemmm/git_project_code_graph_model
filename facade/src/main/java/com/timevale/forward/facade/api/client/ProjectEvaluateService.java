@@ -2,8 +2,10 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.request.EvaluateReq;
 import com.timevale.forward.facade.api.request.MemberEvaluateModifyReq;
 import com.timevale.forward.facade.api.request.MemberWorkloadFillReq;
+import com.timevale.forward.facade.api.request.ProjectEvaluateReq;
 import com.timevale.forward.facade.api.result.ProjectEvaluateVO;
 import com.timevale.forward.facade.api.result.ProjectMemberEvaluateVO;
 import com.timevale.forward.facade.api.result.ProjectWorkloadChangeVO;
@@ -56,11 +58,11 @@ public interface ProjectEvaluateService {
     BaseResult<ProjectEvaluateVO> evaluateList(Long projectId);
 
     /**
-     * 更新
+     * 评估更新
      *
      * @param req 要求事情
      * @return {@link BaseResult}<{@link Boolean}>
      */
-    BaseResult<Boolean> evaluateUpdate(MemberEvaluateModifyReq req);
+    BaseResult<Boolean> evaluateUpdate(ProjectEvaluateReq req);
 
 }

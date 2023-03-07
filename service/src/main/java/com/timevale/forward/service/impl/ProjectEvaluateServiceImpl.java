@@ -10,9 +10,7 @@ import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMemberEvaluateMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectEvaluateService;
-import com.timevale.forward.facade.api.request.MemberEvaluateModifyReq;
-import com.timevale.forward.facade.api.request.MemberWorkloadFillReq;
-import com.timevale.forward.facade.api.request.MemberWorkloadModifyReq;
+import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.ProjectKindEnum;
 import com.timevale.forward.model.enums.ProjectLevelEnum;
@@ -25,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -114,13 +113,12 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.selectByIds(dimensionIdList);
         ImmutableMap<Long, EvaluateDimensionDO> dimensionMap = Maps.uniqueIndex(dimensionDOList, BaseDO::getId);
 
-        // 转换评价项，填充维度名称
-        List<ProjectEvaluateItemVO> evaluateItemVOList = ProjectEvaluateCopier.INSTANCE.do2vo(evaluateDOList);
-        for (ProjectEvaluateItemVO itemVO : evaluateItemVOList) {
-            EvaluateDimensionDO dimensionDO = dimensionMap.get(itemVO.getEvaluateDimensionId());
-            if (dimensionDO != null) {
-                itemVO.setDimensionName(dimensionDO.getDimensionName());
-            }
+        // 转换评价项，填充数据
+        List<ProjectEvaluateItemVO> evaluateItemVOList = new ArrayList<>();
+        for (ProjectEvaluateDO evaluateDO : evaluateDOList) {
+            EvaluateDimensionDO dimensionDO = dimensionMap.get(evaluateDO.getEvaluateDimensionId());
+            ProjectEvaluateItemVO evaluateItemVO = ProjectEvaluateCopier.INSTANCE.do2vo(evaluateDO, dimensionDO);
+            evaluateItemVOList.add(evaluateItemVO);
         }
 
         // PBG项目/基线项目，且项目等级≠B取PMO评价各维度分数之和；其他，取各维度评分数之和
@@ -130,8 +128,9 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         // 计算项目评价总分
         Integer scoresSum = evaluateItemVOList.stream()
                 .map(e -> selectPMO ? e.getPmoScores() : e.getScores())
+                .filter(ObjectUtil::isNotNull)
                 .reduce(Integer::sum)
-                .orElse(0);
+                .orElse(null);
 
         // 组装结果
         ProjectEvaluateVO result = new ProjectEvaluateVO();
@@ -142,8 +141,14 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     }
 
     @Override
-    public BaseResult<Boolean> evaluateUpdate(MemberEvaluateModifyReq req) {
+    public BaseResult<Boolean> evaluateUpdate(ProjectEvaluateReq req) {
+        List<EvaluateReq> evaluateReqList = req.getEvaluateReqList();
+        List<ProjectEvaluateDO> evaluateDOList = ProjectEvaluateCopier.INSTANCE.req2do(evaluateReqList);
 
-        return null;
+        for (ProjectEvaluateDO evaluateDO : evaluateDOList) {
+            evaluateMapper.update(evaluateDO);
+        }
+
+        return BaseResult.success(true);
     }
 }

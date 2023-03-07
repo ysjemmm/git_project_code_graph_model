@@ -15,7 +15,7 @@ import javax.validation.constraints.NotNull;
 @Getter
 @Setter
 @ApiModel("项目评价修改请求")
-public class EvaluateModifyReq extends ToString {
+public class EvaluateReq extends ToString {
 
     @ApiModelProperty("项目id")
     @NotNull(message = "项目id必填")

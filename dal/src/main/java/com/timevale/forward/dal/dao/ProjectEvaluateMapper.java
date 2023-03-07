@@ -13,4 +13,6 @@ public interface ProjectEvaluateMapper {
 
     List<ProjectEvaluateDO> selectByProjectId(@Param("projectId") Long projectId);
 
+    void update(ProjectEvaluateDO evaluateDO);
+
 }

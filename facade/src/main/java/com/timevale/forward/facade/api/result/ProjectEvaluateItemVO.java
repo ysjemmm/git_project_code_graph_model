@@ -33,4 +33,10 @@ public class ProjectEvaluateItemVO extends ToString {
 
     @ApiModelProperty("PMO评分描述")
     private String pmoScoresDesc;
+
+    @ApiModelProperty("评分上限")
+    private Integer scoresCeiling;
+
+    @ApiModelProperty("评分下限")
+    private Integer scoresFloor;
 }
