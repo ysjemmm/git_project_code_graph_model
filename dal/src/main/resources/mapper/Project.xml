@@ -272,6 +272,7 @@
                 and create_date &gt;= #{createDateLeft} and create_date &lt;= #{createDateRight}
             </if>
             <if test="conclusionDateLeft != null and conclusionDateRight != null">
+                and conclusion_date is not null
                 and conclusion_date &gt;= #{conclusionDateLeft} and conclusion_date &lt;= #{conclusionDateRight}
             </if>
             <if test="priorities!=null and priorities.size()>0">
