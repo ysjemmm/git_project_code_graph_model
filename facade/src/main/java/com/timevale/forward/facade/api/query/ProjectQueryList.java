@@ -57,12 +57,6 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("产品经理")
     private List<String> pds;
 
-    @ApiModelProperty("SR")
-    private List<String> srs;
-
-    @ApiModelProperty("项目类型: 0-空，1-PBG项目/基线项目，2-PBG项目/1-N客开项目，3-职能后台项目/流程IT中心项目")
-    private List<Integer> kinds;
-
     @ApiModelProperty("团队成员")
     private List<String> teamMembers;
 
@@ -149,6 +143,12 @@ public class ProjectQueryList extends QueryBase {
 
     @ApiModelProperty("是否只展示一级项目")
     private Boolean onlyFirstLevel = false;
+
+    @ApiModelProperty("SR")
+    private List<String> srs;
+
+    @ApiModelProperty("项目类型: 0-空，1-PBG项目/基线项目，2-PBG项目/1-N客开项目，3-职能后台项目/流程IT中心项目")
+    private Integer kind;
 
     @ApiModelProperty("结项时间")
     private Date conclusionDate;

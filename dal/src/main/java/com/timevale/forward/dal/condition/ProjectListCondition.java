@@ -227,7 +227,7 @@ public class ProjectListCondition {
     /**
      * 项目类型: 0-空，1-PBG项目/基线项目，2-PBG项目/1-N客开项目，3-职能后台项目/流程IT中心项目
      */
-    private List<Integer> kinds;
+    private Integer kind;
 
     /**
      * 结项时间

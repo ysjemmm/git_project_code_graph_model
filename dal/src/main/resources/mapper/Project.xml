@@ -252,7 +252,8 @@
                 </foreach>
             </if>
             <if test="id != null">and id = #{id}</if>
-            <if test="name != null and name != ''">and name like concat('%',#{name},'%')</if>
+            <if test="kind != null">and kind = #{kind},</if>
+            <if test="name != null and name != ''">and `name` like concat('%',#{name},'%')</if>
             <if test="customerDev != null">and customer_dev = #{customerDev}</if>
             <if test="planStartDateLeft != null and planStartDateRight != null">
                 and plan_start_date &gt;= #{planStartDateLeft} and plan_start_date &lt;= #{planStartDateRight}
@@ -339,12 +340,6 @@
             <if test="srs!=null and srs.size()>0">
                 and sr_id in
                 <foreach collection="srs" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-            <if test="kinds!=null and kinds.size()>0">
-                and kind in
-                <foreach collection="kinds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
