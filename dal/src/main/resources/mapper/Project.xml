@@ -252,7 +252,7 @@
                 </foreach>
             </if>
             <if test="id != null">and id = #{id}</if>
-            <if test="kind != null">and kind = #{kind},</if>
+            <if test="kind != null">and kind = #{kind}</if>
             <if test="name != null and name != ''">and `name` like concat('%',#{name},'%')</if>
             <if test="customerDev != null">and customer_dev = #{customerDev}</if>
             <if test="planStartDateLeft != null and planStartDateRight != null">
