@@ -36,7 +36,7 @@ public class ProjectVO extends ToString {
     @ApiModelProperty("项目性质:0产品研发项目,1技术优化项目,2日常迭代，3自研项目，4ISV项目")
     private Integer type;
 
-    @ApiModelProperty("项目状态:0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废")
+    @ApiModelProperty("项目状态：0待启动,5启动中，10规划中,15执行中,20研发中,25收尾中,30测试中,35运营中,40已发布,45已完成,50已结项，-10已暂停,-20已中止")
     private Integer status;
 
     @ApiModelProperty("项目计划开始时间")

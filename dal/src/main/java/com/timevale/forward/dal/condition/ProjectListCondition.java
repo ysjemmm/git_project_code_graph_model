@@ -229,10 +229,16 @@ public class ProjectListCondition {
      */
     private Integer kind;
 
+
     /**
-     * 结项时间
+     * 结项时间-开始
      */
-    private Date conclusionDate;
+    private Date conclusionDateLeft;
+
+    /**
+     * 结项时间-结束
+     */
+    private Date conclusionDateRight;
 
     private Integer pageNum = 1;
 

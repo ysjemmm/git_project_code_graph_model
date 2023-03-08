@@ -124,6 +124,8 @@ public interface ProjectCopier {
     @Mapping(target = "actualTestDateRight", expression = "java(DateUtil.getEndOfDay(query.getActualTestDateRight()))")
     @Mapping(target = "actualStartDateLeft", expression = "java(DateUtil.getStartOfDay(query.getActualStartDateLeft()))")
     @Mapping(target = "actualStartDateRight", expression = "java(DateUtil.getEndOfDay(query.getActualStartDateRight()))")
+    @Mapping(target = "conclusionDateLeft", expression = "java(DateUtil.getStartOfDay(query.getConclusionDateLeft()))")
+    @Mapping(target = "conclusionDateRight", expression = "java(DateUtil.getEndOfDay(query.getConclusionDateRight()))")
     ProjectListCondition convert(ProjectQueryList query);
 
     /**

@@ -271,6 +271,9 @@
             <if test="createDateLeft != null and createDateRight != null">
                 and create_date &gt;= #{createDateLeft} and create_date &lt;= #{createDateRight}
             </if>
+            <if test="conclusionDateLeft != null and conclusionDateRight != null">
+                and conclusion_date &gt;= #{conclusionDateLeft} and conclusion_date &lt;= #{conclusionDateRight}
+            </if>
             <if test="priorities!=null and priorities.size()>0">
                 and priority in
                 <foreach collection="priorities" item="item" separator="," open="(" close=")">

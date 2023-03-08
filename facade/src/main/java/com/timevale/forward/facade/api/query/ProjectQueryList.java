@@ -48,7 +48,7 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("内部项目类型: 0空, 1战略项目, 2LTC项目, 3PBG项目, 4CBG项目, 5管理后台项目")
     private List<Integer> innerTypes;
 
-    @ApiModelProperty("项目状态:0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废")
+    @ApiModelProperty("0待启动,5启动中，10规划中,15执行中,20研发中,25收尾中,30测试中,35运营中,40已发布,45已完成,50已结项，-10已暂停,-20已中止")
     private List<Integer> status;
 
     @ApiModelProperty("项目经理")
@@ -150,6 +150,9 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("项目类型: 0-空，1-PBG项目/基线项目，2-PBG项目/1-N客开项目，3-职能后台项目/流程IT中心项目")
     private Integer kind;
 
-    @ApiModelProperty("结项时间")
-    private Date conclusionDate;
+    @ApiModelProperty("结项时间-开始")
+    private Date conclusionDateLeft;
+
+    @ApiModelProperty("结项时间-结束")
+    private Date conclusionDateRight;
 }
