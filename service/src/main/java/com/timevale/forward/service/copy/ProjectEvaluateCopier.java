@@ -1,13 +1,19 @@
 package com.timevale.forward.service.copy;
 
 import com.timevale.forward.dal.entity.EvaluateDimensionDO;
+import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectEvaluateDO;
 import com.timevale.forward.facade.api.request.EvaluateReq;
+import com.timevale.forward.facade.api.result.ConclusionFormVO;
 import com.timevale.forward.facade.api.result.ProjectEvaluateItemVO;
 import com.timevale.forward.model.enums.ProjectKindEnum;
 import com.timevale.forward.model.enums.ProjectLevelEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.ProjectTypeEnum;
+import com.timevale.forward.service.integration.epeius.model.ConclusionVar;
+import com.timevale.forward.service.integration.epeius.model.ProjectEvaluateVar;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import java.util.Collection;
@@ -23,6 +29,7 @@ import java.util.List;
                 ProjectKindEnum.class,
                 ProjectTypeEnum.class,
                 ProjectLevelEnum.class,
+                ProjectStatusEnum.class,
         }
 )
 public interface ProjectEvaluateCopier {
@@ -36,6 +43,21 @@ public interface ProjectEvaluateCopier {
 
     List<ProjectEvaluateDO> req2do(Collection<EvaluateReq> evaluateReqs);
 
-    ProjectEvaluateItemVO do2vo(ProjectEvaluateDO evaluateDO, EvaluateDimensionDO dimensionDO);
+    ProjectEvaluateItemVO do2item(ProjectEvaluateDO evaluateDO, EvaluateDimensionDO dimensionDO);
 
+
+    @Mapping(target = "kindName", expression = "java(ProjectKindEnum.getTextByCode(projectDO.getKind()))")
+    @Mapping(target = "typeName", expression = "java(ProjectTypeEnum.getTextByCode(projectDO.getType()))")
+    @Mapping(target = "levelName", expression = "java(ProjectLevelEnum.getTextByCode(projectDO.getLevel()))")
+    @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectDO.getStatus()))")
+    ConclusionFormVO do2vo(ProjectDO projectDO);
+
+    @Mapping(target = "projectName", source = "name")
+    @Mapping(target = "kindName", expression = "java(ProjectKindEnum.getTextByCode(projectDO.getKind()))")
+    @Mapping(target = "typeName", expression = "java(ProjectTypeEnum.getTextByCode(projectDO.getType()))")
+    @Mapping(target = "levelName", expression = "java(ProjectLevelEnum.getTextByCode(projectDO.getLevel()))")
+    @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectDO.getStatus()))")
+    ConclusionVar do2var(ProjectDO projectDO);
+
+    ProjectEvaluateVar do2var(ProjectEvaluateDO evaluateDO, EvaluateDimensionDO dimensionDO);
 }

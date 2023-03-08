@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 
 
@@ -26,11 +25,14 @@ public class ConclusionFormVO extends ToString {
     @ApiModelProperty("项目名称")
     private String name;
 
+    @ApiModelProperty("项目类型")
+    private String kindName;
+
     @ApiModelProperty("项目性质")
     private String typeName;
 
-    @ApiModelProperty("项目等级：0普通，1重点，2S级别，3A级别，4B级别")
-    private Integer level;
+    @ApiModelProperty("项目等级")
+    private String levelName;
 
     @ApiModelProperty("项目状态")
     private String statusName;
@@ -39,9 +41,9 @@ public class ConclusionFormVO extends ToString {
     private BigDecimal planWorkloadSum;
 
     @ApiModelProperty("工作量(计算积分)")
-    private BigDecimal workloadPointsSum;
+    private BigDecimal pointsWorkloadSum;
 
     @ApiModelProperty("评价列表")
-    private List<EvaluateVO> evaluateList;
+    private List<ProjectEvaluateItemVO> evaluateItemVOList;
 
 }

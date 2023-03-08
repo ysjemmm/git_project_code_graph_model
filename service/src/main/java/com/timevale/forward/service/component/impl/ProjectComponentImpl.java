@@ -15,6 +15,7 @@ import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -81,6 +82,9 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Resource
     private ProjectLogComponent projectLogComponent;
+
+    @Resource
+    private CommonConfig config;
 
     @Override
     public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -533,6 +537,11 @@ public class ProjectComponentImpl implements ProjectComponent {
         projectMapper.deleteChildren(parent.getParentIds().length(), "^" + child.getParentIds());
         projectLogComponent.addDeleteChildLog(parent.getId(), child.getName());
         projectLogComponent.addDetachParentLog(child.getId(), parent.getName());
+    }
+
+    @Override
+    public String getUrl(Long projectId) {
+        return String.format(config.getCommonViewUrl(),TabEnum.PROJECT_MANAGEMENT.getText(), projectId);
     }
 
     private List<ProductLineAnalyseVO> analyse(ProjectListCondition condition) {

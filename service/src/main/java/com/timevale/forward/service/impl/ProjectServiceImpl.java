@@ -1,10 +1,12 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
@@ -164,9 +166,11 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private ProjectEvaluateMapper evaluateMapper;
     @Resource
-    private EvaluateDimensionMapper evaluateDimensionMapper;
+    private EvaluateDimensionMapper dimensionMapper;
     @Resource
     private ProjectMemberEvaluateMapper memberEvaluateMapper;
+    @Resource
+    private WorkFlowComponent workFlowComponent;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -366,7 +370,7 @@ public class ProjectServiceImpl implements ProjectService {
         personComponent.add(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         // 添加对应的项目评价
-        List<EvaluateDimensionDO> dimensionDOList = evaluateDimensionMapper.selectByKindDate(projectDO.getKind(), new Date());
+        List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.selectByKindDate(projectDO.getKind(), new Date());
         List<Long> dimensionIdList = dimensionDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
         if (CollUtil.isNotEmpty(dimensionIdList)) {
             evaluateMapper.batchInsert(projectDO.getId(), dimensionIdList);
@@ -1236,12 +1240,68 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public BaseResult<Boolean> conclusion(Long projectId) {
-        return null;
+        // conclusionForm(projectId);
+
+        // 发起结项流程
+        String flowId = workFlowComponent.conclusionFlow(projectId);
+
+        return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<ConclusionFormVO> conclusionForm(Long projectId) {
-        return null;
+        // 校验结项
+        ProjectDO projectDO = projectMapper.get(projectId);
+        AssertUtil.notNull(projectDO,"项目不存在");
+
+        // 项目状态是否为已发布
+        AssertUtil.checkState(ObjectUtil.equal(ProjectStatusEnum.RELEASED.getCode(), projectDO.getStatus()),
+                "只有已发布的项目才可以发起结项");
+
+        // 需要校验项目评价必填内容是否完成、
+        List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.selectByProjectId(projectId);
+        AssertUtil.checkState(evaluateDOList.stream().anyMatch(e -> ObjectUtil.isNull(e.getScores())),
+                "项目评价未完成，无法发起结项");
+
+        // 纳入积分员工的实际工作量是否录入完成，个人评价是否必填
+        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
+        AssertUtil.checkState(memberEvaluateDOList.stream()
+                        .filter(ProjectMemberEvaluateDO::getIncludeStat)
+                        .anyMatch(e->ObjectUtil.isNull(e.getActualWorkload())),
+                "存在纳入积分统计的项目成员未录入实际工作量，无法发起结项");
+        AssertUtil.checkState(memberEvaluateDOList.stream().anyMatch(e -> ObjectUtil.isNull(e.getEvaluateGrade())),
+                "存在项目成员评价等级");
+
+        // 计划工作量变更、发布正式计划时间延迟审批流程是否审批完成。
+
+
+        // 计划总工作量
+        BigDecimal planWorkloadSum = memberEvaluateDOList.stream()
+                .map(ProjectMemberEvaluateDO::getPlanWorkload)
+                .filter(ObjectUtil::isNotNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 工作量(计算积分)
+        BigDecimal pointsWorkloadSum = memberEvaluateDOList.stream()
+                .filter(ProjectMemberEvaluateDO::getIncludeStat)
+                .map(ProjectMemberEvaluateDO::getPlanWorkload)
+                .filter(ObjectUtil::isNotNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 评价列表
+        List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.selectByKind(projectDO.getKind());
+        ImmutableMap<Long, EvaluateDimensionDO> dimensionDOMap = Maps.uniqueIndex(dimensionDOList, BaseDO::getId);
+        List<ProjectEvaluateItemVO> evaluateItemVOList = evaluateDOList.stream()
+                .map(e -> ProjectEvaluateCopier.INSTANCE.do2item(e, dimensionDOMap.get(e.getEvaluateDimensionId())))
+                .collect(Collectors.toList());
+
+        // 数据填充
+        ConclusionFormVO conclusionFormVO = ProjectEvaluateCopier.INSTANCE.do2vo(projectDO);
+        conclusionFormVO.setPlanWorkloadSum(planWorkloadSum);
+        conclusionFormVO.setPointsWorkloadSum(pointsWorkloadSum);
+        conclusionFormVO.setEvaluateItemVOList(evaluateItemVOList);
+
+        return BaseResult.success(conclusionFormVO);
     }
 
 

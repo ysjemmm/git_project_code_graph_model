@@ -16,9 +16,6 @@ import lombok.Setter;
 @ApiModel("项目结项申请单详情")
 public class EvaluateVO extends ToString {
 
-    @ApiModelProperty("评价id")
-    private Long id;
-
     @ApiModelProperty("项目维度名称")
     private String dimensionName;
 

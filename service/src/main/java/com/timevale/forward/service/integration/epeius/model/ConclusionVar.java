@@ -26,7 +26,7 @@ public class ConclusionVar {
 
     private String statusName;
 
-    private String principalId;
+    private List<String> principalIdList;
 
     private String srId;
 

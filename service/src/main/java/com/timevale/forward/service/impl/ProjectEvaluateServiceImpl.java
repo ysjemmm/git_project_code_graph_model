@@ -125,12 +125,9 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         ImmutableMap<Long, EvaluateDimensionDO> dimensionMap = Maps.uniqueIndex(dimensionDOList, BaseDO::getId);
 
         // 转换评价项，填充数据
-        List<ProjectEvaluateItemVO> evaluateItemVOList = new ArrayList<>();
-        for (ProjectEvaluateDO evaluateDO : evaluateDOList) {
-            EvaluateDimensionDO dimensionDO = dimensionMap.get(evaluateDO.getEvaluateDimensionId());
-            ProjectEvaluateItemVO evaluateItemVO = ProjectEvaluateCopier.INSTANCE.do2vo(evaluateDO, dimensionDO);
-            evaluateItemVOList.add(evaluateItemVO);
-        }
+        List<ProjectEvaluateItemVO> evaluateItemVOList = evaluateDOList.stream()
+                .map(e -> ProjectEvaluateCopier.INSTANCE.do2item(e, dimensionMap.get(e.getEvaluateDimensionId())))
+                .collect(Collectors.toList());
 
         // PBG项目/基线项目，且项目等级≠B取PMO评价各维度分数之和；其他，取各维度评分数之和
         boolean selectPMO = ObjectUtil.equals(ProjectKindEnum.PBG_BASE.getCode(), projectDO.getKind())

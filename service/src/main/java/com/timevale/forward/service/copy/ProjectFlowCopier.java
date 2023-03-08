@@ -106,13 +106,4 @@ public interface ProjectFlowCopier {
     @Mapping(target = "modifyManId", source = "docModifyManId")
     @Mapping(target = "modifyMan", source = "docModifyMan")
     ProjectFlowDocumentVO convert2Document(ProjectFlowDO projectFlowDO);
-
-    @Mapping(target = "projectName", source = "name")
-    @Mapping(target = "kindName", expression = "java(ProjectKindEnum.getTextByCode(projectDO.getKind()))")
-    @Mapping(target = "typeName", expression = "java(ProjectTypeEnum.getTextByCode(projectDO.getType()))")
-    @Mapping(target = "levelName", expression = "java(ProjectLevelEnum.getTextByCode(projectDO.getLevel()))")
-    @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectDO.getStatus()))")
-    ConclusionVar do2var(ProjectDO projectDO);
-
-    ProjectEvaluateVar do2var(ProjectEvaluateDO evaluateDO, EvaluateDimensionDO dimensionDO);
 }
