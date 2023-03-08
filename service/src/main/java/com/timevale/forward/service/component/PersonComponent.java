@@ -15,12 +15,14 @@ public interface PersonComponent {
     void add(List<PersonAddReq> list, Long mainId, Integer type);
 
     /**
+     * 添加
      *
-     * @param list 人员列表
-     * @param mainId 所属主体id
-     * @param type 所属主体类型
+     * @param list        列表
+     * @param mainId      主要id
+     * @param type        类型
+     * @param personLevel 人水平
      */
-    void add(List<PersonAddReq> list, Long mainId, Integer type, Integer level);
+    void add(List<PersonAddReq> list, Long mainId, Integer type, Integer personLevel);
 
 
     /**
@@ -63,6 +65,15 @@ public interface PersonComponent {
      */
     List<PersonDO> addIfNotExisted(List<PersonAddReq> list, Long mainId, Integer type);
 
+    /**
+     *
+     * @param list        列表
+     * @param mainId      主要id
+     * @param type        类型
+     * @param personLevel 人水平
+     * @return {@link List}<{@link PersonDO}>
+     */
     List<PersonDO> addIfNotExisted(List<PersonAddReq> list, Long mainId, Integer type, Integer personLevel);
 
+    void duplicateRemove(List<PersonAddReq> list, PersonAddReq duplicate);
 }

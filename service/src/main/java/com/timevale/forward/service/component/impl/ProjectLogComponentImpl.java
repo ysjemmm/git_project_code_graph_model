@@ -340,7 +340,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 members,
                 projectId,
                 BizChangeLogFieldEnum.PJ_MEMBER.getText(),
-                ButtonActionEnum.DELETE.getText());
+                ButtonActionEnum.APPEND.getText());
     }
 
     @Override
@@ -353,7 +353,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 members,
                 projectId,
                 BizChangeLogFieldEnum.PJ_MEMBER.getText(),
-                ButtonActionEnum.APPEND.getText());
+                ButtonActionEnum.DELETE.getText());
     }
 
     private BizChangeLogDO createLog(Long mainId, String field, String oldValue, String newValue, String action) {

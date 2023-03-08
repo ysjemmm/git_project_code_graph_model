@@ -14,6 +14,7 @@ import com.timevale.forward.facade.api.request.DevopsReq;
 import com.timevale.forward.facade.api.request.DevopsUpdateStatReq;
 import com.timevale.forward.facade.api.result.DevopsAppVO;
 import com.timevale.forward.facade.api.result.DevopsProjectVO;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.DevopsAppCopier;
 import com.timevale.forward.service.integration.publish.PublishPlatformClient;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -87,7 +88,7 @@ public class DevopsAppServiceImpl implements DevopsAppService {
     @Override
     public BaseResult<PageQueryResult<DevopsAppVO>> listDevopsApps(DevopsAppQueryList appQueryList) {
         // 分页查询
-        PageHelper.startPage(appQueryList.pageNum, appQueryList.pageSize);
+        PageHelper.startPage(appQueryList.pageNum, appQueryList.pageSize, CommonConstant.CREATE_ORDER_BY);
         List<DevopsAppDO> appDOList = devopsAppMapper.selectByMainId(appQueryList.getMainId());
 
         // 数据转换

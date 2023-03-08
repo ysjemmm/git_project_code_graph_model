@@ -16,6 +16,7 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectMilestoneService;
 import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
+import com.timevale.forward.facade.api.query.ProjectPageQuery;
 import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
 import com.timevale.forward.facade.api.query.ProjectQueryList;
 import com.timevale.forward.facade.api.request.*;
@@ -396,12 +397,10 @@ public class ProjectServiceImpl implements ProjectService {
         // 获取项目id
         Long projectId = projectDO.getId();
 
-        // 核心成员, 避免pm重复
+        // 核心成员
         List<PersonAddReq> teamMembers = projectInnerAddReq.getTeamMembers();
-        PersonAddReq pm = projectInnerAddReq.getPm();
-        teamMembers.removeIf(e -> Objects.equals(e.getUserId(), pm.getUserId()));
-        teamMembers.add(projectInnerAddReq.getPm());
-        personComponent.add(teamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        personComponent.duplicateRemove(teamMembers, projectInnerAddReq.getPm());
+        personComponent.add(teamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
 
         // 扩展成员
         List<PersonAddReq> extTeamMembers = projectInnerAddReq.getExtTeamMembers();
@@ -563,14 +562,15 @@ public class ProjectServiceImpl implements ProjectService {
         List<PersonAddReq> extTeamMembers = projectSimpleModifyReq.getExtTeamMembers();
         if (extTeamMembers != null) {
             // 旧版成员
-            List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
+            List<PersonDO> allMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            List<PersonDO> levelMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(),PersonLevelEnum.EXTENSION.getCode());
 
             String addMembers = extTeamMembers.stream()
                     .map(PersonAddReq::getUserName)
-                    .filter(e -> oldMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
+                    .filter(e -> allMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
 
-            String deleteMembers = oldMembers.stream()
+            String deleteMembers = levelMembers.stream()
                     .map(PersonDO::getUserName)
                     .filter(e -> extTeamMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
@@ -581,18 +581,24 @@ public class ProjectServiceImpl implements ProjectService {
 
             // 实际更新落库
             personComponent.update(extTeamMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
+
+            // 更新成员等级
+            List<String> extMemberIdList = extTeamMembers.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+            if (CollUtil.isNotEmpty(extMemberIdList)) {
+                personMapper.updateLevel(extMemberIdList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
+            }
+
         }
 
         // 核心成员
         PersonAddReq pm = projectSimpleModifyReq.getPm();
         List<PersonAddReq> newMembers = projectSimpleModifyReq.getTeamMembers();
         if (newMembers != null || pm != null) {
-            // 旧版成员
-            List<PersonDO> oldMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
-
+            List<PersonDO> levelMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
             // 成员更新日志
             if (newMembers == null) {
-                newMembers = oldMembers.stream()
+                // 旧版成员
+                newMembers = levelMembers.stream()
                         .map(PersonCopier.INSTANCE::convert)
                         .collect(Collectors.toList());
             } else if (pm == null){
@@ -600,17 +606,17 @@ public class ProjectServiceImpl implements ProjectService {
                 pm.setUserId(oldProjectDO.getPmId());
                 pm.setUserName(oldProjectDO.getPm());
             }
-            newMembers.remove(pm);
-            newMembers.add(pm);
+            personComponent.duplicateRemove(newMembers, pm);
 
             List<PersonAddReq> finalNewMembers = newMembers;
 
+            List<PersonDO> allMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
             String addMembers = finalNewMembers.stream()
                     .map(PersonAddReq::getUserName)
-                    .filter(e -> oldMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
+                    .filter(e -> allMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
 
-            String deleteMembers = oldMembers.stream()
+            String deleteMembers = levelMembers.stream()
                     .map(PersonDO::getUserName)
                     .filter(e -> finalNewMembers.stream().noneMatch(x -> Objects.equals(e, x.getUserName())))
                     .collect(Collectors.joining(","));
@@ -620,7 +626,13 @@ public class ProjectServiceImpl implements ProjectService {
             projectLogComponent.addDeleteProjectMemberLog(projectId, deleteMembers);
 
             // 实际更新落库
-            personComponent.update(finalNewMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+            personComponent.update(newMembers, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
+
+            // 更新成员等级
+            List<String> coreMemberIdList = newMembers.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+            if (CollUtil.isNotEmpty(coreMemberIdList)) {
+                personMapper.updateLevel(coreMemberIdList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
+            }
         }
 
         // 项目日志
@@ -817,7 +829,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<PersonVO> extTeamMemberVOList = PersonCopier.INSTANCE.transform(extTeamMemberDOList);
 
         projectInnerDetailVO.setTeamMember(coreTeamMemberVOList);
-        projectInnerDetailVO.setExtTeamMember(extTeamMemberVOList);
+        projectInnerDetailVO.setExtTeamMembers(extTeamMemberVOList);
 
         // 上级项目信息
         Long parentId = projectDO.getParentId();
@@ -1098,7 +1110,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public BaseResult<List<ProjectProductLineVO>> getByName(String name) {
         String likeName = StringUtil.toLikeStr(name);
-        List<ProjectDO> projectDOList = projectMapper.getByLikeName(likeName);
+        List<ProjectDO> projectDOList = projectMapper.getByLikeName(likeName, ProjectCategoryEnum.PRODUCT_PROJECT.getCode());
         projectDOList = projectDOList.stream()
                 .filter(a -> !ProjectStatusEnum.INVALID.getCode().equals(a.getStatus())
                         && !ProjectStatusEnum.RELEASED.getCode().equals(a.getStatus()))
@@ -1185,6 +1197,21 @@ public class ProjectServiceImpl implements ProjectService {
 
         innerProjectStatusUpdateComponent.updateFromProject(projectDO);
         return BaseResult.success();
+    }
+
+    @Override
+    public BaseResult<PageQueryResult<ProjectSimpleVO>> pageAll(ProjectPageQuery query) {
+        PageHelper.startPage(query.pageNum, query.pageSize);
+        List<ProjectDO> doList = projectMapper.getByLikeName(query.getName(), null);
+
+        List<ProjectSimpleVO> simpleVOList = ProjectCopier.INSTANCE.do2svo(doList);
+
+        // 分页数据
+        PageQueryResult<ProjectSimpleVO> result = new PageQueryResult<>();
+        PageInfo<ProjectDO> pageInfo = new PageInfo<>(doList);
+        result.setResultList(simpleVOList);
+        ResultUtil.fillPageInfo(result, pageInfo);
+        return BaseResult.success(result);
     }
 
 

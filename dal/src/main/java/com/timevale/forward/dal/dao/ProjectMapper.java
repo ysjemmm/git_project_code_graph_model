@@ -169,7 +169,7 @@ public interface ProjectMapper {
      * @param name name
      * @return 产品需求DO
      */
-    List<ProjectDO> getByLikeName(@Param("name") String name);
+    List<ProjectDO> getByLikeName(@Param("name") String name, @Param("category") Integer category);
 
     Page<ProjectListDO> listChildren(ProjectListChildCondition condition);
 
