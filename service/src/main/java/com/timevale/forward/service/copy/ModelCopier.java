@@ -45,8 +45,9 @@ public interface ModelCopier {
     ModelDO convert(ModelModifyReq modelModifyReq);
 
     /**
+     * 转换
      *
-     * @param modelModifyReq modelModifyReq
+     * @param modelQueryList 模型查询列表
      * @return return
      */
     ModelCondition convert(ModelQueryList modelQueryList);

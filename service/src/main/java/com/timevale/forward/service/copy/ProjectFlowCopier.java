@@ -1,11 +1,18 @@
 package com.timevale.forward.service.copy;
 
 import com.alibaba.fastjson.JSONObject;
+import com.timevale.forward.dal.entity.EvaluateDimensionDO;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectEvaluateDO;
 import com.timevale.forward.dal.entity.ProjectFlowDO;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ProjectFlowAddReq;
 import com.timevale.forward.facade.api.result.ProjectFlowDetailVO;
 import com.timevale.forward.facade.api.result.ProjectFlowDocumentVO;
+import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.integration.epeius.model.ConclusionVar;
+import com.timevale.forward.service.integration.epeius.model.ProjectEvaluateVar;
+import com.timevale.forward.service.utils.date.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.mapstruct.Mapper;
@@ -14,10 +21,25 @@ import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 import org.springframework.util.CollectionUtils;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Mapper
+@Mapper(
+        imports = {
+                ProjectCategoryEnum.class,
+                ProjectStageEnum.class,
+                ProjectInnerTypeEnum.class,
+                ProjectStatusEnum.class,
+                ProjectLevelEnum.class,
+                ProjectTypeEnum.class,
+                PriorityEnum.class,
+                BigDecimal.class,
+                StringUtils.class,
+                ProjectKindEnum.class,
+                DateUtil.class
+        }
+)
 public interface ProjectFlowCopier {
 
     ProjectFlowCopier INSTANCE = Mappers.getMapper(ProjectFlowCopier.class);
@@ -84,4 +106,13 @@ public interface ProjectFlowCopier {
     @Mapping(target = "modifyManId", source = "docModifyManId")
     @Mapping(target = "modifyMan", source = "docModifyMan")
     ProjectFlowDocumentVO convert2Document(ProjectFlowDO projectFlowDO);
+
+    @Mapping(target = "projectName", source = "name")
+    @Mapping(target = "kindName", expression = "java(ProjectKindEnum.getTextByCode(projectDO.getKind()))")
+    @Mapping(target = "typeName", expression = "java(ProjectTypeEnum.getTextByCode(projectDO.getType()))")
+    @Mapping(target = "levelName", expression = "java(ProjectLevelEnum.getTextByCode(projectDO.getLevel()))")
+    @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectDO.getStatus()))")
+    ConclusionVar do2var(ProjectDO projectDO);
+
+    ProjectEvaluateVar do2var(ProjectEvaluateDO evaluateDO, EvaluateDimensionDO dimensionDO);
 }

@@ -4,7 +4,8 @@
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectEvaluateDO">
         SELECT *
         FROM project_evaluate
-        WHERE is_deleted = false
+        WHERE project_id = #{projectId}
+          AND is_deleted = false
     </select>
 
     <update id="update">

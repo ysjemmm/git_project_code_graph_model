@@ -366,7 +366,7 @@ public class ProjectServiceImpl implements ProjectService {
         personComponent.add(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         // 添加对应的项目评价
-        List<EvaluateDimensionDO> dimensionDOList = evaluateDimensionMapper.selectByKind(projectDO.getKind(), new Date());
+        List<EvaluateDimensionDO> dimensionDOList = evaluateDimensionMapper.selectByKindDate(projectDO.getKind(), new Date());
         List<Long> dimensionIdList = dimensionDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
         if (CollUtil.isNotEmpty(dimensionIdList)) {
             evaluateMapper.batchInsert(projectDO.getId(), dimensionIdList);

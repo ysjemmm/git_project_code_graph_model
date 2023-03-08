@@ -17,6 +17,13 @@
         SELECT *
         FROM evaluate_dimension
         WHERE kind = #{kind}
+          AND is_deleted = false
+    </select>
+
+    <select id="selectByKindDate" resultType="com.timevale.forward.dal.entity.EvaluateDimensionDO">
+        SELECT *
+        FROM evaluate_dimension
+        WHERE kind = #{kind}
           AND effect_date &lt;= #{nowDate}
           AND is_deleted = false
     </select>
