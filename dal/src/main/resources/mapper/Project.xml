@@ -337,9 +337,6 @@
             <if test="onlyFirstLevel != null and onlyFirstLevel == true">
                 and parent_ids = concat(',', id, ',')
             </if>
-            <if test="conclusionDate != null">
-                and conclusion_date = #{conclusionDate}
-            </if>
             <if test="srs!=null and srs.size()>0">
                 and sr_id in
                 <foreach collection="srs" item="item" separator="," open="(" close=")">

@@ -229,7 +229,6 @@ public class ProjectListCondition {
      */
     private Integer kind;
 
-
     /**
      * 结项时间-开始
      */

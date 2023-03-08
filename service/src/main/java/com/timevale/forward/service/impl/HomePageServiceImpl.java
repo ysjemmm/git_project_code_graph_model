@@ -476,8 +476,10 @@ public class HomePageServiceImpl implements HomePageService {
         }
 
         List<TaskBoardDTO> filter = listTasksSuitDateRange(startDate, endDate, allMyStaffNameWithSelf);
+
         if (CollUtil.isNotEmpty(filter)) {
             List<HomePageSingleWorkTimeVO> result = new ArrayList<>();
+
             List<Long> filterIds = filter.stream().map(TaskBoardDTO::getId).collect(Collectors.toList());
             Map<Long, TaskBoardDTO> taskMap = filter.stream().collect(Collectors.toMap(TaskBoardDTO::getId, k -> k, (v1, v2) -> v2));
             Map<Long, Date> projectDateMap = filter.stream().collect(Collectors.toMap(TaskBoardDTO::getProjectId, TaskBoardDTO::getProjectPlanEndDate, (v1, v2) -> v2));
@@ -691,7 +693,7 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     private List<TaskBoardDTO> listTasksSuitDateRange(Date startDate, Date endDate, Collection<String> staffIds) {
-
+        // SQL 排除状态为 暂停、作废的任务
         List<TaskBoardDTO> taskBoardDTOList = taskMapper.getByDate(startDate, endDate, staffIds);
         Date current = new Date();
         taskBoardDTOList.forEach(a -> {

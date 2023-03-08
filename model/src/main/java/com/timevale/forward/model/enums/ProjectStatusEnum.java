@@ -38,6 +38,8 @@ public enum ProjectStatusEnum {
 
     COMPLETE(45, "已完成", false, true),
 
+    CONCLUSION(50, "已结项", false, true),
+
     SUSPEND(-10, "已暂停", false, false),
 
     INVALID(-20, "已中止", false, true);

@@ -156,6 +156,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             log.info("更新产品需求,没有找到产品需求");
             return;
         }
+
         List<ProductDemandDO> productDemands = productDemandMapper.selectByIdList(existProductDemandIds);
 
         Map<Long, Integer> statusMap = productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getStatus, (v1, v2) -> v2));
@@ -170,7 +171,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                 || ProjectStatusEnum.TESTING.getCode().equals(status)) {
             pdStatus = ProductDemandStatusEnum.PROGRESS.getCode();
             productDemandMapper.updateByIds(existProductDemandIds, pdStatus, false);
-        } else if (ProjectStatusEnum.RELEASED.getCode().equals(status)) {
+        } else if (ProjectStatusEnum.RELEASED.getCode().equals(status) || ProjectStatusEnum.CONCLUSION.equals(status)) {
             pdStatus = ProductDemandStatusEnum.ONLINE.getCode();
             productDemandMapper.updateByIds(existProductDemandIds, pdStatus, false);
         } else if (ProjectStatusEnum.INVALID.getCode().equals(status)) {
