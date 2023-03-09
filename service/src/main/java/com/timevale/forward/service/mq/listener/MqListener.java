@@ -5,23 +5,21 @@ import com.timevale.forward.model.enums.MessageTagEnum;
 import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.component.ProjectNodeFlowComponent;
 import com.timevale.forward.service.component.TrackEventComponent;
+import com.timevale.forward.service.component.WorkFlowComponent;
 import com.timevale.forward.service.component.impl.ProductDemandDescFlowComponent;
 import com.timevale.forward.service.mq.dto.WorkflowBody;
 import com.timevale.forward.service.mq.handler.MqMessageHandler;
 import com.timevale.framework.mq.client.consumer.Listener;
 import com.timevale.framework.mq.client.consumer.ReceiveResult;
 import com.timevale.framework.mq.client.producer.Msg;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author xingyun
@@ -30,16 +28,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class MqListener implements Listener {
-
     @Resource
-    private ProjectFlowComponent projectFlowComponent;
-
+    private WorkFlowComponent workFlowComponent;
     @Resource
     private TrackEventComponent trackEventComponent;
-
+    @Resource
+    private ProjectFlowComponent projectFlowComponent;
     @Resource
     private ProjectNodeFlowComponent projectNodeFlowComponent;
-
     @Resource
     private ProductDemandDescFlowComponent productDemandDescFlowComponent;
 
@@ -47,14 +43,14 @@ public class MqListener implements Listener {
 
     @PostConstruct
     public void init() {
-        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TECHREVIEW.getText(), projectFlowComponent::updateFlowInfo);
-        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_DEMAND_INTERNAL_AUDIT.getText(),projectFlowComponent::updateFlowInfo);
-        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_DEMAND_CONSTRUE.getText(),projectFlowComponent::updateFlowInfo);
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_UED_AUDIT.getText(),projectFlowComponent::updateFlowInfo);
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TECHREVIEW.getText(), projectFlowComponent::updateFlowInfo);
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_DEMAND_CONSTRUE.getText(),projectFlowComponent::updateFlowInfo);
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_PROJECT_CONCLUSION.getText(), workFlowComponent::conclusionComplete);
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_DEMAND_INTERNAL_AUDIT.getText(),projectFlowComponent::updateFlowInfo);
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TRACKEVENTREVIEW.getText(), trackEventComponent::updateTrackEventInfo);
-        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TRACKEVENTREVIEW_NOTNOTICE.getText(), trackEventComponent::updateTrackEventInfo);
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_PUBLISHOFFICEREVIEW.getText(), projectNodeFlowComponent::updateProjectNodeInfo);
-        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_PRODUCT_DEMAND_CHANGE.getText(), productDemandDescFlowComponent::updateFlowInfo);
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TRACKEVENTREVIEW_NOTNOTICE.getText(), trackEventComponent::updateTrackEventInfo);
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_PRODUCT_DEMAND_CHANGE.getText(), productDemandDescFlowComponent::updateFlowInfo);
     }
 

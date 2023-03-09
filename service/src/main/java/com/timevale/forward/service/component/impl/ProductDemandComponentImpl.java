@@ -127,7 +127,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         // 变更后描述
         ProductDemandDescFlowDO latestDescFlow =
                 productDemandDescFlowMapper.getLastByProductDemandId(demandDO.getId());
-        if (latestDescFlow != null && FlowStatusEnum.AUDITING.getCode().equals(latestDescFlow.getStatus())) {
+        if (latestDescFlow != null && ForwardFlowStatusEnum.AUDITING.getCode().equals(latestDescFlow.getStatus())) {
             demandDetailVO.setChangeDesc(latestDescFlow.getChangeDesc());
         }
 

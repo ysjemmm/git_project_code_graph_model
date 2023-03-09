@@ -85,7 +85,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             throw new BaseBizRuntimeException("请填写流程表单数据后重新发起");
         }
         List<ProjectNodeFlowDO> projectNodeFlows = projectNodeFlowMapper.getByProjectId(projectNodeFlowDO.getProjectId());
-        boolean match = projectNodeFlows.stream().anyMatch(a -> com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
+        boolean match = projectNodeFlows.stream().anyMatch(a -> ForwardFlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
         if (match) {
             throw new BaseBizRuntimeException("存在正在审核中的审批流程,请撤销后重新发起");
         }
@@ -104,7 +104,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
                     && (StringUtils.isEmpty(projectNodeFlowDO.getPdId()) || Objects.equals(projectNodeFlowDO.getPdId(), userInfo.getId()))
                     ? FlowStageEnum.SECOND.getCode() : FlowStageEnum.FIRST.getCode();
             projectNodeFlowDO.setStage(stage);
-            projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode());
+            projectNodeFlowDO.setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
             projectNodeFlowDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
             projectNodeFlowDO.setCreateManId(userInfo.getId());
 
@@ -137,15 +137,15 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         }
         Map<String, Object> flowData = processInfo.getFlowData();
         if (FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
-            projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode());
+            projectNodeFlowDO.setStatus(ForwardFlowStatusEnum.REJECT.getCode());
             String rejectReason = flowData.get("rejectReason") == null ? StringUtils.EMPTY : String.valueOf(flowData.get("rejectReason"));
             projectNodeFlowDO.setReviewFailReason(rejectReason);
             projectNodeFlowDO.setFlowEndDate(new Date());
         } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
-            projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.WITHDRAW.getCode());
+            projectNodeFlowDO.setStatus(ForwardFlowStatusEnum.WITHDRAW.getCode());
             projectNodeFlowDO.setFlowEndDate(new Date());
         } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
-            projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode());
+            projectNodeFlowDO.setStatus(ForwardFlowStatusEnum.COMPLETE.getCode());
             projectNodeFlowDO.setFlowEndDate(new Date());
 
         }
@@ -216,7 +216,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
                 projectNodeFlowDO.setStage(FlowStageEnum.SECOND.getCode());
                 projectNodeFlowDO.setLastFlowId(projectNodeFlowDO.getFlowId());
                 projectNodeFlowDO.setFlowId(startFlow(projectNodeFlowDO, projectNodes));
-                projectNodeFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode());
+                projectNodeFlowDO.setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
                 projectNodeFlowDO.setReviewFailReason(StringUtils.EMPTY);
                 projectNodeFlowDO.setReviewFail(StringUtils.EMPTY);
                 projectNodeFlowDO.setReviewFailId(StringUtils.EMPTY);
@@ -338,7 +338,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
 
     private String startFlow(ProjectNodeFlowDO projectNodeFlowDO, List<ProjectNodeDO> projectNodes) {
         List<ProjectNodeFlowDO> projectNodeFlows = projectNodeFlowMapper.getByProjectId(projectNodeFlowDO.getProjectId());
-        long count = projectNodeFlows.stream().filter(a -> com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
+        long count = projectNodeFlows.stream().filter(a -> ForwardFlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
         StartProcessRequest start = new StartProcessRequest();
         Map<String, Object> variables = new HashMap<>();
         variables.put("projectNodes", JSONObject.toJSONString(projectNodes));

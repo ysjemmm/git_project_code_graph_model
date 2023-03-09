@@ -656,7 +656,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             List<Long> trackEventIds = productDemandTrackEventMapper.select(c).stream().map(ProductDemandTrackEventDO::getTrackEventId).collect(Collectors.toList());
             condition.setFilterTrackEventIds(trackEventIds);
         }
-        condition.setStatus(Lists.newArrayList(FlowStatusEnum.COMPLETE.getCode()));
+        condition.setStatus(Lists.newArrayList(ForwardFlowStatusEnum.COMPLETE.getCode()));
         PageHelper.startPage(trackEventQueryList.getPageNum(), trackEventQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         return trackEventComponent.list(condition);
     }

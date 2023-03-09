@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author jingchun
@@ -44,6 +46,14 @@ public class UserComponent {
             }
         }
         return false;
+    }
+
+    public List<String> getPmo(String groupId) {
+        List<BaseInfoResponse> baseInfoList = personClient.getBaseInfoByGroupId(groupId);
+        return baseInfoList.stream()
+                .filter(e -> ObjectUtil.equal(CommonConstant.PMO, e.getJobClassification()))
+                .map(BaseInfoResponse::getAccount)
+                .collect(Collectors.toList());
     }
 
 

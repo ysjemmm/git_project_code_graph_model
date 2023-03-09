@@ -822,7 +822,7 @@ public class ProjectServiceImpl implements ProjectService {
             ProjectNodeFlowDO oldFlowDo = projectNodeFlows.get(0);
             projectDetailVO.setPublishFlowId(oldFlowDo.getId());
             projectDetailVO.setPublishFlowStatus(oldFlowDo.getStatus());
-            long count = projectNodeFlows.stream().filter(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
+            long count = projectNodeFlows.stream().filter(a -> ForwardFlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
             projectDetailVO.setPublishChangeCount(count);
         }
 
@@ -1240,10 +1240,19 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public BaseResult<Boolean> conclusion(Long projectId) {
-        // conclusionForm(projectId);
+        // 校验参数
+        conclusionForm(projectId);
 
         // 发起结项流程
         String flowId = workFlowComponent.conclusionFlow(projectId);
+
+        // 添加工作流信息
+        ProjectFlowDO projectFlowDO = new ProjectFlowDO()
+                .setFlowId(flowId)
+                .setProjectId(projectId)
+                .setFlowType(FlowTypeEnum.CONCLUSION.getCode())
+                .setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
+        projectFlowMapper.insert(projectFlowDO);
 
         return BaseResult.success(true);
     }
@@ -1270,10 +1279,17 @@ public class ProjectServiceImpl implements ProjectService {
                         .anyMatch(e->ObjectUtil.isNull(e.getActualWorkload())),
                 "存在纳入积分统计的项目成员未录入实际工作量，无法发起结项");
         AssertUtil.checkState(memberEvaluateDOList.stream().anyMatch(e -> ObjectUtil.isNull(e.getEvaluateGrade())),
-                "存在项目成员评价等级");
+                "存在项目成员评价等级未录入，无法发起结项");
 
-        // 计划工作量变更、发布正式计划时间延迟审批流程是否审批完成。
+        // 是否存在审批中结项流程
+        List<ProjectFlowDO> workloadFlow = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
+        AssertUtil.checkState(workloadFlow.stream().anyMatch(e -> ObjectUtil.equal(ForwardFlowStatusEnum.AUDITING.getCode(), e.getStatus())),
+                "存在审批中的工作流变更流程，无法发起结项");
 
+        // 是否存在审批中结项流程
+        List<ProjectFlowDO> conclusionFlow = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
+        AssertUtil.checkState(conclusionFlow.stream().anyMatch(e -> ObjectUtil.equal(ForwardFlowStatusEnum.AUDITING.getCode(), e.getStatus())),
+                "结项流程正在审批中，请勿重复发起结项流程");
 
         // 计划总工作量
         BigDecimal planWorkloadSum = memberEvaluateDOList.stream()
@@ -1422,7 +1438,7 @@ public class ProjectServiceImpl implements ProjectService {
     private void checkPjEstablishPublishDateChange(ProjectDO oldProjectDO, Date pjEstablishPublishDate) {
         if (!Objects.equals(oldProjectDO.getPjEstablishPublishDate(), pjEstablishPublishDate)) {
             List<ProjectNodeFlowDO> projectNodeFlowDos = projectNodeFlowMapper.getByProjectId(oldProjectDO.getId());
-            boolean match = projectNodeFlowDos.stream().anyMatch(a -> FlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
+            boolean match = projectNodeFlowDos.stream().anyMatch(a -> ForwardFlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
             if (match) {
                 throw new BaseBizRuntimeException("发布正式节点流程处于审核中,不能修改立项预期上线时间");
             }
@@ -1431,7 +1447,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     private void checkAcceptBeforeUpdate(List<ProjectNodeDO> projectNodes, ProjectDO newProject) {
         if (YesOrNoEnum.NO.getCode().equals(newProject.getIsAcceptance())) {
-            List<Integer> status = Lists.newArrayList(FlowStatusEnum.AUDITING.getCode(), FlowStatusEnum.COMPLETE.getCode(), FlowStatusEnum.REJECT.getCode());
+            List<Integer> status = Lists.newArrayList(ForwardFlowStatusEnum.AUDITING.getCode(), ForwardFlowStatusEnum.COMPLETE.getCode(), ForwardFlowStatusEnum.REJECT.getCode());
             ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().status(status).projectId(newProject.getId()).build();
             List<ProjectAcceptanceDO> list = projectAcceptanceMapper.list(c);
             if (CollectionUtils.isNotEmpty(list)) {
@@ -1444,17 +1460,17 @@ public class ProjectServiceImpl implements ProjectService {
         if (released && YesOrNoEnum.YES.getCode().equals(newProject.getIsAcceptance())) {
             ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().projectId(newProject.getId()).build();
             List<ProjectAcceptanceDO> list = projectAcceptanceMapper.list(c);
-            boolean allWithdraw = list.stream().allMatch(a -> FlowStatusEnum.WITHDRAW.getCode().equals(a.getStatus()));
+            boolean allWithdraw = list.stream().allMatch(a -> ForwardFlowStatusEnum.WITHDRAW.getCode().equals(a.getStatus()));
             if (CollectionUtils.isEmpty(list) || allWithdraw) {
                 throw new BaseBizRuntimeException("您还没有发起项目验收,请验收通过后再发布");
             }
-            list = list.stream().filter(a -> !FlowStatusEnum.WITHDRAW.getCode().equals(a.getStatus())).collect(Collectors.toList());
+            list = list.stream().filter(a -> !ForwardFlowStatusEnum.WITHDRAW.getCode().equals(a.getStatus())).collect(Collectors.toList());
             Map<String, List<ProjectAcceptanceDO>> groupMap = list.stream().collect(Collectors.groupingBy(ProjectAcceptanceDO::getAcceptorId));
             groupMap.forEach((k, v) -> {
                 List<ProjectAcceptanceDO> order = v.stream().sorted(Comparator.comparing(ProjectAcceptanceDO::getCreateDate).reversed()).collect(Collectors.toList());
                 ProjectAcceptanceDO last = order.get(0);
                 //去除已撤回的验收,最新一条不是已通过 不能发布
-                if (FlowStatusEnum.AUDITING.getCode().equals(last.getStatus()) || FlowStatusEnum.REJECT.getCode().equals(last.getStatus())) {
+                if (ForwardFlowStatusEnum.AUDITING.getCode().equals(last.getStatus()) || ForwardFlowStatusEnum.REJECT.getCode().equals(last.getStatus())) {
                     throw new BaseBizRuntimeException("请确保所有验收人员验收通过后再发布");
                 }
             });
@@ -1475,7 +1491,7 @@ public class ProjectServiceImpl implements ProjectService {
         //找出可以发起审批的节点
         List<ProjectNodeDO> startFlowNodes = newProjectNodes.stream().filter(a -> ProjectNodeEnum.canStartFlow(a.getName())).collect(Collectors.toList());
         List<ProjectFlowDO> projectFlowDOList = projectFlowMapper.getByProjectId(id);
-        List<Integer> flowTypes = projectFlowDOList.stream().filter(a -> !FlowStatusEnum.PRE_EDIT.getCode().equals(a.getStatus()))
+        List<Integer> flowTypes = projectFlowDOList.stream().filter(a -> !ForwardFlowStatusEnum.PRE_EDIT.getCode().equals(a.getStatus()))
                 .map(ProjectFlowDO::getFlowType).collect(Collectors.toList());
         startFlowNodes.forEach(a -> {
             //有流程,实际时间不能修改

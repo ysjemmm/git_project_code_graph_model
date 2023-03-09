@@ -91,6 +91,14 @@ public interface InnerUserPersonClient {
      * @param groupId 部门id
      * @return 员工idList
      */
+    List<BaseInfoResponse> getBaseInfoByGroupId(String groupId);
+
+    /**
+     * 获取部门员工（不包含离职）
+     *
+     * @param groupId 部门id
+     * @return 员工idList
+     */
     List<String> getByGroupIdNew(String groupId);
 
     /**

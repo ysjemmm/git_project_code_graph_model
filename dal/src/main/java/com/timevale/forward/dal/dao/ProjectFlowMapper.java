@@ -2,6 +2,8 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.entity.ProjectFlowDO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -30,6 +32,8 @@ public interface ProjectFlowMapper {
      */
     List<ProjectFlowDO> getByProjectId(@Param("projectId") Long projectId);
 
+    @Select("SELECT * FROM project_flow WHERE flow_id = #{flowId} AND is_deleted = false")
+    ProjectFlowDO getByFlowId(@Param("flowId") String flowId);
 
     /**
      * 新增单条项目
@@ -38,6 +42,9 @@ public interface ProjectFlowMapper {
      * @return int
      */
     int update(ProjectFlowDO projectFlowDO);
+
+    @Update("UPDATE project_flow SET `status`=#{status} WHERE id=#{id} ")
+    void updateStatus(@Param("id")Long id, @Param("status")Integer status);
 
     /**
      * 根据项目id和流程类型获取

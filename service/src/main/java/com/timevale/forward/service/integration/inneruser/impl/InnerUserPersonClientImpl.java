@@ -1,9 +1,11 @@
 package com.timevale.forward.service.integration.inneruser.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.security.facade.api.RpcPersonService;
 import com.timevale.security.facade.request.AccountRequest;
 import com.timevale.security.facade.request.BatchGetStaffsRequest;
@@ -161,6 +163,22 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             return Lists.emptyList();
         } catch (Exception e) {
             log.error("调用内部用户中心失败 getAllStaffsByGroupId groupId: " + groupId + " error: " + e.getMessage(), e);
+        }
+        throw new BaseBizRuntimeException("调用内部用户中心失败! " + groupId);
+    }
+
+    @Override
+    public List<BaseInfoResponse> getBaseInfoByGroupId(String groupId) {
+        AssertUtil.checkState(StrUtil.isNotBlank(groupId), "部门id为空");
+        try {
+            GroupRequest groupRequest = new GroupRequest();
+            groupRequest.setGroupId(groupId);
+            BaseResult<List<BaseInfoResponse>> personInGroup = rpcPersonService.getByGroupIdNew(groupRequest);
+            if (personInGroup.ifSuccess()) {
+                return personInGroup.getData();
+            }
+        } catch (Exception e) {
+            log.error("调用内部用户中心失败 getByGroupIdNew groupId: " + groupId + " error: " + e.getMessage(), e);
         }
         throw new BaseBizRuntimeException("调用内部用户中心失败! " + groupId);
     }

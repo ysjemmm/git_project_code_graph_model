@@ -83,7 +83,7 @@ public class ProductDemandDescFlowComponent {
         AssertUtil.checkState(ProductDemandStatusEnum.PROGRESS.getCode().equals(productDemand.getStatus()),
                 "只有项目在进行中时才可以发起需求变更流程");
         ProductDemandDescFlowDO lastFlow = productDemandDescFlowMapper.getLastByProductDemandId(productDemand.getId());
-        if (lastFlow != null && com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode().equals(lastFlow.getStatus())) {
+        if (lastFlow != null && ForwardFlowStatusEnum.AUDITING.getCode().equals(lastFlow.getStatus())) {
             throw new BaseBizRuntimeException("该产品需求有正在审批中的方案调整流程，无法再次发起审批");
         }
         ProjectProductDemandDO projectProduct = projectProductDemandMapper.getByProductDemandId(productDemand.getId());
@@ -159,7 +159,7 @@ public class ProductDemandDescFlowComponent {
         }
         Map<String, Object> flowData = processInfo.getFlowData();
         if (FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
-            auditingFlow.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode());
+            auditingFlow.setStatus(ForwardFlowStatusEnum.REJECT.getCode());
             String rejectReason = flowData.get("rejectReason") == null ? StringUtils.EMPTY : String.valueOf(flowData.get("rejectReason"));
             auditingFlow.setReviewFailReason(rejectReason);
             if (FlowStageEnum.FIRST.getCode().equals(auditingFlow.getStage())) {
@@ -171,7 +171,7 @@ public class ProductDemandDescFlowComponent {
                 String newFlowId = startFlow(flowData, auditingFlow.getCreateManId());
                 ProductDemandDescFlowDO newFlow = ProductDemandDescFlowCopier.INSTANCE.clone(auditingFlow);
                 newFlow.setFlowId(newFlowId)
-                        .setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode())
+                        .setStatus(ForwardFlowStatusEnum.AUDITING.getCode())
                         .setLastFlowId(auditingFlow.getFlowId())
                         .setReviewFailReason(StringUtils.EMPTY)
                         .setStage(FlowStageEnum.SECOND.getCode());
@@ -189,9 +189,9 @@ public class ProductDemandDescFlowComponent {
                         ));
             }
         } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
-            auditingFlow.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.WITHDRAW.getCode());
+            auditingFlow.setStatus(ForwardFlowStatusEnum.WITHDRAW.getCode());
         } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
-            auditingFlow.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode());
+            auditingFlow.setStatus(ForwardFlowStatusEnum.COMPLETE.getCode());
             // 审批成功
             Integer count = productDemandDescRecordMapper.countByProductDemandId(auditingFlow.getProductDemandId());
             ProductDemandDO productDemand = productDemandMapper.get(auditingFlow.getProductDemandId());

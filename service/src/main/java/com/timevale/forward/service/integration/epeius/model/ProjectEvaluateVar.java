@@ -2,6 +2,7 @@ package com.timevale.forward.service.integration.epeius.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 /**
  * @author by YangXu
@@ -9,16 +10,22 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@Accessors(chain = true)
 public class ProjectEvaluateVar {
     /**
-     * 项目考核维度
+     * 项目考核维度id
+     */
+    private Long dimensionId;
+
+    /**
+     * 项目考核维度名称
      */
     private String dimensionName;
 
     /**
      * 评分
      */
-    private String scores;
+    private Integer scores;
 
     /**
      * 评分描述

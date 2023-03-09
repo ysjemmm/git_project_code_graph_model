@@ -52,6 +52,7 @@ public interface ProjectEvaluateCopier {
     @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectDO.getStatus()))")
     ConclusionFormVO do2vo(ProjectDO projectDO);
 
+    @Mapping(target = "projectId", source = "id")
     @Mapping(target = "projectName", source = "name")
     @Mapping(target = "kindName", expression = "java(ProjectKindEnum.getTextByCode(projectDO.getKind()))")
     @Mapping(target = "typeName", expression = "java(ProjectTypeEnum.getTextByCode(projectDO.getType()))")
@@ -59,5 +60,7 @@ public interface ProjectEvaluateCopier {
     @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectDO.getStatus()))")
     ConclusionVar do2var(ProjectDO projectDO);
 
+    @Mapping(target = "dimensionId", source = "dimensionDO.id")
     ProjectEvaluateVar do2var(ProjectEvaluateDO evaluateDO, EvaluateDimensionDO dimensionDO);
+
 }

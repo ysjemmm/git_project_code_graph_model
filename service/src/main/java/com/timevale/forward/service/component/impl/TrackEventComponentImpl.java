@@ -21,6 +21,7 @@ import com.timevale.forward.facade.api.request.FileAddReq;
 import com.timevale.forward.facade.api.request.TrackEventAddReq;
 import com.timevale.forward.facade.api.result.TrackEventVO;
 import com.timevale.forward.model.enums.EnvEnum;
+import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
 import com.timevale.forward.model.enums.PlatformTypeEnum;
 import com.timevale.forward.model.enums.TrackPropTypeEnum;
 import com.timevale.forward.service.component.TrackEventComponent;
@@ -82,7 +83,7 @@ public class TrackEventComponentImpl implements TrackEventComponent {
         List<TrackEventDO> list = trackEventMapper.list(condition);
         List<TrackEventVO> trackEventVOList = TrackEventCopier.INSTANCE.convert(list);
         trackEventVOList.forEach(a -> {
-            a.setStatusName(com.timevale.forward.model.enums.FlowStatusEnum.getTextByCode(a.getStatus()));
+            a.setStatusName(ForwardFlowStatusEnum.getTextByCode(a.getStatus()));
             a.setEnvNames(EnvEnum.getTextByCode(JSONObject.parseArray(a.getEnv(), Integer.class)));
             a.setPlatformNames(PlatformTypeEnum.getTextByCode(JSONObject.parseArray(a.getPlatform(), Integer.class)));
         });
@@ -100,7 +101,7 @@ public class TrackEventComponentImpl implements TrackEventComponent {
         List<TrackEventDO> list = trackEventMapper.list(condition);
         List<TrackEventVO> trackEventVOList = TrackEventCopier.INSTANCE.convert(list);
         trackEventVOList.forEach(a -> {
-            a.setStatusName(com.timevale.forward.model.enums.FlowStatusEnum.getTextByCode(a.getStatus()));
+            a.setStatusName(ForwardFlowStatusEnum.getTextByCode(a.getStatus()));
             a.setEnvNames(EnvEnum.getTextByCode(JSONObject.parseArray(a.getEnv(), Integer.class)));
             a.setPlatformNames(PlatformTypeEnum.getTextByCode(JSONObject.parseArray(a.getPlatform(), Integer.class)));
         });
@@ -123,14 +124,14 @@ public class TrackEventComponentImpl implements TrackEventComponent {
         }
         Map<String, Object> flowData = processInfo.getFlowData();
         if (FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
-            trackEventDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode());
+            trackEventDO.setStatus(ForwardFlowStatusEnum.REJECT.getCode());
             String rejectReason = flowData.get("rejectReason") == null ? StringUtils.EMPTY : String.valueOf(flowData.get("rejectReason"));
             trackEventDO.setFailReason(rejectReason);
         } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
-            trackEventDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.WITHDRAW.getCode());
+            trackEventDO.setStatus(ForwardFlowStatusEnum.WITHDRAW.getCode());
 
         } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
-            trackEventDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode());
+            trackEventDO.setStatus(ForwardFlowStatusEnum.COMPLETE.getCode());
             trackEventDO.setFailReason(StringUtils.EMPTY);
         }
         updateTrackEventProp(trackEventDO);
@@ -152,7 +153,7 @@ public class TrackEventComponentImpl implements TrackEventComponent {
         if (CollectionUtils.isEmpty(filterProps)) {
             return;
         }
-        if (com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode().equals(trackEventDO.getStatus())) {
+        if (ForwardFlowStatusEnum.COMPLETE.getCode().equals(trackEventDO.getStatus())) {
             //更新
             List<Long> filterPropIds = filterProps.stream().map(TrackPropDO::getId).collect(Collectors.toList());
             log.info("更新事件属性 trackEventId={},filterPropIds={}", trackEventDO.getId(), filterPropIds);
@@ -168,16 +169,16 @@ public class TrackEventComponentImpl implements TrackEventComponent {
                     .map(TrackEventPropDO::getTrackEventId).collect(Collectors.toList());
             if (CollectionUtils.isNotEmpty(otherTrackEventIds)) {
                 List<Integer> status = trackEventMapper.selectByIds(otherTrackEventIds).stream().map(TrackEventDO::getStatus).collect(Collectors.toList());
-                if (status.contains(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode())
-                        || status.contains(com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode())) {
+                if (status.contains(ForwardFlowStatusEnum.AUDITING.getCode())
+                        || status.contains(ForwardFlowStatusEnum.COMPLETE.getCode())) {
                     //当前属性关联其他事件
                     return;
                 }
             }
             //没有关联其他事件,更新为撤回或拒绝
-            if (com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode().equals(a.getStatus())) {
+            if (ForwardFlowStatusEnum.AUDITING.getCode().equals(a.getStatus())) {
                 log.info("更新事件属性 trackEventId={},propId={}", trackEventDO.getId(), a.getId());
-                a.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode());
+                a.setStatus(ForwardFlowStatusEnum.REJECT.getCode());
                 trackPropMapper.updateWithOutModifyMan(a);
             }
         });
@@ -220,13 +221,13 @@ public class TrackEventComponentImpl implements TrackEventComponent {
             trackPropDO.setDataType(a.getDataType());
             trackPropDO.setCnName(a.getCnName());
             trackPropDO.setEgName(a.getEgName());
-            if (a.getId() != null && com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode().equals(a.getStatus())) {
+            if (a.getId() != null && ForwardFlowStatusEnum.REJECT.getCode().equals(a.getStatus())) {
                 //审核不通过的属性重新提交,变成审核中
-                trackPropDO.setStatusName(com.timevale.forward.model.enums.FlowStatusEnum.getTextByCode(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode()));
-                a.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode());
+                trackPropDO.setStatusName(ForwardFlowStatusEnum.getTextByCode(ForwardFlowStatusEnum.AUDITING.getCode()));
+                a.setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
                 trackPropMapper.update(a);
             } else {
-                trackPropDO.setStatusName(com.timevale.forward.model.enums.FlowStatusEnum.getTextByCode(a.getStatus()));
+                trackPropDO.setStatusName(ForwardFlowStatusEnum.getTextByCode(a.getStatus()));
             }
             trackPropDO.setTypeName(TrackPropTypeEnum.getTextByCode(a.getType()));
             trackPropItemDOList.add(trackPropDO);
@@ -291,15 +292,15 @@ public class TrackEventComponentImpl implements TrackEventComponent {
                 trackPropDO.setDataType(a.getDataType());
                 trackPropDO.setCnName(a.getCnName());
                 trackPropDO.setEgName(a.getEgName());
-                if (a.getId() != null && com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode().equals(a.getStatus())) {
+                if (a.getId() != null && ForwardFlowStatusEnum.REJECT.getCode().equals(a.getStatus())) {
                     //审核不通过的属性重新提交,变成审核中
-                    trackPropDO.setStatusName(com.timevale.forward.model.enums.FlowStatusEnum.getTextByCode(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode()));
-                    a.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.AUDITING.getCode());
+                    trackPropDO.setStatusName(ForwardFlowStatusEnum.getTextByCode(ForwardFlowStatusEnum.AUDITING.getCode()));
+                    a.setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
                     a.setModifyManId(userInfo.getId());
                     a.setModifyMan(userInfo.getAlias() + "-" + userInfo.getName());
                     trackPropMapper.updateNotIC(a);
                 } else {
-                    trackPropDO.setStatusName(com.timevale.forward.model.enums.FlowStatusEnum.getTextByCode(a.getStatus()));
+                    trackPropDO.setStatusName(ForwardFlowStatusEnum.getTextByCode(a.getStatus()));
                 }
                 trackPropDO.setTypeName(TrackPropTypeEnum.getTextByCode(a.getType()));
                 trackPropItemDOList.add(trackPropDO);

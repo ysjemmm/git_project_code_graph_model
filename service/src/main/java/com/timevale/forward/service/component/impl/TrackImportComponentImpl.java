@@ -584,7 +584,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
         egNameList = egNameList.stream().distinct().collect(Collectors.toList());
 
         // 状态为审核中和审核通过
-        List<Integer> status = Lists.newArrayList(FlowStatusEnum.AUDITING.getCode(), FlowStatusEnum.COMPLETE.getCode());
+        List<Integer> status = Lists.newArrayList(ForwardFlowStatusEnum.AUDITING.getCode(), ForwardFlowStatusEnum.COMPLETE.getCode());
 
         // 查询原有中文名数据
         Map<String, List<TrackPropDO>> cnNameGroup = new HashMap<>();
@@ -710,7 +710,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
                     trackPropDO.setEgName(propNameEn);
                     trackPropDO.setDataType(dataType);
                     trackPropDO.setType(TrackPropTypeEnum.NEW.getCode());
-                    trackPropDO.setStatus(FlowStatusEnum.AUDITING.getCode());
+                    trackPropDO.setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
                     trackPropDO.setCreateMan(userInfo.getAlias() + "-" + userInfo.getName());
                     trackPropDO.setCreateManId(userInfo.getId());
                     newTrackPropSet.add(trackPropDO);
@@ -946,7 +946,7 @@ public class TrackImportComponentImpl implements TrackImportComponent {
             trackEventDO.setFullCnName(e.getFullNameCn());
             trackEventDO.setTrackMapId(e.getTrackMapId());
             trackEventDO.setTouchMoment(e.getTouchMoment());
-            trackEventDO.setStatus(FlowStatusEnum.AUDITING.getCode());
+            trackEventDO.setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
             trackEventDO.setApiName(StrUtil.emptyIfNull(e.getApiName()));
             trackEventDO.setEnv(JSONObject.toJSONString(e.getEnvList()));
             trackEventDO.setExplanation(StrUtil.emptyIfNull(e.getExplanation()));

@@ -13,6 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 public class ConclusionVar {
+    private Long projectId;
 
     private String projectName;
 

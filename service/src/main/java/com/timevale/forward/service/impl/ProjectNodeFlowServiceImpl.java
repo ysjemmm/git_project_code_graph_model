@@ -13,7 +13,7 @@ import com.timevale.forward.facade.api.request.ProjectNodeFlowCheckReq;
 import com.timevale.forward.facade.api.result.ProjectNodeDelayVO;
 import com.timevale.forward.facade.api.result.ProjectNodeFlowDetailVO;
 import com.timevale.forward.model.enums.FlowStageEnum;
-import com.timevale.forward.model.enums.FlowStatusEnum;
+import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.service.component.ProjectNodeFlowComponent;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -74,7 +74,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
         }
         ProjectNodeFlowDO currentFlowDo = projectFlowDos.get(0);
         ProjectNodeFlowDetailVO projectFlowDetailVO = ProjectNodeFlowCopier.INSTANCE.convert(currentFlowDo);
-        projectFlowDetailVO.setStatusName(FlowStatusEnum.getTextByCode(currentFlowDo.getStatus()));
+        projectFlowDetailVO.setStatusName(ForwardFlowStatusEnum.getTextByCode(currentFlowDo.getStatus()));
 
         String flowId = currentFlowDo.getFlowId();
         if (!StringUtils.isEmpty(currentFlowDo.getLastFlowId())) {
@@ -96,7 +96,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
         String pjEstablishPublishDate=flowData.get("pjEstablishPublishDate")==null ?null:flowData.get("pjEstablishPublishDate").toString();
         projectFlowDetailVO.setPjEstablishPublishDate(DateUtil.parseToDate(pjEstablishPublishDate, DateFormatConst.DATE_FORMAT));
 
-        long changeCount = projectFlowDos.stream().filter(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
+        long changeCount = projectFlowDos.stream().filter(a -> ForwardFlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
         projectFlowDetailVO.setChangeCount(changeCount);
         return BaseResult.success(projectFlowDetailVO);
     }
@@ -110,7 +110,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
             throw new BaseBizRuntimeException("找不到该审批流程");
         }
         ProjectNodeFlowDO currentFlowDo = projectFlowDos.get(0);
-        if (!FlowStatusEnum.AUDITING.getCode().equals(currentFlowDo.getStatus())) {
+        if (!ForwardFlowStatusEnum.AUDITING.getCode().equals(currentFlowDo.getStatus())) {
             throw new BaseBizRuntimeException("流程状态非审核中,无法撤销");
         }
 
@@ -123,7 +123,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         currentFlowDo.setModifyMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         currentFlowDo.setModifyManId(userInfo.getId());
-        currentFlowDo.setStatus(FlowStatusEnum.WITHDRAW.getCode());
+        currentFlowDo.setStatus(ForwardFlowStatusEnum.WITHDRAW.getCode());
         projectNodeFlowMapper.update(currentFlowDo);
         return BaseResult.success(true);
     }
@@ -151,8 +151,8 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
             Date planDate = DateUtil.getEndOfDay(publishNodes.get(0).getPlanDate());
             if(pjEstablishPublishDateEnd.before(planDate)){
                 List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(projectNodeFlowCheckReq.getProjectId());
-                boolean match = projectFlowDos.stream().anyMatch(a -> FlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())
-                        ||FlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
+                boolean match = projectFlowDos.stream().anyMatch(a -> ForwardFlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())
+                        || ForwardFlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
                 if (!match) {
                     //有基线版本,且立项预期上线时间小于发布正式计划时间,且无审批通过的流程
                     Long seconds = elapsedTimeClient.getElapsedTime(pjEstablishPublishDateEnd, planDate);

@@ -10,7 +10,7 @@ import com.timevale.forward.dal.dao.TrackPropMapper;
 import com.timevale.forward.dal.entity.TrackEventPropDO;
 import com.timevale.forward.dal.entity.TrackPropDO;
 import com.timevale.forward.facade.api.result.TrackPropVO;
-import com.timevale.forward.model.enums.FlowStatusEnum;
+import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
 import com.timevale.forward.model.enums.TrackPropTypeEnum;
 import com.timevale.forward.service.component.TrackPropComponent;
 import com.timevale.forward.service.copy.TrackPropCopier;
@@ -46,7 +46,7 @@ public class TrackPropComponentImpl implements TrackPropComponent {
         List<TrackPropDO> list = trackPropMapper.list(condition);
         List<TrackPropVO> trackEventVOList = TrackPropCopier.INSTANCE.convert(list);
         trackEventVOList.forEach(a -> {
-            a.setStatusName(FlowStatusEnum.getTextByCode(a.getStatus()));
+            a.setStatusName(ForwardFlowStatusEnum.getTextByCode(a.getStatus()));
         });
         PageInfo<TrackPropDO> pageInfo = new PageInfo<>(list);
         PageQueryResult<TrackPropVO> pageQueryResult = new PageQueryResult<>();
@@ -88,7 +88,7 @@ public class TrackPropComponentImpl implements TrackPropComponent {
         List<TrackPropVO> trackEventVOList = TrackPropCopier.INSTANCE.convert(filter);
 
         trackEventVOList.forEach(a -> {
-            a.setStatusName(FlowStatusEnum.getTextByCode(a.getStatus()));
+            a.setStatusName(ForwardFlowStatusEnum.getTextByCode(a.getStatus()));
         });
         return trackEventVOList;
     }
@@ -146,12 +146,12 @@ public class TrackPropComponentImpl implements TrackPropComponent {
 
         //新加的属性,或不通过的属性
         List<TrackPropDO> filter = trackPropDOList.stream().filter(a -> a.getId() == null
-                || FlowStatusEnum.REJECT.getCode().equals(a.getStatus())).collect(Collectors.toList());
+                || ForwardFlowStatusEnum.REJECT.getCode().equals(a.getStatus())).collect(Collectors.toList());
 
         if (CollectionUtils.isEmpty(filter)) {
             return;
         }
-        List<Integer> status = Lists.newArrayList(FlowStatusEnum.AUDITING.getCode(), FlowStatusEnum.COMPLETE.getCode());
+        List<Integer> status = Lists.newArrayList(ForwardFlowStatusEnum.AUDITING.getCode(), ForwardFlowStatusEnum.COMPLETE.getCode());
 
         List<String> newCnNames = filter.stream().map(TrackPropDO::getCnName).collect(Collectors.toList());
         //sql大小写不敏感,程序判断
