@@ -28,7 +28,7 @@ public class BugOfflineComponentImpl implements BugOfflineComponent {
     public void containProductLineInBugOffline(Long projectId, List<Long> productLineIdsInProject) {
         List<Long> productLineIdsInBugOffline = bugOfflineMapper.selectByProjectId(projectId)
                 .stream().map(BugOfflineDO::getProductLineId).collect(Collectors.toList());
-        AssertUtil.checkState(CollUtil.containsAny(productLineIdsInBugOffline, productLineIdsInProject),
+        AssertUtil.checkState(CollUtil.containsAll(productLineIdsInProject, productLineIdsInBugOffline),
                 "该产品线已关联线下bug，无法修改");
     }
 
