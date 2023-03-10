@@ -199,19 +199,19 @@ public interface ProjectService {
     /**
      * 结项
      *
-     * @param projectId 项目id
-     * @return {@link BaseResult}<{@link ConclusionFormVO}>
+     * @param req 请求
+     * @return {@link BaseResult}<{@link Boolean}>
      */
-    BaseResult<Boolean> conclusion(Long projectId);
+    BaseResult<Boolean> conclusion(ProjectConclusionReq req);
 
 
     /**
      * 结项表单
      *
-     * @param projectId 项目id
+     * @param req 请求
      * @return {@link BaseResult}<{@link ConclusionFormVO}>
      */
-    BaseResult<ConclusionFormVO> conclusionForm(Long projectId);
+    BaseResult<ConclusionFormVO> conclusionForm(ProjectConclusionReq req);
 
     BaseResult<PageQueryResult<ProjectSimpleVO>> pageAll(ProjectPageQuery query);
 }

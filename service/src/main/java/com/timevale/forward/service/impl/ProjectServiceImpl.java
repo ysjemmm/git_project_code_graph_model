@@ -1289,9 +1289,11 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<Boolean> conclusion(Long projectId) {
+    public BaseResult<Boolean> conclusion(ProjectConclusionReq req) {
+        final Long projectId = req.getProjectId();
+
         // 校验参数
-        conclusionForm(projectId);
+        conclusionForm(req);
 
         // 发起结项流程
         String flowId = workFlowComponent.conclusionFlow(projectId);
@@ -1313,7 +1315,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public BaseResult<ConclusionFormVO> conclusionForm(Long projectId) {
+    public BaseResult<ConclusionFormVO> conclusionForm(ProjectConclusionReq req) {
+        final Long projectId = req.getProjectId();
+
         // 校验结项
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO,"项目不存在");
