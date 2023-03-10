@@ -146,7 +146,7 @@ public class WorkFlowComponent {
         conclusionVar.setPointsWorkloadSum(pointsWorkloadSum);
         conclusionVar.setReviewerEvaluateList(reviewerEvaluateVarList);
 
-        // 转换为Map
+        // 项目参数转换为Map
         Map<String, Object> variables = BeanUtil.beanToMap(conclusionVar);
 
         // 流程参数填装

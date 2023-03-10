@@ -171,6 +171,9 @@ public interface ProjectMapper {
      */
     List<ProjectDO> getByLikeName(@Param("name") String name, @Param("category") Integer category);
 
+
+    List<Long> getIdByPl(@Param("productLines")Collection<Long> productLines);
+
     Page<ProjectListDO> listChildren(ProjectListChildCondition condition);
 
     List<ProjectChildCountDO> countChildren(@Param("projectIds")Collection<Long> projectIds);

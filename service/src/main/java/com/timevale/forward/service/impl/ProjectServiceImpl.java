@@ -511,9 +511,10 @@ public class ProjectServiceImpl implements ProjectService {
         // 节点信息
         if (CollUtil.isNotEmpty(projectNodeDOList)) {
             // 项目发布时需要校验未关闭bug
-            boolean match = projectNodeDOList.stream()
-                    .anyMatch(e -> ObjectUtil.equal(ProjectNodeEnum.PUBLISH_OFFICIAL.getText(), e.getName()) && e.getActualDate() != null);
-            AssertUtil.checkState(match && !checkProductRelease(projectModifyReq.getId()), "该项目还有bug未关闭，请关闭后再发布");
+            boolean match = projectNodeDOList.stream().anyMatch(e ->
+                    ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(e.getName()) && e.getActualDate() != null);
+            AssertUtil.checkState(!match || checkProductRelease(projectModifyReq.getId()),
+                    "该项目还有bug未关闭，请关闭后再发布");
 
             if (projectModifyReq.getDelayType() >= 1) {
                 //需要审批,只更新实际时间
@@ -678,6 +679,21 @@ public class ProjectServiceImpl implements ProjectService {
             AssertUtil.notNull(navigateProject, "您选择的项目树节点不存在，请检查");
             condition.setNavigateParentIdsPrefix(navigateProject.getParentIds());
         }
+
+        // 业务域、产品线过滤
+        Collection<Long> bizDomains = projectChildListReq.getBizDomains();
+        Collection<Long> productLines = projectChildListReq.getProductLines();
+        if (CollUtil.isNotEmpty(bizDomains) || CollUtil.isNotEmpty(productLines)) {
+            List<Long> plIds = CollUtil.newArrayList(productLines);
+            if (CollUtil.isNotEmpty(bizDomains)) {
+                plIds.addAll(productLineMapper.getByBizDomainIds(bizDomains));
+            }
+            if (CollUtil.isNotEmpty(plIds)) {
+                List<Long> validIds = projectMapper.getIdByPl(plIds);
+                condition.setValidIds(validIds);
+            }
+        }
+
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         Page<ProjectListDO> projects = projectMapper.listChildren(condition);
         List<ProjectVO> resultList = ProjectCopier.INSTANCE.convert(projects);

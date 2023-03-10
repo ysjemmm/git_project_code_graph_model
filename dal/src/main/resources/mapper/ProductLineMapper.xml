@@ -133,4 +133,18 @@
             </if>
         </where>
     </select>
+
+    <select id="getByBizDomainIds" resultType="java.lang.Long">
+        SELECT id
+        FROM product_line
+        <where>
+            AND is_deleted = false
+            <if test="bizDomainIds != null and bizDomainIds.size() > 0">
+                AND biz_domain_id IN
+                <foreach collection="bizDomainIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
 </mapper>

@@ -14,6 +14,9 @@ import java.util.Collection;
 @Setter
 @Accessors(chain = true)
 public class ProjectListChildCondition {
+    // 有效的项目id
+    private Collection<Long> validIds;
+
     // 根节点项目id
     private Long projectId;
 
@@ -29,7 +32,7 @@ public class ProjectListChildCondition {
     // 内部项目类型: 0空, 1战略项目, 2LTC项目, 3PBG项目, 4CBG项目, 5管理后台项目
     private Collection<Integer> innerTypes;
 
-    // 项目类型:0产品研发项目,1技术优化项目,2日常迭代
+    // 项目性质:0产品研发项目,1技术优化项目,2日常迭代
     private Collection<Integer> types;
 
     // 项目经理
@@ -48,6 +51,15 @@ public class ProjectListChildCondition {
 
     // 父节点id列表
     private Collection<Long> parentIds;
+
+    // 项目类型
+    private Collection<Integer> kinds;
+
+    // 业务域
+    private Collection<Long> bizDomains;
+
+    // 产品线
+    private Collection<Long> productLines;
 
     private Integer pageNum;
 

@@ -488,27 +488,32 @@
     </select>
 
     <select id="listChildren" resultType="com.timevale.forward.dal.entity.ProjectListDO">
-        select a.id,a.name, a.customer_dev,is_platform_publish, is_with_goal, a.priority, a.type
-        ,a.status,a.node_status, a.pm_id,a.pm ,a.plan_start_date,a.plan_end_date,
-        a.actual_start_date,a.actual_end_date,a.`desc`,a.inner_type,a.category,a.parent_ids,
-        a.level,pj_establish_start_date,pj_establish_publish_date,is_acceptance,
-        a.create_man_id, a.create_man,a.create_date,a.modify_date
+        select a.id,a.name, a.customer_dev,is_platform_publish, is_with_goal, a.priority, a.type, a.status, a.node_status,
+               a.pm_id,a.pm ,a.plan_start_date,a.plan_end_date, a.actual_start_date, a.actual_end_date, a.`desc`,a.inner_type,
+               a.category,a.parent_ids, a.level,pj_establish_start_date,pj_establish_publish_date,is_acceptance,
+               a.create_man_id, a.create_man,a.create_date,a.modify_date
         from project a
         <where>
-            is_deleted = false
+            a.is_deleted = false
+            <if test="validIds != null and validIds.size > 0">
+                and a.id in
+                <foreach collection="validIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="projectName != null and projectName != ''">
-                and name like concat('%', #{projectName}, '%')
+                and a.name like concat('%', #{projectName}, '%')
             </if>
             <if test="childProjectId != null">
-                and id = #{childProjectId}
+                and a.id = #{childProjectId}
             </if>
             <if test="navigateParentIdsPrefix != null">
-                and parent_ids like concat(#{navigateParentIdsPrefix}, '%')
+                and a.parent_ids like concat(#{navigateParentIdsPrefix}, '%')
             </if>
             <choose>
-                <when test="types != null and types.size > 0 and innerTypes != null and innerTypes.size > 0">
-                    and (a.type in
-                    <foreach collection="types" item="item" separator="," open="(" close=")">
+                <when test="kinds != null and kinds.size > 0 and innerTypes != null and innerTypes.size > 0">
+                    and (a.kind in
+                    <foreach collection="kinds" item="item" separator="," open="(" close=")">
                         #{item}
                     </foreach>
                     or a.inner_type in
@@ -518,9 +523,9 @@
                     )
                 </when>
                 <otherwise>
-                    <if test="types!=null and types.size()>0">
-                        and a.type in
-                        <foreach collection="types" item="item" separator="," open="(" close=")">
+                    <if test="kinds!=null and kinds.size()>0">
+                        and a.kind in
+                        <foreach collection="kinds" item="item" separator="," open="(" close=")">
                             #{item}
                         </foreach>
                     </if>
@@ -532,20 +537,26 @@
                     </if>
                 </otherwise>
             </choose>
+            <if test="types != null and types.size > 0">
+                and a.type in
+                <foreach collection="types" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="pms != null and pms.size > 0">
-                and pm_id in
+                and a.pm_id in
                 <foreach collection="pms" item="pm" open="(" separator="," close=")">
                     #{pm}
                 </foreach>
             </if>
             <if test="levels != null and levels.size > 0">
-                and `level` in
+                and a.level in
                 <foreach collection="levels" item="level" open="(" separator="," close=")">
                     #{level}
                 </foreach>
             </if>
             <if test="status != null and status.size > 0">
-                and `status` in
+                and a.status in
                 <foreach collection="status" item="singleStatus" open="(" separator="," close=")">
                     #{singleStatus}
                 </foreach>
@@ -554,20 +565,20 @@
                 <choose>
                     <when test="searchType == 2">
                         <!-- 查询可以添加为子项目的项目列表 -->
-                        and parent_ids = concat(',', id, ',') and id not in
+                        and a.parent_ids = concat(',', id, ',') and id not in
                         <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
                             #{parentId}
                         </foreach>
                     </when>
                     <when test="searchType == 3">
                         <!-- 查询可以关联到当前项目里程碑的项目列表 -->
-                        and id not in (select relation_id from project_milestone where type = 1 and is_deleted = false)
+                        and a.id not in (select relation_id from project_milestone where type = 1 and is_deleted = false)
                         and (
                         <!-- 子项目列表 -->
-                        id in (select id from project where parent_ids regexp #{parentIdsRegexp})
+                        a.id in (select id from project where parent_ids regexp #{parentIdsRegexp})
                         or
                         <!-- 无父节点项目 -->
-                        (parent_ids = concat(',', id, ',') and id not in
+                        (a.parent_ids = concat(',', id, ',') and id not in
                         <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
                             #{parentId}
                         </foreach>
@@ -576,7 +587,7 @@
                     </when>
                     <otherwise>
                         <!-- 查询当前项目的子项目 -->
-                        and parent_ids regexp #{parentIdsRegexp}
+                        and a.parent_ids regexp #{parentIdsRegexp}
                     </otherwise>
                 </choose>
             </if>
@@ -593,5 +604,19 @@
         </foreach>
         and p.is_deleted = false
         group by p.id;
+    </select>
+
+    <select id="getIdByPl" resultType="java.lang.Long">
+        SELECT DISTINCT id
+        FROM project pj
+        LEFT JOIN project_product_line ppl ON pj.id = ppl.project_id AND ppl.is_deleted = false
+        <where>
+            <if test="productLines != null and productLines.size() > 0">
+                AND ppl.product_line_id IN
+                <foreach collection="productLines" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
     </select>
 </mapper>
