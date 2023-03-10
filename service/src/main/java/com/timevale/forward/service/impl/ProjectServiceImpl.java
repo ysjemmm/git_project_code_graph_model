@@ -508,17 +508,18 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 节点信息
         if (CollUtil.isNotEmpty(projectNodeDOList)) {
-            boolean match = projectNodeDOList.stream().anyMatch(e ->
-                    ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(e.getName()) && e.getActualDate() != null);
-            if (match && !checkProductRelease(projectModifyReq.getId())) {
-                throw new BaseBizRuntimeException("该项目还有bug未关闭，请关闭后再发布");
-            }
+            // 项目发布时需要校验未关闭bug
+            boolean match = projectNodeDOList.stream()
+                    .anyMatch(e -> ObjectUtil.equal(ProjectNodeEnum.PUBLISH_OFFICIAL.getText(), e.getName()) && e.getActualDate() != null);
+            AssertUtil.checkState(match && !checkProductRelease(projectModifyReq.getId()), "该项目还有bug未关闭，请关闭后再发布");
+
             if (projectModifyReq.getDelayType() >= 1) {
                 //需要审批,只更新实际时间
                 projectNodeComponent.updateNodeActualDate(projectNodeDOList, newProject.getId());
             } else {
                 projectNodeComponent.add(projectNodeDOList, newProject.getId());
             }
+
             // 更新节点状态
             projectComponent.updateNodeStatus(projectModifyReq.getId());
         }
@@ -1269,26 +1270,26 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 需要校验项目评价必填内容是否完成、
         List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.selectByProjectId(projectId);
-        AssertUtil.checkState(evaluateDOList.stream().anyMatch(e -> ObjectUtil.isNull(e.getScores())),
+        AssertUtil.checkState(evaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getScores())),
                 "项目评价未完成，无法发起结项");
 
         // 纳入积分员工的实际工作量是否录入完成，个人评价是否必填
         List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
         AssertUtil.checkState(memberEvaluateDOList.stream()
                         .filter(ProjectMemberEvaluateDO::getIncludeStat)
-                        .anyMatch(e->ObjectUtil.isNull(e.getActualWorkload())),
+                        .noneMatch(e->ObjectUtil.isNull(e.getActualWorkload())),
                 "存在纳入积分统计的项目成员未录入实际工作量，无法发起结项");
-        AssertUtil.checkState(memberEvaluateDOList.stream().anyMatch(e -> ObjectUtil.isNull(e.getEvaluateGrade())),
+        AssertUtil.checkState(memberEvaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getEvaluateGrade())),
                 "存在项目成员评价等级未录入，无法发起结项");
 
         // 是否存在审批中结项流程
         List<ProjectFlowDO> workloadFlow = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
-        AssertUtil.checkState(workloadFlow.stream().anyMatch(e -> ObjectUtil.equal(ForwardFlowStatusEnum.AUDITING.getCode(), e.getStatus())),
+        AssertUtil.checkState(workloadFlow.stream().noneMatch(e -> ObjectUtil.equal(ForwardFlowStatusEnum.AUDITING.getCode(), e.getStatus())),
                 "存在审批中的工作流变更流程，无法发起结项");
 
         // 是否存在审批中结项流程
         List<ProjectFlowDO> conclusionFlow = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
-        AssertUtil.checkState(conclusionFlow.stream().anyMatch(e -> ObjectUtil.equal(ForwardFlowStatusEnum.AUDITING.getCode(), e.getStatus())),
+        AssertUtil.checkState(conclusionFlow.stream().noneMatch(e -> ObjectUtil.equal(ForwardFlowStatusEnum.AUDITING.getCode(), e.getStatus())),
                 "结项流程正在审批中，请勿重复发起结项流程");
 
         // 计划总工作量
