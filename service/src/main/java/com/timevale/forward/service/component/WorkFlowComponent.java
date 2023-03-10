@@ -30,6 +30,7 @@ import com.timevale.mandarin.base.util.AssertUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -74,6 +75,7 @@ public class WorkFlowComponent {
      * @param projectId 项目id
      * @return {@link String}
      */
+    @Transactional(rollbackFor = Exception.class)
     public String conclusionFlow(Long projectId) {
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO, "项目不存在");
@@ -163,6 +165,7 @@ public class WorkFlowComponent {
      *
      * @param processInstanceId 流程实例id
      */
+    @Transactional(rollbackFor = Exception.class)
     public void conclusionComplete(String processInstanceId) {
         AssertUtil.checkState(StrUtil.isNotBlank(processInstanceId), "流程id为空");
 
@@ -230,6 +233,7 @@ public class WorkFlowComponent {
      * @param req      工作量变更请求
      * @return {@link String}
      */
+    @Transactional(rollbackFor = Exception.class)
     public String workloadChangeFlow(ProjectWorkloadChangeVO changeVO, MemberWorkloadFillReq req) {
         // 当前用户发起人id
         String startAccountId = LocalSessionUtils.getUserInfo().getId();
@@ -283,6 +287,7 @@ public class WorkFlowComponent {
      *
      * @param processInstanceId 流程实例id
      */
+    @Transactional(rollbackFor = Exception.class)
     public void workloadChangeComplete(String processInstanceId) {
         AssertUtil.checkState(StrUtil.isNotBlank(processInstanceId), "流程id为空");
 

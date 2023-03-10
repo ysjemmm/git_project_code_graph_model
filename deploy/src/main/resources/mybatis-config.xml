@@ -118,5 +118,6 @@
         <mapper resource="mapper/ProjectEvaluateMapper.xml"/>
         <mapper resource="mapper/ProjectMemberEvaluateMapper.xml"/>
         <mapper resource="mapper/EvaluateDimensionMapper.xml"/>
+        <mapper resource="mapper/HistoryRecordMapper.xml"/>
     </mappers>
 </configuration>

@@ -105,6 +105,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> memberWorkloadFill(MemberWorkloadFillReq req) {
         // 校验并获取表单信息
         ProjectWorkloadChangeVO changeVO = projectEvaluateComponent.workloadChangeForm(req);
@@ -124,7 +125,6 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
 
             // 存储变更信息
             List<MemberWorkloadModifyReq> modifyReqList = req.getModifyReqList();
-
             String modifyWorkloadJson = JSON.toJSONString(modifyReqList);
 
             // 添加工作流信息
