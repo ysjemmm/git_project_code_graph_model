@@ -41,6 +41,7 @@ public interface ProjectMemberEvaluateCopier {
 
     ProjectMemberEvaluateDO req2do(MemberEvaluateModifyReq req);
 
+    ProjectMemberEvaluateDO req2do(MemberWorkloadModifyReq req);
     ProjectMemberEvaluateDO req2do(MemberWorkloadModifyReq req, Long projectId);
 
     @Mapping(source = "id", target = "projectId")
@@ -50,3 +51,5 @@ public interface ProjectMemberEvaluateCopier {
     @Mapping(target = "levelName", expression = "java(ProjectLevelEnum.getTextByCode(projectDO.getLevel()))")
     ProjectWorkloadChangeVO do2vo(ProjectDO projectDO);
 }
+
+

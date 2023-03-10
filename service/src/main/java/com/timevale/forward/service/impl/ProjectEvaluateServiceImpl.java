@@ -2,19 +2,21 @@ package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.EvaluateDimensionMapper;
-import com.timevale.forward.dal.dao.ProjectEvaluateMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.dao.ProjectMemberEvaluateMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectEvaluateService;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.model.enums.FlowTypeEnum;
+import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
 import com.timevale.forward.model.enums.ProjectKindEnum;
 import com.timevale.forward.model.enums.ProjectLevelEnum;
+import com.timevale.forward.service.component.ProjectEvaluateComponent;
+import com.timevale.forward.service.component.WorkFlowComponent;
 import com.timevale.forward.service.copy.ProjectEvaluateCopier;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -33,15 +35,20 @@ import java.util.stream.Collectors;
 @LogPoint
 @RestService
 public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
-
     @Resource
     private ProjectMapper projectMapper;
+    @Resource
+    private ProjectFlowMapper projectFlowMapper;
+    @Resource
+    private WorkFlowComponent workFlowComponent;
     @Resource
     private ProjectEvaluateMapper evaluateMapper;
     @Resource
     private EvaluateDimensionMapper dimensionMapper;
     @Resource
     private ProjectMemberEvaluateMapper memberEvaluateMapper;
+    @Resource
+    private ProjectEvaluateComponent projectEvaluateComponent;
 
     @Override
     public BaseResult<ProjectMemberEvaluateVO> memberList(Long projectId) {
@@ -49,26 +56,43 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
         List<MemberEvaluateVO> memberEvaluateVOList = ProjectMemberEvaluateCopier.INSTANCE.do2vo(memberEvaluateDOList);
 
-        // 组装结构
-        ProjectMemberEvaluateVO result = new ProjectMemberEvaluateVO();
-
-        // 成员
-        result.setMemberEvaluateVOList(memberEvaluateVOList);
-
         // 工作量总和
         BigDecimal planWorkLoadSum = memberEvaluateVOList.stream()
-                .map(MemberEvaluateVO::getPlanWorkLoad)
+                .map(MemberEvaluateVO::getPlanWorkload)
                 .filter(ObjectUtil::isNotNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        result.setPlanWorkloadSum(planWorkLoadSum);
 
         // 需要计算积分的工作量总和
         BigDecimal workloadPointsSum = memberEvaluateVOList.stream()
                 .filter(MemberEvaluateVO::getIncludeStat)
-                .map(MemberEvaluateVO::getPlanWorkLoad)
+                .map(MemberEvaluateVO::getPlanWorkload)
                 .filter(ObjectUtil::isNotNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 结项流程, 查询审批中、或者审核通过的流程
+        List<ProjectFlowDO> conclusionFlowList = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.CONCLUSION.getCode());
+        String conclusionFlowId = conclusionFlowList.stream()
+                .filter(e -> ForwardFlowStatusEnum.COMPLETE.getCode().equals(e.getStatus())
+                        || ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()))
+                .map(ProjectFlowDO::getFlowId)
+                .findAny()
+                .orElse("");
+
+        // 工作流变更流程，查询审核中的流程
+        List<ProjectFlowDO> workloadFlowList = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
+        String workloadFlowId = workloadFlowList.stream()
+                .filter(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()))
+                .map(ProjectFlowDO::getFlowId)
+                .findAny()
+                .orElse("");
+
+        // 组装数据
+        ProjectMemberEvaluateVO result = new ProjectMemberEvaluateVO();
+        result.setWorkloadFlowId(workloadFlowId);
+        result.setPlanWorkloadSum(planWorkLoadSum);
+        result.setConclusionFlowId(conclusionFlowId);
         result.setPointsWorkloadSum(workloadPointsSum);
+        result.setMemberEvaluateVOList(memberEvaluateVOList);
 
         return BaseResult.success(result);
     }
@@ -82,24 +106,43 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
 
     @Override
     public BaseResult<Boolean> memberWorkloadFill(MemberWorkloadFillReq req) {
-        Long projectId = req.getProjectId();
-        for (MemberWorkloadModifyReq modifyReq : req.getModifyReqList()) {
-            ProjectMemberEvaluateDO evaluateDO = ProjectMemberEvaluateCopier.INSTANCE.req2do(modifyReq, projectId);
-            memberEvaluateMapper.update(evaluateDO);
+        // 校验并获取表单信息
+        ProjectWorkloadChangeVO changeVO = projectEvaluateComponent.workloadChangeForm(req);
+
+        if (changeVO.getDirectChangeEnable()) {
+            // 遍历修改参数，落库
+            Long projectId = req.getProjectId();
+            List<MemberWorkloadModifyReq> modifyReqList = req.getModifyReqList();
+            for (MemberWorkloadModifyReq modifyReq : modifyReqList) {
+                ProjectMemberEvaluateDO evaluateDO = ProjectMemberEvaluateCopier.INSTANCE.req2do(modifyReq, projectId);
+                memberEvaluateMapper.update(evaluateDO);
+            }
+        } else {
+            // 项目id 及 流程id
+            Long projectId = changeVO.getProjectId();
+            String flowId = workFlowComponent.workloadChangeFlow(changeVO, req);
+
+            // 存储变更信息
+            List<MemberWorkloadModifyReq> modifyReqList = req.getModifyReqList();
+
+            String modifyWorkloadJson = JSON.toJSONString(modifyReqList);
+
+            // 添加工作流信息
+            ProjectFlowDO projectFlowDO = new ProjectFlowDO()
+                    .setFlowId(flowId)
+                    .setProjectId(projectId)
+                    .setFlowData(modifyWorkloadJson)
+                    .setFlowType(FlowTypeEnum.WORKLOAD.getCode())
+                    .setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
+            projectFlowMapper.insert(projectFlowDO);
         }
+
         return BaseResult.success(true);
     }
 
     @Override
     public BaseResult<ProjectWorkloadChangeVO> workloadChangeCheck(MemberWorkloadFillReq req) {
-        Long projectId = req.getProjectId();
-
-        ProjectDO projectDO = projectMapper.get(projectId);
-        AssertUtil.notNull(projectDO,"项目不存在");
-
-        ProjectWorkloadChangeVO changeVO = ProjectMemberEvaluateCopier.INSTANCE.do2vo(projectDO);
-
-        return null;
+        return BaseResult.success(projectEvaluateComponent.workloadChangeForm(req));
     }
 
     @Override

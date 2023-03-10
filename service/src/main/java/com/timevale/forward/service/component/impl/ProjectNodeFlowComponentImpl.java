@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -277,10 +278,10 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
     @Override
     public void insertProjectNodeRecord(Long projectId, List<ProjectNodeDO> projectNodes) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        String operator = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
+
         ProjectNodeFlowDO projectNodeFlowDO = new ProjectNodeFlowDO();
-        projectNodeFlowDO.setCreateMan(operator);
         projectNodeFlowDO.setCreateManId(userInfo.getId());
+        projectNodeFlowDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
         insertProjectNodeRecord(projectId, projectNodes, projectNodeFlowDO);
     }
 
@@ -318,20 +319,24 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
     }
 
     private void insertProjectNodeRecord(Long projectId, List<ProjectNodeDO> projectNodes, ProjectNodeFlowDO projectNodeFlowDO) {
-        BigDecimal max = projectNodeRecordMapper.list(projectId).stream().map(ProjectNodeRecordDO::getVersion)
-                .max(Comparator.comparing(BigDecimal::abs)).orElse(BigDecimal.ZERO);
+        BigDecimal max = projectNodeRecordMapper.list(projectId).stream()
+                .map(ProjectNodeRecordDO::getVersion)
+                .max(Comparator.comparing(BigDecimal::abs))
+                .orElse(BigDecimal.ZERO);
 
-        List<ProjectNodeRecordDO> recordDOList = projectNodes.stream().map(a -> {
-            ProjectNodeRecordDO p = new ProjectNodeRecordDO();
-            p.setProjectId(projectId);
-            p.setName(a.getName());
-            p.setPlanDate(a.getPlanDate());
-            p.setVersion(max.add(BigDecimal.valueOf(1)));
-            p.setCreateMan(projectNodeFlowDO.getCreateMan());
-            p.setCreateManId(projectNodeFlowDO.getCreateManId());
-            return p;
-        }).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(recordDOList)) {
+        List<ProjectNodeRecordDO> recordDOList = projectNodes.stream()
+                .map(a -> {
+                    ProjectNodeRecordDO p = new ProjectNodeRecordDO();
+                    p.setName(a.getName());
+                    p.setProjectId(projectId);
+                    p.setPlanDate(a.getPlanDate());
+                    p.setVersion(max.add(BigDecimal.ONE));
+                    p.setCreateMan(projectNodeFlowDO.getCreateMan());
+                    p.setCreateManId(projectNodeFlowDO.getCreateManId());
+                    return p;
+                }).collect(Collectors.toList());
+
+        if (CollUtil.isNotEmpty(recordDOList)) {
             projectNodeRecordMapper.batchInsert(recordDOList);
         }
     }

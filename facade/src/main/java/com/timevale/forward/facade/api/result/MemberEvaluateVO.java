@@ -30,10 +30,10 @@ public class MemberEvaluateVO extends ToString {
     private String userName;
 
     @ApiModelProperty("计划工作量")
-    private BigDecimal planWorkLoad;
+    private BigDecimal planWorkload;
 
     @ApiModelProperty("实际工作量")
-    private BigDecimal actualWorkLoad;
+    private BigDecimal actualWorkload;
 
     @ApiModelProperty("评级")
     private Integer evaluateGrade;

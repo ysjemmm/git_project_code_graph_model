@@ -117,4 +117,8 @@ public class ProjectFlowDO extends BaseDO {
      */
     private Date flowEndDate;
 
+    /**
+     * 工作流数据数据
+     */
+    private String flowData;
 }

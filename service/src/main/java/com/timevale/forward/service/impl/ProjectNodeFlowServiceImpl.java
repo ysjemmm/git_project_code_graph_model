@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.timevale.epeius.service.model.request.TerminateRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -145,12 +146,15 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
         List<ProjectNodeDO> testNodes = projectNodes.stream()
                 .filter(a -> ProjectNodeEnum.SUBMIT_TEST.getText().equals(a.getName()) && a.getPlanDate() != null).collect(Collectors.toList());
 
+        // 立项预期上线时间
         Date pjEstablishPublishDate = projectNodeFlowCheckReq.getPjEstablishPublishDate();
-        if (pjEstablishPublishDate != null && !CollectionUtils.isEmpty(publishNodes)) {
+
+        if (pjEstablishPublishDate != null && !CollUtil.isEmpty(publishNodes)) {
             Date pjEstablishPublishDateEnd = DateUtil.getEndOfDay(pjEstablishPublishDate);
             Date planDate = DateUtil.getEndOfDay(publishNodes.get(0).getPlanDate());
             if(pjEstablishPublishDateEnd.before(planDate)){
                 List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(projectNodeFlowCheckReq.getProjectId());
+
                 boolean match = projectFlowDos.stream().anyMatch(a -> ForwardFlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())
                         || ForwardFlowStatusEnum.AUDITING.getCode().equals(a.getStatus()));
                 if (!match) {

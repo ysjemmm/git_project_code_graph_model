@@ -171,6 +171,8 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectMemberEvaluateMapper memberEvaluateMapper;
     @Resource
     private WorkFlowComponent workFlowComponent;
+    @Resource
+    private ProjectEvaluateComponent evaluateComponent;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -1247,10 +1249,15 @@ public class ProjectServiceImpl implements ProjectService {
         // 发起结项流程
         String flowId = workFlowComponent.conclusionFlow(projectId);
 
+        // 用户信息
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         // 添加工作流信息
         ProjectFlowDO projectFlowDO = new ProjectFlowDO()
                 .setFlowId(flowId)
                 .setProjectId(projectId)
+                .setProposerId(userInfo.getId())
+                .setProposer(userInfo.getFullAlias())
                 .setFlowType(FlowTypeEnum.CONCLUSION.getCode())
                 .setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
         projectFlowMapper.insert(projectFlowDO);
@@ -1564,9 +1571,11 @@ public class ProjectServiceImpl implements ProjectService {
                     ProjectNodeEnum.DEVELOP_START.getText().equals(e.getName()) && e.getActualDate() != null);
             if (match) {
                 List<ProjectNodeRecordDO> list = projectNodeRecordMapper.list(projectModifyReq.getId());
-                if (CollectionUtils.isEmpty(list)) {
-                    //首次生成版本
+                if (CollUtil.isEmpty(list)) {
+                    //首次生成节点版本
                     projectNodeFlowComponent.insertProjectNodeRecord(projectModifyReq.getId(), projectNodeDOList);
+                    // 首次生成工作量版本
+                    evaluateComponent.additionRecord(projectModifyReq.getId());
                 }
             }
         }
