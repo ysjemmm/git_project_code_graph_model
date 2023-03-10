@@ -488,10 +488,7 @@
     </select>
 
     <select id="listChildren" resultType="com.timevale.forward.dal.entity.ProjectListDO">
-        select a.id,a.name, a.customer_dev,is_platform_publish, is_with_goal, a.priority, a.type, a.status, a.node_status,
-               a.pm_id,a.pm ,a.plan_start_date,a.plan_end_date, a.actual_start_date, a.actual_end_date, a.`desc`,a.inner_type,
-               a.category,a.parent_ids, a.level,pj_establish_start_date, a.pj_establish_publish_date, a.is_acceptance,
-               a.create_man_id, a.create_man,a.create_date,a.modify_date
+        select a.*
         from project a
         <where>
             a.is_deleted = false

@@ -708,11 +708,20 @@ public class ProjectServiceImpl implements ProjectService {
         condition.setValidIds(validIds);
         Page<ProjectListDO> projects = projectMapper.listChildren(condition);
 
-        // 业务域、产品线数据
+        // 当前页项目id
         List<Long> resultIds = projects.stream().map(BaseDO::getId).collect(Collectors.toList());
+        if (CollUtil.isEmpty(resultIds)) {
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+
+        // 业务域、产品线数据
         List<ProjectProductLineBizDomain> bdPlData = productLineMapper.getByProjectIds(resultIds);
         Map<Long, List<ProjectProductLineBizDomain>> bdPlGroup = bdPlData.stream()
                 .collect(Collectors.groupingBy(ProjectProductLineBizDomain::getProjectId));
+
+        // 产品经理
+        List<PersonDO> pdDOList = personMapper.get(resultIds, PersonTypeEnum.PROJECT_PD.getCode());
+        Map<Long, List<PersonDO>> pdMap = pdDOList.stream().collect(Collectors.groupingBy(PersonDO::getMainId));
 
         // 转换
         List<ProjectVO> resultList = ProjectCopier.INSTANCE.convert(projects);
@@ -720,12 +729,20 @@ public class ProjectServiceImpl implements ProjectService {
         for (ProjectVO projectVO : resultList) {
             Long id = projectVO.getId();
 
+            // 产品线、业务域数据
             List<ProjectProductLineBizDomain> selfBdPlData = bdPlGroup.get(id);
             if (CollUtil.isNotEmpty(selfBdPlData)) {
                 String bdNames = selfBdPlData.stream().map(ProjectProductLineBizDomain::getBizDomainName).collect(Collectors.joining(","));
                 String plNames = selfBdPlData.stream().map(ProjectProductLineBizDomain::getProductLineName).collect(Collectors.joining(","));
                 projectVO.setBizDomainName(bdNames);
                 projectVO.setProductLineName(plNames);
+            }
+
+            // 产品经理数据
+            List<PersonDO> selfPdDOList = pdMap.get(id);
+            if (CollUtil.isNotEmpty(selfPdDOList)) {
+                String pdNames = selfPdDOList.stream().map(PersonDO::getUserName).collect(Collectors.joining(","));
+                projectVO.setPdName(pdNames);
             }
 
             projectVO.setNodeDepth(projectVO.getNodeDepth() - baseProjectDepth + 1);
