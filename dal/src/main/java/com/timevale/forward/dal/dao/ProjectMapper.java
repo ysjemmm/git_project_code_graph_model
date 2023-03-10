@@ -91,7 +91,9 @@ public interface ProjectMapper {
      * @param projectIds     项目id
      * @param productLineIds 产品线id
      */
-    List<Long> getProjectIds(@Param("projectIds") List<Long> projectIds, @Param("productLineIds") List<Long> productLineIds, @Param("bizDomainIds") List<Long> bizDomainIds);
+    List<Long> getProjectIds(@Param("projectIds") List<Long> projectIds,
+                             @Param("productLineIds") Collection<Long> productLineIds,
+                             @Param("bizDomainIds") Collection<Long> bizDomainIds);
 
 
     /**
@@ -170,9 +172,6 @@ public interface ProjectMapper {
      * @return 产品需求DO
      */
     List<ProjectDO> getByLikeName(@Param("name") String name, @Param("category") Integer category);
-
-
-    List<Long> getIdByPl(@Param("productLines")Collection<Long> productLines);
 
     Page<ProjectListDO> listChildren(ProjectListChildCondition condition);
 

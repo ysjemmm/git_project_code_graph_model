@@ -55,12 +55,6 @@ public class ProjectListChildCondition {
     // 项目类型
     private Collection<Integer> kinds;
 
-    // 业务域
-    private Collection<Long> bizDomains;
-
-    // 产品线
-    private Collection<Long> productLines;
-
     private Integer pageNum;
 
     private Integer pageSize;

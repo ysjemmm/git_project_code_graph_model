@@ -73,7 +73,7 @@ public class ProjectEvaluateComponent {
         HistoryRecordDO recordDO = new HistoryRecordDO();
         recordDO.setVersion(newVersion);
         recordDO.setProjectId(projectId);
-        recordDO.setRecord_content(recordContent);
+        recordDO.setRecordContent(recordContent);
         recordMapper.insert(recordDO);
     }
 

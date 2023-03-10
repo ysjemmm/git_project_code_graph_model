@@ -490,7 +490,7 @@
     <select id="listChildren" resultType="com.timevale.forward.dal.entity.ProjectListDO">
         select a.id,a.name, a.customer_dev,is_platform_publish, is_with_goal, a.priority, a.type, a.status, a.node_status,
                a.pm_id,a.pm ,a.plan_start_date,a.plan_end_date, a.actual_start_date, a.actual_end_date, a.`desc`,a.inner_type,
-               a.category,a.parent_ids, a.level,pj_establish_start_date,pj_establish_publish_date,is_acceptance,
+               a.category,a.parent_ids, a.level,pj_establish_start_date, a.pj_establish_publish_date, a.is_acceptance,
                a.create_man_id, a.create_man,a.create_date,a.modify_date
         from project a
         <where>
@@ -604,19 +604,5 @@
         </foreach>
         and p.is_deleted = false
         group by p.id;
-    </select>
-
-    <select id="getIdByPl" resultType="java.lang.Long">
-        SELECT DISTINCT id
-        FROM project pj
-        LEFT JOIN project_product_line ppl ON pj.id = ppl.project_id AND ppl.is_deleted = false
-        <where>
-            <if test="productLines != null and productLines.size() > 0">
-                AND ppl.product_line_id IN
-                <foreach collection="productLines" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
-            </if>
-        </where>
     </select>
 </mapper>

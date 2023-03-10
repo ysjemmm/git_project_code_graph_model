@@ -673,6 +673,8 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<PageQueryResult<ProjectVO>> listChildren(ProjectChildListReq projectChildListReq) {
         ProjectDO project = projectMapper.get(projectChildListReq.getProjectId());
         AssertUtil.notNull(project, "您查询的项目不存在，请检查");
+
+        // 转换条件
         ProjectListChildCondition condition = ProjectCopier.INSTANCE.convert(projectChildListReq, project);
         if (projectChildListReq.getNavigateProjectId() != null) {
             ProjectDO navigateProject = projectMapper.get(projectChildListReq.getNavigateProjectId());
@@ -680,29 +682,58 @@ public class ProjectServiceImpl implements ProjectService {
             condition.setNavigateParentIdsPrefix(navigateProject.getParentIds());
         }
 
+        List<Long> validIds = projectMapper.getAllId();
+
         // 业务域、产品线过滤
         Collection<Long> bizDomains = projectChildListReq.getBizDomains();
         Collection<Long> productLines = projectChildListReq.getProductLines();
-        if (CollUtil.isNotEmpty(bizDomains) || CollUtil.isNotEmpty(productLines)) {
-            List<Long> plIds = CollUtil.newArrayList(productLines);
-            if (CollUtil.isNotEmpty(bizDomains)) {
-                plIds.addAll(productLineMapper.getByBizDomainIds(bizDomains));
-            }
-            if (CollUtil.isNotEmpty(plIds)) {
-                List<Long> validIds = projectMapper.getIdByPl(plIds);
-                condition.setValidIds(validIds);
+        if (CollUtil.isNotEmpty(productLines) || CollectionUtils.isNotEmpty(bizDomains)) {
+            validIds = projectMapper.getProjectIds(validIds, productLines, bizDomains);
+            if (CollUtil.isEmpty(validIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
             }
         }
 
+        // 产品经理过滤
+        Collection<String> productPms = projectChildListReq.getProductPms();
+        if (CollUtil.isNotEmpty(productPms)) {
+            validIds = personMapper.getMainIds(productPms, validIds, PersonTypeEnum.PROJECT_PD.getCode());
+            if (CollUtil.isEmpty(validIds)) {
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+        }
+
+        // 分页查询
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
+        condition.setValidIds(validIds);
         Page<ProjectListDO> projects = projectMapper.listChildren(condition);
+
+        // 业务域、产品线数据
+        List<Long> resultIds = projects.stream().map(BaseDO::getId).collect(Collectors.toList());
+        List<ProjectProductLineBizDomain> bdPlData = productLineMapper.getByProjectIds(resultIds);
+        Map<Long, List<ProjectProductLineBizDomain>> bdPlGroup = bdPlData.stream()
+                .collect(Collectors.groupingBy(ProjectProductLineBizDomain::getProjectId));
+
+        // 转换
         List<ProjectVO> resultList = ProjectCopier.INSTANCE.convert(projects);
         int baseProjectDepth = project.getParentList().size();
         for (ProjectVO projectVO : resultList) {
+            Long id = projectVO.getId();
+
+            List<ProjectProductLineBizDomain> selfBdPlData = bdPlGroup.get(id);
+            if (CollUtil.isNotEmpty(selfBdPlData)) {
+                String bdNames = selfBdPlData.stream().map(ProjectProductLineBizDomain::getBizDomainName).collect(Collectors.joining(","));
+                String plNames = selfBdPlData.stream().map(ProjectProductLineBizDomain::getProductLineName).collect(Collectors.joining(","));
+                projectVO.setBizDomainName(bdNames);
+                projectVO.setProductLineName(plNames);
+            }
+
             projectVO.setNodeDepth(projectVO.getNodeDepth() - baseProjectDepth + 1);
         }
+
         PageQueryResult<ProjectVO> res = PageQueryResult.resResult(resultList);
         ResultUtil.fillPageInfo(res, projects);
+
         return BaseResult.success(res);
     }
 

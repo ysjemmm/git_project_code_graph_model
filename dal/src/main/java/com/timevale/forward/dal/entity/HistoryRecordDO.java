@@ -23,7 +23,7 @@ public class HistoryRecordDO extends BaseDO {
     /**
      * 记录内容
      */
-    private String record_content;
+    private String recordContent;
 
     /**
      * 版本
