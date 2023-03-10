@@ -21,11 +21,10 @@ import com.timevale.forward.service.copy.ProjectEvaluateCopier;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.util.AssertUtil;
-import com.timevale.mandarin.common.annotation.RestService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,22 +32,15 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @LogPoint
-@RestService
+@RequiredArgsConstructor
 public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
-    @Resource
-    private ProjectMapper projectMapper;
-    @Resource
-    private ProjectFlowMapper projectFlowMapper;
-    @Resource
-    private WorkFlowComponent workFlowComponent;
-    @Resource
-    private ProjectEvaluateMapper evaluateMapper;
-    @Resource
-    private EvaluateDimensionMapper dimensionMapper;
-    @Resource
-    private ProjectMemberEvaluateMapper memberEvaluateMapper;
-    @Resource
-    private ProjectEvaluateComponent projectEvaluateComponent;
+    private final ProjectMapper projectMapper;
+    private final ProjectFlowMapper projectFlowMapper;
+    private final WorkFlowComponent workFlowComponent;
+    private final ProjectEvaluateMapper evaluateMapper;
+    private final EvaluateDimensionMapper dimensionMapper;
+    private final ProjectMemberEvaluateMapper memberEvaluateMapper;
+    private final ProjectEvaluateComponent projectEvaluateComponent;
 
     @Override
     public BaseResult<ProjectMemberEvaluateVO> memberList(Long projectId) {

@@ -17,4 +17,11 @@
         LIMIT 1
     </select>
 
+    <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.HistoryRecordDO">
+        SELECT *
+        FROM history_record
+        WHERE project_id = #{projectId}
+          AND is_deleted = false
+    </select>
+
 </mapper>
