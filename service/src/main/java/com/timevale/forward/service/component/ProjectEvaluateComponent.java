@@ -6,7 +6,6 @@ import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.dao.HistoryRecordMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMemberEvaluateMapper;
-import com.timevale.forward.dal.dao.ProjectNodeRecordMapper;
 import com.timevale.forward.dal.entity.HistoryRecordDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMemberEvaluateDO;
@@ -21,8 +20,10 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 /**
@@ -35,7 +36,6 @@ public class ProjectEvaluateComponent {
 
     private final ProjectMapper projectMapper;
     private final HistoryRecordMapper recordMapper;
-    private final ProjectNodeRecordMapper nodeRecordMapper;
     private final ProjectMemberEvaluateMapper memberEvaluateMapper;
 
     /**
@@ -44,14 +44,29 @@ public class ProjectEvaluateComponent {
      * @param projectId 项目id
      */
     public void additionRecord(Long projectId) {
+        additionRecord(projectId, null);
+    }
+
+    /**
+     * 添加工作量记录
+     *
+     * @param projectId  项目id
+     * @param userIdColl 需要记录的成员，为空则为全部成员
+     */
+    public void additionRecord(Long projectId, Collection<String> userIdColl) {
         // 查询最新版本，生成下一个版本号
         BigDecimal lastVersion = Optional.ofNullable(recordMapper.selectLast(projectId))
                 .flatMap(e -> Optional.ofNullable(e.getVersion()))
                 .orElse(BigDecimal.ZERO);
         BigDecimal newVersion = lastVersion.add(BigDecimal.ONE);
 
-        // 记录的内容
+        // 记录的内容, 过滤无需记录的成员
         List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
+        if (CollUtil.isNotEmpty(userIdColl)) {
+            memberEvaluateDOList = memberEvaluateDOList.stream()
+                    .filter(e -> userIdColl.contains(e.getUserId()))
+                    .collect(Collectors.toList());
+        }
         String recordContent = JSON.toJSONString(memberEvaluateDOList);
 
         // 组装落库
@@ -62,6 +77,7 @@ public class ProjectEvaluateComponent {
         recordMapper.insert(recordDO);
     }
 
+
     /**
      * 工作量变更表单
      *
@@ -69,14 +85,14 @@ public class ProjectEvaluateComponent {
      * @return {@link ProjectWorkloadChangeVO}
      */
     public ProjectWorkloadChangeVO workloadChangeForm(MemberWorkloadFillReq req) {
-        Long projectId = req.getProjectId();
+        final Long projectId = req.getProjectId();
 
         // 判断项目是否存在
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO,"项目不存在");
 
         // 不存在基线版本，直接返回，无需表单数据
-        if (!nodeRecordMapper.contain(projectId)) {
+        if (recordMapper.selectLast(projectId) == null) {
             return new ProjectWorkloadChangeVO().setDirectChangeEnable(true);
         }
 

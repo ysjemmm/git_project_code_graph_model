@@ -18,6 +18,7 @@ import com.timevale.forward.facade.api.result.ProjectWorkloadChangeVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectEvaluateCopier;
+import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.integration.epeius.model.ConclusionVar;
 import com.timevale.forward.service.integration.epeius.model.ProjectEvaluateVar;
@@ -59,6 +60,8 @@ public class WorkFlowComponent {
     private ProjectEvaluateMapper evaluateMapper;
     @Resource
     private EvaluateDimensionMapper dimensionMapper;
+    @Resource
+    private ProjectEvaluateComponent evaluateComponent;
     @Resource
     private ProjectMemberEvaluateMapper memberEvaluateMapper;
 
@@ -276,7 +279,7 @@ public class WorkFlowComponent {
     }
 
     /**
-     * 结项工作流——工作流完成回调处理
+     * 工作量变更——工作流完成回调处理
      *
      * @param processInstanceId 流程实例id
      */
@@ -287,20 +290,42 @@ public class WorkFlowComponent {
         ProjectFlowDO projectFlowDO = projectFlowMapper.getByFlowId(processInstanceId);
         AssertUtil.notNull(projectFlowDO, "流程不存在");
 
-        // 查询对应项目
-        ProjectDO projectDO = projectMapper.get(projectFlowDO.getProjectId());
-        AssertUtil.notNull(projectFlowDO, "项目不存在");
+        // 获取流程信息
+        ProcessResponse processInfo  = epeiusClient.getProcessInfo(processInstanceId);
+        AssertUtil.notNull(processInfo, "流程信息为空");
 
-        // 解析对应工作流修改数据
+        // 更新流程状态
+        String processStatus = processInfo.getProcessStatus();
+        Optional.ofNullable(ForwardFlowStatusEnum.getByValue(processStatus))
+                .flatMap(e -> Optional.ofNullable(e.getCode()))
+                .ifPresent(e -> projectFlowMapper.updateStatus(projectFlowDO.getId(), e));
+
+        // 只有审批通过，需要更新项目工作量信息
+        if (ObjectUtil.notEqual(FlowStatusEnum.FLOW_COMPLETE.getValue(), processStatus)) {
+            return;
+        }
+
+        // 项目id
+        final Long projectId = projectFlowDO.getProjectId();
+
+        // 解析对应工作流的数据
         String flowData = projectFlowDO.getFlowData();
-        List<MemberWorkloadModifyReq> workloadModifyList = JSON.parseArray(flowData, MemberWorkloadModifyReq.class);
-        ImmutableMap<String, MemberWorkloadModifyReq> workloadModifyMap = Maps.uniqueIndex(workloadModifyList, MemberWorkloadModifyReq::getUserId);
+        List<MemberWorkloadModifyReq> modifyReqList = JSON.parseArray(flowData, MemberWorkloadModifyReq.class);
 
-        // 查询对应的项目成员工作量信息
-        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectFlowDO.getProjectId());
+        // 需要更新的员工id set
+        Set<String> recordUserIdSet = modifyReqList.stream().map(MemberWorkloadModifyReq::getUserId).collect(Collectors.toSet());
 
-        // 更新版本信息
+        // 更新结项工作流状态
+        projectFlowMapper.updateStatus(projectFlowDO.getId(), ForwardFlowStatusEnum.COMPLETE.getCode());
 
+        // 更新当前成员工作量
+        for (MemberWorkloadModifyReq modifyReq : modifyReqList) {
+            ProjectMemberEvaluateDO evaluateDO = ProjectMemberEvaluateCopier.INSTANCE.req2do(modifyReq, projectId);
+            memberEvaluateMapper.update(evaluateDO);
+        }
+
+        // 生成版本
+        evaluateComponent.additionRecord(projectId, recordUserIdSet);
     }
 
 }
