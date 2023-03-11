@@ -33,8 +33,6 @@ public interface ProjectNodeFlowCopier {
     @Mapping(source = "po.userId", target = "poId")
     @Mapping(source = "d.userName", target = "d")
     @Mapping(source = "d.userId", target = "did")
-    @Mapping(source = "pbu.userName", target = "pbu")
-    @Mapping(source = "pbu.userId", target = "pbuId")
     @Mapping(source = "bis", target = "biz", qualifiedByName = "bizMappingStr")
     @Mapping(source = "bis", target = "bizId", qualifiedByName = "bizIdMappingStr")
     ProjectNodeFlowDO convert(ProjectNodeFlowAddReq projectNodeFlowAddReq);
