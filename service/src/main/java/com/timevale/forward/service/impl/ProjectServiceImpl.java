@@ -225,7 +225,7 @@ public class ProjectServiceImpl implements ProjectService {
         }
         Integer oldStatus = projectDO.getStatus();
         if (ProjectStatusEnum.INVALID.getCode().equals(oldStatus) || ProjectStatusEnum.RELEASED.getCode().equals(oldStatus)) {
-            throw new BaseBizRuntimeException("项目状态为已作废或已发布时,不能修改状态");
+            throw new BaseBizRuntimeException("项目状态为已中止或已发布时,不能修改状态");
         }
 
         // 更新项目状态
@@ -253,16 +253,29 @@ public class ProjectServiceImpl implements ProjectService {
             // 作废项目更新里程碑内部项目状态
             innerProjectStatusUpdateComponent.updateFromProject(projectDO);
         }
-        String action = ProjectStatusEnum.SUSPEND.getCode().equals(type) ?
-                ButtonActionEnum.SUSPEND.getText() : ButtonActionEnum.INVALID.getText();
-        projectLogComponent.addLogWhenStatusChange(oldStatus, type, projectId, action);
 
-        //记录暂停/作废原因更新日志
-        String field = ProjectStatusEnum.SUSPEND.getCode().equals(type) ?
-                BizChangeLogFieldEnum.SUSPEND_REASON.getText() : BizChangeLogFieldEnum.INVALID_REASON.getText();
-        String reason = ProjectStatusEnum.SUSPEND.getCode().equals(type) ?
-                suspendReason : invalidReason;
+        //记录暂停/作废/中止原因更新日志
+        String field;
+        String action;
+        String reason;
+        if (ProjectStatusEnum.SUSPEND.getCode().equals(type)) {
+            reason = suspendReason;
+            action = ButtonActionEnum.SUSPEND.getText();
+            field = BizChangeLogFieldEnum.SUSPEND_REASON.getText();
+        } else {
+            if (ProjectCategoryEnum.PRODUCT_PROJECT.getCode().equals(projectDO.getCategory())) {
+                action = ButtonActionEnum.TERMINATE.getText();
+                field = BizChangeLogFieldEnum.TERMINATE_REASON.getText();
+            } else {
+                action = ButtonActionEnum.INVALID.getText();
+                field = BizChangeLogFieldEnum.INVALID_REASON.getText();
+            }
+            reason = invalidReason;
+        }
+
+        projectLogComponent.addLogWhenStatusChange(oldStatus, type, projectId, action);
         projectLogComponent.addLogWhenContentChange(CommonConstant.NULL, reason, projectId, field);
+
         // 更新任务状态
         taskComponent.updateStatusAsProjectStatusChange(projectId, type, false);
         if (ProjectStatusEnum.SUSPEND.getCode().equals(type)) {
@@ -753,6 +766,12 @@ public class ProjectServiceImpl implements ProjectService {
             }
 
             projectVO.setNodeDepth(projectVO.getNodeDepth() - baseProjectDepth + 1);
+
+            // 内部项目作废文案处理
+            if (ProjectStatusEnum.INVALID.getCode().equals(projectVO.getStatus())
+                    && ProjectCategoryEnum.INNER_PROJECT.getCode().equals(projectVO.getCategory())) {
+                projectVO.setStatusName(CommonConstant.INVALID);
+            }
         }
 
         PageQueryResult<ProjectVO> res = PageQueryResult.resResult(resultList);
@@ -1514,7 +1533,7 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         if (ProjectStatusEnum.terminated(oldStatus)) {
-            throw new BaseBizRuntimeException("项目处于发布或作废中，不可编辑，请刷新后重试");
+            throw new BaseBizRuntimeException("项目处于发布或中止中，不可编辑，请刷新后重试");
         }
 
     }

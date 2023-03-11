@@ -93,6 +93,8 @@ public enum BizChangeLogFieldEnum {
     SUSPEND_REASON("项目暂停原因"),
 
     INVALID_REASON("项目作废原因"),
+
+    TERMINATE_REASON("项目中止原因"),
     ;
 
     private final String text;

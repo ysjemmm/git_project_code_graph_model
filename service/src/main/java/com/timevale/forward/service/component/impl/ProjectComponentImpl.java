@@ -17,6 +17,7 @@ import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.config.CommonConfig;
+import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -247,11 +248,10 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         }
 
-        // 开始分页
+        // 更新筛选项 —— 项目id列表，开始查询开始分页
+        condition.setIds(projectIds);
         String collation = sqlOrderComponent.build(condition.getOrderFiled(), condition.getOrderCollation());
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), collation);
-        // 更新筛选项 —— 项目id列表，开始查询
-        condition.setIds(projectIds);
         List<ProjectListDO> projectDos = projectMapper.list(condition);
 
         // 筛选判空
@@ -297,59 +297,65 @@ public class ProjectComponentImpl implements ProjectComponent {
                 .collect(Collectors.toSet());
 
         // 遍历填充数据
-        for (ProjectVO a : projectVOList) {
-            List<PersonDO> pds = pdMap.get(a.getId());
+        for (ProjectVO projectVO : projectVOList) {
+            List<PersonDO> pds = pdMap.get(projectVO.getId());
             if (CollUtil.isNotEmpty(pds)) {
                 String pdName = pds.stream().map(PersonDO::getUserName).collect(Collectors.joining(","));
-                a.setPdName(pdName);
+                projectVO.setPdName(pdName);
 
                 List<String> pdIdList = pds.stream()
                         .map(PersonDO::getUserId)
                         .collect(Collectors.toList());
-                a.setPdId(pdIdList);
+                projectVO.setPdId(pdIdList);
             }
 
-            List<PersonDO> teamMembers = teamMemberMap.get(a.getId());
+            List<PersonDO> teamMembers = teamMemberMap.get(projectVO.getId());
             if (CollUtil.isNotEmpty(teamMembers)) {
                 String teamMemberName = teamMembers.stream().map(PersonDO::getUserName).collect(Collectors.joining(","));
-                a.setTeamMember(teamMemberName);
+                projectVO.setTeamMember(teamMemberName);
             }
 
-            List<ProjectProductLineBizDomain> pdls = productLineMap.get(a.getId());
+            List<ProjectProductLineBizDomain> pdls = productLineMap.get(projectVO.getId());
             if (CollUtil.isNotEmpty(pdls)) {
                 String productLineName = pdls.stream().map(ProjectProductLineBizDomain::getProductLineName).collect(Collectors.joining(","));
-                a.setProductLineName(productLineName);
+                projectVO.setProductLineName(productLineName);
                 String bizDomainName = pdls.stream().map(ProjectProductLineBizDomain::getBizDomainName).distinct().collect(Collectors.joining(","));
-                a.setBizDomainName(bizDomainName);
+                projectVO.setBizDomainName(bizDomainName);
             }
 
-            List<TestBillDO> testBillDos = testBillMap.get(a.getId());
+            List<TestBillDO> testBillDos = testBillMap.get(projectVO.getId());
             if (CollUtil.isEmpty(testBillDos)) {
-                a.setReturnCount(0);
-                a.setIsDelay(false);
+                projectVO.setReturnCount(0);
+                projectVO.setIsDelay(false);
             } else {
-                a.setReturnCount(testBillDos.get(0).getReturnCount());
-                a.setIsDelay(testBillDos.get(0).getDelayDay() > 0);
+                projectVO.setReturnCount(testBillDos.get(0).getReturnCount());
+                projectVO.setIsDelay(testBillDos.get(0).getDelayDay() > 0);
             }
-            a.setActualTestDate(CollUtil.isEmpty(testNodeMap.get(a.getId())) ? null : testNodeMap.get(a.getId()).get(0).getActualDate());
+            projectVO.setActualTestDate(CollUtil.isEmpty(testNodeMap.get(projectVO.getId())) ? null : testNodeMap.get(projectVO.getId()).get(0).getActualDate());
 
             // 项目节点状态、节点计划时间
-            Integer nodeStatus = a.getNodeStatus();
-            a.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(nodeStatus));
-            a.setNodePlanDate(projectNodeComponent.getRecentPlanDate(nodeMap.get(a.getId())));
+            Integer nodeStatus = projectVO.getNodeStatus();
+            projectVO.setNodeStatusName(ProjectNodeStatusEnum.getNameByCode(nodeStatus));
+            projectVO.setNodePlanDate(projectNodeComponent.getRecentPlanDate(nodeMap.get(projectVO.getId())));
 
             // 是否需要预警
-            Integer status = a.getStatus();
+            Integer status = projectVO.getStatus();
             boolean warn = ProjectStatusEnum.SUSPEND.getCode().equals(status)
                     || ProjectStatusEnum.INVALID.getCode().equals(status)
                     || ProjectStatusEnum.RELEASED.getCode().equals(status);
             if (!warn) {
-                a.setContainRisk(riskSet.contains(a.getId()));
+                projectVO.setContainRisk(riskSet.contains(projectVO.getId()));
             }
 
-            List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(a.getId());
+            List<BizLabelSimpleVO> labelSimpleVOList = bizLabelMap.get(projectVO.getId());
             if (CollUtil.isNotEmpty(labelSimpleVOList)) {
-                a.setLabelNames(labelSimpleVOList);
+                projectVO.setLabelNames(labelSimpleVOList);
+            }
+
+            // 内部项目作废文案处理
+            if (ProjectStatusEnum.INVALID.getCode().equals(projectVO.getStatus())
+                    && ProjectCategoryEnum.INNER_PROJECT.getCode().equals(projectVO.getCategory())) {
+                projectVO.setStatusName(CommonConstant.INVALID);
             }
         }
 

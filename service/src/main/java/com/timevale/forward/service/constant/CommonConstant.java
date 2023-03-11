@@ -38,4 +38,6 @@ public class CommonConstant {
 
     public static final String FORWARD_BIZ_RELATION_TOPIC = "forward-biz-rel";
 
+    public static final String INVALID = "已作废";
+
 }

@@ -158,6 +158,11 @@ public enum ButtonActionEnum {
     INVALID("作废"),
 
     /**
+     * 中止
+     */
+    TERMINATE("中止"),
+
+    /**
      * 接收
      */
     RECEIVE("接收"),
