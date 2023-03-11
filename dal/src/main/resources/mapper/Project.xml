@@ -132,6 +132,7 @@
             <if test="validStages!= null">valid_stages = #{validStages},</if>
             <if test="expectedIncome != null">expected_income = #{expectedIncome},</if>
             <if test="suspendReason != null">suspend_reason = #{suspendReason},</if>
+            <if test="conclusionDate != null">conclusion_date = #{conclusionDate},</if>
         </set>
         <where>
             id = #{id}

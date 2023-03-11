@@ -1326,6 +1326,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .setProposerId(userInfo.getId())
                 .setProposer(userInfo.getFullAlias())
                 .setFlowType(FlowTypeEnum.CONCLUSION.getCode())
+                .setFlowData(String.valueOf(req.getTargetStatus()))
                 .setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
         projectFlowMapper.insert(projectFlowDO);
 

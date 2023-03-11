@@ -209,6 +209,11 @@ public class ProjectDO extends BaseDO {
     private String otnPrincipalId;
 
     /**
+     * 结项时间
+     */
+    private Date conclusionDate;
+
+    /**
      * 返回父节点id列表
      */
     public LinkedList<Long> getParentList() {

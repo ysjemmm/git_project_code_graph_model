@@ -34,10 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -222,8 +219,11 @@ public class WorkFlowComponent {
             evaluateMapper.update(updateEvaluate);
         }
 
-        // 更新项目状态
-        projectMapper.updateStatus(projectFlowDO.getProjectId(), ProjectStatusEnum.CONCLUSION.getCode());
+        // 更新项目状态, 结项日期
+        ProjectDO updateDO = new ProjectDO();
+        updateDO.setId(projectFlowDO.getId());
+        updateDO.setConclusionDate(new Date());
+        updateDO.setStatus(Integer.valueOf(projectFlowDO.getFlowData()));
     }
 
     /**
