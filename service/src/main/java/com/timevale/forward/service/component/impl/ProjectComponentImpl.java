@@ -1,6 +1,7 @@
 package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.BooleanUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
@@ -159,24 +160,31 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
 
         // 是否包含风险
-        if (condition.getIncludeRisk() != null && condition.getIncludeRisk()) {
+        if (BooleanUtil.isTrue(condition.getIncludeRisk())) {
+            // 查询所有待处理的分享
             List<ProjectRiskDO> projectRiskDOList = projectRiskMapper.selectByProjectIdListStatus(projectIds, ProjectRiskStatusEnum.PENDING.getCode());
-            projectIds = projectRiskDOList.stream().map(ProjectRiskDO::getProjectId).distinct().collect(Collectors.toList());
+            // 过滤出有分享的项目id
+            projectIds = projectRiskDOList.stream()
+                    .map(ProjectRiskDO::getProjectId)
+                    .distinct()
+                    .collect(Collectors.toList());
 
             if (CollUtil.isEmpty(projectIds)) {
                 return ResultUtil.queryResultEmpty();
             }
 
-            //项目状态≠已暂停、已作废、已发布
+            // 项目状态需要过滤掉已暂停、已作废、已发布、已结项
             List<Integer> status = condition.getStatus();
             if (CollUtil.isEmpty(status)) {
                 for (ProjectStatusEnum e : ProjectStatusEnum.values()) {
                     status.add(e.getCode());
                 }
             }
-            status.removeIf(e -> ProjectStatusEnum.SUSPEND.getCode().equals(e)
-                    || ProjectStatusEnum.INVALID.getCode().equals(e)
-                    || ProjectStatusEnum.RELEASED.getCode().equals(e));
+            status.remove(ProjectStatusEnum.SUSPEND.getCode());
+            status.remove(ProjectStatusEnum.INVALID.getCode());
+            status.remove(ProjectStatusEnum.RELEASED.getCode());
+            status.remove(ProjectStatusEnum.CONCLUSION.getCode());
+
             if (CollUtil.isEmpty(status)) {
                 return ResultUtil.queryResultEmpty();
             }
