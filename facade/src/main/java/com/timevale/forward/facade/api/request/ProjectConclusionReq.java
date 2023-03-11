@@ -21,7 +21,7 @@ public class ProjectConclusionReq extends ToString {
     @ApiModelProperty("项目id")
     private Long projectId;
 
-    @NotNull(message = "项目最终状态必填: ")
+    @NotNull(message = "项目最终状态必填")
     @ApiModelProperty("项目最终状态")
     private Integer targetStatus;
 }

@@ -1366,10 +1366,6 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO,"项目不存在");
 
-        // 项目状态是否为已发布
-        AssertUtil.checkState(ObjectUtil.equal(ProjectStatusEnum.RELEASED.getCode(), projectDO.getStatus()),
-                "只有已发布的项目才可以发起结项");
-
         // 需要校验项目评价必填内容是否完成、
         List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.selectByProjectId(projectId);
         AssertUtil.checkState(evaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getScores())),
