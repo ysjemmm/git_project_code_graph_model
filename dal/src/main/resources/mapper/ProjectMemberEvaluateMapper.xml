@@ -26,6 +26,21 @@
         </where>
     </update>
 
+    <update id="batchDelete">
+        UPDATE project_member_evaluate
+        <set>
+            is_deleted = true,
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId},
+        </set>
+        <where>
+            AND user_id IN
+            <foreach collection="userIdColl" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </update>
+
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectMemberEvaluateDO">
         SELECT *
         FROM project_member_evaluate

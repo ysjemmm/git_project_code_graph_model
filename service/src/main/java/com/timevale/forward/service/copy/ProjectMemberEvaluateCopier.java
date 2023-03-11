@@ -7,6 +7,7 @@ import com.timevale.forward.facade.api.request.MemberWorkloadModifyReq;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.result.MemberEvaluateVO;
 import com.timevale.forward.facade.api.result.ProjectWorkloadChangeVO;
+import com.timevale.forward.model.enums.GradeEnum;
 import com.timevale.forward.model.enums.ProjectKindEnum;
 import com.timevale.forward.model.enums.ProjectLevelEnum;
 import com.timevale.forward.model.enums.ProjectTypeEnum;
@@ -24,6 +25,7 @@ import java.util.List;
  */
 @Mapper(
         imports = {
+                GradeEnum.class,
                 ProjectKindEnum.class,
                 ProjectTypeEnum.class,
                 ProjectLevelEnum.class,
@@ -33,6 +35,7 @@ public interface ProjectMemberEvaluateCopier {
     ProjectMemberEvaluateCopier INSTANCE = Mappers.getMapper(ProjectMemberEvaluateCopier.class);
 
     @Mapping(target = "includeStat", constant = "true")
+    @Mapping(target = "evaluateGrade", expression = "java(GradeEnum.B.getCode())")
     ProjectMemberEvaluateDO person2do(PersonAddReq personAddReq, Long projectId);
 
     MemberEvaluateVO do2vo(ProjectMemberEvaluateDO projectMemberEvaluateDO);

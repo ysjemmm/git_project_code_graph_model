@@ -4,15 +4,19 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.dao.HistoryRecordMapper;
+import com.timevale.forward.dal.dao.ProjectFlowMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMemberEvaluateMapper;
-import com.timevale.forward.dal.entity.HistoryRecordDO;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectMemberEvaluateDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.request.MemberWorkloadFillReq;
 import com.timevale.forward.facade.api.request.MemberWorkloadModifyReq;
+import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.result.ProjectWorkloadChangeVO;
+import com.timevale.forward.model.enums.FlowTypeEnum;
+import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.WorkloadChangeTypeEnum;
+import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.mandarin.base.util.AssertUtil;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +39,9 @@ import java.util.stream.Collectors;
 public class ProjectEvaluateComponent {
 
     private final ProjectMapper projectMapper;
+    private final PersonComponent personComponent;
     private final HistoryRecordMapper recordMapper;
+    private final ProjectFlowMapper projectFlowMapper;
     private final ProjectMemberEvaluateMapper memberEvaluateMapper;
 
     /**
@@ -76,7 +82,6 @@ public class ProjectEvaluateComponent {
         recordDO.setRecordContent(recordContent);
         recordMapper.insert(recordDO);
     }
-
 
     /**
      * 工作量变更表单
@@ -149,5 +154,44 @@ public class ProjectEvaluateComponent {
                 .setPlanWorkloadAddSum(planWorkloadAddSum)
                 .setPointWorkloadAddSum(pointsWorkloadAddSum)
                 .setChangeTypeList(changeTypeList);
+    }
+
+    /**
+     * 更新成员
+     *
+     * @param projectId  项目id
+     * @param newMembers 新成员
+     */
+    public void updateMember(Long projectId, Collection<PersonAddReq> newMembers) {
+        // 当前团队成员
+        List<PersonDO> oldMemberDOList = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        List<PersonAddReq> oldMembers = PersonCopier.INSTANCE.do2req(oldMemberDOList);
+
+        // 分析出需要新增、删除的成员， 处理成员积分
+        Collection<PersonAddReq> addMembers = CollUtil.subtract(newMembers, oldMembers);
+        Collection<PersonAddReq> delMembers = CollUtil.subtract(oldMembers, newMembers);
+
+        // 删除成员，如果存在审批中的工作量变更流程，不允许删除成员
+        if (CollUtil.isNotEmpty(delMembers)) {
+            List<ProjectFlowDO> workloadFlows = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
+            boolean noneAuditing = workloadFlows.stream()
+                    .map(ProjectFlowDO::getStatus)
+                    .noneMatch(ForwardFlowStatusEnum.AUDITING.getCode()::equals);
+            AssertUtil.checkState(noneAuditing, "存在审批中的工作量变更流程，不允许删除成员");
+
+            // 删除落库
+            List<String> delUserIdColl = delMembers.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+            memberEvaluateMapper.batchDelete(projectId, delUserIdColl);
+        }
+
+        // 新增成员
+        if (CollUtil.isNotEmpty(addMembers)) {
+            List<ProjectMemberEvaluateDO> newEvalMembers = addMembers.stream()
+                    .map(e -> ProjectMemberEvaluateCopier.INSTANCE.person2do(e, projectId))
+                    .collect(Collectors.toList());
+
+            // 新增落库
+            memberEvaluateMapper.batchInsert(newEvalMembers);
+        }
     }
 }

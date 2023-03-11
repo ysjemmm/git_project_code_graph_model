@@ -371,18 +371,15 @@ public class ProjectServiceImpl implements ProjectService {
         teamMembers = teamMembers.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList());
         personComponent.add(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
 
+        // 添加积分成员
+        evaluateComponent.updateMember(projectDO.getId(), teamMembers);
+
         // 添加对应的项目评价
         List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.selectByKindDate(projectDO.getKind(), new Date());
         List<Long> dimensionIdList = dimensionDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
         if (CollUtil.isNotEmpty(dimensionIdList)) {
             evaluateMapper.batchInsert(projectDO.getId(), dimensionIdList);
         }
-
-        // 添加积分成员
-        List<ProjectMemberEvaluateDO> memberEvaluateDOList = teamMembers.stream()
-                .map(e -> ProjectMemberEvaluateCopier.INSTANCE.person2do(e, projectDO.getId()))
-                .collect(Collectors.toList());
-        memberEvaluateMapper.batchInsert(memberEvaluateDOList);
 
         //生成节点信息
         projectNodeComponent.buildDefaultNode(projectDO.getPlanStartDate(), projectDO.getPlanEndDate(), projectDO.getId());
@@ -469,6 +466,9 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<Boolean> modify(ProjectModifyReq projectModifyReq) {
         log.info("项目修改接收参数:{}", projectModifyReq);
 
+        // 项目id
+        final Long projectId = projectModifyReq.getId();
+
         // 校验名称
         Optional<ProjectDO> oldProjectOpt = Optional.ofNullable(projectMapper.getByName(projectModifyReq.getName()));
         oldProjectOpt.ifPresent(e -> AssertUtil.checkState(Objects.equals(e.getId(), projectModifyReq.getId()),
@@ -498,15 +498,21 @@ public class ProjectServiceImpl implements ProjectService {
         taskComponent.containProductLineInTask(newProject.getId(), newProject.getProductLineIds());
         bugOfflineComponent.containProductLineInBugOffline(newProject.getId(), newProject.getProductLineIds());
 
-        // 团队成员, 过滤后更新
-        List<PersonAddReq> teamMembers = projectModifyReq.getTeamMembers();
-        teamMembers.add(projectModifyReq.getPm());
-        teamMembers.add(projectModifyReq.getSr());
-        teamMembers.add(projectModifyReq.getPrincipal());
-        teamMembers.add(projectModifyReq.getOtnPrincipal());
-        teamMembers.addAll(projectModifyReq.getPds());
-        teamMembers = teamMembers.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList());
-        personComponent.update(teamMembers, newProject.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
+        // 新团队成员, 过滤后更新
+        List<PersonAddReq> newMembers = projectModifyReq.getTeamMembers();
+        newMembers.add(projectModifyReq.getPm());
+        newMembers.add(projectModifyReq.getSr());
+        newMembers.add(projectModifyReq.getPrincipal());
+        newMembers.add(projectModifyReq.getOtnPrincipal());
+        newMembers.addAll(projectModifyReq.getPds());
+        newMembers = newMembers.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList());
+
+        // 这个修改已经完全是shit了，开摆
+
+        evaluateComponent.updateMember(projectId, newMembers);
+
+        // 更新团队成员
+        personComponent.update(newMembers, newProject.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         // 节点信息
         if (CollUtil.isNotEmpty(projectNodeDOList)) {

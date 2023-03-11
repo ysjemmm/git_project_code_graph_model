@@ -72,4 +72,6 @@ public interface PersonCopier {
      */
     PersonDO req2do(PersonAddReq req, Long mainId, Integer type, Integer personLevel);
 
+    List<PersonAddReq> do2req(List<PersonDO> personDOList);
+
 }
