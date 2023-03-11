@@ -66,13 +66,22 @@ public class ProjectEvaluateComponent {
                 .orElse(BigDecimal.ZERO);
         BigDecimal newVersion = lastVersion.add(BigDecimal.ONE);
 
-        // 记录的内容, 过滤无需记录的成员
+       // 查询该项目的成员
         List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
+
+        // 过滤没有计划工作量的成员
+        memberEvaluateDOList = memberEvaluateDOList.stream()
+                .filter(e -> ObjectUtil.isNotNull(e.getPlanWorkload()))
+                .collect(Collectors.toList());
+
+        // 记录的内容, 过滤无需记录的成员
         if (CollUtil.isNotEmpty(userIdColl)) {
             memberEvaluateDOList = memberEvaluateDOList.stream()
                     .filter(e -> userIdColl.contains(e.getUserId()))
                     .collect(Collectors.toList());
         }
+
+        // 转换为JSON
         String recordContent = JSON.toJSONString(memberEvaluateDOList);
 
         // 组装落库

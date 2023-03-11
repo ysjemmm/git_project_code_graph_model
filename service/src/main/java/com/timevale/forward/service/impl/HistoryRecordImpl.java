@@ -2,6 +2,7 @@ package com.timevale.forward.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.HistoryRecordMapper;
@@ -11,6 +12,7 @@ import com.timevale.forward.facade.api.client.HistoryRecordService;
 import com.timevale.forward.facade.api.request.HistoryRecordCmpReq;
 import com.timevale.forward.facade.api.result.HistoryRecordCmpVO;
 import com.timevale.forward.facade.api.result.HistoryRecordVO;
+import com.timevale.forward.model.enums.AddOrDelOrCoEnum;
 import com.timevale.forward.service.copy.HistoryRecordCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import lombok.RequiredArgsConstructor;
@@ -57,9 +59,13 @@ public class HistoryRecordImpl implements HistoryRecordService {
         ImmutableMap<String, ProjectMemberEvaluateDO> maxRecordMap = Maps.uniqueIndex(maxEvalDOList, ProjectMemberEvaluateDO::getUserName);
 
         // 两个版本的用户名集合
+        ImmutableSet<String> minUserNameSet = minRecordMap.keySet();
+        ImmutableSet<String> maxUserNameSet = maxRecordMap.keySet();
+
+        // 合并两个版本的用户名集合，遍历用户
         HashSet<String> userNameSet = new HashSet<>();
-        userNameSet.addAll(minRecordMap.keySet());
-        userNameSet.addAll(maxRecordMap.keySet());
+        userNameSet.addAll(minUserNameSet);
+        userNameSet.addAll(maxUserNameSet);
 
         // 遍历全部用户，比较
         List<HistoryRecordCmpVO> result = new ArrayList<>();
@@ -73,12 +79,23 @@ public class HistoryRecordImpl implements HistoryRecordService {
                     .orElse(BigDecimal.ZERO);
             BigDecimal timeDiff = maxWorkload.subtract(minWorkload);
 
+            // 当前用户在两个版本对比中，是新增还是删除还是共有
+            int addOrDelOrCo;
+            if (minUserNameSet.contains(userName) && maxUserNameSet.contains(userName)) {
+                addOrDelOrCo = AddOrDelOrCoEnum.COEXIST.getCode();
+            } else if (maxUserNameSet.contains(userName)){
+                addOrDelOrCo = AddOrDelOrCoEnum.ADD.getCode();
+            } else {
+                addOrDelOrCo = AddOrDelOrCoEnum.DEL.getCode();
+            }
+
             // 组装参数
             HistoryRecordCmpVO cmpVO = new HistoryRecordCmpVO();
             cmpVO.setUserName(userName);
             cmpVO.setTimeDiff(timeDiff);
             cmpVO.setMaxVersion(maxVersion);
             cmpVO.setMinVersion(minVersion);
+            cmpVO.setAddOrDelOrCo(addOrDelOrCo);
 
             // 添加到返回结果中
             result.add(cmpVO);
