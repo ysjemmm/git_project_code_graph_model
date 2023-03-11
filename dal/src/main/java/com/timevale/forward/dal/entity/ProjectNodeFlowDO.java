@@ -149,5 +149,4 @@ public class ProjectNodeFlowDO extends BaseDO {
      */
     private Date flowEndDate;
 
-
 }

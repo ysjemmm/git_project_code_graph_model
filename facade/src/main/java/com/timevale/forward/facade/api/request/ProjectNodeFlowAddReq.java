@@ -50,4 +50,7 @@ public class ProjectNodeFlowAddReq extends BaseReq {
     @ApiModelProperty("变更类型为其他时,填写")
     private String otherReason;
 
+    @ApiModelProperty("D层负责人")
+    private PersonAddReq pbu;
+
 }

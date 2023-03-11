@@ -1,6 +1,7 @@
 package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -123,23 +124,34 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             log.info("流程id为空");
             return;
         }
+
+        // 获取流程信息
         ProcessResponse processInfo = epeiusClient.getProcessInfo(processInstanceId);
         List<String> currentTaskIdList = processInfo.getCurrentTaskIdList();
         if (CollectionUtils.isEmpty(currentTaskIdList)) {
             log.info("任务id为空");
             return;
         }
+
+        // 获取流程状态
         String processStatus = processInfo.getProcessStatus();
         log.info("返回流程信息 processInfo={}", processInfo);
+
+        // 查询产研流程数据
         ProjectNodeFlowDO projectNodeFlowDO = projectNodeFlowMapper.get(null, processInstanceId);
         if (projectNodeFlowDO == null) {
             log.info("无发布正式节点审批流程 flowId={}", processInstanceId);
             return;
         }
+
+        // 获取对应项目
+        Long projectId = projectNodeFlowDO.getProjectId();
+        ProjectDO projectDO = projectMapper.get(projectId);
+
         Map<String, Object> flowData = processInfo.getFlowData();
         if (FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
             projectNodeFlowDO.setStatus(ForwardFlowStatusEnum.REJECT.getCode());
-            String rejectReason = flowData.get("rejectReason") == null ? StringUtils.EMPTY : String.valueOf(flowData.get("rejectReason"));
+            String rejectReason = flowData.get("rejectReason") == null ? "" : String.valueOf(flowData.get("rejectReason"));
             projectNodeFlowDO.setReviewFailReason(rejectReason);
             projectNodeFlowDO.setFlowEndDate(new Date());
         } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
@@ -148,8 +160,8 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
             projectNodeFlowDO.setStatus(ForwardFlowStatusEnum.COMPLETE.getCode());
             projectNodeFlowDO.setFlowEndDate(new Date());
-
         }
+
         //1审核人员处理
         List<String> reviewList = new ArrayList<>();
         List<String> reviewIdList = new ArrayList<>();
@@ -165,14 +177,15 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
                 reviewIdList.addAll(bizId);
             }
         } else {
-            if (StringUtils.isNotEmpty(projectNodeFlowDO.getPo())) {
-                reviewList.add(projectNodeFlowDO.getPo());
-                reviewIdList.add(projectNodeFlowDO.getPoId());
-            } else {
+            if (StrUtil.isNotBlank(projectNodeFlowDO.getD())) {
                 reviewList.add(projectNodeFlowDO.getD());
                 reviewIdList.add(projectNodeFlowDO.getDid());
+            } else {
+                reviewList.add(projectDO.getSr());
+                reviewIdList.add(projectDO.getSrId());
             }
         }
+
         Map<String, String> reviewMap = new HashMap<>();
         for (int i = 0; i < reviewList.size(); i++) {
             reviewMap.put(reviewIdList.get(i), reviewList.get(i));
@@ -181,28 +194,20 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         TaskHandleUserResponse taskHandleUserList = epeiusClient.getTaskHandleUserList(currentTaskIdList.get(0));
         log.info("返回人员信息 taskHandleUserList={}", taskHandleUserList);
         List<String> passIds = taskHandleUserList.getPassedUserList().stream().map(TaskHandleUserResponse.TaskUser::getAccountId).collect(Collectors.toList());
-        List<String> passAlias = new ArrayList<>();
-        passIds.forEach(a -> {
-            passAlias.add(reviewMap.get(a));
-        });
 
+        // 评审不通过人员
         List<String> rejectIds = taskHandleUserList.getRejectUserList().stream().map(TaskHandleUserResponse.TaskUser::getAccountId).collect(Collectors.toList());
-        List<String> rejectAlias = new ArrayList<>();
-        rejectIds.forEach(a -> {
-            rejectAlias.add(reviewMap.get(a));
-        });
-
+        List<String> rejectAlias = rejectIds.stream().map(reviewMap::get).collect(Collectors.toList());
         reviewIdList.removeAll(passIds);
         reviewIdList.removeAll(rejectIds);
 
-        List<String> unReviewAlias = new ArrayList<>();
-        reviewIdList.forEach(a -> {
-            unReviewAlias.add(reviewMap.get(a));
-        });
-        projectNodeFlowDO.setReviewFailId(CollectionUtils.isEmpty(rejectIds) ? StringUtils.EMPTY : JSONObject.toJSONString(rejectIds));
-        projectNodeFlowDO.setReviewFail(CollectionUtils.isEmpty(rejectAlias) ? StringUtils.EMPTY : JSONObject.toJSONString(rejectAlias));
-        projectNodeFlowDO.setUnreviewedId(CollectionUtils.isEmpty(reviewIdList) ? StringUtils.EMPTY : JSONObject.toJSONString(reviewIdList));
-        projectNodeFlowDO.setUnreviewed(CollectionUtils.isEmpty(unReviewAlias) ? StringUtils.EMPTY : JSONObject.toJSONString(unReviewAlias));
+        // 未评审人员
+        List<String> unReviewAlias = reviewIdList.stream().map(reviewMap::get).collect(Collectors.toList());
+
+        projectNodeFlowDO.setReviewFailId(CollectionUtils.isEmpty(rejectIds) ? "" : JSONObject.toJSONString(rejectIds));
+        projectNodeFlowDO.setReviewFail(CollectionUtils.isEmpty(rejectAlias) ? "" : JSONObject.toJSONString(rejectAlias));
+        projectNodeFlowDO.setUnreviewedId(CollectionUtils.isEmpty(reviewIdList) ? "" : JSONObject.toJSONString(reviewIdList));
+        projectNodeFlowDO.setUnreviewed(CollectionUtils.isEmpty(unReviewAlias) ? "" : JSONObject.toJSONString(unReviewAlias));
 
         projectNodeFlowDO.setModifyMan(projectNodeFlowDO.getCreateMan());
         projectNodeFlowDO.setModifyManId(projectNodeFlowDO.getCreateManId());
@@ -211,12 +216,17 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         projectNodeFlowMapper.update(projectNodeFlowDO);
 
         List<ProjectNodeDO> projectNodes = JSONObject.parseArray(String.valueOf(flowData.get("projectNodes")), ProjectNodeDO.class);
+
+        // 如果流程审批被拒绝
         if (FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
             if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())) {
-                //2.流程重新发起
+                // 如果为一阶段，再发出一条流程
                 projectNodeFlowDO.setStage(FlowStageEnum.SECOND.getCode());
                 projectNodeFlowDO.setLastFlowId(projectNodeFlowDO.getFlowId());
-                projectNodeFlowDO.setFlowId(startFlow(projectNodeFlowDO, projectNodes));
+                String flowId = startFlow(projectNodeFlowDO, projectNodes);
+
+                // 记录
+                projectNodeFlowDO.setFlowId(flowId);
                 projectNodeFlowDO.setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
                 projectNodeFlowDO.setReviewFailReason(StringUtils.EMPTY);
                 projectNodeFlowDO.setReviewFail(StringUtils.EMPTY);
@@ -227,6 +237,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
                 projectNodeFlowDO.setUnreviewedId(JSONObject.toJSONString(Lists.newArrayList(unreviewedId)));
                 projectNodeFlowMapper.insert(projectNodeFlowDO);
             } else {
+                // 如果为二阶段则不再发送流程
                 messageEventPublisher.publish(new WorkflowRejectMsgEvent(
                         this,
                         "项目计划变更审批流程",
@@ -240,12 +251,12 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         }
         if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
             //3.流程通过后,更新信息
-            Long projectId = projectNodeFlowDO.getProjectId();
+
             projectNodeComponent.updateNodePlanDate(projectNodes, projectId);
 
             projectComponent.updateNodeStatus(projectId);
 
-            ProjectDO projectDO = projectMapper.get(projectId);
+
             Date oldEndDate = projectDO.getPlanEndDate();
 
             projectNodes = projectNodeComponent.sort(projectNodes);
@@ -344,6 +355,10 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
     private String startFlow(ProjectNodeFlowDO projectNodeFlowDO, List<ProjectNodeDO> projectNodes) {
         List<ProjectNodeFlowDO> projectNodeFlows = projectNodeFlowMapper.getByProjectId(projectNodeFlowDO.getProjectId());
         long count = projectNodeFlows.stream().filter(a -> ForwardFlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
+
+        // 查询对应项目
+        ProjectDO projectDO = projectMapper.get(projectNodeFlowDO.getProjectId());
+
         StartProcessRequest start = new StartProcessRequest();
         Map<String, Object> variables = new HashMap<>();
         variables.put("projectNodes", JSONObject.toJSONString(projectNodes));
@@ -362,8 +377,11 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         variables.put("otherReason", projectNodeFlowDO.getOtherReason());
         variables.put("projectName", projectNodeFlowDO.getProjectName());
         variables.put("detailLink", String.format(config.getCommonViewUrl(),TabEnum.PROJECT_MANAGEMENT.getText(),projectNodeFlowDO.getProjectId()));
+
         List<String> reviewIds = new ArrayList<>();
         List<String> reviews = new ArrayList<>();
+
+        // 第一阶段审批人为产品经理和业务方，第二阶段为pbu负责人或SR
         if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())) {
             List<String> bizId = JSONObject.parseArray(projectNodeFlowDO.getBizId(), String.class);
             if (CollectionUtils.isNotEmpty(bizId)) {
@@ -374,26 +392,36 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
                 reviewIds.add(projectNodeFlowDO.getPdId());
                 reviews.add(projectNodeFlowDO.getPd());
             }
-        } else if (!StringUtils.isEmpty(projectNodeFlowDO.getPoId())) {
-            reviewIds.add(projectNodeFlowDO.getPoId());
-            reviews.add(projectNodeFlowDO.getPo());
-        } else {
-            reviewIds.add(projectNodeFlowDO.getDid());
+        } else if (StrUtil.isNotBlank(projectNodeFlowDO.getD())) {
             reviews.add(projectNodeFlowDO.getD());
+            reviewIds.add(projectNodeFlowDO.getDid());
+        } else {
+            reviews.add(projectDO.getSr());
+            reviews.add(projectDO.getSrId());
         }
+
         String lastFlowId = projectNodeFlowDO.getLastFlowId();
-        if (!StringUtils.isEmpty(lastFlowId)) {
+        if (StrUtil.isNotBlank(lastFlowId)) {
             ProjectNodeFlowDO lastFlow = projectNodeFlowMapper.get(null, lastFlowId);
             List<String> reviewFail = JSONObject.parseArray(projectNodeFlowDO.getReviewFail(), String.class);
             variables.put("reviewFail", StringUtils.join(reviewFail, ","));
             variables.put("reviewFailReason", lastFlow.getReviewFailReason());
         }
+
         //流程发起,未审核人员=评审人员
         projectNodeFlowDO.setUnreviewedId(JSONObject.toJSONString(reviewIds));
         projectNodeFlowDO.setUnreviewed(JSONObject.toJSONString(reviews));
         projectNodeFlowDO.setFlowType(ProjectNodeEnum.PUBLISH_OFFICIAL.getCode());
         variables.put("reviews", reviewIds);
         variables.put("proposer", projectNodeFlowDO.getCreateMan());
+
+        // 项目表单信息, 直接覆盖，鬼才来重构
+        variables.put("kind", ProjectKindEnum.getTextByCode(projectDO.getKind()));
+        variables.put("type", ProjectTypeEnum.getTextByCode(projectDO.getType()));
+        variables.put("level", ProjectLevelEnum.getTextByCode(projectDO.getLevel()));
+        variables.put("sr", projectDO.getSr());
+        variables.put("srId", projectDO.getSrId());
+
         start.setStartAccountId(projectNodeFlowDO.getCreateManId());
         start.setApplicationName("forward");
         start.setProcessDefinitionKey("forward_publishOfficeReview");
