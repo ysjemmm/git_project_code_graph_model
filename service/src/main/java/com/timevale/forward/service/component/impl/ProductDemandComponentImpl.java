@@ -38,52 +38,36 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
 
     @Resource
     private ProductDemandMapper productDemandMapper;
-
     @Resource
     private FileComponent fileComponent;
-
     @Resource
     private PersonComponent personComponent;
-
     @Resource
     private ProductLineMapper productLineMapper;
-
     @Resource
     private ProductBizDemandMapper productBizDemandMapper;
-
     @Resource
     private ProductCustomDemandMapper productCustomDemandMapper;
-
     @Resource
     private BizDemandMapper bizDemandMapper;
-
     @Resource
     private CustomDemandMapper customDemandMapper;
-
     @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
-
     @Resource
     private BizDemandComponent bizDemandComponent;
-
     @Resource
     private MessageEventPublisher messageEventPublisher;
-
     @Resource
     private BizDemandLogComponent bizDemandLogComponent;
-
     @Resource
     private ProductDemandLogComponent productDemandLogComponent;
-
     @Resource
     private ProjectLogComponent projectLogComponent;
-
     @Resource
     private ProjectMapper projectMapper;
-
     @Resource
     private ProductDemandDescRecordMapper productDemandDescRecordMapper;
-
     @Resource
     private ProductDemandDescFlowMapper productDemandDescFlowMapper;
 
@@ -94,7 +78,6 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
         return productDemandMapper.list(condition);
     }
-
     @Override
     public ProductDemandDetailVO get(Long id) {
         ProductDemandDO demandDO = productDemandMapper.get(id);
@@ -162,6 +145,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         Map<Long, Integer> statusMap = productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getStatus, (v1, v2) -> v2));
         Map<Long, String> nameMap = productDemands.stream().collect(Collectors.toMap(ProductDemandDO::getId, ProductDemandDO::getName, (v1, v2) -> v2));
 
+        // 更新项目状态
         Integer pdStatus = ProductDemandStatusEnum.WAITING.getCode();
         if (ProjectStatusEnum.WAITING.getCode().equals(status) || ProjectStatusEnum.SUSPEND.getCode().equals(status)) {
             pdStatus = ProductDemandStatusEnum.INCLUDED.getCode();
@@ -171,7 +155,8 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
                 || ProjectStatusEnum.TESTING.getCode().equals(status)) {
             pdStatus = ProductDemandStatusEnum.PROGRESS.getCode();
             productDemandMapper.updateByIds(existProductDemandIds, pdStatus, false);
-        } else if (ProjectStatusEnum.RELEASED.getCode().equals(status) || ProjectStatusEnum.CONCLUSION.equals(status)) {
+        } else if (ProjectStatusEnum.RELEASED.getCode().equals(status)
+                || ProjectStatusEnum.CONCLUSION.getCode().equals(status)) {
             pdStatus = ProductDemandStatusEnum.ONLINE.getCode();
             productDemandMapper.updateByIds(existProductDemandIds, pdStatus, false);
         } else if (ProjectStatusEnum.INVALID.getCode().equals(status)) {

@@ -485,8 +485,8 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO newProject = ProjectCopier.INSTANCE.convert(projectModifyReq);
         List<ProjectNodeDO> projectNodeDOList = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
 
+        //有流程,计划时间不能变
         if (!DelayTypeEnum.NONE.getCode().equals(projectModifyReq.getDelayType())) {
-            //有流程,计划时间不能变
             ProjectDO oldProjectDO = projectMapper.get(projectModifyReq.getId());
             newProject.setPlanStartDate(oldProjectDO.getPlanStartDate());
             newProject.setPlanEndDate(oldProjectDO.getPlanEndDate());
@@ -511,9 +511,10 @@ public class ProjectServiceImpl implements ProjectService {
         // 节点信息
         if (CollUtil.isNotEmpty(projectNodeDOList)) {
             // 项目发布时需要校验未关闭bug
-            boolean match = projectNodeDOList.stream().anyMatch(e ->
-                    ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(e.getName()) && e.getActualDate() != null);
-            AssertUtil.checkState(!match || checkProductRelease(projectModifyReq.getId()),
+            ProjectNodeDO publishNodeDO = CollUtil.findOne(projectNodeDOList, e -> ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(e.getName()));
+            AssertUtil.checkState(publishNodeDO == null
+                            || publishNodeDO.getActualDate() == null
+                            || checkProductRelease(projectModifyReq.getId()),
                     "该项目还有bug未关闭，请关闭后再发布");
 
             if (projectModifyReq.getDelayType() >= 1) {

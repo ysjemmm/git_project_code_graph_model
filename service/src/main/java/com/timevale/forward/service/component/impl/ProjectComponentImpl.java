@@ -484,7 +484,7 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         // 如果节点为空则状态设为待启动
         Integer nodeStatus;
-        if (CollectionUtils.isEmpty(nodeDOList)) {
+        if (CollUtil.isEmpty(nodeDOList)) {
             nodeStatus = ProjectNodeStatusEnum.READY_START.getCode();
         } else {
             nodeStatus = projectNodeComponent.getStatus(nodeDOList);
