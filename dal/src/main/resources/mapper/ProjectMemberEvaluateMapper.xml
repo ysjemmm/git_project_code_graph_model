@@ -2,10 +2,12 @@
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
 <mapper namespace="com.timevale.forward.dal.dao.ProjectMemberEvaluateMapper">
     <insert id="batchInsert">
-        INSERT INTO project_member_evaluate (project_id, user_id, user_name, include_stat, create_man_id, create_man)
+        INSERT INTO project_member_evaluate (project_id, user_id, user_name, evaluate_grade, include_stat,
+                                             create_man_id, create_man)
         VALUES
         <foreach collection="coll" item="item" separator=",">
-            (#{item.projectId}, #{item.userId}, #{item.userName}, #{item.includeStat}, #{createManId}, #{createMan})
+            (#{item.projectId}, #{item.userId}, #{item.userName}, #{item.evaluateGrade}, #{item.includeStat},
+             #{createManId}, #{createMan})
         </foreach>
     </insert>
 
