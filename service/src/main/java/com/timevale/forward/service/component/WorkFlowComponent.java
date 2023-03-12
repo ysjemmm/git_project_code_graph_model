@@ -219,7 +219,7 @@ public class WorkFlowComponent {
             evaluateMapper.update(updateEvaluate);
         }
 
-        // 更新项目状态, 结项日期
+        // 更新结项日期,项目状态（取放在flowData中的数据）
         ProjectDO updateDO = new ProjectDO();
         updateDO.setId(projectFlowDO.getId());
         updateDO.setConclusionDate(new Date());
@@ -321,9 +321,6 @@ public class WorkFlowComponent {
 
         // 需要更新的员工id set
         Set<String> recordUserIdSet = modifyReqList.stream().map(MemberWorkloadModifyReq::getUserId).collect(Collectors.toSet());
-
-        // 更新结项工作流状态
-        projectFlowMapper.updateStatus(projectFlowDO.getId(), ForwardFlowStatusEnum.COMPLETE.getCode());
 
         // 更新当前成员工作量
         for (MemberWorkloadModifyReq modifyReq : modifyReqList) {

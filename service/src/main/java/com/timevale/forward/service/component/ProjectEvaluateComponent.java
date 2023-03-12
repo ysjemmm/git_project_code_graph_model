@@ -3,6 +3,8 @@ package com.timevale.forward.service.component;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.timevale.forward.dal.dao.HistoryRecordMapper;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
@@ -12,14 +14,15 @@ import com.timevale.forward.facade.api.request.MemberWorkloadFillReq;
 import com.timevale.forward.facade.api.request.MemberWorkloadModifyReq;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.result.ProjectWorkloadChangeVO;
-import com.timevale.forward.model.enums.FlowTypeEnum;
-import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
-import com.timevale.forward.model.enums.PersonTypeEnum;
-import com.timevale.forward.model.enums.WorkloadChangeTypeEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
+import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.mandarin.base.util.AssertUtil;
+import com.timevale.security.facade.enums.IncentiveMethodEnum;
+import com.timevale.security.facade.response.BaseInfoResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -31,6 +34,7 @@ import java.util.stream.Collectors;
  * @author by YangXu
  * @date 2023/03/10 14:27
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ProjectEvaluateComponent {
@@ -39,6 +43,7 @@ public class ProjectEvaluateComponent {
     private final PersonComponent personComponent;
     private final HistoryRecordMapper recordMapper;
     private final ProjectFlowMapper projectFlowMapper;
+    private final InnerUserPersonClient innerUserPersonClient;
     private final ProjectMemberEvaluateMapper memberEvaluateMapper;
 
     /**
@@ -182,17 +187,10 @@ public class ProjectEvaluateComponent {
                 .collect(Collectors.toSet());
 
         // 过滤掉可能存在的旧成员
-        newMembers = newMembers.stream().filter(e -> !oldMemberIdSet.contains(e.getUserId())).collect(Collectors.toList());
+        List<PersonAddReq> members = newMembers.stream().filter(e -> !oldMemberIdSet.contains(e.getUserId())).collect(Collectors.toList());
 
         // 新增成员
-        if (CollUtil.isNotEmpty(newMembers)) {
-            List<ProjectMemberEvaluateDO> newEvalMembers = newMembers.stream()
-                    .map(e -> ProjectMemberEvaluateCopier.INSTANCE.person2do(e, projectId))
-                    .collect(Collectors.toList());
-
-            // 新增落库
-            memberEvaluateMapper.batchInsert(newEvalMembers);
-        }
+        addMemberNoCheck(projectId, members);
     }
 
     /**
@@ -223,13 +221,60 @@ public class ProjectEvaluateComponent {
         }
 
         // 新增成员
-        if (CollUtil.isNotEmpty(addMembers)) {
-            List<ProjectMemberEvaluateDO> newEvalMembers = addMembers.stream()
-                    .map(e -> ProjectMemberEvaluateCopier.INSTANCE.person2do(e, projectId))
-                    .collect(Collectors.toList());
+        addMemberNoCheck(projectId, addMembers);
 
-            // 新增落库
-            memberEvaluateMapper.batchInsert(newEvalMembers);
+//        // 新增成员
+//        if (CollUtil.isNotEmpty(addMembers)) {
+//            List<ProjectMemberEvaluateDO> newEvalMembers = addMembers.stream()
+//                    .map(e -> ProjectMemberEvaluateCopier.INSTANCE.person2do(e, projectId))
+//                    .collect(Collectors.toList());
+//
+//            // 新增落库
+//            memberEvaluateMapper.batchInsert(newEvalMembers);
+//        }
+    }
+
+    /**
+     * 添加积分成员，不做检查
+     *
+     * @param projectId 项目id
+     * @param members   成员
+     */
+    private void addMemberNoCheck(Long projectId, Collection<PersonAddReq> members) {
+        if (CollUtil.isEmpty(members)) {
+            return;
         }
+
+        // 查询内部用户中心，获取用户信息，用于判断是否纳入积分统计
+        List<String> memberIds = members.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+        List<BaseInfoResponse> membersInfo =  innerUserPersonClient.batchGetStaffs(memberIds);
+        ImmutableMap<String, BaseInfoResponse> memberInfoMap = Maps.uniqueIndex(membersInfo, BaseInfoResponse::getAccount);
+
+        List<ProjectMemberEvaluateDO> addEvalMembers = members.stream()
+                .map(e -> {
+                    boolean includeStat = false;
+
+                    // 用户激励方式为积分制的时候，才纳入积分统计
+                    final String userId = e.getUserId();
+                    BaseInfoResponse memberInfo = memberInfoMap.get(userId);
+                    if (memberInfo == null) {
+                        log.error("[ProjectEvaluateComponent.addMember]未查询到对应员工的信息:{}", userId);
+                    } else {
+                        Integer incentiveMethod = memberInfo.getIncentiveMethod();
+                        includeStat = IncentiveMethodEnum.POINTS.getCode().equals(incentiveMethod);
+                    }
+
+                    // 转换
+                    ProjectMemberEvaluateDO evaluateDO = ProjectMemberEvaluateCopier.INSTANCE.person2do(e);
+                    evaluateDO.setProjectId(projectId);
+                    evaluateDO.setIncludeStat(includeStat);
+                    evaluateDO.setEvaluateGrade(GradeEnum.B.getCode());
+
+                    return evaluateDO;
+                })
+                .collect(Collectors.toList());
+
+        // 新增落库
+        memberEvaluateMapper.batchInsert(addEvalMembers);
     }
 }

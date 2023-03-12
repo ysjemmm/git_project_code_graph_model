@@ -34,9 +34,7 @@ import java.util.List;
 public interface ProjectMemberEvaluateCopier {
     ProjectMemberEvaluateCopier INSTANCE = Mappers.getMapper(ProjectMemberEvaluateCopier.class);
 
-    @Mapping(target = "includeStat", constant = "true")
-    @Mapping(target = "evaluateGrade", expression = "java(GradeEnum.B.getCode())")
-    ProjectMemberEvaluateDO person2do(PersonAddReq personAddReq, Long projectId);
+    ProjectMemberEvaluateDO person2do(PersonAddReq personAddReq);
 
     @Mapping(target = "evaluateGradeName", expression = "java(GradeEnum.getTextByCode(memberEvaluateDO.getEvaluateGrade()))")
     MemberEvaluateVO do2vo(ProjectMemberEvaluateDO memberEvaluateDO);
