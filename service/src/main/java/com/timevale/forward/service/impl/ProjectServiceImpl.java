@@ -919,6 +919,12 @@ public class ProjectServiceImpl implements ProjectService {
             projectDetailVO.setPublishChangeCount(count);
         }
 
+        // 内部项目显示为已废除
+        if (ProjectCategoryEnum.INNER_PROJECT.getCode().equals(projectDO.getCategory())
+                && ProjectStatusEnum.INVALID.getCode().equals(projectDetailVO.getStatus())) {
+            projectDetailVO.setStatusName(CommonConstant.INVALID);
+        }
+
         // 是否为PMO
         projectDetailVO.setIsPMO(userComponent.isPmoOrPmoLeader());
         return BaseResult.success(projectDetailVO);
