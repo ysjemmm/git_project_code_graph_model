@@ -38,7 +38,8 @@ public interface ProjectMemberEvaluateCopier {
     @Mapping(target = "evaluateGrade", expression = "java(GradeEnum.B.getCode())")
     ProjectMemberEvaluateDO person2do(PersonAddReq personAddReq, Long projectId);
 
-    MemberEvaluateVO do2vo(ProjectMemberEvaluateDO projectMemberEvaluateDO);
+    @Mapping(target = "evaluateGradeName", expression = "java(GradeEnum.getTextByCode(memberEvaluateDO.getEvaluateGrade()))")
+    MemberEvaluateVO do2vo(ProjectMemberEvaluateDO memberEvaluateDO);
 
     List<MemberEvaluateVO> do2vo(Collection<ProjectMemberEvaluateDO> projectMemberEvaluateDO);
 

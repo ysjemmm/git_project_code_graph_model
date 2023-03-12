@@ -23,10 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -172,16 +169,18 @@ public class ProjectEvaluateComponent {
      * @param newMembers 新成员
      */
     public void addMember(Long projectId, Collection<PersonAddReq> newMembers) {
-        // 当前团队成员
-        List<PersonDO> oldMemberDOList = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
-        List<PersonAddReq> oldMembers = PersonCopier.INSTANCE.do2req(oldMemberDOList);
+        // 当前积分团队成员
+        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
+        Set<String> oldMemberIdSet = memberEvaluateDOList.stream()
+                .map(ProjectMemberEvaluateDO::getUserId)
+                .collect(Collectors.toSet());
 
-        // 分析出需要新增、删除的成员， 处理成员积分
-        Collection<PersonAddReq> addMembers = CollUtil.subtract(newMembers, oldMembers);
+        // 过滤掉可能存在的旧成员
+        newMembers = newMembers.stream().filter(e -> !oldMemberIdSet.contains(e.getUserId())).collect(Collectors.toList());
 
         // 新增成员
-        if (CollUtil.isNotEmpty(addMembers)) {
-            List<ProjectMemberEvaluateDO> newEvalMembers = addMembers.stream()
+        if (CollUtil.isNotEmpty(newMembers)) {
+            List<ProjectMemberEvaluateDO> newEvalMembers = newMembers.stream()
                     .map(e -> ProjectMemberEvaluateCopier.INSTANCE.person2do(e, projectId))
                     .collect(Collectors.toList());
 

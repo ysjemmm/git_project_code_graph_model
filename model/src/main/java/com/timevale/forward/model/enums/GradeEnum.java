@@ -24,4 +24,13 @@ public enum GradeEnum {
 
     private final Integer code;
     private final String text;
+
+    public static String getTextByCode(Integer code){
+        for (GradeEnum e : GradeEnum.values()){
+            if(e.getCode().equals(code)){
+                return e.text;
+            }
+        }
+        return "";
+    }
 }
