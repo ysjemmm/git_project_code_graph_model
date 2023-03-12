@@ -111,11 +111,14 @@ public class ProjectAddReq extends BaseReq {
     private Integer kind;
 
     @ApiModelProperty("sr")
+    @NotNull(message = "sr不能为空")
     private PersonAddReq sr;
 
     @ApiModelProperty("负责人")
+    @NotNull(message = "项目负责人不能为空")
     private PersonAddReq principal;
 
-    @ApiModelProperty("1-n负责人")
+    @ApiModelProperty("1-N产研团队负责人")
+    @NotNull(message = "1-N产研团队负责人不能为空")
     private PersonAddReq otnPrincipal;
 }
