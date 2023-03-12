@@ -110,7 +110,7 @@
     <select id="getByStatus" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
         SELECT *
         FROM project_flow
-        WHERE flow_id = #{flowId}
+        WHERE project_id = #{projectId}
           AND flow_type = #{flowType}
           AND `status` = #{status}
           AND is_deleted = false
