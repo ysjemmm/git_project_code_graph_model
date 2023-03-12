@@ -57,7 +57,7 @@ public class ProjectEvaluateComponent {
      * 添加工作量记录
      *
      * @param projectId  项目id
-     * @param userIdColl 需要记录的成员，为空则为全部成员
+     * @param userIdColl 仅需要记录的成员，为空则为全部成员
      */
     public void additionRecord(Long projectId, Collection<String> userIdColl) {
         // 查询最新版本，生成下一个版本号

@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     private final ProjectMapper projectMapper;
+    private final HistoryRecordMapper recordMapper;
     private final ProjectFlowMapper projectFlowMapper;
     private final WorkFlowComponent workFlowComponent;
     private final ProjectEvaluateMapper evaluateMapper;
@@ -100,19 +101,24 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> memberWorkloadFill(MemberWorkloadFillReq req) {
         // 校验并获取表单信息
+        final Long projectId = req.getProjectId();
         ProjectWorkloadChangeVO changeVO = projectEvaluateComponent.workloadChangeForm(req);
 
         if (changeVO.getDirectChangeEnable()) {
             // 遍历修改参数，落库
-            Long projectId = req.getProjectId();
             List<MemberWorkloadModifyReq> modifyReqList = req.getModifyReqList();
             for (MemberWorkloadModifyReq modifyReq : modifyReqList) {
                 ProjectMemberEvaluateDO evaluateDO = ProjectMemberEvaluateCopier.INSTANCE.req2do(modifyReq, projectId);
                 memberEvaluateMapper.update(evaluateDO);
             }
+
+            // 判断是否存在基线版本，如果是则需要添加新版本
+            HistoryRecordDO recordDO = recordMapper.selectLast(projectId);
+            if (recordDO != null) {
+                projectEvaluateComponent.additionRecord(projectId);
+            }
         } else {
-            // 项目id 及 流程id
-            Long projectId = changeVO.getProjectId();
+            //流程id
             String flowId = workFlowComponent.workloadChangeFlow(changeVO, req);
 
             // 存储变更信息
