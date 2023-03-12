@@ -21,6 +21,7 @@ import com.timevale.forward.service.copy.ProjectEvaluateCopier;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.util.AssertUtil;
+import com.timevale.mandarin.common.annotation.RestService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @LogPoint
+@RestService
 @RequiredArgsConstructor
 public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     private final ProjectMapper projectMapper;
@@ -113,8 +115,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
             }
 
             // 判断是否存在基线版本，如果是则需要添加新版本
-            HistoryRecordDO recordDO = recordMapper.selectLast(projectId);
-            if (recordDO != null) {
+            if (recordMapper.selectLast(projectId) != null) {
                 projectEvaluateComponent.additionRecord(projectId);
             }
         } else {
