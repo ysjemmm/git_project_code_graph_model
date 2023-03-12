@@ -63,7 +63,7 @@ public class WorkFlowComponent {
     @Resource
     private ProjectMemberEvaluateMapper memberEvaluateMapper;
 
-    @Value("${conclusionPmoGroup:557300580")
+    @Value("${conclusionPmoGroup:557300580}")
     private String CONCLUSION_PMO_GROUP;
 
     /**
@@ -248,18 +248,20 @@ public class WorkFlowComponent {
         AssertUtil.notNull(pbuPrincipal, "PBU负责人不能为空");
 
         // 获取项目信息
-        Long projectId = changeVO.getProjectId();
+        final Long projectId = changeVO.getProjectId();
         ProjectDO projectDO = projectMapper.get(projectId);
+        String srId = projectDO.getSrId();
         String projectUrl = projectComponent.getUrl(projectId);
 
         // 发起人是否为项目负责人或者1-n产研负责人
         Set<String> principalIdSet = CollUtil.newHashSet(projectDO.getPrincipalId(), projectDO.getOtnPrincipalId());
-        List<String> principalIdList = CollUtil.newArrayList(principalIdSet);
+        List<String> principalIdList = principalIdSet.stream().filter(StrUtil::isNotBlank).collect(Collectors.toList());
         boolean startIsPrincipal = principalIdSet.contains(startAccountId);
         String isPrincipal = YesOrNoEnum.getTextByCode(startIsPrincipal);
 
         // 项目参数填装
         WorkloadChangeVar changeVar = ProjectEvaluateCopier.INSTANCE.vo2var(changeVO);
+        changeVar.setSrId(srId);
         changeVar.setPMOIdList(pmoIdList);
         changeVar.setProjectUrl(projectUrl);
         changeVar.setIsPrincipal(isPrincipal);

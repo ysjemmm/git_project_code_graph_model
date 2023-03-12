@@ -107,6 +107,15 @@
           and is_deleted = false
     </select>
 
+    <select id="getByStatus" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
+        SELECT *
+        FROM project_flow
+        WHERE flow_id = #{flowId}
+          AND flow_type = #{flowType}
+          AND `status` = #{status}
+          AND is_deleted = false
+    </select>
+
     <update id="batchUpdateFlowEndTime">
         update project_flow
         <trim prefix="set" suffixOverrides=",">

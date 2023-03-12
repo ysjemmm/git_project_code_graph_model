@@ -57,6 +57,17 @@ public interface ProjectFlowMapper {
                                               @Param("flowType") Integer flowType);
 
     /**
+     * 查询审计中的流程
+     *
+     * @param projectId 项目id
+     * @param flowType  流类型
+     * @return {@link List}<{@link ProjectFlowDO}>
+     */
+    List<ProjectFlowDO> getByStatus(@Param("projectId") Long projectId,
+                                    @Param("flowType") Integer flowType,
+                                    @Param("status") Integer status);
+
+    /**
      * 查询所有已完结的流程
      *
      * @return

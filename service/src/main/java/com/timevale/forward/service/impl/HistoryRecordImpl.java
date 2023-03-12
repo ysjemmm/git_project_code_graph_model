@@ -15,6 +15,7 @@ import com.timevale.forward.facade.api.result.HistoryRecordVO;
 import com.timevale.forward.model.enums.AddOrDelOrCoEnum;
 import com.timevale.forward.service.copy.HistoryRecordCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.mandarin.common.annotation.RestService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,12 +27,13 @@ import java.util.Optional;
 
 @Slf4j
 @LogPoint
+@RestService
 @RequiredArgsConstructor
 public class HistoryRecordImpl implements HistoryRecordService {
     private final HistoryRecordMapper recordMapper;
 
     @Override
-    public BaseResult<List<HistoryRecordVO>> list(Long id) {
+    public BaseResult<List<HistoryRecordVO>> recordList(Long id) {
         List<HistoryRecordDO> recordDOList = recordMapper.selectByProjectId(id);
         List<HistoryRecordVO> recordVOList = HistoryRecordCopier.INSTANCE.do2vo(recordDOList);
         return BaseResult.success(recordVOList);

@@ -102,6 +102,12 @@ public class ProjectEvaluateComponent {
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO,"项目不存在");
 
+        // 判断是否存在审批流程
+        List<ProjectFlowDO> auditingFlows = projectFlowMapper.getByStatus(projectId,
+                FlowTypeEnum.WORKLOAD.getCode(),
+                ForwardFlowStatusEnum.AUDITING.getCode());
+        AssertUtil.checkState(CollUtil.isEmpty(auditingFlows), "已存在审核中的工作量变更流程");
+
         // 不存在基线版本，直接返回，无需表单数据
         if (recordMapper.selectLast(projectId) == null) {
             return new ProjectWorkloadChangeVO().setDirectChangeEnable(true);
@@ -206,11 +212,10 @@ public class ProjectEvaluateComponent {
 
         // 删除成员，如果存在审批中的工作量变更流程，不允许删除成员
         if (CollUtil.isNotEmpty(delMembers)) {
-            List<ProjectFlowDO> workloadFlows = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
-            boolean noneAuditing = workloadFlows.stream()
-                    .map(ProjectFlowDO::getStatus)
-                    .noneMatch(ForwardFlowStatusEnum.AUDITING.getCode()::equals);
-            AssertUtil.checkState(noneAuditing, "存在审批中的工作量变更流程，不允许删除成员");
+            List<ProjectFlowDO> auditingFlows = projectFlowMapper.getByStatus(projectId,
+                    FlowTypeEnum.WORKLOAD.getCode(),
+                    ForwardFlowStatusEnum.AUDITING.getCode());
+            AssertUtil.checkState(CollUtil.isEmpty(auditingFlows), "存在审批中的工作量变更流程，不允许删除成员");
 
             // 删除落库
             List<String> delUserIdColl = delMembers.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());

@@ -20,6 +20,8 @@ import com.timevale.forward.service.component.WorkFlowComponent;
 import com.timevale.forward.service.copy.ProjectEvaluateCopier;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
+import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import lombok.RequiredArgsConstructor;
@@ -126,11 +128,16 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
             List<MemberWorkloadModifyReq> modifyReqList = req.getModifyReqList();
             String modifyWorkloadJson = JSON.toJSONString(modifyReqList);
 
+            // 获取用户信息
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
             // 添加工作流信息
             ProjectFlowDO projectFlowDO = new ProjectFlowDO()
                     .setFlowId(flowId)
                     .setProjectId(projectId)
                     .setFlowData(modifyWorkloadJson)
+                    .setProposerId(userInfo.getId())
+                    .setProposer(userInfo.getFullAlias())
                     .setFlowType(FlowTypeEnum.WORKLOAD.getCode())
                     .setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
             projectFlowMapper.insert(projectFlowDO);

@@ -17,7 +17,7 @@ import java.util.List;
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface HistoryRecordService {
 
-    BaseResult<List<HistoryRecordVO>> list(Long id);
+    BaseResult<List<HistoryRecordVO>> recordList(Long id);
 
     BaseResult<List<HistoryRecordCmpVO>> compare(HistoryRecordCmpReq req);
 }
