@@ -171,6 +171,31 @@ public class ProjectEvaluateComponent {
      * @param projectId  项目id
      * @param newMembers 新成员
      */
+    public void addMember(Long projectId, Collection<PersonAddReq> newMembers) {
+        // 当前团队成员
+        List<PersonDO> oldMemberDOList = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        List<PersonAddReq> oldMembers = PersonCopier.INSTANCE.do2req(oldMemberDOList);
+
+        // 分析出需要新增、删除的成员， 处理成员积分
+        Collection<PersonAddReq> addMembers = CollUtil.subtract(newMembers, oldMembers);
+
+        // 新增成员
+        if (CollUtil.isNotEmpty(addMembers)) {
+            List<ProjectMemberEvaluateDO> newEvalMembers = addMembers.stream()
+                    .map(e -> ProjectMemberEvaluateCopier.INSTANCE.person2do(e, projectId))
+                    .collect(Collectors.toList());
+
+            // 新增落库
+            memberEvaluateMapper.batchInsert(newEvalMembers);
+        }
+    }
+
+    /**
+     * 更新成员
+     *
+     * @param projectId  项目id
+     * @param newMembers 新成员
+     */
     public void updateMember(Long projectId, Collection<PersonAddReq> newMembers) {
         // 当前团队成员
         List<PersonDO> oldMemberDOList = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());

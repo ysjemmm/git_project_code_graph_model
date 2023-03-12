@@ -385,7 +385,7 @@ public class ProjectServiceImpl implements ProjectService {
         personComponent.add(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         // 添加积分成员
-        evaluateComponent.updateMember(projectDO.getId(), teamMembers);
+        evaluateComponent.addMember(projectDO.getId(), teamMembers);
 
         // 添加对应的项目评价
         List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.selectByKindDate(projectDO.getKind(), new Date());
