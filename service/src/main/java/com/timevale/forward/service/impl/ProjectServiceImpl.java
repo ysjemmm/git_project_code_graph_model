@@ -505,6 +505,7 @@ public class ProjectServiceImpl implements ProjectService {
             newProject.setPlanEndDate(oldProjectDO.getPlanEndDate());
         }
 
+        // 在这里面把项目数据更新了，我艹了
         fillInfoWhenModify(projectNodeDOList, newProject);
 
         // 判断产品线是否已关联任务、线下bug
@@ -520,12 +521,9 @@ public class ProjectServiceImpl implements ProjectService {
         newMembers.addAll(projectModifyReq.getPds());
         newMembers = newMembers.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList());
 
-        // 这个修改已经完全是shit了，开摆
-
-        evaluateComponent.updateMember(projectId, newMembers);
-
-        // 更新团队成员
+        // 更新团队成员、积分成员
         personComponent.update(newMembers, newProject.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
+        evaluateComponent.updateMember(projectId, newMembers);
 
         // 节点信息
         if (CollUtil.isNotEmpty(projectNodeDOList)) {
@@ -1480,6 +1478,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         fieldUpdate(newProject, projectNodes, oldProject);
 
+        // 在这里更新
         projectMapper.fullUpdateById(newProject);
 
         if (!Objects.equals(newProject.getStatus(), oldStatus)) {

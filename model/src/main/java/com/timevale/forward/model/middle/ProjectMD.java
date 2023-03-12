@@ -34,12 +34,6 @@ public class ProjectMD extends BaseMD{
     private Date actualEndDate;
 
     /**
-     * 是否为客户开发项目：0否，1是
-     */
-    @FieldCompare(fieldName = "是否为客开项目",enumClass = YesOrNoEnum.class)
-    private Integer customerDev;
-
-    /**
      * 优先级:0(P0),1(P1),2(P2),3(P3)
      */
     @FieldCompare(fieldName = "优先级",enumClass = PriorityEnum.class)

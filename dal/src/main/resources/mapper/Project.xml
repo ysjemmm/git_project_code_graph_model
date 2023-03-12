@@ -165,7 +165,14 @@
             pj_establish_start_date = #{pjEstablishStartDate},
             pj_establish_publish_date = #{pjEstablishPublishDate},
             suspend_reason = #{suspendReason},
-            un_write_reason = #{unWriteReason}
+            un_write_reason = #{unWriteReason},
+            kind = #{kind},
+            sr = #{sr},
+            sr_id = #{srId},
+            principal = #{principal},
+            principal_id = #{principalId},
+            otnPrincipal = #{otnPrincipal},
+            otn_principal_id = #{otnPrincipalId}
         </set>
         <where>
             id = #{id}
