@@ -171,7 +171,7 @@
             sr_id = #{srId},
             principal = #{principal},
             principal_id = #{principalId},
-            otnPrincipal = #{otnPrincipal},
+            otn_principal = #{otnPrincipal},
             otn_principal_id = #{otnPrincipalId}
         </set>
         <where>
