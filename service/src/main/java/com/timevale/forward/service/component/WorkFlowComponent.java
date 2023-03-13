@@ -23,6 +23,7 @@ import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.integration.epeius.model.ConclusionVar;
 import com.timevale.forward.service.integration.epeius.model.ProjectEvaluateVar;
 import com.timevale.forward.service.integration.epeius.model.WorkloadChangeVar;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
  * @date 2023/03/08 18:00
  */
 @Slf4j
+@LogPoint
 @Component
 public class WorkFlowComponent {
     @Resource
@@ -164,6 +166,7 @@ public class WorkFlowComponent {
      */
     @Transactional(rollbackFor = Exception.class)
     public void conclusionComplete(String processInstanceId) {
+
         AssertUtil.checkState(StrUtil.isNotBlank(processInstanceId), "流程id为空");
 
         // 获取项目流程信息
