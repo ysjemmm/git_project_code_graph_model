@@ -22,11 +22,9 @@ public class LocalSessionUtils {
 
     public final static String ADMIN = "admin";
     public final static String SYSTEM = "SYSTEM";
-    public final static String SYSTEM_ALIAS = "系统";
 
     public static UserInfo getUserInfo() throws BaseRuntimeException {
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder
-                .getRequestAttributes();
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attributes == null) {
             UserInfo userInfo = new UserInfo();
             userInfo.setName(SYSTEM);
@@ -34,9 +32,11 @@ public class LocalSessionUtils {
             userInfo.setId(SYSTEM);
             return userInfo;
         }
+
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         String userInfoHeader = attributes.getRequest().getHeader("x-timevale-jwtcontent");
+
         if (StringUtils.isEmpty(userInfoHeader)) {
             UserInfo userInfo = new UserInfo();
             userInfo.setName(SYSTEM);
@@ -44,6 +44,7 @@ public class LocalSessionUtils {
             userInfo.setId(SYSTEM);
             return userInfo;
         }
+
         byte[] userInfo = Base64.getUrlDecoder().decode(userInfoHeader);
         UserInfo result;
         try {
@@ -52,6 +53,7 @@ public class LocalSessionUtils {
             log.info("userSession:{} 解析用户信息失败", new String(userInfo), e);
             throw new BaseRuntimeException("401", "登录超时", e);
         }
+
         if (StringUtils.isBlank(result.getId())) {
             result.setId(ADMIN);
             result.setAlias(ADMIN);

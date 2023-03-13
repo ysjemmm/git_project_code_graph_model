@@ -28,12 +28,12 @@ import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -45,25 +45,17 @@ import java.util.stream.Collectors;
 @Slf4j
 @LogPoint
 @Component
+@RequiredArgsConstructor
 public class WorkFlowComponent {
-    @Resource
-    private EpeiusClient epeiusClient;
-    @Resource
-    private UserComponent userComponent;
-    @Resource
-    private ProjectMapper projectMapper;
-    @Resource
-    private ProjectComponent projectComponent;
-    @Resource
-    private ProjectFlowMapper projectFlowMapper;
-    @Resource
-    private ProjectEvaluateMapper evaluateMapper;
-    @Resource
-    private EvaluateDimensionMapper dimensionMapper;
-    @Resource
-    private ProjectEvaluateComponent evaluateComponent;
-    @Resource
-    private ProjectMemberEvaluateMapper memberEvaluateMapper;
+    final private EpeiusClient epeiusClient;
+    final private UserComponent userComponent;
+    final private ProjectMapper projectMapper;
+    final private ProjectComponent projectComponent;
+    final private ProjectFlowMapper projectFlowMapper;
+    final private ProjectEvaluateMapper evaluateMapper;
+    final private EvaluateDimensionMapper dimensionMapper;
+    final private ProjectEvaluateComponent evaluateComponent;
+    final private ProjectMemberEvaluateMapper memberEvaluateMapper;
 
     @Value("${conclusionPmoGroup:557300580}")
     private String CONCLUSION_PMO_GROUP;
@@ -166,7 +158,6 @@ public class WorkFlowComponent {
      */
     @Transactional(rollbackFor = Exception.class)
     public void conclusionComplete(String processInstanceId) {
-
         AssertUtil.checkState(StrUtil.isNotBlank(processInstanceId), "流程id为空");
 
         // 获取项目流程信息
@@ -227,6 +218,7 @@ public class WorkFlowComponent {
         updateDO.setId(projectFlowDO.getId());
         updateDO.setConclusionDate(new Date());
         updateDO.setStatus(Integer.valueOf(projectFlowDO.getFlowData()));
+        projectMapper.update(projectDO);
     }
 
     /**

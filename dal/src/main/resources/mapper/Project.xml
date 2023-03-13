@@ -121,8 +121,6 @@
             <if test="desc != null">`desc` = #{desc},</if>
             <if test="level != null">`level` = #{level},</if>
             <if test="resourceAssessment != null">resource_assessment = #{resourceAssessment},</if>
-            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
-            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             <if test="actualStartDate != null">actual_start_date = #{actualStartDate},</if>
             <if test="actualEndDate != null">actual_end_date = #{actualEndDate},</if>
             <if test="suspendReason != null">suspend_reason = #{suspendReason},</if>
@@ -133,6 +131,8 @@
             <if test="expectedIncome != null">expected_income = #{expectedIncome},</if>
             <if test="suspendReason != null">suspend_reason = #{suspendReason},</if>
             <if test="conclusionDate != null">conclusion_date = #{conclusionDate},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
         </set>
         <where>
             id = #{id}
