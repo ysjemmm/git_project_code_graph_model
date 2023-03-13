@@ -2,7 +2,6 @@ package com.timevale.forward.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.HistoryRecordMapper;
@@ -39,7 +38,6 @@ public class HistoryRecordImpl implements HistoryRecordService {
         return BaseResult.success(recordVOList);
     }
 
-
     @Override
     public BaseResult<List<HistoryRecordCmpVO>> compare(HistoryRecordCmpReq req) {
         final Long projectId = req.getId();
@@ -60,14 +58,10 @@ public class HistoryRecordImpl implements HistoryRecordService {
         ImmutableMap<String, ProjectMemberEvaluateDO> minRecordMap = Maps.uniqueIndex(minEvalDOList, ProjectMemberEvaluateDO::getUserName);
         ImmutableMap<String, ProjectMemberEvaluateDO> maxRecordMap = Maps.uniqueIndex(maxEvalDOList, ProjectMemberEvaluateDO::getUserName);
 
-        // 两个版本的用户名集合
-        ImmutableSet<String> minUserNameSet = minRecordMap.keySet();
-        ImmutableSet<String> maxUserNameSet = maxRecordMap.keySet();
-
         // 合并两个版本的用户名集合，遍历用户
         HashSet<String> userNameSet = new HashSet<>();
-        userNameSet.addAll(minUserNameSet);
-        userNameSet.addAll(maxUserNameSet);
+        userNameSet.addAll(minRecordMap.keySet());
+        userNameSet.addAll(maxRecordMap.keySet());
 
         // 遍历全部用户，比较
         List<HistoryRecordCmpVO> result = new ArrayList<>();
@@ -75,20 +69,23 @@ public class HistoryRecordImpl implements HistoryRecordService {
             // 获取大小版本的计划工作量，计算相差的天数
             BigDecimal minWorkload = Optional.ofNullable(minRecordMap.get(userName))
                     .flatMap(e -> Optional.ofNullable(e.getPlanWorkload()))
-                    .orElse(BigDecimal.ZERO);
+                    .orElse(null);
             BigDecimal maxWorkload = Optional.ofNullable(maxRecordMap.get(userName))
                     .flatMap(e -> Optional.ofNullable(e.getPlanWorkload()))
-                    .orElse(BigDecimal.ZERO);
-            BigDecimal timeDiff = maxWorkload.subtract(minWorkload);
+                    .orElse(null);
 
-            // 当前用户在两个版本对比中，是新增还是删除还是共有
-            int addOrDelOrCo;
-            if (minUserNameSet.contains(userName) && maxUserNameSet.contains(userName)) {
-                addOrDelOrCo = AddOrDelOrCoEnum.COEXIST.getCode();
-            } else if (maxUserNameSet.contains(userName)){
+            // 计算相差天数，判断用户是新增、删除还是共有
+            BigDecimal timeDiff;
+            Integer addOrDelOrCo;
+            if (minWorkload == null) {
+                timeDiff = maxWorkload;
                 addOrDelOrCo = AddOrDelOrCoEnum.ADD.getCode();
-            } else {
+            } else if (maxWorkload == null){
+                timeDiff = minWorkload;
                 addOrDelOrCo = AddOrDelOrCoEnum.DEL.getCode();
+            } else {
+                timeDiff = maxWorkload.subtract(minWorkload);
+                addOrDelOrCo = AddOrDelOrCoEnum.COEXIST.getCode();
             }
 
             // 组装参数

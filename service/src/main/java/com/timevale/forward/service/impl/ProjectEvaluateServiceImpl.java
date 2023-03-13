@@ -147,6 +147,23 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> memberWorkloadCopy(Long projectId) {
+        List<ProjectMemberEvaluateDO> evaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
+
+        // 计划工作量覆盖实际工作量
+        for (ProjectMemberEvaluateDO evaluateDO : evaluateDOList) {
+            ProjectMemberEvaluateDO updateDO = new ProjectMemberEvaluateDO();
+            updateDO.setUserId(evaluateDO.getUserId());
+            updateDO.setProjectId(evaluateDO.getProjectId());
+            updateDO.setActualWorkload(evaluateDO.getPlanWorkload());
+            memberEvaluateMapper.update(updateDO);
+        }
+
+        return BaseResult.success(true);
+    }
+
+    @Override
     public BaseResult<ProjectWorkloadChangeVO> workloadChangeCheck(MemberWorkloadFillReq req) {
         return BaseResult.success(projectEvaluateComponent.workloadChangeForm(req));
     }

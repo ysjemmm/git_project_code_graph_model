@@ -41,6 +41,14 @@ public interface ProjectEvaluateService {
     BaseResult<Boolean> memberWorkloadFill(MemberWorkloadFillReq req);
 
     /**
+     * 成员计划工作量复制到实际工作量中
+     *
+     * @param projectId 项目id
+     * @return {@link BaseResult}<{@link Boolean}>
+     */
+    BaseResult<Boolean> memberWorkloadCopy(Long projectId);
+
+    /**
      * 工作量变更校验
      *
      * @param req 请求
