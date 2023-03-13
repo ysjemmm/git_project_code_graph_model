@@ -1406,26 +1406,26 @@ public class ProjectServiceImpl implements ProjectService {
         // 需要校验项目评价必填内容是否完成、
         List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.selectByProjectId(projectId);
         AssertUtil.checkState(evaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getScores())),
-                "项目评价未完成，无法发起结项");
+                "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
 
         // 纳入积分员工的实际工作量是否录入完成，个人评价是否必填
         List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
         AssertUtil.checkState(memberEvaluateDOList.stream()
                         .filter(ProjectMemberEvaluateDO::getIncludeStat)
                         .noneMatch(e->ObjectUtil.isNull(e.getActualWorkload())),
-                "存在纳入积分统计的项目成员未录入实际工作量，无法发起结项");
+                "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
         AssertUtil.checkState(memberEvaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getEvaluateGrade())),
-                "存在项目成员评价等级未录入，无法发起结项");
+                "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
 
         // 是否存在审批中结项流程
         List<ProjectFlowDO> workloadFlow = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
         AssertUtil.checkState(workloadFlow.stream().noneMatch(e -> ObjectUtil.equal(ForwardFlowStatusEnum.AUDITING.getCode(), e.getStatus())),
-                "存在审批中的工作流变更流程，无法发起结项");
+                "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
 
         // 是否存在审批中结项流程
         List<ProjectFlowDO> conclusionFlow = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
         AssertUtil.checkState(conclusionFlow.stream().noneMatch(e -> ObjectUtil.equal(ForwardFlowStatusEnum.AUDITING.getCode(), e.getStatus())),
-                "结项流程正在审批中，请勿重复发起结项流程");
+                "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
 
         // 计划总工作量
         BigDecimal planWorkloadSum = memberEvaluateDOList.stream()
