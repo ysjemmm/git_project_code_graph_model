@@ -9,13 +9,18 @@ import com.timevale.forward.dal.dao.HistoryRecordMapper;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMemberEvaluateMapper;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.entity.HistoryRecordDO;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectFlowDO;
+import com.timevale.forward.dal.entity.ProjectMemberEvaluateDO;
 import com.timevale.forward.facade.api.request.MemberWorkloadFillReq;
 import com.timevale.forward.facade.api.request.MemberWorkloadModifyReq;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.result.ProjectWorkloadChangeVO;
-import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.copy.PersonCopier;
+import com.timevale.forward.model.enums.FlowTypeEnum;
+import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
+import com.timevale.forward.model.enums.GradeEnum;
+import com.timevale.forward.model.enums.WorkloadChangeTypeEnum;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.mandarin.base.util.AssertUtil;
@@ -40,7 +45,6 @@ import java.util.stream.Collectors;
 public class ProjectEvaluateComponent {
 
     private final ProjectMapper projectMapper;
-    private final PersonComponent personComponent;
     private final HistoryRecordMapper recordMapper;
     private final ProjectFlowMapper projectFlowMapper;
     private final InnerUserPersonClient innerUserPersonClient;
@@ -201,8 +205,10 @@ public class ProjectEvaluateComponent {
      */
     public void updateMember(Long projectId, Collection<PersonAddReq> newMembers) {
         // 当前团队成员
-        List<PersonDO> oldMemberDOList = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
-        List<PersonAddReq> oldMembers = PersonCopier.INSTANCE.do2req(oldMemberDOList);
+        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
+        List<PersonAddReq> oldMembers = memberEvaluateDOList.stream()
+                .map(e -> new PersonAddReq(e.getUserName(), e.getUserId()))
+                .collect(Collectors.toList());
 
         // 分析出需要新增、删除的成员， 处理成员积分
         Collection<PersonAddReq> addMembers = CollUtil.subtract(newMembers, oldMembers);

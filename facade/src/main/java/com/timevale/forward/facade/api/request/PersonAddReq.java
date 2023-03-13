@@ -3,8 +3,10 @@ package com.timevale.forward.facade.api.request;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 
@@ -14,6 +16,8 @@ import javax.validation.constraints.NotBlank;
  */
 @EqualsAndHashCode(callSuper = false)
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @ApiModel("添加相关人员")
 public class PersonAddReq extends ToString {
 
