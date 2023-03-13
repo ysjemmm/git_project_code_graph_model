@@ -87,11 +87,11 @@ public class ProjectMD extends BaseMD{
     @FieldCompare(fieldName = "项目类型", enumClass = ProjectInnerTypeEnum.class)
     private Integer innerType;
 
-    @FieldCompare(fieldName = "SR")
-    private String sr;
-
     @FieldCompare(fieldName = "项目类型", enumClass = ProjectKindEnum.class)
     private Integer kind;
+
+    @FieldCompare(fieldName = "SR")
+    private String sr;
 
     @FieldCompare(fieldName = "项目负责人")
     private String principal;

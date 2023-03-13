@@ -11,7 +11,6 @@ import com.timevale.forward.facade.api.client.HistoryRecordService;
 import com.timevale.forward.facade.api.request.HistoryRecordCmpReq;
 import com.timevale.forward.facade.api.result.HistoryRecordCmpVO;
 import com.timevale.forward.facade.api.result.HistoryRecordVO;
-import com.timevale.forward.model.enums.AddOrDelOrCoEnum;
 import com.timevale.forward.service.copy.HistoryRecordCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -76,16 +75,12 @@ public class HistoryRecordImpl implements HistoryRecordService {
 
             // 计算相差天数，判断用户是新增、删除还是共有
             BigDecimal timeDiff;
-            Integer addOrDelOrCo;
             if (minWorkload == null) {
                 timeDiff = maxWorkload;
-                addOrDelOrCo = AddOrDelOrCoEnum.ADD.getCode();
             } else if (maxWorkload == null){
                 timeDiff = minWorkload;
-                addOrDelOrCo = AddOrDelOrCoEnum.DEL.getCode();
             } else {
                 timeDiff = maxWorkload.subtract(minWorkload);
-                addOrDelOrCo = AddOrDelOrCoEnum.COEXIST.getCode();
             }
 
             // 组装参数
@@ -94,7 +89,8 @@ public class HistoryRecordImpl implements HistoryRecordService {
             cmpVO.setTimeDiff(timeDiff);
             cmpVO.setMaxVersion(maxVersion);
             cmpVO.setMinVersion(minVersion);
-            cmpVO.setAddOrDelOrCo(addOrDelOrCo);
+            cmpVO.setMinVersionWorkload(minWorkload);
+            cmpVO.setMaxVersionWorkload(maxWorkload);
 
             // 添加到返回结果中
             result.add(cmpVO);

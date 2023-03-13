@@ -27,8 +27,11 @@ public class HistoryRecordCmpVO extends ToString {
     @ApiModelProperty("大版本")
     private BigDecimal maxVersion;
 
-    @ApiModelProperty("大版本中: 0-共存，1-大版本中新增，2-大版本中删除")
-    private Integer addOrDelOrCo;
+    @ApiModelProperty("小版本数据")
+    private BigDecimal minVersionWorkload;
+
+    @ApiModelProperty("大版本数据")
+    private BigDecimal maxVersionWorkload;
 
     @ApiModelProperty("时差(工作日)天")
     private BigDecimal timeDiff;
