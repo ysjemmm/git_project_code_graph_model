@@ -222,16 +222,6 @@ public class ProjectEvaluateComponent {
 
         // 新增成员
         addMemberNoCheck(projectId, addMembers);
-
-//        // 新增成员
-//        if (CollUtil.isNotEmpty(addMembers)) {
-//            List<ProjectMemberEvaluateDO> newEvalMembers = addMembers.stream()
-//                    .map(e -> ProjectMemberEvaluateCopier.INSTANCE.person2do(e, projectId))
-//                    .collect(Collectors.toList());
-//
-//            // 新增落库
-//            memberEvaluateMapper.batchInsert(newEvalMembers);
-//        }
     }
 
     /**
