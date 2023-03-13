@@ -725,6 +725,17 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
+        // 项目类型分级处理
+        if (condition.getInnerTypes().contains(ProjectInnerTypeEnum.PBG.getCode())) {
+            if (CollUtil.isEmpty(condition.getKinds())) {
+                condition.setKinds(CollUtil.newArrayList(ProjectKindEnum.PBG_BASE.getCode(), ProjectKindEnum.PBG_OTN.getCode()));
+            }
+        } else if (condition.getInnerTypes().contains(ProjectInnerTypeEnum.MANAGE.getCode())){
+            if (CollUtil.isEmpty(condition.getKinds())) {
+                condition.setKinds(CollUtil.newArrayList(ProjectKindEnum.OFC_FLOW_IT.getCode()));
+            }
+        }
+
         // 分页查询
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         condition.setValidIds(validIds);
