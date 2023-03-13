@@ -164,6 +164,9 @@ public class WorkFlowComponent {
         ProjectFlowDO projectFlowDO = projectFlowMapper.getByFlowId(processInstanceId);
         AssertUtil.notNull(projectFlowDO, "流程不存在");
 
+        // 配置用户信息
+        LocalSessionUtils.setUserInfo(projectFlowDO.getProposerId(), projectFlowDO.getProposer());
+
         // 查询对应项目
         ProjectDO projectDO = projectMapper.get(projectFlowDO.getProjectId());
         AssertUtil.notNull(projectFlowDO, "项目不存在");
@@ -291,6 +294,9 @@ public class WorkFlowComponent {
         // 获取项目流程信息
         ProjectFlowDO projectFlowDO = projectFlowMapper.getByFlowId(processInstanceId);
         AssertUtil.notNull(projectFlowDO, "流程不存在");
+
+        // 配置用户信息
+        LocalSessionUtils.setUserInfo(projectFlowDO.getProposerId(), projectFlowDO.getProposer());
 
         // 获取流程信息
         ProcessResponse processInfo  = epeiusClient.getProcessInfo(processInstanceId);

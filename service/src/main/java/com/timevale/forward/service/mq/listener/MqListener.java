@@ -9,6 +9,7 @@ import com.timevale.forward.service.component.WorkFlowComponent;
 import com.timevale.forward.service.component.impl.ProductDemandDescFlowComponent;
 import com.timevale.forward.service.mq.dto.WorkflowBody;
 import com.timevale.forward.service.mq.handler.MqMessageHandler;
+import com.timevale.forward.service.utils.ThreadLocalUtil;
 import com.timevale.framework.mq.client.consumer.Listener;
 import com.timevale.framework.mq.client.consumer.ReceiveResult;
 import com.timevale.framework.mq.client.producer.Msg;
@@ -74,6 +75,8 @@ public class MqListener implements Listener {
                 log.info("消费完成,{}",body.getProcessDefinitionType());
             } catch (Exception e) {
                 log.error("消费失败,流程类型={},错误信息={},{}",body.getProcessDefinitionType(),e.getMessage(),e);
+            } finally {
+                ThreadLocalUtil.remove();
             }
         }
         return ReceiveResult.success();
