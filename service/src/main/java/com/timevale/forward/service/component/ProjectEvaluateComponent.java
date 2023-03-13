@@ -5,14 +5,8 @@ import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.timevale.forward.dal.dao.HistoryRecordMapper;
-import com.timevale.forward.dal.dao.ProjectFlowMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.dao.ProjectMemberEvaluateMapper;
-import com.timevale.forward.dal.entity.HistoryRecordDO;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectFlowDO;
-import com.timevale.forward.dal.entity.ProjectMemberEvaluateDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.request.MemberWorkloadFillReq;
 import com.timevale.forward.facade.api.request.MemberWorkloadModifyReq;
 import com.timevale.forward.facade.api.request.PersonAddReq;
@@ -47,6 +41,8 @@ public class ProjectEvaluateComponent {
     private final ProjectMapper projectMapper;
     private final HistoryRecordMapper recordMapper;
     private final ProjectFlowMapper projectFlowMapper;
+    private final ProjectEvaluateMapper evaluateMapper;
+    private final EvaluateDimensionMapper dimensionMapper;
     private final InnerUserPersonClient innerUserPersonClient;
     private final ProjectMemberEvaluateMapper memberEvaluateMapper;
 
@@ -272,5 +268,19 @@ public class ProjectEvaluateComponent {
 
         // 新增落库
         memberEvaluateMapper.batchInsert(addEvalMembers);
+    }
+
+    /**
+     * 初始化项目评价
+     *
+     * @param projectId 项目id
+     * @param kind      种类
+     */
+    public void initEvaluate(Long projectId, Integer kind) {
+        List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.selectByKindDate(kind, new Date());
+        List<Long> dimensionIdList = dimensionDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(dimensionIdList)) {
+            evaluateMapper.batchInsert(projectId, dimensionIdList);
+        }
     }
 }

@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 
 /**
  * @author by YangXu
@@ -26,7 +27,7 @@ public class EvaluateReq extends ToString {
     private Long evaluateDimensionId;
 
     @ApiModelProperty("评分")
-    private Integer scores;
+    private BigDecimal scores;
 
     @ApiModelProperty("评分描述")
     private String scoresDesc;

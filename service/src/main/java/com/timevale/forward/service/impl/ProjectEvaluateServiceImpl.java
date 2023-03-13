@@ -47,6 +47,14 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     private final ProjectMemberEvaluateMapper memberEvaluateMapper;
     private final ProjectEvaluateComponent projectEvaluateComponent;
 
+    public static void main(String[] args) {
+        List<BigDecimal> list = new ArrayList<>();
+        list.add(null);
+
+        BigDecimal bigDecimal = list.stream().filter(ObjectUtil::isNotNull).reduce(BigDecimal.ZERO,BigDecimal::add);
+        System.out.println(bigDecimal);
+    }
+
     @Override
     public BaseResult<Boolean> flowCallback(Integer type, String flowId) {
         if (type == 1) {
@@ -210,10 +218,10 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
                 && ObjectUtil.notEqual(ProjectLevelEnum.B.getCode(), projectDO.getLevel());
 
         // 计算项目评价总分
-        Integer scoresSum = evaluateItemVOList.stream()
+        BigDecimal scoresSum = evaluateItemVOList.stream()
                 .map(e -> selectPMO ? e.getPmoScores() : e.getScores())
                 .filter(ObjectUtil::isNotNull)
-                .reduce(Integer::sum)
+                .reduce(BigDecimal::add)
                 .orElse(null);
 
         // 组装结果

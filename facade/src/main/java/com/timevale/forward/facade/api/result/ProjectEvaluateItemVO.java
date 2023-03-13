@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 
 /**
  * @author by YangXu
@@ -23,20 +25,20 @@ public class ProjectEvaluateItemVO extends ToString {
     private String dimensionName;
 
     @ApiModelProperty("评分")
-    private Integer scores;
+    private BigDecimal scores;
 
     @ApiModelProperty("评分描述")
     private String scoresDesc;
 
     @ApiModelProperty("PMO评分")
-    private Integer pmoScores;
+    private BigDecimal pmoScores;
 
     @ApiModelProperty("PMO评分描述")
     private String pmoScoresDesc;
 
     @ApiModelProperty("评分上限")
-    private Integer scoresCeiling;
+    private BigDecimal scoresCeiling;
 
     @ApiModelProperty("评分下限")
-    private Integer scoresFloor;
+    private BigDecimal scoresFloor;
 }

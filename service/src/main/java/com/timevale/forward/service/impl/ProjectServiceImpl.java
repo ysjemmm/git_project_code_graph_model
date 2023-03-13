@@ -389,12 +389,8 @@ public class ProjectServiceImpl implements ProjectService {
         // 添加积分成员
         evaluateComponent.addMember(projectDO.getId(), teamMembers);
 
-        // 添加对应的项目评价
-        List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.selectByKindDate(projectDO.getKind(), new Date());
-        List<Long> dimensionIdList = dimensionDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
-        if (CollUtil.isNotEmpty(dimensionIdList)) {
-            evaluateMapper.batchInsert(projectDO.getId(), dimensionIdList);
-        }
+        // 初始化项目评价
+        evaluateComponent.initEvaluate(projectDO.getId(), projectDO.getKind());
 
         //生成节点信息
         projectNodeComponent.buildDefaultNode(projectDO.getPlanStartDate(), projectDO.getPlanEndDate(), projectDO.getId());

@@ -3,6 +3,8 @@ package com.timevale.forward.dal.entity;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 /**
  * @author by YangXu
  * @date 2021/12/15 10:00
@@ -21,7 +23,7 @@ public class ProjectEvaluateDO extends BaseDO{
     /**
      * 评分
      */
-    private Integer scores;
+    private BigDecimal scores;
     /**
      * 评分描述
      */
@@ -29,7 +31,7 @@ public class ProjectEvaluateDO extends BaseDO{
     /**
      * PMO评分
      */
-    private Integer pmoScores;
+    private BigDecimal pmoScores;
     /**
      * PMO评分描述
      */

@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import java.math.BigDecimal;
+
 /**
  * @author by YangXu
  * @date 2023/03/08 13:53
@@ -25,7 +27,7 @@ public class ProjectEvaluateVar {
     /**
      * 评分
      */
-    private Integer scores;
+    private BigDecimal scores;
 
     /**
      * 评分描述

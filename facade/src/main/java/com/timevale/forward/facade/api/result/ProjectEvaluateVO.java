@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 
@@ -19,7 +20,7 @@ import java.util.List;
 public class ProjectEvaluateVO extends ToString {
 
     @ApiModelProperty("项目评价总分")
-    private Integer scoresSum;
+    private BigDecimal scoresSum;
 
     @ApiModelProperty("项目评价详情项")
     private List<ProjectEvaluateItemVO> evaluateItemVOList;

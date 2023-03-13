@@ -2,6 +2,7 @@ package com.timevale.forward.dal.entity;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -17,7 +18,7 @@ public class EvaluateDimensionDO extends BaseDO {
 
     private String scoresExplain;
 
-    private Integer scoresCeiling;
+    private BigDecimal scoresCeiling;
 
-    private Integer scoresFloor;
+    private BigDecimal scoresFloor;
 }
