@@ -59,5 +59,5 @@ public class ProjectListChildCondition {
 
     private Integer pageSize;
 
-    private Integer category;
+    private Integer notInvalid;
 }

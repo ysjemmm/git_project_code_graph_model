@@ -610,4 +610,37 @@
         and p.is_deleted = false
         group by p.id;
     </select>
+
+    <select id="filterInvalid" resultType="java.lang.Long">
+        SELECT id
+        FROM project
+        <where>
+            AND id IN
+            <foreach collection="ids" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            AND id NOT IN (
+                SELECT id
+                FROM project
+                WHERE `status` = -20 AND category = 1
+            )
+        </where>
+    </select>
+
+    <select id="filterInnerInvalid" resultType="java.lang.Long">
+        SELECT id
+        FROM project
+        <where>
+            AND id IN
+            <foreach collection="ids" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            AND id NOT IN (
+                SELECT id
+                FROM project
+                WHERE `status` = -20 AND category = 0
+            )
+        </where>
+    </select>
+
 </mapper>

@@ -732,6 +732,21 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
+        Collection<Integer> status = condition.getStatus();
+        if (CollUtil.isNotEmpty(status)) {
+            boolean containInvalid = status.contains(ProjectStatusEnum.INVALID.getCode());
+            boolean containCanCell = status.contains(ProjectStatusEnum.CANCELLATION.getCode());
+            if (containInvalid && !containCanCell) {
+               validIds = projectMapper.filterInvalid(validIds);
+            } else if (!containInvalid && containCanCell) {
+                validIds = projectMapper.filterInnerInvalid(validIds);
+                status.add(ProjectStatusEnum.INVALID.getCode());
+            }
+        }
+        if (CollUtil.isEmpty(validIds)) {
+            return BaseResult.success(ResultUtil.pageEmpty());
+        }
+
         // 分页查询
         PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         condition.setValidIds(validIds);
@@ -936,6 +951,12 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 是否为PMO
         projectDetailVO.setIsPMO(userComponent.isPmoOrPmoLeader());
+
+        // 是否存在结项流程
+        List<ProjectFlowDO> conclusionFlows = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.CONCLUSION.getCode());
+        boolean conclusionAuditing = conclusionFlows.stream().anyMatch(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()));
+        projectDetailVO.setConclusionAuditing(conclusionAuditing);
+
         return BaseResult.success(projectDetailVO);
     }
 

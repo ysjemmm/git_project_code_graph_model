@@ -1,6 +1,5 @@
 package com.timevale.forward.facade.api.result;
 
-import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -181,4 +180,6 @@ public class ProjectDetailVO extends ToString {
     @ApiModelProperty("1-n负责人id")
     private String otnPrincipalId;
 
+    @ApiModelProperty("是否存在结项流程")
+    private Boolean conclusionAuditing;
 }

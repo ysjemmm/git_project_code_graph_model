@@ -42,7 +42,9 @@ public enum ProjectStatusEnum {
 
     SUSPEND(-10, "已暂停", false, false),
 
-    INVALID(-20, "已中止", false, true);
+    INVALID(-20, "已中止", false, true),
+
+    CANCELLATION(-30, "已废除", false, true);
 
     private final Integer code;
     private final String text;

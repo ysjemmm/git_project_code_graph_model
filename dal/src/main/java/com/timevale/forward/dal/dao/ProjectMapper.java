@@ -186,4 +186,8 @@ public interface ProjectMapper {
 
     @Update("update project set parent_ids = substr(parent_ids, #{parentLen}) where parent_ids regexp #{parentRegexp}")
     void deleteChildren(@Param("parentLen") Integer parentLen, @Param("parentRegexp") String parentRegexp);
+
+    List<Long> filterInvalid(@Param("ids") List<Long> ids);
+
+    List<Long> filterInnerInvalid(@Param("ids") List<Long> projectIds);
 }
