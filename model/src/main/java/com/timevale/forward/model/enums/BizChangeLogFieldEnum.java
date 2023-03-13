@@ -36,6 +36,8 @@ public enum BizChangeLogFieldEnum {
     PJ_BUDGET("项目预算"),
     PJ_MILESTONE("里程碑"),
 
+    CONCLUSION_DATE("结项时间"),
+
     /**
      * 项目目标
      */

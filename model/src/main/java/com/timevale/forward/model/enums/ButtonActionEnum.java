@@ -200,6 +200,11 @@ public enum ButtonActionEnum {
     DELETE("删除"),
 
     /**
+     * 结论
+     */
+    CONCLUSION("结项"),
+
+    /**
      * 新增
      */
     APPEND("新增"),

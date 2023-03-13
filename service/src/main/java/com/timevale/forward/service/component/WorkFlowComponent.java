@@ -50,6 +50,7 @@ public class WorkFlowComponent {
     final private EpeiusClient epeiusClient;
     final private UserComponent userComponent;
     final private ProjectMapper projectMapper;
+    final private ProjectLogComponent logComponent;
     final private ProjectComponent projectComponent;
     final private ProjectFlowMapper projectFlowMapper;
     final private ProjectEvaluateMapper evaluateMapper;
@@ -217,11 +218,19 @@ public class WorkFlowComponent {
         }
 
         // 更新结项日期,项目状态（取放在flowData中的数据）
+        Date conclusionDate = new Date();
+        Long projectId = projectDO.getId();
+        Integer oldStatus = projectDO.getStatus();
+        Integer newStatus = Integer.valueOf(projectFlowDO.getFlowData());
+
         ProjectDO updateDO = new ProjectDO();
-        updateDO.setId(projectFlowDO.getId());
-        updateDO.setConclusionDate(new Date());
-        updateDO.setStatus(Integer.valueOf(projectFlowDO.getFlowData()));
+        updateDO.setId(projectId);
+        updateDO.setStatus(newStatus);
+        updateDO.setConclusionDate(conclusionDate);
         projectMapper.update(projectDO);
+
+        // 结项流程日志处理
+        logComponent.addConclusion(projectId, oldStatus, newStatus, conclusionDate);
     }
 
     /**

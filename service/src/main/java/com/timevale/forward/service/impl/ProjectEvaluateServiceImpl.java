@@ -47,14 +47,6 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     private final ProjectMemberEvaluateMapper memberEvaluateMapper;
     private final ProjectEvaluateComponent projectEvaluateComponent;
 
-    public static void main(String[] args) {
-        List<BigDecimal> list = new ArrayList<>();
-        list.add(null);
-
-        BigDecimal bigDecimal = list.stream().filter(ObjectUtil::isNotNull).reduce(BigDecimal.ZERO,BigDecimal::add);
-        System.out.println(bigDecimal);
-    }
-
     @Override
     public BaseResult<Boolean> flowCallback(Integer type, String flowId) {
         if (type == 1) {
