@@ -1245,7 +1245,8 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProjectDO> projectDOList = projectMapper.getByLikeName(likeName, ProjectCategoryEnum.PRODUCT_PROJECT.getCode());
         projectDOList = projectDOList.stream()
                 .filter(a -> !ProjectStatusEnum.INVALID.getCode().equals(a.getStatus())
-                        && !ProjectStatusEnum.RELEASED.getCode().equals(a.getStatus()))
+                        && !ProjectStatusEnum.RELEASED.getCode().equals(a.getStatus())
+                        && !ProjectStatusEnum.CONCLUSION.getCode().equals(a.getStatus()))
                 .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(projectDOList)) {
             return BaseResult.success(Lists.emptyList());

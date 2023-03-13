@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -123,24 +124,28 @@ public class ProjectEvaluateComponent {
         BigDecimal planWorkloadSumBefore = memberEvaluateDOList.stream()
                 .map(ProjectMemberEvaluateDO::getPlanWorkload)
                 .filter(ObjectUtil::isNotNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(1, RoundingMode.HALF_UP);
         BigDecimal pointsWorkloadSumBefore = memberEvaluateDOList.stream()
                 .filter(ProjectMemberEvaluateDO::getIncludeStat)
                 .map(ProjectMemberEvaluateDO::getPlanWorkload)
                 .filter(ObjectUtil::isNotNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(1, RoundingMode.HALF_UP);
 
         // 新的总计划工作量、积分总工作量
         List<MemberWorkloadModifyReq> memberWorkloadList = req.getModifyReqList();
         BigDecimal planWorkloadSumAfter = memberWorkloadList.stream()
                 .map(MemberWorkloadModifyReq::getPlanWorkload)
                 .filter(ObjectUtil::isNotNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(1, RoundingMode.HALF_UP);
         BigDecimal pointsWorkloadSumAfter = memberWorkloadList.stream()
                 .filter(MemberWorkloadModifyReq::getIncludeStat)
                 .map(MemberWorkloadModifyReq::getPlanWorkload)
                 .filter(ObjectUtil::isNotNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(1, RoundingMode.HALF_UP);
 
         // 新旧工作量差值，判断变更类型
         List<String> changeTypeList = new ArrayList<>();

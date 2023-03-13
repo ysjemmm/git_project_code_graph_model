@@ -114,7 +114,7 @@
             <if test="type != null">type = #{type},</if>
             <if test="pmId != null">pm_id = #{pmId},</if>
             <if test="pm != null">pm = #{pm},</if>
-            <if test="status != null">status = #{status},</if>
+            <if test="status != null">`status` = #{status},</if>
             <if test="nodeStatus != null">node_status = #{nodeStatus},</if>
             <if test="planStartDate != null">plan_start_date = #{planStartDate},</if>
             <if test="planEndDate != null">plan_end_date = #{planEndDate},</if>

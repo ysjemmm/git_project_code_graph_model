@@ -227,7 +227,7 @@ public class WorkFlowComponent {
         updateDO.setId(projectId);
         updateDO.setStatus(newStatus);
         updateDO.setConclusionDate(conclusionDate);
-        projectMapper.update(projectDO);
+        projectMapper.update(updateDO);
 
         // 结项流程日志处理
         logComponent.addConclusion(projectId, oldStatus, newStatus, conclusionDate);
