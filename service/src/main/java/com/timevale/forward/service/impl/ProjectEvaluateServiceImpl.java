@@ -48,6 +48,16 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     private final ProjectEvaluateComponent projectEvaluateComponent;
 
     @Override
+    public BaseResult<Boolean> flowCallback(Integer type, String flowId) {
+        if (type == 1) {
+            workFlowComponent.conclusionComplete(flowId);
+        } else if (type == 2) {
+            workFlowComponent.workloadChangeComplete(flowId);
+        }
+        return BaseResult.success(true);
+    }
+
+    @Override
     public BaseResult<ProjectMemberEvaluateVO> memberList(Long projectId) {
         // 查询并转换
         List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
