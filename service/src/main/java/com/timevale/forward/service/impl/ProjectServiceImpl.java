@@ -725,10 +725,14 @@ public class ProjectServiceImpl implements ProjectService {
         if (condition.getInnerTypes().contains(ProjectInnerTypeEnum.PBG.getCode())) {
             if (CollUtil.isEmpty(condition.getKinds())) {
                 condition.setKinds(CollUtil.newArrayList(ProjectKindEnum.PBG_BASE.getCode(), ProjectKindEnum.PBG_OTN.getCode()));
+            } else {
+                condition.setInnerTypes(new ArrayList<>());
             }
         } else if (condition.getInnerTypes().contains(ProjectInnerTypeEnum.MANAGE.getCode())){
             if (CollUtil.isEmpty(condition.getKinds())) {
                 condition.setKinds(CollUtil.newArrayList(ProjectKindEnum.OFC_FLOW_IT.getCode()));
+            } else {
+                condition.setInnerTypes(new ArrayList<>());
             }
         }
 

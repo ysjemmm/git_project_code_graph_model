@@ -206,7 +206,7 @@ public class WorkFlowComponent {
 
             // 基线且非迭代，更新PMO评价，否在更新项目评价
             if (ProjectKindEnum.PBG_BASE.getCode().equals(projectDO.getKind())
-                    && ProjectTypeEnum.RENEW.getCode().equals(projectDO.getType())) {
+                    && !ProjectTypeEnum.RENEW.getCode().equals(projectDO.getType())) {
                 updateEvaluate.setPmoScores(evaluateVar.getScores());
                 updateEvaluate.setPmoScoresDesc(evaluateVar.getScoresDesc());
             } else {

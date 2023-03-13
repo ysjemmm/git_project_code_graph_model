@@ -67,4 +67,11 @@ public interface ProjectComponent {
      * @return {@link String}
      */
     String getUrl(Long projectId);
+
+    /**
+     * 更新是否为客开项目
+     *
+     * @param projectId 项目id
+     */
+    void updateCustomDev(Long projectId);
 }

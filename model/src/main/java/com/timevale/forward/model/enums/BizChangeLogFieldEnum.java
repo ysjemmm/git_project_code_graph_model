@@ -38,6 +38,8 @@ public enum BizChangeLogFieldEnum {
 
     CONCLUSION_DATE("结项时间"),
 
+    CUSTOMER_PROJECT("是否为客开项目"),
+
     /**
      * 项目目标
      */
