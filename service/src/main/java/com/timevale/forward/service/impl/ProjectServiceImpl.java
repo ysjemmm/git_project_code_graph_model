@@ -381,7 +381,9 @@ public class ProjectServiceImpl implements ProjectService {
         teamMembers.add(projectAddReq.getPrincipal());
         teamMembers.add(projectAddReq.getOtnPrincipal());
         teamMembers.addAll(projectAddReq.getPds());
-        teamMembers = teamMembers.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList());
+        teamMembers = teamMembers.stream()
+                .filter(e -> Objects.nonNull(e) && StrUtil.isNotBlank(e.getUserId()))
+                .distinct().collect(Collectors.toList());
         personComponent.add(teamMembers, projectDO.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         // 添加积分成员
@@ -519,7 +521,9 @@ public class ProjectServiceImpl implements ProjectService {
         newMembers.add(projectModifyReq.getPrincipal());
         newMembers.add(projectModifyReq.getOtnPrincipal());
         newMembers.addAll(projectModifyReq.getPds());
-        newMembers = newMembers.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList());
+        newMembers = newMembers.stream()
+                .filter(e -> Objects.nonNull(e) && StrUtil.isNotBlank(e.getUserId()))
+                .distinct().collect(Collectors.toList());
 
         // 更新团队成员、积分成员
         personComponent.update(newMembers, newProject.getId(), PersonTypeEnum.PROJECT_MEMBER.getCode());
