@@ -51,6 +51,7 @@
             <foreach collection="userIdColl" item="item" separator="," open="(" close=")">
                 #{item}
             </foreach>
+            AND project_id = #{projectId}
         </where>
     </update>
 
