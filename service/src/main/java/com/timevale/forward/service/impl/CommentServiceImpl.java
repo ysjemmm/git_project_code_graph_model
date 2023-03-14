@@ -4,6 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.CommentDO;
 import com.timevale.forward.dal.entity.FileDO;
+import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.client.CommentService;
 import com.timevale.forward.facade.api.query.CommentQueryList;
 import com.timevale.forward.facade.api.query.PersonQuery;
@@ -143,6 +144,13 @@ public class CommentServiceImpl implements CommentService {
         CommentTypeEnum commentType = CommentTypeEnum.getByCode(type);
         String name = commentMainNameFun.getOrDefault(commentType, id -> "").apply(toId);
 
+        // 任务特殊处理
+        Long projectId = null;
+        if (CommentTypeEnum.TASK.getCode().equals(type)) {
+            TaskDO taskDO = taskMapper.getById(toId);
+            projectId = taskDO.getProjectId();
+        }
+
         // 发送通知
         messageEventPublisher.publish(new CommentMsgEvent(
                 this,
@@ -151,7 +159,8 @@ public class CommentServiceImpl implements CommentService {
                 receivers,
                 commentType,
                 name,
-                commentDO.getContent()
+                commentDO.getContent(),
+                projectId
         ));
 
         return BaseResult.success(true);
