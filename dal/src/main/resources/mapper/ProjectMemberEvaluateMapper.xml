@@ -28,6 +28,17 @@
         </where>
     </update>
 
+    <update id="updatePlanWorkload">
+        UPDATE project_member_evaluate
+        <set>
+            plan_workload = #{planWorkload},
+        </set>
+        <where>
+            AND user_id = #{userId}
+            AND project_id = #{projectId}
+        </where>
+    </update>
+
     <update id="batchDelete">
         UPDATE project_member_evaluate
         <set>

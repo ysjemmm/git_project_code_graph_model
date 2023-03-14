@@ -958,10 +958,11 @@ public class ProjectServiceImpl implements ProjectService {
             projectDetailVO.setStatusName(CommonConstant.INVALID);
         }
 
-        // 是否为PMO
+        // 是否为PMO和评价部门下的PMO
         projectDetailVO.setIsPMO(userComponent.isPmoOrPmoLeader());
+        projectDetailVO.setIsEvalPmoOrPmoLeader(userComponent.isEvalPmoOrPmoLeader());
 
-        // 是否存在结项流程
+        // 是否存在审核中的结项流程
         List<ProjectFlowDO> conclusionFlows = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.CONCLUSION.getCode());
         boolean conclusionAuditing = conclusionFlows.stream().anyMatch(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()));
         projectDetailVO.setConclusionAuditing(conclusionAuditing);

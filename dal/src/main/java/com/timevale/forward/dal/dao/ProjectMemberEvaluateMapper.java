@@ -18,6 +18,8 @@ public interface ProjectMemberEvaluateMapper {
 
     void update(ProjectMemberEvaluateDO memberEvaluateDO);
 
+    void updatePlanWorkload(ProjectMemberEvaluateDO memberEvaluateDO);
+
     List<ProjectMemberEvaluateDO> selectByProjectId(@Param("projectId")Long projectId);
 
 }

@@ -1,12 +1,15 @@
 package com.timevale.forward.service.component;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.security.facade.response.BaseInfoResponse;
+import com.timevale.security.facade.response.GroupModelResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -22,6 +25,9 @@ import java.util.stream.Collectors;
 public class UserComponent {
     private final InnerUserPersonClient personClient;
 
+    @Value("${evalPmoGroup:557300580}")
+    private String EVAL_PMO_GROUP;
+
     /**
      * 查询是否PMO或者PMO上级
      */
@@ -31,6 +37,21 @@ public class UserComponent {
                 personClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
         for (BaseInfoResponse user : users) {
             if (CommonConstant.PMO.equalsIgnoreCase(user.getJobClassification())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 查询是否评价部门下的PMO或者PMO上级
+     */
+    public boolean isEvalPmoOrPmoLeader() {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        List<BaseInfoResponse> users = personClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
+        for (BaseInfoResponse user : users) {
+            GroupModelResponse evalGroup = CollUtil.findOne(user.getGroupList(), e -> EVAL_PMO_GROUP.equals(e.getGroupId()));
+            if (evalGroup != null && CommonConstant.PMO.equalsIgnoreCase(user.getJobClassification())) {
                 return true;
             }
         }

@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -79,13 +80,12 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
                 .filter(ObjectUtil::isNotNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 结项流程, 查询审批中、或者审核通过的流程
+        // 结项流程
         List<ProjectFlowDO> conclusionFlowList = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.CONCLUSION.getCode());
         String conclusionPid = conclusionFlowList.stream()
-                .filter(e -> ForwardFlowStatusEnum.COMPLETE.getCode().equals(e.getStatus())
-                        || ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()))
+                .sorted(Comparator.comparing(BaseDO::getId))
                 .map(ProjectFlowDO::getFlowId)
-                .findAny()
+                .findFirst()
                 .orElse("");
         String conclusionFlowId = Optional.ofNullable(epeiusClient.getProcessInfo(conclusionPid))
                 .flatMap(e -> Optional.ofNullable(e.getCurrentTaskIdList()))
@@ -97,7 +97,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         String workloadFlowPid = workloadFlowList.stream()
                 .filter(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()))
                 .map(ProjectFlowDO::getFlowId)
-                .findAny()
+                .findFirst()
                 .orElse("");
         String workloadFlowId = Optional.ofNullable(epeiusClient.getProcessInfo(workloadFlowPid))
                 .flatMap(e -> Optional.ofNullable(e.getCurrentTaskIdList()))
@@ -135,6 +135,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
             for (MemberWorkloadModifyReq modifyReq : modifyReqList) {
                 ProjectMemberEvaluateDO evaluateDO = ProjectMemberEvaluateCopier.INSTANCE.req2do(modifyReq, projectId);
                 memberEvaluateMapper.update(evaluateDO);
+                memberEvaluateMapper.updatePlanWorkload(evaluateDO);
             }
 
             // 判断是否存在基线版本，如果是则需要添加新版本

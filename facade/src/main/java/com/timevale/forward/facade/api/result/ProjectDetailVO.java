@@ -182,4 +182,10 @@ public class ProjectDetailVO extends ToString {
 
     @ApiModelProperty("是否存在结项流程")
     private Boolean conclusionAuditing;
+
+    @ApiModelProperty("结项时间")
+    private Date conclusionDate;
+
+    @ApiModelProperty("是否是评价部门的pmo")
+    private Boolean isEvalPmoOrPmoLeader;
 }

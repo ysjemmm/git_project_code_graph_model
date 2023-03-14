@@ -58,8 +58,8 @@ public class WorkFlowComponent {
     final private ProjectEvaluateComponent evaluateComponent;
     final private ProjectMemberEvaluateMapper memberEvaluateMapper;
 
-    @Value("${conclusionPmoGroup:557300580}")
-    private String CONCLUSION_PMO_GROUP;
+    @Value("${evalPmoGroup:557300580}")
+    private String EVAL_PMO_GROUP;
 
     /**
      * 结项工作流——发起
@@ -79,7 +79,7 @@ public class WorkFlowComponent {
         String projectUrl = projectComponent.getUrl(projectId);
 
         // 查询结项流程PMO
-        List<String> pmoIdList = userComponent.getPmo(CONCLUSION_PMO_GROUP);
+        List<String> pmoIdList = userComponent.getPmo(EVAL_PMO_GROUP);
 
         // 发起人是否为项目负责人或者1-n产研负责人
         Set<String> principalIdSet = CollUtil.newHashSet(projectDO.getPrincipalId(), projectDO.getOtnPrincipalId());
@@ -182,7 +182,6 @@ public class WorkFlowComponent {
                 .flatMap(e -> Optional.ofNullable(e.getCode()))
                 .ifPresent(e -> projectFlowMapper.updateStatus(projectFlowDO.getId(), e));
 
-
         // 只有审批通过，需要更新项目评价信息
         if (ObjectUtil.notEqual(FlowStatusEnum.FLOW_COMPLETE.getValue(), processStatus)) {
             return;
@@ -246,7 +245,7 @@ public class WorkFlowComponent {
         String startAccountId = LocalSessionUtils.getUserInfo().getId();
 
         // 查询结项流程PMO
-        List<String> pmoIdList = userComponent.getPmo(CONCLUSION_PMO_GROUP);
+        List<String> pmoIdList = userComponent.getPmo(EVAL_PMO_GROUP);
 
         // 取出变更事由、PBU负责人
         String changeReason = req.getChangeReason();
