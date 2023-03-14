@@ -190,4 +190,6 @@ public interface ProjectMapper {
     List<Long> filterInvalid(@Param("ids") List<Long> ids);
 
     List<Long> filterInnerInvalid(@Param("ids") List<Long> projectIds);
+
+    List<ProjectDO> getByBizDemandId(@Param("bizDemandIds")List<Long> bizDemandIds);
 }

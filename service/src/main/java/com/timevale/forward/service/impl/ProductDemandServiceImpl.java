@@ -323,6 +323,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         productDemandLogComponent.addLogWhenStatusChange(oldStatus, type, productDemandId, action);
         //解除任务关联
         taskProductDemandComponent.update(null, productDemandId);
+
+        productDemandComponent.updateCustomerProject(productDemandId);
         return BaseResult.success(true);
     }
 
@@ -576,6 +578,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             productDemandLogComponent.addLogWhenLinkOrUnlink(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
 
         }
+
+        productDemandComponent.updateCustomerProject(productDemandDO.getId());
         return BaseResult.success(true);
     }
 

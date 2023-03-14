@@ -285,6 +285,8 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         bizLabelComponent.deleteLabel(bizDemandId, BizTypeEnum.BIZ_DEMAND.getCode());
+
+        bizDemandComponent.updateCustomerProject(bizDemandId);
         return BaseResult.success(true);
     }
 
@@ -513,7 +515,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 变更日志
         bizDemandLogComponent.addLogWhenModifyData(oldBizDemandDO, newBizDemandDO);
 
-
+        bizDemandComponent.updateCustomerProject(bizDemandModifyReq.getId());
         return BaseResult.success(true);
     }
 

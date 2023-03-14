@@ -155,4 +155,6 @@ public interface BizDemandMapper {
      */
     List<BizDemandListDO> selectByCustomId(@Param("customId") Long customId);
 
+    List<BizDemandDO> getByProjectId(@Param("projectId")Long projectId);
+
 }

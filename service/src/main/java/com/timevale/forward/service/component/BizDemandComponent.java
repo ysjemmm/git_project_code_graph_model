@@ -1,10 +1,8 @@
 package com.timevale.forward.service.component;
 
-import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
-import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
 
 import java.util.Date;
@@ -78,4 +76,6 @@ public interface BizDemandComponent {
      * @return
      */
     Integer getBizDemandStatus(Integer pdStauts);
+
+    void updateCustomerProject(Long bizDemandId);
 }

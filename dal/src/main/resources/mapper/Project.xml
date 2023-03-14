@@ -143,7 +143,6 @@
         update project
         <set>
             name = #{name},
-            customer_dev = #{customerDev},
             priority = #{priority},
             type = #{type},
             `status` = #{status},
@@ -641,6 +640,18 @@
                 WHERE `status` = -20 AND category = 0
             )
         </where>
+    </select>
+
+    <select id="getByBizDemandId" resultType="com.timevale.forward.dal.entity.ProjectDO">
+        SELECT pj.*
+        FROM project pj
+        INNER JOIN project_product_demand ppd on pj.id = ppd.project_id AND ppd.is_deleted = false
+        INNER JOIN product_biz_demand pbd on ppd.product_demand_id = pbd.biz_demand_id AND pbd.is_deleted = false
+        WHERE pbd.biz_demand_id IN
+        <foreach collection="bizDemandIds" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        AND pj.is_deleted = false
     </select>
 
 </mapper>

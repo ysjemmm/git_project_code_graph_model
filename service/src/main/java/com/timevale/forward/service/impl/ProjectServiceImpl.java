@@ -283,6 +283,8 @@ public class ProjectServiceImpl implements ProjectService {
         } else {
             projectMilestoneComponent.addMilestoneInvalidLog(projectId, MilestoneTypeEnum.PROJECT.getCode());
         }
+
+        projectComponent.updateCustomDev(projectId);
         return BaseResult.success(true);
     }
 
@@ -565,6 +567,9 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 内部项目状态变更
         innerProjectStatusUpdateComponent.updateFromProject(newProject);
+
+        // 客开刷新
+        projectComponent.updateCustomDev(projectId);
 
         // log
         projectLogComponent.addLogWhenModifyData(oldProject, newProject);
@@ -1111,6 +1116,10 @@ public class ProjectServiceImpl implements ProjectService {
             // 取消产品需求和任务的关联
             productDemandIds.forEach(a -> taskProductDemandComponent.update(null, a));
         }
+
+        // 客开刷新
+        projectComponent.updateCustomDev(projectDO.getId());
+
         //产品需求和项目关联或删除时,需要给前端刷新产品需求状态
         ProductDemandDO productDemandDO = productDemandMapper.selectById(productDemandIds.get(0));
         ProductDemandStatusVO vo = new ProductDemandStatusVO();

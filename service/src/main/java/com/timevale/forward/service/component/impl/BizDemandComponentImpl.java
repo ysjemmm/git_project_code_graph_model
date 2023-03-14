@@ -1,9 +1,9 @@
 package com.timevale.forward.service.component.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
-import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -80,6 +80,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Resource
     private SqlOrderComponent sqlOrderComponent;
+
+    @Resource
+    private ProjectLogComponent projectLogComponent;
 
     @Override
     public void updateBizDemandStatusByLinkedProductDemand(Long bizDemandId) {
@@ -430,5 +433,19 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         }
 
         return BizDemandStatusEnum.RECEIVED.getCode();
+    }
+
+    @Resource
+    private ProjectComponent projectComponent;
+
+    @Override
+    public void updateCustomerProject(Long bizDemandId) {
+        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+
+        List<ProjectDO> byBizDemandId = projectMapper.getByBizDemandId(CollUtil.newArrayList(bizDemandId));
+        for (ProjectDO projectDO : byBizDemandId) {
+            projectComponent.updateCustomDev(projectDO.getId());
+        }
+
     }
 }

@@ -42,6 +42,9 @@ import java.util.stream.Collectors;
 public class ProjectComponentImpl implements ProjectComponent {
 
     @Resource
+    private BizDemandMapper bizDemandMapper;
+
+    @Resource
     private ProjectMapper projectMapper;
 
     @Resource
@@ -91,8 +94,6 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Resource
     private ProductBizDemandMapper productBizDemandMapper;
-    @Resource
-    private BizDemandMapper bizDemandMapper;
 
     @Override
     public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -600,45 +601,34 @@ public class ProjectComponentImpl implements ProjectComponent {
         return analyseVOList;
     }
 
+    @Override
     public void updateCustomDev(Long projectId) {
         ProjectDO projectDO = projectMapper.get(projectId);
-
-        Integer customerDev = 0;
-
         Integer kind = projectDO.getKind();
+
+        Integer newCustomerDev = 0;
+
         if (ProjectKindEnum.PBG_OTN.getCode().equals(kind)) {
-
-            List<ProjectProductDemandDO> byProjectId = projectProductDemandMapper.getByProjectId(projectId);
-            List<Long> productDemandIds = byProjectId.stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
-
-            if (CollUtil.isNotEmpty(productDemandIds)) {
-                List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByProductDemandIds(productDemandIds);
-                List<Long> bizIdList = productBizDemandDOList.stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
-
-                if (CollUtil.isNotEmpty(bizIdList)) {
-                    List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(bizIdList);
-                    boolean customerDevDemand = bizDemandDOList.stream().anyMatch(e -> BooleanUtil.isTrue(e.getCustomerDevDemand()));
-                    if (customerDevDemand) {
-                        customerDev = 1;
-                    }
-                }
-            }
+            List<BizDemandDO> bizDemandDOList = bizDemandMapper.getByProjectId(projectId);
+            boolean customerDevDemand = bizDemandDOList.stream().anyMatch(e -> BooleanUtil.isTrue(e.getCustomerDevDemand()));
+            newCustomerDev = customerDevDemand ? 1 : 0;
+        } else {
+            newCustomerDev = 0;
         }
 
         Integer oldCustomerDev = projectDO.getCustomerDev();
-        if (ObjectUtil.notEqual(customerDev, oldCustomerDev)) {
+        if (ObjectUtil.notEqual(newCustomerDev, oldCustomerDev)) {
             ProjectDO updateDO = new ProjectDO();
             updateDO.setId(projectId);
-            updateDO.setCustomerDev(customerDev);
+            updateDO.setCustomerDev(newCustomerDev);
             projectMapper.update(updateDO);
 
             projectLogComponent.addLogWhenContentChange(
                     YesOrNoEnum.getTextByCode(oldCustomerDev),
-                    YesOrNoEnum.getTextByCode(customerDev),
+                    YesOrNoEnum.getTextByCode(newCustomerDev),
                     projectId,
                     BizChangeLogFieldEnum.CUSTOMER_PROJECT.getText()
             );
         }
-
     }
 }
