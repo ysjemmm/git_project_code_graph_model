@@ -19,6 +19,7 @@ import com.timevale.forward.service.component.ProjectEvaluateComponent;
 import com.timevale.forward.service.component.WorkFlowComponent;
 import com.timevale.forward.service.copy.ProjectEvaluateCopier;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
+import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -31,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -38,6 +40,7 @@ import java.util.stream.Collectors;
 @RestService
 @RequiredArgsConstructor
 public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
+    private final EpeiusClient epeiusClient;
     private final ProjectMapper projectMapper;
     private final HistoryRecordMapper recordMapper;
     private final ProjectFlowMapper projectFlowMapper;
@@ -78,19 +81,27 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
 
         // 结项流程, 查询审批中、或者审核通过的流程
         List<ProjectFlowDO> conclusionFlowList = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.CONCLUSION.getCode());
-        String conclusionFlowId = conclusionFlowList.stream()
+        String conclusionPid = conclusionFlowList.stream()
                 .filter(e -> ForwardFlowStatusEnum.COMPLETE.getCode().equals(e.getStatus())
                         || ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()))
                 .map(ProjectFlowDO::getFlowId)
                 .findAny()
                 .orElse("");
+        String conclusionFlowId = Optional.ofNullable(epeiusClient.getProcessInfo(conclusionPid))
+                .flatMap(e -> Optional.ofNullable(e.getCurrentTaskIdList()))
+                .flatMap(e -> Optional.ofNullable(CollUtil.getLast(e)))
+                .orElse("");
 
         // 工作流变更流程，查询审核中的流程
         List<ProjectFlowDO> workloadFlowList = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
-        String workloadFlowId = workloadFlowList.stream()
+        String workloadFlowPid = workloadFlowList.stream()
                 .filter(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()))
                 .map(ProjectFlowDO::getFlowId)
                 .findAny()
+                .orElse("");
+        String workloadFlowId = Optional.ofNullable(epeiusClient.getProcessInfo(workloadFlowPid))
+                .flatMap(e -> Optional.ofNullable(e.getCurrentTaskIdList()))
+                .flatMap(e -> Optional.ofNullable(CollUtil.getLast(e)))
                 .orElse("");
 
         // 组装数据
