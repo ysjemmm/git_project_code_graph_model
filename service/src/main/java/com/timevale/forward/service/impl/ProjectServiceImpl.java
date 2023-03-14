@@ -505,7 +505,7 @@ public class ProjectServiceImpl implements ProjectService {
             newProject.setPlanEndDate(oldProjectDO.getPlanEndDate());
         }
 
-        // 在这里面把项目数据更新了，我艹了
+        // 在这里面把项目数据更新了
         fillInfoWhenModify(projectNodeDOList, newProject);
 
         // 判断产品线是否已关联任务、线下bug
@@ -570,6 +570,9 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 客开刷新
         projectComponent.updateCustomDev(projectId);
+
+        // 更新评价维度
+        evaluateComponent.updateEvalDimension(projectId);
 
         // log
         projectLogComponent.addLogWhenModifyData(oldProject, newProject);

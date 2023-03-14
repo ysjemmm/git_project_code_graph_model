@@ -288,4 +288,34 @@ public class ProjectEvaluateComponent {
             evaluateMapper.batchInsert(projectId, dimensionIdList);
         }
     }
+
+    /**
+     * 更新项目维度评价处理
+     *
+     * @param projectId 项目id
+     */
+    public void updateEvalDimension(Long projectId) {
+        ProjectDO projectDO = projectMapper.get(projectId);
+        AssertUtil.notNull(projectDO, "项目不存在");
+
+        List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.selectByProjectId(projectId);
+        Optional<Long> dimensionIdOpt = evaluateDOList.stream()
+                .map(ProjectEvaluateDO::getEvaluateDimensionId)
+                .findAny();
+
+        dimensionIdOpt.ifPresent(dimensionId -> {
+            List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.selectById(dimensionId);
+            Integer dimensionKind = dimensionDOList.stream()
+                    .map(EvaluateDimensionDO::getKind)
+                    .findAny()
+                    .orElse(null);
+
+            Integer projectKind = projectDO.getKind();
+            if (ObjectUtil.notEqual(projectKind, dimensionKind)) {
+                evaluateMapper.delete(projectId);
+                initEvaluate(projectId, projectKind);
+            }
+        });
+
+    }
 }

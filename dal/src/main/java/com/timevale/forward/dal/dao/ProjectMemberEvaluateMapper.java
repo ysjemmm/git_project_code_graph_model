@@ -14,7 +14,7 @@ public interface ProjectMemberEvaluateMapper {
 
     void batchInsert(@Param("coll") Collection<ProjectMemberEvaluateDO> collection);
 
-    void batchDelete(@Param("projectId")Long projectId, @Param("coll") Collection<String> userIdColl);
+    void batchDelete(@Param("projectId")Long projectId, @Param("userIdColl") Collection<String> userIdColl);
 
     void update(ProjectMemberEvaluateDO memberEvaluateDO);
 

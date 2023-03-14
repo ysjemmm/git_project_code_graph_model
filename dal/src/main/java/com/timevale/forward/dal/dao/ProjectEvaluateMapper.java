@@ -22,4 +22,6 @@ public interface ProjectEvaluateMapper {
 
     void batchInsert(@Param("projectId")Long projectId, @Param("dimensionIds")Collection<Long> dimensionIds);
 
+    @Update("UPDATE project_evaluate SET is_deleted = true WHERE project_id = #{projectId}")
+    void delete(@Param("projectId") Long projectId);
 }
