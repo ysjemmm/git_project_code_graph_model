@@ -83,7 +83,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         // 结项流程
         List<ProjectFlowDO> conclusionFlowList = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.CONCLUSION.getCode());
         String conclusionPid = conclusionFlowList.stream()
-                .sorted(Comparator.comparing(BaseDO::getId))
+                .sorted(Comparator.comparing(BaseDO::getId).reversed())
                 .map(ProjectFlowDO::getFlowId)
                 .findFirst()
                 .orElse("");
