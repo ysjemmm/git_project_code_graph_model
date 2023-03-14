@@ -144,6 +144,9 @@ public class ProjectVO extends ToString {
     @ApiModelProperty("结项时间")
     private Date conclusionDate;
 
+    @ApiModelProperty("是否存在审批中的结项流程")
+    private Boolean conclusionAuditing;
+
     @ApiModelProperty("标签名称")
     private List<BizLabelSimpleVO> labelNames;
 }

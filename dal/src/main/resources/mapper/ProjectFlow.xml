@@ -116,6 +116,20 @@
           AND is_deleted = false
     </select>
 
+    <select id="getByProjectIds" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
+        SELECT *
+        FROM project_flow
+        <where>
+            AND project_id IN
+            <foreach collection="projectIds" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            AND flow_type = #{flowType}
+            AND `status` = #{status}
+            AND is_deleted = false
+        </where>
+    </select>
+
     <update id="batchUpdateFlowEndTime">
         update project_flow
         <trim prefix="set" suffixOverrides=",">

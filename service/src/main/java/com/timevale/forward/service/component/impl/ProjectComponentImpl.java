@@ -43,57 +43,40 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Resource
     private BizDemandMapper bizDemandMapper;
-
     @Resource
     private ProjectMapper projectMapper;
-
     @Resource
     private PersonMapper personMapper;
-
     @Resource
     private ProductLineMapper productLineMapper;
-
     @Resource
     private ProjectRiskMapper projectRiskMapper;
-
     @Resource
     private ProjectNodeMapper projectNodeMapper;
-
     @Resource
     private ProjectNodeComponent projectNodeComponent;
-
     @Resource
     private ProjectProductDemandMapper projectProductDemandMapper;
-
     @Resource
     private ProjectProductLineMapper projectProductLineMapper;
-
     @Resource
     private TestBillMapper testBillMapper;
-
     @Resource
     private SqlOrderComponent sqlOrderComponent;
-
     @Resource
     private BizLabelMapper bizLabelMapper;
-
     @Resource
     private BizLabelComponent bizLabelComponent;
-
     @Resource
     private ProjectMilestoneMapper projectMilestoneMapper;
-
     @Resource
     private ProjectMilestoneService milestoneService;
-
     @Resource
     private ProjectLogComponent projectLogComponent;
-
     @Resource
     private CommonConfig config;
-
     @Resource
-    private ProductBizDemandMapper productBizDemandMapper;
+    private ProjectFlowMapper projectFlowMapper;
 
     @Override
     public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -303,6 +286,12 @@ public class ProjectComponentImpl implements ProjectComponent {
                 .map(ProjectRiskDO::getProjectId)
                 .collect(Collectors.toSet());
 
+        // 查询审批工作流
+        List<ProjectFlowDO> conclusionFlows = projectFlowMapper.getByProjectIds(projectIdList,
+                FlowTypeEnum.CONCLUSION.getCode(),
+                ForwardFlowStatusEnum.AUDITING.getCode());
+        Set<Long> conclusionFlowSet = conclusionFlows.stream().map(ProjectFlowDO::getProjectId).collect(Collectors.toSet());
+
         // 遍历填充数据
         for (ProjectVO projectVO : projectVOList) {
             List<PersonDO> pds = pdMap.get(projectVO.getId());
@@ -359,11 +348,14 @@ public class ProjectComponentImpl implements ProjectComponent {
                 projectVO.setLabelNames(labelSimpleVOList);
             }
 
-            // 内部项目作废文案处理
+            // 内部项目作废文案处理(临时)
             if (ProjectStatusEnum.INVALID.getCode().equals(projectVO.getStatus())
                     && ProjectCategoryEnum.INNER_PROJECT.getCode().equals(projectVO.getCategory())) {
                 projectVO.setStatusName(CommonConstant.INVALID);
             }
+
+            // 是否存在审批中的结项流程
+            projectVO.setConclusionAuditing(conclusionFlowSet.contains(projectVO.getId()));
         }
 
         // 项目子项目数量
@@ -606,7 +598,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         ProjectDO projectDO = projectMapper.get(projectId);
         Integer kind = projectDO.getKind();
 
-        Integer newCustomerDev = 0;
+        Integer newCustomerDev;
 
         if (ProjectKindEnum.PBG_OTN.getCode().equals(kind)) {
             List<BizDemandDO> bizDemandDOList = bizDemandMapper.getByProjectId(projectId);

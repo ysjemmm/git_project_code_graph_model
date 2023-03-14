@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface ProjectFlowMapper {
@@ -55,6 +56,17 @@ public interface ProjectFlowMapper {
      */
     List<ProjectFlowDO> getByProjectIdAndType(@Param("projectId") Long projectId,
                                               @Param("flowType") Integer flowType);
+
+    /**
+     * 根据项目id和流程类型获取
+     *
+     * @param flowType   流程类型
+     * @param projectIds 项目id
+     * @return 流程列表
+     */
+    List<ProjectFlowDO> getByProjectIds(@Param("projectIds")Collection<Long> projectIds,
+                                        @Param("flowType") Integer flowType,
+                                        @Param("status") Integer status);
 
     /**
      * 查询审计中的流程

@@ -15,10 +15,10 @@ import java.util.Objects;
 public enum ForwardFlowStatusEnum {
 
     PRE_EDIT(-2, "提前编写文档", ""),
-    WITHDRAW(-1, "已撤回", "REJECT"),
+    WITHDRAW(-1, "已撤回", "WITHDRAW"),
     AUDITING(0, "审核中","PENDING"),
     COMPLETE(1, "审核通过", "FLOW_COMPLETE"),
-    REJECT(2, "审核不通过", "WITHDRAW")
+    REJECT(2, "审核不通过", "REJECT")
     ;
     private final Integer code;
     private final String text;
