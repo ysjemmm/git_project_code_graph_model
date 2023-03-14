@@ -93,13 +93,10 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             elapsedTime = elapsedTime.divide(new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND), 0, RoundingMode.UP);
             projectNodeFlowDO.setDelayDay(elapsedTime);
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
-            Integer stage = StringUtils.isEmpty(projectNodeFlowDO.getBizId())
-                    && (StringUtils.isEmpty(projectNodeFlowDO.getPdId()) || Objects.equals(projectNodeFlowDO.getPdId(), userInfo.getId()))
-                    ? FlowStageEnum.SECOND.getCode() : FlowStageEnum.FIRST.getCode();
-            projectNodeFlowDO.setStage(stage);
             projectNodeFlowDO.setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
-            projectNodeFlowDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            projectNodeFlowDO.setCreateMan(userInfo.getFullAlias());
             projectNodeFlowDO.setCreateManId(userInfo.getId());
+            projectNodeFlowDO.setStage(FlowStageEnum.FIRST.getCode());
 
             // 发起流程
             String flowId = startFlow(projectNodeFlowDO, projectNodes);
@@ -372,7 +369,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
         List<String> reviewIds = new ArrayList<>();
         List<String> reviews = new ArrayList<>();
 
-        // 第一阶段审批人为产品经理和业务方，第二阶段为pbu负责人或SR
+        // 第一阶段审批人为产品经理和业务方或SR，第二阶段为pbu负责人或SR
         if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())) {
             Integer kind = projectDO.getKind();
             if (ProjectKindEnum.PBG_OTN.getCode().equals(kind)) {
