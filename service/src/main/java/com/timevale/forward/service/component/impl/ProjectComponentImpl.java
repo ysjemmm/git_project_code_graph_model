@@ -595,17 +595,19 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Override
     public void updateCustomDev(Long projectId) {
+        if (projectId == null) {
+            return;
+        }
+
         ProjectDO projectDO = projectMapper.get(projectId);
         Integer kind = projectDO.getKind();
 
-        Integer newCustomerDev;
+        int newCustomerDev = 0;
 
         if (ProjectKindEnum.PBG_OTN.getCode().equals(kind)) {
             List<BizDemandDO> bizDemandDOList = bizDemandMapper.getByProjectId(projectId);
             boolean customerDevDemand = bizDemandDOList.stream().anyMatch(e -> BooleanUtil.isTrue(e.getCustomerDevDemand()));
             newCustomerDev = customerDevDemand ? 1 : 0;
-        } else {
-            newCustomerDev = 0;
         }
 
         Integer oldCustomerDev = projectDO.getCustomerDev();

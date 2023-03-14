@@ -330,9 +330,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         taskProductDemandComponent.update(null, productDemandId);
 
         // 刷新客开
-        if (linkProjectId != null) {
-            projectCmponent.updateCustomDev(linkProjectId);
-        }
+        projectCmponent.updateCustomDev(linkProjectId);
+
         return BaseResult.success(true);
     }
 
@@ -587,7 +586,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         }
 
-        productDemandComponent.updateCustomerProject(productDemandDO.getId());
+        // 刷新客开
+        Long linkProjectId = productDemandComponent.getLinkProjectId(bizDemandLinkReq.getProductDemandId());
+        projectCmponent.updateCustomDev(linkProjectId);
         return BaseResult.success(true);
     }
 
