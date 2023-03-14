@@ -243,6 +243,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
 
         for (ProjectEvaluateDO evaluateDO : evaluateDOList) {
             evaluateMapper.update(evaluateDO);
+            evaluateMapper.updateScores(evaluateDO);
         }
 
         return BaseResult.success(true);
