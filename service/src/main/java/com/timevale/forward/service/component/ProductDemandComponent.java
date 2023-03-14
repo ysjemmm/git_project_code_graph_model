@@ -96,4 +96,6 @@ public interface ProductDemandComponent {
     void sendDingMsg(Integer oldStatus, Integer newStatus, Long bizDemandId);
 
     void updateCustomerProject(Long productDemandId);
+
+    Long getLinkProjectId(Long productDemandId);
 }

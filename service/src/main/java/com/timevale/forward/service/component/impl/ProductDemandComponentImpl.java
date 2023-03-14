@@ -365,4 +365,13 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             bizDemandComponent.updateCustomerProject(bizDemandId);
         }
     }
+
+    @Override
+    public Long getLinkProjectId(Long productDemandId) {
+        ProjectProductDemandDO byProductDemandId = projectProductDemandMapper.getByProductDemandId(productDemandId);
+        if (byProductDemandId != null) {
+            return byProductDemandId.getProjectId();
+        }
+        return null;
+    }
 }

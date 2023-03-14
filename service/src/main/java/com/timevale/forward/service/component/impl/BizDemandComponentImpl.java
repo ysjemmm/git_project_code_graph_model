@@ -429,4 +429,10 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         }
 
     }
+
+    @Override
+    public List<Long> getLinkProjectIds(Long bizDemandId) {
+        List<ProjectDO> byBizDemandId = projectMapper.getByBizDemandId(CollUtil.newArrayList(bizDemandId));
+        return byBizDemandId.stream().map(BaseDO::getId).collect(Collectors.toList());
+    }
 }

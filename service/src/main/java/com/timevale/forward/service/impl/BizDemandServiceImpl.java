@@ -88,6 +88,8 @@ public class BizDemandServiceImpl implements BizDemandService {
     private BizLabelComponent bizLabelComponent;
     @Resource
     private BugLogComponent bugLogComponent;
+    @Resource
+    private ProjectComponent projectComponent;
 
     @Override
     public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
@@ -242,11 +244,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setStatus(BizDemandStatusEnum.INVALID.getCode());
         bizDemandMapper.fullUpdate(bizDemandDO);
 
-        // 产品关联断开日志
-        bizDemandLogComponent.addLogWhenBizDemandInvalid(bizDemandId);
 
-        // 取消产品关联
+        // 关联的项目
+        List<Long> linkProjectIds = bizDemandComponent.getLinkProjectIds(bizDemandId);
+
+        // 取消产品关联, 产品关联断开日志
         productBizDemandMapper.deleteByBizDemandId(bizDemandId);
+        bizDemandLogComponent.addLogWhenBizDemandInvalid(bizDemandId);
 
         // 接收人通知
         messageEventPublisher.publish(new BizDemandInvalidMsgEvent(
@@ -286,7 +290,11 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         bizLabelComponent.deleteLabel(bizDemandId, BizTypeEnum.BIZ_DEMAND.getCode());
 
-        bizDemandComponent.updateCustomerProject(bizDemandId);
+        // 刷新客开
+        for (Long projectId : linkProjectIds) {
+            projectComponent.updateCustomDev(projectId);
+        }
+
         return BaseResult.success(true);
     }
 

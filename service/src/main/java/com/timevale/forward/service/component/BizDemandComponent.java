@@ -78,4 +78,6 @@ public interface BizDemandComponent {
     Integer getBizDemandStatus(Integer pdStauts);
 
     void updateCustomerProject(Long bizDemandId);
+
+    List<Long> getLinkProjectIds(Long bizDemandId);
 }

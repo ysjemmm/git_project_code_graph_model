@@ -267,6 +267,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateStatus(Long productDemandId, Integer type) {
         log.info("产品需求暂停,作废接收参数:{},{}", productDemandId, type);
+
         if (!ProductDemandStatusEnum.SUSPEND.getCode().equals(type)
                 && !ProductDemandStatusEnum.INVALID.getCode().equals(type)) {
             throw new BaseBizRuntimeException("操作类型不是暂停或作废,请重试输入");
@@ -279,6 +280,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 || ProductDemandStatusEnum.ONLINE.getCode().equals(productDemand.getStatus())) {
             throw new BaseBizRuntimeException("产品需求状态为已作废或已完成上线时,不能修改状态");
         }
+
+        // 关联的项目
+        Long linkProjectId = productDemandComponent.getLinkProjectId(productDemandId);
+
         Integer oldStatus = productDemand.getStatus();
         // 更新需求状态
         productDemand.setStatus(type);
@@ -324,7 +329,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         //解除任务关联
         taskProductDemandComponent.update(null, productDemandId);
 
-        productDemandComponent.updateCustomerProject(productDemandId);
+        // 刷新客开
+        if (linkProjectId != null) {
+            projectCmponent.updateCustomDev(linkProjectId);
+        }
         return BaseResult.success(true);
     }
 
