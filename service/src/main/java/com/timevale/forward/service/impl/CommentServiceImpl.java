@@ -146,7 +146,7 @@ public class CommentServiceImpl implements CommentService {
 
         // 任务特殊处理
         Long projectId = null;
-        if (CommentTypeEnum.TASK.getCode().equals(type)) {
+        if (CommentTypeEnum.TASK.getCode().equals(type) || CommentTypeEnum.INNER_TASK.getCode().equals(type)) {
             TaskDO taskDO = taskMapper.getById(toId);
             projectId = taskDO.getProjectId();
         }
