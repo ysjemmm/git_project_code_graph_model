@@ -19,11 +19,14 @@ public class CommentMsgEvent extends MessageEvent {
     private final CommentTypeEnum type;
     private final String name;
     private final String content;
+    private final Long projectId;
 
+    private static final String PROJECT_ID = "&projectId=";
     private static final String COMMENT_ANCHOR = "&anchor=comment";
     private static final String COMMENT_MSG = "### %s  \n  **%s**评论了%s **%s**  \n  > %s  \n\n  ***  \n  [查看详情](%s)";
 
-    public CommentMsgEvent(Object source, Long mainId, String operator, List<String> receivers, CommentTypeEnum type, String name, String content) {
+    public CommentMsgEvent(Object source, Long mainId, String operator, List<String> receivers, CommentTypeEnum type,
+                           String name, String content, Long projectId) {
         super(source);
         this.mainId = mainId;
         this.operator = operator;
@@ -31,6 +34,7 @@ public class CommentMsgEvent extends MessageEvent {
         this.type = type;
         this.name = name;
         this.content = content;
+        this.projectId = projectId;
     }
 
     @Override
@@ -44,6 +48,11 @@ public class CommentMsgEvent extends MessageEvent {
 
         // 评论添加定位
         singleUrl += COMMENT_ANCHOR;
+
+        // 任务需要项目id
+        if (projectId != null) {
+            singleUrl += PROJECT_ID + projectId;
+        }
 
         String markdown = String.format(COMMENT_MSG, title, operator, type.getText(), name, content, singleUrl);
 
