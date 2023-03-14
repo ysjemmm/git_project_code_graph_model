@@ -11,10 +11,7 @@ import com.timevale.forward.facade.api.request.MemberWorkloadFillReq;
 import com.timevale.forward.facade.api.request.MemberWorkloadModifyReq;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.result.ProjectWorkloadChangeVO;
-import com.timevale.forward.model.enums.FlowTypeEnum;
-import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
-import com.timevale.forward.model.enums.GradeEnum;
-import com.timevale.forward.model.enums.WorkloadChangeTypeEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.mandarin.base.util.AssertUtil;
@@ -38,8 +35,8 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class ProjectEvaluateComponent {
-
     private final ProjectMapper projectMapper;
+    private final PersonComponent personComponent;
     private final HistoryRecordMapper recordMapper;
     private final ProjectFlowMapper projectFlowMapper;
     private final ProjectEvaluateMapper evaluateMapper;
@@ -229,6 +226,20 @@ public class ProjectEvaluateComponent {
 
         // 新增成员
         addMemberNoCheck(projectId, addMembers);
+    }
+
+    /**
+     * 同步成员
+     *
+     * @param projectId 项目id
+     */
+    public void syncMember(Long projectId) {
+        // 项目成员
+        List<PersonDO> projectMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        List<PersonAddReq> newMembers = projectMembers.stream()
+                .map(e -> new PersonAddReq(e.getUserName(), e.getUserId()))
+                .collect(Collectors.toList());
+        updateMember(projectId, newMembers);
     }
 
     /**

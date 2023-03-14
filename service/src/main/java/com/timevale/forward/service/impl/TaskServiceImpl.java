@@ -108,6 +108,8 @@ public class TaskServiceImpl implements TaskService {
     private ProjectMilestoneComponent projectMilestoneComponent;
     @Resource
     private ProjectMilestoneMapper milestoneMapper;
+    @Resource
+    ProjectEvaluateComponent evaluateComponent;
 
     @Value("${excludeBizDomain:[1,13,32]}")
     private String excludeBizDomain;
@@ -199,6 +201,9 @@ public class TaskServiceImpl implements TaskService {
                 taskDO.getProjectId(),
                 PersonTypeEnum.PROJECT_MEMBER.getCode(),
                 PersonLevelEnum.EXTENSION.getCode());
+
+        // 积分成员同步
+        evaluateComponent.syncMember(taskDO.getProjectId());
 
         //关联产品需求
         taskProductDemandComponent.batchInsert(taskDO.getId(), taskAddReq.getProductDemandIds());
