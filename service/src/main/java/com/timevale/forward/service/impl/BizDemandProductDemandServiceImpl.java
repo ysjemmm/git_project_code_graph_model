@@ -60,38 +60,25 @@ import java.util.stream.Collectors;
 public class BizDemandProductDemandServiceImpl implements BizDemandProductDemandService {
 
     @Resource
-    ProductBizDemandMapper productBizDemandMapper;
-
+    private ProductBizDemandMapper productBizDemandMapper;
     @Resource
-    ProductDemandMapper productDemandMapper;
-
+    private ProductDemandMapper productDemandMapper;
     @Resource
-    BizDemandMapper bizDemandMapper;
-
+    private BizDemandMapper bizDemandMapper;
     @Resource
-    ProductDemandService productDemandService;
-
+    private ProductDemandService productDemandService;
     @Resource
-    BizDemandComponent bizDemandComponent;
-
+    private BizDemandComponent bizDemandComponent;
     @Resource
-    InnerUserPersonClient innerUserPersonClient;
-
+    private InnerUserPersonClient innerUserPersonClient;
     @Resource
-    MessageEventPublisher messageEventPublisher;
-
+    private MessageEventPublisher messageEventPublisher;
     @Resource
-    BizDemandLogComponent bizDemandLogComponent;
-
+    private BizDemandLogComponent bizDemandLogComponent;
     @Resource
     private LabelComponent labelComponent;
-
     @Resource
     private BizLabelMapper bizLabelMapper;
-
-    @Resource
-    private LabelMapper labelMapper;
-
     @Resource
     private BizLabelComponent bizLabelComponent;
 
@@ -173,6 +160,9 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         // 日志
         bizDemandLogComponent.addLogWhenBizDemandLinkProductDemand(bizDemandId, productDemandIdList);
 
+
+        bizDemandComponent.updateCustomerProject(bizDemandId);
+
         return BaseResult.success(bizDemandStatusVO);
     }
 
@@ -209,6 +199,8 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         // 产品需求关联日志
         bizDemandLogComponent.addLogWhenBizDemandUnLinkProductDemand(bizDemandId, productDemandId);
+
+        bizDemandComponent.updateCustomerProject(bizDemandId);
 
         return BaseResult.success(bizDemandStatusVO);
     }

@@ -47,42 +47,25 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Resource
     private BizDemandMapper bizDemandMapper;
-
     @Resource
     private ProductDemandMapper productDemandMapper;
-
     @Resource
     private ProjectMapper projectMapper;
-
     @Resource
     private ProductBizDemandMapper productBizDemandMapper;
-
     @Resource
     private InnerGroupClient innerGroupClient;
-
     @Resource
     private MessageEventPublisher messageEventPublisher;
-
     @Resource
     private BizDemandLogComponent bizDemandLogComponent;
-
     @Resource
     private BizLabelMapper bizLabelMapper;
-
     @Resource
     private BizLabelComponent bizLabelComponent;
-
-    @Resource
-    private LabelMapper labelMapper;
-
-    @Resource
-    private LabelComponent labelComponent;
-
     @Resource
     private SqlOrderComponent sqlOrderComponent;
 
-    @Resource
-    private ProjectLogComponent projectLogComponent;
 
     @Override
     public void updateBizDemandStatusByLinkedProductDemand(Long bizDemandId) {
@@ -440,8 +423,6 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Override
     public void updateCustomerProject(Long bizDemandId) {
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
-
         List<ProjectDO> byBizDemandId = projectMapper.getByBizDemandId(CollUtil.newArrayList(bizDemandId));
         for (ProjectDO projectDO : byBizDemandId) {
             projectComponent.updateCustomDev(projectDO.getId());
