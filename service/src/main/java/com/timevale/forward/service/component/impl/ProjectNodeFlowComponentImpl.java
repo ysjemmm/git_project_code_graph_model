@@ -52,31 +52,22 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
 
     @Resource
     private ProjectNodeFlowMapper projectNodeFlowMapper;
-
     @Resource
     private ElapsedTimeClient elapsedTimeClient;
-
     @Resource
     private EpeiusClient epeiusClient;
-
     @Resource
     private ProjectNodeRecordMapper projectNodeRecordMapper;
-
     @Resource
     private ProjectNodeComponent projectNodeComponent;
-
     @Resource
     private ProjectComponent projectComponent;
-
     @Resource
     private ProjectMapper projectMapper;
-
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
-
     @Resource
     private MessageEventPublisher messageEventPublisher;
-
     @Resource
     private CommonConfig config;
 
@@ -383,14 +374,20 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
 
         // 第一阶段审批人为产品经理和业务方，第二阶段为pbu负责人或SR
         if (FlowStageEnum.FIRST.getCode().equals(projectNodeFlowDO.getStage())) {
-            List<String> bizId = JSONObject.parseArray(projectNodeFlowDO.getBizId(), String.class);
-            if (CollectionUtils.isNotEmpty(bizId)) {
-                reviewIds.addAll(bizId);
-                reviews.addAll(JSONObject.parseArray(projectNodeFlowDO.getBiz(), String.class));
-            }
-            if (StringUtils.isNotEmpty(projectNodeFlowDO.getPdId())) {
-                reviewIds.add(projectNodeFlowDO.getPdId());
-                reviews.add(projectNodeFlowDO.getPd());
+            Integer kind = projectDO.getKind();
+            if (ProjectKindEnum.PBG_OTN.getCode().equals(kind)) {
+                reviews.add(projectDO.getSr());
+                reviewIds.add(projectDO.getSrId());
+            } else {
+                List<String> bizId = JSONObject.parseArray(projectNodeFlowDO.getBizId(), String.class);
+                if (CollectionUtils.isNotEmpty(bizId)) {
+                    reviewIds.addAll(bizId);
+                    reviews.addAll(JSONObject.parseArray(projectNodeFlowDO.getBiz(), String.class));
+                }
+                if (StringUtils.isNotEmpty(projectNodeFlowDO.getPdId())) {
+                    reviewIds.add(projectNodeFlowDO.getPdId());
+                    reviews.add(projectNodeFlowDO.getPd());
+                }
             }
         } else if (StrUtil.isNotBlank(projectNodeFlowDO.getD())) {
             reviews.add(projectNodeFlowDO.getD());
