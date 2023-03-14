@@ -13,8 +13,8 @@
         <set>
             <if test="scores != null">scores = #{scores},</if>
             <if test="pmoScores != null">pmo_scores = #{pmoScores},</if>
-            <if test="scoresDesc != null and scoresDesc != ''">scores_desc = #{scoresDesc},</if>
-            <if test="pmoScoresDesc != null and pmoScoresDesc != ''">pmo_scores_desc = #{pmoScoresDesc},</if>
+            <if test="scoresDesc != null ">scores_desc = #{scoresDesc},</if>
+            <if test="pmoScoresDesc != null">pmo_scores_desc = #{pmoScoresDesc},</if>
             <if test="modifyMan != null ">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
         </set>
