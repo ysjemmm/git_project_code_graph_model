@@ -46,16 +46,12 @@ public class UserComponent {
     /**
      * 查询是否评价部门下的PMO或者PMO上级
      */
-    public boolean isEvalPmoOrPmoLeader() {
+    public boolean isEvalPmo() {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        List<BaseInfoResponse> users = personClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
-        for (BaseInfoResponse user : users) {
-            GroupModelResponse evalGroup = CollUtil.findOne(user.getGroupList(), e -> EVAL_PMO_GROUP.equals(e.getGroupId()));
-            if (evalGroup != null && CommonConstant.PMO.equalsIgnoreCase(user.getJobClassification())) {
-                return true;
-            }
-        }
-        return false;
+        BaseInfoResponse selfInfo = personClient.getSelfInfo(userInfo.getId(), false);
+
+        GroupModelResponse evalGroup = CollUtil.findOne(selfInfo.getGroupList(), e -> EVAL_PMO_GROUP.equals(e.getGroupId()));
+        return evalGroup != null && CommonConstant.PMO.equalsIgnoreCase(selfInfo.getJobClassification());
     }
 
     public boolean isPmo() {
