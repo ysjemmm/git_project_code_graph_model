@@ -1434,21 +1434,41 @@ public class ProjectServiceImpl implements ProjectService {
         AssertUtil.checkState(memberEvaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getEvaluateGrade())),
                 "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
 
-        // 是否存在审批中结项流程
-        List<ProjectFlowDO> workloadFlow = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
-        AssertUtil.checkState(workloadFlow.stream().noneMatch(e -> ObjectUtil.equal(ForwardFlowStatusEnum.AUDITING.getCode(), e.getStatus())),
-                "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
+        // 查询该项目的流程
+        List<ProjectFlowDO> projectFlowDOList = projectFlowMapper.getByProjectId(projectId);
 
-        // 是否存在审批中结项流程
-        List<ProjectFlowDO> conclusionFlow = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
-        AssertUtil.checkState(conclusionFlow.stream().noneMatch(e -> ObjectUtil.equal(ForwardFlowStatusEnum.AUDITING.getCode(), e.getStatus())),
-                "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
+        // 是否存在审核中的工作流变更、结项流程
+        boolean noneWorkloadFlow = projectFlowDOList.stream()
+                .filter(e -> FlowTypeEnum.WORKLOAD.getCode().equals(e.getFlowType())
+                        || FlowTypeEnum.CONCLUSION.getCode().equals(e.getFlowType()))
+                .noneMatch(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()));
+        AssertUtil.checkState(noneWorkloadFlow, "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
+
+        // 是否存发布延期流程
+        List<ProjectNodeFlowDO> nodeFlowDOList = projectNodeFlowMapper.getByProjectId(projectId);
+        boolean nonePublishFlow = nodeFlowDOList.stream().noneMatch(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()));
+        AssertUtil.checkState(nonePublishFlow, "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
 
         // 计划总工作量
         BigDecimal planWorkloadSum = memberEvaluateDOList.stream()
                 .map(ProjectMemberEvaluateDO::getPlanWorkload)
                 .filter(ObjectUtil::isNotNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 再分配工作量
+        BigDecimal actualWorkloadSum = memberEvaluateDOList.stream()
+                .map(ProjectMemberEvaluateDO::getActualWorkload)
+                .filter(ObjectUtil::isNotNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 比较两个工作量是否相等
+        int compareWorkloadSum = planWorkloadSum.compareTo(actualWorkloadSum);
+        if (compareWorkloadSum > 0) {
+            throw new BaseBizRuntimeException("请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
+        } else if (compareWorkloadSum < 0) {
+            BigDecimal diffDay = actualWorkloadSum.subtract(planWorkloadSum).setScale(1, RoundingMode.HALF_UP);
+            throw new BaseBizRuntimeException("再分配计划工作量之和大于计划总工作量" + diffDay + "天，请调整");
+        }
 
         // 工作量(计算积分)
         BigDecimal pointsWorkloadSum = memberEvaluateDOList.stream()

@@ -287,7 +287,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
     }
 
     @Override
-    public List flushCompleteFlow(QueryBase queryBase) {
+    public List<ProjectNodeFlowDO> flushCompleteFlow(QueryBase queryBase) {
         PageHelper.startPage(queryBase.getPageNum(), queryBase.getPageSize());
 
         List<ProjectNodeFlowDO> projectNodeFlowDOList = projectNodeFlowMapper.pageCompleteFlow();
@@ -393,7 +393,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             reviewIds.add(projectNodeFlowDO.getDid());
         } else {
             reviews.add(projectDO.getSr());
-            reviews.add(projectDO.getSrId());
+            reviewIds.add(projectDO.getSrId());
         }
 
         String lastFlowId = projectNodeFlowDO.getLastFlowId();

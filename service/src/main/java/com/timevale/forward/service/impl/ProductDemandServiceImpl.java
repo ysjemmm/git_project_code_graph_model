@@ -487,9 +487,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             AssertUtil.checkState(related == null, "该产品需求已被关联,请解除后重试");
         }
 
-        // 转换类型
-        ProjectListCondition condition = ProjectCopier.INSTANCE.convert(query);
-
         // 如果查询状态条件为空,默认选择下列状态
         List<Integer> status = query.getStatus();
         if (CollUtil.isEmpty(status)) {
@@ -498,6 +495,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             status.add(ProjectStatusEnum.PLANING.getCode());
             status.add(ProjectStatusEnum.TESTING.getCode());
         }
+
+        // 转换类型
+        ProjectListCondition condition = ProjectCopier.INSTANCE.convert(query);
 
         // 如果标签条件不为空
         if(CollUtil.isNotEmpty(query.getLabelIds()) || CollUtil.isNotEmpty(query.getLabelCategoryIds())){
