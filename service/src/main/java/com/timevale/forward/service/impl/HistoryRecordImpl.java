@@ -78,7 +78,7 @@ public class HistoryRecordImpl implements HistoryRecordService {
             if (minWorkload == null) {
                 timeDiff = maxWorkload;
             } else if (maxWorkload == null){
-                timeDiff = minWorkload;
+                timeDiff = minWorkload.negate();
             } else {
                 timeDiff = maxWorkload.subtract(minWorkload);
             }
