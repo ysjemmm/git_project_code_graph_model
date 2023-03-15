@@ -48,7 +48,7 @@ public class ProjectChildListReq extends QueryBase {
     private Integer searchType;
 
     @ApiModelProperty("产品经理")
-    private Collection<String> productPms;
+    private Collection<String> pds;
 
     @ApiModelProperty("项目类型")
     private Collection<Integer> kinds;

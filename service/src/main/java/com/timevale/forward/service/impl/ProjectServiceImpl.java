@@ -721,9 +721,9 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         // 产品经理过滤
-        Collection<String> productPms = projectChildListReq.getProductPms();
-        if (CollUtil.isNotEmpty(productPms)) {
-            validIds = personMapper.getMainIds(productPms, validIds, PersonTypeEnum.PROJECT_PD.getCode());
+        Collection<String> pds = projectChildListReq.getPds();
+        if (CollUtil.isNotEmpty(pds)) {
+            validIds = personMapper.getMainIds(pds, validIds, PersonTypeEnum.PROJECT_PD.getCode());
             if (CollUtil.isEmpty(validIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
