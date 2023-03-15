@@ -96,7 +96,9 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             projectNodeFlowDO.setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
             projectNodeFlowDO.setCreateMan(userInfo.getFullAlias());
             projectNodeFlowDO.setCreateManId(userInfo.getId());
-            projectNodeFlowDO.setStage(FlowStageEnum.FIRST.getCode());
+
+            Integer stage = StrUtil.isEmpty(projectNodeFlowDO.getBizId()) ? FlowStageEnum.SECOND.getCode() : FlowStageEnum.FIRST.getCode();
+            projectNodeFlowDO.setStage(stage);
 
             // 发起流程
             String flowId = startFlow(projectNodeFlowDO, projectNodes);
