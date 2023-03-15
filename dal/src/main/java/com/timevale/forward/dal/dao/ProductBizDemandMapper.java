@@ -4,6 +4,7 @@ import com.timevale.forward.dal.condition.ProductBizDemandCondition;
 import com.timevale.forward.dal.entity.ProductBizDemandDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -86,6 +87,11 @@ public interface ProductBizDemandMapper {
      * @return 列表
      */
     List<ProductBizDemandDO> getByBizDemandId(@Param("bizDemandId") Long bizDemandId);
+
+    /**
+     * 查询业务需求关联产品需求列表
+     */
+    List<ProductBizDemandDO> getByBizDemandIds(@Param("bizDemandIds") Collection<Long> bizDemandId);
 
     /**
      *

@@ -107,4 +107,26 @@
         </if>
         and is_deleted = false
     </select>
+    <select id="getByProjectIdsAndUsersAndDateRange" resultType="com.timevale.forward.dal.entity.ManDayDO">
+        select * from man_day
+        where is_deleted = false
+        <if test="projectIds != null and projectIds.size > 0">
+            and project_id in
+            <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+                #{projectId}
+            </foreach>
+        </if>
+        <if test="accounts != null and accounts.size > 0">
+            and member_id in
+            <foreach collection="accounts" open="(" separator="," close=")" item="account">
+                #{account}
+            </foreach>
+        </if>
+        <if test="startDate != null">
+            and week_end_date >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            and week_start_date &lt;= #{endDate}
+        </if>
+    </select>
 </mapper>

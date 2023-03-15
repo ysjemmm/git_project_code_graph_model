@@ -14,7 +14,7 @@
         <setting name="lazyLoadingEnabled" value="true"/>
         <!-- 设置超时时间，它决定驱动等待数据库响应的秒数。-->
         <setting name="defaultStatementTimeout" value="10"/>
-<!--        <setting name="logImpl" value="STDOUT_LOGGING"/>-->
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
     </settings>
 
     <plugins>
@@ -48,7 +48,7 @@
         <!--审计拦截器-->
         <plugin interceptor="com.timevale.forward.service.interceptor.AuditInterceptor"/>
         <!--通配符转义处理器-->
-        <plugin interceptor="com.timevale.forward.service.interceptor.WildcardEscapeInterceptor"/>
+<!--        <plugin interceptor="com.timevale.forward.service.interceptor.WildcardEscapeInterceptor"/>-->
     </plugins>
 
     <mappers>

@@ -4,22 +4,21 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.BizChangeLogMapper;
-import com.timevale.forward.dal.dao.ManDayMapper;
-import com.timevale.forward.dal.dao.PersonMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ManDayService;
 import com.timevale.forward.facade.api.query.ManDayQueryList;
 import com.timevale.forward.facade.api.query.ProjectManDayQueryList;
+import com.timevale.forward.facade.api.query.SourceManDayQuery;
 import com.timevale.forward.facade.api.request.ManDayModifyReq;
-import com.timevale.forward.facade.api.result.ManDayListVO;
-import com.timevale.forward.facade.api.result.ManDayVO;
-import com.timevale.forward.facade.api.result.ProjectManDayVO;
-import com.timevale.forward.facade.api.result.ProjectTotalManDayVO;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.model.enums.AuditStatusEnum;
+import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
+import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.component.ManDayReportComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ManDayCopier;
@@ -27,13 +26,14 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.util.AssertUtil;
+import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -50,18 +50,18 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestService
+@RequiredArgsConstructor
 public class ManDayServiceImpl implements ManDayService {
 
-    @Resource
-    private ProjectMapper projectMapper;
-    @Resource
-    private BizChangeLogMapper bizChangeLogMapper;
-    @Resource
-    private PersonMapper personMapper;
-    @Resource
-    private ManDayMapper manDayMapper;
-    @Resource
-    private ManDayReportComponent manDayReportComponent;
+    private final ProjectMapper projectMapper;
+    private final PersonMapper personMapper;
+    private final ManDayMapper manDayMapper;
+    private final BizDemandMapper bizDemandMapper;
+    private final BizChangeLogMapper bizChangeLogMapper;
+    private final ProductBizDemandMapper productBizDemandMapper;
+    private final ProjectProductDemandMapper projectProductDemandMapper;
+
+    private final ManDayReportComponent manDayReportComponent;
 
     @Override
     public BaseResult<List<ManDayListVO>> list(ManDayQueryList manDayQueryList) {
@@ -337,7 +337,7 @@ public class ManDayServiceImpl implements ManDayService {
                     "审核中状态不可编辑。若需要修改，请联系项目经理驳回后，再编辑提交");
 
             if (oldManDay.getActualManDay().compareTo(actualManDay) == 0) {
-                if(!Objects.equals(oldManDay.getManDayDesc(), manDayDesc)) {
+                if (!Objects.equals(oldManDay.getManDayDesc(), manDayDesc)) {
                     // 人天不更新则只更新描述
                     oldManDay.setManDayDesc(manDayDesc);
                     manDayMapper.updateActualManDay(oldManDay);
@@ -423,6 +423,81 @@ public class ManDayServiceImpl implements ManDayService {
         }
         res = res.stream().distinct().collect(Collectors.toList());
         return BaseResult.success(res);
+    }
+
+    @Override
+    public BaseResult<List<SourceManDayRes>> querySourceManDays(SourceManDayQuery query) {
+        if (Objects.isNull(query) || CollectionUtils.isEmpty(query.getSourceIds())) {
+            return BaseResult.success(Collections.emptyList());
+        }
+        List<BizDemandDO> bizDemands = bizDemandMapper.selectBySourceIds(query.getSourceIds());
+        if (CollectionUtils.isEmpty(bizDemands)) {
+            return BaseResult.success(Collections.emptyList());
+        }
+        Map<Long, BizDemandDO> bizDemandById = Maps.uniqueIndex(bizDemands, BizDemandDO::getId);
+
+        List<Long> bizDemandIds = bizDemands.stream().map(BizDemandDO::getId).collect(Collectors.toList());
+        List<ProductBizDemandDO> productBizDemands = productBizDemandMapper.getByBizDemandIds(bizDemandIds);
+        if (CollectionUtils.isEmpty(productBizDemands)) {
+            return BaseResult.success(Collections.emptyList());
+        }
+        Map<Long, List<Long>> productBizDemandMap = productBizDemands.stream().collect(
+                Collectors.groupingBy(ProductBizDemandDO::getProductDemandId,
+                        Collectors.mapping(ProductBizDemandDO::getBizDemandId, Collectors.toList())));
+        List<ProjectProductDemandDO> projectProductDemands =
+                projectProductDemandMapper.getLinkedProductDemand(productBizDemandMap.keySet());
+        if (CollectionUtils.isEmpty(projectProductDemands)) {
+            return BaseResult.success(Collections.emptyList());
+        }
+        Map<Long, List<Long>> projectBizDemandMap = projectProductDemands.stream()
+                .collect(Collectors.toMap(ProjectProductDemandDO::getProjectId,
+                        ppd -> productBizDemandMap.get(ppd.getProductDemandId()),
+                        (l1, l2) -> {
+                            l1.addAll(l2);
+                            return l1;
+                        })
+                );
+        Set<Long> projectIds = projectBizDemandMap.keySet();
+        List<ProjectDO> projects = projectMapper.getByIds(projectIds);
+        Map<Long, ProjectDO> projectById = Maps.uniqueIndex(projects, ProjectDO::getId);
+        List<ManDayDO> manDays = manDayMapper.getByProjectIdsAndUsersAndDateRange(projectIds,
+                query.getAccounts(), query.getStartDate(), query.getEndDate());
+        manDays.removeIf(m -> m.getActualManDay().compareTo(BigDecimal.ZERO) == 0);
+        if (CollectionUtils.isEmpty(manDays)) {
+            return BaseResult.success(Collections.emptyList());
+        }
+        // 按照项目维度合并数据
+        ListMultimap<Long, ManDayDO> manDaysByProjectId = Multimaps.index(manDays, ManDayDO::getProjectId);
+        // 无来源id的数据列表
+        List<SourceManDayRes> sourceManDayTemplates = new ArrayList<>();
+        for (Long projectId : manDaysByProjectId.keySet()) {
+            SourceManDayRes sourceManDay = new SourceManDayRes();
+            ProjectDO project = projectById.get(projectId);
+            if (project == null) {
+                continue;
+            }
+            sourceManDay.setProjectId(projectId);
+            sourceManDay.setProjectName(project.getName());
+            List<ManDayDO> projectManDays = manDaysByProjectId.get(projectId);
+            sourceManDay.setManDays(ManDayCopier.INSTANCE.convert2Source(projectManDays));
+            sourceManDayTemplates.add(sourceManDay);
+        }
+        List<SourceManDayRes> resultList = new ArrayList<>();
+        for (SourceManDayRes sourceManDayTemplate : sourceManDayTemplates) {
+            Long projectId = sourceManDayTemplate.getProjectId();
+            List<Long> projectBizDemandIds = projectBizDemandMap.get(projectId);
+            for (Long bizDemandId : projectBizDemandIds) {
+                BizDemandDO bizDemand = bizDemandById.get(bizDemandId);
+                if (bizDemand == null || StringUtils.isEmpty(bizDemand.getSourceId())) {
+                    continue;
+                }
+                SourceManDayRes res = ManDayCopier.INSTANCE.clone(sourceManDayTemplate);
+                res.setSourceId(bizDemand.getSourceId());
+                resultList.add(res);
+            }
+        }
+
+        return BaseResult.success(resultList);
     }
 
     private static Pair<Date, Date> parseAndCheckDateRange(String dateRange) {

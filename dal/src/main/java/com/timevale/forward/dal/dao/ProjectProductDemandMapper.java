@@ -3,6 +3,7 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.entity.ProjectProductDemandDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -48,5 +49,5 @@ public interface ProjectProductDemandMapper {
      *
      * @return ProjectProductDemandDO
      */
-    List<ProjectProductDemandDO> getLinkedProductDemand(@Param("productDemandIds") List<Long> productDemandIds);
+    List<ProjectProductDemandDO> getLinkedProductDemand(@Param("productDemandIds") Collection<Long> productDemandIds);
 }
