@@ -33,5 +33,5 @@ public interface ProjectNodeFlowComponent {
      */
     void  insertProjectNodeRecord(Long projectId,List<ProjectNodeDO> projectNodes);
 
-    List flushCompleteFlow(QueryBase queryBase);
+    List<ProjectNodeFlowDO> flushCompleteFlow(QueryBase queryBase);
 }
