@@ -83,9 +83,8 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         // 结项流程
         List<ProjectFlowDO> conclusionFlowList = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.CONCLUSION.getCode());
         String conclusionPid = conclusionFlowList.stream()
-                .sorted(Comparator.comparing(BaseDO::getId).reversed())
+                .max(Comparator.comparing(BaseDO::getId))
                 .map(ProjectFlowDO::getFlowId)
-                .findFirst()
                 .orElse("");
         String conclusionFlowId = Optional.ofNullable(epeiusClient.getProcessInfo(conclusionPid))
                 .flatMap(e -> Optional.ofNullable(e.getCurrentTaskIdList()))
