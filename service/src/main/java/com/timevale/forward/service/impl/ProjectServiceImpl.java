@@ -963,7 +963,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 是否为PMO和评价部门下的PMO
         projectDetailVO.setIsPMO(userComponent.isPmoOrPmoLeader());
-        projectDetailVO.setIsEvalPmoOrPmoLeader(userComponent.isEvalPmo());
+        projectDetailVO.setIsEvalPmo(userComponent.isEvalPmo());
 
         // 是否存在审核中的结项流程
         List<ProjectFlowDO> conclusionFlows = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.CONCLUSION.getCode());
