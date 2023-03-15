@@ -547,6 +547,9 @@ public class ProjectServiceImpl implements ProjectService {
             projectComponent.updateNodeStatus(projectModifyReq.getId());
         }
 
+        // log, 顺序很重要，别动
+        projectLogComponent.addLogWhenModifyData(oldProject, newProject);
+
         // 产品线
         projectProductLineComponent.update(newProject.getProductLineIds(), newProject.getId());
 
@@ -573,9 +576,6 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 更新评价维度
         evaluateComponent.updateEvalDimension(projectId);
-
-        // log
-        projectLogComponent.addLogWhenModifyData(oldProject, newProject);
 
         return BaseResult.success(true);
     }
