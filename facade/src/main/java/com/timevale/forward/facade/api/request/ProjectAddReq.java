@@ -1,9 +1,10 @@
 package com.timevale.forward.facade.api.request;
 
+import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Digits;
@@ -17,10 +18,10 @@ import java.util.List;
  * @author xingyun
  * @date 2021-12-13 13:58
  **/
-@EqualsAndHashCode(callSuper = true)
-@Data
+@Getter
+@Setter
 @ApiModel("项目新增")
-public class ProjectAddReq extends BaseReq {
+public class ProjectAddReq extends ToString {
 
     @ApiModelProperty("项目名称")
     @NotNull(message = "项目名称不能为空")

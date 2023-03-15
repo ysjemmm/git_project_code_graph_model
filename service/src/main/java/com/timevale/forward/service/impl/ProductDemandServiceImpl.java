@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
@@ -22,6 +23,7 @@ import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.BaseInfoResponse;
@@ -478,30 +480,34 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> matchProjectList(ProductDemandLinkProjectQueryList query) {
         log.info("产品需求-项目匹配接收参数:{}", query);
+
+        // 校验当前产品需求是否已经关联项目
         if (query.getProductDemandId() != null) {
-            ProjectProductDemandDO productDemandDO = projectProductDemandMapper.getByProductDemandId(query.getProductDemandId());
-            if (productDemandDO != null) {
-                throw new BaseBizRuntimeException("该产品需求已被关联,请解除后重试");
-            }
+            ProjectProductDemandDO related  = projectProductDemandMapper.getByProductDemandId(query.getProductDemandId());
+            AssertUtil.checkState(related == null, "该产品需求已被关联,请解除后重试");
         }
+
+        // 转换类型
         ProjectListCondition condition = ProjectCopier.INSTANCE.convert(query);
-        condition.setPageNum(query.getPageNum());
-        condition.setPageSize(query.getPageSize());
+
+        // 如果查询状态条件为空,默认选择下列状态
         List<Integer> status = query.getStatus();
-        if (CollectionUtils.isEmpty(status)) {
-            // 空,默认选择下列状态
-            condition.setStatus(Lists.newArrayList(ProjectStatusEnum.WAITING.getCode()
-                    , ProjectStatusEnum.PLANING.getCode()
-                    , ProjectStatusEnum.DEVING.getCode()
-                    , ProjectStatusEnum.TESTING.getCode()));
+        if (CollUtil.isEmpty(status)) {
+            status.add(ProjectStatusEnum.DEVING.getCode());
+            status.add(ProjectStatusEnum.WAITING.getCode());
+            status.add(ProjectStatusEnum.PLANING.getCode());
+            status.add(ProjectStatusEnum.TESTING.getCode());
         }
-        if(CollectionUtils.isNotEmpty(query.getLabelIds())||CollectionUtils.isNotEmpty(query.getLabelCategoryIds())){
+
+        // 如果标签条件不为空
+        if(CollUtil.isNotEmpty(query.getLabelIds()) || CollUtil.isNotEmpty(query.getLabelCategoryIds())){
             List<Long> labelIds = labelComponent.getLabelIds(query.getLabelIds(), query.getLabelCategoryIds());
-            if(CollectionUtils.isEmpty(labelIds)){
+            if(CollUtil.isEmpty(labelIds)){
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
             condition.setLabelIds(labelIds);
         }
+
         PageQueryResult<ProjectVO> pageQueryResult = projectCmponent.page(condition, Lists.newArrayList()).getPageQueryResult();
         return BaseResult.success(pageQueryResult);
     }
