@@ -55,6 +55,9 @@ public class ProjectListChildCondition {
     // 项目类型
     private Collection<Integer> kinds;
 
+    // 项目经理
+    private Collection<String> srs;
+
     private Integer pageNum;
 
     private Integer pageSize;

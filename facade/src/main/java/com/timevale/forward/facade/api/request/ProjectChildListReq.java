@@ -58,4 +58,7 @@ public class ProjectChildListReq extends QueryBase {
 
     @ApiModelProperty("产品线")
     private Collection<Long> productLines;
+
+    @ApiModelProperty("sr")
+    private Collection<String> srs;
 }

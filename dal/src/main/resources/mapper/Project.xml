@@ -553,6 +553,12 @@
                     #{pm}
                 </foreach>
             </if>
+            <if test="srs != null and srs.size > 0">
+                and a.sr_id in
+                <foreach collection="srs" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="levels != null and levels.size > 0">
                 and a.level in
                 <foreach collection="levels" item="level" open="(" separator="," close=")">
