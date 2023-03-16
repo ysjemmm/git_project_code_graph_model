@@ -30,6 +30,9 @@ public class ProjectWorkloadChangeVO extends ToString {
     @ApiModelProperty("项目名称")
     private String projectName;
 
+    @ApiModelProperty("项目类型,0-空，1-PBG项目/基线项目，2-PBG项目/1-N客开项目，3-职能后台项目/流程IT中心项目")
+    private Integer kind;
+
     @ApiModelProperty("项目类型")
     private String kindName;
 
