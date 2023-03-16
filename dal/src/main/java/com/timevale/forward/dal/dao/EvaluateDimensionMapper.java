@@ -19,7 +19,7 @@ public interface EvaluateDimensionMapper {
 
     List<EvaluateDimensionDO> selectByIds(@Param("ids")Collection<Long> ids);
 
-    List<EvaluateDimensionDO> selectByKind(@Param("kind")Integer kind);
+    List<EvaluateDimensionDO> getByKind(@Param("kind")Integer kind);
 
     List<EvaluateDimensionDO> selectByKindDate(@Param("kind")Integer kind, @Param("nowDate")Date nowDate);
 

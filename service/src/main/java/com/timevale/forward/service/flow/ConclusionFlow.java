@@ -1,28 +1,26 @@
-package com.timevale.forward.service.component;
+package com.timevale.forward.service.flow;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
-import com.timevale.forward.facade.api.request.MemberWorkloadFillReq;
-import com.timevale.forward.facade.api.request.MemberWorkloadModifyReq;
-import com.timevale.forward.facade.api.request.PersonAddReq;
-import com.timevale.forward.facade.api.result.ProjectWorkloadChangeVO;
 import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.ProjectComponent;
+import com.timevale.forward.service.component.ProjectLogComponent;
+import com.timevale.forward.service.component.UserComponent;
+import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectEvaluateCopier;
-import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.integration.epeius.model.ConclusionVar;
 import com.timevale.forward.service.integration.epeius.model.ProjectEvaluateVar;
-import com.timevale.forward.service.integration.epeius.model.WorkloadChangeVar;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
@@ -30,7 +28,6 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,13 +37,14 @@ import java.util.stream.Collectors;
 
 /**
  * @author by YangXu
- * @date 2023/03/08 18:00
+ * @date 2023/03/16 14:01
  */
 @Slf4j
 @LogPoint
 @Component
 @RequiredArgsConstructor
-public class WorkFlowComponent {
+public class ConclusionFlow {
+    final private CommonConfig commonConfig;
     final private EpeiusClient epeiusClient;
     final private UserComponent userComponent;
     final private ProjectMapper projectMapper;
@@ -55,11 +53,7 @@ public class WorkFlowComponent {
     final private ProjectFlowMapper projectFlowMapper;
     final private ProjectEvaluateMapper evaluateMapper;
     final private EvaluateDimensionMapper dimensionMapper;
-    final private ProjectEvaluateComponent evaluateComponent;
     final private ProjectMemberEvaluateMapper memberEvaluateMapper;
-
-    @Value("${evalPmoGroup:557300580}")
-    private String EVAL_PMO_GROUP;
 
     /**
      * 结项工作流——发起
@@ -68,7 +62,7 @@ public class WorkFlowComponent {
      * @return {@link String}
      */
     @Transactional(rollbackFor = Exception.class)
-    public String conclusionFlow(Long projectId) {
+    public String start(Long projectId) {
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO, "项目不存在");
 
@@ -79,7 +73,7 @@ public class WorkFlowComponent {
         String projectUrl = projectComponent.getUrl(projectId);
 
         // 查询结项流程PMO
-        List<String> pmoIdList = userComponent.getPmo(EVAL_PMO_GROUP);
+        List<String> pmoIdList = userComponent.getPmo(commonConfig.getEvalPmoGroup());
 
         // 发起人是否为项目负责人或者1-n产研负责人
         Set<String> principalIdSet = CollUtil.newHashSet(projectDO.getPrincipalId(), projectDO.getOtnPrincipalId());
@@ -88,8 +82,8 @@ public class WorkFlowComponent {
         String isPrincipal = YesOrNoEnum.getTextByCode(startIsPrincipal);
 
         // 项目评价信息
-        List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.selectByProjectId(projectId);
-        List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.selectByKind(projectDO.getKind());
+        List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.getByProjectId(projectId);
+        List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.getByKind(projectDO.getKind());
         ImmutableMap<Long, EvaluateDimensionDO> dimensionDOMap = Maps.uniqueIndex(dimensionDOList, EvaluateDimensionDO::getId);
 
         // 项目评价参数
@@ -158,25 +152,29 @@ public class WorkFlowComponent {
      * @param processInstanceId 流程实例id
      */
     @Transactional(rollbackFor = Exception.class)
-    public void conclusionComplete(String processInstanceId) {
+    public void complete(String processInstanceId) {
         AssertUtil.checkState(StrUtil.isNotBlank(processInstanceId), "流程id为空");
 
         // 获取项目流程信息
         ProjectFlowDO projectFlowDO = projectFlowMapper.getByFlowId(processInstanceId);
         AssertUtil.notNull(projectFlowDO, "流程不存在");
 
+        // 判断项目流程状态
+        AssertUtil.checkState(ForwardFlowStatusEnum.AUDITING.getCode().equals(projectFlowDO.getStatus()), "流程已结束");
+
+        // 获取低代码流程信息
+        ProcessResponse processInfo  = epeiusClient.getProcessInfo(processInstanceId);
+        AssertUtil.notNull(processInfo, "流程信息为空");
+
         // 配置用户信息
         LocalSessionUtils.setUserInfo(projectFlowDO.getProposerId(), projectFlowDO.getProposer());
 
         // 查询对应项目
-        ProjectDO projectDO = projectMapper.get(projectFlowDO.getProjectId());
+        final Long projectId = projectFlowDO.getProjectId();
+        ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectFlowDO, "项目不存在");
 
-        // 获取流程信息
-        ProcessResponse processInfo  = epeiusClient.getProcessInfo(processInstanceId);
-        AssertUtil.notNull(processInfo, "流程信息为空");
-
-        // 更新流程状态
+        // 更新项目流程状态
         String processStatus = processInfo.getProcessStatus();
         Optional.ofNullable(ForwardFlowStatusEnum.getByValue(processStatus))
                 .flatMap(e -> Optional.ofNullable(e.getCode()))
@@ -196,21 +194,40 @@ public class WorkFlowComponent {
                     return new BaseBizRuntimeException("审批信息为空");
                 });
 
+        // 查询项目的评价维度信息
+        List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.getByKind(projectDO.getKind());
+        ImmutableMap<Long, EvaluateDimensionDO> dimensionMap = Maps.uniqueIndex(dimensionDOList, BaseDO::getId);
+
         // 更新评价信息
         for (ProjectEvaluateVar evaluateVar : evaluateVarList) {
+            BigDecimal scores = evaluateVar.getScores();
+            String scoresDesc = evaluateVar.getScoresDesc();
+            Long dimensionId = evaluateVar.getDimensionId();
+
+            // 评分限制取值
+            BigDecimal scoresCeiling = Optional.ofNullable(dimensionMap.get(dimensionId))
+                    .flatMap(e -> Optional.ofNullable(e.getScoresCeiling()))
+                    .orElse(BigDecimal.TEN);
+            BigDecimal scoresFloor = Optional.ofNullable(dimensionMap.get(dimensionId))
+                    .flatMap(e -> Optional.ofNullable(e.getScoresFloor()))
+                    .orElse(BigDecimal.ZERO);
+
+            scores = NumberUtil.min(scores, scoresCeiling);
+            scores = NumberUtil.max(scores, scoresFloor);
+
             // 需要更新的数据
             ProjectEvaluateDO updateEvaluate = new ProjectEvaluateDO();
-            updateEvaluate.setProjectId(projectDO.getId());
-            updateEvaluate.setEvaluateDimensionId(evaluateVar.getDimensionId());
+            updateEvaluate.setProjectId(projectId);
+            updateEvaluate.setEvaluateDimensionId(dimensionId);
 
-            // 基线且非迭代，更新PMO评价，否在更新项目评价
+            // 基线且非日常迭代，更新PMO评价，否在更新项目评价
             if (ProjectKindEnum.PBG_BASE.getCode().equals(projectDO.getKind())
                     && !ProjectTypeEnum.RENEW.getCode().equals(projectDO.getType())) {
-                updateEvaluate.setPmoScores(evaluateVar.getScores());
-                updateEvaluate.setPmoScoresDesc(evaluateVar.getScoresDesc());
+                updateEvaluate.setPmoScores(scores);
+                updateEvaluate.setPmoScoresDesc(scoresDesc);
             } else {
-                updateEvaluate.setScores(evaluateVar.getScores());
-                updateEvaluate.setScoresDesc(evaluateVar.getScoresDesc());
+                updateEvaluate.setScores(scores);
+                updateEvaluate.setScoresDesc(scoresDesc);
             }
             // 更新落库
             evaluateMapper.update(updateEvaluate);
@@ -218,7 +235,6 @@ public class WorkFlowComponent {
 
         // 更新结项日期,项目状态（取放在flowData中的数据）
         Date conclusionDate = new Date();
-        Long projectId = projectDO.getId();
         Integer oldStatus = projectDO.getStatus();
         Integer newStatus = Integer.valueOf(projectFlowDO.getFlowData());
 
@@ -231,114 +247,4 @@ public class WorkFlowComponent {
         // 结项流程日志处理
         logComponent.addConclusion(projectId, oldStatus, newStatus, conclusionDate);
     }
-
-    /**
-     * 工作量变更流程
-     *
-     * @param changeVO 工作量表单
-     * @param req      工作量变更请求
-     * @return {@link String}
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public String workloadChangeFlow(ProjectWorkloadChangeVO changeVO, MemberWorkloadFillReq req) {
-        // 当前用户发起人id
-        String startAccountId = LocalSessionUtils.getUserInfo().getId();
-
-        // 查询结项流程PMO
-        List<String> pmoIdList = userComponent.getPmo(EVAL_PMO_GROUP);
-
-        // 取出变更事由、PBU负责人
-        String changeReason = req.getChangeReason();
-        PersonAddReq pbuPrincipal = req.getPbuPrincipal();
-        AssertUtil.checkState(StrUtil.isNotBlank(changeReason), "变更事由不能为空");
-        AssertUtil.notNull(pbuPrincipal, "PBU负责人不能为空");
-
-        // 获取项目信息
-        final Long projectId = changeVO.getProjectId();
-        ProjectDO projectDO = projectMapper.get(projectId);
-        String srId = projectDO.getSrId();
-        String projectUrl = projectComponent.getUrl(projectId);
-
-        // 发起人是否为项目负责人或者1-n产研负责人
-        Set<String> principalIdSet = CollUtil.newHashSet(projectDO.getPrincipalId(), projectDO.getOtnPrincipalId());
-        List<String> principalIdList = principalIdSet.stream().filter(StrUtil::isNotBlank).collect(Collectors.toList());
-        boolean startIsPrincipal = principalIdSet.contains(startAccountId);
-        String isPrincipal = YesOrNoEnum.getTextByCode(startIsPrincipal);
-
-        // 项目参数填装
-        WorkloadChangeVar changeVar = ProjectEvaluateCopier.INSTANCE.vo2var(changeVO);
-        changeVar.setSrId(srId);
-        changeVar.setPMOIdList(pmoIdList);
-        changeVar.setProjectUrl(projectUrl);
-        changeVar.setIsPrincipal(isPrincipal);
-        changeVar.setChangeReason(changeReason);
-        changeVar.setPrincipalIdList(principalIdList);
-        changeVar.setPbuPrincipal(pbuPrincipal.getUserName());
-        changeVar.setPbuPrincipalId(pbuPrincipal.getUserId());
-
-        // 转换为Map
-        Map<String, Object> variables = BeanUtil.beanToMap(changeVar);
-
-        // 流程参数填装
-        StartProcessRequest startProcessReq = new StartProcessRequest();
-        startProcessReq.setVariables(variables);
-        startProcessReq.setStartAccountId(startAccountId);
-        startProcessReq.setEpeVirtualProcessSwitch(false);
-        startProcessReq.setApplicationName(CommonConstant.APP);
-        startProcessReq.setProcessDefinitionKey(MessageTagEnum.FORWARD_WORKLOAD_CHANGE.getText());
-
-        return epeiusClient.start(startProcessReq);
-    }
-
-    /**
-     * 工作量变更——工作流完成回调处理
-     *
-     * @param processInstanceId 流程实例id
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void workloadChangeComplete(String processInstanceId) {
-        AssertUtil.checkState(StrUtil.isNotBlank(processInstanceId), "流程id为空");
-
-        // 获取项目流程信息
-        ProjectFlowDO projectFlowDO = projectFlowMapper.getByFlowId(processInstanceId);
-        AssertUtil.notNull(projectFlowDO, "流程不存在");
-
-        // 配置用户信息
-        LocalSessionUtils.setUserInfo(projectFlowDO.getProposerId(), projectFlowDO.getProposer());
-
-        // 获取流程信息
-        ProcessResponse processInfo  = epeiusClient.getProcessInfo(processInstanceId);
-        AssertUtil.notNull(processInfo, "流程信息为空");
-
-        // 更新流程状态
-        String processStatus = processInfo.getProcessStatus();
-        Optional.ofNullable(ForwardFlowStatusEnum.getByValue(processStatus))
-                .flatMap(e -> Optional.ofNullable(e.getCode()))
-                .ifPresent(e -> projectFlowMapper.updateStatus(projectFlowDO.getId(), e));
-
-        // 只有审批通过，需要更新项目工作量信息
-        if (ObjectUtil.notEqual(FlowStatusEnum.FLOW_COMPLETE.getValue(), processStatus)) {
-            return;
-        }
-
-        // 项目id
-        final Long projectId = projectFlowDO.getProjectId();
-
-        // 解析对应工作流的数据
-        String flowData = projectFlowDO.getFlowData();
-        List<MemberWorkloadModifyReq> modifyReqList = JSON.parseArray(flowData, MemberWorkloadModifyReq.class);
-
-        // 需要更新的员工id set
-        Set<String> recordUserIdSet = modifyReqList.stream().map(MemberWorkloadModifyReq::getUserId).collect(Collectors.toSet());
-
-        // 更新当前成员工作量
-        for (MemberWorkloadModifyReq modifyReq : modifyReqList) {
-            ProjectMemberEvaluateDO evaluateDO = ProjectMemberEvaluateCopier.INSTANCE.req2do(modifyReq, projectId);
-            memberEvaluateMapper.update(evaluateDO);
-        }
-
-        // 生成版本
-        evaluateComponent.additionRecord(projectId, recordUserIdSet);
-    }
-
 }

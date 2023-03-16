@@ -28,6 +28,7 @@ import com.timevale.forward.model.event.ProjectCreateEvent;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.flow.ForwardFlow;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.ProjectEstablishDateChangeMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
@@ -170,7 +171,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private ProjectMemberEvaluateMapper memberEvaluateMapper;
     @Resource
-    private WorkFlowComponent workFlowComponent;
+    private ForwardFlow forwardFlow;
     @Resource
     private ProjectEvaluateComponent evaluateComponent;
 
@@ -1393,7 +1394,7 @@ public class ProjectServiceImpl implements ProjectService {
         conclusionForm(req);
 
         // 发起结项流程
-        String flowId = workFlowComponent.conclusionFlow(projectId);
+        String flowId = forwardFlow.conclusionFlow.start(projectId);
 
         // 用户信息
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
@@ -1421,7 +1422,7 @@ public class ProjectServiceImpl implements ProjectService {
         AssertUtil.notNull(projectDO,"项目不存在");
 
         // 需要校验项目评价必填内容是否完成、
-        List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.selectByProjectId(projectId);
+        List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.getByProjectId(projectId);
         AssertUtil.checkState(evaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getScores())),
                 "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
 
@@ -1478,7 +1479,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // 评价列表
-        List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.selectByKind(projectDO.getKind());
+        List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.getByKind(projectDO.getKind());
         ImmutableMap<Long, EvaluateDimensionDO> dimensionDOMap = Maps.uniqueIndex(dimensionDOList, BaseDO::getId);
         List<ProjectEvaluateItemVO> evaluateItemVOList = evaluateDOList.stream()
                 .map(e -> ProjectEvaluateCopier.INSTANCE.do2item(e, dimensionDOMap.get(e.getEvaluateDimensionId())))

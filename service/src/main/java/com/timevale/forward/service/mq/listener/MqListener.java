@@ -5,19 +5,19 @@ import com.timevale.forward.model.enums.MessageTagEnum;
 import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.component.ProjectNodeFlowComponent;
 import com.timevale.forward.service.component.TrackEventComponent;
-import com.timevale.forward.service.component.WorkFlowComponent;
 import com.timevale.forward.service.component.impl.ProductDemandDescFlowComponent;
+import com.timevale.forward.service.flow.ForwardFlow;
 import com.timevale.forward.service.mq.dto.WorkflowBody;
 import com.timevale.forward.service.mq.handler.MqMessageHandler;
 import com.timevale.forward.service.utils.ThreadLocalUtil;
 import com.timevale.framework.mq.client.consumer.Listener;
 import com.timevale.framework.mq.client.consumer.ReceiveResult;
 import com.timevale.framework.mq.client.producer.Msg;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,17 +28,13 @@ import java.util.Map;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class MqListener implements Listener {
-    @Resource
-    private WorkFlowComponent workFlowComponent;
-    @Resource
-    private TrackEventComponent trackEventComponent;
-    @Resource
-    private ProjectFlowComponent projectFlowComponent;
-    @Resource
-    private ProjectNodeFlowComponent projectNodeFlowComponent;
-    @Resource
-    private ProductDemandDescFlowComponent productDemandDescFlowComponent;
+    private final ForwardFlow forwardFlow;
+    private final TrackEventComponent trackEventComponent;
+    private final ProjectFlowComponent projectFlowComponent;
+    private final ProjectNodeFlowComponent projectNodeFlowComponent;
+    private final ProductDemandDescFlowComponent productDemandDescFlowComponent;
 
     public static Map<String, MqMessageHandler> MESSAGE_HANDLER_MAP = new HashMap<>();
 
@@ -47,8 +43,8 @@ public class MqListener implements Listener {
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_UED_AUDIT.getText(),projectFlowComponent::updateFlowInfo);
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TECHREVIEW.getText(), projectFlowComponent::updateFlowInfo);
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_DEMAND_CONSTRUE.getText(),projectFlowComponent::updateFlowInfo);
-        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_PROJECT_CONCLUSION.getText(), workFlowComponent::conclusionComplete);
-        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_WORKLOAD_CHANGE.getText(), workFlowComponent::workloadChangeComplete);
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_PROJECT_CONCLUSION.getText(), forwardFlow.conclusionFlow::complete);
+        MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_WORKLOAD_CHANGE.getText(), forwardFlow.workloadChangeFlow::complete);
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_DEMAND_INTERNAL_AUDIT.getText(),projectFlowComponent::updateFlowInfo);
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_TRACKEVENTREVIEW.getText(), trackEventComponent::updateTrackEventInfo);
         MESSAGE_HANDLER_MAP.put(MessageTagEnum.FORWARD_PUBLISHOFFICEREVIEW.getText(), projectNodeFlowComponent::updateProjectNodeInfo);

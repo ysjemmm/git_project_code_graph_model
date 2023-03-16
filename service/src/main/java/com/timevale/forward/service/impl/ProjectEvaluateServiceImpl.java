@@ -16,9 +16,9 @@ import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
 import com.timevale.forward.model.enums.ProjectKindEnum;
 import com.timevale.forward.model.enums.ProjectLevelEnum;
 import com.timevale.forward.service.component.ProjectEvaluateComponent;
-import com.timevale.forward.service.component.WorkFlowComponent;
 import com.timevale.forward.service.copy.ProjectEvaluateCopier;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
+import com.timevale.forward.service.flow.ForwardFlow;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -41,11 +41,11 @@ import java.util.stream.Collectors;
 @RestService
 @RequiredArgsConstructor
 public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
+    private final ForwardFlow forwardFlow;
     private final EpeiusClient epeiusClient;
     private final ProjectMapper projectMapper;
     private final HistoryRecordMapper recordMapper;
     private final ProjectFlowMapper projectFlowMapper;
-    private final WorkFlowComponent workFlowComponent;
     private final ProjectEvaluateMapper evaluateMapper;
     private final EvaluateDimensionMapper dimensionMapper;
     private final ProjectMemberEvaluateMapper memberEvaluateMapper;
@@ -54,9 +54,9 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     @Override
     public BaseResult<Boolean> flowCallback(Integer type, String flowId) {
         if (type == 1) {
-            workFlowComponent.conclusionComplete(flowId);
+            forwardFlow.conclusionFlow.complete(flowId);
         } else if (type == 2) {
-            workFlowComponent.workloadChangeComplete(flowId);
+            forwardFlow.workloadChangeFlow.complete(flowId);
         }
         return BaseResult.success(true);
     }
@@ -143,7 +143,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
             }
         } else {
             //流程id
-            String flowId = workFlowComponent.workloadChangeFlow(changeVO, req);
+            String flowId = forwardFlow.workloadChangeFlow.start(changeVO, req);
 
             // 存储变更信息
             List<MemberWorkloadModifyReq> modifyReqList = req.getModifyReqList();
@@ -195,7 +195,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         AssertUtil.notNull(projectDO, "项目不存在");
 
         // 查询对应的项目评价，旧数据判空处理
-        List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.selectByProjectId(projectId);
+        List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.getByProjectId(projectId);
         if (CollUtil.isEmpty(evaluateDOList)) {
             ProjectEvaluateVO result = new ProjectEvaluateVO();
             result.setEvaluateItemVOList(new ArrayList<>());

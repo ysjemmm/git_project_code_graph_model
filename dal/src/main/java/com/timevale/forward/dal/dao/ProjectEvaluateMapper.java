@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface ProjectEvaluateMapper {
 
-    List<ProjectEvaluateDO> selectByProjectId(@Param("projectId") Long projectId);
+    List<ProjectEvaluateDO> getByProjectId(@Param("projectId") Long projectId);
 
     void update(ProjectEvaluateDO evaluateDO);
 

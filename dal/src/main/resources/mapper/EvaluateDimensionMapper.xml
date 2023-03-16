@@ -13,7 +13,7 @@
         </where>
     </select>
 
-    <select id="selectByKind" resultType="com.timevale.forward.dal.entity.EvaluateDimensionDO">
+    <select id="getByKind" resultType="com.timevale.forward.dal.entity.EvaluateDimensionDO">
         SELECT *
         FROM evaluate_dimension
         WHERE kind = #{kind}

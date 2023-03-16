@@ -309,7 +309,7 @@ public class ProjectEvaluateComponent {
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO, "项目不存在");
 
-        List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.selectByProjectId(projectId);
+        List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.getByProjectId(projectId);
         Optional<Long> dimensionIdOpt = evaluateDOList.stream()
                 .map(ProjectEvaluateDO::getEvaluateDimensionId)
                 .findAny();
