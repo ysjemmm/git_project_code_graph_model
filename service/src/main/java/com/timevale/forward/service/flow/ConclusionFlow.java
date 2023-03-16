@@ -12,9 +12,7 @@ import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.ProjectComponent;
-import com.timevale.forward.service.component.ProjectLogComponent;
-import com.timevale.forward.service.component.UserComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectEvaluateCopier;
@@ -47,13 +45,17 @@ public class ConclusionFlow {
     final private CommonConfig commonConfig;
     final private EpeiusClient epeiusClient;
     final private UserComponent userComponent;
+    final private TaskComponent taskComponent;
     final private ProjectMapper projectMapper;
     final private ProjectLogComponent logComponent;
     final private ProjectComponent projectComponent;
     final private ProjectFlowMapper projectFlowMapper;
+    final private BizLabelComponent bizLabelComponent;
     final private ProjectEvaluateMapper evaluateMapper;
     final private EvaluateDimensionMapper dimensionMapper;
+    final private ProductDemandComponent productDemandComponent;
     final private ProjectMemberEvaluateMapper memberEvaluateMapper;
+    final private ProjectProductDemandComponent projectProductDemandComponent;
 
     /**
      * 结项工作流——发起
@@ -246,5 +248,32 @@ public class ConclusionFlow {
 
         // 结项流程日志处理
         logComponent.addConclusion(projectId, oldStatus, newStatus, conclusionDate);
+
+        // 如果项目状态为中止，需要执行中止逻辑
+        if (ProjectStatusEnum.INVALID.getCode().equals(newStatus)) {
+            invalid(projectId);
+        }
+    }
+
+    /**
+     * 项目作废处理
+     *
+     * @param projectId 项目id
+     */
+    private void invalid(Long projectId) {
+        final Integer status = ProjectStatusEnum.INVALID.getCode();
+
+        //修改产品需求状态
+        productDemandComponent.updateProductDemandStatus(projectId, status);
+
+        // 作废解除关联
+        projectProductDemandComponent.update(projectId, null);
+        bizLabelComponent.deleteLabel(projectId, BizTypeEnum.PROJECT.getCode());
+
+        // 更新任务状态
+        taskComponent.updateStatusAsProjectStatusChange(projectId, status, false);
+
+        // 刷新客开
+        projectComponent.updateCustomDev(projectId);
     }
 }
