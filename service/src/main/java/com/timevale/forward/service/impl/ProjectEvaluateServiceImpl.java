@@ -82,6 +82,9 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
 
         // 结项流程
         List<ProjectFlowDO> conclusionFlowList = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.CONCLUSION.getCode());
+        boolean conclusionAuditing = conclusionFlowList.stream()
+                .map(ProjectFlowDO::getStatus)
+                .anyMatch(ForwardFlowStatusEnum.AUDITING.getCode()::equals);
         String conclusionPid = conclusionFlowList.stream()
                 .max(Comparator.comparing(BaseDO::getId))
                 .map(ProjectFlowDO::getFlowId)
@@ -109,6 +112,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         result.setPlanWorkloadSum(planWorkLoadSum);
         result.setConclusionFlowId(conclusionFlowId);
         result.setPointsWorkloadSum(workloadPointsSum);
+        result.setConclusionAuditing(conclusionAuditing);
         result.setMemberEvaluateVOList(memberEvaluateVOList);
 
         return BaseResult.success(result);

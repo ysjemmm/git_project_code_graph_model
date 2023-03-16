@@ -22,6 +22,9 @@ public class ProjectMemberEvaluateVO extends ToString {
     @ApiModelProperty("工作量变更审批流程id")
     private String workloadFlowId;
 
+    @ApiModelProperty("是否存在结项流程")
+    private Boolean conclusionAuditing;
+
     @ApiModelProperty("结项工作流id")
     private String conclusionFlowId;
 
