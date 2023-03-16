@@ -7,7 +7,9 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
-import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dao.ProjectFlowMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.ProjectMemberEvaluateMapper;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectFlowDO;
 import com.timevale.forward.dal.entity.ProjectMemberEvaluateDO;
@@ -17,6 +19,7 @@ import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.result.ProjectWorkloadChangeVO;
 import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
 import com.timevale.forward.model.enums.MessageTagEnum;
+import com.timevale.forward.model.enums.ProjectKindEnum;
 import com.timevale.forward.model.enums.YesOrNoEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectEvaluateComponent;
@@ -75,17 +78,24 @@ public class WorkloadChangeFlow {
         // 查询结项流程PMO
         List<String> pmoIdList = userComponent.getPmo(commonConfig.getEvalPmoGroup());
 
-        // 取出变更事由、PBU负责人
-        String changeReason = req.getChangeReason();
+        // 取出项目id、变更事由、PBU负责人
+        final Long projectId = req.getProjectId();
+        final String changeReason = req.getChangeReason();
         PersonAddReq pbuPrincipal = req.getPbuPrincipal();
-        AssertUtil.checkState(StrUtil.isNotBlank(changeReason), "变更事由不能为空");
-        AssertUtil.notNull(pbuPrincipal, "PBU负责人不能为空");
 
-        // 获取项目信息
-        final Long projectId = changeVO.getProjectId();
+        // 校验参数
+        AssertUtil.notBlank(changeReason, "变更事由不能为空");
+        if (ProjectKindEnum.PBG_OTN.getCode().equals(changeVO.getKind())) {
+            pbuPrincipal = new PersonAddReq();
+        } else {
+            AssertUtil.notNull(pbuPrincipal, "PBU负责人不能为空");
+        }
+
+        // 配置项目信息
         ProjectDO projectDO = projectMapper.get(projectId);
-        String srId = projectDO.getSrId();
-        String projectUrl = projectComponent.getUrl(projectId);
+        AssertUtil.notNull(projectDO, "项目不存在");
+        final String srId = projectDO.getSrId();
+        final String projectUrl = projectComponent.getUrl(projectId);
 
         // 发起人是否为项目负责人或者1-n产研负责人
         Set<String> principalIdSet = CollUtil.newHashSet(projectDO.getPrincipalId(), projectDO.getOtnPrincipalId());
