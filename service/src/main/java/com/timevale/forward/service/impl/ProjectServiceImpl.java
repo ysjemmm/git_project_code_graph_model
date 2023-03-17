@@ -1463,10 +1463,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // 比较两个工作量是否相等
-        int compareWorkloadSum = planWorkloadSum.compareTo(actualWorkloadSum);
-        if (compareWorkloadSum > 0) {
-            throw new BaseBizRuntimeException("请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
-        } else if (compareWorkloadSum < 0) {
+        if (planWorkloadSum.compareTo(actualWorkloadSum) < 0) {
             BigDecimal diffDay = actualWorkloadSum.subtract(planWorkloadSum).setScale(1, RoundingMode.HALF_UP);
             throw new BaseBizRuntimeException("再分配计划工作量之和大于计划总工作量" + diffDay + "天，请调整");
         }
