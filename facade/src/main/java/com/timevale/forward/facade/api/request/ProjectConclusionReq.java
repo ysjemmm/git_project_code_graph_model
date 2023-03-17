@@ -24,4 +24,7 @@ public class ProjectConclusionReq extends ToString {
     @NotNull(message = "项目最终状态必填")
     @ApiModelProperty("项目最终状态")
     private Integer targetStatus;
+
+    @ApiModelProperty("作废原因")
+    private String invalidReason;
 }

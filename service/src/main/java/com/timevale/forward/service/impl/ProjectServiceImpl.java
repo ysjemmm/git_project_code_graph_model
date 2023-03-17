@@ -3,6 +3,7 @@ package com.timevale.forward.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -29,6 +30,7 @@ import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.flow.ForwardFlow;
+import com.timevale.forward.service.flow.model.TargetStatusModel;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.ProjectEstablishDateChangeMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
@@ -1393,6 +1395,16 @@ public class ProjectServiceImpl implements ProjectService {
         // 校验参数
         conclusionForm(req);
 
+        // 如果最终为中止状态，需要填写中止原因
+        Integer targetStatus = req.getTargetStatus();
+        String invalidReason = req.getInvalidReason();
+        if (ProjectStatusEnum.INVALID.getCode().equals(targetStatus)) {
+            AssertUtil.notBlank(invalidReason, "中止原因必填");
+        }
+        TargetStatusModel targetStatusModel = new TargetStatusModel()
+                .setTargetStatus(targetStatus)
+                .setInvalidReason(invalidReason);
+
         // 发起结项流程
         String flowId = forwardFlow.conclusionFlow.start(projectId);
 
@@ -1406,8 +1418,8 @@ public class ProjectServiceImpl implements ProjectService {
                 .setProposerId(userInfo.getId())
                 .setProposer(userInfo.getFullAlias())
                 .setFlowType(FlowTypeEnum.CONCLUSION.getCode())
-                .setFlowData(String.valueOf(req.getTargetStatus()))
-                .setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
+                .setStatus(ForwardFlowStatusEnum.AUDITING.getCode())
+                .setFlowData(JSONObject.toJSONString(targetStatusModel));
         projectFlowMapper.insert(projectFlowDO);
 
         return BaseResult.success(true);

@@ -5,6 +5,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
@@ -16,6 +17,7 @@ import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectEvaluateCopier;
+import com.timevale.forward.service.flow.model.TargetStatusModel;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.integration.epeius.model.ConclusionVar;
 import com.timevale.forward.service.integration.epeius.model.ProjectEvaluateVar;
@@ -134,6 +136,10 @@ public class ConclusionFlow {
         conclusionVar.setPointsWorkloadSum(pointsWorkloadSum);
         conclusionVar.setReviewerEvaluateList(reviewerEvaluateVarList);
 
+        fillEValuateName(conclusionVar);
+        fillEvaluate(conclusionVar, evaluateVarList);
+        fillPrincipalEvaluate(conclusionVar, evaluateVarList);
+
         // 项目参数转换为Map
         Map<String, Object> variables = BeanUtil.beanToMap(conclusionVar);
 
@@ -187,58 +193,22 @@ public class ConclusionFlow {
             return;
         }
 
-        // 取出评价信息, 更新
-        List<ProjectEvaluateVar> evaluateVarList = Optional.ofNullable(processInfo.getFlowData())
+        ConclusionVar conclusionVar = Optional.ofNullable(processInfo.getFlowData())
                 .flatMap(flowData -> Optional.ofNullable(BeanUtil.toBean(flowData, ConclusionVar.class)))
-                .flatMap(conclusionVar -> Optional.ofNullable(conclusionVar.getReviewerEvaluateList()))
                 .orElseThrow(() -> {
                     log.error("[ProjectFlowComponentImpl.conclusionComplete]审批信息为空 processInstanceId:{}", processInstanceId);
                     return new BaseBizRuntimeException("审批信息为空");
                 });
 
-        // 查询项目的评价维度信息
-        List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.getByKind(projectDO.getKind());
-        ImmutableMap<Long, EvaluateDimensionDO> dimensionMap = Maps.uniqueIndex(dimensionDOList, BaseDO::getId);
-
-        // 更新评价信息
-        for (ProjectEvaluateVar evaluateVar : evaluateVarList) {
-            BigDecimal scores = evaluateVar.getScores();
-            String scoresDesc = evaluateVar.getScoresDesc();
-            Long dimensionId = evaluateVar.getDimensionId();
-
-            // 评分限制取值
-            BigDecimal scoresCeiling = Optional.ofNullable(dimensionMap.get(dimensionId))
-                    .flatMap(e -> Optional.ofNullable(e.getScoresCeiling()))
-                    .orElse(BigDecimal.TEN);
-            BigDecimal scoresFloor = Optional.ofNullable(dimensionMap.get(dimensionId))
-                    .flatMap(e -> Optional.ofNullable(e.getScoresFloor()))
-                    .orElse(BigDecimal.ZERO);
-
-            scores = NumberUtil.min(scores, scoresCeiling);
-            scores = NumberUtil.max(scores, scoresFloor);
-
-            // 需要更新的数据
-            ProjectEvaluateDO updateEvaluate = new ProjectEvaluateDO();
-            updateEvaluate.setProjectId(projectId);
-            updateEvaluate.setEvaluateDimensionId(dimensionId);
-
-            // 基线且非日常迭代，更新PMO评价，否在更新项目评价
-            if (ProjectKindEnum.PBG_BASE.getCode().equals(projectDO.getKind())
-                    && !ProjectTypeEnum.RENEW.getCode().equals(projectDO.getType())) {
-                updateEvaluate.setPmoScores(scores);
-                updateEvaluate.setPmoScoresDesc(scoresDesc);
-            } else {
-                updateEvaluate.setScores(scores);
-                updateEvaluate.setScoresDesc(scoresDesc);
-            }
-            // 更新落库
-            evaluateMapper.update(updateEvaluate);
-        }
+        // 更新普通评价
+        updateEvaluate(projectDO, conclusionVar);
 
         // 更新结项日期,项目状态（取放在flowData中的数据）
+        TargetStatusModel targetStatusModel = JSONObject.parseObject(projectFlowDO.getFlowData(), TargetStatusModel.class);
+
         Date conclusionDate = new Date();
         Integer oldStatus = projectDO.getStatus();
-        Integer newStatus = Integer.valueOf(projectFlowDO.getFlowData());
+        Integer newStatus = targetStatusModel.getTargetStatus();
 
         ProjectDO updateDO = new ProjectDO();
         updateDO.setId(projectId);
@@ -251,7 +221,7 @@ public class ConclusionFlow {
 
         // 如果项目状态为中止，需要执行中止逻辑
         if (ProjectStatusEnum.INVALID.getCode().equals(newStatus)) {
-            invalid(projectId);
+            invalid(projectId, targetStatusModel.getInvalidReason());
         }
     }
 
@@ -260,8 +230,16 @@ public class ConclusionFlow {
      *
      * @param projectId 项目id
      */
-    private void invalid(Long projectId) {
+    private void invalid(Long projectId, String invalidReason) {
+
         final Integer status = ProjectStatusEnum.INVALID.getCode();
+
+        // 修改中止原因， 添加中止原因日志
+        ProjectDO updateReason = new ProjectDO();
+        updateReason.setId(projectId);
+        updateReason.setInvalidReason(invalidReason);
+        projectMapper.update(updateReason);
+        logComponent.addLogWhenContentChange("", invalidReason, projectId, BizChangeLogFieldEnum.TERMINATE_REASON.getText());
 
         //修改产品需求状态
         productDemandComponent.updateProductDemandStatus(projectId, status);
@@ -276,4 +254,128 @@ public class ConclusionFlow {
         // 刷新客开
         projectComponent.updateCustomDev(projectId);
     }
+
+    private void updateEvaluate(ProjectDO projectDO, ConclusionVar conclusionVar) {
+        // 查询项目的评价维度信息
+        List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.getByKind(projectDO.getKind());
+
+        for (EvaluateDimensionDO dimensionDO : dimensionDOList) {
+            String dimensionName = dimensionDO.getDimensionName();
+            BigDecimal scoresFloor = dimensionDO.getScoresFloor();
+            BigDecimal scoresCeiling = dimensionDO.getScoresCeiling();
+
+            BigDecimal score = null;
+            String scoreDesc = null;
+            BigDecimal pmoScore = null;
+            String pmoScoreDesc = null;
+
+            if ("项目进度".equals(dimensionName)) {
+                score = conclusionVar.getPrincipalProgressScore();
+                scoreDesc = conclusionVar.getPrincipalProgressScoreDesc();
+                pmoScore = conclusionVar.getPmoProgressScore();
+                pmoScoreDesc = conclusionVar.getPmoProgressScoreDesc();
+            } else if ("项目质量".equals(dimensionName)) {
+                score = conclusionVar.getPrincipalQualityScore();
+                scoreDesc = conclusionVar.getPrincipalQualityScoreDesc();
+                pmoScore = conclusionVar.getPmoQualityScore();
+                pmoScoreDesc = conclusionVar.getPmoQualityScoreDesc();
+            } else {
+                score = conclusionVar.getPrincipalTargetScore();
+                scoreDesc = conclusionVar.getPrincipalTargetScoreDesc();
+            }
+
+            ProjectEvaluateDO updateEvaluate = new ProjectEvaluateDO();
+            updateEvaluate.setProjectId(projectDO.getId());
+            updateEvaluate.setEvaluateDimensionId(dimensionDO.getId());
+
+            if (score != null) {
+                score = NumberUtil.min(score, scoresCeiling);
+                score = NumberUtil.max(score, scoresFloor);
+                updateEvaluate.setScores(score);
+                updateEvaluate.setScoresDesc(scoreDesc);
+
+                // 更新落库
+                evaluateMapper.update(updateEvaluate);
+            }
+            if (pmoScore != null) {
+                pmoScore = NumberUtil.min(pmoScore, scoresCeiling);
+                pmoScore = NumberUtil.max(pmoScore, scoresFloor);
+                updateEvaluate.setPmoScores(pmoScore);
+                updateEvaluate.setPmoScoresDesc(pmoScoreDesc);
+
+                // 更新落库
+                evaluateMapper.update(updateEvaluate);
+            }
+
+        }
+    }
+
+    /**
+     * 填写评估名字
+     *
+     * @param conclusionVar   结论var
+     */
+    private void fillEValuateName(ConclusionVar conclusionVar) {
+        conclusionVar.setSelfProgress("项目进度");
+        conclusionVar.setSelfQuality("项目质量");
+        conclusionVar.setSelfTarget("目标达成情况");
+        conclusionVar.setPrincipalProgress("项目进度");
+        conclusionVar.setPrincipalQuality("项目质量");
+        conclusionVar.setPrincipalTarget("目标达成情况");
+        conclusionVar.setPmoProgress("项目进度");
+        conclusionVar.setPmoQuality("项目质量");
+    }
+
+    /**
+     * 填写自评
+     *
+     * @param conclusionVar   结论var
+     * @param evaluateVarList 评估var列表
+     */
+    private void fillEvaluate(ConclusionVar conclusionVar, List<ProjectEvaluateVar> evaluateVarList) {
+        for (ProjectEvaluateVar evaluateVar : evaluateVarList) {
+
+            BigDecimal scores = evaluateVar.getScores();
+            String scoresDesc = evaluateVar.getScoresDesc();
+            String dimensionName = evaluateVar.getDimensionName();
+
+            if ("项目进度".equals(dimensionName)) {
+                conclusionVar.setSelfProgressScore(scores);
+                conclusionVar.setSelfProgressScoreDesc(scoresDesc);
+            } else if ("项目质量".equals(dimensionName)) {
+                conclusionVar.setSelfQualityScore(scores);
+                conclusionVar.setSelfQualityScoreDesc(scoresDesc);
+            } else {
+                conclusionVar.setSelfTargetScore(scores);
+                conclusionVar.setSelfTargetScoreDesc(scoresDesc);
+            }
+        }
+    }
+
+    /**
+     * 填写审核人评价
+     *
+     * @param conclusionVar   结论var
+     * @param evaluateVarList 评估var列表
+     */
+    private void fillPrincipalEvaluate(ConclusionVar conclusionVar, List<ProjectEvaluateVar> evaluateVarList) {
+        for (ProjectEvaluateVar evaluateVar : evaluateVarList) {
+
+            BigDecimal scores = evaluateVar.getScores();
+            String scoresDesc = evaluateVar.getScoresDesc();
+            String dimensionName = evaluateVar.getDimensionName();
+
+            if ("项目进度".equals(dimensionName)) {
+                conclusionVar.setPrincipalProgressScore(scores);
+                conclusionVar.setPrincipalProgressScoreDesc(scoresDesc);
+            } else if ("项目质量".equals(dimensionName)) {
+                conclusionVar.setPrincipalQualityScore(scores);
+                conclusionVar.setPrincipalQualityScoreDesc(scoresDesc);
+            } else {
+                conclusionVar.setPrincipalTargetScore(scores);
+                conclusionVar.setPrincipalTargetScoreDesc(scoresDesc);
+            }
+        }
+    }
+
 }

@@ -3,6 +3,7 @@ package com.timevale.forward.service.integration.epeius.model;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -42,4 +43,35 @@ public class ConclusionVar {
     private List<ProjectEvaluateVar> evaluateList;
 
     private List<ProjectEvaluateVar> reviewerEvaluateList;
+
+    // 低代码有bug，以下为临时写法
+    private String selfProgress;
+    private String selfQuality;
+    private String selfTarget;
+    private String principalProgress;
+    private String principalQuality;
+    private String principalTarget;
+    private String pmoProgress;
+    private String pmoQuality;
+    private String pmoTarget;
+
+    private BigDecimal selfProgressScore;
+    private BigDecimal selfQualityScore;
+    private BigDecimal selfTargetScore;
+    private BigDecimal principalProgressScore;
+    private BigDecimal principalQualityScore;
+    private BigDecimal principalTargetScore;
+    private BigDecimal pmoProgressScore;
+    private BigDecimal pmoQualityScore;
+    private BigDecimal pmoTargetScore;
+
+    private String selfProgressScoreDesc;
+    private String selfQualityScoreDesc;
+    private String selfTargetScoreDesc;
+    private String principalProgressScoreDesc;
+    private String principalQualityScoreDesc;
+    private String principalTargetScoreDesc;
+    private String pmoProgressScoreDesc;
+    private String pmoQualityScoreDesc;
+    private String pmoTargetScoreDesc;
 }
