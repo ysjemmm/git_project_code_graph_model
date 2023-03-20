@@ -117,4 +117,24 @@ public class ProjectListDO extends BaseDO {
      */
     private Date conclusionDate;
 
+    /**
+     * 项目负责人
+     */
+    private String principal;
+
+    /**
+     * 项目负责人id
+     */
+    private String principalId;
+
+    /**
+     * 1-n负责人
+     */
+    private String otnPrincipal;
+
+    /**
+     * 1-n负责人Id
+     */
+    private String otnPrincipalId;
+
 }

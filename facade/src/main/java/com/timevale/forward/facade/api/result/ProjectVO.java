@@ -149,4 +149,16 @@ public class ProjectVO extends ToString {
 
     @ApiModelProperty("标签名称")
     private List<BizLabelSimpleVO> labelNames;
+
+    @ApiModelProperty("项目负责人")
+    private String principal;
+
+    @ApiModelProperty("项目负责人id")
+    private String principalId;
+
+    @ApiModelProperty("1-n负责人")
+    private String otnPrincipal;
+
+    @ApiModelProperty("1-n负责人Id")
+    private String otnPrincipalId;
 }
