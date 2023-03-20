@@ -112,4 +112,10 @@ public class BugOnlineVO extends ToString {
 
     @ApiModelProperty("详情描述")
     private String describe;
+
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
+
+    @ApiModelProperty("bug问题类别:0-空,1-功能问题,2-性能问题,3-兼容性问题,4用户体验问题,5-安全问题")
+    private String categoryName;
 }

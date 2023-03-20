@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.request;
 
+import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -16,7 +17,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("线上bug新增")
-public class BugOnlineAddReq extends BaseReq {
+public class BugOnlineAddReq extends ToString {
     @ApiModelProperty("标题")
     @NotNull(message = "标题不能为空")
     private String name;
@@ -110,4 +111,19 @@ public class BugOnlineAddReq extends BaseReq {
 
     @ApiModelProperty("0华南大区，1华北大区，2华东大区，3西部大区，9其他大区")
     private Integer area;
+
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
+
+    @ApiModelProperty("bug问题类别:0-空,1-功能问题,2-性能问题,3-兼容性问题,4用户体验问题,5-安全问题")
+    private Integer category;
+
+    @ApiModelProperty("关联线下bug的id")
+    private Long bugOfflineId;
+
+    @ApiModelProperty("bug责任人列表")
+    private List<PersonAddReq> principalList;
+
+    @ApiModelProperty("归因阶段")
+    private Integer reasonStage;
 }

@@ -97,4 +97,9 @@ public class BugOnlineListDO extends BaseDO {
      * 描述
      */
     private String describe;
+
+    /**
+     * 客户等级
+     */
+    private String customerGrade;
 }
