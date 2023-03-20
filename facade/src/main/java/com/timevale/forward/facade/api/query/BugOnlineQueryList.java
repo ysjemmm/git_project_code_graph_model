@@ -106,6 +106,12 @@ public class BugOnlineQueryList extends QueryBase {
     @ApiModelProperty("详情描述")
     private String describe;
 
+    @ApiModelProperty("bug原因归因列表")
+    private List<Integer> reasonStageList;
+
+    @ApiModelProperty("驳回原因归因列表")
+    private List<Integer> dismissCauseStageList;
+
     @ApiModelProperty("客户等级")
     private List<String> customerGradeList;
 

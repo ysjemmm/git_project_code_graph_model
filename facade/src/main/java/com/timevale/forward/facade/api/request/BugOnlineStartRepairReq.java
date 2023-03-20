@@ -26,6 +26,10 @@ public class BugOnlineStartRepairReq extends BaseReq {
     @NotNull(message = "bug原因不能为空")
     private Integer reason;
 
+    @ApiModelProperty("归因阶段")
+    @NotNull(message = "归因阶段不能为空")
+    private Integer reasonStage;
+
     @ApiModelProperty("问题原因")
     @NotNull(message = "问题原因不能为空")
     private String problemReason;
