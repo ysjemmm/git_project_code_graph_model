@@ -94,6 +94,14 @@ public interface InnerUserPersonClient {
     List<String> getAllByGroupId(String groupId);
 
     /**
+     * 获取当前部门及其所有子部门员工
+     *
+     * @param groupId 组id
+     * @return {@link List}<{@link BaseInfoResponse}>
+     */
+    List<BaseInfoResponse> getAllInfoByGroupId(String groupId);
+
+    /**
      * 获取部门员工（不包含离职）
      *
      * @param groupId 部门id

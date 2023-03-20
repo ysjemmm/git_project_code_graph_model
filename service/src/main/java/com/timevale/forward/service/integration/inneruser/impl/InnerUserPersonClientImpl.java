@@ -189,6 +189,31 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
         throw new BaseBizRuntimeException("调用内部用户中心失败! " + groupId);
     }
 
+    /**
+     * @param groupId groupId
+     * @return 部门及子部门员工
+     */
+    @Override
+    public List<BaseInfoResponse> getAllInfoByGroupId(String groupId) {
+        if (StringUtils.isEmpty(groupId)) {
+            throw new BaseBizRuntimeException("部门id为空! " + groupId);
+        }
+        try {
+            GroupRequest request = new GroupRequest();
+            request.setGroupId(groupId);
+            request.setIsDelete(false);
+            BaseResult<List<BaseInfoResponse>> personInGroup = rpcPersonService.getAllByGroupId(request);
+            if (personInGroup.ifSuccess() && CollUtil.isNotEmpty(personInGroup.getData())) {
+                return personInGroup.getData();
+            }
+            log.error("调用内部用户中心失败 getAllStaffsByGroupId groupId: " + groupId + " error: " + personInGroup);
+            return Lists.emptyList();
+        } catch (Exception e) {
+            log.error("调用内部用户中心失败 getAllStaffsByGroupId groupId: " + groupId + " error: " + e.getMessage(), e);
+        }
+        throw new BaseBizRuntimeException("调用内部用户中心失败! " + groupId);
+    }
+
     @Override
     public List<BaseInfoResponse> getBaseInfoByGroupId(String groupId) {
         AssertUtil.checkState(StrUtil.isNotBlank(groupId), "部门id为空");

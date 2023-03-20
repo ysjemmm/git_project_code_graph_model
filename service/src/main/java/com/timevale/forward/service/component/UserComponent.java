@@ -1,15 +1,13 @@
 package com.timevale.forward.service.component;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.security.facade.response.BaseInfoResponse;
-import com.timevale.security.facade.response.GroupModelResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -23,10 +21,8 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class UserComponent {
+    private final CommonConfig commonConfig;
     private final InnerUserPersonClient personClient;
-
-    @Value("${evalPmoGroup:557300580}")
-    private String EVAL_PMO_GROUP;
 
     /**
      * 查询是否PMO或者PMO上级
@@ -44,14 +40,12 @@ public class UserComponent {
     }
 
     /**
-     * 查询是否评价部门下的PMO或者PMO上级
+     * 查询是否评价部门下的PMO
      */
     public boolean isEvalPmo() {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        BaseInfoResponse selfInfo = personClient.getSelfInfo(userInfo.getId(), false);
-
-        GroupModelResponse evalGroup = CollUtil.findOne(selfInfo.getGroupList(), e -> EVAL_PMO_GROUP.equals(e.getGroupId()));
-        return evalGroup != null && CommonConstant.PMO.equalsIgnoreCase(selfInfo.getJobClassification());
+        List<String> allPmo = getAllPmo(commonConfig.getEvalPmoGroup());
+        return allPmo.stream().anyMatch(e -> e.equals(userInfo.getId()));
     }
 
     public boolean isPmo() {
@@ -65,8 +59,8 @@ public class UserComponent {
         return false;
     }
 
-    public List<String> getPmo(String groupId) {
-        List<BaseInfoResponse> baseInfoList = personClient.getBaseInfoByGroupId(groupId);
+    public List<String> getAllPmo(String groupId) {
+        List<BaseInfoResponse> baseInfoList = personClient.getAllInfoByGroupId(groupId);
         return baseInfoList.stream()
                 .filter(e -> ObjectUtil.equal(CommonConstant.PMO, e.getJobClassification()))
                 .map(BaseInfoResponse::getAccount)

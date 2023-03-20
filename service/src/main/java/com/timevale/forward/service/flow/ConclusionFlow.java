@@ -77,7 +77,7 @@ public class ConclusionFlow {
         String projectUrl = projectComponent.getUrl(projectId);
 
         // 查询结项流程PMO
-        List<String> pmoIdList = userComponent.getPmo(commonConfig.getEvalPmoGroup());
+        List<String> pmoIdList = userComponent.getAllPmo(commonConfig.getEvalPmoGroup());
 
         // 发起人是否为项目负责人或者1-n产研负责人
         Set<String> principalIdSet = CollUtil.newHashSet(projectDO.getPrincipalId(), projectDO.getOtnPrincipalId());

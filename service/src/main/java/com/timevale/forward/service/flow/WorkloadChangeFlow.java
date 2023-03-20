@@ -76,7 +76,7 @@ public class WorkloadChangeFlow {
         String startAccountId = LocalSessionUtils.getUserInfo().getId();
 
         // 查询结项流程PMO
-        List<String> pmoIdList = userComponent.getPmo(commonConfig.getEvalPmoGroup());
+        List<String> pmoIdList = userComponent.getAllPmo(commonConfig.getEvalPmoGroup());
 
         // 取出项目id、变更事由、PBU负责人
         final Long projectId = req.getProjectId();
