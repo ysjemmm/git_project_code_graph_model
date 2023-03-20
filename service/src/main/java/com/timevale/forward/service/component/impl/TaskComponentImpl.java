@@ -24,7 +24,6 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
-import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -140,10 +139,16 @@ public class TaskComponentImpl implements TaskComponent {
                 a.setExecutor(executor);
                 a.setExecutorId(executorId);
             }
+            ProjectDO projectDO = projectMap.get(a.getProjectId());
+            a.setPmId(projectDO.getPmId());
+            a.setProjectName(projectDO.getName());
+            a.setPrincipal(projectDO.getPrincipal());
+            a.setPrincipalId(projectDO.getPrincipalId());
+            a.setOtnPrincipal(projectDO.getOtnPrincipal());
+            a.setOtnPrincipalId(projectDO.getOtnPrincipalId());
+
             a.setProductLineName(productLineMap.get(a.getProductLineId()));
             a.setStatusName(TaskStatusEnum.getTextByCode(a.getStatus()));
-            a.setProjectName(projectMap.get(a.getProjectId()).getName());
-            a.setPmId(projectMap.get(a.getProjectId()).getPmId());
             a.setStageName(ProjectStageEnum.getTextByCode(a.getStage()));
             a.setIsPMO(isPMO);
             if(a.getPlanEndDate()==null){

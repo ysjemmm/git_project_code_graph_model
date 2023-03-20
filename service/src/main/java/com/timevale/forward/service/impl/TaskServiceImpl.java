@@ -299,6 +299,10 @@ public class TaskServiceImpl implements TaskService {
         taskDetailVO.setProjectName(projectDO.getName());
         taskDetailVO.setPmId(projectDO.getPmId());
         taskDetailVO.setProjectId(projectDO.getId());
+        taskDetailVO.setPrincipal(projectDO.getPrincipal());
+        taskDetailVO.setPrincipalId(projectDO.getPrincipalId());
+        taskDetailVO.setOtnPrincipal(projectDO.getOtnPrincipal());
+        taskDetailVO.setOtnPrincipalId(projectDO.getOtnPrincipalId());
 
         //产品线
         ProductLineDO productLineDO = productLineMapper.selectById(taskDO.getProductLineId());

@@ -93,4 +93,16 @@ public class TaskDetailVO extends ToString {
 
     @ApiModelProperty("是否为里程碑")
     private Boolean milestoneFlag;
+
+    @ApiModelProperty("项目负责人")
+    private String principal;
+
+    @ApiModelProperty("项目负责人id")
+    private String principalId;
+
+    @ApiModelProperty("1-n负责人")
+    private String otnPrincipal;
+
+    @ApiModelProperty("1-n负责人Id")
+    private String otnPrincipalId;
 }

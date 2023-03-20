@@ -95,4 +95,16 @@ public class TaskVO extends ToString {
 
     @ApiModelProperty("当前登陆人是否为PMO")
     private Boolean isPMO;
+
+    @ApiModelProperty("项目负责人")
+    private String principal;
+
+    @ApiModelProperty("项目负责人id")
+    private String principalId;
+
+    @ApiModelProperty("1-n负责人")
+    private String otnPrincipal;
+
+    @ApiModelProperty("1-n负责人Id")
+    private String otnPrincipalId;
 }
