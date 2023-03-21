@@ -2,7 +2,7 @@
 <!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
 <mapper namespace="com.timevale.forward.dal.dao.ProjectMapper">
 
-    <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectDO" useGeneratedKeys="true"
+    <insert id="newInsert" parameterType="com.timevale.forward.dal.entity.ProjectDO" useGeneratedKeys="true"
             keyProperty="id" keyColumn="id">
         INSERT INTO project
         <trim prefix="(" suffix=")" suffixOverrides=",">

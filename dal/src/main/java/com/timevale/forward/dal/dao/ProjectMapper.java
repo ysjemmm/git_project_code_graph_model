@@ -21,7 +21,7 @@ public interface ProjectMapper {
      * @param projectDO 项目
      * @return int
      */
-    int insert(ProjectDO projectDO);
+    int newInsert(ProjectDO projectDO);
 
     /**
      * 内部项目-新增

@@ -46,7 +46,7 @@
             <property name="returnPageInfo" value="check"/>
         </plugin>
         <!--审计拦截器-->
-        <plugin interceptor="com.timevale.forward.service.interceptor.AuditInterceptor"/>
+        <!--<plugin interceptor="com.timevale.forward.service.interceptor.AuditInterceptor"/>-->
         <!--通配符转义处理器-->
 <!--        <plugin interceptor="com.timevale.forward.service.interceptor.WildcardEscapeInterceptor"/>-->
     </plugins>

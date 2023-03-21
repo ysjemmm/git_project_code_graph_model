@@ -360,8 +360,11 @@ public class ProjectServiceImpl implements ProjectService {
 
         ProjectDO byName = projectMapper.getByName(projectAddReq.getName());
         log.info("[ProjectServiceImpl.add]project add before:{}", byName);
-
-        projectMapper.insert(projectDO);
+        List<Long> allIdBefore = projectMapper.getAllId();
+        log.info("[ProjectServiceImpl.add]project before count:{}", CollUtil.size(allIdBefore));
+        projectMapper.newInsert(projectDO);
+        List<Long> allIdAfter = projectMapper.getAllId();
+        log.info("[ProjectServiceImpl.add]project after count:{}", CollUtil.size(allIdAfter));
         log.info("[ProjectServiceImpl.add]project add after:{}", projectDO.getId());
         projectDO.setParentIds(Collections.singletonList(projectDO.getId()));
 
