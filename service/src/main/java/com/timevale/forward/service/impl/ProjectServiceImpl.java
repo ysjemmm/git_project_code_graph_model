@@ -176,6 +176,8 @@ public class ProjectServiceImpl implements ProjectService {
     private ForwardFlow forwardFlow;
     @Resource
     private ProjectEvaluateComponent evaluateComponent;
+    @Resource
+    private ProjectExtMapper projectExtMapper;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -360,12 +362,11 @@ public class ProjectServiceImpl implements ProjectService {
 
         ProjectDO byName = projectMapper.getByName(projectAddReq.getName());
         log.info("[ProjectServiceImpl.add]project add before:{}", byName);
-        List<Long> allIdBefore = projectMapper.getAllId();
-        log.info("[ProjectServiceImpl.add]project before count:{}", CollUtil.size(allIdBefore));
-        projectMapper.newInsert(projectDO);
-        List<Long> allIdAfter = projectMapper.getAllId();
-        log.info("[ProjectServiceImpl.add]project after count:{}", CollUtil.size(allIdAfter));
+        int insert = projectMapper.insert(projectDO);
+        log.info("[ProjectServiceImpl.add]project inert count :{}", insert);
         log.info("[ProjectServiceImpl.add]project add after:{}", projectDO.getId());
+        projectMapper.deleteSameNameAndNotId(projectDO.getName(), projectDO.getId());
+
         projectDO.setParentIds(Collections.singletonList(projectDO.getId()));
 
         //标签
@@ -433,6 +434,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 项目落库
         projectMapper.innerInsert(projectDO);
+        projectMapper.deleteSameNameAndNotId(projectDO.getName(), projectDO.getId());
         log.info("[ProjectServiceImpl.innerAdd]project add after:{}", projectDO.getId());
         projectDO.setParentIds(Collections.singletonList(projectDO.getId()));
 

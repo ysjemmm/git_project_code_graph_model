@@ -6,6 +6,7 @@ import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.entity.ProjectChildCountDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
@@ -21,7 +22,8 @@ public interface ProjectMapper {
      * @param projectDO 项目
      * @return int
      */
-    int newInsert(ProjectDO projectDO);
+
+    int insert(ProjectDO projectDO);
 
     /**
      * 内部项目-新增
@@ -192,4 +194,11 @@ public interface ProjectMapper {
     List<Long> filterInnerInvalid(@Param("ids") List<Long> projectIds);
 
     List<ProjectDO> getByBizDemandId(@Param("bizDemandIds")List<Long> bizDemandIds);
+
+
+    @Select("SELECT * FROM project WHERE create_date >= '2023-01-01'")
+    List<ProjectDO> getThisYear();
+
+    @Delete("DELETE FROM project WHERE `name` =#{name} AND id !=#{id}")
+    void deleteSameNameAndNotId(@Param("name")String name, @Param("id")Long id);
 }
