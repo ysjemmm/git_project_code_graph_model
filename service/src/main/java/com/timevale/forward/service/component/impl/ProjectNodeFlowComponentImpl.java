@@ -97,7 +97,7 @@ public class ProjectNodeFlowComponentImpl implements ProjectNodeFlowComponent {
             projectNodeFlowDO.setCreateMan(userInfo.getFullAlias());
             projectNodeFlowDO.setCreateManId(userInfo.getId());
 
-            Integer stage = StrUtil.isEmpty(projectNodeFlowDO.getBizId()) ? FlowStageEnum.SECOND.getCode() : FlowStageEnum.FIRST.getCode();
+            Integer stage = StrUtil.isEmpty(projectNodeFlowDO.getBizId()) || StrUtil.isEmpty(projectNodeFlowDO.getPdId()) ? FlowStageEnum.SECOND.getCode() : FlowStageEnum.FIRST.getCode();
             projectNodeFlowDO.setStage(stage);
 
             // 发起流程
