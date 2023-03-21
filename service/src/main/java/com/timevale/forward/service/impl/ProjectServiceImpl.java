@@ -358,6 +358,7 @@ public class ProjectServiceImpl implements ProjectService {
         // 转换后新增
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
         projectMapper.insert(projectDO);
+        log.info("[ProjectServiceImpl.add]project add after:{}", projectDO.getId());
         projectDO.setParentIds(Collections.singletonList(projectDO.getId()));
 
         //标签
@@ -425,6 +426,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 项目落库
         projectMapper.innerInsert(projectDO);
+        log.info("[ProjectServiceImpl.innerAdd]project add after:{}", projectDO.getId());
         projectDO.setParentIds(Collections.singletonList(projectDO.getId()));
 
         // 获取项目id
