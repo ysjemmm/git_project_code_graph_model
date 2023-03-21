@@ -357,6 +357,10 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 转换后新增
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
+
+        ProjectDO byName = projectMapper.getByName(projectAddReq.getName());
+        log.info("[ProjectServiceImpl.add]project add before:{}", byName);
+
         projectMapper.insert(projectDO);
         log.info("[ProjectServiceImpl.add]project add after:{}", projectDO.getId());
         projectDO.setParentIds(Collections.singletonList(projectDO.getId()));
