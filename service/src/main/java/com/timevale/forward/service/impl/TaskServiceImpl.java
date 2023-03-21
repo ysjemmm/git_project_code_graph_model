@@ -628,7 +628,10 @@ public class TaskServiceImpl implements TaskService {
         // 若执行人不在项目成员中,需新增
         Long projectId = CollUtil.getFirst(taskDos).getProjectId();
         personComponent.addIfNotExisted(executorList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
-        
+
+        // 积分成员同步
+        evaluateComponent.syncMember(projectId);
+
         return BaseResult.success(true);
 
     }
