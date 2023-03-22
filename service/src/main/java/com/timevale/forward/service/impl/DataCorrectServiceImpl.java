@@ -1,31 +1,15 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.BugLogMapper;
-import com.timevale.forward.dal.dao.BugOnlineStatusOperatorMapper;
-import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.dao.ProjectNodeMapper;
-import com.timevale.forward.dal.dao.ProjectProductDemandMapper;
-import com.timevale.forward.dal.dao.TestBillMapper;
-import com.timevale.forward.dal.dao.TroubleTicketMapper;
-import com.timevale.forward.dal.entity.BizDemandDO;
-import com.timevale.forward.dal.entity.BugLogDO;
-import com.timevale.forward.dal.entity.BugOnlineStatusOperatorDO;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectNodeDO;
-import com.timevale.forward.dal.entity.TestBillDO;
-import com.timevale.forward.dal.entity.TroubleTicketDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.DataCorrectService;
 import com.timevale.forward.facade.api.request.ProjectNodeModifyReq;
 import com.timevale.forward.model.enums.BugLogTypeEnum;
 import com.timevale.forward.model.enums.BugOnlineStatusEnum;
 import com.timevale.forward.model.enums.ProjectNodeStatusEnum;
-import com.timevale.forward.service.component.BizDemandComponent;
-import com.timevale.forward.service.component.BugOnlineStatusOperatorComponent;
-import com.timevale.forward.service.component.ProjectComponent;
-import com.timevale.forward.service.component.ProjectNodeComponent;
+import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -190,6 +174,39 @@ public class DataCorrectServiceImpl implements DataCorrectService {
                 bugOnlineStatusOperatorComponent.add(bugOnlineStatusOperatorDO);            }
 
         });
+        return BaseResult.success(true);
+    }
+
+    @Resource
+    private EvaluateDimensionMapper dimensionMapper;
+    @Resource
+    private ProjectEvaluateMapper evaluateMapper;
+    @Resource
+    private ProjectEvaluateComponent projectEvaluateComponent;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> updateEval() {
+        List<ProjectDO> projectDOList = projectMapper.getThisYear();
+
+        for (ProjectDO projectDO : projectDOList) {
+            Long projectId = projectDO.getId();
+            Integer kind = projectDO.getKind();
+
+            List<EvaluateDimensionDO> dimensionDOList = dimensionMapper.selectByKindDate(kind, new Date());
+            List<Long> dimensionIdList = dimensionDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
+
+            List<ProjectEvaluateDO> byProjectId = evaluateMapper.getByProjectId(projectId);
+            List<Long> oldDimensionIdList = byProjectId.stream().map(ProjectEvaluateDO::getEvaluateDimensionId).collect(Collectors.toList());
+
+            dimensionIdList.removeAll(oldDimensionIdList);
+            if (CollUtil.isNotEmpty(dimensionIdList)) {
+                evaluateMapper.batchInsert(projectId, dimensionIdList);
+            }
+
+            projectEvaluateComponent.syncMember(projectId);
+        }
+
         return BaseResult.success(true);
     }
 

@@ -36,6 +36,10 @@ public enum BizChangeLogFieldEnum {
     PJ_BUDGET("项目预算"),
     PJ_MILESTONE("里程碑"),
 
+    CONCLUSION_DATE("结项时间"),
+
+    CUSTOMER_PROJECT("是否为客开项目"),
+
     /**
      * 项目目标
      */
@@ -93,6 +97,8 @@ public enum BizChangeLogFieldEnum {
     SUSPEND_REASON("项目暂停原因"),
 
     INVALID_REASON("项目作废原因"),
+
+    TERMINATE_REASON("项目中止原因"),
     ;
 
     private final String text;

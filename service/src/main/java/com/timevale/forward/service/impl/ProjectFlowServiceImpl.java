@@ -17,7 +17,7 @@ import com.timevale.forward.facade.api.request.ProjectFlowDocModifyReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.ProjectFlowDetailVO;
 import com.timevale.forward.facade.api.result.ProjectFlowNodeVO;
-import com.timevale.forward.model.enums.FlowStatusEnum;
+import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
 import com.timevale.forward.model.enums.MessageTagEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
@@ -101,13 +101,13 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
         if (!CollectionUtils.isEmpty(projectFlowDos)) {
             projectFlowDos.sort(Comparator.comparing(ProjectFlowDO::getCreateDate).reversed());
             ProjectFlowDO oldFlowDo = projectFlowDos.get(0);
-            if (FlowStatusEnum.AUDITING.getCode().equals(oldFlowDo.getStatus())) {
+            if (ForwardFlowStatusEnum.AUDITING.getCode().equals(oldFlowDo.getStatus())) {
                 throw new BaseBizRuntimeException(String.format("%s正在审核中,请不要重复发起", projectNodeEnum.getText()));
             }
-            if (FlowStatusEnum.COMPLETE.getCode().equals(oldFlowDo.getStatus())) {
+            if (ForwardFlowStatusEnum.COMPLETE.getCode().equals(oldFlowDo.getStatus())) {
                 throw new BaseBizRuntimeException(String.format("%s已通过,请不要重复发起", projectNodeEnum.getText()));
             }
-            if (FlowStatusEnum.PRE_EDIT.getCode().equals(oldFlowDo.getStatus())) {
+            if (ForwardFlowStatusEnum.PRE_EDIT.getCode().equals(oldFlowDo.getStatus())) {
                 projectFlowDO.setId(oldFlowDo.getId());
             }
         }
@@ -140,7 +140,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
 
         String processInstanceId = startWorkflow(projectFlowAddReq);
         projectFlowDO.setFlowId(processInstanceId);
-        projectFlowDO.setStatus(FlowStatusEnum.AUDITING.getCode());
+        projectFlowDO.setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         projectFlowDO.setDocModifyDate(new Date());
         projectFlowDO.setDocModifyManId(userInfo.getId());
@@ -165,7 +165,7 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
             preEditFlow.setProposerId(StringUtils.EMPTY);
             preEditFlow.setProposer(StringUtils.EMPTY);
             preEditFlow.setProjectId(projectFlowDocModifyReq.getProjectId());
-            preEditFlow.setStatus(FlowStatusEnum.PRE_EDIT.getCode());
+            preEditFlow.setStatus(ForwardFlowStatusEnum.PRE_EDIT.getCode());
             preEditFlow.setReviewUrl(projectFlowDocModifyReq.getReviewUrl());
             projectFlowMapper.insert(preEditFlow);
             flows.add(preEditFlow);
@@ -200,19 +200,19 @@ public class ProjectFlowServiceImpl implements ProjectFlowService {
             }
         }
 
-        if (FlowStatusEnum.AUDITING.getCode().equals(oldFlowDo.getStatus())) {
+        if (ForwardFlowStatusEnum.AUDITING.getCode().equals(oldFlowDo.getStatus())) {
             projectFlowComponent.updateFlowInfo(oldFlowDo.getFlowId());
             oldFlowDo = projectFlowMapper.get(projectFlowId, null);
         }
         ProjectFlowDetailVO projectFlowDetailVO = ProjectFlowCopier.INSTANCE.convert(oldFlowDo);
-        projectFlowDetailVO.setStatusName(FlowStatusEnum.getTextByCode(oldFlowDo.getStatus()));
+        projectFlowDetailVO.setStatusName(ForwardFlowStatusEnum.getTextByCode(oldFlowDo.getStatus()));
         PersonVO proposer = new PersonVO();
         proposer.setUserName(oldFlowDo.getProposer());
         proposer.setUserId(oldFlowDo.getProposerId());
         projectFlowDetailVO.setProposerVO(proposer);
         projectFlowDetailVO.setReviews(reviews);
         List<ProjectFlowDO> projectFlowDos = projectFlowMapper.getByProjectIdAndType(oldFlowDo.getProjectId(),oldFlowDo.getFlowType());
-        long count = projectFlowDos.stream().filter(a -> FlowStatusEnum.REJECT.getCode().equals(a.getStatus())).count();
+        long count = projectFlowDos.stream().filter(a -> ForwardFlowStatusEnum.REJECT.getCode().equals(a.getStatus())).count();
         projectFlowDetailVO.setReturnCount(count);
         return BaseResult.success(projectFlowDetailVO);
     }

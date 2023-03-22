@@ -35,7 +35,7 @@ public class ProductDemandLinkProjectQueryList extends QueryBase {
     @ApiModelProperty("产品线")
     private List<Long> productLineIds;
 
-    @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
+    @ApiModelProperty("项目性质:0产品研发项目,1技术优化项目,2日常迭代")
     private List<Integer> types;
 
     @ApiModelProperty("项目状态:0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废")
@@ -73,4 +73,10 @@ public class ProductDemandLinkProjectQueryList extends QueryBase {
 
     @ApiModelProperty("选中为标签类别时填写,类别id")
     private List<Long> labelCategoryIds;
+
+    @ApiModelProperty("项目类型:0-空，1-PBG项目/基线项目，2-PBG项目/1-N客开项目，3-职能后台项目/流程IT中心项目")
+    private Integer kind;
+
+    @ApiModelProperty("srId列表")
+    private List<String> srs;
 }

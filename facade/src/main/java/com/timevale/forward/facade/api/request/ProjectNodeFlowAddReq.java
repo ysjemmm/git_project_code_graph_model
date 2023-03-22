@@ -29,7 +29,7 @@ public class ProjectNodeFlowAddReq extends BaseReq {
     @ApiModelProperty("po负责人")
     private PersonAddReq po;
 
-    @ApiModelProperty("D层负责人")
+    @ApiModelProperty("pbu层负责人")
     private PersonAddReq d;
 
     @ApiModelProperty("调整前发布时间")

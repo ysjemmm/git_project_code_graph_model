@@ -129,7 +129,7 @@ public class TrackEventServiceImpl implements TrackEventService {
         trackEventDO.setTrackMapId(trackMapId);
 
         trackEventDO.setFlowId(StringUtils.EMPTY);
-        trackEventDO.setStatus(FlowStatusEnum.AUDITING.getCode());
+        trackEventDO.setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
         trackEventMapper.insert(trackEventDO);
 
         List<TrackPropDO> trackProps = TrackPropCopier.INSTANCE.change(trackEventAddReq.getTrackProps());
@@ -149,8 +149,8 @@ public class TrackEventServiceImpl implements TrackEventService {
     public BaseResult<Boolean> modify(TrackEventModifyReq trackEventModifyReq) {
         log.info("埋点事件修改,参数:{}", trackEventModifyReq);
         TrackEventDO oldTrackEventDO = trackEventMapper.get(trackEventModifyReq.getId(), null);
-        if (!FlowStatusEnum.WITHDRAW.getCode().equals(oldTrackEventDO.getStatus())
-                && !FlowStatusEnum.REJECT.getCode().equals(oldTrackEventDO.getStatus())) {
+        if (!ForwardFlowStatusEnum.WITHDRAW.getCode().equals(oldTrackEventDO.getStatus())
+                && !ForwardFlowStatusEnum.REJECT.getCode().equals(oldTrackEventDO.getStatus())) {
             throw new BaseBizRuntimeException("状态为审核不通过,已撤回才能编辑");
         }
         checkBeforeInsert(trackEventModifyReq);
@@ -165,7 +165,7 @@ public class TrackEventServiceImpl implements TrackEventService {
         fileComponent.update(trackEventModifyReq.getFiles(), trackEventModifyReq.getId(), FileTypeEnum.TRACK_EVENT.getCode());
 
         trackEventDO.setFlowId(trackEventComponent.startFlow(trackEventModifyReq, LocalSessionUtils.getUserInfo()));
-        trackEventDO.setStatus(FlowStatusEnum.AUDITING.getCode());
+        trackEventDO.setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
         trackEventMapper.update(trackEventDO);
         return BaseResult.success(true);
     }
@@ -178,7 +178,7 @@ public class TrackEventServiceImpl implements TrackEventService {
             throw new BaseBizRuntimeException("不存在该事件");
         }
         TrackEventDetailVO trackEventDetailVO = TrackEventCopier.INSTANCE.convert(trackEventDO);
-        trackEventDetailVO.setStatusName(FlowStatusEnum.getTextByCode(trackEventDetailVO.getStatus()));
+        trackEventDetailVO.setStatusName(ForwardFlowStatusEnum.getTextByCode(trackEventDetailVO.getStatus()));
         trackEventDetailVO.setEnvNames(EnvEnum.getTextByCode(JSONObject.parseArray(trackEventDetailVO.getEnv(), Integer.class)));
         trackEventDetailVO.setPlatformNames(PlatformTypeEnum.getTextByCode(JSONObject.parseArray(trackEventDetailVO.getPlatform(), Integer.class)));
         List<TrackPropVO> trackPropVOList = trackPropComponent.get(eventId);
@@ -201,7 +201,7 @@ public class TrackEventServiceImpl implements TrackEventService {
         log.info("埋点事件删除,参数:{}", trackEventDeleteReq);
         TrackEventDO oldTrackEventDO = trackEventMapper.get(trackEventDeleteReq.getId(), null);
 
-        if (FlowStatusEnum.AUDITING.getCode().equals(oldTrackEventDO.getStatus())) {
+        if (ForwardFlowStatusEnum.AUDITING.getCode().equals(oldTrackEventDO.getStatus())) {
             throw new BaseBizRuntimeException("状态为审核中不能删除");
         }
         oldTrackEventDO.setIsDeleted(true);
@@ -401,7 +401,7 @@ public class TrackEventServiceImpl implements TrackEventService {
     }
 
     private void checkBeforeInsert(TrackEventAddReq trackEventAddReq) {
-        List<Integer> status = Lists.newArrayList(FlowStatusEnum.AUDITING.getCode(), FlowStatusEnum.COMPLETE.getCode());
+        List<Integer> status = Lists.newArrayList(ForwardFlowStatusEnum.AUDITING.getCode(), ForwardFlowStatusEnum.COMPLETE.getCode());
         TrackEventCondition c = TrackEventCondition.builder().fullCnName(trackEventAddReq.getFullCnName()).status(status).build();
         List<TrackEventDO> trackEventDos = trackEventMapper.select(c);
         //sql大小写不敏感,程序判断

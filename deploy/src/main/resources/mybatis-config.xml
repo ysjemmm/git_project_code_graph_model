@@ -48,7 +48,7 @@
         <!--审计拦截器-->
         <plugin interceptor="com.timevale.forward.service.interceptor.AuditInterceptor"/>
         <!--通配符转义处理器-->
-<!--        <plugin interceptor="com.timevale.forward.service.interceptor.WildcardEscapeInterceptor"/>-->
+        <plugin interceptor="com.timevale.forward.service.interceptor.WildcardEscapeInterceptor"/>
     </plugins>
 
     <mappers>
@@ -115,5 +115,9 @@
         <mapper resource="mapper/ProjectMilestoneMapper.xml"/>
         <mapper resource="mapper/BugOnlineBizDemandMapper.xml"/>
         <mapper resource="mapper/DevopsAppMapper.xml"/>
+        <mapper resource="mapper/ProjectEvaluateMapper.xml"/>
+        <mapper resource="mapper/ProjectMemberEvaluateMapper.xml"/>
+        <mapper resource="mapper/EvaluateDimensionMapper.xml"/>
+        <mapper resource="mapper/HistoryRecordMapper.xml"/>
     </mappers>
 </configuration>

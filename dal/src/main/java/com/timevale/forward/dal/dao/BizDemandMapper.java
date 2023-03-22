@@ -158,4 +158,7 @@ public interface BizDemandMapper {
      * 根据来源id列表查询业务需求列表
      */
     List<BizDemandDO> selectBySourceIds(@Param("sourceIds") Collection<String> sourceIds);
+
+    List<BizDemandDO> getByProjectId(@Param("projectId")Long projectId);
+
 }

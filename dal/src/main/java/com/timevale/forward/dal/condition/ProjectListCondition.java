@@ -1,6 +1,8 @@
 package com.timevale.forward.dal.condition;
 
+import com.timevale.forward.dal.annotation.WildcardEscape;
 import com.timevale.mandarin.common.query.QueryBase;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -13,7 +15,7 @@ import java.util.List;
  **/
 @Data
 @Builder
-public class ProjectListCondition extends QueryBase {
+public class ProjectListCondition {
     /**
      * id
      */
@@ -37,6 +39,7 @@ public class ProjectListCondition extends QueryBase {
     /**
      * 名称
      */
+    @WildcardEscape
     private String name;
 
     /**
@@ -215,5 +218,30 @@ public class ProjectListCondition extends QueryBase {
     private Date actualDateRight;
 
     private Boolean onlyFirstLevel;
+
+    /**
+     * srs
+     */
+    private List<String> srs;
+
+    /**
+     * 项目类型: 0-空，1-PBG项目/基线项目，2-PBG项目/1-N客开项目，3-职能后台项目/流程IT中心项目
+     */
+    private Integer kind;
+
+    /**
+     * 结项时间-开始
+     */
+    private Date conclusionDateLeft;
+
+    /**
+     * 结项时间-结束
+     */
+    private Date conclusionDateRight;
+
+    private Integer pageNum = 1;
+
+    private Integer pageSize = 20;
+
 
 }

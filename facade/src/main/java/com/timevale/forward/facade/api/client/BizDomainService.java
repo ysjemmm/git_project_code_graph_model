@@ -6,7 +6,6 @@ import com.timevale.forward.facade.api.query.BizDomainQueryList;
 import com.timevale.forward.facade.api.request.BizDomainAddReq;
 import com.timevale.forward.facade.api.request.BizDomainModifyReq;
 import com.timevale.forward.facade.api.result.BizDomainVO;
-import com.timevale.forward.facade.api.result.ProductLineVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 

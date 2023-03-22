@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
@@ -459,24 +460,26 @@ public class HomePageServiceImpl implements HomePageService {
                 .collect(Collectors.toMap(BaseInfoResponse::getAccount, a -> a.getAlias() + "-" + a.getName(), (v1, v2) -> v2));
 
         // 部门id、员工id非空取交集
-        if (!CollectionUtils.isEmpty(deptIds)) {
+        if (CollUtil.isNotEmpty(deptIds)) {
             Set<String> deptAllMyStaff = Sets.newHashSet();
             for (String deptId : deptIds) {
                 deptAllMyStaff.addAll(innerUserPersonClient.getByGroupIdNew(deptId));
             }
             allMyStaffNameWithSelf.retainAll(deptAllMyStaff);
         }
-        if (!CollectionUtils.isEmpty(teamMembers)) {
+        if (CollUtil.isNotEmpty(teamMembers)) {
             allMyStaffNameWithSelf.retainAll(teamMembers);
         }
-
         // 如果查询条件为空直接返回空数据
-        if (CollectionUtils.isEmpty(allMyStaffNameWithSelf)) {
+        if (CollUtil.isEmpty(allMyStaffNameWithSelf)) {
             return BaseResult.success(Lists.emptyList());
         }
+
         List<TaskBoardDTO> filter = listTasksSuitDateRange(startDate, endDate, allMyStaffNameWithSelf);
-        if (!CollectionUtils.isEmpty(filter)) {
+
+        if (CollUtil.isNotEmpty(filter)) {
             List<HomePageSingleWorkTimeVO> result = new ArrayList<>();
+
             List<Long> filterIds = filter.stream().map(TaskBoardDTO::getId).collect(Collectors.toList());
             Map<Long, TaskBoardDTO> taskMap = filter.stream().collect(Collectors.toMap(TaskBoardDTO::getId, k -> k, (v1, v2) -> v2));
             Map<Long, Date> projectDateMap = filter.stream().collect(Collectors.toMap(TaskBoardDTO::getProjectId, TaskBoardDTO::getProjectPlanEndDate, (v1, v2) -> v2));
@@ -690,7 +693,7 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     private List<TaskBoardDTO> listTasksSuitDateRange(Date startDate, Date endDate, Collection<String> staffIds) {
-
+        // SQL 排除状态为 暂停、作废的任务
         List<TaskBoardDTO> taskBoardDTOList = taskMapper.getByDate(startDate, endDate, staffIds);
         Date current = new Date();
         taskBoardDTOList.forEach(a -> {

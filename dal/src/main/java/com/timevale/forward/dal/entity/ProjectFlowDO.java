@@ -1,7 +1,7 @@
 package com.timevale.forward.dal.entity;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
+import lombok.experimental.Accessors;
 
 import java.util.Date;
 
@@ -9,8 +9,9 @@ import java.util.Date;
  * @author xingyun
  * @date 2021-12-13 13:58
  **/
-@EqualsAndHashCode(callSuper = true)
-@Data
+@Getter
+@Setter
+@Accessors(chain = true)
 public class ProjectFlowDO extends BaseDO {
     /**
      * 项目id
@@ -110,10 +111,12 @@ public class ProjectFlowDO extends BaseDO {
      * 文档修改时间
      */
     private Date docModifyDate;
-
     /**
      * 流程结束时间
      */
     private Date flowEndDate;
-
+    /**
+     * 工作流数据数据
+     */
+    private String flowData;
 }

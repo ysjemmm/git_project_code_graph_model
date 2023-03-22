@@ -2,6 +2,7 @@ package com.timevale.forward.service.utils.envoy;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.timevale.forward.service.utils.ThreadLocalUtil;
 import com.timevale.mandarin.base.exception.BaseRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -22,11 +23,15 @@ public class LocalSessionUtils {
 
     public final static String ADMIN = "admin";
     public final static String SYSTEM = "SYSTEM";
-    public final static String SYSTEM_ALIAS = "系统";
+    public static final String USER_INFO = "USER_INFO";
 
     public static UserInfo getUserInfo() throws BaseRuntimeException {
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder
-                .getRequestAttributes();
+        Object o = ThreadLocalUtil.get(USER_INFO);
+        if (o instanceof UserInfo) {
+            return (UserInfo)o;
+        }
+
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attributes == null) {
             UserInfo userInfo = new UserInfo();
             userInfo.setName(SYSTEM);
@@ -34,9 +39,11 @@ public class LocalSessionUtils {
             userInfo.setId(SYSTEM);
             return userInfo;
         }
+
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         String userInfoHeader = attributes.getRequest().getHeader("x-timevale-jwtcontent");
+
         if (StringUtils.isEmpty(userInfoHeader)) {
             UserInfo userInfo = new UserInfo();
             userInfo.setName(SYSTEM);
@@ -44,6 +51,7 @@ public class LocalSessionUtils {
             userInfo.setId(SYSTEM);
             return userInfo;
         }
+
         byte[] userInfo = Base64.getUrlDecoder().decode(userInfoHeader);
         UserInfo result;
         try {
@@ -52,12 +60,20 @@ public class LocalSessionUtils {
             log.info("userSession:{} 解析用户信息失败", new String(userInfo), e);
             throw new BaseRuntimeException("401", "登录超时", e);
         }
+
         if (StringUtils.isBlank(result.getId())) {
             result.setId(ADMIN);
             result.setAlias(ADMIN);
             result.setName(ADMIN);
         }
         return result;
+    }
+
+    public static void setUserInfo(String userId, String fullName) {
+        UserInfo userInfo = new UserInfo();
+        userInfo.setId(userId);
+        userInfo.setFullAlias(fullName);
+        ThreadLocalUtil.set(USER_INFO, userInfo);
     }
 
 }

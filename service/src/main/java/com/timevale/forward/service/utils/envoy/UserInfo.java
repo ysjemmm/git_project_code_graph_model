@@ -55,4 +55,12 @@ public class UserInfo {
         return alias + CommonConstant.JOIN_LINE + name;
     }
 
+    public void setFullAlias(String fullAlias) {
+        String[] split = fullAlias.split(CommonConstant.JOIN_LINE);
+        if (split.length >= 2) {
+            this.alias = split[0];
+            this.name = split[1];
+        }
+    }
+
 }

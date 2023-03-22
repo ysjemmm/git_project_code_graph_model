@@ -1,9 +1,9 @@
 package com.timevale.forward.service.integration.epeius.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.timevale.epeius.service.api.FlowService;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
-import com.timevale.epeius.service.model.base.PageResult;
 import com.timevale.epeius.service.model.request.ProcessInstanceRequest;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
 import com.timevale.epeius.service.model.request.TerminateRequest;
@@ -18,12 +18,10 @@ import com.timevale.lowcode.support.response.RpcResponse;
 import com.timevale.lowcode.support.response.process.ProcessResponse;
 import com.timevale.lowcode.support.response.task.TaskHandleUserResponse;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
-import com.timevale.mandarin.base.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -62,6 +60,9 @@ public class EpeiusClientImpl implements EpeiusClient {
 
     @Override
     public ProcessResponse getProcessInfo(String processInstanceId) {
+        if (StrUtil.isBlank(processInstanceId)) {
+            return null;
+        }
         try {
             log.info("查询工作流 processInstanceId: {}", processInstanceId);
             ProcessQueryRequest request=new ProcessQueryRequest();

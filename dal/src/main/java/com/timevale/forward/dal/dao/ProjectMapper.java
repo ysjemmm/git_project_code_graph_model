@@ -6,6 +6,7 @@ import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.entity.ProjectChildCountDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectListDO;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
@@ -21,6 +22,7 @@ public interface ProjectMapper {
      * @param projectDO 项目
      * @return int
      */
+
     int insert(ProjectDO projectDO);
 
     /**
@@ -91,7 +93,9 @@ public interface ProjectMapper {
      * @param projectIds     项目id
      * @param productLineIds 产品线id
      */
-    List<Long> getProjectIds(@Param("projectIds") List<Long> projectIds, @Param("productLineIds") List<Long> productLineIds, @Param("bizDomainIds") List<Long> bizDomainIds);
+    List<Long> getProjectIds(@Param("projectIds") List<Long> projectIds,
+                             @Param("productLineIds") Collection<Long> productLineIds,
+                             @Param("bizDomainIds") Collection<Long> bizDomainIds);
 
 
     /**
@@ -184,4 +188,17 @@ public interface ProjectMapper {
 
     @Update("update project set parent_ids = substr(parent_ids, #{parentLen}) where parent_ids regexp #{parentRegexp}")
     void deleteChildren(@Param("parentLen") Integer parentLen, @Param("parentRegexp") String parentRegexp);
+
+    List<Long> filterInvalid(@Param("ids") List<Long> ids);
+
+    List<Long> filterInnerInvalid(@Param("ids") List<Long> projectIds);
+
+    List<ProjectDO> getByBizDemandId(@Param("bizDemandIds")List<Long> bizDemandIds);
+
+
+    @Select("SELECT * FROM project WHERE create_date >= '2023-01-01'")
+    List<ProjectDO> getThisYear();
+
+    @Delete("DELETE FROM project WHERE `name` =#{name} AND id !=#{id}")
+    void deleteSameNameAndNotId(@Param("name")String name, @Param("id")Long id);
 }

@@ -3,6 +3,7 @@ package com.timevale.forward.service.component;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface PersonComponent {
@@ -12,7 +13,7 @@ public interface PersonComponent {
      * @param mainId 所属主体id
      * @param type 所属主体类型
      */
-    void add(List<PersonAddReq> list, Long mainId, Integer type);
+    void add(Collection<PersonAddReq> list, Long mainId, Integer type);
 
     /**
      * 添加
@@ -22,7 +23,7 @@ public interface PersonComponent {
      * @param type        类型
      * @param personLevel 人水平
      */
-    void add(List<PersonAddReq> list, Long mainId, Integer type, Integer personLevel);
+    void add(Collection<PersonAddReq> list, Long mainId, Integer type, Integer personLevel);
 
 
     /**

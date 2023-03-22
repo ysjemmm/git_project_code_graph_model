@@ -14,7 +14,7 @@ import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ProjectAcceptanceAddReq;
 import com.timevale.forward.facade.api.request.ProjectAcceptanceModifyReq;
 import com.timevale.forward.facade.api.result.ProjectAcceptanceVO;
-import com.timevale.forward.model.enums.FlowStatusEnum;
+import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
 import com.timevale.forward.model.enums.YesOrNoEnum;
 import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
@@ -61,7 +61,7 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
     @Override
     public BaseResult<List<ProjectAcceptanceVO>> acceptList(Long projectId) {
         log.info("项目验收列表,参数:{}", projectId);
-        List<Integer> status = Lists.newArrayList(FlowStatusEnum.AUDITING.getCode(), FlowStatusEnum.COMPLETE.getCode(), FlowStatusEnum.REJECT.getCode());
+        List<Integer> status = Lists.newArrayList(ForwardFlowStatusEnum.AUDITING.getCode(), ForwardFlowStatusEnum.COMPLETE.getCode(), ForwardFlowStatusEnum.REJECT.getCode());
         ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().status(status).projectId(projectId).build();
 
         List<ProjectAcceptanceDO> list = projectAcceptanceMapper.list(c);
@@ -108,7 +108,7 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
         List<ProjectAcceptanceDO> list = projectAcceptanceMapper.list(c);
 
         List<String> allAcceptorIds = list.stream().map(ProjectAcceptanceDO::getAcceptorId).collect(Collectors.toList());
-        List<String> auditAcceptorIds = list.stream().filter(a -> FlowStatusEnum.AUDITING.getCode().equals(a.getStatus())).map(ProjectAcceptanceDO::getAcceptorId).collect(Collectors.toList());
+        List<String> auditAcceptorIds = list.stream().filter(a -> ForwardFlowStatusEnum.AUDITING.getCode().equals(a.getStatus())).map(ProjectAcceptanceDO::getAcceptorId).collect(Collectors.toList());
 
         List<PersonAddReq> acceptors = req.getAcceptors();
         Set<String> newAcceptorIds = acceptors.stream().map(PersonAddReq::getUserId).collect(Collectors.toSet());
@@ -168,7 +168,7 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
     public BaseResult<Boolean> remind(Long id) {
         log.info("项目验收催办,参数:{}", id);
         ProjectAcceptanceDO projectAcceptanceDO = projectAcceptanceMapper.get(id);
-        if (!FlowStatusEnum.AUDITING.getCode().equals(projectAcceptanceDO.getStatus())) {
+        if (!ForwardFlowStatusEnum.AUDITING.getCode().equals(projectAcceptanceDO.getStatus())) {
             throw new BaseBizRuntimeException("状态不是验收中,不能进行催办操作,请刷新后重试");
         }
         ProjectDO projectDO = projectMapper.get(projectAcceptanceDO.getProjectId());
@@ -188,10 +188,10 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
     public BaseResult<Boolean> revoke(Long id) {
         log.info("项目验收撤回,参数:{}", id);
         ProjectAcceptanceDO projectAcceptanceDO = projectAcceptanceMapper.get(id);
-        if (!FlowStatusEnum.AUDITING.getCode().equals(projectAcceptanceDO.getStatus())) {
+        if (!ForwardFlowStatusEnum.AUDITING.getCode().equals(projectAcceptanceDO.getStatus())) {
             throw new BaseBizRuntimeException("状态不是验收中,不能进行撤回操作,请刷新后重试");
         }
-        projectAcceptanceDO.setStatus(FlowStatusEnum.WITHDRAW.getCode());
+        projectAcceptanceDO.setStatus(ForwardFlowStatusEnum.WITHDRAW.getCode());
         projectAcceptanceMapper.update(projectAcceptanceDO);
 
         ProjectDO projectDO = projectMapper.get(projectAcceptanceDO.getProjectId());
@@ -209,14 +209,14 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
 
     private void acceptOrUnAccept(ProjectAcceptanceModifyReq req, boolean accept) {
         ProjectAcceptanceDO projectAcceptanceDO = projectAcceptanceMapper.get(req.getId());
-        if (!FlowStatusEnum.AUDITING.getCode().equals(projectAcceptanceDO.getStatus())) {
+        if (!ForwardFlowStatusEnum.AUDITING.getCode().equals(projectAcceptanceDO.getStatus())) {
             throw new BaseBizRuntimeException("状态不是验收中,不能进行验收操作,请刷新后重试");
         }
         ProjectAcceptanceDO o = new ProjectAcceptanceDO();
         o.setId(req.getId());
         o.setDesc(req.getDesc());
         o.setAcceptDate(new Date());
-        o.setStatus(accept ? FlowStatusEnum.COMPLETE.getCode() : FlowStatusEnum.REJECT.getCode());
+        o.setStatus(accept ? ForwardFlowStatusEnum.COMPLETE.getCode() : ForwardFlowStatusEnum.REJECT.getCode());
         projectAcceptanceMapper.update(o);
 
         ProjectDO projectDO = projectMapper.get(projectAcceptanceDO.getProjectId());

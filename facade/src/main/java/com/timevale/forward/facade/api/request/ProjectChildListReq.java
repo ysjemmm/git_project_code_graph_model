@@ -32,7 +32,7 @@ public class ProjectChildListReq extends QueryBase {
     @ApiModelProperty("内部项目类型: 0空, 1战略项目, 2LTC项目, 3PBG项目, 4CBG项目, 5管理后台项目")
     private Collection<Integer> innerTypes;
 
-    @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
+    @ApiModelProperty("项目性质:0产品研发项目,1技术优化项目,2日常迭代")
     private Collection<Integer> types;
 
     @ApiModelProperty("项目经理")
@@ -47,4 +47,18 @@ public class ProjectChildListReq extends QueryBase {
     @ApiModelProperty("1-子项目列表; 2-可添加为子项目列表; 3-里程碑可关联项目列表")
     private Integer searchType;
 
+    @ApiModelProperty("产品经理")
+    private Collection<String> pds;
+
+    @ApiModelProperty("项目类型")
+    private Collection<Integer> kinds;
+
+    @ApiModelProperty("业务域")
+    private Collection<Long> bizDomains;
+
+    @ApiModelProperty("产品线")
+    private Collection<Long> productLines;
+
+    @ApiModelProperty("sr")
+    private Collection<String> srs;
 }

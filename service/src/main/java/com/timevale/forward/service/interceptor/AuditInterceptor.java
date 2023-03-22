@@ -1,6 +1,5 @@
 package com.timevale.forward.service.interceptor;
 
-import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.Getter;
@@ -52,8 +51,6 @@ public class AuditInterceptor implements Interceptor {
 
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         if (invocation.getArgs().length == 1) {
             return invocation.proceed();
         }
@@ -70,8 +67,9 @@ public class AuditInterceptor implements Interceptor {
         }
 
         // 根据sql类型进行审计填充
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String id = userInfo.getId();
-        String name = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
+        String name = userInfo.getFullAlias();
 
         if (sqlCommandType == SqlCommandType.INSERT) {
             setProperty(parameter, AuditEnum.CREATE_MAN.getText(), name);

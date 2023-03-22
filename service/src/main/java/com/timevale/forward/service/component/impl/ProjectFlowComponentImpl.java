@@ -11,6 +11,7 @@ import com.timevale.forward.dal.dao.ProjectNodeMapper;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectFlowDO;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
+import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
@@ -75,16 +76,16 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
         }
         Map<String, Object> flowData = processInfo.getFlowData();
         if (FlowStatusEnum.REJECT.getValue().equals(processStatus)) {
-            projectFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.REJECT.getCode());
+            projectFlowDO.setStatus(ForwardFlowStatusEnum.REJECT.getCode());
             String rejectReason = flowData.get("rejectReason") == null ? StringUtils.EMPTY : String.valueOf(flowData.get("rejectReason"));
             projectFlowDO.setReviewFailReason(rejectReason);
             projectFlowDO.setFlowEndDate(new Date());
         } else if (FlowStatusEnum.WITHDRAW.getValue().equals(processStatus)) {
-            projectFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.WITHDRAW.getCode());
+            projectFlowDO.setStatus(ForwardFlowStatusEnum.WITHDRAW.getCode());
             projectFlowDO.setFlowEndDate(new Date());
         } else if (FlowStatusEnum.FLOW_COMPLETE.getValue().equals(processStatus)) {
             ProjectDO oldProjectDO = projectMapper.get(projectFlowDO.getProjectId());
-            projectFlowDO.setStatus(com.timevale.forward.model.enums.FlowStatusEnum.COMPLETE.getCode());
+            projectFlowDO.setStatus(ForwardFlowStatusEnum.COMPLETE.getCode());
             projectFlowDO.setFlowEndDate(new Date());
             ProjectNodeDO projectNodeDo = projectNodeMapper.getByName(projectFlowDO.getProjectId(), ProjectNodeEnum.getNameByCode(projectFlowDO.getFlowType()));
             if (projectNodeDo != null) {
@@ -186,5 +187,4 @@ public class ProjectFlowComponentImpl implements ProjectFlowComponent {
 
         return pageInfo.getList();
     }
-
 }

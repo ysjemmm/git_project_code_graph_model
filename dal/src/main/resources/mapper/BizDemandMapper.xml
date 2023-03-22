@@ -403,4 +403,12 @@
         </foreach>
         and is_deleted = false
     </select>
+
+    <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.BizDemandDO">
+        SELECT *
+        FROM biz_demand bd
+        INNER JOIN product_biz_demand pbd on bd.id = pbd.biz_demand_id AND pbd.is_deleted = false
+        INNER JOIN project_product_demand ppd on pbd.product_demand_id = ppd.product_demand_id AND ppd.is_deleted = false
+        WHERE bd.is_deleted = false AND ppd.project_id = #{projectId}
+    </select>
 </mapper>

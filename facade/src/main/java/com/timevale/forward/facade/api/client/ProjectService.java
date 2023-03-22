@@ -196,5 +196,22 @@ public interface ProjectService {
      */
     BaseResult<Boolean> innerComplete(ProjectInnerCompleteReq req);
 
+    /**
+     * 结项
+     *
+     * @param req 请求
+     * @return {@link BaseResult}<{@link Boolean}>
+     */
+    BaseResult<Boolean> conclusion(ProjectConclusionReq req);
+
+
+    /**
+     * 结项表单
+     *
+     * @param req 请求
+     * @return {@link BaseResult}<{@link ConclusionFormVO}>
+     */
+    BaseResult<ConclusionFormVO> conclusionForm(ProjectConclusionReq req);
+
     BaseResult<PageQueryResult<ProjectSimpleVO>> pageAll(ProjectPageQuery query);
 }

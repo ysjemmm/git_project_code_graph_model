@@ -1,5 +1,7 @@
 package com.timevale.forward.service.component;
 
+import cn.hutool.core.util.ObjectUtil;
+import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author jingchun
@@ -18,6 +21,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class UserComponent {
+    private final CommonConfig commonConfig;
     private final InnerUserPersonClient personClient;
 
     /**
@@ -35,6 +39,15 @@ public class UserComponent {
         return false;
     }
 
+    /**
+     * 查询是否评价部门下的PMO
+     */
+    public boolean isEvalPmo() {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        List<String> allPmo = getAllPmo(commonConfig.getEvalPmoGroup());
+        return allPmo.stream().anyMatch(e -> e.equals(userInfo.getId()));
+    }
+
     public boolean isPmo() {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         List<BaseInfoResponse> personList = personClient.getPersonByAccountNew(Collections.singletonList(userInfo.getId()));
@@ -44,6 +57,14 @@ public class UserComponent {
             }
         }
         return false;
+    }
+
+    public List<String> getAllPmo(String groupId) {
+        List<BaseInfoResponse> baseInfoList = personClient.getAllInfoByGroupId(groupId);
+        return baseInfoList.stream()
+                .filter(e -> ObjectUtil.equal(CommonConstant.PMO, e.getJobClassification()))
+                .map(BaseInfoResponse::getAccount)
+                .collect(Collectors.toList());
     }
 
 

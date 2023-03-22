@@ -78,12 +78,36 @@ public interface InnerUserPersonClient {
     List<BaseInfoResponse> getPersonByAccountNew(List<String> accountIds);
 
     /**
+     * 批处理得到员工，推荐
+     *
+     * @param accountIds 帐户id
+     * @return {@link List}<{@link BaseInfoResponse}>
+     */
+    List<BaseInfoResponse> batchGetStaffs(List<String> accountIds);
+
+    /**
      * 获取当前部门及其所有子部门员工 (含离职)
      *
      * @param groupId groupId
      * @return String
      */
     List<String> getAllByGroupId(String groupId);
+
+    /**
+     * 获取当前部门及其所有子部门员工
+     *
+     * @param groupId 组id
+     * @return {@link List}<{@link BaseInfoResponse}>
+     */
+    List<BaseInfoResponse> getAllInfoByGroupId(String groupId);
+
+    /**
+     * 获取部门员工（不包含离职）
+     *
+     * @param groupId 部门id
+     * @return 员工idList
+     */
+    List<BaseInfoResponse> getBaseInfoByGroupId(String groupId);
 
     /**
      * 获取部门员工（不包含离职）

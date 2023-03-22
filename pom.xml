@@ -46,7 +46,7 @@
         <crm-sdk-common-core-version>1.0.11-SNAPSHOT</crm-sdk-common-core-version>
         <!-- RPC Facade -->
         <filesystem.version>2.0.4-RELEASE</filesystem.version>
-        <inuser.security.facade.version>1.0.18-SNAPSHOT</inuser.security.facade.version>
+        <inuser.security.facade.version>1.1.11-SNAPSHOT</inuser.security.facade.version>
         <erp.message-facade.version>1.2.6-SNAPSHOT</erp.message-facade.version>
         <epeius.version>1.0.0-SNAPSHOT</epeius.version>
         <lowcode.version>0.0.1-SNAPSHOT</lowcode.version>

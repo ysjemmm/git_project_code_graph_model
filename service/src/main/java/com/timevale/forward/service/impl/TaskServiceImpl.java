@@ -108,6 +108,8 @@ public class TaskServiceImpl implements TaskService {
     private ProjectMilestoneComponent projectMilestoneComponent;
     @Resource
     private ProjectMilestoneMapper milestoneMapper;
+    @Resource
+    ProjectEvaluateComponent evaluateComponent;
 
     @Value("${excludeBizDomain:[1,13,32]}")
     private String excludeBizDomain;
@@ -199,6 +201,9 @@ public class TaskServiceImpl implements TaskService {
                 taskDO.getProjectId(),
                 PersonTypeEnum.PROJECT_MEMBER.getCode(),
                 PersonLevelEnum.EXTENSION.getCode());
+
+        // 积分成员同步
+        evaluateComponent.syncMember(taskDO.getProjectId());
 
         //关联产品需求
         taskProductDemandComponent.batchInsert(taskDO.getId(), taskAddReq.getProductDemandIds());
@@ -294,6 +299,10 @@ public class TaskServiceImpl implements TaskService {
         taskDetailVO.setProjectName(projectDO.getName());
         taskDetailVO.setPmId(projectDO.getPmId());
         taskDetailVO.setProjectId(projectDO.getId());
+        taskDetailVO.setPrincipal(projectDO.getPrincipal());
+        taskDetailVO.setPrincipalId(projectDO.getPrincipalId());
+        taskDetailVO.setOtnPrincipal(projectDO.getOtnPrincipal());
+        taskDetailVO.setOtnPrincipalId(projectDO.getOtnPrincipalId());
 
         //产品线
         ProductLineDO productLineDO = productLineMapper.selectById(taskDO.getProductLineId());
@@ -619,7 +628,10 @@ public class TaskServiceImpl implements TaskService {
         // 若执行人不在项目成员中,需新增
         Long projectId = CollUtil.getFirst(taskDos).getProjectId();
         personComponent.addIfNotExisted(executorList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
-        
+
+        // 积分成员同步
+        evaluateComponent.syncMember(projectId);
+
         return BaseResult.success(true);
 
     }

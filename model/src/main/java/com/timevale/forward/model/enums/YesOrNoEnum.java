@@ -29,7 +29,7 @@ public enum YesOrNoEnum {
                 return e.text;
             }
         }
-        return "errorCode";
+        return "";
     }
 
     public static String getTextByCode(Boolean code){

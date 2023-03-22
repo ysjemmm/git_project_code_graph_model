@@ -25,7 +25,13 @@ public interface ProjectNodeFlowComponent {
      */
     void  updateProjectNodeInfo(String processInstanceId);
 
+    /**
+     * 新增项目节点记录
+     *
+     * @param projectId    项目id
+     * @param projectNodes 项目节点
+     */
     void  insertProjectNodeRecord(Long projectId,List<ProjectNodeDO> projectNodes);
 
-    List flushCompleteFlow(QueryBase queryBase);
+    List<ProjectNodeFlowDO> flushCompleteFlow(QueryBase queryBase);
 }

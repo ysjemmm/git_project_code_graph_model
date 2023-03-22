@@ -29,4 +29,6 @@ public class CommonConfig {
     @Value("${forward.baseurl}/%s/edit?type=check&id=%d")
     private String commonViewUrl;
 
+    @Value("${evalPmoGroup:557300580}")
+    private String evalPmoGroup;
 }

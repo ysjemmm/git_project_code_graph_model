@@ -4,19 +4,72 @@
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectDO" useGeneratedKeys="true"
             keyProperty="id" keyColumn="id">
-        insert into project (name, customer_dev, is_platform_publish, is_with_goal, priority, type, status, pm, pm_id,
-        plan_start_date, plan_end_date, `desc`, level, resource_assessment,
-        pj_establish_start_date, pj_establish_publish_date, is_acceptance, create_man_id,
-        create_man, parent_ids)
-        values (#{name}, #{customerDev}, #{isPlatformPublish}, #{isWithGoal}, #{priority}, #{type}, #{status},
-        #{pm}, #{pmId}, #{planStartDate}, #{planEndDate},
-        #{desc}, #{level}, #{resourceAssessment}, #{pjEstablishStartDate}, #{pjEstablishPublishDate},
-        #{isAcceptance}, #{createManId}, #{createMan},
-        <!-- 获取当前自增id -->
-        concat(',', (select `AUTO_INCREMENT`
-        from information_schema.TABLES
-        where TABLE_SCHEMA = 'info_forward'
-        and TABLE_NAME = 'project'), ','))
+        INSERT INTO project
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">`name`,</if>
+            <if test="type != null">type,</if>
+            <if test="kind != null">kind,</if>
+            <if test="desc != null">`desc`,</if>
+            <if test="level != null">`level`,</if>
+            <if test="status != null">`status`,</if>
+            <if test="priority != null">priority,</if>
+            <if test="isWithGoal != null">is_with_goal,</if>
+            <if test="customerDev != null">customer_dev,</if>
+            <if test="pm != null">pm,</if>
+            <if test="pmId != null">pm_id,</if>
+            <if test="sr != null">sr,</if>
+            <if test="srId != null">`sr_id`,</if>
+            <if test="principal != null">principal,</if>
+            <if test="principalId != null">principal_id,</if>
+            <if test="otnPrincipal != null">otn_principal,</if>
+            <if test="otnPrincipalId != null">otn_principal_id,</if>
+            <if test="planStartDate != null">plan_start_date,</if>
+            <if test="planEndDate != null">plan_end_date,</if>
+            <if test="pjEstablishStartDate != null">pj_establish_start_date,</if>
+            <if test="pjEstablishPublishDate != null">pj_establish_publish_date,</if>
+            <if test="isAcceptance != null">is_acceptance,</if>
+            <if test="isPlatformPublish != null">is_platform_publish,</if>
+            <if test="resourceAssessment != null">resource_assessment,</if>
+            <if test="createMan != null">create_man,</if>
+            <if test="createManId != null">create_man_id,</if>
+            <if test="true">parent_ids,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">#{name},</if>
+            <if test="type != null">#{type},</if>
+            <if test="kind != null">#{kind},</if>
+            <if test="desc != null">#{desc},</if>
+            <if test="level != null">#{level},</if>
+            <if test="status != null">#{status},</if>
+            <if test="priority != null">#{priority},</if>
+            <if test="isWithGoal != null">#{isWithGoal},</if>
+            <if test="customerDev != null">#{customerDev},</if>
+            <if test="pm != null">#{pm},</if>
+            <if test="pmId != null">#{pmId},</if>
+            <if test="sr != null">#{sr},</if>
+            <if test="srId != null">#{srId},</if>
+            <if test="principal != null">#{principal},</if>
+            <if test="principalId != null">#{principalId},</if>
+            <if test="otnPrincipal != null">#{otnPrincipal},</if>
+            <if test="otnPrincipalId != null">#{otnPrincipalId},</if>
+            <if test="planStartDate != null">#{planStartDate},</if>
+            <if test="planEndDate != null">#{planEndDate},</if>
+            <if test="pjEstablishStartDate != null">#{pjEstablishStartDate},</if>
+            <if test="pjEstablishPublishDate != null">#{pjEstablishPublishDate},</if>
+            <if test="isAcceptance != null">#{isAcceptance},</if>
+            <if test="isPlatformPublish != null">#{isPlatformPublish},</if>
+            <if test="resourceAssessment != null">#{resourceAssessment},</if>
+            <if test="createMan != null">#{createMan},</if>
+            <if test="createManId != null">#{createManId},</if>
+            <if test="true">
+                <!-- 获取当前自增id -->
+                concat(',', (select `AUTO_INCREMENT`
+                from information_schema.TABLES
+                where TABLE_SCHEMA = 'info_forward'
+                and TABLE_NAME = 'project'), ','),
+            </if>
+        </trim>
     </insert>
 
     <insert id="innerInsert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
@@ -61,15 +114,13 @@
             <if test="type != null">type = #{type},</if>
             <if test="pmId != null">pm_id = #{pmId},</if>
             <if test="pm != null">pm = #{pm},</if>
-            <if test="status != null">status = #{status},</if>
+            <if test="status != null">`status` = #{status},</if>
             <if test="nodeStatus != null">node_status = #{nodeStatus},</if>
             <if test="planStartDate != null">plan_start_date = #{planStartDate},</if>
             <if test="planEndDate != null">plan_end_date = #{planEndDate},</if>
             <if test="desc != null">`desc` = #{desc},</if>
             <if test="level != null">`level` = #{level},</if>
             <if test="resourceAssessment != null">resource_assessment = #{resourceAssessment},</if>
-            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
-            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             <if test="actualStartDate != null">actual_start_date = #{actualStartDate},</if>
             <if test="actualEndDate != null">actual_end_date = #{actualEndDate},</if>
             <if test="suspendReason != null">suspend_reason = #{suspendReason},</if>
@@ -79,6 +130,9 @@
             <if test="validStages!= null">valid_stages = #{validStages},</if>
             <if test="expectedIncome != null">expected_income = #{expectedIncome},</if>
             <if test="suspendReason != null">suspend_reason = #{suspendReason},</if>
+            <if test="conclusionDate != null">conclusion_date = #{conclusionDate},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
         </set>
         <where>
             id = #{id}
@@ -89,7 +143,6 @@
         update project
         <set>
             name = #{name},
-            customer_dev = #{customerDev},
             priority = #{priority},
             type = #{type},
             `status` = #{status},
@@ -111,7 +164,14 @@
             pj_establish_start_date = #{pjEstablishStartDate},
             pj_establish_publish_date = #{pjEstablishPublishDate},
             suspend_reason = #{suspendReason},
-            un_write_reason = #{unWriteReason}
+            un_write_reason = #{unWriteReason},
+            kind = #{kind},
+            sr = #{sr},
+            sr_id = #{srId},
+            principal = #{principal},
+            principal_id = #{principalId},
+            otn_principal = #{otnPrincipal},
+            otn_principal_id = #{otnPrincipalId}
         </set>
         <where>
             id = #{id}
@@ -189,63 +249,64 @@
     </select>
 
     <select id="list" resultType="com.timevale.forward.dal.entity.ProjectListDO">
-        select a.id,a.name, a.customer_dev,is_platform_publish, is_with_goal, a.priority, a.type
-        ,a.status,a.node_status, a.pm_id,a.pm,a.plan_start_date,a.plan_end_date,
-        a.actual_start_date,a.actual_end_date,a.`desc`,a.inner_type,a.parent_ids,
-        a.level,pj_establish_start_date,pj_establish_publish_date,is_acceptance,
-        a.create_man_id, a.create_man,a.create_date,a.modify_date
-        from project a
+        select *
+        from project
         <where>
             <if test="ids!=null and ids.size()>0">
-                and a.id in
+                and id in
                 <foreach collection="ids" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
-            <if test="id != null">and a.id = #{id}</if>
-            <if test="name != null and name != ''">and a.name like concat('%',#{name},'%')</if>
-            <if test="customerDev != null">and a.customer_dev = #{customerDev}</if>
+            <if test="id != null">and id = #{id}</if>
+            <if test="kind != null">and kind = #{kind}</if>
+            <if test="name != null and name != ''">and `name` like concat('%',#{name},'%')</if>
+            <if test="customerDev != null">and customer_dev = #{customerDev}</if>
             <if test="planStartDateLeft != null and planStartDateRight != null">
-                and a.plan_start_date &gt;= #{planStartDateLeft} and a.plan_start_date &lt;= #{planStartDateRight}
+                and plan_start_date &gt;= #{planStartDateLeft} and plan_start_date &lt;= #{planStartDateRight}
             </if>
             <if test="planEndDateLeft != null and planEndDateRight != null">
-                and a.plan_end_date &gt;= #{planEndDateLeft} and a.plan_end_date &lt;= #{planEndDateRight}
+                and plan_end_date &gt;= #{planEndDateLeft} and plan_end_date &lt;= #{planEndDateRight}
             </if>
             <if test="actualStartDateLeft != null and actualStartDateRight != null">
-                and a.actual_start_date &gt;= #{actualStartDateLeft} and a.actual_start_date &lt;=
+                and actual_start_date &gt;= #{actualStartDateLeft} and actual_start_date &lt;=
                 #{actualStartDateRight}
             </if>
             <if test="actualEndDateLeft != null and actualEndDateRight != null">
-                and a.actual_end_date &gt;= #{actualEndDateLeft} and a.actual_end_date &lt;= #{actualEndDateRight}
+                and actual_end_date &gt;= #{actualEndDateLeft} and actual_end_date &lt;= #{actualEndDateRight}
             </if>
             <if test="createDateLeft != null and createDateRight != null">
-                and a.create_date &gt;= #{createDateLeft} and a.create_date &lt;= #{createDateRight}
+                and create_date &gt;= #{createDateLeft} and create_date &lt;= #{createDateRight}
+            </if>
+            <if test="conclusionDateLeft != null and conclusionDateRight != null">
+                and conclusion_date is not null
+                and conclusion_date &gt;= #{conclusionDateLeft} and conclusion_date &lt;= #{conclusionDateRight}
             </if>
             <if test="priorities!=null and priorities.size()>0">
-                and a.priority in
+                and priority in
                 <foreach collection="priorities" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
             <if test="status!=null and status.size()>0">
-                and a.status in
+                and status in
                 <foreach collection="status" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
             <if test="nodeStatusList!=null and nodeStatusList.size()>0">
-                and a.node_status in
+                and node_status in
                 <foreach collection="nodeStatusList" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
             <choose>
                 <when test="types != null and types.size > 0 and innerTypes != null and innerTypes.size > 0">
-                    and (a.type in
+                    and (type in
                     <foreach collection="types" item="item" separator="," open="(" close=")">
                         #{item}
                     </foreach>
-                    or a.inner_type in
+                    or inner_type in
                     <foreach collection="innerTypes" item="item" separator="," open="(" close=")">
                         #{item}
                     </foreach>
@@ -253,13 +314,13 @@
                 </when>
                 <otherwise>
                     <if test="types!=null and types.size()>0">
-                        and a.type in
+                        and type in
                         <foreach collection="types" item="item" separator="," open="(" close=")">
                             #{item}
                         </foreach>
                     </if>
                     <if test="innerTypes != null and innerTypes.size()>0">
-                        and a.inner_type in
+                        and inner_type in
                         <foreach collection="innerTypes" item="item" separator="," open="(" close=")">
                             #{item}
                         </foreach>
@@ -267,13 +328,13 @@
                 </otherwise>
             </choose>
             <if test="pms!=null and pms.size()>0">
-                and a.pm_id in
+                and pm_id in
                 <foreach collection="pms" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
             <if test="levels!=null and levels.size()>0">
-                and a.level in
+                and `level` in
                 <foreach collection="levels" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
@@ -284,7 +345,13 @@
             <if test="onlyFirstLevel != null and onlyFirstLevel == true">
                 and parent_ids = concat(',', id, ',')
             </if>
-            and a.is_deleted =false
+            <if test="srs!=null and srs.size()>0">
+                and sr_id in
+                <foreach collection="srs" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            and is_deleted =false
         </where>
     </select>
 
@@ -428,27 +495,29 @@
     </select>
 
     <select id="listChildren" resultType="com.timevale.forward.dal.entity.ProjectListDO">
-        select a.id,a.name, a.customer_dev,is_platform_publish, is_with_goal, a.priority, a.type
-        ,a.status,a.node_status, a.pm_id,a.pm ,a.plan_start_date,a.plan_end_date,
-        a.actual_start_date,a.actual_end_date,a.`desc`,a.inner_type,a.category,a.parent_ids,
-        a.level,pj_establish_start_date,pj_establish_publish_date,is_acceptance,
-        a.create_man_id, a.create_man,a.create_date,a.modify_date
+        select a.*
         from project a
         <where>
-            is_deleted = false
+            a.is_deleted = false
+            <if test="validIds != null and validIds.size > 0">
+                and a.id in
+                <foreach collection="validIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="projectName != null and projectName != ''">
-                and name like concat('%', #{projectName}, '%')
+                and a.name like concat('%', #{projectName}, '%')
             </if>
             <if test="childProjectId != null">
-                and id = #{childProjectId}
+                and a.id = #{childProjectId}
             </if>
             <if test="navigateParentIdsPrefix != null">
-                and parent_ids like concat(#{navigateParentIdsPrefix}, '%')
+                and a.parent_ids like concat(#{navigateParentIdsPrefix}, '%')
             </if>
             <choose>
-                <when test="types != null and types.size > 0 and innerTypes != null and innerTypes.size > 0">
-                    and (a.type in
-                    <foreach collection="types" item="item" separator="," open="(" close=")">
+                <when test="kinds != null and kinds.size > 0 and innerTypes != null and innerTypes.size > 0">
+                    and (a.kind in
+                    <foreach collection="kinds" item="item" separator="," open="(" close=")">
                         #{item}
                     </foreach>
                     or a.inner_type in
@@ -458,9 +527,9 @@
                     )
                 </when>
                 <otherwise>
-                    <if test="types!=null and types.size()>0">
-                        and a.type in
-                        <foreach collection="types" item="item" separator="," open="(" close=")">
+                    <if test="kinds!=null and kinds.size()>0">
+                        and a.kind in
+                        <foreach collection="kinds" item="item" separator="," open="(" close=")">
                             #{item}
                         </foreach>
                     </if>
@@ -472,20 +541,32 @@
                     </if>
                 </otherwise>
             </choose>
+            <if test="types != null and types.size > 0">
+                and a.type in
+                <foreach collection="types" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="pms != null and pms.size > 0">
-                and pm_id in
+                and a.pm_id in
                 <foreach collection="pms" item="pm" open="(" separator="," close=")">
                     #{pm}
                 </foreach>
             </if>
+            <if test="srs != null and srs.size > 0">
+                and a.sr_id in
+                <foreach collection="srs" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="levels != null and levels.size > 0">
-                and `level` in
+                and a.level in
                 <foreach collection="levels" item="level" open="(" separator="," close=")">
                     #{level}
                 </foreach>
             </if>
             <if test="status != null and status.size > 0">
-                and `status` in
+                and a.status in
                 <foreach collection="status" item="singleStatus" open="(" separator="," close=")">
                     #{singleStatus}
                 </foreach>
@@ -494,20 +575,20 @@
                 <choose>
                     <when test="searchType == 2">
                         <!-- 查询可以添加为子项目的项目列表 -->
-                        and parent_ids = concat(',', id, ',') and id not in
+                        and a.parent_ids = concat(',', id, ',') and id not in
                         <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
                             #{parentId}
                         </foreach>
                     </when>
                     <when test="searchType == 3">
                         <!-- 查询可以关联到当前项目里程碑的项目列表 -->
-                        and id not in (select relation_id from project_milestone where type = 1 and is_deleted = false)
+                        and a.id not in (select relation_id from project_milestone where type = 1 and is_deleted = false)
                         and (
                         <!-- 子项目列表 -->
-                        id in (select id from project where parent_ids regexp #{parentIdsRegexp})
+                        a.id in (select id from project where parent_ids regexp #{parentIdsRegexp})
                         or
                         <!-- 无父节点项目 -->
-                        (parent_ids = concat(',', id, ',') and id not in
+                        (a.parent_ids = concat(',', id, ',') and id not in
                         <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
                             #{parentId}
                         </foreach>
@@ -516,7 +597,7 @@
                     </when>
                     <otherwise>
                         <!-- 查询当前项目的子项目 -->
-                        and parent_ids regexp #{parentIdsRegexp}
+                        and a.parent_ids regexp #{parentIdsRegexp}
                     </otherwise>
                 </choose>
             </if>
@@ -534,4 +615,49 @@
         and p.is_deleted = false
         group by p.id;
     </select>
+
+    <select id="filterInvalid" resultType="java.lang.Long">
+        SELECT id
+        FROM project
+        <where>
+            AND id IN
+            <foreach collection="ids" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            AND id NOT IN (
+                SELECT id
+                FROM project
+                WHERE `status` = -20 AND category = 1
+            )
+        </where>
+    </select>
+
+    <select id="filterInnerInvalid" resultType="java.lang.Long">
+        SELECT id
+        FROM project
+        <where>
+            AND id IN
+            <foreach collection="ids" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            AND id NOT IN (
+                SELECT id
+                FROM project
+                WHERE `status` = -20 AND category = 0
+            )
+        </where>
+    </select>
+
+    <select id="getByBizDemandId" resultType="com.timevale.forward.dal.entity.ProjectDO">
+        SELECT pj.*
+        FROM project pj
+        INNER JOIN project_product_demand ppd on pj.id = ppd.project_id AND ppd.is_deleted = false
+        INNER JOIN product_biz_demand pbd on ppd.product_demand_id = pbd.product_demand_id AND pbd.is_deleted = false
+        WHERE pbd.biz_demand_id IN
+        <foreach collection="bizDemandIds" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        AND pj.is_deleted = false
+    </select>
+
 </mapper>

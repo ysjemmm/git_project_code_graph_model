@@ -7,7 +7,7 @@ import com.timevale.forward.dal.entity.ProductDemandDescFlowDO;
 import com.timevale.forward.facade.api.client.ProductDemandDescFlowService;
 import com.timevale.forward.facade.api.request.ProductDemandIdReq;
 import com.timevale.forward.facade.api.result.ProductDemandDescFlowVO;
-import com.timevale.forward.model.enums.FlowStatusEnum;
+import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProductDemandDescFlowCopier;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
@@ -57,15 +57,15 @@ public class ProductDemandDescFlowServiceImpl implements ProductDemandDescFlowSe
     public BaseResult<Boolean> withdrawProductDemandDescFlow(ProductDemandIdReq productDemandId) {
         ProductDemandDescFlowDO flow = productDemandDescFlowMapper.getLastByProductDemandId(productDemandId.getProductDemandId());
         AssertUtil.notNull(flow, "该产品需求不存在流程变更记录，无法撤回流程");
-        AssertUtil.checkState(FlowStatusEnum.AUDITING.getCode().equals(flow.getStatus()), "该审批流程处于" +
-                FlowStatusEnum.getTextByCode(flow.getStatus()) + "状态，无法撤回");
+        AssertUtil.checkState(ForwardFlowStatusEnum.AUDITING.getCode().equals(flow.getStatus()), "该审批流程处于" +
+                ForwardFlowStatusEnum.getTextByCode(flow.getStatus()) + "状态，无法撤回");
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         String alias = userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName();
         TerminateRequest terminateRequest = new TerminateRequest();
         terminateRequest.setProcessInstanceId(flow.getFlowId());
         terminateRequest.setAssignee(flow.getCreateManId());
         epeiusClient.withdrawInstance(terminateRequest);
-        flow.setStatus(FlowStatusEnum.WITHDRAW.getCode());
+        flow.setStatus(ForwardFlowStatusEnum.WITHDRAW.getCode());
         flow.setModifyManId(userInfo.getId());
         flow.setModifyMan(alias);
         productDemandDescFlowMapper.update(flow);
