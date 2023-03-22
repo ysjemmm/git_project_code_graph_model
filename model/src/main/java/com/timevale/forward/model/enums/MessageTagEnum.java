@@ -37,7 +37,17 @@ public enum MessageTagEnum {
     /**
      * 发起ued评审流程
      */
-    FORWARD_UED_AUDIT("forward_uedAudit")
+    FORWARD_UED_AUDIT("forward_uedAudit"),
+
+    /**
+     * 发起结项流程
+     */
+    FORWARD_PROJECT_CONCLUSION("forward_project_conclusion"),
+
+    /**
+     * 工作量变更申请
+     */
+    FORWARD_WORKLOAD_CHANGE("forward_workload_change")
     ;
 
     private final String text;

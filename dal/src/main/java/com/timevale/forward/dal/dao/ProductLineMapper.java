@@ -6,6 +6,7 @@ import com.timevale.forward.dal.entity.ProjectProductLineBizDomain;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -72,6 +73,13 @@ public interface ProductLineMapper {
      * @return 列表
      */
     List<ProductLineDO> getByBizDomainName(@Param("bizDomainName") List<String> bizDomainName);
+
+    /**
+     *
+     * @param bizDomainIds 业务域id
+     * @return 列表
+     */
+    List<Long> getByBizDomainIds(@Param("bizDomainIds") Collection<Long> bizDomainIds);
 
     /**
      *

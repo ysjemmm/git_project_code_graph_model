@@ -16,7 +16,7 @@ import java.util.Map;
 public enum ProjectStatusEnum {
     NULL(-1, "", false, false),
     /**
-     * 0待启动,5启动中，10规划中,15执行中,20研发中,25收尾中,30测试中,35运营中,40已发布,45已完成,-10已暂停,-20已作废
+     * 0待启动,5启动中，10规划中,15执行中,20研发中,25收尾中,30测试中,35运营中,40已发布,45已完成,50已结项，-10已暂停,-20已中止
      */
     WAITING(0, "待启动", false, false),
 
@@ -38,9 +38,13 @@ public enum ProjectStatusEnum {
 
     COMPLETE(45, "已完成", false, true),
 
+    CONCLUSION(50, "已结项", false, true),
+
     SUSPEND(-10, "已暂停", false, false),
 
-    INVALID(-20, "已作废", false, true);
+    INVALID(-20, "已中止", false, true),
+
+    CANCELLATION(-30, "已废除", false, true);
 
     private final Integer code;
     private final String text;

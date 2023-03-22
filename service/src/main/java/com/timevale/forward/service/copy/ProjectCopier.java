@@ -13,6 +13,7 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.ProjectMD;
 import com.timevale.forward.model.middle.ProjectSimpleMD;
+import com.timevale.forward.service.utils.date.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -20,6 +21,7 @@ import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 
 @Mapper(imports = {
@@ -32,6 +34,8 @@ import java.util.List;
         PriorityEnum.class,
         BigDecimal.class,
         StringUtils.class,
+        ProjectKindEnum.class,
+        DateUtil.class
 })
 public interface ProjectCopier {
 
@@ -43,8 +47,15 @@ public interface ProjectCopier {
      * @param projectAddReq 对象
      * @return ProductDemandDO
      */
-    @Mapping(source = "pm.userId", target = "pmId")
     @Mapping(source = "pm.userName", target = "pm")
+    @Mapping(source = "pm.userId", target = "pmId")
+    @Mapping(source = "sr.userName", target = "sr")
+    @Mapping(source = "sr.userId", target = "srId")
+    @Mapping(source = "principal.userName", target = "principal")
+    @Mapping(source = "principal.userId", target = "principalId")
+    @Mapping(source = "otnPrincipal.userName", target = "otnPrincipal")
+    @Mapping(source = "otnPrincipal.userId", target = "otnPrincipalId")
+    @Mapping(target = "status", expression = "java(ProjectStatusEnum.WAITING.getCode())")
     ProjectDO convert(ProjectAddReq projectAddReq);
 
     @Mapping(target = "status", source = "req.status")
@@ -70,8 +81,14 @@ public interface ProjectCopier {
      * @return ProjectDO
      */
     @Mapping(source = "pds", target = "pds", qualifiedByName = "mapping")
-    @Mapping(source = "pm.userId", target = "pmId")
     @Mapping(source = "pm.userName", target = "pm")
+    @Mapping(source = "pm.userId", target = "pmId")
+    @Mapping(source = "sr.userName", target = "sr")
+    @Mapping(source = "sr.userId", target = "srId")
+    @Mapping(source = "principal.userName", target = "principal")
+    @Mapping(source = "principal.userId", target = "principalId")
+    @Mapping(source = "otnPrincipal.userName", target = "otnPrincipal")
+    @Mapping(source = "otnPrincipal.userId", target = "otnPrincipalId")
     ProjectDO convert(ProjectModifyReq projectModifyReq);
     
     /**
@@ -81,15 +98,35 @@ public interface ProjectCopier {
      * @return ProjectDetailVO
      */
     @Mapping(source = "pm", target = "pmName")
+    @Mapping(target = "kindName", expression = "java(ProjectKindEnum.getTextByCode(projectDO.getKind()))")
+    @Mapping(target = "typeName", expression = "java(ProjectTypeEnum.getTextByCode(projectDO.getType()))")
+    @Mapping(target = "levelName", expression = "java(ProjectLevelEnum.getTextByCode(projectDO.getLevel()))")
+    @Mapping(target = "priorityName", expression = "java(PriorityEnum.getTextByCode(projectDO.getPriority()))")
+    @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectDO.getStatus()))")
     ProjectDetailVO convert(ProjectDO projectDO);
 
     /**
      * 转换转换DO
      *
-     * @param projectQueryList 对象
+     * @param query 对象
      * @return ProjectListCondition
      */
-    ProjectListCondition convert(ProjectQueryList projectQueryList);
+
+    @Mapping(target = "createDateLeft", expression = "java(DateUtil.getStartOfDay(query.getCreateDateLeft()))")
+    @Mapping(target = "createDateRight", expression = "java(DateUtil.getEndOfDay(query.getCreateDateRight()))")
+    @Mapping(target = "planEndDateLeft", expression = "java(DateUtil.getStartOfDay(query.getPlanEndDateLeft()))")
+    @Mapping(target = "planEndDateRight", expression = "java(DateUtil.getEndOfDay(query.getPlanEndDateRight()))")
+    @Mapping(target = "planStartDateLeft", expression = "java(DateUtil.getStartOfDay(query.getPlanStartDateLeft()))")
+    @Mapping(target = "planStartDateRight", expression = "java(DateUtil.getEndOfDay(query.getPlanStartDateRight()))")
+    @Mapping(target = "actualEndDateLeft", expression = "java(DateUtil.getStartOfDay(query.getActualEndDateLeft()))")
+    @Mapping(target = "actualEndDateRight", expression = "java(DateUtil.getEndOfDay(query.getActualEndDateRight()))")
+    @Mapping(target = "actualTestDateLeft", expression = "java(DateUtil.getStartOfDay(query.getActualTestDateLeft()))")
+    @Mapping(target = "actualTestDateRight", expression = "java(DateUtil.getEndOfDay(query.getActualTestDateRight()))")
+    @Mapping(target = "actualStartDateLeft", expression = "java(DateUtil.getStartOfDay(query.getActualStartDateLeft()))")
+    @Mapping(target = "actualStartDateRight", expression = "java(DateUtil.getEndOfDay(query.getActualStartDateRight()))")
+    @Mapping(target = "conclusionDateLeft", expression = "java(DateUtil.getStartOfDay(query.getConclusionDateLeft()))")
+    @Mapping(target = "conclusionDateRight", expression = "java(DateUtil.getEndOfDay(query.getConclusionDateRight()))")
+    ProjectListCondition convert(ProjectQueryList query);
 
     /**
      * 转换转换DO
@@ -98,12 +135,13 @@ public interface ProjectCopier {
      * @return ProjectDetailVO
      */
     @Mapping(target = "pmName", source = "pm")
+    @Mapping(target = "kindName", expression = "java(ProjectKindEnum.getTextByCode(projectListDO.getKind()))")
+    @Mapping(target = "typeName", expression = "java(ProjectTypeEnum.getTextByCode(projectListDO.getType()))")
+    @Mapping(target = "levelName", expression = "java(ProjectLevelEnum.getTextByCode(projectListDO.getLevel()))")
+    @Mapping(target = "priorityName", expression = "java(PriorityEnum.getTextByCode(projectListDO.getPriority()))")
+    @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectListDO.getStatus()))")
     @Mapping(target = "nodeDepth", expression = "java(StringUtils.split(projectListDO.getParentIds(), ',').length)")
     @Mapping(target = "innerTypeName", expression = "java(ProjectInnerTypeEnum.getTextByCode(projectListDO.getInnerType()))")
-    @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectListDO.getStatus()))")
-    @Mapping(target = "typeName", expression = "java(ProjectTypeEnum.getTextByCode(projectListDO.getType()))")
-    @Mapping(target = "priorityName", expression = "java(PriorityEnum.getTextByCode(projectListDO.getPriority()))")
-    @Mapping(target = "levelName", expression = "java(ProjectLevelEnum.getTextByCode(projectListDO.getLevel()))")
     ProjectVO convert(ProjectListDO projectListDO);
 
     /**

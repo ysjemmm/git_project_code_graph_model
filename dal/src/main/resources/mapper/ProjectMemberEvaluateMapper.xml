@@ -1,0 +1,64 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--你接口的包名是com.abc.dao,接口名是NameMapper.java，那么你的mapper.xml的namespace应该是com.abc.dao.NameMapper-->
+<mapper namespace="com.timevale.forward.dal.dao.ProjectMemberEvaluateMapper">
+    <insert id="batchInsert">
+        INSERT INTO project_member_evaluate (project_id, user_id, user_name, evaluate_grade, include_stat,
+                                             create_man_id, create_man)
+        VALUES
+        <foreach collection="coll" item="item" separator=",">
+            (#{item.projectId}, #{item.userId}, #{item.userName}, #{item.evaluateGrade}, #{item.includeStat},
+             #{createManId}, #{createMan})
+        </foreach>
+    </insert>
+
+    <update id="update">
+        UPDATE project_member_evaluate
+        <set>
+            <if test="planWorkload != null">plan_workload = #{planWorkload},</if>
+            <if test="actualWorkload != null">actual_workload = #{actualWorkload},</if>
+            <if test="evaluateGrade != null">evaluate_grade = #{evaluateGrade},</if>
+            <if test="evaluateExplain != null">evaluate_explain = #{evaluateExplain},</if>
+            <if test="includeStat != null">include_stat = #{includeStat},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            AND user_id = #{userId}
+            AND project_id = #{projectId}
+        </where>
+    </update>
+
+    <update id="updatePlanWorkload">
+        UPDATE project_member_evaluate
+        <set>
+            plan_workload = #{planWorkload},
+        </set>
+        <where>
+            AND user_id = #{userId}
+            AND project_id = #{projectId}
+        </where>
+    </update>
+
+    <update id="batchDelete">
+        UPDATE project_member_evaluate
+        <set>
+            is_deleted = true,
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId},
+        </set>
+        <where>
+            AND user_id IN
+            <foreach collection="userIdColl" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            AND project_id = #{projectId}
+        </where>
+    </update>
+
+    <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectMemberEvaluateDO">
+        SELECT *
+        FROM project_member_evaluate
+        WHERE project_id = #{projectId}
+          AND is_deleted = false
+    </select>
+</mapper>

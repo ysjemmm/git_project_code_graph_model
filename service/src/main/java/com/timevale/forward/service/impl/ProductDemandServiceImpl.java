@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
@@ -22,6 +23,7 @@ import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.BaseInfoResponse;
@@ -267,6 +269,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateStatus(Long productDemandId, Integer type) {
         log.info("产品需求暂停,作废接收参数:{},{}", productDemandId, type);
+
         if (!ProductDemandStatusEnum.SUSPEND.getCode().equals(type)
                 && !ProductDemandStatusEnum.INVALID.getCode().equals(type)) {
             throw new BaseBizRuntimeException("操作类型不是暂停或作废,请重试输入");
@@ -279,6 +282,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
                 || ProductDemandStatusEnum.ONLINE.getCode().equals(productDemand.getStatus())) {
             throw new BaseBizRuntimeException("产品需求状态为已作废或已完成上线时,不能修改状态");
         }
+
+        // 关联的项目
+        Long linkProjectId = productDemandComponent.getLinkProjectId(productDemandId);
+
         Integer oldStatus = productDemand.getStatus();
         // 更新需求状态
         productDemand.setStatus(type);
@@ -323,6 +330,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         productDemandLogComponent.addLogWhenStatusChange(oldStatus, type, productDemandId, action);
         //解除任务关联
         taskProductDemandComponent.update(null, productDemandId);
+
+        // 刷新客开
+        projectCmponent.updateCustomDev(linkProjectId);
+
         return BaseResult.success(true);
     }
 
@@ -469,30 +480,34 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     public BaseResult<PageQueryResult<ProjectVO>> matchProjectList(ProductDemandLinkProjectQueryList query) {
         log.info("产品需求-项目匹配接收参数:{}", query);
+
+        // 校验当前产品需求是否已经关联项目
         if (query.getProductDemandId() != null) {
-            ProjectProductDemandDO productDemandDO = projectProductDemandMapper.getByProductDemandId(query.getProductDemandId());
-            if (productDemandDO != null) {
-                throw new BaseBizRuntimeException("该产品需求已被关联,请解除后重试");
-            }
+            ProjectProductDemandDO related  = projectProductDemandMapper.getByProductDemandId(query.getProductDemandId());
+            AssertUtil.checkState(related == null, "该产品需求已被关联,请解除后重试");
         }
-        ProjectListCondition condition = ProjectCopier.INSTANCE.convert(query);
-        condition.setPageNum(query.getPageNum());
-        condition.setPageSize(query.getPageSize());
+
+        // 如果查询状态条件为空,默认选择下列状态
         List<Integer> status = query.getStatus();
-        if (CollectionUtils.isEmpty(status)) {
-            // 空,默认选择下列状态
-            condition.setStatus(Lists.newArrayList(ProjectStatusEnum.WAITING.getCode()
-                    , ProjectStatusEnum.PLANING.getCode()
-                    , ProjectStatusEnum.DEVING.getCode()
-                    , ProjectStatusEnum.TESTING.getCode()));
+        if (CollUtil.isEmpty(status)) {
+            status.add(ProjectStatusEnum.DEVING.getCode());
+            status.add(ProjectStatusEnum.WAITING.getCode());
+            status.add(ProjectStatusEnum.PLANING.getCode());
+            status.add(ProjectStatusEnum.TESTING.getCode());
         }
-        if(CollectionUtils.isNotEmpty(query.getLabelIds())||CollectionUtils.isNotEmpty(query.getLabelCategoryIds())){
+
+        // 转换类型
+        ProjectListCondition condition = ProjectCopier.INSTANCE.convert(query);
+
+        // 如果标签条件不为空
+        if(CollUtil.isNotEmpty(query.getLabelIds()) || CollUtil.isNotEmpty(query.getLabelCategoryIds())){
             List<Long> labelIds = labelComponent.getLabelIds(query.getLabelIds(), query.getLabelCategoryIds());
-            if(CollectionUtils.isEmpty(labelIds)){
+            if(CollUtil.isEmpty(labelIds)){
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
             condition.setLabelIds(labelIds);
         }
+
         PageQueryResult<ProjectVO> pageQueryResult = projectCmponent.page(condition, Lists.newArrayList()).getPageQueryResult();
         return BaseResult.success(pageQueryResult);
     }
@@ -576,6 +591,10 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             productDemandLogComponent.addLogWhenLinkOrUnlink(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
 
         }
+
+        // 刷新客开
+        Long linkProjectId = productDemandComponent.getLinkProjectId(bizDemandLinkReq.getProductDemandId());
+        projectCmponent.updateCustomDev(linkProjectId);
         return BaseResult.success(true);
     }
 
@@ -656,7 +675,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             List<Long> trackEventIds = productDemandTrackEventMapper.select(c).stream().map(ProductDemandTrackEventDO::getTrackEventId).collect(Collectors.toList());
             condition.setFilterTrackEventIds(trackEventIds);
         }
-        condition.setStatus(Lists.newArrayList(FlowStatusEnum.COMPLETE.getCode()));
+        condition.setStatus(Lists.newArrayList(ForwardFlowStatusEnum.COMPLETE.getCode()));
         PageHelper.startPage(trackEventQueryList.getPageNum(), trackEventQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
         return trackEventComponent.list(condition);
     }

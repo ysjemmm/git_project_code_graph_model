@@ -158,6 +158,11 @@ public enum ButtonActionEnum {
     INVALID("作废"),
 
     /**
+     * 中止
+     */
+    TERMINATE("中止"),
+
+    /**
      * 接收
      */
     RECEIVE("接收"),
@@ -193,6 +198,11 @@ public enum ButtonActionEnum {
      *删除
      */
     DELETE("删除"),
+
+    /**
+     * 结论
+     */
+    CONCLUSION("结项"),
 
     /**
      * 新增

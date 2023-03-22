@@ -3,11 +3,44 @@
 <mapper namespace="com.timevale.forward.dal.dao.ProjectFlowMapper">
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProjectFlowDO" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        insert into project_flow (project_id, flow_id,flow_type,proposer_id,proposer,review_date,review_id,
-                                  review,review_url,status, create_man_id, create_man, doc_modify_man_id, doc_modify_man, doc_modify_date)
-        values
-        (#{projectId}, #{flowId}, #{flowType},#{proposerId},#{proposer}, #{reviewDate},#{reviewId},
-         #{review},#{reviewUrl}, #{status}, #{createManId}, #{createMan}, #{docModifyManId}, #{docModifyMan}, #{docModifyDate})
+        INSERT INTO project_flow
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="projectId != null">project_id,</if>
+            <if test="flowId != null">flow_id,</if>
+            <if test="flowType != null">flow_type,</if>
+            <if test="proposerId != null">proposer_id,</if>
+            <if test="proposer != null">proposer,</if>
+            <if test="reviewDate != null">review_date,</if>
+            <if test="reviewId != null">review_id,</if>
+            <if test="review != null">review,</if>
+            <if test="reviewUrl != null">review_url,</if>
+            <if test="status != null">`status`,</if>
+            <if test="docModifyManId != null">doc_modify_man_id,</if>
+            <if test="docModifyMan != null">doc_modify_man,</if>
+            <if test="docModifyDate != null">doc_modify_date,</if>
+            <if test="flowData != null">flow_data,</if>
+            <if test="createManId != null">create_man_id,</if>
+            <if test="createMan != null">create_man,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="projectId != null">#{projectId},</if>
+            <if test="flowId != null">#{flowId},</if>
+            <if test="flowType != null">#{flowType},</if>
+            <if test="proposerId != null">#{proposerId},</if>
+            <if test="proposer != null">#{proposer},</if>
+            <if test="reviewDate != null">#{reviewDate},</if>
+            <if test="reviewId != null">#{reviewId},</if>
+            <if test="review != null">#{review},</if>
+            <if test="reviewUrl != null">#{reviewUrl},</if>
+            <if test="status != null">#{status},</if>
+            <if test="docModifyManId != null">#{docModifyManId},</if>
+            <if test="docModifyMan != null">#{docModifyMan},</if>
+            <if test="docModifyDate != null">#{docModifyDate},</if>
+            <if test="flowData != null">#{flowData},</if>
+            <if test="createManId != null">#{createManId},</if>
+            <if test="createMan != null">#{createMan},</if>
+        </trim>
     </insert>
 
     <select id="get" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
@@ -72,8 +105,29 @@
         where flow_type in (10, 20, 30)
           and status in (-1, 1, 2)
           and is_deleted = false
-<!--          and flow_end_date is null-->
-<!--          and project_id = 1642-->
+    </select>
+
+    <select id="getByStatus" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
+        SELECT *
+        FROM project_flow
+        WHERE project_id = #{projectId}
+          AND flow_type = #{flowType}
+          AND `status` = #{status}
+          AND is_deleted = false
+    </select>
+
+    <select id="getByProjectIds" resultType="com.timevale.forward.dal.entity.ProjectFlowDO">
+        SELECT *
+        FROM project_flow
+        <where>
+            AND project_id IN
+            <foreach collection="projectIds" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            AND flow_type = #{flowType}
+            AND `status` = #{status}
+            AND is_deleted = false
+        </where>
     </select>
 
     <update id="batchUpdateFlowEndTime">

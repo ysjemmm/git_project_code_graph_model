@@ -59,4 +59,19 @@ public interface ProjectComponent {
      * 删除子项目节点
      */
     void deleteChildProject(ProjectDO parent, ProjectDO child);
+
+    /**
+     * 获取url
+     *
+     * @param projectId 项目id
+     * @return {@link String}
+     */
+    String getUrl(Long projectId);
+
+    /**
+     * 更新是否为客开项目
+     *
+     * @param projectId 项目id
+     */
+    void updateCustomDev(Long projectId);
 }

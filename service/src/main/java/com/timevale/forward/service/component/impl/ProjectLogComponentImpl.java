@@ -356,6 +356,21 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 ButtonActionEnum.DELETE.getText());
     }
 
+    @Override
+    public void addConclusion(Long projectId, Integer oldStatus, Integer newStatus, Date conclusionDate) {
+        addLogWhenStatusChange(
+                oldStatus,
+                newStatus,
+                projectId,
+                ButtonActionEnum.CONCLUSION.getText()
+        );
+        addLogWhenContentChange(
+                "",
+                DateUtil.parseToString(conclusionDate, DateStyle.YYYY_MM_DD),
+                projectId,
+                BizChangeLogFieldEnum.CONCLUSION_DATE.getText());
+    }
+
     private BizChangeLogDO createLog(Long mainId, String field, String oldValue, String newValue, String action) {
         BizChangeLogDO logDO = new BizChangeLogDO();
         logDO.setType(BizChangeLogTypeEnum.PROJECT.getCode());

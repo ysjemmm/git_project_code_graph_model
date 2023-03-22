@@ -8,7 +8,7 @@ import com.timevale.forward.dal.entity.ProjectFlowDO;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.request.ProjectFlowAddReq;
-import com.timevale.forward.model.enums.FlowStatusEnum;
+import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
 import com.timevale.forward.service.component.ProjectComponent;
 import com.timevale.forward.service.component.ProjectFlowComponent;
 import com.timevale.forward.service.component.ProjectLogComponent;
@@ -82,7 +82,7 @@ public class ProjectFlowServiceImplTest extends AbstractTestNGSpringContextTests
         when(projectFlowMapper.get(any(),any())).thenReturn(new ProjectFlowDO(){{
             setReview("[\"1\"]");
             setReviewId("[\"1\"]");
-            setStatus(FlowStatusEnum.AUDITING.getCode());
+            setStatus(ForwardFlowStatusEnum.AUDITING.getCode());
         }});
         assert projectFlowService.get(1L).ifSuccess();
     }

@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -23,7 +24,7 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
-import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -138,10 +139,16 @@ public class TaskComponentImpl implements TaskComponent {
                 a.setExecutor(executor);
                 a.setExecutorId(executorId);
             }
+            ProjectDO projectDO = projectMap.get(a.getProjectId());
+            a.setPmId(projectDO.getPmId());
+            a.setProjectName(projectDO.getName());
+            a.setPrincipal(projectDO.getPrincipal());
+            a.setPrincipalId(projectDO.getPrincipalId());
+            a.setOtnPrincipal(projectDO.getOtnPrincipal());
+            a.setOtnPrincipalId(projectDO.getOtnPrincipalId());
+
             a.setProductLineName(productLineMap.get(a.getProductLineId()));
             a.setStatusName(TaskStatusEnum.getTextByCode(a.getStatus()));
-            a.setProjectName(projectMap.get(a.getProjectId()).getName());
-            a.setPmId(projectMap.get(a.getProjectId()).getPmId());
             a.setStageName(ProjectStageEnum.getTextByCode(a.getStage()));
             a.setIsPMO(isPMO);
             if(a.getPlanEndDate()==null){
@@ -235,13 +242,12 @@ public class TaskComponentImpl implements TaskComponent {
     @Override
     public void containProductLineInTask(Long projectId, List<Long> productLineIdsInProject) {
         List<Long> productLineIdsInTask = taskMapper.getByProjectId(projectId)
-                .stream().map(TaskDO::getProductLineId).collect(Collectors.toList());
-        productLineIdsInTask.forEach(a -> {
-            if (!productLineIdsInProject.contains(a)) {
-                throw new BaseBizRuntimeException("该产品线已关联任务，无法修改");
-            }
-        });
+                .stream()
+                .map(TaskDO::getProductLineId)
+                .distinct()
+                .collect(Collectors.toList());
 
+        AssertUtil.checkState(CollUtil.containsAll(productLineIdsInProject, productLineIdsInTask),"该产品线已关联任务已关联任务，无法修改");
     }
 
     @Override

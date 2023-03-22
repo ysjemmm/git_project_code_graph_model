@@ -1,9 +1,9 @@
 package com.timevale.forward.service.component.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
-import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -47,39 +47,25 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Resource
     private BizDemandMapper bizDemandMapper;
-
     @Resource
     private ProductDemandMapper productDemandMapper;
-
     @Resource
     private ProjectMapper projectMapper;
-
     @Resource
     private ProductBizDemandMapper productBizDemandMapper;
-
     @Resource
     private InnerGroupClient innerGroupClient;
-
     @Resource
     private MessageEventPublisher messageEventPublisher;
-
     @Resource
     private BizDemandLogComponent bizDemandLogComponent;
-
     @Resource
     private BizLabelMapper bizLabelMapper;
-
     @Resource
     private BizLabelComponent bizLabelComponent;
-
-    @Resource
-    private LabelMapper labelMapper;
-
-    @Resource
-    private LabelComponent labelComponent;
-
     @Resource
     private SqlOrderComponent sqlOrderComponent;
+
 
     @Override
     public void updateBizDemandStatusByLinkedProductDemand(Long bizDemandId) {
@@ -430,5 +416,23 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         }
 
         return BizDemandStatusEnum.RECEIVED.getCode();
+    }
+
+    @Resource
+    private ProjectComponent projectComponent;
+
+    @Override
+    public void updateCustomerProject(Long bizDemandId) {
+        List<ProjectDO> byBizDemandId = projectMapper.getByBizDemandId(CollUtil.newArrayList(bizDemandId));
+        for (ProjectDO projectDO : byBizDemandId) {
+            projectComponent.updateCustomDev(projectDO.getId());
+        }
+
+    }
+
+    @Override
+    public List<Long> getLinkProjectIds(Long bizDemandId) {
+        List<ProjectDO> byBizDemandId = projectMapper.getByBizDemandId(CollUtil.newArrayList(bizDemandId));
+        return byBizDemandId.stream().map(BaseDO::getId).collect(Collectors.toList());
     }
 }

@@ -33,10 +33,10 @@ public class ProjectVO extends ToString {
     @ApiModelProperty("优先级:0(P0),1(P1),2(P2)")
     private Integer priority;
 
-    @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
+    @ApiModelProperty("项目性质:0产品研发项目,1技术优化项目,2日常迭代，3自研项目，4ISV项目")
     private Integer type;
 
-    @ApiModelProperty("项目状态:0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废")
+    @ApiModelProperty("项目状态：0待启动,5启动中，10规划中,15执行中,20研发中,25收尾中,30测试中,35运营中,40已发布,45已完成,50已结项，-10已暂停,-20已中止")
     private Integer status;
 
     @ApiModelProperty("项目计划开始时间")
@@ -135,6 +135,30 @@ public class ProjectVO extends ToString {
     @ApiModelProperty("节点深度(相对)")
     private Integer nodeDepth;
 
+    @ApiModelProperty("项目类型-描述")
+    private String kindName;
+
+    @ApiModelProperty("SR")
+    private String sr;
+
+    @ApiModelProperty("结项时间")
+    private Date conclusionDate;
+
+    @ApiModelProperty("是否存在审批中的结项流程")
+    private Boolean conclusionAuditing;
+
     @ApiModelProperty("标签名称")
     private List<BizLabelSimpleVO> labelNames;
+
+    @ApiModelProperty("项目负责人")
+    private String principal;
+
+    @ApiModelProperty("项目负责人id")
+    private String principalId;
+
+    @ApiModelProperty("1-n负责人")
+    private String otnPrincipal;
+
+    @ApiModelProperty("1-n负责人Id")
+    private String otnPrincipalId;
 }

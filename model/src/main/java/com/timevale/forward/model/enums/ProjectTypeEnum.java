@@ -17,6 +17,10 @@ public enum ProjectTypeEnum {
 
     RENEW(2,"日常迭代"),
 
+    INDEPENDENT(3,"自研项目"),
+
+    ISV(4,"ISV项目"),
+
     INNER(10, "内部项目");
 
     final private Integer code;
@@ -33,6 +37,6 @@ public enum ProjectTypeEnum {
                 return e.text;
             }
         }
-        return "errorCode";
+        return "";
     }
 }

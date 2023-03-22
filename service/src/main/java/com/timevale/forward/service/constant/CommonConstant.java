@@ -6,6 +6,8 @@ package com.timevale.forward.service.constant;
  **/
 public class CommonConstant {
 
+    public static final String APP = "forward";
+
     public static final String JOIN_LINE = "-";
 
     public static final String WIDE_COLON = "：";
@@ -26,6 +28,8 @@ public class CommonConstant {
 
     public static final String NULL = "无";
 
+    public static final String DAY = "天";
+
     public static final String SYSTEM = "SYSTEM-SYSTEM";
 
     public static final String SYSTEM_DEFAULT = "系统默认";
@@ -33,5 +37,7 @@ public class CommonConstant {
     public static final String PMO = "PMO";
 
     public static final String FORWARD_BIZ_RELATION_TOPIC = "forward-biz-rel";
+
+    public static final String INVALID = "已作废";
 
 }

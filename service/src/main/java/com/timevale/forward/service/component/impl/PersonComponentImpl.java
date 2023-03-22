@@ -13,10 +13,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -31,12 +28,12 @@ public class PersonComponentImpl implements PersonComponent {
     private PersonMapper personMapper;
 
     @Override
-    public void add(List<PersonAddReq> list, Long mainId, Integer type) {
+    public void add(Collection<PersonAddReq> list, Long mainId, Integer type) {
         add(list, mainId, type, PersonLevelEnum.CORE.getCode());
     }
 
     @Override
-    public void add(List<PersonAddReq> list, Long mainId, Integer type, Integer personLevel) {
+    public void add(Collection<PersonAddReq> list, Long mainId, Integer type, Integer personLevel) {
         log.info("[PersonComponentImpl.add]人员新增接收参数:list={},mainId={},type={}, personLevel= {}", list, mainId, type, personLevel);
         if (CollUtil.isEmpty(list)) {
             return;

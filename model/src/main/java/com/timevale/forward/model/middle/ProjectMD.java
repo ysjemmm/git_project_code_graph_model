@@ -34,12 +34,6 @@ public class ProjectMD extends BaseMD{
     private Date actualEndDate;
 
     /**
-     * 是否为客户开发项目：0否，1是
-     */
-    @FieldCompare(fieldName = "是否为客开项目",enumClass = YesOrNoEnum.class)
-    private Integer customerDev;
-
-    /**
      * 优先级:0(P0),1(P1),2(P2),3(P3)
      */
     @FieldCompare(fieldName = "优先级",enumClass = PriorityEnum.class)
@@ -48,7 +42,7 @@ public class ProjectMD extends BaseMD{
     /**
      * 0产品研发项目,1技术优化项目,2日常迭代
      */
-    @FieldCompare(fieldName = "项目类型",enumClass = ProjectTypeEnum.class)
+    @FieldCompare(fieldName = "项目性质",enumClass = ProjectTypeEnum.class)
     private Integer type;
 
     /**
@@ -75,7 +69,7 @@ public class ProjectMD extends BaseMD{
     @FieldCompare(fieldName = "项目等级",enumClass = ProjectLevelEnum.class)
     private Integer level;
 
-    @FieldCompare(fieldName = "产品技术资源评估（人天）", scale = 2)
+    @FieldCompare(fieldName = "立项工作量评估（人天）", scale = 2)
     private BigDecimal resourceAssessment;
 
     @FieldCompare(fieldName = "立项开始时间")
@@ -92,4 +86,16 @@ public class ProjectMD extends BaseMD{
 
     @FieldCompare(fieldName = "项目类型", enumClass = ProjectInnerTypeEnum.class)
     private Integer innerType;
+
+    @FieldCompare(fieldName = "项目类型", enumClass = ProjectKindEnum.class)
+    private Integer kind;
+
+    @FieldCompare(fieldName = "SR")
+    private String sr;
+
+    @FieldCompare(fieldName = "项目负责人")
+    private String principal;
+
+    @FieldCompare(fieldName = "1-N产研团队负责人")
+    private String otnPrincipal;
 }

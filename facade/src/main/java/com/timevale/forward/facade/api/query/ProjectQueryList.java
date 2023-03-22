@@ -42,13 +42,13 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("子产品线id")
     private List<Long> subProductLineIds;
 
-    @ApiModelProperty("项目类型:0产品研发项目,1技术优化项目,2日常迭代")
+    @ApiModelProperty("项目性质:0产品研发项目,1技术优化项目,2日常迭代，3自研项目，4ISV项目")
     private List<Integer> types;
 
     @ApiModelProperty("内部项目类型: 0空, 1战略项目, 2LTC项目, 3PBG项目, 4CBG项目, 5管理后台项目")
     private List<Integer> innerTypes;
 
-    @ApiModelProperty("项目状态:0待启动,10规划中,20研发中,30测试中,40已发布,-10已暂停,-20已作废")
+    @ApiModelProperty("0待启动,5启动中，10规划中,15执行中,20研发中,25收尾中,30测试中,35运营中,40已发布,45已完成,50已结项，-10已暂停,-20已中止")
     private List<Integer> status;
 
     @ApiModelProperty("项目经理")
@@ -117,7 +117,7 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("排序规则：0正序，1逆序")
     private Integer orderCollation;
 
-    @ApiModelProperty("项目等级：0普通，1重点，2S级别，3A级别，4B级别")
+    @ApiModelProperty("项目等级：0普通 10重点 20S级别 30A级别 40B级别")
     private List<Integer> levels;
 
     @ApiModelProperty("是否有项目风险")
@@ -144,4 +144,15 @@ public class ProjectQueryList extends QueryBase {
     @ApiModelProperty("是否只展示一级项目")
     private Boolean onlyFirstLevel = false;
 
+    @ApiModelProperty("SR")
+    private List<String> srs;
+
+    @ApiModelProperty("项目类型: 0-空，1-PBG项目/基线项目，2-PBG项目/1-N客开项目，3-职能后台项目/流程IT中心项目")
+    private Integer kind;
+
+    @ApiModelProperty("结项时间-开始")
+    private Date conclusionDateLeft;
+
+    @ApiModelProperty("结项时间-结束")
+    private Date conclusionDateRight;
 }

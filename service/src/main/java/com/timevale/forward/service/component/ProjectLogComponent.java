@@ -2,6 +2,7 @@ package com.timevale.forward.service.component;
 
 import com.timevale.forward.dal.entity.ProjectDO;
 
+import java.util.Date;
 import java.util.Map;
 
 public interface ProjectLogComponent{
@@ -30,4 +31,5 @@ public interface ProjectLogComponent{
 
     void addDeleteProjectMemberLog(Long projectId, String members);
 
+    void addConclusion(Long projectId, Integer oldStatus, Integer newStatus, Date conclusionDate);
 }
