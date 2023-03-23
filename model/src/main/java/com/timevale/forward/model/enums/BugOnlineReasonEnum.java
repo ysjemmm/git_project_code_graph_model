@@ -157,8 +157,8 @@ public enum BugOnlineReasonEnum {
 
     SERVICE_INTERRUPT(40001, "服务中断", BugOnlineReasonStageEnum.PUBLISH),
     PUBLISH_PLAN(40002, "发布计划问题", BugOnlineReasonStageEnum.PUBLISH),
-    ENVIRONMENT_CONFIG(40003, "环境配置问题", BugOnlineReasonStageEnum.PUBLISH),
-    PUBLISH_MISOPERATION(40004, "发布误操作", BugOnlineReasonStageEnum.PUBLISH),
+    ENVIRONMENT_CONFIG(40003, "环境配置导致", BugOnlineReasonStageEnum.PUBLISH),
+    PUBLISH_MISOPERATION(40004, "误操作", BugOnlineReasonStageEnum.PUBLISH),
     NOTICE_MISSING(40005, "产品培训或发布公告缺失", BugOnlineReasonStageEnum.PUBLISH),
 
     PRODUCT_INCOMPREHENSION(50001, "对产品的理解错误或不熟悉", BugOnlineReasonStageEnum.OPERATION),

@@ -658,9 +658,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         // 查询关联的线下bug
-        Long bugOfflineId = bugOnlineDO.getBugOfflineId();
-        if (bugOfflineId != null) {
-            BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineId);
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOnlineDO.getBugOfflineId());
+        if (bugOfflineDO != null) {
             bugOnlineDetailVO.setBugOfflineName(bugOfflineDO.getName());
         }
 
