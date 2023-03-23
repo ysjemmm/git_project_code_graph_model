@@ -130,8 +130,6 @@ public enum BugOnlineReasonEnum {
     SPECIAL_DOC(22, "特殊文档问题",null),
 
 
-    NULL(0, "空", BugOnlineReasonStageEnum.NULL),
-
     PRODUCT_DESIGN_FLAWS(10001, "产品设计缺陷", BugOnlineReasonStageEnum.PRODUCT_DESIGN),
     PERFORMANCE_UNDEFINED(10002, "性能标准未定义", BugOnlineReasonStageEnum.PRODUCT_DESIGN),
     COMPATIBILITY_UNDEFINE(10003, "兼容性标准未定义", BugOnlineReasonStageEnum.PRODUCT_DESIGN),

@@ -12,7 +12,6 @@ import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOnlineMD;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
@@ -71,7 +70,7 @@ public interface BugOnlineCopier {
     @Mapping(target = "priorityName", expression = "java(BugOnlinePriorityEnum.getTextByCode(listDO.getPriority()))")
     @Mapping(target = "reasonName", expression = "java(BugOnlineReasonEnum.getTextByCode(listDO.getReason()))")
     @Mapping(target = "reasonStageName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(listDO.getReasonStage()))")
-    @Mapping(target = "dismissCauseName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(listDO.getDismissCause()))")
+    @Mapping(target = "dismissCauseName", expression = "java(BugOnlineReasonEnum.getTextByCode(listDO.getDismissCause()))")
     @Mapping(target = "dismissCauseStageName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(listDO.getDismissCause()))")
     BugOnlineVO convert(BugOnlineListDO listDO);
 
@@ -112,8 +111,8 @@ public interface BugOnlineCopier {
      *
      * @param req 参数
      */
-    @Mapping(source = "reason", target = "reasonName", qualifiedByName  = "fullName")
-    @Mapping(source = "dismissCause", target = "dismissCauseName", qualifiedByName  = "fullName")
+    @Mapping(target = "reasonName", expression="java(BugOnlineReasonEnum.getFullTextByCode(req.getReason()))")
+    @Mapping(target = "dismissCauseName", expression="java(BugOnlineReasonEnum.getFullTextByCode(req.getDismissCause()))")
     BugOnlineMD req2md(BugOnlineModifyReq req);
 
     /**
@@ -122,8 +121,8 @@ public interface BugOnlineCopier {
      * @param bugOnlineDO 参数
      * @return 返回值
      */
-    @Mapping(source = "reason", target = "reasonName", qualifiedByName  = "fullName")
-    @Mapping(source = "dismissCause", target = "dismissCauseName", qualifiedByName  = "fullName")
+    @Mapping(target = "reasonName", expression="java(BugOnlineReasonEnum.getFullTextByCode(req.getReason()))")
+    @Mapping(target = "dismissCauseName", expression="java(BugOnlineReasonEnum.getFullTextByCode(req.getDismissCause()))")
     BugOnlineMD change(BugOnlineDO bugOnlineDO);
 
     /**
@@ -132,17 +131,4 @@ public interface BugOnlineCopier {
      * @return 返回值
      */
     List<BugOnlineVO> convert(List<BugOnlineListDO> bugOnlineListDOList);
-
-    @Named("fullName")
-    default String fullName (Integer reason) {
-        BugOnlineReasonEnum reasonEnum = BugOnlineReasonEnum.getByCode(reason);
-        if (reasonEnum == null) {
-            return "";
-        }
-        BugOnlineReasonStageEnum stageEnum = reasonEnum.getStage();
-        if (stageEnum == null) {
-            return "";
-        }
-        return stageEnum.getText() + "/" + reasonEnum.getText();
-    }
 }

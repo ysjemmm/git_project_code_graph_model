@@ -12,7 +12,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum BugOnlineReasonStageEnum {
 
-    NULL(0, "空"),
     PRODUCT_DESIGN(10000, "产品设计阶段"),
     DEV(20000, "研发阶段"),
     TEST(30000, "测试阶段"),
