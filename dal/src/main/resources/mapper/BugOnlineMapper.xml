@@ -392,6 +392,9 @@
             repair_fail_reason = #{repairFailReason},
             dismiss_cause_stage = #{dismissCauseStage},
         </set>
+        <where>
+            id = #{id}
+        </where>
     </update>
 
     <select id="selectByCustomId" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
