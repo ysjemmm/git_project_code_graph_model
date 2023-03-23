@@ -276,8 +276,8 @@
             <if test="dismissCauseStage!=null"> dismiss_cause_stage = #{dismissCauseStage}, </if>
             <if test="openCount!=null"> open_count = #{openCount}, </if>
             <if test="isDeleted != null"> is_deleted = #{isDeleted}, </if>
-            <if test="modifyManId ！= null"> modify_man_id = #{modifyManId}, </if>
-            <if test="modifyMan ！= null"> modify_man = #{modifyMan}, </if>
+            <if test="modifyManId != null"> modify_man_id = #{modifyManId}, </if>
+            <if test="modifyMan != null"> modify_man = #{modifyMan}, </if>
         </set>
         <where>
             id = #{id}
