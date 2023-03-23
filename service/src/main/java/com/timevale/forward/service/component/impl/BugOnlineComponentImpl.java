@@ -64,16 +64,16 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
 
         // 默认值特殊处理
         if (reason == null) {
-            bugOnlineDO.setReason(BugOnlineReasonEnum.NULL.getCode());
+            bugOnlineDO.setReason(CommonConstant.REASON_NULL);
         }
         if (reasonStage == null) {
-            bugOnlineDO.setReason(BugOnlineReasonStageEnum.NULL.getCode());
+            bugOnlineDO.setReason(CommonConstant.REASON_NULL);
         }
         if (dismissCause == null) {
-            bugOnlineDO.setReason(BugOnlineReasonEnum.NULL.getCode());
+            bugOnlineDO.setReason(CommonConstant.REASON_NULL);
         }
         if (dismissCauseStage == null) {
-            bugOnlineDO.setReason(BugOnlineReasonStageEnum.NULL.getCode());
+            bugOnlineDO.setReason(CommonConstant.REASON_NULL);
         }
         bugOnlineMapper.updateCanNull(bugOnlineDO);
     }
