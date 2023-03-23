@@ -1,6 +1,7 @@
 package com.timevale.forward.service.component;
 
 import com.timevale.forward.dal.condition.BizDemandListCondition;
+import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.security.facade.response.GroupResponse;
@@ -16,11 +17,11 @@ import java.util.Map;
 public interface BizDemandComponent {
 
     /**
-     * 更新业务需求状态根据关联的产品需求
+     * 刷新业务需求状态
      *
-     * @param bizDemandId 业务需求id
+     * @param bdId 业务需求id
      */
-    void updateBizDemandStatusByLinkedProductDemand(Long bizDemandId);
+    void updateStatus(Long bdId);
 
     /**
      * 获取所有子部门及其完整链名
@@ -73,11 +74,31 @@ public interface BizDemandComponent {
     /**
      *
      * @param pdStauts pdStauts
-     * @return
      */
     Integer getBizDemandStatus(Integer pdStauts);
 
-    void updateCustomerProject(Long bizDemandId);
+    /**
+     * 更新项目，判断是否客开项目
+     *
+     * @param bdId bd id
+     */
+    void updateCustomerPj(Long bdId);
 
     List<Long> getLinkProjectIds(Long bizDemandId);
+
+    /**
+     * 查询关联的产品需求
+     *
+     * @param bdId 业务需求id
+     * @return 产品需求DO
+     */
+    List<ProductDemandDO> getPdDO(Long bdId);
+
+    /**
+     * 计算指定业务需求的状态
+     *
+     * @param bdId 业务需求id
+     * @return 返回业务需求状态
+     */
+    Integer getStatus(Long bdId);
 }

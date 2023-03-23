@@ -414,7 +414,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             projectProductDemandComponent.batchInsert(productDemandAddReq.getProjectId(), Lists.newArrayList(productDemand.getId()));
             //
             bizIdMap.forEach((k, v) -> {
-                BizDemandDO bizDemandDO = bizDemandMapper.selectById(k);
+                BizDemandDO bizDemandDO = bizDemandMapper.get(k);
                 productDemandComponent.sendDingMsg(v, bizDemandDO.getStatus(), k);
             });
 

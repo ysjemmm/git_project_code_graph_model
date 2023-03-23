@@ -105,7 +105,7 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
 
     @Override
     public void addLogWhenBizDemandInvalid(Long bizDemandId) {
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
         List<BizDemandLinkProductDemandListDO> bizDemandLinkProductDemandListDOList = productDemandMapper.selectByBizDemandId(bizDemandId);
 
         // 双向变更
@@ -138,8 +138,8 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
     }
 
     @Override
-    public void addLogWhenBizDemandLinkProductDemand(Long bizDemandId, List<Long> productDemandIdList) {
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+    public void linkPd(Long bizDemandId, Collection<Long> productDemandIdList) {
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
         List<ProductDemandDO> productDemandDOList = productDemandMapper.selectByIdList(productDemandIdList);
 
         // 双向更新
@@ -173,8 +173,8 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
     }
 
     @Override
-    public void addLogWhenBizDemandUnLinkProductDemand(Long bizDemandId, Long productDemandId) {
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+    public void unlinkPd(Long bizDemandId, Long productDemandId) {
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
         ProductDemandDO productDemandDO = productDemandMapper.selectById(productDemandId);
 
         // 业务需求方

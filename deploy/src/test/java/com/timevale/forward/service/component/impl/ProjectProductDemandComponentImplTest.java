@@ -48,19 +48,13 @@ public class ProjectProductDemandComponentImplTest extends AbstractTestNGSpringC
     private BizDemandComponent bizDemandComponent;
 
     @Mock
-    private BizDemandLogComponent bizDemandLogComponent;
-
-    @Mock
-    private BizChangeLogMapper bizChangeLogMapper;
-
-    @Mock
     private BizDemandMapper bizDemandMapper;
 
     @Test
     public void testUpdate() {
         when(productBizDemandMapper.getByProductDemandIds(any())).thenReturn(Lists.newArrayList(new ProductBizDemandDO(){{setBizDemandId(1L);}}));
         when(bizDemandComponent.getProjectEndDate(any())).thenReturn(new Date());
-        when(bizDemandMapper.selectById(any())).thenReturn(new BizDemandDO(){{setProjectEndDate(new Date(1000L));}});
+        when(bizDemandMapper.get(any())).thenReturn(new BizDemandDO(){{setProjectEndDate(new Date(1000L));}});
         projectProductDemandComponent.update(1L, 1L);
     }
 
@@ -68,7 +62,7 @@ public class ProjectProductDemandComponentImplTest extends AbstractTestNGSpringC
     public void testBatchInsert() {
         when(productBizDemandMapper.getByProductDemandIds(any())).thenReturn(Lists.newArrayList(new ProductBizDemandDO(){{setBizDemandId(1L);}}));
         when(bizDemandComponent.getProjectEndDate(any())).thenReturn(new Date());
-        when(bizDemandMapper.selectById(any())).thenReturn(new BizDemandDO(){{setProjectEndDate(new Date(1000L));}});
+        when(bizDemandMapper.get(any())).thenReturn(new BizDemandDO(){{setProjectEndDate(new Date(1000L));}});
         ProjectProductDemandDO projectProductDemandDO = new ProjectProductDemandDO();
         projectProductDemandDO.setProductDemandId(1L);
         when(projectProductDemandMapper.getByProjectId(any())).thenReturn(Collections.singletonList(projectProductDemandDO));

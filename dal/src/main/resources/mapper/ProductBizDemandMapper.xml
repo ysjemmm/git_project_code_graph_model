@@ -25,7 +25,7 @@
         insert into product_biz_demand (product_demand_id, biz_demand_id, create_man_id, create_man)
         values
         <foreach collection="productBizDemandDOList" item="item" separator=",">
-            (#{item.productDemandId}, #{item.bizDemandId}, #{item.createManId}, #{item.createMan})
+            (#{item.productDemandId}, #{item.bizDemandId}, #{createManId}, #{createMan})
         </foreach>
     </insert>
 
@@ -85,7 +85,7 @@
         </where>
     </select>
 
-    <select id="getByBizDemandId" resultType="com.timevale.forward.dal.entity.ProductBizDemandDO">
+    <select id="getByBdId" resultType="com.timevale.forward.dal.entity.ProductBizDemandDO">
         select a.id, a.product_demand_id, a.biz_demand_id, a.is_deleted,b.status
         from product_biz_demand a
         join product_demand b on a.product_demand_id=b.id

@@ -1,6 +1,7 @@
 package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
@@ -23,8 +24,10 @@ import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -32,7 +35,6 @@ import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,77 +42,41 @@ import java.util.stream.Collectors;
  * @author by YangXu
  * @date 2022/01/04 10:29
  */
-@Component
 @Slf4j
 @LogPoint
+@Component
+@RequiredArgsConstructor
 public class BizDemandComponentImpl implements BizDemandComponent {
-
-    @Resource
-    private BizDemandMapper bizDemandMapper;
-    @Resource
-    private ProductDemandMapper productDemandMapper;
-    @Resource
-    private ProjectMapper projectMapper;
-    @Resource
-    private ProductBizDemandMapper productBizDemandMapper;
-    @Resource
-    private InnerGroupClient innerGroupClient;
-    @Resource
-    private MessageEventPublisher messageEventPublisher;
-    @Resource
-    private BizDemandLogComponent bizDemandLogComponent;
-    @Resource
-    private BizLabelMapper bizLabelMapper;
-    @Resource
-    private BizLabelComponent bizLabelComponent;
-    @Resource
-    private SqlOrderComponent sqlOrderComponent;
-
+    private final ProjectMapper projectMapper;
+    private final BizLabelMapper bizLabelMapper;
+    private final BizDemandMapper bizDemandMapper;
+    private final InnerGroupClient innerGroupClient;
+    private final ProjectComponent projectComponent;
+    private final BizLabelComponent bizLabelComponent;
+    private final SqlOrderComponent sqlOrderComponent;
+    private final ProductDemandMapper productDemandMapper;
+    private final MessageEventPublisher messageEventPublisher;
+    private final BizDemandLogComponent bizDemandLogComponent;
+    private final ProductBizDemandMapper productBizDemandMapper;
 
     @Override
-    public void updateBizDemandStatusByLinkedProductDemand(Long bizDemandId) {
+    public void updateStatus(Long bdId) {
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bdId);
+        AssertUtil.notNull(bizDemandDO, "业务需求不存在");
 
-        List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByBizDemandId(bizDemandId);
-        List<Long> productDemandIdList = productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList());
-
-        List<ProductDemandDO> productDemandDOList = Lists.newArrayList();
-        if (!productDemandIdList.isEmpty()) {
-            productDemandDOList = productDemandMapper.selectByIdList(productDemandIdList);
-        }
-
-        // 筛出最小产品需求状态
-        Integer status = null;
-        for (ProductDemandDO productDemandDO : productDemandDOList) {
-            Integer productDemandStatus = productDemandDO.getStatus();
-            if (productDemandStatus.equals(ProductDemandStatusEnum.INVALID.getCode())) {
-                continue;
-            }
-            status = status == null ? productDemandStatus : Math.min(status, productDemandStatus);
-        }
-
-        // 根据产品需求状态判断业务需求状态
-        int newStatus;
-        if (ProductDemandStatusEnum.INCLUDED.getCode().equals(status)) {
-            newStatus = BizDemandStatusEnum.INCLUDE_PROJECT.getCode();
-        } else if (ProductDemandStatusEnum.PROGRESS.getCode().equals(status)) {
-            newStatus = BizDemandStatusEnum.PROJECTING.getCode();
-        } else if (ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
-            newStatus = BizDemandStatusEnum.AVAILABLE.getCode();
-        } else if (ProductDemandStatusEnum.WAITING.getCode().equals(status) || ProductDemandStatusEnum.SUSPEND.getCode().equals(status)) {
-            newStatus = BizDemandStatusEnum.PD_LINKED.getCode();
-        } else {
-            newStatus = BizDemandStatusEnum.RECEIVED.getCode();
+        // 已驳回状态下不变化
+        Integer oldBdStatus = bizDemandDO.getStatus();
+        if (BizDemandStatusEnum.REJECT.getCode().equals(oldBdStatus)) {
+            return;
         }
 
         // 判断状态是否发生变更
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
-        Integer oldStatus = bizDemandDO.getStatus();
-        if (!Objects.equals(oldStatus, newStatus) && !Objects.equals(BizDemandStatusEnum.REJECT.getCode(), oldStatus)) {
-            // 状态更新
-            BizDemandDO newBizDemandDO = new BizDemandDO();
-            newBizDemandDO.setId(bizDemandId);
-            newBizDemandDO.setStatus(newStatus);
-            bizDemandMapper.update(newBizDemandDO);
+        Integer newBdStatus = getStatus(bdId);
+        if (ObjectUtil.notEqual(oldBdStatus, newBdStatus)) {
+            BizDemandDO updateDO = new BizDemandDO();
+            updateDO.setId(bdId);
+            updateDO.setStatus(newBdStatus);
+            bizDemandMapper.update(updateDO);
         }
     }
 
@@ -160,7 +126,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     @Override
     public Date getProjectEndDate(Long bizDemandId) {
         // 获取该业务需求所关联的产品需求
-        List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByBizDemandId(bizDemandId);
+        List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByBdId(bizDemandId);
         if (productBizDemandDOList.isEmpty()) {
             return null;
         }
@@ -317,7 +283,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     @Override
     public Boolean transfer(Long id, String newReceiveMan, String newReceiveManId) {
         // 转交：修改接收人
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(id);
+        BizDemandDO bizDemandDO = bizDemandMapper.get(id);
         if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
@@ -357,7 +323,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Override
     public void updateProjectEndDate(Long bizDemandId) {
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
         Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
 
         Date oldProjectEndDate = bizDemandDO.getProjectEndDate();
@@ -373,7 +339,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             bizDemandMapper.fullUpdate(bizDemandDO);
             log.info("业务需求id:{},发布时间,更新前:{},更新后:{}", bizDemandId, oldProjectEndDate, newProjectEndDate);
             if (!Objects.equals(oldPlanReleaseDate, bizDemandDO.getPlanReleaseDate())) {
-                List<ProductBizDemandDO> productBizDemandDos = productBizDemandMapper.getByBizDemandId(bizDemandId);
+                List<ProductBizDemandDO> productBizDemandDos = productBizDemandMapper.getByBdId(bizDemandId);
                 //link biz
                 Integer minStatus = productBizDemandDos.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
                 Integer newStatus = getBizDemandStatus(minStatus);
@@ -418,21 +384,65 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         return BizDemandStatusEnum.RECEIVED.getCode();
     }
 
-    @Resource
-    private ProjectComponent projectComponent;
-
     @Override
-    public void updateCustomerProject(Long bizDemandId) {
-        List<ProjectDO> byBizDemandId = projectMapper.getByBizDemandId(CollUtil.newArrayList(bizDemandId));
+    public void updateCustomerPj(Long bdId) {
+        List<ProjectDO> byBizDemandId = projectMapper.getByBizDemandId(CollUtil.newArrayList(bdId));
         for (ProjectDO projectDO : byBizDemandId) {
             projectComponent.updateCustomDev(projectDO.getId());
         }
-
     }
 
     @Override
     public List<Long> getLinkProjectIds(Long bizDemandId) {
         List<ProjectDO> byBizDemandId = projectMapper.getByBizDemandId(CollUtil.newArrayList(bizDemandId));
         return byBizDemandId.stream().map(BaseDO::getId).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProductDemandDO> getPdDO(Long bdId) {
+        if (bdId == null) {
+            return new ArrayList<>();
+        }
+
+        // 查询关联关系
+        List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByBdId(bdId);
+        List<Long> pdIdList = productBizDemandDOList.stream()
+                .map(ProductBizDemandDO::getProductDemandId)
+                .collect(Collectors.toList());
+        if (CollUtil.isEmpty(pdIdList)) {
+            return new ArrayList<>();
+        }
+
+        return productDemandMapper.selectByIdList(pdIdList);
+    }
+
+    @Override
+    public Integer getStatus(Long bdId) {
+        // 查询关联的产品需求
+        List<ProductDemandDO> pdDOList = getPdDO(bdId);
+
+        // 过滤掉已作废的产品需求, 取出最小状态
+        Integer minPdStatus = pdDOList.stream()
+                .map(ProductDemandDO::getStatus)
+                .filter(Objects::nonNull)
+                .filter(e -> !ProductDemandStatusEnum.INVALID.getCode().equals(e))
+                .min(Integer::compareTo)
+                .orElse(null);
+
+        // 根据产品需求状态判断业务需求状态
+        int bdStatus;
+        if (ProductDemandStatusEnum.INCLUDED.getCode().equals(minPdStatus)) {
+            bdStatus = BizDemandStatusEnum.INCLUDE_PROJECT.getCode();
+        } else if (ProductDemandStatusEnum.PROGRESS.getCode().equals(minPdStatus)) {
+            bdStatus = BizDemandStatusEnum.PROJECTING.getCode();
+        } else if (ProductDemandStatusEnum.ONLINE.getCode().equals(minPdStatus)) {
+            bdStatus = BizDemandStatusEnum.AVAILABLE.getCode();
+        } else if (ProductDemandStatusEnum.WAITING.getCode().equals(minPdStatus)
+                || ProductDemandStatusEnum.SUSPEND.getCode().equals(minPdStatus)) {
+            bdStatus = BizDemandStatusEnum.PD_LINKED.getCode();
+        } else {
+            bdStatus = BizDemandStatusEnum.RECEIVED.getCode();
+        }
+        return bdStatus;
     }
 }

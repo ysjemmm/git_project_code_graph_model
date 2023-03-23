@@ -112,7 +112,7 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
     private void before(Map<Long, Date> publishDateMap, List<Long> bizDemandIds) {
         if (!CollectionUtils.isEmpty(bizDemandIds)) {
             bizDemandIds.forEach(bid -> {
-                BizDemandDO bizDemandDO = bizDemandMapper.selectById(bid);
+                BizDemandDO bizDemandDO = bizDemandMapper.get(bid);
                 publishDateMap.put(bid, bizDemandDO.getProjectEndDate());
             });
         }
@@ -122,7 +122,7 @@ public class ProductBizDemandComponentImpl implements ProductBizDemandComponent 
         List<BizChangeLogDO> logs = new ArrayList<>();
         bizDemandIds.forEach(bid -> {
             bizDemandComponent.updateProjectEndDate(bid);
-            BizDemandDO bizDemandDO = bizDemandMapper.selectById(bid);
+            BizDemandDO bizDemandDO = bizDemandMapper.get(bid);
             if (!Objects.equals(publishDateMap.get(bid), bizDemandDO.getProjectEndDate())) {
                 String oldValue = DateUtil.parseToString(publishDateMap.get(bid), DateStyle.YYYY_MM_DD);
                 String newValue = DateUtil.parseToString(bizDemandDO.getProjectEndDate(), DateStyle.YYYY_MM_DD);

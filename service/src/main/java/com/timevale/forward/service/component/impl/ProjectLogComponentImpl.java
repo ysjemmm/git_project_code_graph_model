@@ -112,7 +112,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 List<Long> bizDemandIds = productBizDemandMapper.selectByProductDemandIds(productDemandIds)
                         .stream().map(ProductBizDemandDO::getBizDemandId).distinct().collect(Collectors.toList());
                 bizDemandIds.forEach(bid -> {
-                    Date publishDate = bizDemandMapper.selectById(bid).getProjectEndDate();
+                    Date publishDate = bizDemandMapper.get(bid).getProjectEndDate();
                     log.info("bid={},planEndDate={},publishDate={}", bid, newObj.getPlanEndDate(), publishDate);
                     BizChangeLogDO bizChangeLogDO = bizChangeLogMapper.getProjectPublishDate(bid, BizChangeLogTypeEnum.BIZ_DEMAND.getCode(), BizChangeLogFieldEnum.PROJECT_RELEASE_DATE.getText());
                     //发布时间已变为当前需要更新的时间

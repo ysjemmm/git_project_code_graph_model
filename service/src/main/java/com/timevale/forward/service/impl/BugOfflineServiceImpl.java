@@ -1098,7 +1098,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         Long bizDemandId = bugOfflineDO.getBizDemandId();
         //如果线上bug转化了业务需求，则查询并转化业务需求
         if (bizDemandId != 0) {
-            BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+            BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
             bugOfflineDetailVO.setBizDemandId(bizDemandDO.getId());
             bugOfflineDetailVO.setBizDemandName(bizDemandDO.getName());
         }

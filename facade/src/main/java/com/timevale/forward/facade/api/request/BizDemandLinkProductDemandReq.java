@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -22,5 +23,6 @@ public class BizDemandLinkProductDemandReq extends BaseReq {
     Long id;
 
     @ApiModelProperty("关联产品需求Id")
+    @NotEmpty(message = "产品需求id必填")
     List<Long> productDemandIdList;
 }

@@ -228,7 +228,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 修改业务需求状态 —— 作废
         Long bizDemandId = bizDemandUpdateStatusReq.getBizDemandId();
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
         if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
@@ -366,7 +366,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<BizDemandDetailVO> getBizDemandById(Long bizDemandId) {
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
         if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("该业务需求不存在");
         }
@@ -443,7 +443,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         log.info("业务需求修改接收参数 bizDemandModifyReq = {}", bizDemandModifyReq);
 
         // 修改业务需求
-        BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(bizDemandModifyReq.getId());
+        BizDemandDO oldBizDemandDO = bizDemandMapper.get(bizDemandModifyReq.getId());
         if (oldBizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
@@ -523,7 +523,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 变更日志
         bizDemandLogComponent.addLogWhenModifyData(oldBizDemandDO, newBizDemandDO);
 
-        bizDemandComponent.updateCustomerProject(bizDemandModifyReq.getId());
+        bizDemandComponent.updateCustomerPj(bizDemandModifyReq.getId());
         return BaseResult.success(true);
     }
 
@@ -541,7 +541,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             throw new BaseBizRuntimeException("产品线不能为空");
         }
 
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
         if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
@@ -568,10 +568,10 @@ public class BizDemandServiceImpl implements BizDemandService {
                 PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
         ));
 
-        bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
+        bizDemandComponent.updateStatus(bizDemandId);
 
         // 日志, 状态改为同意
-        BizDemandDO newBizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO newBizDemandDO = bizDemandMapper.get(bizDemandId);
         Integer newStatus = newBizDemandDO.getStatus();
 
         bizDemandLogComponent.addLogWhenModifyData(
@@ -634,7 +634,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         Long bizDemandId = bizDemandRejectReq.getBizDemandId();
         Integer reason = bizDemandRejectReq.getReason();
 
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
         if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
@@ -827,7 +827,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             throw new BaseBizRuntimeException("产品线不能为空");
         }
 
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(id);
+        BizDemandDO bizDemandDO = bizDemandMapper.get(id);
         Integer oldStatus = bizDemandDO.getStatus();
         Integer newStatus = BizDemandStatusEnum.TO_CONFIRM.getCode();
 
@@ -909,7 +909,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     public BaseResult<Boolean> completedAgree(BizDemandCompletedAgreeReq bizDemandCompletedAgreeReq) {
         Long id = bizDemandCompletedAgreeReq.getId();
 
-        BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(id);
+        BizDemandDO oldBizDemandDO = bizDemandMapper.get(id);
         Integer oldStatus = oldBizDemandDO.getStatus();
         Integer newStatus = BizDemandStatusEnum.COMPLETED.getCode();
 
@@ -939,7 +939,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         Long id = bizDemandCompletedRejectReq.getId();
         String reason = bizDemandCompletedRejectReq.getRejectReason();
 
-        BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(id);
+        BizDemandDO oldBizDemandDO = bizDemandMapper.get(id);
         Integer oldStatus = oldBizDemandDO.getStatus();
         Integer newStatus = BizDemandStatusEnum.RECEIVED.getCode();
 
@@ -987,7 +987,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     public BaseResult<Boolean> reSubmit(BizDemandResubmitReq bizDemandResubmitReq) {
         Long bizDemandId = bizDemandResubmitReq.getId();
         String name = bizDemandResubmitReq.getName();
-        BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO oldBizDemandDO = bizDemandMapper.get(bizDemandId);
         if (oldBizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }

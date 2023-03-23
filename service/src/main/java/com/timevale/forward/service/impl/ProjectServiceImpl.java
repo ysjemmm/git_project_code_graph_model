@@ -176,8 +176,6 @@ public class ProjectServiceImpl implements ProjectService {
     private ForwardFlow forwardFlow;
     @Resource
     private ProjectEvaluateComponent evaluateComponent;
-    @Resource
-    private ProjectExtMapper projectExtMapper;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -359,13 +357,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 转换后新增
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
-
-        ProjectDO byName = projectMapper.getByName(projectAddReq.getName());
-        log.info("[ProjectServiceImpl.add]project add before:{}", byName);
-        int insert = projectMapper.insert(projectDO);
-        log.info("[ProjectServiceImpl.add]project inert count :{}", insert);
-        log.info("[ProjectServiceImpl.add]project add after:{}", projectDO.getId());
-        projectMapper.deleteSameNameAndNotId(projectDO.getName(), projectDO.getId());
+        projectMapper.insert(projectDO);
 
         projectDO.setParentIds(Collections.singletonList(projectDO.getId()));
 
@@ -1111,7 +1103,7 @@ public class ProjectServiceImpl implements ProjectService {
 
             //项目关联后,业务需求的发布时间可能变化
             bizIdMap.forEach((k, v) -> {
-                BizDemandDO bizDemandDO = bizDemandMapper.selectById(k);
+                BizDemandDO bizDemandDO = bizDemandMapper.get(k);
                 productDemandComponent.sendDingMsg(v, bizDemandDO.getStatus(), k);
             });
 

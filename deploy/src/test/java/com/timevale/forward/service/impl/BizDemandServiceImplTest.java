@@ -107,7 +107,7 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         bizDemandDO.setId(1L);
         bizDemandDO.setReceiveManId("www");
         bizDemandDO.setName("轩振营");
-        when(bizDemandMapper.selectById(any())).thenReturn(bizDemandDO);
+        when(bizDemandMapper.get(any())).thenReturn(bizDemandDO);
 
         when(bizDemandMapper.update(any())).thenReturn(1);
 
@@ -162,7 +162,7 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
         bizDemandDO.setStatus(1);
         bizDemandDO.setPriority(1);
         bizDemandDO.setPlanReleaseDate(1);
-        when(bizDemandMapper.selectById(any())).thenReturn(bizDemandDO);
+        when(bizDemandMapper.get(any())).thenReturn(bizDemandDO);
 
         FileDO fileDO = new FileDO();
         fileDO.setFileId("www");
@@ -197,7 +197,7 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
 
         BizDemandDO bizDemandDO = new BizDemandDO();
         bizDemandDO.setStatus(1);
-        when(bizDemandMapper.selectById(any())).thenReturn(bizDemandDO);
+        when(bizDemandMapper.get(any())).thenReturn(bizDemandDO);
 
         when(bizDemandMapper.selectByName(any())).thenReturn(null);
 
@@ -230,7 +230,7 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
 
         BizDemandDO bizDemandDO = new BizDemandDO();
         bizDemandDO.setStatus(1);
-        when(bizDemandMapper.selectById(any())).thenReturn(bizDemandDO);
+        when(bizDemandMapper.get(any())).thenReturn(bizDemandDO);
 
         when(bizDemandMapper.update(any())).thenReturn(1);
 
@@ -257,7 +257,7 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
 
         BizDemandDO bizDemandDO = new BizDemandDO();
         bizDemandDO.setStatus(1);
-        when(bizDemandMapper.selectById(any())).thenReturn(bizDemandDO);
+        when(bizDemandMapper.get(any())).thenReturn(bizDemandDO);
 
         BizDemandRejectReq bizDemandRejectReq = new BizDemandRejectReq();
         bizDemandRejectReq.setBizDemandId(1L);
@@ -280,7 +280,7 @@ public class BizDemandServiceImplTest extends AbstractTestNGSpringContextTests {
 
         BizDemandDO bizDemandDO = new BizDemandDO();
         bizDemandDO.setStatus(1);
-        when(bizDemandMapper.selectById(any())).thenReturn(bizDemandDO);
+        when(bizDemandMapper.get(any())).thenReturn(bizDemandDO);
 
         when(bizDemandMapper.update(any())).thenReturn(1);
 

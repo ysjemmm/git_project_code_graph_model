@@ -131,14 +131,11 @@
         where id = #{id}
     </update>
 
-    <select id="selectById" resultType="com.timevale.forward.dal.entity.BizDemandDO">
-        select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status,
-               priority, receive_man, receive_man_id, plan_release_date, reason, submit_man,
-               submit_man_id,solve_plan, reject_reason, project_end_date,is_deleted, create_man_id, create_man,
-               create_date, modify_man_id, modify_man, modify_date,customer_dev_demand,customer_dev_type,
-               customer_dev_sale_contract,customer_dev_project_name, source_id,ued_time,back_time,front_time,qa_time,total_time,hope_release_date
-        from biz_demand
-        where id = #{id}
+    <select id="get" resultType="com.timevale.forward.dal.entity.BizDemandDO">
+        SELECT *
+        FROM biz_demand
+        WHERE id = #{id}
+          AND is_deleted = false
     </select>
 
     <select id="selectByName" resultType="com.timevale.forward.dal.entity.BizDemandDO">
@@ -327,6 +324,19 @@
             <if test="true">modify_date = modify_date,</if>
             <if test="true">modify_man = modify_man,</if>
             <if test="true">modify_man_id = modify_man_id,</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <update id="updateCanNull">
+        UPDATE biz_demand
+        <set>
+            project_end_date = #{projectEndDate},
+            plan_release_date = #{planReleaseDate},
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
         </set>
         <where>
             id = #{id}
