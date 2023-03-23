@@ -525,7 +525,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //更新线上bug
         BugOnlineDO bugOnlineConvert = BugOnlineCopier.INSTANCE.change(bugOnlineModifyReq);
         bugOnlineMapper.update(bugOnlineConvert);
-        bugOnlineComponent.updateCanNull(bugOnlineConvert);
+        bugOnlineMapper.updateCanNull(bugOnlineConvert);
 
         //更新附件表
         List<FileAddReq> files = bugOnlineModifyReq.getFiles();
@@ -1079,11 +1079,13 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setOperatorId(lastOperatorId);
         bugOnlineDO.setOperator(lastOperator);
         bugOnlineDO.setDismissCause(null);
+        bugOnlineDO.setDismissCauseStage(null);
         bugOnlineDO.setHangUp(false);
         bugOnlineDO.setOpenAgainReason(bugOnlineOpenAgainReq.getOpenAgainReason());
         bugOnlineDO.setOpenCount(bugOnlineDO.getOpenCount() + 1);
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
+        bugOnlineMapper.updateCanNull(bugOnlineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.OPEN_AGAIN.getText());
@@ -1164,9 +1166,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setDismissCause(bugOnlineNoRepairReq.getDismissCause());
         bugOnlineDO.setDismissCauseStage(bugOnlineNoRepairReq.getDismissCauseStage());
         bugOnlineDO.setReason(null);
+        bugOnlineDO.setReasonStage(null);
         bugOnlineDO.setRepairFailReason(null);
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
+        bugOnlineMapper.updateCanNull(bugOnlineDO);
 
         //状态
         List<BugLogDO> bugLogDOList = new ArrayList<>();
@@ -1377,7 +1381,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //保存老的状态
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
         //保存老的驳回原因
-        String oldDismissCause = BugOnlineDismissCauseEnum.getTextByCode(bugOnlineDO.getDismissCause());
+        String oldDismissCause = BugOnlineReasonEnum.getFullTextByCode(bugOnlineDO.getDismissCause());
         //保存老的经办人和老的上一阶段经办人
         String operatorId = bugOnlineDO.getOperatorId();
         String operator = bugOnlineDO.getOperator();
@@ -1390,8 +1394,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setOperatorId(lastOperatorId);
         bugOnlineDO.setOperator(lastOperator);
         bugOnlineDO.setDismissCause(null);
+        bugOnlineDO.setDismissCauseStage(null);
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
+        bugOnlineMapper.updateCanNull(bugOnlineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.REFUSED.getText());

@@ -56,28 +56,6 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
 
-    public void updateCanNull(BugOnlineDO bugOnlineDO) {
-        Integer reason = bugOnlineDO.getReason();
-        Integer reasonStage = bugOnlineDO.getReasonStage();
-        Integer dismissCause = bugOnlineDO.getDismissCause();
-        Integer dismissCauseStage = bugOnlineDO.getDismissCauseStage();
-
-        // 默认值特殊处理
-        if (reason == null) {
-            bugOnlineDO.setReason(CommonConstant.REASON_NULL);
-        }
-        if (reasonStage == null) {
-            bugOnlineDO.setReason(CommonConstant.REASON_NULL);
-        }
-        if (dismissCause == null) {
-            bugOnlineDO.setReason(CommonConstant.REASON_NULL);
-        }
-        if (dismissCauseStage == null) {
-            bugOnlineDO.setReason(CommonConstant.REASON_NULL);
-        }
-        bugOnlineMapper.updateCanNull(bugOnlineDO);
-    }
-
     @Override
     public void autoCloseBugIfBeConfirm(int autoCloseLimitDay) {
         log.info("待确认线上bug自动关闭-开始:{}", autoCloseLimitDay);
@@ -147,7 +125,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         String oldReasonName = BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason());
 
         bugOnlineDO.setStatus(BugOnlineStatusEnum.REQUIRED.getCode());
-        bugOnlineDO.setReason(BugOnlineReasonEnum.DEMAND_QUESTION.getCode());
+        bugOnlineDO.setReason(BugOnlineReasonEnum.PRODUCT_DESIGN_FLAWS.getCode());
         bugOnlineDO.setPrevStatus(oldStatus);
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
@@ -165,7 +143,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         BugLogDO reasonBugLogDO = new BugLogDO()
                 .setMainId(bugOnlineId)
                 .setOldValue(oldReasonName)
-                .setNewValue(BugOnlineReasonEnum.DEMAND_QUESTION.getText())
+                .setNewValue(BugOnlineReasonEnum.PRODUCT_DESIGN_FLAWS.getText())
                 .setField(BugLogFieldEnum.REASON.getText())
                 .setType(BugLogTypeEnum.ONLINE.getCode());
 

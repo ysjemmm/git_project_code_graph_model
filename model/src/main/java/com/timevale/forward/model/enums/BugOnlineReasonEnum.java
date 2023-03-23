@@ -5,131 +5,14 @@ import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
- * @Date 2022/3/18 15:30
- * @Author 望轩
+ * @author by YangXu
+ * @date 2023/03/23 14:29
  */
 @Getter
 @AllArgsConstructor
 public enum BugOnlineReasonEnum {
-    /**
-     * 需求问题
-     */
-    DEMAND_QUESTION(0, "需求问题",null),
-
-    /**
-     * 环境配置问题
-     */
-    ENV_CONFIGURE(1, "环境配置问题",null),
-
-    /**
-     * 功能错误
-     */
-    FUNCTIONAL_ERROR(2, "功能错误",null),
-
-    /**
-     * 兼容性问题
-     */
-    COMPATIBILITY_PROBLEM(3, "兼容性问题",null),
-
-    /**
-     * 数据问题
-     */
-    DATA_PROBLEM(4, "数据问题",null),
-
-    /**
-     * 性能问题
-     */
-    PERFORMANCE_PROBLEM(5, "性能问题",null),
-
-    /**
-     * 安全问题
-     */
-    SAFE_PROBLEM(6, "安全问题",null),
-
-    /**
-     * 外部原因
-     */
-    OUTSIDE_REASON(7, "外部原因",null),
-
-    /**
-     * 开发误操作
-     */
-    DEVELOP_MISTAKE_OPERATION(8, "开发误操作",null),
-
-    /**
-     * 接口文档编写错误
-     */
-    DOCUMENT_MISTAKE(9, "接口文档编写错误",null),
-
-    /**
-     * ISV问题
-     */
-    ISV(10, "ISV问题",null),
-
-    /**
-     * 历史版本
-     */
-    HISTORY_VERSION(11, "历史版本",null),
-
-    /**
-     * 无测试参与版本
-     */
-    NO_TEST_VERSION(12, "无测试参与版本",null),
-
-    /**
-     * 测试环境延期未修复bug
-     */
-    TEST_ENV_DELAY(13, "测试环境延期未修复bug",null),
-
-    /**
-     * 设计缺陷
-     */
-    DEGREE_DEFECT(14, "设计缺陷",null),
-
-    /**
-     * 定制版升级改动波及
-     */
-    CHANGE_AFFECT(15, "定制版升级改动波及",null),
-
-    /**
-     * 无法重现但客户环境偶现
-     */
-    CUSTOMER_ENV_OCCASION(16, "无法重现但客户环境偶现",null),
-
-    /**
-     * 无法重现但客户环境必现
-     */
-    CUSTOMER_ENV_MUST(17, "无法重现但客户环境必现",null),
-
-    /**
-     * 公有云问题
-     */
-    OPEN_CLOUD(18, "公有云问题",null),
-
-    /**
-     * 中间件问题
-     */
-    MIDDLEWARE(19, "中间件问题",null),
-
-    /**
-     * 产品设计问题
-     */
-    PRODUCT_DESIGN(20, "产品设计问题",null),
-
-    /**
-     * 用户体验
-     */
-    USER_EXPERIENCE(21, "用户体验",null),
-
-    /**
-     * 特殊文档问题
-     */
-    SPECIAL_DOC(22, "特殊文档问题",null),
-
-
     PRODUCT_DESIGN_FLAWS(10001, "产品设计缺陷", BugOnlineReasonStageEnum.PRODUCT_DESIGN),
     PERFORMANCE_UNDEFINED(10002, "性能标准未定义", BugOnlineReasonStageEnum.PRODUCT_DESIGN),
     COMPATIBILITY_UNDEFINE(10003, "兼容性标准未定义", BugOnlineReasonStageEnum.PRODUCT_DESIGN),
@@ -185,7 +68,7 @@ public enum BugOnlineReasonEnum {
     public static List<Integer> getByStage(Integer stage) {
         List<Integer> result = new ArrayList<>();
         for (BugOnlineReasonEnum e : BugOnlineReasonEnum.values()) {
-            if (Objects.equals(stage, e.stage.getCode())) {
+            if (e.stage.getCode().equals(stage)) {
                 result.add(e.getCode());
             }
         }
@@ -194,7 +77,7 @@ public enum BugOnlineReasonEnum {
 
     public static BugOnlineReasonEnum getByCode(Integer code) {
         for (BugOnlineReasonEnum e : BugOnlineReasonEnum.values()) {
-            if (e.getCode().equals(code)) {
+            if (e.code.equals(code)) {
                 return e;
             }
         }

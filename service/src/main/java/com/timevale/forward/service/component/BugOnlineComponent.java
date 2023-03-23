@@ -21,11 +21,4 @@ public interface BugOnlineComponent {
      * 关联业务需求转需求
      */
     void attachToBizDemands(BugOnlineDO bugOnline, Collection<Long> bizDemandIds, ButtonActionEnum actionEnum);
-
-    /**
-     * 更新可以为空的字段
-     *
-     * @param bugOnlineDO 错误在线DO
-     */
-    void updateCanNull(BugOnlineDO bugOnlineDO);
 }

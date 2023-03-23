@@ -23,7 +23,6 @@ import java.util.List;
 @Mapper(
         imports = {
                 BugOnlineStatusEnum.class,
-                BugOnlineDismissCauseEnum.class,
                 BugOnlineEnvEnum.class,
                 BugOnlineSourceEnum.class,
                 BugOnlineBeloneEnum.class,
