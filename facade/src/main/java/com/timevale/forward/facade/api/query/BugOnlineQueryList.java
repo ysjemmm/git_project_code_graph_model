@@ -117,6 +117,10 @@ public class BugOnlineQueryList extends QueryBase {
 
     @ApiModelProperty("bug问题类型")
     private List<Integer> categoryList;
-    
 
+    @ApiModelProperty("重复打开次数判断类型")
+    private Integer openCountType;
+
+    @ApiModelProperty("重复打开次数")
+    private Integer openCount;
 }

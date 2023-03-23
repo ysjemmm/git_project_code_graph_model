@@ -15,6 +15,8 @@ public enum BugFieldEnum {
 
     PRODUCT_LINE("关联产品线"),
 
+    BUG_OFFLINE("关联线下bug"),
+
     UN_HANDLE_REASON("不用修复原因"),
 
     DELAY_HANDLE_REASON("延期修复原因"),

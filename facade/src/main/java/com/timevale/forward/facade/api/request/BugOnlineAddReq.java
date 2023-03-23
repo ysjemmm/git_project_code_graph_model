@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.List;
 @ApiModel("线上bug新增")
 public class BugOnlineAddReq extends ToString {
     @ApiModelProperty("标题")
-    @NotNull(message = "标题不能为空")
+    @NotBlank(message = "标题不能为空")
     private String name;
 
     @ApiModelProperty("提出人:格式 花名-真名")

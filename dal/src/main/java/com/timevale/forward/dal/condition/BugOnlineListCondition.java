@@ -1,13 +1,11 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.forward.dal.annotation.WildcardEscape;
+import lombok.Builder;
+import lombok.Data;
 
 import java.util.Date;
 import java.util.List;
-
-import io.swagger.annotations.ApiModelProperty;
-import lombok.Builder;
-import lombok.Data;
 
 /**
  * @author xingyun
@@ -60,7 +58,7 @@ public class BugOnlineListCondition {
     /**
      * 原因
      */
-    private List<String> reasons;
+    private List<Integer> reasons;
 
     /**
      * 驳回原因列表
@@ -144,4 +142,23 @@ public class BugOnlineListCondition {
     @WildcardEscape
     private String describe;
 
+    /**
+     * 客户等级列表
+     */
+    private List<String> customerGradeList;
+
+    /**
+     * bug类别
+     */
+    private List<Integer> categoryList;
+
+    /**
+     * 打开次数类型
+     */
+    private Integer openCountType;
+
+    /**
+     * 打开次数
+     */
+    private Integer openCount;
 }

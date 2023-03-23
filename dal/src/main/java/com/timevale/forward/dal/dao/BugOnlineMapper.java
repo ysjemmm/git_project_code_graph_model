@@ -41,14 +41,14 @@ public interface BugOnlineMapper {
      *
      * @param bugOnlineDO 参数
      */
-    void update(@Param("bugOnlineDO") BugOnlineDO bugOnlineDO);
+    void update(BugOnlineDO bugOnlineDO);
 
     /**
-     * 完整更新
+     * 更新线上bug
      *
-     * @param bugOnlineDO 线上bugDO
+     * @param bugOnlineDO 参数
      */
-    void fullUpdate(@Param("bugOnlineDO") BugOnlineDO bugOnlineDO);
+    void updateCanNull(BugOnlineDO bugOnlineDO);
 
     /**
      * 插入线上bug
@@ -56,7 +56,7 @@ public interface BugOnlineMapper {
      * @param bugOnlineDO 参数
      * @return Long
      */
-    Long insert(@Param("bugOnlineDO") BugOnlineDO bugOnlineDO);
+    void insert(BugOnlineDO bugOnlineDO);
 
     /**
      * 根据线上bug的id查询线上bug

@@ -56,6 +56,28 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
 
+    public void updateCanNull(BugOnlineDO bugOnlineDO) {
+        Integer reason = bugOnlineDO.getReason();
+        Integer reasonStage = bugOnlineDO.getReasonStage();
+        Integer dismissCause = bugOnlineDO.getDismissCause();
+        Integer dismissCauseStage = bugOnlineDO.getDismissCauseStage();
+
+        // 默认值特殊处理
+        if (reason == null) {
+            bugOnlineDO.setReason(BugOnlineReasonEnum.NULL.getCode());
+        }
+        if (reasonStage == null) {
+            bugOnlineDO.setReason(BugOnlineReasonStageEnum.NULL.getCode());
+        }
+        if (dismissCause == null) {
+            bugOnlineDO.setReason(BugOnlineReasonEnum.NULL.getCode());
+        }
+        if (dismissCauseStage == null) {
+            bugOnlineDO.setReason(BugOnlineReasonStageEnum.NULL.getCode());
+        }
+        bugOnlineMapper.updateCanNull(bugOnlineDO);
+    }
+
     @Override
     public void autoCloseBugIfBeConfirm(int autoCloseLimitDay) {
         log.info("待确认线上bug自动关闭-开始:{}", autoCloseLimitDay);

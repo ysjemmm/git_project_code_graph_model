@@ -6,6 +6,8 @@ import com.timevale.forward.dal.entity.BugLogDO;
 import com.timevale.forward.dal.entity.BugStatusOperatorDO;
 import com.timevale.forward.model.enums.BugLogFieldEnum;
 import com.timevale.forward.model.enums.BugLogTypeEnum;
+import com.timevale.forward.model.enums.BugOnlineStatusEnum;
+import com.timevale.forward.model.enums.ButtonActionEnum;
 import com.timevale.forward.service.component.BugLogComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -50,5 +52,17 @@ public class BugLogComponentImpl implements BugLogComponent {
     @Override
     public void insertToBugStatusOperator(Long bugOnlineId, String userId, String userName) {
         insertToBugStatusOperator(bugOnlineId,userId,userName, BugLogTypeEnum.ONLINE.getCode());
+    }
+
+    @Override
+    public void bugOnlineInit(Long id) {
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setMainId(id);
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setOldValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
+        bugLogDO.setNewValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+        bugLogDO.setAction(ButtonActionEnum.SUBMIT.getText());
+        bugLogMapper.insert(bugLogDO);
     }
 }

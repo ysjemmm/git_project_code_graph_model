@@ -102,4 +102,24 @@ public class BugOnlineListDO extends BaseDO {
      * 客户等级
      */
     private String customerGrade;
+
+    /**
+     * 打开次数
+     */
+    private Integer openCount;
+
+    /**
+     * 原因阶段
+     */
+    private Integer reasonStage;
+
+    /**
+     * 驳回原因阶段
+     */
+    private Integer dismissCauseStage;
+
+    /**
+     * 类别
+     */
+    private Integer category;
 }

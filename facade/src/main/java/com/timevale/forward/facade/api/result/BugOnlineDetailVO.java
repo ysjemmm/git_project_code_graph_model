@@ -1,6 +1,5 @@
 package com.timevale.forward.facade.api.result;
 
-import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -185,7 +184,7 @@ public class BugOnlineDetailVO extends ToString {
     private Long bugOfflineId;
 
     @ApiModelProperty("关联线下bug的名称")
-    private Long bugOfflineName;
+    private String bugOfflineName;
 
     @ApiModelProperty("bug责任人列表")
     private List<PersonVO> principalList;
@@ -194,11 +193,11 @@ public class BugOnlineDetailVO extends ToString {
     private Integer reasonStage;
 
     @ApiModelProperty("归因阶段描述")
-    private Integer reasonStageName;
+    private String reasonStageName;
 
     @ApiModelProperty("驳回原因归因阶段")
     private Integer dismissCauseStage;
 
     @ApiModelProperty("驳回原因归因阶段描述")
-    private Integer dismissCauseStageName;
+    private String dismissCauseStageName;
 }
