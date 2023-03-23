@@ -121,8 +121,8 @@ public interface BugOnlineCopier {
      * @param bugOnlineDO 参数
      * @return 返回值
      */
-    @Mapping(target = "reasonName", expression="java(BugOnlineReasonEnum.getFullTextByCode(req.getReason()))")
-    @Mapping(target = "dismissCauseName", expression="java(BugOnlineReasonEnum.getFullTextByCode(req.getDismissCause()))")
+    @Mapping(target = "reasonName", expression="java(BugOnlineReasonEnum.getFullTextByCode(bugOnlineDO.getReason()))")
+    @Mapping(target = "dismissCauseName", expression="java(BugOnlineReasonEnum.getFullTextByCode(bugOnlineDO.getDismissCause()))")
     BugOnlineMD change(BugOnlineDO bugOnlineDO);
 
     /**
