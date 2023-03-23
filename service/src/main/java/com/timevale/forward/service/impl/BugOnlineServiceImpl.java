@@ -362,7 +362,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     public BaseResult<Boolean> add(BugOnlineAddReq bugOnlineAddReq) {
         log.info("线上bug-新增:接收参数{}", bugOnlineAddReq);
 
-        AssertUtil.checkState(bugOnlineAddReq.getName().contains(CommonConstant.BLANK), "线上bug名称中请勿包含空格");
+        AssertUtil.checkState(!bugOnlineAddReq.getName().contains(CommonConstant.BLANK), "线上bug名称中请勿包含空格");
 
         if (Objects.equals(bugOnlineAddReq.getSource(), "support")) {
             log.info("默认经办人:{}", defaultOperator);
