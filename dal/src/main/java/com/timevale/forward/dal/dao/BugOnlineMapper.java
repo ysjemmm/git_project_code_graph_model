@@ -5,6 +5,7 @@ import com.timevale.forward.dal.entity.BugOnlineDO;
 import com.timevale.forward.dal.entity.BugOnlineListDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public interface BugOnlineMapper {
      * @param id 线上bug的id
      * @return 返回值
      */
-    BugOnlineDO selectById(@Param("id") Long id);
+    BugOnlineDO get(@Param("id") Long id);
 
     /**
      * 选择所有id
@@ -42,13 +43,6 @@ public interface BugOnlineMapper {
      * @param bugOnlineDO 参数
      */
     void update(BugOnlineDO bugOnlineDO);
-
-    /**
-     * 更新线上bug
-     *
-     * @param bugOnlineDO 参数
-     */
-    void updateCanNull(BugOnlineDO bugOnlineDO);
 
     /**
      * 插入线上bug
@@ -109,6 +103,8 @@ public interface BugOnlineMapper {
     @Select("select count(*) from bug_online where biz_id = #{bizId} and is_deleted = false")
     boolean bizIdExists(@Param("bizId") String bizId);
 
+    @Update("UPDATE bug_online SET is_deleted=true, modify_man=#{modiftMan}, modify_man_id=#{modifyManId} WHERE id=#{id}")
+    void delete(@Param("id")Long id);
 
     /**
      * 根据客户id查询

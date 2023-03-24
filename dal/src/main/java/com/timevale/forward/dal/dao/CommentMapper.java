@@ -36,5 +36,5 @@ public interface CommentMapper {
      * @param type 类型
      * @return
      */
-    Boolean deleteByToIdAndType(@Param("toId") Long toId, @Param("type") Integer type);
+    Boolean delete(@Param("toId") Long toId, @Param("type") Integer type);
 }

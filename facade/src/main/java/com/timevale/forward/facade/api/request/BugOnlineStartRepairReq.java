@@ -39,4 +39,7 @@ public class BugOnlineStartRepairReq extends BaseReq {
     @ApiModelProperty("预计上线日期")
     @NotNull(message = "预计上线日期不能为空")
     private Date expectLaunchDate;
+
+    @ApiModelProperty("线下bugId")
+    private Long bugOfflineId;
 }

@@ -1128,7 +1128,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             bugLogComponent.insertToBugStatusOperator(bugOfflineId, userInfo.getId(), userInfo.getFullAlias(), BugLogTypeEnum.OFFLINE.getCode());
         }
         if (bugOnlineId != null) {
-            BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineId);
+            BugOnlineDO bugOnlineDO = bugOnlineMapper.get(bugOnlineId);
             if (bugOnlineDO == null) {
                 throw new BaseBizRuntimeException("转换需求失败，原线上bug不存在");
             }

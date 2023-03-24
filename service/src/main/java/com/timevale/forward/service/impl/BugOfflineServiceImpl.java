@@ -1124,7 +1124,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         personMapper.update(personDO);
 
         //删除评论数据
-        commentMapper.deleteByToIdAndType(bugOfflineReq.getId(), CommentTypeEnum.BUG_OFFLINE.getCode());
+        commentMapper.delete(bugOfflineReq.getId(), CommentTypeEnum.BUG_OFFLINE.getCode());
 
         //删除附件数据
         FileDO fileDO = new FileDO();

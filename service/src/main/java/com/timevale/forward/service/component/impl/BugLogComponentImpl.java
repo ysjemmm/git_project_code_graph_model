@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.timevale.forward.dal.dao.BugLogMapper;
 import com.timevale.forward.dal.dao.BugStatusOperatorMapper;
 import com.timevale.forward.dal.entity.BugLogDO;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -64,5 +66,24 @@ public class BugLogComponentImpl implements BugLogComponent {
         bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
         bugLogDO.setAction(ButtonActionEnum.SUBMIT.getText());
         bugLogMapper.insert(bugLogDO);
+    }
+
+    @Override
+    public void add(BugLogDO bugLogDO) {
+        if (bugLogDO == null) {
+            return;
+        }
+        bugLogMapper.insert(bugLogDO);
+    }
+
+    @Override
+    public void add(List<BugLogDO> logDOList) {
+        if (CollUtil.isEmpty(logDOList)) {
+            return;
+        }
+        logDOList = logDOList.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(logDOList)) {
+            bugLogMapper.batchInsert(logDOList);
+        }
     }
 }

@@ -1,6 +1,6 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.timevale.forward.dal.dao.BugOnlineMapper">
-    <select id="selectById" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+    <select id="get" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
         select *
         from bug_online
         where id = #{id}
@@ -202,7 +202,7 @@
                 <if test="createManId != null"> create_man_id,</if>
             </trim>
             VALUES
-            <trim prefix="(" suffix=")" suffixOverrides=",">
+            <trim prefix="(" suffix=">" suffixOverrides=",">
                 <if test="name!=null">#{name},</if>
                 <if test="operator!=null">#{operator},</if>
                 <if test="operatorId!=null">#{operatorId},</if>
@@ -240,44 +240,96 @@
     <update id="update">
         update bug_online
         <set>
-            <if test="name != null"> name = #{name}, </if>
-            <if test="operator != null"> operator = #{operator}, </if>
-            <if test="operatorId != null"> operator_id = #{operatorId}, </if>
-            <if test="lastOperator != null"> last_operator = #{lastOperator}, </if>
-            <if test="lastOperatorId != null"> last_operator_id = #{lastOperatorId}, </if>
-            <if test="proposer != null"> proposer = #{proposer}, </if>
-            <if test="proposerId != null"> proposer_id = #{proposerId}, </if>
-            <if test="customerName != null"> customer_name = #{customerName}, </if>
-            <if test="env != null"> env = #{env}, </if>
-            <if test="belong != null"> belong = #{belong}, </if>
-            <if test="priority != null"> priority = #{priority}, </if>
-            <if test="recurrent != null"> recurrent = #{recurrent}, </if>
-            <if test="reason != null"> reason = #{reason}, </if>
-            <if test="expectDate != null"> expect_date = #{expectDate}, </if>
-            <if test="business != null"> business = #{business}, </if>
-            <if test="describe != null"> `describe` = #{describe}, </if>
-            <if test="prevStatus != null"> prev_status = #{prevStatus}, </if>
-            <if test="hangUp != null"> hang_up = #{hangUp}, </if>
-            <if test="status != null"> `status` = #{status}, </if>
-            <if test="dismissCause != null"> dismiss_cause = #{dismissCause}, </if>
-            <if test="problemReason != null"> problem_reason = #{problemReason}, </if>
-            <if test="solveScheme != null"> solve_scheme = #{solveScheme}, </if>
-            <if test="repairFailReason != null"> repair_fail_reason = #{repairFailReason}, </if>
-            <if test="openAgainReason != null"> open_again_reason = #{openAgainReason}, </if>
-            <if test="detailVersionId != null"> detail_version_id = #{detailVersionId}, </if>
-            <if test="expectLaunchDate != null"> expect_launch_date = #{expectLaunchDate}, </if>
-            <if test="sourceId != null and sourceId != ''"> source_id = #{sourceId}, </if>
-            <if test="customerDevProjectName != null and customerDevProjectName != ''"> customer_dev_project_name = #{customerDevProjectName}, </if>
-            <if test="area != null"> area = #{area}, </if>
-            <if test="category!=null"> category = #{category}, </if>
-            <if test="bugOfflineId!=null"> bug_offline_id = #{bugOfflineId}, </if>
-            <if test="reasonStage!=null"> reason_stage = #{reasonStage}, </if>
-            <if test="dismissCause!=null"> dismiss_cause = #{dismissCause}, </if>
-            <if test="dismissCauseStage!=null"> dismiss_cause_stage = #{dismissCauseStage}, </if>
-            <if test="openCount!=null"> open_count = #{openCount}, </if>
-            <if test="isDeleted != null"> is_deleted = #{isDeleted}, </if>
-            <if test="modifyManId != null"> modify_man_id = #{modifyManId}, </if>
-            <if test="modifyMan != null"> modify_man = #{modifyMan}, </if>
+            # 历史悠久，改不动了，坑点
+            <if test="true">
+                area = #{area},
+                reason = #{reason},
+                expect_date = #{expectDate},
+                reason_stage = #{reasonStage},
+                dismiss_cause = #{dismissCause},
+                customer_name = #{customerName},
+                bug_offline_id = #{bugOfflineId},
+                repair_fail_reason = #{repairFailReason},
+                dismiss_cause_stage = #{dismissCauseStage},
+            </if>
+            <if test="name != null">
+                `name` = #{name},
+            </if>
+            <if test="operator != null">
+                operator = #{operator},
+            </if>
+            <if test="operatorId != null">
+                operator_id = #{operatorId},
+            </if>
+            <if test="lastOperator != null">
+                last_operator = #{lastOperator},
+            </if>
+            <if test="lastOperatorId != null">
+                last_operator_id = #{lastOperatorId},
+            </if>
+            <if test="proposer != null">
+                proposer = #{proposer},
+            </if>
+            <if test="proposerId != null">
+                proposer_id = #{proposerId},
+            </if>
+            <if test="env != null">
+                env = #{env},
+            </if>
+            <if test="belong != null">
+                belong = #{belong},
+            </if>
+            <if test="priority != null">
+                priority = #{priority},
+            </if>
+            <if test="recurrent != null">
+                recurrent = #{recurrent},
+            </if>
+            <if test="business != null">
+                business = #{business},
+            </if>
+            <if test="describe != null">
+                `describe` = #{describe},
+            </if>
+            <if test="prevStatus != null">
+                prev_status = #{prevStatus},
+            </if>
+            <if test="hangUp != null">
+                hang_up = #{hangUp},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="problemReason != null">
+                problem_reason = #{problemReason},
+            </if>
+            <if test="solveScheme != null">
+                solve_scheme = #{solveScheme},
+            </if>
+            <if test="openAgainReason != null">
+                open_again_reason = #{openAgainReason},
+            </if>
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted},
+            </if>
+            <if test="detailVersionId != null">
+                detail_version_id = #{detailVersionId},
+            </if>
+            <if test="expectLaunchDate != null">
+                expect_launch_date = #{expectLaunchDate},
+            </if>
+            <if test="sourceId != null and sourceId != ''">
+                source_id = #{sourceId},
+            </if>
+            <if test="customerDevProjectName != null and customerDevProjectName != ''">
+                customer_dev_project_name = #{customerDevProjectName},
+            </if>
+            <if test="modify_man != null">
+                modify_man_id = #{modifyManId},
+            </if>
+            <if test="modify_man != null">
+                modify_man = #{modifyMan}
+            </if>
         </set>
         <where>
             id = #{id}
@@ -377,23 +429,6 @@
             <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
                 #{item}
             </foreach>
-        </where>
-    </update>
-
-    <update id="updateCanNull">
-        UPDATE bug_online
-        <set>
-            area = #{area},
-            reason = #{reason},
-            expect_date = #{expectDate},
-            reason_stage = #{reasonStage},
-            dismiss_cause = #{dismissCause},
-            customer_name = #{customerName},
-            repair_fail_reason = #{repairFailReason},
-            dismiss_cause_stage = #{dismissCauseStage},
-        </set>
-        <where>
-            id = #{id}
         </where>
     </update>
 
