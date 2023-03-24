@@ -64,6 +64,11 @@ public enum BugOnlineReasonEnum {
     private final Integer code;
     private final String text;
     private final BugOnlineReasonStageEnum stage;
+    private final static String SEPARATOR = "-";
+
+    public String getFullText() {
+        return stage.getText() + SEPARATOR + text;
+    }
 
     public static List<Integer> getByStage(Integer stage) {
         List<Integer> result = new ArrayList<>();
@@ -96,7 +101,7 @@ public enum BugOnlineReasonEnum {
     public static String getFullTextByCode(Integer code) {
         for (BugOnlineReasonEnum e : BugOnlineReasonEnum.values()) {
             if (e.code.equals(code)) {
-                return e.getStage().getText() + "-" + e.getText();
+                return e.getStage().getText() + BugOnlineReasonEnum.SEPARATOR + e.getText();
             }
         }
         return "";

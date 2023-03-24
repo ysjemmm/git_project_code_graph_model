@@ -143,7 +143,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         BugLogDO reasonBugLogDO = new BugLogDO()
                 .setMainId(bugOnlineId)
                 .setOldValue(oldReasonName)
-                .setNewValue(BugOnlineReasonEnum.PRODUCT_DESIGN_FLAWS.getText())
+                .setNewValue(BugOnlineReasonEnum.PRODUCT_DESIGN_FLAWS.getFullText())
                 .setField(BugLogFieldEnum.REASON.getText())
                 .setType(BugLogTypeEnum.ONLINE.getCode());
 
