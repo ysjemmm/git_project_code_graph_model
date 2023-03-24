@@ -96,7 +96,7 @@ public enum BugOnlineReasonEnum {
     public static String getFullTextByCode(Integer code) {
         for (BugOnlineReasonEnum e : BugOnlineReasonEnum.values()) {
             if (e.code.equals(code)) {
-                return e.getStage().getText() + "/" + e.getText();
+                return e.getStage().getText() + "-" + e.getText();
             }
         }
         return "";
