@@ -329,10 +329,10 @@
             <if test="reasonStage != null">
                 reason_stage = #{reasonStage},
             </if>
-            <if test="modify_man != null">
+            <if test="modifyManId != null">
                 modify_man_id = #{modifyManId},
             </if>
-            <if test="modify_man != null">
+            <if test="modifyMan != null">
                 modify_man = #{modifyMan}
             </if>
         </set>
