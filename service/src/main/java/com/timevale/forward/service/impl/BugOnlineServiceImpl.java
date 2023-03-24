@@ -187,16 +187,26 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<Integer> reasonStageList = bugOnlineQueryList.getReasonStageList();
         List<Integer> dismissCauselist = bugOnlineQueryList.getDismissCauseList();
         List<Integer> dismissCauseStageList = bugOnlineQueryList.getDismissCauseStageList();
-        for (Integer stage : reasonStageList) {
-            List<Integer> stageReasons = BugOnlineReasonEnum.getByStage(stage);
-            if (!CollUtil.containsAny(stageReasons, reasons)) {
-                reasons.addAll(stageReasons);
+        if (CollUtil.isNotEmpty(reasonStageList)) {
+            if (reasons == null) {
+                reasons = new ArrayList<>();
+            }
+            for (Integer stage : reasonStageList) {
+                List<Integer> stageReasons = BugOnlineReasonEnum.getByStage(stage);
+                if (!CollUtil.containsAny(stageReasons, reasons)) {
+                    reasons.addAll(stageReasons);
+                }
             }
         }
-        for (Integer stage : dismissCauseStageList) {
-            List<Integer> stageReasons = BugOnlineReasonEnum.getByStage(stage);
-            if (!CollUtil.containsAny(stageReasons, reasons)) {
-                dismissCauselist.addAll(stageReasons);
+        if (CollUtil.isNotEmpty(dismissCauseStageList)) {
+            if (dismissCauselist == null) {
+                dismissCauselist = new ArrayList<>();
+            }
+            for (Integer stage : dismissCauseStageList) {
+                List<Integer> stageReasons = BugOnlineReasonEnum.getByStage(stage);
+                if (!CollUtil.containsAny(stageReasons, reasons)) {
+                    dismissCauselist.addAll(stageReasons);
+                }
             }
         }
         condition.setReasons(reasons);
