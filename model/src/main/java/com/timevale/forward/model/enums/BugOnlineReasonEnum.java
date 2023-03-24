@@ -24,7 +24,7 @@ public enum BugOnlineReasonEnum {
     TECHNICAL_DESIGN_FLAWS(20001, "技术设计缺陷", BugOnlineReasonStageEnum.DEV),
     CHANGE_EVALUATION_INSUFFICIENT(20002, "改动评估不足", BugOnlineReasonStageEnum.DEV),
     EXTERNAL_TECHNICAL(20003, "外部技术供应商原因", BugOnlineReasonStageEnum.DEV),
-    NEW_ISV(20004, "ISV原因", BugOnlineReasonStageEnum.DEV),
+    ISV(20004, "ISV原因", BugOnlineReasonStageEnum.DEV),
     UNKNOWN(20005, "原因未查明", BugOnlineReasonStageEnum.DEV),
     INTERFACE_DOC(20006, "接口文档编写错误", BugOnlineReasonStageEnum.DEV),
     DATA(20007, "数据原因", BugOnlineReasonStageEnum.DEV),
@@ -39,7 +39,7 @@ public enum BugOnlineReasonEnum {
     SERVICE_INTERRUPT(40001, "服务中断", BugOnlineReasonStageEnum.PUBLISH),
     PUBLISH_PLAN(40002, "发布计划问题", BugOnlineReasonStageEnum.PUBLISH),
     ENVIRONMENT_CONFIG(40003, "环境配置导致", BugOnlineReasonStageEnum.PUBLISH),
-    PUBLISH_MISOPERATION(40004, "误操作", BugOnlineReasonStageEnum.PUBLISH),
+    PUBLISH_MISOPERATION(40004, "发布误操作", BugOnlineReasonStageEnum.PUBLISH),
     NOTICE_MISSING(40005, "产品培训或发布公告缺失", BugOnlineReasonStageEnum.PUBLISH),
 
     PRODUCT_INCOMPREHENSION(50001, "对产品的理解错误或不熟悉", BugOnlineReasonStageEnum.OPERATION),
