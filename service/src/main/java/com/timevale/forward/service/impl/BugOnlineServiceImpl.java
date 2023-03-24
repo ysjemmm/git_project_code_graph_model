@@ -1068,11 +1068,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BusinessResult<String> noRepair(BugOnlineNoRepairReq req) {
+    public BusinessResult<String> noRepair(BugOnlineNoRepairReq noRepairReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         //查询线上bug
-        BugOnlineDO bugOnlineDO = bugOnlineMapper.get(req.getId());
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.get(noRepairReq.getId());
         if (bugOnlineDO == null) {
             throw new BaseBizRuntimeException("线上bug不存在");
         }
@@ -1096,8 +1096,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setLastOperator(bugOnlineDO.getOperator());
         bugOnlineDO.setOperatorId(bugOnlineDO.getProposerId());
         bugOnlineDO.setOperator(bugOnlineDO.getProposer());
-        bugOnlineDO.setDismissCause(req.getDismissCause());
-        bugOnlineDO.setDismissCauseStage(req.getDismissCauseStage());
+        bugOnlineDO.setDismissCause(noRepairReq.getDismissCause());
+        bugOnlineDO.setDismissCauseStage(noRepairReq.getDismissCauseStage());
         bugOnlineDO.setReason(null);
         bugOnlineDO.setReasonStage(null);
         bugOnlineDO.setRepairFailReason(null);
@@ -1106,11 +1106,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //状态
         List<BugLogDO> bugLogDOList = new ArrayList<>();
-        bugLogDOList.add(createBugLog(req.getId(), oldStatus, BugOnlineStatusEnum.BE_CONFIRM.getText()
+        bugLogDOList.add(createBugLog(noRepairReq.getId(), oldStatus, BugOnlineStatusEnum.BE_CONFIRM.getText()
                 , ButtonActionEnum.NO_REPAIR.getText(), BugLogFieldEnum.STATUS.getText()));
 
         //因为新增了驳回原因所以这里需要加入一条内容变更记录
-        bugLogDOList.add(createBugLog(req.getId(),
+        bugLogDOList.add(createBugLog(noRepairReq.getId(),
                 null,
                 BugOnlineReasonEnum.getFullTextByCode(bugOnlineDO.getDismissCause()),
                 null,
@@ -1118,20 +1118,20 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //如果修复失败原因有值还需要记录一条日志内容记录
         if (StringUtils.isNotEmpty(oldRepairFailReason)) {
-            bugLogDOList.add(createBugLog(req.getId(), oldRepairFailReason, null
+            bugLogDOList.add(createBugLog(noRepairReq.getId(), oldRepairFailReason, null
                     , null, BugFieldEnum.REPAIR_FAIL_REASON.getText()));
         }
 
         //如果经办人变了，则添加一条内容变更记录
         if (!operator.equals(bugOnlineDO.getOperator())) {
-            bugLogDOList.add(createBugLog(req.getId(), operator, bugOnlineDO.getOperator()
+            bugLogDOList.add(createBugLog(noRepairReq.getId(), operator, bugOnlineDO.getOperator()
                     , null, BugFieldEnum.OPERATOR.getText()));
         }
 
         //bug原因
         if (oldReason != null) {
             String reasonText = BugOnlineReasonEnum.getTextByCode(oldReason);
-            bugLogDOList.add(createBugLog(req.getId(), reasonText, null
+            bugLogDOList.add(createBugLog(noRepairReq.getId(), reasonText, null
                     , null, BugLogFieldEnum.REASON.getText()));
         }
 
@@ -1160,7 +1160,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 )
         ));
 
-        String tips = updateLinkBug(req.getId(), req.getLinkBugId());
+        String tips = updateLinkBug(noRepairReq.getId(), noRepairReq.getLinkBugId());
 
         BusinessResult<String> businessResult = new BusinessResult<>();
         businessResult.setData(tips);
@@ -1748,11 +1748,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 //由A->B 变成 A->无
                 bugLogDOList.add(createBugLog(id, id, oldLinkBugId, ButtonActionEnum.UN_LINK.getText()));
                 bugLogDOList.add(createBugLog(oldLinkBugId, id, oldLinkBugId, ButtonActionEnum.UN_LINK.getText()));
-            } else if (oldLinkBugId == null && finalBugId != null) {
+            } else if (oldLinkBugId == null) {
                 //由A->无 变成 A->B
                 bugLogDOList.add(createBugLog(id, id, finalBugId, ButtonActionEnum.LINK.getText()));
                 bugLogDOList.add(createBugLog(finalBugId, id, finalBugId, ButtonActionEnum.LINK.getText()));
-            } else if (oldLinkBugId != null && finalBugId != null) {
+            } else {
                 //由A->B 变成 A->finalBugId
                 //删除老的
                 bugLogDOList.add(createBugLog(id, id, oldLinkBugId, ButtonActionEnum.UN_LINK.getText()));
