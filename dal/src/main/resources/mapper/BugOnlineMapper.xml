@@ -240,12 +240,11 @@
     <update id="update">
         update bug_online
         <set>
-            # 历史悠久，改不动了，坑点
+            # 历史悠久，改不动了
             <if test="true">
                 area = #{area},
-                reason = #{reason},
+                category = #{category},
                 expect_date = #{expectDate},
-                reason_stage = #{reasonStage},
                 dismiss_cause = #{dismissCause},
                 customer_name = #{customerName},
                 bug_offline_id = #{bugOfflineId},
@@ -298,7 +297,7 @@
                 hang_up = #{hangUp},
             </if>
             <if test="status != null">
-                status = #{status},
+                `status` = #{status},
             </if>
             <if test="problemReason != null">
                 problem_reason = #{problemReason},
@@ -323,6 +322,12 @@
             </if>
             <if test="customerDevProjectName != null and customerDevProjectName != ''">
                 customer_dev_project_name = #{customerDevProjectName},
+            </if>
+            <if test="reason != null">
+                reason = #{reason},
+            </if>
+            <if test="reasonStage != null">
+                reason_stage = #{reasonStage},
             </if>
             <if test="modify_man != null">
                 modify_man_id = #{modifyManId},

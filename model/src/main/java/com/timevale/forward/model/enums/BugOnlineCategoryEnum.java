@@ -11,8 +11,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum BugOnlineCategoryEnum {
-
-    NULL(0, "空"),
     FUNCTION(1, "功能问题"),
     PERFORMANCE(2, "性能问题"),
     CAPABILITY(3, "兼容性问题"),
