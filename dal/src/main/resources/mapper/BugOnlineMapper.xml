@@ -202,7 +202,7 @@
                 <if test="createManId != null"> create_man_id,</if>
             </trim>
             VALUES
-            <trim prefix="(" suffix=">" suffixOverrides=",">
+            <trim prefix="(" suffix=")" suffixOverrides=",">
                 <if test="name!=null">#{name},</if>
                 <if test="operator!=null">#{operator},</if>
                 <if test="operatorId!=null">#{operatorId},</if>

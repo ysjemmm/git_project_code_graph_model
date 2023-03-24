@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
@@ -26,6 +27,7 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
@@ -381,29 +383,23 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 获取对应产品线
         ProductLineDO productLineDO = productLineMapper.selectById(bizDemandDO.getProductLineId());
-        if (productLineDO == null) {
-            throw new BaseBizRuntimeException("业务需求未关联产品线");
-        }
+        AssertUtil.notNull(productLineDO, "业务需求未关联产品线");
 
         // 信息填充
         BizDemandDetailVO bizDemandDetailVO = BizDemandCopier.INSTANCE.convert(bizDemandDO);
         bizDemandDetailVO.setFileList(fileVOList);
         bizDemandDetailVO.setRecipientInfoList(personVOList);
+        bizDemandDetailVO.setEndDate(bizDemandDO.getProjectEndDate());
         bizDemandDetailVO.setProductLineName(productLineDO.getName());
         bizDemandDetailVO.setBizDomainId(productLineDO.getBizDomainId());
 
         // 获取部门链，添加完整部门信息
         Map<Long, GroupResponse> deptMap = bizDemandComponent.getGroupListTreeMap(Lists.newArrayList(bizDemandDO.getDeptId()));
         GroupResponse response = deptMap.get(bizDemandDetailVO.getDeptId());
-        if (response == null) {
-            log.info("没有找到部门,id为:{}", bizDemandDetailVO.getDeptId());
-        } else {
+        if (response != null) {
             bizDemandDetailVO.setDeptName(response.getGroupName());
             bizDemandDetailVO.setDeptDeleteFlag(response.getDeleteFlag());
         }
-
-        //获取项目发布时间
-        bizDemandDetailVO.setEndDate(bizDemandDO.getProjectEndDate());
 
         // 查看是否为线上bug转换
         List<Long> bugOnlineIds = bugOnlineBizDemandMapper.getBugOnlineIds(bizDemandId);
@@ -422,10 +418,11 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 获取客户信息
         List<BizDemandCustomDO> bizDemandCustomDOList = bizDemandCustomComponent.selectByBizDemandId(bizDemandId);
-
-        if (CollectionUtils.isNotEmpty(bizDemandCustomDOList)) {
-            bizDemandDetailVO.setCustomList(BizDemandCustomCopier.INSTANCE.convertListToVO(bizDemandCustomDOList));
+        if (CollUtil.isNotEmpty(bizDemandCustomDOList)) {
+            List<BizDemandCustomVO> customList = BizDemandCustomCopier.INSTANCE.convertListToVO(bizDemandCustomDOList);
+            bizDemandDetailVO.setCustomList(customList);
         }
+
         return BaseResult.success(bizDemandDetailVO);
     }
 
