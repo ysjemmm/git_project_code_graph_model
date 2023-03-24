@@ -1,7 +1,10 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BugOfflineListCondition;
 import com.timevale.forward.dal.condition.PersonListCondition;
@@ -1138,61 +1141,84 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList bugLogQueryList) {
-        PageHelper.startPage(bugLogQueryList.pageNum, bugLogQueryList.pageSize);
+    public BaseResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList logQuery) {
         List<BugLogDO> bugLogDOList;
-        //如果是状态变更,需要进行筛选出状态变更的数据
-        if (bugLogQueryList.getStatusChange()) {
-            bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), true);
+        PageHelper.startPage(logQuery.pageNum, logQuery.pageSize);
+        if (logQuery.getStatusChange()) {
+            bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(logQuery.getId(), logQuery.getType(), true);
             bugLogDOList = bugLogDOList.stream().filter(a->BugLogFieldEnum.STATUS.getText().equals(a.getField())).collect(Collectors.toList());
         } else {
-            bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(bugLogQueryList.getId(), bugLogQueryList.getType(), false);
+            bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(logQuery.getId(), logQuery.getType(), false);
         }
 
-        if (CollectionUtils.isEmpty(bugLogDOList)) {
+        // 判空
+        if (CollUtil.isEmpty(bugLogDOList)) {
             return BaseResult.success(ResultUtil.pageEmpty());
         }
 
-        PageInfo<BugLogDO> pageInfo = new PageInfo<>(bugLogDOList);
-        PageQueryResult<BugLogVO> pageQueryResult = new PageQueryResult<>();
-
+        // 转换为 VO
         List<BugLogVO> bugLogVOList = bugLogDOList.stream().map(BugLogCopier.INSTANCE::convert).collect(Collectors.toList());
 
-        Map<Long, BugOnlineDO> bugMap=new HashMap<>();
-        if(BugLogTypeEnum.ONLINE.getCode().equals(bugLogQueryList.getType())){
-            List<Long> oldBugIds = bugLogDOList.stream().filter(a->BugFieldEnum.LINK_BUG.getText().equals(a.getField()))
-                    .map(a->Long.valueOf(a.getOldValue())).distinct().collect(Collectors.toList());
-            List<Long> newBugIds = bugLogDOList.stream().filter(a->BugFieldEnum.LINK_BUG.getText().equals(a.getField()))
-                    .map(a->Long.valueOf(a.getNewValue())).distinct().collect(Collectors.toList());
+        // 如果是线上bug，需要填充关联的对应bug信息
+        if(BugLogTypeEnum.ONLINE.getCode().equals(logQuery.getType())){
+            // 关联的线上线下bug信息
+            Set<Long> bugOnlineIds = new HashSet<>();
+            Set<Long> bugOfflineIds = new HashSet<>();
 
-            oldBugIds.addAll(newBugIds);
-            if(CollectionUtils.isNotEmpty(oldBugIds)){
-                List<BugOnlineDO>bugOnlineDOList = bugOnlineMapper.selectByIds(oldBugIds,true);
-                bugMap = bugOnlineDOList.stream().collect(Collectors.toMap(BugOnlineDO::getId, a->a, (v1, v2) -> v2));
+            bugLogDOList.stream()
+                    .filter(e -> BugFieldEnum.LINK_BUG_ONLINE.getText().equals(e.getField()))
+                    .forEach(e -> {
+                        bugOnlineIds.add(Long.valueOf(e.getOldValue()));
+                        bugOnlineIds.add(Long.valueOf(e.getNewValue()));
+                    });
+            bugLogDOList.stream()
+                    .filter(e -> BugFieldEnum.LINK_BUG_OFFLINE.getText().equals(e.getField()))
+                    .forEach(e -> {
+                        bugOfflineIds.add(Long.valueOf(e.getOldValue()));
+                        bugOfflineIds.add(Long.valueOf(e.getNewValue()));
+                    });
+
+            // 查询关联的线上bug，获取信息填充
+            if(CollUtil.isNotEmpty(bugOnlineIds)){
+                List<BugOnlineDO> budDOLIst = bugOnlineMapper.getByIds(bugOnlineIds,true);
+                ImmutableMap<Long, BugOnlineDO> bugMap = Maps.uniqueIndex(budDOLIst, BaseDO::getId);
+                bugLogVOList.stream()
+                        .filter(e -> BugFieldEnum.LINK_BUG_ONLINE.getText().equals(e.getField()))
+                        .filter(e -> bugMap.containsKey(Long.valueOf(e.getOldValue()))
+                                  && bugMap.containsKey(Long.valueOf(e.getNewValue())))
+                        .forEach(e -> {
+                            Long oldId = Long.valueOf(e.getOldValue());
+                            Long newId = Long.valueOf(e.getNewValue());
+                            String oldName = bugMap.get(oldId).getName();
+                            String newName = bugMap.get(newId).getName();
+
+                            e.setLinkBug(new BugSimpleVO(oldId, oldName));
+                            e.setLinkBug(new BugSimpleVO(newId, newName));
+                        });
             }
 
-        }
+            // 查询关联的线下bug，获取信息填充
+            if(CollUtil.isNotEmpty(bugOfflineIds)){
+                List<BugOfflineDO> budDOList = bugOfflineMapper.getByIds(bugOfflineIds, true);
+                ImmutableMap<Long, BugOfflineDO> bugMap = Maps.uniqueIndex(budDOList, BaseDO::getId);
+                bugLogVOList.stream()
+                        .filter(e -> BugFieldEnum.LINK_BUG_OFFLINE.getText().equals(e.getField()))
+                        .filter(e -> bugMap.containsKey(Long.valueOf(e.getOldValue()))
+                                  && bugMap.containsKey(Long.valueOf(e.getNewValue())))
+                        .forEach(e -> {
+                            Long oldId = Long.valueOf(e.getOldValue());
+                            Long newId = Long.valueOf(e.getNewValue());
+                            String oldName = bugMap.get(oldId).getName();
+                            String newName = bugMap.get(newId).getName();
 
-        for (BugLogVO bugLogVO : bugLogVOList) {
-            bugLogVO.setTypeName(BugLogTypeEnum.getTextByCode(bugLogVO.getType()));
-            bugLogVO.setCurrentDate(new Date());
-            if(BugLogTypeEnum.ONLINE.getCode().equals(bugLogQueryList.getType())&&BugFieldEnum.LINK_BUG.getText().equals(bugLogVO.getField())){
-                //线上bug 关联bug日志
-                if(bugMap.containsKey(Long.valueOf(bugLogVO.getOldValue()))&&bugMap.containsKey(Long.valueOf(bugLogVO.getNewValue()))){
-                    BugSimpleVO linkBug=new BugSimpleVO();
-                    linkBug.setId(Long.valueOf(bugLogVO.getOldValue()));
-                    linkBug.setName(bugMap.get(Long.valueOf(bugLogVO.getOldValue())).getName());
-                    bugLogVO.setLinkBug(linkBug);
-
-                    BugSimpleVO linkedBug=new BugSimpleVO();
-                    linkedBug.setId(Long.valueOf(bugLogVO.getNewValue()));
-                    linkedBug.setName(bugMap.get(Long.valueOf(bugLogVO.getNewValue())).getName());
-                    bugLogVO.setLinkedBug(linkedBug);
-                }
+                            e.setLinkBug(new BugSimpleVO(oldId, oldName));
+                            e.setLinkBug(new BugSimpleVO(newId, newName));
+                        });
             }
         }
+
         //如果是状态变更，需要填充状态经办人信息
-        if (bugLogQueryList.getStatusChange()) {
+        if (logQuery.getStatusChange()) {
             //查询出所有的状态经办人记录
             List<Integer> bugLogIdList = bugLogVOList.stream().map(BugLogVO::getId).collect(Collectors.toList());
             List<BugStatusOperatorDO> bugStatusOperatorDOList = bugStatusOperatorMapper.batchSelectByBugIds(bugLogIdList);
@@ -1212,6 +1238,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
             });
         }
 
+        PageInfo<BugLogDO> pageInfo = new PageInfo<>(bugLogDOList);
+        PageQueryResult<BugLogVO> pageQueryResult = new PageQueryResult<>();
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
         pageQueryResult.setResultList(bugLogVOList);
 

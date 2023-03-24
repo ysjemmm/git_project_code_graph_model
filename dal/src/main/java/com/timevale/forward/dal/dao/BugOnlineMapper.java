@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -74,7 +75,7 @@ public interface BugOnlineMapper {
      * @param ids 线上bug的id
      * @return 返回值
      */
-    List<BugOnlineDO> selectByIds(@Param("ids") List<Long> ids,@Param("containDeleted")Boolean containDeleted);
+    List<BugOnlineDO> getByIds(@Param("ids") Collection<Long> ids, @Param("containDeleted")Boolean containDeleted);
 
     /**
      * 根据线上bug的业务需求id查询线上bug

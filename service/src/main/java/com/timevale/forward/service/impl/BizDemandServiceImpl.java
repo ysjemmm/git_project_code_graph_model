@@ -387,19 +387,11 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 信息填充
         BizDemandDetailVO bizDemandDetailVO = BizDemandCopier.INSTANCE.convert(bizDemandDO);
-
         bizDemandDetailVO.setFileList(fileVOList);
         bizDemandDetailVO.setRecipientInfoList(personVOList);
-
         bizDemandDetailVO.setProductLineName(productLineDO.getName());
         bizDemandDetailVO.setBizDomainId(productLineDO.getBizDomainId());
-        bizDemandDetailVO.setReasonText(BizDemandReasonEnum.getTextByCode(bizDemandDetailVO.getReason()));
-        bizDemandDetailVO.setStatusText(BizDemandStatusEnum.getTextByCode(bizDemandDetailVO.getStatus()));
-        bizDemandDetailVO.setPriorityText(PriorityEnum.getTextChineseByCode(bizDemandDetailVO.getPriority()));
-        bizDemandDetailVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandDetailVO.getPlanReleaseDate()));
-        bizDemandDetailVO.setCustomerDevDemandText(YesOrNoEnum.getTextByCode(bizDemandDetailVO.getCustomerDevDemand()));
-        bizDemandDetailVO.setCustomerDevTypeText(CustomerDevTypeEnum.getTextByCode(bizDemandDetailVO.getCustomerDevType()));
-        bizDemandDetailVO.setHopeReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandDetailVO.getHopeReleaseDate()));
+
         // 获取部门链，添加完整部门信息
         Map<Long, GroupResponse> deptMap = bizDemandComponent.getGroupListTreeMap(Lists.newArrayList(bizDemandDO.getDeptId()));
         GroupResponse response = deptMap.get(bizDemandDetailVO.getDeptId());
@@ -416,7 +408,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 查看是否为线上bug转换
         List<Long> bugOnlineIds = bugOnlineBizDemandMapper.getBugOnlineIds(bizDemandId);
         if (!bugOnlineIds.isEmpty()) {
-            List<BugOnlineDO> bugOnlineList = bugOnlineMapper.selectByIds(bugOnlineIds, false);
+            List<BugOnlineDO> bugOnlineList = bugOnlineMapper.getByIds(bugOnlineIds, false);
             bizDemandDetailVO.setBugOnlineList(bugOnlineList.stream()
                     .map(x -> new BugOnlineLinkVO(x.getId(), x.getName()))
                     .collect(Collectors.toList()));

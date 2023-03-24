@@ -328,4 +328,18 @@
         FROM bug_offline
         WHERE biz_demand_id = #{bizDemandId}
     </select>
+
+    <select id="getByIds" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
+        SELECT *
+        FROM bug_offline
+        <where>
+            AND id IN
+            <foreach collection="ids" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            <if test="containDeleted == null or containDeleted == false">
+                AND is_deleted = false
+            </if>
+        </where>
+    </select>
 </mapper>

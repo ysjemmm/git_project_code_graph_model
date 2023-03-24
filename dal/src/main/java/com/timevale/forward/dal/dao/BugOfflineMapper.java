@@ -8,6 +8,7 @@ import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.dal.entity.BugOfflineListDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -62,6 +63,8 @@ public interface BugOfflineMapper {
      * @return BugOfflineDO
      */
     BugOfflineDO selectById(@Param("id") Long id);
+
+    List<BugOfflineDO> getByIds(@Param("ids") Collection<Long> ids, @Param("containDeleted")Boolean containDeleted);
 
     /**
      * 根据查询条件获取DO列表

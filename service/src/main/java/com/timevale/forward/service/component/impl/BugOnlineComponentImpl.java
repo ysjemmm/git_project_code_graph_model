@@ -1,9 +1,6 @@
 package com.timevale.forward.service.component.impl;
 
-import com.timevale.forward.dal.dao.BizChangeLogMapper;
-import com.timevale.forward.dal.dao.BugLogMapper;
-import com.timevale.forward.dal.dao.BugOnlineBizDemandMapper;
-import com.timevale.forward.dal.dao.BugOnlineMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.BugLogDO;
 import com.timevale.forward.dal.entity.BugOnlineDO;
@@ -18,12 +15,12 @@ import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,28 +30,15 @@ import java.util.stream.Collectors;
  **/
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class BugOnlineComponentImpl implements BugOnlineComponent {
-
-    @Resource
-    private BugOnlineMapper bugOnlineMapper;
-
-    @Resource
-    private BugLogMapper bugLogMapper;
-
-    @Resource
-    private BugLogComponent bugLogComponent;
-
-    @Resource
-    private MessageEventPublisher messageEventPublisher;
-
-    @Resource
-    private BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
-
-    @Resource
-    private BugOnlineBizDemandMapper bugOnlineBizDemandMapper;
-
-    @Resource
-    private BizChangeLogMapper bizChangeLogMapper;
+    private final BugLogMapper bugLogMapper;
+    private final BugOnlineMapper bugOnlineMapper;
+    private final BugLogComponent bugLogComponent;
+    private final BizChangeLogMapper bizChangeLogMapper;
+    private final MessageEventPublisher messageEventPublisher;
+    private final BugOnlineBizDemandMapper bugOnlineBizDemandMapper;
+    private final BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
 
     @Override
     public void autoCloseBugIfBeConfirm(int autoCloseLimitDay) {
@@ -118,17 +102,20 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
                                    ButtonActionEnum actionEnum) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         Long bugOnlineId = bugOnlineDO.getId();
-        String oldStatusName = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
-        Integer oldStatus = bugOnlineDO.getStatus();
 
-        // 保存旧的bug原因
+        // 历史参数
+        Integer oldStatus = bugOnlineDO.getStatus();
+        String oldStatusName = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
         String oldReasonName = BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason());
 
+        //线上bug表更新
+        bugOnlineDO.setBugOfflineId(null);
+        bugOnlineDO.setPrevStatus(oldStatus);
         bugOnlineDO.setStatus(BugOnlineStatusEnum.REQUIRED.getCode());
         bugOnlineDO.setReason(BugOnlineReasonEnum.PRODUCT_DESIGN_FLAWS.getCode());
-        bugOnlineDO.setPrevStatus(oldStatus);
-        //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
+
+        // 新增关联关系
         bugOnlineBizDemandMapper.addRelations(bugOnlineId, bizDemandIds);
 
         BugLogDO bugLogDO = new BugLogDO()
@@ -157,12 +144,45 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         }
     }
 
+    @Override
+    public List<BugLogDO> compareBugOffline(Long oldId, Long newId, Long bugOnlineId) {
+        List<BugLogDO> result = new ArrayList<>();
+
+        // 校验参数
+        if (Objects.equals(oldId, newId) || bugOnlineId == null) {
+            return result;
+        }
+
+        Optional<BugLogDO> unLinkOpt = Optional.ofNullable(oldId)
+                .map(bugOfflineId -> new BugLogDO()
+                        .setField(BugFieldEnum.LINK_BUG_OFFLINE.getText())
+                        .setOldValue(bugOnlineId.toString())
+                        .setNewValue(bugOfflineId.toString())
+                        .setMainId(bugOnlineId)
+                        .setAction(ButtonActionEnum.UN_LINK.getText())
+                        .setType(BugLogTypeEnum.ONLINE.getCode()));
+
+        Optional<BugLogDO> linkOpt = Optional.ofNullable(newId)
+                .map(bugOfflineId -> new BugLogDO()
+                        .setField(BugFieldEnum.LINK_BUG_OFFLINE.getText())
+                        .setOldValue(bugOnlineId.toString())
+                        .setNewValue(bugOfflineId.toString())
+                        .setMainId(bugOnlineId)
+                        .setAction(ButtonActionEnum.LINK.getText())
+                        .setType(BugLogTypeEnum.ONLINE.getCode()));
+
+        linkOpt.ifPresent(result::add);
+        unLinkOpt.ifPresent(result::add);
+
+        return result;
+    }
+
     private void addBizDemandAttachLogs(BugOnlineDO bugOnlineDO, Collection<Long> bizDemandIds) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         List<BizChangeLogDO> changeLogs = bizDemandIds.stream().map(id -> {
             BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
             bizChangeLogDO.setCreateManId(userInfo.getId());
-            bizChangeLogDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            bizChangeLogDO.setCreateMan(userInfo.getFullAlias());
             bizChangeLogDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode())
                     .setMainId(id)
                     .setAction(ButtonActionEnum.LINK.getText())

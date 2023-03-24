@@ -12,7 +12,7 @@ import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.YesOrNoEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BizDemandMD;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import org.mapstruct.Mapper;
@@ -29,7 +29,13 @@ import java.util.stream.Collectors;
  */
 @Mapper(
         imports = {
-                YesOrNoEnum.class
+                YesOrNoEnum.class,
+                PriorityEnum.class,
+                BizDemandReasonEnum.class,
+                BizDemandStatusEnum.class,
+                PlanReleaseDateEnum.class,
+                CustomerDevTypeEnum.class,
+                PlanReleaseDateEnum.class,
         }
 )
 public interface BizDemandCopier {
@@ -67,6 +73,13 @@ public interface BizDemandCopier {
      * @param bizDemandDO 业务需求DO
      * @return 业务需求详细VO
      */
+    @Mapping(target = "reasonText", expression = "java(BizDemandReasonEnum.getTextByCode(bizDemandDO.getReason()))")
+    @Mapping(target = "statusText", expression = "java(BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()))")
+    @Mapping(target = "priorityText", expression = "java(PriorityEnum.getTextChineseByCode(bizDemandDO.getPriority()))")
+    @Mapping(target = "customerDevDemandText", expression = "java(YesOrNoEnum.getTextByCode(bizDemandDO.getCustomerDevDemand()))")
+    @Mapping(target = "planReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate()))")
+    @Mapping(target = "customerDevTypeText", expression = "java(CustomerDevTypeEnum.getTextByCode(bizDemandDO.getCustomerDevType()))")
+    @Mapping(target = "hopeReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(bizDemandDO.getHopeReleaseDate()))")
     BizDemandDetailVO convert(BizDemandDO bizDemandDO);
 
     /**

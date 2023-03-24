@@ -512,7 +512,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogDOList.addAll(compareModel(oldModelList, modifyReq.getModelIds(), bugOnlineDO.getId()));
         bugLogDOList.addAll(compareModel(oldModelList, modifyReq.getModelIds(), bugOnlineDO.getId()));
         bugLogDOList.addAll(compareProductLine(oldProductLineIdList, modifyReq.getProductLineIdList(), bugOnlineDO.getId()));
-        bugLogDOList.add(compareBugOffline(bugOnlineDO.getBugOfflineId(), modifyReq.getBugOfflineId(), bugOnlineDO.getId()));
+        bugLogDOList.addAll(bugOnlineComponent.compareBugOffline(bugOnlineDO.getBugOfflineId(), modifyReq.getBugOfflineId(), bugOnlineDO.getId()));
         bugLogComponent.add(bugLogDOList);
 
         //如果经办人变了，但是状态没有变化，需要往状态人员处理表中插入一条数据，并且需要发送钉钉消息
@@ -727,7 +727,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         // 线下bug log
-        bugLogComponent.add(compareBugOffline(bugOnlineDO.getBugOfflineId(), startRepairReq.getBugOfflineId(), startRepairReq.getId()));
+        bugLogComponent.add(bugOnlineComponent.compareBugOffline(bugOnlineDO.getBugOfflineId(), startRepairReq.getBugOfflineId(), startRepairReq.getId()));
 
         // 比较通用字段
         BugOnlineMD newBugOnlineMD = BugOnlineCopier.INSTANCE.change(bugOnlineDO);
@@ -883,7 +883,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         // 线下bug log
-        bugLogComponent.add(compareBugOffline(bugOnlineDO.getBugOfflineId(), confirmRepairReq.getBugOfflineId(), confirmRepairReq.getId()));
+        bugLogComponent.add(bugOnlineComponent.compareBugOffline(bugOnlineDO.getBugOfflineId(), confirmRepairReq.getBugOfflineId(), confirmRepairReq.getId()));
 
         //bug状态处理人员表插入数据
         bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
@@ -947,7 +947,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         // 线下bug log
-        bugLogComponent.add(compareBugOffline(bugOnlineDO.getBugOfflineId(), onlineReq.getBugOfflineId(), onlineReq.getId()));
+        bugLogComponent.add(bugOnlineComponent.compareBugOffline(bugOnlineDO.getBugOfflineId(), onlineReq.getBugOfflineId(), onlineReq.getId()));
 
         //bug状态处理人员表插入数据
         bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
@@ -1068,11 +1068,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BusinessResult<String> noRepair(BugOnlineNoRepairReq noRepairReq) {
+    public BusinessResult<String> noRepair(BugOnlineNoRepairReq req) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         //查询线上bug
-        BugOnlineDO bugOnlineDO = bugOnlineMapper.get(noRepairReq.getId());
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.get(req.getId());
         if (bugOnlineDO == null) {
             throw new BaseBizRuntimeException("线上bug不存在");
         }
@@ -1096,8 +1096,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setLastOperator(bugOnlineDO.getOperator());
         bugOnlineDO.setOperatorId(bugOnlineDO.getProposerId());
         bugOnlineDO.setOperator(bugOnlineDO.getProposer());
-        bugOnlineDO.setDismissCause(noRepairReq.getDismissCause());
-        bugOnlineDO.setDismissCauseStage(noRepairReq.getDismissCauseStage());
+        bugOnlineDO.setDismissCause(req.getDismissCause());
+        bugOnlineDO.setDismissCauseStage(req.getDismissCauseStage());
         bugOnlineDO.setReason(null);
         bugOnlineDO.setReasonStage(null);
         bugOnlineDO.setRepairFailReason(null);
@@ -1106,11 +1106,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //状态
         List<BugLogDO> bugLogDOList = new ArrayList<>();
-        bugLogDOList.add(createBugLog(noRepairReq.getId(), oldStatus, BugOnlineStatusEnum.BE_CONFIRM.getText()
+        bugLogDOList.add(createBugLog(req.getId(), oldStatus, BugOnlineStatusEnum.BE_CONFIRM.getText()
                 , ButtonActionEnum.NO_REPAIR.getText(), BugLogFieldEnum.STATUS.getText()));
 
         //因为新增了驳回原因所以这里需要加入一条内容变更记录
-        bugLogDOList.add(createBugLog(noRepairReq.getId(),
+        bugLogDOList.add(createBugLog(req.getId(),
                 null,
                 BugOnlineReasonEnum.getFullTextByCode(bugOnlineDO.getDismissCause()),
                 null,
@@ -1118,20 +1118,20 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //如果修复失败原因有值还需要记录一条日志内容记录
         if (StringUtils.isNotEmpty(oldRepairFailReason)) {
-            bugLogDOList.add(createBugLog(noRepairReq.getId(), oldRepairFailReason, null
+            bugLogDOList.add(createBugLog(req.getId(), oldRepairFailReason, null
                     , null, BugFieldEnum.REPAIR_FAIL_REASON.getText()));
         }
 
         //如果经办人变了，则添加一条内容变更记录
         if (!operator.equals(bugOnlineDO.getOperator())) {
-            bugLogDOList.add(createBugLog(noRepairReq.getId(), operator, bugOnlineDO.getOperator()
+            bugLogDOList.add(createBugLog(req.getId(), operator, bugOnlineDO.getOperator()
                     , null, BugFieldEnum.OPERATOR.getText()));
         }
 
         //bug原因
         if (oldReason != null) {
             String reasonText = BugOnlineReasonEnum.getTextByCode(oldReason);
-            bugLogDOList.add(createBugLog(noRepairReq.getId(), reasonText, null
+            bugLogDOList.add(createBugLog(req.getId(), reasonText, null
                     , null, BugLogFieldEnum.REASON.getText()));
         }
 
@@ -1160,7 +1160,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 )
         ));
 
-        String tips = updateLinkBug(noRepairReq.getId(), noRepairReq.getLinkBugId());
+        String tips = updateLinkBug(req.getId(), req.getLinkBugId());
 
         BusinessResult<String> businessResult = new BusinessResult<>();
         businessResult.setData(tips);
@@ -1674,28 +1674,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         return bugLogDOList;
     }
 
-    private BugLogDO compareBugOffline(Long oldId, Long newId, Long bugOnlineId) {
-        if (Objects.equals(oldId, newId)) {
-            return null;
-        }
-
-        String oldName = Optional.ofNullable(oldId)
-                .flatMap(e -> Optional.ofNullable(bugOfflineMapper.selectById(oldId)))
-                .flatMap(e -> Optional.ofNullable(e.getName()))
-                .orElse("");
-        String newName = Optional.ofNullable(newId)
-                .flatMap(e -> Optional.ofNullable(bugOfflineMapper.selectById(newId)))
-                .flatMap(e -> Optional.ofNullable(e.getName()))
-                .orElse("");
-
-        return new BugLogDO()
-                .setField(BugFieldEnum.BUG_OFFLINE.getText())
-                .setOldValue(oldName)
-                .setNewValue(newName)
-                .setMainId(bugOnlineId)
-                .setType(BugLogTypeEnum.ONLINE.getCode());
-    }
-
     private List<BugLogDO> compareModel(List<Long> oldModelIds, List<Long> newModelIds, Long bugOnlineId) {
         oldModelIds = CollectionUtils.isEmpty(oldModelIds) ? new ArrayList<>() : oldModelIds;
         List<BugLogDO> bugLogDOList = new ArrayList<>();
@@ -1812,7 +1790,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     private BugLogDO createBugLog(Long mainId, Long oldValue, Long newValue, String action) {
-        return createBugLog(mainId, String.valueOf(oldValue), String.valueOf(newValue), action, BugFieldEnum.LINK_BUG.getText());
+        return createBugLog(mainId, String.valueOf(oldValue), String.valueOf(newValue), action, BugFieldEnum.LINK_BUG_ONLINE.getText());
     }
 
     private BugLogDO createBugLog(Long mainId, String oldValue, String newValue, String action, String field) {
