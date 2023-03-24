@@ -27,7 +27,6 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -35,6 +34,7 @@ import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -45,19 +45,29 @@ import java.util.stream.Collectors;
 @Slf4j
 @LogPoint
 @Component
-@RequiredArgsConstructor
 public class BizDemandComponentImpl implements BizDemandComponent {
-    private final ProjectMapper projectMapper;
-    private final BizLabelMapper bizLabelMapper;
-    private final BizDemandMapper bizDemandMapper;
-    private final InnerGroupClient innerGroupClient;
-    private final ProjectComponent projectComponent;
-    private final BizLabelComponent bizLabelComponent;
-    private final SqlOrderComponent sqlOrderComponent;
-    private final ProductDemandMapper productDemandMapper;
-    private final MessageEventPublisher messageEventPublisher;
-    private final BizDemandLogComponent bizDemandLogComponent;
-    private final ProductBizDemandMapper productBizDemandMapper;
+    @Resource
+    private ProjectMapper projectMapper;
+    @Resource
+    private BizLabelMapper bizLabelMapper;
+    @Resource
+    private BizDemandMapper bizDemandMapper;
+    @Resource
+    private InnerGroupClient innerGroupClient;
+    @Resource
+    private ProjectComponent projectComponent;
+    @Resource
+    private BizLabelComponent bizLabelComponent;
+    @Resource
+    private SqlOrderComponent sqlOrderComponent;
+    @Resource
+    private ProductDemandMapper productDemandMapper;
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
+    @Resource
+    private BizDemandLogComponent bizDemandLogComponent;
+    @Resource
+    private ProductBizDemandMapper productBizDemandMapper;
 
     @Override
     public void updateStatus(Long bdId) {
