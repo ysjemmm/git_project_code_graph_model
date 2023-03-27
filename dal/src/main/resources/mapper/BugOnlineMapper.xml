@@ -448,6 +448,15 @@
         FROM bug_online
         WHERE is_deleted = false
     </select>
+
+    <update id="delete">
+        UPDATE bug_online
+        SET is_deleted =true,
+            modify_man=#{modifyMan},
+            modify_man_id=#{modifyManId}
+        WHERE id = #{id}
+    </update>
+
 </mapper>
 
 
