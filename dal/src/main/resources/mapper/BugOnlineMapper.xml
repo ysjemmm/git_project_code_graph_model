@@ -325,6 +325,7 @@
             <if test="customerDevProjectName != null and customerDevProjectName != ''">
                 customer_dev_project_name = #{customerDevProjectName},
             </if>
+            <if test="openCount != null">open_count = #{openCount},</if>
             <if test="modifyManId != null">
                 modify_man_id = #{modifyManId},
             </if>
