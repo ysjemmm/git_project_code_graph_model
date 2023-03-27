@@ -116,7 +116,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         // 历史参数
         Integer oldStatus = bugOnlineDO.getStatus();
         String oldStatusName = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
-        String oldReasonName = BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason());
+        String oldReasonName = BugOnlineReasonEnum.getFullTextByCode(bugOnlineDO.getReason());
 
         //线上bug表更新
         bugOnlineDO.setBugOfflineId(null);
