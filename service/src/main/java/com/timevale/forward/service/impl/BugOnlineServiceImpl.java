@@ -704,6 +704,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         //保存老的状态
+        Long oldBugOfflineId = bugOnlineDO.getBugOfflineId();
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
 
         //得到老的对象
@@ -730,7 +731,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         // 线下bug log
-        bugLogComponent.bugOffline(bugOnlineDO.getBugOfflineId(), null, startRepairReq.getBugOfflineId());
+        bugLogComponent.bugOffline(bugOnlineDO.getBugOfflineId(), oldBugOfflineId, startRepairReq.getBugOfflineId());
 
         // 比较通用字段
         BugOnlineMD newBugOnlineMD = BugOnlineCopier.INSTANCE.do2md(bugOnlineDO);
