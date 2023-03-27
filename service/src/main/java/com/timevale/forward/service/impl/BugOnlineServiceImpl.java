@@ -921,6 +921,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         //保存老的状态
+        Long oldBugOfflineId = bugOnlineDO.getBugOfflineId();
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
 
         //线上bug表更新
@@ -952,7 +953,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         // 线下bug log
-        bugLogComponent.bugOffline(onlineReq.getId(), bugOnlineDO.getBugOfflineId(), onlineReq.getBugOfflineId());
+        bugLogComponent.bugOffline(onlineReq.getId(), oldBugOfflineId, onlineReq.getBugOfflineId());
 
         //bug状态处理人员表插入数据
         bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());

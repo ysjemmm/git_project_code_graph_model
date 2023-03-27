@@ -86,6 +86,9 @@ public class BugLogComponentImpl implements BugLogComponent {
 
     @Override
     public void reason(Long bugId, Integer oldReason, Integer newReason) {
+        if (Objects.equals(oldReason, newReason)) {
+            return;
+        }
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setMainId(bugId);
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
