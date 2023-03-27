@@ -111,6 +111,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
                                    ButtonActionEnum actionEnum) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         Long bugOnlineId = bugOnlineDO.getId();
+        Long bugOfflineId = bugOnlineDO.getBugOfflineId();
 
         // 历史参数
         Integer oldStatus = bugOnlineDO.getStatus();
@@ -152,6 +153,9 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
             // 业务需求变更日志
             addBizDemandAttachLogs(bugOnlineDO, bizDemandIds);
         }
+
+        // 关联的线下bug日志
+        bugLogComponent.bugOffline(bugOnlineId, bugOfflineId, null);
     }
 
     @Override
