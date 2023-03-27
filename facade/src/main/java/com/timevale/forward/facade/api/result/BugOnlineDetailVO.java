@@ -200,4 +200,7 @@ public class BugOnlineDetailVO extends ToString {
 
     @ApiModelProperty("驳回原因归因阶段描述")
     private String dismissCauseStageName;
+
+    @ApiModelProperty("打开次数")
+    private Integer openCount;
 }
