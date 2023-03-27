@@ -243,8 +243,10 @@
             # 历史悠久，改不动了
             <if test="true">
                 area = #{area},
+                reason = #{reason},
                 category = #{category},
                 expect_date = #{expectDate},
+                reason_stage = #{reasonStage},
                 dismiss_cause = #{dismissCause},
                 customer_name = #{customerName},
                 bug_offline_id = #{bugOfflineId},
@@ -322,12 +324,6 @@
             </if>
             <if test="customerDevProjectName != null and customerDevProjectName != ''">
                 customer_dev_project_name = #{customerDevProjectName},
-            </if>
-            <if test="reason != null">
-                reason = #{reason},
-            </if>
-            <if test="reasonStage != null">
-                reason_stage = #{reasonStage},
             </if>
             <if test="modifyManId != null">
                 modify_man_id = #{modifyManId},

@@ -291,8 +291,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
 
         //4.bug_log记录
-        BugOfflineMD oldBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(oldBugOfflineDO);
-        BugOfflineMD newBugOfflineMD = BugOfflineCopier.INSTANCE.convertToMD(newBugOfflineDO);
+        BugOfflineMD oldBugOfflineMD = BugOfflineCopier.INSTANCE.do2md(oldBugOfflineDO);
+        BugOfflineMD newBugOfflineMD = BugOfflineCopier.INSTANCE.do2md(newBugOfflineDO);
         List<BugLogDO> bugLogDOList = FieldCompareUtil.commonCompare(oldBugOfflineMD, newBugOfflineMD, BugLogDO.class);
 
         // 额外判断项目与产品

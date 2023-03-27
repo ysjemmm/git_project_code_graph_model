@@ -153,6 +153,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
             return result;
         }
 
+        // 断开关联
         Optional<BugLogDO> unLinkOpt = Optional.ofNullable(oldId)
                 .map(bugOfflineId -> new BugLogDO()
                         .setField(BugFieldEnum.LINK_BUG_OFFLINE.getText())
@@ -161,7 +162,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
                         .setMainId(bugOnlineId)
                         .setAction(ButtonActionEnum.UN_LINK.getText())
                         .setType(BugLogTypeEnum.ONLINE.getCode()));
-
+        // 新增关联
         Optional<BugLogDO> linkOpt = Optional.ofNullable(newId)
                 .map(bugOfflineId -> new BugLogDO()
                         .setField(BugFieldEnum.LINK_BUG_OFFLINE.getText())

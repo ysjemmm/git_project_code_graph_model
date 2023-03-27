@@ -128,7 +128,7 @@ public interface BugOnlineCopier {
      */
     @Mapping(target = "reasonName", expression="java(BugOnlineReasonEnum.getFullTextByCode(bugOnlineDO.getReason()))")
     @Mapping(target = "dismissCauseName", expression="java(BugOnlineReasonEnum.getFullTextByCode(bugOnlineDO.getDismissCause()))")
-    BugOnlineMD change(BugOnlineDO bugOnlineDO);
+    BugOnlineMD do2md(BugOnlineDO bugOnlineDO);
 
     /**
      *

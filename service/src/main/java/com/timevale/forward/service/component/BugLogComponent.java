@@ -15,4 +15,22 @@ public interface BugLogComponent {
     void add(BugLogDO bugLogDO);
 
     void add(List<BugLogDO> bugLogDOList);
+
+    /**
+     * 更新线上bug原因日志
+     *
+     * @param bugId     线上bug id
+     * @param oldReason 老bug原因
+     * @param newReason 新bug原因
+     */
+    void reason(Long bugId, Integer oldReason, Integer newReason);
+
+    /**
+     * 更新关联线下bug日志
+     *
+     * @param bugId           线上bug id
+     * @param oldBugOfflineId 断开关联的线下bug id
+     * @param newBugOfflineId 关联的线下bug id
+     */
+    void bugOffline(Long bugId, Long oldBugOfflineId, Long newBugOfflineId);
 }

@@ -5,15 +5,13 @@ import com.timevale.forward.dal.dao.BugLogMapper;
 import com.timevale.forward.dal.dao.BugStatusOperatorMapper;
 import com.timevale.forward.dal.entity.BugLogDO;
 import com.timevale.forward.dal.entity.BugStatusOperatorDO;
-import com.timevale.forward.model.enums.BugLogFieldEnum;
-import com.timevale.forward.model.enums.BugLogTypeEnum;
-import com.timevale.forward.model.enums.BugOnlineStatusEnum;
-import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BugLogComponent;
+import com.timevale.forward.service.component.BugOnlineComponent;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -25,14 +23,11 @@ import java.util.stream.Collectors;
  **/
 @Component
 @Slf4j
+@AllArgsConstructor
 public class BugLogComponentImpl implements BugLogComponent {
-
-
-    @Resource
-    private BugLogMapper bugLogMapper;
-
-    @Resource
-    private BugStatusOperatorMapper bugStatusOperatorMapper;
+    private final BugLogMapper bugLogMapper;
+    private final BugOnlineComponent bugOnlineComponent;
+    private final BugStatusOperatorMapper bugStatusOperatorMapper;
 
     public void insertToBugStatusOperator(Long bugId, String userId, String userName,Integer bugType) {
         //查询当前线上bug对应的所有状态变更记录
@@ -82,6 +77,25 @@ public class BugLogComponentImpl implements BugLogComponent {
             return;
         }
         logDOList = logDOList.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(logDOList)) {
+            bugLogMapper.batchInsert(logDOList);
+        }
+    }
+
+    @Override
+    public void reason(Long bugId, Integer oldReason, Integer newReason) {
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setMainId(bugId);
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setOldValue(BugOnlineReasonEnum.getFullTextByCode(oldReason));
+        bugLogDO.setNewValue(BugOnlineReasonEnum.getFullTextByCode(newReason));
+        bugLogDO.setField(BugLogFieldEnum.REASON.getText());
+        bugLogMapper.insert(bugLogDO);
+    }
+
+    @Override
+    public void bugOffline(Long bugId, Long oldBugOfflineId, Long newBugOfflineId) {
+        List<BugLogDO> logDOList = bugOnlineComponent.compareBugOffline(bugId, oldBugOfflineId, newBugOfflineId);
         if (CollUtil.isNotEmpty(logDOList)) {
             bugLogMapper.batchInsert(logDOList);
         }
