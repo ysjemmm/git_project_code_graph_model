@@ -1,6 +1,9 @@
 package com.timevale.forward.service.component.impl;
 
-import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
+import com.timevale.forward.dal.dao.BugLogMapper;
+import com.timevale.forward.dal.dao.BugOnlineBizDemandMapper;
+import com.timevale.forward.dal.dao.BugOnlineMapper;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.BugLogDO;
 import com.timevale.forward.dal.entity.BugOnlineDO;
@@ -15,12 +18,12 @@ import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,15 +33,21 @@ import java.util.stream.Collectors;
  **/
 @Component
 @Slf4j
-@RequiredArgsConstructor
 public class BugOnlineComponentImpl implements BugOnlineComponent {
-    private final BugLogMapper bugLogMapper;
-    private final BugOnlineMapper bugOnlineMapper;
-    private final BugLogComponent bugLogComponent;
-    private final BizChangeLogMapper bizChangeLogMapper;
-    private final MessageEventPublisher messageEventPublisher;
-    private final BugOnlineBizDemandMapper bugOnlineBizDemandMapper;
-    private final BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
+    @Resource
+    private BugLogMapper bugLogMapper;
+    @Resource
+    private BugOnlineMapper bugOnlineMapper;
+    @Resource
+    private BugLogComponent bugLogComponent;
+    @Resource
+    private BizChangeLogMapper bizChangeLogMapper;
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
+    @Resource
+    private BugOnlineBizDemandMapper bugOnlineBizDemandMapper;
+    @Resource
+    private BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
 
     @Override
     public void autoCloseBugIfBeConfirm(int autoCloseLimitDay) {
