@@ -1089,11 +1089,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             throw new BaseBizRuntimeException("当前状态不允许点击不用修复");
         }
 
-        //保存老的状态
+        //保存老的状态、经办人、修复失败原因
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
-        //保存老的经办人
         String operator = bugOnlineDO.getOperator();
-        //保存老的修复失败原因
         String oldRepairFailReason = bugOnlineDO.getRepairFailReason();
 
         bugOnlineDO.setStatus(BugOnlineStatusEnum.BE_CONFIRM.getCode());
@@ -1241,8 +1239,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                 "您没有点击此按钮的权限");
 
         // 保存老的状态
-        String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
         Integer oldReason = bugOnlineDO.getReason();
+        Long oldBugOfflineId = bugOnlineDO.getBugOfflineId();
+        String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+
 
         bugOnlineDO.setReason(null);
         bugOnlineDO.setReasonStage(null);
@@ -1252,7 +1252,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         // 清空bug原因、关联的线下bug日志
         bugLogComponent.reason(bugId, oldReason, null);
-        bugLogComponent.bugOffline(bugId, bugOnlineDO.getBugOfflineId(), null);
+        bugLogComponent.bugOffline(bugId, oldBugOfflineId, null);
 
         //往bug日志表中插入一条线上bug状态变更数据
         BugLogDO bugLogDO = new BugLogDO();
