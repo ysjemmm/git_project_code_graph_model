@@ -8,10 +8,10 @@ import com.timevale.forward.dal.entity.BugStatusOperatorDO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BugLogComponent;
 import com.timevale.forward.service.component.BugOnlineComponent;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -23,11 +23,13 @@ import java.util.stream.Collectors;
  **/
 @Component
 @Slf4j
-@AllArgsConstructor
 public class BugLogComponentImpl implements BugLogComponent {
-    private final BugLogMapper bugLogMapper;
-    private final BugOnlineComponent bugOnlineComponent;
-    private final BugStatusOperatorMapper bugStatusOperatorMapper;
+    @Resource
+    private BugLogMapper bugLogMapper;
+    @Resource
+    private BugOnlineComponent bugOnlineComponent;
+    @Resource
+    private BugStatusOperatorMapper bugStatusOperatorMapper;
 
     public void insertToBugStatusOperator(Long bugId, String userId, String userName,Integer bugType) {
         //查询当前线上bug对应的所有状态变更记录
