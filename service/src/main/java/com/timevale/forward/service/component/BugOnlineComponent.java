@@ -28,10 +28,10 @@ public interface BugOnlineComponent {
     /**
      * 比较关联的线下bug
      *
+     * @param bugOnlineId 线上bugid
      * @param oldId       旧的线下bugid
      * @param newId       新的线下bugid
-     * @param bugOnlineId 线上bugid
      * @return bug日志实体
      */
-    List<BugLogDO> compareBugOffline(Long oldId, Long newId, Long bugOnlineId);
+    List<BugLogDO> compareBugOffline(Long bugOnlineId, Long oldId, Long newId);
 }

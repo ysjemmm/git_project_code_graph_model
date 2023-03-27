@@ -515,7 +515,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogDOList.addAll(compareModel(oldModelList, modifyReq.getModelIds(), bugOnlineDO.getId()));
         bugLogDOList.addAll(compareModel(oldModelList, modifyReq.getModelIds(), bugOnlineDO.getId()));
         bugLogDOList.addAll(compareProductLine(oldProductLineIdList, modifyReq.getProductLineIdList(), bugOnlineDO.getId()));
-        bugLogDOList.addAll(bugOnlineComponent.compareBugOffline(bugOnlineDO.getBugOfflineId(), modifyReq.getBugOfflineId(), bugOnlineDO.getId()));
+        bugLogDOList.addAll(bugOnlineComponent.compareBugOffline(bugOnlineDO.getId(), bugOnlineDO.getBugOfflineId(), modifyReq.getBugOfflineId()));
         bugLogComponent.add(bugLogDOList);
 
         //如果经办人变了，但是状态没有变化，需要往状态人员处理表中插入一条数据，并且需要发送钉钉消息
@@ -886,7 +886,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         // 线下bug log
-        bugLogComponent.add(bugOnlineComponent.compareBugOffline(bugOnlineDO.getBugOfflineId(), confirmRepairReq.getBugOfflineId(), confirmRepairReq.getId()));
+        bugLogComponent.bugOffline(confirmRepairReq.getId(), bugOnlineDO.getBugOfflineId(), confirmRepairReq.getBugOfflineId());
 
         //bug状态处理人员表插入数据
         bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
@@ -950,7 +950,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         // 线下bug log
-        bugLogComponent.add(bugOnlineComponent.compareBugOffline(bugOnlineDO.getBugOfflineId(), onlineReq.getBugOfflineId(), onlineReq.getId()));
+        bugLogComponent.bugOffline(onlineReq.getId(), bugOnlineDO.getBugOfflineId(), onlineReq.getBugOfflineId());
 
         //bug状态处理人员表插入数据
         bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());

@@ -159,7 +159,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
     }
 
     @Override
-    public List<BugLogDO> compareBugOffline(Long oldId, Long newId, Long bugOnlineId) {
+    public List<BugLogDO> compareBugOffline(Long bugOnlineId, Long oldId, Long newId) {
         List<BugLogDO> result = new ArrayList<>();
 
         // 校验参数
