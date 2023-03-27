@@ -1193,7 +1193,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                             String newName = bugMap.get(newId).getName();
 
                             e.setLinkBug(new BugSimpleVO(oldId, oldName));
-                            e.setLinkBug(new BugSimpleVO(newId, newName));
+                            e.setLinkedBug(new BugSimpleVO(newId, newName));
                         });
             }
 
@@ -1212,7 +1212,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                             String newName = bugMap.get(newId).getName();
 
                             e.setLinkBug(new BugSimpleVO(oldId, oldName));
-                            e.setLinkBug(new BugSimpleVO(newId, newName));
+                            e.setLinkedBug(new BugSimpleVO(newId, newName));
                         });
             }
         }

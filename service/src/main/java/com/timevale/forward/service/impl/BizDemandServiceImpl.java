@@ -98,36 +98,35 @@ public class BizDemandServiceImpl implements BizDemandService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 转换查询条件
-        BizDemandListCondition bizDemandListCondition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
-        bizDemandListCondition.setPageNum(bizDemandQueryList.getPageNum());
-        bizDemandListCondition.setPageSize(bizDemandQueryList.getPageSize());
+        BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
 
         // 标志是否有对应数据
         boolean resultIsEmpty = false;
+
         // 根据tabs添加不同的效果
         String ascription = bizDemandQueryList.getAscription();
-        if (ascription.equals(AscriptionEnum.CURRENT_USER.toString())) {
-            bizDemandListCondition.setSubmitManIdList(Lists.newArrayList(userInfo.getId()));
-        } else if (ascription.equals(AscriptionEnum.RECEIVE.toString())) {
-            bizDemandListCondition.setReceiveManIdList(Lists.newArrayList(userInfo.getId()));
-        } else if (ascription.equals(AscriptionEnum.COPIER.toString())) {
-            bizDemandListCondition.setCopier(userInfo.getId());
+        if (AscriptionEnum.CURRENT_USER.toString().equals(ascription)) {
+            condition.setSubmitManIdList(Lists.newArrayList(userInfo.getId()));
+        } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
+            condition.setReceiveManIdList(Lists.newArrayList(userInfo.getId()));
+        } else if (AscriptionEnum.COPIER.toString().equals(ascription)) {
+            condition.setCopier(userInfo.getId());
         } else {
             List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
-            if (ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())) {
-                Set<String> createIdSet = new HashSet<>(bizDemandListCondition.getSubmitManIdList());
+            if (AscriptionEnum.TEAM_SUBMIT.toString().equals(ascription)) {
+                Set<String> createIdSet = new HashSet<>(condition.getSubmitManIdList());
                 if (!createIdSet.isEmpty()) {
                     teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
                     resultIsEmpty = teamMemberIdList.isEmpty();
                 }
-                bizDemandListCondition.setSubmitManIdList(teamMemberIdList);
-            } else if (ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())) {
-                Set<String> receiveIdSet = new HashSet<>(bizDemandListCondition.getReceiveManIdList());
+                condition.setSubmitManIdList(teamMemberIdList);
+            } else if (AscriptionEnum.TEAM_RECEIVE.toString().equals(ascription)) {
+                Set<String> receiveIdSet = new HashSet<>(condition.getReceiveManIdList());
                 if (!receiveIdSet.isEmpty()) {
                     teamMemberIdList = teamMemberIdList.stream().filter(receiveIdSet::contains).collect(Collectors.toList());
                     resultIsEmpty = teamMemberIdList.isEmpty();
                 }
-                bizDemandListCondition.setReceiveManIdList(teamMemberIdList);
+                condition.setReceiveManIdList(teamMemberIdList);
             }
         }
         if (resultIsEmpty) {
@@ -140,14 +139,10 @@ public class BizDemandServiceImpl implements BizDemandService {
             if (CollectionUtils.isEmpty(labelIds) && bizDemandQueryList.getContainLabel()) {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
-            bizDemandListCondition.setLabelIds(labelIds);
+            condition.setLabelIds(labelIds);
         }
 
-        // 分页参数
-        bizDemandListCondition.setPageNum(bizDemandQueryList.getPageNum());
-        bizDemandListCondition.setPageSize(bizDemandQueryList.getPageSize());
-
-        return BaseResult.success(bizDemandComponent.page(bizDemandListCondition));
+        return BaseResult.success(bizDemandComponent.page(condition));
     }
 
     @Override

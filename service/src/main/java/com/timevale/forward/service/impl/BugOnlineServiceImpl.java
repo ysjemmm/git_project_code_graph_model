@@ -144,12 +144,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         // 转换查询条件
         BugOnlineListCondition condition = BugOnlineCopier.INSTANCE.convert(bugOnlineQueryList);
 
-        // 时间处理
-        condition.setCreateDateLeft(DateUtil.getStartOfDay(condition.getCreateDateLeft()));
-        condition.setCreateDateRight(DateUtil.getEndOfDay(condition.getCreateDateRight()));
-        condition.setModifyDateLeft(DateUtil.getStartOfDay(condition.getModifyDateLeft()));
-        condition.setModifyDateRight(DateUtil.getEndOfDay(condition.getModifyDateRight()));
-
         // 标志是否有对应数据
         boolean resultIsEmpty = false;
         // 根据tabs添加不同的效果

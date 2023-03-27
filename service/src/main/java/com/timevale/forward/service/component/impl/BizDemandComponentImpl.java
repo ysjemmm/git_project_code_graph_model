@@ -91,9 +91,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     }
 
     @Override
-    public Map<Long, GroupResponse> getGroupListTreeMap(List<Long> queryDeptIdList) {
+    public Map<Long, GroupResponse> getGroupListTreeMap(Collection<Long> queryDeptIds) {
         Map<Long, GroupResponse> deptMap = Maps.newHashMap();
-        Set<Long> queryDeptIdSet = Sets.newHashSet(queryDeptIdList);
+        Set<Long> queryDeptIdSet = new HashSet<>(queryDeptIds);
         GroupResponse rootNode = innerGroupClient.getGroupListTree(true).get(0);
         for (GroupResponse childNode : rootNode.getChildNode()) {
             dfsGroupListTree(childNode, deptMap, queryDeptIdSet, StringUtils.EMPTY, false);
@@ -118,6 +118,10 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         for (GroupResponse childNode : node.getChildNode()) {
             dfsGroupListTree(childNode, deptMap, queryDeptIdSet, name, isInsert);
         }
+    }
+
+    public static void main(String[] args) {
+
     }
 
     @Override
@@ -168,44 +172,38 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     }
 
     @Override
-    public QueryResultVO<BizDemandVO> page(BizDemandListCondition bizDemandListCondition) {
+    public QueryResultVO<BizDemandVO> page(BizDemandListCondition condition) {
         Map<Long, GroupResponse> deptNodeMap = new HashMap<>();
-        Set<Long> queryDeptIdSet = Sets.newHashSet(bizDemandListCondition.getDeptIdList());
+        Set<Long> queryDeptIdSet = Sets.newHashSet(condition.getDeptIdList());
         if (queryDeptIdSet == null) {
             queryDeptIdSet = new HashSet<>();
         }
 
         // 如果查询条件有部门id，收集子部门id及所需部门的完整名
-        if (!CollectionUtils.isEmpty(queryDeptIdSet)) {
+        if (CollUtil.isNotEmpty(queryDeptIdSet)) {
             deptNodeMap = getGroupListTreeMap(Lists.newArrayList(queryDeptIdSet));
             // 替换查询部门id条件
-            bizDemandListCondition.setDeptIdList(Lists.newArrayList(deptNodeMap.keySet()));
+            condition.setDeptIdList(Lists.newArrayList(deptNodeMap.keySet()));
         }
-
-        // 日期处理
-        bizDemandListCondition.setCreateDateStart(DateUtil.getStartOfDay(bizDemandListCondition.getCreateDateStart()));
-        bizDemandListCondition.setCreateDateEnd(DateUtil.getEndOfDay(bizDemandListCondition.getCreateDateEnd()));
-        bizDemandListCondition.setProjectEndDateStart(DateUtil.getStartOfDay(bizDemandListCondition.getProjectEndDateStart()));
-        bizDemandListCondition.setProjectEndDateEnd(DateUtil.getEndOfDay(bizDemandListCondition.getProjectEndDateEnd()));
 
         //是否打标
         List<BizLabelDO> bizLabelDOList;
-        if (CollectionUtils.isNotEmpty(bizDemandListCondition.getLabelIds())) {
-            bizLabelDOList = bizLabelMapper.getByLabelIdInType(bizDemandListCondition.getLabelIds(), BizTypeEnum.BIZ_DEMAND.getCode());
+        if (CollectionUtils.isNotEmpty(condition.getLabelIds())) {
+            bizLabelDOList = bizLabelMapper.getByLabelIdInType(condition.getLabelIds(), BizTypeEnum.BIZ_DEMAND.getCode());
             List<Long> bizIds = bizLabelDOList.stream().map(BizLabelDO::getBizId).collect(Collectors.toList());
-            Boolean containLabel = bizDemandListCondition.getContainLabel();
+            Boolean containLabel = condition.getContainLabel();
             if (containLabel) {
                 if (CollectionUtils.isEmpty(bizIds)) {
                     return ResultUtil.queryResultEmpty();
                 }
-                bizDemandListCondition.setContainIds(bizIds);
+                condition.setContainIds(bizIds);
             } else {
-                bizDemandListCondition.setExclusiveIds(bizIds);
+                condition.setExclusiveIds(bizIds);
             }
         }
 
         // 产品线分析信息
-        List<BizDemandListDO> allBizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
+        List<BizDemandListDO> allBizDemandListDOList = bizDemandMapper.selectList(condition);
         Map<Long, List<BizDemandListDO>> bizDemandListDOMap = allBizDemandListDOList.stream().collect(Collectors.groupingBy(BizDemandListDO::getProductLineId));
         log.info("业务查询产品线分析：{}", bizDemandListDOMap);
 
@@ -224,28 +222,28 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         analyseVOList.sort((a,b) -> b.getCount().compareTo(a.getCount()));
 
         // 产品线排查
-        List<Long> conditionSubProductLineIdList = bizDemandListCondition.getSubProductLineIdList();
-        if (CollectionUtils.isNotEmpty(conditionSubProductLineIdList)) {
+        List<Long> conditionSubProductLineIdList = condition.getSubProductLineIdList();
+        if (CollUtil.isNotEmpty(conditionSubProductLineIdList)) {
             Set<Long> resultProductLineIdSet = analyseVOList.stream().map(ProductLineAnalyseVO::getProductLineId).collect(Collectors.toSet());
             List<Long> queryProductLineIdList = conditionSubProductLineIdList.stream().filter(resultProductLineIdSet::contains).collect(Collectors.toList());
-            if(CollectionUtils.isEmpty(queryProductLineIdList)) {
+            if(CollUtil.isEmpty(queryProductLineIdList)) {
                 QueryResultVO<BizDemandVO> queryResultVO = new QueryResultVO<>();
                 queryResultVO.setAnalyseVOList(analyseVOList);
                 queryResultVO.setPageQueryResult(ResultUtil.pageEmpty());
                 return queryResultVO;
             } else {
-                bizDemandListCondition.setProductLineIdList(queryProductLineIdList);
+                condition.setProductLineIdList(queryProductLineIdList);
             }
         }
 
         // 开始分页,查询并转换
-        String collation = sqlOrderComponent.build(bizDemandListCondition.getOrderFiled(), bizDemandListCondition.getOrderCollation());
-        // 开始分页
-        PageHelper.startPage(bizDemandListCondition.getPageNum(), bizDemandListCondition.getPageSize(), collation);
-        List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(bizDemandListCondition);
+        String collation = sqlOrderComponent.build(condition.getOrderFiled(), condition.getOrderCollation());
+        PageHelper.startPage(condition.getPageNum(), condition.getPageSize(), collation);
+        List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(condition);
+
         List<Long> bizDemandIds = bizDemandListDOList.stream().map(BizDemandListDO::getId).collect(Collectors.toList());
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
-        if (CollectionUtils.isEmpty(bizDemandVOList)) {
+        if (CollUtil.isEmpty(bizDemandVOList)) {
             return ResultUtil.queryResultEmpty();
         }
 
@@ -254,9 +252,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
                 .getBizLabelMap(bizDemandIds, BizTypeEnum.BIZ_DEMAND.getCode());
 
         // 如果查询条件没有部门id，收集完整名
-        if (CollectionUtils.isEmpty(queryDeptIdSet)) {
-            queryDeptIdSet.addAll(bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
-            deptNodeMap = getGroupListTreeMap(Lists.newArrayList(queryDeptIdSet));
+        if (CollUtil.isEmpty(queryDeptIdSet)) {
+            queryDeptIdSet = bizDemandVOList.stream().map(BizDemandVO::getDeptId).collect(Collectors.toSet());
+            deptNodeMap = getGroupListTreeMap(queryDeptIdSet);
         }
 
         // 信息填充
@@ -268,12 +266,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
                 bizDemandVO.setDeptName(response.getGroupName());
                 bizDemandVO.setDeptDeleteFlag(response.getDeleteFlag());
             }
-            bizDemandVO.setStatusText(BizDemandStatusEnum.getTextByCode(bizDemandVO.getStatus()));
-            bizDemandVO.setPriorityText(PriorityEnum.getTextChineseByCode(bizDemandVO.getPriority()));
-            bizDemandVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandVO.getPlanReleaseDate()));
-            bizDemandVO.setHopeReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandVO.getHopeReleaseDate()));
+
             List<BizLabelSimpleVO> list = labelMap.get(bizDemandVO.getId());
-            if (CollectionUtils.isNotEmpty(list)) {
+            if (CollUtil.isNotEmpty(list)) {
                 bizDemandVO.setLabelNames(list);
             }
         }

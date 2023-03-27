@@ -10,6 +10,7 @@ import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOnlineMD;
+import com.timevale.forward.service.utils.date.DateUtil;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -22,6 +23,7 @@ import java.util.List;
  */
 @Mapper(
         imports = {
+                DateUtil.class,
                 BugOnlineStatusEnum.class,
                 BugOnlineEnvEnum.class,
                 BugOnlineSourceEnum.class,
@@ -84,10 +86,14 @@ public interface BugOnlineCopier {
     /**
      * bugOnlineQueryList --> BugOnlineListCondition
      *
-     * @param bugOnlineQueryList 对象
+     * @param query 对象
      * @return BugOnlineListCondition
      */
-    BugOnlineListCondition convert(BugOnlineQueryList bugOnlineQueryList);
+    @Mapping(target = "createDateLeft", expression = "java(DateUtil.getStartOfDay(query.getCreateDateLeft()))")
+    @Mapping(target = "createDateRight", expression = "java(DateUtil.getEndOfDay(query.getCreateDateRight()))")
+    @Mapping(target = "modifyDateLeft", expression = "java(DateUtil.getStartOfDay(query.getModifyDateLeft()))")
+    @Mapping(target = "modifyDateRight", expression = "java(DateUtil.getEndOfDay(query.getModifyDateRight()))")
+    BugOnlineListCondition convert(BugOnlineQueryList query);
 
     /**
      * BugOnlineAddReq --> BugOnlineDO

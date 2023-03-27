@@ -6,6 +6,7 @@ import com.timevale.forward.facade.api.result.BizDemandVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.security.facade.response.GroupResponse;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -26,10 +27,10 @@ public interface BizDemandComponent {
     /**
      * 获取所有子部门及其完整链名
      *
-     * @param queryDeptIdList 查询部门id列表
+     * @param queryDeptIds 查询部门id列表
      * @return 部门id -> 部门信息（完整名称）
      */
-    Map<Long, GroupResponse> getGroupListTreeMap(List<Long> queryDeptIdList);
+    Map<Long, GroupResponse> getGroupListTreeMap(Collection<Long> queryDeptIds);
 
     /**
      * 获取部门完整链名
