@@ -1113,14 +1113,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
         if (bugOnlineId != null) {
             BugOnlineDO bugOnlineDO = bugOnlineMapper.get(bugOnlineId);
-            if (bugOnlineDO == null) {
-                throw new BaseBizRuntimeException("转换需求失败，原线上bug不存在");
-            }
-            //判断当前状态是否为“挂起”，“问题上报”，“问题确认”状态
-            if (!BugOnlineStatusEnum.canConvertBizDemand(bugOnlineDO.getStatus())) {
-                throw new BaseBizRuntimeException("当前状态不允许转化业务需求");
-            }
-            //保存老的状态
+            AssertUtil.notNull(bugOnlineDO, "转换需求失败，原线上bug不存在");
+            AssertUtil.checkState(BugOnlineStatusEnum.canConvertBizDemand(bugOnlineDO.getStatus()), "当前状态不允许转化业务需求");
+
+            // 转换需求
             bugOnlineComponent.attachToBizDemands(bugOnlineDO, Collections.singletonList(bizDemandId),
                     ButtonActionEnum.SHIFT_BUSINESS);
         }

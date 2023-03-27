@@ -122,6 +122,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         bugOnlineDO.setPrevStatus(oldStatus);
         bugOnlineDO.setStatus(BugOnlineStatusEnum.REQUIRED.getCode());
         bugOnlineDO.setReason(BugOnlineReasonEnum.PRODUCT_DESIGN_FLAWS.getCode());
+        bugOnlineDO.setReasonStage(BugOnlineReasonStageEnum.PRODUCT_DESIGN.getCode());
         bugOnlineMapper.update(bugOnlineDO);
 
         // 新增关联关系
