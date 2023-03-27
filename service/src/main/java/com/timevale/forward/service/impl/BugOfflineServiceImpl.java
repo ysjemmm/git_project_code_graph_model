@@ -1161,6 +1161,8 @@ public class BugOfflineServiceImpl implements BugOfflineService {
 
         // 如果是线上bug，需要填充关联的对应bug信息
         if(BugLogTypeEnum.ONLINE.getCode().equals(logQuery.getType())){
+            final BugOnlineDO bugOnlineDO = bugOnlineMapper.get(logQuery.getId());
+
             // 关联的线上线下bug信息
             Set<Long> bugOnlineIds = new HashSet<>();
             Set<Long> bugOfflineIds = new HashSet<>();
@@ -1184,12 +1186,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                 ImmutableMap<Long, BugOnlineDO> bugMap = Maps.uniqueIndex(budDOLIst, BaseDO::getId);
                 bugLogVOList.stream()
                         .filter(e -> BugFieldEnum.LINK_BUG_ONLINE.getText().equals(e.getField()))
-                        .filter(e -> bugMap.containsKey(Long.valueOf(e.getOldValue()))
-                                  && bugMap.containsKey(Long.valueOf(e.getNewValue())))
+                        .filter(e -> bugMap.containsKey(Long.valueOf(e.getNewValue())))
                         .forEach(e -> {
-                            Long oldId = Long.valueOf(e.getOldValue());
+                            Long oldId = bugOnlineDO.getId();
+                            String oldName = bugOnlineDO.getName();
                             Long newId = Long.valueOf(e.getNewValue());
-                            String oldName = bugMap.get(oldId).getName();
                             String newName = bugMap.get(newId).getName();
 
                             e.setLinkBug(new BugSimpleVO(oldId, oldName));
@@ -1203,12 +1204,11 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                 ImmutableMap<Long, BugOfflineDO> bugMap = Maps.uniqueIndex(budDOList, BaseDO::getId);
                 bugLogVOList.stream()
                         .filter(e -> BugFieldEnum.LINK_BUG_OFFLINE.getText().equals(e.getField()))
-                        .filter(e -> bugMap.containsKey(Long.valueOf(e.getOldValue()))
-                                  && bugMap.containsKey(Long.valueOf(e.getNewValue())))
+                        .filter(e -> bugMap.containsKey(Long.valueOf(e.getNewValue())))
                         .forEach(e -> {
-                            Long oldId = Long.valueOf(e.getOldValue());
+                            Long oldId = bugOnlineDO.getId();
+                            String oldName = bugOnlineDO.getName();
                             Long newId = Long.valueOf(e.getNewValue());
-                            String oldName = bugMap.get(oldId).getName();
                             String newName = bugMap.get(newId).getName();
 
                             e.setLinkBug(new BugSimpleVO(oldId, oldName));
