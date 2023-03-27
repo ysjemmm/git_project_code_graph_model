@@ -730,7 +730,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogMapper.insert(bugLogDO);
 
         // 线下bug log
-        bugLogComponent.bugOffline(bugOnlineDO.getBugOfflineId(), startRepairReq.getBugOfflineId(), startRepairReq.getId());
+        bugLogComponent.bugOffline(bugOnlineDO.getBugOfflineId(), null, startRepairReq.getBugOfflineId());
 
         // 比较通用字段
         BugOnlineMD newBugOnlineMD = BugOnlineCopier.INSTANCE.do2md(bugOnlineDO);
