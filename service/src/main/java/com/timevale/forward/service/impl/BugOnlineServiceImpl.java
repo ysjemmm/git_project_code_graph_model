@@ -1095,7 +1095,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         String operator = bugOnlineDO.getOperator();
         //保存老的修复失败原因
         String oldRepairFailReason = bugOnlineDO.getRepairFailReason();
-        Integer oldReason = bugOnlineDO.getReason();
 
         bugOnlineDO.setStatus(BugOnlineStatusEnum.BE_CONFIRM.getCode());
         bugOnlineDO.setLastOperatorId(bugOnlineDO.getOperatorId());
@@ -1130,13 +1129,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         if (!operator.equals(bugOnlineDO.getOperator())) {
             bugLogDOList.add(createBugLog(noRepairReq.getId(), operator, bugOnlineDO.getOperator()
                     , null, BugFieldEnum.OPERATOR.getText()));
-        }
-
-        //bug原因
-        if (oldReason != null) {
-            String reasonText = BugOnlineReasonEnum.getTextByCode(oldReason);
-            bugLogDOList.add(createBugLog(noRepairReq.getId(), reasonText, null
-                    , null, BugLogFieldEnum.REASON.getText()));
         }
 
         bugLogMapper.batchInsert(bugLogDOList);
