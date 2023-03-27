@@ -856,6 +856,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //保存老的状态
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+        Long oldBugOfflineId = bugOnlineDO.getBugOfflineId();
 
         // 更新线上bug
         bugOnlineDO.setReason(confirmRepairReq.getReason());
@@ -874,6 +875,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //往bug日志表中插入一条线上bug状态变更数据
         bugLogMapper.insert(bugLogDO);
 
+        // 线下bug log
+        bugLogComponent.bugOffline(confirmRepairReq.getId(), oldBugOfflineId, confirmRepairReq.getBugOfflineId());
+
         //如果前端传递的有bug原因，那么就存放一条内容记录
         if (confirmRepairReq.getReason() != null) {
             BugLogDO bugLog = new BugLogDO();
@@ -884,9 +888,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             //插入bug日志内容变更记录
             bugLogMapper.insert(bugLog);
         }
-
-        // 线下bug log
-        bugLogComponent.bugOffline(confirmRepairReq.getId(), bugOnlineDO.getBugOfflineId(), confirmRepairReq.getBugOfflineId());
 
         //bug状态处理人员表插入数据
         bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
