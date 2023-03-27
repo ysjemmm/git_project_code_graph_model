@@ -104,7 +104,7 @@ public interface BugOnlineMapper {
     @Select("select count(*) from bug_online where biz_id = #{bizId} and is_deleted = false")
     boolean bizIdExists(@Param("bizId") String bizId);
 
-    @Update("UPDATE bug_online SET is_deleted=true, modify_man=#{modiftMan}, modify_man_id=#{modifyManId} WHERE id=#{id}")
+    @Update("UPDATE bug_online SET is_deleted=true, modify_man=#{modifyMan}, modify_man_id=#{modifyManId} WHERE id=#{id}")
     void delete(@Param("id")Long id);
 
     /**
