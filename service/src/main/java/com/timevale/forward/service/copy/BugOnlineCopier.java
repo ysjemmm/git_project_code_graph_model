@@ -54,7 +54,7 @@ public interface BugOnlineCopier {
     @Mapping(target = "reasonName", expression = "java(BugOnlineReasonEnum.getTextByCode(bugDO.getReason()))")
     @Mapping(target = "reasonStageName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(bugDO.getReasonStage()))")
     @Mapping(target = "dismissCauseName", expression = "java(BugOnlineReasonEnum.getTextByCode(bugDO.getDismissCause()))")
-    @Mapping(target = "dismissCauseStageName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(bugDO.getDismissCause()))")
+    @Mapping(target = "dismissCauseStageName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(bugDO.getDismissCauseStage()))")
     BugOnlineDetailVO convert(BugOnlineDO bugDO);
 
     /**
