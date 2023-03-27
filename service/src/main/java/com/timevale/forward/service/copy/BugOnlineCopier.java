@@ -53,7 +53,7 @@ public interface BugOnlineCopier {
     @Mapping(target = "recurrentName", expression = "java(BugOnlineRecurrentEnum.getTextByCode(bugDO.getRecurrent()))")
     @Mapping(target = "reasonName", expression = "java(BugOnlineReasonEnum.getTextByCode(bugDO.getReason()))")
     @Mapping(target = "reasonStageName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(bugDO.getReasonStage()))")
-    @Mapping(target = "dismissCauseName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(bugDO.getDismissCause()))")
+    @Mapping(target = "dismissCauseName", expression = "java(BugOnlineReasonEnum.getTextByCode(bugDO.getDismissCause()))")
     @Mapping(target = "dismissCauseStageName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(bugDO.getDismissCause()))")
     BugOnlineDetailVO convert(BugOnlineDO bugDO);
 
@@ -72,7 +72,7 @@ public interface BugOnlineCopier {
     @Mapping(target = "reasonName", expression = "java(BugOnlineReasonEnum.getTextByCode(listDO.getReason()))")
     @Mapping(target = "reasonStageName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(listDO.getReasonStage()))")
     @Mapping(target = "dismissCauseName", expression = "java(BugOnlineReasonEnum.getTextByCode(listDO.getDismissCause()))")
-    @Mapping(target = "dismissCauseStageName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(listDO.getDismissCause()))")
+    @Mapping(target = "dismissCauseStageName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(listDO.getDismissCauseStage()))")
     BugOnlineVO convert(BugOnlineListDO listDO);
 
     /**
