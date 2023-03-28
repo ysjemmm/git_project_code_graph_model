@@ -630,11 +630,13 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //关联的bug/被关联的bug
         if (bugOnlineDO.getLinkBugId() != null) {
-            BugOnlineDO linkBug = bugOnlineMapper.get(bugOnlineDO.getLinkBugId());
-            BugOnlineLinkVO bugOnlineLinkVO = new BugOnlineLinkVO();
-            bugOnlineLinkVO.setId(linkBug.getId());
-            bugOnlineLinkVO.setName(linkBug.getName());
-            bugOnlineDetailVO.setLinkBug(bugOnlineLinkVO);
+            Optional.ofNullable(bugOnlineMapper.get(bugOnlineDO.getLinkBugId()))
+                    .ifPresent(linkBug -> {
+                        BugOnlineLinkVO bugOnlineLinkVO = new BugOnlineLinkVO();
+                        bugOnlineLinkVO.setId(linkBug.getId());
+                        bugOnlineLinkVO.setName(linkBug.getName());
+                        bugOnlineDetailVO.setLinkBug(bugOnlineLinkVO);
+                    });
         } else {
             List<BugOnlineDO> linkedBug = bugOnlineMapper.selectByLinkBugId(bugOnlineDO.getId());
             List<BugOnlineLinkVO> linkedBugs = linkedBug.stream().map(a -> {
