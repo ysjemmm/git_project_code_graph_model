@@ -11,10 +11,7 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectEvaluateService;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.FlowTypeEnum;
-import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
-import com.timevale.forward.model.enums.ProjectKindEnum;
-import com.timevale.forward.model.enums.ProjectLevelEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ProjectEvaluateComponent;
 import com.timevale.forward.service.copy.ProjectEvaluateCopier;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
@@ -197,6 +194,9 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO, "项目不存在");
 
+        // 获取SR建议评价等级
+        String srEvaluateGrade = GradeEnum.getTextByCode(projectDO.getSrEvaluateGrade());
+
         // 查询对应的项目评价，旧数据判空处理
         List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.getByProjectId(projectId);
         if (CollUtil.isEmpty(evaluateDOList)) {
@@ -233,6 +233,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         // 组装结果
         ProjectEvaluateVO result = new ProjectEvaluateVO();
         result.setScoresSum(scoresSum);
+        result.setSrEvaluateGrade(srEvaluateGrade);
         result.setEvaluateItemVOList(evaluateItemVOList);
 
         return BaseResult.success(result);

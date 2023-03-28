@@ -214,6 +214,11 @@ public class ProjectDO extends BaseDO {
     private Date conclusionDate;
 
     /**
+     * sr建议评价等级
+     */
+    private Integer srEvaluateGrade;
+
+    /**
      * 返回父节点id列表
      */
     public LinkedList<Long> getParentList() {
