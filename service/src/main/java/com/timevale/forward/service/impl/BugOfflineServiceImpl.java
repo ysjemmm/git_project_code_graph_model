@@ -70,36 +70,28 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     private BugOfflineMapper bugOfflineMapper;
     @Resource
     private BugLogMapper bugLogMapper;
-
     @Resource
     private FileMapper fileMapper;
-
     @Resource
     private BizDomainMapper bizDomainMapper;
-
     @Resource
     private CommentMapper commentMapper;
-
     @Resource
     private BugStatusOperatorMapper bugStatusOperatorMapper;
-
     @Resource
     private SqlOrderComponent sqlOrderComponent;
-
     @Resource
     private LabelComponent labelComponent;
-
     @Resource
     private BizLabelMapper bizLabelMapper;
-
     @Resource
     private BugOnlineMapper bugOnlineMapper;
-
     @Resource
     private BizLabelComponent bizLabelComponent;
-
     @Resource
     private BizDemandMapper bizDemandMapper;
+    @Resource
+    private BugLogComponent bugLogComponent;
 
     @Override
     public BaseResult<PageQueryResult<BugOfflineVO>> list(BugOfflineQueryList bugOfflineQueryList) {
@@ -1113,30 +1105,46 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> delete(BugOfflineReq bugOfflineReq) {
         log.info("删除线下bug接收参数:{}", bugOfflineReq.getId());
+        final Long id = bugOfflineReq.getId();
+
         //删除线下bug表中的数据
-        bugOfflineMapper.deleteById(bugOfflineReq.getId());
+        bugOfflineMapper.deleteById(id);
 
         //删除bug日志表中的数据
-        bugLogMapper.deleteByBugId(bugOfflineReq.getId(), BugLogTypeEnum.OFFLINE.getCode());
+        bugLogMapper.deleteByBugId(id, BugLogTypeEnum.OFFLINE.getCode());
 
         //删除抄送人表person中的数据
         PersonDO personDO = new PersonDO();
-        personDO.setMainId(bugOfflineReq.getId());
+        personDO.setMainId(id);
         personDO.setType(PersonTypeEnum.BUG_OFFLINE_CC.getCode());
         personDO.setIsDeleted(true);
         personMapper.update(personDO);
 
         //删除评论数据
-        commentMapper.delete(bugOfflineReq.getId(), CommentTypeEnum.BUG_OFFLINE.getCode());
+        commentMapper.delete(id, CommentTypeEnum.BUG_OFFLINE.getCode());
 
         //删除附件数据
         FileDO fileDO = new FileDO();
         fileDO.setIsDeleted(true);
-        fileDO.setAttacheId(bugOfflineReq.getId());
+        fileDO.setAttacheId(id);
         fileDO.setType(FileTypeEnum.BUG_OFFLINE.getCode());
         fileMapper.update(fileDO);
 
-        bizLabelComponent.deleteLabel(bugOfflineReq.getId(), BizTypeEnum.BUG_OFFLINE.getCode());
+        // 删除关联标签
+        bizLabelComponent.deleteLabel(id, BizTypeEnum.BUG_OFFLINE.getCode());
+
+        // 删除关联的线上bug
+        List<BugOnlineDO> bugOnlineDOs = bugOnlineMapper.getByBugOffline(id);
+        if (CollUtil.isNotEmpty(bugOnlineDOs)) {
+            List<Long> bugOnlineIds = bugOnlineDOs.stream().map(BaseDO::getId).collect(Collectors.toList());
+            bugOnlineMapper.clearBugOffline(bugOnlineIds);
+
+            // 关联日志
+            for (BugOnlineDO bugOnlineDO : bugOnlineDOs) {
+                bugLogComponent.bugOffline(bugOnlineDO.getId(), bugOnlineDO.getBugOfflineId(), null);
+            }
+        }
+
         return BaseResult.success(true);
     }
 

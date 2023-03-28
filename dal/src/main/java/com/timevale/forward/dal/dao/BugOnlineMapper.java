@@ -116,4 +116,19 @@ public interface BugOnlineMapper {
      * 根据客户id查询
      */
     List<BugOnlineListDO> selectByCustomId(@Param("customId") Long customId);
+
+    /**
+     * 查询关联的该线下bug的线上bug
+     *
+     * @param bugOfflineId 线下bug id
+     * @return 线上bug数据集合
+     */
+    List<BugOnlineDO> getByBugOffline(@Param("bugOfflineId")Long bugOfflineId);
+
+    /**
+     * 清空关联的线下bug
+     *
+     * @param ids 线上bug id集合
+     */
+    void clearBugOffline(@Param("ids")Collection<Long> ids);
 }

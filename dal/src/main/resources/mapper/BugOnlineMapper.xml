@@ -455,12 +455,36 @@
         WHERE is_deleted = false
     </select>
 
+    <select id="getByBugOffline" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+        SELECT *
+        FROM bug_online
+        WHERE bug_offline_id = #{bugOfflineId}
+          AND is_deleted = false
+    </select>
+
     <update id="delete">
         UPDATE bug_online
-        SET is_deleted =true,
-            modify_man=#{modifyMan},
-            modify_man_id=#{modifyManId}
+        <set>
+            is_deleted = true,
+            <if test="modify_man != null">modify_man=#{modifyMan},</if>
+            <if test="modify_man_id != null">modify_man_id=#{modifyManId},</if>
+        </set>
         WHERE id = #{id}
+    </update>
+
+    <update id="clearBugOffline">
+        UPDATE bug_online
+        <set>
+            bug_offline_id = null,
+            <if test="modifyMan != null">modify_man=#{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id=#{modifyManId},</if>
+        </set>
+        <where>
+            AND id IN
+            <foreach collection="ids" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
     </update>
 
 </mapper>
