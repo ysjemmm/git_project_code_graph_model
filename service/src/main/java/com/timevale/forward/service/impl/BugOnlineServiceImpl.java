@@ -51,8 +51,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * @Date 2022/3/17 16:59
- * @Author 望轩
+ * @date 2022/3/17 16:59
+ * @author 望轩
  */
 @Slf4j
 @LogPoint
@@ -851,6 +851,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         //保存老的状态
+        Integer oldReason = bugOnlineDO.getReason();
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
         Long oldBugOfflineId = bugOnlineDO.getBugOfflineId();
 
@@ -871,19 +872,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //往bug日志表中插入一条线上bug状态变更数据
         bugLogMapper.insert(bugLogDO);
 
-        // 线下bug log
+        // 线下bug、bug原因的log
         bugLogComponent.bugOffline(confirmRepairReq.getId(), oldBugOfflineId, confirmRepairReq.getBugOfflineId());
-
-        //如果前端传递的有bug原因，那么就存放一条内容记录
-        if (confirmRepairReq.getReason() != null) {
-            BugLogDO bugLog = new BugLogDO();
-            bugLog.setField(BugFieldEnum.REASON.getText());
-            bugLog.setNewValue(BugOnlineReasonEnum.getFullTextByCode(bugOnlineDO.getReason()));
-            bugLog.setMainId(confirmRepairReq.getId());
-            bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
-            //插入bug日志内容变更记录
-            bugLogMapper.insert(bugLog);
-        }
+        bugLogComponent.reason(confirmRepairReq.getId(),oldReason, confirmRepairReq.getReason());
 
         //bug状态处理人员表插入数据
         bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
@@ -916,6 +907,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         //保存老的状态
+        Integer oldReason = bugOnlineDO.getReason();
         Long oldBugOfflineId = bugOnlineDO.getBugOfflineId();
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
 
@@ -936,19 +928,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //往bug日志表中插入一条线上bug状态变更数据
         bugLogMapper.insert(bugLogDO);
 
-        //如果前端传递的有bug原因，那么就存放一条内容记录
-        if (onlineReq.getReason() != null) {
-            BugLogDO bugLog = new BugLogDO();
-            bugLog.setField(BugFieldEnum.REASON.getText());
-            bugLog.setNewValue(BugOnlineReasonEnum.getFullTextByCode(bugOnlineDO.getReason()));
-            bugLog.setMainId(onlineReq.getId());
-            bugLog.setType(BugLogTypeEnum.ONLINE.getCode());
-            //插入bug日志内容变更记录
-            bugLogMapper.insert(bugLog);
-        }
-
-        // 线下bug log
+        // 线下bug, bug原因 log
         bugLogComponent.bugOffline(onlineReq.getId(), oldBugOfflineId, onlineReq.getBugOfflineId());
+        bugLogComponent.reason(onlineReq.getId(), oldReason, onlineReq.getReason());
 
         //bug状态处理人员表插入数据
         bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
