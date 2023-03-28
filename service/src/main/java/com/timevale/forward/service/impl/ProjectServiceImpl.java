@@ -1436,19 +1436,27 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO,"项目不存在");
 
-        // 需要校验项目评价必填内容是否完成、
+        // 是否为1-n客开项目
+        boolean isOtnPj = ProjectKindEnum.PBG_OTN.getCode().equals(projectDO.getKind());
+
+        // 不同项目类型需要显示不同提示
+        String message = isOtnPj ?
+                "请检查项目积分模块中对项目成员评价是否完整，变更流程是否审批完成":
+                "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成";
+
+        // 非1-n客开项目需要校验项目评价必填内容是否完成
         List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.getByProjectId(projectId);
-        AssertUtil.checkState(evaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getScores())),
-                "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
+        AssertUtil.checkState(isOtnPj || evaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getScores())),
+                message);
 
         // 纳入积分员工的实际工作量是否录入完成，个人评价是否必填
         List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
         AssertUtil.checkState(memberEvaluateDOList.stream()
                         .filter(ProjectMemberEvaluateDO::getIncludeStat)
                         .noneMatch(e->ObjectUtil.isNull(e.getActualWorkload())),
-                "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
+                message);
         AssertUtil.checkState(memberEvaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getEvaluateGrade())),
-                "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
+                message);
 
         // 查询该项目的流程
         List<ProjectFlowDO> projectFlowDOList = projectFlowMapper.getByProjectId(projectId);
@@ -1456,14 +1464,14 @@ public class ProjectServiceImpl implements ProjectService {
         // 是否存在审核中的工作流变更、结项流程
         boolean noneWorkloadFlow = projectFlowDOList.stream()
                 .filter(e -> FlowTypeEnum.WORKLOAD.getCode().equals(e.getFlowType())
-                        || FlowTypeEnum.CONCLUSION.getCode().equals(e.getFlowType()))
+                          || FlowTypeEnum.CONCLUSION.getCode().equals(e.getFlowType()))
                 .noneMatch(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()));
-        AssertUtil.checkState(noneWorkloadFlow, "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
+        AssertUtil.checkState(noneWorkloadFlow, message);
 
         // 是否存发布延期流程
         List<ProjectNodeFlowDO> nodeFlowDOList = projectNodeFlowMapper.getByProjectId(projectId);
         boolean nonePublishFlow = nodeFlowDOList.stream().noneMatch(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()));
-        AssertUtil.checkState(nonePublishFlow, "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成");
+        AssertUtil.checkState(nonePublishFlow, message);
 
         // 计划总工作量
         BigDecimal planWorkloadSum = memberEvaluateDOList.stream()
