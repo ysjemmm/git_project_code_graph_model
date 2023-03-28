@@ -33,4 +33,13 @@ public enum GradeEnum {
         }
         return "";
     }
+
+    public static Integer getCodeByText(String text){
+        for (GradeEnum e : GradeEnum.values()){
+            if(e.getText().equals(text)){
+                return e.code;
+            }
+        }
+        return null;
+    }
 }
