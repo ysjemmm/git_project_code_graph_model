@@ -339,10 +339,4 @@
             </if>
         </where>
     </select>
-
-    <select id="getContainDeleted" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
-        SELECT *
-        FROM bug_offline
-        WHERE id = #{id}
-    </select>
 </mapper>

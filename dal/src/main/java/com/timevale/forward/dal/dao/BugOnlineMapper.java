@@ -23,14 +23,6 @@ public interface BugOnlineMapper {
     BugOnlineDO get(@Param("id") Long id);
 
     /**
-     * 根据线上bugid查询，包含is_deleted = true的数据
-     *
-     * @param id id
-     * @return {@link BugOnlineDO}
-     */
-    BugOnlineDO getContainDeleted(@Param("id") Long id);
-
-    /**
      * 选择所有id
      *
      * @return {@link List}<{@link Long}>
