@@ -197,7 +197,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             }
             for (Integer stage : dismissCauseStageList) {
                 List<Integer> stageReasons = BugOnlineReasonEnum.getByStage(stage);
-                if (!CollUtil.containsAny(stageReasons, reasons)) {
+                if (!CollUtil.containsAny(stageReasons, dismissCauselist)) {
                     dismissCauselist.addAll(stageReasons);
                 }
             }
