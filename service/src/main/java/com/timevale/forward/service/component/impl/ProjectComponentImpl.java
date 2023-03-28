@@ -600,6 +600,11 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
 
         ProjectDO projectDO = projectMapper.get(projectId);
+        if (projectDO == null) {
+            log.error("[ProjectComponentImpl.updateCustomDev]项目为空projectId:{}",projectId);
+            return;
+        }
+
         Integer kind = projectDO.getKind();
 
         int newCustomerDev = 0;
