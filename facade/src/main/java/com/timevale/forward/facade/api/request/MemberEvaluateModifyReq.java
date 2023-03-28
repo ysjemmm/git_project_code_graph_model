@@ -35,7 +35,4 @@ public class MemberEvaluateModifyReq extends ToString {
     @ApiModelProperty("评价说明")
     private String evaluateExplain;
 
-    @ApiModelProperty("是否纳入积分统计")
-    private Boolean includeStat;
-
 }

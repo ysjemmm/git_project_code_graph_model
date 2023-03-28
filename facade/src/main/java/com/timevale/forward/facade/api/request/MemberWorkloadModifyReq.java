@@ -24,7 +24,4 @@ public class MemberWorkloadModifyReq extends ToString {
 
     @ApiModelProperty("计划工作量")
     private BigDecimal planWorkload;
-
-    @ApiModelProperty("是否纳入积分统计")
-    private Boolean includeStat;
 }

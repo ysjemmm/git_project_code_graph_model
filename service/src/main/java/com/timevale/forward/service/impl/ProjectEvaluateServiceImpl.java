@@ -137,7 +137,6 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
             List<MemberWorkloadModifyReq> modifyReqList = req.getModifyReqList();
             for (MemberWorkloadModifyReq modifyReq : modifyReqList) {
                 ProjectMemberEvaluateDO evaluateDO = ProjectMemberEvaluateCopier.INSTANCE.req2do(modifyReq, projectId);
-                memberEvaluateMapper.update(evaluateDO);
                 memberEvaluateMapper.updatePlanWorkload(evaluateDO);
             }
 

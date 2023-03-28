@@ -509,10 +509,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //比较编辑修改的一般字段，生成结果集合
         List<BugLogDO> bugLogDOList = FieldCompareUtil.commonCompare(oldBugOnlineMD, newBugOnlineMD, BugLogDO.class);
-
         //模块日志
         bugLogDOList.addAll(compareExtField(bugOnlineDO, newBugOnlineDO));
-        bugLogDOList.addAll(compareModel(oldModelList, modifyReq.getModelIds(), bugOnlineDO.getId()));
         bugLogDOList.addAll(compareModel(oldModelList, modifyReq.getModelIds(), bugOnlineDO.getId()));
         bugLogDOList.addAll(compareProductLine(oldProductLineIdList, modifyReq.getProductLineIdList(), bugOnlineDO.getId()));
         bugLogDOList.addAll(bugOnlineComponent.compareBugOffline(bugOnlineDO.getId(), bugOnlineDO.getBugOfflineId(), modifyReq.getBugOfflineId()));

@@ -116,15 +116,23 @@ public class ProjectEvaluateComponent {
             return new ProjectWorkloadChangeVO().setDirectChangeEnable(true);
         }
 
-        // 旧的计划总工作量、积分总工作量
+        // 成员评价信息
         List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
+
+        // 纳入积分的团队成员
+        Set<String> includeStatUsers = memberEvaluateDOList.stream()
+                .filter(ProjectMemberEvaluateDO::getIncludeStat)
+                .map(ProjectMemberEvaluateDO::getUserId)
+                .collect(Collectors.toSet());
+
+        // 旧的计划总工作量、积分总工作量
         BigDecimal planWorkloadSumBefore = memberEvaluateDOList.stream()
                 .map(ProjectMemberEvaluateDO::getPlanWorkload)
                 .filter(ObjectUtil::isNotNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(1, RoundingMode.HALF_UP);
         BigDecimal pointsWorkloadSumBefore = memberEvaluateDOList.stream()
-                .filter(ProjectMemberEvaluateDO::getIncludeStat)
+                .filter(e -> includeStatUsers.contains(e.getUserId()))
                 .map(ProjectMemberEvaluateDO::getPlanWorkload)
                 .filter(ObjectUtil::isNotNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
@@ -138,7 +146,7 @@ public class ProjectEvaluateComponent {
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(1, RoundingMode.HALF_UP);
         BigDecimal pointsWorkloadSumAfter = memberWorkloadList.stream()
-                .filter(MemberWorkloadModifyReq::getIncludeStat)
+                .filter(e -> includeStatUsers.contains(e.getUserId()))
                 .map(MemberWorkloadModifyReq::getPlanWorkload)
                 .filter(ObjectUtil::isNotNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
