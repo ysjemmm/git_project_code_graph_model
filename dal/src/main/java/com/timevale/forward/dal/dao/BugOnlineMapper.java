@@ -5,7 +5,6 @@ import com.timevale.forward.dal.entity.BugOnlineDO;
 import com.timevale.forward.dal.entity.BugOnlineListDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
 
 import java.util.Collection;
 import java.util.List;
@@ -22,6 +21,14 @@ public interface BugOnlineMapper {
      * @return 返回值
      */
     BugOnlineDO get(@Param("id") Long id);
+
+    /**
+     * 根据线上bugid查询，包含is_deleted = true的数据
+     *
+     * @param id id
+     * @return {@link BugOnlineDO}
+     */
+    BugOnlineDO getContainDeleted(@Param("id") Long id);
 
     /**
      * 选择所有id
@@ -49,7 +56,6 @@ public interface BugOnlineMapper {
      * 插入线上bug
      *
      * @param bugOnlineDO 参数
-     * @return Long
      */
     void insert(BugOnlineDO bugOnlineDO);
 

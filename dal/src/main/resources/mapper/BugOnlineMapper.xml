@@ -7,6 +7,12 @@
           and is_deleted = 0
     </select>
 
+    <select id="getContainDeleted" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+        select *
+        from bug_online
+        where id = #{id}
+    </select>
+
     <select id="selectListByCondition" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
         select bo.*
         from bug_online bo

@@ -1071,7 +1071,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         // 判断是否为线下bug转换
         if (bugOfflineId != null) {
-            BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineId);
+            BugOfflineDO bugOfflineDO = bugOfflineMapper.get(bugOfflineId);
             if (bugOfflineDO == null) {
                 throw new BaseBizRuntimeException("转换需求失败，原线下bug不存在");
             }

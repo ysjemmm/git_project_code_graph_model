@@ -612,7 +612,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         // 查询关联的线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOnlineDO.getBugOfflineId());
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.getContainDeleted(bugOnlineDO.getBugOfflineId());
         if (bugOfflineDO != null) {
             bugOnlineDetailVO.setBugOfflineName(bugOfflineDO.getName());
         }
@@ -630,13 +630,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //关联的bug/被关联的bug
         if (bugOnlineDO.getLinkBugId() != null) {
-            Optional.ofNullable(bugOnlineMapper.get(bugOnlineDO.getLinkBugId()))
-                    .ifPresent(linkBug -> {
-                        BugOnlineLinkVO bugOnlineLinkVO = new BugOnlineLinkVO();
-                        bugOnlineLinkVO.setId(linkBug.getId());
-                        bugOnlineLinkVO.setName(linkBug.getName());
-                        bugOnlineDetailVO.setLinkBug(bugOnlineLinkVO);
-                    });
+            BugOnlineDO linkBug = bugOnlineMapper.getContainDeleted(bugOnlineDO.getLinkBugId());
+            bugOnlineDetailVO.setLinkBug(new BugOnlineLinkVO(linkBug.getId(), linkBug.getName()));
         } else {
             List<BugOnlineDO> linkedBug = bugOnlineMapper.selectByLinkBugId(bugOnlineDO.getId());
             List<BugOnlineLinkVO> linkedBugs = linkedBug.stream().map(a -> {

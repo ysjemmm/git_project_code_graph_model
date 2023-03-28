@@ -87,7 +87,7 @@ public class CommentServiceImpl implements CommentService {
         commentMainNameFun.put(CommentTypeEnum.PRODUCT_DEMAND, id -> productDemandMapper.selectById(id).getName());
         commentMainNameFun.put(CommentTypeEnum.BIZ_DEMAND, id -> bizDemandMapper.get(id).getName());
         commentMainNameFun.put(CommentTypeEnum.TASK, id -> taskMapper.getById(id).getName());
-        commentMainNameFun.put(CommentTypeEnum.BUG_OFFLINE, id -> bugOfflineMapper.selectById(id).getName());
+        commentMainNameFun.put(CommentTypeEnum.BUG_OFFLINE, id -> bugOfflineMapper.get(id).getName());
         commentMainNameFun.put(CommentTypeEnum.BUG_ONLINE, id -> bugOnlineMapper.get(id).getName());
         commentMainNameFun.put(CommentTypeEnum.TROUBLE_TICKET, id -> troubleTicketMapper.selectById(id).getName());
         commentMainNameFun.put(CommentTypeEnum.CUSTOM_DEMAND, id -> customDemandMapper.selectById(id).getName());

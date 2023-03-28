@@ -62,7 +62,15 @@ public interface BugOfflineMapper {
      * @param id id
      * @return BugOfflineDO
      */
-    BugOfflineDO selectById(@Param("id") Long id);
+    BugOfflineDO get(@Param("id") Long id);
+
+    /**
+     * 选择id获取DO, 包含is_deleted = true的数据
+     *
+     * @param id id
+     * @return BugOfflineDO
+     */
+    BugOfflineDO getContainDeleted(@Param("id") Long id);
 
     List<BugOfflineDO> getByIds(@Param("ids") Collection<Long> ids, @Param("containDeleted")Boolean containDeleted);
 

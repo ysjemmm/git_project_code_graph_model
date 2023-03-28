@@ -271,7 +271,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> modify(BugOfflineModifyReq bugOfflineModifyReq) {
-        BugOfflineDO oldBugOfflineDO = bugOfflineMapper.selectById(bugOfflineModifyReq.getId());
+        BugOfflineDO oldBugOfflineDO = bugOfflineMapper.get(bugOfflineModifyReq.getId());
         if (oldBugOfflineDO == null) {
             throw new BaseBizRuntimeException("该线下bug不存在");
         }
@@ -336,7 +336,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineTransferReq.getId());
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.get(bugOfflineTransferReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
@@ -389,7 +389,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineUnHandleReq.getId());
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.get(bugOfflineUnHandleReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
@@ -467,7 +467,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     public BaseResult<Boolean> agree(BugOfflineReq bugOfflineReq) {
         log.info("线下bug'同意'接收参数{}", bugOfflineReq.getId());
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.get(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
@@ -512,7 +512,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.get(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
@@ -589,7 +589,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineDelayHandleReq.getId());
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.get(bugOfflineDelayHandleReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
@@ -658,7 +658,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     public BaseResult<Boolean> doHandle(BugOfflineReq bugOfflineReq) {
         log.info("确认修复接收参数{}", bugOfflineReq.getId());
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.get(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
@@ -704,7 +704,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.get(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
@@ -810,7 +810,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     public BaseResult<Boolean> accepted(BugOfflineReq bugOfflineReq) {
         log.info("验收通过接收参数{}", bugOfflineReq.getId());
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.get(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
@@ -853,7 +853,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         log.info("验收失败接收参数{}", bugOfflineReq.getId());
 
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.get(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
@@ -919,7 +919,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         //得到当前线下bug
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineReq.getId());
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.get(bugOfflineReq.getId());
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("线下bug不存在。");
         }
@@ -1015,7 +1015,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
     public BaseResult<BugOfflineDetailVO> get(Long id) {
         log.info("查看线下bug详情接收参数:{}", id);
         //校验线下bug是否存在
-        BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(id);
+        BugOfflineDO bugOfflineDO = bugOfflineMapper.get(id);
         if (bugOfflineDO == null) {
             throw new BaseBizRuntimeException("该线下bug不存在");
         }
