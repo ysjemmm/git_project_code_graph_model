@@ -712,7 +712,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<BizChangeLogDO> logDOList = new ArrayList<>();
 
         // 获取相关业务需求
-        List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(bizDemandIdList);
+        List<BizDemandDO> bizDemandDOList = bizDemandMapper.getByIds(bizDemandIdList);
         for (BizDemandDO e : bizDemandDOList) {
             String oldReceiveMan = e.getReceiveMan();
 
@@ -758,7 +758,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 日志处理
         List<BizChangeLogDO> bizChangeLogDOList = new ArrayList<>();
-        List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(bizDemandIdList);
+        List<BizDemandDO> bizDemandDOList = bizDemandMapper.getByIds(bizDemandIdList);
         for (BizDemandDO e : bizDemandDOList) {
             String oldSubmitMan = e.getSubmitMan();
 
@@ -1069,7 +1069,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Override
     public BaseResult<Boolean> noticeReceiver(BizDemandNoticeReceiverReq receiverReq) {
         log.info("开发资源申请流程通过,通知需求接收人:{}", receiverReq.getBizDemandIds());
-        List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(receiverReq.getBizDemandIds());
+        List<BizDemandDO> bizDemandDOList = bizDemandMapper.getByIds(receiverReq.getBizDemandIds());
         bizDemandDOList.forEach(a ->
                 messageEventPublisher.publish(new BizDemandApprovedMsgEvent(
                         this,

@@ -36,7 +36,7 @@ public enum BizDemandStatusEnum {
                 return e.text;
             }
         }
-        return "errorCode";
+        return "";
     }
 
     public static Boolean statusNeedNotice(Integer code){

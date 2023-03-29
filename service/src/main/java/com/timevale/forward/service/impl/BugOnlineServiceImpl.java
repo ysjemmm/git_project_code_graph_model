@@ -598,7 +598,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //如果线上bug转化了业务需求，则查询并转化业务需求
         List<Long> bizDemandIds = bugOnlineBizDemandMapper.getBizDemandIds(bugOnlineId);
         if (CollectionUtils.isNotEmpty(bizDemandIds)) {
-            List<BizDemandDO> bizDemands = bizDemandMapper.selectByIds(bizDemandIds);
+            List<BizDemandDO> bizDemands = bizDemandMapper.getByIds(bizDemandIds);
             List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.transfer(bizDemands);
             bugOnlineDetailVO.setBizDemands(bizDemandVOList);
         }
@@ -1652,7 +1652,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         AssertUtil.notNull(bugOnline, "您选择的线上bug不存在，请刷新后重试");
         AssertUtil.checkState(BugOnlineStatusEnum.canConvertBizDemand(bugOnline.getStatus()),
                 "当前状态不允许转化业务需求");
-        List<BizDemandDO> bizDemands = bizDemandMapper.selectByIds(bizDemandIds);
+        List<BizDemandDO> bizDemands = bizDemandMapper.getByIds(bizDemandIds);
         AssertUtil.notEmpty(bizDemands, "关联的业务需求不存在，请重新勾选");
         bugOnlineComponent.attachToBizDemands(bugOnline, bizDemandIds, ButtonActionEnum.ATTACH_BUSINESS);
         return BaseResult.success();

@@ -310,7 +310,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             ProductBizDemandCondition c = ProductBizDemandCondition.builder().productDemandId(productDemandId).isDeleted(false).build();
             List<Long> bizDemandIds = productBizDemandMapper.select(c).stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
             if (CollectionUtils.isNotEmpty(bizDemandIds)) {
-                Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
+                Map<Long, String> bdNameMap = bizDemandMapper.getByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
                 productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, null);
                 // 作废解业务需求关联
                 productBizDemandComponent.update(productDemandId, null, relation == null);
@@ -386,7 +386,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (CollectionUtils.isNotEmpty(bizDemandIds)) {
             //只关联产品或客户需求时,不关联项目,此处计算项目发布时间
             productBizDemandComponent.batchInsert(productDemand.getId(), bizDemandIds, !hasProject);
-            Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
+            Map<Long, String> bdNameMap = bizDemandMapper.getByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
             productDemandLogComponent.addLogWhenLinkOrUnlink(productDemand.getName(), productDemand.getId(), bdNameMap, ButtonActionEnum.LINK.getText());
         }
 
@@ -531,7 +531,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         condition.setReceiveManIdList(receiveManIdList);
         List<Integer> status = query.getStatusList();
-        if (CollectionUtils.isEmpty(status)) {
+        if (CollUtil.isEmpty(status)) {
             condition.setStatusList(Lists.newArrayList(
                     BizDemandStatusEnum.RECEIVED.getCode()
                     , BizDemandStatusEnum.INCLUDE_PROJECT.getCode()
@@ -548,19 +548,14 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             List<Long> bizDemandIds = productBizDemand.stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
             condition.setBizDemandIds(bizDemandIds);
         }
-        condition.setPageNum(query.getPageNum());
-        condition.setPageSize(query.getPageSize());
         condition.setCollation(CommonConstant.DEFAULT_ORDER_BY);
-        if(CollectionUtils.isNotEmpty(query.getLabelIds())||CollectionUtils.isNotEmpty(query.getLabelCategoryIds())){
+        if(CollUtil.isNotEmpty(query.getLabelIds())||CollUtil.isNotEmpty(query.getLabelCategoryIds())){
             List<Long> labelIds = labelComponent.getLabelIds(query.getLabelIds(), query.getLabelCategoryIds());
-            if(CollectionUtils.isEmpty(labelIds)){
+            if(CollUtil.isEmpty(labelIds)){
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
             condition.setLabelIds(labelIds);
         }
-
-        condition.setPageNum(query.getPageNum());
-        condition.setPageSize(query.getPageSize());
         return BaseResult.success(bizDemandComponent.page(condition).getPageQueryResult());
     }
 
@@ -571,7 +566,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         List<Long> bizDemandIds = bizDemandLinkReq.getBizDemandIds();
         List<Long> productDemandIds = Lists.newArrayList(bizDemandLinkReq.getProductDemandId());
         ProductDemandDO productDemandDO = productDemandMapper.selectById(bizDemandLinkReq.getProductDemandId());
-        Map<Long, String> bdNameMap = bizDemandMapper.selectByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
+        Map<Long, String> bdNameMap = bizDemandMapper.getByIds(bizDemandIds).stream().collect(Collectors.toMap(BizDemandDO::getId, BizDemandDO::getName, (v1, v2) -> v2));
 
         if (LinkOrUnLinkEnum.LINK.getCode().equals(bizDemandLinkReq.getType())) {
             productBizDemandComponent.batchInsert(bizDemandLinkReq.getProductDemandId(), bizDemandIds, true);

@@ -128,7 +128,7 @@ public interface BizDemandMapper {
      * @param ids id
      * @return 业务需求DO
      */
-    List<BizDemandDO> selectByIds(@Param("ids") List<Long> ids);
+    List<BizDemandDO> getByIds(@Param("ids") List<Long> ids);
 
     /**
      * 选择id获取对应业务需求信息

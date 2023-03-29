@@ -69,11 +69,21 @@ public enum BugOnlineStatusEnum {
                 return e.text;
             }
         }
-        return "error code";
+        return "";
     }
 
+    /**
+     * 可以转换业务需求的状态
+     *
+     * @param code 代码
+     * @return boolean
+     */
     public static boolean canConvertBizDemand(Integer code) {
-        return HANG_UP.getCode().equals(code) || PROBLEM_REPORT.getCode().equals(code) || QUESTION_CONFIRM.getCode().equals(code);
+        return HANG_UP.getCode().equals(code)
+            || PROBLEM_REPORT.getCode().equals(code)
+            || QUESTION_CONFIRM.getCode().equals(code)
+            || BE_CONFIRM.getCode().equals(code)
+            || CLOSE.getCode().equals(code);
     }
 
 }
