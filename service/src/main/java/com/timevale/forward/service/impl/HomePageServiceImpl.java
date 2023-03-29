@@ -108,7 +108,7 @@ public class HomePageServiceImpl implements HomePageService {
             List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
 
             // 项目信息
-            List<ProjectDO> projectDOList = projectMapper.selectByTeamMember(allMyStaffWithSelf);
+            List<ProjectDO> projectDOList = projectMapper.getByTeamMember(allMyStaffWithSelf);
             projectDOList = projectDOList.stream().filter(e -> !ProjectStatusEnum.INVALID.getCode().equals(e.getStatus())).collect(Collectors.toList());
 
             dataIndicatorVO.setProjectReadyStartCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_START.getCode().equals(e.getNodeStatus())).count());
@@ -137,10 +137,10 @@ public class HomePageServiceImpl implements HomePageService {
     @Override
     public BaseResult<HomePageTodoCardVO> getTodoCard(HomePageBaseReq homePageBaseReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        int taskCount = 0;
         int projectCount;
-        int bizDemandCount = 0;
         int bugOnLineCount;
+        int taskCount = 0;
+        int bizDemandCount = 0;
         int bugOfflineCount = 0;
         int bizDemandReceivedCount = 0;
 
@@ -148,7 +148,7 @@ public class HomePageServiceImpl implements HomePageService {
         List<String> allMyStaffWithSelf = Lists.newArrayList(userInfo.getId());
 
         // 进行中的项目
-        List<ProjectDO> projectDOList = projectMapper.selectByTeamMember(allMyStaffWithSelf);
+        List<ProjectDO> projectDOList = projectMapper.getByTeamMember(allMyStaffWithSelf);
         projectCount = (int) projectDOList.stream().filter(e -> ProjectStatusEnum.ongoing(e.getStatus())).count();
 
         // 产品添加待处理业务需求，开发测试添加待处理任务

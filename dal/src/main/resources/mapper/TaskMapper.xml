@@ -214,8 +214,6 @@
             and p.type = 40
             and p.is_deleted = false
             and t.is_deleted = false
-            <!-- 暂时排除里程碑任务 -->
-            and t.id not in (select relation_id from project_milestone where type = 0 and is_deleted = false)
         group by t.id
     </select>
 
@@ -239,8 +237,6 @@
         and t.project_id = #{projectId}
         and t.is_deleted = false
         and p.is_deleted = false
-        <!-- 暂时排除里程碑任务 -->
-        and t.id not in (select relation_id from project_milestone where type = 0 and is_deleted = false)
         group by p.user_id
     </select>
 
@@ -302,8 +298,6 @@
             </foreach>
             and c.status not in (-10,-20)
             and a.is_deleted = false
-        <!-- 暂时排除里程碑任务 -->
-        and a.id not in (select relation_id from project_milestone where type = 0 and is_deleted = false)
         </where>
     </select>
 

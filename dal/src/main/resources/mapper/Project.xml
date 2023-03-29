@@ -374,7 +374,7 @@
         </where>
     </select>
 
-    <select id="selectByTeamMember" resultType="com.timevale.forward.dal.entity.ProjectDO">
+    <select id="getByTeamMember" resultType="com.timevale.forward.dal.entity.ProjectDO">
         select pj.*
         from person p
         join project pj on pj.id = p.main_id
