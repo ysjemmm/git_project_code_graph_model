@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
@@ -26,6 +27,7 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
@@ -315,6 +317,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (StringUtils.isNotBlank(bizDemandAddReq.getBizId())) {
             outBizDealComponent.checkBizIdExistence(bizDemandAddReq.getBizId());
         }
+        checkDescLength(bizDemandAddReq.getDesc());
 
         // 新增业务需求
         BizDemandDO bizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandAddReq);
@@ -459,6 +462,8 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (checkUniqueName != null && !checkUniqueName.getId().equals(bizDemandModifyReq.getId())) {
             throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
         }
+
+        checkDescLength(bizDemandModifyReq.getDesc());
 
         BizDemandDO newBizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandModifyReq);
         newBizDemandDO.setStatus(oldBizDemandDO.getStatus());
@@ -1151,5 +1156,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         bugLogDO.setOldValue(oldValue);
         bugLogDO.setNewValue(newValue);
         return bugLogDO;
+    }
+
+    private void checkDescLength(String desc) {
+        Integer descLength = StrUtil.length(desc);
+        AssertUtil.checkState(CommonConstant.DESC_MAX_LENGTH.compareTo(descLength) >= 0, "需求描述字数过大,请重新输入");
     }
 }

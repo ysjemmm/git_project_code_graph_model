@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
@@ -30,7 +31,6 @@ import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -129,9 +129,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
     @Resource
     private BizLabelComponent bizLabelComponent;
-
-    private static final Integer MAX_LENGTH = 20 * 1000;
-
 
     @Override
     public BaseResult<QueryResultVO<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
@@ -785,9 +782,8 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     }
 
     private void checkDescLength(String desc) {
-        if (StringUtils.isNotEmpty(desc) && desc.getBytes().length > MAX_LENGTH) {
-            throw new BaseBizRuntimeException("需求描述字数过大,请重新输入");
-        }
+        Integer descLength = StrUtil.length(desc);
+        AssertUtil.checkState(CommonConstant.DESC_MAX_LENGTH.compareTo(descLength) >= 0, "需求描述字数过大,请重新输入");
     }
 
 }
