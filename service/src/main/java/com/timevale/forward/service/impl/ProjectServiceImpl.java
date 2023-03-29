@@ -1436,17 +1436,11 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO,"项目不存在");
 
-        // 是否为1-n客开项目
-        boolean isOtnPj = ProjectKindEnum.PBG_OTN.getCode().equals(projectDO.getKind());
+        String message = "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成";
 
-        // 不同项目类型需要显示不同提示
-        String message = isOtnPj ?
-                "请检查项目积分模块中对项目成员评价是否完整，变更流程是否审批完成":
-                "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成";
-
-        // 非1-n客开项目需要校验项目评价必填内容是否完成
+        // 需要校验项目评价必填内容是否完成、
         List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.getByProjectId(projectId);
-        AssertUtil.checkState(isOtnPj || evaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getScores())),
+        AssertUtil.checkState(evaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getScores())),
                 message);
 
         // 纳入积分员工的实际工作量是否录入完成，个人评价是否必填
@@ -1464,7 +1458,7 @@ public class ProjectServiceImpl implements ProjectService {
         // 是否存在审核中的工作流变更、结项流程
         boolean noneWorkloadFlow = projectFlowDOList.stream()
                 .filter(e -> FlowTypeEnum.WORKLOAD.getCode().equals(e.getFlowType())
-                          || FlowTypeEnum.CONCLUSION.getCode().equals(e.getFlowType()))
+                        || FlowTypeEnum.CONCLUSION.getCode().equals(e.getFlowType()))
                 .noneMatch(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()));
         AssertUtil.checkState(noneWorkloadFlow, message);
 
