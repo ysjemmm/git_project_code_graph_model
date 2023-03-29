@@ -253,8 +253,8 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         TaskDO taskDO=new TaskDO();
         taskDO.setId(1L);
         taskDO.setStatus(TaskStatusEnum.WAITING.getCode());
-        when(taskMapper.get(any())).thenReturn(taskDO);
-        BaseResult<Boolean> baseResult = taskServiceImp.execute(1L);
+        when(taskMapper.getById(any())).thenReturn(taskDO);
+        BaseResult<Boolean> baseResult = taskServiceImp.execute(new TaskExecuteReq());
         assert baseResult.ifSuccess();
     }
 
@@ -264,7 +264,7 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         taskDO.setId(1L);
         taskDO.setTodo(true);
         taskDO.setStatus(TaskStatusEnum.PROGRESS.getCode());
-        when(taskMapper.get(any())).thenReturn(taskDO);
+        when(taskMapper.getById(any())).thenReturn(taskDO);
         TaskTimeDO taskTimeDO=new TaskTimeDO();
         taskTimeDO.setStartDate(new Date(1));
         taskTimeDO.setEndDate(new Date(2));
@@ -275,7 +275,8 @@ public class TaskServiceImplTest extends AbstractTestNGSpringContextTests {
         MockedConstruction<TaskDoneMsgEvent> construction = mockConstruction(TaskDoneMsgEvent.class);
         try {
             doNothing().when(messageEventPublisher).publish(any());
-            BaseResult<Boolean> baseResult = taskServiceImp.done(1L);
+
+            BaseResult<Boolean> baseResult = taskServiceImp.done(new TaskDoneReq());
             assert baseResult.ifSuccess();
         }finally {
             construction.close();

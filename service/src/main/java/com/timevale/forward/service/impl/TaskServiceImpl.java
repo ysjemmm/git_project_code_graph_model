@@ -38,6 +38,7 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -400,18 +401,13 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> execute(Long taskId) {
-        log.info("任务执行接收参数:{}", taskId);
-        TaskCondition condition = TaskCondition.builder().id(taskId).build();
-        TaskDO taskDO = taskMapper.get(condition);
-        if (taskDO == null) {
-            throw new BaseBizRuntimeException("找不到该任务");
-        }
-        if (!TaskStatusEnum.WAITING.getCode().equals(taskDO.getStatus())) {
-            throw new BaseBizRuntimeException("任务状态不是待执行,不能修改状态");
-        }
+    public BaseResult<Boolean> execute(TaskExecuteReq executeReq) {
+        TaskDO taskDO = taskMapper.getById(executeReq.getId());
+        AssertUtil.notNull(taskDO, "找不到该任务");
+        AssertUtil.checkState(TaskStatusEnum.WAITING.getCode().equals(taskDO.getStatus()), "任务状态不是待执行,不能修改状态");
+
         taskDO.setStatus(TaskStatusEnum.PROGRESS.getCode());
-        taskDO.setActualStartDate(new Date());
+        taskDO.setActualStartDate(executeReq.getActualStartDate());
         taskMapper.update(taskDO);
 
         //耗时表入库
@@ -422,18 +418,15 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> done(Long taskId) {
-        log.info("任务完成接收参数:{}", taskId);
-        TaskCondition condition = TaskCondition.builder().id(taskId).build();
-        TaskDO taskDO = taskMapper.get(condition);
-        if (taskDO == null) {
-            throw new BaseBizRuntimeException("找不到该任务");
-        }
-        if (!TaskStatusEnum.PROGRESS.getCode().equals(taskDO.getStatus())) {
-            throw new BaseBizRuntimeException("任务状态不是进行中,不能修改状态");
-        }
+    public BaseResult<Boolean> done(TaskDoneReq doneReq) {
+        final Long taskId = doneReq.getId();
+
+        TaskDO taskDO = taskMapper.getById(taskId);
+        AssertUtil.notNull(taskDO, "找不到该任务");
+        AssertUtil.checkState(TaskStatusEnum.PROGRESS.getCode().equals(taskDO.getStatus()), "任务状态不是进行中,不能修改状态");
+
         taskDO.setStatus(TaskStatusEnum.DONE.getCode());
-        taskDO.setActualEndDate(new Date());
+        taskDO.setActualEndDate(doneReq.getActualEndDate());
 
         //更新耗时表
         taskTimeComponent.updateEndDate(taskDO.getId(), taskDO.getActualEndDate());
