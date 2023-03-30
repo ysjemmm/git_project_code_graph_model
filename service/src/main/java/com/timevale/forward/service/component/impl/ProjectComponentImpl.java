@@ -338,7 +338,8 @@ public class ProjectComponentImpl implements ProjectComponent {
             Integer status = projectVO.getStatus();
             boolean warn = ProjectStatusEnum.SUSPEND.getCode().equals(status)
                     || ProjectStatusEnum.INVALID.getCode().equals(status)
-                    || ProjectStatusEnum.RELEASED.getCode().equals(status);
+                    || ProjectStatusEnum.RELEASED.getCode().equals(status)
+                    || ProjectStatusEnum.CONCLUSION.getCode().equals(status);
             if (!warn) {
                 projectVO.setContainRisk(riskSet.contains(projectVO.getId()));
             }
