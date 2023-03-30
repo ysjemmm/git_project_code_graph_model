@@ -49,15 +49,15 @@ public class WorkloadChangeVar {
      */
     private String planWorkloadAddSum;
     /**
-     * 积分工作量—调整前
+     * 计入积分成员工作量—调整前
      */
     private String pointWorkloadBefore;
     /**
-     * 积分工作量—调整后
+     * 计入积分成员工作量—调整后
      */
     private String pointWorkloadAfter;
     /**
-     * 积分工作量增加
+     * 计入积分成员工作量
      */
     private String pointWorkloadAddSum;
     /**
