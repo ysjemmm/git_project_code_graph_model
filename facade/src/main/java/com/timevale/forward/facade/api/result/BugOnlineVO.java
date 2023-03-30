@@ -24,6 +24,9 @@ public class BugOnlineVO extends ToString {
     private String name;
 
     @ApiModelProperty("bug状态")
+    private Integer status;
+
+    @ApiModelProperty("bug状态描述")
     private String statusName;
 
     @ApiModelProperty("产品线")
