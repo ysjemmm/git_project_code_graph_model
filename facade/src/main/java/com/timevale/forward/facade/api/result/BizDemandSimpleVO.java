@@ -53,4 +53,7 @@ public class BizDemandSimpleVO extends ToString {
     @ApiModelProperty("业务域名称")
     private String bizDomainName;
 
+    @ApiModelProperty("需求接收人")
+    private String receiveMan;
+
 }

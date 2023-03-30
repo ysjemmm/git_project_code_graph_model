@@ -1647,12 +1647,14 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
-    public BaseResult<List<BugOnlineSimpleVO>> getByCustomerIds(BugOnlineCustomerReq customerReq) {
-        Collection<Long> customerIds = customerReq.getCustomerIds();
-        AssertUtil.notEmpty(customerIds, "请求参数为空，请检查后重试");
+    public BaseResult<List<BugOnlineSimpleVO>> getByIds(BugOnlineIdsReq simpleReq) {
+        Collection<Long> ids = simpleReq.getIds();
+        if (CollUtil.isEmpty(ids)) {
+            return BaseResult.success(Lists.emptyList());
+        }
 
-        // 查询客开关联的线上bug
-        List<BugOnlineDO> bugOnlineDOs = bugOnlineMapper.getByCustomerIds(customerIds);
+        // 查询指定的线上bug
+        List<BugOnlineDO> bugOnlineDOs = bugOnlineMapper.selectByIds(ids, false);
         if (CollUtil.isEmpty(bugOnlineDOs)) {
             return BaseResult.success(Lists.emptyList());
         }
@@ -1686,8 +1688,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                     .collect(Collectors.toList());
 
             // 过滤，填装数据
-            List<String> productLineNameList = linkPdLineDomainTOs.stream().map(PdLineDomainTO::getProductLineName).collect(Collectors.toList());
-            List<String> bizDomainNameList = linkPdLineDomainTOs.stream().map(PdLineDomainTO::getBizDomainName).collect(Collectors.toList());
+            List<String> productLineNameList = linkPdLineDomainTOs.stream().map(PdLineDomainTO::getProductLineName).distinct().collect(Collectors.toList());
+            List<String> bizDomainNameList = linkPdLineDomainTOs.stream().map(PdLineDomainTO::getBizDomainName).distinct().collect(Collectors.toList());
             simpleVO.setProductLineNameList(productLineNameList);
             simpleVO.setBizDomainNameList(bizDomainNameList);
         }

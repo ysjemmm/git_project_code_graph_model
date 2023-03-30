@@ -16,10 +16,9 @@ import java.util.Collection;
  */
 @Setter
 @Getter
-@ApiModel("客开id查询线上bug请求")
-public class BugOnlineCustomerReq extends ToString {
-
-    @ApiModelProperty("客开id集合")
-    @NotEmpty(message = "客开id不能为空")
-    private Collection<Long> customerIds;
+@ApiModel("批量查询线上bug请求")
+public class BugOnlineIdsReq extends ToString {
+    @ApiModelProperty("线上bug id集合")
+    @NotEmpty(message = "id不能为空")
+    private Collection<Long> ids;
 }

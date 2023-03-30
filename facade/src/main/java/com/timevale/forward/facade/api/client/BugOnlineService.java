@@ -188,11 +188,12 @@ public interface BugOnlineService {
     BaseResult<List<BugOnlineVO>> getBugOnlineByCustomId(Long customId);
 
     /**
-     * 根据客户id集合查询线上bug数据
-     * @param customerReq 客开id查询线上bug请求
+     * 批量查询指定id的线上bug数据
+     *
+     * @param simpleReq 线上bug id集合
      * @return 线上bug数据
      */
-    BaseResult<List<BugOnlineSimpleVO>> getByCustomerIds(BugOnlineCustomerReq customerReq);
+    BaseResult<List<BugOnlineSimpleVO>> getByIds(BugOnlineIdsReq simpleReq);
 
 
     /**
