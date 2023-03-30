@@ -37,7 +37,7 @@ public enum PriorityEnum {
                 return e.text;
             }
         }
-        return "errorCode";
+        return "";
     }
 
     public static String getTextChineseByCode(Integer code){
@@ -46,6 +46,6 @@ public enum PriorityEnum {
                 return e.textChinese;
             }
         }
-        return "errorCode";
+        return "";
     }
 }

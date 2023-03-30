@@ -1312,7 +1312,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .collect(Collectors.groupingBy(ProjectProductLineDO::getProjectId, Collectors.mapping(ProjectProductLineDO::getProductLineId, Collectors.toSet())));
 
         List<Long> productLineIds = ppLines.stream().map(ProjectProductLineDO::getProductLineId).collect(Collectors.toList());
-        List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIds);
+        List<ProductLineDO> productLineDOList = productLineMapper.getByIds(productLineIds);
         Map<Long, ProductLineDO> pdlMap = productLineDOList.stream().collect(Collectors.toMap(ProductLineDO::getId, a -> a, (v1, v2) -> v2));
 
         List<ProjectProductLineVO> result = projectDOList.stream().map(a -> {

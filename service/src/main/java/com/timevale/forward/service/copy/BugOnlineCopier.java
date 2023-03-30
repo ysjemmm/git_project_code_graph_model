@@ -7,6 +7,7 @@ import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.BugOnlineAddReq;
 import com.timevale.forward.facade.api.request.BugOnlineModifyReq;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
+import com.timevale.forward.facade.api.result.BugOnlineSimpleVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
 import com.timevale.forward.model.middle.BugOnlineMD;
 
@@ -93,4 +94,6 @@ public interface BugOnlineCopier {
      * @return 返回值
      */
     List<BugOnlineVO> convert(List<BugOnlineListDO> bugOnlineListDOList);
+
+    BugOnlineSimpleVO do2svo(BugOnlineDO bugOnlineDO);
 }

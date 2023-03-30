@@ -124,7 +124,7 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
             setProjectId(1L);
         }});
         when(projectMapper.getByIds(any())).thenReturn(new ArrayList<>());
-        when(productLineMapper.selectByIds(any())).thenReturn(new ArrayList<>());
+        when(productLineMapper.getByIds(any())).thenReturn(new ArrayList<>());
         MockedConstruction<BugOfflineUpdateMsg> construction = mockConstruction(BugOfflineUpdateMsg.class);
         construction.constructed();
         doNothing().when(messageEventPublisher).publish(any());

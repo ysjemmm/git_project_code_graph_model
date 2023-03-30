@@ -119,7 +119,7 @@ public class TaskComponentImpl implements TaskComponent {
 
         //2.填充产品线
         List<Long> productLineIds = taskDos.stream().map(TaskDO::getProductLineId).collect(Collectors.toList());
-        Map<Long, String> productLineMap = productLineMapper.selectByIds(productLineIds)
+        Map<Long, String> productLineMap = productLineMapper.getByIds(productLineIds)
                 .stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (v1, v2) -> v2));
 
         //3.填充项目信息

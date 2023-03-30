@@ -51,7 +51,7 @@ public interface ProductLineMapper {
      * @param ids id
      * @return {@link ProductLineDO }
      */
-    List<ProductLineDO> selectByIds(@Param("ids") List<Long> ids);
+    List<ProductLineDO> getByIds(@Param("ids") Collection<Long> ids);
 
     /**
      *

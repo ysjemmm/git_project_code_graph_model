@@ -86,7 +86,7 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
             List<Long> productLineIds = new ArrayList<>(oldProductLineIds);
             productLineIds.addAll(newObj.getProductLineIds());
 
-            Map<Long, String> productLineMap = productLineMapper.selectByIds(productLineIds)
+            Map<Long, String> productLineMap = productLineMapper.getByIds(productLineIds)
                     .stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (v1, v2) -> v2));
 
             String oldValue = oldProductLineIds.stream().map(productLineMap::get).collect(Collectors.joining(","));

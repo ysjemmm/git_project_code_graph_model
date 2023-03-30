@@ -3,31 +3,34 @@
 <mapper namespace="com.timevale.forward.dal.dao.BizDomainMapper">
 
     <select id="selectAllBizDomain" resultType="com.timevale.forward.dal.entity.BizDomainDO">
-        select id, name, owner, owner_id,is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        select *
         from biz_domain
+        WHERE is_deleted = false
     </select>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BizDomainDO">
-        select id, name, owner, owner_id,is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        select *
         from biz_domain
         where id = #{id}
+          AND is_deleted = false
     </select>
 
-    <select id="selectByIdList" resultType="com.timevale.forward.dal.entity.BizDomainDO">
-        select id, name, owner, owner_id,is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+    <select id="getByIds" resultType="com.timevale.forward.dal.entity.BizDomainDO">
+        select *
         from biz_domain
         <where>
-            <if test="idList != null and idList.size() > 0">
+            <if test="ids != null and ids.size() > 0">
                 AND id IN
-                <foreach collection="idList" item="item" separator="," open="(" close=")">
+                <foreach collection="ids" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
             </if>
+            AND is_deleted = false
         </where>
     </select>
 
     <select id="selectByName" resultType="com.timevale.forward.dal.entity.BizDomainDO">
-        SELECT id, name
+        SELECT *
         FROM biz_domain
         <where>
             <if test="nameList != null and nameList.size() > 0">
@@ -60,11 +63,11 @@
     </update>
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.BizDomainDO">
-        select id, name, owner, owner_id,is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        select *
         from biz_domain
         <where>
             <if test="name != null and name!=''">
-                name like concat('%',#{name},'%')
+                AND `name` like concat('%',#{name},'%')
             </if>
             <if test="ownerIds != null and ownerIds.size() > 0">
                 AND owner_id IN
@@ -72,6 +75,7 @@
                     #{item}
                 </foreach>
             </if>
+            AND is_deleted = false
         </where>
     </select>
 

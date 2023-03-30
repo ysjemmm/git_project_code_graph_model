@@ -379,7 +379,7 @@
                 </foreach>
             </if>
             <if test="status!=null and status.size()>0">
-                and status in
+                and `status` in
                 <foreach collection="status" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>

@@ -399,19 +399,33 @@
         </where>
     </update>
 
-    <select id="selectByCustomId" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
-        select bo.id, bo.name, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env,
-        bo.reason, bo.belong, bo.dismiss_cause, bo.customer_name, bo.expect_launch_date, bo.source,
-        bo.create_date, bo.modify_date
+    <select id="getByCustomId" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
+        select bo.*
         from bug_online bo
-         left join bug_online_custom bc on bo.id = bc.bug_online_id where bc.custom_id = #{customId} and bc.is_deleted=0 and bo.is_deleted=0 order by bo.create_date desc
-
+        left join bug_online_custom bc on bo.id = bc.bug_online_id
+        where bc.custom_id = #{customId}
+          and bc.is_deleted=0
+          and bo.is_deleted=0
     </select>
 
     <select id="selectAllId" resultType="java.lang.Long">
         SELECT id
         FROM bug_online
         WHERE is_deleted = false
+    </select>
+
+    <select id="getByCustomerIds" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+        SELECT bo.*
+        FROM bug_online bo
+            LEFT JOIN bug_online_custom bc ON bo.id = bc.bug_online_id
+        <where>
+            AND bc.custom_id IN
+            <foreach collection="customerIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            AND bc.is_deleted=0
+            AND bo.is_deleted=0
+        </where>
     </select>
 </mapper>
 

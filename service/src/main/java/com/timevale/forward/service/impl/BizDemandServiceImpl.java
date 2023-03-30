@@ -1,5 +1,7 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
@@ -10,6 +12,7 @@ import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.to.PdLineDomainTO;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
@@ -90,6 +93,8 @@ public class BizDemandServiceImpl implements BizDemandService {
     private BugLogComponent bugLogComponent;
     @Resource
     private ProjectComponent projectComponent;
+    @Resource
+    private ProductLineComponent productLineComponent;
 
     @Override
     public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
@@ -592,7 +597,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             );
         }
         if (!Objects.equal(oldProductLineId, productLineId)) {
-            List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(Lists.newArrayList(oldProductLineId, productLineId));
+            List<ProductLineDO> productLineDOList = productLineMapper.getByIds(Lists.newArrayList(oldProductLineId, productLineId));
 
             log.info("变更产品线：{}", productLineDOList);
             Optional<ProductLineDO> oldOpt = productLineDOList.stream().filter(e -> oldProductLineId.equals(e.getId())).findAny();
@@ -864,7 +869,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         if (!Objects.equal(oldProductLineId, productLineId)) {
-            List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(Lists.newArrayList(oldProductLineId, productLineId));
+            List<ProductLineDO> productLineDOList = productLineMapper.getByIds(Lists.newArrayList(oldProductLineId, productLineId));
 
             log.info("变更产品线：{}", productLineDOList);
             Optional<ProductLineDO> oldOpt = productLineDOList.stream().filter(e -> oldProductLineId.equals(e.getId())).findAny();
@@ -1032,19 +1037,31 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<List<BizDemandSimpleVO>> getSimpleBizDemands(BizDemandGetReq bizDemandGetReq) {
-        if (CollectionUtils.isEmpty(bizDemandGetReq.getIds())
-                && CollectionUtils.isEmpty(bizDemandGetReq.getStatus())
-                && StringUtils.isEmpty(bizDemandGetReq.getSourceId())) {
+        List<Long> ids = bizDemandGetReq.getIds();
+        List<Integer> status = bizDemandGetReq.getStatus();
+        String sourceId = bizDemandGetReq.getSourceId();
+
+        // 参数校验
+        if (CollUtil.isEmpty(ids) && CollUtil.isEmpty(status) && StrUtil.isEmpty(sourceId)) {
             return BaseResult.success(Lists.emptyList());
         }
-        List<BizDemandDO> bizDemandDOList = bizDemandMapper.getSimpleBizDemands(bizDemandGetReq.getIds(), bizDemandGetReq.getStatus(), bizDemandGetReq.getSourceId());
 
-        List<BizDemandSimpleVO> bizDemandVOList = bizDemandDOList.stream().map(BizDemandCopier.INSTANCE::convertT).collect(Collectors.toList());
-        bizDemandVOList.forEach(a -> {
-            a.setPriorityText(PriorityEnum.getTextChineseByCode(a.getPriority()));
-            a.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(a.getPlanReleaseDate()));
-        });
-        return BaseResult.success(bizDemandVOList);
+        // 查询业务需求
+        List<BizDemandDO> bizDemandDOs = bizDemandMapper.getSimpleBizDemands(ids, status, sourceId);
+        if (CollUtil.isEmpty(bizDemandDOs)) {
+            return BaseResult.success(Lists.emptyList());
+        }
+
+        // 查询关联的产品线业务域信息
+        Set<Long> productLineIds = bizDemandDOs.stream().map(BizDemandDO::getProductLineId).collect(Collectors.toSet());
+        Map<Long, PdLineDomainTO> pdLineDomainTOMap = productLineComponent.getMapByIds(productLineIds);
+
+        // 转换返回信息
+        List<BizDemandSimpleVO> result = bizDemandDOs.stream()
+                .map(e -> BizDemandCopier.INSTANCE.do2svo(e, pdLineDomainTOMap.get(e.getProductLineId())))
+                .collect(Collectors.toList());
+
+        return BaseResult.success(result);
     }
 
     @Override

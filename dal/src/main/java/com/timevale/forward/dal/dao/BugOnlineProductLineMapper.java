@@ -26,7 +26,7 @@ public interface BugOnlineProductLineMapper {
      * @param bugOnlineIdList 错误在线id列表
      * @return BugOnlineProductLineDO 列表
      */
-    List<BugOnlineProductLineDO> selectByBugOnlineIdList(@Param("bugOnlineIdList") List<Long> bugOnlineIdList,@Param("type") Integer type);
+    List<BugOnlineProductLineDO> getByBugOnlineIdList(@Param("bugOnlineIdList") List<Long> bugOnlineIdList, @Param("type") Integer type);
 
     /**
      * 批量插入数据

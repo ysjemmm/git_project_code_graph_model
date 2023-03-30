@@ -4,6 +4,7 @@ import com.timevale.forward.dal.condition.BizDomainCondition;
 import com.timevale.forward.dal.entity.BizDomainDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -38,10 +39,10 @@ public interface BizDomainMapper {
     /**
      * 通过id选择
      *
-     * @param idList id列表
+     * @param ids id集合
      * @return 业务域DO 列表
      */
-    List<BizDomainDO> selectByIdList(@Param("idList") List<Long> idList);
+    List<BizDomainDO> getByIds(@Param("ids") Collection<Long> ids);
 
     /**
      *

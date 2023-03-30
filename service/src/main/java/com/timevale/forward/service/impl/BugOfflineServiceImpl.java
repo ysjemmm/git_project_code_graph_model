@@ -1254,7 +1254,7 @@ public class BugOfflineServiceImpl implements BugOfflineService {
         }
         if (!Objects.equals(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId())) {
             List<ProductLineDO> productLineDOList = productLineMapper
-                    .selectByIds(Lists.newArrayList(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId()));
+                    .getByIds(Lists.newArrayList(oldBugOfflineDO.getProductLineId(), newBugOfflineDO.getProductLineId()));
             Map<Long, String> productLineMap = productLineDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProductLineDO::getName));
 
             BugLogDO bugLogDO = new BugLogDO();

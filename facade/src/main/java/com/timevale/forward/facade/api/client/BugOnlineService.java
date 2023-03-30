@@ -5,6 +5,7 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
+import com.timevale.forward.facade.api.result.BugOnlineSimpleVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
 import com.timevale.forward.facade.api.result.ProductLineToFieldVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -185,6 +186,14 @@ public interface BugOnlineService {
      * @return
      */
     BaseResult<List<BugOnlineVO>> getBugOnlineByCustomId(Long customId);
+
+    /**
+     * 根据客户id集合查询线上bug数据
+     * @param customerReq 客开id查询线上bug请求
+     * @return 线上bug数据
+     */
+    BaseResult<List<BugOnlineSimpleVO>> getByCustomerIds(BugOnlineCustomerReq customerReq);
+
 
     /**
      * bug 关联需求列表转需求接口

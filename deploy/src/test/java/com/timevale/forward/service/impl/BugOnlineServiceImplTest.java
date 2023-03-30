@@ -117,16 +117,16 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
         when(bugOnlineMapper.selectListByCondition(any())).thenReturn(Lists.newArrayList(new BugOnlineListDO() {{
             setId(1L);
         }}));
-        when(bugOnlineProductLineMapper.selectByBugOnlineIdList(any(),any())).thenReturn(Lists.newArrayList(new BugOnlineProductLineDO() {{
+        when(bugOnlineProductLineMapper.getByBugOnlineIdList(any(),any())).thenReturn(Lists.newArrayList(new BugOnlineProductLineDO() {{
             setProductLineId(1L);
             setBugOnlineId(1L);
         }}));
-        when(productLineMapper.selectByIds(any())).thenReturn(Lists.newArrayList(new ProductLineDO() {{
+        when(productLineMapper.getByIds(any())).thenReturn(Lists.newArrayList(new ProductLineDO() {{
             setBizDomainId(1L);
             setName("1");
             setId(1L);
         }}));
-        when(bizDomainMapper.selectByIdList(any())).thenReturn(Lists.newArrayList(new BizDomainDO() {{
+        when(bizDomainMapper.getByIds(any())).thenReturn(Lists.newArrayList(new BizDomainDO() {{
             setId(1L);
         }}));
 //        FieldUtils.setFieldValue("defaultOperator", bugOnlineService, "1");

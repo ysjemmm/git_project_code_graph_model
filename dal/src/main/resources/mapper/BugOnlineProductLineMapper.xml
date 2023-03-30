@@ -5,7 +5,7 @@
         where bug_online_id = #{id} and type = #{type} and is_deleted = 0
     </select>
 
-    <select id="selectByBugOnlineIdList" resultType="com.timevale.forward.dal.entity.BugOnlineProductLineDO">
+    <select id="getByBugOnlineIdList" resultType="com.timevale.forward.dal.entity.BugOnlineProductLineDO">
         SELECT bug_online_id, product_line_id
         FROM bug_online_product_line
         <where>

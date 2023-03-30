@@ -92,7 +92,7 @@ public class TaskComponentImplTest extends AbstractTestNGSpringContextTests {
         when(taskMapper.getByProductLineIds(any(),any())).thenReturn(taskIds);
         when(taskMapper.list(any())).thenReturn(Collections.singletonList(new TaskDO(){{setProjectId(1L);setPlanEndDate(new Date());}}));
         when(personMapper.get(any(),any())).thenReturn(Collections.singletonList(new PersonDO(){{setMainId(1L);}}));
-        when(productLineMapper.selectByIds(any())).thenReturn(Collections.singletonList(new ProductLineDO(){{setName("");}}));
+        when(productLineMapper.getByIds(any())).thenReturn(Collections.singletonList(new ProductLineDO(){{setName("");}}));
         when(projectMapper.getByIds(any())).thenReturn(Collections.singletonList(new ProjectDO(){{setId(1L);}}));
         BaseResult<PageQueryResult<TaskVO>> baseResult = taskComponentImpl.page(condition,taskIds);
         assert baseResult.ifSuccess();

@@ -564,7 +564,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         // 项目关联的产品线
         List<ProjectProductLineDO> projectProductLineDOList = projectProductLineMapper.getByProjectIdList(projectIdList);
         List<Long> productLineIdList = projectProductLineDOList.stream().map(ProjectProductLineDO::getProductLineId).distinct().collect(Collectors.toList());
-        List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIdList);
+        List<ProductLineDO> productLineDOList = productLineMapper.getByIds(productLineIdList);
 
         // 产品线id-名称 map
         Map<Long, String> productLineMap = productLineDOList.stream().collect(Collectors.toMap(BaseDO::getId, ProductLineDO::getName, (a, b) -> a));

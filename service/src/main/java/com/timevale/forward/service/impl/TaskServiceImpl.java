@@ -687,7 +687,7 @@ public class TaskServiceImpl implements TaskService {
             List<Long> excludeBizDomainIds = JSONArray.parseArray(excludeBizDomain, Long.class);
             if (!excludeBizDomainIds.contains(bizDomainId)) {
                 //除xx业务域外,计划时间不能超过16h
-                List<String> names = bizDomainMapper.selectByIdList(excludeBizDomainIds).stream().map(BizDomainDO::getName).collect(Collectors.toList());
+                List<String> names = bizDomainMapper.getByIds(excludeBizDomainIds).stream().map(BizDomainDO::getName).collect(Collectors.toList());
                 throw new BaseBizRuntimeException("存在计划耗时超过16小时的任务,且业务域不属于" + names + ",请修改后重试");
             }
         }
@@ -772,7 +772,7 @@ public class TaskServiceImpl implements TaskService {
         if (productLine != null) {
             if (!excludeBizDomainIds.contains(productLine.getBizDomainId())) {
                 // 除xx业务域外,计划时间不能超过16h
-                List<String> names = bizDomainMapper.selectByIdList(excludeBizDomainIds)
+                List<String> names = bizDomainMapper.getByIds(excludeBizDomainIds)
                         .stream().map(BizDomainDO::getName).collect(Collectors.toList());
                 throw new BaseBizRuntimeException("除" + names + "外,计划耗时不能超过16小时");
             }

@@ -12,8 +12,11 @@ import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.result.*;
+import com.timevale.forward.model.enums.PlanReleaseDateEnum;
+import com.timevale.forward.model.enums.PriorityEnum;
 import com.timevale.forward.model.enums.YesOrNoEnum;
 import com.timevale.forward.model.middle.BizDemandMD;
+import com.timevale.forward.model.to.PdLineDomainTO;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -29,7 +32,9 @@ import java.util.stream.Collectors;
  */
 @Mapper(
         imports = {
-                YesOrNoEnum.class
+                YesOrNoEnum.class,
+                PriorityEnum.class,
+                PlanReleaseDateEnum.class
         }
 )
 public interface BizDemandCopier {
@@ -75,7 +80,9 @@ public interface BizDemandCopier {
      * @param bizDemandDO 业务需求DO
      * @return 业务需求详细VO
      */
-    BizDemandSimpleVO convertT(BizDemandDO bizDemandDO);
+    @Mapping(target = "priorityText", expression = "java(PriorityEnum.getTextChineseByCode(bizDemandDO.getPriority()))")
+    @Mapping(target = "planReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate()))")
+    BizDemandSimpleVO do2svo(BizDemandDO bizDemandDO, PdLineDomainTO pdLineDomainTO);
 
     /**
      * 业务需求DO转换为VO

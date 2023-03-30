@@ -6,6 +6,7 @@ import com.timevale.forward.dal.entity.BugOnlineListDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -113,5 +114,13 @@ public interface BugOnlineMapper {
     /**
      * 根据客户id查询
      */
-    List<BugOnlineListDO> selectByCustomId(@Param("customId") Long customId);
+    List<BugOnlineListDO> getByCustomId(@Param("customId") Long customId);
+
+    /**
+     * 根据客户id集合查询关联的线上bug数据
+     *
+     * @param customerIds 客户id集合
+     * @return 线上bug数据集合
+     */
+    List<BugOnlineDO> getByCustomerIds(@Param("customerIds") Collection<Long> customerIds);
 }

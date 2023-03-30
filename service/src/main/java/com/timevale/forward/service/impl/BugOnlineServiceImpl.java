@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
@@ -17,6 +18,7 @@ import com.timevale.forward.model.bo.BusinessBO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BugOnlineMD;
 import com.timevale.forward.model.middle.BusinessMD;
+import com.timevale.forward.model.to.PdLineDomainTO;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
@@ -111,6 +113,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     private BugOnlineProductLineComponent bugOnlineProductLineComponent;
     @Resource
     private BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
+    @Resource
+    private ProductLineComponent productLineComponent;
 
     @Value("${business}")
     private String business;
@@ -248,14 +252,14 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         // 查询对应产品线和业务域
         List<Long> bugOnlineIdList = bugOnlineVOList.stream().map(BugOnlineVO::getId).collect(Collectors.toList());
-        List<BugOnlineProductLineDO> bugOnlineProductLineDOList = bugOnlineProductLineMapper.selectByBugOnlineIdList(bugOnlineIdList, BizProductLineTypeEnum.BUG_ONLINE.getCode());
+        List<BugOnlineProductLineDO> bugOnlineProductLineDOList = bugOnlineProductLineMapper.getByBugOnlineIdList(bugOnlineIdList, BizProductLineTypeEnum.BUG_ONLINE.getCode());
 
 
         List<Long> productLineIdList = bugOnlineProductLineDOList.stream().map(BugOnlineProductLineDO::getProductLineId).collect(Collectors.toList());
-        List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIdList);
+        List<ProductLineDO> productLineDOList = productLineMapper.getByIds(productLineIdList);
 
         List<Long> bizDomainIdList = productLineDOList.stream().map(ProductLineDO::getBizDomainId).collect(Collectors.toList());
-        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByIdList(bizDomainIdList);
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.getByIds(bizDomainIdList);
 
         List<BugOnlineModelDO> bugOnlineModelDOList = bugOnlineModelMapper.selectByBugOnlineIdList(bugOnlineIdList);
         List<Long> modelIdList = bugOnlineModelDOList.stream().map(BugOnlineModelDO::getModelId).collect(Collectors.toList());
@@ -588,7 +592,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //如果产品线id不为空，批量查询产品线并进行类型转换
         if (CollectionUtils.isNotEmpty(productLineIdList)) {
             //批量查询产品线
-            List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIdList);
+            List<ProductLineDO> productLineDOList = productLineMapper.getByIds(productLineIdList);
             //转换 ProductLineDO --> ProductLineVO
             List<ProductLineVO> productLineVOList = productLineDOList.stream().map(ProductLineCopier.INSTANCE::convert).collect(Collectors.toList());
             //产品线信息存储到详情参数里面
@@ -1626,15 +1630,13 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         if (customId == null) {
             throw new BaseBizRuntimeException("参数有误");
         }
-        List<BugOnlineListDO> bugOnlineListDOS = bugOnlineMapper.selectByCustomId(customId);
+        List<BugOnlineListDO> bugOnlineListDOS = bugOnlineMapper.getByCustomId(customId);
         if (CollectionUtils.isEmpty(bugOnlineListDOS)) {
             return BaseResult.success(new ArrayList<>());
         }
         List<BugOnlineVO> bugOnlineVOList = BugOnlineCopier.INSTANCE.convert(bugOnlineListDOS);
         // 信息填充
         for (BugOnlineVO bugOnlineVO : bugOnlineVOList) {
-
-
             bugOnlineVO.setStatusName(BugOnlineStatusEnum.getTextByCode(bugOnlineVO.getStatus()));
             bugOnlineVO.setReasonName(BugOnlineReasonEnum.getTextByCode(bugOnlineVO.getReason()));
             bugOnlineVO.setPriorityName(BugOnlinePriorityEnum.getTextByCode(bugOnlineVO.getPriority()));
@@ -1642,6 +1644,55 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         }
         return BaseResult.success(bugOnlineVOList);
+    }
+
+    @Override
+    public BaseResult<List<BugOnlineSimpleVO>> getByCustomerIds(BugOnlineCustomerReq customerReq) {
+        Collection<Long> customerIds = customerReq.getCustomerIds();
+        AssertUtil.notEmpty(customerIds, "请求参数为空，请检查后重试");
+
+        // 查询客开关联的线上bug
+        List<BugOnlineDO> bugOnlineDOs = bugOnlineMapper.getByCustomerIds(customerIds);
+        if (CollUtil.isEmpty(bugOnlineDOs)) {
+            return BaseResult.success(Lists.emptyList());
+        }
+
+        // 查询关联的产品线
+        List<Long> bugOnlineIds = bugOnlineDOs.stream().map(BaseDO::getId).collect(Collectors.toList());
+        List<BugOnlineProductLineDO> linkData = bugOnlineProductLineMapper.getByBugOnlineIdList(bugOnlineIds,
+                BizProductLineTypeEnum.BUG_ONLINE.getCode());
+
+        // 关联关系分组处理
+        Map<Long, List<BugOnlineProductLineDO>> linkDataGroup = linkData.stream()
+                .collect(Collectors.groupingBy(BugOnlineProductLineDO::getBugOnlineId));
+
+        // 获取产品线和业务域的数据
+        Set<Long> productLineIds = linkData.stream().map(BugOnlineProductLineDO::getProductLineId).collect(Collectors.toSet());
+        Map<Long, PdLineDomainTO> pdLineDomainTOMap = productLineComponent.getMapByIds(productLineIds);
+
+        // 转换，组装数据
+        List<BugOnlineSimpleVO> result = bugOnlineDOs.stream().map(BugOnlineCopier.INSTANCE::do2svo).collect(Collectors.toList());
+        for (BugOnlineSimpleVO simpleVO : result) {
+            Long id = simpleVO.getId();
+
+            // 查询关联关系，获取关联数据
+            List<BugOnlineProductLineDO> linkPdLines = linkDataGroup.get(id);
+            if (CollUtil.isEmpty(linkPdLines)) {
+                continue;
+            }
+            List<PdLineDomainTO> linkPdLineDomainTOs = linkPdLines.stream()
+                    .map(e -> pdLineDomainTOMap.get(e.getProductLineId()))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            // 过滤，填装数据
+            List<String> productLineNameList = linkPdLineDomainTOs.stream().map(PdLineDomainTO::getProductLineName).collect(Collectors.toList());
+            List<String> bizDomainNameList = linkPdLineDomainTOs.stream().map(PdLineDomainTO::getBizDomainName).collect(Collectors.toList());
+            simpleVO.setProductLineNameList(productLineNameList);
+            simpleVO.setBizDomainNameList(bizDomainNameList);
+        }
+
+        return BaseResult.success(result);
     }
 
     @Override
@@ -1725,7 +1776,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             List<Long> mergeProductLineIds = new ArrayList<>();
             mergeProductLineIds.addAll(oldProductLineIdList);
             mergeProductLineIds.addAll(newProductLineIdList);
-            Map<Long, String> mergeProductLines = productLineMapper.selectByIds(mergeProductLineIds).stream()
+            Map<Long, String> mergeProductLines = productLineMapper.getByIds(mergeProductLineIds).stream()
                     .collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (v1, v2) -> v2));
             String oldValue = oldProductLineIdList.stream().map(mergeProductLines::get).collect(Collectors.joining(","));
             String newValue = newProductLineIdList.stream().map(mergeProductLines::get).collect(Collectors.joining(","));

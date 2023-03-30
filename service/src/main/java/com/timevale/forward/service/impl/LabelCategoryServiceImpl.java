@@ -94,7 +94,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
 
 
         List<Long> bizDomainIds = lcbds.stream().map(LabelCategoryBizDomainDO::getBizDomainId).collect(Collectors.toList());
-        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByIdList(bizDomainIds);
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.getByIds(bizDomainIds);
         Map<Long, BizDomainDO> bizDomainMap = bizDomainDOList.stream().collect(Collectors.toMap(BizDomainDO::getId, k -> k, (v1, v2) -> v2));
 
         List<String> allDeptIds = new ArrayList<>();
@@ -157,7 +157,7 @@ public class LabelCategoryServiceImpl implements LabelCategoryService {
         LabelCategoryListCondition condition = LabelCategoryCopier.INSTANCE.convert(labelInCategoryQueryList);
 
         if (CollectionUtils.isNotEmpty(labelInCategoryQueryList.getProductLineIds())) {
-            List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(labelInCategoryQueryList.getProductLineIds());
+            List<ProductLineDO> productLineDOList = productLineMapper.getByIds(labelInCategoryQueryList.getProductLineIds());
             List<Long> bizDomainIds = productLineDOList.stream().map(ProductLineDO::getBizDomainId).collect(Collectors.toList());
             condition.setBizDomainIds(bizDomainIds);
         }

@@ -201,7 +201,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         // 填充描述数据
         List<Long> productLineIdList = bugOnlineProductLineMapper.selectProductLineIds(troubleTicketId, BizProductLineTypeEnum.TROUBLE_TICKET.getCode());
         if (CollectionUtils.isNotEmpty(productLineIdList)) {
-            List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIdList);
+            List<ProductLineDO> productLineDOList = productLineMapper.getByIds(productLineIdList);
             List<ProductLineVO> productLineVOList = productLineDOList.stream().map(ProductLineCopier.INSTANCE::convert).collect(Collectors.toList());
             ticketDetailVO.setProductLineList(productLineVOList);
         }
@@ -336,14 +336,14 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
                 .map(TroubleTicketCopier.INSTANCE::convert).collect(Collectors.toList());
 
         List<Long> troubleTicketIds = troubleTicketVOList.stream().map(TroubleTicketVO::getId).collect(Collectors.toList());
-        List<BugOnlineProductLineDO> troubleTicketProductLineDOList = bugOnlineProductLineMapper.selectByBugOnlineIdList(troubleTicketIds, BizProductLineTypeEnum.TROUBLE_TICKET.getCode());
+        List<BugOnlineProductLineDO> troubleTicketProductLineDOList = bugOnlineProductLineMapper.getByBugOnlineIdList(troubleTicketIds, BizProductLineTypeEnum.TROUBLE_TICKET.getCode());
 
 
         List<Long> productLineIdList = troubleTicketProductLineDOList.stream().map(BugOnlineProductLineDO::getProductLineId).collect(Collectors.toList());
-        List<ProductLineDO> productLineDOList = productLineMapper.selectByIds(productLineIdList);
+        List<ProductLineDO> productLineDOList = productLineMapper.getByIds(productLineIdList);
 
         List<Long> bizDomainIdList = productLineDOList.stream().map(ProductLineDO::getBizDomainId).collect(Collectors.toList());
-        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByIdList(bizDomainIdList);
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.getByIds(bizDomainIdList);
 
         Map<Long, ProductLineDO> productLineMap = productLineDOList.stream().collect(Collectors.toMap(ProductLineDO::getId, Function.identity()));
         Map<Long, BizDomainDO> bizDomainDOMap = bizDomainDOList.stream().collect(Collectors.toMap(BizDomainDO::getId, Function.identity()));

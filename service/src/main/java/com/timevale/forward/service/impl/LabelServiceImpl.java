@@ -90,7 +90,7 @@ public class LabelServiceImpl implements LabelService {
 
 
         List<Long> bizDomainIds = lcbds.stream().map(LabelCategoryBizDomainDO::getBizDomainId).collect(Collectors.toList());
-        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByIdList(bizDomainIds);
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.getByIds(bizDomainIds);
         Map<Long, BizDomainDO> bizDomainMap = bizDomainDOList.stream().collect(Collectors.toMap(BizDomainDO::getId, k -> k, (v1, v2) -> v2));
 
         List<String> allDeptIds = new ArrayList<>();
@@ -160,7 +160,7 @@ public class LabelServiceImpl implements LabelService {
         List<LabelCategoryBizDomainDO> lcbds = labelCategoryBizDomainMapper.get(Lists.newArrayList(categoryId));
         List<Long> bdIds = lcbds.stream().map(LabelCategoryBizDomainDO::getBizDomainId).collect(Collectors.toList());
 
-        List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectByIdList(bdIds);
+        List<BizDomainDO> bizDomainDOList = bizDomainMapper.getByIds(bdIds);
         List<String> bizDomains = bizDomainDOList.stream().map(BizDomainDO::getName).collect(Collectors.toList());
 
         labelDetailVO.setBizDomains(bizDomains);

@@ -77,7 +77,7 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
         //产品线
         if (!Objects.equals(oldObj.getProductLineId(), newObj.getProductLineId())) {
             List<Long> productLineIds = Lists.newArrayList(oldObj.getProductLineId(), newObj.getProductLineId());
-            Map<Long, String> productLineMap = productLineMapper.selectByIds(productLineIds)
+            Map<Long, String> productLineMap = productLineMapper.getByIds(productLineIds)
                     .stream().collect(Collectors.toMap(ProductLineDO::getId, ProductLineDO::getName, (v1, v2) -> v2));
             String oldValue = productLineMap.get(oldObj.getProductLineId());
             String newValue = productLineMap.get(newObj.getProductLineId());
