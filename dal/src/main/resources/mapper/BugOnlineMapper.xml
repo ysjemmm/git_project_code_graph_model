@@ -466,8 +466,8 @@
         UPDATE bug_online
         <set>
             is_deleted = true,
-            <if test="modify_man != null">modify_man=#{modifyMan},</if>
-            <if test="modify_man_id != null">modify_man_id=#{modifyManId},</if>
+            <if test="modifyMan != null">modify_man=#{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id=#{modifyManId},</if>
         </set>
         WHERE id = #{id}
     </update>
