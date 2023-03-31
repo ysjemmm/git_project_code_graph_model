@@ -98,19 +98,19 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> add(ProjectAcceptanceAddReq pjReq) {
-        log.info("项目验收发起,参数:{}", pjReq);
-        ProjectDO projectDO = projectMapper.get(pjReq.getProjectId());
+    public BaseResult<Boolean> add(ProjectAcceptanceAddReq req) {
+        log.info("项目验收发起,参数:{}", req);
+        ProjectDO projectDO = projectMapper.get(req.getProjectId());
         if(!YesOrNoEnum.YES.getCode().equals(projectDO.getIsAcceptance())){
             throw new BaseBizRuntimeException("项目处于无需验收中,不能发起项目验收,请修改后重试");
         }
-        ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().projectId(pjReq.getProjectId()).build();
+        ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().projectId(req.getProjectId()).build();
         List<ProjectAcceptanceDO> list = projectAcceptanceMapper.list(c);
 
         List<String> allAcceptorIds = list.stream().map(ProjectAcceptanceDO::getAcceptorId).collect(Collectors.toList());
         List<String> auditAcceptorIds = list.stream().filter(a -> ForwardFlowStatusEnum.AUDITING.getCode().equals(a.getStatus())).map(ProjectAcceptanceDO::getAcceptorId).collect(Collectors.toList());
 
-        List<PersonAddReq> acceptors = pjReq.getAcceptors();
+        List<PersonAddReq> acceptors = req.getAcceptors();
         Set<String> newAcceptorIds = acceptors.stream().map(PersonAddReq::getUserId).collect(Collectors.toSet());
         newAcceptorIds.addAll(allAcceptorIds);
 
@@ -122,7 +122,7 @@ public class ProjectAcceptanceServiceImpl implements ProjectAcceptanceService {
         List<PersonAddReq> filter = acceptors.stream().filter(a -> !auditAcceptorIds.contains(a.getUserId())).collect(Collectors.toList());
         List<ProjectAcceptanceDO> projectAcceptanceDOList = filter.stream().map(a -> {
             ProjectAcceptanceDO o = new ProjectAcceptanceDO();
-            o.setProjectId(pjReq.getProjectId());
+            o.setProjectId(req.getProjectId());
             o.setAcceptor(a.getUserName());
             o.setAcceptorId(a.getUserId());
             return o;

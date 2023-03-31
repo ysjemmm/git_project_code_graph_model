@@ -114,13 +114,13 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<BizDemandStatusVO> linkProductDemand(BizDemandLinkProductDemandReq req) {
-        final Long bdId = req.getId();
+    public BaseResult<BizDemandStatusVO> linkProductDemand(BizDemandLinkProductDemandReq bizDemandLinkProductDemandReq) {
+        final Long bdId = bizDemandLinkProductDemandReq.getId();
         BizDemandDO bdDO = bizDemandMapper.get(bdId);
         AssertUtil.notNull(bdDO, "不存在该业务需求");
 
         // 创建和产品需求的关联关系
-        List<Long> willLinkPdIdList = req.getProductDemandIdList();
+        List<Long> willLinkPdIdList = bizDemandLinkProductDemandReq.getProductDemandIdList();
         List<ProductBizDemandDO> newLinkData = willLinkPdIdList.stream()
                 .map(e -> ProductBizDemandCopier.INSTANCE.convert(bdId, e))
                 .collect(Collectors.toList());
