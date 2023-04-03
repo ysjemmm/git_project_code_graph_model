@@ -110,7 +110,7 @@ public class TaskServiceImpl implements TaskService {
     @Resource
     private ProjectMilestoneMapper milestoneMapper;
     @Resource
-    ProjectEvaluateComponent evaluateComponent;
+    private ProjectEvaluateComponent evaluateComponent;
 
     @Value("${excludeBizDomain:[1,13,32]}")
     private String excludeBizDomain;

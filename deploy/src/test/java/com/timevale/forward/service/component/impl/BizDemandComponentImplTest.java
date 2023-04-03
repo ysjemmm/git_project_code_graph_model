@@ -59,7 +59,7 @@ public class BizDemandComponentImplTest extends AbstractTestNGSpringContextTests
 
         ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
         productBizDemandDO.setProductDemandId(1L);
-        when(productBizDemandMapper.getByBizDemandId(any())).thenReturn(Collections.singletonList(productBizDemandDO));
+        when(productBizDemandMapper.getByBdId(any())).thenReturn(Collections.singletonList(productBizDemandDO));
 
         ProductDemandDO productDemandDO = new ProductDemandDO();
         productDemandDO.setStatus(10);
@@ -67,9 +67,9 @@ public class BizDemandComponentImplTest extends AbstractTestNGSpringContextTests
 
         BizDemandDO bizDemandDO = new BizDemandDO();
         bizDemandDO.setStatus(1);
-        when(bizDemandMapper.selectById(any())).thenReturn(bizDemandDO);
+        when(bizDemandMapper.get(any())).thenReturn(bizDemandDO);
 
-        bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(1L);
+        bizDemandComponent.updateStatus(1L);
         localSessionUtilsMockedStatic.close();
     }
 
@@ -108,7 +108,7 @@ public class BizDemandComponentImplTest extends AbstractTestNGSpringContextTests
     public void testGetProjectEndDate() {
         ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
         productBizDemandDO.setProductDemandId(1L);
-        when(productBizDemandMapper.getByBizDemandId(any())).thenReturn(Collections.singletonList(productBizDemandDO));
+        when(productBizDemandMapper.getByBdId(any())).thenReturn(Collections.singletonList(productBizDemandDO));
 
         ProjectDO projectDO = new ProjectDO();
         projectDO.setActualEndDate(new Date());

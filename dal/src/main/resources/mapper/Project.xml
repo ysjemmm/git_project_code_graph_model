@@ -131,6 +131,7 @@
             <if test="expectedIncome != null">expected_income = #{expectedIncome},</if>
             <if test="suspendReason != null">suspend_reason = #{suspendReason},</if>
             <if test="conclusionDate != null">conclusion_date = #{conclusionDate},</if>
+            <if test="srEvaluateGrade != null">sr_evaluate_grade = #{srEvaluateGrade},</if>
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
         </set>

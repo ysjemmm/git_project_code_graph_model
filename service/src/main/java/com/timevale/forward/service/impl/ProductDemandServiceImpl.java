@@ -411,7 +411,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             projectProductDemandComponent.batchInsert(productDemandAddReq.getProjectId(), Lists.newArrayList(productDemand.getId()));
             //
             bizIdMap.forEach((k, v) -> {
-                BizDemandDO bizDemandDO = bizDemandMapper.selectById(k);
+                BizDemandDO bizDemandDO = bizDemandMapper.get(k);
                 productDemandComponent.sendDingMsg(v, bizDemandDO.getStatus(), k);
             });
 
@@ -514,19 +514,23 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         log.info("产品需求-业务需求匹配接收参数:{}", query);
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        List<String> receiveManIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
-        log.info("我和我的下属:receiveManIdList={}", receiveManIdList);
         BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(query);
-        if (!CollectionUtils.isEmpty(condition.getReceiveManIdList())) {
-            receiveManIdList.retainAll(condition.getReceiveManIdList());
-            log.info("我和我的下属,过滤后,receiveManIdList={}", receiveManIdList);
-        }
-        if (CollectionUtils.isEmpty(receiveManIdList)) {
-            //所选人员不在我和我的下属中
-            return BaseResult.success(ResultUtil.pageEmpty());
+
+        if (query.getLimitReceiveMan()) {
+            List<String> receiveManIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
+            log.info("我和我的下属:receiveManIdList={}", receiveManIdList);
+
+            if (CollUtil.isNotEmpty(condition.getReceiveManIdList())) {
+                receiveManIdList.retainAll(condition.getReceiveManIdList());
+                log.info("我和我的下属,过滤后,receiveManIdList={}", receiveManIdList);
+            }
+            if (CollUtil.isEmpty(receiveManIdList)) {
+                //所选人员不在我和我的下属中
+                return BaseResult.success(ResultUtil.pageEmpty());
+            }
+            condition.setReceiveManIdList(receiveManIdList);
         }
 
-        condition.setReceiveManIdList(receiveManIdList);
         List<Integer> status = query.getStatusList();
         if (CollUtil.isEmpty(status)) {
             condition.setStatusList(Lists.newArrayList(

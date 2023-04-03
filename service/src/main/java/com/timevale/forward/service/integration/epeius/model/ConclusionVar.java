@@ -44,6 +44,8 @@ public class ConclusionVar {
 
     private List<ProjectEvaluateVar> reviewerEvaluateList;
 
+    private String srEvaluateGrade;
+
     // 低代码有bug，以下为临时写法
     private String selfProgress;
     private String selfQuality;

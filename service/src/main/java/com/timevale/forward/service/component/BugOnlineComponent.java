@@ -1,9 +1,11 @@
 package com.timevale.forward.service.component;
 
+import com.timevale.forward.dal.entity.BugLogDO;
 import com.timevale.forward.dal.entity.BugOnlineDO;
 import com.timevale.forward.model.enums.ButtonActionEnum;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface BugOnlineComponent {
     /**
@@ -22,4 +24,14 @@ public interface BugOnlineComponent {
      */
     void attachToBizDemands(BugOnlineDO bugOnline, Collection<Long> bizDemandIds, ButtonActionEnum actionEnum);
 
+
+    /**
+     * 比较关联的线下bug
+     *
+     * @param bugOnlineId 线上bugid
+     * @param oldId       旧的线下bugid
+     * @param newId       新的线下bugid
+     * @return bug日志实体
+     */
+    List<BugLogDO> compareBugOffline(Long bugOnlineId, Long oldId, Long newId);
 }

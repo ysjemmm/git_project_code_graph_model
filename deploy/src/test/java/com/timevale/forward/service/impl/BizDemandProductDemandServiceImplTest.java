@@ -100,23 +100,23 @@ public class BizDemandProductDemandServiceImplTest extends AbstractTestNGSpringC
         BizDemandDO bizDemandDO = new BizDemandDO();
         bizDemandDO.setId(1L);
         bizDemandDO.setStatus(1);
-        when(bizDemandMapper.selectById(any())).thenReturn(bizDemandDO);
+        when(bizDemandMapper.get(any())).thenReturn(bizDemandDO);
 
         ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
         productBizDemandDO.setProductDemandId(1L);
         productBizDemandDO.setIsDeleted(true);
         when(productBizDemandMapper.select(any())).thenReturn(Collections.singletonList(productBizDemandDO));
 
-        when(productBizDemandMapper.inserts(any())).thenReturn(1);
+        when(productBizDemandMapper.batchInsert(any())).thenReturn(1);
         when(productBizDemandMapper.updates(any(), any())).thenReturn(1);
-        doNothing().when(bizDemandComponent).updateBizDemandStatusByLinkedProductDemand(any());
+        doNothing().when(bizDemandComponent).updateStatus(any());
 
         BizDemandDO bizDemand = new BizDemandDO();
         bizDemand.setStatus(1);
         bizDemand.setId(1L);
         bizDemand.setReceiveManId("www");
         bizDemand.setName("www");
-        when(bizDemandMapper.selectById(any())).thenReturn(bizDemand);
+        when(bizDemandMapper.get(any())).thenReturn(bizDemand);
 
         Date date = new Date();
         when(bizDemandComponent.getProjectEndDate(any())).thenReturn(date);
@@ -145,21 +145,21 @@ public class BizDemandProductDemandServiceImplTest extends AbstractTestNGSpringC
         BizDemandDO bizDemandDO = new BizDemandDO();
         bizDemandDO.setId(1L);
         bizDemandDO.setStatus(1);
-        when(bizDemandMapper.selectById(any())).thenReturn(bizDemandDO);
+        when(bizDemandMapper.get(any())).thenReturn(bizDemandDO);
 
         ProductBizDemandDO productBizDemandDO = new ProductBizDemandDO();
         productBizDemandDO.setId(1L);
         when(productBizDemandMapper.select(any())).thenReturn(Collections.singletonList(productBizDemandDO));
 
         when(productBizDemandMapper.delete(any())).thenReturn(1);
-        doNothing().when(bizDemandComponent).updateBizDemandStatusByLinkedProductDemand(any());
+        doNothing().when(bizDemandComponent).updateStatus(any());
 
         BizDemandDO bizDemand = new BizDemandDO();
         bizDemand.setStatus(1);
         bizDemand.setId(1L);
         bizDemand.setReceiveManId("www");
         bizDemand.setName("www");
-        when(bizDemandMapper.selectById(any())).thenReturn(bizDemand);
+        when(bizDemandMapper.get(any())).thenReturn(bizDemand);
 
         Date date = new Date();
         when(bizDemandComponent.getProjectEndDate(any())).thenReturn(date);

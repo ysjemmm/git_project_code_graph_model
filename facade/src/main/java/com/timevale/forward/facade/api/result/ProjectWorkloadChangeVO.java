@@ -54,12 +54,12 @@ public class ProjectWorkloadChangeVO extends ToString {
     @ApiModelProperty("计划工作量增加")
     private BigDecimal planWorkloadAddSum;
 
-    @ApiModelProperty("积分工作量—调整前")
+    @ApiModelProperty("计入积分成员工作量—调整前")
     private BigDecimal pointWorkloadBefore;
 
-    @ApiModelProperty("积分工作量—调整后")
+    @ApiModelProperty("计入积分成员工作量—调整后")
     private BigDecimal pointWorkloadAfter;
 
-    @ApiModelProperty("积分工作量增加")
+    @ApiModelProperty("计入积分成员工作量增加")
     private BigDecimal pointWorkloadAddSum;
 }

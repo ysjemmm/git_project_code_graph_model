@@ -38,34 +38,34 @@ public interface BugOnlineService {
     /**
      * 新增线上bug
      *
-     * @param bugOnlineAddReq 新增参数
+     * @param addReq 新增参数
      * @return 返回值
      */
-    BusinessResult<Boolean> add(BugOnlineAddReq bugOnlineAddReq);
+    BaseResult<Boolean> add(BugOnlineAddReq addReq);
 
     /**
      * 删除线上bug
      *
-     * @param bugOnlineReq 参数
+     * @param deleteReq 参数
      * @return 返回值
      */
-    BusinessResult<Boolean> delete(BugOnlineReq bugOnlineReq);
+    BusinessResult<Boolean> delete(BugOnlineReq deleteReq);
 
     /**
      * 编辑线上bug
      *
-     * @param bugOnlineModifyReq 参数
+     * @param modifyReq 参数
      * @return 返回值
      */
-    BusinessResult<String> modify(BugOnlineModifyReq bugOnlineModifyReq);
+    BaseResult<String> modify(BugOnlineModifyReq modifyReq);
 
     /**
      * 查看线上bug详情
      *
-     * @param bugOnlineDetailReq 参数
+     * @param getReq 参数
      * @return 返回值
      */
-    BusinessResult<BugOnlineDetailVO> get(BugOnlineDetailReq bugOnlineDetailReq);
+    BusinessResult<BugOnlineDetailVO> get(BugOnlineDetailReq getReq);
 
     /**
      * bug确认
@@ -78,10 +78,10 @@ public interface BugOnlineService {
     /**
      * 开始修复
      *
-     * @param bugOnlineStartRepairReq 参数
+     * @param startRepairReq 参数
      * @return 返回值
      */
-    BusinessResult<Boolean> startRepair(BugOnlineStartRepairReq bugOnlineStartRepairReq);
+    BusinessResult<Boolean> startRepair(BugOnlineStartRepairReq startRepairReq);
 
     /**
      * 修复完毕
@@ -94,18 +94,18 @@ public interface BugOnlineService {
     /**
      * 确认修复
      *
-     * @param bugOnlineConfirmRepairReq 参数
+     * @param confirmRepairReq 参数
      * @return 返回值
      */
-    BusinessResult<Boolean> confirmRepair(BugOnlineConfirmRepairReq bugOnlineConfirmRepairReq);
+    BusinessResult<Boolean> confirmRepair(BugOnlineConfirmRepairReq confirmRepairReq);
 
     /**
      * 已上线
      *
-     * @param bugOnlineOnlineReq 参数
+     * @param onlineReq 参数
      * @return 返回值
      */
-    BusinessResult<Boolean> online(BugOnlineOnlineReq bugOnlineOnlineReq);
+    BusinessResult<Boolean> online(BugOnlineOnlineReq onlineReq);
 
     /**
      * 重新打开
@@ -118,10 +118,10 @@ public interface BugOnlineService {
     /**
      * 不用修复
      *
-     * @param bugOnlineNoRepairReq 参数
+     * @param noRepairReq 参数
      * @return 返回值
      */
-    BusinessResult<String> noRepair(BugOnlineNoRepairReq bugOnlineNoRepairReq);
+    BusinessResult<String> noRepair(BugOnlineNoRepairReq noRepairReq);
 
     /**
      * 转交

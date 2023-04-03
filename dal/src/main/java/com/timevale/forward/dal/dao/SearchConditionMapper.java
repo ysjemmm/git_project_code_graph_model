@@ -2,6 +2,8 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.entity.SearchConditionDO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -42,5 +44,10 @@ public interface SearchConditionMapper {
      */
     List<SearchConditionDO> select(@Param("model") Integer model, @Param("tabType") Integer tabType, @Param("belongManId") String belongManId);
 
+    @Select("SELECT * FROM search_condition WHERE model=#{model} AND is_deleted=false")
+    List<SearchConditionDO> getByModel(@Param("model") Integer model);
+
+    @Update("UPDATE search_condition SET content=#{content} WHERE id=#{id}")
+    void updateContent(@Param("id")Long id, @Param("content")String content);
 
 }

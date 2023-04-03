@@ -22,7 +22,7 @@
         order by create_date desc;
     </select>
 
-    <update id="deleteByToIdAndType">
+    <update id="delete">
         update comment
         <set>
             <if test="true">is_deleted=true,</if>

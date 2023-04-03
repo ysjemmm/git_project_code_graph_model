@@ -14,7 +14,9 @@ import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.YesOrNoEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BizDemandMD;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -30,6 +32,14 @@ import java.util.stream.Collectors;
  */
 @Mapper(
         imports = {
+                DateUtil.class,
+                YesOrNoEnum.class,
+                PriorityEnum.class,
+                BizDemandReasonEnum.class,
+                BizDemandStatusEnum.class,
+                PlanReleaseDateEnum.class,
+                CustomerDevTypeEnum.class,
+                PlanReleaseDateEnum.class,
                 YesOrNoEnum.class,
                 BizDemandStatusEnum.class
         }
@@ -40,10 +50,14 @@ public interface BizDemandCopier {
     /**
      * 查询条件转换
      *
-     * @param bizDemandQueryList 业务需求查询条件
+     * @param query 业务需求查询条件
      * @return 查询条件
      */
-    BizDemandListCondition convert(BizDemandQueryList bizDemandQueryList);
+    @Mapping(target = "createDateStart", expression = "java(DateUtil.getStartOfDay(query.getCreateDateStart()))")
+    @Mapping(target = "createDateEnd", expression = "java(DateUtil.getEndOfDay(query.getCreateDateEnd()))")
+    @Mapping(target = "projectEndDateStart", expression = "java(DateUtil.getStartOfDay(query.getProjectEndDateStart()))")
+    @Mapping(target = "projectEndDateEnd", expression = "java(DateUtil.getEndOfDay(query.getProjectEndDateEnd()))")
+    BizDemandListCondition convert(BizDemandQueryList query);
 
 
     /**
@@ -69,6 +83,13 @@ public interface BizDemandCopier {
      * @param bizDemandDO 业务需求DO
      * @return 业务需求详细VO
      */
+    @Mapping(target = "reasonText", expression = "java(BizDemandReasonEnum.getTextByCode(bizDemandDO.getReason()))")
+    @Mapping(target = "statusText", expression = "java(BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()))")
+    @Mapping(target = "priorityText", expression = "java(PriorityEnum.getTextChineseByCode(bizDemandDO.getPriority()))")
+    @Mapping(target = "customerDevDemandText", expression = "java(YesOrNoEnum.getTextByCode(bizDemandDO.getCustomerDevDemand()))")
+    @Mapping(target = "planReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate()))")
+    @Mapping(target = "customerDevTypeText", expression = "java(CustomerDevTypeEnum.getTextByCode(bizDemandDO.getCustomerDevType()))")
+    @Mapping(target = "hopeReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(bizDemandDO.getHopeReleaseDate()))")
     BizDemandDetailVO convert(BizDemandDO bizDemandDO);
 
     /**
@@ -100,11 +121,15 @@ public interface BizDemandCopier {
     /**
      * 转换
      *
-     * @param bizDemandListDO 业务需求列表DO
+     * @param listDO 业务需求列表DO
      * @return VO
      */
-    @Mapping(target = "customerDevDemand", expression = "java(YesOrNoEnum.getTextByCode(bizDemandListDO.getCustomerDevDemand()))")
-    BizDemandVO convert(BizDemandListDO bizDemandListDO);
+    @Mapping(target = "statusText", expression = "java(BizDemandStatusEnum.getTextByCode(listDO.getStatus()))")
+    @Mapping(target = "priorityText", expression = "java(PriorityEnum.getTextChineseByCode(listDO.getPriority()))")
+    @Mapping(target = "customerDevDemand", expression = "java(YesOrNoEnum.getTextByCode(listDO.getCustomerDevDemand()))")
+    @Mapping(target = "planReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(listDO.getPlanReleaseDate()))")
+    @Mapping(target = "hopeReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(listDO.getHopeReleaseDate()))")
+    BizDemandVO convert(BizDemandListDO listDO);
 
     /**
      * DO批量转换为VO

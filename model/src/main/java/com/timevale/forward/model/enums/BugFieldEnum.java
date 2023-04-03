@@ -29,7 +29,9 @@ public enum BugFieldEnum {
 
     LABEL("标签"),
 
-    LINK_BUG("关联bug"),
+    LINK_BUG_ONLINE("关联线上bug"),
+
+    LINK_BUG_OFFLINE("关联线下bug"),
 
     MODEL("模块");
 

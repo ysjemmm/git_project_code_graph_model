@@ -61,14 +61,6 @@ public class BugOnlineMD extends BaseMD{
     private Integer recurrent;
 
     /**
-     * bug原因：0需求问题，1环境配置问题，2功能错误，3兼容性问题，4数据问题，5性能问题，6安全问题，
-     * 7外部原因，8开发误操作，9接口文档编写错误，10外包项目，11历史版本，12无测试参与版本，13测试环境延期未修复bug，
-     * 14设计缺陷，15定制版升级改动波及，16无法重现但客户环境偶现，17无法重现但客户环境必现
-     */
-    @FieldCompare(fieldName = "bug原因", enumClass = BugOnlineReasonEnum.class)
-    private Integer reason;
-
-    /**
      * 期望解决日期
      */
     @FieldCompare(fieldName = "期望解决日期")
@@ -84,17 +76,6 @@ public class BugOnlineMD extends BaseMD{
      */
     @FieldCompare(fieldName = "bug详情描述")
     private String describe;
-
-    /**
-     * 驳回原因：0客户操作错误，1客户对业务理解错误，2产品不支持，3客户的回调地址错误，
-     * 4客户对接版本错误，5配置套餐没有费用，6重复提交，7支行大额行号未配置，8实施传参错误，
-     * 9网络波动，10客户自身缺陷，11实施给客户项目的配置错误，12实施对业务理解错误，
-     * 13操作人录入错误，14需求变更，15历史数据未订正，16文档与实际不符，17长时间未反馈，
-     * 18问题描述不清，19当前版本不支持，20可以升级版本解决，21报告人提供信息不全无法排查，
-     * 22产品配置错误，23客户侧环境问题，24技术咨询
-     */
-    @FieldCompare(fieldName = "驳回原因", enumClass = BugOnlineDismissCauseEnum.class)
-    private Integer dismissCause;
 
     /**
      * 问题原因
@@ -137,4 +118,23 @@ public class BugOnlineMD extends BaseMD{
      */
     @FieldCompare(fieldName = "所在大区", enumClass = AreaEnum.class)
     private Integer area ;
+
+    /**
+     * bug问题类别
+     */
+    @FieldCompare(fieldName = "bug问题类别", enumClass = BugOnlineCategoryEnum.class)
+    private Integer category;
+    
+    /**
+     * bug原因
+     */
+    @FieldCompare(fieldName = "bug原因")
+    private String reasonName;
+
+    /**
+     * 驳回原因
+     */
+    @FieldCompare(fieldName = "驳回原因")
+    private String dismissCauseName;
+
 }

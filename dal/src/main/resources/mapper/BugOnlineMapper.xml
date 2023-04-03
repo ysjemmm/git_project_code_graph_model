@@ -1,16 +1,20 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.timevale.forward.dal.dao.BugOnlineMapper">
-    <select id="selectById" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+    <select id="get" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
         select *
         from bug_online
         where id = #{id}
           and is_deleted = 0
     </select>
 
+    <select id="getContainDeleted" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+        select *
+        from bug_online
+        where id = #{id}
+    </select>
+
     <select id="selectListByCondition" resultType="com.timevale.forward.dal.entity.BugOnlineListDO">
-        select bo.id, bo.name, bo.status, bo.operator, bo.operator_id, bo.proposer, bo.proposer_id, bo.priority, bo.env,
-        bo.reason, bo.belong, bo.dismiss_cause, bo.customer_name, bo.expect_launch_date, bo.source,
-        bo.create_date, bo.modify_date,bo.area,bo.`describe`
+        select bo.*
         from bug_online bo
         left join bug_online_product_line bopl on bo.id = bopl.bug_online_id AND bopl.type =0  AND bopl.is_deleted = false
         left join bug_online_model mo on bo.id = mo.bug_online_id and mo.is_deleted = false
@@ -141,6 +145,25 @@
             <if test="isSystemCloseBug!=null and isSystemCloseBug==true">
                 and  bo.status =2 and boso.status=2 and boso.operator_id='SYSTEM'
              </if>
+            <if test="openCountType != null and openCount != null">
+                <if test="openCountType == 0">and bo.open_count = #{openCount}</if>
+                <if test="openCountType == 1">and bo.open_count &gt; #{openCount}</if>
+                <if test="openCountType == 2">and bo.open_count &gt;= #{openCount}</if>
+                <if test="openCountType == 3">and bo.open_count &lt; #{openCount}</if>
+                <if test="openCountType == 4">and bo.open_count &lt;= #{openCount}</if>
+            </if>
+            <if test="categoryList!=null and categoryList.size()>0">
+                and bo.category in
+                <foreach collection="categoryList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="customerGradeList!=null and customerGradeList.size()>0">
+                and bo.customer_grade in
+                <foreach collection="customerGradeList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
             <if test="true">
                 and bo.is_deleted = false
                 and bopl.is_deleted = false
@@ -149,157 +172,175 @@
         group by bo.id
     </select>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="bugOnlineDO.id">
-        insert into bug_online(name, operator, operator_id, last_operator, last_operator_id, proposer, proposer_id,
-                               customer_name, env, belong, priority, recurrent, reason, expect_date, business,
-                               `describe`, system_menu_name, create_man, create_man_id, source, detail_version_id,
-                               source_id, customer_dev_project_name, biz_id, biz_name,area)
-        values (#{bugOnlineDO.name}, #{bugOnlineDO.operator}, #{bugOnlineDO.operatorId}, #{bugOnlineDO.lastOperator},
-                #{bugOnlineDO.lastOperatorId}, #{bugOnlineDO.proposer}, #{bugOnlineDO.proposerId},
-                #{bugOnlineDO.customerName}, #{bugOnlineDO.env}, #{bugOnlineDO.belong}, #{bugOnlineDO.priority},
-                #{bugOnlineDO.recurrent}, #{bugOnlineDO.reason}, #{bugOnlineDO.expectDate}, #{bugOnlineDO.business},
-                #{bugOnlineDO.describe}, #{bugOnlineDO.systemMenuName}, #{createMan}, #{createManId},
-                #{bugOnlineDO.source}, #{bugOnlineDO.detailVersionId}, #{bugOnlineDO.sourceId},
-                #{bugOnlineDO.customerDevProjectName}, #{bugOnlineDO.bizId}, #{bugOnlineDO.bizName}, #{bugOnlineDO.area})
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO bug_online
+            <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="name != null"> `name`,</if>
+                <if test="operator != null"> operator,</if>
+                <if test="operatorId != null"> operator_id,</if>
+                <if test="lastOperator != null"> last_operator,</if>
+                <if test="lastOperatorId != null"> last_operator_id,</if>
+                <if test="proposer != null"> proposer,</if>
+                <if test="proposerId != null"> proposer_id,</if>
+                <if test="customerName != null"> customer_name,</if>
+                <if test="env != null"> env,</if>
+                <if test="belong != null"> belong,</if>
+                <if test="priority != null"> priority,</if>
+                <if test="recurrent != null"> recurrent,</if>
+                <if test="reason != null"> reason,</if>
+                <if test="expectDate != null"> expect_date,</if>
+                <if test="business != null"> business,</if>
+                <if test="describe != null"> `describe`,</if>
+                <if test="systemMenuName != null"> system_menu_name,</if>
+                <if test="source != null"> `source`,</if>
+                <if test="detailVersionId != null"> detail_version_id,</if>
+                <if test="sourceId != null"> source_id,</if>
+                <if test="customerDevProjectName != null"> customer_dev_project_name,</if>
+                <if test="bizId != null"> biz_id,</if>
+                <if test="bizName != null"> biz_name,</if>
+                <if test="area != null"> area,</if>
+                <if test="customerGrade != null">customer_grade,</if>
+                <if test="category!=null">category,</if>
+                <if test="bugOfflineId!=null">bug_offline_id,</if>
+                <if test="reasonStage!=null">reason_stage,</if>
+                <if test="dismissCauseStage!=null">dismiss_cause_stage,</if>
+                <if test="createMan != null"> create_man,</if>
+                <if test="createManId != null"> create_man_id,</if>
+            </trim>
+            VALUES
+            <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="name!=null">#{name},</if>
+                <if test="operator!=null">#{operator},</if>
+                <if test="operatorId!=null">#{operatorId},</if>
+                <if test="lastOperator!=null">#{lastOperator},</if>
+                <if test="lastOperatorId!=null">#{lastOperatorId},</if>
+                <if test="proposer!=null">#{proposer},</if>
+                <if test="proposerId!=null">#{proposerId},</if>
+                <if test="customerName!=null">#{customerName},</if>
+                <if test="env!=null">#{env},</if>
+                <if test="belong!=null">#{belong},</if>
+                <if test="priority!=null">#{priority},</if>
+                <if test="recurrent!=null">#{recurrent},</if>
+                <if test="reason!=null">#{reason},</if>
+                <if test="expectDate!=null">#{expectDate},</if>
+                <if test="business!=null">#{business},</if>
+                <if test="describe!=null">#{describe},</if>
+                <if test="systemMenuName!=null">#{systemMenuName},</if>
+                <if test="source!=null">#{source},</if>
+                <if test="detailVersionId!=null">#{detailVersionId},</if>
+                <if test="sourceId!=null">#{sourceId},</if>
+                <if test="customerDevProjectName!=null">#{customerDevProjectName},</if>
+                <if test="bizId!=null">#{bizId},</if>
+                <if test="bizName!=null">#{bizName},</if>
+                <if test="area!=null">#{area},</if>
+                <if test="customerGrade != null">#{customerGrade},</if>
+                <if test="category!=null">#{category},</if>
+                <if test="bugOfflineId!=null">#{bugOfflineId},</if>
+                <if test="reasonStage!=null">#{reasonStage},</if>
+                <if test="dismissCauseStage!=null">#{dismissCauseStage},</if>
+                <if test="createMan != null"> #{createMan},</if>
+                <if test="createManId != null"> #{createManId},</if>
+            </trim>
     </insert>
 
     <update id="update">
         update bug_online
         <set>
-            <if test="bugOnlineDO.name != null">
-                name = #{bugOnlineDO.name},
-            </if>
-            <if test="bugOnlineDO.operator != null">
-                operator = #{bugOnlineDO.operator},
-            </if>
-            <if test="bugOnlineDO.operatorId != null">
-                operator_id = #{bugOnlineDO.operatorId},
-            </if>
-            <if test="bugOnlineDO.lastOperator != null">
-                last_operator = #{bugOnlineDO.lastOperator},
-            </if>
-            <if test="bugOnlineDO.lastOperatorId != null">
-                last_operator_id = #{bugOnlineDO.lastOperatorId},
-            </if>
-            <if test="bugOnlineDO.proposer != null">
-                proposer = #{bugOnlineDO.proposer},
-            </if>
-            <if test="bugOnlineDO.proposerId != null">
-                proposer_id = #{bugOnlineDO.proposerId},
-            </if>
+            # 历史悠久，改不动了
             <if test="true">
-                customer_name = #{bugOnlineDO.customerName},
+                area = #{area},
+                reason = #{reason},
+                category = #{category},
+                expect_date = #{expectDate},
+                reason_stage = #{reasonStage},
+                dismiss_cause = #{dismissCause},
+                customer_name = #{customerName},
+                bug_offline_id = #{bugOfflineId},
+                repair_fail_reason = #{repairFailReason},
+                dismiss_cause_stage = #{dismissCauseStage},
             </if>
-            <if test="bugOnlineDO.env != null">
-                env = #{bugOnlineDO.env},
+            <if test="name != null">
+                `name` = #{name},
             </if>
-            <if test="bugOnlineDO.belong != null">
-                belong = #{bugOnlineDO.belong},
+            <if test="operator != null">
+                operator = #{operator},
             </if>
-            <if test="bugOnlineDO.priority != null">
-                priority = #{bugOnlineDO.priority},
+            <if test="operatorId != null">
+                operator_id = #{operatorId},
             </if>
-            <if test="bugOnlineDO.recurrent != null">
-                recurrent = #{bugOnlineDO.recurrent},
+            <if test="lastOperator != null">
+                last_operator = #{lastOperator},
             </if>
-            <if test="true">
-                reason = #{bugOnlineDO.reason},
+            <if test="lastOperatorId != null">
+                last_operator_id = #{lastOperatorId},
             </if>
-            <if test="true">
-                expect_date = #{bugOnlineDO.expectDate},
+            <if test="proposer != null">
+                proposer = #{proposer},
             </if>
-            <if test="bugOnlineDO.business != null">
-                business = #{bugOnlineDO.business},
+            <if test="proposerId != null">
+                proposer_id = #{proposerId},
             </if>
-            <if test="bugOnlineDO.describe != null">
-                `describe` = #{bugOnlineDO.describe},
+            <if test="env != null">
+                env = #{env},
             </if>
-            <if test="bugOnlineDO.prevStatus != null">
-                prev_status = #{bugOnlineDO.prevStatus},
+            <if test="belong != null">
+                belong = #{belong},
             </if>
-            <if test="bugOnlineDO.hangUp != null">
-                hang_up = #{bugOnlineDO.hangUp},
+            <if test="priority != null">
+                priority = #{priority},
             </if>
-            <if test="bugOnlineDO.status != null">
-                status = #{bugOnlineDO.status},
+            <if test="recurrent != null">
+                recurrent = #{recurrent},
             </if>
-            <if test="true">
-                dismiss_cause = #{bugOnlineDO.dismissCause},
+            <if test="business != null">
+                business = #{business},
             </if>
-            <if test="bugOnlineDO.problemReason != null">
-                problem_reason = #{bugOnlineDO.problemReason},
+            <if test="describe != null">
+                `describe` = #{describe},
             </if>
-            <if test="bugOnlineDO.solveScheme != null">
-                solve_scheme = #{bugOnlineDO.solveScheme},
+            <if test="prevStatus != null">
+                prev_status = #{prevStatus},
             </if>
-            <if test="true">
-                repair_fail_reason = #{bugOnlineDO.repairFailReason},
+            <if test="hangUp != null">
+                hang_up = #{hangUp},
             </if>
-            <if test="bugOnlineDO.openAgainReason != null">
-                open_again_reason = #{bugOnlineDO.openAgainReason},
+            <if test="status != null">
+                `status` = #{status},
             </if>
-            <if test="bugOnlineDO.isDeleted != null">
-                is_deleted = #{bugOnlineDO.isDeleted},
+            <if test="problemReason != null">
+                problem_reason = #{problemReason},
             </if>
-            <if test="bugOnlineDO.detailVersionId != null">
-                detail_version_id = #{bugOnlineDO.detailVersionId},
+            <if test="solveScheme != null">
+                solve_scheme = #{solveScheme},
             </if>
-            <if test="bugOnlineDO.expectLaunchDate != null">
-                expect_launch_date = #{bugOnlineDO.expectLaunchDate},
+            <if test="openAgainReason != null">
+                open_again_reason = #{openAgainReason},
             </if>
-            <if test="bugOnlineDO.sourceId != null and bugOnlineDO.sourceId != ''">
-                source_id = #{bugOnlineDO.sourceId},
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted},
             </if>
-            <if test="bugOnlineDO.customerDevProjectName != null and bugOnlineDO.customerDevProjectName != ''">
-                customer_dev_project_name = #{bugOnlineDO.customerDevProjectName},
+            <if test="detailVersionId != null">
+                detail_version_id = #{detailVersionId},
             </if>
-            <if test="true">
-                area = #{bugOnlineDO.area},
+            <if test="expectLaunchDate != null">
+                expect_launch_date = #{expectLaunchDate},
             </if>
-            <if test="true">
+            <if test="sourceId != null and sourceId != ''">
+                source_id = #{sourceId},
+            </if>
+            <if test="customerDevProjectName != null and customerDevProjectName != ''">
+                customer_dev_project_name = #{customerDevProjectName},
+            </if>
+            <if test="openCount != null">open_count = #{openCount},</if>
+            <if test="modifyManId != null">
                 modify_man_id = #{modifyManId},
+            </if>
+            <if test="modifyMan != null">
                 modify_man = #{modifyMan}
             </if>
         </set>
         <where>
-            id = #{bugOnlineDO.id}
-        </where>
-    </update>
-
-    <update id="fullUpdate">
-        update bug_online
-        <set>
-            name = #{bugOnlineDO.name},
-            operator = #{bugOnlineDO.operator},
-            operator_id = #{bugOnlineDO.operatorId},
-            last_operator = #{bugOnlineDO.lastOperator},
-            last_operator_id = #{bugOnlineDO.lastOperatorId},
-            proposer = #{bugOnlineDO.proposer},
-            proposer_id = #{bugOnlineDO.proposerId},
-            customer_name = #{bugOnlineDO.customerName},
-            env = #{bugOnlineDO.env},
-            belong = #{bugOnlineDO.belong},
-            priority = #{bugOnlineDO.priority},
-            recurrent = #{bugOnlineDO.recurrent},
-            reason = #{bugOnlineDO.reason},
-            expect_date = #{bugOnlineDO.expectDate},
-            business = #{bugOnlineDO.business},
-            `describe` = #{bugOnlineDO.describe},
-            prev_status = #{bugOnlineDO.prevStatus},
-            hang_up = #{bugOnlineDO.hangUp},
-            `status` = #{bugOnlineDO.status},
-            dismiss_cause = #{bugOnlineDO.dismissCause},
-            problem_reason = #{bugOnlineDO.problemReason},
-            solve_scheme = #{bugOnlineDO.solveScheme},
-            repair_fail_reason = #{bugOnlineDO.repairFailReason},
-            open_again_reason = #{bugOnlineDO.openAgainReason},
-            is_deleted = #{bugOnlineDO.isDeleted},
-            detail_version_id = #{bugOnlineDO.detailVersionId},
-            modify_man_id = #{modifyManId},
-            modify_man = #{modifyMan}
-        </set>
-        <where>
-            id = #{bugOnlineDO.id}
+            id = #{id}
         </where>
     </update>
 
@@ -345,7 +386,7 @@
         </where>
     </update>
 
-    <select id="selectByIds" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+    <select id="getByIds" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
         SELECT id, name,operator,operator_id,last_operator,last_operator_id,proposer
         ,proposer_id,customer_name,env,belong,priority,recurrent,reason,expect_date,business,`describe`,system_menu_name
         ,create_man,create_man_id,source, detail_version_id,link_bug_id
@@ -413,6 +454,39 @@
         FROM bug_online
         WHERE is_deleted = false
     </select>
+
+    <select id="getByBugOffline" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
+        SELECT *
+        FROM bug_online
+        WHERE bug_offline_id = #{bugOfflineId}
+          AND is_deleted = false
+    </select>
+
+    <update id="delete">
+        UPDATE bug_online
+        <set>
+            is_deleted = true,
+            <if test="modifyMan != null">modify_man=#{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id=#{modifyManId},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="clearBugOffline">
+        UPDATE bug_online
+        <set>
+            bug_offline_id = null,
+            <if test="modifyMan != null">modify_man=#{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id=#{modifyManId},</if>
+        </set>
+        <where>
+            AND id IN
+            <foreach collection="ids" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </update>
+
 </mapper>
 
 

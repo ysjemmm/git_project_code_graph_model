@@ -119,7 +119,7 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
         BugOfflineModifyReq bugOfflineModifyReq = new BugOfflineModifyReq();
         bugOfflineModifyReq.setProductLineId(2L);
         bugOfflineModifyReq.setProjectId(2L);
-        when(bugOfflineMapper.selectById(any())).thenReturn(new BugOfflineDO(){{
+        when(bugOfflineMapper.get(any())).thenReturn(new BugOfflineDO(){{
             setProductLineId(1L);
             setProjectId(1L);
         }});
@@ -138,7 +138,7 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
     @Test
     public void testTransfer() {
         BugOfflineTransferReq transferReq = new BugOfflineTransferReq();
-        when(bugOfflineMapper.selectById(any())).thenReturn(new BugOfflineDO(){{
+        when(bugOfflineMapper.get(any())).thenReturn(new BugOfflineDO(){{
             setProposerId("1");
             setOperatorId("1");
         }});
@@ -161,7 +161,7 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
     @Test
     public void testUnHandle() {
         BugOfflineUnHandleReq handleReq = new BugOfflineUnHandleReq();
-        when(bugOfflineMapper.selectById(any())).thenReturn(new BugOfflineDO(){{
+        when(bugOfflineMapper.get(any())).thenReturn(new BugOfflineDO(){{
             setProposerId("1");
             setOperatorId("1");
             setStatus(BugStatusEnum.OPEN.getCode());
@@ -185,7 +185,7 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
     @Test
     public void testAgree() {
         BugOfflineReq handleReq = new BugOfflineReq();
-        when(bugOfflineMapper.selectById(any())).thenReturn(new BugOfflineDO(){{
+        when(bugOfflineMapper.get(any())).thenReturn(new BugOfflineDO(){{
             setProposerId("1");
             setOperatorId("1");
             setStatus(BugStatusEnum.CONFIRM.getCode());
@@ -205,7 +205,7 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
     @Test
     public void testReject() {
         BugOfflineReq bugOfflineReq = new BugOfflineReq();
-        when(bugOfflineMapper.selectById(any())).thenReturn(new BugOfflineDO(){{
+        when(bugOfflineMapper.get(any())).thenReturn(new BugOfflineDO(){{
             setProposerId("1");
             setOperatorId("1");
             setStatus(BugStatusEnum.CONFIRM.getCode());
@@ -229,7 +229,7 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
     @Test
     public void testDelayHandle() {
         BugOfflineDelayHandleReq delayHandleReq = new BugOfflineDelayHandleReq();
-        when(bugOfflineMapper.selectById(any())).thenReturn(new BugOfflineDO(){{
+        when(bugOfflineMapper.get(any())).thenReturn(new BugOfflineDO(){{
             setProposerId("1");
             setOperatorId("1");
             setStatus(BugStatusEnum.OPEN.getCode());
@@ -253,7 +253,7 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
     @Test
     public void testDoHandle() {
         BugOfflineReq bugOfflineReq = new BugOfflineReq();
-        when(bugOfflineMapper.selectById(any())).thenReturn(new BugOfflineDO(){{
+        when(bugOfflineMapper.get(any())).thenReturn(new BugOfflineDO(){{
             setProposerId("1");
             setOperatorId("1");
             setStatus(BugStatusEnum.OPEN.getCode());
@@ -274,7 +274,7 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
     @Test
     public void testPassSelf() {
         BugOfflinePassSelfReq bugOfflinePassSelfReq = new BugOfflinePassSelfReq();
-        when(bugOfflineMapper.selectById(any())).thenReturn(new BugOfflineDO(){{
+        when(bugOfflineMapper.get(any())).thenReturn(new BugOfflineDO(){{
             setProposerId("1");
             setOperatorId("1");
             setStatus(BugStatusEnum.REPAIR.getCode());
@@ -307,7 +307,7 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
         bugOfflineDO.setStatus(BugStatusEnum.ACCEPTANCE.getCode());
         bugOfflineDO.setCause("1");
         bugOfflineDO.setSolvePlan("1");
-        when(bugOfflineMapper.selectById(any())).thenReturn(bugOfflineDO);
+        when(bugOfflineMapper.get(any())).thenReturn(bugOfflineDO);
 
         MockedConstruction<BugOfflineSelfTestPassMsgEvent> construction = mockConstruction(BugOfflineSelfTestPassMsgEvent.class);
         construction.constructed();
@@ -330,7 +330,7 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
     @Test
     public void testAcceptFailed() {
         BugOfflineReq bugOfflineReq = new BugOfflineReq();
-        when(bugOfflineMapper.selectById(any())).thenReturn(new BugOfflineDO(){{
+        when(bugOfflineMapper.get(any())).thenReturn(new BugOfflineDO(){{
             setProposerId("1");
             setOperatorId("1");
             setStatus(BugStatusEnum.ACCEPTANCE.getCode());
@@ -355,7 +355,7 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
     @Test
     public void testReopen() {
         BugOfflineReq bugOfflineReq = new BugOfflineReq();
-        when(bugOfflineMapper.selectById(any())).thenReturn(new BugOfflineDO(){{
+        when(bugOfflineMapper.get(any())).thenReturn(new BugOfflineDO(){{
             setProposerId("1");
             setOperatorId("1");
             setStatus(BugStatusEnum.COMPLETE.getCode());
@@ -382,7 +382,7 @@ public class BugOfflineServiceImplTest extends AbstractTestNGSpringContextTests 
 
     @Test
     public void testGet() {
-        when(bugOfflineMapper.selectById(any())).thenReturn(new BugOfflineDO());
+        when(bugOfflineMapper.get(any())).thenReturn(new BugOfflineDO());
         when(projectMapper.get(any())).thenReturn(new ProjectDO());
         when(productLineMapper.selectById(any())).thenReturn(new ProductLineDO());
         when(bizDomainMapper.selectById(any())).thenReturn(new BizDomainDO());

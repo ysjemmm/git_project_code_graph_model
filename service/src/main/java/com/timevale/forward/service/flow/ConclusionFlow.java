@@ -203,17 +203,21 @@ public class ConclusionFlow {
         // 更新普通评价
         updateEvaluate(projectDO, conclusionVar);
 
-        // 更新结项日期,项目状态（取放在flowData中的数据）
-        TargetStatusModel targetStatusModel = JSONObject.parseObject(projectFlowDO.getFlowData(), TargetStatusModel.class);
+        // 获取sr建议评价
+        Integer srEvaluateGrade = GradeEnum.getCodeByText(conclusionVar.getSrEvaluateGrade());
 
+        // 获取更新结项日期,项目状态（取放在flowData中的数据）
+        TargetStatusModel targetStatusModel = JSONObject.parseObject(projectFlowDO.getFlowData(), TargetStatusModel.class);
         Date conclusionDate = new Date();
         Integer oldStatus = projectDO.getStatus();
         Integer newStatus = targetStatusModel.getTargetStatus();
 
+        // 组装，更新项目数据
         ProjectDO updateDO = new ProjectDO();
         updateDO.setId(projectId);
         updateDO.setStatus(newStatus);
         updateDO.setConclusionDate(conclusionDate);
+        updateDO.setSrEvaluateGrade(srEvaluateGrade);
         projectMapper.update(updateDO);
 
         // 结项流程日志处理
@@ -264,8 +268,8 @@ public class ConclusionFlow {
             BigDecimal scoresFloor = dimensionDO.getScoresFloor();
             BigDecimal scoresCeiling = dimensionDO.getScoresCeiling();
 
-            BigDecimal score = null;
-            String scoreDesc = null;
+            BigDecimal score;
+            String scoreDesc;
             BigDecimal pmoScore = null;
             String pmoScoreDesc = null;
 

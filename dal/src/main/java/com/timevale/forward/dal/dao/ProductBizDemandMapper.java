@@ -86,7 +86,7 @@ public interface ProductBizDemandMapper {
      * @param bizDemandId 产品业务需求查询条件
      * @return 列表
      */
-    List<ProductBizDemandDO> getByBizDemandId(@Param("bizDemandId") Long bizDemandId);
+    List<ProductBizDemandDO> getByBdId(@Param("bizDemandId") Long bizDemandId);
 
     /**
      * 查询业务需求关联产品需求列表
