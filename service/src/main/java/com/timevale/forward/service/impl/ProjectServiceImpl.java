@@ -36,6 +36,7 @@ import com.timevale.forward.service.observer.event.ProjectEstablishDateChangeMsg
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.StringUtil;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateStyle;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -63,6 +64,7 @@ import java.util.stream.Collectors;
  * @date 2021-12-13 13:58
  **/
 @Slf4j
+@LogPoint
 @RestService
 public class ProjectServiceImpl implements ProjectService {
 

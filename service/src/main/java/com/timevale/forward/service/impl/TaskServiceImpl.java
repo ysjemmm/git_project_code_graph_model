@@ -33,6 +33,7 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.TaskDoneMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -62,6 +63,7 @@ import static com.timevale.forward.service.constant.CommonConstant.SECONDS_PER_H
  * @date 2021-12-13 13:58
  **/
 @Slf4j
+@LogPoint
 @RestService
 public class TaskServiceImpl implements TaskService {
 

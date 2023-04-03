@@ -40,8 +40,6 @@ import java.util.stream.Collectors;
                 PlanReleaseDateEnum.class,
                 CustomerDevTypeEnum.class,
                 PlanReleaseDateEnum.class,
-                YesOrNoEnum.class,
-                BizDemandStatusEnum.class
         }
 )
 public interface BizDemandCopier {
