@@ -16,7 +16,7 @@ import java.util.Date;
  **/
 @Getter
 @Setter
-@ApiModel("任务执行请求")
+@ApiModel("任务完成请求")
 public class TaskDoneReq extends ToString {
 
     @ApiModelProperty("任务id")
