@@ -31,4 +31,11 @@ public class ProductDemandMD extends BaseMD{
      */
     @FieldCompare(fieldName = "需求负责人")
     private String owner;
+
+
+    /**
+     * 需求描述
+     */
+    @FieldCompare(fieldName = "需求描述")
+    private String desc;
 }

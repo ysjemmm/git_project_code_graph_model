@@ -154,6 +154,9 @@ public class BugOnlineModifyReq extends ToString {
 
     @ApiModelProperty("驳回原因归因阶段")
     private Integer dismissCauseStage;
+
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
 }
 
 

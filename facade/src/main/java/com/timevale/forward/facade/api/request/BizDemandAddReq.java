@@ -49,7 +49,7 @@ public class BizDemandAddReq extends BaseReq {
     private Boolean createCustomer;
 
     @ApiModelProperty("需求描述")
-    @Length(max = 1000)
+    @Length(max = 20000,message = "需求描述字数过大,请重新输入")
     private String desc;
 
     @ApiModelProperty("抄送人")

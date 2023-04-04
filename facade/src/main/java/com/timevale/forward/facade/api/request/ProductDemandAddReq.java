@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -38,6 +39,7 @@ public class ProductDemandAddReq extends BaseReq {
     private PersonAddReq demandOwner;
 
     @ApiModelProperty("描述")
+    @Length(max = 20000, message = "需求描述字数过大,请重新输入")
     private String desc;
 
     @ApiModelProperty("抄送人")

@@ -451,7 +451,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             // 发起变更记录时不直接修改产品需求描述
             productDemandModifyReq.setDesc(oldProductDemand.getDesc());
         }
-        checkDescLength(productDemandModifyReq.getDesc());
+
         ProductDemandDO newProductDemand = ProductDemandCopier.INSTANCE.convert(productDemandModifyReq);
         newProductDemand.setType(JSON.toJSONString(productDemandModifyReq.getTypes()));
         productDemandMapper.update(newProductDemand);
@@ -460,6 +460,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         // 抄送人
         personComponent.update(productDemandModifyReq.getRecipients(), newProductDemand.getId(), PersonTypeEnum.PRODUCT_DEMAND_CC.getCode());
 
+        // 日志
         productDemandLogComponent.addLogWhenModifyData(oldProductDemand, newProductDemand);
 
         productDemandDescFlowComponent.startProductDemandDescChangeFlow(productDemandModifyReq);
