@@ -262,7 +262,7 @@
             <if test="name != null">
                 `name` = #{name},
             </if>
-            <if test="customer_grade != null">
+            <if test="customerGrade != null">
                 customer_grade = #{customerGrade},
             </if>
             <if test="operator != null">

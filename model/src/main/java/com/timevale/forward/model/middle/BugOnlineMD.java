@@ -137,4 +137,10 @@ public class BugOnlineMD extends BaseMD{
     @FieldCompare(fieldName = "驳回原因")
     private String dismissCauseName;
 
+    /**
+     * 客户等级
+     */
+    @FieldCompare(fieldName = "客户等级")
+    private String customerGrade;
+
 }
