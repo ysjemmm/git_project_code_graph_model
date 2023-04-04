@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.Length;
 
 /**
  * @author by YangXu
@@ -48,6 +49,7 @@ public class BizDemandAddReq extends BaseReq {
     private Boolean createCustomer;
 
     @ApiModelProperty("需求描述")
+    @Length(max = 1000)
     private String desc;
 
     @ApiModelProperty("抄送人")
