@@ -140,7 +140,7 @@ public class BugOnlineModifyReq extends ToString {
     @ApiModelProperty("0华南大区，1华北大区，2华东大区，3西部大区，9其他大区")
     private Integer area;
 
-    @ApiModelProperty("bug问题类别:0-空,1-功能问题,2-性能问题,3-兼容性问题,4用户体验问题,5-安全问题")
+    @ApiModelProperty("问题类别:0-空,1-功能问题,2-性能问题,3-兼容性问题,4用户体验问题,5-安全问题")
     private Integer category;
 
     @ApiModelProperty("关联线下bug的id")

@@ -120,9 +120,9 @@ public class BugOnlineMD extends BaseMD{
     private Integer area ;
 
     /**
-     * bug问题类别
+     * 问题类别
      */
-    @FieldCompare(fieldName = "bug问题类别", enumClass = BugOnlineCategoryEnum.class)
+    @FieldCompare(fieldName = "问题类别", enumClass = BugOnlineCategoryEnum.class)
     private Integer category;
     
     /**
