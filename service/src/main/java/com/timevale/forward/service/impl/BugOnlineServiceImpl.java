@@ -22,6 +22,7 @@ import com.timevale.forward.model.middle.BusinessMD;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.integration.crm.CrmClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
@@ -59,6 +60,7 @@ import java.util.stream.Collectors;
 @RestService
 @RequiredArgsConstructor
 public class BugOnlineServiceImpl implements BugOnlineService {
+    private final CrmClient crmClient;
     private final FileMapper fileMapper;
     private final ModelMapper modelMapper;
     private final BugLogMapper bugLogMapper;
@@ -344,6 +346,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
         if (StringUtils.isNotBlank(addReq.getBizId())) {
             outBizDealComponent.checkBizIdExistence(addReq.getBizId());
+        }
+
+        if (StrUtil.isEmpty(addReq.getCustomerGrade()) && StrUtil.isNotEmpty(addReq.getCustomerName())) {
+            String postGrade = crmClient.getPostGrade(addReq.getCustomerName());
+            addReq.setCustomerGrade(postGrade);
         }
 
         // req 转换为 do
