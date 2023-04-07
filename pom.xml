@@ -47,6 +47,7 @@
         <!-- RPC Facade -->
         <filesystem.version>2.0.4-RELEASE</filesystem.version>
         <inuser.security.facade.version>1.1.11-SNAPSHOT</inuser.security.facade.version>
+        <custom-provider-facade.version>2.4.1-SNAPSHOT</custom-provider-facade.version>
         <erp.message-facade.version>1.2.6-SNAPSHOT</erp.message-facade.version>
         <epeius.version>1.0.0-SNAPSHOT</epeius.version>
         <lowcode.version>0.0.1-SNAPSHOT</lowcode.version>
@@ -114,6 +115,12 @@
                 <groupId>com.timevale.security</groupId>
                 <artifactId>facade</artifactId>
                 <version>${inuser.security.facade.version}</version>
+            </dependency>
+            <!-- 客户-->
+            <dependency>
+                <groupId>com.timevale.crm.custom-provider</groupId>
+                <artifactId>custom-provider-facade</artifactId>
+                <version>${custom-provider-facade.version}</version>
             </dependency>
             <!-- erp消息 -->
             <dependency>

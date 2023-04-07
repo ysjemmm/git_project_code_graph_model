@@ -22,6 +22,7 @@ import com.timevale.forward.model.middle.BusinessMD;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.integration.crm.CrmClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
@@ -59,6 +60,7 @@ import java.util.stream.Collectors;
 @RestService
 @RequiredArgsConstructor
 public class BugOnlineServiceImpl implements BugOnlineService {
+    private final CrmClient crmClient;
     private final FileMapper fileMapper;
     private final ModelMapper modelMapper;
     private final BugLogMapper bugLogMapper;
@@ -348,6 +350,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         // req 转换为 do
         BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.req2do(addReq);
+
+        // 客户等级若为空，获取填入客户等级
+        if (StrUtil.isNotEmpty(bugOnlineDO.getCustomerName()) && StrUtil.isEmpty(bugOnlineDO.getCustomerGrade())) {
+            String postGrade = crmClient.getPostGrade(bugOnlineDO.getCustomerName());
+            bugOnlineDO.setCustomerGrade(postGrade);
+        }
 
         // 线上bug落库
         bugOnlineMapper.insert(bugOnlineDO);

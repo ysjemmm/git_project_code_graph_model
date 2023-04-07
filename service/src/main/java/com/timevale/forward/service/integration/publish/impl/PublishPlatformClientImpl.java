@@ -79,8 +79,8 @@ public class PublishPlatformClientImpl implements PublishPlatformClient {
         }
 
         return Optional.ofNullable(jsonObject)
-                .flatMap(obj -> Optional.ofNullable(obj.getJSONObject("result")))
-                .flatMap(obj -> Optional.ofNullable(obj.toJavaObject(DevopsProjectDTO.class)))
+                .map(obj -> obj.getJSONObject("result"))
+                .map(obj -> obj.toJavaObject(DevopsProjectDTO.class))
                 .orElse(null);
     }
 }
