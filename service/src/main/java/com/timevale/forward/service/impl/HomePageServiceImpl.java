@@ -308,35 +308,32 @@ public class HomePageServiceImpl implements HomePageService {
         // 填入数据
         riskWarningGroup.forEach((key, value) -> {
             HomePageRiskWarningVO riskWarningVO = resultMap.get(key);
-            ProjectDO projectDO = projectDOMap.get(key);
-            if (projectDO != null) {
-                riskWarningVO.setProjectId(key);
-                riskWarningVO.setProjectName(projectDO.getName());
-                riskWarningVO.setCategory(projectDO.getCategory());
-                riskWarningVO.setPlanEndDate(projectDO.getPlanEndDate());
-            }
+            riskWarningVO.setProjectId(key);
+            riskWarningVO.setProjectName(value.get(0).getProjectName());
+            riskWarningVO.setPlanEndDate(value.get(0).getPlanEndDate());
+
+            Integer category = Optional.ofNullable(projectDOMap.get(key)).map(ProjectDO::getCategory).orElse(0);
+            riskWarningVO.setCategory(category);
             riskWarningVO.setHomePageProjectNodeVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
         });
         riskWarningTaskGroup.forEach((key, value) -> {
             HomePageRiskWarningVO riskWarningVO = resultMap.get(key);
-            ProjectDO projectDO = projectDOMap.get(key);
-            if (projectDO != null) {
-                riskWarningVO.setProjectId(key);
-                riskWarningVO.setProjectName(projectDO.getName());
-                riskWarningVO.setCategory(projectDO.getCategory());
-                riskWarningVO.setPlanEndDate(projectDO.getPlanEndDate());
-            }
+            riskWarningVO.setProjectId(key);
+            riskWarningVO.setProjectName(value.get(0).getProjectName());
+            riskWarningVO.setPlanEndDate(value.get(0).getPlanEndDate());
+
+            Integer category = Optional.ofNullable(projectDOMap.get(key)).map(ProjectDO::getCategory).orElse(0);
+            riskWarningVO.setCategory(category);
             riskWarningVO.setHomePageTaskVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
         });
         riskWarningSubmitTestGroup.forEach((key, value) -> {
             HomePageRiskWarningVO riskWarningVO = resultMap.get(key);
-            ProjectDO projectDO = projectDOMap.get(key);
-            if (projectDO != null) {
-                riskWarningVO.setProjectId(key);
-                riskWarningVO.setProjectName(projectDO.getName());
-                riskWarningVO.setCategory(projectDO.getCategory());
-                riskWarningVO.setPlanEndDate(projectDO.getPlanEndDate());
-            }
+            riskWarningVO.setProjectId(key);
+            riskWarningVO.setProjectName(value.get(0).getProjectName());
+            riskWarningVO.setPlanEndDate(value.get(0).getPlanEndDate());
+
+            Integer category = Optional.ofNullable(projectDOMap.get(key)).map(ProjectDO::getCategory).orElse(0);
+            riskWarningVO.setCategory(category);
             riskWarningVO.setHomePageSubmitTestVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
         });
 
