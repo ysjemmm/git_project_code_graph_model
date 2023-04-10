@@ -78,5 +78,9 @@ public class TaskBoardDTO {
      */
     private String projectName;
 
+    /**
+     * 项目类别
+     */
+    private Integer category;
 
 }

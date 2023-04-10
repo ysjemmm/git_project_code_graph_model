@@ -521,6 +521,7 @@ public class HomePageServiceImpl implements HomePageService {
                         projectWorkTimeVO.setTaskCount(taskWorkTimeVOList.size());
                         projectWorkTimeVO.setProjectPlanEndDate(projectDateMap.get(a.getProjectId()));
                         projectWorkTimeVO.setTaskWorkTimeVos(taskWorkTimeVOList);
+                        projectWorkTimeVO.setCategory(a.getCategory());
                         projectIds.add(a.getProjectId());
                         projectWorkTimeVOList.add(projectWorkTimeVO);
                     }
@@ -639,6 +640,7 @@ public class HomePageServiceImpl implements HomePageService {
                     Optional.ofNullable(projectById.get(key)).ifPresent(p -> {
                         projectDateWorkTime.setProjectName(p.getName());
                         projectDateWorkTime.setProjectPlanEndDate(p.getPlanEndDate());
+                        projectDateWorkTime.setCategory(p.getCategory());
                     });
                     userPerDateWorkTime.getProjectInfo().add(projectDateWorkTime);
                     projectDateWorkTime.setTaskWorkTimeVos(value.stream().map(

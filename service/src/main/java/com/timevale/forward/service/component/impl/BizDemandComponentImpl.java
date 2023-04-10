@@ -98,6 +98,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         for (GroupResponse childNode : rootNode.getChildNode()) {
             dfsGroupListTree(childNode, deptMap, queryDeptIdSet, StringUtils.EMPTY, false);
         }
+        deptMap.put(Long.valueOf(rootNode.getGroupId()), rootNode);
         return deptMap;
     }
 
