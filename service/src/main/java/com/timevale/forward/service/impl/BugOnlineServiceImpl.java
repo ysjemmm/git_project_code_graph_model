@@ -348,6 +348,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             outBizDealComponent.checkBizIdExistence(addReq.getBizId());
         }
 
+        if (StrUtil.isEmpty(addReq.getCustomerGrade()) && StrUtil.isNotEmpty(addReq.getCustomerName())) {
+            String postGrade = crmClient.getPostGrade(addReq.getCustomerName());
+            addReq.setCustomerGrade(postGrade);
+        }
+
         // req 转换为 do
         BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.req2do(addReq);
 
