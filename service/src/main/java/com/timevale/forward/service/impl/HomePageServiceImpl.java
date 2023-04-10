@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
@@ -243,6 +244,15 @@ public class HomePageServiceImpl implements HomePageService {
         projectIdSet.addAll(warningTaskDTOList.stream().map(HomePageRiskWarningTaskDTO::getProjectId).collect(Collectors.toSet()));
         projectIdSet.addAll(submitTestDTOList.stream().map(HomePageRiskWarningSubmitTestDTO::getProjectId).collect(Collectors.toSet()));
 
+        // 判空处理
+        if (CollUtil.isEmpty(projectIdSet)) {
+            return BaseResult.success(Lists.emptyList());
+        }
+
+        // 查询项目
+        List<ProjectDO> projectDOs = projectMapper.getByIds(projectIdSet);
+        ImmutableMap<Long, ProjectDO> projectDOMap = Maps.uniqueIndex(projectDOs, BaseDO::getId);
+
         // 初始化结果集
         Map<Long, HomePageRiskWarningVO> resultMap = Maps.newHashMap();
         projectIdSet.forEach(key -> resultMap.put(key, new HomePageRiskWarningVO()));
@@ -298,23 +308,35 @@ public class HomePageServiceImpl implements HomePageService {
         // 填入数据
         riskWarningGroup.forEach((key, value) -> {
             HomePageRiskWarningVO riskWarningVO = resultMap.get(key);
-            riskWarningVO.setProjectId(key);
-            riskWarningVO.setProjectName(value.get(0).getProjectName());
-            riskWarningVO.setPlanEndDate(value.get(0).getPlanEndDate());
+            ProjectDO projectDO = projectDOMap.get(key);
+            if (projectDO != null) {
+                riskWarningVO.setProjectId(key);
+                riskWarningVO.setProjectName(projectDO.getName());
+                riskWarningVO.setCategory(projectDO.getCategory());
+                riskWarningVO.setPlanEndDate(projectDO.getPlanEndDate());
+            }
             riskWarningVO.setHomePageProjectNodeVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
         });
         riskWarningTaskGroup.forEach((key, value) -> {
             HomePageRiskWarningVO riskWarningVO = resultMap.get(key);
-            riskWarningVO.setProjectId(key);
-            riskWarningVO.setProjectName(value.get(0).getProjectName());
-            riskWarningVO.setPlanEndDate(value.get(0).getPlanEndDate());
+            ProjectDO projectDO = projectDOMap.get(key);
+            if (projectDO != null) {
+                riskWarningVO.setProjectId(key);
+                riskWarningVO.setProjectName(projectDO.getName());
+                riskWarningVO.setCategory(projectDO.getCategory());
+                riskWarningVO.setPlanEndDate(projectDO.getPlanEndDate());
+            }
             riskWarningVO.setHomePageTaskVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
         });
         riskWarningSubmitTestGroup.forEach((key, value) -> {
             HomePageRiskWarningVO riskWarningVO = resultMap.get(key);
-            riskWarningVO.setProjectId(key);
-            riskWarningVO.setProjectName(value.get(0).getProjectName());
-            riskWarningVO.setPlanEndDate(value.get(0).getPlanEndDate());
+            ProjectDO projectDO = projectDOMap.get(key);
+            if (projectDO != null) {
+                riskWarningVO.setProjectId(key);
+                riskWarningVO.setProjectName(projectDO.getName());
+                riskWarningVO.setCategory(projectDO.getCategory());
+                riskWarningVO.setPlanEndDate(projectDO.getPlanEndDate());
+            }
             riskWarningVO.setHomePageSubmitTestVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
         });
 

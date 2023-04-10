@@ -27,6 +27,9 @@ public class HomePageRiskWarningVO extends ToString {
     @ApiModelProperty("项目名称")
     private String projectName;
 
+    @ApiModelProperty("项目类型：0产研，1内部")
+    private Integer category;
+
     @ApiModelProperty("项目计划上线时间")
     private Date planEndDate;
 
