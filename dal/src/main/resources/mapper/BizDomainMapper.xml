@@ -5,14 +5,12 @@
     <select id="selectAllBizDomain" resultType="com.timevale.forward.dal.entity.BizDomainDO">
         select *
         from biz_domain
-        WHERE is_deleted = false
     </select>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BizDomainDO">
         select *
         from biz_domain
         where id = #{id}
-          AND is_deleted = false
     </select>
 
     <select id="getByIds" resultType="com.timevale.forward.dal.entity.BizDomainDO">
@@ -25,7 +23,6 @@
                     #{item}
                 </foreach>
             </if>
-            AND is_deleted = false
         </where>
     </select>
 
@@ -75,7 +72,6 @@
                     #{item}
                 </foreach>
             </if>
-            AND is_deleted = false
         </where>
     </select>
 
