@@ -197,7 +197,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
             //被驳回和作废的业务需求不处理
             if (!BizDemandStatusEnum.REJECT.getCode().equals(v.getStatus()) && !BizDemandStatusEnum.INVALID.getCode().equals(v.getStatus())) {
                 //当前业务需求下的所有产品需求
-                List<ProductBizDemandDO> productDemands = productBizDemandMapper.getByBizDemandId(bid);
+                List<ProductBizDemandDO> productDemands = productBizDemandMapper.getByBdId(bid);
                 Integer productStatus;
                 if (invalid) {
                     //如果作废:计算业务需求状态时需要过滤掉本次被解除的产品需求
@@ -273,7 +273,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     @Override
     public void sendDingMsg(Integer oldStatus, Integer newStatus, Long bizDemandId) {
         if (!Objects.equals(oldStatus, newStatus) && BizDemandStatusEnum.statusNeedNotice(newStatus)) {
-            BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+            BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
             Date projectEndDate = bizDemandDO.getProjectEndDate();
             log.info("发送钉钉消息,项目发布时间={},更新前状态={},更新后状态={},业务需求id={}", projectEndDate, oldStatus, newStatus, bizDemandId);
             if (projectEndDate != null) {
@@ -292,12 +292,12 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
     @Override
     public void updateDemandStatusWhenUnlink(Long demandId, Long productDemandId, boolean bizDemand) {
         if (bizDemand) {
-            List<ProductBizDemandDO> demandDOList = productBizDemandMapper.getByBizDemandId(demandId);
+            List<ProductBizDemandDO> demandDOList = productBizDemandMapper.getByBdId(demandId);
 
             Integer productStatus = demandDOList.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(null);
 
             Integer newStatus = bizDemandComponent.getBizDemandStatus(productStatus);
-            BizDemandDO bizDemandDO = bizDemandMapper.selectById(demandId);
+            BizDemandDO bizDemandDO = bizDemandMapper.get(demandId);
             Integer oldStatus = bizDemandDO.getStatus();
             log.info("产品需求删除关联,更新前状态={},更新后状态={},产品需求id={},业务需求id={}", oldStatus, newStatus, productDemandId, demandId);
             if (!Objects.equals(newStatus, oldStatus) && !BizDemandStatusEnum.statusNoNeedTodo(oldStatus)) {
@@ -362,7 +362,7 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         }
 
         for (Long bizDemandId : bizDemandIdList) {
-            bizDemandComponent.updateCustomerProject(bizDemandId);
+            bizDemandComponent.updateCustomerPj(bizDemandId);
         }
     }
 

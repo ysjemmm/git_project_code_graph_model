@@ -98,11 +98,8 @@
         where id = #{id}
     </update>
 
-    <select id="selectById" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
-        select id, project_id, product_line_id, name, status, last_operator, last_operator_id, operator, operator_id,
-               proposer, proposer_id, priority, env, reason, source, belong, frequency, `desc`, open_count, return_count,
-               delay_handle_reason, unhandle_reason, cause, solve_plan, expect_solve_date,biz_demand_id,prev_status,
-               is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+    <select id="get" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
+        select *
         from bug_offline
         where id = #{id} and is_deleted = false
     </select>
@@ -327,5 +324,19 @@
         SELECT id, name
         FROM bug_offline
         WHERE biz_demand_id = #{bizDemandId}
+    </select>
+
+    <select id="getByIds" resultType="com.timevale.forward.dal.entity.BugOfflineDO">
+        SELECT *
+        FROM bug_offline
+        <where>
+            AND id IN
+            <foreach collection="ids" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+            <if test="containDeleted == null or containDeleted == false">
+                AND is_deleted = false
+            </if>
+        </where>
     </select>
 </mapper>

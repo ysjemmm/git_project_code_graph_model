@@ -43,4 +43,6 @@ public interface DataCorrectService {
     BaseResult<Boolean> bugOnlineCloseStatusOperatorInit(Integer count);
 
     BaseResult<Boolean> updateEval();
+
+    BaseResult<Boolean> updateBugOnlineQuery();
 }

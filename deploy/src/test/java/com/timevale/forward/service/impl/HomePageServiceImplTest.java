@@ -68,9 +68,6 @@ public class HomePageServiceImplTest extends AbstractTestNGSpringContextTests {
     private BizDemandMapper bizDemandMapper;
 
     @Mock
-    private TaskMapper taskMapper;
-
-    @Mock
     private BugOfflineMapper bugOfflineMapper;
 
     @Mock
@@ -84,7 +81,7 @@ public class HomePageServiceImplTest extends AbstractTestNGSpringContextTests {
         when(innerUserPersonClient.getAllMyStaffWithSelf(any(),any())).thenReturn(Collections.singletonList("user"));
 
         ProjectDO projectDO = new ProjectDO();
-        when(projectMapper.selectByTeamMember(any())).thenReturn(Collections.singletonList(projectDO));
+        when(projectMapper.getByTeamMember(any())).thenReturn(Collections.singletonList(projectDO));
 
         BizDemandListDO bizDemandListDO = new BizDemandListDO();
         when(bizDemandMapper.selectList(any())).thenReturn(Collections.singletonList(bizDemandListDO));
@@ -111,7 +108,7 @@ public class HomePageServiceImplTest extends AbstractTestNGSpringContextTests {
 
         ProjectDO projectDO = new ProjectDO();
         projectDO.setStatus(ProjectStatusEnum.PLANING.getCode());
-        when(projectMapper.selectByTeamMember(any())).thenReturn(Collections.singletonList(projectDO));
+        when(projectMapper.getByTeamMember(any())).thenReturn(Collections.singletonList(projectDO));
 
         BizDemandListDO evaluateDO = new BizDemandListDO();
         evaluateDO.setStatus(BizDemandStatusEnum.EVALUATE.getCode());

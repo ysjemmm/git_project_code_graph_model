@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
@@ -108,7 +109,7 @@ public class HomePageServiceImpl implements HomePageService {
             List<String> allMyStaffWithSelf = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
 
             // 项目信息
-            List<ProjectDO> projectDOList = projectMapper.selectByTeamMember(allMyStaffWithSelf);
+            List<ProjectDO> projectDOList = projectMapper.getByTeamMember(allMyStaffWithSelf);
             projectDOList = projectDOList.stream().filter(e -> !ProjectStatusEnum.INVALID.getCode().equals(e.getStatus())).collect(Collectors.toList());
 
             dataIndicatorVO.setProjectReadyStartCount((int) projectDOList.stream().filter(e -> ProjectNodeStatusEnum.READY_START.getCode().equals(e.getNodeStatus())).count());
@@ -137,10 +138,10 @@ public class HomePageServiceImpl implements HomePageService {
     @Override
     public BaseResult<HomePageTodoCardVO> getTodoCard(HomePageBaseReq homePageBaseReq) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        int taskCount = 0;
         int projectCount;
-        int bizDemandCount = 0;
         int bugOnLineCount;
+        int taskCount = 0;
+        int bizDemandCount = 0;
         int bugOfflineCount = 0;
         int bizDemandReceivedCount = 0;
 
@@ -148,7 +149,7 @@ public class HomePageServiceImpl implements HomePageService {
         List<String> allMyStaffWithSelf = Lists.newArrayList(userInfo.getId());
 
         // 进行中的项目
-        List<ProjectDO> projectDOList = projectMapper.selectByTeamMember(allMyStaffWithSelf);
+        List<ProjectDO> projectDOList = projectMapper.getByTeamMember(allMyStaffWithSelf);
         projectCount = (int) projectDOList.stream().filter(e -> ProjectStatusEnum.ongoing(e.getStatus())).count();
 
         // 产品添加待处理业务需求，开发测试添加待处理任务
@@ -243,6 +244,15 @@ public class HomePageServiceImpl implements HomePageService {
         projectIdSet.addAll(warningTaskDTOList.stream().map(HomePageRiskWarningTaskDTO::getProjectId).collect(Collectors.toSet()));
         projectIdSet.addAll(submitTestDTOList.stream().map(HomePageRiskWarningSubmitTestDTO::getProjectId).collect(Collectors.toSet()));
 
+        // 判空处理
+        if (CollUtil.isEmpty(projectIdSet)) {
+            return BaseResult.success(Lists.emptyList());
+        }
+
+        // 查询项目
+        List<ProjectDO> projectDOs = projectMapper.getByIds(projectIdSet);
+        ImmutableMap<Long, ProjectDO> projectDOMap = Maps.uniqueIndex(projectDOs, BaseDO::getId);
+
         // 初始化结果集
         Map<Long, HomePageRiskWarningVO> resultMap = Maps.newHashMap();
         projectIdSet.forEach(key -> resultMap.put(key, new HomePageRiskWarningVO()));
@@ -301,6 +311,9 @@ public class HomePageServiceImpl implements HomePageService {
             riskWarningVO.setProjectId(key);
             riskWarningVO.setProjectName(value.get(0).getProjectName());
             riskWarningVO.setPlanEndDate(value.get(0).getPlanEndDate());
+
+            Integer category = Optional.ofNullable(projectDOMap.get(key)).map(ProjectDO::getCategory).orElse(0);
+            riskWarningVO.setCategory(category);
             riskWarningVO.setHomePageProjectNodeVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
         });
         riskWarningTaskGroup.forEach((key, value) -> {
@@ -308,6 +321,9 @@ public class HomePageServiceImpl implements HomePageService {
             riskWarningVO.setProjectId(key);
             riskWarningVO.setProjectName(value.get(0).getProjectName());
             riskWarningVO.setPlanEndDate(value.get(0).getPlanEndDate());
+
+            Integer category = Optional.ofNullable(projectDOMap.get(key)).map(ProjectDO::getCategory).orElse(0);
+            riskWarningVO.setCategory(category);
             riskWarningVO.setHomePageTaskVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
         });
         riskWarningSubmitTestGroup.forEach((key, value) -> {
@@ -315,6 +331,9 @@ public class HomePageServiceImpl implements HomePageService {
             riskWarningVO.setProjectId(key);
             riskWarningVO.setProjectName(value.get(0).getProjectName());
             riskWarningVO.setPlanEndDate(value.get(0).getPlanEndDate());
+
+            Integer category = Optional.ofNullable(projectDOMap.get(key)).map(ProjectDO::getCategory).orElse(0);
+            riskWarningVO.setCategory(category);
             riskWarningVO.setHomePageSubmitTestVOList(value.stream().map(HomePageRiskWarningCopier.INSTANCE::convert).collect(Collectors.toList()));
         });
 
@@ -521,6 +540,7 @@ public class HomePageServiceImpl implements HomePageService {
                         projectWorkTimeVO.setTaskCount(taskWorkTimeVOList.size());
                         projectWorkTimeVO.setProjectPlanEndDate(projectDateMap.get(a.getProjectId()));
                         projectWorkTimeVO.setTaskWorkTimeVos(taskWorkTimeVOList);
+                        projectWorkTimeVO.setCategory(a.getCategory());
                         projectIds.add(a.getProjectId());
                         projectWorkTimeVOList.add(projectWorkTimeVO);
                     }
@@ -639,6 +659,7 @@ public class HomePageServiceImpl implements HomePageService {
                     Optional.ofNullable(projectById.get(key)).ifPresent(p -> {
                         projectDateWorkTime.setProjectName(p.getName());
                         projectDateWorkTime.setProjectPlanEndDate(p.getPlanEndDate());
+                        projectDateWorkTime.setCategory(p.getCategory());
                     });
                     userPerDateWorkTime.getProjectInfo().add(projectDateWorkTime);
                     projectDateWorkTime.setTaskWorkTimeVos(value.stream().map(

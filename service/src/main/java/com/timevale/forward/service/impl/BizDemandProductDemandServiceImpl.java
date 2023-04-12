@@ -6,8 +6,14 @@ import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandLinkProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProductBizDemandCondition;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.BizDemandMapper;
+import com.timevale.forward.dal.dao.BizLabelMapper;
+import com.timevale.forward.dal.dao.ProductBizDemandMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.entity.BizDemandDO;
+import com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO;
+import com.timevale.forward.dal.entity.BizLabelDO;
+import com.timevale.forward.dal.entity.ProductBizDemandDO;
 import com.timevale.forward.facade.api.client.BizDemandProductDemandService;
 import com.timevale.forward.facade.api.client.ProductDemandService;
 import com.timevale.forward.facade.api.query.BizDemandLinkProductDemandQueryList;
@@ -34,17 +40,15 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -111,56 +115,27 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<BizDemandStatusVO> linkProductDemand(BizDemandLinkProductDemandReq bizDemandLinkProductDemandReq) {
-        Long bizDemandId = bizDemandLinkProductDemandReq.getId();
-        List<Long> productDemandIdList = bizDemandLinkProductDemandReq.getProductDemandIdList();
+        final Long bdId = bizDemandLinkProductDemandReq.getId();
+        BizDemandDO bdDO = bizDemandMapper.get(bdId);
+        AssertUtil.notNull(bdDO, "不存在该业务需求");
 
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
-        if(bizDemandDO == null){
-            throw new BaseBizRuntimeException("不存在该业务需求");
-        }
+        // 创建和产品需求的关联关系
+        List<Long> willLinkPdIdList = bizDemandLinkProductDemandReq.getProductDemandIdList();
+        List<ProductBizDemandDO> newLinkData = willLinkPdIdList.stream()
+                .map(e -> ProductBizDemandCopier.INSTANCE.convert(bdId, e))
+                .collect(Collectors.toList());
+        productBizDemandMapper.batchInsert(newLinkData);
 
-        // 获取当前关联数据
-        List<ProductBizDemandDO> list = productBizDemandMapper.select(ProductBizDemandCondition.builder()
-                .bizDemandId(bizDemandId)
-                .build());
-
-        // 数据转换为集合，判断交集补集
-        Set<Long> newLinkData = new HashSet<>(productDemandIdList);
-        Map<Long, ProductBizDemandDO> oldLinkDate = list.stream()
-                .collect(Collectors.toMap(ProductBizDemandDO::getProductDemandId, Function.identity(), (a, b) -> a));
-
-        // 更新和新增数据的集合
-        List<ProductBizDemandDO> insertLinkData = Lists.newArrayList();
-        List<Long> updateLinkData = Lists.newArrayList();
-
-        // 判断旧数据是否存在新数据中，更新逻辑删除标识
-        for (Map.Entry<Long, ProductBizDemandDO> entry : oldLinkDate.entrySet()) {
-            if(newLinkData.contains(entry.getKey()) && entry.getValue().getIsDeleted()){
-                updateLinkData.add(entry.getValue().getId());
-            }
-        }
-
-        // 判断新数据是否在旧数据中，添加新增数据
-        for (Long productDemandId : newLinkData) {
-            if(!oldLinkDate.containsKey(productDemandId)){
-                ProductBizDemandDO productBizDemandDO = ProductBizDemandCopier.INSTANCE.convert(bizDemandId, productDemandId);
-                insertLinkData.add(productBizDemandDO);
-            }
-        }
-
-        // 新增和更新非空数据
-        if(!insertLinkData.isEmpty()){productBizDemandMapper.inserts(insertLinkData);}
-        if(!updateLinkData.isEmpty()){productBizDemandMapper.updates(updateLinkData, false);}
-
-        bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
-
-        BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bizDemandDO);
+        // 更新业务需求状态
+        bizDemandComponent.updateStatus(bdId);
 
         // 日志
-        bizDemandLogComponent.addLogWhenBizDemandLinkProductDemand(bizDemandId, productDemandIdList);
+        bizDemandLogComponent.linkPd(bdId, willLinkPdIdList);
 
+        // 更新客开项目状态
+        bizDemandComponent.updateCustomerPj(bdId);
 
-        bizDemandComponent.updateCustomerProject(bizDemandId);
+        BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bdDO);
 
         return BaseResult.success(bizDemandStatusVO);
     }
@@ -168,7 +143,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<BizDemandStatusVO> unlinkProductDemand(BizDemandUnlinkProductDemandReq bizDemandUnlinkProductDemandReq) {
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandUnlinkProductDemandReq.getBizDemandId());
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandUnlinkProductDemandReq.getBizDemandId());
         if(bizDemandDO == null){
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
@@ -194,13 +169,13 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         productBizDemandMapper.delete(productBizDemandDO);
 
-        bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
+        bizDemandComponent.updateStatus(bizDemandId);
 
         // 判断当前状态
         BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bizDemandDO);
 
         // 产品需求关联日志
-        bizDemandLogComponent.addLogWhenBizDemandUnLinkProductDemand(bizDemandId, productDemandId);
+        bizDemandLogComponent.unlinkPd(bizDemandId, productDemandId);
 
         // 刷新客开
         for (Long projectId : linkProjectIds) {
@@ -211,14 +186,14 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
     }
 
     private BizDemandStatusVO compareBizDemandStatus(BizDemandDO oldBizDemandDO){
-        Long bizDemandId = oldBizDemandDO.getId();
-        BizDemandDO newBizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        final Long bdId = oldBizDemandDO.getId();
+        BizDemandDO newBizDemandDO = bizDemandMapper.get(bdId);
 
         Integer oldStatus = oldBizDemandDO.getStatus();
         Integer newStatus = newBizDemandDO.getStatus();
 
         String statusText = BizDemandStatusEnum.getTextByCode(newStatus);
-        Date newEndDate = bizDemandComponent.getProjectEndDate(bizDemandId);
+        Date newEndDate = bizDemandComponent.getProjectEndDate(bdId);
 
         // 如果新旧状态不同
         if(!oldStatus.equals(newStatus)){
@@ -238,13 +213,11 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
             bizDemandLogComponent.addLogWhenModifyData(
                     BizDemandStatusEnum.getTextByCode(oldStatus),
                     BizDemandStatusEnum.getTextByCode(newStatus),
-                    bizDemandId,
+                    bdId,
                     BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                     false
             );
         }
-
-
 
         Date oldEndDate = oldBizDemandDO.getProjectEndDate();
         if(!Objects.equals(oldEndDate, newEndDate)){
@@ -253,9 +226,9 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
             // 日志
             bizDemandLogComponent.addLogWhenModifyData(
-                    oldEndDate == null ? StringUtils.EMPTY : DateUtil.parseToString(oldEndDate, DateStyle.YYYY_MM_DD),
-                    newEndDate == null ? StringUtils.EMPTY : DateUtil.parseToString(newEndDate, DateStyle.YYYY_MM_DD),
-                    bizDemandId,
+                    oldEndDate == null ? "" : DateUtil.parseToString(oldEndDate, DateStyle.YYYY_MM_DD),
+                    newEndDate == null ? "" : DateUtil.parseToString(newEndDate, DateStyle.YYYY_MM_DD),
+                    bdId,
                     BizChangeLogFieldEnum.PROJECT_RELEASE_DATE.getText(),
                     false
             );
@@ -274,7 +247,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                 // 发送通知
                 messageEventPublisher.publish(new BizDemandPlanReleaseDateMsgEvent(
                         this,
-                        bizDemandId,
+                        bdId,
                         newBizDemandDO.getSubmitManId(),
                         newBizDemandDO.getName(),
                         BizDemandStatusEnum.getTextByCode(newBizDemandDO.getStatus()),
@@ -285,22 +258,23 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                 bizDemandLogComponent.addLogWhenModifyData(
                         PlanReleaseDateEnum.getTextByCode(oldBizDemandDO.getPlanReleaseDate()),
                         PlanReleaseDateEnum.getTextByCode(newPlanReleaseDate),
-                        bizDemandId,
+                        bdId,
                         BizChangeLogFieldEnum.PLAN_RELEASE_DATE.getText(),
                         false
                 );
             }
         }
-        bizDemandMapper.fullUpdate(newBizDemandDO);
+
+
+        bizDemandMapper.updateCanNull(newBizDemandDO);
 
         // 返回当前状态
-        BizDemandStatusVO bizDemandStatusVO = new BizDemandStatusVO();
-        bizDemandStatusVO.setStatus(newStatus);
-        bizDemandStatusVO.setStatusText(statusText);
-        bizDemandStatusVO.setProjectEndDate(newEndDate);
-        bizDemandStatusVO.setPlanReleaseDate(newPlanReleaseDate);
-        bizDemandStatusVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(newPlanReleaseDate));
-        return bizDemandStatusVO;
+        return new BizDemandStatusVO()
+                .setStatus(newStatus)
+                .setStatusText(statusText)
+                .setProjectEndDate(newEndDate)
+                .setPlanReleaseDate(newPlanReleaseDate)
+                .setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(newPlanReleaseDate));
     }
 
     @Override
@@ -393,7 +367,7 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
     @Override
     public BaseResult<BizDemandStatusVO> getBizDemandStatus(Long bizDemandId) {
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
         BizDemandStatusVO statusVO = BizDemandCopier.INSTANCE.change(bizDemandDO);
 
         statusVO.setStatusText(BizDemandStatusEnum.getTextByCode(statusVO.getStatus()));

@@ -214,8 +214,6 @@
             and p.type = 40
             and p.is_deleted = false
             and t.is_deleted = false
-            <!-- 暂时排除里程碑任务 -->
-            and t.id not in (select relation_id from project_milestone where type = 0 and is_deleted = false)
         group by t.id
     </select>
 
@@ -239,8 +237,6 @@
         and t.project_id = #{projectId}
         and t.is_deleted = false
         and p.is_deleted = false
-        <!-- 暂时排除里程碑任务 -->
-        and t.id not in (select relation_id from project_milestone where type = 0 and is_deleted = false)
         group by p.user_id
     </select>
 
@@ -279,7 +275,7 @@
         select distinct a.id, a.project_id, a.product_line_id, a.name, a.stage, a.status, a.todo, a.todo_id,
         a.plan_start_date, a.plan_end_date, a.plan_use_time, a.actual_start_date, a.actual_end_date, a.task_use_time,
         a.is_deleted, a.create_man_id, a.create_man, a.create_date, a.modify_man_id, a.modify_man,
-        a.modify_date,c.plan_end_date projectPlanEndDate,c.name projectName
+        a.modify_date,c.plan_end_date projectPlanEndDate,c.name projectName, c.category
         from task a
         join person b on a.id=b.main_id and b.type=40 and b.is_deleted = false
         join project c on a.project_id=c.id
@@ -302,8 +298,6 @@
             </foreach>
             and c.status not in (-10,-20)
             and a.is_deleted = false
-        <!-- 暂时排除里程碑任务 -->
-        and a.id not in (select relation_id from project_milestone where type = 0 and is_deleted = false)
         </where>
     </select>
 

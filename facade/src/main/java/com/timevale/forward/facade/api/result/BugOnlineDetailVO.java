@@ -171,4 +171,36 @@ public class BugOnlineDetailVO extends ToString {
     @ApiModelProperty("业务需求列表")
     private List<BizDemandVO> bizDemands;
 
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
+
+    @ApiModelProperty("问题类别:0-空,1-功能问题,2-性能问题,3-兼容性问题,4用户体验问题,5-安全问题")
+    private Integer category;
+
+    @ApiModelProperty("问题类别:0-空,1-功能问题,2-性能问题,3-兼容性问题,4用户体验问题,5-安全问题")
+    private String categoryName;
+
+    @ApiModelProperty("关联线下bug的id")
+    private Long bugOfflineId;
+
+    @ApiModelProperty("关联线下bug的名称")
+    private String bugOfflineName;
+
+    @ApiModelProperty("bug责任人列表")
+    private List<PersonVO> principalList;
+
+    @ApiModelProperty("归因阶段")
+    private Integer reasonStage;
+
+    @ApiModelProperty("归因阶段描述")
+    private String reasonStageName;
+
+    @ApiModelProperty("驳回原因归因阶段")
+    private Integer dismissCauseStage;
+
+    @ApiModelProperty("驳回原因归因阶段描述")
+    private String dismissCauseStageName;
+
+    @ApiModelProperty("打开次数")
+    private Integer openCount;
 }

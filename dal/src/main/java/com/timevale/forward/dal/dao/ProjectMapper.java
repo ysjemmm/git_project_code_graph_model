@@ -87,7 +87,7 @@ public interface ProjectMapper {
      * @param teamMemberList 团队成员列表
      * @return ProjectDO List
      */
-    List<ProjectDO> selectByTeamMember(@Param("teamMemberList") List<String> teamMemberList);
+    List<ProjectDO> getByTeamMember(@Param("teamMemberList") List<String> teamMemberList);
 
     /**
      * @param projectIds     项目id

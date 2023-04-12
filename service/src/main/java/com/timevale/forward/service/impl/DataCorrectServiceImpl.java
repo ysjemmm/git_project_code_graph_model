@@ -13,19 +13,18 @@ import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.common.annotation.RestService;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xingyun
@@ -34,45 +33,30 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestService
 public class DataCorrectServiceImpl implements DataCorrectService {
-
     @Resource
     private ProjectComponent projectComponent;
-
     @Resource
     private ProjectMapper projectMapper;
-
     @Resource
     private ProjectNodeMapper projectNodeMapper;
-
     @Resource
     private TestBillMapper testBillMapper;
-
     @Resource
     private BizDemandMapper bizDemandMapper;
-
     @Resource
     private BizDemandComponent bizDemandComponent;
-
-    @Resource
-    private ProjectProductDemandMapper projectProductDemandMapper;
-
-    @Resource
-    private ProductDemandMapper productDemandMapper;
-
     @Resource
     private ProjectNodeComponent projectNodeComponent;
     @Resource
     private TroubleTicketMapper troubleTicketMapper;
-
     @Resource
     private BugOnlineStatusOperatorMapper bugOnlineStatusOperatorMapper;
-
     @Resource
     private BugLogMapper bugLogMapper;
-
     @Resource
     private BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
-
+    @Resource
+    private SearchConditionMapper searchConditionMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -210,4 +194,40 @@ public class DataCorrectServiceImpl implements DataCorrectService {
         return BaseResult.success(true);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResult<Boolean> updateBugOnlineQuery() {
+        String reasonReg = ",\"reasons\":\\[[\\d,\\,]+\\],";
+        String dismissReg = ",\"dismissCauseList\":\\[[\\d,\\,]+\\],";
+
+        String reasonReplace = ",\"reasons\":[],";
+        String dismissReplace = ",\"dismissCauseList\":[],";
+
+        Pattern reasonPattern = Pattern.compile(reasonReg);
+        Pattern dismissPattern = Pattern.compile(dismissReg);
+
+        List<SearchConditionDO> conditionDOs = searchConditionMapper.getByModel(50);
+        for (SearchConditionDO conditionDO : conditionDOs) {
+            String content = conditionDO.getContent();
+
+            boolean needUpdate = false;
+
+            Matcher reasonMatcher = reasonPattern.matcher(content);
+            if (reasonMatcher.find()) {
+                needUpdate = true;
+                content = reasonMatcher.replaceAll(reasonReplace);
+            }
+
+            Matcher dismissMatcher = dismissPattern.matcher(content);
+            if (dismissMatcher.find()) {
+                needUpdate = true;
+                content = dismissMatcher.replaceAll(dismissReplace);
+            }
+
+            if (needUpdate) {
+                searchConditionMapper.updateContent(conditionDO.getId(), content);
+            }
+        }
+        return BaseResult.success(true);
+    }
 }

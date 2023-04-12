@@ -25,7 +25,9 @@ public enum PersonTypeEnum {
     // 60 线上bug-抄送人
     BUG_ONLINE_CC(60),
     // 70 故障单-处理人
-    TROUBLE_TICKET_HANDLER(70)
+    TROUBLE_TICKET_HANDLER(70),
+    // 80 线上bug-责任人
+    BUG_ONLINE_PRINCIPAL(80)
     ;
 
     private final Integer code;

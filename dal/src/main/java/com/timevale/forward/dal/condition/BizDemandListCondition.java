@@ -1,16 +1,11 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.forward.dal.annotation.WildcardEscape;
-import com.timevale.mandarin.common.query.QueryBase;
-
-import java.util.Date;
-import java.util.List;
-
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -18,7 +13,7 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 @Builder
-public class BizDemandListCondition extends QueryBase {
+public class BizDemandListCondition{
 
     /**
      * 名称
@@ -170,4 +165,7 @@ public class BizDemandListCondition extends QueryBase {
      * 是否为客开需求
      */
     private Boolean customerDevDemand;
+
+    public int pageNum = 1;
+    public int pageSize = 20;
 }

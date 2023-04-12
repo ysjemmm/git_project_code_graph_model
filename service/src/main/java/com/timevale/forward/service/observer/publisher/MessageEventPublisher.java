@@ -13,7 +13,7 @@ import javax.annotation.Resource;
 @Component
 public class MessageEventPublisher {
     @Resource
-    ApplicationEventPublisher applicationEventPublisher;
+    private ApplicationEventPublisher applicationEventPublisher;
 
     public void publish(MessageEvent event){
         applicationEventPublisher.publishEvent(event);

@@ -143,10 +143,10 @@ public interface BugOfflineService {
     /**
      * 查询bug日志列表
      *
-     * @param bugLogQueryList 参数
+     * @param logQuery 参数
      * @return 返回分页结果
      */
-    BaseResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList bugLogQueryList);
+    BaseResult<PageQueryResult<BugLogVO>> bugLogList(BugLogQueryList logQuery);
 
 
 }

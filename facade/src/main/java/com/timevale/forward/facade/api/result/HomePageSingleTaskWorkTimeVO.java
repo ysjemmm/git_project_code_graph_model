@@ -70,4 +70,6 @@ public class HomePageSingleTaskWorkTimeVO extends ToString {
     @ApiModelProperty("实际耗时")
     private BigDecimal taskUseTime;
 
+    @ApiModelProperty("项目类型：0产研，1内部")
+    private Integer category;
 }

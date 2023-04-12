@@ -20,7 +20,7 @@ public interface BugOnlineMapper {
      * @param id 线上bug的id
      * @return 返回值
      */
-    BugOnlineDO selectById(@Param("id") Long id);
+    BugOnlineDO get(@Param("id") Long id);
 
     /**
      * 选择所有id
@@ -42,22 +42,14 @@ public interface BugOnlineMapper {
      *
      * @param bugOnlineDO 参数
      */
-    void update(@Param("bugOnlineDO") BugOnlineDO bugOnlineDO);
-
-    /**
-     * 完整更新
-     *
-     * @param bugOnlineDO 线上bugDO
-     */
-    void fullUpdate(@Param("bugOnlineDO") BugOnlineDO bugOnlineDO);
+    void update(BugOnlineDO bugOnlineDO);
 
     /**
      * 插入线上bug
      *
      * @param bugOnlineDO 参数
-     * @return Long
      */
-    Long insert(@Param("bugOnlineDO") BugOnlineDO bugOnlineDO);
+    void insert(BugOnlineDO bugOnlineDO);
 
     /**
      * 根据线上bug的id查询线上bug
@@ -81,7 +73,7 @@ public interface BugOnlineMapper {
      * @param ids 线上bug的id
      * @return 返回值
      */
-    List<BugOnlineDO> selectByIds(@Param("ids") Collection<Long> ids,@Param("containDeleted")Boolean containDeleted);
+    List<BugOnlineDO> getByIds(@Param("ids") Collection<Long> ids, @Param("containDeleted")Boolean containDeleted);
 
     /**
      * 根据线上bug的业务需求id查询线上bug
@@ -110,10 +102,27 @@ public interface BugOnlineMapper {
     @Select("select count(*) from bug_online where biz_id = #{bizId} and is_deleted = false")
     boolean bizIdExists(@Param("bizId") String bizId);
 
+    void delete(@Param("id")Long id);
 
     /**
      * 根据客户id查询
      */
+    List<BugOnlineListDO> selectByCustomId(@Param("customId") Long customId);
+
+    /**
+     * 查询关联的该线下bug的线上bug
+     *
+     * @param bugOfflineId 线下bug id
+     * @return 线上bug数据集合
+     */
+    List<BugOnlineDO> getByBugOffline(@Param("bugOfflineId")Long bugOfflineId);
+
+    /**
+     * 清空关联的线下bug
+     *
+     * @param ids 线上bug id集合
+     */
+    void clearBugOffline(@Param("ids")Collection<Long> ids);
     List<BugOnlineListDO> getByCustomId(@Param("customId") Long customId);
 
     /**

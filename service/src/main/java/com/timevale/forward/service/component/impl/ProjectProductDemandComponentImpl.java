@@ -121,7 +121,7 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
                     .stream().map(ProductBizDemandDO::getBizDemandId).distinct().collect(Collectors.toList());
             bizDemandIds.addAll(bids);
             bizDemandIds.forEach(bid -> {
-                BizDemandDO bizDemandDO = bizDemandMapper.selectById(bid);
+                BizDemandDO bizDemandDO = bizDemandMapper.get(bid);
                 publishDateMap.put(bid, bizDemandDO.getProjectEndDate());
             });
 
@@ -140,7 +140,7 @@ public class ProjectProductDemandComponentImpl implements ProjectProductDemandCo
         List<BizChangeLogDO> logs = new ArrayList<>();
         bizDemandIds.forEach(bid -> {
             bizDemandComponent.updateProjectEndDate(bid);
-            BizDemandDO bizDemandDO = bizDemandMapper.selectById(bid);
+            BizDemandDO bizDemandDO = bizDemandMapper.get(bid);
             if (!Objects.equals(publishDateMap.get(bid), bizDemandDO.getProjectEndDate())) {
                 String oldValue = DateUtil.parseToString(publishDateMap.get(bid), DateStyle.YYYY_MM_DD);
                 String newValue = DateUtil.parseToString(bizDemandDO.getProjectEndDate(), DateStyle.YYYY_MM_DD);

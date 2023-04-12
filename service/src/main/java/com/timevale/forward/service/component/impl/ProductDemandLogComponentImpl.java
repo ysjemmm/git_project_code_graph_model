@@ -1,7 +1,6 @@
 package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.http.HtmlUtil;
 import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
@@ -17,7 +16,6 @@ import com.timevale.forward.service.utils.compare.FieldCompareUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
@@ -56,15 +54,7 @@ public class ProductDemandLogComponentImpl implements ProductDemandLogComponent 
         ProductDemandMD oldPdm = ProductDemandCopier.INSTANCE.change(oldObj);
         ProductDemandMD newPdm = ProductDemandCopier.INSTANCE.change(newObj);
         List<BizChangeLogDO> logs = FieldCompareUtil.commonCompare(oldPdm, newPdm, BizChangeLogDO.class);
-        // 描述
-        log.info("oldDesc:{}=====newDesc:{}", oldObj.getDesc(), newObj.getDesc());
-        if (!Objects.equals(oldObj.getDesc(), newObj.getDesc())) {
-            String oldValue = StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(oldObj.getDesc()));
-            String newValue = StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(newObj.getDesc()));
-            if (!Objects.equals(oldValue, newValue)) {
-                logs.add(createLog(oldObj.getId(), BizChangeLogFieldEnum.DESC.getText(), oldValue, newValue, null));
-            }
-        }
+
         //类型
         List<Integer> oldTypes = JSON.parseArray(oldObj.getType(), Integer.class);
         List<Integer> newTypes = JSON.parseArray(newObj.getType(), Integer.class);

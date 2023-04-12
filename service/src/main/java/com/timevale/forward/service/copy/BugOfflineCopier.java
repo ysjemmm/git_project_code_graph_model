@@ -76,7 +76,7 @@ public interface BugOfflineCopier {
      * @param bugOfflineDO 对象
      * @return BugOfflineVO
      */
-    BugOfflineMD convertToMD(BugOfflineDO bugOfflineDO);
+    BugOfflineMD do2md(BugOfflineDO bugOfflineDO);
 
 
     @Mapping(target = "reasonName", expression = "java(BugReasonEnum.getTextByCode(req.getReason()))")

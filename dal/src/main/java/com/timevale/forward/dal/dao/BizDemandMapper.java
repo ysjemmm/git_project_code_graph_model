@@ -32,6 +32,14 @@ public interface BizDemandMapper {
      */
     int update(BizDemandDO bizDemandDO);
 
+
+    /**
+     * 更新业务需求信息, 仅更新可以为null的字段
+     *
+     * @param bdDO 业务需求DO
+     */
+    void updateCanNull(BizDemandDO bdDO);
+
     /**
      * 更新业务需求信息-完全更新
      *
@@ -46,7 +54,7 @@ public interface BizDemandMapper {
      * @param id id
      * @return 业务需求DO
      */
-    BizDemandDO selectById(@Param("id") Long id);
+    BizDemandDO get(@Param("id") Long id);
 
     /**
      * 选择name获取对应业务需求信息
@@ -128,7 +136,7 @@ public interface BizDemandMapper {
      * @param ids id
      * @return 业务需求DO
      */
-    List<BizDemandDO> selectByIds(@Param("ids") List<Long> ids);
+    List<BizDemandDO> getByIds(@Param("ids") List<Long> ids);
 
     /**
      * 选择id获取对应业务需求信息

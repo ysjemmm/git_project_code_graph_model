@@ -194,4 +194,33 @@ public class BugOnlineDO extends BaseDO {
      */
     private Integer area;
 
+    /**
+     * 客户等级
+     */
+    private String customerGrade;
+
+    /**
+     * 类别
+     */
+    private Integer category;
+
+    /**
+     * 线下bug id
+     */
+    private Long bugOfflineId;
+
+    /**
+     * 原因阶段
+     */
+    private Integer reasonStage;
+
+    /**
+     * 驳回原因阶段
+     */
+    private Integer dismissCauseStage;
+
+    /**
+     * 打开次数
+     */
+    private Integer openCount;
 }

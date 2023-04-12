@@ -7,6 +7,7 @@ import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface ProductDemandMapper {
@@ -40,7 +41,7 @@ public interface ProductDemandMapper {
      * @param productDemandIdList 产品需求id列表
      * @return list
      */
-    List<ProductDemandDO> selectByIdList(@Param("productDemandIdList") List<Long> productDemandIdList);
+    List<ProductDemandDO> selectByIdList(@Param("productDemandIdList") Collection<Long> productDemandIdList);
 
     /**
      * 选择通过业务需求id

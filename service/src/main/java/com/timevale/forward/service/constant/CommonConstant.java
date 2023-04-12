@@ -28,6 +28,8 @@ public class CommonConstant {
 
     public static final String NULL = "无";
 
+    public static final Integer REASON_NULL = 0;
+
     public static final String DAY = "天";
 
     public static final String SYSTEM = "SYSTEM-SYSTEM";
@@ -40,4 +42,5 @@ public class CommonConstant {
 
     public static final String INVALID = "已作废";
 
+    public static final Integer DESC_MAX_LENGTH = 20000;
 }

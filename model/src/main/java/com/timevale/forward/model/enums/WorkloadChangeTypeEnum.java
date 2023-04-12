@@ -16,9 +16,9 @@ public enum WorkloadChangeTypeEnum {
     PLAN_WORKLOAD_ADD("计划总工作量增加"),
 
     /**
-     * 积分总工作量增加
+     * 计入积分成员工作量增加
      */
-    POINTS_WORKLOAD_ADD("积分总工作量增加");
+    POINTS_WORKLOAD_ADD("计入积分成员工作量增加");
 
     private final String text;
 }

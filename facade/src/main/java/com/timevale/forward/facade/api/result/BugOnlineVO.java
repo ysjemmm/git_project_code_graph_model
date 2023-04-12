@@ -23,10 +23,10 @@ public class BugOnlineVO extends ToString {
     @ApiModelProperty("bug标题")
     private String name;
 
-    @ApiModelProperty("bug状态：0问题上报，1待确认，2关闭，3问题确认，4问题修复，5QA修复确认，6待上线，7挂起，8完成，9已转需求'")
+    @ApiModelProperty("bug状态")
     private Integer status;
 
-    @ApiModelProperty("bug状态")
+    @ApiModelProperty("bug状态描述")
     private String statusName;
 
     @ApiModelProperty("产品线")
@@ -34,9 +34,6 @@ public class BugOnlineVO extends ToString {
 
     @ApiModelProperty("业务域")
     private List<String> bizDomainNameList;
-
-    @ApiModelProperty("bug优先级：0低，1中，2高，3紧急")
-    private Integer priority;
 
     @ApiModelProperty("bug优先级")
     private String priorityName;
@@ -53,20 +50,11 @@ public class BugOnlineVO extends ToString {
     @ApiModelProperty("经办人id")
     private String operatorId;
 
-    @ApiModelProperty("bug原因")
-    private Integer reason;
-
     @ApiModelProperty("bug原因-描述")
     private String reasonName;
 
-    @ApiModelProperty("驳回原因")
-    private Integer dismissCause;
-
     @ApiModelProperty("驳回原因-描述")
     private String dismissCauseName;
-
-    @ApiModelProperty("来源: forward 产研系统， support 运营支撑平台， duty 值班反馈")
-    private String source;
 
     @ApiModelProperty("来源数据id")
     private String sourceId;
@@ -77,14 +65,8 @@ public class BugOnlineVO extends ToString {
     @ApiModelProperty("项目名称")
     private String customerDevProjectName;
 
-    @ApiModelProperty("bug环境：0生产环境，1模拟环境")
-    private Integer env;
-
     @ApiModelProperty("bug环境")
     private String envName;
-
-    @ApiModelProperty("bug所属端：0后端bug，1PC客户端，2PCweb端，3Android，4IOS，5H5")
-    private Integer belong;
 
     @ApiModelProperty("bug所属端")
     private String belongName;
@@ -112,4 +94,19 @@ public class BugOnlineVO extends ToString {
 
     @ApiModelProperty("详情描述")
     private String describe;
+
+    @ApiModelProperty("原因阶段-描述")
+    private String reasonStageName;
+
+    @ApiModelProperty("驳回原因阶段-描述")
+    private String dismissCauseStageName;
+
+    @ApiModelProperty("客户等级")
+    private String customerGrade;
+
+    @ApiModelProperty("问题类别:0-空,1-功能问题,2-性能问题,3-兼容性问题,4用户体验问题,5-安全问题")
+    private String categoryName;
+
+    @ApiModelProperty("打开次数")
+    private Integer openCount;
 }

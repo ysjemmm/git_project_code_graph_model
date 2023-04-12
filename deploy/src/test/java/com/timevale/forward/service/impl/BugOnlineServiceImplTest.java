@@ -170,7 +170,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
         bugOnlineModifyReq.setRecipients(Lists.newArrayList(new PersonAddReq()));
         bugOnlineModifyReq.setBusiness("");
         bugOnlineModifyReq.setOperatorId("1");
-        when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
+        when(bugOnlineMapper.get(any())).thenReturn(new BugOnlineDO() {{
             setOperatorId("2");
         }});
         when(bugLogMapper.selectByBugOfflineIdAndType(any(), any(), any())).thenReturn(Lists.newArrayList(new BugLogDO()));
@@ -189,7 +189,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
     @Test
     public void testGet() {
         BugOnlineDetailReq bugOnlineDetailReq = new BugOnlineDetailReq();
-        when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
+        when(bugOnlineMapper.get(any())).thenReturn(new BugOnlineDO() {{
             setOperatorId("2");
             setDismissCause(1);
             setRepairFailReason("2");
@@ -206,7 +206,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
     @Test
     public void testConfirm() {
         BugOnlineReq bugOnlineReq = new BugOnlineReq();
-        when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
+        when(bugOnlineMapper.get(any())).thenReturn(new BugOnlineDO() {{
             setStatus(BugOnlineStatusEnum.PROBLEM_REPORT.getCode());
         }});
         when(bugLogMapper.selectByBugOfflineIdAndType(any(), any(), any())).thenReturn(Lists.newArrayList(new BugLogDO()));
@@ -216,7 +216,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
     @Test
     public void testStartRepair() {
         BugOnlineStartRepairReq repairReq = new BugOnlineStartRepairReq();
-        when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
+        when(bugOnlineMapper.get(any())).thenReturn(new BugOnlineDO() {{
             setStatus(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
         }});
         when(bugLogMapper.selectByBugOfflineIdAndType(any(), any(), any())).thenReturn(Lists.newArrayList(new BugLogDO()));
@@ -226,7 +226,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
     @Test
     public void testRepairFinished() {
         BugOnlineRepairFinishedReq finishedReq = new BugOnlineRepairFinishedReq();
-        when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
+        when(bugOnlineMapper.get(any())).thenReturn(new BugOnlineDO() {{
             setStatus(BugOnlineStatusEnum.QUESTION_REPAIR.getCode());
             setRepairFailReason("1");
             setOperator("1");
@@ -247,7 +247,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
     public void testConfirmRepair() {
         BugOnlineConfirmRepairReq confirmRepairReq = new BugOnlineConfirmRepairReq();
         confirmRepairReq.setReason(1);
-        when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
+        when(bugOnlineMapper.get(any())).thenReturn(new BugOnlineDO() {{
             setStatus(BugOnlineStatusEnum.REPAIR_CONFIRM.getCode());
             setRepairFailReason("1");
             setOperator("1");
@@ -261,7 +261,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
     @Test
     public void testOnline() {
         BugOnlineOnlineReq onlineOnlineReq = new BugOnlineOnlineReq();
-        when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
+        when(bugOnlineMapper.get(any())).thenReturn(new BugOnlineDO() {{
             setStatus(BugOnlineStatusEnum.ONLINE.getCode());
             setReason(1);
             setOperator("1");
@@ -285,7 +285,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
     @Test
     public void testOpenAgain() {
         BugOnlineOpenAgainReq onlineOpenAgainReq = new BugOnlineOpenAgainReq();
-        when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
+        when(bugOnlineMapper.get(any())).thenReturn(new BugOnlineDO() {{
             setStatus(BugOnlineStatusEnum.COMPLETE.getCode());
         }});
         when(bugLogMapper.selectByBugOfflineIdAndType(any(), any(), any())).thenReturn(Lists.newArrayList(new BugLogDO()));
@@ -303,7 +303,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
     @Test
     public void testNoRepair() {
         BugOnlineNoRepairReq noRepairReq = new BugOnlineNoRepairReq();
-        when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
+        when(bugOnlineMapper.get(any())).thenReturn(new BugOnlineDO() {{
             setStatus(BugOnlineStatusEnum.PROBLEM_REPORT.getCode());
             setRepairFailReason("2");
             setOperator("1");
@@ -323,7 +323,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
     @Test
     public void testTransfer() {
         BugOnlineTransferReq transferReq = new BugOnlineTransferReq();
-        when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
+        when(bugOnlineMapper.get(any())).thenReturn(new BugOnlineDO() {{
             setStatus(BugOnlineStatusEnum.REPAIR_CONFIRM.getCode());
             setRepairFailReason("2");
             setOperator("1");
@@ -347,7 +347,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
     @Test
     public void testAgree() {
         BugOnlineReq bugOnlineReq = new BugOnlineReq();
-        when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
+        when(bugOnlineMapper.get(any())).thenReturn(new BugOnlineDO() {{
             setStatus(BugOnlineStatusEnum.BE_CONFIRM.getCode());
             setRepairFailReason("2");
             setOperator("1");
@@ -371,7 +371,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
     @Test
     public void testReject() {
         BugOnlineReq bugOnlineReq = new BugOnlineReq();
-        when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
+        when(bugOnlineMapper.get(any())).thenReturn(new BugOnlineDO() {{
             setStatus(BugOnlineStatusEnum.BE_CONFIRM.getCode());
             setRepairFailReason("2");
             setOperatorId("1");
@@ -400,7 +400,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
     @Test
     public void testReconfirm() {
         BugOnlineReq bugOnlineReq = new BugOnlineReq();
-        when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
+        when(bugOnlineMapper.get(any())).thenReturn(new BugOnlineDO() {{
             setStatus(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
             setRepairFailReason("2");
             setOperatorId("1");
@@ -414,7 +414,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
     @Test
     public void testTemporaryNoRepair() {
         BugOnlineReq bugOnlineReq = new BugOnlineReq();
-        when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
+        when(bugOnlineMapper.get(any())).thenReturn(new BugOnlineDO() {{
             setStatus(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
             setRepairFailReason("2");
             setOperatorId("1");
@@ -428,7 +428,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
     @Test
     public void testRepairFailed() {
         BugOnlineRepairFailedReasonReq failedReasonReq = new BugOnlineRepairFailedReasonReq();
-        when(bugOnlineMapper.selectById(any())).thenReturn(new BugOnlineDO() {{
+        when(bugOnlineMapper.get(any())).thenReturn(new BugOnlineDO() {{
             setStatus(BugOnlineStatusEnum.REPAIR_CONFIRM.getCode());
             setRepairFailReason("2");
             setOperatorId("1");

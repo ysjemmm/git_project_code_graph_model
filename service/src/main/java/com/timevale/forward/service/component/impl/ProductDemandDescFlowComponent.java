@@ -227,8 +227,8 @@ public class ProductDemandDescFlowComponent {
                     .setMainId(productDemand.getId())
                     .setType(BizChangeLogTypeEnum.PRODUCT_DEMAND.getCode())
                     .setField(BizChangeLogFieldEnum.DESC.getText())
-                    .setOldValue(StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(auditingFlow.getDesc())))
-                    .setNewValue(StringEscapeUtils.unescapeHtml(HtmlUtil.cleanHtmlTag(auditingFlow.getChangeDesc())));
+                    .setOldValue(auditingFlow.getDesc())
+                    .setNewValue(auditingFlow.getChangeDesc());
             bizChangeLogDO.setCreateManId(auditingFlow.getCreateManId());
             bizChangeLogDO.setCreateMan(auditingFlow.getCreateMan());
             bizChangeLogDO.setContent(String.format("{\"taskId\": \"%s\"}", currentTaskIdList.get(0)));

@@ -75,22 +75,21 @@ public interface TaskService {
      */
     BaseResult<Boolean> enable(Long taskId);
 
-
     /**
      * 执行项目
      *
-     * @param taskId 任务id
-     * @return 数量
+     * @param executeReq 任务执行请求
+     * @return 是否成功
      */
-    BaseResult<Boolean> execute(Long taskId);
+    BaseResult<Boolean> execute(TaskExecuteReq executeReq);
 
     /**
      * 完成项目
      *
-     * @param taskId 任务id
-     * @return 数量
+     * @param doneReq 任务完成请求
+     * @return 是否成功
      */
-    BaseResult<Boolean> done(Long taskId);
+    BaseResult<Boolean> done(TaskDoneReq doneReq);
 
     /**
      * 查询满足条件的产品需求列表

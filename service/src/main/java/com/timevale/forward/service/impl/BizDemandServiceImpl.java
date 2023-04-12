@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -29,6 +30,7 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
@@ -101,36 +103,35 @@ public class BizDemandServiceImpl implements BizDemandService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         // 转换查询条件
-        BizDemandListCondition bizDemandListCondition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
-        bizDemandListCondition.setPageNum(bizDemandQueryList.getPageNum());
-        bizDemandListCondition.setPageSize(bizDemandQueryList.getPageSize());
+        BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandQueryList);
 
         // 标志是否有对应数据
         boolean resultIsEmpty = false;
+
         // 根据tabs添加不同的效果
         String ascription = bizDemandQueryList.getAscription();
-        if (ascription.equals(AscriptionEnum.CURRENT_USER.toString())) {
-            bizDemandListCondition.setSubmitManIdList(Lists.newArrayList(userInfo.getId()));
-        } else if (ascription.equals(AscriptionEnum.RECEIVE.toString())) {
-            bizDemandListCondition.setReceiveManIdList(Lists.newArrayList(userInfo.getId()));
-        } else if (ascription.equals(AscriptionEnum.COPIER.toString())) {
-            bizDemandListCondition.setCopier(userInfo.getId());
+        if (AscriptionEnum.CURRENT_USER.toString().equals(ascription)) {
+            condition.setSubmitManIdList(Lists.newArrayList(userInfo.getId()));
+        } else if (AscriptionEnum.RECEIVE.toString().equals(ascription)) {
+            condition.setReceiveManIdList(Lists.newArrayList(userInfo.getId()));
+        } else if (AscriptionEnum.COPIER.toString().equals(ascription)) {
+            condition.setCopier(userInfo.getId());
         } else {
             List<String> teamMemberIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
-            if (ascription.equals(AscriptionEnum.TEAM_SUBMIT.toString())) {
-                Set<String> createIdSet = new HashSet<>(bizDemandListCondition.getSubmitManIdList());
+            if (AscriptionEnum.TEAM_SUBMIT.toString().equals(ascription)) {
+                Set<String> createIdSet = new HashSet<>(condition.getSubmitManIdList());
                 if (!createIdSet.isEmpty()) {
                     teamMemberIdList = teamMemberIdList.stream().filter(createIdSet::contains).collect(Collectors.toList());
                     resultIsEmpty = teamMemberIdList.isEmpty();
                 }
-                bizDemandListCondition.setSubmitManIdList(teamMemberIdList);
-            } else if (ascription.equals(AscriptionEnum.TEAM_RECEIVE.toString())) {
-                Set<String> receiveIdSet = new HashSet<>(bizDemandListCondition.getReceiveManIdList());
+                condition.setSubmitManIdList(teamMemberIdList);
+            } else if (AscriptionEnum.TEAM_RECEIVE.toString().equals(ascription)) {
+                Set<String> receiveIdSet = new HashSet<>(condition.getReceiveManIdList());
                 if (!receiveIdSet.isEmpty()) {
                     teamMemberIdList = teamMemberIdList.stream().filter(receiveIdSet::contains).collect(Collectors.toList());
                     resultIsEmpty = teamMemberIdList.isEmpty();
                 }
-                bizDemandListCondition.setReceiveManIdList(teamMemberIdList);
+                condition.setReceiveManIdList(teamMemberIdList);
             }
         }
         if (resultIsEmpty) {
@@ -143,14 +144,10 @@ public class BizDemandServiceImpl implements BizDemandService {
             if (CollectionUtils.isEmpty(labelIds) && bizDemandQueryList.getContainLabel()) {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
-            bizDemandListCondition.setLabelIds(labelIds);
+            condition.setLabelIds(labelIds);
         }
 
-        // 分页参数
-        bizDemandListCondition.setPageNum(bizDemandQueryList.getPageNum());
-        bizDemandListCondition.setPageSize(bizDemandQueryList.getPageSize());
-
-        return BaseResult.success(bizDemandComponent.page(bizDemandListCondition));
+        return BaseResult.success(bizDemandComponent.page(condition));
     }
 
     @Override
@@ -233,7 +230,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 修改业务需求状态 —— 作废
         Long bizDemandId = bizDemandUpdateStatusReq.getBizDemandId();
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
         if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
@@ -371,7 +368,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
     @Override
     public BaseResult<BizDemandDetailVO> getBizDemandById(Long bizDemandId) {
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
         if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("该业务需求不存在");
         }
@@ -386,42 +383,28 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 获取对应产品线
         ProductLineDO productLineDO = productLineMapper.selectById(bizDemandDO.getProductLineId());
-        if (productLineDO == null) {
-            throw new BaseBizRuntimeException("业务需求未关联产品线");
-        }
+        AssertUtil.notNull(productLineDO, "业务需求未关联产品线");
 
         // 信息填充
         BizDemandDetailVO bizDemandDetailVO = BizDemandCopier.INSTANCE.convert(bizDemandDO);
-
         bizDemandDetailVO.setFileList(fileVOList);
         bizDemandDetailVO.setRecipientInfoList(personVOList);
-
+        bizDemandDetailVO.setEndDate(bizDemandDO.getProjectEndDate());
         bizDemandDetailVO.setProductLineName(productLineDO.getName());
         bizDemandDetailVO.setBizDomainId(productLineDO.getBizDomainId());
-        bizDemandDetailVO.setReasonText(BizDemandReasonEnum.getTextByCode(bizDemandDetailVO.getReason()));
-        bizDemandDetailVO.setStatusText(BizDemandStatusEnum.getTextByCode(bizDemandDetailVO.getStatus()));
-        bizDemandDetailVO.setPriorityText(PriorityEnum.getTextChineseByCode(bizDemandDetailVO.getPriority()));
-        bizDemandDetailVO.setPlanReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandDetailVO.getPlanReleaseDate()));
-        bizDemandDetailVO.setCustomerDevDemandText(YesOrNoEnum.getTextByCode(bizDemandDetailVO.getCustomerDevDemand()));
-        bizDemandDetailVO.setCustomerDevTypeText(CustomerDevTypeEnum.getTextByCode(bizDemandDetailVO.getCustomerDevType()));
-        bizDemandDetailVO.setHopeReleaseDateText(PlanReleaseDateEnum.getTextByCode(bizDemandDetailVO.getHopeReleaseDate()));
+
         // 获取部门链，添加完整部门信息
         Map<Long, GroupResponse> deptMap = bizDemandComponent.getGroupListTreeMap(Lists.newArrayList(bizDemandDO.getDeptId()));
         GroupResponse response = deptMap.get(bizDemandDetailVO.getDeptId());
-        if (response == null) {
-            log.info("没有找到部门,id为:{}", bizDemandDetailVO.getDeptId());
-        } else {
+        if (response != null) {
             bizDemandDetailVO.setDeptName(response.getGroupName());
             bizDemandDetailVO.setDeptDeleteFlag(response.getDeleteFlag());
         }
 
-        //获取项目发布时间
-        bizDemandDetailVO.setEndDate(bizDemandDO.getProjectEndDate());
-
         // 查看是否为线上bug转换
         List<Long> bugOnlineIds = bugOnlineBizDemandMapper.getBugOnlineIds(bizDemandId);
         if (!bugOnlineIds.isEmpty()) {
-            List<BugOnlineDO> bugOnlineList = bugOnlineMapper.selectByIds(bugOnlineIds, false);
+            List<BugOnlineDO> bugOnlineList = bugOnlineMapper.getByIds(bugOnlineIds, false);
             bizDemandDetailVO.setBugOnlineList(bugOnlineList.stream()
                     .map(x -> new BugOnlineLinkVO(x.getId(), x.getName()))
                     .collect(Collectors.toList()));
@@ -435,10 +418,11 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 获取客户信息
         List<BizDemandCustomDO> bizDemandCustomDOList = bizDemandCustomComponent.selectByBizDemandId(bizDemandId);
-
-        if (CollectionUtils.isNotEmpty(bizDemandCustomDOList)) {
-            bizDemandDetailVO.setCustomList(BizDemandCustomCopier.INSTANCE.convertListToVO(bizDemandCustomDOList));
+        if (CollUtil.isNotEmpty(bizDemandCustomDOList)) {
+            List<BizDemandCustomVO> customList = BizDemandCustomCopier.INSTANCE.convertListToVO(bizDemandCustomDOList);
+            bizDemandDetailVO.setCustomList(customList);
         }
+
         return BaseResult.success(bizDemandDetailVO);
     }
 
@@ -448,7 +432,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         log.info("业务需求修改接收参数 bizDemandModifyReq = {}", bizDemandModifyReq);
 
         // 修改业务需求
-        BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(bizDemandModifyReq.getId());
+        BizDemandDO oldBizDemandDO = bizDemandMapper.get(bizDemandModifyReq.getId());
         if (oldBizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
@@ -528,7 +512,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 变更日志
         bizDemandLogComponent.addLogWhenModifyData(oldBizDemandDO, newBizDemandDO);
 
-        bizDemandComponent.updateCustomerProject(bizDemandModifyReq.getId());
+        bizDemandComponent.updateCustomerPj(bizDemandModifyReq.getId());
         return BaseResult.success(true);
     }
 
@@ -546,7 +530,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             throw new BaseBizRuntimeException("产品线不能为空");
         }
 
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
         if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
@@ -573,10 +557,10 @@ public class BizDemandServiceImpl implements BizDemandService {
                 PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
         ));
 
-        bizDemandComponent.updateBizDemandStatusByLinkedProductDemand(bizDemandId);
+        bizDemandComponent.updateStatus(bizDemandId);
 
         // 日志, 状态改为同意
-        BizDemandDO newBizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO newBizDemandDO = bizDemandMapper.get(bizDemandId);
         Integer newStatus = newBizDemandDO.getStatus();
 
         bizDemandLogComponent.addLogWhenModifyData(
@@ -639,7 +623,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         Long bizDemandId = bizDemandRejectReq.getBizDemandId();
         Integer reason = bizDemandRejectReq.getReason();
 
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
         if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
@@ -717,7 +701,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         List<BizChangeLogDO> logDOList = new ArrayList<>();
 
         // 获取相关业务需求
-        List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(bizDemandIdList);
+        List<BizDemandDO> bizDemandDOList = bizDemandMapper.getByIds(bizDemandIdList);
         for (BizDemandDO e : bizDemandDOList) {
             String oldReceiveMan = e.getReceiveMan();
 
@@ -763,7 +747,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 日志处理
         List<BizChangeLogDO> bizChangeLogDOList = new ArrayList<>();
-        List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(bizDemandIdList);
+        List<BizDemandDO> bizDemandDOList = bizDemandMapper.getByIds(bizDemandIdList);
         for (BizDemandDO e : bizDemandDOList) {
             String oldSubmitMan = e.getSubmitMan();
 
@@ -832,7 +816,7 @@ public class BizDemandServiceImpl implements BizDemandService {
             throw new BaseBizRuntimeException("产品线不能为空");
         }
 
-        BizDemandDO bizDemandDO = bizDemandMapper.selectById(id);
+        BizDemandDO bizDemandDO = bizDemandMapper.get(id);
         Integer oldStatus = bizDemandDO.getStatus();
         Integer newStatus = BizDemandStatusEnum.TO_CONFIRM.getCode();
 
@@ -914,7 +898,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     public BaseResult<Boolean> completedAgree(BizDemandCompletedAgreeReq bizDemandCompletedAgreeReq) {
         Long id = bizDemandCompletedAgreeReq.getId();
 
-        BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(id);
+        BizDemandDO oldBizDemandDO = bizDemandMapper.get(id);
         Integer oldStatus = oldBizDemandDO.getStatus();
         Integer newStatus = BizDemandStatusEnum.COMPLETED.getCode();
 
@@ -944,7 +928,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         Long id = bizDemandCompletedRejectReq.getId();
         String reason = bizDemandCompletedRejectReq.getRejectReason();
 
-        BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(id);
+        BizDemandDO oldBizDemandDO = bizDemandMapper.get(id);
         Integer oldStatus = oldBizDemandDO.getStatus();
         Integer newStatus = BizDemandStatusEnum.RECEIVED.getCode();
 
@@ -992,7 +976,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     public BaseResult<Boolean> reSubmit(BizDemandResubmitReq bizDemandResubmitReq) {
         Long bizDemandId = bizDemandResubmitReq.getId();
         String name = bizDemandResubmitReq.getName();
-        BizDemandDO oldBizDemandDO = bizDemandMapper.selectById(bizDemandId);
+        BizDemandDO oldBizDemandDO = bizDemandMapper.get(bizDemandId);
         if (oldBizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
@@ -1086,7 +1070,7 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Override
     public BaseResult<Boolean> noticeReceiver(BizDemandNoticeReceiverReq receiverReq) {
         log.info("开发资源申请流程通过,通知需求接收人:{}", receiverReq.getBizDemandIds());
-        List<BizDemandDO> bizDemandDOList = bizDemandMapper.selectByIds(receiverReq.getBizDemandIds());
+        List<BizDemandDO> bizDemandDOList = bizDemandMapper.getByIds(receiverReq.getBizDemandIds());
         bizDemandDOList.forEach(a ->
                 messageEventPublisher.publish(new BizDemandApprovedMsgEvent(
                         this,
@@ -1104,7 +1088,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         // 判断是否为线下bug转换
         if (bugOfflineId != null) {
-            BugOfflineDO bugOfflineDO = bugOfflineMapper.selectById(bugOfflineId);
+            BugOfflineDO bugOfflineDO = bugOfflineMapper.get(bugOfflineId);
             if (bugOfflineDO == null) {
                 throw new BaseBizRuntimeException("转换需求失败，原线下bug不存在");
             }
@@ -1145,15 +1129,11 @@ public class BizDemandServiceImpl implements BizDemandService {
             bugLogComponent.insertToBugStatusOperator(bugOfflineId, userInfo.getId(), userInfo.getFullAlias(), BugLogTypeEnum.OFFLINE.getCode());
         }
         if (bugOnlineId != null) {
-            BugOnlineDO bugOnlineDO = bugOnlineMapper.selectById(bugOnlineId);
-            if (bugOnlineDO == null) {
-                throw new BaseBizRuntimeException("转换需求失败，原线上bug不存在");
-            }
-            //判断当前状态是否为“挂起”，“问题上报”，“问题确认”状态
-            if (!BugOnlineStatusEnum.canConvertBizDemand(bugOnlineDO.getStatus())) {
-                throw new BaseBizRuntimeException("当前状态不允许转化业务需求");
-            }
-            //保存老的状态
+            BugOnlineDO bugOnlineDO = bugOnlineMapper.get(bugOnlineId);
+            AssertUtil.notNull(bugOnlineDO, "转换需求失败，原线上bug不存在");
+            AssertUtil.checkState(BugOnlineStatusEnum.canConvertBizDemand(bugOnlineDO.getStatus()), "当前状态不允许转化业务需求");
+
+            // 转换需求
             bugOnlineComponent.attachToBizDemands(bugOnlineDO, Collections.singletonList(bizDemandId),
                     ButtonActionEnum.SHIFT_BUSINESS);
         }

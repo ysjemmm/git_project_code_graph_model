@@ -3,7 +3,7 @@ package com.timevale.forward.service.component;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.BizDemandDO;
 
-import java.util.List;
+import java.util.Collection;
 
 public interface BizDemandLogComponent{
 
@@ -17,9 +17,9 @@ public interface BizDemandLogComponent{
 
     void addLogWhenBizDemandInvalid(Long bizDemandId);
 
-    void addLogWhenBizDemandLinkProductDemand(Long bizDemandId, List<Long> productDemandIdList);
+    void linkPd(Long bizDemandId, Collection<Long> productDemandIdList);
 
-    void addLogWhenBizDemandUnLinkProductDemand(Long bizDemandId, Long productDemandId);
+    void unlinkPd(Long bizDemandId, Long productDemandId);
 
     void addLogAsProductDemandStatusChange(Integer oldStatus,  Integer newStatus,Long id,Integer type) ;
 

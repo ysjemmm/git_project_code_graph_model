@@ -34,27 +34,20 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 public class BugOnlineComponentImpl implements BugOnlineComponent {
-
-    @Resource
-    private BugOnlineMapper bugOnlineMapper;
-
     @Resource
     private BugLogMapper bugLogMapper;
-
+    @Resource
+    private BugOnlineMapper bugOnlineMapper;
     @Resource
     private BugLogComponent bugLogComponent;
-
-    @Resource
-    private MessageEventPublisher messageEventPublisher;
-
-    @Resource
-    private BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
-
-    @Resource
-    private BugOnlineBizDemandMapper bugOnlineBizDemandMapper;
-
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
+    @Resource
+    private MessageEventPublisher messageEventPublisher;
+    @Resource
+    private BugOnlineBizDemandMapper bugOnlineBizDemandMapper;
+    @Resource
+    private BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
 
     @Override
     public void autoCloseBugIfBeConfirm(int autoCloseLimitDay) {
@@ -118,17 +111,22 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
                                    ButtonActionEnum actionEnum) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
         Long bugOnlineId = bugOnlineDO.getId();
-        String oldStatusName = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+        Long bugOfflineId = bugOnlineDO.getBugOfflineId();
+
+        // 历史参数
         Integer oldStatus = bugOnlineDO.getStatus();
+        String oldStatusName = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+        String oldReasonName = BugOnlineReasonEnum.getFullTextByCode(bugOnlineDO.getReason());
 
-        // 保存旧的bug原因
-        String oldReasonName = BugOnlineReasonEnum.getTextByCode(bugOnlineDO.getReason());
-
-        bugOnlineDO.setStatus(BugOnlineStatusEnum.REQUIRED.getCode());
-        bugOnlineDO.setReason(BugOnlineReasonEnum.DEMAND_QUESTION.getCode());
-        bugOnlineDO.setPrevStatus(oldStatus);
         //线上bug表更新
+        bugOnlineDO.setBugOfflineId(null);
+        bugOnlineDO.setPrevStatus(oldStatus);
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.REQUIRED.getCode());
+        bugOnlineDO.setReason(BugOnlineReasonEnum.PRODUCT_DESIGN_FLAWS.getCode());
+        bugOnlineDO.setReasonStage(BugOnlineReasonStageEnum.PRODUCT_DESIGN.getCode());
         bugOnlineMapper.update(bugOnlineDO);
+
+        // 新增关联关系
         bugOnlineBizDemandMapper.addRelations(bugOnlineId, bizDemandIds);
 
         BugLogDO bugLogDO = new BugLogDO()
@@ -143,7 +141,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         BugLogDO reasonBugLogDO = new BugLogDO()
                 .setMainId(bugOnlineId)
                 .setOldValue(oldReasonName)
-                .setNewValue(BugOnlineReasonEnum.DEMAND_QUESTION.getText())
+                .setNewValue(BugOnlineReasonEnum.PRODUCT_DESIGN_FLAWS.getFullText())
                 .setField(BugLogFieldEnum.REASON.getText())
                 .setType(BugLogTypeEnum.ONLINE.getCode());
 
@@ -155,6 +153,43 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
             // 业务需求变更日志
             addBizDemandAttachLogs(bugOnlineDO, bizDemandIds);
         }
+
+        // 关联的线下bug日志
+        bugLogComponent.bugOffline(bugOnlineId, bugOfflineId, null);
+    }
+
+    @Override
+    public List<BugLogDO> compareBugOffline(Long bugOnlineId, Long oldId, Long newId) {
+        List<BugLogDO> result = new ArrayList<>();
+
+        // 校验参数
+        if (Objects.equals(oldId, newId) || bugOnlineId == null) {
+            return result;
+        }
+
+        // 断开关联
+        Optional<BugLogDO> unLinkOpt = Optional.ofNullable(oldId)
+                .map(bugOfflineId -> new BugLogDO()
+                        .setField(BugFieldEnum.LINK_BUG_OFFLINE.getText())
+                        .setOldValue(bugOnlineId.toString())
+                        .setNewValue(bugOfflineId.toString())
+                        .setMainId(bugOnlineId)
+                        .setAction(ButtonActionEnum.UN_LINK.getText())
+                        .setType(BugLogTypeEnum.ONLINE.getCode()));
+        // 新增关联
+        Optional<BugLogDO> linkOpt = Optional.ofNullable(newId)
+                .map(bugOfflineId -> new BugLogDO()
+                        .setField(BugFieldEnum.LINK_BUG_OFFLINE.getText())
+                        .setOldValue(bugOnlineId.toString())
+                        .setNewValue(bugOfflineId.toString())
+                        .setMainId(bugOnlineId)
+                        .setAction(ButtonActionEnum.LINK.getText())
+                        .setType(BugLogTypeEnum.ONLINE.getCode()));
+
+        linkOpt.ifPresent(result::add);
+        unLinkOpt.ifPresent(result::add);
+
+        return result;
     }
 
     private void addBizDemandAttachLogs(BugOnlineDO bugOnlineDO, Collection<Long> bizDemandIds) {
@@ -162,7 +197,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         List<BizChangeLogDO> changeLogs = bizDemandIds.stream().map(id -> {
             BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
             bizChangeLogDO.setCreateManId(userInfo.getId());
-            bizChangeLogDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            bizChangeLogDO.setCreateMan(userInfo.getFullAlias());
             bizChangeLogDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode())
                     .setMainId(id)
                     .setAction(ButtonActionEnum.LINK.getText())
