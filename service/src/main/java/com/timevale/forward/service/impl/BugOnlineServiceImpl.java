@@ -2,7 +2,6 @@ package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
@@ -83,6 +82,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     private final BugOnlineComponent bugOnlineComponent;
     private final OutBizDealComponent outBizDealComponent;
     private final BugOnlineModelMapper bugOnlineModelMapper;
+    private final ProductLineComponent productLineComponent;
     private final MessageEventPublisher messageEventPublisher;
     private final InnerUserPersonClient innerUserPersonClient;
     private final BugOnlineModelComponent bugOnlineModelComponent;
@@ -92,6 +92,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     private final BugOnlineProductLineMapper bugOnlineProductLineMapper;
     private final BugOnlineProductLineComponent bugOnlineProductLineComponent;
     private final BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
+
 
     @Value("${business}")
     private String business;
@@ -1564,14 +1565,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             return BaseResult.success(new ArrayList<>());
         }
         List<BugOnlineVO> bugOnlineVOList = BugOnlineCopier.INSTANCE.convert(bugOnlineListDOS);
-        // 信息填充
-        for (BugOnlineVO bugOnlineVO : bugOnlineVOList) {
-            bugOnlineVO.setStatusName(BugOnlineStatusEnum.getTextByCode(bugOnlineVO.getStatus()));
-            bugOnlineVO.setReasonName(BugOnlineReasonEnum.getTextByCode(bugOnlineVO.getReason()));
-            bugOnlineVO.setPriorityName(BugOnlinePriorityEnum.getTextByCode(bugOnlineVO.getPriority()));
-            bugOnlineVO.setDismissCauseName(BugOnlineDismissCauseEnum.getTextByCode(bugOnlineVO.getDismissCause()));
-
-        }
         return BaseResult.success(bugOnlineVOList);
     }
 
@@ -1583,7 +1576,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         // 查询指定的线上bug
-        List<BugOnlineDO> bugOnlineDOs = bugOnlineMapper.selectByIds(ids, false);
+        List<BugOnlineDO> bugOnlineDOs = bugOnlineMapper.getByIds(ids, false);
         if (CollUtil.isEmpty(bugOnlineDOs)) {
             return BaseResult.success(Lists.emptyList());
         }
