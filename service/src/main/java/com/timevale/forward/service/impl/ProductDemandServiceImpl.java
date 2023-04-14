@@ -130,6 +130,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Resource
     private BizLabelComponent bizLabelComponent;
 
+    @Resource
+    private ProjectComponent projectComponent;
+
     @Override
     public BaseResult<QueryResultVO<ProductDemandVO>> list(ProductDemandQueryList productDemandQueryList) {
         log.info("产品需求接收参数:{}", productDemandQueryList);
@@ -433,6 +436,11 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             bizLabelComponent.addLabel(productDemand.getId(),productDemandAddReq.getLabelIds(),BizTypeEnum.PRODUCT_DEMAND.getCode());
             bizLabelComponent.addLog(productDemand.getId(),productDemandAddReq.getLabelIds(),BizTypeEnum.PRODUCT_DEMAND.getCode(),true);
         }
+
+        // 更新是否客开项目
+        Long projectId = productDemandAddReq.getProjectId();
+        projectComponent.updateCustomDev(projectId);
+
         return BaseResult.success(true);
     }
 
