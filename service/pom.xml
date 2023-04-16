@@ -104,5 +104,10 @@
             <groupId>com.timevale.crm.custom-provider</groupId>
             <artifactId>custom-provider-facade</artifactId>
         </dependency>
+        <!-- 交付项目 -->
+        <dependency>
+            <groupId>com.timevale.crm.dock</groupId>
+            <artifactId>crm-dock-facade</artifactId>
+        </dependency>
     </dependencies>
 </project>

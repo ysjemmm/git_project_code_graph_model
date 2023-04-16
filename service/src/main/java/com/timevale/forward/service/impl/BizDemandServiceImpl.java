@@ -20,6 +20,7 @@ import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.BizDemandCustomCopier;
 import com.timevale.forward.service.copy.FileCopier;
 import com.timevale.forward.service.copy.PersonCopier;
+import com.timevale.forward.service.integration.dock.CrmProjectClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
@@ -97,6 +98,8 @@ public class BizDemandServiceImpl implements BizDemandService {
     private ProjectComponent projectComponent;
     @Resource
     private ProductLineComponent productLineComponent;
+    @Resource
+    private CrmProjectClient crmProjectClient;
 
     @Override
     public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
@@ -392,6 +395,8 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDetailVO.setEndDate(bizDemandDO.getProjectEndDate());
         bizDemandDetailVO.setProductLineName(productLineDO.getName());
         bizDemandDetailVO.setBizDomainId(productLineDO.getBizDomainId());
+        crmProjectClient.getProject(bizDemandDO.getSourceId())
+                .ifPresent(p -> bizDemandDetailVO.setCustomerDevProjectName(p.getProjectName()));
 
         // 获取部门链，添加完整部门信息
         Map<Long, GroupResponse> deptMap = bizDemandComponent.getGroupListTreeMap(Lists.newArrayList(bizDemandDO.getDeptId()));
