@@ -219,6 +219,11 @@ public class ProjectDO extends BaseDO {
     private Integer srEvaluateGrade;
 
     /**
+     * 来源交付项目id
+     */
+    private String sourceId;
+
+    /**
      * 返回父节点id列表
      */
     public LinkedList<Long> getParentList() {
@@ -258,10 +263,6 @@ public class ProjectDO extends BaseDO {
                         .map(String::valueOf)
                         .collect(Collectors.joining(",")) +
                 ",";
-    }
-
-    public void setParentIds(String parentIds) {
-        this.parentIds = parentIds;
     }
 
 }

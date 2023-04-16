@@ -1,6 +1,7 @@
 package com.timevale.forward.facade.api.request;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 import javax.validation.constraints.NotBlank;
@@ -118,4 +119,7 @@ public class BizDemandAddReq extends BaseReq {
 
     @ApiModelProperty("期望上线时间")
     private Integer hopeReleaseDate;
+
+    @ApiModelProperty("期望上线日期")
+    private Date hopeReleaseDay;
 }

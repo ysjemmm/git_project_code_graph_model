@@ -168,4 +168,15 @@ public class BizDemandDO extends BaseDO {
      * 期望上线时间
      */
     private Integer hopeReleaseDate;
+
+    /**
+     * 期望上线日期
+     */
+    private Date hopeReleaseDay;
+
+    /**
+     * 业务需求产品方案
+     */
+    private String productSolution;
+
 }
