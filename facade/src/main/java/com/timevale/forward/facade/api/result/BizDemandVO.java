@@ -121,4 +121,7 @@ public class BizDemandVO extends ToString {
 
     @ApiModelProperty("是否为客户开发项目:否,是")
     private String customerDevDemand;
+
+    @ApiModelProperty("产品方案")
+    private String productSolution;
 }
