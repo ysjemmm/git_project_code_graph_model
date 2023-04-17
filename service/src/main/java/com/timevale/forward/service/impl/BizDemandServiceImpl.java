@@ -546,6 +546,15 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
+        if (bizDemandDO.getCustomerDevDemand()) {
+            AssertUtil.checkState(Objects.equal(bizDemandDO.getSubmitManId(), bizDemandDO.getReceiveManId()),
+                    "只有接收人和提交人是同一个人时才能接收需求");
+            AssertUtil.checkState(ObjectUtils.allNotNull(bizDemandDO.getUedTime(), bizDemandDO.getFrontTime(),
+                            bizDemandDO.getQaTime(), bizDemandDO.getBackTime(), bizDemandDO.getTotalTime()),
+                    "请维护好资源评估后再接收需求");
+        } else {
+            AssertUtil.notNull(bizDemandAgreeReq.getPlanReleaseDate(), "计划上线时间不能为空");
+        }
 
         // 保存旧状态
         Integer oldStatus = bizDemandDO.getStatus();

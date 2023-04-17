@@ -21,7 +21,6 @@ public class BizDemandAgreeReq extends BaseReq {
     private Long bizDemandId;
 
     @ApiModelProperty("计划上线时间")
-    @NotNull(message = "计划上线时间不能为空")
     private Integer planReleaseDate;
 
     @ApiModelProperty("产品线id")
