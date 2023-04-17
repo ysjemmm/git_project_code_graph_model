@@ -1,8 +1,6 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.forward.dal.annotation.WildcardEscape;
-import com.timevale.mandarin.common.query.QueryBase;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -228,6 +226,11 @@ public class ProjectListCondition {
      * 项目类型: 0-空，1-PBG项目/基线项目，2-PBG项目/1-N客开项目，3-职能后台项目/流程IT中心项目
      */
     private Integer kind;
+
+    /**
+     * 来源id (交付项目id)
+     */
+    private String sourceId;
 
     /**
      * 结项时间-开始

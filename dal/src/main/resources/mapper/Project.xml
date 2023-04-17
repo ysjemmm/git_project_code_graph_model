@@ -352,6 +352,9 @@
                     #{item}
                 </foreach>
             </if>
+        <if test="sourceId != null and sourceId != ''">
+            and source_id = #{sourceId}
+        </if>
             and is_deleted =false
         </where>
     </select>

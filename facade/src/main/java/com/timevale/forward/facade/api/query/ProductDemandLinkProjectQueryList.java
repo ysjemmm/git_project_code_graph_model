@@ -77,6 +77,9 @@ public class ProductDemandLinkProjectQueryList extends QueryBase {
     @ApiModelProperty("项目类型:0-空，1-PBG项目/基线项目，2-PBG项目/1-N客开项目，3-职能后台项目/流程IT中心项目")
     private Integer kind;
 
+    @ApiModelProperty("来源id")
+    private String sourceId;
+
     @ApiModelProperty("srId列表")
     private List<String> srs;
 }
