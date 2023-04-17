@@ -1,6 +1,7 @@
 package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
+import com.google.common.collect.ImmutableList;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
@@ -228,6 +229,23 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
                 .setNewValue(bd.getName())).collect(Collectors.toList()));
         bizChangeLogMapper.batchInsert(bizChangeLogs);
 
+    }
+
+    @Override
+    public void unlinkProject(ProjectDO project, BizDemandDO bizDemandDO) {
+        BizChangeLogDO bizDemandLog = newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode())
+                .setMainId(bizDemandDO.getId())
+                .setAction(ButtonActionEnum.UN_LINK.getText())
+                .setField(BizChangeLogTypeEnum.PROJECT.getText())
+                .setOldValue(project.getName())
+                .setNewValue(project.getName());
+        BizChangeLogDO projectLog = newBizChangeLogDO(true, BizChangeLogTypeEnum.PROJECT.getCode())
+                .setMainId(project.getId())
+                .setAction(ButtonActionEnum.UN_LINK.getText())
+                .setField(BizChangeLogTypeEnum.BIZ_DEMAND.getText())
+                .setOldValue(bizDemandDO.getName())
+                .setNewValue(bizDemandDO.getName());
+        bizChangeLogMapper.batchInsert(ImmutableList.of(bizDemandLog, projectLog));
     }
 
     @Override

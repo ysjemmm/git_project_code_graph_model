@@ -17,7 +17,6 @@ import com.timevale.mandarin.common.annotation.RestService;
 import generator.domain.ProjectBizDemandDO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.HashSet;
 import java.util.List;
@@ -45,10 +44,6 @@ public class BizDemandProjectServiceImpl implements BizDemandProjectService {
     @Override
     public BaseResult<Void> linkBizDemandProject(BizDemandLinkProjectReq bizDemandLinkProjectReq) {
         Long projectId = bizDemandLinkProjectReq.getProjectId();
-        if (CollectionUtils.isEmpty(bizDemandLinkProjectReq.getBizDemandIds()) ||
-                projectId == null) {
-            return BaseResult.success();
-        }
         Set<Long> bizDemandIds = new HashSet<>(bizDemandLinkProjectReq.getBizDemandIds());
         ProjectDO project = projectMapper.get(projectId);
         AssertUtil.notNull(project, "您关联的项目不存在");
@@ -89,6 +84,19 @@ public class BizDemandProjectServiceImpl implements BizDemandProjectService {
 
     @Override
     public BaseResult<Void> unlinkBizDemandProject(BizDemandUnlinkProjectReq bizDemandUnlinkProjectReq) {
-        return null;
+        Long bizDemandId = bizDemandUnlinkProjectReq.getBizDemandId();
+        Long projectId = bizDemandUnlinkProjectReq.getProjectId();
+        ProjectDO project = projectMapper.get(projectId);
+        AssertUtil.notNull(project, "取消关联的项目不存在");
+        BizDemandDO bizDemand = bizDemandMapper.get(bizDemandId);
+        AssertUtil.notNull(bizDemand, "取消关联的业务需求不存在");
+        List<ProjectBizDemandDO> pbRelations = projectBizDemandMapper.selectByProjectId(projectId);
+        AssertUtil.checkState(pbRelations.stream().map(ProjectBizDemandDO::getBizDemandId)
+                        .anyMatch(bId -> Objects.equals(bId, bizDemandId)),
+                "不存在对应关联关系");
+        projectBizDemandMapper.delete(projectId, bizDemandId);
+        // 日志
+        bizDemandLogComponent.unlinkProject(project, bizDemand);
+        return BaseResult.success();
     }
 }
