@@ -146,21 +146,24 @@
     </select>
 
     <select id="selectList" resultType="com.timevale.forward.dal.entity.BizDemandListDO">
-        select bd.id, bd.name, bd.dept_id, bd.status, bd.priority, bd.receive_man,  bd.receive_man_id, bd.target_customer,
-               bd.submit_man, bd.submit_man_id, bd.plan_release_date, bd.project_end_date,
-               bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date, bd.source_id,
-               bd.ued_time,bd.back_time,bd.front_time,bd.qa_time,bd.total_time,bd.`desc`,bd.hope_release_date, bd.customer_dev_demand,
-               pl.id productLineId, pl.name productLineName,
-               b.id bizDomainId , b.name bizDomainName
+        select bd.id, bd.name, bd.dept_id, bd.status, bd.priority, bd.receive_man, bd.receive_man_id,
+        bd.target_customer,
+        bd.submit_man, bd.submit_man_id, bd.plan_release_date, bd.project_end_date,
+        bd.is_deleted, bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date,
+        bd.source_id,
+        bd.ued_time,bd.back_time,bd.front_time,bd.qa_time,bd.total_time,bd.`desc`,bd.hope_release_date,
+        bd.customer_dev_demand,
+        pl.id productLineId, pl.name productLineName,
+        b.id bizDomainId , b.name bizDomainName
         from biz_demand bd
         left join product_line pl on pl.id = bd.product_line_id
-        left join biz_domain b    on pl.biz_domain_id = b.id
+        left join biz_domain b on pl.biz_domain_id = b.id
         <where>
             <if test="id!=null">
                 and bd.id = #{id}
             </if>
             <if test="containIds!=null and containIds.size()>0">
-                and bd.id  in
+                and bd.id in
                 <foreach collection="containIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
@@ -229,7 +232,7 @@
                 </foreach>
             </if>
             <if test="bizDemandIds!=null and bizDemandIds.size()>0">
-                and bd.id not  in
+                and bd.id not in
                 <foreach collection="bizDemandIds" item="item" separator="," open="(" close=")">
                     #{item}
                 </foreach>
@@ -263,6 +266,12 @@
             </if>
             <if test="customerDevDemand != null">
                 and bd.customer_dev_demand = #{customerDevDemand}
+            </if>
+            <if test="hopeReleaseDayStart != null">
+                and bd.hope_release_day >= date(#{hopeReleaseDayStart})
+            </if>
+            <if test="hopeReleaseDayEnd != null">
+                and bd.hope_release_day &lt;= date(#{hopeReleaseDayEnd})
             </if>
             and bd.is_deleted = false
         </where>

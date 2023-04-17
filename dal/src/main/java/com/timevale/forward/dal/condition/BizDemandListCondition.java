@@ -162,6 +162,16 @@ public class BizDemandListCondition{
     private List<Integer> hopeReleaseDateList;
 
     /**
+     * 期望上线日期开始
+     */
+    private Date hopeReleaseDayStart;
+
+    /**
+     * 期望上线日期结束
+     */
+    private Date hopeReleaseDayEnd;
+
+    /**
      * 是否为客开需求
      */
     private Boolean customerDevDemand;

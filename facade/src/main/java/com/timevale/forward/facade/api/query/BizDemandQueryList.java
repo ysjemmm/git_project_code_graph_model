@@ -93,6 +93,12 @@ public class BizDemandQueryList extends QueryBase {
     @ApiModelProperty("期望上线时间0(1月),1(2月),2(3月),3(4月),4(5月),5(6月),7(8月),8(9月),9(10月),10(11月),11(12月)")
     private List<Integer> hopeReleaseDateList;
 
+    @ApiModelProperty("期望上线时间开始")
+    private Date hopeReleaseDayStart;
+
+    @ApiModelProperty("期望上线时间结束")
+    private Date hopeReleaseDayEnd;
+
     @ApiModelProperty("是否为客户开发项目")
     private Boolean customerDevDemand;
 }
