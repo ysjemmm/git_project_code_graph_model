@@ -1,7 +1,6 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -37,6 +36,7 @@ import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
@@ -324,6 +324,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 新增业务需求
         BizDemandDO bizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandAddReq);
         bizDemandDO.setStatus(BizDemandStatusEnum.EVALUATE.getCode());
+        if (bizDemandAddReq.getCustomerDevDemand()) {
+            // 客开业务需求新增时如果资源评估人天全部维护，自动变为已接受
+            if (ObjectUtils.allNotNull(bizDemandAddReq.getUedTime(), bizDemandAddReq.getFrontTime(),
+                    bizDemandAddReq.getQaTime(), bizDemandAddReq.getBackTime(), bizDemandAddReq.getTotalTime())) {
+                bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
+            }
+        }
         bizDemandMapper.insert(bizDemandDO);
 
         List<FileAddReq> fileIdList = bizDemandAddReq.getFileList();
