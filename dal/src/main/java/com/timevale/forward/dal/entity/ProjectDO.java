@@ -8,8 +8,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -226,12 +226,13 @@ public class ProjectDO extends BaseDO {
     /**
      * 返回父节点id列表
      */
-    public LinkedList<Long> getParentList() {
-        return Stream.of(parentIds.substring(1, parentIds.length() - 1).split(","))
-                // prevent in case someone directly update table with space accidentally
-                .map(String::trim)
-                .map(Long::parseLong)
-                .collect(Collectors.toCollection(LinkedList::new));
+    public List<Long> getParentList() {
+        return Optional.ofNullable(parentIds).filter(StringUtils::isNotBlank)
+                .map(pIds -> Stream.of(pIds.substring(1, pIds.length() - 1).split(","))
+                        // prevent in case someone directly update table with space accidentally
+                        .map(String::trim)
+                        .map(Long::parseLong)
+                        .collect(Collectors.toList())).orElse(Collections.emptyList());
     }
 
     public List<Integer> getValidStageList() {
@@ -250,7 +251,7 @@ public class ProjectDO extends BaseDO {
     }
 
     public Long getParentId() {
-        LinkedList<Long> parentIds = getParentList();
+        List<Long> parentIds = getParentList();
         if (parentIds.size() < 2) {
             return null;
         }

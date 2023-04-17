@@ -14,9 +14,9 @@ import java.util.List;
 public class BizDemandLinkProjectReq extends ToString {
 
     @ApiModelProperty("业务需求id")
-    private List<String> bizDemandIds;
+    private List<Long> bizDemandIds;
 
     @ApiModelProperty("项目id")
-    private String projectId;
+    private Long projectId;
 
 }

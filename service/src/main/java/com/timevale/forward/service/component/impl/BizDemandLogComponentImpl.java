@@ -23,7 +23,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author xingyun
@@ -55,17 +59,17 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
         BizDemandMD newMD = BizDemandCopier.INSTANCE.transform(newObj);
         List<BizChangeLogDO> bizChangeLogDOList = FieldCompareUtil.commonCompare(oldMD, newMD, BizChangeLogDO.class);
         // 部门，产品线 判断
-        if(!Objects.equals(oldObj.getDeptId(), newObj.getDeptId())){
+        if (!Objects.equals(oldObj.getDeptId(), newObj.getDeptId())) {
             String oldDeptName = bizDemandComponent.getDeptChainName(oldObj.getDeptId());
             String newDeptName = bizDemandComponent.getDeptChainName(newObj.getDeptId());
             addLogWhenModifyData(oldDeptName, newDeptName, id, BizChangeLogFieldEnum.DEPARTMENT.getText(), true);
         }
-        if(!Objects.equals(oldObj.getProductLineId(), newObj.getProductLineId())){
+        if (!Objects.equals(oldObj.getProductLineId(), newObj.getProductLineId())) {
             String oldProductLineName = productLineMapper.selectById(oldObj.getProductLineId()).getName();
             String newProductLineName = productLineMapper.selectById(newObj.getProductLineId()).getName();
             addLogWhenModifyData(oldProductLineName, newProductLineName, id, BizChangeLogFieldEnum.PRODUCT_LINE.getText(), true);
         }
-        if(CollectionUtil.isNotEmpty(bizChangeLogDOList)){
+        if (CollectionUtil.isNotEmpty(bizChangeLogDOList)) {
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
             for (BizChangeLogDO bizChangeLogDO : bizChangeLogDOList) {
                 bizChangeLogDO.setCreateManId(userInfo.getId());
@@ -205,8 +209,30 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
     }
 
     @Override
-    public void addLogAsProductDemandStatusChange(Integer oldStatus, Integer newStatus, Long id,Integer type) {
-        if(!Objects.equals(oldStatus,newStatus)){
+    public void linkProject(ProjectDO project, Collection<BizDemandDO> bizDemands) {
+
+        // 业务需求关联项目
+        List<BizChangeLogDO> bizChangeLogs =
+                bizDemands.stream().map(bd -> newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode())
+                        .setMainId(bd.getId())
+                        .setAction(ButtonActionEnum.LINK.getText()).setField(BizChangeLogTypeEnum.PROJECT.getText())
+                        .setOldValue(project.getName())
+                        .setNewValue(project.getName())).collect(Collectors.toList());
+
+        // 项目关联业务需求列表
+        bizChangeLogs.addAll(bizDemands.stream().map(bd -> newBizChangeLogDO(true, BizChangeLogTypeEnum.PROJECT.getCode())
+                .setMainId(project.getId())
+                .setAction(ButtonActionEnum.LINK.getText())
+                .setField(BizChangeLogTypeEnum.BIZ_DEMAND.getText())
+                .setOldValue(bd.getName())
+                .setNewValue(bd.getName())).collect(Collectors.toList()));
+        bizChangeLogMapper.batchInsert(bizChangeLogs);
+
+    }
+
+    @Override
+    public void addLogAsProductDemandStatusChange(Integer oldStatus, Integer newStatus, Long id, Integer type) {
+        if (!Objects.equals(oldStatus, newStatus)) {
             BizChangeLogDO logDO = new BizChangeLogDO();
             logDO.setType(type);
             logDO.setMainId(id);
@@ -232,7 +258,7 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
         logDO.setField(field);
         logDO.setOldValue(oldValue);
         logDO.setNewValue(newValue);
-        if(StringUtils.isNotEmpty(action)){
+        if (StringUtils.isNotEmpty(action)) {
             logDO.setAction(action);
         }
 
@@ -241,7 +267,7 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
 
     @Override
     public BizChangeLogDO buildLogWhenPublishDateChange(String oldValue, String newValue, Long id) {
-        return buildLogWhenPublishDateChange(oldValue,newValue,id,BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+        return buildLogWhenPublishDateChange(oldValue, newValue, id, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
     }
 
     @Override
@@ -255,7 +281,7 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
     }
 
     @Override
-    public BizChangeLogDO buildLogWhenUpdateFiles(String oldValue, String newValue, Long id,String action) {
+    public BizChangeLogDO buildLogWhenUpdateFiles(String oldValue, String newValue, Long id, String action) {
         BizChangeLogDO logDO = newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
         logDO.setMainId(id);
         logDO.setField(BizChangeLogFieldEnum.ATTACHMENT.getText());
@@ -265,15 +291,15 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
         return logDO;
     }
 
-    private BizChangeLogDO newBizChangeLogDO(Boolean isUser, Integer type){
+    private BizChangeLogDO newBizChangeLogDO(Boolean isUser, Integer type) {
         BizChangeLogDO bizChangeLogDO = new BizChangeLogDO();
         bizChangeLogDO.setType(type);
 
-        if(isUser){
+        if (isUser) {
             UserInfo userInfo = LocalSessionUtils.getUserInfo();
             bizChangeLogDO.setCreateManId(userInfo.getId());
             bizChangeLogDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-        }else{
+        } else {
             bizChangeLogDO.setCreateManId(CommonConstant.SYSTEM);
             bizChangeLogDO.setCreateMan(CommonConstant.SYSTEM);
         }
