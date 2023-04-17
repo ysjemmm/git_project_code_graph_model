@@ -15,10 +15,7 @@ import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.to.PdLineDomainTO;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.BizDemandCopier;
-import com.timevale.forward.service.copy.BizDemandCustomCopier;
-import com.timevale.forward.service.copy.FileCopier;
-import com.timevale.forward.service.copy.PersonCopier;
+import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.dock.CrmProjectClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.*;
@@ -1100,6 +1097,13 @@ public class BizDemandServiceImpl implements BizDemandService {
                         a.getName())
                 ));
         return BaseResult.success(true);
+    }
+
+    @Override
+    public ProjectVO findLinkProject(Long bizDemandId) {
+        log.info("业务需求-项目清单接收参数:{}", bizDemandId);
+        ProjectDO projectDO = projectComponent.getByBizDemandId(bizDemandId);
+        return ProjectCopier.INSTANCE.transform(projectDO);
     }
 
     /**

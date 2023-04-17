@@ -21,7 +21,6 @@ import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.List;
 
 @Mapper(imports = {
@@ -177,6 +176,8 @@ public interface ProjectCopier {
      * @return ProjectVO
      */
     @Mapping(source = "pm", target = "pmName")
+    @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(projectDO.getStatus()))")
+    @Mapping(target = "priorityName", expression = "java(PriorityEnum.getTextByCode(projectDO.getPriority()))")
     ProjectVO transform(ProjectDO projectDO);
 
 

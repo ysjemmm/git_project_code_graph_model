@@ -74,4 +74,6 @@ public interface ProjectComponent {
      * @param projectId 项目id
      */
     void updateCustomDev(Long projectId);
+
+    ProjectDO getByBizDemandId(Long bizDemandId);
 }

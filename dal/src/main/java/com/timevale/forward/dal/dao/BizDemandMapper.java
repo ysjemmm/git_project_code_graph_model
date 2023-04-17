@@ -3,6 +3,7 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.BizDemandListDO;
+import com.timevale.forward.dal.entity.ProjectDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
@@ -169,4 +170,6 @@ public interface BizDemandMapper {
 
     List<BizDemandDO> getByProjectId(@Param("projectId")Long projectId);
 
+    @Select("select p.* from project p left join project_biz_demand pbd on p.id = pbd.project_id and pbd.is_deleted = false where pbd.biz_demand_id = #{bizDemandId} and p.is_deleted = false")
+    ProjectDO getByBizDemandId(@Param("bizDemandId") Long bizDemandId);
 }

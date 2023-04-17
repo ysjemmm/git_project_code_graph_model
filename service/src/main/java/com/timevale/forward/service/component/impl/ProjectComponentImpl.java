@@ -631,4 +631,12 @@ public class ProjectComponentImpl implements ProjectComponent {
             );
         }
     }
+
+    @Override
+    public ProjectDO getByBizDemandId(Long bizDemandId) {
+        if (bizDemandId == null) {
+            return null;
+        }
+        return bizDemandMapper.getByBizDemandId(bizDemandId);
+    }
 }

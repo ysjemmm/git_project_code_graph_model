@@ -610,10 +610,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (projectDO == null) {
             return null;
         }
-        ProjectVO projectVO = ProjectCopier.INSTANCE.transform(projectDO);
-        projectVO.setStatusName(ProjectStatusEnum.getTextByCode(projectDO.getStatus()));
-        projectVO.setPriorityName(PriorityEnum.getTextByCode(projectDO.getPriority()));
-        return projectVO;
+        return ProjectCopier.INSTANCE.transform(projectDO);
     }
 
     @Override

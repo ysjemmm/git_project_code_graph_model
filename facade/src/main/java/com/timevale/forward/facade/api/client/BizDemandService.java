@@ -143,15 +143,20 @@ public interface BizDemandService {
 
     /**
      * 根据客户id查询业务数据
-     * @param customId
-     * @return
      */
     BaseResult<List<BizDemandVO>> getBizDemandByCustomId(Long customId);
 
     /**
      * CRM开发资源申请流程通过,发送消息通知接收人
-     * @param receiverReq receiverReq
-     * @return Boolean
      */
     BaseResult<Boolean> noticeReceiver(BizDemandNoticeReceiverReq receiverReq);
+
+    /**
+     * 业务需求-项目清单
+     *
+     * @param bizDemandId 业务需求id
+     * @return 列表
+     */
+    ProjectVO findLinkProject(Long bizDemandId);
+
 }
