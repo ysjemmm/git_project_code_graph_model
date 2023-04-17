@@ -127,6 +127,7 @@
             total_time = #{totalTime},
             modify_man_id = #{modifyManId},
             modify_man = #{modifyMan},
+            product_solution = #{productSolution},
         </set>
         where id = #{id}
     </update>
