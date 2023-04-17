@@ -66,4 +66,7 @@ public class ProductDemandLinkBizDemandQueryList extends QueryBase {
     @ApiModelProperty("选中为标签类别时填写,类别id")
     private Boolean limitReceiveMan = true;
 
+    @ApiModelProperty("是否客开需求")
+    private Boolean customerDevDemand;
+
 }
