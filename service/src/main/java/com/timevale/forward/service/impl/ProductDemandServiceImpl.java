@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.Lists;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.*;
 import com.timevale.forward.dal.dao.*;
@@ -31,7 +32,6 @@ import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -172,13 +172,13 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         //是否打标
-        if(CollectionUtils.isNotEmpty(productDemandQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(productDemandQueryList.getLabelCategoryIds())){
+        if (CollectionUtils.isNotEmpty(productDemandQueryList.getLabelIds()) || CollectionUtils.isNotEmpty(productDemandQueryList.getLabelCategoryIds())) {
             Boolean containLabel = productDemandQueryList.getContainLabel();
 
             List<Long> newLabelIds = labelComponent.getLabelIds(productDemandQueryList.getLabelIds(), productDemandQueryList.getLabelCategoryIds());
 
             // 查询包含且类别下没有标签
-            if(CollectionUtils.isEmpty(newLabelIds) && containLabel){
+            if (CollectionUtils.isEmpty(newLabelIds) && containLabel) {
                 return BaseResult.success(ResultUtil.queryResultEmpty());
             }
 
@@ -432,9 +432,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         }
 
         //标签
-        if(CollectionUtils.isNotEmpty(productDemandAddReq.getLabelIds())){
-            bizLabelComponent.addLabel(productDemand.getId(),productDemandAddReq.getLabelIds(),BizTypeEnum.PRODUCT_DEMAND.getCode());
-            bizLabelComponent.addLog(productDemand.getId(),productDemandAddReq.getLabelIds(),BizTypeEnum.PRODUCT_DEMAND.getCode(),true);
+        if (CollectionUtils.isNotEmpty(productDemandAddReq.getLabelIds())) {
+            bizLabelComponent.addLabel(productDemand.getId(), productDemandAddReq.getLabelIds(), BizTypeEnum.PRODUCT_DEMAND.getCode());
+            bizLabelComponent.addLog(productDemand.getId(), productDemandAddReq.getLabelIds(), BizTypeEnum.PRODUCT_DEMAND.getCode(), true);
         }
 
         // 更新是否客开项目
@@ -489,26 +489,27 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         // 校验当前产品需求是否已经关联项目
         if (query.getProductDemandId() != null) {
-            ProjectProductDemandDO related  = projectProductDemandMapper.getByProductDemandId(query.getProductDemandId());
+            ProjectProductDemandDO related = projectProductDemandMapper.getByProductDemandId(query.getProductDemandId());
             AssertUtil.checkState(related == null, "该产品需求已被关联,请解除后重试");
         }
 
         // 如果查询状态条件为空,默认选择下列状态
         List<Integer> status = query.getStatus();
         if (CollUtil.isEmpty(status)) {
-            status.add(ProjectStatusEnum.DEVING.getCode());
-            status.add(ProjectStatusEnum.WAITING.getCode());
-            status.add(ProjectStatusEnum.PLANING.getCode());
-            status.add(ProjectStatusEnum.TESTING.getCode());
+            query.setStatus(Lists.newArrayList(
+                    ProjectStatusEnum.DEVING.getCode(),
+                    ProjectStatusEnum.WAITING.getCode(),
+                    ProjectStatusEnum.PLANING.getCode(),
+                    ProjectStatusEnum.TESTING.getCode()));
         }
 
         // 转换类型
         ProjectListCondition condition = ProjectCopier.INSTANCE.convert(query);
 
         // 如果标签条件不为空
-        if(CollUtil.isNotEmpty(query.getLabelIds()) || CollUtil.isNotEmpty(query.getLabelCategoryIds())){
+        if (CollUtil.isNotEmpty(query.getLabelIds()) || CollUtil.isNotEmpty(query.getLabelCategoryIds())) {
             List<Long> labelIds = labelComponent.getLabelIds(query.getLabelIds(), query.getLabelCategoryIds());
-            if(CollUtil.isEmpty(labelIds)){
+            if (CollUtil.isEmpty(labelIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
             condition.setLabelIds(labelIds);
@@ -559,9 +560,9 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             condition.setBizDemandIds(bizDemandIds);
         }
         condition.setCollation(CommonConstant.DEFAULT_ORDER_BY);
-        if(CollUtil.isNotEmpty(query.getLabelIds())||CollUtil.isNotEmpty(query.getLabelCategoryIds())){
+        if (CollUtil.isNotEmpty(query.getLabelIds()) || CollUtil.isNotEmpty(query.getLabelCategoryIds())) {
             List<Long> labelIds = labelComponent.getLabelIds(query.getLabelIds(), query.getLabelCategoryIds());
-            if(CollUtil.isEmpty(labelIds)){
+            if (CollUtil.isEmpty(labelIds)) {
                 return BaseResult.success(ResultUtil.pageEmpty());
             }
             condition.setLabelIds(labelIds);
