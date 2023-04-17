@@ -101,4 +101,7 @@ public class BizDemandQueryList extends QueryBase {
 
     @ApiModelProperty("是否为客户开发项目")
     private Boolean customerDevDemand;
+
+    @ApiModelProperty("产品方案")
+    private String productSolution;
 }

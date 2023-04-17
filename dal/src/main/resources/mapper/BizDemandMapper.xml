@@ -273,6 +273,9 @@
             <if test="hopeReleaseDayEnd != null">
                 and bd.hope_release_day &lt;= date(#{hopeReleaseDayEnd})
             </if>
+            <if test="productSolution != null and productSolution != ''">
+                and bd.product_solution like concat('%', #{productSolution}, '%')
+            </if>
             and bd.is_deleted = false
         </where>
     </select>

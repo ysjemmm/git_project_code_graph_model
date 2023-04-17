@@ -176,6 +176,11 @@ public class BizDemandListCondition{
      */
     private Boolean customerDevDemand;
 
+    /**
+     * 产品方案
+     */
+    private String productSolution;
+
     public int pageNum = 1;
     public int pageSize = 20;
 }
