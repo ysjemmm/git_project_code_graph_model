@@ -31,4 +31,11 @@ public class CommonConfig {
 
     @Value("${evalPmoGroup:557300580}")
     private String evalPmoGroup;
+
+    @Value("${devDemandAppealLabelId:542}")
+    private Long devDemandAppealLabelId;
+
+    @Value("${devDemandAppealLabelId:543}")
+    private Long devDemandApproveLabelId;
+
 }

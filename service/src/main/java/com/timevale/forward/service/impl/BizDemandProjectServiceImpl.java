@@ -8,8 +8,8 @@ import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.facade.api.client.BizDemandProjectService;
 import com.timevale.forward.facade.api.request.BizDemandLinkProjectReq;
-import com.timevale.forward.facade.api.request.BizDemandUnlinkProjectReq;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
+import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.mandarin.base.util.AssertUtil;
@@ -42,7 +42,15 @@ public class BizDemandProjectServiceImpl implements BizDemandProjectService {
     private final ProjectBizDemandMapper projectBizDemandMapper;
 
     @Override
-    public BaseResult<Void> linkBizDemandProject(BizDemandLinkProjectReq bizDemandLinkProjectReq) {
+    public BaseResult<Void> linkOrUnlinkBizDemandProject(BizDemandLinkProjectReq bizDemandLinkProjectReq) {
+        if (Objects.equals(bizDemandLinkProjectReq.getType(), LinkOrUnLinkEnum.LINK.getCode())) {
+            return linkBizDemandProject(bizDemandLinkProjectReq);
+        } else {
+            return unlinkBizDemandProject(bizDemandLinkProjectReq);
+        }
+    }
+
+    private BaseResult<Void> linkBizDemandProject(BizDemandLinkProjectReq bizDemandLinkProjectReq) {
         Long projectId = bizDemandLinkProjectReq.getProjectId();
         Set<Long> bizDemandIds = new HashSet<>(bizDemandLinkProjectReq.getBizDemandIds());
         ProjectDO project = projectMapper.get(projectId);
@@ -82,9 +90,8 @@ public class BizDemandProjectServiceImpl implements BizDemandProjectService {
         return BaseResult.success();
     }
 
-    @Override
-    public BaseResult<Void> unlinkBizDemandProject(BizDemandUnlinkProjectReq bizDemandUnlinkProjectReq) {
-        Long bizDemandId = bizDemandUnlinkProjectReq.getBizDemandId();
+    private BaseResult<Void> unlinkBizDemandProject(BizDemandLinkProjectReq bizDemandUnlinkProjectReq) {
+        Long bizDemandId = bizDemandUnlinkProjectReq.getBizDemandIds().get(0);
         Long projectId = bizDemandUnlinkProjectReq.getProjectId();
         ProjectDO project = projectMapper.get(projectId);
         AssertUtil.notNull(project, "取消关联的项目不存在");

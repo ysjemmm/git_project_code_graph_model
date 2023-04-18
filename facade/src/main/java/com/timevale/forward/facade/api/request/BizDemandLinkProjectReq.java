@@ -23,4 +23,7 @@ public class BizDemandLinkProjectReq extends ToString {
     @ApiModelProperty("项目id")
     private Long projectId;
 
+    @ApiModelProperty("关联、取消关联类型")
+    private int type;
+
 }
