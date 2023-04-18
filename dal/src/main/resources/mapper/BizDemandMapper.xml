@@ -88,6 +88,9 @@
             <if test="hopeReleaseDay != null">
                 hope_release_day = #{hopeReleaseDay},
             </if>
+            <if test="productSolution != null and productSolution != ''">
+                product_solution = #{productSolution},
+            </if>
             <if test="true">
                 modify_man_id = #{modifyManId},
                 modify_man = #{modifyMan},
@@ -131,6 +134,7 @@
             modify_man_id = #{modifyManId},
             modify_man = #{modifyMan},
             product_solution = #{productSolution},
+            hope_release_day = #{hopeReleaseDay},
         </set>
         where id = #{id}
     </update>
