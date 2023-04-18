@@ -662,5 +662,12 @@
         </foreach>
         AND pj.is_deleted = false
     </select>
+    <select id="getBySourceIds" resultType="com.timevale.forward.dal.entity.ProjectDO">
+        select id, name, source_id from project where source_id in
+        <foreach collection="sourceIds" item="sourceId" open="(" separator="," close=")">
+            #{sourceId}
+        </foreach>
+        and is_deleted = false
+    </select>
 
 </mapper>

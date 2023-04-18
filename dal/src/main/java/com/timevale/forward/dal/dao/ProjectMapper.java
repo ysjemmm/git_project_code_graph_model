@@ -55,7 +55,7 @@ public interface ProjectMapper {
     int update(ProjectDO projectDO);
 
     @Update("UPDATE project SET expected_income = #{expectedIncome} WHERE id =#{id}")
-    int updateExpectIncome(@Param("id")Long id, @Param("expectedIncome")String expectedIncome);
+    void updateExpectIncome(@Param("id")Long id, @Param("expectedIncome")String expectedIncome);
 
     /**
      * 完成更新（可以为null）
@@ -201,4 +201,6 @@ public interface ProjectMapper {
 
     @Delete("DELETE FROM project WHERE `name` =#{name} AND id !=#{id}")
     void deleteSameNameAndNotId(@Param("name")String name, @Param("id")Long id);
+
+    List<ProjectDO> getBySourceIds(@Param("sourceIds") Collection<String> sourceIds);
 }
