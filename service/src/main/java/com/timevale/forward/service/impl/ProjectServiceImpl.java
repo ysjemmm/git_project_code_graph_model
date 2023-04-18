@@ -16,7 +16,7 @@ import com.timevale.forward.dal.condition.ProjectListChildCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
-import com.timevale.forward.facade.api.client.BizDemandProjectService;
+import com.timevale.forward.facade.api.client.ProjectBizDemandService;
 import com.timevale.forward.facade.api.client.ProjectMilestoneService;
 import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.*;
@@ -180,7 +180,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Resource
     private ProjectBizDemandMapper projectBizDemandMapper;
     @Resource
-    private BizDemandProjectService bizDemandProjectService;
+    private ProjectBizDemandService projectBizDemandService;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -419,7 +419,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         if (StringUtils.isNotBlank(projectAddReq.getSourceId()) &&
                 CollectionUtils.isNotEmpty(projectAddReq.getBizDemandIds())) {
-            bizDemandProjectService.linkOrUnlinkBizDemandProject(new BizDemandLinkProjectReq()
+            projectBizDemandService.linkOrUnlinkBizDemandProject(new BizDemandLinkProjectReq()
                     .setProjectId(projectDO.getId())
                     .setBizDemandIds(projectAddReq.getBizDemandIds()));
         }

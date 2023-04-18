@@ -6,7 +6,7 @@ import com.timevale.forward.facade.api.request.BizDemandLinkProjectReq;
 import com.timevale.mandarin.common.annotation.RestClient;
 
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
-public interface BizDemandProjectService {
+public interface ProjectBizDemandService {
 
     /**
      * 关联或者取消关联业务需求

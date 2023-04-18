@@ -6,7 +6,7 @@ import com.timevale.forward.dal.dao.ProjectBizDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.facade.api.client.BizDemandProjectService;
+import com.timevale.forward.facade.api.client.ProjectBizDemandService;
 import com.timevale.forward.facade.api.request.BizDemandLinkProjectReq;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestService
 @RequiredArgsConstructor
-public class BizDemandProjectServiceImpl implements BizDemandProjectService {
+public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
 
     private final ProjectMapper projectMapper;
     private final BizDemandMapper bizDemandMapper;
