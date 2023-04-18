@@ -16,6 +16,7 @@ import com.timevale.forward.dal.condition.ProjectListChildCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.facade.api.client.BizDemandProjectService;
 import com.timevale.forward.facade.api.client.ProjectMilestoneService;
 import com.timevale.forward.facade.api.client.ProjectService;
 import com.timevale.forward.facade.api.query.*;
@@ -178,6 +179,8 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectEvaluateComponent evaluateComponent;
     @Resource
     private ProjectBizDemandMapper projectBizDemandMapper;
+    @Resource
+    private BizDemandProjectService bizDemandProjectService;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -336,7 +339,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResult<Boolean> add(ProjectAddReq projectAddReq) {
+    public BaseResult<Long> add(ProjectAddReq projectAddReq) {
         log.info("项目新增接收参数:{}", projectAddReq);
 
         // 名称校验
@@ -414,7 +417,14 @@ public class ProjectServiceImpl implements ProjectService {
             projectGoalMapper.batchInsert(ProjectGoalCopier.INSTANCE.convert(projectAddReq.getProjectGoals()));
         }
 
-        return BaseResult.success(true);
+        if (StringUtils.isNotBlank(projectAddReq.getSourceId()) &&
+                CollectionUtils.isNotEmpty(projectAddReq.getBizDemandIds())) {
+            bizDemandProjectService.linkOrUnlinkBizDemandProject(new BizDemandLinkProjectReq()
+                    .setProjectId(projectDO.getId())
+                    .setBizDemandIds(projectAddReq.getBizDemandIds()));
+        }
+
+        return BaseResult.success(projectDO.getId());
     }
 
     @Override

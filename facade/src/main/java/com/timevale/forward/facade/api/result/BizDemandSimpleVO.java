@@ -48,6 +48,9 @@ public class BizDemandSimpleVO extends ToString {
     @ApiModelProperty("更新时间")
     private Date modifyDate;
 
+    @ApiModelProperty("产品线id")
+    private Long productLineId;
+
     @ApiModelProperty("产品线名称")
     private String productLineName;
 

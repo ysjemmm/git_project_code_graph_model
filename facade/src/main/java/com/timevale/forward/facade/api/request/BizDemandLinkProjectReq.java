@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -13,6 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 @ApiModel("关联业务需求、项目请求")
+@Accessors(chain = true)
 public class BizDemandLinkProjectReq extends ToString {
 
     @NotEmpty(message = "业务需求id不能为空")

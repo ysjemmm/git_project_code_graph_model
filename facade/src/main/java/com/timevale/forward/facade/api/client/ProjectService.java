@@ -47,7 +47,7 @@ public interface ProjectService {
      * @param projectAddReq 项目信息
      * @return 数量
      */
-    BaseResult<Boolean> add(ProjectAddReq projectAddReq);
+    BaseResult<Long> add(ProjectAddReq projectAddReq);
 
     /**
      * 内部项目新增

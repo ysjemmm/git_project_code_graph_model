@@ -14,6 +14,7 @@ import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.to.PdLineDomainTO;
 import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.dock.CrmProjectClient;
@@ -97,6 +98,8 @@ public class BizDemandServiceImpl implements BizDemandService {
     private ProductLineComponent productLineComponent;
     @Resource
     private CrmProjectClient crmProjectClient;
+    @Resource
+    private CommonConfig commonConfig;
 
     @Override
     public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
@@ -640,6 +643,22 @@ public class BizDemandServiceImpl implements BizDemandService {
             );
         }
 
+        if (bizDemandDO.getCustomerDevDemand()) {
+            Map<Long, List<BizLabelSimpleVO>> bizLabelMap =
+                    bizLabelComponent.getBizLabelMap(Collections.singletonList(bizDemandId),
+                            BizTypeEnum.BIZ_DEMAND.getCode());
+            if (!bizLabelMap.isEmpty()) {
+                List<BizLabelSimpleVO> labels = bizLabelMap.get(bizDemandId);
+                if (labels.stream().map(BizLabelSimpleVO::getId)
+                        .anyMatch(x -> Objects.equal(x, commonConfig.getDevDemandAppealLabelId()))) {
+                    // 申诉需求接收打上申诉通过标签
+                    bizLabelComponent.addLabel(bizDemandId,
+                            Collections.singletonList(commonConfig.getDevDemandApproveLabelId()),
+                            BizTypeEnum.BIZ_DEMAND.getCode());
+                }
+            }
+        }
+
         return BaseResult.success(true);
     }
 
@@ -1037,6 +1056,12 @@ public class BizDemandServiceImpl implements BizDemandService {
         oldBizDemandDO.setReceiveMan(bizDemandResubmitReq.getReceiveMan());
         oldBizDemandDO.setReceiveManId(bizDemandResubmitReq.getReceiveManId());
         bizDemandMapper.fullUpdate(oldBizDemandDO);
+        if (oldBizDemandDO.getCustomerDevDemand()) {
+            // 客开需求需要添加标签：客开需求提交申诉
+            Long labelId = commonConfig.getDevDemandAppealLabelId();
+            bizLabelComponent.addLabel(oldBizDemandDO.getId(), Collections.singletonList(labelId),
+                    BizTypeEnum.BIZ_DEMAND.getCode());
+        }
 
         messageEventPublisher.publish(new BizDemandToReceiveAaginMsgEvent(
                 this,

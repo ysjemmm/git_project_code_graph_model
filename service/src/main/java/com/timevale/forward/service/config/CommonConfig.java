@@ -32,9 +32,15 @@ public class CommonConfig {
     @Value("${evalPmoGroup:557300580}")
     private String evalPmoGroup;
 
+    /**
+     * 客开需求申诉标签
+     */
     @Value("${devDemandAppealLabelId:542}")
     private Long devDemandAppealLabelId;
 
+    /**
+     * 客开需求申诉通过标签
+     */
     @Value("${devDemandAppealLabelId:543}")
     private Long devDemandApproveLabelId;
 
