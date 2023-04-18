@@ -154,7 +154,7 @@
         bd.target_customer, bd.submit_man, bd.submit_man_id, bd.plan_release_date, bd.project_end_date, bd.is_deleted,
         bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date, bd.source_id,
         bd.ued_time,bd.back_time,bd.front_time,bd.qa_time,bd.total_time,bd.`desc`,bd.hope_release_date,
-        bd.customer_dev_demand,bd.hope_release_day,
+        bd.customer_dev_demand,bd.hope_release_day,bd.product_solution,
         pl.id productLineId, pl.name productLineName,
         b.id bizDomainId , b.name bizDomainName
         from biz_demand bd
