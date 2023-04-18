@@ -27,6 +27,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
+import generator.domain.ProjectBizDemandDO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -68,6 +69,8 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     private BizDemandLogComponent bizDemandLogComponent;
     @Resource
     private ProductBizDemandMapper productBizDemandMapper;
+    @Resource
+    private ProjectBizDemandMapper projectBizDemandMapper;
 
     @Override
     public void updateStatus(Long bdId) {
@@ -155,8 +158,8 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
         //最小的产品需求状态小于列入项目中,无需计算发布时间
         Integer minStatus = productBizDemandDOList.stream().map(ProductBizDemandDO::getStatus).min(Comparator.comparingInt(o -> o)).orElse(0);
-        if(minStatus<ProductDemandStatusEnum.INCLUDED.getCode()){
-            log.info("业务需求关联的产品需求{}:",productBizDemandDOList);
+        if (minStatus < ProductDemandStatusEnum.INCLUDED.getCode()) {
+            log.info("业务需求关联的产品需求{}:", productBizDemandDOList);
             return null;
         }
 
@@ -209,7 +212,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         log.info("业务查询产品线分析：{}", bizDemandListDOMap);
 
         List<ProductLineAnalyseVO> analyseVOList = new ArrayList<>();
-        bizDemandListDOMap.forEach((k,v) -> {
+        bizDemandListDOMap.forEach((k, v) -> {
             ProductLineAnalyseVO bizDemandProductLineVO = new ProductLineAnalyseVO();
             Optional<BizDemandListDO> any = v.stream().findAny();
             any.ifPresent(e -> {
@@ -220,14 +223,14 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             });
         });
         // 根据数量，逆序排序
-        analyseVOList.sort((a,b) -> b.getCount().compareTo(a.getCount()));
+        analyseVOList.sort((a, b) -> b.getCount().compareTo(a.getCount()));
 
         // 产品线排查
         List<Long> conditionSubProductLineIdList = condition.getSubProductLineIdList();
         if (CollUtil.isNotEmpty(conditionSubProductLineIdList)) {
             Set<Long> resultProductLineIdSet = analyseVOList.stream().map(ProductLineAnalyseVO::getProductLineId).collect(Collectors.toSet());
             List<Long> queryProductLineIdList = conditionSubProductLineIdList.stream().filter(resultProductLineIdSet::contains).collect(Collectors.toList());
-            if(CollUtil.isEmpty(queryProductLineIdList)) {
+            if (CollUtil.isEmpty(queryProductLineIdList)) {
                 QueryResultVO<BizDemandVO> queryResultVO = new QueryResultVO<>();
                 queryResultVO.setAnalyseVOList(analyseVOList);
                 queryResultVO.setPageQueryResult(ResultUtil.pageEmpty());
@@ -243,6 +246,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(condition);
 
         List<Long> bizDemandIds = bizDemandListDOList.stream().map(BizDemandListDO::getId).collect(Collectors.toList());
+        List<Long> customerDevBizDemandIds = bizDemandListDOList.stream()
+                .filter(BizDemandListDO::getCustomerDevDemand)
+                .map(BizDemandListDO::getId).collect(Collectors.toList());
         List<BizDemandVO> bizDemandVOList = BizDemandCopier.INSTANCE.convert(bizDemandListDOList);
         if (CollUtil.isEmpty(bizDemandVOList)) {
             return ResultUtil.queryResultEmpty();
@@ -271,6 +277,27 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             List<BizLabelSimpleVO> list = labelMap.get(bizDemandVO.getId());
             if (CollUtil.isNotEmpty(list)) {
                 bizDemandVO.setLabelNames(list);
+            }
+        }
+
+        // 填充交付项目来源数据产研项目信息
+        if (!customerDevBizDemandIds.isEmpty()) {
+            List<ProjectBizDemandDO> pbdList = projectBizDemandMapper.selectByBizDemandIds(customerDevBizDemandIds);
+            if (!pbdList.isEmpty()) {
+                List<Long> projectIds = pbdList.stream().map(ProjectBizDemandDO::getProjectId).distinct()
+                        .collect(Collectors.toList());
+                List<ProjectDO> projects = projectMapper.getByIds(projectIds);
+                Map<Long, ProjectDO> projectById = Maps.uniqueIndex(projects, ProjectDO::getId);
+                Map<Long, BizDemandVO> voById = Maps.uniqueIndex(bizDemandVOList, BizDemandVO::getId);
+                for (ProjectBizDemandDO pbd : pbdList) {
+                    BizDemandVO vo = voById.get(pbd.getBizDemandId());
+                    ProjectDO project = projectById.get(pbd.getProjectId());
+                    if (vo != null && project != null) {
+                        vo.setProjectId(project.getId());
+                        vo.setProjectName(project.getName());
+                        vo.setProjectCreateDate(project.getCreateDate());
+                    }
+                }
             }
         }
 

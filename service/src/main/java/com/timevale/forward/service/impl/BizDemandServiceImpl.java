@@ -147,7 +147,16 @@ public class BizDemandServiceImpl implements BizDemandService {
             condition.setLabelIds(labelIds);
         }
 
-        return BaseResult.success(bizDemandComponent.page(condition));
+        QueryResultVO<BizDemandVO> res = bizDemandComponent.page(condition);
+        if (bizDemandQueryList.getQuerySource() == 1) {
+            // 交付项目来源查询需要特殊排序
+            List<BizDemandVO> resultList = res.getPageQueryResult().getResultList();
+            resultList.sort(Comparator.<BizDemandVO, Integer>comparing(x -> x.getProjectId() != null ? 1 : 0)
+                    .thenComparing(BizDemandVO::getProjectCreateDate).thenComparing(BizDemandVO::getCreateDate)
+                    .reversed());
+        }
+
+        return BaseResult.success(res);
     }
 
     @Override

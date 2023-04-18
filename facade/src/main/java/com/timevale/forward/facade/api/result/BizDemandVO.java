@@ -127,4 +127,14 @@ public class BizDemandVO extends ToString {
 
     @ApiModelProperty("产品方案")
     private String productSolution;
+
+    @ApiModelProperty("产研项目id")
+    private Long projectId;
+
+    @ApiModelProperty("产研项目名称")
+    private String projectName;
+
+    @ApiModelProperty("项目创建时间")
+    private Date projectCreateDate;
+
 }
