@@ -119,5 +119,6 @@
         <mapper resource="mapper/ProjectMemberEvaluateMapper.xml"/>
         <mapper resource="mapper/EvaluateDimensionMapper.xml"/>
         <mapper resource="mapper/HistoryRecordMapper.xml"/>
+        <mapper resource="mapper/ProjectBizDemandMapper.xml" />
     </mappers>
 </configuration>

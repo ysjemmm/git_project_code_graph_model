@@ -18,10 +18,7 @@ import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectMilestoneService;
 import com.timevale.forward.facade.api.client.ProjectService;
-import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
-import com.timevale.forward.facade.api.query.ProjectPageQuery;
-import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
-import com.timevale.forward.facade.api.query.ProjectQueryList;
+import com.timevale.forward.facade.api.query.*;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
@@ -46,6 +43,7 @@ import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import generator.domain.ProjectBizDemandDO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -178,6 +176,8 @@ public class ProjectServiceImpl implements ProjectService {
     private ForwardFlow forwardFlow;
     @Resource
     private ProjectEvaluateComponent evaluateComponent;
+    @Resource
+    private ProjectBizDemandMapper projectBizDemandMapper;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -340,8 +340,8 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("项目新增接收参数:{}", projectAddReq);
 
         // 名称校验
-        AssertUtil.checkState(!StrUtil.contains(projectAddReq.getName(),CommonConstant.BLANK), "项目名称中请勿包含空格");
-        AssertUtil.checkState(projectMapper.getByName(projectAddReq.getName()) == null,"该项目名称已存在,请修改后重试");
+        AssertUtil.checkState(!StrUtil.contains(projectAddReq.getName(), CommonConstant.BLANK), "项目名称中请勿包含空格");
+        AssertUtil.checkState(projectMapper.getByName(projectAddReq.getName()) == null, "该项目名称已存在,请修改后重试");
 
         if (YesOrNoEnum.YES.getCode().equals(projectAddReq.getIsWithGoal())) {
             AssertUtil.notEmpty(projectAddReq.getProjectGoals(), "项目含有项目目标，请至少添加一条项目目标数据");
@@ -623,7 +623,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (extTeamMembers != null) {
             // 旧版成员
             List<PersonDO> allMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
-            List<PersonDO> levelMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(),PersonLevelEnum.EXTENSION.getCode());
+            List<PersonDO> levelMembers = personComponent.select(projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.EXTENSION.getCode());
 
             String addMembers = extTeamMembers.stream()
                     .map(PersonAddReq::getUserName)
@@ -661,7 +661,7 @@ public class ProjectServiceImpl implements ProjectService {
                 newMembers = levelMembers.stream()
                         .map(PersonCopier.INSTANCE::convert)
                         .collect(Collectors.toList());
-            } else if (pm == null){
+            } else if (pm == null) {
                 pm = new PersonAddReq();
                 pm.setUserId(oldProjectDO.getPmId());
                 pm.setUserName(oldProjectDO.getPm());
@@ -744,7 +744,7 @@ public class ProjectServiceImpl implements ProjectService {
             } else {
                 condition.setInnerTypes(new ArrayList<>());
             }
-        } else if (condition.getInnerTypes().contains(ProjectInnerTypeEnum.MANAGE.getCode())){
+        } else if (condition.getInnerTypes().contains(ProjectInnerTypeEnum.MANAGE.getCode())) {
             if (CollUtil.isEmpty(condition.getKinds())) {
                 condition.setKinds(CollUtil.newArrayList(ProjectKindEnum.OFC_FLOW_IT.getCode()));
             } else {
@@ -757,7 +757,7 @@ public class ProjectServiceImpl implements ProjectService {
             boolean containInvalid = status.contains(ProjectStatusEnum.INVALID.getCode());
             boolean containCanCell = status.contains(ProjectStatusEnum.CANCELLATION.getCode());
             if (containInvalid && !containCanCell) {
-               validIds = projectMapper.filterInvalid(validIds);
+                validIds = projectMapper.filterInvalid(validIds);
             } else if (!containInvalid && containCanCell) {
                 validIds = projectMapper.filterInnerInvalid(validIds);
                 status.add(ProjectStatusEnum.INVALID.getCode());
@@ -1193,6 +1193,26 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    public BaseResult<PageQueryResult<BizDemandVO>> linkBizDemandList(ProjectBizDemandQueryList projectBizDemandQueryList) {
+        PageQueryResult<BizDemandVO> res = new PageQueryResult<>();
+        if (projectBizDemandQueryList.getProjectId() == null) {
+            return BaseResult.success(res);
+        }
+        PageHelper.startPage(projectBizDemandQueryList.getPageNum(), projectBizDemandQueryList.getPageSize());
+        List<ProjectBizDemandDO> pbd = projectBizDemandMapper.selectByProjectId(projectBizDemandQueryList.getProjectId());
+        if (!pbd.isEmpty()) {
+            List<BizDemandDO> bizDemands =
+                    bizDemandMapper.getByIds(pbd.stream().map(ProjectBizDemandDO::getBizDemandId)
+                            .collect(Collectors.toList()));
+            List<BizDemandVO> bizDemandRes = BizDemandCopier.INSTANCE.transfer(bizDemands);
+            res.setResultList(bizDemandRes);
+        }
+        PageInfo<ProjectBizDemandDO> pbdPageInfo = new PageInfo<>(pbd);
+        ResultUtil.fillPageInfo(res, pbdPageInfo);
+        return BaseResult.success();
+    }
+
+    @Override
     public BaseResult<List<ProjectBaseVO>> getProjectByProductLine(Long productLineId) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
@@ -1436,7 +1456,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 校验结项
         ProjectDO projectDO = projectMapper.get(projectId);
-        AssertUtil.notNull(projectDO,"项目不存在");
+        AssertUtil.notNull(projectDO, "项目不存在");
 
         String message = "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成";
 
@@ -1449,7 +1469,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
         AssertUtil.checkState(memberEvaluateDOList.stream()
                         .filter(ProjectMemberEvaluateDO::getIncludeStat)
-                        .noneMatch(e->ObjectUtil.isNull(e.getActualWorkload())),
+                        .noneMatch(e -> ObjectUtil.isNull(e.getActualWorkload())),
                 message);
         AssertUtil.checkState(memberEvaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getEvaluateGrade())),
                 message);

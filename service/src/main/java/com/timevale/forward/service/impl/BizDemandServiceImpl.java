@@ -151,8 +151,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (bizDemandQueryList.getQuerySource() == 1) {
             // 交付项目来源查询需要特殊排序
             List<BizDemandVO> resultList = res.getPageQueryResult().getResultList();
+            final Date BIG_DATE = new Date(Long.MAX_VALUE);
             resultList.sort(Comparator.<BizDemandVO, Integer>comparing(x -> x.getProjectId() != null ? 1 : 0)
-                    .thenComparing(BizDemandVO::getProjectCreateDate).thenComparing(BizDemandVO::getCreateDate)
+                    .thenComparing(x -> Optional.ofNullable(x.getProjectCreateDate()).orElse(BIG_DATE))
+                    .thenComparing(BizDemandVO::getCreateDate)
                     .reversed());
         }
 

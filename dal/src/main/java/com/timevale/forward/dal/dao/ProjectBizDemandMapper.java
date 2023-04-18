@@ -23,7 +23,6 @@ public interface ProjectBizDemandMapper {
      */
     List<ProjectBizDemandDO> selectByBizDemandIds(@Param("bizDemandIds") Collection<Long> bizDemandIds);
 
-
     @Select("select * from project_biz_demand where project_id = #{projectId} and is_deleted = false")
     List<ProjectBizDemandDO> selectByProjectId(@Param("projectId") Long projectId);
 
@@ -31,6 +30,7 @@ public interface ProjectBizDemandMapper {
 
     @Update("update project_biz_demand set is_deleted = true where project_id = #{projectId} and biz_demand_id = #{bizDemandId}")
     void delete(@Param("projectId") Long projectId, @Param("bizDemandId") Long bizDemandId);
+
 }
 
 

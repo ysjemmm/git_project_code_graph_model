@@ -15,7 +15,7 @@
         select * from project_biz_demand
         <where>
             biz_demand_id in
-            <foreach collection="bizDemandIds" open="(" separator="," close=")">
+            <foreach collection="bizDemandIds" item="bizDemandId" open="(" separator="," close=")">
                 #{bizDemandId}
             </foreach>
             and is_deleted = false
