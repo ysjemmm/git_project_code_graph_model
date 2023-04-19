@@ -10,6 +10,13 @@
             (#{record.projectId}, #{record.bizDemandId}, #{createManId}, #{createMan})
         </foreach>
     </insert>
+    <update id="delete">
+        update project_biz_demand set is_deleted = true where project_id = #{projectId} and
+        biz_demand_id in
+        <foreach collection="bizDemandIds" item="bizDemandId" open="(" separator="," close=")">
+            #{bizDemandId}
+        </foreach>
+    </update>
 
     <select id="selectByBizDemandIds" resultType="generator.domain.ProjectBizDemandDO">
         select * from project_biz_demand

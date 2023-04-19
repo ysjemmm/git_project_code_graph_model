@@ -1,6 +1,5 @@
 package com.timevale.forward.service.impl;
 
-import com.google.common.collect.ImmutableList;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandUpdateCondition;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
@@ -128,30 +127,33 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
     }
 
     private BaseResult<Void> unlinkBizDemandProject(BizDemandLinkProjectReq bizDemandUnlinkProjectReq) {
-        Long bizDemandId = bizDemandUnlinkProjectReq.getBizDemandIds().get(0);
         Long projectId = bizDemandUnlinkProjectReq.getProjectId();
         ProjectDO project = projectMapper.get(projectId);
         AssertUtil.notNull(project, "取消关联的项目不存在");
-        BizDemandDO bizDemand = bizDemandMapper.get(bizDemandId);
-        AssertUtil.notNull(bizDemand, "取消关联的业务需求不存在");
+        List<Long> bizDemandIds = bizDemandUnlinkProjectReq.getBizDemandIds();
         List<ProjectBizDemandDO> pbRelations = projectBizDemandMapper.selectByProjectId(projectId);
-        AssertUtil.checkState(pbRelations.stream().map(ProjectBizDemandDO::getBizDemandId)
-                        .anyMatch(bId -> Objects.equals(bId, bizDemandId)),
-                "不存在对应关联关系");
-        projectBizDemandMapper.delete(projectId, bizDemandId);
+        Set<Long> relBizDemandIds = pbRelations.stream().map(ProjectBizDemandDO::getBizDemandId)
+                .collect(Collectors.toSet());
+        bizDemandIds.removeIf(id -> !relBizDemandIds.contains(id));
+        List<BizDemandDO> bizDemands = bizDemandMapper.getByIds(bizDemandIds);
+        AssertUtil.notNull(bizDemands.isEmpty(), "取消关联的业务需求不存在");
+        projectBizDemandMapper.delete(projectId, bizDemandIds);
         bizDemandMapper.updateConditional(new BizDemandUpdateCondition().
                 setStatus(BizDemandStatusEnum.RECEIVED.getCode())
                 .setProjectEndDateNull(true)
-                .setIds(Collections.singletonList(bizDemandId)));
+                .setIds(bizDemandIds));
 
-        String projectEndDate = DateUtil.parseToString(bizDemand.getProjectEndDate(), DateStyle.YYYY_MM_DD);
-        List<BizChangeLogDO> logs = ImmutableList.of(
-                bizDemandLogComponent.buildLogWhenPublishDateChange(projectEndDate, StringUtils.EMPTY, bizDemandId),
-                bizDemandLogComponent.buildLogWhenStatusChange(BizDemandStatusEnum.getTextByCode(bizDemand.getStatus()),
-                        BizDemandStatusEnum.RECEIVED.getText(), bizDemandId)
-        );
+        BizDemandStatusEnum status = getBizDemandStatusByProjectStatus(project.getStatus());
+        String projectEndDate = DateUtil.parseToString(project.getPlanEndDate(), DateStyle.YYYY_MM_DD);
+        List<BizChangeLogDO> logs = new ArrayList<>();
+        for (BizDemandDO bizDemand : bizDemands) {
+            logs.add(bizDemandLogComponent.buildLogWhenPublishDateChange(projectEndDate, StringUtils.EMPTY,
+                    bizDemand.getId()));
+            logs.add(bizDemandLogComponent.buildLogWhenStatusChange(status.getText(),
+                    BizDemandStatusEnum.RECEIVED.getText(), bizDemand.getId()));
+        }
         // 日志
-        bizDemandLogComponent.unlinkProject(project, bizDemand);
+        bizDemandLogComponent.unlinkProject(project, bizDemands);
         bizChangeLogMapper.batchInsert(logs);
         return BaseResult.success();
     }

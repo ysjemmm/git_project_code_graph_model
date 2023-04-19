@@ -253,6 +253,11 @@ public class ProjectServiceImpl implements ProjectService {
         if (ProjectStatusEnum.INVALID.getCode().equals(type)) {
             // 作废解除关联
             projectProductDemandComponent.update(projectId, null);
+            projectBizDemandService.linkOrUnlinkBizDemandProject(new BizDemandLinkProjectReq()
+                    .setProjectId(projectId)
+                    .setBizDemandIds(projectBizDemandMapper.selectByProjectId(projectId).stream()
+                            .map(ProjectBizDemandDO::getBizDemandId).collect(Collectors.toList()))
+                    .setType(LinkOrUnLinkEnum.UN_LINK.getCode()));
 
             bizLabelComponent.deleteLabel(projectDO.getId(), BizTypeEnum.PROJECT.getCode());
             // 删除子项目关联关系

@@ -24,7 +24,7 @@ public interface BizDemandLogComponent{
 
     void linkProject(ProjectDO project, Collection<BizDemandDO> bizDemands);
 
-    void unlinkProject(ProjectDO project, BizDemandDO bizDemandDO);
+    void unlinkProject(ProjectDO project, Collection<BizDemandDO> bizDemands);
 
     void addLogAsProductDemandStatusChange(Integer oldStatus,  Integer newStatus,Long id,Integer type) ;
 

@@ -3,7 +3,6 @@ package com.timevale.forward.dal.dao;
 import generator.domain.ProjectBizDemandDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
 
 import java.util.Collection;
 import java.util.List;
@@ -28,8 +27,7 @@ public interface ProjectBizDemandMapper {
 
     void batchInsert(@Param("records") Collection<ProjectBizDemandDO> projectBizDemands);
 
-    @Update("update project_biz_demand set is_deleted = true where project_id = #{projectId} and biz_demand_id = #{bizDemandId}")
-    void delete(@Param("projectId") Long projectId, @Param("bizDemandId") Long bizDemandId);
+    void delete(@Param("projectId") Long projectId, @Param("bizDemandIds")Collection<Long> bizDemandIds);
 
 }
 

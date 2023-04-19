@@ -1,7 +1,6 @@
 package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
-import com.google.common.collect.ImmutableList;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
@@ -232,20 +231,23 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
     }
 
     @Override
-    public void unlinkProject(ProjectDO project, BizDemandDO bizDemandDO) {
-        BizChangeLogDO bizDemandLog = newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode())
+    public void unlinkProject(ProjectDO project, Collection<BizDemandDO> bizDemands) {
+        List<BizChangeLogDO> bizChangeLogs =
+                bizDemands.stream().map(bizDemandDO ->
+                newBizChangeLogDO(true, BizChangeLogTypeEnum.BIZ_DEMAND.getCode())
                 .setMainId(bizDemandDO.getId())
                 .setAction(ButtonActionEnum.UN_LINK.getText())
                 .setField(BizChangeLogTypeEnum.PROJECT.getText())
                 .setOldValue(project.getName())
-                .setNewValue(project.getName());
-        BizChangeLogDO projectLog = newBizChangeLogDO(true, BizChangeLogTypeEnum.PROJECT.getCode())
+                .setNewValue(project.getName())).collect(Collectors.toList());
+        bizChangeLogs.addAll(bizDemands.stream().map(bizDemandDO ->
+                newBizChangeLogDO(true, BizChangeLogTypeEnum.PROJECT.getCode())
                 .setMainId(project.getId())
                 .setAction(ButtonActionEnum.UN_LINK.getText())
                 .setField(BizChangeLogTypeEnum.BIZ_DEMAND.getText())
                 .setOldValue(bizDemandDO.getName())
-                .setNewValue(bizDemandDO.getName());
-        bizChangeLogMapper.batchInsert(ImmutableList.of(bizDemandLog, projectLog));
+                .setNewValue(bizDemandDO.getName())).collect(Collectors.toList()));
+        bizChangeLogMapper.batchInsert(bizChangeLogs);
     }
 
     @Override
