@@ -359,7 +359,6 @@ public class ProjectServiceImpl implements ProjectService {
                 throw new BaseIllegalArgumentException("项目名称已存在，请修改后重试");
             }
         }
-        AssertUtil.checkState(existsName == null, "该项目名称已存在,请修改后重试");
 
         if (YesOrNoEnum.YES.getCode().equals(projectAddReq.getIsWithGoal())) {
             AssertUtil.notEmpty(projectAddReq.getProjectGoals(), "项目含有项目目标，请至少添加一条项目目标数据");
