@@ -1245,7 +1245,7 @@ public class ProjectServiceImpl implements ProjectService {
         }
         PageInfo<ProjectBizDemandDO> pbdPageInfo = new PageInfo<>(pbd);
         ResultUtil.fillPageInfo(res, pbdPageInfo);
-        return BaseResult.success();
+        return BaseResult.success(res);
     }
 
     @Override
