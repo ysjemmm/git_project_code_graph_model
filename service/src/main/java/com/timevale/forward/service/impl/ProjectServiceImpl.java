@@ -46,6 +46,7 @@ import com.timevale.mandarin.base.exception.BaseIllegalArgumentException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.GroupResponse;
 import generator.domain.ProjectBizDemandDO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -1246,6 +1247,14 @@ public class ProjectServiceImpl implements ProjectService {
                     bizDemandMapper.getByIds(pbd.stream().map(ProjectBizDemandDO::getBizDemandId)
                             .collect(Collectors.toList()));
             List<BizDemandVO> bizDemandRes = BizDemandCopier.INSTANCE.transfer(bizDemands);
+
+            Map<Long, GroupResponse> deptMap = bizDemandComponent.getGroupListTreeMap(
+                    bizDemandRes.stream().map(BizDemandVO::getDeptId).collect(Collectors.toList()));
+
+            for (BizDemandVO bizDemandRe : bizDemandRes) {
+                GroupResponse group = deptMap.get(bizDemandRe.getDeptId());
+                Optional.ofNullable(group).map(GroupResponse::getGroupName).ifPresent(bizDemandRe::setDeptName);
+            }
             res.setResultList(bizDemandRes);
         }
         PageInfo<ProjectBizDemandDO> pbdPageInfo = new PageInfo<>(pbd);

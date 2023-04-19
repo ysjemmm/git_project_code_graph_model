@@ -107,6 +107,7 @@ public interface BizDemandCopier {
      * @return 业务需求详细VO
      */
     @Mapping(target = "statusText", expression = "java(BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()))")
+    @Mapping(target = "priorityText", expression = "java(PriorityEnum.getTextByCode(bizDemandDO.getPriority()))")
     BizDemandVO transfer(BizDemandDO bizDemandDO);
 
     /**
