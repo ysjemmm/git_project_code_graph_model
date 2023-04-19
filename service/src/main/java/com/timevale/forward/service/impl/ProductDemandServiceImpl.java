@@ -65,9 +65,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     private ProjectMapper projectMapper;
 
     @Resource
-    private ProjectComponent projectCmponent;
-
-    @Resource
     private BizDemandMapper bizDemandMapper;
 
     @Resource
@@ -332,7 +329,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         taskProductDemandComponent.update(null, productDemandId);
 
         // 刷新客开
-        projectCmponent.updateCustomDev(linkProjectId);
+        projectComponent.updateCustomDev(linkProjectId);
 
         return BaseResult.success(true);
     }
@@ -515,7 +512,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             condition.setLabelIds(labelIds);
         }
 
-        PageQueryResult<ProjectVO> pageQueryResult = projectCmponent.page(condition, Lists.newArrayList()).getPageQueryResult();
+        PageQueryResult<ProjectVO> pageQueryResult = projectComponent.page(condition, Lists.newArrayList()).getPageQueryResult();
         return BaseResult.success(pageQueryResult);
     }
 
@@ -600,7 +597,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
 
         // 刷新客开
         Long linkProjectId = productDemandComponent.getLinkProjectId(bizDemandLinkReq.getProductDemandId());
-        projectCmponent.updateCustomDev(linkProjectId);
+        projectComponent.updateCustomDev(linkProjectId);
         return BaseResult.success(true);
     }
 
