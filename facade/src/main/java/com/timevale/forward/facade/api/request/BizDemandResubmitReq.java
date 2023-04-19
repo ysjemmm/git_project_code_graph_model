@@ -26,10 +26,8 @@ public class BizDemandResubmitReq extends BaseReq {
     private String name;
 
     @ApiModelProperty("需求接收人")
-    @NotBlank(message = "业务需求id不能为空")
     private String receiveMan;
 
     @ApiModelProperty("需求接收人id")
-    @NotBlank(message = "业务需求id不能为空")
     private String receiveManId;
 }

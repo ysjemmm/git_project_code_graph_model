@@ -1028,6 +1028,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (oldBizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
+        if (!oldBizDemandDO.getCustomerDevDemand()) {
+            AssertUtil.notBlank(bizDemandResubmitReq.getReceiveManId(), "业务需求接收人不能为空");
+            AssertUtil.notBlank(bizDemandResubmitReq.getReceiveMan(), "业务需求接收人不能为空");
+        } else {
+            bizDemandResubmitReq.setReceiveManId(commonConfig.getDevDemandAcceptUserId());
+            bizDemandResubmitReq.setReceiveMan(commonConfig.getDevDemandAcceptUserName());
+        }
         BizDemandDO checkUniqueName = bizDemandMapper.selectByName(name);
         if (checkUniqueName != null && !checkUniqueName.getId().equals(bizDemandId)) {
             throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
@@ -1055,15 +1062,14 @@ public class BizDemandServiceImpl implements BizDemandService {
         oldBizDemandDO.setReason(null);
         oldBizDemandDO.setReceiveMan(bizDemandResubmitReq.getReceiveMan());
         oldBizDemandDO.setReceiveManId(bizDemandResubmitReq.getReceiveManId());
+        bizDemandMapper.fullUpdate(oldBizDemandDO);
+
         if (oldBizDemandDO.getCustomerDevDemand()) {
             // 客开需求需要添加标签：客开需求提交申诉
             Long labelId = commonConfig.getDevDemandAppealLabelId();
             bizLabelComponent.addLabel(oldBizDemandDO.getId(), Collections.singletonList(labelId),
                     BizTypeEnum.BIZ_DEMAND.getCode());
-            oldBizDemandDO.setReceiveManId(commonConfig.getDevDemandAcceptUserId());
-            oldBizDemandDO.setReceiveMan(commonConfig.getDevDemandAcceptUserName());
         }
-        bizDemandMapper.fullUpdate(oldBizDemandDO);
 
         messageEventPublisher.publish(new BizDemandToReceiveAaginMsgEvent(
                 this,

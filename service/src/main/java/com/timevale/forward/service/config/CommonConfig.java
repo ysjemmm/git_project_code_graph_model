@@ -46,7 +46,7 @@ public class CommonConfig {
 
     @Value("${devDemandAcceptUserId:yunshu}")
     private String devDemandAcceptUserId;
-    @Value("${devDemandAcceptUserName:云舒}")
+    @Value("${devDemandAcceptUserName:云舒-余贤圆}")
     private String devDemandAcceptUserName;
 
 }
