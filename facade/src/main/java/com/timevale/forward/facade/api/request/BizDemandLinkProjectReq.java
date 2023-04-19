@@ -28,4 +28,7 @@ public class BizDemandLinkProjectReq extends ToString {
     @ApiModelProperty("关联、取消关联类型")
     private int type;
 
+    @ApiModelProperty("移除不符合要求需求")
+    private boolean removeUnsatisfied;
+
 }

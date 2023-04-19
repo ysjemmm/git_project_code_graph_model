@@ -29,6 +29,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.flow.ForwardFlow;
 import com.timevale.forward.service.flow.model.TargetStatusModel;
+import com.timevale.forward.service.integration.dock.CrmProjectClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.ProjectEstablishDateChangeMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
@@ -182,6 +183,8 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectBizDemandMapper projectBizDemandMapper;
     @Resource
     private ProjectBizDemandService projectBizDemandService;
+    @Resource
+    private CrmProjectClient crmProjectClient;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -374,6 +377,9 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 转换后新增
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
+        if (customerDev) {
+            projectDO.setStatus(ProjectStatusEnum.PLANING.getCode());
+        }
         projectMapper.insert(projectDO);
 
         projectDO.setParentIds(Collections.singletonList(projectDO.getId()));
@@ -398,12 +404,15 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         // 团队成员, 去重后新增
-        List<PersonAddReq> teamMembers = projectAddReq.getTeamMembers();
+        List<PersonAddReq> teamMembers = projectAddReq.getTeamMembers() == null ?
+                new ArrayList<>() : projectAddReq.getTeamMembers();
         teamMembers.add(projectAddReq.getPm());
         teamMembers.add(projectAddReq.getSr());
         teamMembers.add(projectAddReq.getPrincipal());
         teamMembers.add(projectAddReq.getOtnPrincipal());
-        teamMembers.addAll(projectAddReq.getPds());
+        if (projectAddReq.getPds() != null) {
+            teamMembers.addAll(projectAddReq.getPds());
+        }
         teamMembers = teamMembers.stream()
                 .filter(e -> Objects.nonNull(e) && StrUtil.isNotBlank(e.getUserId()))
                 .distinct().collect(Collectors.toList());
@@ -419,7 +428,8 @@ public class ProjectServiceImpl implements ProjectService {
         if (customerDev) {
             projectBizDemandService.linkOrUnlinkBizDemandProject(new BizDemandLinkProjectReq()
                     .setProjectId(projectDO.getId())
-                    .setBizDemandIds(projectAddReq.getBizDemandIds()));
+                    .setBizDemandIds(projectAddReq.getBizDemandIds())
+                    .setRemoveUnsatisfied(true));
             projectNodeComponent.buildNodeForCustomerDevProject(projectDO.getPlanStartDate(),
                     projectDO.getPlanEndDate(), projectDO.getId());
         } else {
@@ -1002,6 +1012,8 @@ public class ProjectServiceImpl implements ProjectService {
         List<ProjectFlowDO> conclusionFlows = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.CONCLUSION.getCode());
         boolean conclusionAuditing = conclusionFlows.stream().anyMatch(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()));
         projectDetailVO.setConclusionAuditing(conclusionAuditing);
+        crmProjectClient.getProject(projectDetailVO.getSourceId()).ifPresent(p ->
+                projectDetailVO.setCustomerDevProjectName(p.getProjectName()));
 
         return BaseResult.success(projectDetailVO);
     }

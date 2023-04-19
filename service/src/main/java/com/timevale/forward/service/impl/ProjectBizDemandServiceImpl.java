@@ -59,17 +59,27 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
                 "项目已发布或者终止，无法关联业务需求");
 
         List<BizDemandDO> bizDemands = bizDemandMapper.getByIds(bizDemandIds);
-        AssertUtil.checkState(bizDemands.size() == bizDemandIds.size(),
-                "您选择的业务需求已经不存在，请刷新页面后重试");
-        AssertUtil.checkState(bizDemands.stream().map(BizDemandDO::getStatus)
-                        .allMatch(status -> Objects.equals(status, BizDemandStatusEnum.RECEIVED.getCode())),
-                "您选择的业务需求存在未接收的状态，您只能选择已经接收的业务需求关联项目");
+        if (bizDemandLinkProjectReq.isRemoveUnsatisfied()) {
+            Set<Long> nonReceivedIds = bizDemands.stream()
+                    .filter(x -> !Objects.equals(x.getStatus(), BizDemandStatusEnum.RECEIVED.getCode()))
+                    .map(BizDemandDO::getId)
+                    .collect(Collectors.toSet());
+            bizDemandIds.removeIf(nonReceivedIds::contains);
+        } else {
+            AssertUtil.checkState(bizDemands.size() == bizDemandIds.size(),
+                    "您选择的业务需求已经不存在，请刷新页面后重试");
+            AssertUtil.checkState(bizDemands.stream().map(BizDemandDO::getStatus)
+                            .allMatch(status -> Objects.equals(status, BizDemandStatusEnum.RECEIVED.getCode())),
+                    "您选择的业务需求存在未接收的状态，您只能选择已经接收的业务需求关联项目");
+        }
 
         List<ProjectBizDemandDO> pbRelations =
                 projectBizDemandMapper.selectByBizDemandIds(bizDemandIds);
-        AssertUtil.checkState(pbRelations.stream().map(ProjectBizDemandDO::getProjectId)
-                        .allMatch(pId -> Objects.equals(projectId, pId)),
-                "您选择的业务需求已经关联到其他项目，无法再次关联");
+        if (!bizDemandLinkProjectReq.isRemoveUnsatisfied()) {
+            AssertUtil.checkState(pbRelations.stream().map(ProjectBizDemandDO::getProjectId)
+                            .allMatch(pId -> Objects.equals(projectId, pId)),
+                    "您选择的业务需求已经关联到其他项目，无法再次关联");
+        }
         // 去除已经关联到该项目的列表
         Set<Long> alreadyRelatedBizDemandIds = pbRelations.stream()
                 .map(ProjectBizDemandDO::getBizDemandId).collect(Collectors.toSet());
