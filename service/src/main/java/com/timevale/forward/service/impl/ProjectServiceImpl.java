@@ -1879,7 +1879,7 @@ public class ProjectServiceImpl implements ProjectService {
         String tmpName = projectName + i;
         while (projectMapper.getByName(tmpName) != null) {
             i++;
-            tmpName = projectName + i;
+            tmpName = projectName + "-" + i;
         }
         return tmpName;
     }
