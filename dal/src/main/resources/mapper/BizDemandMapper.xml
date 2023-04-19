@@ -360,6 +360,26 @@
             id = #{id}
         </where>
     </update>
+    <update id="updateConditional">
+        update biz_demand
+        <set>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="projectEndDate != null">
+                project_end_date = #{projectEndDate},
+            </if>
+            <if test="projectEndDateNull">
+                project_end_date = null,
+            </if>
+        </set>
+        <where>
+            id in
+            <foreach collection="ids" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </where>
+    </update>
 
     <select id="getByIds" resultType="com.timevale.forward.dal.entity.BizDemandDO">
         select *

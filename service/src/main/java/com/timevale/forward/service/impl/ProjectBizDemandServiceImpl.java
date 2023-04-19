@@ -1,9 +1,13 @@
 package com.timevale.forward.service.impl;
 
+import com.google.common.collect.ImmutableList;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.condition.BizDemandUpdateCondition;
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
 import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProjectBizDemandMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.facade.api.client.ProjectBizDemandService;
@@ -12,16 +16,16 @@ import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.BizDemandLogComponent;
+import com.timevale.forward.service.utils.date.DateStyle;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import generator.domain.ProjectBizDemandDO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -40,6 +44,7 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
     private final BizDemandMapper bizDemandMapper;
     private final BizDemandLogComponent bizDemandLogComponent;
     private final ProjectBizDemandMapper projectBizDemandMapper;
+    private final BizChangeLogMapper bizChangeLogMapper;
 
     @Override
     public BaseResult<Void> linkOrUnlinkBizDemandProject(BizDemandLinkProjectReq bizDemandLinkProjectReq) {
@@ -92,10 +97,32 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
                 .collect(Collectors.toList());
 
         bizDemands = bizDemands.stream().filter(bd -> bizDemandIds.contains(bd.getId())).collect(Collectors.toList());
+        // 插入关联关系
         projectBizDemandMapper.batchInsert(newPbRelations);
 
+        BizDemandStatusEnum status = getBizDemandStatusByProjectStatus(project.getStatus());
+        // 目前关联是项目一定为进行中状态
+        bizDemandMapper.updateConditional(new BizDemandUpdateCondition().
+                setStatus(status.getCode())
+                .setProjectEndDate(project.getPlanEndDate())
+                .setIds(bizDemandIds));
+
+        String projectEndDate = DateUtil.parseToString(project.getPlanEndDate(), DateStyle.YYYY_MM_DD);
+        List<BizChangeLogDO> logs = new ArrayList<>();
+        for (Long bizDemandId : bizDemandIds) {
+            BizChangeLogDO publishDateLog =
+                    bizDemandLogComponent.buildLogWhenPublishDateChange(StringUtils.EMPTY, projectEndDate, bizDemandId);
+            BizChangeLogDO statusLog =
+                    bizDemandLogComponent.buildLogWhenStatusChange(BizDemandStatusEnum.RECEIVED.getText(),
+                            status.getText(), bizDemandId);
+            logs.add(publishDateLog);
+            logs.add(statusLog);
+        }
         // 日志
         bizDemandLogComponent.linkProject(project, bizDemands);
+        if (!logs.isEmpty()) {
+            bizChangeLogMapper.batchInsert(logs);
+        }
 
         return BaseResult.success();
     }
@@ -112,8 +139,32 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
                         .anyMatch(bId -> Objects.equals(bId, bizDemandId)),
                 "不存在对应关联关系");
         projectBizDemandMapper.delete(projectId, bizDemandId);
+        bizDemandMapper.updateConditional(new BizDemandUpdateCondition().
+                setStatus(BizDemandStatusEnum.RECEIVED.getCode())
+                .setProjectEndDateNull(true)
+                .setIds(Collections.singletonList(bizDemandId)));
+
+        String projectEndDate = DateUtil.parseToString(bizDemand.getProjectEndDate(), DateStyle.YYYY_MM_DD);
+        List<BizChangeLogDO> logs = ImmutableList.of(
+                bizDemandLogComponent.buildLogWhenPublishDateChange(projectEndDate, StringUtils.EMPTY, bizDemandId),
+                bizDemandLogComponent.buildLogWhenStatusChange(BizDemandStatusEnum.getTextByCode(bizDemand.getStatus()),
+                        BizDemandStatusEnum.RECEIVED.getText(), bizDemandId)
+        );
         // 日志
         bizDemandLogComponent.unlinkProject(project, bizDemand);
+        bizChangeLogMapper.batchInsert(logs);
         return BaseResult.success();
     }
+
+    private BizDemandStatusEnum getBizDemandStatusByProjectStatus(Integer projectStatus) {
+        ProjectStatusEnum status = ProjectStatusEnum.getByCode(projectStatus);
+        if (status == ProjectStatusEnum.WAITING) {
+            return BizDemandStatusEnum.INCLUDE_PROJECT;
+        }
+        if (status == ProjectStatusEnum.COMPLETE) {
+            return BizDemandStatusEnum.AVAILABLE;
+        }
+        return BizDemandStatusEnum.PROJECTING;
+    }
+
 }
