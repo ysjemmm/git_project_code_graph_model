@@ -8,6 +8,7 @@ import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BizDemandService;
+import com.timevale.forward.facade.api.client.ProjectBizDemandService;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
@@ -32,6 +33,7 @@ import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
+import generator.domain.ProjectBizDemandDO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -100,6 +102,10 @@ public class BizDemandServiceImpl implements BizDemandService {
     private CrmProjectClient crmProjectClient;
     @Resource
     private CommonConfig commonConfig;
+    @Resource
+    private ProjectBizDemandService projectBizDemandService;
+    @Resource
+    private ProjectBizDemandMapper projectBizDemandMapper;
 
     @Override
     public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
@@ -264,8 +270,15 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 关联的项目
         List<Long> linkProjectIds = bizDemandComponent.getLinkProjectIds(bizDemandId);
 
+        List<ProjectBizDemandDO> pbdList = projectBizDemandMapper.selectByBizDemandIds(Collections.singletonList(bizDemandId));
         // 取消产品关联, 产品关联断开日志
         productBizDemandMapper.deleteByBizDemandId(bizDemandId);
+        if (!pbdList.isEmpty()) {
+            projectBizDemandService.linkOrUnlinkBizDemandProject(new BizDemandLinkProjectReq()
+                    .setProjectId(pbdList.get(0).getProjectId())
+                    .setBizDemandIds(Collections.singletonList(bizDemandDO.getId()))
+                    .setType(LinkOrUnLinkEnum.UN_LINK.getCode()));
+        }
         bizDemandLogComponent.addLogWhenBizDemandInvalid(bizDemandId);
 
         // 接收人通知
