@@ -362,8 +362,9 @@
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProjectDO">
         select *
         from project
-        where `name` = #{name}
+        where `name` like #{name}
           and is_deleted = false
+        order by create_date desc limit 1
     </select>
 
     <select id="getByIds" resultType="com.timevale.forward.dal.entity.ProjectDO">

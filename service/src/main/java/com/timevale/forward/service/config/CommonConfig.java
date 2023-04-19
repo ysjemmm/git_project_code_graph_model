@@ -44,4 +44,9 @@ public class CommonConfig {
     @Value("${devDemandAppealLabelId:543}")
     private Long devDemandApproveLabelId;
 
+    @Value("${devDemandAcceptUserId:yunshu}")
+    private String devDemandAcceptUserId;
+    @Value("${devDemandAcceptUserName:云舒}")
+    private String devDemandAcceptUserName;
+
 }

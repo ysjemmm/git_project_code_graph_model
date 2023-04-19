@@ -1055,13 +1055,15 @@ public class BizDemandServiceImpl implements BizDemandService {
         oldBizDemandDO.setReason(null);
         oldBizDemandDO.setReceiveMan(bizDemandResubmitReq.getReceiveMan());
         oldBizDemandDO.setReceiveManId(bizDemandResubmitReq.getReceiveManId());
-        bizDemandMapper.fullUpdate(oldBizDemandDO);
         if (oldBizDemandDO.getCustomerDevDemand()) {
             // 客开需求需要添加标签：客开需求提交申诉
             Long labelId = commonConfig.getDevDemandAppealLabelId();
             bizLabelComponent.addLabel(oldBizDemandDO.getId(), Collections.singletonList(labelId),
                     BizTypeEnum.BIZ_DEMAND.getCode());
+            oldBizDemandDO.setReceiveManId(commonConfig.getDevDemandAcceptUserId());
+            oldBizDemandDO.setReceiveMan(commonConfig.getDevDemandAcceptUserName());
         }
+        bizDemandMapper.fullUpdate(oldBizDemandDO);
 
         messageEventPublisher.publish(new BizDemandToReceiveAaginMsgEvent(
                 this,

@@ -41,6 +41,7 @@ import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.exception.BaseIllegalArgumentException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -344,7 +345,18 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 名称校验
         AssertUtil.checkState(!StrUtil.contains(projectAddReq.getName(), CommonConstant.BLANK), "项目名称中请勿包含空格");
-        AssertUtil.checkState(projectMapper.getByName(projectAddReq.getName()) == null, "该项目名称已存在,请修改后重试");
+        boolean customerDev = StringUtils.isNotBlank(projectAddReq.getSourceId()) &&
+                CollectionUtils.isNotEmpty(projectAddReq.getBizDemandIds());
+
+        ProjectDO existsName = projectMapper.getByName(projectAddReq.getName());
+        if (existsName != null) {
+            if (customerDev) {
+                projectAddReq.setName(getAppendedProjectName(projectAddReq.getName()));
+            } else {
+                throw new BaseIllegalArgumentException("项目名称已存在，请修改后重试");
+            }
+        }
+        AssertUtil.checkState(existsName == null, "该项目名称已存在,请修改后重试");
 
         if (YesOrNoEnum.YES.getCode().equals(projectAddReq.getIsWithGoal())) {
             AssertUtil.notEmpty(projectAddReq.getProjectGoals(), "项目含有项目目标，请至少添加一条项目目标数据");
@@ -404,8 +416,7 @@ public class ProjectServiceImpl implements ProjectService {
         evaluateComponent.initEvaluate(projectDO.getId(), projectDO.getKind());
 
         //生成节点信息
-        if (StringUtils.isNotBlank(projectAddReq.getSourceId()) &&
-                CollectionUtils.isNotEmpty(projectAddReq.getBizDemandIds())) {
+        if (customerDev) {
             projectBizDemandService.linkOrUnlinkBizDemandProject(new BizDemandLinkProjectReq()
                     .setProjectId(projectDO.getId())
                     .setBizDemandIds(projectAddReq.getBizDemandIds()));
@@ -1845,6 +1856,16 @@ public class ProjectServiceImpl implements ProjectService {
         }
         Set<String> allSuperiorByAccount = innerUserPersonClient.getAllSuperiorByAccount(queryUserId, false);
         return allSuperiorByAccount.contains(localUserId);
+    }
+
+    private String getAppendedProjectName(String projectName) {
+        int i = 2;
+        String tmpName = projectName + i;
+        while (projectMapper.getByName(tmpName) != null) {
+            i++;
+            tmpName = projectName + i;
+        }
+        return tmpName;
     }
 
 }
