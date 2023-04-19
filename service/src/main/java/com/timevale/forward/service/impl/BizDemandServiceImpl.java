@@ -351,7 +351,8 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (bizDemandAddReq.getCustomerDevDemand()) {
             // 客开业务需求新增时如果资源评估人天全部维护，自动变为已接受
             if (ObjectUtils.allNotNull(bizDemandAddReq.getUedTime(), bizDemandAddReq.getFrontTime(),
-                    bizDemandAddReq.getQaTime(), bizDemandAddReq.getBackTime(), bizDemandAddReq.getTotalTime())) {
+                    bizDemandAddReq.getQaTime(), bizDemandAddReq.getBackTime(), bizDemandAddReq.getTotalTime()) &&
+                    Objects.equal(bizDemandAddReq.getReceiveManId(), bizDemandAddReq.getSubmitManId())) {
                 bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
             }
         }
