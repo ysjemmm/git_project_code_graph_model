@@ -2,6 +2,7 @@ package com.timevale.forward.service.component.impl;
 
 import com.timevale.forward.dal.dao.ProjectNodeMapper;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
+import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import org.mockito.InjectMocks;
@@ -25,7 +26,7 @@ import static org.mockito.Mockito.mockStatic;
 @TestExecutionListeners(listeners = MockitoTestExecutionListener.class)
 public class ProjectNodeComponentImplTest extends AbstractTestNGSpringContextTests {
     @InjectMocks
-    private ProjectNodeComponentImpl projectNodeComponent;
+    private ProjectNodeComponent projectNodeComponent;
 
     @Mock
     private ProjectNodeMapper projectNodeMapper;

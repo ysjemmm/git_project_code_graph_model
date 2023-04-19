@@ -1,9 +1,13 @@
 package com.timevale.forward.model.enums;
 
+import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 
 /**
@@ -33,6 +37,9 @@ public enum ProjectNodeEnum {
     private final Integer code;
     private final String text;
 
+    private static final Map<Integer, ProjectNodeEnum> MAP =
+            Maps.uniqueIndex(Arrays.asList(values()), ProjectNodeEnum::getCode);
+
     public static Integer getCodeByName(String name) {
         for (ProjectNodeEnum e : ProjectNodeEnum.values()) {
             if (Objects.equals(e.getText(), name)) {
@@ -44,32 +51,16 @@ public enum ProjectNodeEnum {
 
     /**
      * 根据code获取对应的名称
-     *
-     * @param code
-     * @return
      */
     public static ProjectNodeEnum getByCode(Integer code) {
-        for (ProjectNodeEnum e : ProjectNodeEnum.values()) {
-            if (e.getCode().equals(code)) {
-                return e;
-            }
-        }
-        return null;
+        return MAP.get(code);
     }
 
     /**
      * 根据code获取对应的名称
-     *
-     * @param code
-     * @return
      */
     public static String getNameByCode(Integer code) {
-        for (ProjectNodeEnum e : ProjectNodeEnum.values()) {
-            if (e.getCode().equals(code)) {
-                return e.text;
-            }
-        }
-        return null;
+        return Optional.ofNullable(getByCode(code)).map(ProjectNodeEnum::getText).orElse(null);
     }
 
     public static boolean canStartFlow(String name) {

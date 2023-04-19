@@ -404,7 +404,17 @@ public class ProjectServiceImpl implements ProjectService {
         evaluateComponent.initEvaluate(projectDO.getId(), projectDO.getKind());
 
         //生成节点信息
-        projectNodeComponent.buildDefaultNode(projectDO.getPlanStartDate(), projectDO.getPlanEndDate(), projectDO.getId());
+        if (StringUtils.isNotBlank(projectAddReq.getSourceId()) &&
+                CollectionUtils.isNotEmpty(projectAddReq.getBizDemandIds())) {
+            projectBizDemandService.linkOrUnlinkBizDemandProject(new BizDemandLinkProjectReq()
+                    .setProjectId(projectDO.getId())
+                    .setBizDemandIds(projectAddReq.getBizDemandIds()));
+            projectNodeComponent.buildNodeForCustomerDevProject(projectDO.getPlanStartDate(),
+                    projectDO.getPlanEndDate(), projectDO.getId());
+        } else {
+            projectNodeComponent.buildDefaultNode(projectDO.getPlanStartDate(),
+                    projectDO.getPlanEndDate(), projectDO.getId());
+        }
 
         Integer status = ProjectStatusEnum.WAITING.getCode();
         projectLogComponent.addLogWhenStatusChange(status, status, projectDO.getId(), ButtonActionEnum.SUBMIT.getText());
@@ -417,12 +427,6 @@ public class ProjectServiceImpl implements ProjectService {
             projectGoalMapper.batchInsert(ProjectGoalCopier.INSTANCE.convert(projectAddReq.getProjectGoals()));
         }
 
-        if (StringUtils.isNotBlank(projectAddReq.getSourceId()) &&
-                CollectionUtils.isNotEmpty(projectAddReq.getBizDemandIds())) {
-            projectBizDemandService.linkOrUnlinkBizDemandProject(new BizDemandLinkProjectReq()
-                    .setProjectId(projectDO.getId())
-                    .setBizDemandIds(projectAddReq.getBizDemandIds()));
-        }
 
         return BaseResult.success(projectDO.getId());
     }
