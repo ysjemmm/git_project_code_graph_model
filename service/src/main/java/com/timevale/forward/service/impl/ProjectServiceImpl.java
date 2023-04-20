@@ -448,8 +448,12 @@ public class ProjectServiceImpl implements ProjectService {
                     projectDO.getPlanEndDate(), projectDO.getId());
         }
 
-        Integer status = ProjectStatusEnum.WAITING.getCode();
-        projectLogComponent.addLogWhenStatusChange(status, status, projectDO.getId(), ButtonActionEnum.SUBMIT.getText());
+        Integer status = projectDO.getStatus();
+        if (customerDevSourceAdd) {
+            projectLogComponent.addLogWhenSystemCreate(projectDO.getId(), ButtonActionEnum.CUSTOMER_DEV_FLOW_COMPLETE_ADD.getText());
+        } else {
+            projectLogComponent.addLogWhenStatusChange(status, status, projectDO.getId(), ButtonActionEnum.SUBMIT.getText());
+        }
 
         // 项目目标信息插入
         if (YesOrNoEnum.YES.getCode().equals(projectAddReq.getIsWithGoal())) {

@@ -371,6 +371,16 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 BizChangeLogFieldEnum.CONCLUSION_DATE.getText());
     }
 
+    @Override
+    public void addLogWhenSystemCreate(Long projectId, String text) {
+        BizChangeLogDO log = new BizChangeLogDO();
+        log.setType(BizChangeLogTypeEnum.PROJECT.getCode());
+        log.setField(StringUtils.EMPTY);
+        log.setMainId(projectId);
+        log.setNewValue(text);
+        bizChangeLogMapper.insert(log);
+    }
+
     private BizChangeLogDO createLog(Long mainId, String field, String oldValue, String newValue, String action) {
         BizChangeLogDO logDO = new BizChangeLogDO();
         logDO.setType(BizChangeLogTypeEnum.PROJECT.getCode());
