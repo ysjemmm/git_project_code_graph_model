@@ -7,6 +7,8 @@ import com.timevale.forward.model.enums.PlanReleaseDateEnum;
 import com.timevale.forward.model.enums.YesOrNoEnum;
 import lombok.Data;
 
+import java.util.Date;
+
 
 /**
  * @author yangxu
@@ -62,5 +64,8 @@ public class BizDemandMD extends BaseMD {
 
     @FieldCompare(fieldName = "产品方案")
     private String productSolution;
+
+    @FieldCompare(fieldName = "期望上线时间")
+    private Date hopeReleaseDay;
 
 }
