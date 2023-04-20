@@ -385,6 +385,11 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
         if (customerDevSourceAdd) {
             projectDO.setStatus(ProjectStatusEnum.PLANING.getCode());
+            PersonAddReq sr = projectAddReq.getSr();
+            if (sr != null) {
+                projectDO.setCreateManId(sr.getUserId());
+                projectDO.setCreateMan(sr.getUserName());
+            }
         }
         projectMapper.insert(projectDO);
 
