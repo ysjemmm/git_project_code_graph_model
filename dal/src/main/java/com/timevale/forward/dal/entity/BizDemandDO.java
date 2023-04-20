@@ -165,11 +165,6 @@ public class BizDemandDO extends BaseDO {
     private BigDecimal totalTime;
 
     /**
-     * 期望上线时间
-     */
-    private Integer hopeReleaseDate;
-
-    /**
      * 期望上线日期
      */
     private Date hopeReleaseDay;

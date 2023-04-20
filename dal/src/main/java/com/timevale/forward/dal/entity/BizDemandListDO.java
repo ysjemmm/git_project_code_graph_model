@@ -125,11 +125,6 @@ public class BizDemandListDO extends BaseDO {
     private String desc;
 
     /**
-     * 期望上线时间
-     */
-    private Integer hopeReleaseDate;
-
-    /**
      * 期望上线日
      */
     private Date hopeReleaseDay;

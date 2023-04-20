@@ -86,7 +86,6 @@ public interface BizDemandCopier {
     @Mapping(target = "customerDevDemandText", expression = "java(YesOrNoEnum.getTextByCode(bizDemandDO.getCustomerDevDemand()))")
     @Mapping(target = "planReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate()))")
     @Mapping(target = "customerDevTypeText", expression = "java(CustomerDevTypeEnum.getTextByCode(bizDemandDO.getCustomerDevType()))")
-    @Mapping(target = "hopeReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(bizDemandDO.getHopeReleaseDate()))")
     BizDemandDetailVO convert(BizDemandDO bizDemandDO);
 
     /**
@@ -129,7 +128,6 @@ public interface BizDemandCopier {
     @Mapping(target = "priorityText", expression = "java(PriorityEnum.getTextChineseByCode(listDO.getPriority()))")
     @Mapping(target = "customerDevDemand", expression = "java(YesOrNoEnum.getTextByCode(listDO.getCustomerDevDemand()))")
     @Mapping(target = "planReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(listDO.getPlanReleaseDate()))")
-    @Mapping(target = "hopeReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(listDO.getHopeReleaseDate()))")
     BizDemandVO convert(BizDemandListDO listDO);
 
     /**

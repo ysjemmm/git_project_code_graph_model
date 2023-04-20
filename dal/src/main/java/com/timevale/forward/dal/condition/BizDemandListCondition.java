@@ -157,11 +157,6 @@ public class BizDemandListCondition{
     private String desc;
 
     /**
-     * 期望上线日期列表
-     */
-    private List<Integer> hopeReleaseDateList;
-
-    /**
      * 期望上线日期开始
      */
     private Date hopeReleaseDayStart;

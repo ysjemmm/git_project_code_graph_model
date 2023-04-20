@@ -6,11 +6,11 @@
         insert into biz_demand (name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status,
                                 priority, receive_man, receive_man_id, submit_man_id, submit_man,  create_man_id, create_man,
                                 customer_dev_demand,customer_dev_type,customer_dev_sale_contract,customer_dev_project_name, source_id,
-                                biz_id, biz_name,hope_release_date, hope_release_day, ued_time, front_time, back_time, qa_time, total_time)
+                                biz_id, biz_name, hope_release_day, ued_time, front_time, back_time, qa_time, total_time)
         values (#{name}, #{productLineId}, #{dataIndicators}, #{targetCustomer}, #{createCustomer}, #{deptId}, #{desc}, #{status},
                 #{priority}, #{receiveMan}, #{receiveManId}, #{submitManId}, #{submitMan}, #{createManId}, #{createMan},
                 #{customerDevDemand}, #{customerDevType}, #{customerDevSaleContract}, #{customerDevProjectName}, #{sourceId},
-                #{bizId}, #{bizName},#{hopeReleaseDate}, #{hopeReleaseDay}, #{uedTime}, #{frontTime}, #{backTime}, #{qaTime}, #{totalTime})
+                #{bizId}, #{bizName}, #{hopeReleaseDay}, #{uedTime}, #{frontTime}, #{backTime}, #{qaTime}, #{totalTime})
     </insert>
 
     <update id="update">
@@ -119,7 +119,6 @@
             solve_plan = #{solvePlan},
             reject_reason = #{rejectReason},
             plan_release_date = #{planReleaseDate},
-            hope_release_date = #{hopeReleaseDate},
             project_end_date = #{projectEndDate},
             source_id = #{sourceId},
             customer_dev_demand = #{customerDevDemand},
@@ -157,7 +156,7 @@
         select bd.id, bd.name, bd.dept_id, bd.status, bd.priority, bd.receive_man, bd.receive_man_id,
         bd.target_customer, bd.submit_man, bd.submit_man_id, bd.plan_release_date, bd.project_end_date, bd.is_deleted,
         bd.create_man_id, bd.create_man, bd.create_date, bd.modify_man_id, bd.modify_man, bd.modify_date, bd.source_id,
-        bd.ued_time,bd.back_time,bd.front_time,bd.qa_time,bd.total_time,bd.`desc`,bd.hope_release_date,
+        bd.ued_time,bd.back_time,bd.front_time,bd.qa_time,bd.total_time,bd.`desc`,
         bd.customer_dev_demand,bd.hope_release_day,bd.product_solution,
         pl.id productLineId, pl.name productLineName,
         b.id bizDomainId , b.name bizDomainName
@@ -263,12 +262,6 @@
             </if>
             <if test="sourceId != null and sourceId != ''">
                 and bd.source_id = #{sourceId}
-            </if>
-            <if test="hopeReleaseDateList!=null and hopeReleaseDateList.size()>0">
-                and bd.hope_release_date in
-                <foreach collection="hopeReleaseDateList" item="item" separator="," open="(" close=")">
-                    #{item}
-                </foreach>
             </if>
             <if test="customerDevDemand != null">
                 and bd.customer_dev_demand = #{customerDevDemand}
