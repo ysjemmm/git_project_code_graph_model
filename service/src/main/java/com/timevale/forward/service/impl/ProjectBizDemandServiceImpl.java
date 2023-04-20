@@ -137,6 +137,9 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
         Set<Long> relBizDemandIds = pbRelations.stream().map(ProjectBizDemandDO::getBizDemandId)
                 .collect(Collectors.toSet());
         bizDemandIds.removeIf(id -> !relBizDemandIds.contains(id));
+        if (bizDemandIds.isEmpty()) {
+            return BaseResult.success();
+        }
         List<BizDemandDO> bizDemands = bizDemandMapper.getByIds(bizDemandIds);
         AssertUtil.notNull(bizDemands.isEmpty(), "取消关联的业务需求不存在");
         projectBizDemandMapper.delete(projectId, bizDemandIds);
