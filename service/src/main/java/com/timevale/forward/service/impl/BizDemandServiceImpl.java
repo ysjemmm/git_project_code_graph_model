@@ -656,9 +656,7 @@ public class BizDemandServiceImpl implements BizDemandService {
                 if (labels.stream().map(BizLabelSimpleVO::getId)
                         .anyMatch(x -> Objects.equal(x, commonConfig.getDevDemandAppealLabelId()))) {
                     // 申诉需求接收打上申诉通过标签
-                    bizLabelComponent.addLabel(bizDemandId,
-                            Collections.singletonList(commonConfig.getDevDemandApproveLabelId()),
-                            BizTypeEnum.BIZ_DEMAND.getCode());
+                    addBizLabel(bizDemandDO, commonConfig.getDevDemandApproveLabelId());
                 }
             }
         }
@@ -1075,14 +1073,12 @@ public class BizDemandServiceImpl implements BizDemandService {
                     bizLabelComponent.getBizLabelMap(Collections.singletonList(oldBizDemandDO.getId()),
                             BizTypeEnum.BIZ_DEMAND.getCode());
             if (bizLabelMap.isEmpty()) {
-                bizLabelComponent.addLabel(oldBizDemandDO.getId(), Collections.singletonList(labelId),
-                        BizTypeEnum.BIZ_DEMAND.getCode());
+                addBizLabel(oldBizDemandDO, labelId);
             } else {
                 List<BizLabelSimpleVO> labels = bizLabelMap.get(bizDemandId);
                 if (labels.stream().map(BizLabelSimpleVO::getId)
                         .noneMatch(x -> Objects.equal(x, commonConfig.getDevDemandAppealLabelId()))) {
-                    bizLabelComponent.addLabel(oldBizDemandDO.getId(), Collections.singletonList(labelId),
-                            BizTypeEnum.BIZ_DEMAND.getCode());
+                    addBizLabel(oldBizDemandDO, labelId);
                 }
             }
         }
@@ -1234,4 +1230,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         bugLogDO.setNewValue(newValue);
         return bugLogDO;
     }
+
+    private void addBizLabel(BizDemandDO bizDemand, Long labelId) {
+        List<Long> labelIds = Collections.singletonList(labelId);
+        bizLabelComponent.addLabel(bizDemand.getId(), labelIds,
+                BizTypeEnum.BIZ_DEMAND.getCode());
+        bizLabelComponent.addLog(bizDemand.getId(), labelIds,
+                BizTypeEnum.BIZ_DEMAND.getCode(), true);
+    }
+
 }
