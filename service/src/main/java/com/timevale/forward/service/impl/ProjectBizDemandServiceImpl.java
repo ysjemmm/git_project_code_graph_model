@@ -14,6 +14,7 @@ import com.timevale.forward.facade.api.request.BizDemandLinkProjectReq;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.utils.date.DateStyle;
 import com.timevale.forward.service.utils.date.DateUtil;
@@ -41,6 +42,7 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
 
     private final ProjectMapper projectMapper;
     private final BizDemandMapper bizDemandMapper;
+    private final BizDemandComponent bizDemandComponent;
     private final BizDemandLogComponent bizDemandLogComponent;
     private final ProjectBizDemandMapper projectBizDemandMapper;
     private final BizChangeLogMapper bizChangeLogMapper;
@@ -99,7 +101,7 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
         // 插入关联关系
         projectBizDemandMapper.batchInsert(newPbRelations);
 
-        BizDemandStatusEnum status = getBizDemandStatusByProjectStatus(project.getStatus());
+        BizDemandStatusEnum status = bizDemandComponent.getBizDemandStatusByProjectStatus(project.getStatus());
         // 目前关联是项目一定为进行中状态
         bizDemandMapper.updateConditional(new BizDemandUpdateCondition().
                 setStatus(status.getCode())
@@ -143,7 +145,7 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
                 .setProjectEndDateNull(true)
                 .setIds(bizDemandIds));
 
-        BizDemandStatusEnum status = getBizDemandStatusByProjectStatus(project.getStatus());
+        BizDemandStatusEnum status = bizDemandComponent.getBizDemandStatusByProjectStatus(project.getStatus());
         String projectEndDate = DateUtil.parseToString(project.getPlanEndDate(), DateStyle.YYYY_MM_DD);
         List<BizChangeLogDO> logs = new ArrayList<>();
         for (BizDemandDO bizDemand : bizDemands) {
@@ -156,17 +158,6 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
         bizDemandLogComponent.unlinkProject(project, bizDemands);
         bizChangeLogMapper.batchInsert(logs);
         return BaseResult.success();
-    }
-
-    private BizDemandStatusEnum getBizDemandStatusByProjectStatus(Integer projectStatus) {
-        ProjectStatusEnum status = ProjectStatusEnum.getByCode(projectStatus);
-        if (status == ProjectStatusEnum.WAITING) {
-            return BizDemandStatusEnum.INCLUDE_PROJECT;
-        }
-        if (status == ProjectStatusEnum.COMPLETE) {
-            return BizDemandStatusEnum.AVAILABLE;
-        }
-        return BizDemandStatusEnum.PROJECTING;
     }
 
 }

@@ -6,6 +6,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
+import com.timevale.forward.dal.condition.BizDemandUpdateCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.BizDemandVO;
@@ -13,7 +14,10 @@ import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDemandLogComponent;
+import com.timevale.forward.service.component.BizLabelComponent;
+import com.timevale.forward.service.component.SqlOrderComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
@@ -56,8 +60,6 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     @Resource
     private InnerGroupClient innerGroupClient;
     @Resource
-    private ProjectComponent projectComponent;
-    @Resource
     private BizLabelComponent bizLabelComponent;
     @Resource
     private SqlOrderComponent sqlOrderComponent;
@@ -84,13 +86,42 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         }
 
         // 判断状态是否发生变更
-        Integer newBdStatus = getStatus(bdId);
+        Integer newBdStatus = getStatusByProduct(bdId);
         if (ObjectUtil.notEqual(oldBdStatus, newBdStatus)) {
             BizDemandDO updateDO = new BizDemandDO();
             updateDO.setId(bdId);
             updateDO.setStatus(newBdStatus);
             bizDemandMapper.update(updateDO);
         }
+    }
+
+    @Override
+    public void updateStatusByProject(Long projectId) {
+        if (projectId == null) {
+            return;
+        }
+        ProjectDO project = projectMapper.get(projectId);
+        if (project == null) {
+            return;
+        }
+        List<ProjectBizDemandDO> pbdList = projectBizDemandMapper.selectByProjectId(projectId);
+        if (pbdList.isEmpty()) {
+            return;
+        }
+        BizDemandStatusEnum bdStatus = getBizDemandStatusByProjectStatus(project.getStatus());
+        Set<Long> bizDemandIds = pbdList.stream().map(ProjectBizDemandDO::getBizDemandId)
+                .collect(Collectors.toSet());
+        List<BizDemandDO> bizDemands = bizDemandMapper.getByIds(bizDemandIds);
+        if (bizDemands.isEmpty()) {
+            return;
+        }
+        BizDemandDO demand = bizDemands.get(0);
+        if (Objects.equals(demand.getStatus(), bdStatus.getCode())) {
+            return;
+        }
+        bizDemandMapper.updateConditional(new BizDemandUpdateCondition().setIds(bizDemandIds)
+                .setStatus(bdStatus.getCode()));
+        bizDemandLogComponent.addLogsAsProjectStatusChange(demand.getStatus(), bdStatus.getCode(), bizDemandIds);
     }
 
     @Override
@@ -418,20 +449,6 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     }
 
     @Override
-    public void updateCustomerPj(Long bdId) {
-        List<ProjectDO> byBizDemandId = projectMapper.getByBizDemandId(CollUtil.newArrayList(bdId));
-        for (ProjectDO projectDO : byBizDemandId) {
-            projectComponent.updateCustomDev(projectDO.getId());
-        }
-    }
-
-    @Override
-    public List<Long> getLinkProjectIds(Long bizDemandId) {
-        List<ProjectDO> byBizDemandId = projectMapper.getByBizDemandId(CollUtil.newArrayList(bizDemandId));
-        return byBizDemandId.stream().map(BaseDO::getId).collect(Collectors.toList());
-    }
-
-    @Override
     public List<ProductDemandDO> getPdDO(Long bdId) {
         if (bdId == null) {
             return new ArrayList<>();
@@ -450,7 +467,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     }
 
     @Override
-    public Integer getStatus(Long bdId) {
+    public Integer getStatusByProduct(Long bdId) {
         // 查询关联的产品需求
         List<ProductDemandDO> pdDOList = getPdDO(bdId);
 
@@ -478,4 +495,17 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         }
         return bdStatus;
     }
+
+    @Override
+    public BizDemandStatusEnum getBizDemandStatusByProjectStatus(Integer projectStatus) {
+        ProjectStatusEnum status = ProjectStatusEnum.getByCode(projectStatus);
+        if (status == ProjectStatusEnum.WAITING) {
+            return BizDemandStatusEnum.INCLUDE_PROJECT;
+        }
+        if (status == ProjectStatusEnum.COMPLETE) {
+            return BizDemandStatusEnum.AVAILABLE;
+        }
+        return BizDemandStatusEnum.PROJECTING;
+    }
+
 }

@@ -2,7 +2,6 @@ package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
-import cn.hutool.core.util.ObjectUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
@@ -592,44 +591,6 @@ public class ProjectComponentImpl implements ProjectComponent {
         analyseVOList.sort((a, b) -> b.getCount().compareTo(a.getCount()));
 
         return analyseVOList;
-    }
-
-    @Override
-    public void updateCustomDev(Long projectId) {
-        if (projectId == null) {
-            return;
-        }
-
-        ProjectDO projectDO = projectMapper.get(projectId);
-        if (projectDO == null) {
-            log.error("[ProjectComponentImpl.updateCustomDev]项目为空projectId:{}",projectId);
-            return;
-        }
-
-        Integer kind = projectDO.getKind();
-
-        int newCustomerDev = 0;
-
-        if (ProjectKindEnum.PBG_OTN.getCode().equals(kind)) {
-            List<BizDemandDO> bizDemandDOList = bizDemandMapper.getByProjectId(projectId);
-            boolean customerDevDemand = bizDemandDOList.stream().anyMatch(e -> BooleanUtil.isTrue(e.getCustomerDevDemand()));
-            newCustomerDev = customerDevDemand ? 1 : 0;
-        }
-
-        Integer oldCustomerDev = projectDO.getCustomerDev();
-        if (ObjectUtil.notEqual(newCustomerDev, oldCustomerDev)) {
-            ProjectDO updateDO = new ProjectDO();
-            updateDO.setId(projectId);
-            updateDO.setCustomerDev(newCustomerDev);
-            projectMapper.update(updateDO);
-
-            projectLogComponent.addLogWhenContentChange(
-                    YesOrNoEnum.getTextByCode(oldCustomerDev),
-                    YesOrNoEnum.getTextByCode(newCustomerDev),
-                    projectId,
-                    BizChangeLogFieldEnum.CUSTOMER_PROJECT.getText()
-            );
-        }
     }
 
     @Override

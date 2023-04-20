@@ -28,6 +28,8 @@ public interface BizDemandLogComponent{
 
     void addLogAsProductDemandStatusChange(Integer oldStatus,  Integer newStatus,Long id,Integer type) ;
 
+    void addLogsAsProjectStatusChange(Integer oldStatus, Integer newStatus, Collection<Long> ids);
+
     BizChangeLogDO getLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active);
 
     BizChangeLogDO getLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active, String action);

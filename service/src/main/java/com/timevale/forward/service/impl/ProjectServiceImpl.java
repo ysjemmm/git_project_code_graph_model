@@ -302,7 +302,7 @@ public class ProjectServiceImpl implements ProjectService {
             projectMilestoneComponent.addMilestoneInvalidLog(projectId, MilestoneTypeEnum.PROJECT.getCode());
         }
 
-        projectComponent.updateCustomDev(projectId);
+        bizDemandComponent.updateStatusByProject(projectId);
         return BaseResult.success(true);
     }
 
@@ -354,12 +354,13 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 名称校验
         AssertUtil.checkState(!StrUtil.contains(projectAddReq.getName(), CommonConstant.BLANK), "项目名称中请勿包含空格");
-        boolean customerDev = StringUtils.isNotBlank(projectAddReq.getSourceId()) &&
+        // 是否产研系统RPC调用产生的项目
+        boolean customerDevSourceAdd = StringUtils.isNotBlank(projectAddReq.getSourceId()) &&
                 CollectionUtils.isNotEmpty(projectAddReq.getBizDemandIds());
 
         ProjectDO existsName = projectMapper.getByName(projectAddReq.getName());
         if (existsName != null) {
-            if (customerDev) {
+            if (customerDevSourceAdd) {
                 projectAddReq.setName(getAppendedProjectName(projectAddReq.getName()));
             } else {
                 throw new BaseIllegalArgumentException("项目名称已存在，请修改后重试");
@@ -382,7 +383,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 转换后新增
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
-        if (customerDev) {
+        if (customerDevSourceAdd) {
             projectDO.setStatus(ProjectStatusEnum.PLANING.getCode());
         }
         projectMapper.insert(projectDO);
@@ -430,7 +431,7 @@ public class ProjectServiceImpl implements ProjectService {
         evaluateComponent.initEvaluate(projectDO.getId(), projectDO.getKind());
 
         //生成节点信息
-        if (customerDev) {
+        if (customerDevSourceAdd) {
             projectBizDemandService.linkOrUnlinkBizDemandProject(new BizDemandLinkProjectReq()
                     .setProjectId(projectDO.getId())
                     .setBizDemandIds(projectAddReq.getBizDemandIds())
@@ -619,8 +620,8 @@ public class ProjectServiceImpl implements ProjectService {
         // 内部项目状态变更
         innerProjectStatusUpdateComponent.updateFromProject(newProject);
 
-        // 客开刷新
-        projectComponent.updateCustomDev(projectId);
+        // 业务需求更新状态
+        bizDemandComponent.updateStatusByProject(projectId);
 
         // 更新评价维度
         evaluateComponent.updateEvalDimension(projectId);
@@ -1170,9 +1171,6 @@ public class ProjectServiceImpl implements ProjectService {
             // 取消产品需求和任务的关联
             productDemandIds.forEach(a -> taskProductDemandComponent.update(null, a));
         }
-
-        // 客开刷新
-        projectComponent.updateCustomDev(projectDO.getId());
 
         //产品需求和项目关联或删除时,需要给前端刷新产品需求状态
         ProductDemandDO productDemandDO = productDemandMapper.selectById(productDemandIds.get(0));

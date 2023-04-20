@@ -266,10 +266,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setStatus(BizDemandStatusEnum.INVALID.getCode());
         bizDemandMapper.fullUpdate(bizDemandDO);
 
-
-        // 关联的项目
-        List<Long> linkProjectIds = bizDemandComponent.getLinkProjectIds(bizDemandId);
-
         List<ProjectBizDemandDO> pbdList = projectBizDemandMapper.selectByBizDemandIds(Collections.singletonList(bizDemandId));
         // 取消产品关联, 产品关联断开日志
         productBizDemandMapper.deleteByBizDemandId(bizDemandId);
@@ -318,11 +314,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         bizLabelComponent.deleteLabel(bizDemandId, BizTypeEnum.BIZ_DEMAND.getCode());
-
-        // 刷新客开
-        for (Long projectId : linkProjectIds) {
-            projectComponent.updateCustomDev(projectId);
-        }
 
         return BaseResult.success(true);
     }
@@ -549,7 +540,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 变更日志
         bizDemandLogComponent.addLogWhenModifyData(oldBizDemandDO, newBizDemandDO);
 
-        bizDemandComponent.updateCustomerPj(bizDemandModifyReq.getId());
         return BaseResult.success(true);
     }
 

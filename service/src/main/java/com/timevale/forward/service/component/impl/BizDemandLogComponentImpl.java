@@ -6,10 +6,7 @@ import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.dao.ProductLineMapper;
 import com.timevale.forward.dal.entity.*;
-import com.timevale.forward.model.enums.BizChangeLogFieldEnum;
-import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
-import com.timevale.forward.model.enums.BizDemandStatusEnum;
-import com.timevale.forward.model.enums.ButtonActionEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BizDemandMD;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
@@ -263,6 +260,25 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
             logDO.setCreateManId(CommonConstant.SYSTEM);
             bizChangeLogMapper.insert(logDO);
         }
+    }
+
+    @Override
+    public void addLogsAsProjectStatusChange(Integer oldStatus, Integer newStatus, Collection<Long> ids) {
+        if (Objects.equals(oldStatus, newStatus)) {
+            return;
+        }
+        List<BizChangeLogDO> logs = ids.stream().map(id -> {
+            BizChangeLogDO logDO = new BizChangeLogDO();
+            logDO.setType(BizTypeEnum.BIZ_DEMAND.getCode());
+            logDO.setMainId(id);
+            logDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
+            logDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
+            logDO.setNewValue(BizDemandStatusEnum.getTextByCode(newStatus));
+            logDO.setCreateMan(CommonConstant.SYSTEM);
+            logDO.setCreateManId(CommonConstant.SYSTEM);
+            return logDO;
+        }).collect(Collectors.toList());
+        bizChangeLogMapper.batchInsert(logs);
     }
 
     @Override

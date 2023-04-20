@@ -280,9 +280,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             throw new BaseBizRuntimeException("产品需求状态为已作废或已完成上线时,不能修改状态");
         }
 
-        // 关联的项目
-        Long linkProjectId = productDemandComponent.getLinkProjectId(productDemandId);
-
         Integer oldStatus = productDemand.getStatus();
         // 更新需求状态
         productDemand.setStatus(type);
@@ -327,9 +324,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         productDemandLogComponent.addLogWhenStatusChange(oldStatus, type, productDemandId, action);
         //解除任务关联
         taskProductDemandComponent.update(null, productDemandId);
-
-        // 刷新客开
-        projectComponent.updateCustomDev(linkProjectId);
 
         return BaseResult.success(true);
     }
@@ -433,10 +427,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             bizLabelComponent.addLabel(productDemand.getId(), productDemandAddReq.getLabelIds(), BizTypeEnum.PRODUCT_DEMAND.getCode());
             bizLabelComponent.addLog(productDemand.getId(), productDemandAddReq.getLabelIds(), BizTypeEnum.PRODUCT_DEMAND.getCode(), true);
         }
-
-        // 更新是否客开项目
-        Long projectId = productDemandAddReq.getProjectId();
-        projectComponent.updateCustomDev(projectId);
 
         return BaseResult.success(true);
     }
@@ -594,10 +584,6 @@ public class ProductDemandServiceImpl implements ProductDemandService {
             productDemandLogComponent.addLogWhenLinkOrUnlink(productDemandDO.getName(), productDemandDO.getId(), bdNameMap, ButtonActionEnum.UN_LINK.getText());
 
         }
-
-        // 刷新客开
-        Long linkProjectId = productDemandComponent.getLinkProjectId(bizDemandLinkReq.getProductDemandId());
-        projectComponent.updateCustomDev(linkProjectId);
         return BaseResult.success(true);
     }
 

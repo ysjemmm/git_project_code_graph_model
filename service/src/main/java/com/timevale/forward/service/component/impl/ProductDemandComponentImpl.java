@@ -1,6 +1,5 @@
 package com.timevale.forward.service.component.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
 import com.timevale.forward.dal.dao.*;
@@ -352,26 +351,4 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
         return status;
     }
 
-    @Override
-    public void updateCustomerProject(Long productDemandId) {
-        List<ProductBizDemandDO> productBizDemandDOList = productBizDemandMapper.getByProductDemandIds(CollUtil.newArrayList(productDemandId));
-        List<Long> bizDemandIdList = productBizDemandDOList.stream().map(ProductBizDemandDO::getBizDemandId).collect(Collectors.toList());
-
-        if (CollUtil.isEmpty(bizDemandIdList)) {
-            return;
-        }
-
-        for (Long bizDemandId : bizDemandIdList) {
-            bizDemandComponent.updateCustomerPj(bizDemandId);
-        }
-    }
-
-    @Override
-    public Long getLinkProjectId(Long productDemandId) {
-        ProjectProductDemandDO byProductDemandId = projectProductDemandMapper.getByProductDemandId(productDemandId);
-        if (byProductDemandId != null) {
-            return byProductDemandId.getProjectId();
-        }
-        return null;
-    }
 }
