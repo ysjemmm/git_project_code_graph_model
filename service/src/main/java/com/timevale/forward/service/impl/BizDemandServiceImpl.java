@@ -1074,8 +1074,10 @@ public class BizDemandServiceImpl implements BizDemandService {
             Map<Long, List<BizLabelSimpleVO>> bizLabelMap =
                     bizLabelComponent.getBizLabelMap(Collections.singletonList(oldBizDemandDO.getId()),
                             BizTypeEnum.BIZ_DEMAND.getCode());
-
-            if (!bizLabelMap.isEmpty()) {
+            if (bizLabelMap.isEmpty()) {
+                bizLabelComponent.addLabel(oldBizDemandDO.getId(), Collections.singletonList(labelId),
+                        BizTypeEnum.BIZ_DEMAND.getCode());
+            } else {
                 List<BizLabelSimpleVO> labels = bizLabelMap.get(bizDemandId);
                 if (labels.stream().map(BizLabelSimpleVO::getId)
                         .noneMatch(x -> Objects.equal(x, commonConfig.getDevDemandAppealLabelId()))) {
