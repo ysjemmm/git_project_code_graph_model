@@ -69,4 +69,7 @@ public class ProductDemandLinkBizDemandQueryList extends QueryBase {
     @ApiModelProperty("是否客开需求")
     private Boolean customerDevDemand;
 
+    @ApiModelProperty("来源id")
+    private String sourceId;
+
 }
