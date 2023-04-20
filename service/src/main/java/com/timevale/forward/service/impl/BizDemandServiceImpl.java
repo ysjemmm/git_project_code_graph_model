@@ -1081,8 +1081,18 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (oldBizDemandDO.getCustomerDevDemand()) {
             // 客开需求需要添加标签：客开需求提交申诉
             Long labelId = commonConfig.getDevDemandAppealLabelId();
-            bizLabelComponent.addLabel(oldBizDemandDO.getId(), Collections.singletonList(labelId),
-                    BizTypeEnum.BIZ_DEMAND.getCode());
+            Map<Long, List<BizLabelSimpleVO>> bizLabelMap =
+                    bizLabelComponent.getBizLabelMap(Collections.singletonList(oldBizDemandDO.getId()),
+                            BizTypeEnum.BIZ_DEMAND.getCode());
+
+            if (!bizLabelMap.isEmpty()) {
+                List<BizLabelSimpleVO> labels = bizLabelMap.get(bizDemandId);
+                if (labels.stream().map(BizLabelSimpleVO::getId)
+                        .noneMatch(x -> Objects.equal(x, commonConfig.getDevDemandAppealLabelId()))) {
+                    bizLabelComponent.addLabel(oldBizDemandDO.getId(), Collections.singletonList(labelId),
+                            BizTypeEnum.BIZ_DEMAND.getCode());
+                }
+            }
         }
 
         messageEventPublisher.publish(new BizDemandToReceiveAaginMsgEvent(
