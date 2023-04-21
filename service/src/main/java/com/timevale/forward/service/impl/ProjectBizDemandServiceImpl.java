@@ -81,15 +81,22 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
 
         List<ProjectBizDemandDO> pbRelations =
                 projectBizDemandMapper.selectByBizDemandIds(bizDemandIds);
+        Set<Long> nonSourceBizDemandIds = bizDemands.stream().filter(bd ->
+                !Objects.equals(bd.getSourceId(), project.getSourceId()))
+                .map(BizDemandDO::getId).collect(Collectors.toSet());
+
         if (!bizDemandLinkProjectReq.isRemoveUnsatisfied()) {
             AssertUtil.checkState(pbRelations.stream().map(ProjectBizDemandDO::getProjectId)
                             .allMatch(pId -> Objects.equals(projectId, pId)),
                     "您选择的业务需求已经关联到其他项目，无法再次关联");
+            AssertUtil.checkState(nonSourceBizDemandIds.isEmpty(),
+                    "您关联的业务需求和项目的关联交付项目不一致，请刷新后重试");
         }
         // 去除已经关联到该项目的列表
         Set<Long> alreadyRelatedBizDemandIds = pbRelations.stream()
                 .map(ProjectBizDemandDO::getBizDemandId).collect(Collectors.toSet());
         bizDemandIds.removeIf(alreadyRelatedBizDemandIds::contains);
+        bizDemandIds.removeIf(nonSourceBizDemandIds::contains);
         if (bizDemandIds.isEmpty()) {
             return BaseResult.success();
         }
