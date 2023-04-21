@@ -54,6 +54,7 @@ public interface ProjectCopier {
     @Mapping(source = "principal.userId", target = "principalId")
     @Mapping(source = "otnPrincipal.userName", target = "otnPrincipal")
     @Mapping(source = "otnPrincipal.userId", target = "otnPrincipalId")
+    @Mapping(target = "nodeStatus", constant = "0")
     @Mapping(target = "status", expression = "java(ProjectStatusEnum.WAITING.getCode())")
     ProjectDO convert(ProjectAddReq projectAddReq);
 
