@@ -24,10 +24,10 @@ public class ProjectEvaluateItemVO extends ToString {
     @ApiModelProperty("项目考核维度名称")
     private String dimensionName;
 
-    @ApiModelProperty("评分")
+    @ApiModelProperty("提交人评分")
     private BigDecimal scores;
 
-    @ApiModelProperty("评分描述")
+    @ApiModelProperty("提交人评分描述")
     private String scoresDesc;
 
     @ApiModelProperty("PMO评分")
@@ -35,6 +35,12 @@ public class ProjectEvaluateItemVO extends ToString {
 
     @ApiModelProperty("PMO评分描述")
     private String pmoScoresDesc;
+
+    @ApiModelProperty("审核人评分")
+    private BigDecimal reviewerScores;
+
+    @ApiModelProperty("审核人评分描述")
+    private String reviewerScoresDesc;
 
     @ApiModelProperty("评分上限")
     private BigDecimal scoresCeiling;
