@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -33,6 +34,7 @@ public class MemberEvaluateModifyReq extends ToString {
     private Integer evaluateGrade;
 
     @ApiModelProperty("评价说明")
+    @Length(max = 200)
     private String evaluateExplain;
 
 }

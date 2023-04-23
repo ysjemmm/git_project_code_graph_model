@@ -5,6 +5,7 @@ import com.timevale.forward.dal.entity.ProjectMemberEvaluateDO;
 import com.timevale.forward.facade.api.request.MemberEvaluateModifyReq;
 import com.timevale.forward.facade.api.request.MemberWorkloadModifyReq;
 import com.timevale.forward.facade.api.request.PersonAddReq;
+import com.timevale.forward.facade.api.result.ConclusionMemberItemVO;
 import com.timevale.forward.facade.api.result.MemberEvaluateVO;
 import com.timevale.forward.facade.api.result.ProjectWorkloadChangeVO;
 import com.timevale.forward.model.enums.GradeEnum;
@@ -40,6 +41,11 @@ public interface ProjectMemberEvaluateCopier {
     MemberEvaluateVO do2vo(ProjectMemberEvaluateDO memberEvaluateDO);
 
     List<MemberEvaluateVO> do2vo(Collection<ProjectMemberEvaluateDO> projectMemberEvaluateDO);
+
+    @Mapping(target = "evaluateGradeName", expression = "java(GradeEnum.getTextByCode(memberEvaluateDO.getEvaluateGrade()))")
+    ConclusionMemberItemVO do2cvo(ProjectMemberEvaluateDO memberEvaluateDO);
+
+    List<ConclusionMemberItemVO> do2cvo(Collection<ProjectMemberEvaluateDO> projectMemberEvaluateDO);
 
     ProjectMemberEvaluateDO req2do(MemberEvaluateModifyReq req);
 

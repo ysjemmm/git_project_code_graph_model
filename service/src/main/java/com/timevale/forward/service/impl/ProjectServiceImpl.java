@@ -1501,11 +1501,15 @@ public class ProjectServiceImpl implements ProjectService {
                 .map(e -> ProjectEvaluateCopier.INSTANCE.do2item(e, dimensionDOMap.get(e.getEvaluateDimensionId())))
                 .collect(Collectors.toList());
 
+        // 项目成员工作量信息
+        List<ConclusionMemberItemVO> memberItemVOList = ProjectMemberEvaluateCopier.INSTANCE.do2cvo(memberEvaluateDOList);
+
         // 数据填充
         ConclusionFormVO conclusionFormVO = ProjectEvaluateCopier.INSTANCE.do2vo(projectDO);
         conclusionFormVO.setPlanWorkloadSum(planWorkloadSum);
         conclusionFormVO.setPointsWorkloadSum(pointsWorkloadSum);
         conclusionFormVO.setEvaluateItemVOList(evaluateItemVOList);
+        conclusionFormVO.setConclusionMemberItemVOList(memberItemVOList);
 
         return BaseResult.success(conclusionFormVO);
     }
