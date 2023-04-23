@@ -1893,7 +1893,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     private String getAppendedProjectName(String projectName) {
         int i = 2;
-        String tmpName = projectName + i;
+        String tmpName = projectName + "-" + i;
         while (projectMapper.getByName(tmpName) != null) {
             i++;
             tmpName = projectName + "-" + i;
