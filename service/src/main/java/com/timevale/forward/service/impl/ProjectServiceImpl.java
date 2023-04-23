@@ -362,10 +362,13 @@ public class ProjectServiceImpl implements ProjectService {
         if (existsName != null) {
             if (customerDevSourceAdd) {
                 projectAddReq.setName(getAppendedProjectName(projectAddReq.getName()));
+                projectAddReq.setDesc(projectAddReq.getName());
             } else {
                 throw new BaseIllegalArgumentException("项目名称已存在，请修改后重试");
             }
         }
+        // 处理时间类型差异
+        preProcessDates(projectAddReq);
 
         if (YesOrNoEnum.YES.getCode().equals(projectAddReq.getIsWithGoal())) {
             AssertUtil.notEmpty(projectAddReq.getProjectGoals(), "项目含有项目目标，请至少添加一条项目目标数据");
@@ -466,6 +469,25 @@ public class ProjectServiceImpl implements ProjectService {
 
 
         return BaseResult.success(projectDO.getId());
+    }
+
+    private void preProcessDates(ProjectAddReq projectAddReq) {
+        Date startDate = projectAddReq.getPlanStartDate();
+        Date endDate = projectAddReq.getPlanEndDate();
+        if (startDate != null) {
+            Date startOfDay = DateUtil.getStartOfDay(startDate);
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(startOfDay);
+            cal.set(Calendar.HOUR, 8);
+            projectAddReq.setPlanStartDate(cal.getTime());
+        }
+        if (endDate != null) {
+            Date startOfDay = DateUtil.getStartOfDay(endDate);
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(startOfDay);
+            cal.set(Calendar.HOUR, 8);
+            projectAddReq.setPlanEndDate(cal.getTime());
+        }
     }
 
     @Override
