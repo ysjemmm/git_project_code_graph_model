@@ -653,8 +653,9 @@ public class BizDemandServiceImpl implements BizDemandService {
                             BizTypeEnum.BIZ_DEMAND.getCode());
             if (!bizLabelMap.isEmpty()) {
                 List<BizLabelSimpleVO> labels = bizLabelMap.get(bizDemandId);
-                if (labels.stream().map(BizLabelSimpleVO::getId)
-                        .anyMatch(x -> Objects.equal(x, commonConfig.getDevDemandAppealLabelId()))) {
+                Set<Long> labelIds = labels.stream().map(BizLabelSimpleVO::getId).collect(Collectors.toSet());
+                if (labelIds.contains(commonConfig.getDevDemandAppealLabelId()) &&
+                        !labelIds.contains(commonConfig.getDevDemandApproveLabelId())) {
                     // 申诉需求接收打上申诉通过标签
                     addBizLabel(bizDemandDO, commonConfig.getDevDemandApproveLabelId());
                 }
