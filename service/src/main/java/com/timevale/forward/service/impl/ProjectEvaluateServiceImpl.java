@@ -195,7 +195,8 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         AssertUtil.notNull(projectDO, "项目不存在");
 
         // 获取SR建议评价等级
-        String srEvaluateGrade = GradeEnum.getTextByCode(projectDO.getSrEvaluateGrade());
+        Integer srEvaluateGrade = projectDO.getSrEvaluateGrade();
+        String srEvaluateGradeName = GradeEnum.getTextByCode(srEvaluateGrade);
 
         // 查询对应的项目评价，旧数据判空处理
         List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.getByProjectId(projectId);
@@ -234,6 +235,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         ProjectEvaluateVO result = new ProjectEvaluateVO();
         result.setScoresSum(scoresSum);
         result.setSrEvaluateGrade(srEvaluateGrade);
+        result.setSrEvaluateGradeName(srEvaluateGradeName);
         result.setEvaluateItemVOList(evaluateItemVOList);
 
         return BaseResult.success(result);
