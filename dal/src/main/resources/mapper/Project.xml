@@ -266,7 +266,15 @@
             <if test="id != null">and id = #{id}</if>
             <if test="kind != null">and kind = #{kind}</if>
             <if test="name != null and name != ''">and `name` like concat('%',#{name},'%')</if>
-            <if test="customerDev != null">and customer_dev = #{customerDev}</if>
+            <if test="customerDev != null">
+                and customer_dev = #{customerDev}
+                <if test="customerDev == 0">
+                    and kind != 2
+                </if>
+                <if test="customerDev == 1">
+                    and kind = 2
+                </if>
+            </if>
             <if test="planStartDateLeft != null and planStartDateRight != null">
                 and plan_start_date &gt;= #{planStartDateLeft} and plan_start_date &lt;= #{planStartDateRight}
             </if>
@@ -356,9 +364,9 @@
                     #{item}
                 </foreach>
             </if>
-        <if test="sourceId != null and sourceId != ''">
-            and source_id = #{sourceId}
-        </if>
+            <if test="sourceId != null and sourceId != ''">
+                and source_id = #{sourceId}
+            </if>
             and is_deleted =false
         </where>
     </select>
