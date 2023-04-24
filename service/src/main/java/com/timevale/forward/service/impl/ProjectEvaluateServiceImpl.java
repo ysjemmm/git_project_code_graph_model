@@ -250,6 +250,19 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
             evaluateMapper.updateScores(evaluateDO);
         }
 
+        // 更新 sr 评价等级
+        Optional<Long> projectIdOpt = evaluateDOList.stream().map(ProjectEvaluateDO::getProjectId).findAny();
+        if (projectIdOpt.isPresent()) {
+            Long projectId = projectIdOpt.get();
+            Optional.ofNullable(req.getSrEvaluateGrade())
+                    .ifPresent(e -> {
+                        ProjectDO projectDO = new ProjectDO();
+                        projectDO.setId(projectId);
+                        projectDO.setSrEvaluateGrade(e);
+                        projectMapper.update(projectDO);
+                    });
+        }
+
         return BaseResult.success(true);
     }
 }

@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
 /**
@@ -18,6 +20,11 @@ import java.util.List;
 public class ProjectEvaluateReq extends ToString {
 
     @ApiModelProperty("项目评价项")
+    @Valid
+    @NotEmpty
     private List<EvaluateReq> evaluateReqList;
+
+    @ApiModelProperty("SR建议评价等级，A-20，B-30，C-40")
+    private Integer srEvaluateGrade;
 
 }

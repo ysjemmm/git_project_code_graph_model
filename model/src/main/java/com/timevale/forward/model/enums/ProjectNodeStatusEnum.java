@@ -26,7 +26,8 @@ public enum ProjectNodeStatusEnum {
     READY_TEST(60,"待测试"),
     TESTING(70,"测试中"),
     PUBLISHED(80,"已发布"),
-    READY_CONCLUSION(90,"待结项");
+    READY_CONCLUSION(90,"待结项"),
+    CONCLUSION(100,"已结项");
 
     private final Integer code;
     private final String text;

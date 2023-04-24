@@ -27,9 +27,6 @@ public class MemberWorkloadFillReq extends ToString {
     @Valid
     private List<MemberWorkloadModifyReq> modifyReqList;
 
-    @ApiModelProperty("SR建议评价等级，A-20，B-30，C-40")
-    private Integer srEvaluateGrade;
-
     @ApiModelProperty("变更事由")
     private String changeReason;
 
