@@ -394,8 +394,8 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         Date newProjectEndDate = getProjectEndDate(bizDemandId);
 
         if (!Objects.equals(newProjectEndDate, oldProjectEndDate)) {
-            if (newProjectEndDate != null) {
-                //部分断开或关联业务需求
+            if (newProjectEndDate != null && !bizDemandDO.getCustomerDevDemand()) {
+                // 部分断开或关联业务需求 非客开需求才更新计划上线日期
                 int month = DateUtil.getMonth(newProjectEndDate);
                 bizDemandDO.setPlanReleaseDate(month - 1);
             }
