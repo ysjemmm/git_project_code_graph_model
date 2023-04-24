@@ -1427,6 +1427,9 @@ public class ProjectServiceImpl implements ProjectService {
                 .setFlowData(JSONObject.toJSONString(targetStatusModel));
         projectFlowMapper.insert(projectFlowDO);
 
+        // 更新项目节点状态
+        projectComponent.updateNodeStatus(projectId);
+
         return BaseResult.success(true);
     }
 

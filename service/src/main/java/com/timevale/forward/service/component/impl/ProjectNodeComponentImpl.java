@@ -140,8 +140,9 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
 
     @Override
     public Integer getStatus(List<ProjectNodeDO> nodeDOList) {
+        // 为空返回待启动
         if (CollUtil.isEmpty(nodeDOList)) {
-            return null;
+            return ProjectNodeStatusEnum.READY_START.getCode();
         }
 
         nodeDOList = sort(nodeDOList);

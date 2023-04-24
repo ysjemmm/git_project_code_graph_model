@@ -190,6 +190,7 @@ public class ConclusionFlow {
 
         // 只有审批通过，需要更新项目评价信息
         if (ObjectUtil.notEqual(FlowStatusEnum.FLOW_COMPLETE.getValue(), processStatus)) {
+            projectComponent.updateNodeStatus(projectId);
             return;
         }
 
@@ -218,6 +219,7 @@ public class ConclusionFlow {
         updateDO.setStatus(newStatus);
         updateDO.setConclusionDate(conclusionDate);
         updateDO.setSrEvaluateGrade(srEvaluateGrade);
+        updateDO.setNodeStatus(ProjectNodeStatusEnum.CONCLUSION.getCode());
         projectMapper.update(updateDO);
 
         // 结项流程日志处理
