@@ -499,10 +499,11 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     @Override
     public BizDemandStatusEnum getBizDemandStatusByProjectStatus(Integer projectStatus) {
         ProjectStatusEnum status = ProjectStatusEnum.getByCode(projectStatus);
-        if (status == ProjectStatusEnum.WAITING) {
+        if (status == ProjectStatusEnum.WAITING || status == ProjectStatusEnum.SUSPEND) {
             return BizDemandStatusEnum.INCLUDE_PROJECT;
         }
-        if (status == ProjectStatusEnum.COMPLETE) {
+        if (status == ProjectStatusEnum.CONCLUSION ||
+                status == ProjectStatusEnum.RELEASED) {
             return BizDemandStatusEnum.AVAILABLE;
         }
         return BizDemandStatusEnum.PROJECTING;

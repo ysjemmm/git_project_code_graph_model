@@ -611,7 +611,8 @@ public class ProjectServiceImpl implements ProjectService {
         // 节点信息
         if (CollUtil.isNotEmpty(projectNodeDOList)) {
             // 项目发布时需要校验未关闭bug
-            ProjectNodeDO publishNodeDO = CollUtil.findOne(projectNodeDOList, e -> ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(e.getName()));
+            ProjectNodeDO publishNodeDO = CollUtil.findOne(projectNodeDOList,
+                    e -> ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(e.getName()));
             AssertUtil.checkState(publishNodeDO == null
                             || publishNodeDO.getActualDate() == null
                             || checkProductRelease(projectModifyReq.getId()),
