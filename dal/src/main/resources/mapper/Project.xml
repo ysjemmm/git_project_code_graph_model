@@ -24,6 +24,7 @@
             <if test="otnPrincipal != null">otn_principal,</if>
             <if test="otnPrincipalId != null">otn_principal_id,</if>
             <if test="planStartDate != null">plan_start_date,</if>
+            <if test="actualStartDate != null">actual_start_date,</if>
             <if test="planEndDate != null">plan_end_date,</if>
             <if test="pjEstablishStartDate != null">pj_establish_start_date,</if>
             <if test="pjEstablishPublishDate != null">pj_establish_publish_date,</if>
@@ -56,6 +57,7 @@
             <if test="otnPrincipal != null">#{otnPrincipal},</if>
             <if test="otnPrincipalId != null">#{otnPrincipalId},</if>
             <if test="planStartDate != null">#{planStartDate},</if>
+            <if test="actualStartDate != null">#{actualStartDate},</if>
             <if test="planEndDate != null">#{planEndDate},</if>
             <if test="pjEstablishStartDate != null">#{pjEstablishStartDate},</if>
             <if test="pjEstablishPublishDate != null">#{pjEstablishPublishDate},</if>
