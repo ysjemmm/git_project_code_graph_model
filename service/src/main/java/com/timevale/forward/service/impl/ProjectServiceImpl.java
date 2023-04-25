@@ -389,6 +389,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (customerDevSourceAdd) {
             projectDO.setStatus(ProjectStatusEnum.PLANING.getCode());
             projectDO.setNodeStatus(ProjectNodeStatusEnum.READY_CONSTRUE.getCode());
+            projectDO.setActualStartDate(projectDO.getPlanStartDate());
             PersonAddReq sr = projectAddReq.getSr();
             if (sr != null) {
                 projectDO.setCreateManId(sr.getUserId());
