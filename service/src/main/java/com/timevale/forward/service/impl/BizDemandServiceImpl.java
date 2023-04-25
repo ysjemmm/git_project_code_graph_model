@@ -379,8 +379,8 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 日志, 状态改为待评估
         bizDemandLogComponent.addLogWhenModifyData(
-                BizDemandStatusEnum.EVALUATE.getText(),
-                BizDemandStatusEnum.EVALUATE.getText(),
+                BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
+                BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
                 bizDemandDO.getId(),
                 BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                 true,
