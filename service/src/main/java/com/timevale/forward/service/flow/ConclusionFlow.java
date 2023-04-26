@@ -16,10 +16,12 @@ import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectEvaluateCopier;
+import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.flow.model.TargetStatusModel;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.integration.epeius.model.ConclusionVar;
 import com.timevale.forward.service.integration.epeius.model.ProjectEvaluateVar;
+import com.timevale.forward.service.integration.epeius.model.ProjectMemberEvaluateVar;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -131,6 +133,9 @@ public class ConclusionFlow {
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .toString();
 
+        // 项目成员信息
+        List<ProjectMemberEvaluateVar> memberEvaluates = ProjectMemberEvaluateCopier.INSTANCE.do2var(memberEvaluateDOList);
+
         // 项目参数填装
         ConclusionVar conclusionVar = ProjectEvaluateCopier.INSTANCE.do2var(projectDO);
 
@@ -144,6 +149,7 @@ public class ConclusionFlow {
 
         conclusionVar.setProjectUrl(projectUrl);
         conclusionVar.setEvaluates(evaluates);
+        conclusionVar.setMemberEvaluates(memberEvaluates);
         conclusionVar.setPlanWorkloadSum(planWorkloadSum);
         conclusionVar.setPointsWorkloadSum(pointsWorkloadSum);
         conclusionVar.setReviewerEvaluates(reviewerEvaluates);
@@ -211,7 +217,8 @@ public class ConclusionFlow {
                 });
 
         // 更新普通评价
-        updateEvaluate(projectDO, conclusionVar);
+        updateEvaluate(projectId, conclusionVar);
+        updateMemberEvaluate(projectId, conclusionVar);
 
         // 获取更新结项日期,项目状态（取放在flowData中的数据）
         TargetStatusModel targetStatusModel = JSONObject.parseObject(projectFlowDO.getFlowData(), TargetStatusModel.class);
@@ -264,9 +271,13 @@ public class ConclusionFlow {
 
     }
 
-    private void updateEvaluate(ProjectDO projectDO, ConclusionVar conclusionVar) {
-        Long projectId = projectDO.getId();
-
+    /**
+     * 更新项目评价
+     *
+     * @param projectId     项目id
+     * @param conclusionVar 流程变量
+     */
+    private void updateEvaluate(Long projectId, ConclusionVar conclusionVar) {
         Collection<ProjectEvaluateVar> reviewerEvaluates = conclusionVar.getReviewerEvaluates();
         for (ProjectEvaluateVar reviewerEvaluate : reviewerEvaluates) {
             ProjectEvaluateDO evaluateDO = new ProjectEvaluateDO();
@@ -275,6 +286,24 @@ public class ConclusionFlow {
             evaluateDO.setReviewerScoresDesc(reviewerEvaluate.getScoresDesc());
             evaluateDO.setEvaluateDimensionId(reviewerEvaluate.getDimensionId());
             evaluateMapper.update(evaluateDO);
+        }
+    }
+
+    /**
+     * 更新成员评价
+     *
+     * @param projectId     项目id
+     * @param conclusionVar 流程变量
+     */
+    private void updateMemberEvaluate(Long projectId, ConclusionVar conclusionVar) {
+        Collection<ProjectMemberEvaluateVar> memberEvaluates = conclusionVar.getMemberEvaluates();
+        for (ProjectMemberEvaluateVar memberEvaluate : memberEvaluates) {
+            ProjectMemberEvaluateDO evaluateDO = new ProjectMemberEvaluateDO();
+            evaluateDO.setProjectId(projectId);
+            evaluateDO.setUserId(memberEvaluate.getUserId());
+            evaluateDO.setEvaluateGrade(GradeEnum.getCodeByText(memberEvaluate.getEvaluateGradeName()));
+            evaluateDO.setEvaluateExplain(memberEvaluate.getEvaluateExplain());
+            memberEvaluateMapper.update(evaluateDO);
         }
     }
 

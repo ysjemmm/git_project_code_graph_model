@@ -12,6 +12,7 @@ import com.timevale.forward.model.enums.GradeEnum;
 import com.timevale.forward.model.enums.ProjectKindEnum;
 import com.timevale.forward.model.enums.ProjectLevelEnum;
 import com.timevale.forward.model.enums.ProjectTypeEnum;
+import com.timevale.forward.service.integration.epeius.model.ProjectMemberEvaluateVar;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -58,6 +59,11 @@ public interface ProjectMemberEvaluateCopier {
     @Mapping(target = "typeName", expression = "java(ProjectTypeEnum.getTextByCode(projectDO.getType()))")
     @Mapping(target = "levelName", expression = "java(ProjectLevelEnum.getTextByCode(projectDO.getLevel()))")
     ProjectWorkloadChangeVO do2vo(ProjectDO projectDO);
+
+    @Mapping(target = "evaluateGradeName", expression = "java(GradeEnum.getTextByCode(memberEvaluateDO.getEvaluateGrade()))")
+    ProjectMemberEvaluateVar do2var(ProjectMemberEvaluateDO memberEvaluateDO);
+
+    List<ProjectMemberEvaluateVar> do2var(List<ProjectMemberEvaluateDO> memberEvaluateDOs);
 }
 
 

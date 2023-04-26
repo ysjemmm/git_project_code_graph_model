@@ -48,6 +48,8 @@ public class ConclusionVar {
 
     private Collection<ProjectEvaluateVar> reviewerEvaluates;
 
+    private Collection<ProjectMemberEvaluateVar> memberEvaluates;
+
     private Collection<String> pdSuperiorIds;
 
     private String pmId;
