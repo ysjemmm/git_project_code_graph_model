@@ -36,4 +36,14 @@ public class ProjectEvaluateDO extends BaseDO{
      * PMO评分描述
      */
     private String pmoScoresDesc;
+
+    /**
+     * 审核人评分
+     */
+    private BigDecimal reviewerScores;
+
+    /**
+     * 审核人评分描述
+     */
+    private String reviewerScoresDesc;
 }

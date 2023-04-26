@@ -12,9 +12,9 @@
         UPDATE project_evaluate
         <set>
             <if test="scores != null">scores = #{scores},</if>
-            <if test="pmoScores != null">pmo_scores = #{pmoScores},</if>
+            <if test="reviewerScores != null">reviewer_scores = #{reviewerScores},</if>
             <if test="scoresDesc != null ">scores_desc = #{scoresDesc},</if>
-            <if test="pmoScoresDesc != null">pmo_scores_desc = #{pmoScoresDesc},</if>
+            <if test="reviewerScoresDesc != null">reviewer_scores_desc = #{reviewerScoresDesc},</if>
             <if test="modifyMan != null ">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
         </set>

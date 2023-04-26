@@ -15,7 +15,6 @@ import java.util.Set;
  * @date 2020/11/5 16:17
  */
 public interface InnerUserPersonClient {
-
     /**
      * 查询上级
      *
