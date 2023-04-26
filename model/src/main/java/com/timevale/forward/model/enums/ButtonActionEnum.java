@@ -209,6 +209,8 @@ public enum ButtonActionEnum {
      */
     APPEND("新增"),
 
+    CUSTOMER_DEV_FLOW_COMPLETE_ADD("开发资源流程审批通过,系统自动创建产研项目"),
+
     APPEND_CHILD("新增子项目"),
     DELETE_CHILD("删除子项目"),
 
@@ -235,6 +237,9 @@ public enum ButtonActionEnum {
      */
     PROJECT_INCOME_DELETE("删除项目已收益金额"),
 
+    /**
+     * 里程碑相关
+     */
     MILESTONE_ADD("新增"),
     MILESTONE_DELETE("删除"),
     MILESTONE_SUSPEND("暂停"),

@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.timevale.forward.model.enums.MessageTitleEnum;
 import com.timevale.forward.model.enums.TabEnum;
 import com.timevale.forward.service.integration.erp.model.MarkdownMsg;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class BizDemandReceivedMsgEvent extends MessageEvent {
     private final String name;
     private final String planReleaseDate;
 
-    private static final String BIZ_DEMAND_RECEIVED_MSG = "### %s  \n  **%s**接收了您提交的业务需求 **%s**，预期上线时间为 **%s**  \n\n  ***  \n  [查看详情](%s)";
+    private static final String BIZ_DEMAND_RECEIVED_MSG = "### %s  \n  **%s**接收了您提交的业务需求 **%s** %s \n\n  ***  \n  [查看详情](%s)";
 
     public BizDemandReceivedMsgEvent(Object source, Long bizDemandId, String operator, String receiver, String name, String planReleaseDate) {
         super(source);
@@ -35,7 +36,14 @@ public class BizDemandReceivedMsgEvent extends MessageEvent {
         List<String> receivers = Lists.newArrayList(receiver);
         String title = MessageTitleEnum.BIZDEMAND_FEEDBACK.getText();
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUSINESS_MANAGEMENT.getText(), bizDemandId);
-        String markdown = String.format(BIZ_DEMAND_RECEIVED_MSG, title, operator, name, planReleaseDate, singleUrl);
+
+        String markdown;
+
+        if (StringUtils.isEmpty(planReleaseDate)) {
+            markdown = String.format(BIZ_DEMAND_RECEIVED_MSG, title, operator, name, "", singleUrl);
+        } else {
+            markdown = String.format(BIZ_DEMAND_RECEIVED_MSG, title, operator, name, "，预期上线时间为 **" + planReleaseDate + "**", singleUrl);
+        }
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
                 .title(title)

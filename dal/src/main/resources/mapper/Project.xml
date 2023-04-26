@@ -24,12 +24,15 @@
             <if test="otnPrincipal != null">otn_principal,</if>
             <if test="otnPrincipalId != null">otn_principal_id,</if>
             <if test="planStartDate != null">plan_start_date,</if>
+            <if test="actualStartDate != null">actual_start_date,</if>
             <if test="planEndDate != null">plan_end_date,</if>
             <if test="pjEstablishStartDate != null">pj_establish_start_date,</if>
             <if test="pjEstablishPublishDate != null">pj_establish_publish_date,</if>
             <if test="isAcceptance != null">is_acceptance,</if>
             <if test="isPlatformPublish != null">is_platform_publish,</if>
             <if test="resourceAssessment != null">resource_assessment,</if>
+            <if test="sourceId != null and sourceId != ''">source_id,</if>
+            <if test="nodeStatus != null">node_status,</if>
             <if test="createMan != null">create_man,</if>
             <if test="createManId != null">create_man_id,</if>
             <if test="true">parent_ids,</if>
@@ -54,12 +57,15 @@
             <if test="otnPrincipal != null">#{otnPrincipal},</if>
             <if test="otnPrincipalId != null">#{otnPrincipalId},</if>
             <if test="planStartDate != null">#{planStartDate},</if>
+            <if test="actualStartDate != null">#{actualStartDate},</if>
             <if test="planEndDate != null">#{planEndDate},</if>
             <if test="pjEstablishStartDate != null">#{pjEstablishStartDate},</if>
             <if test="pjEstablishPublishDate != null">#{pjEstablishPublishDate},</if>
             <if test="isAcceptance != null">#{isAcceptance},</if>
             <if test="isPlatformPublish != null">#{isPlatformPublish},</if>
             <if test="resourceAssessment != null">#{resourceAssessment},</if>
+            <if test="sourceId != null and sourceId != ''">#{sourceId},</if>
+            <if test="nodeStatus != null">#{nodeStatus},</if>
             <if test="createMan != null">#{createMan},</if>
             <if test="createManId != null">#{createManId},</if>
             <if test="true">
@@ -262,7 +268,15 @@
             <if test="id != null">and id = #{id}</if>
             <if test="kind != null">and kind = #{kind}</if>
             <if test="name != null and name != ''">and `name` like concat('%',#{name},'%')</if>
-            <if test="customerDev != null">and customer_dev = #{customerDev}</if>
+            <if test="customerDev != null">
+                and customer_dev = #{customerDev}
+                <if test="customerDev == 0">
+                    and kind != 2
+                </if>
+                <if test="customerDev == 1">
+                    and kind = 2
+                </if>
+            </if>
             <if test="planStartDateLeft != null and planStartDateRight != null">
                 and plan_start_date &gt;= #{planStartDateLeft} and plan_start_date &lt;= #{planStartDateRight}
             </if>
@@ -352,6 +366,9 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="sourceId != null and sourceId != ''">
+                and source_id = #{sourceId}
+            </if>
             and is_deleted =false
         </where>
     </select>
@@ -359,8 +376,9 @@
     <select id="getByName" resultType="com.timevale.forward.dal.entity.ProjectDO">
         select *
         from project
-        where `name` = #{name}
+        where `name` like #{name}
           and is_deleted = false
+        order by create_date desc limit 1
     </select>
 
     <select id="getByIds" resultType="com.timevale.forward.dal.entity.ProjectDO">
@@ -652,13 +670,19 @@
     <select id="getByBizDemandId" resultType="com.timevale.forward.dal.entity.ProjectDO">
         SELECT pj.*
         FROM project pj
-        INNER JOIN project_product_demand ppd on pj.id = ppd.project_id AND ppd.is_deleted = false
-        INNER JOIN product_biz_demand pbd on ppd.product_demand_id = pbd.product_demand_id AND pbd.is_deleted = false
+        INNER JOIN project_biz_demand pbd on pj.id = pbd.project_id AND pbd.is_deleted = false
         WHERE pbd.biz_demand_id IN
         <foreach collection="bizDemandIds" item="item" separator="," open="(" close=")">
             #{item}
         </foreach>
         AND pj.is_deleted = false
+    </select>
+    <select id="getBySourceIds" resultType="com.timevale.forward.dal.entity.ProjectDO">
+        select id, name, source_id from project where source_id in
+        <foreach collection="sourceIds" item="sourceId" open="(" separator="," close=")">
+            #{sourceId}
+        </foreach>
+        and is_deleted = false
     </select>
 
 </mapper>

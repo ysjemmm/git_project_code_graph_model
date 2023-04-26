@@ -188,4 +188,10 @@ public class ProjectDetailVO extends ToString {
 
     @ApiModelProperty("是否是评价部门的pmo")
     private Boolean isEvalPmo;
+
+    @ApiModelProperty("来源数据id")
+    private String sourceId;
+
+    @ApiModelProperty("项目名称")
+    private String customerDevProjectName;
 }

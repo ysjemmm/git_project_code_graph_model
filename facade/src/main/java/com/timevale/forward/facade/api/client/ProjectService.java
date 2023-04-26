@@ -2,10 +2,7 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
-import com.timevale.forward.facade.api.query.ProjectLinkProductDemandQueryList;
-import com.timevale.forward.facade.api.query.ProjectPageQuery;
-import com.timevale.forward.facade.api.query.ProjectProductDemandQueryList;
-import com.timevale.forward.facade.api.query.ProjectQueryList;
+import com.timevale.forward.facade.api.query.*;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -38,11 +35,11 @@ public interface ProjectService {
     /**
      * 开启项目
      *
-     * @param projectId 项目id
+     * @param projectId  项目id
      * @param enableTask 是否启用任务
      * @return 数量
      */
-    BaseResult<Boolean> enable(Long projectId,Boolean enableTask);
+    BaseResult<Boolean> enable(Long projectId, Boolean enableTask);
 
     /**
      * 新增
@@ -50,7 +47,7 @@ public interface ProjectService {
      * @param projectAddReq 项目信息
      * @return 数量
      */
-    BaseResult<Boolean> add(ProjectAddReq projectAddReq);
+    BaseResult<Long> add(ProjectAddReq projectAddReq);
 
     /**
      * 内部项目新增
@@ -70,6 +67,7 @@ public interface ProjectService {
 
     /**
      * 简单修改
+     *
      * @param projectSimpleModifyReq 项目信息
      * @return 是否成功
      */
@@ -77,6 +75,7 @@ public interface ProjectService {
 
     /**
      * 查询子项目列表
+     *
      * @param projectChildListReq 分页查询参数
      * @return 子项目列表
      */
@@ -84,6 +83,7 @@ public interface ProjectService {
 
     /**
      * 根据项目id获取项目树
+     *
      * @param projectId 项目id
      * @return 项目树结构内容
      */
@@ -101,6 +101,7 @@ public interface ProjectService {
 
     /**
      * 查询项目标签页的todo数量列表
+     *
      * @param projectId 项目id
      */
     BaseResult<ProjectTabCountVO> countTabTodos(Long projectId);
@@ -140,11 +141,17 @@ public interface ProjectService {
 
 
     /**
-     *
      * @param query 查询条件
      * @return 项目产品需求清单
      */
-    BaseResult<PageQueryResult<ProductDemandVO>>  linkProductDemandList(ProjectProductDemandQueryList query);
+    BaseResult<PageQueryResult<ProductDemandVO>> linkProductDemandList(ProjectProductDemandQueryList query);
+
+    /**
+     * 查询关联到这个项目的业务需求列表
+     *
+     * @param projectBizDemandQueryList 查询条件 项目id
+     */
+    BaseResult<PageQueryResult<BizDemandVO>> linkBizDemandList(ProjectBizDemandQueryList projectBizDemandQueryList);
 
     /**
      * 产品线Id

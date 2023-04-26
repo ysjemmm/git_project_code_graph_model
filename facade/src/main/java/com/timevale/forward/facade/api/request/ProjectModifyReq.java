@@ -31,9 +31,6 @@ public class ProjectModifyReq extends ToString {
     @NotNull(message = "项目名称不能为空")
     private String name;
 
-    @ApiModelProperty("是否为客户开发项目：0否，1是")
-    private Integer customerDev;
-
     @ApiModelProperty("优先级:0(P0),10(P1),20(P2)")
     @NotNull(message = "优先级不能为空")
     private Integer priority;

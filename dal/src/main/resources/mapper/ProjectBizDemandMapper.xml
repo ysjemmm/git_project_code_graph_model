@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.timevale.forward.dal.dao.ProjectBizDemandMapper">
+    <insert id="batchInsert">
+        insert into project_biz_demand (project_id, biz_demand_id, create_man_id, create_man)
+        values
+        <foreach collection="records" item="record" separator=",">
+            (#{record.projectId}, #{record.bizDemandId}, #{createManId}, #{createMan})
+        </foreach>
+    </insert>
+    <update id="delete">
+        update project_biz_demand set is_deleted = true where project_id = #{projectId} and
+        biz_demand_id in
+        <foreach collection="bizDemandIds" item="bizDemandId" open="(" separator="," close=")">
+            #{bizDemandId}
+        </foreach>
+    </update>
+
+    <select id="selectByBizDemandIds" resultType="generator.domain.ProjectBizDemandDO">
+        select * from project_biz_demand
+        <where>
+            biz_demand_id in
+            <foreach collection="bizDemandIds" item="bizDemandId" open="(" separator="," close=")">
+                #{bizDemandId}
+            </foreach>
+            and is_deleted = false
+        </where>
+    </select>
+
+</mapper>

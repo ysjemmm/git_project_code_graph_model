@@ -24,6 +24,7 @@ import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.crm.CrmClient;
+import com.timevale.forward.service.integration.dock.CrmProjectClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
@@ -75,6 +76,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     private final BizDomainMapper bizDomainMapper;
     private final BizDemandMapper bizDemandMapper;
     private final BugLogComponent bugLogComponent;
+    private final CrmProjectClient crmProjectClient;
     private final BugOfflineMapper bugOfflineMapper;
     private final SqlOrderComponent sqlOrderComponent;
     private final ProductLineMapper productLineMapper;
@@ -563,6 +565,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //BugOnlineDO --> BugOnlineDetailVO
         BugOnlineDetailVO bugOnlineDetailVO = BugOnlineCopier.INSTANCE.convert(bugOnlineDO);
+        crmProjectClient.getProject(bugOnlineDO.getSourceId())
+                .ifPresent(p -> bugOnlineDetailVO.setCustomerDevProjectName(p.getProjectName()));
 
         //通过线上bug和产品线映射表查询所有的产品线id
         List<Long> productLineIdList = bugOnlineProductLineMapper.selectProductLineIds(bugOnlineId, BizProductLineTypeEnum.BUG_ONLINE.getCode());

@@ -12,14 +12,10 @@ import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.BizDemandStatusEnum;
-import com.timevale.forward.model.enums.PlanReleaseDateEnum;
-import com.timevale.forward.model.enums.PriorityEnum;
-import com.timevale.forward.model.enums.YesOrNoEnum;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BizDemandMD;
-import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.model.to.PdLineDomainTO;
+import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -90,7 +86,6 @@ public interface BizDemandCopier {
     @Mapping(target = "customerDevDemandText", expression = "java(YesOrNoEnum.getTextByCode(bizDemandDO.getCustomerDevDemand()))")
     @Mapping(target = "planReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate()))")
     @Mapping(target = "customerDevTypeText", expression = "java(CustomerDevTypeEnum.getTextByCode(bizDemandDO.getCustomerDevType()))")
-    @Mapping(target = "hopeReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(bizDemandDO.getHopeReleaseDate()))")
     BizDemandDetailVO convert(BizDemandDO bizDemandDO);
 
     /**
@@ -99,6 +94,7 @@ public interface BizDemandCopier {
      * @param bizDemandDO 业务需求DO
      * @return 业务需求详细VO
      */
+    @Mapping(target = "productLineId", source = "bizDemandDO.productLineId")
     @Mapping(target = "priorityText", expression = "java(PriorityEnum.getTextChineseByCode(bizDemandDO.getPriority()))")
     @Mapping(target = "planReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate()))")
     BizDemandSimpleVO do2svo(BizDemandDO bizDemandDO, PdLineDomainTO pdLineDomainTO);
@@ -110,6 +106,7 @@ public interface BizDemandCopier {
      * @return 业务需求详细VO
      */
     @Mapping(target = "statusText", expression = "java(BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()))")
+    @Mapping(target = "priorityText", expression = "java(PriorityEnum.getTextByCode(bizDemandDO.getPriority()))")
     BizDemandVO transfer(BizDemandDO bizDemandDO);
 
     /**
@@ -131,7 +128,6 @@ public interface BizDemandCopier {
     @Mapping(target = "priorityText", expression = "java(PriorityEnum.getTextChineseByCode(listDO.getPriority()))")
     @Mapping(target = "customerDevDemand", expression = "java(YesOrNoEnum.getTextByCode(listDO.getCustomerDevDemand()))")
     @Mapping(target = "planReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(listDO.getPlanReleaseDate()))")
-    @Mapping(target = "hopeReleaseDateText", expression = "java(PlanReleaseDateEnum.getTextByCode(listDO.getHopeReleaseDate()))")
     BizDemandVO convert(BizDemandListDO listDO);
 
     /**

@@ -17,7 +17,7 @@
     </insert>
 
     <insert id="batchInsert" parameterType="java.util.List">
-        insert into biz_label(biz_id,label_id, type, create_man_id, create_man)
+        insert into biz_label(biz_id, label_id, type, create_man_id, create_man)
         values
         <foreach collection="list" item="i" open="" separator="," close="">
             (#{i.bizId}, #{i.labelId},#{i.type}, #{createManId},#{createMan})

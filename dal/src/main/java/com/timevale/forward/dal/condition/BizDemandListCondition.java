@@ -157,14 +157,24 @@ public class BizDemandListCondition{
     private String desc;
 
     /**
-     * 期望上线日期列表
+     * 期望上线日期开始
      */
-    private List<Integer> hopeReleaseDateList;
+    private Date hopeReleaseDayStart;
+
+    /**
+     * 期望上线日期结束
+     */
+    private Date hopeReleaseDayEnd;
 
     /**
      * 是否为客开需求
      */
     private Boolean customerDevDemand;
+
+    /**
+     * 产品方案
+     */
+    private String productSolution;
 
     public int pageNum = 1;
     public int pageSize = 20;

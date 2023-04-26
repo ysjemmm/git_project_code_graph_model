@@ -122,4 +122,11 @@ public class ProjectAddReq extends ToString {
     @ApiModelProperty("1-N产研团队负责人")
     @NotNull(message = "1-N产研团队负责人不能为空")
     private PersonAddReq otnPrincipal;
+
+    @ApiModelProperty("来源id")
+    private String sourceId;
+
+    @ApiModelProperty("业务需求列表")
+    private List<Long> bizDemandIds;
+
 }

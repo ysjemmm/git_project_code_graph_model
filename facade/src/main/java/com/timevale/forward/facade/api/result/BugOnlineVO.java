@@ -62,9 +62,6 @@ public class BugOnlineVO extends ToString {
     @ApiModelProperty("来源-描述")
     private String sourceName;
 
-    @ApiModelProperty("项目名称")
-    private String customerDevProjectName;
-
     @ApiModelProperty("bug环境")
     private String envName;
 

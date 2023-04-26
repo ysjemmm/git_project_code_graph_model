@@ -32,4 +32,6 @@ public interface ProjectLogComponent{
     void addDeleteProjectMemberLog(Long projectId, String members);
 
     void addConclusion(Long projectId, Integer oldStatus, Integer newStatus, Date conclusionDate);
+
+    void addLogWhenSystemCreate(Long projectId, String text);
 }

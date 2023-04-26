@@ -26,6 +26,9 @@ public class BizDemandModifyReq extends BizDemandAddReq {
     @ApiModelProperty("解决方案")
     private String solvePlan;
 
+    @ApiModelProperty("产品方案")
+    private String productSolution;
+
     @ApiModelProperty("拒绝原因")
     private String rejectReason;
 

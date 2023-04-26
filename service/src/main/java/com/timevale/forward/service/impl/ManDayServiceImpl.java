@@ -7,7 +7,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.timevale.footstone.base.model.response.BaseResult;
-import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
+import com.timevale.forward.dal.dao.ManDayMapper;
+import com.timevale.forward.dal.dao.PersonMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ManDayService;
 import com.timevale.forward.facade.api.query.ManDayQueryList;
@@ -53,13 +56,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ManDayServiceImpl implements ManDayService {
 
-    private final ProjectMapper projectMapper;
     private final PersonMapper personMapper;
     private final ManDayMapper manDayMapper;
-    private final BizDemandMapper bizDemandMapper;
+    private final ProjectMapper projectMapper;
     private final BizChangeLogMapper bizChangeLogMapper;
-    private final ProductBizDemandMapper productBizDemandMapper;
-    private final ProjectProductDemandMapper projectProductDemandMapper;
 
     private final ManDayReportComponent manDayReportComponent;
 
@@ -430,35 +430,12 @@ public class ManDayServiceImpl implements ManDayService {
         if (Objects.isNull(query) || CollectionUtils.isEmpty(query.getSourceIds())) {
             return BaseResult.success(Collections.emptyList());
         }
-        List<BizDemandDO> bizDemands = bizDemandMapper.selectBySourceIds(query.getSourceIds());
-        if (CollectionUtils.isEmpty(bizDemands)) {
-            return BaseResult.success(Collections.emptyList());
-        }
-        Map<Long, BizDemandDO> bizDemandById = Maps.uniqueIndex(bizDemands, BizDemandDO::getId);
 
-        List<Long> bizDemandIds = bizDemands.stream().map(BizDemandDO::getId).collect(Collectors.toList());
-        List<ProductBizDemandDO> productBizDemands = productBizDemandMapper.getByBizDemandIds(bizDemandIds);
-        if (CollectionUtils.isEmpty(productBizDemands)) {
+        List<ProjectDO> projects = projectMapper.getBySourceIds(query.getSourceIds());
+        if (projects.isEmpty()) {
             return BaseResult.success(Collections.emptyList());
         }
-        Map<Long, List<Long>> productBizDemandMap = productBizDemands.stream().collect(
-                Collectors.groupingBy(ProductBizDemandDO::getProductDemandId,
-                        Collectors.mapping(ProductBizDemandDO::getBizDemandId, Collectors.toList())));
-        List<ProjectProductDemandDO> projectProductDemands =
-                projectProductDemandMapper.getLinkedProductDemand(productBizDemandMap.keySet());
-        if (CollectionUtils.isEmpty(projectProductDemands)) {
-            return BaseResult.success(Collections.emptyList());
-        }
-        Map<Long, List<Long>> projectBizDemandMap = projectProductDemands.stream()
-                .collect(Collectors.toMap(ProjectProductDemandDO::getProjectId,
-                        ppd -> productBizDemandMap.get(ppd.getProductDemandId()),
-                        (l1, l2) -> {
-                            l1.addAll(l2);
-                            return l1;
-                        })
-                );
-        Set<Long> projectIds = projectBizDemandMap.keySet();
-        List<ProjectDO> projects = projectMapper.getByIds(projectIds);
+        Set<Long> projectIds = projects.stream().map(ProjectDO::getId).collect(Collectors.toSet());
         Map<Long, ProjectDO> projectById = Maps.uniqueIndex(projects, ProjectDO::getId);
         List<ManDayDO> manDays = manDayMapper.getByProjectIdsAndUsersAndDateRange(projectIds,
                 query.getAccounts(), query.getStartDate(), query.getEndDate());
@@ -469,7 +446,7 @@ public class ManDayServiceImpl implements ManDayService {
         // 按照项目维度合并数据
         ListMultimap<Long, ManDayDO> manDaysByProjectId = Multimaps.index(manDays, ManDayDO::getProjectId);
         // 无来源id的数据列表
-        List<SourceManDayRes> sourceManDayTemplates = new ArrayList<>();
+        List<SourceManDayRes> resultList = new ArrayList<>();
         for (Long projectId : manDaysByProjectId.keySet()) {
             SourceManDayRes sourceManDay = new SourceManDayRes();
             ProjectDO project = projectById.get(projectId);
@@ -478,23 +455,10 @@ public class ManDayServiceImpl implements ManDayService {
             }
             sourceManDay.setProjectId(projectId);
             sourceManDay.setProjectName(project.getName());
+            sourceManDay.setSourceId(project.getSourceId());
             List<ManDayDO> projectManDays = manDaysByProjectId.get(projectId);
             sourceManDay.setManDays(ManDayCopier.INSTANCE.convert2Source(projectManDays));
-            sourceManDayTemplates.add(sourceManDay);
-        }
-        List<SourceManDayRes> resultList = new ArrayList<>();
-        for (SourceManDayRes sourceManDayTemplate : sourceManDayTemplates) {
-            Long projectId = sourceManDayTemplate.getProjectId();
-            List<Long> projectBizDemandIds = projectBizDemandMap.get(projectId);
-            for (Long bizDemandId : projectBizDemandIds) {
-                BizDemandDO bizDemand = bizDemandById.get(bizDemandId);
-                if (bizDemand == null || StringUtils.isEmpty(bizDemand.getSourceId())) {
-                    continue;
-                }
-                SourceManDayRes res = ManDayCopier.INSTANCE.clone(sourceManDayTemplate);
-                res.setSourceId(bizDemand.getSourceId());
-                resultList.add(res);
-            }
+            resultList.add(sourceManDay);
         }
 
         return BaseResult.success(resultList);

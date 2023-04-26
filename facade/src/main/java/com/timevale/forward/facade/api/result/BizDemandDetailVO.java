@@ -166,9 +166,9 @@ public class BizDemandDetailVO extends ToString {
     @ApiModelProperty("总资源评估（人天）")
     private BigDecimal totalTime;
 
-    @ApiModelProperty("期望上线时间")
-    private Integer hopeReleaseDate;
+    @ApiModelProperty("产品方案")
+    private String productSolution;
 
-    @ApiModelProperty("期望上线时间名称")
-    private String hopeReleaseDateText;
+    @ApiModelProperty("期望上线日")
+    private Date hopeReleaseDay;
 }

@@ -1,7 +1,6 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -9,17 +8,17 @@ import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.BizDemandService;
+import com.timevale.forward.facade.api.client.ProjectBizDemandService;
 import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.to.PdLineDomainTO;
 import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.BizDemandCopier;
-import com.timevale.forward.service.copy.BizDemandCustomCopier;
-import com.timevale.forward.service.copy.FileCopier;
-import com.timevale.forward.service.copy.PersonCopier;
+import com.timevale.forward.service.copy.*;
+import com.timevale.forward.service.integration.dock.CrmProjectClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.*;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
@@ -34,8 +33,10 @@ import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.security.facade.response.BaseInfoResponse;
 import com.timevale.security.facade.response.GroupResponse;
+import generator.domain.ProjectBizDemandDO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,6 +98,14 @@ public class BizDemandServiceImpl implements BizDemandService {
     private ProjectComponent projectComponent;
     @Resource
     private ProductLineComponent productLineComponent;
+    @Resource
+    private CrmProjectClient crmProjectClient;
+    @Resource
+    private CommonConfig commonConfig;
+    @Resource
+    private ProjectBizDemandService projectBizDemandService;
+    @Resource
+    private ProjectBizDemandMapper projectBizDemandMapper;
 
     @Override
     public BaseResult<QueryResultVO<BizDemandVO>> list(BizDemandQueryList bizDemandQueryList) {
@@ -147,7 +156,18 @@ public class BizDemandServiceImpl implements BizDemandService {
             condition.setLabelIds(labelIds);
         }
 
-        return BaseResult.success(bizDemandComponent.page(condition));
+        QueryResultVO<BizDemandVO> res = bizDemandComponent.page(condition);
+        if (bizDemandQueryList.getQuerySource() == 1) {
+            // 交付项目来源查询需要特殊排序
+            List<BizDemandVO> resultList = res.getPageQueryResult().getResultList();
+            final Date BIG_DATE = new Date(Long.MAX_VALUE);
+            resultList.sort(Comparator.<BizDemandVO, Integer>comparing(x -> x.getProjectId() != null ? 0 : 1)
+                    .thenComparing(x -> Optional.ofNullable(x.getProjectCreateDate()).orElse(BIG_DATE))
+                    .thenComparing(BizDemandVO::getCreateDate)
+                    .reversed());
+        }
+
+        return BaseResult.success(res);
     }
 
     @Override
@@ -246,12 +266,15 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setStatus(BizDemandStatusEnum.INVALID.getCode());
         bizDemandMapper.fullUpdate(bizDemandDO);
 
-
-        // 关联的项目
-        List<Long> linkProjectIds = bizDemandComponent.getLinkProjectIds(bizDemandId);
-
+        List<ProjectBizDemandDO> pbdList = projectBizDemandMapper.selectByBizDemandIds(Collections.singletonList(bizDemandId));
         // 取消产品关联, 产品关联断开日志
         productBizDemandMapper.deleteByBizDemandId(bizDemandId);
+        if (!pbdList.isEmpty()) {
+            projectBizDemandService.linkOrUnlinkBizDemandProject(new BizDemandLinkProjectReq()
+                    .setProjectId(pbdList.get(0).getProjectId())
+                    .setBizDemandIds(Collections.singletonList(bizDemandDO.getId()))
+                    .setType(LinkOrUnLinkEnum.UN_LINK.getCode()));
+        }
         bizDemandLogComponent.addLogWhenBizDemandInvalid(bizDemandId);
 
         // 接收人通知
@@ -292,11 +315,6 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         bizLabelComponent.deleteLabel(bizDemandId, BizTypeEnum.BIZ_DEMAND.getCode());
 
-        // 刷新客开
-        for (Long projectId : linkProjectIds) {
-            projectComponent.updateCustomDev(projectId);
-        }
-
         return BaseResult.success(true);
     }
 
@@ -321,6 +339,14 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 新增业务需求
         BizDemandDO bizDemandDO = BizDemandCopier.INSTANCE.convert(bizDemandAddReq);
         bizDemandDO.setStatus(BizDemandStatusEnum.EVALUATE.getCode());
+        if (bizDemandAddReq.getCustomerDevDemand()) {
+            // 客开业务需求新增时如果资源评估人天全部维护，自动变为已接受
+            if (ObjectUtils.allNotNull(bizDemandAddReq.getUedTime(), bizDemandAddReq.getFrontTime(),
+                    bizDemandAddReq.getQaTime(), bizDemandAddReq.getBackTime(), bizDemandAddReq.getTotalTime()) &&
+                    Objects.equal(bizDemandAddReq.getReceiveManId(), bizDemandAddReq.getSubmitManId())) {
+                bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
+            }
+        }
         bizDemandMapper.insert(bizDemandDO);
 
         List<FileAddReq> fileIdList = bizDemandAddReq.getFileList();
@@ -353,8 +379,8 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         // 日志, 状态改为待评估
         bizDemandLogComponent.addLogWhenModifyData(
-                BizDemandStatusEnum.EVALUATE.getText(),
-                BizDemandStatusEnum.EVALUATE.getText(),
+                BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
+                BizDemandStatusEnum.getTextByCode(bizDemandDO.getStatus()),
                 bizDemandDO.getId(),
                 BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText(),
                 true,
@@ -392,6 +418,8 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDetailVO.setEndDate(bizDemandDO.getProjectEndDate());
         bizDemandDetailVO.setProductLineName(productLineDO.getName());
         bizDemandDetailVO.setBizDomainId(productLineDO.getBizDomainId());
+        crmProjectClient.getProject(bizDemandDO.getSourceId())
+                .ifPresent(p -> bizDemandDetailVO.setCustomerDevProjectName(p.getProjectName()));
 
         // 获取部门链，添加完整部门信息
         Map<Long, GroupResponse> deptMap = bizDemandComponent.getGroupListTreeMap(Lists.newArrayList(bizDemandDO.getDeptId()));
@@ -512,7 +540,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 变更日志
         bizDemandLogComponent.addLogWhenModifyData(oldBizDemandDO, newBizDemandDO);
 
-        bizDemandComponent.updateCustomerPj(bizDemandModifyReq.getId());
         return BaseResult.success(true);
     }
 
@@ -533,6 +560,15 @@ public class BizDemandServiceImpl implements BizDemandService {
         BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
         if (bizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
+        }
+        if (bizDemandDO.getCustomerDevDemand()) {
+            AssertUtil.checkState(Objects.equal(bizDemandDO.getSubmitManId(), bizDemandDO.getReceiveManId()),
+                    "只有接收人和提交人是同一个人时才能接收需求");
+            AssertUtil.checkState(ObjectUtils.allNotNull(bizDemandDO.getUedTime(), bizDemandDO.getFrontTime(),
+                            bizDemandDO.getQaTime(), bizDemandDO.getBackTime(), bizDemandDO.getTotalTime()),
+                    "请维护好资源评估后再接收需求");
+        } else {
+            AssertUtil.notNull(bizDemandAgreeReq.getPlanReleaseDate(), "计划上线时间不能为空");
         }
 
         // 保存旧状态
@@ -609,6 +645,21 @@ public class BizDemandServiceImpl implements BizDemandService {
                     BizChangeLogFieldEnum.REASON.getText(),
                     false
             );
+        }
+
+        if (bizDemandDO.getCustomerDevDemand()) {
+            Map<Long, List<BizLabelSimpleVO>> bizLabelMap =
+                    bizLabelComponent.getBizLabelMap(Collections.singletonList(bizDemandId),
+                            BizTypeEnum.BIZ_DEMAND.getCode());
+            if (!bizLabelMap.isEmpty()) {
+                List<BizLabelSimpleVO> labels = bizLabelMap.get(bizDemandId);
+                Set<Long> labelIds = labels.stream().map(BizLabelSimpleVO::getId).collect(Collectors.toSet());
+                if (labelIds.contains(commonConfig.getDevDemandAppealLabelId()) &&
+                        !labelIds.contains(commonConfig.getDevDemandApproveLabelId())) {
+                    // 申诉需求接收打上申诉通过标签
+                    addBizLabel(bizDemandDO, commonConfig.getDevDemandApproveLabelId());
+                }
+            }
         }
 
         return BaseResult.success(true);
@@ -980,6 +1031,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (oldBizDemandDO == null) {
             throw new BaseBizRuntimeException("不存在该业务需求");
         }
+        if (!oldBizDemandDO.getCustomerDevDemand()) {
+            AssertUtil.notBlank(bizDemandResubmitReq.getReceiveManId(), "业务需求接收人不能为空");
+            AssertUtil.notBlank(bizDemandResubmitReq.getReceiveMan(), "业务需求接收人不能为空");
+        } else {
+            bizDemandResubmitReq.setReceiveManId(commonConfig.getDevDemandAcceptUserId());
+            bizDemandResubmitReq.setReceiveMan(commonConfig.getDevDemandAcceptUserName());
+        }
         BizDemandDO checkUniqueName = bizDemandMapper.selectByName(name);
         if (checkUniqueName != null && !checkUniqueName.getId().equals(bizDemandId)) {
             throw new BaseBizRuntimeException("该业务需求名称已存在,请修改后重试");
@@ -1008,6 +1066,23 @@ public class BizDemandServiceImpl implements BizDemandService {
         oldBizDemandDO.setReceiveMan(bizDemandResubmitReq.getReceiveMan());
         oldBizDemandDO.setReceiveManId(bizDemandResubmitReq.getReceiveManId());
         bizDemandMapper.fullUpdate(oldBizDemandDO);
+
+        if (oldBizDemandDO.getCustomerDevDemand()) {
+            // 客开需求需要添加标签：客开需求提交申诉
+            Long labelId = commonConfig.getDevDemandAppealLabelId();
+            Map<Long, List<BizLabelSimpleVO>> bizLabelMap =
+                    bizLabelComponent.getBizLabelMap(Collections.singletonList(oldBizDemandDO.getId()),
+                            BizTypeEnum.BIZ_DEMAND.getCode());
+            if (bizLabelMap.isEmpty()) {
+                addBizLabel(oldBizDemandDO, labelId);
+            } else {
+                List<BizLabelSimpleVO> labels = bizLabelMap.get(bizDemandId);
+                if (labels.stream().map(BizLabelSimpleVO::getId)
+                        .noneMatch(x -> Objects.equal(x, commonConfig.getDevDemandAppealLabelId()))) {
+                    addBizLabel(oldBizDemandDO, labelId);
+                }
+            }
+        }
 
         messageEventPublisher.publish(new BizDemandToReceiveAaginMsgEvent(
                 this,
@@ -1081,6 +1156,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         return BaseResult.success(true);
     }
 
+    @Override
+    public ProjectVO findLinkProject(Long bizDemandId) {
+        log.info("业务需求-项目清单接收参数:{}", bizDemandId);
+        ProjectDO projectDO = projectComponent.getByBizDemandId(bizDemandId);
+        return ProjectCopier.INSTANCE.transform(projectDO);
+    }
+
     /**
      * 新增业务需求的时候特殊处理线上bug的方法
      */
@@ -1149,4 +1231,13 @@ public class BizDemandServiceImpl implements BizDemandService {
         bugLogDO.setNewValue(newValue);
         return bugLogDO;
     }
+
+    private void addBizLabel(BizDemandDO bizDemand, Long labelId) {
+        List<Long> labelIds = Collections.singletonList(labelId);
+        bizLabelComponent.addLabel(bizDemand.getId(), labelIds,
+                BizTypeEnum.BIZ_DEMAND.getCode());
+        bizLabelComponent.addLog(bizDemand.getId(), labelIds,
+                BizTypeEnum.BIZ_DEMAND.getCode(), true);
+    }
+
 }

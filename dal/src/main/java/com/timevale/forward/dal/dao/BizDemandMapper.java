@@ -1,8 +1,10 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.BizDemandListCondition;
+import com.timevale.forward.dal.condition.BizDemandUpdateCondition;
 import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.BizDemandListDO;
+import com.timevale.forward.dal.entity.ProjectDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
@@ -31,6 +33,11 @@ public interface BizDemandMapper {
      * @return int
      */
     int update(BizDemandDO bizDemandDO);
+
+    /**
+     * 按需更新
+     */
+    void updateConditional(BizDemandUpdateCondition condition);
 
 
     /**
@@ -74,6 +81,7 @@ public interface BizDemandMapper {
 
     /**
      * 查询全部
+     *
      * @return 业务需求DO
      */
     List<BizDemandDO> selectAll();
@@ -92,7 +100,9 @@ public interface BizDemandMapper {
      * @param ids 产品需求DO
      * @return int
      */
-    int updateByIds(@Param("ids") List<Long> ids,@Param("status") Integer status,@Param("retainModifyDate") boolean retainModifyDate);
+    int updateByIds(@Param("ids") Collection<Long> ids,
+                    @Param("status") Integer status,
+                    @Param("retainModifyDate") boolean retainModifyDate);
 
     /**
      * 更新业务需求
@@ -101,7 +111,7 @@ public interface BizDemandMapper {
      * @param createMan   提交人
      * @param createManId 提交人id
      */
-    int updateCreateMan(@Param("idList") List<Long> idList, @Param("createMan") String createMan,@Param("createManId") String createManId);
+    int updateCreateMan(@Param("idList") List<Long> idList, @Param("createMan") String createMan, @Param("createManId") String createManId);
 
     /**
      * 修改需求提交人
@@ -110,7 +120,7 @@ public interface BizDemandMapper {
      * @param submitMan   提交人
      * @param submitManId 提交人id
      */
-    int updateSubmitMan(@Param("idList") List<Long> idList, @Param("submitMan") String submitMan,@Param("submitManId") String submitManId, @Param("deptId") Long deptId);
+    int updateSubmitMan(@Param("idList") List<Long> idList, @Param("submitMan") String submitMan, @Param("submitManId") String submitManId, @Param("deptId") Long deptId);
 
 
     /**
@@ -120,7 +130,7 @@ public interface BizDemandMapper {
      * @param receiveMan   接收人
      * @param receiveManId 接收人id
      */
-    int updateReceiveMan(@Param("idList") List<Long> idList, @Param("receiveMan") String receiveMan,@Param("receiveManId") String receiveManId);
+    int updateReceiveMan(@Param("idList") List<Long> idList, @Param("receiveMan") String receiveMan, @Param("receiveManId") String receiveManId);
 
     /**
      * 更新项目发布时间数据
@@ -128,7 +138,7 @@ public interface BizDemandMapper {
      * @param projectEndDate  项目结束日期
      * @param planReleaseDate 计划发布日期
      */
-    int updateDate(@Param("id") Long id, @Param("projectEndDate")Date projectEndDate, @Param("planReleaseDate") Integer planReleaseDate);
+    int updateDate(@Param("id") Long id, @Param("projectEndDate") Date projectEndDate, @Param("planReleaseDate") Integer planReleaseDate);
 
     /**
      * 选择id获取对应业务需求信息
@@ -136,7 +146,7 @@ public interface BizDemandMapper {
      * @param ids id
      * @return 业务需求DO
      */
-    List<BizDemandDO> getByIds(@Param("ids") List<Long> ids);
+    List<BizDemandDO> getByIds(@Param("ids") Collection<Long> ids);
 
     /**
      * 选择id获取对应业务需求信息
@@ -150,12 +160,11 @@ public interface BizDemandMapper {
     boolean bizIdExists(@Param("bizId") String bizId);
 
     /**
-     *
-     * @param ids id
+     * @param ids    id
      * @param status 状态
      * @return 业务需求DO
      */
-    List<BizDemandDO> getSimpleBizDemands(@Param("ids") List<Long> ids,@Param("status") List<Integer> status,@Param("sourceId") String sourceId);
+    List<BizDemandDO> getSimpleBizDemands(@Param("ids") List<Long> ids, @Param("status") List<Integer> status, @Param("sourceId") String sourceId);
 
     /**
      * 根据客户id查询
@@ -167,6 +176,8 @@ public interface BizDemandMapper {
      */
     List<BizDemandDO> selectBySourceIds(@Param("sourceIds") Collection<String> sourceIds);
 
-    List<BizDemandDO> getByProjectId(@Param("projectId")Long projectId);
+    List<BizDemandDO> getByProjectId(@Param("projectId") Long projectId);
 
+    @Select("select p.* from project p left join project_biz_demand pbd on p.id = pbd.project_id and pbd.is_deleted = false where pbd.biz_demand_id = #{bizDemandId} and p.is_deleted = false")
+    ProjectDO getByBizDemandId(@Param("bizDemandId") Long bizDemandId);
 }

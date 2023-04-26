@@ -1,16 +1,16 @@
 package com.timevale.forward.facade.api.request;
 
-import java.math.BigDecimal;
-import java.util.List;
-
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.Length;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author by YangXu
@@ -116,6 +116,6 @@ public class BizDemandAddReq extends BaseReq {
     @ApiModelProperty("总资源评估（人天）")
     private BigDecimal totalTime;
 
-    @ApiModelProperty("期望上线时间")
-    private Integer hopeReleaseDate;
+    @ApiModelProperty("期望上线日期")
+    private Date hopeReleaseDay;
 }

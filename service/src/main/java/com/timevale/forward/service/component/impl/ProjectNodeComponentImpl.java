@@ -1,14 +1,8 @@
 package com.timevale.forward.service.component.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import com.google.common.collect.Maps;
-import com.timevale.forward.dal.dao.ProjectFlowMapper;
 import com.timevale.forward.dal.dao.ProjectNodeMapper;
-import com.timevale.forward.dal.entity.BaseDO;
-import com.timevale.forward.dal.entity.ProjectFlowDO;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
-import com.timevale.forward.model.enums.FlowTypeEnum;
-import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
 import com.timevale.forward.model.enums.ProjectNodeStatusEnum;
 import com.timevale.forward.service.component.ProjectNodeComponent;
@@ -30,8 +24,7 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
 
     @Resource
     private ProjectNodeMapper projectNodeMapper;
-    @Resource
-    private ProjectFlowMapper projectFlowMapper;
+
 
     @Override
     public void add(List<ProjectNodeDO> list, Long projectId) {
@@ -140,39 +133,12 @@ public class ProjectNodeComponentImpl implements ProjectNodeComponent {
 
     @Override
     public Integer getStatus(List<ProjectNodeDO> nodeDOList) {
-        // 为空返回待启动
-        if (CollUtil.isEmpty(nodeDOList)) {
-            return ProjectNodeStatusEnum.READY_START.getCode();
-        }
-
         nodeDOList = sort(nodeDOList);
         for (ProjectNodeDO e : nodeDOList) {
             if(e.getActualDate() == null){
                 return ProjectNodeStatusEnum.nodeStatusMap.get(e.getName());
             }
         }
-
-        // 是否为结项状态
-        Optional<Long> projectIdOpt = nodeDOList.stream().map(ProjectNodeDO::getProjectId).findAny();
-        if (projectIdOpt.isPresent()) {
-            Long projectId = projectIdOpt.get();
-            List<ProjectFlowDO> projectFlows = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.CONCLUSION.getCode());
-
-            Optional<Integer> flowStatusOpt = projectFlows.stream()
-                    .max(Comparator.comparing(BaseDO::getCreateDate))
-                    .map(ProjectFlowDO::getStatus);
-
-            if (flowStatusOpt.isPresent()) {
-                Integer flowStatus = flowStatusOpt.get();
-                if (ForwardFlowStatusEnum.AUDITING.getCode().equals(flowStatus)) {
-                    return ProjectNodeStatusEnum.READY_CONCLUSION.getCode();
-                } else if (ForwardFlowStatusEnum.COMPLETE.getCode().equals(flowStatus)) {
-                    return ProjectNodeStatusEnum.CONCLUSION.getCode();
-                }
-            }
-        }
-
-        // 已发布状态
         return ProjectNodeStatusEnum.PUBLISHED.getCode();
     }
 

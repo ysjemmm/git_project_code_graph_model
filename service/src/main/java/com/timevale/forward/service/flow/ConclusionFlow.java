@@ -262,8 +262,6 @@ public class ConclusionFlow {
         // 更新任务状态
         taskComponent.updateStatusAsProjectStatusChange(projectId, status, false);
 
-        // 刷新客开
-        projectComponent.updateCustomDev(projectId);
     }
 
     private void updateEvaluate(ProjectDO projectDO, ConclusionVar conclusionVar) {

@@ -1,10 +1,12 @@
 package com.timevale.forward.service.interceptor;
 
+import com.timevale.forward.dal.entity.BaseDO;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
@@ -62,7 +64,7 @@ public class AuditInterceptor implements Interceptor {
         String mappedStatementId = mappedStatement.getId();
 
         // 填充字段,日志操作人单独赋值为SYSTEM-SYSTEM
-        if(FILTER_METHOD.contains(mappedStatementId)){
+        if (FILTER_METHOD.contains(mappedStatementId)) {
             return invocation.proceed();
         }
 
@@ -72,8 +74,18 @@ public class AuditInterceptor implements Interceptor {
         String name = userInfo.getFullAlias();
 
         if (sqlCommandType == SqlCommandType.INSERT) {
-            setProperty(parameter, AuditEnum.CREATE_MAN.getText(), name);
-            setProperty(parameter, AuditEnum.CREATE_MAN_ID.getText(), id);
+            if (parameter instanceof BaseDO) {
+                BaseDO baseDO = (BaseDO) parameter;
+                if (StringUtils.isEmpty(baseDO.getCreateManId())) {
+                    setProperty(parameter, AuditEnum.CREATE_MAN_ID.getText(), id);
+                }
+                if (StringUtils.isEmpty(baseDO.getCreateMan())) {
+                    setProperty(parameter, AuditEnum.CREATE_MAN.getText(), name);
+                }
+            } else {
+                setProperty(parameter, AuditEnum.CREATE_MAN.getText(), name);
+                setProperty(parameter, AuditEnum.CREATE_MAN_ID.getText(), id);
+            }
         } else {
             setProperty(parameter, AuditEnum.MODIFY_MAN.getText(), name);
             setProperty(parameter, AuditEnum.MODIFY_MAN_ID.getText(), id);

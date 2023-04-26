@@ -25,7 +25,10 @@ import com.timevale.forward.facade.api.result.BizDemandStatusVO;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ProductDemandDetailVO;
 import com.timevale.forward.model.enums.*;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BizDemandLogComponent;
+import com.timevale.forward.service.component.BizLabelComponent;
+import com.timevale.forward.service.component.LabelComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.copy.ProductBizDemandCopier;
@@ -82,8 +85,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
     private BizLabelMapper bizLabelMapper;
     @Resource
     private BizLabelComponent bizLabelComponent;
-    @Resource
-    private ProjectComponent projectComponent;
 
     @Override
     public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> linkedProductDemandList(BizDemandProductDemandQueryList bizDemandProductDemandQueryList) {
@@ -132,9 +133,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
         // 日志
         bizDemandLogComponent.linkPd(bdId, willLinkPdIdList);
 
-        // 更新客开项目状态
-        bizDemandComponent.updateCustomerPj(bdId);
-
         BizDemandStatusVO bizDemandStatusVO = compareBizDemandStatus(bdDO);
 
         return BaseResult.success(bizDemandStatusVO);
@@ -162,9 +160,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
             throw new BaseBizRuntimeException("不存在对应的关联关系");
         }
 
-        // 关联的项目
-        List<Long> linkProjectIds = bizDemandComponent.getLinkProjectIds(bizDemandId);
-
         ProductBizDemandDO productBizDemandDO = list.get(0);
 
         productBizDemandMapper.delete(productBizDemandDO);
@@ -176,11 +171,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
         // 产品需求关联日志
         bizDemandLogComponent.unlinkPd(bizDemandId, productDemandId);
-
-        // 刷新客开
-        for (Long projectId : linkProjectIds) {
-            projectComponent.updateCustomDev(projectId);
-        }
 
         return BaseResult.success(bizDemandStatusVO);
     }
