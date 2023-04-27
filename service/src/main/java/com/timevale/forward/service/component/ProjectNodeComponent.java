@@ -190,18 +190,6 @@ public class ProjectNodeComponent {
      * @return {@link Integer}
      */
     public Integer getStatus(List<ProjectNodeDO> nodeDOList) {
-        // 为空返回待启动
-        if (CollUtil.isEmpty(nodeDOList)) {
-            return ProjectNodeStatusEnum.READY_START.getCode();
-        }
-
-        nodeDOList = sort(nodeDOList);
-        for (ProjectNodeDO e : nodeDOList) {
-            if (e.getActualDate() == null) {
-                return ProjectNodeStatusEnum.nodeStatusMap.get(e.getName());
-            }
-        }
-
         // 是否为结项状态
         Optional<Long> projectIdOpt = nodeDOList.stream().map(ProjectNodeDO::getProjectId).findAny();
         if (projectIdOpt.isPresent()) {
@@ -219,6 +207,18 @@ public class ProjectNodeComponent {
                 } else if (ForwardFlowStatusEnum.COMPLETE.getCode().equals(flowStatus)) {
                     return ProjectNodeStatusEnum.CONCLUSION.getCode();
                 }
+            }
+        }
+
+        // 为空返回待启动
+        if (CollUtil.isEmpty(nodeDOList)) {
+            return ProjectNodeStatusEnum.READY_START.getCode();
+        }
+
+        nodeDOList = sort(nodeDOList);
+        for (ProjectNodeDO e : nodeDOList) {
+            if (e.getActualDate() == null) {
+                return ProjectNodeStatusEnum.nodeStatusMap.get(e.getName());
             }
         }
 
