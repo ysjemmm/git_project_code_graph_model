@@ -266,4 +266,9 @@ public class ProjectDO extends BaseDO {
                 ",";
     }
 
+    // 请勿删除此方法，该方法会被mybatis使用放入数据
+    public void setParentIds(String parentIds) {
+        this.parentIds = parentIds;
+    }
+
 }
