@@ -8,12 +8,43 @@ import java.util.Collection;
 
 public interface BizDemandLogComponent{
 
+
     void addLogWhenModifyData(BizDemandDO oldObj, BizDemandDO newObj) ;
 
+    /**
+     * 记录变更日志
+     *
+     * @param oldValue 旧值
+     * @param newValue 新值
+     * @param id       id
+     * @param field    字段名
+     * @param active   是否主动触发变更
+     */
     void addLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active);
 
+    /**
+     * 修改数据时添加日志
+     *
+     * @param oldValue 旧值
+     * @param newValue 新值
+     * @param id       id
+     * @param field    字段名
+     * @param active   是否主动触发变更
+     * @param action   触发动作
+     */
     void addLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active, String action);
 
+    /**
+     * 修改数据时添加日志
+     *
+     * @param oldValue 旧值
+     * @param newValue 新值
+     * @param id       id
+     * @param field    字段名
+     * @param active   是否主动触发变更
+     * @param action   触发动作
+     * @param identity 数据标识
+     */
     void addLogWhenModifyData(String oldValue, String newValue, Long id, String field, Boolean active, String action, String identity);
 
     void addLogWhenBizDemandInvalid(Long bizDemandId);
@@ -41,5 +72,7 @@ public interface BizDemandLogComponent{
     BizChangeLogDO buildLogWhenPublishDateChange(String oldValue, String newValue, Long id,Integer type);
 
     BizChangeLogDO buildLogWhenUpdateFiles(String oldValue, String newValue, Long id,String action);
+
+    void updateReceiveMan(Long bizDemandId, String oldReceiveMan, String newReceiveMan);
 
 }

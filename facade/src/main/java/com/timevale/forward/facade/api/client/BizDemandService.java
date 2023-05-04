@@ -83,10 +83,10 @@ public interface BizDemandService {
     /**
      * 转交
      *
-     * @param bizDemandTransferReq 业务需求转交请求
+     * @param transferReq 业务需求转交请求
      * @return 成功与否
      */
-    BaseResult<Boolean> transfer(BizDemandTransferReq bizDemandTransferReq);
+    BaseResult<Boolean> transfer(BizDemandTransferReq transferReq);
 
     /**
      * 批量转交

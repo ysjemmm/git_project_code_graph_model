@@ -180,4 +180,6 @@ public interface BizDemandMapper {
 
     @Select("select p.* from project p left join project_biz_demand pbd on p.id = pbd.project_id and pbd.is_deleted = false where pbd.biz_demand_id = #{bizDemandId} and p.is_deleted = false")
     ProjectDO getByBizDemandId(@Param("bizDemandId") Long bizDemandId);
+
+    void updateReason(Long id, Integer reason);
 }

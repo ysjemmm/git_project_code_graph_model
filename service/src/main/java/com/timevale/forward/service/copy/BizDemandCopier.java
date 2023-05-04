@@ -10,6 +10,7 @@ import com.timevale.forward.facade.api.query.BizDemandQueryList;
 import com.timevale.forward.facade.api.query.PersonQuery;
 import com.timevale.forward.facade.api.query.ProductDemandLinkBizDemandQueryList;
 import com.timevale.forward.facade.api.request.BizDemandAddReq;
+import com.timevale.forward.facade.api.request.BizDemandAgreeReq;
 import com.timevale.forward.facade.api.request.BizDemandModifyReq;
 import com.timevale.forward.facade.api.result.*;
 import com.timevale.forward.model.enums.*;
@@ -208,6 +209,9 @@ public interface BizDemandCopier {
      * @return {@link BizDemandStatusVO}
      */
     BizDemandStatusVO change(BizDemandDO bizDemandDO);
+
+    @Mapping(source = "bizDemandId", target = "id")
+    BizDemandDO req2do(BizDemandAgreeReq req);
 
     /**
      * 信息id

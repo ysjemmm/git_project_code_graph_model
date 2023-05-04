@@ -20,13 +20,16 @@ public class BizDemandTransferReq extends BaseReq{
 
     @ApiModelProperty("业务需求Id")
     @NotNull(message = "业务需求id不能为空")
-    Long id;
+    private Long id;
 
     @ApiModelProperty("接收人")
     @NotBlank(message = "接收人不能为空")
-    String receiveMan;
+    private String receiveMan;
 
     @ApiModelProperty("接收人id")
     @NotBlank(message = "接收人id不能为空")
-    String receiveManId;
+    private String receiveManId;
+
+    @ApiModelProperty("是否为驳回申请")
+    private Boolean isRejectApplication = false;
 }

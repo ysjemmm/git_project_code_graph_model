@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -26,4 +27,12 @@ public class BizDemandAgreeReq extends BaseReq {
     @ApiModelProperty("产品线id")
     @NotNull(message = "产品线不能为空")
     private Long productLineId;
+
+    @ApiModelProperty("接收人")
+    @NotBlank(message = "接收人必填")
+    private String receiveMan;
+
+    @ApiModelProperty("接收人id")
+    @NotBlank(message = "接收人id必填")
+    private String receiveManId;
 }

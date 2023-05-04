@@ -352,4 +352,12 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
         }
         return bizChangeLogDO;
     }
+
+    @Override
+    public void updateReceiveMan(Long bizDemandId, String oldReceiveMan, String newReceiveMan) {
+        if (Objects.equals(oldReceiveMan, newReceiveMan)) {
+            return;
+        }
+        addLogWhenModifyData(oldReceiveMan, newReceiveMan, bizDemandId, BizChangeLogFieldEnum.RECEIVE_MAN.getText(), true);
+    }
 }

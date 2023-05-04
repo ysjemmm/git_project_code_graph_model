@@ -374,6 +374,14 @@
         </where>
     </update>
 
+    <update id="updateReason">
+        UPDATE biz_demand
+        SET biz_demand.reason = #{reason},
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId}
+        WHERE id = #{id}
+    </update>
+
     <select id="getByIds" resultType="com.timevale.forward.dal.entity.BizDemandDO">
         select *
         from biz_demand

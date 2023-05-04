@@ -1,6 +1,7 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -558,9 +559,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
-        if (bizDemandDO == null) {
-            throw new BaseBizRuntimeException("不存在该业务需求");
-        }
+        AssertUtil.notNull(bizDemandDO, "不存在该业务需求");
         if (bizDemandDO.getCustomerDevDemand()) {
             AssertUtil.checkState(Objects.equal(bizDemandDO.getSubmitManId(), bizDemandDO.getReceiveManId()),
                     "只有接收人和提交人是同一个人时才能接收需求");
@@ -574,14 +573,17 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 保存旧状态
         Integer oldStatus = bizDemandDO.getStatus();
         Integer oldReason = bizDemandDO.getReason();
+        String oldReceiveMan = bizDemandDO.getReceiveMan();
         Integer oldPlanReleaseDate = bizDemandDO.getPlanReleaseDate();
         Long oldProductLineId = bizDemandDO.getProductLineId();
 
-        bizDemandDO.setReason(null);
         bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
         bizDemandDO.setPlanReleaseDate(planReleaseDate);
         bizDemandDO.setProductLineId(productLineId);
-        bizDemandMapper.fullUpdate(bizDemandDO);
+        bizDemandDO.setReceiveMan(bizDemandAgreeReq.getReceiveMan());
+        bizDemandDO.setReceiveManId(bizDemandAgreeReq.getReceiveManId());
+        bizDemandMapper.update(bizDemandDO);
+        bizDemandMapper.updateReason(bizDemandId, null);
 
         // 通知需求提交人
         messageEventPublisher.publish(new BizDemandReceivedMsgEvent(
@@ -662,6 +664,9 @@ public class BizDemandServiceImpl implements BizDemandService {
             }
         }
 
+        // 更新接收人
+        bizDemandLogComponent.updateReceiveMan(bizDemandId, oldReceiveMan, bizDemandAgreeReq.getReceiveMan());
+
         return BaseResult.success(true);
     }
 
@@ -730,8 +735,16 @@ public class BizDemandServiceImpl implements BizDemandService {
     }
 
     @Override
-    public BaseResult<Boolean> transfer(BizDemandTransferReq bizDemandTransferReq) {
-        Boolean result = bizDemandComponent.transfer(bizDemandTransferReq.getId(), bizDemandTransferReq.getReceiveMan(), bizDemandTransferReq.getReceiveManId());
+    public BaseResult<Boolean> transfer(BizDemandTransferReq transferReq) {
+        Boolean result = bizDemandComponent.transfer(transferReq.getId(), transferReq.getReceiveMan(), transferReq.getReceiveManId());
+
+        // 如果为驳回申请，需要添加当前操作人为
+        if (BooleanUtil.isTrue(transferReq.getIsRejectApplication())) {
+            UserInfo userInfo = LocalSessionUtils.getUserInfo();
+            PersonAddReq addReq = new PersonAddReq(userInfo.getFullAlias(), userInfo.getId());
+            personComponent.addIfNotExisted(CollUtil.newArrayList(addReq), transferReq.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());
+        }
+
         return BaseResult.success(result);
     }
 
