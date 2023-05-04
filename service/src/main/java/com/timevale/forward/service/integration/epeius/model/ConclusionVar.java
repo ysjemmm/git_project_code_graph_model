@@ -3,7 +3,7 @@ package com.timevale.forward.service.integration.epeius.model;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -28,11 +28,13 @@ public class ConclusionVar {
 
     private String statusName;
 
-    private List<String> principalIdList;
+    private String principalId;
+
+    private String otnPrincipalId;
 
     private String srId;
 
-    private List<String> PMOIdList;
+    private List<String> PMOIds;
 
     private String planWorkloadSum;
 
@@ -40,40 +42,15 @@ public class ConclusionVar {
 
     private String isPrincipal;
 
-    private List<ProjectEvaluateVar> evaluateList;
+    private String containPd;
 
-    private List<ProjectEvaluateVar> reviewerEvaluateList;
+    private Collection<ProjectEvaluateVar> evaluates;
 
-    private String srEvaluateGrade;
+    private Collection<ProjectEvaluateVar> reviewerEvaluates;
 
-    // 低代码有bug，以下为临时写法
-    private String selfProgress;
-    private String selfQuality;
-    private String selfTarget;
-    private String principalProgress;
-    private String principalQuality;
-    private String principalTarget;
-    private String pmoProgress;
-    private String pmoQuality;
-    private String pmoTarget;
+    private Collection<ProjectMemberEvaluateVar> memberEvaluates;
 
-    private BigDecimal selfProgressScore;
-    private BigDecimal selfQualityScore;
-    private BigDecimal selfTargetScore;
-    private BigDecimal principalProgressScore;
-    private BigDecimal principalQualityScore;
-    private BigDecimal principalTargetScore;
-    private BigDecimal pmoProgressScore;
-    private BigDecimal pmoQualityScore;
-    private BigDecimal pmoTargetScore;
+    private Collection<String> pdSuperiorIds;
 
-    private String selfProgressScoreDesc;
-    private String selfQualityScoreDesc;
-    private String selfTargetScoreDesc;
-    private String principalProgressScoreDesc;
-    private String principalQualityScoreDesc;
-    private String principalTargetScoreDesc;
-    private String pmoProgressScoreDesc;
-    private String pmoQualityScoreDesc;
-    private String pmoTargetScoreDesc;
+    private String pmId;
 }

@@ -25,6 +25,11 @@ public class ProjectEvaluateVar {
     private String dimensionName;
 
     /**
+     * 评分标准
+     */
+    private String scoresExplain;
+
+    /**
      * 评分
      */
     private BigDecimal scores;

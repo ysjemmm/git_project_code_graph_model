@@ -46,4 +46,6 @@ public class ConclusionFormVO extends ToString {
     @ApiModelProperty("评价列表")
     private List<ProjectEvaluateItemVO> evaluateItemVOList;
 
+    @ApiModelProperty("项目成员信息")
+    private List<ConclusionMemberItemVO> conclusionMemberItemVOList;
 }

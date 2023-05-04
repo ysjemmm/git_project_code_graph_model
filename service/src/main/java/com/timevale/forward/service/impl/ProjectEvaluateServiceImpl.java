@@ -195,7 +195,8 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         AssertUtil.notNull(projectDO, "项目不存在");
 
         // 获取SR建议评价等级
-        String srEvaluateGrade = GradeEnum.getTextByCode(projectDO.getSrEvaluateGrade());
+        Integer srEvaluateGrade = projectDO.getSrEvaluateGrade();
+        String srEvaluateGradeName = GradeEnum.getTextByCode(srEvaluateGrade);
 
         // 查询对应的项目评价，旧数据判空处理
         List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.getByProjectId(projectId);
@@ -219,13 +220,9 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
                 .map(e -> ProjectEvaluateCopier.INSTANCE.do2item(e, dimensionMap.get(e.getEvaluateDimensionId())))
                 .collect(Collectors.toList());
 
-        // PBG项目/基线项目，且项目等级≠B取PMO评价各维度分数之和；其他，取各维度评分数之和
-        boolean selectPMO = ObjectUtil.equals(ProjectKindEnum.PBG_BASE.getCode(), projectDO.getKind())
-                && ObjectUtil.notEqual(ProjectLevelEnum.B.getCode(), projectDO.getLevel());
-
         // 计算项目评价总分
         BigDecimal scoresSum = evaluateItemVOList.stream()
-                .map(e -> selectPMO ? e.getPmoScores() : e.getScores())
+                .map(ProjectEvaluateItemVO::getReviewerScores)
                 .filter(ObjectUtil::isNotNull)
                 .reduce(BigDecimal::add)
                 .orElse(null);
@@ -234,6 +231,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         ProjectEvaluateVO result = new ProjectEvaluateVO();
         result.setScoresSum(scoresSum);
         result.setSrEvaluateGrade(srEvaluateGrade);
+        result.setSrEvaluateGradeName(srEvaluateGradeName);
         result.setEvaluateItemVOList(evaluateItemVOList);
 
         return BaseResult.success(result);
@@ -248,6 +246,19 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         for (ProjectEvaluateDO evaluateDO : evaluateDOList) {
             evaluateMapper.update(evaluateDO);
             evaluateMapper.updateScores(evaluateDO);
+        }
+
+        // 更新 sr 评价等级
+        Optional<Long> projectIdOpt = evaluateDOList.stream().map(ProjectEvaluateDO::getProjectId).findAny();
+        if (projectIdOpt.isPresent()) {
+            Long projectId = projectIdOpt.get();
+            Optional.ofNullable(req.getSrEvaluateGrade())
+                    .ifPresent(e -> {
+                        ProjectDO projectDO = new ProjectDO();
+                        projectDO.setId(projectId);
+                        projectDO.setSrEvaluateGrade(e);
+                        projectMapper.update(projectDO);
+                    });
         }
 
         return BaseResult.success(true);

@@ -5,12 +5,14 @@ import com.timevale.forward.dal.entity.ProjectMemberEvaluateDO;
 import com.timevale.forward.facade.api.request.MemberEvaluateModifyReq;
 import com.timevale.forward.facade.api.request.MemberWorkloadModifyReq;
 import com.timevale.forward.facade.api.request.PersonAddReq;
+import com.timevale.forward.facade.api.result.ConclusionMemberItemVO;
 import com.timevale.forward.facade.api.result.MemberEvaluateVO;
 import com.timevale.forward.facade.api.result.ProjectWorkloadChangeVO;
 import com.timevale.forward.model.enums.GradeEnum;
 import com.timevale.forward.model.enums.ProjectKindEnum;
 import com.timevale.forward.model.enums.ProjectLevelEnum;
 import com.timevale.forward.model.enums.ProjectTypeEnum;
+import com.timevale.forward.service.integration.epeius.model.ProjectMemberEvaluateVar;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -41,6 +43,11 @@ public interface ProjectMemberEvaluateCopier {
 
     List<MemberEvaluateVO> do2vo(Collection<ProjectMemberEvaluateDO> projectMemberEvaluateDO);
 
+    @Mapping(target = "evaluateGradeName", expression = "java(GradeEnum.getTextByCode(memberEvaluateDO.getEvaluateGrade()))")
+    ConclusionMemberItemVO do2cvo(ProjectMemberEvaluateDO memberEvaluateDO);
+
+    List<ConclusionMemberItemVO> do2cvo(Collection<ProjectMemberEvaluateDO> projectMemberEvaluateDO);
+
     ProjectMemberEvaluateDO req2do(MemberEvaluateModifyReq req);
 
     ProjectMemberEvaluateDO req2do(MemberWorkloadModifyReq req);
@@ -52,6 +59,11 @@ public interface ProjectMemberEvaluateCopier {
     @Mapping(target = "typeName", expression = "java(ProjectTypeEnum.getTextByCode(projectDO.getType()))")
     @Mapping(target = "levelName", expression = "java(ProjectLevelEnum.getTextByCode(projectDO.getLevel()))")
     ProjectWorkloadChangeVO do2vo(ProjectDO projectDO);
+
+    @Mapping(target = "evaluateGradeName", expression = "java(GradeEnum.getTextByCode(memberEvaluateDO.getEvaluateGrade()))")
+    ProjectMemberEvaluateVar do2var(ProjectMemberEvaluateDO memberEvaluateDO);
+
+    List<ProjectMemberEvaluateVar> do2var(List<ProjectMemberEvaluateDO> memberEvaluateDOs);
 }
 
 
