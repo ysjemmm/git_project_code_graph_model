@@ -263,6 +263,9 @@ public class TrackEventServiceImpl implements TrackEventService {
         long serialNumber = 1L;
         Map<Integer, Integer> mergeInfo = new HashMap<>();
 
+        // 导出顺序排序
+        trackEventVOList.sort(Comparator.comparing(TrackEventVO::getModifyDate).thenComparingLong(TrackEventVO::getId));
+
         List<SensorTrackRow> sensorTrackRowList = new ArrayList<>();
         for (TrackEventVO event : trackEventVOList) {
             // 基础属性
