@@ -32,6 +32,24 @@ public class BizDomainVO extends ToString {
     @ApiModelProperty("负责人id")
     private String ownerId;
 
+    @ApiModelProperty("业务域技术负责人")
+    private String techOwner;
+
+    @ApiModelProperty("业务域技术负责人id")
+    private String techOwnerId;
+
+    @ApiModelProperty("PBU负责人")
+    private String pbuOwner;
+
+    @ApiModelProperty("PBU负责人id")
+    private String pbuOwnerId;
+
+    @ApiModelProperty("业务需求产品线负责人是否可以直接驳回")
+    private Boolean directReject;
+
+    @ApiModelProperty("线上bug是否可以直接转产品需求")
+    private Boolean directConvertBiz;
+
     @ApiModelProperty("是否废弃")
     private Boolean isDeleted;
 

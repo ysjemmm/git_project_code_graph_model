@@ -201,4 +201,11 @@ public interface BugOnlineService {
      */
     BaseResult<Void> attachToBizDemand(BugOnlineAttachToBizReq attachToBizReq);
 
+    /**
+     * 线上bug转业务需求操作
+     *
+     * @param toBizApplyReq 操作请求
+     */
+    BaseResult<Void> convertBizApply(BugOnlineToBizApplyReq toBizApplyReq);
+
 }

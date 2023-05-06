@@ -490,7 +490,6 @@
         </where>
     </update>
 
-
     <select id="getByCustomerIds" resultType="com.timevale.forward.dal.entity.BugOnlineDO">
         SELECT bo.*
         FROM bug_online bo
@@ -504,6 +503,14 @@
             AND bo.is_deleted=0
         </where>
     </select>
+
+    <update id="updateConvertBizStatus">
+        UPDATE info_forward.bug_online
+        SET convert_biz_status = #{convertBizStatus},
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId}
+        WHERE id = #{id}
+    </update>
 </mapper>
 
 

@@ -203,4 +203,7 @@ public class BugOnlineDetailVO extends ToString {
 
     @ApiModelProperty("打开次数")
     private Integer openCount;
+
+    @ApiModelProperty("请求转业务需求状态: 0无，1申请中，2同意，3拒绝")
+    private Integer convertBizStatus;
 }

@@ -105,11 +105,6 @@ public interface BugOnlineMapper {
     void delete(@Param("id")Long id);
 
     /**
-     * 根据客户id查询
-     */
-    List<BugOnlineListDO> selectByCustomId(@Param("customId") Long customId);
-
-    /**
      * 查询关联的该线下bug的线上bug
      *
      * @param bugOfflineId 线下bug id
@@ -132,4 +127,6 @@ public interface BugOnlineMapper {
      * @return 线上bug数据集合
      */
     List<BugOnlineDO> getByCustomerIds(@Param("customerIds") Collection<Long> customerIds);
+
+    void updateConvertBizStatus(@Param("id")Long id, @Param("convertBizStatus")Integer convertBizStatus);
 }
