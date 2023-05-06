@@ -87,7 +87,8 @@ public class ConclusionFlow {
         // 产品经理上级
         List<PersonDO> pds = personComponent.select(projectId, PersonTypeEnum.PROJECT_PD.getCode());
         Set<String> pdSuperiors = pds.parallelStream()
-                .flatMap(e -> innerUserPersonClient.getAllSuperiorByAccount(e.getUserId(), false).stream())
+                .map(e -> innerUserPersonClient.getDefaultSuperior(e.getUserId(), true))
+                .filter(StrUtil::isNotEmpty)
                 .collect(Collectors.toSet());
         String containPd = YesOrNoEnum.getTextByCode(CollUtil.isNotEmpty(pdSuperiors));
 

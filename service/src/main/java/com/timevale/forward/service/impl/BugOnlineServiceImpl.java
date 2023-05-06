@@ -1637,6 +1637,16 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         return BaseResult.success();
     }
 
+    @Override
+    public BaseResult<Void> convertBizApply(BugOnlineToBizApplyReq toBizApplyReq) {
+        BugOnlineConvertBizStatusEnum operateEnum = BugOnlineConvertBizStatusEnum.getByOperate(toBizApplyReq.getOperate());
+        if (operateEnum == null) {
+            return BaseResult.success();
+        }
+        bugOnlineMapper.updateConvertBizStatus(toBizApplyReq.getId(), operateEnum.getCode());
+        return BaseResult.success();
+    }
+
     /**
      * 判断当前操作人是否为personId或者personId的上级
      */

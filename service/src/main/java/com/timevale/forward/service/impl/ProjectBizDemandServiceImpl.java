@@ -65,13 +65,7 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
                 "项目已发布或者终止，无法关联业务需求");
 
         List<BizDemandDO> bizDemands = bizDemandMapper.getByIds(bizDemandIds);
-        if (bizDemandLinkProjectReq.isRemoveUnsatisfied()) {
-            Set<Long> nonReceivedIds = bizDemands.stream()
-                    .filter(x -> !Objects.equals(x.getStatus(), BizDemandStatusEnum.RECEIVED.getCode()))
-                    .map(BizDemandDO::getId)
-                    .collect(Collectors.toSet());
-            bizDemandIds.removeIf(nonReceivedIds::contains);
-        } else {
+        if (!bizDemandLinkProjectReq.isRemoveUnsatisfied()) {
             AssertUtil.checkState(bizDemands.size() == bizDemandIds.size(),
                     "您选择的业务需求已经不存在，请刷新页面后重试");
             AssertUtil.checkState(bizDemands.stream().map(BizDemandDO::getStatus)
@@ -82,7 +76,7 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
         List<ProjectBizDemandDO> pbRelations =
                 projectBizDemandMapper.selectByBizDemandIds(bizDemandIds);
         Set<Long> nonSourceBizDemandIds = bizDemands.stream().filter(bd ->
-                !Objects.equals(bd.getSourceId(), project.getSourceId()))
+                        !Objects.equals(bd.getSourceId(), project.getSourceId()))
                 .map(BizDemandDO::getId).collect(Collectors.toSet());
 
         if (!bizDemandLinkProjectReq.isRemoveUnsatisfied()) {

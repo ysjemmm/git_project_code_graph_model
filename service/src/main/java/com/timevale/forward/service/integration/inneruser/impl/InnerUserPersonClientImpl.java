@@ -12,6 +12,7 @@ import com.timevale.security.facade.request.AccountRequest;
 import com.timevale.security.facade.request.BatchGetStaffsRequest;
 import com.timevale.security.facade.request.GroupRequest;
 import com.timevale.security.facade.response.BaseInfoResponse;
+import com.timevale.security.facade.response.GroupModelResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
@@ -19,10 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -313,5 +311,14 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
             log.error("调用内部用户中心失败 batchGetStaffs accounts: " + accounts + " error: " + e.getMessage(), e);
         }
         throw new BaseBizRuntimeException("调用内部用户中心失败! " + accounts);
+    }
+
+    @Override
+    public String getDefaultSuperior(String account, Boolean isLeave) {
+        BaseInfoResponse selfInfo = getSelfInfo(account, isLeave);
+        return Optional.ofNullable(selfInfo)
+                .map(BaseInfoResponse::getDefaultGroup)
+                .map(GroupModelResponse::getDefaultManager)
+                .orElse("");
     }
 }

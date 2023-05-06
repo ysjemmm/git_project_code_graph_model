@@ -140,4 +140,13 @@ public interface InnerUserPersonClient {
      * @return BaseInfoResponse
      */
     List<String> batchGetStaffs(List<String> accounts, Boolean isLeave);
+
+    /**
+     * 获取默认部门上级
+     *
+     * @param account 当前用户花名拼音
+     * @param isLeave 是否包含离职用户
+     * @return 上级花名，为空返回空字符串
+     */
+    String getDefaultSuperior(String account,Boolean isLeave);
 }

@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class BizDomainDO extends BaseDO{
+public class BizDomainDO extends BaseDO {
 
     /**
      * 业务域名称
@@ -26,5 +26,34 @@ public class BizDomainDO extends BaseDO{
      */
     private String ownerId;
 
+    /**
+     * 业务域技术负责人
+     */
+    private String techOwner;
+
+    /**
+     * 业务域技术负责人id
+     */
+    private String techOwnerId;
+
+    /**
+     * PBU负责人
+     */
+    private String pbuOwner;
+
+    /**
+     * PBU负责人id
+     */
+    private String pbuOwnerId;
+
+    /**
+     * 业务需求产品线负责人是否可以直接驳回
+     */
+    private Boolean directReject;
+
+    /**
+     * 线上bug是否可以直接转产品需求
+     */
+    private Boolean directConvertBiz;
 
 }

@@ -355,8 +355,9 @@ public class ProjectServiceImpl implements ProjectService {
         // 名称校验
         AssertUtil.checkState(!StrUtil.contains(projectAddReq.getName(), CommonConstant.BLANK), "项目名称中请勿包含空格");
         // 是否产研系统RPC调用产生的项目
+        List<Long> bizDemandIds = projectAddReq.getBizDemandIds();
         boolean customerDevSourceAdd = StringUtils.isNotBlank(projectAddReq.getSourceId()) &&
-                CollectionUtils.isNotEmpty(projectAddReq.getBizDemandIds());
+                CollectionUtils.isNotEmpty(bizDemandIds);
 
         ProjectDO existsName = projectMapper.getByName(projectAddReq.getName());
         if (existsName != null) {
@@ -387,6 +388,15 @@ public class ProjectServiceImpl implements ProjectService {
         // 转换后新增
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
         if (customerDevSourceAdd) {
+            List<BizDemandDO> bizDemands = bizDemandMapper.getByIds(bizDemandIds);
+            bizDemandIds = bizDemands.stream()
+                    .filter(x -> Objects.equals(x.getStatus(), BizDemandStatusEnum.RECEIVED.getCode()))
+                    .filter(x -> Objects.equals(x.getSourceId(), projectDO.getSourceId()))
+                    .map(BizDemandDO::getId)
+                    .collect(Collectors.toList());
+            if (bizDemandIds.isEmpty()) {
+                return BaseResult.fail(302, "关联业务需求已经关联或者未绑定对应项目");
+            }
             projectDO.setStatus(ProjectStatusEnum.PLANING.getCode());
             projectDO.setNodeStatus(ProjectNodeStatusEnum.READY_CONSTRUE.getCode());
             projectDO.setActualStartDate(projectDO.getPlanStartDate());
@@ -444,7 +454,7 @@ public class ProjectServiceImpl implements ProjectService {
         if (customerDevSourceAdd) {
             projectBizDemandService.linkOrUnlinkBizDemandProject(new BizDemandLinkProjectReq()
                     .setProjectId(projectDO.getId())
-                    .setBizDemandIds(projectAddReq.getBizDemandIds())
+                    .setBizDemandIds(bizDemandIds)
                     .setRemoveUnsatisfied(true));
             projectNodeComponent.buildNodeForCustomerDevProject(projectDO.getPlanStartDate(),
                     projectDO.getPlanEndDate(), projectDO.getId());
