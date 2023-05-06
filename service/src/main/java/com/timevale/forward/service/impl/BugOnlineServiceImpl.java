@@ -678,17 +678,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDO bugOnlineDO = bugOnlineMapper.get(bugOnlineReq.getId());
         AssertUtil.notNull(bugOnlineDO, "线上bug不存在");
 
-        //判断当前状态是否为上报状态
-        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.PROBLEM_REPORT.getCode())) {
-            throw new BaseBizRuntimeException("当前状态不允许点击bug确认");
-        }
-
         bugOnlineDO.setStatus(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
         bugOnlineMapper.update(bugOnlineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.CONFIRM.getText());
-        bugLogDO.setOldValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
+        bugLogDO.setOldValue(BugOnlineStatusEnum.START_RESPONSE.getText());
         bugLogDO.setNewValue(BugOnlineStatusEnum.QUESTION_CONFIRM.getText());
         bugLogDO.setMainId(bugOnlineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
@@ -1029,7 +1024,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogDO.setAction(ButtonActionEnum.OPEN_AGAIN.getText());
         bugLogDO.setOldValue(oldStatus);
         if (oldStatus.equals(BugOnlineStatusEnum.CLOSE.getText())) {
-            bugLogDO.setNewValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
+            bugLogDO.setNewValue(BugOnlineStatusEnum.START_RESPONSE.getText());
         }
         if (oldStatus.equals(BugOnlineStatusEnum.COMPLETE.getText())) {
             bugLogDO.setNewValue(BugOnlineStatusEnum.QUESTION_CONFIRM.getText());
@@ -1079,12 +1074,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDO bugOnlineDO = bugOnlineMapper.get(noRepairReq.getId());
         if (bugOnlineDO == null) {
             throw new BaseBizRuntimeException("线上bug不存在");
-        }
-
-        //判断当前状态是否为“问题上报”或者“问题确认”状态
-        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.PROBLEM_REPORT.getCode())
-                && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode())) {
-            throw new BaseBizRuntimeException("当前状态不允许点击不用修复");
         }
 
         //保存老的状态、经办人、修复失败原因
@@ -1310,7 +1299,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         String lastOperatorId = bugOnlineDO.getLastOperatorId();
         String lastOperator = bugOnlineDO.getLastOperator();
 
-        bugOnlineDO.setStatus(BugOnlineStatusEnum.PROBLEM_REPORT.getCode());
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.START_RESPONSE.getCode());
         bugOnlineDO.setLastOperatorId(operatorId);
         bugOnlineDO.setLastOperator(operator);
         bugOnlineDO.setOperatorId(lastOperatorId);
@@ -1323,7 +1312,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.REFUSED.getText());
         bugLogDO.setOldValue(oldStatus);
-        bugLogDO.setNewValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
+        bugLogDO.setNewValue(BugOnlineStatusEnum.START_RESPONSE.getText());
         bugLogDO.setMainId(bugOnlineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
         bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
@@ -1379,12 +1368,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             throw new BaseBizRuntimeException("线上bug不存在");
         }
 
-        //判断当前状态是否为“问题确认”或者“问题修复”状态
-        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode())
-                && !bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.QUESTION_REPAIR.getCode())) {
-            throw new BaseBizRuntimeException("当前状态不允许点击重新确认");
-        }
-
         //保存老的状态
         String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
 
@@ -1392,7 +1375,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         if (oldStatus.equals(BugOnlineStatusEnum.QUESTION_REPAIR.getText())) {
             bugOnlineDO.setStatus(BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
         } else {
-            bugOnlineDO.setStatus(BugOnlineStatusEnum.PROBLEM_REPORT.getCode());
+            bugOnlineDO.setStatus(BugOnlineStatusEnum.START_RESPONSE.getCode());
         }
 
         bugOnlineDO.setHangUp(false);
