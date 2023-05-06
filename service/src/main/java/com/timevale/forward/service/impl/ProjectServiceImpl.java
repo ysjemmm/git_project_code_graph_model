@@ -389,13 +389,13 @@ public class ProjectServiceImpl implements ProjectService {
         ProjectDO projectDO = ProjectCopier.INSTANCE.convert(projectAddReq);
         if (customerDevSourceAdd) {
             List<BizDemandDO> bizDemands = bizDemandMapper.getByIds(bizDemandIds);
-            Set<Long> nonReceivedIds = bizDemands.stream()
-                    .filter(x -> !Objects.equals(x.getStatus(), BizDemandStatusEnum.RECEIVED.getCode()))
+            bizDemandIds = bizDemands.stream()
+                    .filter(x -> Objects.equals(x.getStatus(), BizDemandStatusEnum.RECEIVED.getCode()))
+                    .filter(x -> Objects.equals(x.getSourceId(), projectDO.getSourceId()))
                     .map(BizDemandDO::getId)
-                    .collect(Collectors.toSet());
-            bizDemandIds.removeIf(nonReceivedIds::contains);
+                    .collect(Collectors.toList());
             if (bizDemandIds.isEmpty()) {
-                return BaseResult.fail(302, "所有业务需求已经关联另一个项目");
+                return BaseResult.fail(302, "关联业务需求已经关联或者未绑定对应项目");
             }
             projectDO.setStatus(ProjectStatusEnum.PLANING.getCode());
             projectDO.setNodeStatus(ProjectNodeStatusEnum.READY_CONSTRUE.getCode());
