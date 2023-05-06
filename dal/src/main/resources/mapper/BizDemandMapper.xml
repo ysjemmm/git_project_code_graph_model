@@ -376,7 +376,7 @@
 
     <update id="updateReason">
         UPDATE biz_demand
-        SET biz_demand.reason = #{reason},
+        SET reason = #{reason},
             modify_man = #{modifyMan},
             modify_man_id = #{modifyManId}
         WHERE id = #{id}
