@@ -216,10 +216,10 @@ public interface BugOnlineService {
     BaseResult<Void> startResponse(Long id);
 
     /**
-     * 已上线
+     * 验收
      *
-     * @param id 线上bug id
+     * @param acceptanceReq 验收请求
      */
-    BaseResult<Void> launched(Long id);
+    BaseResult<Void> acceptance(BugOnlineAcceptanceReq acceptanceReq);
 
 }

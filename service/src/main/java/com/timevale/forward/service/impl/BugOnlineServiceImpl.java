@@ -1654,8 +1654,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
-    public BaseResult<Void> launched(Long id) {
-        bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(id),BugOnlineStatusEnum.ACCEPTANCE.getCode());
+    public BaseResult<Void> acceptance(BugOnlineAcceptanceReq acceptanceReq) {
+        if (acceptanceReq.getPass()) {
+
+        } else {
+
+        }
         return BaseResult.success();
     }
 
