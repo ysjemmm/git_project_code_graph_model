@@ -28,4 +28,22 @@ public class BizDomainAddReq extends BaseReq {
     @NotBlank(message = "负责人id不能为空")
     private String ownerId;
 
+    @ApiModelProperty("业务域技术负责人")
+    private String techOwner;
+
+    @ApiModelProperty("业务域技术负责人id")
+    private String techOwnerId;
+
+    @ApiModelProperty("PBU负责人")
+    private String pbuOwner;
+
+    @ApiModelProperty("PBU负责人id")
+    private String pbuOwnerId;
+
+    @ApiModelProperty("业务需求产品线负责人是否可以直接驳回")
+    private Boolean directReject;
+
+    @ApiModelProperty("线上bug是否可以直接转产品需求")
+    private Boolean directConvertBiz;
+
 }

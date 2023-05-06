@@ -41,9 +41,34 @@
     </select>
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.BizDomainDO">
-        insert into biz_domain ( name, owner, owner_id)
-        values
-        (#{name},#{owner},#{ownerId})
+        INSERT INTO biz_domain
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">`name`,</if>
+            <if test="owner != null">`owner`,</if>
+            <if test="ownerId != null">owner_id,</if>
+            <if test="techOwner != null">tech_owner,</if>
+            <if test="techOwnerId != null">tech_owner_id,</if>
+            <if test="pbuOwner != null">pbu_owner,</if>
+            <if test="pbuOwnerId != null">pbu_owner_id,</if>
+            <if test="directReject != null">direct_reject,</if>
+            <if test="directConvertBiz != null">direct_convert_biz,</if>
+            <if test="createMan != null">create_man,</if>
+            <if test="createManId != null">create_man_id,</if>
+        </trim>
+        VALUES
+        <trim>
+            <if test="name != null">#{name},</if>
+            <if test="owner != null">#{owner},</if>
+            <if test="ownerId != null">#{ownerId},</if>
+            <if test="techOwner != null">#{techOwner},</if>
+            <if test="techOwnerId != null">#{techOwnerId},</if>
+            <if test="pbuOwner != null">#{pbuOwner},</if>
+            <if test="pbuOwnerId != null">#{pbuOwnerId},</if>
+            <if test="directReject != null">#{directReject},</if>
+            <if test="directConvertBiz != null">#{directConvertBiz},</if>
+            <if test="createMan != null">#{createMan},</if>
+            <if test="createManId != null">#{createManId},</if>
+        </trim>
     </insert>
 
     <update id="update" parameterType="com.timevale.forward.dal.entity.BizDomainDO">
@@ -52,6 +77,14 @@
             <if test="name != null">name = #{name},</if>
             <if test="owner != null">owner = #{owner},</if>
             <if test="ownerId != null">owner_id = #{ownerId},</if>
+            <if test="techOwner != null">tech_owner = #{techOwner},</if>
+            <if test="techOwnerId != null">tech_owner_id = #{techOwnerId},</if>
+            <if test="pbuOwner != null">pbu_owner = #{pbuOwner},</if>
+            <if test="pbuOwnerId != null">pbu_owner_id = #{pbuOwnerId},</if>
+            <if test="directReject != null">direct_reject = #{directReject},</if>
+            <if test="directConvertBiz != null">direct_convert_biz = #{directConvertBiz},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
         </set>
         <where>
