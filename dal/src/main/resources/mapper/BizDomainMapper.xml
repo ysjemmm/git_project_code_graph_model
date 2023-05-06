@@ -56,7 +56,7 @@
             <if test="createManId != null">create_man_id,</if>
         </trim>
         VALUES
-        <trim>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="name != null">#{name},</if>
             <if test="owner != null">#{owner},</if>
             <if test="ownerId != null">#{ownerId},</if>

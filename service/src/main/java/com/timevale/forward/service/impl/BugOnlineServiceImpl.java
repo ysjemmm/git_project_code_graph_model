@@ -1647,6 +1647,18 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         return BaseResult.success();
     }
 
+    @Override
+    public BaseResult<Void> startResponse(Long id) {
+        bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(id), BugOnlineStatusEnum.START_RESPONSE.getCode());
+        return BaseResult.success();
+    }
+
+    @Override
+    public BaseResult<Void> launched(Long id) {
+        bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(id),BugOnlineStatusEnum.ACCEPTANCE.getCode());
+        return BaseResult.success();
+    }
+
     /**
      * 判断当前操作人是否为personId或者personId的上级
      */

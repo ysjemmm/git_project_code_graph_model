@@ -58,7 +58,18 @@ public enum BugOnlineStatusEnum {
     /**
      * 已转需求
      */
-    REQUIRED(9, "已转需求");
+    REQUIRED(9, "已转需求"),
+
+    /**
+     * 开始响应
+     */
+    START_RESPONSE(10,"开始响应"),
+
+    /**
+     * 待验收
+     */
+    ACCEPTANCE(11,"待验收")
+    ;
 
     private final Integer code;
     private final String text;

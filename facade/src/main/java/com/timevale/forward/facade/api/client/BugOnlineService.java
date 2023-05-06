@@ -208,4 +208,18 @@ public interface BugOnlineService {
      */
     BaseResult<Void> convertBizApply(BugOnlineToBizApplyReq toBizApplyReq);
 
+    /**
+     * 开始响应
+     *
+     * @param id 线上bug id
+     */
+    BaseResult<Void> startResponse(Long id);
+
+    /**
+     * 已上线
+     *
+     * @param id 线上bug id
+     */
+    BaseResult<Void> launched(Long id);
+
 }
