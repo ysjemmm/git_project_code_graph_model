@@ -2,6 +2,7 @@ package com.timevale.forward.service.observer.event;
 
 import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.integration.erp.ErpMessageClient;
+import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.SpringContextUtil;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.context.ApplicationEvent;
@@ -28,6 +29,11 @@ public abstract class MessageEvent extends ApplicationEvent {
         if(StringUtils.isEmpty(domainName)){
             domainName = "http://forward-opt-0915.projectk8s.tsign.cn/";
         }
+    }
+
+    public void send() {
+        MessageEventPublisher publisher = (MessageEventPublisher)SpringContextUtil.getBean(MessageEventPublisher.class);
+        publisher.publish(this);
     }
 
     /**

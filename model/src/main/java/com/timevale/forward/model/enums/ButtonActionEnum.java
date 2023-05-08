@@ -176,6 +176,16 @@ public enum ButtonActionEnum {
     TRANSFER("转交"),
 
     /**
+     * 验收通过
+     */
+    ACCEPTANCE_PASS("验收通过"),
+
+    /**
+     * 验收失败
+     */
+    ACCEPTANCE_FAILT("验收失败"),
+
+    /**
      * 发起详设评审
      */
     START_REVIEW("发起详设评审"),

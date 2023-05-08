@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component;
 
+import com.timevale.forward.dal.entity.BizDomainDO;
 import com.timevale.forward.dal.entity.BugLogDO;
 import com.timevale.forward.dal.entity.BugOnlineDO;
 import com.timevale.forward.model.enums.ButtonActionEnum;
@@ -34,4 +35,12 @@ public interface BugOnlineComponent {
      * @return bug日志实体
      */
     List<BugLogDO> compareBugOffline(Long bugOnlineId, Long oldId, Long newId);
+
+    /**
+     * 查询管理的业务域
+     *
+     * @param bugOnlineId 线上bug id
+     * @return {@link List}<{@link BizDomainDO}>
+     */
+    List<BizDomainDO> getBizDomain(Long bugOnlineId);
 }

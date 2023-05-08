@@ -1,13 +1,8 @@
 package com.timevale.forward.service.component.impl;
 
-import com.timevale.forward.dal.dao.BizChangeLogMapper;
-import com.timevale.forward.dal.dao.BugLogMapper;
-import com.timevale.forward.dal.dao.BugOnlineBizDemandMapper;
-import com.timevale.forward.dal.dao.BugOnlineMapper;
-import com.timevale.forward.dal.entity.BizChangeLogDO;
-import com.timevale.forward.dal.entity.BugLogDO;
-import com.timevale.forward.dal.entity.BugOnlineDO;
-import com.timevale.forward.dal.entity.BugOnlineStatusOperatorDO;
+import cn.hutool.core.collection.CollUtil;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BugLogComponent;
 import com.timevale.forward.service.component.BugOnlineComponent;
@@ -39,6 +34,10 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
     @Resource
     private BugOnlineMapper bugOnlineMapper;
     @Resource
+    private BizDomainMapper bizDomainMapper;
+    @Resource
+    private ProductLineMapper productLineMapper;
+    @Resource
     private BugLogComponent bugLogComponent;
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
@@ -46,6 +45,8 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
     private MessageEventPublisher messageEventPublisher;
     @Resource
     private BugOnlineBizDemandMapper bugOnlineBizDemandMapper;
+    @Resource
+    private BugOnlineProductLineMapper bugOnlineProductLineMapper;
     @Resource
     private BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
 
@@ -190,6 +191,23 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         unLinkOpt.ifPresent(result::add);
 
         return result;
+    }
+
+    @Override
+    public List<BizDomainDO> getBizDomain(Long bugOnlineId) {
+        List<BugOnlineProductLineDO> plLinks = bugOnlineProductLineMapper.getByBugOnlineId(bugOnlineId, BizProductLineTypeEnum.BUG_ONLINE.getCode());
+        List<Long> plIds = plLinks.stream().map(BugOnlineProductLineDO::getProductLineId).collect(Collectors.toList());
+        if (CollUtil.isEmpty(plIds)) {
+            return Collections.emptyList();
+        }
+
+        List<ProductLineDO> plDOs = productLineMapper.getByIds(plIds);
+        List<Long> bdIds = plDOs.stream().map(ProductLineDO::getBizDomainId).collect(Collectors.toList());
+        if (CollUtil.isEmpty(bdIds)) {
+            return Collections.emptyList();
+        }
+
+        return bizDomainMapper.getByIds(bdIds);
     }
 
     private void addBizDemandAttachLogs(BugOnlineDO bugOnlineDO, Collection<Long> bizDemandIds) {

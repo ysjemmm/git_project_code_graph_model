@@ -335,6 +335,9 @@
                 customer_dev_project_name = #{customerDevProjectName},
             </if>
             <if test="openCount != null">open_count = #{openCount},</if>
+            <if test="convertBizStatus !=null">convert_biz_status=#{convertBizStatus},</if>
+            <if test="convertBizApplyMan !=null">convert_biz_apply_man=#{convertBizApplyMan},</if>
+            <if test="convertBizApplyManId !=null">convert_biz_apply_man_id=#{convertBizApplyManId},</if>
             <if test="modifyManId != null">
                 modify_man_id = #{modifyManId},
             </if>

@@ -105,4 +105,7 @@ public class TaskDetailVO extends ToString {
 
     @ApiModelProperty("1-n负责人Id")
     private String otnPrincipalId;
+
+    @ApiModelProperty("项目状态")
+    private Integer projectStatus;
 }

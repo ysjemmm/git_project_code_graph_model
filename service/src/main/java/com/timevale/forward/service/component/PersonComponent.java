@@ -64,7 +64,7 @@ public interface PersonComponent {
      * @param mainId 所属主体id
      * @param type 所属主体类型
      */
-    List<PersonDO> addIfNotExisted(List<PersonAddReq> list, Long mainId, Integer type);
+    List<PersonDO> addIfNotExisted(Collection<PersonAddReq> list, Long mainId, Integer type);
 
     /**
      *

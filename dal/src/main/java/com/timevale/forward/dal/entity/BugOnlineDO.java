@@ -228,4 +228,14 @@ public class BugOnlineDO extends BaseDO {
      * 请求转业务需求状态: 0无，1申请中，2同意，3拒绝
      */
     private Integer convertBizStatus;
+
+    /**
+     * 转业务需求申请人
+     */
+    private String convertBizApplyMan;
+
+    /**
+     * 转业务需求申请人 id
+     */
+    private String convertBizApplyManId;
 }

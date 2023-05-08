@@ -3,6 +3,7 @@ package com.timevale.forward.dal.dao;
 import com.timevale.forward.dal.condition.BugOnlineLinkCondition;
 import com.timevale.forward.dal.entity.BugOnlineProductLineDO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -27,6 +28,9 @@ public interface BugOnlineProductLineMapper {
      * @return BugOnlineProductLineDO 列表
      */
     List<BugOnlineProductLineDO> getByBugOnlineIdList(@Param("bugOnlineIdList") List<Long> bugOnlineIdList, @Param("type") Integer type);
+
+    @Select("SELECT * FROM bug_online_product_line WHERE bug_online_id = #{bugId} AND type=#{type} AND is_deleted = false")
+    List<BugOnlineProductLineDO> getByBugOnlineId(@Param("bugId") Long bugId, @Param("type") Integer type);
 
     /**
      * 批量插入数据

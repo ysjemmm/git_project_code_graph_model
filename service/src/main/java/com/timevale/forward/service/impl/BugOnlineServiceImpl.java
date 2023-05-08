@@ -930,13 +930,13 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setReason(onlineReq.getReason());
         bugOnlineDO.setReasonStage(onlineReq.getReasonStage());
         bugOnlineDO.setBugOfflineId(onlineReq.getBugOfflineId());
-        bugOnlineDO.setStatus(BugOnlineStatusEnum.COMPLETE.getCode());
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.ACCEPTANCE.getCode());
         bugOnlineMapper.update(bugOnlineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.ONLINE.getText());
         bugLogDO.setOldValue(oldStatus);
-        bugLogDO.setNewValue(BugOnlineStatusEnum.COMPLETE.getText());
+        bugLogDO.setNewValue(BugOnlineStatusEnum.ACCEPTANCE.getText());
         bugLogDO.setMainId(onlineReq.getId());
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
         bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
@@ -950,25 +950,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //bug状态处理人员表插入数据
         bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
-        //发送消息
-        messageEventPublisher.publish(
-                new BugOnlineOnlineMsgEvent(
-                        this,
-                        bugOnlineDO.getName(),
-                        bugOnlineDO.getProposerId(),
-                        onlineReq.getId()
-                )
-        );
-
-        List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(bugOnlineDO.getId());
-        bugOnlineDOList.forEach(a -> messageEventPublisher.publish(
-                new BugOnlineResubmitOnlineMsgEvent(
-                        this,
-                        bugOnlineDO.getName(),
-                        a.getProposerId(),
-                        bugOnlineDO.getId()
-                )
-        ));
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
         return businessResult;
@@ -1167,17 +1148,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         BugOnlineDO bugOnlineDO = bugOnlineMapper.get(bugOnlineTransferReq.getId());
         if (bugOnlineDO == null) {
             throw new BaseBizRuntimeException("线上bug不存在");
-        }
-
-        //判断操作人是否有点击权限
-        Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
-        Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
-        Boolean testJobFunctionResult = false;
-        if (bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.REPAIR_CONFIRM.getCode())) {
-            testJobFunctionResult = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
-        }
-        if (!operatorResult && !proposerResult && !testJobFunctionResult) {
-            throw new BaseBizRuntimeException("您没有点击此按钮的权限");
         }
 
         //保存老的经办人
@@ -1622,11 +1592,80 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
     public BaseResult<Void> convertBizApply(BugOnlineToBizApplyReq toBizApplyReq) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.get(toBizApplyReq.getId());
+        AssertUtil.notNull(bugOnlineDO, "线上bug不存在");
+
         BugOnlineConvertBizStatusEnum operateEnum = BugOnlineConvertBizStatusEnum.getByOperate(toBizApplyReq.getOperate());
-        if (operateEnum == null) {
-            return BaseResult.success();
+        AssertUtil.notNull(operateEnum, "操作有误，请检查后重试");
+
+        // 获取技术负责人
+        List<BizDomainDO> bizDomain = bugOnlineComponent.getBizDomain(bugOnlineDO.getId());
+
+        Set<PersonAddReq> techOwners = bizDomain.stream()
+                .map(e -> new PersonAddReq(e.getTechOwner(), e.getTechOwnerId()))
+                .collect(Collectors.toSet());
+
+        if (CollUtil.isEmpty(techOwners)) {
+            log.error("[BugOnlineServiceImpl.convertBizApply] 线上bug: {} ,关联的业务域没有技术负责人", toBizApplyReq.getId());
+            throw new BaseBizRuntimeException("请确认当前线上bug关联的业务域存在技术负责人");
         }
+
+        // 转业务需求状态
+        bugOnlineDO.setConvertBizStatus(operateEnum.getCode());
+
+        if (operateEnum == BugOnlineConvertBizStatusEnum.APPLY) {
+            // 转业务需求申请人
+            bugOnlineDO.setConvertBizApplyManId(userInfo.getId());
+            bugOnlineDO.setConvertBizApplyMan(userInfo.getFullAlias());
+
+            // 更新数据
+            bugOnlineMapper.update(bugOnlineDO);
+
+            // 抄送
+            personComponent.addIfNotExisted(techOwners, toBizApplyReq.getId(), PersonTypeEnum.BUG_ONLINE_CC.getCode());
+            // 通知
+            techOwners.stream()
+                    .map(PersonAddReq::getUserId)
+                    .forEach(techOwnerId -> new BugOnlineToBizApplyEvent(
+                            this,
+                            bugOnlineDO.getName(),
+                            techOwnerId,
+                            bugOnlineDO.getId()).send());
+        } else {
+            AssertUtil.checkState(BugOnlineConvertBizStatusEnum.APPLY.getCode().equals(bugOnlineDO.getConvertBizStatus()),
+                    "当前状态不允许进行此操作");
+
+            Set<String> receivers = new HashSet<>();
+            Optional.ofNullable(bugOnlineDO.getOperatorId()).ifPresent(receivers::add);
+            Optional.ofNullable(bugOnlineDO.getConvertBizApplyManId()).ifPresent(receivers::add);
+
+            if (CollUtil.isEmpty(receivers)) {
+                log.error("[BugOnlineServiceImpl.convertBizApply] 线上bug: {} ,通知接收人为空", toBizApplyReq.getId());
+                return BaseResult.success();
+            }
+
+            // 通知
+            if (operateEnum == BugOnlineConvertBizStatusEnum.AGREE) {
+                receivers.forEach(receiver -> new BugOnlineToBizAgreeEvent(
+                                this,
+                                userInfo.getFullAlias(),
+                                bugOnlineDO.getName(),
+                                receiver,
+                                bugOnlineDO.getId()).send());
+            } else if (operateEnum == BugOnlineConvertBizStatusEnum.REJECT) {
+                receivers.forEach(receiver -> new BugOnlineToBizRejectEvent(
+                                this,
+                                userInfo.getFullAlias(),
+                                bugOnlineDO.getName(),
+                                receiver,
+                                bugOnlineDO.getId()).send());
+            }
+        }
+
         bugOnlineMapper.updateConvertBizStatus(toBizApplyReq.getId(), operateEnum.getCode());
+
         return BaseResult.success();
     }
 
@@ -1639,9 +1678,71 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     public BaseResult<Void> acceptance(BugOnlineAcceptanceReq acceptanceReq) {
         if (acceptanceReq.getPass()) {
+            //查询线上bug
+            BugOnlineDO bugOnlineDO = bugOnlineMapper.get(acceptanceReq.getId());
+            AssertUtil.notNull(bugOnlineDO, "线上bug不存在");
 
+            //保存老的状态
+            String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+
+            //线上bug表更新
+            bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(acceptanceReq.getId()),BugOnlineStatusEnum.ACCEPTANCE.getCode());
+
+            BugLogDO bugLogDO = new BugLogDO();
+            bugLogDO.setAction(ButtonActionEnum.ACCEPTANCE_PASS.getText());
+            bugLogDO.setOldValue(oldStatus);
+            bugLogDO.setNewValue(BugOnlineStatusEnum.COMPLETE.getText());
+            bugLogDO.setMainId(acceptanceReq.getId());
+            bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+            bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+            //往bug日志表中插入一条线上bug状态变更数据
+            bugLogMapper.insert(bugLogDO);
+
+            //bug状态处理人员表插入数据
+            bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
+
+            //发送消息
+            messageEventPublisher.publish(
+                    new BugOnlineOnlineMsgEvent(
+                            this,
+                            bugOnlineDO.getName(),
+                            bugOnlineDO.getProposerId(),
+                            acceptanceReq.getId()
+                    )
+            );
+
+            List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(bugOnlineDO.getId());
+            bugOnlineDOList.forEach(a -> messageEventPublisher.publish(
+                    new BugOnlineResubmitOnlineMsgEvent(
+                            this,
+                            bugOnlineDO.getName(),
+                            a.getProposerId(),
+                            bugOnlineDO.getId()
+                    )
+            ));
         } else {
+            //查询线上bug
+            BugOnlineDO bugOnlineDO = bugOnlineMapper.get(acceptanceReq.getId());
+            AssertUtil.notNull(bugOnlineDO, "线上bug不存在");
 
+            //保存老的状态
+            String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
+
+            //线上bug表更新
+            bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(acceptanceReq.getId()),BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
+
+            BugLogDO bugLogDO = new BugLogDO();
+            bugLogDO.setAction(ButtonActionEnum.ACCEPTANCE_FAILT.getText());
+            bugLogDO.setOldValue(oldStatus);
+            bugLogDO.setNewValue(BugOnlineStatusEnum.QUESTION_CONFIRM.getText());
+            bugLogDO.setMainId(acceptanceReq.getId());
+            bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+            bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+            //往bug日志表中插入一条线上bug状态变更数据
+            bugLogMapper.insert(bugLogDO);
+
+            //bug状态处理人员表插入数据
+            bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
         }
         return BaseResult.success();
     }

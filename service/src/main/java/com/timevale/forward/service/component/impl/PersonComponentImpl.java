@@ -112,7 +112,7 @@ public class PersonComponentImpl implements PersonComponent {
     }
 
     @Override
-    public List<PersonDO> addIfNotExisted(List<PersonAddReq> list, Long mainId, Integer type) {
+    public List<PersonDO> addIfNotExisted(Collection<PersonAddReq> list, Long mainId, Integer type) {
         List<PersonDO> existPersons = select(mainId, type);
         Set<String> existUserIdSet = existPersons.stream().map(PersonDO::getUserId).collect(Collectors.toSet());
         log.info("已存在人员:existUserIdSet={}", existUserIdSet);
