@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -16,6 +17,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("批量转交请求")
+@Accessors(chain = true)
 public class BatchTransferReq extends BaseReq{
 
     @ApiModelProperty("需要转交的id列表")

@@ -182,4 +182,7 @@ public interface BizDemandMapper {
     ProjectDO getByBizDemandId(@Param("bizDemandId") Long bizDemandId);
 
     void updateReason(@Param("id") Long id, @Param("reason") Integer reason);
+
+    @Select("SELECT * FROM biz_demand WHERE receive_man_id=#{receiveManId} AND is_deleted =false")
+    List<BizDemandDO> getByReceiveManId(@Param("receiveManId")String receiveManId);
 }

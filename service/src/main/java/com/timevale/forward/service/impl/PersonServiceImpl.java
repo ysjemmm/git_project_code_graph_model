@@ -1,23 +1,36 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
+import com.timevale.forward.dal.dao.BizDemandMapper;
 import com.timevale.forward.dal.dao.PersonMapper;
 import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.entity.BaseDO;
+import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.PersonDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.facade.api.client.BizDemandService;
 import com.timevale.forward.facade.api.client.PersonService;
+import com.timevale.forward.facade.api.client.ProductDemandService;
+import com.timevale.forward.facade.api.request.BatchTransferReq;
 import com.timevale.forward.facade.api.request.RecipientAddReq;
 import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.TeamMemberVO;
+import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.PersonTypeEnum;
+import com.timevale.forward.model.enums.ProductDemandStatusEnum;
 import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.PersonCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.forward.service.observer.event.BizResignTransferEvent;
+import com.timevale.forward.service.observer.event.PdResignTransferEvent;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.security.facade.response.BaseInfoResponse;
+import com.timevale.security.facade.response.GroupModelResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
@@ -26,6 +39,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -37,15 +51,18 @@ import java.util.stream.Collectors;
 public class PersonServiceImpl implements PersonService {
     @Resource
     private PersonComponent personComponent;
-
     @Resource
     private PersonMapper personMapper;
-
     @Resource
     private InnerUserPersonClient innerUserPersonClient;
-
     @Resource
     private ProductDemandMapper productDemandMapper;
+    @Resource
+    private BizDemandMapper bizDemandMapper;
+    @Resource
+    private BizDemandService bizDemandService;
+    @Resource
+    private ProductDemandService productDemandService;
 
     @Override
     public BaseResult<Boolean> addRecipients(RecipientAddReq recipientAddReq) {
@@ -104,7 +121,59 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public BaseResult<Void> resignNotice(String account) {
-        return null;
+        if (StrUtil.isEmpty(account)) {
+            return BaseResult.success();
+        }
+
+        // 查询个人信息
+        BaseInfoResponse selfInfo = innerUserPersonClient.getSelfInfo(account, true);
+        if (selfInfo == null) {
+            log.error("[PersonServiceImpl.resignNotice] 无法查询到离职人员的信息，account: {}", account);
+            return BaseResult.success();
+        }
+
+        // 查询上级信息
+        BaseInfoResponse managerInfo =  Optional.of(selfInfo)
+                .map(BaseInfoResponse::getDefaultGroup)
+                .map(GroupModelResponse::getDefaultManager)
+                .map(manager -> innerUserPersonClient.getSelfInfo(manager, false))
+                .orElse(null);
+        if (managerInfo == null) {
+            log.error("[PersonServiceImpl.resignNotice] 无法查询到离职人员上级的信息，无法转交需求，account: {}", account);
+            return BaseResult.success();
+        }
+
+        List<BizDemandDO> bds = bizDemandMapper.getByReceiveManId(account);
+        List<ProductDemandDO> pds = productDemandMapper.getByOwnerId(account);
+        List<Long> bdIds = bds.stream().filter(e -> BizDemandStatusEnum.unfinished(e.getStatus())).map(BaseDO::getId).collect(Collectors.toList());
+        List<Long> pdIds = pds.stream().filter(e -> ProductDemandStatusEnum.unfinished(e.getStatus())).map(BaseDO::getId).collect(Collectors.toList());
+
+
+        String operator = selfInfo.getAlias() +"-" + selfInfo.getName();
+
+        if (CollUtil.isNotEmpty(bdIds)) {
+            BatchTransferReq req = new BatchTransferReq()
+                    .setType(0)
+                    .setReceiveMan(managerInfo.getAlias() + "-" + managerInfo.getName())
+                    .setReceiveManId(managerInfo.getAccount())
+                    .setIdList(bdIds);
+            bizDemandService.bizDemandBatchTransferReceiveMan(req);
+
+            new BizResignTransferEvent(this, bdIds.size(), operator, managerInfo.getAccount()).send();
+        }
+
+        if (CollUtil.isNotEmpty(pdIds)) {
+            BatchTransferReq req = new BatchTransferReq()
+                    .setType(0)
+                    .setReceiveMan(managerInfo.getAlias() + "-" + managerInfo.getName())
+                    .setReceiveManId(managerInfo.getAccount())
+                    .setIdList(pdIds);
+            productDemandService.productDemandBatchTransferReceiveMan(req);
+
+            new PdResignTransferEvent(this, pdIds.size(), operator, managerInfo.getAccount()).send();
+        }
+
+        return BaseResult.success();
     }
 
 }

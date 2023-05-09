@@ -47,4 +47,13 @@ public enum BizDemandStatusEnum {
         return code.equals(REJECT.getCode()) || code.equals(INVALID.getCode());
     }
 
+    public static Boolean unfinished(Integer code) {
+        return EVALUATE.getCode().equals(code) ||
+                RECEIVED.getCode().equals(code) ||
+                TO_CONFIRM.getCode().equals(code) ||
+                PD_LINKED.getCode().equals(code) ||
+                INCLUDE_PROJECT.getCode().equals(code) ||
+                PROJECTING.getCode().equals(code);
+    }
+
 }

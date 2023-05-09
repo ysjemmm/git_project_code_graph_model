@@ -68,5 +68,13 @@ public enum TabEnum {
     INNER_PROJECT_MANAGEMENT("internalProjectManagement"),
     ;
 
+    public String list() {
+        return this.text + "/list";
+    }
+
+    public String listTab(Integer tabActive) {
+        return list() + "?tabActive=" + tabActive;
+    }
+
     private final String text;
 }

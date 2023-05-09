@@ -12,9 +12,12 @@ public enum MessageTitleEnum {
     BIZDEMAND_FEEDBACK("业务需求反馈通知"),
     BIZDEMAND_STATUS_CHANGE("业务需求进度变更通知"),
     BIZDEMAND_RECEIVE("您收到一条新的业务需求"),
+    BIZDEMAND_RECEIVE_BATCH("您收到%s条业务需求"),
     BIZDEMAND_INVALID("业务需求作废通知"),
     BIZDEMAND_MODIFY("您收到一条业务需求修改通知"),
     BIZDEMAND_APPROVED("业务需求动态通知"),
+    // 产品需求
+    PD_RECEIVE_BATCH("您收到%s条产品需求"),
     // 评论区@通知标题
     COMMENT("评论通知"),
     TEST_BILL("提测单消息通知"),
