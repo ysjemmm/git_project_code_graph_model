@@ -37,4 +37,11 @@ public interface PersonService {
      * @return PersonVO
      */
     BaseResult<List<PersonVO>> getLastCopior();
+
+    /**
+     * 辞职通知
+     *
+     * @param account 花名拼音
+     */
+    BaseResult<Void> resignNotice(String account);
 }

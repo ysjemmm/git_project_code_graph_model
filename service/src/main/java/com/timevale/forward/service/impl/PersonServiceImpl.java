@@ -102,4 +102,9 @@ public class PersonServiceImpl implements PersonService {
         return BaseResult.success(personVOList);
     }
 
+    @Override
+    public BaseResult<Void> resignNotice(String account) {
+        return null;
+    }
+
 }
