@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
@@ -14,10 +15,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -102,6 +100,21 @@ public class BizLabelComponentImpl implements BizLabelComponent {
     }
 
     @Override
+    public boolean addLabelNx(Long bizId, Long labelId, Integer type) {
+        List<BizLabelDO> links = bizLabelMapper.getByBiz(bizId, type);
+        boolean noneMatch = links.stream().noneMatch(e -> Objects.equals(labelId, e.getLabelId()));
+
+        if (noneMatch) {
+            BizLabelDO bizLabelDO = new BizLabelDO();
+            bizLabelDO.setBizId(bizId);
+            bizLabelDO.setType(type);
+            bizLabelDO.setLabelId(labelId);
+            bizLabelMapper.insert(bizLabelDO);
+        }
+        return !noneMatch;
+    }
+
+    @Override
     public void addLabel(Long bizId, List<Long> labelIds, Integer type) {
         List<BizLabelDO> bizLabelDOList = labelIds.stream().map(a -> {
             BizLabelDO bizLabelDO = new BizLabelDO();
@@ -180,5 +193,10 @@ public class BizLabelComponentImpl implements BizLabelComponent {
         bizLabelDO.setType(type);
         bizLabelDO.setIsDeleted(true);
         bizLabelMapper.update(bizLabelDO);
+    }
+
+    @Override
+    public List<BizLabelDO> get(Long bizId, Integer type) {
+        return  bizLabelMapper.getByBizIdInType(CollUtil.newArrayList(bizId), type);
     }
 }

@@ -2,6 +2,7 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.entity.BizLabelDO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -18,6 +19,9 @@ public interface BizLabelMapper {
      * @return LabelCategoryDO
      */
     List<BizLabelDO> get(@Param("labelId") Long labelId);
+
+    @Select("SELECT * FROM biz_label WHERE biz_id=#{bizId} AND type=#{type} AND is_deleted = false")
+    List<BizLabelDO> getByBiz(@Param("bizId")Long bizId, @Param("type")Integer type);
 
     /**
      * 插入业务-标签

@@ -49,4 +49,16 @@ public class CommonConfig {
     @Value("${devDemandAcceptUserName:云舒-余贤圆}")
     private String devDemandAcceptUserName;
 
+    /**
+     * 基线需求申诉标签id
+     */
+    @Value("${bizDemandAppealLabelId:813}")
+    private Long bizDemandAppealLabelId;
+
+    /**
+     * 基线需求申诉成功标签id
+     */
+    @Value("${bizDemandAcceptLabelId:814}")
+    private Long bizDemandAcceptLabelId;
+
 }

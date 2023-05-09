@@ -14,6 +14,11 @@ public enum ButtonActionEnum {
     CONFIRM_REPAIR("确认修复"),
 
     /**
+     * 开始响应
+     */
+    START_RESPONSE("开始响应"),
+
+    /**
      * 自测通过
      */
     SELF_PASS("自测通过"),

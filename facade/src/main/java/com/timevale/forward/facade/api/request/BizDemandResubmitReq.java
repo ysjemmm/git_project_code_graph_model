@@ -30,4 +30,7 @@ public class BizDemandResubmitReq extends BaseReq {
 
     @ApiModelProperty("需求接收人id")
     private String receiveManId;
+
+    @ApiModelProperty("是否为申诉")
+    private Boolean isAppeal;
 }

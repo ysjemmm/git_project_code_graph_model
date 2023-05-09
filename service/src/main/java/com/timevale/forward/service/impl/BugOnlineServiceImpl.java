@@ -1634,9 +1634,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
                             techOwnerId,
                             bugOnlineDO.getId()).send());
         } else {
-            AssertUtil.checkState(BugOnlineConvertBizStatusEnum.APPLY.getCode().equals(bugOnlineDO.getConvertBizStatus()),
-                    "当前状态不允许进行此操作");
-
             Set<String> receivers = new HashSet<>();
             Optional.ofNullable(bugOnlineDO.getOperatorId()).ifPresent(receivers::add);
             Optional.ofNullable(bugOnlineDO.getConvertBizApplyManId()).ifPresent(receivers::add);
@@ -1671,7 +1668,24 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
     public BaseResult<Void> startResponse(Long id) {
+        BugOnlineDO bugOnlineDO = bugOnlineMapper.get(id);
+        AssertUtil.notNull(bugOnlineDO, "线上bug不存在");
+
         bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(id), BugOnlineStatusEnum.START_RESPONSE.getCode());
+
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setAction(ButtonActionEnum.START_RESPONSE.getText());
+        bugLogDO.setOldValue(BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()));
+        bugLogDO.setNewValue(BugOnlineStatusEnum.START_RESPONSE.getText());
+        bugLogDO.setMainId(id);
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
+        //往bug日志表中插入一条线上bug状态变更数据
+        bugLogMapper.insert(bugLogDO);
+
+        //bug状态处理人员表插入数据
+        bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
+
         return BaseResult.success();
     }
 
@@ -1686,7 +1700,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             String oldStatus = BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus());
 
             //线上bug表更新
-            bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(acceptanceReq.getId()),BugOnlineStatusEnum.ACCEPTANCE.getCode());
+            bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(acceptanceReq.getId()),BugOnlineStatusEnum.COMPLETE.getCode());
 
             BugLogDO bugLogDO = new BugLogDO();
             bugLogDO.setAction(ButtonActionEnum.ACCEPTANCE_PASS.getText());

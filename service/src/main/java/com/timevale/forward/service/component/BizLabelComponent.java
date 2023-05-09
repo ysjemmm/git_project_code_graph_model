@@ -1,5 +1,6 @@
 package com.timevale.forward.service.component;
 
+import com.timevale.forward.dal.entity.BizLabelDO;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 
 import java.util.List;
@@ -15,6 +16,15 @@ public interface BizLabelComponent {
      * @param add add
      */
     void addLog(Long mainId, List<Long> labelIds, Integer type ,Boolean add) ;
+
+    /**
+     * 如果不存在则添加标签
+     *
+     * @param bizId   bizId
+     * @param labelId 标签id
+     * @param type    type
+     */
+    boolean addLabelNx(Long bizId, Long labelId, Integer type);
 
     /**
      *
@@ -39,4 +49,11 @@ public interface BizLabelComponent {
      */
     void deleteLabel(Long bizId, Integer type) ;
 
+    /**
+     * 查询
+     *
+     * @param bizId 业务id
+     * @param type  类型
+     */
+    List<BizLabelDO> get(Long bizId, Integer type);
 }

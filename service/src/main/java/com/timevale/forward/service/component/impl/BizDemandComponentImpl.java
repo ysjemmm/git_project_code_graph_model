@@ -18,6 +18,7 @@ import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.SqlOrderComponent;
+import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
@@ -73,6 +74,8 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     private ProductBizDemandMapper productBizDemandMapper;
     @Resource
     private ProjectBizDemandMapper projectBizDemandMapper;
+    @Resource
+    private CommonConfig commonConfig;
 
     @Override
     public void updateStatus(Long bdId) {
