@@ -1060,12 +1060,17 @@ public class BizDemandServiceImpl implements BizDemandService {
         String name = bizDemandResubmitReq.getName();
         BizDemandDO oldBizDemandDO = bizDemandMapper.get(bizDemandId);
         AssertUtil.notNull(oldBizDemandDO,"不存在该业务需求");
-        if (!oldBizDemandDO.getCustomerDevDemand()) {
+        if (!bizDemandResubmitReq.getIsAppeal()) {
             AssertUtil.notBlank(bizDemandResubmitReq.getReceiveManId(), "业务需求接收人不能为空");
             AssertUtil.notBlank(bizDemandResubmitReq.getReceiveMan(), "业务需求接收人不能为空");
         } else {
-            bizDemandResubmitReq.setReceiveManId(commonConfig.getDevDemandAcceptUserId());
-            bizDemandResubmitReq.setReceiveMan(commonConfig.getDevDemandAcceptUserName());
+            if (oldBizDemandDO.getCustomerDevDemand()) {
+                bizDemandResubmitReq.setReceiveManId(commonConfig.getDevDemandAcceptUserId());
+                bizDemandResubmitReq.setReceiveMan(commonConfig.getDevDemandAcceptUserName());
+            } else {
+                bizDemandResubmitReq.setReceiveManId(commonConfig.getBizDemandAcceptUserId());
+                bizDemandResubmitReq.setReceiveMan(commonConfig.getBizDemandAcceptUserName());
+            }
         }
         Integer oldStatus = oldBizDemandDO.getStatus();
         BizDemandDO checkUniqueName = bizDemandMapper.selectByName(name);

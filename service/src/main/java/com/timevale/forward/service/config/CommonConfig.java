@@ -61,4 +61,9 @@ public class CommonConfig {
     @Value("${bizDemandAcceptLabelId:814}")
     private Long bizDemandAcceptLabelId;
 
+    @Value("${devDemandAcceptUserId:yuzhe}")
+    private String bizDemandAcceptUserId;
+    @Value("${devDemandAcceptUserName:予哲-张彧喆}")
+    private String bizDemandAcceptUserName;
+
 }
