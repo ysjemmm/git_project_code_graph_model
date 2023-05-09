@@ -89,9 +89,6 @@ public class TrackEventServiceImpl implements TrackEventService {
     private FileComponent fileComponent;
 
     @Resource
-    private EpeiusClient epeiusClient;
-
-    @Resource
     private TrackPropMapper trackPropMapper;
 
     @Resource
@@ -264,7 +261,7 @@ public class TrackEventServiceImpl implements TrackEventService {
         Map<Integer, Integer> mergeInfo = new HashMap<>();
 
         // 导出顺序排序
-        trackEventVOList.sort(Comparator.comparing(TrackEventVO::getModifyDate).thenComparingLong(TrackEventVO::getId));
+        trackEventVOList.sort(Comparator.comparing(TrackEventVO::getModifyDate).reversed().thenComparingLong(TrackEventVO::getId));
 
         List<SensorTrackRow> sensorTrackRowList = new ArrayList<>();
         for (TrackEventVO event : trackEventVOList) {
