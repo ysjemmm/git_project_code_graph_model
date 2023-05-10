@@ -547,12 +547,12 @@ public class BizDemandServiceImpl implements BizDemandService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> agree(BizDemandAgreeReq bizDemandAgreeReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         // 修改业务需求状态 —— 接收，添加预期上线时间
         Long bizDemandId = bizDemandAgreeReq.getBizDemandId();
         Integer planReleaseDate = bizDemandAgreeReq.getPlanReleaseDate();
         Long productLineId = bizDemandAgreeReq.getProductLineId();
+        String receiveMan = bizDemandAgreeReq.getReceiveMan();
+        String receiveManId = bizDemandAgreeReq.getReceiveManId();
 
         if (productLineId == null) {
             throw new BaseBizRuntimeException("产品线不能为空");
@@ -578,8 +578,8 @@ public class BizDemandServiceImpl implements BizDemandService {
         bizDemandDO.setStatus(BizDemandStatusEnum.RECEIVED.getCode());
         bizDemandDO.setPlanReleaseDate(planReleaseDate);
         bizDemandDO.setProductLineId(productLineId);
-        bizDemandDO.setReceiveMan(bizDemandAgreeReq.getReceiveMan());
-        bizDemandDO.setReceiveManId(bizDemandAgreeReq.getReceiveManId());
+        bizDemandDO.setReceiveMan(receiveMan);
+        bizDemandDO.setReceiveManId(receiveManId);
         bizDemandMapper.update(bizDemandDO);
         bizDemandMapper.updateReason(bizDemandId, null);
 
@@ -587,7 +587,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         messageEventPublisher.publish(new BizDemandReceivedMsgEvent(
                 this,
                 bizDemandDO.getId(),
-                userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName(),
+                receiveMan,
                 bizDemandDO.getSubmitManId(),
                 bizDemandDO.getName(),
                 PlanReleaseDateEnum.getTextByCode(bizDemandDO.getPlanReleaseDate())
