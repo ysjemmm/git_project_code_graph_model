@@ -52,14 +52,13 @@ public class CommonConfig {
     /**
      * 基线需求申诉标签id
      */
-    @Value("${bizDemandAppealLabelId:813}")
+    @Value("${bizDemandAppealLabelId:565}")
     private Long bizDemandAppealLabelId;
-
     /**
      * 基线需求申诉成功标签id
      */
-    @Value("${bizDemandAcceptLabelId:814}")
-    private Long bizDemandAcceptLabelId;
+    @Value("${bizDemandAcceptLabelId:566}")
+    private Long bizDemandApproveLabelId;
 
     @Value("${devDemandAcceptUserId:yuzhe}")
     private String bizDemandAcceptUserId;

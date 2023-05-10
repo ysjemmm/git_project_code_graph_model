@@ -5,6 +5,7 @@ import com.timevale.framework.mq.client.Group;
 import com.timevale.framework.mq.client.Topic;
 import com.timevale.framework.mq.client.consumer.Consumer;
 import com.timevale.framework.mq.client.consumer.ConsumerFactory;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -15,6 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author by YangXu
  * @date 2023/05/09 16:30
  */
+@Component
 public class PersonConsumer {
     private final String GROUP_NAME = "forward-person-group";
     private final String TOPIC_NAME = "USER_STATUS_CHANGE";

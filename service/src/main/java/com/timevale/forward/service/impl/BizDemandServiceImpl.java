@@ -667,7 +667,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         boolean containBizAppeal = labels.stream().anyMatch(e -> e.getLabelId().equals(commonConfig.getBizDemandAppealLabelId()));
         boolean containDevAppeal = labels.stream().anyMatch(e -> e.getLabelId().equals(commonConfig.getDevDemandAppealLabelId()));
         if (containBizAppeal) {
-            Long labelId = commonConfig.getBizDemandAppealLabelId();
+            Long labelId = commonConfig.getBizDemandApproveLabelId();
             boolean addSuccess = bizLabelComponent.addLabelNx(bizDemandId, labelId, BizTypeEnum.BIZ_DEMAND.getCode());
             if (addSuccess) {
                 bizLabelComponent.addLog(bizDemandId, CollUtil.newArrayList(labelId), BizTypeEnum.BIZ_DEMAND.getCode(), true);
