@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class PersonConsumer {
     private final String GROUP_NAME = "forward-person-group";
-    private final String TOPIC_NAME = "PERSON_STATUS_TOPIC";
+    private final String TOPIC_NAME = "USER_STATUS_CHANGE";
 
     @Resource
     private ConsumerFactory consumerFactory;
