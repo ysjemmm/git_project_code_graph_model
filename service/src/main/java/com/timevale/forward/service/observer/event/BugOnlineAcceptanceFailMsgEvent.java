@@ -10,14 +10,14 @@ import java.util.Date;
 
 /**
  * @author by YangXu
- * @date 2023/05/11 16:35
+ * @date 2023/05/11 16:47
  */
-public class BugOnlineOnlineMsgEvent extends MessageEvent {
+public class BugOnlineAcceptanceFailMsgEvent extends MessageEvent {
     private final String bugName;
     private final String receiver;
     private final Long bugOnlineId;
 
-    public BugOnlineOnlineMsgEvent(Object source, String bugName, String receiver, Long bugOnlineId) {
+    public BugOnlineAcceptanceFailMsgEvent(Object source, String bugName, String receiver, Long bugOnlineId) {
         super(source);
         this.bugName = bugName;
         this.receiver = receiver;
@@ -26,12 +26,12 @@ public class BugOnlineOnlineMsgEvent extends MessageEvent {
 
     @Override
     public void run() {
-        String msg = "### %s \n 线上bug **%s** 已修复完成，请及时验收。 \n *** \n[查看详情](%s)  <!--%s-->";
+        String msg = "### %s \n 线上bug **%s** 验收不通过，请及时处理。 \n *** \n[查看详情](%s)  <!--%s-->";
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUG_ONLINE_MANAGEMENT.getText(), bugOnlineId);
-        String markdown = String.format(msg, MessageTitleEnum.BUG_ONLINE_ACCEPTANCE.getText(), bugName, singleUrl, new Date());
+        String markdown = String.format(msg, MessageTitleEnum.BUG_ONLINE_ACCEPTANCE_FAIL.getText(), bugName, singleUrl, new Date());
 
         MarkdownMsg markdownMsg = MarkdownMsg.builder()
-                .title(MessageTitleEnum.BUG_ONLINE_ACCEPTANCE.getText())
+                .title(MessageTitleEnum.BUG_ONLINE_ACCEPTANCE_FAIL.getText())
                 .content(markdown)
                 .receivers(CollUtil.newArrayList(receiver))
                 .build();

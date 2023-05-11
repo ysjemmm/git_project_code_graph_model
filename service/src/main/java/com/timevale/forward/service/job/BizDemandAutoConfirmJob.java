@@ -106,7 +106,6 @@ public class BizDemandAutoConfirmJob extends IJobHandler {
             }
             bizChangeLogMapper.batchInsert(logDOList);
         }
-        bugOnlineComponent.autoCloseBugIfBeConfirm(autoConfirmLimitDay);
 
         log.info("[BizDemandAutoConfirmJob]业务需求更新待确认-完成");
         return ReturnT.SUCCESS;

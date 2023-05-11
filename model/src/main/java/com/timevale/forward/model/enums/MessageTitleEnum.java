@@ -32,7 +32,7 @@ public enum MessageTitleEnum {
     BUG_OFFLINE_REJECT("线下bug被拒绝通知"),
     BUG_OFFLINE_OPEN_AGAIN("线下bug重新打开通知"),
     BUG_ONLINE_REPAIR_FINISHED("线上bug修复完毕通知"),
-    BUG_ONLINE_ONLINE("线上bug已上线通知"),
+    BUG_ONLINE_ONLINE("线上bug已完成通知"),
     BUG_ONLINE_SUBMIT("线上bug提交通知"),
     BUG_ONLINE_MODIFY_OPERATOR("线上bug修改经办人通知"),
     BUG_ONLINE_OPEN_AGAIN("线上bug重新打开通知"),
@@ -45,6 +45,8 @@ public enum MessageTitleEnum {
     BUG_ONLINE_TO_BIZ_APPLY("线上bug转业务需求审批通知"),
     BUG_ONLINE_TO_BIZ_AGREE("线上bug转业务需求同意通知"),
     BUG_ONLINE_TO_BIZ_REJECT("线上bug转业务需求拒绝通知"),
+    BUG_ONLINE_ACCEPTANCE("线上bug验收通知"),
+    BUG_ONLINE_ACCEPTANCE_FAIL("验收不通过通知"),
 
     // 人天通知标题
     MAN_DAY_AUDIT("人天审核通知"),

@@ -902,24 +902,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BusinessResult<Boolean> online(BugOnlineOnlineReq onlineReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         //查询线上bug
         BugOnlineDO bugOnlineDO = bugOnlineMapper.get(onlineReq.getId());
         AssertUtil.notNull(bugOnlineDO, "线上bug不存在");
-
-        //判断当前状态是否为“待上线”状态
-        if (!bugOnlineDO.getStatus().equals(BugOnlineStatusEnum.ONLINE.getCode())) {
-            throw new BaseBizRuntimeException("当前状态不允许点击已上线");
-        }
-
-        //校验点击按钮的人是否为测试角色或者是经办人&提出人及其上级
-        Boolean jobFunctionResult = jobFunctionMatch(userInfo.getId(), JobFunctionEnum.QA.getName());
-        Boolean operatorResult = isPermission(bugOnlineDO.getOperatorId());
-        Boolean proposerResult = isPermission(bugOnlineDO.getProposerId());
-        if (!jobFunctionResult && !operatorResult && !proposerResult) {
-            throw new BaseBizRuntimeException("您没有权限点击此按钮");
-        }
 
         //保存老的状态
         Integer oldReason = bugOnlineDO.getReason();
@@ -949,6 +934,13 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         //bug状态处理人员表插入数据
         bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
+
+        new BugOnlineOnlineMsgEvent(
+                this,
+                bugOnlineDO.getName(),
+                bugOnlineDO.getProposerId(),
+                bugOnlineDO.getId()
+        ).send();
 
         BusinessResult<Boolean> businessResult = new BusinessResult<>();
         businessResult.setData(true);
@@ -1716,24 +1708,19 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
             //发送消息
-            messageEventPublisher.publish(
-                    new BugOnlineOnlineMsgEvent(
-                            this,
-                            bugOnlineDO.getName(),
-                            bugOnlineDO.getProposerId(),
-                            acceptanceReq.getId()
-                    )
-            );
+            new BugOnlineAcceptanceMsgEvent(
+                    this,
+                    bugOnlineDO.getName(),
+                    bugOnlineDO.getProposerId(),
+                    acceptanceReq.getId()
+            ).send();
 
             List<BugOnlineDO> bugOnlineDOList = bugOnlineMapper.selectByLinkBugId(bugOnlineDO.getId());
-            bugOnlineDOList.forEach(a -> messageEventPublisher.publish(
-                    new BugOnlineResubmitOnlineMsgEvent(
-                            this,
-                            bugOnlineDO.getName(),
-                            a.getProposerId(),
-                            bugOnlineDO.getId()
-                    )
-            ));
+            bugOnlineDOList.forEach(a -> new BugOnlineResubmitOnlineMsgEvent(
+                    this,
+                    bugOnlineDO.getName(),
+                    a.getProposerId(),
+                    bugOnlineDO.getId()).send());
         } else {
             //查询线上bug
             BugOnlineDO bugOnlineDO = bugOnlineMapper.get(acceptanceReq.getId());
@@ -1757,6 +1744,13 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
             //bug状态处理人员表插入数据
             bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
+
+            new BugOnlineAcceptanceFailMsgEvent(
+                    this,
+                    bugOnlineDO.getName(),
+                    bugOnlineDO.getOperatorId(),
+                    bugOnlineDO.getId()
+            ).send();
         }
         return BaseResult.success();
     }

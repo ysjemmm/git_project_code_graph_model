@@ -272,7 +272,7 @@ public class BugOnlineServiceImplTest extends AbstractTestNGSpringContextTests {
         when(innerUserPersonClient.getAllSuperiorByAccount(any())).thenReturn(BaseResult.success(new HashSet<>()));
         when(bugLogMapper.selectByBugOfflineIdAndType(any(), any(), any())).thenReturn(Lists.newArrayList(new BugLogDO()));
 
-        MockedConstruction<BugOnlineOnlineMsgEvent> construction = mockConstruction(BugOnlineOnlineMsgEvent.class);
+        MockedConstruction<BugOnlineAcceptanceMsgEvent> construction = mockConstruction(BugOnlineAcceptanceMsgEvent.class);
         construction.constructed();
         doNothing().when(messageEventPublisher).publish(any());
         try {
