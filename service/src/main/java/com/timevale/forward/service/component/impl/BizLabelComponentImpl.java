@@ -111,7 +111,7 @@ public class BizLabelComponentImpl implements BizLabelComponent {
             bizLabelDO.setLabelId(labelId);
             bizLabelMapper.insert(bizLabelDO);
         }
-        return !noneMatch;
+        return noneMatch;
     }
 
     @Override
