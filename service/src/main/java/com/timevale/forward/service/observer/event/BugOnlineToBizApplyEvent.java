@@ -27,7 +27,7 @@ public class BugOnlineToBizApplyEvent extends MessageEvent {
 
     @Override
     public void run() {
-        String BUG_ONLINE_TRANS = "### %s \n 线上bug: %s 申请转业务需求，请及时处理。 \n *** \n[查看详情](%s)  <!--%s-->";
+        String BUG_ONLINE_TRANS = "### %s \n 线上bug: **%s** 申请转业务需求，请及时处理。 \n *** \n[查看详情](%s)  <!--%s-->";
 
         List<String> receivers = Lists.newArrayList(receiver);
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUG_ONLINE_MANAGEMENT.getText(), bugOnlineId);

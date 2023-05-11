@@ -29,7 +29,7 @@ public class BugOnlineToBizRejectEvent extends MessageEvent {
 
     @Override
     public void run() {
-        String BUG_ONLINE_TRANS = "### %s \n %s 拒绝对线上bug %s 转业务需求 \n *** \n[查看详情](%s)  <!--%s-->";
+        String BUG_ONLINE_TRANS = "### %s \n **%s** 拒绝对线上bug **%s** 转业务需求 \n *** \n[查看详情](%s)  <!--%s-->";
 
         List<String> receivers = Lists.newArrayList(receiver);
         String singleUrl = domainName + String.format(PARAM, TabEnum.BUG_ONLINE_MANAGEMENT.getText(), bugOnlineId);
