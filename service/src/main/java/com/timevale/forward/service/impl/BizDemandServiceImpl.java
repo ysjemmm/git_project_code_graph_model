@@ -647,21 +647,6 @@ public class BizDemandServiceImpl implements BizDemandService {
             );
         }
 
-        if (bizDemandDO.getCustomerDevDemand()) {
-            Map<Long, List<BizLabelSimpleVO>> bizLabelMap =
-                    bizLabelComponent.getBizLabelMap(Collections.singletonList(bizDemandId),
-                            BizTypeEnum.BIZ_DEMAND.getCode());
-            if (!bizLabelMap.isEmpty()) {
-                List<BizLabelSimpleVO> labels = bizLabelMap.get(bizDemandId);
-                Set<Long> labelIds = labels.stream().map(BizLabelSimpleVO::getId).collect(Collectors.toSet());
-                if (labelIds.contains(commonConfig.getDevDemandAppealLabelId()) &&
-                        !labelIds.contains(commonConfig.getDevDemandApproveLabelId())) {
-                    // 申诉需求接收打上申诉通过标签
-                    addBizLabel(bizDemandDO, commonConfig.getDevDemandApproveLabelId());
-                }
-            }
-        }
-
         // 如果有申诉标，需要打上成功标
         List<BizLabelDO> labels = bizLabelComponent.get(bizDemandId, BizTypeEnum.BIZ_DEMAND.getCode());
         boolean containBizAppeal = labels.stream().anyMatch(e -> e.getLabelId().equals(commonConfig.getBizDemandAppealLabelId()));
@@ -757,7 +742,7 @@ public class BizDemandServiceImpl implements BizDemandService {
 
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        // 如果为驳回申请，需要添加当前操作人为
+        // 如果为驳回申请，需要添加当前操作人为抄送人
         if (BooleanUtil.isTrue(transferReq.getIsRejectApplication())) {
             PersonAddReq addReq = new PersonAddReq(userInfo.getFullAlias(), userInfo.getId());
             personComponent.addIfNotExisted(CollUtil.newArrayList(addReq), transferReq.getId(), PersonTypeEnum.BIZ_DEMAND_CC.getCode());

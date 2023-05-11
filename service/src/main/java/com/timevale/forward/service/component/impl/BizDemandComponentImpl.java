@@ -74,8 +74,6 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     private ProductBizDemandMapper productBizDemandMapper;
     @Resource
     private ProjectBizDemandMapper projectBizDemandMapper;
-    @Resource
-    private CommonConfig commonConfig;
 
     @Override
     public void updateStatus(Long bdId) {
@@ -376,13 +374,13 @@ public class BizDemandComponentImpl implements BizDemandComponent {
                     true);
 
             // 转交人通知
-            messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
+            new BizDemandToReceiveMsgEvent(
                     this,
                     bizDemandDO.getId(),
                     bizDemandDO.getSubmitMan(),
                     newReceiveManId,
                     bizDemandDO.getName()
-            ));
+            ).send();
         }
 
         return true;
