@@ -174,4 +174,12 @@ public class BizDemandDO extends BaseDO {
      */
     private String productSolution;
 
+    /**
+     * SR专家
+     */
+    private String srExpert;
+    /**
+     * SR专家id
+     */
+    private String srExpertId;
 }
