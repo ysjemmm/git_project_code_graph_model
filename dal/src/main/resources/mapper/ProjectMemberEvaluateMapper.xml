@@ -55,7 +55,7 @@
         </where>
     </update>
 
-    <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectMemberEvaluateDO">
+    <select id="getByProjectId" resultType="com.timevale.forward.dal.entity.ProjectMemberEvaluateDO">
         SELECT *
         FROM project_member_evaluate
         WHERE project_id = #{projectId}

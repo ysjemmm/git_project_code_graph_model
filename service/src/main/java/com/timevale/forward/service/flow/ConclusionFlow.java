@@ -49,19 +49,17 @@ public class ConclusionFlow {
     final private CommonConfig commonConfig;
     final private EpeiusClient epeiusClient;
     final private UserComponent userComponent;
-    final private TaskComponent taskComponent;
     final private ProjectMapper projectMapper;
     final private PersonComponent personComponent;
     final private ProjectLogComponent logComponent;
     final private ProjectComponent projectComponent;
     final private ProjectFlowMapper projectFlowMapper;
-    final private BizLabelComponent bizLabelComponent;
     final private ProjectEvaluateMapper evaluateMapper;
     final private EvaluateDimensionMapper dimensionMapper;
+    final private ProjectEvaluateComponent evaluateComponent;
     final private InnerUserPersonClient innerUserPersonClient;
-    final private ProductDemandComponent productDemandComponent;
     final private ProjectMemberEvaluateMapper memberEvaluateMapper;
-    final private ProjectProductDemandComponent projectProductDemandComponent;
+
 
     /**
      * 结项工作流——发起
@@ -119,7 +117,7 @@ public class ConclusionFlow {
                 .collect(Collectors.toList());
 
         // 计划总工作量
-        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
+        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
         String planWorkloadSum = memberEvaluateDOList.stream()
                 .map(ProjectMemberEvaluateDO::getPlanWorkload)
                 .filter(ObjectUtil::isNotNull)
@@ -240,36 +238,8 @@ public class ConclusionFlow {
 
         // 如果项目状态为中止，需要执行中止逻辑
         if (ProjectStatusEnum.INVALID.getCode().equals(newStatus)) {
-            invalid(projectId, targetStatusModel.getInvalidReason());
+            evaluateComponent.conclusionAfterInvalid(projectId, targetStatusModel.getInvalidReason());
         }
-    }
-
-    /**
-     * 项目作废处理
-     *
-     * @param projectId 项目id
-     */
-    private void invalid(Long projectId, String invalidReason) {
-
-        final Integer status = ProjectStatusEnum.INVALID.getCode();
-
-        // 修改中止原因， 添加中止原因日志
-        ProjectDO updateReason = new ProjectDO();
-        updateReason.setId(projectId);
-        updateReason.setInvalidReason(invalidReason);
-        projectMapper.update(updateReason);
-        logComponent.addLogWhenContentChange("", invalidReason, projectId, BizChangeLogFieldEnum.TERMINATE_REASON.getText());
-
-        //修改产品需求状态
-        productDemandComponent.updateProductDemandStatus(projectId, status);
-
-        // 作废解除关联
-        projectProductDemandComponent.update(projectId, null);
-        bizLabelComponent.deleteLabel(projectId, BizTypeEnum.PROJECT.getCode());
-
-        // 更新任务状态
-        taskComponent.updateStatusAsProjectStatusChange(projectId, status, false);
-
     }
 
     /**

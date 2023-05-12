@@ -2,6 +2,7 @@ package com.timevale.forward.service.component;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -14,6 +15,8 @@ import com.timevale.forward.facade.api.result.ProjectWorkloadChangeVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.exception.BaseIllegalStateException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.security.facade.enums.IncentiveMethodEnum;
 import com.timevale.security.facade.response.BaseInfoResponse;
@@ -35,14 +38,20 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class ProjectEvaluateComponent {
+    private final TaskComponent taskComponent;
     private final ProjectMapper projectMapper;
     private final PersonComponent personComponent;
     private final HistoryRecordMapper recordMapper;
     private final ProjectFlowMapper projectFlowMapper;
+    private final BizLabelComponent bizLabelComponent;
     private final ProjectEvaluateMapper evaluateMapper;
+    private final ProjectLogComponent projectLogComponent;
     private final EvaluateDimensionMapper dimensionMapper;
     private final InnerUserPersonClient innerUserPersonClient;
+    private final ProjectNodeFlowMapper projectNodeFlowMapper;
+    private final ProductDemandComponent productDemandComponent;
     private final ProjectMemberEvaluateMapper memberEvaluateMapper;
+    private final ProjectProductDemandComponent projectProductDemandComponent;
 
     /**
      * 添加工作量记录
@@ -67,7 +76,7 @@ public class ProjectEvaluateComponent {
         BigDecimal newVersion = lastVersion.add(BigDecimal.ONE);
 
        // 查询该项目的成员
-        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
+        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
 
         // 过滤没有计划工作量的成员
         memberEvaluateDOList = memberEvaluateDOList.stream()
@@ -117,7 +126,7 @@ public class ProjectEvaluateComponent {
         }
 
         // 成员评价信息
-        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
+        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
 
         // 纳入积分的团队成员
         Set<String> includeStatUsers = memberEvaluateDOList.stream()
@@ -191,7 +200,7 @@ public class ProjectEvaluateComponent {
      */
     public void addMember(Long projectId, Collection<PersonAddReq> newMembers) {
         // 当前积分团队成员
-        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
+        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
         Set<String> oldMemberIdSet = memberEvaluateDOList.stream()
                 .map(ProjectMemberEvaluateDO::getUserId)
                 .collect(Collectors.toSet());
@@ -211,7 +220,7 @@ public class ProjectEvaluateComponent {
      */
     public void updateMember(Long projectId, Collection<PersonAddReq> newMembers) {
         // 当前团队成员
-        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
+        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
         List<PersonAddReq> oldMembers = memberEvaluateDOList.stream()
                 .map(e -> new PersonAddReq(e.getUserName(), e.getUserId()))
                 .collect(Collectors.toList());
@@ -336,5 +345,139 @@ public class ProjectEvaluateComponent {
             }
         });
 
+    }
+
+    /**
+     * 结项预检
+     *
+     * @param projectId 项目id
+     */
+    public void conclusionPreview(Long projectId) throws BaseIllegalStateException, BaseBizRuntimeException{
+        // 校验结项
+        ProjectDO projectDO = projectMapper.get(projectId);
+        AssertUtil.notNull(projectDO, "项目不存在");
+
+        String message = "请检查项目积分模块中对项目成员评价和项目评价维护是否完整，变更流程是否审批完成";
+
+        // 需要校验项目评价必填内容是否完成、
+        List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.getByProjectId(projectId);
+        AssertUtil.checkState(evaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getScores())),
+                message);
+
+        // 纳入积分员工的实际工作量是否录入完成，个人评价是否必填
+        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
+        AssertUtil.checkState(memberEvaluateDOList.stream()
+                        .filter(ProjectMemberEvaluateDO::getIncludeStat)
+                        .noneMatch(e -> ObjectUtil.isNull(e.getActualWorkload())),
+                message);
+        AssertUtil.checkState(memberEvaluateDOList.stream().noneMatch(e -> ObjectUtil.isNull(e.getEvaluateGrade())),
+                message);
+
+        // 查询该项目的流程
+        List<ProjectFlowDO> projectFlowDOList = projectFlowMapper.getByProjectId(projectId);
+
+        // 是否存在审核中的工作流变更、结项流程
+        boolean noneWorkloadFlow = projectFlowDOList.stream()
+                .filter(e -> FlowTypeEnum.WORKLOAD.getCode().equals(e.getFlowType())
+                        || FlowTypeEnum.CONCLUSION.getCode().equals(e.getFlowType()))
+                .noneMatch(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()));
+        AssertUtil.checkState(noneWorkloadFlow, message);
+
+        // 是否存发布延期流程
+        List<ProjectNodeFlowDO> nodeFlowDOList = projectNodeFlowMapper.getByProjectId(projectId);
+        boolean nonePublishFlow = nodeFlowDOList.stream().noneMatch(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()));
+        AssertUtil.checkState(nonePublishFlow, message);
+
+        // 计划总工作量
+        BigDecimal planWorkloadSum = memberEvaluateDOList.stream()
+                .map(ProjectMemberEvaluateDO::getPlanWorkload)
+                .filter(ObjectUtil::isNotNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 再分配工作量
+        BigDecimal actualWorkloadSum = memberEvaluateDOList.stream()
+                .map(ProjectMemberEvaluateDO::getActualWorkload)
+                .filter(ObjectUtil::isNotNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 比较两个工作量是否相等
+        if (planWorkloadSum.compareTo(actualWorkloadSum) < 0) {
+            BigDecimal diffDay = actualWorkloadSum.subtract(planWorkloadSum).setScale(1, RoundingMode.HALF_UP);
+            throw new BaseBizRuntimeException("再分配计划工作量之和大于计划总工作量" + diffDay + "天，请调整");
+        }
+    }
+
+    /**
+     * 直接结项，不走审批
+     *
+     * @param projectId 项目id
+     */
+    public void directConclusion(Long projectId, String invalidReason) {
+        conclusionPreview(projectId);
+
+        // 更新项目评价
+        List<ProjectEvaluateDO> evaluates = evaluateMapper.getByProjectId(projectId);
+        for (ProjectEvaluateDO evaluate : evaluates) {
+            ProjectEvaluateDO evalDO = new ProjectEvaluateDO()
+                    .setProjectId(evaluate.getProjectId())
+                    .setEvaluateDimensionId(evaluate.getEvaluateDimensionId())
+                    .setReviewerScores(evaluate.getReviewerScores())
+                    .setReviewerScoresDesc(evaluate.getReviewerScoresDesc());
+            evaluateMapper.update(evalDO);
+        }
+
+
+        ProjectDO projectDO = projectMapper.get(projectId);
+
+        // 取当前时间为结项时间
+        Date conclusionDate = new Date();
+
+        // 计算出新旧状态
+        Integer oldStatus = projectDO.getStatus();
+        Integer newStatus = StrUtil.isEmpty(invalidReason) ? ProjectStatusEnum.CONCLUSION.getCode() : ProjectStatusEnum.INVALID.getCode();
+
+        // 组装，更新项目数据
+        ProjectDO updateDO = new ProjectDO();
+        updateDO.setId(projectId);
+        updateDO.setStatus(newStatus);
+        updateDO.setConclusionDate(conclusionDate);
+        updateDO.setNodeStatus(ProjectNodeStatusEnum.CONCLUSION.getCode());
+        projectMapper.update(updateDO);
+
+        // 结项后状态、结项日期节点
+        projectLogComponent.status(projectId, oldStatus, newStatus);
+        projectLogComponent.conclusionDate(projectId, conclusionDate);
+
+        // 如果项目状态为中止，需要执行中止逻辑
+        if (ProjectStatusEnum.INVALID.getCode().equals(newStatus)) {
+            conclusionAfterInvalid(projectId, invalidReason);
+        }
+    }
+
+    /**
+     * 结项后作废项目
+     *
+     * @param projectId     项目id
+     * @param invalidReason 无效原因
+     */
+    public void conclusionAfterInvalid(Long projectId, String invalidReason) {
+        final Integer status = ProjectStatusEnum.INVALID.getCode();
+
+        // 修改中止原因， 添加中止原因日志
+        ProjectDO updateReason = new ProjectDO();
+        updateReason.setId(projectId);
+        updateReason.setInvalidReason(invalidReason);
+        projectMapper.update(updateReason);
+        projectLogComponent.addLogWhenContentChange("", invalidReason, projectId, BizChangeLogFieldEnum.TERMINATE_REASON.getText());
+
+        //修改产品需求状态
+        productDemandComponent.updateProductDemandStatus(projectId, status);
+
+        // 作废解除关联
+        projectProductDemandComponent.update(projectId, null);
+        bizLabelComponent.deleteLabel(projectId, BizTypeEnum.PROJECT.getCode());
+
+        // 更新任务状态
+        taskComponent.updateStatusAsProjectStatusChange(projectId, status, false);
     }
 }

@@ -61,7 +61,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     @Override
     public BaseResult<ProjectMemberEvaluateVO> memberList(Long projectId) {
         // 查询并转换
-        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
+        List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
         List<MemberEvaluateVO> memberEvaluateVOList = ProjectMemberEvaluateCopier.INSTANCE.do2vo(memberEvaluateDOList);
 
         // 工作量总和
@@ -170,7 +170,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> memberWorkloadCopy(Long projectId) {
-        List<ProjectMemberEvaluateDO> evaluateDOList = memberEvaluateMapper.selectByProjectId(projectId);
+        List<ProjectMemberEvaluateDO> evaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
 
         // 计划工作量覆盖实际工作量
         for (ProjectMemberEvaluateDO evaluateDO : evaluateDOList) {

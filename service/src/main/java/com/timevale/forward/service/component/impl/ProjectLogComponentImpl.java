@@ -364,11 +364,6 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
                 projectId,
                 ButtonActionEnum.CONCLUSION.getText()
         );
-        addLogWhenContentChange(
-                "",
-                DateUtil.parseToString(conclusionDate, DateStyle.YYYY_MM_DD),
-                projectId,
-                BizChangeLogFieldEnum.CONCLUSION_DATE.getText());
     }
 
     @Override
@@ -379,6 +374,25 @@ public class ProjectLogComponentImpl implements ProjectLogComponent {
         log.setMainId(projectId);
         log.setNewValue(text);
         bizChangeLogMapper.insert(log);
+    }
+
+    @Override
+    public void status(Long projectId, Integer oldStatus, Integer newStatus) {
+        addLogWhenStatusChange(
+                oldStatus,
+                newStatus,
+                projectId,
+                ButtonActionEnum.CONCLUSION.getText()
+        );
+    }
+
+    @Override
+    public void conclusionDate(Long projectId, Date conclusionDate) {
+        addLogWhenContentChange(
+                "",
+                DateUtil.parseToString(conclusionDate, DateStyle.YYYY_MM_DD),
+                projectId,
+                BizChangeLogFieldEnum.CONCLUSION_DATE.getText());
     }
 
     private BizChangeLogDO createLog(Long mainId, String field, String oldValue, String newValue, String action) {

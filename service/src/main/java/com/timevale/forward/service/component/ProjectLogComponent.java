@@ -34,4 +34,8 @@ public interface ProjectLogComponent{
     void addConclusion(Long projectId, Integer oldStatus, Integer newStatus, Date conclusionDate);
 
     void addLogWhenSystemCreate(Long projectId, String text);
+
+    void status(Long projectId, Integer oldStatus, Integer newStatus);
+
+    void conclusionDate(Long projectId, Date conclusionDate);
 }
