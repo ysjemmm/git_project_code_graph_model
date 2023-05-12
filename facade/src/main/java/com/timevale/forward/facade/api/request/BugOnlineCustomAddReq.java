@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("业务需求新增")
+@ApiModel("线上bug客户新增")
 public class BugOnlineCustomAddReq extends BaseReq{
 
     @ApiModelProperty("客户名称")
