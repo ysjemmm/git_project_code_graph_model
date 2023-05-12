@@ -534,6 +534,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogDOList.addAll(bugOnlineComponent.compareBugOffline(bugOnlineDO.getId(), bugOnlineDO.getBugOfflineId(), modifyReq.getBugOfflineId()));
         bugLogComponent.add(bugLogDOList);
 
+        // 交付项目变更日志
+        bugLogComponent.customDevProject(bugOnlineDO.getId(), bugOnlineDO.getSourceId(), modifyReq.getSourceId());
+
         //如果经办人变了，但是状态没有变化，需要往状态人员处理表中插入一条数据，并且需要发送钉钉消息
         if (!bugOnlineDO.getOperatorId().equals(newBugOnlineDO.getOperatorId())) {
             //往bug状态人员处理表中插入一条记录

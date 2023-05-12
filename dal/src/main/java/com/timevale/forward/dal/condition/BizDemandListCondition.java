@@ -4,6 +4,7 @@ import com.timevale.forward.dal.annotation.WildcardEscape;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -175,6 +176,11 @@ public class BizDemandListCondition{
      * 产品方案
      */
     private String productSolution;
+
+    /**
+     * SR专家id集合
+     */
+    private Collection<String> srExpertIds;
 
     public int pageNum = 1;
     public int pageSize = 20;

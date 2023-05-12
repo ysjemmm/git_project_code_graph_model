@@ -48,7 +48,12 @@ public enum BugLogFieldEnum {
     /**
      * 模块
      */
-    MODEL("模块")
+    MODEL("模块"),
+
+    /**
+     * 关联交付项目
+     */
+    CUSTOM_DEV_PROJECT("关联交付项目")
     ;
 
 

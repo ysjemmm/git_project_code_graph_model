@@ -118,4 +118,10 @@ public class BizDemandAddReq extends BaseReq {
 
     @ApiModelProperty("期望上线日期")
     private Date hopeReleaseDay;
+
+    @ApiModelProperty("SR专家")
+    private String srExpert;
+
+    @ApiModelProperty("SR专家id")
+    private String srExpertId;
 }

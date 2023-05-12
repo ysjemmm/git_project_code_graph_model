@@ -33,4 +33,13 @@ public interface BugLogComponent {
      * @param newBugOfflineId 关联的线下bug id
      */
     void bugOffline(Long bugId, Long oldBugOfflineId, Long newBugOfflineId);
+
+    /**
+     * 客开项目日志
+     *
+     * @param bugOnlineId 线上bug id
+     * @param oldSourceId 老源id
+     * @param newSourceId 新源id
+     */
+    void customDevProject(Long bugOnlineId, String oldSourceId, String newSourceId);
 }

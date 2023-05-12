@@ -1,6 +1,7 @@
 package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.timevale.crm.dock.facade.model.output.ProjectOutput;
 import com.timevale.forward.dal.dao.BugLogMapper;
 import com.timevale.forward.dal.dao.BugStatusOperatorMapper;
 import com.timevale.forward.dal.entity.BugLogDO;
@@ -8,6 +9,7 @@ import com.timevale.forward.dal.entity.BugStatusOperatorDO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BugLogComponent;
 import com.timevale.forward.service.component.BugOnlineComponent;
+import com.timevale.forward.service.integration.dock.CrmProjectClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +17,7 @@ import javax.annotation.Resource;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -30,6 +33,8 @@ public class BugLogComponentImpl implements BugLogComponent {
     private BugOnlineComponent bugOnlineComponent;
     @Resource
     private BugStatusOperatorMapper bugStatusOperatorMapper;
+    @Resource
+    private CrmProjectClient crmProjectClient;
 
     public void insertToBugStatusOperator(Long bugId, String userId, String userName,Integer bugType) {
         //查询当前线上bug对应的所有状态变更记录
@@ -104,5 +109,22 @@ public class BugLogComponentImpl implements BugLogComponent {
         if (CollUtil.isNotEmpty(logDOList)) {
             bugLogMapper.batchInsert(logDOList);
         }
+    }
+
+    @Override
+    public void customDevProject(Long bugOnlineId, String oldSourceId, String newSourceId) {
+        if (bugOnlineId == null || Objects.equals(oldSourceId, newSourceId)) {
+            return;
+        }
+        Optional<ProjectOutput> oldPj = crmProjectClient.getProject(oldSourceId);
+        Optional<ProjectOutput> newPj = crmProjectClient.getProject(newSourceId);
+
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setMainId(bugOnlineId);
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setOldValue(oldPj.map(ProjectOutput::getProjectName).orElse(""));
+        bugLogDO.setNewValue(newPj.map(ProjectOutput::getProjectName).orElse(""));
+        bugLogDO.setField(BugLogFieldEnum.CUSTOM_DEV_PROJECT.getText());
+        bugLogMapper.insert(bugLogDO);
     }
 }

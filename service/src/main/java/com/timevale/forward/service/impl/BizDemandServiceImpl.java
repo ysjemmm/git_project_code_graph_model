@@ -218,12 +218,6 @@ public class BizDemandServiceImpl implements BizDemandService {
             condition.setDeptIdList(Lists.newArrayList(groupListTreeMap.keySet()));
         }
 
-        // 日期处理
-        condition.setCreateDateStart(DateUtil.getStartOfDay(condition.getCreateDateStart()));
-        condition.setCreateDateEnd(DateUtil.getEndOfDay(condition.getCreateDateEnd()));
-        condition.setProjectEndDateStart(DateUtil.getStartOfDay(condition.getProjectEndDateStart()));
-        condition.setProjectEndDateEnd(DateUtil.getEndOfDay(condition.getProjectEndDateEnd()));
-
         // 查询并转换
         List<BizDemandListDO> bizDemandListDOList = bizDemandMapper.selectList(condition);
         Map<Long, List<BizDemandListDO>> bizDemandListDOMap = bizDemandListDOList.stream().collect(Collectors.groupingBy(BizDemandListDO::getProductLineId));

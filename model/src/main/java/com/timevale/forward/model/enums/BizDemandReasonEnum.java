@@ -21,7 +21,8 @@ public enum BizDemandReasonEnum {
     ISSUER_ONLINE(5,"线上问题，请提交线上bug"),
     UNREASONABLE(6,"需求不合理"),
     UNABLE(7,"无法实现"),
-    NO_RESPONSE_ON_DEMAND_SIDE(8, "需求方无响应");
+    NO_RESPONSE_ON_DEMAND_SIDE(8, "需求方无响应"),
+    NEEDS_TO_BE_CONFIRMED(9,"需求待确认");
 
     private final Integer code;
     private final String text;

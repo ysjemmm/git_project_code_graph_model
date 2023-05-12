@@ -91,6 +91,12 @@
             <if test="productSolution != null and productSolution != ''">
                 product_solution = #{productSolution},
             </if>
+            <if test="srExpert != null and srExpert != ''">
+                sr_expert = #{srExpert},
+            </if>
+            <if test="srExpertId != null and srExpertId != ''">
+                sr_expert_id = #{srExpertId},
+            </if>
             <if test="true">
                 modify_man_id = #{modifyManId},
                 modify_man = #{modifyMan},
@@ -134,6 +140,8 @@
             modify_man = #{modifyMan},
             product_solution = #{productSolution},
             hope_release_day = #{hopeReleaseDay},
+            sr_expert = #{srExpert},
+            sr_expert_id = #{srExpertId},
         </set>
         where id = #{id}
     </update>
@@ -274,6 +282,12 @@
             </if>
             <if test="productSolution != null and productSolution != ''">
                 and bd.product_solution like concat('%', #{productSolution}, '%')
+            </if>
+            <if test="srExpertIds != null and srExpertIds.size() > 0">
+                AND bd.sr_expert_id IN
+                <foreach collection="srExpertIds" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
             </if>
             and bd.is_deleted = false
         </where>

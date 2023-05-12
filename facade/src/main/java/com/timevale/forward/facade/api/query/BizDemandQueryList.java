@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -104,4 +105,7 @@ public class BizDemandQueryList extends QueryBase {
 
     @ApiModelProperty("查询来源: 0-默认产研系统 1-交付项目")
     private int querySource;
+
+    @ApiModelProperty("SR专家id集合")
+    private Collection<String> srExpertIds;
 }

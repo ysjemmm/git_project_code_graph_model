@@ -68,4 +68,7 @@ public class BizDemandMD extends BaseMD {
     @FieldCompare(fieldName = "期望上线时间")
     private Date hopeReleaseDay;
 
+    @FieldCompare(fieldName = "SR专家")
+    private String srExpert;
+
 }
