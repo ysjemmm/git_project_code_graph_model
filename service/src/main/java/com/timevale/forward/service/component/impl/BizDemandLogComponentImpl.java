@@ -1,10 +1,7 @@
 package com.timevale.forward.service.component.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
-import com.timevale.forward.dal.dao.BizChangeLogMapper;
-import com.timevale.forward.dal.dao.BizDemandMapper;
-import com.timevale.forward.dal.dao.ProductDemandMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
+import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.model.middle.BizDemandMD;
@@ -33,21 +30,18 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 public class BizDemandLogComponentImpl implements BizDemandLogComponent {
-
     @Resource
     private BizChangeLogMapper bizChangeLogMapper;
-
     @Resource
     private BizDemandComponent bizDemandComponent;
-
     @Resource
     private ProductDemandMapper productDemandMapper;
-
     @Resource
     private ProductLineMapper productLineMapper;
-
     @Resource
     private BizDemandMapper bizDemandMapper;
+    @Resource
+    private BizRecordMapper bizRecordMapper;
 
     @Override
     public void addLogWhenModifyData(BizDemandDO oldObj, BizDemandDO newObj) {

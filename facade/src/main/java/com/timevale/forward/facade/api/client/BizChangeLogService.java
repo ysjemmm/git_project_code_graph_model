@@ -3,11 +3,8 @@ package com.timevale.forward.facade.api.client;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BizChangeLogQueryList;
-import com.timevale.forward.facade.api.query.BizDemandQueryList;
-import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.BizChangeLogVO;
-import com.timevale.forward.facade.api.result.BizDemandDetailVO;
-import com.timevale.forward.facade.api.result.BizDemandVO;
+import com.timevale.forward.facade.api.result.BizRecordVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
 
@@ -28,4 +25,12 @@ public interface BizChangeLogService {
      * @return 列表
      */
     BaseResult<PageQueryResult<BizChangeLogVO>> list(BizChangeLogQueryList bizChangeLogQueryList);
+
+    /**
+     * 查询状态操作人员日志
+     *
+     * @param query 查询
+     * @return 状态操作人员列表
+     */
+    BaseResult<PageQueryResult<BizRecordVO>> statusOperator(BizChangeLogQueryList query);
 }

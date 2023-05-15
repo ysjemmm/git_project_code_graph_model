@@ -1,0 +1,166 @@
+package com.timevale.forward.service.mq.handler.impl;
+
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
+import com.alibaba.fastjson.JSON;
+import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
+import com.timevale.forward.dal.dao.ProjectRiskMapper;
+import com.timevale.forward.dal.entity.BaseDO;
+import com.timevale.forward.dal.entity.ProjectDO;
+import com.timevale.forward.dal.entity.ProjectMilestone;
+import com.timevale.forward.dal.entity.ProjectRiskDO;
+import com.timevale.forward.model.enums.DrcActionEnum;
+import com.timevale.forward.model.enums.ProjectRiskStatusEnum;
+import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
+import com.timevale.forward.service.component.ProjectRiskComponent;
+import com.timevale.forward.service.copy.ProjectMilestoneCopier;
+import com.timevale.forward.service.integration.http.ElapsedTimeClient;
+import com.timevale.forward.service.mq.dto.DrcMsgBody;
+import com.timevale.forward.service.mq.dto.MilestoneDTO;
+import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.forward.service.utils.date.DateFormatConst;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+/**
+ * @author by YangXu
+ * @date 2023/05/15 18:17
+ */
+@Slf4j
+@LogPoint
+@Component
+@AllArgsConstructor
+public class DrcProjectHandler {
+    private final ProjectRiskMapper projectRiskMapper;
+    private final ElapsedTimeClient elapsedTimeClient;
+    private final ProjectRiskComponent projectRiskComponent;
+    private final ProjectMilestoneMapper projectMilestoneMapper;
+
+    // 一个的工作日毫秒数
+    private final BigDecimal WORK_DAY_SECONDS = new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND);
+
+    public void handle(DrcMsgBody body) {
+        riskHandle(body);
+    }
+
+    private void riskHandle(DrcMsgBody body) {
+        // 新增、删除无需处理
+        if (ObjectUtil.equal(DrcActionEnum.INSERT.toString(), body.getAction())
+                ||ObjectUtil.equal(DrcActionEnum.DELETE.toString(), body.getAction())) {
+            return;
+        }
+
+        ProjectDO projectDO = JSON.parseObject(body.getAfter(), ProjectDO.class);
+        MilestoneDTO milestoneDTO = ProjectMilestoneCopier.INSTANCE.project2dto(projectDO);
+        solveRisk(milestoneDTO);
+    }
+
+    public void solveRisk(MilestoneDTO milestoneDTO) {
+        log.info("[DrcProjectHandler.solveRisk]里程碑类型:{}，里程碑关联id:{}", milestoneDTO.getMilestoneType(), milestoneDTO.getMilestoneRelationId());
+
+        // 关联的里程碑
+        ProjectMilestone milestone = projectMilestoneMapper
+                .selectByRelation(milestoneDTO.getMilestoneRelationId(), milestoneDTO.getMilestoneType());
+        if (milestone == null) {
+            return;
+        }
+
+        // 关联的待处理风险
+        Long milestoneId = milestone.getId();
+        List<Integer> types = CollUtil.newArrayList(ProjectRiskTypeEnum.MILE_STONE_START.getCode(), ProjectRiskTypeEnum.MILE_STONE_END.getCode());
+        List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByMain(milestoneId, ProjectRiskStatusEnum.PENDING.getCode(), types);
+        projectRiskComponent.solveNoEntry(milestone.getProjectId());
+        if (CollUtil.isEmpty(riskDOList)) {
+            return;
+        }
+
+        // 如果里程碑节点暂停或作废，对应风险作废
+        if (milestoneDTO.getSuspend() || milestoneDTO.getInvalid()) {
+            List<Long> riskIdList = riskDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
+            projectRiskMapper.updateStatuses(riskIdList, ProjectRiskStatusEnum.INVALID.getCode());
+
+            if (milestoneDTO.getInvalid()) {
+                projectRiskComponent.solveNoEntry(milestone.getProjectId());
+            }
+            return;
+        }
+
+        Date nowDate = new Date();
+        for (ProjectRiskDO riskDO : riskDOList) {
+            Integer riskStatus = null;
+            BigDecimal overdueDay = null;
+
+            Integer riskType = riskDO.getType();
+
+            // 开始时间未录入
+            if (Objects.equals(ProjectRiskTypeEnum.MILE_STONE_START.getCode(), riskType)) {
+                Date planStartDate = milestoneDTO.getPlanStartDate();
+                Date actualStartDate = milestoneDTO.getActualStartDate();
+                if (actualStartDate == null) {
+                    overdueDay = getOverdueDay(planStartDate, nowDate);
+                    if (nowDate.compareTo(planStartDate) <= 0) {
+                        riskStatus = ProjectRiskStatusEnum.COMPLETE.getCode();
+                    } else {
+                        riskStatus = ProjectRiskStatusEnum.PENDING.getCode();
+                    }
+                } else {
+                    overdueDay = getOverdueDay(planStartDate, actualStartDate);
+                    riskStatus = ProjectRiskStatusEnum.COMPLETE.getCode();
+                }
+            } else if (Objects.equals(ProjectRiskTypeEnum.MILE_STONE_END.getCode(), riskType)) {
+                Date planEndDate = milestoneDTO.getPlanEndDate();
+                Date actualEndDate = milestoneDTO.getActualEndDate();
+                if (actualEndDate == null) {
+                    overdueDay = getOverdueDay(planEndDate, nowDate);
+                    if (nowDate.compareTo(planEndDate) <= 0) {
+                        riskStatus = ProjectRiskStatusEnum.COMPLETE.getCode();
+                    } else {
+                        riskStatus = ProjectRiskStatusEnum.PENDING.getCode();
+                    }
+                } else {
+                    overdueDay = getOverdueDay(planEndDate, actualEndDate);
+                    riskStatus = ProjectRiskStatusEnum.COMPLETE.getCode();
+                }
+            }
+
+            // 处理风险
+            if (overdueDay != null) {
+                ProjectRiskDO updateRiskDO = new ProjectRiskDO();
+                updateRiskDO.setId(riskDO.getId());
+                updateRiskDO.setSign(overdueDay.toString());
+                updateRiskDO.setStatus(riskStatus);
+                projectRiskMapper.update(updateRiskDO);
+            }
+        }
+    }
+
+    /**
+     * 得到逾期天数
+     *
+     * @return {@link BigDecimal}
+     */
+    private BigDecimal getOverdueDay(Date planDate, Date actualDate) {
+        if (ObjectUtil.hasNull(planDate, actualDate)) {
+            return null;
+        }
+
+        if (actualDate.compareTo(planDate) <= 0) {
+            return BigDecimal.ZERO;
+        }
+
+        log.info("[DrcRiskListener.getOverdueDay]planDate:{}, actualDate:{}", planDate, actualDate);
+
+        // 计算实际工作日
+        Long elapsedTimeStamp = elapsedTimeClient.getElapsedTime(planDate, actualDate);
+        BigDecimal elapsedTime = new BigDecimal(elapsedTimeStamp);
+        return elapsedTime.divide(WORK_DAY_SECONDS, 0, RoundingMode.UP);
+    }
+}

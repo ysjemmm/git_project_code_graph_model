@@ -1,0 +1,21 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.timevale.forward.dal.dao.BizRecordMapper">
+    <insert id="insert">
+        INSERT INTO biz_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="mainId!=null">main_id,</if>
+            <if test="mainType!=null">main_type,</if>
+            <if test="record!=null">record,</if>
+            <if test="createMan!=null">create_man,</if>
+            <if test="createManId!=null">create_man_id,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="mainId!=null">#{mainId},</if>
+            <if test="mainType!=null">#{mainType},</if>
+            <if test="record!=null">#{record},</if>
+            <if test="createMan!=null">#{createMan},</if>
+            <if test="createManId!=null">#{createManId},</if>
+        </trim>
+    </insert>
+</mapper>
