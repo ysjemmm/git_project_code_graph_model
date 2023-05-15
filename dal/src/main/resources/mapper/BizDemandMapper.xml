@@ -32,7 +32,7 @@
             <if test="frontTime != null">front_time,</if>
             <if test="backTime != null">back_time,</if>
             <if test="qaTime != null">qa_time,</if>
-            <if test="totalTim != null">total_time,</if>
+            <if test="totalTime != null">total_time,</if>
             <if test="srExpert != null">sr_expert,</if>
             <if test="srExpertId != null">sr_expert_id,</if>
         </trim>
@@ -65,7 +65,7 @@
             <if test="frontTime != null">#{frontTime},</if>
             <if test="backTime != null">#{backTime},</if>
             <if test="qaTime != null">#{qaTime},</if>
-            <if test="totalTim != null">#{totalTim},</if>
+            <if test="totalTime != null">#{totalTime},</if>
             <if test="srExpert != null">#{srExpert},</if>
             <if test="srExpertId != null">#{srExpertId},</if>
         </trim>

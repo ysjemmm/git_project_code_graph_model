@@ -283,7 +283,7 @@ public class ProjectEvaluateComponent {
                     final String userId = e.getUserId();
                     BaseInfoResponse memberInfo = memberInfoMap.get(userId);
                     if (memberInfo == null) {
-                        log.error("[ProjectEvaluateComponent.addMember]未查询到对应员工的信息:{}", userId);
+                        log.warn("[ProjectEvaluateComponent.addMember]未查询到对应员工的信息:{}", userId);
                     } else {
                         Integer incentiveMethod = memberInfo.getIncentiveMethod();
                         includeStat = IncentiveMethodEnum.POINTS.getCode().equals(incentiveMethod);
