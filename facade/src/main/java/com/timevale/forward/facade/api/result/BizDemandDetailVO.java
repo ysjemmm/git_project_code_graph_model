@@ -171,4 +171,10 @@ public class BizDemandDetailVO extends ToString {
 
     @ApiModelProperty("期望上线日")
     private Date hopeReleaseDay;
+
+    @ApiModelProperty("SR专家")
+    private String srExpert;
+
+    @ApiModelProperty("SR专家id")
+    private String srExpertId;
 }
