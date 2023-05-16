@@ -16,9 +16,6 @@ import com.timevale.mandarin.common.annotation.RestClient;
  */
 @RestClient(serviceId = MagicValue.FORWARD_RPC_PREFIX)
 public interface ProjectEvaluateService {
-
-    BaseResult<Boolean> flowCallback(Integer type, String flowId);
-
     /**
      * 列表
      *

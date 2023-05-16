@@ -421,11 +421,10 @@ public class ProjectEvaluateComponent {
             ProjectEvaluateDO evalDO = new ProjectEvaluateDO()
                     .setProjectId(evaluate.getProjectId())
                     .setEvaluateDimensionId(evaluate.getEvaluateDimensionId())
-                    .setReviewerScores(evaluate.getReviewerScores())
-                    .setReviewerScoresDesc(evaluate.getReviewerScoresDesc());
+                    .setReviewerScores(evaluate.getScores())
+                    .setReviewerScoresDesc(evaluate.getScoresDesc());
             evaluateMapper.update(evalDO);
         }
-
 
         ProjectDO projectDO = projectMapper.get(projectId);
 

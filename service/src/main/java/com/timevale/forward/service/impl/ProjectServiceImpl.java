@@ -1506,6 +1506,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> conclusion(ProjectConclusionReq req) {
         final Long projectId = req.getProjectId();
 

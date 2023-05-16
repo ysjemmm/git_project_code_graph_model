@@ -11,7 +11,9 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectEvaluateService;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.enums.FlowTypeEnum;
+import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
+import com.timevale.forward.model.enums.GradeEnum;
 import com.timevale.forward.service.component.ProjectEvaluateComponent;
 import com.timevale.forward.service.copy.ProjectEvaluateCopier;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
@@ -47,16 +49,6 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     private final EvaluateDimensionMapper dimensionMapper;
     private final ProjectMemberEvaluateMapper memberEvaluateMapper;
     private final ProjectEvaluateComponent projectEvaluateComponent;
-
-    @Override
-    public BaseResult<Boolean> flowCallback(Integer type, String flowId) {
-        if (type == 1) {
-            forwardFlow.conclusionFlow.complete(flowId);
-        } else if (type == 2) {
-            forwardFlow.workloadChangeFlow.complete(flowId);
-        }
-        return BaseResult.success(true);
-    }
 
     @Override
     public BaseResult<ProjectMemberEvaluateVO> memberList(Long projectId) {

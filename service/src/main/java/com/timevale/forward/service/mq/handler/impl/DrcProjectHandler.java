@@ -2,6 +2,7 @@ package com.timevale.forward.service.mq.handler.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.dao.ProjectRiskMapper;
@@ -15,6 +16,9 @@ import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
 import com.timevale.forward.service.mq.dto.MilestoneDTO;
+import com.timevale.forward.service.observer.event.OtherProjectPublishMsgEvent;
+import com.timevale.forward.service.observer.event.OtnProjectPublishMsgEvent;
+import com.timevale.forward.service.observer.event.SrEvalEndMsgEvent;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import lombok.AllArgsConstructor;
@@ -53,20 +57,31 @@ public class DrcProjectHandler {
      * @param drcMsgBody drc消息体
      */
     public void msgHandle(DrcMsgBody drcMsgBody) {
-        ProjectDO projectDO = JSON.parseObject(drcMsgBody.getAfter(), ProjectDO.class);
+        ProjectDO beforePj = JSON.parseObject(drcMsgBody.getBefore(), ProjectDO.class);
+        ProjectDO afterPj = JSON.parseObject(drcMsgBody.getAfter(), ProjectDO.class);
 
         // 目前只有产研项目需要发送
-        if (!ProjectCategoryEnum.PRODUCT_PROJECT.getCode().equals(projectDO.getCategory())) {
+        if (!ProjectCategoryEnum.PRODUCT_PROJECT.getCode().equals(afterPj.getCategory())) {
             return;
         }
 
-        // 如果已发布
-        if (ProjectStatusEnum.RELEASED.getCode().equals(projectDO.getStatus())) {
-
-
+        // 如果项目变更为已发布
+        if (!Objects.equals(beforePj.getStatus(), afterPj.getStatus()) &&
+                ProjectStatusEnum.RELEASED.getCode().equals(afterPj.getStatus())) {
+            if (StrUtil.isNotEmpty(afterPj.getSrId()) && ProjectKindEnum.PBG_OTN.getCode().equals(afterPj.getKind())) {
+                new OtnProjectPublishMsgEvent(this, afterPj.getId(), afterPj.getSrId(), afterPj.getName()).send();
+            }
+            if (StrUtil.isNotEmpty(afterPj.getPmId())) {
+                new OtherProjectPublishMsgEvent(this, afterPj.getId(), afterPj.getPmId(), afterPj.getName()).send();
+            }
         }
 
-
+        // 如果SR评价从无到有
+        if (beforePj.getSrEvaluateGrade() == null && afterPj.getSrEvaluateGrade() != null) {
+            if (StrUtil.isNotEmpty(afterPj.getPmId())) {
+                new SrEvalEndMsgEvent(this, afterPj.getId(), afterPj.getPmId(), afterPj.getName()).send();
+            }
+        }
     }
 
     /**

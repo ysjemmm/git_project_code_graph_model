@@ -1,5 +1,6 @@
 package com.timevale.forward.model.enums;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -7,6 +8,7 @@ import lombok.Getter;
  * @date 2021/12/16 18:12
  */
 @Getter
+@AllArgsConstructor
 public enum MessageTitleEnum {
     // 业务需求状态变更通知标题
     BIZDEMAND_FEEDBACK("业务需求反馈通知"),
@@ -79,11 +81,11 @@ public enum MessageTitleEnum {
     PROJECT_ACCEPTANCE_ACCEPT("项目验收通过通知"),
 
     PROJECT_ACCEPTANCE_UNACCEPT("项目验收不通过通知"),
+
+    PROJECT_PUBLISH_EVAL("项目已发布项目评价提醒"),
+
+    PROJECT_SR_EVAL_END("SR项目评价完成提醒"),
     ;
 
-    private String text;
-
-    MessageTitleEnum(String text) {
-        this.text = text;
-    }
+    private final String text;
 }
