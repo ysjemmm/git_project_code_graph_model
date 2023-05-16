@@ -54,7 +54,7 @@ public class DrcBizDemandHandler {
             if (Objects.equals(nowStatus,lastRecordVO.getStatus())
                     && !Objects.equals(bizDO.getReceiveMan(), lastOperatorVO.getOperatorName())) {
                 operatorVOList.add(operatorVO);
-                bizRecordMapper.updateRecord(lastRecordDO.getId(), JSON.toJSONString(operatorVO));
+                bizRecordMapper.updateRecord(lastRecordDO.getId(), JSON.toJSONString(lastRecordVO));
                 return;
             }
         }
