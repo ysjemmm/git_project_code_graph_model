@@ -16,6 +16,7 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizChangeLogCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
+import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @LogPoint
+@RestService
 @RequiredArgsConstructor
 public class BizChangeLogServiceImpl implements BizChangeLogService {
     private final BizRecordMapper bizRecordMapper;
