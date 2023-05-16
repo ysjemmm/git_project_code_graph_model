@@ -9,9 +9,7 @@ import com.timevale.forward.dal.entity.BaseDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
 import com.timevale.forward.dal.entity.ProjectRiskDO;
-import com.timevale.forward.model.enums.DrcActionEnum;
-import com.timevale.forward.model.enums.ProjectRiskStatusEnum;
-import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
+import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.ProjectRiskComponent;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
@@ -44,13 +42,38 @@ public class DrcProjectHandler {
     private final ProjectRiskComponent projectRiskComponent;
     private final ProjectMilestoneMapper projectMilestoneMapper;
 
-    // 一个的工作日毫秒数
-    private final BigDecimal WORK_DAY_SECONDS = new BigDecimal(DateFormatConst.WORK_DAY / DateFormatConst.ONE_SECOND);
-
     public void handle(DrcMsgBody body) {
+        msgHandle(body);
         riskHandle(body);
     }
 
+    /**
+     * 根据项目状态发送钉钉消息
+     *
+     * @param drcMsgBody drc消息体
+     */
+    public void msgHandle(DrcMsgBody drcMsgBody) {
+        ProjectDO projectDO = JSON.parseObject(drcMsgBody.getAfter(), ProjectDO.class);
+
+        // 目前只有产研项目需要发送
+        if (!ProjectCategoryEnum.PRODUCT_PROJECT.getCode().equals(projectDO.getCategory())) {
+            return;
+        }
+
+        // 如果已发布
+        if (ProjectStatusEnum.RELEASED.getCode().equals(projectDO.getStatus())) {
+
+
+        }
+
+
+    }
+
+    /**
+     * 内部项目风险处理
+     *
+     * @param body DRC消息体
+     */
     private void riskHandle(DrcMsgBody body) {
         // 新增、删除无需处理
         if (ObjectUtil.equal(DrcActionEnum.INSERT.toString(), body.getAction())
@@ -63,6 +86,11 @@ public class DrcProjectHandler {
         solveRisk(milestoneDTO);
     }
 
+    /**
+     * 内部项目风险处理
+     *
+     * @param milestoneDTO 里程碑dto
+     */
     public void solveRisk(MilestoneDTO milestoneDTO) {
         log.info("[DrcProjectHandler.solveRisk]里程碑类型:{}，里程碑关联id:{}", milestoneDTO.getMilestoneType(), milestoneDTO.getMilestoneRelationId());
 
@@ -161,6 +189,6 @@ public class DrcProjectHandler {
         // 计算实际工作日
         Long elapsedTimeStamp = elapsedTimeClient.getElapsedTime(planDate, actualDate);
         BigDecimal elapsedTime = new BigDecimal(elapsedTimeStamp);
-        return elapsedTime.divide(WORK_DAY_SECONDS, 0, RoundingMode.UP);
+        return elapsedTime.divide(BigDecimal.valueOf(DateFormatConst.WORK_DAY_SECONDS), 0, RoundingMode.UP);
     }
 }

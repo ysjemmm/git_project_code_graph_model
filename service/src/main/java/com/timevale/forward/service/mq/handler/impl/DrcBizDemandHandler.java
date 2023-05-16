@@ -47,11 +47,11 @@ public class DrcBizDemandHandler {
         BizRecordDO lastRecordDO = bizRecordMapper.getLast(bizDO.getId(), BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
         if (lastRecordDO != null) {
             BizRecordVO lastRecordVO = JSON.parseObject(lastRecordDO.getRecord(), BizRecordVO.class);
-            List<BizStatusOperatorVO> operatorVOList = lastRecordVO.getBizStatusOperatorVOList();
+            List<BizStatusOperatorVO> operatorVOList = lastRecordVO.getStatusOperatorVOList();
             BizStatusOperatorVO lastOperatorVO = CollUtil.getLast(operatorVOList);
 
             // 如果当前的状态和记录的状态一致, 且操作人不同，多增加一个操作人
-            if (Objects.equals(nowStatus,lastRecordVO.getBizStatus())
+            if (Objects.equals(nowStatus,lastRecordVO.getStatus())
                     && !Objects.equals(bizDO.getReceiveMan(), lastOperatorVO.getOperatorName())) {
                 operatorVOList.add(operatorVO);
                 bizRecordMapper.updateRecord(lastRecordDO.getId(), JSON.toJSONString(operatorVO));
@@ -61,9 +61,9 @@ public class DrcBizDemandHandler {
 
         // 新增记录
         BizRecordVO recordVO = new BizRecordVO();
-        recordVO.setBizStatus(nowStatus);
+        recordVO.setStatus(nowStatus);
         recordVO.setCreateDate(currentDate);
-        recordVO.setBizStatusOperatorVOList(CollUtil.newArrayList(operatorVO));
+        recordVO.setStatusOperatorVOList(CollUtil.newArrayList(operatorVO));
 
         BizRecordDO recordDO = new BizRecordDO();
         recordDO.setMainId(bizDO.getId());

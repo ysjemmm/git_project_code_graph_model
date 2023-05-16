@@ -88,4 +88,9 @@ public interface DateFormatConst {
      * 工作日的毫秒数
      */
     long WORK_DAY = ONE_HOUR * 8L;
+
+    /**
+     * 工作时间秒数
+     */
+    long WORK_DAY_SECONDS = WORK_DAY / ONE_SECOND;
 }

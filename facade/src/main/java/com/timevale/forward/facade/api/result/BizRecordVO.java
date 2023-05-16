@@ -21,11 +21,11 @@ import java.util.List;
 @ApiModel("业务状态变更日志")
 public class BizRecordVO extends ToString {
     @ApiModelProperty("业务状态")
-    private String bizStatus;
+    private String status;
 
     @ApiModelProperty("创建时间")
     private Date createDate;
 
     @ApiModelProperty("bug状态操作人")
-    private List<BizStatusOperatorVO> bizStatusOperatorVOList;
+    private List<BizStatusOperatorVO> statusOperatorVOList;
 }
