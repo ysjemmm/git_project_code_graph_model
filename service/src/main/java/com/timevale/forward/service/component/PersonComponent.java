@@ -76,5 +76,15 @@ public interface PersonComponent {
      */
     List<PersonDO> addIfNotExisted(List<PersonAddReq> list, Long mainId, Integer type, Integer personLevel);
 
+    /**
+     * 存在
+     *
+     * @param userId 用户id
+     * @param mainId 主要id
+     * @param type   类型
+     * @return boolean
+     */
+    boolean exist(String userId, Long mainId, Integer type);
+
     void duplicateRemove(List<PersonAddReq> list, PersonAddReq duplicate);
 }

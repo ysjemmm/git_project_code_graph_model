@@ -166,6 +166,12 @@ public class PersonComponentImpl implements PersonComponent {
         return existPersons.stream().filter(e -> Objects.equals(personLevel, e.getPersonLevel())).collect(Collectors.toList());
     }
 
+    @Override
+    public boolean exist(String userId, Long mainId, Integer type) {
+        List<PersonDO> personDOList = select(mainId, type);
+        return personDOList.stream().map(PersonDO::getUserId).anyMatch(userId::equals);
+    }
+
     private void delete(Long mainId, Integer type) {
         log.info("[PersonComponentImpl.delete]删除人员, type:{},mainId:{}", type, mainId);
 

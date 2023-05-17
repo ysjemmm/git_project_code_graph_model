@@ -59,8 +59,17 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
 
     @Override
     public BaseResult<ProjectMemberEvaluateVO> memberList(Long projectId) {
+        ProjectDO projectDO = projectMapper.get(projectId);
+        AssertUtil.notNull(projectDO, "项目不存在");
+
         // 查询权限控制
         boolean allowVisitAllData = allowVisitAllData(projectId);
+        boolean isMember = personComponent.exist(LocalSessionUtils.getUserInfo().getId(), projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        if ((!allowVisitAllData && !ProjectStatusEnum.CONCLUSION.getCode().equals(projectDO.getStatus())) || !isMember) {
+            return BaseResult.success();
+        }
+
+        // 如果没查看全部的权限，则只能看自己的数据
         if (!allowVisitAllData) {
             return singleData(projectId);
         }
@@ -214,7 +223,8 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
 
         // 权限控制
         boolean allowVisitAllData = allowVisitAllData(projectId);
-        if (!allowVisitAllData && !ProjectStatusEnum.CONCLUSION.getCode().equals(projectDO.getStatus())) {
+        boolean isMember = personComponent.exist(LocalSessionUtils.getUserInfo().getId(), projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+        if ((!allowVisitAllData && !ProjectStatusEnum.CONCLUSION.getCode().equals(projectDO.getStatus())) || !isMember) {
             return BaseResult.success();
         }
 
