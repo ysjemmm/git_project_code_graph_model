@@ -5,6 +5,8 @@ import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.timevale.encourage.facade.api.response.GetProjectPointResponse;
+import com.timevale.encourage.facade.api.response.meta.UserPoint;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
@@ -18,6 +20,7 @@ import com.timevale.forward.service.component.ProjectEvaluateComponent;
 import com.timevale.forward.service.copy.ProjectEvaluateCopier;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.flow.ForwardFlow;
+import com.timevale.forward.service.integration.encourage.EncourageClient;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -29,10 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,6 +43,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     private final ForwardFlow forwardFlow;
     private final EpeiusClient epeiusClient;
     private final ProjectMapper projectMapper;
+    private final EncourageClient encourageClient;
     private final HistoryRecordMapper recordMapper;
     private final ProjectFlowMapper projectFlowMapper;
     private final ProjectEvaluateMapper evaluateMapper;
@@ -68,6 +69,19 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
                 .map(MemberEvaluateVO::getPlanWorkload)
                 .filter(ObjectUtil::isNotNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 查询激励系统积分
+        Optional<GetProjectPointResponse> projectPointOpt = encourageClient.getProjectPoint(projectId);
+        projectPointOpt.map(GetProjectPointResponse::getUserPoints)
+                       .map(userPoints -> Maps.uniqueIndex(userPoints, UserPoint::getAccount))
+                       .ifPresent(userPointMap -> {
+                            memberEvaluateVOList.forEach(e -> {
+                                UserPoint userPoint = userPointMap.get(e.getUserId());
+                                if (userPoint != null) {
+                                    e.setPersonalPoints(userPoint.getPersonalPoint());
+                                }
+                            });
+                        });
 
         // 结项流程
         List<ProjectFlowDO> conclusionFlowList = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.CONCLUSION.getCode());
@@ -219,12 +233,17 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
                 .reduce(BigDecimal::add)
                 .orElse(null);
 
+        // 查询激励系统积分
+        Optional<GetProjectPointResponse> projectPointOpt = encourageClient.getProjectPoint(projectId);
+
         // 组装结果
         ProjectEvaluateVO result = new ProjectEvaluateVO();
         result.setScoresSum(scoresSum);
         result.setSrEvaluateGrade(srEvaluateGrade);
         result.setSrEvaluateGradeName(srEvaluateGradeName);
         result.setEvaluateItemVOList(evaluateItemVOList);
+        projectPointOpt.map(GetProjectPointResponse::getProjectPoint).ifPresent(result::setProjectPoint);
+        projectPointOpt.map(GetProjectPointResponse::getProjectOriginalPoint).ifPresent(result::setProjectOriginalPoint);
 
         return BaseResult.success(result);
     }

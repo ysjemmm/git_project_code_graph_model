@@ -46,4 +46,7 @@ public class MemberEvaluateVO extends ToString {
 
     @ApiModelProperty("是否纳入统计")
     private Boolean includeStat;
+
+    @ApiModelProperty("实得积分")
+    private BigDecimal personalPoints;
 }
