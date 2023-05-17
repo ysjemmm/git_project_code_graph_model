@@ -34,6 +34,9 @@ public class ProjectMemberEvaluateVO extends ToString {
     @ApiModelProperty("工作量(计算积分)")
     private BigDecimal pointsWorkloadSum;
 
+    @ApiModelProperty("项目原始积分")
+    private BigDecimal projectOriginalPoint;
+
     @ApiModelProperty("项目成员评分")
     private List<MemberEvaluateVO> memberEvaluateVOList;
 }

@@ -272,7 +272,7 @@ public class ProjectEvaluateComponent {
 
         // 查询内部用户中心，获取用户信息，用于判断是否纳入积分统计
         List<String> memberIds = members.stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
-        List<BaseInfoResponse> membersInfo =  innerUserPersonClient.batchGetStaffs(memberIds);
+        List<BaseInfoResponse> membersInfo =  innerUserPersonClient.batchGetStaffInfos(memberIds, false);
         ImmutableMap<String, BaseInfoResponse> memberInfoMap = Maps.uniqueIndex(membersInfo, BaseInfoResponse::getAccount);
 
         List<ProjectMemberEvaluateDO> addEvalMembers = members.stream()

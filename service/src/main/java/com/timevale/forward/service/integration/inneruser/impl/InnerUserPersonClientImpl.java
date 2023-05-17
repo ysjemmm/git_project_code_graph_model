@@ -143,15 +143,15 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
     }
 
     @Override
-    public List<BaseInfoResponse> batchGetStaffs(List<String> accountIds) {
+    public List<BaseInfoResponse> batchGetStaffInfos(Collection<String> accountIds, Boolean isLeave) {
         if (CollUtil.isEmpty(accountIds)) {
             return new ArrayList<>();
         }
 
         try {
             BatchGetStaffsRequest request = new BatchGetStaffsRequest();
-            request.setAccounts(accountIds);
-
+            request.setAccounts(new ArrayList<>(accountIds));
+            request.setIsLeave(isLeave);
             BaseResult<List<BaseInfoResponse>> personByAccountNew = rpcPersonService.batchGetStaffs(request);
             if (personByAccountNew.ifSuccess() && !CollUtil.isEmpty(personByAccountNew.getData())) {
                 return personByAccountNew.getData();
@@ -320,5 +320,14 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
                 .map(BaseInfoResponse::getDefaultGroup)
                 .map(GroupModelResponse::getDefaultManager)
                 .orElse("");
+    }
+
+    @Override
+    public List<String> getDefaultSuperior(Collection<String> accounts, Boolean isLeave) {
+        List<BaseInfoResponse> baseInfoResponses = batchGetStaffInfos(accounts, isLeave);
+        return Optional.ofNullable(baseInfoResponses)
+                .map(e->e.stream().map(BaseInfoResponse::getDefaultGroup).filter(Objects::nonNull).collect(Collectors.toList()))
+                .map(e -> e.stream().map(GroupModelResponse::getDefaultManager).distinct().collect(Collectors.toList()))
+                .orElse(Collections.emptyList());
     }
 }

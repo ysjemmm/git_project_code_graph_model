@@ -4,6 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.security.facade.request.AccountRequest;
 import com.timevale.security.facade.response.BaseInfoResponse;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -80,9 +81,10 @@ public interface InnerUserPersonClient {
      * 批处理得到员工，推荐
      *
      * @param accountIds 帐户id
-     * @return {@link List}<{@link BaseInfoResponse}>
+     * @param isLeave 是否包含已经离职用户
+     * @return 用户信息集合，为空返回空字符串
      */
-    List<BaseInfoResponse> batchGetStaffs(List<String> accountIds);
+    List<BaseInfoResponse> batchGetStaffInfos(Collection<String> accountIds, Boolean isLeave);
 
     /**
      * 获取当前部门及其所有子部门员工 (含离职)
@@ -144,9 +146,18 @@ public interface InnerUserPersonClient {
     /**
      * 获取默认部门上级
      *
-     * @param account 当前用户花名拼音
+     * @param account 用户花名拼音
      * @param isLeave 是否包含离职用户
      * @return 上级花名，为空返回空字符串
      */
     String getDefaultSuperior(String account,Boolean isLeave);
+
+    /**
+     * 获取默认部门上级
+     *
+     * @param accounts 用户花名拼音集合
+     * @param isLeave 是否包含离职用户
+     * @return 上级花名，为空返回空集合
+     */
+    List<String> getDefaultSuperior(Collection<String> accounts, Boolean isLeave);
 }

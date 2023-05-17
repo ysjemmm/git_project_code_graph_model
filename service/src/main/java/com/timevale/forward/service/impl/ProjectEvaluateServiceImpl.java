@@ -13,15 +13,17 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.ProjectEvaluateService;
 import com.timevale.forward.facade.api.request.*;
 import com.timevale.forward.facade.api.result.*;
-import com.timevale.forward.model.enums.FlowTypeEnum;
-import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
-import com.timevale.forward.model.enums.GradeEnum;
+import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.component.ProjectEvaluateComponent;
+import com.timevale.forward.service.component.UserComponent;
+import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.copy.ProjectEvaluateCopier;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.flow.ForwardFlow;
 import com.timevale.forward.service.integration.encourage.EncourageClient;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
+import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -42,17 +44,27 @@ import java.util.stream.Collectors;
 public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     private final ForwardFlow forwardFlow;
     private final EpeiusClient epeiusClient;
+    final private CommonConfig commonConfig;
+    final private UserComponent userComponent;
     private final ProjectMapper projectMapper;
+    private final PersonComponent personComponent;
     private final EncourageClient encourageClient;
     private final HistoryRecordMapper recordMapper;
     private final ProjectFlowMapper projectFlowMapper;
     private final ProjectEvaluateMapper evaluateMapper;
     private final EvaluateDimensionMapper dimensionMapper;
+    private final InnerUserPersonClient innerUserPersonClient;
     private final ProjectMemberEvaluateMapper memberEvaluateMapper;
     private final ProjectEvaluateComponent projectEvaluateComponent;
 
     @Override
     public BaseResult<ProjectMemberEvaluateVO> memberList(Long projectId) {
+        // 查询权限控制
+        boolean allowVisitAllData = allowVisitAllData(projectId);
+        if (!allowVisitAllData) {
+            return singleData(projectId);
+        }
+
         // 查询并转换
         List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
         List<MemberEvaluateVO> memberEvaluateVOList = ProjectMemberEvaluateCopier.INSTANCE.do2vo(memberEvaluateDOList);
@@ -69,19 +81,6 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
                 .map(MemberEvaluateVO::getPlanWorkload)
                 .filter(ObjectUtil::isNotNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        // 查询激励系统积分
-        Optional<GetProjectPointResponse> projectPointOpt = encourageClient.getProjectPoint(projectId);
-        projectPointOpt.map(GetProjectPointResponse::getUserPoints)
-                       .map(userPoints -> Maps.uniqueIndex(userPoints, UserPoint::getAccount))
-                       .ifPresent(userPointMap -> {
-                            memberEvaluateVOList.forEach(e -> {
-                                UserPoint userPoint = userPointMap.get(e.getUserId());
-                                if (userPoint != null) {
-                                    e.setPersonalPoints(userPoint.getPersonalPoint());
-                                }
-                            });
-                        });
 
         // 结项流程
         List<ProjectFlowDO> conclusionFlowList = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.CONCLUSION.getCode());
@@ -109,6 +108,18 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
                 .flatMap(e -> Optional.ofNullable(CollUtil.getLast(e)))
                 .orElse("");
 
+        // 查询激励系统积分
+        Optional<GetProjectPointResponse> projectPointOpt = encourageClient.getProjectPoint(projectId);
+        projectPointOpt.map(GetProjectPointResponse::getUserPoints)
+                       .map(userPoints -> Maps.uniqueIndex(userPoints, UserPoint::getAccount))
+                       .ifPresent(userPointMap -> memberEvaluateVOList.forEach(memberEvaluateVO -> {
+                           UserPoint userPoint = userPointMap.get(memberEvaluateVO.getUserId());
+                           if (userPoint != null) {
+                               // 填充成员实得积分
+                               memberEvaluateVO.setPersonalPoints(userPoint.getPersonalPoint());
+                           }
+                       }));
+
         // 组装数据
         ProjectMemberEvaluateVO result = new ProjectMemberEvaluateVO();
         result.setWorkloadFlowId(workloadFlowId);
@@ -117,6 +128,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         result.setPointsWorkloadSum(workloadPointsSum);
         result.setConclusionAuditing(conclusionAuditing);
         result.setMemberEvaluateVOList(memberEvaluateVOList);
+        projectPointOpt.map(GetProjectPointResponse::getProjectOriginalPoint).ifPresent(result::setProjectOriginalPoint);
 
         return BaseResult.success(result);
     }
@@ -200,6 +212,12 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO, "项目不存在");
 
+        // 权限控制
+        boolean allowVisitAllData = allowVisitAllData(projectId);
+        if (!allowVisitAllData && !ProjectStatusEnum.CONCLUSION.getCode().equals(projectDO.getStatus())) {
+            return BaseResult.success();
+        }
+
         // 获取SR建议评价等级
         Integer srEvaluateGrade = projectDO.getSrEvaluateGrade();
         String srEvaluateGradeName = GradeEnum.getTextByCode(srEvaluateGrade);
@@ -243,7 +261,6 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         result.setSrEvaluateGradeName(srEvaluateGradeName);
         result.setEvaluateItemVOList(evaluateItemVOList);
         projectPointOpt.map(GetProjectPointResponse::getProjectPoint).ifPresent(result::setProjectPoint);
-        projectPointOpt.map(GetProjectPointResponse::getProjectOriginalPoint).ifPresent(result::setProjectOriginalPoint);
 
         return BaseResult.success(result);
     }
@@ -273,5 +290,84 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         }
 
         return BaseResult.success(true);
+    }
+
+
+    /**
+     * 仅查询个人数据
+     *
+     * @param projectId 项目id
+     * @return {@link BaseResult}<{@link ProjectMemberEvaluateVO}>
+     */
+    private BaseResult<ProjectMemberEvaluateVO> singleData(Long projectId) {
+        ProjectDO projectDO = projectMapper.get(projectId);
+        AssertUtil.notNull(projectDO, "项目不存在");
+
+        if (!ProjectStatusEnum.CONCLUSION.getCode().equals(projectDO.getStatus())) {
+            return BaseResult.success();
+        }
+
+        String userId = LocalSessionUtils.getUserInfo().getId();
+        ProjectMemberEvaluateDO memberEvaluateDO = memberEvaluateMapper.getPerson(projectId, userId);
+        if (memberEvaluateDO == null) {
+            return BaseResult.success();
+        }
+
+        MemberEvaluateVO memberEvaluateVO = ProjectMemberEvaluateCopier.INSTANCE.do2vo(memberEvaluateDO);
+
+        // 查询激励系统积分，填充实得积分
+        Optional<GetProjectPointResponse> projectPointOpt = encourageClient.getProjectPoint(projectId);
+        projectPointOpt.map(GetProjectPointResponse::getUserPoints)
+                .map(userPoints -> CollUtil.findOne(userPoints, e -> userId.equals(e.getAccount())))
+                .ifPresent(userPoint -> memberEvaluateVO.setPersonalPoints(userPoint.getPersonalPoint()));
+
+        ProjectMemberEvaluateVO result = new ProjectMemberEvaluateVO();
+        result.setMemberEvaluateVOList(CollUtil.newArrayList(memberEvaluateVO));
+
+        return BaseResult.success(result);
+    }
+
+    /**
+     * 是否允许访问所有数据
+     *
+     * @param projectId 项目id
+     * @return boolean
+     */
+    private boolean allowVisitAllData(Long projectId) {
+        ProjectDO projectDO = projectMapper.get(projectId);
+        if (projectDO == null) {
+            return false;
+        }
+
+        String pmId = projectDO.getPmId();
+        String srId = projectDO.getSrId();
+        String principalId = projectDO.getPrincipalId();
+        String otnPrincipalId = projectDO.getOtnPrincipalId();
+
+        // （产品经理 + 项目经理 + sr ）的上级
+        Set<String> subordinateIds = new HashSet<>();
+        subordinateIds.add(pmId);
+        subordinateIds.add(srId);
+        Optional.ofNullable(personComponent.select(projectId, PersonTypeEnum.PROJECT_PD.getCode()))
+                .map(e -> e.stream().map(PersonDO::getUserId).collect(Collectors.toSet()))
+                .ifPresent(subordinateIds::addAll);
+        List<String> superiorIds = innerUserPersonClient.getDefaultSuperior(subordinateIds, false);
+
+        // PMO
+        List<String> allPMOIds = userComponent.getAllPmo(commonConfig.getEvalPmoGroup());
+
+        Set<String> permissionIds = new HashSet<>();
+        permissionIds.add(pmId);
+        permissionIds.add(srId);
+        permissionIds.add(principalId);
+        permissionIds.add(otnPrincipalId);
+        permissionIds.addAll(allPMOIds);
+        permissionIds.addAll(superiorIds);
+
+        CollUtil.removeEmpty(permissionIds);
+
+        // 判断当前用户是否为以上的权限用户
+        String userId = LocalSessionUtils.getUserInfo().getId();
+        return permissionIds.contains(userId);
     }
 }
