@@ -15,9 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author by YangXu
@@ -54,6 +52,7 @@ public class DrcBizDemandHandler {
             if (Objects.equals(nowStatus,lastRecordVO.getStatus())
                     && !Objects.equals(bizDO.getReceiveMan(), lastOperatorVO.getOperatorName())) {
                 operatorVOList.add(operatorVO);
+                operatorVOList.sort(Comparator.comparing(BizStatusOperatorVO::getOperatorDate).reversed());
                 bizRecordMapper.updateRecord(lastRecordDO.getId(), JSON.toJSONString(lastRecordVO));
                 return;
             }

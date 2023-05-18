@@ -69,11 +69,6 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
             return BaseResult.success();
         }
 
-        // 如果没查看全部的权限，则只能看自己的数据
-        if (!allowVisitAllData) {
-            return singleData(projectId);
-        }
-
         // 查询并转换
         List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
         List<MemberEvaluateVO> memberEvaluateVOList = ProjectMemberEvaluateCopier.INSTANCE.do2vo(memberEvaluateDOList);
@@ -91,31 +86,42 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
                 .filter(ObjectUtil::isNotNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 结项流程
-        List<ProjectFlowDO> conclusionFlowList = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.CONCLUSION.getCode());
-        boolean conclusionAuditing = conclusionFlowList.stream()
-                .map(ProjectFlowDO::getStatus)
-                .anyMatch(ForwardFlowStatusEnum.AUDITING.getCode()::equals);
-        String conclusionPid = conclusionFlowList.stream()
-                .max(Comparator.comparing(BaseDO::getId))
-                .map(ProjectFlowDO::getFlowId)
-                .orElse("");
-        String conclusionFlowId = Optional.ofNullable(epeiusClient.getProcessInfo(conclusionPid))
-                .flatMap(e -> Optional.ofNullable(e.getCurrentTaskIdList()))
-                .flatMap(e -> Optional.ofNullable(CollUtil.getLast(e)))
-                .orElse("");
+        // 结项流程, 权限控制
+        String workloadFlowId = "";
+        String conclusionFlowId = "";
+        boolean conclusionAuditing = false;
+        if (allowVisitAllData) {
+            List<ProjectFlowDO> conclusionFlowList = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.CONCLUSION.getCode());
+            String conclusionPid = conclusionFlowList.stream()
+                    .max(Comparator.comparing(BaseDO::getId))
+                    .map(ProjectFlowDO::getFlowId)
+                    .orElse("");
+            conclusionFlowId = Optional.ofNullable(epeiusClient.getProcessInfo(conclusionPid))
+                    .flatMap(e -> Optional.ofNullable(e.getCurrentTaskIdList()))
+                    .flatMap(e -> Optional.ofNullable(CollUtil.getLast(e)))
+                    .orElse("");
+            conclusionAuditing = conclusionFlowList.stream()
+                    .map(ProjectFlowDO::getStatus)
+                    .anyMatch(ForwardFlowStatusEnum.AUDITING.getCode()::equals);
 
-        // 工作流变更流程，查询审核中的流程
-        List<ProjectFlowDO> workloadFlowList = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
-        String workloadFlowPid = workloadFlowList.stream()
-                .filter(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()))
-                .map(ProjectFlowDO::getFlowId)
-                .findFirst()
-                .orElse("");
-        String workloadFlowId = Optional.ofNullable(epeiusClient.getProcessInfo(workloadFlowPid))
-                .flatMap(e -> Optional.ofNullable(e.getCurrentTaskIdList()))
-                .flatMap(e -> Optional.ofNullable(CollUtil.getLast(e)))
-                .orElse("");
+            // 工作流变更流程，查询审核中的流程
+            List<ProjectFlowDO> workloadFlowList = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
+            String workloadFlowPid = workloadFlowList.stream()
+                    .filter(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus()))
+                    .map(ProjectFlowDO::getFlowId)
+                    .findFirst()
+                    .orElse("");
+            workloadFlowId = Optional.ofNullable(epeiusClient.getProcessInfo(workloadFlowPid))
+                    .flatMap(e -> Optional.ofNullable(e.getCurrentTaskIdList()))
+                    .flatMap(e -> Optional.ofNullable(CollUtil.getLast(e)))
+                    .orElse("");
+        }
+
+        // 只能看到自己的积分
+        if (!allowVisitAllData) {
+            String userId = LocalSessionUtils.getUserInfo().getId();
+            memberEvaluateVOList.removeIf(e-> !Objects.equals(userId, e.getUserId()));
+        }
 
         // 查询激励系统积分
         Optional<GetProjectPointResponse> projectPointOpt = encourageClient.getProjectPoint(projectId);
@@ -300,41 +306,6 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         }
 
         return BaseResult.success(true);
-    }
-
-
-    /**
-     * 仅查询个人数据
-     *
-     * @param projectId 项目id
-     * @return {@link BaseResult}<{@link ProjectMemberEvaluateVO}>
-     */
-    private BaseResult<ProjectMemberEvaluateVO> singleData(Long projectId) {
-        ProjectDO projectDO = projectMapper.get(projectId);
-        AssertUtil.notNull(projectDO, "项目不存在");
-
-        if (!ProjectStatusEnum.CONCLUSION.getCode().equals(projectDO.getStatus())) {
-            return BaseResult.success();
-        }
-
-        String userId = LocalSessionUtils.getUserInfo().getId();
-        ProjectMemberEvaluateDO memberEvaluateDO = memberEvaluateMapper.getPerson(projectId, userId);
-        if (memberEvaluateDO == null) {
-            return BaseResult.success();
-        }
-
-        MemberEvaluateVO memberEvaluateVO = ProjectMemberEvaluateCopier.INSTANCE.do2vo(memberEvaluateDO);
-
-        // 查询激励系统积分，填充实得积分
-        Optional<GetProjectPointResponse> projectPointOpt = encourageClient.getProjectPoint(projectId);
-        projectPointOpt.map(GetProjectPointResponse::getUserPoints)
-                .map(userPoints -> CollUtil.findOne(userPoints, e -> userId.equals(e.getAccount())))
-                .ifPresent(userPoint -> memberEvaluateVO.setPersonalPoints(userPoint.getPersonalPoint()));
-
-        ProjectMemberEvaluateVO result = new ProjectMemberEvaluateVO();
-        result.setMemberEvaluateVOList(CollUtil.newArrayList(memberEvaluateVO));
-
-        return BaseResult.success(result);
     }
 
     /**

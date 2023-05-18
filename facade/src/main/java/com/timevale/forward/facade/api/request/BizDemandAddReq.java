@@ -120,8 +120,10 @@ public class BizDemandAddReq extends BaseReq {
     private Date hopeReleaseDay;
 
     @ApiModelProperty("SR专家")
+    @NotNull(message = "SR专家不能为null")
     private String srExpert;
 
     @ApiModelProperty("SR专家id")
+    @NotNull(message = "SR专家id不能为null")
     private String srExpertId;
 }
