@@ -16,6 +16,7 @@ import com.timevale.forward.service.mq.dto.DrcMsgBody;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -29,9 +30,10 @@ import java.util.stream.Collectors;
 public class DrcProjectMilestoneHandler {
     private final ProjectRiskMapper projectRiskMapper;
     private final ProjectRiskComponent projectRiskComponent;
+    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     public void handle(DrcMsgBody body) {
-        milestoneHandle(body);
+        threadPoolTaskExecutor.execute(()-> milestoneHandle(body));
     }
 
     private void milestoneHandle(DrcMsgBody body) {

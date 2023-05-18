@@ -10,6 +10,7 @@ import com.timevale.forward.service.mq.dto.MilestoneDTO;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 /**
@@ -22,9 +23,10 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class DrcTaskHandler {
     private final DrcProjectHandler projectHandler;
+    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     public void handle(DrcMsgBody body) {
-        riskHandle(body);
+        threadPoolTaskExecutor.execute(()-> riskHandle(body));
     }
 
     private void riskHandle(DrcMsgBody body) {

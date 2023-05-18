@@ -120,6 +120,9 @@ public class ProjectEvaluateComponent {
                 ForwardFlowStatusEnum.AUDITING.getCode());
         AssertUtil.checkState(CollUtil.isEmpty(auditingFlows), "已存在审核中的工作量变更流程");
 
+        // 1-n客开首次超过立项人天工作量需要审批
+
+
         // 不存在基线版本，直接返回，无需表单数据
         if (recordMapper.selectLast(projectId) == null) {
             return new ProjectWorkloadChangeVO().setDirectChangeEnable(true);

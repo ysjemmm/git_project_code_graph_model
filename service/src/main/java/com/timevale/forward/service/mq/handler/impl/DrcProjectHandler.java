@@ -23,6 +23,7 @@ import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -45,10 +46,11 @@ public class DrcProjectHandler {
     private final ElapsedTimeClient elapsedTimeClient;
     private final ProjectRiskComponent projectRiskComponent;
     private final ProjectMilestoneMapper projectMilestoneMapper;
+    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     public void handle(DrcMsgBody body) {
-        msgHandle(body);
-        riskHandle(body);
+        threadPoolTaskExecutor.execute(() -> msgHandle(body));
+        threadPoolTaskExecutor.execute(() -> riskHandle(body));
     }
 
     /**

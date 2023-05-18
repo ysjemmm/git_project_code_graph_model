@@ -13,9 +13,13 @@ import com.timevale.forward.service.mq.dto.DrcMsgBody;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * @author by YangXu
@@ -27,9 +31,10 @@ import java.util.*;
 @AllArgsConstructor
 public class DrcBizDemandHandler {
     private final BizRecordMapper bizRecordMapper;
+    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     public void handle(DrcMsgBody body) {
-        recordStatusOperator(body);
+        threadPoolTaskExecutor.execute(()-> recordStatusOperator(body));
     }
 
     public void recordStatusOperator(DrcMsgBody body) {
