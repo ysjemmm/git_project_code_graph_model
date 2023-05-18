@@ -107,7 +107,7 @@
             <if test="srExpert!=null">sr_expert = #{srExpert},</if>
             <if test="srExpertId!=null">sr_expert_id = #{srExpertId},</if>
             <if test="modifyMan!=null">modify_man=#{modifyMan},</if>
-            <if test="modifyManId!=null">modify_man_id#{modifyManId},</if>
+            <if test="modifyManId!=null">modify_man_id=#{modifyManId},</if>
         </set>
         <where>
             id = #{id}
