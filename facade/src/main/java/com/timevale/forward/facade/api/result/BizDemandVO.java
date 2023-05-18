@@ -131,4 +131,10 @@ public class BizDemandVO extends ToString {
     @ApiModelProperty("项目创建时间")
     private Date projectCreateDate;
 
+    @ApiModelProperty("sr专家")
+    private String srExpert;
+
+    @ApiModelProperty("sr专家id")
+    private String srExpertId;
+
 }

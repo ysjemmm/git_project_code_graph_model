@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.entity;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -133,5 +134,15 @@ public class BizDemandListDO extends BaseDO {
      * 客户开发需求
      */
     private Boolean customerDevDemand;
+
+    /**
+     * sr专家
+     */
+    private String srExpert;
+
+    /**
+     * sr专家id
+     */
+    private String srExpertId;
 }
 
