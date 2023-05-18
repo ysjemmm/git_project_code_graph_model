@@ -41,4 +41,10 @@ public class ProductLineAddReq extends BaseReq {
     @NotBlank(message = "线上bug负责人id不能为空")
     private String bugOnlineOwnerId;
 
+    @ApiModelProperty("sr专家")
+    private String srExpert;
+
+    @ApiModelProperty("sr专家id")
+    private String srExpertId;
+
 }

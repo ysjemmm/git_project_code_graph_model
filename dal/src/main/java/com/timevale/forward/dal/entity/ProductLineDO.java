@@ -40,4 +40,14 @@ public class ProductLineDO extends BaseDO {
      * 产品线bug负责人id
      */
     private String bugOnlineOwnerId;
+
+    /**
+     * sr专家
+     */
+    private String srExpert;
+
+    /**
+     * sr专家id
+     */
+    private String srExpertId;
 }

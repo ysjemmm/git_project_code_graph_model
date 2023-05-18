@@ -29,4 +29,7 @@ public class ProductLineQueryList extends QueryBase {
     @ApiModelProperty("业务域id")
     private List<Long> bizDomainIds;
 
+    @ApiModelProperty("sr专家id")
+    private List<String> srIds;
+
 }

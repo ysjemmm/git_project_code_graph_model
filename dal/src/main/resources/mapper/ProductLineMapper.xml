@@ -3,12 +3,12 @@
 <mapper namespace="com.timevale.forward.dal.dao.ProductLineMapper">
 
     <select id="selectAllProductLine" resultType="com.timevale.forward.dal.entity.ProductLineDO">
-        select id, biz_domain_id, name, owner, owner_id,bug_online_owner_id,bug_online_owner, is_deleted,create_man ,create_date ,modify_man ,modify_date
+        select *
         from product_line
     </select>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.ProductLineDO">
-        select id, biz_domain_id, name, owner, owner_id,bug_online_owner_id,bug_online_owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        select *
         from product_line
         where id = #{id}
     </select>
@@ -35,7 +35,7 @@
     </select>
 
     <select id="getByIds" resultType="com.timevale.forward.dal.entity.ProductLineDO">
-        select id, biz_domain_id, name, owner, owner_id,bug_online_owner_id,bug_online_owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        select *
         from product_line
         <where>
             <if test="ids != null and ids.size() > 0">
@@ -63,15 +63,36 @@
     </select>
 
     <select id="getBizDomainId" resultType="com.timevale.forward.dal.entity.ProductLineDO">
-        select id, biz_domain_id, name, owner, owner_id,bug_online_owner_id,bug_online_owner, is_deleted, create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date
+        select *
         from product_line
         where biz_domain_id = #{bizDomainId} and is_deleted = false
     </select>
 
     <insert id="insert" parameterType="com.timevale.forward.dal.entity.ProductLineDO">
-        insert into product_line (biz_domain_id, name, owner, owner_id,bug_online_owner_id,bug_online_owner)
-        values
-        (#{bizDomainId}, #{name},#{owner},#{ownerId}, #{bugOnlineOwnerId}, #{bugOnlineOwner})
+        INSERT INTO info_forward.product_line
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bizDomainId!=null">biz_domain_id,</if>
+            <if test="name!=null">name,</if>
+            <if test="owner!=null">owner,</if>
+            <if test="ownerId!=null">owner_id,</if>
+            <if test="bugOnlineOwnerId!=null">bug_online_owner_id,</if>
+            <if test="bugOnlineOwner!=null">bug_online_owner,</if>
+            <if test="srExpert!=null">sr_expert,</if>
+            <if test="srExpertId!=null">sr_expert_id,</if>
+            <if test="createMan!=null">create_man,</if>
+            <if test="createManId!=null">create_man_id,</if>
+        </trim>
+        VALUES
+        <if test="bizDomainId!=null">#{bizDomainId},</if>
+        <if test="name!=null">#{name},</if>
+        <if test="owner!=null">#{owner},</if>
+        <if test="ownerId!=null">#{ownerId},</if>
+        <if test="bugOnlineOwnerId!=null">#{bugOnlineOwnerId},</if>
+        <if test="bugOnlineOwner!=null">#{bugOnlineOwner},</if>
+        <if test="srExpert!=null">#{srExpert},</if>
+        <if test="srExpertId!=null">#{srExpertId},</if>
+        <if test="createMan!=null">#{createMan},</if>
+        <if test="createManId!=null">#{createManId},</if>
     </insert>
 
     <update id="update" parameterType="com.timevale.forward.dal.entity.ProductLineDO">
@@ -83,6 +104,10 @@
             <if test="ownerId != null">owner_id = #{ownerId},</if>
             <if test="bugOnlineOwnerId != null">bug_online_owner_id = #{bugOnlineOwnerId},</if>
             <if test="bugOnlineOwner != null">bug_online_owner = #{bugOnlineOwner},</if>
+            <if test="srExpert!=null">sr_expert = #{srExpert},</if>
+            <if test="srExpertId!=null">sr_expert_id = #{srExpertId},</if>
+            <if test="modifyMan!=null">modify_man=#{modifyMan},</if>
+            <if test="modifyManId!=null">modify_man_id#{modifyManId},</if>
         </set>
         <where>
             id = #{id}
@@ -106,8 +131,7 @@
     </select>
 
     <select id="selectByCondition" resultType="com.timevale.forward.dal.entity.ProductLineDO">
-        select a.id, a.biz_domain_id, a.name, a.owner, a.owner_id,a.bug_online_owner_id,a.bug_online_owner, a.is_deleted
-        , a.create_man_id, a.create_man, a.create_date, a.modify_man_id, a.modify_man, a.modify_date
+        select a.*
         from product_line a
         left join biz_domain b on a.biz_domain_id=b.id
         <where>

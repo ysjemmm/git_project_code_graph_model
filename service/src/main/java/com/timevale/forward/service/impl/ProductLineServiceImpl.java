@@ -42,13 +42,13 @@ import java.util.stream.Collectors;
 public class ProductLineServiceImpl implements ProductLineService {
 
     @Resource
-    ProductLineMapper productLineMapper;
+    private ProductLineMapper productLineMapper;
 
     @Resource
-    BizDomainMapper bizDomainMapper;
+    private BizDomainMapper bizDomainMapper;
 
     @Resource
-    ModelMapper modelMapper;
+    private ModelMapper modelMapper;
 
     @Override
     public BaseResult<List<ProductLineVO>> productLineList() {

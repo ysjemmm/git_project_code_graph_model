@@ -54,4 +54,10 @@ public class ProductLineModelVO extends ToString {
     @ApiModelProperty("业务域名称")
     private String bizDomainName;
 
+    @ApiModelProperty("sr专家")
+    private String srExpert;
+
+    @ApiModelProperty("sr专家id")
+    private String srExpertId;
+
 }
