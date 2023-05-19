@@ -251,6 +251,7 @@
                 area = #{area},
                 reason = #{reason},
                 category = #{category},
+                source_id = #{sourceId},
                 expect_date = #{expectDate},
                 reason_stage = #{reasonStage},
                 dismiss_cause = #{dismissCause},
@@ -327,9 +328,6 @@
             </if>
             <if test="expectLaunchDate != null">
                 expect_launch_date = #{expectLaunchDate},
-            </if>
-            <if test="sourceId != null and sourceId != ''">
-                source_id = #{sourceId},
             </if>
             <if test="customerDevProjectName != null and customerDevProjectName != ''">
                 customer_dev_project_name = #{customerDevProjectName},

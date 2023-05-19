@@ -120,8 +120,11 @@ public class ProjectEvaluateComponent {
                 ForwardFlowStatusEnum.AUDITING.getCode());
         AssertUtil.checkState(CollUtil.isEmpty(auditingFlows), "已存在审核中的工作量变更流程");
 
-        // 1-n客开首次超过立项人天工作量需要审批
-
+        // 需要判断为是否1-n客开首次变更
+        Optional<ProjectWorkloadChangeVO> changeFormOpt = otnWorkloadChangeForm(req);
+        if (changeFormOpt.isPresent()) {
+            return changeFormOpt.get();
+        }
 
         // 不存在基线版本，直接返回，无需表单数据
         if (recordMapper.selectLast(projectId) == null) {
@@ -193,6 +196,63 @@ public class ProjectEvaluateComponent {
                 .setPlanWorkloadAddSum(planWorkloadAddSum)
                 .setPointWorkloadAddSum(pointsWorkloadAddSum)
                 .setChangeTypeList(changeTypeList);
+    }
+
+    /**
+     * 1-n客开工作量首次大于‘立项工作量评估’的数值
+     *
+     * @param req 请求
+     * @return {@link ProjectWorkloadChangeVO}
+     */
+    private Optional<ProjectWorkloadChangeVO> otnWorkloadChangeForm(MemberWorkloadFillReq req) {
+        final Long projectId = req.getProjectId();
+
+        // 判断项目是否存在
+        ProjectDO projectDO = projectMapper.get(projectId);
+        AssertUtil.notNull(projectDO,"项目不存在");
+
+        // 判断是否存在审批流程
+        List<ProjectFlowDO> flows = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
+        AssertUtil.checkState(flows.stream().anyMatch(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus())),
+                "已存在审核中的工作量变更流程");
+
+        // 非客开不走该流程
+        if (!ProjectKindEnum.PBG_OTN.getCode().equals(projectDO.getStatus())) {
+            return Optional.empty();
+        }
+        // 立项工作量评估（人天)，如果不存在则不走该变更流程
+        BigDecimal resourceAssessment = projectDO.getResourceAssessment();
+        if (resourceAssessment == null) {
+            return Optional.empty();
+        }
+        // 如果非首次变更，则不走该审批
+        if (flows.stream().anyMatch(e -> ForwardFlowStatusEnum.COMPLETE.getCode().equals(e.getStatus()))) {
+            return Optional.empty();
+        }
+
+        // 新的工作量
+        List<MemberWorkloadModifyReq> memberWorkloadList = req.getModifyReqList();
+        BigDecimal planWorkloadSumAfter = memberWorkloadList.stream()
+                .map(MemberWorkloadModifyReq::getPlanWorkload)
+                .filter(ObjectUtil::isNotNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(1, RoundingMode.HALF_UP);
+        // 新增的工作量
+        BigDecimal planWorkloadAddSum = planWorkloadSumAfter.subtract(resourceAssessment);
+
+        // 立项工作量评估（人天) 如果大于等于新的工作量总和则不需要审批
+        if (planWorkloadAddSum.compareTo(BigDecimal.ZERO) <= 0) {
+            return Optional.empty();
+        }
+
+        // 填装表单数据
+        ProjectWorkloadChangeVO result = ProjectMemberEvaluateCopier.INSTANCE.do2vo(projectDO);
+        result.setDirectChangeEnable(false)
+                .setPlanWorkloadBefore(resourceAssessment)
+                .setPlanWorkloadAfter(planWorkloadSumAfter)
+                .setPlanWorkloadAddSum(planWorkloadAddSum)
+                .setChangeTypeList(CollUtil.newArrayList(WorkloadChangeTypeEnum.PLAN_WORKLOAD_ADD.getText()));
+        return Optional.of(result);
     }
 
     /**

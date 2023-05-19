@@ -7,6 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.timevale.epeius.service.enums.FlowStatusEnum;
 import com.timevale.epeius.service.model.request.StartProcessRequest;
+import com.timevale.forward.dal.dao.HistoryRecordMapper;
 import com.timevale.forward.dal.dao.ProjectFlowMapper;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMemberEvaluateMapper;
@@ -54,14 +55,15 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class WorkloadChangeFlow {
-    final private CommonConfig commonConfig;
-    final private EpeiusClient epeiusClient;
-    final private UserComponent userComponent;
-    final private ProjectMapper projectMapper;
-    final private ProjectComponent projectComponent;
-    final private ProjectFlowMapper projectFlowMapper;
-    final private ProjectEvaluateComponent evaluateComponent;
-    final private ProjectMemberEvaluateMapper memberEvaluateMapper;
+    private final CommonConfig commonConfig;
+    private final EpeiusClient epeiusClient;
+    private final UserComponent userComponent;
+    private final ProjectMapper projectMapper;
+    private final HistoryRecordMapper recordMapper;
+    private final ProjectComponent projectComponent;
+    private final ProjectFlowMapper projectFlowMapper;
+    private final ProjectEvaluateComponent evaluateComponent;
+    private final ProjectMemberEvaluateMapper memberEvaluateMapper;
 
     /**
      * 工作量变更流程
@@ -178,7 +180,9 @@ public class WorkloadChangeFlow {
             memberEvaluateMapper.update(evaluateDO);
         }
 
-        // 生成版本
-        evaluateComponent.additionRecord(projectId, recordUserIdSet);
+        // 如果存在前置版本，则生成新版本
+        if (recordMapper.selectLast(projectId) != null) {
+            evaluateComponent.additionRecord(projectId, recordUserIdSet);
+        }
     }
 }
