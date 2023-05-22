@@ -61,6 +61,17 @@ public class DrcBizDemandHandler {
                 bizRecordMapper.updateRecord(lastRecordDO.getId(), JSON.toJSONString(lastRecordVO));
                 return;
             }
+
+            // 如果当前的状态和记录的状态一致
+            if (Objects.equals(nowStatus,lastRecordVO.getStatus())) {
+                // 操作人不同，多增加一个操作人
+                if (!Objects.equals(bizDO.getReceiveMan(), lastOperatorVO.getOperatorName())) {
+                    operatorVOList.add(operatorVO);
+                    operatorVOList.sort(Comparator.comparing(BizStatusOperatorVO::getOperatorDate).reversed());
+                    bizRecordMapper.updateRecord(lastRecordDO.getId(), JSON.toJSONString(lastRecordVO));
+                }
+                return;
+            }
         }
 
         // 新增记录
