@@ -329,9 +329,11 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         Set<String> subordinateIds = new HashSet<>();
         subordinateIds.add(pmId);
         subordinateIds.add(srId);
-        Optional.ofNullable(personComponent.select(projectId, PersonTypeEnum.PROJECT_PD.getCode()))
-                .map(e -> e.stream().map(PersonDO::getUserId).collect(Collectors.toSet()))
-                .ifPresent(subordinateIds::addAll);
+
+        List<PersonDO> pds = personComponent.select(projectId, PersonTypeEnum.PROJECT_PD.getCode());
+        Set<String> pdIds = pds.stream().map(PersonDO::getUserId).collect(Collectors.toSet());
+        subordinateIds.addAll(pdIds);
+
         List<String> superiorIds = innerUserPersonClient.getDefaultSuperior(subordinateIds, false);
 
         // PMO
@@ -342,6 +344,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         permissionIds.add(srId);
         permissionIds.add(principalId);
         permissionIds.add(otnPrincipalId);
+        permissionIds.addAll(pdIds);
         permissionIds.addAll(allPMOIds);
         permissionIds.addAll(superiorIds);
 
