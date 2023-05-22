@@ -213,7 +213,7 @@ public class ProjectEvaluateComponent {
 
         // 判断是否存在审批流程
         List<ProjectFlowDO> flows = projectFlowMapper.getByProjectIdAndType(projectId, FlowTypeEnum.WORKLOAD.getCode());
-        AssertUtil.checkState(flows.stream().anyMatch(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus())),
+        AssertUtil.checkState(flows.stream().noneMatch(e -> ForwardFlowStatusEnum.AUDITING.getCode().equals(e.getStatus())),
                 "已存在审核中的工作量变更流程");
 
         // 非客开不走该流程
