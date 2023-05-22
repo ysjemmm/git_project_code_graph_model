@@ -217,7 +217,7 @@ public class ProjectEvaluateComponent {
                 "已存在审核中的工作量变更流程");
 
         // 非客开不走该流程
-        if (!ProjectKindEnum.PBG_OTN.getCode().equals(projectDO.getStatus())) {
+        if (!ProjectKindEnum.PBG_OTN.getCode().equals(projectDO.getKind())) {
             return Optional.empty();
         }
         // 立项工作量评估（人天)，如果不存在则不走该变更流程
