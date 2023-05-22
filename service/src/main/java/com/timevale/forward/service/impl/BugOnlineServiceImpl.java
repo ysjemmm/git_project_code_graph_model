@@ -1000,7 +1000,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogDO.setAction(ButtonActionEnum.OPEN_AGAIN.getText());
         bugLogDO.setOldValue(oldStatus);
         if (oldStatus.equals(BugOnlineStatusEnum.CLOSE.getText())) {
-            bugLogDO.setNewValue(BugOnlineStatusEnum.START_RESPONSE.getText());
+            bugLogDO.setNewValue(BugOnlineStatusEnum.PROBLEM_REPORT.getText());
         }
         if (oldStatus.equals(BugOnlineStatusEnum.COMPLETE.getText())) {
             bugLogDO.setNewValue(BugOnlineStatusEnum.QUESTION_CONFIRM.getText());
