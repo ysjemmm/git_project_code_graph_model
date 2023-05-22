@@ -22,6 +22,7 @@ import org.mapstruct.factory.Mappers;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -30,6 +31,7 @@ import java.util.List;
  */
 @Mapper(
         imports = {
+                Optional.class,
                 StrUtil.class,
                 ProjectKindEnum.class,
                 ProjectTypeEnum.class,
@@ -73,8 +75,8 @@ public interface ProjectEvaluateCopier {
     @Mapping(target = "planWorkloadBefore", expression = "java(changeVO.getPlanWorkloadBefore().toString() + CommonConstant.DAY)")
     @Mapping(target = "planWorkloadAfter", expression = "java(changeVO.getPlanWorkloadAfter().toString() + CommonConstant.DAY)")
     @Mapping(target = "planWorkloadAddSum", expression = "java(changeVO.getPlanWorkloadAddSum().toString() + CommonConstant.DAY)")
-    @Mapping(target = "pointWorkloadBefore", expression = "java(changeVO.getPointWorkloadBefore().toString() + CommonConstant.DAY)")
-    @Mapping(target = "pointWorkloadAfter", expression = "java(changeVO.getPointWorkloadAfter().toString() + CommonConstant.DAY)")
-    @Mapping(target = "pointWorkloadAddSum", expression = "java(changeVO.getPointWorkloadAddSum().toString() + CommonConstant.DAY)")
+    @Mapping(target = "pointWorkloadBefore", expression = "java(Optional.ofNullable(changeVO.getPointWorkloadBefore()).map(e -> e + CommonConstant.DAY).orElse(\"\"))")
+    @Mapping(target = "pointWorkloadAfter", expression = "java(Optional.ofNullable(changeVO.getPointWorkloadAfter()).map(e -> e + CommonConstant.DAY).orElse(\"\"))")
+    @Mapping(target = "pointWorkloadAddSum", expression = "java(Optional.ofNullable(changeVO.getPointWorkloadAddSum()).map(e -> e + CommonConstant.DAY).orElse(\"\"))")
     WorkloadChangeVar vo2var(ProjectWorkloadChangeVO changeVO);
 }
