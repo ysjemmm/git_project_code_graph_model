@@ -65,10 +65,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         // 查询权限控制
         boolean allowVisitAllData = allowVisitAllData(projectId);
         boolean isMember = personComponent.exist(LocalSessionUtils.getUserInfo().getId(), projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
-        if (!isMember && !allowVisitAllData) {
-            return BaseResult.success();
-        }
-        if (!allowVisitAllData && !ProjectStatusEnum.CONCLUSION.getCode().equals(projectDO.getStatus())) {
+        if (!allowVisitAllData && (!isMember || !ProjectStatusEnum.CONCLUSION.getCode().equals(projectDO.getStatus()))) {
             return BaseResult.success();
         }
 
