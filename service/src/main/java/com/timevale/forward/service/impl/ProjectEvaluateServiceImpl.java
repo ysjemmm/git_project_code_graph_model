@@ -2,6 +2,7 @@ package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -347,6 +348,9 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         permissionIds.addAll(pdIds);
         permissionIds.addAll(allPMOIds);
         permissionIds.addAll(superiorIds);
+
+        List<String> configAccounts = StrUtil.split(commonConfig.getAllowVisitAllDataAccount(), ',');
+        permissionIds.addAll(configAccounts);
 
         CollUtil.removeEmpty(permissionIds);
 

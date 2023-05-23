@@ -65,4 +65,7 @@ public class CommonConfig {
     @Value("${devDemandAcceptUserName:予哲-张彧喆}")
     private String bizDemandAcceptUserName;
 
+    @Value(("${allowVisitAllDataAccount:yangxu}"))
+    private String allowVisitAllDataAccount;
+
 }
