@@ -12,6 +12,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -71,6 +72,12 @@ public class ProjectInnerAddReq extends ToString {
     @Valid
     @ApiModelProperty("项目预算列表")
     private List<ProjectBudgetSaveReq> projectBudgets;
+
+    @ApiModelProperty("pbu部门id")
+    private Collection<Long> pbuIds;
+
+    @ApiModelProperty("业务域id")
+    private Collection<Long> bizDomainIds;
 
     @Digits(integer = 15, fraction = 2, message = "请输入15位以内整数，2位以内小数")
     @PositiveOrZero(message = "预计收益金额不可为负数")

@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -58,4 +59,10 @@ public class ProjectSimpleModifyReq extends ToString {
     @Valid
     @ApiModelProperty("扩展成员")
     private List<PersonAddReq> extTeamMembers;
+
+    @ApiModelProperty("pbu部门id")
+    private Collection<Long> pbuIds;
+
+    @ApiModelProperty("业务域id")
+    private Collection<Long> bizDomainIds;
 }

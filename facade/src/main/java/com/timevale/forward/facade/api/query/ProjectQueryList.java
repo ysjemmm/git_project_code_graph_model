@@ -155,4 +155,7 @@ public class ProjectQueryList extends QueryBase {
 
     @ApiModelProperty("结项时间-结束")
     private Date conclusionDateRight;
+
+    @ApiModelProperty("pbu部门id")
+    private List<Long> pbuIds;
 }

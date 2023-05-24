@@ -84,4 +84,16 @@ public class ProjectInnerDetailVO extends ToString {
 
     @ApiModelProperty("有效阶段")
     private List<Integer> validStageList;
+
+    @ApiModelProperty("pbu部门id")
+    private List<Long> pbuIds;
+
+    @ApiModelProperty("pbu部门名称")
+    private List<String> pbuNames;
+
+    @ApiModelProperty("业务域id")
+    private List<Long> bizDomainIds;
+
+    @ApiModelProperty("业务域名称")
+    private List<String> bizDomainNames;
 }

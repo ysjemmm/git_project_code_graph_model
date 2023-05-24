@@ -18,7 +18,6 @@ import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
 import com.timevale.forward.service.component.BizLabelComponent;
 import com.timevale.forward.service.component.SqlOrderComponent;
-import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDemandCopier;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
@@ -127,6 +126,9 @@ public class BizDemandComponentImpl implements BizDemandComponent {
 
     @Override
     public Map<Long, GroupResponse> getGroupListTreeMap(Collection<Long> queryDeptIds) {
+        if (CollUtil.isEmpty(queryDeptIds)) {
+            return new HashMap<>();
+        }
         Map<Long, GroupResponse> deptMap = Maps.newHashMap();
         Set<Long> queryDeptIdSet = new HashSet<>(queryDeptIds);
         GroupResponse rootNode = innerGroupClient.getGroupListTree(true).get(0);
@@ -154,10 +156,6 @@ public class BizDemandComponentImpl implements BizDemandComponent {
         for (GroupResponse childNode : node.getChildNode()) {
             dfsGroupListTree(childNode, deptMap, queryDeptIdSet, name, isInsert);
         }
-    }
-
-    public static void main(String[] args) {
-
     }
 
     @Override

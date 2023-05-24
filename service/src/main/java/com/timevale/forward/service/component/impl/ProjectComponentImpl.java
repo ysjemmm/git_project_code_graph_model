@@ -23,6 +23,7 @@ import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.common.query.QueryBase;
 import com.timevale.mandarin.common.result.PageQueryResult;
+import com.timevale.security.facade.response.GroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.assertj.core.util.Lists;
@@ -76,6 +77,14 @@ public class ProjectComponentImpl implements ProjectComponent {
     private CommonConfig config;
     @Resource
     private ProjectFlowMapper projectFlowMapper;
+    @Resource
+    private ProjectPbuMapper projectPbuMapper;
+    @Resource
+    private ProjectBizDomainMapper projectBizDomainMapper;
+    @Resource
+    private BizDemandComponent bizDemandComponent;
+    @Resource
+    private BizDomainMapper bizDomainMapper;
 
     @Override
     public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -94,14 +103,32 @@ public class ProjectComponentImpl implements ProjectComponent {
                 return ResultUtil.queryResultEmpty();
             }
         }
-        //产品线业务域
-        if (CollUtil.isNotEmpty(condition.getProductLineIds())
-                || CollectionUtils.isNotEmpty(condition.getBizDomainIds())) {
+        //产研项目产品线业务域
+        if (ProjectCategoryEnum.PRODUCT_PROJECT.getCode().equals(condition.getCategory())
+                && (CollUtil.isNotEmpty(condition.getProductLineIds()) || CollectionUtils.isNotEmpty(condition.getBizDomainIds()))) {
             projectIds = projectMapper.getProjectIds(projectIds, condition.getProductLineIds(), condition.getBizDomainIds());
             if (CollUtil.isEmpty(projectIds)) {
                 return ResultUtil.queryResultEmpty();
             }
         }
+
+        // 内部项目业务域
+        if (ProjectCategoryEnum.INNER_PROJECT.getCode().equals(condition.getCategory())
+                && CollUtil.isNotEmpty(condition.getBizDomainIds())) {
+            projectIds = projectBizDomainMapper.in(projectIds, condition.getBizDomainIds());
+            if (CollUtil.isEmpty(projectIds)) {
+                return ResultUtil.queryResultEmpty();
+            }
+        }
+
+        // 内部项目pbu
+        if (CollUtil.isNotEmpty(condition.getPbuIds())) {
+            projectIds = projectPbuMapper.in(projectIds, condition.getBizDomainIds());
+            if (CollUtil.isEmpty(projectIds)) {
+                return ResultUtil.queryResultEmpty();
+            }
+        }
+
         //打回次数
         if (condition.getReturnCountType() != null && condition.getReturnCount() != null) {
             projectIds = testBillMapper.getProjectIds(projectIds, condition.getReturnCountType(), condition.getReturnCount());
@@ -291,6 +318,18 @@ public class ProjectComponentImpl implements ProjectComponent {
                 ForwardFlowStatusEnum.AUDITING.getCode());
         Set<Long> conclusionFlowSet = conclusionFlows.stream().map(ProjectFlowDO::getProjectId).collect(Collectors.toSet());
 
+        // pbu
+        List<ProjectPbuDO> pjPbus = projectPbuMapper.getByProjectIds(projectIdList);
+        Map<Long, List<ProjectPbuDO>> pjPbuGroup = pjPbus.stream().collect(Collectors.groupingBy(ProjectPbuDO::getProjectId));
+        Set<Long> pbuIds = pjPbus.stream().map(ProjectPbuDO::getPbuId).collect(Collectors.toSet());
+        Map<Long, GroupResponse> pbuMap = bizDemandComponent.getGroupListTreeMap(pbuIds);
+
+        // 业务域
+        List<ProjectBizDomainDO> pjBds = projectBizDomainMapper.getByProjectIds(projectIds);
+        Map<Long, List<ProjectBizDomainDO>> pjBdGroup = pjBds.stream().collect(Collectors.groupingBy(ProjectBizDomainDO::getProjectId));
+        List<BizDomainDO> bizDomainDOS = bizDomainMapper.selectAllBizDomain();
+        Map<Long, BizDomainDO> bizDomainDOMap = Maps.uniqueIndex(bizDomainDOS, BaseDO::getId);
+
         // 遍历填充数据
         for (ProjectVO projectVO : projectVOList) {
             List<PersonDO> pds = pdMap.get(projectVO.getId());
@@ -353,6 +392,25 @@ public class ProjectComponentImpl implements ProjectComponent {
                     && ProjectCategoryEnum.INNER_PROJECT.getCode().equals(projectVO.getCategory())) {
                 projectVO.setStatusName(CommonConstant.INVALID);
             }
+
+            // pbu
+            Optional.ofNullable(pjPbuGroup.get(projectVO.getId()))
+                    .map(e -> e.stream()
+                            .map(ProjectPbuDO::getPbuId)
+                            .map(pbuMap::get)
+                            .filter(Objects::nonNull)
+                            .map(GroupResponse::getGroupName)
+                            .collect(Collectors.joining(",")))
+                    .ifPresent(projectVO::setPbuNames);
+            // 业务域
+            Optional.of(pjBdGroup.get(projectVO.getId()))
+                    .map(e -> e.stream()
+                            .map(ProjectBizDomainDO::getBizDomainId)
+                            .map(bizDomainDOMap::get)
+                            .filter(Objects::nonNull)
+                            .map(BizDomainDO::getName)
+                            .collect(Collectors.joining(",")))
+                    .ifPresent(projectVO::setBizDomainName);
 
             // 是否存在审批中的结项流程
             projectVO.setConclusionAuditing(conclusionFlowSet.contains(projectVO.getId()));
@@ -599,5 +657,45 @@ public class ProjectComponentImpl implements ProjectComponent {
             return null;
         }
         return bizDemandMapper.getByBizDemandId(bizDemandId);
+    }
+
+    @Override
+    public void updatePbu(Long projectId, Collection<Long> newPbuIds) {
+        if (CollUtil.isEmpty(newPbuIds)) {
+            newPbuIds = Collections.emptyList();
+        }
+
+        List<ProjectPbuDO> pjPbus = projectPbuMapper.getByProjectId(projectId);
+        List<Long> oldPbuIds = pjPbus.stream().map(ProjectPbuDO::getPbuId).collect(Collectors.toList());
+
+        Collection<Long> addPubIds = CollUtil.subtract(newPbuIds, oldPbuIds);
+        Collection<Long> delPubIds = CollUtil.subtract(oldPbuIds, newPbuIds);
+
+        if (CollUtil.isNotEmpty(addPubIds)) {
+            projectPbuMapper.batchAdd(projectId, addPubIds);
+        }
+        if (CollUtil.isNotEmpty(delPubIds)) {
+            projectPbuMapper.batchDel(projectId, delPubIds);
+        }
+    }
+
+    @Override
+    public void updateBizDomain(Long projectId, Collection<Long> newBdIds) {
+        if (CollUtil.isEmpty(newBdIds)) {
+            newBdIds = Collections.emptyList();
+        }
+
+        List<ProjectBizDomainDO> pjBds = projectBizDomainMapper.getByProjectId(projectId);
+        List<Long> oldBdIds = pjBds.stream().map(ProjectBizDomainDO::getBizDomainId).collect(Collectors.toList());
+
+        Collection<Long> addBdIds = CollUtil.subtract(newBdIds, oldBdIds);
+        Collection<Long> delBdIds = CollUtil.subtract(oldBdIds, newBdIds);
+
+        if (CollUtil.isNotEmpty(addBdIds)) {
+            projectBizDomainMapper.batchAdd(projectId, addBdIds);
+        }
+        if (CollUtil.isNotEmpty(delBdIds)) {
+            projectBizDomainMapper.batchDel(projectId, delBdIds);
+        }
     }
 }

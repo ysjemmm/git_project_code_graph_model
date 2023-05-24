@@ -4,6 +4,7 @@ import com.timevale.forward.dal.annotation.WildcardEscape;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -241,6 +242,11 @@ public class ProjectListCondition {
      * 结项时间-结束
      */
     private Date conclusionDateRight;
+
+    /**
+     * pbu id
+     */
+    private Collection<Long> pbuIds;
 
     private Integer pageNum = 1;
 

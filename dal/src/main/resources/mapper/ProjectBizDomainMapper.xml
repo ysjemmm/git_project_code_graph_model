@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.timevale.forward.dal.dao.ProjectBizDomainMapper">
+
+    <insert id="batchAdd">
+        INSERT INTO project_biz_domain(project_id, biz_domain_id, create_man, create_man_id)
+        VALUES
+        <foreach collection="bizDomainIds" item="bizDomainId" separator=",">
+            (#{projectId}, #{bizDomainId}, #{createMan}, #{createManId})
+        </foreach>
+    </insert>
+
+    <update id="batchDel">
+        UPDATE project_biz_domain
+        <set>
+            is_deleted = true,
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId},
+        </set>
+        <where>
+            AND project_id = #{projectId}
+            AND biz_domain_id IN
+            <foreach collection="bizDomainIds" item="bizDomainId" separator="," open="(" close=")">
+                #{bizDomainId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="in" resultType="java.lang.Long">
+        SELECT DISTINCT project_id
+        FROM project_biz_domain
+        <where>
+            <if test="projectIds != null and projectIds.size() > 0">
+                AND project_id IN
+                <foreach collection="projectIds" item="projectId" separator="," open="(" close=")">
+                    #{projectId}
+                </foreach>
+            </if>
+            <if test="bizDomainIds != null and bizDomainIds.size() > 0">
+                AND biz_domain_id IN
+                <foreach collection="bizDomainIds" item="bizDomainId" separator="," open="(" close=")">
+                    #{bizDomainId}
+                </foreach>
+            </if>
+            AND is_deleted = false
+        </where>
+    </select>
+
+    <select id="getByProjectIds" resultType="com.timevale.forward.dal.entity.ProjectBizDomainDO">
+        SELECT *
+        FROM project_biz_domain
+        <where>
+            AND project_id IN
+            <foreach collection="projectIds" item="projectId" separator="," open="(" close=")">
+                #{projectId}
+            </foreach>
+            AND is_deleted = false
+        </where>
+    </select>
+</mapper>

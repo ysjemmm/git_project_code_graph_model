@@ -26,17 +26,17 @@ public class LogAspect {
     public Object doBefore(ProceedingJoinPoint joinPoint) throws Throwable {
         // 打印入参
         Signature signature = joinPoint.getSignature();
-        log.info("[method]: {}.{} [input]: {}", signature.getDeclaringType(), signature.getName(), JSON.toJSON(joinPoint.getArgs()));
+        log.info("[method]: {}#{} [input]: {}", signature.getDeclaringType(), signature.getName(), JSON.toJSONString(joinPoint.getArgs()));
 
         try {
             // 执行方法，打印出参
             Object result = joinPoint.proceed();
-            log.info("[method]: {}.{} [output]: {}", signature.getDeclaringType(), signature.getName(), JSON.toJSON(result));
+            log.info("[method]: {}#{} [output]: {}", signature.getDeclaringType(), signature.getName(), JSON.toJSONString(result));
 
             return result;
         } catch(Throwable e) {
             // 打印异常信息
-            log.info("[method]: {}.{} [exception]: {}", signature.getDeclaringType(), signature.getName(), e.getMessage());
+            log.info("[method]: {}#{} [exception]: {}", signature.getDeclaringType(), signature.getName(), e.getMessage());
             throw e;
         }
     }

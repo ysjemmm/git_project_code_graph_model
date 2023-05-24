@@ -7,6 +7,7 @@ import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
 import com.timevale.mandarin.common.query.QueryBase;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface ProjectComponent {
@@ -69,4 +70,20 @@ public interface ProjectComponent {
     String getUrl(Long projectId);
 
     ProjectDO getByBizDemandId(Long bizDemandId);
+
+    /**
+     * 更新pbu
+     *
+     * @param projectId 项目id
+     * @param pbuIds    试译id
+     */
+    void updatePbu(Long projectId, Collection<Long>pbuIds);
+
+    /**
+     * 更新业务域
+     *
+     * @param projectId    项目id
+     * @param bizDomainIds 业务域id
+     */
+    void updateBizDomain(Long projectId, Collection<Long>bizDomainIds);
 }

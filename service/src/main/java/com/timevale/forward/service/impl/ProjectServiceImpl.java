@@ -186,6 +186,12 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectBizDemandService projectBizDemandService;
     @Resource
     private CrmProjectClient crmProjectClient;
+    @Resource
+    private ProjectPbuMapper projectPbuMapper;
+    @Resource
+    private ProjectBizDomainMapper projectBizDomainMapper;
+    @Resource
+    private BizDomainMapper bizDomainMapper;
 
     @Override
     public BaseResult<QueryResultVO<ProjectVO>> list(ProjectQueryList projectQueryList) {
@@ -558,6 +564,10 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
+        // 关联pbu、业务域
+        projectComponent.updatePbu(projectId, projectInnerAddReq.getPbuIds());
+        projectComponent.updateBizDomain(projectId, projectInnerAddReq.getBizDomainIds());
+
         // 记录项目状态日志
         Integer status = ProjectStatusEnum.WAITING.getCode();
         projectLogComponent.addLogWhenStatusChange(status, status, projectDO.getId(), ButtonActionEnum.SUBMIT.getText());
@@ -778,6 +788,18 @@ public class ProjectServiceImpl implements ProjectService {
             if (CollUtil.isNotEmpty(coreMemberIdList)) {
                 personMapper.updateLevel(coreMemberIdList, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode(), PersonLevelEnum.CORE.getCode());
             }
+        }
+
+        // 项目pbu
+        Collection<Long> pbuIds = projectSimpleModifyReq.getPbuIds();
+        if (pbuIds != null) {
+            projectComponent.updatePbu(projectId, pbuIds);
+        }
+
+        // 项目业务域
+        Collection<Long> bdIds = projectSimpleModifyReq.getBizDomainIds();
+        if (bdIds != null) {
+            projectComponent.updateBizDomain(projectId, bdIds);
         }
 
         // 项目日志
@@ -1104,6 +1126,30 @@ public class ProjectServiceImpl implements ProjectService {
         String pmId = projectDO.getPmId();
         boolean isLeaderOrPMO = userComponent.isPmoOrPmoLeader() || isLeader(pmId);
         projectInnerDetailVO.setIsLeaderOrPMO(isLeaderOrPMO);
+
+        // pbu
+        List<String> pbuNames = Collections.emptyList();
+        List<ProjectPbuDO> pjPbus = projectPbuMapper.getByProjectId(projectId);
+        List<Long> pbuIds = pjPbus.stream().map(ProjectPbuDO::getPbuId).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(pbuIds)) {
+            Map<Long, GroupResponse> groupMap = bizDemandComponent.getGroupListTreeMap(pbuIds);
+            pbuNames = pbuIds.stream().map(groupMap::get).filter(Objects::nonNull).map(GroupResponse::getGroupName).collect(Collectors.toList());
+        }
+        projectInnerDetailVO.setPbuIds(pbuIds);
+        projectInnerDetailVO.setPbuNames(pbuNames);
+
+        // 业务域
+        List<String> bdNames = Collections.emptyList();
+        List<ProjectBizDomainDO> pjBds = projectBizDomainMapper.getByProjectId(projectId);
+        List<Long> bdIds = pjBds.stream().map(ProjectBizDomainDO::getBizDomainId).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(bdIds)) {
+            List<BizDomainDO> domainDOList = bizDomainMapper.getByIds(bdIds);
+            bdNames = domainDOList.stream().map(BizDomainDO::getName).collect(Collectors.toList());
+        }
+        projectInnerDetailVO.setBizDomainIds(bdIds);
+        projectInnerDetailVO.setBizDomainNames(bdNames);
+
+
 
         return BaseResult.success(projectInnerDetailVO);
     }

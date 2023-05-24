@@ -161,4 +161,7 @@ public class ProjectVO extends ToString {
 
     @ApiModelProperty("1-n负责人Id")
     private String otnPrincipalId;
+
+    @ApiModelProperty("pbu名称")
+    private String pbuNames;
 }

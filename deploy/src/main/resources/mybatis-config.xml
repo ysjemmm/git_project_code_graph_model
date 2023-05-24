@@ -121,5 +121,7 @@
         <mapper resource="mapper/HistoryRecordMapper.xml"/>
         <mapper resource="mapper/ProjectBizDemandMapper.xml" />
         <mapper resource="mapper/BizRecordMapper.xml" />
+        <mapper resource="mapper/ProjectPbuMapper.xml" />
+        <mapper resource="mapper/ProjectBizDomainMapper.xml" />
     </mappers>
 </configuration>
