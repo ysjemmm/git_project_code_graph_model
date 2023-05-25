@@ -403,7 +403,7 @@ public class ProjectComponentImpl implements ProjectComponent {
                             .collect(Collectors.joining(",")))
                     .ifPresent(projectVO::setPbuNames);
             // 业务域
-            Optional.of(pjBdGroup.get(projectVO.getId()))
+            Optional.ofNullable(pjBdGroup.get(projectVO.getId()))
                     .map(e -> e.stream()
                             .map(ProjectBizDomainDO::getBizDomainId)
                             .map(bizDomainDOMap::get)
