@@ -555,7 +555,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         BizDemandDO bizDemandDO = bizDemandMapper.get(bizDemandId);
         AssertUtil.notNull(bizDemandDO, "不存在该业务需求");
         if (bizDemandDO.getCustomerDevDemand()) {
-            AssertUtil.checkState(ObjectUtils.allNotNull(bizDemandDO.getUedTime(), bizDemandDO.getFrontTime(),
+            AssertUtil.checkState(ObjectUtils.anyNotNull(bizDemandDO.getUedTime(), bizDemandDO.getFrontTime(),
                             bizDemandDO.getQaTime(), bizDemandDO.getBackTime(), bizDemandDO.getTotalTime()),
                     "请维护好资源评估后再接收需求");
         } else {
