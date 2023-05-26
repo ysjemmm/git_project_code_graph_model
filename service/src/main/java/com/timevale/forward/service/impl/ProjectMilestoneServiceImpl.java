@@ -134,6 +134,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Void> deleteMilestone(Long milestoneId) {
         Optional<ProjectMilestone> milestone = Optional.ofNullable(milestoneMapper.selectById(milestoneId));
         milestone.ifPresent(m -> {
