@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.timevale.forward.dal.dao.ProjectMilestoneActionMapper">
+    <insert id="batchAdd">
+        INSERT INTO project_milestone_action(milestone_id, type, relation_id, create_man, create_man_id)
+        VALUES
+        <foreach collection="actions" item="action" separator=",">
+            (#{action.milestoneId},#{action.type},#{action.relationId},#{createMan},#{createManId})
+        </foreach>
+    </insert>
+
+    <insert id="add">
+        INSERT INTO project_milestone_action(milestone_id, type, relation_id, create_man, create_man_id)
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="milestoneId!=null">milestone_id,</if>
+            <if test="type!=null">type,</if>
+            <if test="relationId!=null">relation_id,</if>
+            <if test="createMan!=null">create_man,</if>
+            <if test="createManId!=null">create_man_id,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="milestoneId!=null">#{milestoneId},</if>
+            <if test="type!=null">#{type},</if>
+            <if test="relationId!=null">#{relationId},</if>
+            <if test="createMan!=null">#{createMan},</if>
+            <if test="createManId!=null">#{createManId},</if>
+        </trim>
+    </insert>
+
+    <update id="del">
+        UPDATE project_milestone_action
+        SET is_deleted = true,
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId}
+        WHERE id =#{id}
+    </update>
+
+    <delete id="delByMain">
+        UPDATE project_milestone_action
+        SET is_deleted = true,
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId}
+        WHERE milestone_id = #{milestoneId}
+    </delete>
+
+    <select id="getByType" resultType="com.timevale.forward.dal.entity.ProjectMilestoneActionDO">
+        SELECT *
+        FROM project_milestone_action
+        <where>
+            AND milestone_id = #{milestoneId}
+            AND type = #{type}
+            AND is_deleted = false
+        </where>
+    </select>
+
+    <select id="getByMain" resultType="com.timevale.forward.dal.entity.ProjectMilestoneActionDO">
+        SELECT *
+        FROM project_milestone
+        <where>
+            AND milestone_id = #{milestoneId}
+            AND is_deleted = false
+        </where>
+    </select>
+</mapper>

@@ -75,4 +75,14 @@ public class ProjectMilestone {
      */
     private Date modifyDate;
 
+    /**
+     * 计划开始日期
+     */
+    private Date planStartDate;
+
+    /**
+     * 计划结束日期
+     */
+    private Date planEndDate;
+
 }

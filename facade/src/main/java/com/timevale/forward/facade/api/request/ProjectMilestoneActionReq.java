@@ -6,10 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -18,22 +15,11 @@ import java.util.List;
  */
 @Getter
 @Setter
-public class ProjectMilestoneAddReq extends ToString {
+public class ProjectMilestoneActionReq extends ToString {
 
-    @NotNull(message = "里程碑所属项目必填")
-    @ApiModelProperty("项目id")
-    private Long projectId;
-
-    @NotBlank(message = "里程碑名称")
-    @ApiModelProperty("里程碑名称")
-    private String milestoneName;
-
-    @NotNull(message = "请选择里程碑类型")
-    @ApiModelProperty("里程碑类型0-任务;1-项目")
+    @NotNull(message = "请选择里程碑行动类型")
+    @ApiModelProperty("里程碑行动类型0-任务;1-项目")
     private Integer type;
-
-    @ApiModelProperty("里程碑所属项目阶段:11:启动阶段;12:规划阶段;13:执行阶段;14:收尾阶段;15:运营阶段")
-    private Integer stage;
 
     @ApiModelProperty("关联数据id，项目id")
     private Long relationId;
@@ -54,12 +40,4 @@ public class ProjectMilestoneAddReq extends ToString {
 
     @ApiModelProperty("任务描述")
     private String desc;
-
-    @ApiModelProperty("里程碑行动-任务")
-    @Valid
-    private Collection<TaskAddReq> tasks;
-
-    @ApiModelProperty("里程碑行动-项目")
-    private Collection<Long> relateProjectIds;
-
 }

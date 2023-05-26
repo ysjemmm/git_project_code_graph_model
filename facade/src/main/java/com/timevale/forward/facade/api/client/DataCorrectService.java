@@ -45,4 +45,11 @@ public interface DataCorrectService {
     BaseResult<Boolean> updateEval();
 
     BaseResult<Boolean> updateBugOnlineQuery();
+
+    /**
+     * 里程碑行动初始化
+     *
+     * @return {@link BaseResult}<{@link Void}>
+     */
+    BaseResult<Void> milestoneAction();
 }

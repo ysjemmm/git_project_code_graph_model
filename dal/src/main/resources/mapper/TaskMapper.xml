@@ -315,4 +315,15 @@
             and is_deleted=false
         </where>
     </update>
+
+    <update id="updateStage">
+        UPDATE task
+        SET stage = #{stage},
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId}
+        WHERE id IN
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </update>
 </mapper>

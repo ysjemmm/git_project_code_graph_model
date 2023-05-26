@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author jingchun
@@ -67,5 +68,8 @@ public class ProjectMilestoneVO extends ToString {
 
     @ApiModelProperty("关联数据名称")
     private String relationName;
+
+    @ApiModelProperty("行动")
+    private List<ProjectMilestoneActionVO> actions;
 
 }

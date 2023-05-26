@@ -10,6 +10,7 @@ import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
  * created on 2023/2/13
  */
 @Slf4j
+@LogPoint
 @Component
 @RequiredArgsConstructor
 public class ProjectMilestoneComponent {
@@ -33,6 +35,7 @@ public class ProjectMilestoneComponent {
     private final TaskMapper taskMapper;
     private final PersonMapper personMapper;
     private final BizChangeLogMapper bizChangeLogMapper;
+    private final ProjectMilestoneActionMapper milestoneActionMapper;
 
     public List<ProjectMilestoneVO> listByProjectId(Long projectId) {
         List<ProjectMilestoneVO> resList = new ArrayList<>();
@@ -188,5 +191,28 @@ public class ProjectMilestoneComponent {
         }
 
         return validMilestoneList;
+    }
+
+    /**
+     * 添加里程碑
+     *
+     * @param taskDO 任务DO
+     */
+    public void addMilestone(TaskDO taskDO) {
+        if (taskDO == null) {
+            return;
+        }
+
+        // 添加里程碑
+        ProjectMilestone milestone = ProjectMilestoneCopier.INSTANCE.task2do(taskDO);
+        milestoneMapper.insert(milestone);
+        addMilestoneCreateLog(milestone);
+
+        // 添加里程碑行动
+        ProjectMilestoneActionDO action = new ProjectMilestoneActionDO();
+        action.setRelationId(taskDO.getId());
+        action.setMilestoneId(milestone.getId());
+        action.setType(MilestoneTypeEnum.TASK.getCode());
+        milestoneActionMapper.add(action);
     }
 }

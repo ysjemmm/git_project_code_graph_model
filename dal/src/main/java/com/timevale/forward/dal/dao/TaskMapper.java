@@ -139,4 +139,6 @@ public interface TaskMapper {
     int updateProductLineId(@Param("idList") List<Long> idList,@Param("productLineId") Long productLineId,@Param("projectId") Long projectId);
 
     void deleteById(@Param("id") Long id);
+
+    void updateStage(@Param("ids") Collection<Long> ids, @Param("stage")Integer stage);
 }

@@ -5,6 +5,7 @@ import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
+import com.timevale.forward.facade.api.request.ProjectMilestoneModifyReq;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
@@ -41,6 +42,8 @@ public interface ProjectMilestoneCopier {
     @Mapping(target = "type", source = "milestone.type")
     @Mapping(target = "stage", source = "milestone.stage")
     @Mapping(target = "relationName", source = "relateProject.name")
+    @Mapping(target = "planStartDate", source = "milestone.planStartDate")
+    @Mapping(target = "planEndDate", source = "milestone.planEndDate")
     @Mapping(target = "stageName", expression = "java(ProjectStageEnum.getTextByCode(milestone.getStage()))")
     @Mapping(target = "statusName", expression = "java(ProjectStatusEnum.getTextByCode(relateProject.getStatus()))")
     ProjectMilestoneVO convert(ProjectMilestone milestone, ProjectDO relateProject);
@@ -51,6 +54,8 @@ public interface ProjectMilestoneCopier {
     @Mapping(target = "type", source = "milestone.type")
     @Mapping(target = "stage", source = "milestone.stage")
     @Mapping(target = "relationName", source = "task.name")
+    @Mapping(target = "planStartDate", source = "milestone.planStartDate")
+    @Mapping(target = "planEndDate", source = "milestone.planEndDate")
     @Mapping(target = "statusName", expression = "java(TaskStatusEnum.getTextByCode(task.getStatus()))")
     @Mapping(target = "stageName", expression = "java(ProjectStageEnum.getTextByCode(milestone.getStage()))")
     @Mapping(target = "executorId", expression = "java(executors.stream().map(PersonDO::getUserId).collect(Collectors.joining(\",\")))")
@@ -98,6 +103,13 @@ public interface ProjectMilestoneCopier {
     @Mapping(target = "type", expression = "java(MilestoneTypeEnum.TASK.getCode())")
     @Mapping(target = "isDeleted", ignore = true)
     ProjectMilestone task2do(TaskDO taskDO, Integer stage);
+
+    @Mapping(target = "milestoneName", source = "taskDO.name")
+    @Mapping(target = "type", expression = "java(MilestoneTypeEnum.TASK.getCode())")
+    @Mapping(target = "isDeleted", ignore = true)
+    ProjectMilestone task2do(TaskDO taskDO);
+
+    ProjectMilestone req2do(ProjectMilestoneModifyReq req);
 
     List<ProjectMilestoneVO> convert(List<ProjectMilestone> milestones);
 

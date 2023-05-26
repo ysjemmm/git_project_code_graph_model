@@ -40,6 +40,9 @@ public interface ProjectMilestoneMapper {
     void deleteById(@Param("id") Long id);
 
     void update(ProjectMilestone milestone);
+
+    @Select("SELECT * FROM project_milestone WHERE is_deleted = false")
+    List<ProjectMilestone> selectAll();
 }
 
 

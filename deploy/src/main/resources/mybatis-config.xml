@@ -123,5 +123,6 @@
         <mapper resource="mapper/BizRecordMapper.xml" />
         <mapper resource="mapper/ProjectPbuMapper.xml" />
         <mapper resource="mapper/ProjectBizDomainMapper.xml" />
+        <mapper resource="mapper/ProjectMilestoneActionMapper.xml" />
     </mappers>
 </configuration>

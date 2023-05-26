@@ -57,6 +57,10 @@ public class DataCorrectServiceImpl implements DataCorrectService {
     private BugOnlineStatusOperatorComponent bugOnlineStatusOperatorComponent;
     @Resource
     private SearchConditionMapper searchConditionMapper;
+    @Resource
+    private ProjectMilestoneMapper milestoneMapper;
+    @Resource
+    private ProjectMilestoneActionMapper milestoneActionMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -229,5 +233,26 @@ public class DataCorrectServiceImpl implements DataCorrectService {
             }
         }
         return BaseResult.success(true);
+    }
+
+    /**
+     * 刷新里程碑行动
+     *
+     * @return {@link BaseResult}<{@link Void}>
+     */
+    public BaseResult<Void> milestoneAction() {
+        List<ProjectMilestone> milestones = milestoneMapper.selectAll();
+
+        List<ProjectMilestoneActionDO> actions = milestones.stream().map(e -> {
+            ProjectMilestoneActionDO actionDO = new ProjectMilestoneActionDO();
+            actionDO.setType(e.getType());
+            actionDO.setMilestoneId(e.getId());
+            actionDO.setRelationId(e.getRelationId());
+            return actionDO;
+        }).collect(Collectors.toList());
+
+        milestoneActionMapper.batchAdd(actions);
+
+        return BaseResult.success();
     }
 }

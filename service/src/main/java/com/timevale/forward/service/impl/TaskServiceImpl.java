@@ -113,6 +113,8 @@ public class TaskServiceImpl implements TaskService {
     private ProjectMilestoneMapper milestoneMapper;
     @Resource
     private ProjectEvaluateComponent evaluateComponent;
+    @Resource
+    private ProjectMilestoneActionMapper milestoneActionMapper;
 
     @Value("${excludeBizDomain:[1,13,32]}")
     private String excludeBizDomain;
@@ -213,9 +215,7 @@ public class TaskServiceImpl implements TaskService {
 
         // 判断是否为里程碑
         if (taskAddReq.getMilestoneFlag()) {
-            ProjectMilestone entity = ProjectMilestoneCopier.INSTANCE.task2do(taskDO, taskAddReq.getStage());
-            milestoneMapper.insert(entity);
-            projectMilestoneComponent.addMilestoneCreateLog(entity);
+            projectMilestoneComponent.addMilestone(taskDO);
         }
 
         sendDingMsg(taskDO, executorIds);
@@ -271,16 +271,11 @@ public class TaskServiceImpl implements TaskService {
 
         // 里程碑处理
         Boolean milestoneFlag = taskModifyReq.getMilestoneFlag();
-        ProjectMilestone milestone = milestoneMapper.selectByRelation(taskDO.getId(), MilestoneTypeEnum.TASK.getCode());
-        if (milestoneFlag && milestone == null) {
-            ProjectMilestone entity = ProjectMilestoneCopier.INSTANCE.task2do(taskDO, taskModifyReq.getStage());
-            milestoneMapper.insert(entity);
-            innerProjectStatusUpdateComponent.updateProjectDateAndStatus(entity.getProjectId());
-            projectMilestoneComponent.addMilestoneCreateLog(entity);
-        } else if (!milestoneFlag && milestone != null){
-            milestoneMapper.deleteById(milestone.getId());
-            innerProjectStatusUpdateComponent.updateProjectDateAndStatus(milestone.getProjectId());
-            projectMilestoneComponent.addMilestoneDeleteLog(milestone);
+        ProjectMilestoneActionDO action = milestoneActionMapper.getOne(taskDO.getId(), MilestoneTypeEnum.TASK.getCode());
+        if (milestoneFlag && action == null) {
+            projectMilestoneComponent.addMilestone(taskDO);
+        } else if (!milestoneFlag && action != null){
+            milestoneActionMapper.del(action.getId());
         }
         return BaseResult.success(true);
     }
@@ -609,9 +604,7 @@ public class TaskServiceImpl implements TaskService {
 
                 // 判断是否为里程碑
                 if (BooleanUtil.isTrue(a.getMilestoneFlag())) {
-                    ProjectMilestone entity = ProjectMilestoneCopier.INSTANCE.task2do(taskDO, a.getStage());
-                    milestoneMapper.insert(entity);
-                    projectMilestoneComponent.addMilestoneCreateLog(entity);
+                    projectMilestoneComponent.addMilestone(taskDO);
                 }
             });
         });
