@@ -64,7 +64,7 @@
 
     <select id="getByMain" resultType="com.timevale.forward.dal.entity.ProjectMilestoneActionDO">
         SELECT *
-        FROM project_milestone
+        FROM project_milestone_action
         <where>
             AND milestone_id = #{milestoneId}
             AND is_deleted = false
