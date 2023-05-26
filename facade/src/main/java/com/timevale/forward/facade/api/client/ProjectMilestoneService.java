@@ -2,6 +2,7 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.request.ProjectMilestoneActionDelReq;
 import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
 import com.timevale.forward.facade.api.result.ProjectMilestoneListVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
@@ -36,4 +37,11 @@ public interface ProjectMilestoneService {
      */
     BaseResult<Void> deleteMilestone(Long milestoneId);
 
+    /**
+     * 删除行动
+     *
+     * @param actionDelReq 行动删除请求
+     * @return {@link BaseResult}<{@link Void}>
+     */
+    BaseResult<Void> delAction(ProjectMilestoneActionDelReq actionDelReq);
 }

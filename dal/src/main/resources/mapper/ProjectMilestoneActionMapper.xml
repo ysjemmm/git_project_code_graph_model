@@ -44,6 +44,14 @@
         WHERE milestone_id = #{milestoneId}
     </delete>
 
+    <delete id="delByRelate">
+        UPDATE project_milestone_action
+        SET is_deleted = true,
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId}
+        WHERE relation_id = #{relationId}
+    </delete>
+
     <select id="getByType" resultType="com.timevale.forward.dal.entity.ProjectMilestoneActionDO">
         SELECT *
         FROM project_milestone_action

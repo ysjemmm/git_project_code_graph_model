@@ -7,6 +7,7 @@ import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
 import com.timevale.forward.facade.api.client.ProjectMilestoneService;
+import com.timevale.forward.facade.api.request.ProjectMilestoneActionDelReq;
 import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
 import com.timevale.forward.facade.api.request.ProjectMilestoneModifyReq;
 import com.timevale.forward.facade.api.result.ProjectMilestoneListVO;
@@ -148,6 +149,12 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
             // 更新项目状态
             innerProjectStatusUpdateComponent.updateProjectDateAndStatus(m.getProjectId());
         });
+        return BaseResult.success();
+    }
+
+    @Override
+    public BaseResult<Void> delAction(ProjectMilestoneActionDelReq actionDelReq) {
+        milestoneActionMapper.delByRelate(actionDelReq.getId(), actionDelReq.getType());
         return BaseResult.success();
     }
 }

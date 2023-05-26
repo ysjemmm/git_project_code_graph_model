@@ -19,6 +19,8 @@ public interface ProjectMilestoneActionMapper {
 
     void del(@Param("id")Long id);
 
+    void delByRelate(@Param("relationId")Long relationId, @Param("type")Integer type);
+
     void delByMain(@Param("milestoneId")Long milestoneId);
 
     @Select("SELECT * FROM project_milestone_action WHERE relation_id=#{relationId} AND type=#{type} AND is_deleted=false")
