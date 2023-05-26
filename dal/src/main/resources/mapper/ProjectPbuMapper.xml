@@ -5,7 +5,7 @@
         INSERT INTO project_pbu(project_id, pbu_id, create_man, create_man_id)
         VALUES
         <foreach collection="pbuIds" item="pbuId" separator=",">
-            (#{projectId}, #{pbuid}, #{createMan}, #{createManId})
+            (#{projectId}, #{pbuId}, #{createMan}, #{createManId})
         </foreach>
     </insert>
 
