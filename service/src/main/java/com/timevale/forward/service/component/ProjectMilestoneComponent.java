@@ -71,15 +71,18 @@ public class ProjectMilestoneComponent {
         List<ProjectMilestoneVO> milestoneVOs = ProjectMilestoneCopier.INSTANCE.convert(milestones);
         for (ProjectMilestoneVO milestoneVO : milestoneVOs) {
             List<ProjectMilestoneActionDO> actions = actionGroup.get(milestoneVO.getId());
+            if (CollUtil.isEmpty(actions)) {
+                continue;
+            }
 
             List<TaskDO> tasks = actions.stream()
                     .filter(e -> MilestoneTypeEnum.TASK.getCode().equals(e.getType()))
-                    .map(BaseDO::getId)
+                    .map(ProjectMilestoneActionDO::getRelationId)
                     .map(taskMap::get)
                     .collect(Collectors.toList());
             List<ProjectDO> projects = actions.stream()
                     .filter(e -> MilestoneTypeEnum.PROJECT.getCode().equals(e.getType()))
-                    .map(BaseDO::getId)
+                    .map(ProjectMilestoneActionDO::getRelationId)
                     .map(projectMap::get)
                     .collect(Collectors.toList());
 
@@ -96,8 +99,16 @@ public class ProjectMilestoneComponent {
             // 填充数据
             Collection<ProjectMilestoneActionVO> allActions = CollUtil.addAll(projectActions, taskActions);
             milestoneVO.setActions(allActions);
-            allActions.stream().map(ProjectMilestoneActionVO::getActualStartDate).min(Date::compareTo).ifPresent(milestoneVO::setActualStartDate);
-            allActions.stream().map(ProjectMilestoneActionVO::getActualEndDate).max(Date::compareTo).ifPresent(milestoneVO::setActualEndDate);
+            allActions.stream()
+                    .map(ProjectMilestoneActionVO::getActualStartDate)
+                    .filter(Objects::nonNull)
+                    .min(Date::compareTo)
+                    .ifPresent(milestoneVO::setActualStartDate);
+            allActions.stream()
+                    .map(ProjectMilestoneActionVO::getActualEndDate)
+                    .filter(Objects::nonNull)
+                    .max(Date::compareTo)
+                    .ifPresent(milestoneVO::setActualEndDate);
         }
 
         return milestoneVOs;

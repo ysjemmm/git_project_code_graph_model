@@ -45,8 +45,6 @@ public interface ProjectMilestoneCopier {
 
 
     @Mapping(target = "projectName", ignore = true)
-    @Mapping(target = "planStartDate", ignore = true)
-    @Mapping(target = "planEndDate", ignore = true)
     @Mapping(target = "actualStartDate", ignore = true)
     @Mapping(target = "actualEndDate", ignore = true)
     @Mapping(target = "stageName", expression = "java(ProjectStageEnum.getTextByCode(milestone.getStage()))")
