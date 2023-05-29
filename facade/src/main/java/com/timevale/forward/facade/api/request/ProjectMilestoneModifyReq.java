@@ -43,5 +43,5 @@ public class ProjectMilestoneModifyReq extends ToString {
     private Collection<TaskAddReq> tasks;
 
     @ApiModelProperty("里程碑行动-项目")
-    private Collection<Long> relateProjectIds;
+    private Collection<Long> relationIds;
 }

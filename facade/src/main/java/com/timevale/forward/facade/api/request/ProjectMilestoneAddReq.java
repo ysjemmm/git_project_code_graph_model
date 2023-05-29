@@ -1,6 +1,5 @@
 package com.timevale.forward.facade.api.request;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -10,8 +9,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author jingchun
@@ -35,31 +32,11 @@ public class ProjectMilestoneAddReq extends ToString {
     @ApiModelProperty("里程碑所属项目阶段:11:启动阶段;12:规划阶段;13:执行阶段;14:收尾阶段;15:运营阶段")
     private Integer stage;
 
-    @ApiModelProperty("关联数据id，项目id")
-    private Long relationId;
-
-    @ApiModelProperty("任务计划开始时间")
-    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
-    private Date planStartDate;
-
-    @ApiModelProperty("任务计划结束时间")
-    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
-    private Date planEndDate;
-
-    @ApiModelProperty(value = "任务执行人")
-    private List<PersonAddReq> executors;
-
-    @ApiModelProperty("是否创建待办")
-    private boolean todo;
-
-    @ApiModelProperty("任务描述")
-    private String desc;
-
     @ApiModelProperty("里程碑行动-任务")
     @Valid
     private Collection<TaskAddReq> tasks;
 
-    @ApiModelProperty("里程碑行动-项目")
-    private Collection<Long> relateProjectIds;
+    @ApiModelProperty("里程碑行动-关联id")
+    private Collection<Long> relationIds;
 
 }

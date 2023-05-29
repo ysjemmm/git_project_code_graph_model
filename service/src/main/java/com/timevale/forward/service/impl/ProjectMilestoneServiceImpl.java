@@ -70,7 +70,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
 
         // 里程关联的任务和项目
         milestoneActionComponent.addTaskAction(entity.getId(), projectMilestoneAddReq.getTasks());
-        milestoneActionComponent.addProjectAction(entity.getId(), projectMilestoneAddReq.getRelateProjectIds());
+        milestoneActionComponent.addProjectAction(entity.getId(), projectMilestoneAddReq.getRelationIds());
 
         // 更新当前项目状态
         innerProjectStatusUpdateComponent.updateProjectDateAndStatus(entity.getProjectId());
@@ -88,7 +88,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
 
         // 增加里程关联的任务和项目
         milestoneActionComponent.addTaskAction(milestoneDO.getId(), projectMilestoneModifyReq.getTasks());
-        milestoneActionComponent.addProjectAction(milestoneDO.getId(), projectMilestoneModifyReq.getRelateProjectIds());
+        milestoneActionComponent.addProjectAction(milestoneDO.getId(), projectMilestoneModifyReq.getRelationIds());
 
         // 更新当前项目状态
         innerProjectStatusUpdateComponent.updateProjectDateAndStatus(milestoneDO.getProjectId());
