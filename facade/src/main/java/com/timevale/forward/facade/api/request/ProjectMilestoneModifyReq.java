@@ -30,14 +30,14 @@ public class ProjectMilestoneModifyReq extends ToString {
     @ApiModelProperty("里程碑所属项目阶段:11:启动阶段;12:规划阶段;13:执行阶段;14:收尾阶段;15:运营阶段")
     private Integer stage;
 
-    @ApiModelProperty("计划开始时间")
-    @NotNull(message = "计划开始时间必填")
-    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
+    @ApiModelProperty("计划开始日期")
+    @NotNull(message = "计划开始日期必填")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd")
     private Date planStartDate;
 
-    @ApiModelProperty("计划结束时间")
-    @NotNull(message = "计划结束时间必填")
-    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
+    @ApiModelProperty("计划结束日期")
+    @NotNull(message = "计划结束日期必填")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd")
     private Date planEndDate;
 
     @ApiModelProperty("里程碑行动-任务")

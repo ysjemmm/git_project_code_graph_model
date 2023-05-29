@@ -37,14 +37,14 @@ public class ProjectMilestoneAddReq extends ToString {
     @ApiModelProperty("里程碑行动-关联id")
     private Collection<Long> relationIds;
 
-    @ApiModelProperty("计划开始时间")
-    @NotNull(message = "计划开始时间必填")
-    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
+    @ApiModelProperty("计划开始日期")
+    @NotNull(message = "计划开始日期必填")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd")
     private Date planStartDate;
 
-    @ApiModelProperty("计划结束时间")
-    @NotNull(message = "计划结束时间必填")
-    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
+    @ApiModelProperty("计划结束日期")
+    @NotNull(message = "计划结束日期必填")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd")
     private Date planEndDate;
 
 }
