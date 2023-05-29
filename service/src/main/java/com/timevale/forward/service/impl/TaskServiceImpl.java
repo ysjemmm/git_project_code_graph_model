@@ -113,8 +113,6 @@ public class TaskServiceImpl implements TaskService {
     private ProjectMilestoneMapper milestoneMapper;
     @Resource
     private ProjectEvaluateComponent evaluateComponent;
-    @Resource
-    private ProjectMilestoneActionMapper milestoneActionMapper;
 
     @Value("${excludeBizDomain:[1,13,32]}")
     private String excludeBizDomain;
@@ -269,14 +267,6 @@ public class TaskServiceImpl implements TaskService {
         projectMilestoneComponent.updateMilestoneNameAndStage(taskDO);
         innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
 
-        // 里程碑处理
-        Boolean milestoneFlag = taskModifyReq.getMilestoneFlag();
-        ProjectMilestoneActionDO action = milestoneActionMapper.getOne(taskDO.getId(), MilestoneTypeEnum.TASK.getCode());
-        if (milestoneFlag && action == null) {
-            projectMilestoneComponent.addMilestone(taskDO);
-        } else if (!milestoneFlag && action != null){
-            milestoneActionMapper.del(action.getId());
-        }
         return BaseResult.success(true);
     }
 

@@ -156,6 +156,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
     @Override
     public BaseResult<Void> delAction(ProjectMilestoneActionDelReq actionDelReq) {
         milestoneActionMapper.delByRelate(actionDelReq.getId(), actionDelReq.getType());
+        innerProjectStatusUpdateComponent.updateProjectDateAndStatus(actionDelReq.getProjectId());
         return BaseResult.success();
     }
 }

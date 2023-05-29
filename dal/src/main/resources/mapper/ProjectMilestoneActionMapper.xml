@@ -50,6 +50,7 @@
             modify_man = #{modifyMan},
             modify_man_id = #{modifyManId}
         WHERE relation_id = #{relationId}
+          AND is_deleted = false
     </delete>
 
     <select id="getByType" resultType="com.timevale.forward.dal.entity.ProjectMilestoneActionDO">

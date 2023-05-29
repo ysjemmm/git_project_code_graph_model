@@ -13,6 +13,10 @@ import javax.validation.constraints.NotNull;
 @Getter
 @Setter
 public class ProjectMilestoneActionDelReq extends ToString {
+    @NotNull(message = "项目id必填")
+    @ApiModelProperty("项目id必填")
+    private Long projectId;
+
     @NotNull(message = "行动id不能为空")
     @ApiModelProperty("行动id")
     private Long id;
