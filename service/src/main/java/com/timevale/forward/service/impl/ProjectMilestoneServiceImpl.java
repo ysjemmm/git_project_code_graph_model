@@ -79,6 +79,7 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
     }
 
     @Transactional(rollbackFor = Exception.class)
+    @Override
     public BaseResult<Void> modify(ProjectMilestoneModifyReq projectMilestoneModifyReq) {
         ProjectMilestone milestoneDO = milestoneMapper.selectById(projectMilestoneModifyReq.getId());
         AssertUtil.notNull(milestoneDO, "里程碑不存在");

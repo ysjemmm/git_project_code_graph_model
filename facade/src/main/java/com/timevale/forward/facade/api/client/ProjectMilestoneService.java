@@ -4,6 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.request.ProjectMilestoneActionDelReq;
 import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
+import com.timevale.forward.facade.api.request.ProjectMilestoneModifyReq;
 import com.timevale.forward.facade.api.result.ProjectMilestoneListVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.mandarin.common.annotation.RestClient;
@@ -21,6 +22,14 @@ public interface ProjectMilestoneService {
      * 添加里程碑
      */
     BaseResult<Void> add(ProjectMilestoneAddReq projectMilestoneAddReq);
+
+    /**
+     * 修改里程碑
+     *
+     * @param projectMilestoneModifyReq 项目里程碑修改请求
+     * @return {@link BaseResult}<{@link Void}>
+     */
+    BaseResult<Void> modify(ProjectMilestoneModifyReq projectMilestoneModifyReq);
 
     /**
      * 里程碑列表查询
