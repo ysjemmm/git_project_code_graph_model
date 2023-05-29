@@ -211,11 +211,6 @@ public class TaskServiceImpl implements TaskService {
         //关联产品需求
         taskProductDemandComponent.batchInsert(taskDO.getId(), taskAddReq.getProductDemandIds());
 
-        // 判断是否为里程碑
-        if (taskAddReq.getMilestoneFlag()) {
-            projectMilestoneComponent.addMilestone(taskDO);
-        }
-
         sendDingMsg(taskDO, executorIds);
         return BaseResult.success(taskDO.getId());
     }
