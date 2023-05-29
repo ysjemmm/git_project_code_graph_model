@@ -31,10 +31,12 @@ public class ProjectMilestoneModifyReq extends ToString {
     private Integer stage;
 
     @ApiModelProperty("计划开始时间")
+    @NotNull(message = "计划开始时间必填")
     @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
     private Date planStartDate;
 
     @ApiModelProperty("计划结束时间")
+    @NotNull(message = "计划结束时间必填")
     @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
     private Date planEndDate;
 

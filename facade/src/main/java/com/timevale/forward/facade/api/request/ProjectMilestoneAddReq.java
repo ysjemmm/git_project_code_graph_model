@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -9,6 +10,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
+import java.util.Date;
 
 /**
  * @author jingchun
@@ -25,10 +27,6 @@ public class ProjectMilestoneAddReq extends ToString {
     @ApiModelProperty("里程碑名称")
     private String milestoneName;
 
-    @NotNull(message = "请选择里程碑类型")
-    @ApiModelProperty("里程碑类型0-任务;1-项目")
-    private Integer type;
-
     @ApiModelProperty("里程碑所属项目阶段:11:启动阶段;12:规划阶段;13:执行阶段;14:收尾阶段;15:运营阶段")
     private Integer stage;
 
@@ -38,5 +36,15 @@ public class ProjectMilestoneAddReq extends ToString {
 
     @ApiModelProperty("里程碑行动-关联id")
     private Collection<Long> relationIds;
+
+    @ApiModelProperty("计划开始时间")
+    @NotNull(message = "计划开始时间必填")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
+    private Date planStartDate;
+
+    @ApiModelProperty("计划结束时间")
+    @NotNull(message = "计划结束时间必填")
+    @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd HH:mm")
+    private Date planEndDate;
 
 }
