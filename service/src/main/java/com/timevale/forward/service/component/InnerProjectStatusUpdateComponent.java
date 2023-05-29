@@ -1,19 +1,18 @@
 package com.timevale.forward.service.component;
 
+import cn.hutool.core.collection.CollUtil;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
+import com.timevale.forward.facade.api.result.ProjectMilestoneActionVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -48,7 +47,7 @@ public class InnerProjectStatusUpdateComponent {
             return;
         }
         try {
-            List<ProjectMilestoneVO> validMilestones = getValidMilestones(projectId);
+            List<ProjectMilestoneVO> validMilestones = getValidActionMilestones(projectId);
             Date actualStartDate = null;
             Integer status = ProjectStatusEnum.WAITING.getCode();
             if (!validMilestones.isEmpty()) {
@@ -57,7 +56,8 @@ public class InnerProjectStatusUpdateComponent {
                         .orElse(ProjectStatusEnum.WAITING.getCode());
                 actualStartDate = validMilestones.stream()
                         .min(Comparator.comparing(ProjectMilestoneVO::getActualStartDate))
-                        .map(ProjectMilestoneVO::getActualStartDate).orElse(null);
+                        .map(ProjectMilestoneVO::getActualStartDate)
+                        .orElse(null);
             }
             // 如果为待启动，并且存在实际开始时间，则为启动中
             if (ProjectStatusEnum.WAITING.getCode().equals(status) && actualStartDate != null) {
@@ -79,28 +79,47 @@ public class InnerProjectStatusUpdateComponent {
     }
 
     public Integer calcProjectStatus(Long projectId) {
-        return getValidMilestones(projectId).stream()
+        return getValidActionMilestones(projectId).stream()
                 .max(Comparator.comparing(ProjectMilestoneVO::getStage))
                 .map(m -> ProjectStageEnum.getByCode(m.getStage()).getStatus().getCode())
                 .orElse(ProjectStatusEnum.WAITING.getCode());
     }
 
-    List<ProjectMilestoneVO> getValidMilestones(Long projectId) {
+    /**
+     * 获取存在有效行动的里程碑
+     *
+     * @param projectId 项目id
+     * @return {@link List}<{@link ProjectMilestoneVO}>
+     */
+    public List<ProjectMilestoneVO> getValidActionMilestones(Long projectId) {
         List<ProjectMilestoneVO> milestones = projectMilestoneComponent.listByProjectId(projectId);
-        return milestones.stream()
-                // 存在实际开始时间
-                .filter(m -> Objects.nonNull(m.getActualStartDate()))
-                // 非作废里程碑
-                .filter(m -> {
-                    if (Objects.equals(m.getType(), MilestoneTypeEnum.TASK.getCode())) {
-                        return !Objects.equals(m.getStatus(), TaskStatusEnum.INVALID.getCode());
-                    }
-                    if (Objects.equals(m.getType(), MilestoneTypeEnum.PROJECT.getCode())) {
-                        return !Objects.equals(m.getStatus(), ProjectStatusEnum.INVALID.getCode());
-                    }
-                    return false;
-                })
-                .collect(Collectors.toList());
+
+        List<ProjectMilestoneVO> validMilestones = new ArrayList<>();
+        for (ProjectMilestoneVO milestone : milestones) {
+            Collection<ProjectMilestoneActionVO> actions = milestone.getActions();
+            if (CollUtil.isEmpty(actions)) {
+                continue;
+            }
+
+            List<ProjectMilestoneActionVO> validActions = actions.stream()
+                    .filter(m -> Objects.nonNull(m.getActualStartDate()))
+                    .filter(m -> {
+                        if (Objects.equals(m.getType(), MilestoneTypeEnum.TASK.getCode())) {
+                            return !Objects.equals(m.getStatus(), TaskStatusEnum.INVALID.getCode());
+                        }
+                        if (Objects.equals(m.getType(), MilestoneTypeEnum.PROJECT.getCode())) {
+                            return !Objects.equals(m.getStatus(), ProjectStatusEnum.INVALID.getCode());
+                        }
+                        return false;
+                    })
+                    .collect(Collectors.toList());
+
+            if (CollUtil.isNotEmpty(validActions)) {
+                milestone.setActions(validActions);
+                validMilestones.add(milestone);
+            }
+        }
+        return validMilestones;
     }
 
 }

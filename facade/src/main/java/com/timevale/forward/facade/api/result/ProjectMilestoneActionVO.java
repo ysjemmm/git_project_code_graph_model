@@ -20,8 +20,14 @@ public class ProjectMilestoneActionVO extends ToString {
     @ApiModelProperty("行动名称")
     private String name;
 
-    @ApiModelProperty("里程碑类型0-任务;1-项目")
+    @ApiModelProperty("行动类型0-任务;1-项目")
     private Integer type;
+
+    @ApiModelProperty("行动状态")
+    private Integer status;
+
+    @ApiModelProperty("行动状态名称")
+    private String statusName;
 
     @ApiModelProperty(value = "负责人")
     private String principal;

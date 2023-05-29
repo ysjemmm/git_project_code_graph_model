@@ -70,4 +70,16 @@
             AND is_deleted = false
         </where>
     </select>
+
+    <select id="getByMains" resultType="com.timevale.forward.dal.entity.ProjectMilestoneActionDO">
+        SELECT *
+        FROM project_milestone_action
+        <where>
+            AND milestone_id IN
+            <foreach collection="milestoneIds" item="milestoneId" separator="," open="(" close=")">
+                #{milestoneId}
+            </foreach>
+            AND is_deleted = false
+        </where>
+    </select>
 </mapper>

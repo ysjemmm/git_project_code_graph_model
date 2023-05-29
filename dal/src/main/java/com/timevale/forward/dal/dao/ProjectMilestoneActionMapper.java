@@ -29,6 +29,8 @@ public interface ProjectMilestoneActionMapper {
     List<ProjectMilestoneActionDO> getByType(@Param("milestoneId")Long milestoneId, @Param("type")Integer type);
 
     List<ProjectMilestoneActionDO> getByMain(@Param("milestoneId")Long milestoneId);
+
+    List<ProjectMilestoneActionDO> getByMains(@Param("milestoneIds")Collection<Long> milestoneIds);
 }
 
 

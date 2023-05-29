@@ -1,14 +1,14 @@
 package com.timevale.forward.service.component;
 
 import cn.hutool.core.collection.CollUtil;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimaps;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.facade.api.result.ProjectMilestoneActionVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.constant.CommonConstant;
+import com.timevale.forward.service.copy.MilestoneActionCopier;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -29,56 +29,78 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class ProjectMilestoneComponent {
-
-    private final ProjectMilestoneMapper milestoneMapper;
-    private final ProjectMapper projectMapper;
     private final TaskMapper taskMapper;
-    private final PersonMapper personMapper;
+    private final ProjectMapper projectMapper;
+    private final PersonComponent personComponent;
     private final BizChangeLogMapper bizChangeLogMapper;
+    private final ProjectMilestoneMapper milestoneMapper;
     private final ProjectMilestoneActionMapper milestoneActionMapper;
 
     public List<ProjectMilestoneVO> listByProjectId(Long projectId) {
-        List<ProjectMilestoneVO> resList = new ArrayList<>();
-
         List<ProjectMilestone> milestones = milestoneMapper.selectByProjectId(projectId);
         if (milestones.isEmpty()) {
-            return resList;
+            return Collections.emptyList();
         }
-        ListMultimap<Integer, ProjectMilestone> milestonesByType =
-                Multimaps.index(milestones, ProjectMilestone::getType);
-        List<ProjectMilestone> projectMilestones = milestonesByType.get(MilestoneTypeEnum.PROJECT.getCode());
-        if (!projectMilestones.isEmpty()) {
-            List<Long> relationIds = projectMilestones.stream().map(ProjectMilestone::getRelationId)
+
+        // 获取行动
+        List<Long> milestoneIds = milestones.stream().map(ProjectMilestone::getId).collect(Collectors.toList());
+        List<ProjectMilestoneActionDO> milestoneActions = milestoneActionMapper.getByMains(milestoneIds);
+        Map<Long, List<ProjectMilestoneActionDO>> actionGroup =
+                milestoneActions.stream().collect(Collectors.groupingBy(ProjectMilestoneActionDO::getMilestoneId));
+
+        Map<Long, TaskDO> taskMap = new HashMap<>();
+        List<Long> taskIds = milestoneActions.stream()
+                .filter(e -> MilestoneTypeEnum.TASK.getCode().equals(e.getType()))
+                .map(ProjectMilestoneActionDO::getRelationId)
+                .collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(taskIds)) {
+            List<TaskDO> tasks = taskMapper.getByIdList(taskIds);
+            taskMap = Maps.uniqueIndex(tasks, BaseDO::getId);
+        }
+
+        Map<Long, ProjectDO> projectMap = new HashMap<>();
+        List<Long> projectIds = milestoneActions.stream()
+                .filter(e -> MilestoneTypeEnum.PROJECT.getCode().equals(e.getType()))
+                .map(ProjectMilestoneActionDO::getRelationId)
+                .collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(projectIds)) {
+            List<ProjectDO> projects = projectMapper.getByIds(projectIds);
+            projectMap = Maps.uniqueIndex(projects, BaseDO::getId);
+        }
+
+        List<ProjectMilestoneVO> milestoneVOs = ProjectMilestoneCopier.INSTANCE.convert(milestones);
+        for (ProjectMilestoneVO milestoneVO : milestoneVOs) {
+            List<ProjectMilestoneActionDO> actions = actionGroup.get(milestoneVO.getId());
+
+            List<TaskDO> tasks = actions.stream()
+                    .filter(e -> MilestoneTypeEnum.TASK.getCode().equals(e.getType()))
+                    .map(BaseDO::getId)
+                    .map(taskMap::get)
                     .collect(Collectors.toList());
-            List<ProjectDO> projects = projectMapper.getByIds(relationIds);
-            Map<Long, ProjectDO> projectById = Maps.uniqueIndex(projects, ProjectDO::getId);
-            for (ProjectMilestone projectMilestone : projectMilestones) {
-                ProjectDO relateProject = projectById.get(projectMilestone.getRelationId());
-                if (relateProject == null) {
-                    continue;
-                }
-                resList.add(ProjectMilestoneCopier.INSTANCE.convert(projectMilestone, relateProject));
-            }
-        }
-        List<ProjectMilestone> taskMilestones = milestonesByType.get(MilestoneTypeEnum.TASK.getCode());
-        if (!taskMilestones.isEmpty()) {
-            List<Long> relationIds = taskMilestones.stream().map(ProjectMilestone::getRelationId)
+            List<ProjectDO> projects = actions.stream()
+                    .filter(e -> MilestoneTypeEnum.PROJECT.getCode().equals(e.getType()))
+                    .map(BaseDO::getId)
+                    .map(projectMap::get)
                     .collect(Collectors.toList());
-            List<TaskDO> tasks = taskMapper.getByIdList(relationIds);
-            //1.填充人员信息
-            Map<Long, TaskDO> taskById = Maps.uniqueIndex(tasks, TaskDO::getId);
-            Map<Long, List<PersonDO>> executorMap = personMapper.get(taskById.keySet(),
-                            PersonTypeEnum.TASK_EXECUTOR.getCode())
-                    .stream().collect(Collectors.groupingBy(PersonDO::getMainId));
-            for (ProjectMilestone taskMilestone : taskMilestones) {
-                TaskDO task = taskById.get(taskMilestone.getRelationId());
-                if (task == null) {
-                    continue;
-                }
-                resList.add(ProjectMilestoneCopier.INSTANCE.convert(taskMilestone, task, executorMap.get(task.getId())));
+
+            // 项目行动直接转换
+            List<ProjectMilestoneActionVO> projectActions = MilestoneActionCopier.INSTANCE.project2vo(projects);
+            // 任务行动由于执行人一对多需要特殊处理
+            List<ProjectMilestoneActionVO> taskActions = MilestoneActionCopier.INSTANCE.task2vo(tasks);
+            for (ProjectMilestoneActionVO taskAction : taskActions) {
+                List<PersonDO> executors = personComponent.select(taskAction.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
+                taskAction.setPrincipal(executors.stream().map(PersonDO::getUserName).collect(Collectors.joining(",")));
+                taskAction.setPrincipalId(executors.stream().map(PersonDO::getUserId).collect(Collectors.joining(",")));
             }
+
+            // 填充数据
+            Collection<ProjectMilestoneActionVO> allActions = CollUtil.addAll(projectActions, taskActions);
+            milestoneVO.setActions(allActions);
+            allActions.stream().map(ProjectMilestoneActionVO::getActualStartDate).min(Date::compareTo).ifPresent(milestoneVO::setActualStartDate);
+            allActions.stream().map(ProjectMilestoneActionVO::getActualEndDate).max(Date::compareTo).ifPresent(milestoneVO::setActualEndDate);
         }
-        return resList;
+
+        return milestoneVOs;
     }
 
     public void updateMilestoneNameAndStage(TaskDO task) {

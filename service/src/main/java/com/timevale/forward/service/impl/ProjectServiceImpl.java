@@ -1498,30 +1498,23 @@ public class ProjectServiceImpl implements ProjectService {
                         && !Objects.equals(projectDO.getStatus(), ProjectStatusEnum.INVALID.getCode()),
                 "项目暂停或作废时，不能进行此操作");
 
-        // 里程碑关联的任务与项目,过滤作废里程碑
-        List<ProjectMilestoneVO> projectMilestones = projectMilestoneComponent.listByProjectId(projectId);
-        projectMilestones = projectMilestones.stream().filter(e -> {
-            if (MilestoneTypeEnum.TASK.getCode().equals(e.getType())) {
-                return !TaskStatusEnum.INVALID.getCode().equals(e.getStatus());
-            } else {
-                return !ProjectStatusEnum.INVALID.getCode().equals(e.getStatus());
-            }
-        }).collect(Collectors.toList());
+        // 获取存在有效行动的里程碑
+        List<ProjectMilestoneVO> validMilestones = innerProjectStatusUpdateComponent.getValidActionMilestones(projectId);
 
         // 最后一个阶段存在里程碑
         List<Integer> validStages = projectDO.getValidStageList();
         Integer completeStage = validStages.get(validStages.size() - 1);
-        Set<Integer> milestoneStages = projectMilestones.stream().map(ProjectMilestoneVO::getStage)
+        Set<Integer> milestoneStages = validMilestones.stream().map(ProjectMilestoneVO::getStage)
                 .collect(Collectors.toSet());
         AssertUtil.checkState(milestoneStages.contains(completeStage),
                 ProjectStageEnum.getByCode(completeStage).getText() + "无里程碑，无法完成项目");
-        Date projectActualEndDate = projectMilestones.stream()
+        Date projectActualEndDate = validMilestones.stream()
                 .filter(m -> Objects.equals(m.getStage(), completeStage))
                 .map(ProjectMilestoneVO::getActualEndDate)
                 .max(Date::compareTo)
                 .orElse(new Date());
         // 里程碑是否全部完成
-        AssertUtil.checkState(projectMilestones.stream().noneMatch(e -> Objects.isNull(e.getActualEndDate())),
+        AssertUtil.checkState(validMilestones.stream().noneMatch(e -> Objects.isNull(e.getActualEndDate())),
                 "存在未完成的里程碑，无法关闭项目");
 
         // 修改项目状态
