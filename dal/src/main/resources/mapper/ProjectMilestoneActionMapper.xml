@@ -50,7 +50,23 @@
             modify_man = #{modifyMan},
             modify_man_id = #{modifyManId}
         WHERE relation_id = #{relationId}
+          AND type = #{type}
           AND is_deleted = false
+    </delete>
+
+    <delete id="delByRelates">
+        UPDATE project_milestone_action
+        SET is_deleted = true,
+            modify_man = #{modifyMan},
+            modify_man_id = #{modifyManId}
+        <where>
+            AND relation_id IN
+            <foreach collection="relationIds" item="relationId" separator="," open="(" close=")">
+                #{relationId}
+            </foreach>
+            AND type = #{type}
+            AND is_deleted = false
+        </where>
     </delete>
 
     <select id="getByType" resultType="com.timevale.forward.dal.entity.ProjectMilestoneActionDO">

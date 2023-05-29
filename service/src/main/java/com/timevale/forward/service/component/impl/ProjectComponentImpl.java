@@ -85,6 +85,8 @@ public class ProjectComponentImpl implements ProjectComponent {
     private BizDemandComponent bizDemandComponent;
     @Resource
     private BizDomainMapper bizDomainMapper;
+    @Resource
+    private ProjectMilestoneActionMapper milestoneActionMapper;
 
     @Override
     public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -601,10 +603,12 @@ public class ProjectComponentImpl implements ProjectComponent {
             return;
         }
         List<Long> childIds = childList.stream().map(ProjectDO::getId).collect(Collectors.toList());
-        List<ProjectMilestone> milestones = projectMilestoneMapper.selectByRelations(childIds, MilestoneTypeEnum.PROJECT.getCode());
-        if (!milestones.isEmpty()) {
-            milestones.stream().map(ProjectMilestone::getId).forEach(milestoneService::deleteMilestone);
+
+        // 删除里成本关联关系
+        if (CollUtil.isNotEmpty(childList)) {
+            milestoneActionMapper.delByRelates(childIds, MilestoneTypeEnum.PROJECT.getCode());
         }
+
         projectMapper.deleteChildren(parent.getParentIds().length(), "^" + child.getParentIds());
         projectLogComponent.addDeleteChildLog(parent.getId(), child.getName());
         projectLogComponent.addDetachParentLog(child.getId(), parent.getName());
