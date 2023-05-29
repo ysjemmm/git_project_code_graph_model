@@ -2,9 +2,12 @@ package com.timevale.forward.service.component;
 
 import cn.hutool.core.collection.CollUtil;
 import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.dao.ProjectMilestoneActionMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
+import com.timevale.forward.dal.entity.BaseDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
+import com.timevale.forward.dal.entity.ProjectMilestoneActionDO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneActionVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.*;
@@ -24,16 +27,18 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class InnerProjectStatusUpdateComponent {
     private final ProjectMapper projectMapper;
-    private final ProjectMilestoneComponent projectMilestoneComponent;
     private final ProjectMilestoneMapper projectMilestoneMapper;
+    private final ProjectMilestoneActionMapper milestoneActionMapper;
+    private final ProjectMilestoneComponent projectMilestoneComponent;
 
     public void updateFromProject(ProjectDO project) {
-        ProjectMilestone milestone =
-                projectMilestoneMapper.selectByRelation(project.getId(), MilestoneTypeEnum.PROJECT.getCode());
-        if (milestone == null) {
-            return;
-        }
-        updateProjectDateAndStatus(milestone.getProjectId());
+        Optional.ofNullable(project)
+                .map(BaseDO::getId)
+                .map(e -> milestoneActionMapper.getOne(project.getId(), MilestoneTypeEnum.PROJECT.getCode()))
+                .map(ProjectMilestoneActionDO::getMilestoneId)
+                .map(projectMilestoneMapper::selectById)
+                .map(ProjectMilestone::getProjectId)
+                .ifPresent(this::updateProjectDateAndStatus);
     }
 
     public void updateProjectDateAndStatus(Long projectId) {

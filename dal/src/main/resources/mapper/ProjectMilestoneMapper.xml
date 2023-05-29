@@ -99,13 +99,4 @@
             AND is_deleted = false
         </where>
     </select>
-    <select id="selectByRelations" resultType="com.timevale.forward.dal.entity.ProjectMilestone">
-        SELECT * FROM project_milestone
-        WHERE
-          relation_id in
-          <foreach collection="relationIds" item="relationId" open="(" separator="," close=")">
-              #{relationId}
-          </foreach>
-          AND type = #{type} AND is_deleted = false
-    </select>
 </mapper>

@@ -114,50 +114,12 @@ public class ProjectMilestoneComponent {
         return milestoneVOs;
     }
 
-    public void updateMilestoneNameAndStage(TaskDO task) {
-        ProjectMilestone milestone = milestoneMapper.selectByRelation(task.getId(), MilestoneTypeEnum.TASK.getCode());
-        if (milestone == null) {
-            return;
-        }
-        if (Objects.equals(milestone.getStage(), task.getStage()) &&
-                Objects.equals(milestone.getMilestoneName(), task.getName())) {
-            return;
-        }
-        milestone.setMilestoneName(task.getName());
-        milestone.setStage(task.getStage());
-        milestoneMapper.update(milestone);
-    }
-
     public void addMilestoneCreateLog(ProjectMilestone entity) {
         addMilestoneLog(entity, ButtonActionEnum.MILESTONE_ADD);
     }
 
     public void addMilestoneDeleteLog(ProjectMilestone entity) {
         addMilestoneLog(entity, ButtonActionEnum.MILESTONE_DELETE);
-    }
-
-    public void addMilestoneSuspendLog(Long relationId, Integer type) {
-        addMilestoneLog(relationId, type, ButtonActionEnum.MILESTONE_SUSPEND);
-    }
-
-    public void addMilestoneEnableLog(Long relationId, Integer type) {
-        addMilestoneLog(relationId, type, ButtonActionEnum.MILESTONE_ENABLE);
-    }
-
-    public void addMilestoneInvalidLog(Long relationId, Integer type) {
-        addMilestoneLog(relationId, type, ButtonActionEnum.MILESTONE_INVALID);
-    }
-
-    public void addMilestoneDoneLog(Long relationId, Integer type) {
-        addMilestoneLog(relationId, type, ButtonActionEnum.MILESTONE_DONE);
-    }
-
-    private void addMilestoneLog(Long relationId, Integer type, ButtonActionEnum action) {
-        ProjectMilestone entity = milestoneMapper.selectByRelation(relationId, type);
-        if (entity == null) {
-            return;
-        }
-        addMilestoneLog(entity, action);
     }
 
     private void addMilestoneLog(ProjectMilestone entity, ButtonActionEnum action) {

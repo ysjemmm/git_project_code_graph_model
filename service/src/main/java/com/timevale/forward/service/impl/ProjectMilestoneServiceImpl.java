@@ -4,6 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneActionMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
+import com.timevale.forward.dal.entity.BaseDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
 import com.timevale.forward.facade.api.client.ProjectMilestoneService;
@@ -12,7 +13,6 @@ import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
 import com.timevale.forward.facade.api.request.ProjectMilestoneModifyReq;
 import com.timevale.forward.facade.api.result.ProjectMilestoneListVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
-import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.InnerProjectStatusUpdateComponent;
 import com.timevale.forward.service.component.MilestoneActionComponent;
@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -127,12 +128,12 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
             return BaseResult.success();
         }
         List<ProjectDO> projects = projectMapper.selectByParentIdsRegexp("^" + project.getParentIds());
-        List<ProjectMilestone> milestones = milestoneMapper.selectByRelations(projects.stream().map(ProjectDO::getId)
-                .collect(Collectors.toList()), MilestoneTypeEnum.PROJECT.getCode());
-
-        List<ProjectMilestoneVO> result = ProjectMilestoneCopier.INSTANCE.convert(milestones);
-        result.forEach(m -> m.setActions(milestoneActionComponent.getActions(m.getId())));
-        return BaseResult.success();
+        List<ProjectMilestoneVO> result = projects.stream()
+                .map(BaseDO::getId)
+                .map(id -> projectMilestoneComponent.listByProjectId(id))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+        return BaseResult.success(result);
     }
 
     @Override

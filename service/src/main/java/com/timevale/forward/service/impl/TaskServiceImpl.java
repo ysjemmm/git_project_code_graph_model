@@ -110,8 +110,6 @@ public class TaskServiceImpl implements TaskService {
     @Resource
     private ProjectMilestoneComponent projectMilestoneComponent;
     @Resource
-    private ProjectMilestoneMapper milestoneMapper;
-    @Resource
     private ProjectEvaluateComponent evaluateComponent;
 
     @Value("${excludeBizDomain:[1,13,32]}")
@@ -259,7 +257,6 @@ public class TaskServiceImpl implements TaskService {
                 personLevel);
 
         sendDingMsg(taskDO, executorIds);
-        projectMilestoneComponent.updateMilestoneNameAndStage(taskDO);
         innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
 
         return BaseResult.success(true);
@@ -309,10 +306,6 @@ public class TaskServiceImpl implements TaskService {
         // 是否为PMO
         taskDetailVO.setIsPMO(userComponent.isPmo());
 
-        // 是否为里程碑
-        ProjectMilestone milestone = milestoneMapper.selectByRelation(taskId, MilestoneTypeEnum.TASK.getCode());
-        taskDetailVO.setMilestoneFlag(milestone != null);
-
         return BaseResult.success(taskDetailVO);
     }
 
@@ -345,11 +338,7 @@ public class TaskServiceImpl implements TaskService {
         taskComponent.deleteTodoTask(taskDO.getTodoId());
         taskDO.setStatus(type);
         taskMapper.update(taskDO);
-        if (TaskStatusEnum.SUSPEND.getCode().equals(type)) {
-            projectMilestoneComponent.addMilestoneSuspendLog(taskId, MilestoneTypeEnum.TASK.getCode());
-        } else {
-            projectMilestoneComponent.addMilestoneInvalidLog(taskId, MilestoneTypeEnum.TASK.getCode());
-        }
+
         innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
         return BaseResult.success(true);
     }
@@ -378,7 +367,6 @@ public class TaskServiceImpl implements TaskService {
             taskComponent.addTodoTask(taskDO, existExecutorIds, LocalSessionUtils.getUserInfo().getId());
         }
         taskMapper.update(taskDO);
-        projectMilestoneComponent.addMilestoneEnableLog(taskId, MilestoneTypeEnum.TASK.getCode());
         return BaseResult.success(true);
     }
 
@@ -426,7 +414,6 @@ public class TaskServiceImpl implements TaskService {
         }
         sendDingMsg(taskDO, existExecutorIds);
         innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
-        projectMilestoneComponent.addMilestoneDoneLog(taskId, MilestoneTypeEnum.TASK.getCode());
         return BaseResult.success(true);
     }
 

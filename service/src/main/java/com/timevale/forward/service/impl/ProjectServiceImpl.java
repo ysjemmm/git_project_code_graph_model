@@ -302,11 +302,6 @@ public class ProjectServiceImpl implements ProjectService {
 
         // 更新任务状态
         taskComponent.updateStatusAsProjectStatusChange(projectId, type, false);
-        if (ProjectStatusEnum.SUSPEND.getCode().equals(type)) {
-            projectMilestoneComponent.addMilestoneSuspendLog(projectId, MilestoneTypeEnum.PROJECT.getCode());
-        } else {
-            projectMilestoneComponent.addMilestoneInvalidLog(projectId, MilestoneTypeEnum.PROJECT.getCode());
-        }
 
         bizDemandComponent.updateStatusByProject(projectId);
         return BaseResult.success(true);
@@ -347,7 +342,6 @@ public class ProjectServiceImpl implements ProjectService {
             projectLogComponent.addLogWhenContentChange(oldReason, CommonConstant.NULL, projectId,
                     BizChangeLogFieldEnum.SUSPEND_REASON.getText());
         }
-        projectMilestoneComponent.addMilestoneEnableLog(projectId, MilestoneTypeEnum.PROJECT.getCode());
         innerProjectStatusUpdateComponent.updateProjectDateAndStatus(projectId);
 
         return BaseResult.success(true);

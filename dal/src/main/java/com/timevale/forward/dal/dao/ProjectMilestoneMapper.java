@@ -5,7 +5,6 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -21,15 +20,10 @@ public interface ProjectMilestoneMapper {
 
     List<ProjectMilestone> selectByProjectIds(@Param("projectIds") List<Long> projectIds);
 
-    @Select("select * from project_milestone where project_id = #{projectId} and stage = #{stage} and is_deleted = false")
-    List<ProjectMilestone> selectByStage(@Param("projectId") Long projectId, @Param("stage")Integer stage);
-
     void insert(ProjectMilestone entity);
 
     @Select("select * from project_milestone where id = #{id} and is_deleted = false")
     ProjectMilestone selectById(@Param("id") Long id);
-
-    List<ProjectMilestone> selectByRelations(@Param("relationIds") Collection<Long> relationId, @Param("type") Integer type);
 
     @Select("select * from project_milestone where relation_id = #{relationId} and type = #{type} and is_deleted = false limit 1")
     ProjectMilestone selectByRelation(@Param("relationId") Long relationId, @Param("type") Integer type);
