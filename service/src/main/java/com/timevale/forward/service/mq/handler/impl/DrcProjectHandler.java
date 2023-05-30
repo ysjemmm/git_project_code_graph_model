@@ -4,18 +4,17 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
-import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
+import com.timevale.forward.dal.dao.ProjectMilestoneActionMapper;
 import com.timevale.forward.dal.dao.ProjectRiskMapper;
 import com.timevale.forward.dal.entity.BaseDO;
 import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectMilestone;
 import com.timevale.forward.dal.entity.ProjectRiskDO;
+import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.ProjectMilestoneComponent;
 import com.timevale.forward.service.component.ProjectRiskComponent;
-import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
-import com.timevale.forward.service.mq.dto.MilestoneDTO;
 import com.timevale.forward.service.observer.event.OtherProjectPublishMsgEvent;
 import com.timevale.forward.service.observer.event.OtnProjectPublishMsgEvent;
 import com.timevale.forward.service.observer.event.SrEvalEndMsgEvent;
@@ -31,7 +30,7 @@ import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 /**
  * @author by YangXu
@@ -45,8 +44,9 @@ public class DrcProjectHandler {
     private final ProjectRiskMapper projectRiskMapper;
     private final ElapsedTimeClient elapsedTimeClient;
     private final ProjectRiskComponent projectRiskComponent;
-    private final ProjectMilestoneMapper projectMilestoneMapper;
+    private final ProjectMilestoneComponent milestoneComponent;
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
+    private final ProjectMilestoneActionMapper milestoneActionMapper;
 
     public void handle(DrcMsgBody body) {
         threadPoolTaskExecutor.execute(() -> msgHandle(body));
@@ -99,42 +99,32 @@ public class DrcProjectHandler {
         }
 
         ProjectDO projectDO = JSON.parseObject(body.getAfter(), ProjectDO.class);
-        MilestoneDTO milestoneDTO = ProjectMilestoneCopier.INSTANCE.project2dto(projectDO);
-        solveRisk(milestoneDTO);
+        Optional.ofNullable(projectDO)
+                .map(BaseDO::getId)
+                .map(e -> milestoneActionMapper.getOne(projectDO.getId(), MilestoneTypeEnum.PROJECT.getCode()))
+                .map(e -> milestoneComponent.getMilestone(e.getMilestoneId()))
+                .ifPresent(this::solveRisk);
     }
 
     /**
-     * 内部项目风险处理
+     * 解决风险
      *
-     * @param milestoneDTO 里程碑dto
+     * @param milestone 里程碑
      */
-    public void solveRisk(MilestoneDTO milestoneDTO) {
-        log.info("[DrcProjectHandler.solveRisk]里程碑类型:{}，里程碑关联id:{}", milestoneDTO.getMilestoneType(), milestoneDTO.getMilestoneRelationId());
-
-        // 关联的里程碑
-        ProjectMilestone milestone = projectMilestoneMapper
-                .selectByRelation(milestoneDTO.getMilestoneRelationId(), milestoneDTO.getMilestoneType());
+    public void solveRisk(ProjectMilestoneVO milestone) {
         if (milestone == null) {
             return;
         }
 
+        // 处理未录入风险
+        projectRiskComponent.solveNoEntry(milestone.getProjectId());
+
         // 关联的待处理风险
         Long milestoneId = milestone.getId();
-        List<Integer> types = CollUtil.newArrayList(ProjectRiskTypeEnum.MILE_STONE_START.getCode(), ProjectRiskTypeEnum.MILE_STONE_END.getCode());
+        List<Integer> types = CollUtil.newArrayList(ProjectRiskTypeEnum.MILE_STONE_START.getCode(),
+                ProjectRiskTypeEnum.MILE_STONE_END.getCode());
         List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByMain(milestoneId, ProjectRiskStatusEnum.PENDING.getCode(), types);
-        projectRiskComponent.solveNoEntry(milestone.getProjectId());
         if (CollUtil.isEmpty(riskDOList)) {
-            return;
-        }
-
-        // 如果里程碑节点暂停或作废，对应风险作废
-        if (milestoneDTO.getSuspend() || milestoneDTO.getInvalid()) {
-            List<Long> riskIdList = riskDOList.stream().map(BaseDO::getId).collect(Collectors.toList());
-            projectRiskMapper.updateStatuses(riskIdList, ProjectRiskStatusEnum.INVALID.getCode());
-
-            if (milestoneDTO.getInvalid()) {
-                projectRiskComponent.solveNoEntry(milestone.getProjectId());
-            }
             return;
         }
 
@@ -147,8 +137,8 @@ public class DrcProjectHandler {
 
             // 开始时间未录入
             if (Objects.equals(ProjectRiskTypeEnum.MILE_STONE_START.getCode(), riskType)) {
-                Date planStartDate = milestoneDTO.getPlanStartDate();
-                Date actualStartDate = milestoneDTO.getActualStartDate();
+                Date planStartDate = milestone.getPlanStartDate();
+                Date actualStartDate = milestone.getActualStartDate();
                 if (actualStartDate == null) {
                     overdueDay = getOverdueDay(planStartDate, nowDate);
                     if (nowDate.compareTo(planStartDate) <= 0) {
@@ -161,8 +151,8 @@ public class DrcProjectHandler {
                     riskStatus = ProjectRiskStatusEnum.COMPLETE.getCode();
                 }
             } else if (Objects.equals(ProjectRiskTypeEnum.MILE_STONE_END.getCode(), riskType)) {
-                Date planEndDate = milestoneDTO.getPlanEndDate();
-                Date actualEndDate = milestoneDTO.getActualEndDate();
+                Date planEndDate = milestone.getPlanEndDate();
+                Date actualEndDate = milestone.getActualEndDate();
                 if (actualEndDate == null) {
                     overdueDay = getOverdueDay(planEndDate, nowDate);
                     if (nowDate.compareTo(planEndDate) <= 0) {

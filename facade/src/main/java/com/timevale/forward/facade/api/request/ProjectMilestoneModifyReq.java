@@ -19,7 +19,7 @@ import java.util.Date;
 @Setter
 public class ProjectMilestoneModifyReq extends ToString {
 
-    @NotNull(message = "里程碑所属项目必填")
+    @NotNull(message = "里程碑id必填")
     @ApiModelProperty("里程碑id")
     private Long id;
 

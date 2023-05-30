@@ -34,6 +34,14 @@ public interface ProjectRiskMapper {
      */
     int update(ProjectRiskDO projectRiskDO);
 
+    /**
+     * 更新
+     * 所属项目id、所属主体id、风险名称、风险类型 组成唯一id
+     *
+     * @param projectRiskDO 项目风险DO
+     */
+    int updateByUnique(ProjectRiskDO projectRiskDO);
+
     void updateStatusByMainId(@Param("mainId") Long mainId, @Param("status") Integer status, @Param("types")List<Integer> types);
 
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);

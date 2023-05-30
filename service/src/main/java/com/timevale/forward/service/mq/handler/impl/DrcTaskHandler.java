@@ -2,16 +2,21 @@ package com.timevale.forward.service.mq.handler.impl;
 
 import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
+import com.timevale.forward.dal.dao.ProjectMilestoneActionMapper;
+import com.timevale.forward.dal.entity.BaseDO;
+import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.model.enums.DrcActionEnum;
-import com.timevale.forward.service.copy.ProjectMilestoneCopier;
+import com.timevale.forward.model.enums.MilestoneTypeEnum;
+import com.timevale.forward.service.component.ProjectMilestoneComponent;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
-import com.timevale.forward.service.mq.dto.MilestoneDTO;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 /**
  * @author by YangXu
@@ -23,7 +28,9 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class DrcTaskHandler {
     private final DrcProjectHandler projectHandler;
+    private final ProjectMilestoneComponent milestoneComponent;
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
+    private final ProjectMilestoneActionMapper milestoneActionMapper;
 
     public void handle(DrcMsgBody body) {
         threadPoolTaskExecutor.execute(()-> riskHandle(body));
@@ -37,7 +44,12 @@ public class DrcTaskHandler {
         }
 
         TaskDO taskDO = JSON.parseObject(body.getAfter(), TaskDO.class);
-        MilestoneDTO milestoneDTO = ProjectMilestoneCopier.INSTANCE.task2dto(taskDO);
-        projectHandler.solveRisk(milestoneDTO);
+
+        ProjectDO projectDO = JSON.parseObject(body.getAfter(), ProjectDO.class);
+        Optional.ofNullable(taskDO)
+                .map(BaseDO::getId)
+                .map(e -> milestoneActionMapper.getOne(projectDO.getId(), MilestoneTypeEnum.PROJECT.getCode()))
+                .map(e -> milestoneComponent.getMilestone(e.getMilestoneId()))
+                .ifPresent(projectHandler::solveRisk);
     }
 }

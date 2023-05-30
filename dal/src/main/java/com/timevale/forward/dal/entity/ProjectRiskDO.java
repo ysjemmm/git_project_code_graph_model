@@ -1,14 +1,13 @@
 package com.timevale.forward.dal.entity;
 
+import com.google.common.base.Objects;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 
 /**
  * @author by YangXu
  * @date 2022/04/29 16:27
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
 public class ProjectRiskDO extends BaseDO {
 
@@ -41,4 +40,18 @@ public class ProjectRiskDO extends BaseDO {
      * 状态：0 待处理, 1 已处理
      */
     private Integer status;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        ProjectRiskDO riskDO = (ProjectRiskDO) o;
+        return Objects.equal(projectId, riskDO.projectId) && Objects.equal(mainId, riskDO.mainId) && Objects.equal(type, riskDO.type) && Objects.equal(name, riskDO.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(projectId, mainId, type, name);
+    }
 }

@@ -72,6 +72,24 @@
         </foreach>
     </update>
 
+    <update id="updateByUnique">
+        UPDATE project_risk
+        <set>
+            <if test="sign != null and sign != ''">sign = #{sign},</if>
+            <if test="name != null and name != ''">`name` = #{name},</if>
+            <if test="status != null">`status` = #{status},</if>
+            <if test="modifyDate != null">modify_date = #{modifyDate},</if>
+            <if test="modifyMan != null">modify_man = #{modifyMan},</if>
+            <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
+        </set>
+        <where>
+            AND type = #{type}
+            AND `name` = #{name},
+            AND main_id = #{main_id},
+            AND project_id = #{projectId},
+        </where>
+    </update>
+
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
         SELECT *
         FROM project_risk

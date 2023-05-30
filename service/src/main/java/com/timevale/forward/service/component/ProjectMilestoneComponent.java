@@ -13,10 +13,10 @@ import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,14 +27,21 @@ import java.util.stream.Collectors;
 @Slf4j
 @LogPoint
 @Component
-@RequiredArgsConstructor
 public class ProjectMilestoneComponent {
-    private final TaskMapper taskMapper;
-    private final ProjectMapper projectMapper;
-    private final PersonComponent personComponent;
-    private final BizChangeLogMapper bizChangeLogMapper;
-    private final ProjectMilestoneMapper milestoneMapper;
-    private final ProjectMilestoneActionMapper milestoneActionMapper;
+    @Resource
+    private TaskMapper taskMapper;
+    @Resource
+    private ProjectMapper projectMapper;
+    @Resource
+    private PersonComponent personComponent;
+    @Resource
+    private BizChangeLogMapper bizChangeLogMapper;
+    @Resource
+    private ProjectMilestoneMapper milestoneMapper;
+    @Resource
+    private MilestoneActionComponent milestoneActionComponent;
+    @Resource
+    private ProjectMilestoneActionMapper milestoneActionMapper;
 
     public List<ProjectMilestoneVO> listByProjectId(Long projectId) {
         List<ProjectMilestone> milestones = milestoneMapper.selectByProjectId(projectId);
@@ -135,57 +142,24 @@ public class ProjectMilestoneComponent {
         bizChangeLogMapper.insert(log);
     }
 
-    /**
-     * 得到有效里程碑，对应非任务或项目为非废除状态
-     *
-     * @param projectIdList 项目id列表
-     * @return {@link List}<{@link ProjectMilestone}>
-     */
-    public List<ProjectMilestone> getValidMilestone(List<Long> projectIdList) {
-        if (CollUtil.isEmpty(projectIdList)) {
-            return new ArrayList<>();
-        }
-        log.info("[ProjectMilestoneComponent.getValidMilestone]projectIdList: {}", projectIdList);
+    public ProjectMilestoneVO getMilestone(Long milestoneId) {
+        ProjectMilestone milestone = milestoneMapper.selectById(milestoneId);
+        List<ProjectMilestoneActionVO> actions = milestoneActionComponent.getActions(milestoneId);
 
-        List<ProjectMilestone> validMilestoneList = new ArrayList<>();
-        List<ProjectMilestone> milestoneList = milestoneMapper.selectByProjectIds(projectIdList);
+        ProjectMilestoneVO milestoneVO = ProjectMilestoneCopier.INSTANCE.convert(milestone);
+        actions.stream()
+                .map(ProjectMilestoneActionVO::getActualStartDate)
+                .filter(Objects::nonNull)
+                .min(Date::compareTo)
+                .ifPresent(milestoneVO::setActualStartDate);
+        actions.stream()
+                .map(ProjectMilestoneActionVO::getActualEndDate)
+                .filter(Objects::nonNull)
+                .max(Date::compareTo)
+                .ifPresent(milestoneVO::setActualEndDate);
+        milestoneVO.setActions(actions);
 
-        List<Long> mTaskIdList = milestoneList.stream()
-                .filter(e -> MilestoneTypeEnum.TASK.getCode().equals(e.getType()))
-                .map(ProjectMilestone::getRelationId)
-                .collect(Collectors.toList());
-
-        List<Long> mProjectIdList = milestoneList.stream()
-                .filter(e -> MilestoneTypeEnum.PROJECT.getCode().equals(e.getType()))
-                .map(ProjectMilestone::getRelationId)
-                .collect(Collectors.toList());
-
-        if (CollUtil.isNotEmpty(mTaskIdList)) {
-            List<TaskDO> mTaskDOList = taskMapper.getByIdList(mTaskIdList);
-            Set<Long> validTaskSet = mTaskDOList.stream()
-                    .filter(e -> !TaskStatusEnum.INVALID.getCode().equals(e.getStatus()))
-                    .map(BaseDO::getId)
-                    .collect(Collectors.toSet());
-            validMilestoneList = milestoneList.stream()
-                    .filter(e -> MilestoneTypeEnum.TASK.getCode().equals(e.getType())
-                            && validTaskSet.contains(e.getRelationId()))
-                    .collect(Collectors.toList());
-        }
-
-        if (CollUtil.isNotEmpty(mProjectIdList)) {
-            List<ProjectDO> mProjectDOList = projectMapper.getByIds(mProjectIdList);
-            Set<Long> validProjectSet = mProjectDOList.stream()
-                    .filter(e -> !ProjectStatusEnum.INVALID.getCode().equals(e.getStatus()))
-                    .map(BaseDO::getId)
-                    .collect(Collectors.toSet());
-            List<ProjectMilestone> projectMilestones = milestoneList.stream()
-                    .filter(e -> MilestoneTypeEnum.PROJECT.getCode().equals(e.getType())
-                            && validProjectSet.contains(e.getRelationId()))
-                    .collect(Collectors.toList());
-            validMilestoneList.addAll(projectMilestones);
-        }
-
-        return validMilestoneList;
+        return milestoneVO;
     }
 
     /**

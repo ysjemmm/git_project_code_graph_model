@@ -1,21 +1,20 @@
 package com.timevale.forward.service.component;
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ObjectUtil;
-import com.timevale.forward.dal.dao.ProjectMapper;
-import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.dao.ProjectRiskMapper;
-import com.timevale.forward.dal.dao.TaskMapper;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectMilestone;
 import com.timevale.forward.dal.entity.ProjectRiskDO;
-import com.timevale.forward.dal.entity.TaskDO;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
+import com.timevale.forward.model.enums.ProjectCategoryEnum;
+import com.timevale.forward.model.enums.ProjectRiskStatusEnum;
+import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
+import com.timevale.forward.model.enums.ProjectStageEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -26,67 +25,36 @@ import java.util.stream.Collectors;
 @Component
 public class ProjectRiskComponent {
     @Resource
-    private TaskMapper taskMapper;
-    @Resource
-    private ProjectMapper projectMapper;
-    @Resource
     private ProjectRiskMapper projectRiskMapper;
     @Resource
-    private ProjectMilestoneMapper milestoneMapper;
+    private ProjectMilestoneComponent milestoneComponent;
 
     public void solveNoEntry(Long projectId) {
         log.info("[DrcRiskListener.solveNoEntry]处理可能的未录入风险：projectId:{}", projectId);
 
-        // 查询当前项目的全部里程碑
-        List<ProjectMilestone> milestoneList = milestoneMapper.selectByProjectId(projectId);
+        // 查询当前项目的里程碑
+        List<ProjectMilestoneVO> milestones = milestoneComponent.listByProjectId(projectId);
 
-        // 查询里程碑对应的任务及项目，判断是否全部作废
-        List<Long> taskIdList = milestoneList.stream()
-                .filter(e -> ObjectUtil.equal(MilestoneTypeEnum.TASK.getCode(), e.getType()))
-                .map(ProjectMilestone::getRelationId)
-                .collect(Collectors.toList());
-        List<Long> projectIdList = milestoneList.stream()
-                .filter(e -> ObjectUtil.equal(MilestoneTypeEnum.PROJECT.getCode(), e.getType()))
-                .map(ProjectMilestone::getRelationId)
-                .collect(Collectors.toList());
-
-        // 过滤作废里程碑
-        Set<String> invalidMilestone = new HashSet<>();
-        if (CollUtil.isNotEmpty(taskIdList)) {
-            List<TaskDO> taskDOList = taskMapper.getByIdList(taskIdList);
-            invalidMilestone = taskDOList.stream().filter(e-> ObjectUtil.equal(TaskStatusEnum.INVALID.getCode(), e.getStatus()))
-                    .map(e -> MilestoneTypeEnum.TASK.getCode() + "-" + e.getId())
-                    .collect(Collectors.toSet());
-
-        }
-        if (CollUtil.isNotEmpty(projectIdList)) {
-            List<ProjectDO> projectDOList = projectMapper.getByIds(projectIdList);
-            invalidMilestone.addAll(projectDOList.stream().filter(e-> ObjectUtil.equal(TaskStatusEnum.INVALID.getCode(), e.getStatus()))
-                    .map(e -> MilestoneTypeEnum.PROJECT.getCode() + "-" + e.getId())
-                    .collect(Collectors.toSet()));
-        }
-
-        // 过滤后按阶段分组
-        Set<String> finalInvalidMilestone = invalidMilestone;
-        Map<String, List<ProjectMilestone>> milestoneGroup = milestoneList.stream()
-                .filter(e -> !finalInvalidMilestone.contains(e.getType() + "-" + e.getRelationId()))
-                .collect(Collectors.groupingBy(e -> ProjectStageEnum.getByCode(e.getStage()).getText()));
+        // 存在里程碑的阶段
+        Set<String> milestoneStageSet = milestones.stream()
+                .map(ProjectMilestoneVO::getStage)
+                .map(ProjectStageEnum::getTextByCode)
+                .collect(Collectors.toSet());
 
         // 当前项目里程碑未录入风险
-        List<ProjectRiskDO> riskDOList = projectRiskMapper.selectByProjectId(projectId);
-        Map<String, ProjectRiskDO> noEntryRiskMap = riskDOList.stream()
+        List<ProjectRiskDO> risks = projectRiskMapper.selectByProjectId(projectId);
+        Map<String, ProjectRiskDO> noEntryRiskMap = risks.stream()
                 .filter(e -> ProjectRiskStatusEnum.PENDING.getCode().equals(e.getStatus())
                         && ProjectRiskTypeEnum.MILE_STONE_NONE.getCode().equals(e.getType()))
                 .collect(Collectors.toMap(ProjectRiskDO::getName, e -> e, (a, b) -> a));
 
-        // 内部里程碑
+        // 内部里程碑的全部阶段
         List<ProjectStageEnum> stageEnumList = Arrays.stream(ProjectStageEnum.values())
                 .filter(e -> ProjectCategoryEnum.INNER_PROJECT.equals(e.getCategory()))
                 .collect(Collectors.toList());
 
         for (int i = 0; i < stageEnumList.size(); i++) {
             ProjectStageEnum stageEnum = stageEnumList.get(i);
-
             ProjectRiskDO riskDO = noEntryRiskMap.get(stageEnum.getText());
             if (riskDO == null) {
                 continue;
@@ -96,7 +64,7 @@ public class ProjectRiskComponent {
             Long id = riskDO.getId();
             String name = riskDO.getName();
             ProjectStageEnum nextStageEnum = stageEnumList.get(i + 1);
-            if (milestoneGroup.containsKey(name) || !milestoneGroup.containsKey(nextStageEnum.getText())) {
+            if (milestoneStageSet.contains(name) || !milestoneStageSet.contains(nextStageEnum.getText())) {
                 projectRiskMapper.updateStatus(id, ProjectRiskStatusEnum.COMPLETE.getCode());
             }
         }
