@@ -11,10 +11,10 @@ import com.timevale.forward.dal.entity.ProjectMilestoneActionDO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneActionVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.*;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,12 +24,15 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class InnerProjectStatusUpdateComponent {
-    private final ProjectMapper projectMapper;
-    private final ProjectMilestoneMapper projectMilestoneMapper;
-    private final ProjectMilestoneActionMapper milestoneActionMapper;
-    private final ProjectMilestoneComponent projectMilestoneComponent;
+    @Resource
+    private ProjectMapper projectMapper;
+    @Resource
+    private ProjectMilestoneMapper projectMilestoneMapper;
+    @Resource
+    private ProjectMilestoneActionMapper milestoneActionMapper;
+    @Resource
+    private ProjectMilestoneComponent projectMilestoneComponent;
 
     public void updateFromProject(ProjectDO project) {
         Optional.ofNullable(project)
