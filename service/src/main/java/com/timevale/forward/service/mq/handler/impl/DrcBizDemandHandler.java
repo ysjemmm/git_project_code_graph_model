@@ -11,7 +11,7 @@ import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
 import com.timevale.forward.service.utils.aop.LogPoint;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
@@ -28,7 +28,7 @@ import java.util.Objects;
 @Slf4j
 @LogPoint
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class DrcBizDemandHandler {
     private final BizRecordMapper bizRecordMapper;
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;

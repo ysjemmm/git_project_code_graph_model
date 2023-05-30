@@ -76,7 +76,7 @@ public class InnerProjectRiskJob extends IJobHandler {
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
 
-        // 判断当前以后的
+        // 创建风险
         List<ProjectRiskDO> newRisks = new ArrayList<>();
         try {
             List<ProjectRiskDO> overDueRisks = createOverdueRisk(milestones);

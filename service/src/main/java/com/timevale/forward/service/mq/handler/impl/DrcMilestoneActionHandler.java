@@ -1,11 +1,7 @@
 package com.timevale.forward.service.mq.handler.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.timevale.forward.dal.dao.ProjectMilestoneActionMapper;
-import com.timevale.forward.dal.entity.BaseDO;
 import com.timevale.forward.dal.entity.ProjectMilestoneActionDO;
-import com.timevale.forward.dal.entity.TaskDO;
-import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.service.component.ProjectRiskComponent;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
 import com.timevale.forward.service.utils.aop.LogPoint;
@@ -24,21 +20,18 @@ import java.util.Optional;
 @LogPoint
 @Component
 @RequiredArgsConstructor
-public class DrcTaskHandler {
+public class DrcMilestoneActionHandler {
     private final ProjectRiskComponent projectRiskComponent;
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
-    private final ProjectMilestoneActionMapper milestoneActionMapper;
 
     public void handle(DrcMsgBody body) {
         threadPoolTaskExecutor.execute(()-> riskHandle(body));
     }
 
     private void riskHandle(DrcMsgBody body) {
-        TaskDO taskDO = JSON.parseObject(body.getAfter(), TaskDO.class);
+        ProjectMilestoneActionDO actionDO = JSON.parseObject(body.getAfter(), ProjectMilestoneActionDO.class);
 
-        Optional.ofNullable(taskDO)
-                .map(BaseDO::getId)
-                .map(e -> milestoneActionMapper.getOne(e, MilestoneTypeEnum.TASK.getCode()))
+        Optional.ofNullable(actionDO)
                 .map(ProjectMilestoneActionDO::getMilestoneId)
                 .ifPresent(projectRiskComponent::solveRisk);
     }

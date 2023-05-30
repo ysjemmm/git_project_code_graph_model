@@ -90,6 +90,20 @@
         </where>
     </update>
 
+    <update id="delByMain">
+        UPDATE project_risk
+        SET is_deleted = true
+        <where>
+            AND project_id = #{projectId}
+            AND main_id = #{main}
+            AND is_deleted = false
+            AND type IN
+            <foreach collection="types" item="type" separator="," open="(" close=")">
+                #{type}
+            </foreach>
+        </where>
+    </update>
+
     <select id="selectByProjectId" resultType="com.timevale.forward.dal.entity.ProjectRiskDO">
         SELECT *
         FROM project_risk

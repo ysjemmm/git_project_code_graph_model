@@ -5,6 +5,7 @@ import com.timevale.forward.dal.entity.ProjectRiskDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -136,4 +137,7 @@ public interface ProjectRiskMapper {
     List<ProjectRiskDO> selectByName(@Param("projectId") Long projectId, @Param("name") String name);
 
     List<ProjectRiskDO> selectByMain(@Param("mainId") Long mainId, @Param("status") Integer status, @Param("types") List<Integer> types);
+
+
+    void delByMain(@Param("projectId")Long projectId, @Param("mainId")Long mainId, @Param("types")Collection<Integer> types);
 }

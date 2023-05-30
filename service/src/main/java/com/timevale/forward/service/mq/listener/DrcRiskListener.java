@@ -4,10 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.timevale.forward.model.enums.DrcTableEnum;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
 import com.timevale.forward.service.mq.handler.DrcHandler;
-import com.timevale.forward.service.mq.handler.impl.DrcBizDemandHandler;
-import com.timevale.forward.service.mq.handler.impl.DrcProjectHandler;
-import com.timevale.forward.service.mq.handler.impl.DrcProjectMilestoneHandler;
-import com.timevale.forward.service.mq.handler.impl.DrcTaskHandler;
+import com.timevale.forward.service.mq.handler.impl.*;
 import com.timevale.framework.mq.client.consumer.Listener;
 import com.timevale.framework.mq.client.consumer.ReceiveResult;
 import com.timevale.framework.mq.client.producer.Msg;
@@ -31,6 +28,7 @@ public class DrcRiskListener implements Listener {
     private final DrcTaskHandler drcTaskHandler;
     private final DrcProjectHandler drcProjectHandler;
     private final DrcBizDemandHandler drcBizDemandHandler;
+    private final DrcMilestoneActionHandler drcMilestoneActionHandler;
     private final DrcProjectMilestoneHandler drcProjectMilestoneHandler;
 
     public static Map<String, DrcHandler> HANDLES = new HashMap<>();
@@ -41,6 +39,7 @@ public class DrcRiskListener implements Listener {
         HANDLES.put(DrcTableEnum.PROJECT.getText(), drcProjectHandler::handle);
         HANDLES.put(DrcTableEnum.BIZ_DEMAND.getText(), drcBizDemandHandler::handle);
         HANDLES.put(DrcTableEnum.PROJECT_MILESTONE.getText(), drcProjectMilestoneHandler::handle);
+        HANDLES.put(DrcTableEnum.PROJECT_MILESTONE_ACTION.getText(), drcMilestoneActionHandler::handle);
     }
 
     @Override

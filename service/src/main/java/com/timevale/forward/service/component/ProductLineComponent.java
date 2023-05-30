@@ -11,7 +11,7 @@ import com.timevale.forward.dal.entity.BizDomainDO;
 import com.timevale.forward.dal.entity.ProductLineDO;
 import com.timevale.forward.model.to.PdLineDomainTO;
 import com.timevale.forward.service.utils.aop.LogPoint;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @LogPoint
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ProductLineComponent {
     private final BizDomainMapper bizDomainMapper;
     private final ProductLineMapper productLineMapper;
