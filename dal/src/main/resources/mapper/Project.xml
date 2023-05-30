@@ -601,7 +601,7 @@
                     </when>
                     <when test="searchType == 3">
                         <!-- 查询可以关联到当前项目里程碑的项目列表 -->
-                        and a.id not in (select relation_id from project_milestone where type = 1 and is_deleted = false)
+                        and a.id not in (select relation_id from project_milestone_action where type = 1 and is_deleted = false)
                         and (
                         <!-- 子项目列表 -->
                         a.id in (select id from project where parent_ids regexp #{parentIdsRegexp})
