@@ -41,13 +41,18 @@ public class ProjectRiskDO extends BaseDO {
      */
     private Integer status;
 
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
+
         ProjectRiskDO riskDO = (ProjectRiskDO) o;
-        return Objects.equal(projectId, riskDO.projectId) && Objects.equal(mainId, riskDO.mainId) && Objects.equal(type, riskDO.type) && Objects.equal(name, riskDO.name);
+        return Objects.equal(projectId, riskDO.projectId)
+                && Objects.equal(mainId, riskDO.mainId)
+                && Objects.equal(type, riskDO.type)
+                && Objects.equal(name, riskDO.name);
     }
 
     @Override
