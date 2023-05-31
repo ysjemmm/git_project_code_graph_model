@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -37,6 +38,9 @@ public interface ProjectMilestoneMapper {
 
     @Select("SELECT * FROM project_milestone WHERE is_deleted = false")
     List<ProjectMilestone> selectAll();
+
+    @Update("UPDATE info_forward.project_milestone SET plan_start_date = #{planStartDate}, plan_end_date=#{planEndDate}, modify_date = modify_date WHERE id=#{id}")
+    void updateDate(@Param("id")Long id, @Param("planStartDate") Date planStartDate, @Param("planEndDate")Date planEndDate);
 }
 
 

@@ -1493,20 +1493,20 @@ public class ProjectServiceImpl implements ProjectService {
                 "项目暂停或作废时，不能进行此操作");
 
         // 获取里程碑
-        List<ProjectMilestoneVO> validMilestones = projectMilestoneComponent.listByProjectId(projectId);
+        List<ProjectMilestoneVO> milestones = projectMilestoneComponent.listByProjectId(projectId);
 
         // 最后一个阶段存在里程碑
         List<Integer> validStages = projectDO.getValidStageList();
         Integer completeStage = validStages.get(validStages.size() - 1);
-        Set<Integer> milestoneStages = validMilestones.stream().map(ProjectMilestoneVO::getStage)
+        Set<Integer> milestoneStages = milestones.stream().map(ProjectMilestoneVO::getStage)
                 .collect(Collectors.toSet());
         AssertUtil.checkState(milestoneStages.contains(completeStage),
                 ProjectStageEnum.getByCode(completeStage).getText() + "无里程碑，无法完成项目");
         // 里程碑是否全部完成
-        AssertUtil.checkState(validMilestones.stream().noneMatch(e -> Objects.isNull(e.getActualEndDate())),
+        AssertUtil.checkState(milestones.stream().noneMatch(e -> Objects.isNull(e.getActualEndDate())),
                 "存在未完成的里程碑，无法关闭项目");
 
-        Date projectActualEndDate = validMilestones.stream()
+        Date projectActualEndDate = milestones.stream()
                 .filter(m -> Objects.equals(m.getStage(), completeStage))
                 .map(ProjectMilestoneVO::getActualEndDate)
                 .max(Date::compareTo)

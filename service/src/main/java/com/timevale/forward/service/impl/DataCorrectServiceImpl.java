@@ -8,6 +8,7 @@ import com.timevale.forward.facade.api.client.DataCorrectService;
 import com.timevale.forward.facade.api.request.ProjectNodeModifyReq;
 import com.timevale.forward.model.enums.BugLogTypeEnum;
 import com.timevale.forward.model.enums.BugOnlineStatusEnum;
+import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.model.enums.ProjectNodeStatusEnum;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.utils.date.DateFormatConst;
@@ -107,12 +108,12 @@ public class DataCorrectServiceImpl implements DataCorrectService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResult<Boolean> updateNodeDate(ProjectNodeModifyReq req) {
-        projectNodeMapper.updateActualDateById(req.getId(),req.getActualDate());
+        projectNodeMapper.updateActualDateById(req.getId(), req.getActualDate());
         ProjectNodeDO projectNodeDO = projectNodeMapper.getById(req.getId());
         TestBillDO testBillDO = new TestBillDO();
         testBillDO.setProjectId(projectNodeDO.getProjectId());
         testBillDO.setDelayDay(0);
-        testBillMapper.updateDelayDay(testBillDO,true);
+        testBillMapper.updateDelayDay(testBillDO, true);
         return BaseResult.success(true);
     }
 
@@ -145,10 +146,10 @@ public class DataCorrectServiceImpl implements DataCorrectService {
     @Override
     public BaseResult<Boolean> bugOnlineCloseStatusOperatorInit(Integer count) {
         List<Long> bugOnlineIds = bugOnlineStatusOperatorMapper.selectInitInfo(count);
-        if(CollectionUtils.isEmpty(bugOnlineIds)){
+        if (CollectionUtils.isEmpty(bugOnlineIds)) {
             BaseResult.success(false);
         }
-        bugOnlineIds.forEach(a->{
+        bugOnlineIds.forEach(a -> {
             List<BugLogDO> bugLogDOList = bugLogMapper.selectByBugOfflineIdAndType(a, BugLogTypeEnum.ONLINE.getCode(), true)
                     .stream().filter(b -> BugOnlineStatusEnum.CLOSE.getText().equals(b.getNewValue())).collect(Collectors.toList());
             if (CollectionUtils.isNotEmpty(bugLogDOList)) {
@@ -159,7 +160,8 @@ public class DataCorrectServiceImpl implements DataCorrectService {
                 bugOnlineStatusOperatorDO.setOperator(bugLogDO.getCreateMan());
                 bugOnlineStatusOperatorDO.setStatus(BugOnlineStatusEnum.CLOSE.getCode());
                 bugOnlineStatusOperatorDO.setOperatorId(bugLogDO.getCreateManId());
-                bugOnlineStatusOperatorComponent.add(bugOnlineStatusOperatorDO);            }
+                bugOnlineStatusOperatorComponent.add(bugOnlineStatusOperatorDO);
+            }
 
         });
         return BaseResult.success(true);
@@ -235,21 +237,38 @@ public class DataCorrectServiceImpl implements DataCorrectService {
         return BaseResult.success(true);
     }
 
+    @Resource
+    private TaskMapper taskMapper;
+
     /**
      * 刷新里程碑行动
      *
      * @return {@link BaseResult}<{@link Void}>
      */
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Void> milestoneAction() {
         List<ProjectMilestone> milestones = milestoneMapper.selectAll();
 
-        List<ProjectMilestoneActionDO> actions = milestones.stream().map(e -> {
-            ProjectMilestoneActionDO actionDO = new ProjectMilestoneActionDO();
-            actionDO.setType(e.getType());
-            actionDO.setMilestoneId(e.getId());
-            actionDO.setRelationId(e.getRelationId());
-            return actionDO;
-        }).collect(Collectors.toList());
+        // 刷新里程碑时间
+        for (ProjectMilestone milestone : milestones) {
+            if (MilestoneTypeEnum.TASK.getCode().equals(milestone.getType())) {
+                TaskDO task = taskMapper.getById(milestone.getRelationId());
+                milestoneMapper.updateDate(milestone.getId(), task.getPlanStartDate(), task.getPlanEndDate());
+            } else {
+                ProjectDO project = projectMapper.get(milestone.getRelationId());
+                milestoneMapper.updateDate(milestone.getId(), project.getPlanStartDate(), project.getPlanEndDate());
+            }
+        }
+
+        // 添加里程碑行动
+        List<ProjectMilestoneActionDO> actions = milestones.stream()
+                .map(e -> {
+                    ProjectMilestoneActionDO actionDO = new ProjectMilestoneActionDO();
+                    actionDO.setType(e.getType());
+                    actionDO.setMilestoneId(e.getId());
+                    actionDO.setRelationId(e.getRelationId());
+                    return actionDO;
+                }).collect(Collectors.toList());
 
         milestoneActionMapper.batchAdd(actions);
 
