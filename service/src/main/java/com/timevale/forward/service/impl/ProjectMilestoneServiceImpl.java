@@ -113,7 +113,6 @@ public class ProjectMilestoneServiceImpl implements ProjectMilestoneService {
         resList.forEach(m -> {
             m.setProjectId(currentProject.getId());
             m.setProjectName(currentProject.getName());
-            m.setActions(milestoneActionComponent.getActions(m.getId()));
         });
         resList.sort(Comparator.comparing(ProjectMilestoneVO::getStage)
                .thenComparing(ProjectMilestoneVO::getPlanStartDate));

@@ -7,14 +7,12 @@ import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneActionMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.dao.TaskMapper;
-import com.timevale.forward.dal.entity.ProjectDO;
-import com.timevale.forward.dal.entity.ProjectMilestone;
-import com.timevale.forward.dal.entity.ProjectMilestoneActionDO;
-import com.timevale.forward.dal.entity.TaskDO;
+import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.TaskService;
 import com.timevale.forward.facade.api.request.TaskAddReq;
 import com.timevale.forward.facade.api.result.ProjectMilestoneActionVO;
 import com.timevale.forward.model.enums.MilestoneTypeEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.service.copy.MilestoneActionCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.util.AssertUtil;
@@ -42,6 +40,8 @@ public class MilestoneActionComponent {
     private TaskService taskService;
     @Resource
     private ProjectMapper projectMapper;
+    @Resource
+    private PersonComponent personComponent;
     @Resource
     private ProjectComponent projectComponent;
     @Resource
@@ -140,7 +140,13 @@ public class MilestoneActionComponent {
         List<ProjectMilestoneActionVO> result = new ArrayList<>();
         if (CollUtil.isNotEmpty(taskIds)) {
             List<TaskDO> tasks = taskMapper.getByIdList(taskIds);
-            result.addAll(MilestoneActionCopier.INSTANCE.task2vo(tasks));
+            List<ProjectMilestoneActionVO> taskActions = MilestoneActionCopier.INSTANCE.task2vo(tasks);
+            for (ProjectMilestoneActionVO taskAction : taskActions) {
+                List<PersonDO> executors = personComponent.select(taskAction.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
+                taskAction.setPrincipal(executors.stream().map(PersonDO::getUserName).collect(Collectors.joining(",")));
+                taskAction.setPrincipalId(executors.stream().map(PersonDO::getUserId).collect(Collectors.joining(",")));
+            }
+            result.addAll(taskActions);
         }
         if (CollUtil.isNotEmpty(projectIds)) {
             List<ProjectDO> projects = projectMapper.getByIds(projectIds);
