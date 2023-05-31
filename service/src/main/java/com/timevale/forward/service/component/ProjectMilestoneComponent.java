@@ -106,16 +106,29 @@ public class ProjectMilestoneComponent {
             // 填充数据
             Collection<ProjectMilestoneActionVO> allActions = CollUtil.addAll(projectActions, taskActions);
             milestoneVO.setActions(allActions);
-            // 里程碑实际开始时间，取行动里最小的实际开始时间
-            allActions.stream()
+
+            // 里程碑获取实际时间要过滤掉作废的行动
+            List<ProjectMilestoneActionVO> validActions = allActions.stream()
+                    .filter(e -> {
+                        if (MilestoneTypeEnum.TASK.getCode().equals(e.getType())) {
+                            return !TaskStatusEnum.INVALID.getCode().equals(e.getStatus());
+                        } else {
+                            return !ProjectStatusEnum.INVALID.getCode().equals(e.getStatus());
+                        }
+                    })
+                    .collect(Collectors.toList());
+            // 里程碑实际开始时间，取非作废的行动里最小的实际开始时间
+            validActions.stream()
                     .map(ProjectMilestoneActionVO::getActualStartDate)
                     .filter(Objects::nonNull)
                     .min(Date::compareTo)
                     .ifPresent(milestoneVO::setActualStartDate);
-            // 里程碑实际结束时间，当全部行动都存在实际结束时间时取最大
-            boolean noneNull = allActions.stream().map(ProjectMilestoneActionVO::getActualEndDate).noneMatch(Objects::isNull);
+            // 里程碑实际结束时间，当非作废行动都存在实际结束时间时取最大
+            boolean noneNull = validActions.stream()
+                    .map(ProjectMilestoneActionVO::getActualEndDate)
+                    .noneMatch(Objects::isNull);
             if (noneNull) {
-                allActions.stream()
+                validActions.stream()
                         .map(ProjectMilestoneActionVO::getActualEndDate)
                         .filter(Objects::nonNull)
                         .max(Date::compareTo)
