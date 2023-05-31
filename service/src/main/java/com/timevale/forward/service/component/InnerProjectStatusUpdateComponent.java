@@ -1,6 +1,5 @@
 package com.timevale.forward.service.component;
 
-import cn.hutool.core.collection.CollUtil;
 import com.timevale.forward.dal.dao.ProjectMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneActionMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
@@ -8,9 +7,11 @@ import com.timevale.forward.dal.entity.BaseDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
 import com.timevale.forward.dal.entity.ProjectMilestoneActionDO;
-import com.timevale.forward.facade.api.result.ProjectMilestoneActionVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
-import com.timevale.forward.model.enums.*;
+import com.timevale.forward.model.enums.MilestoneTypeEnum;
+import com.timevale.forward.model.enums.ProjectCategoryEnum;
+import com.timevale.forward.model.enums.ProjectStageEnum;
+import com.timevale.forward.model.enums.ProjectStatusEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -55,7 +56,7 @@ public class InnerProjectStatusUpdateComponent {
             return;
         }
         try {
-            List<ProjectMilestoneVO> validMilestones = getValidActionMilestones(projectId);
+            List<ProjectMilestoneVO> validMilestones = getActualMilestone(projectId);
             Date actualStartDate = null;
             Integer status = ProjectStatusEnum.WAITING.getCode();
             if (!validMilestones.isEmpty()) {
@@ -87,47 +88,21 @@ public class InnerProjectStatusUpdateComponent {
     }
 
     public Integer calcProjectStatus(Long projectId) {
-        return getValidActionMilestones(projectId).stream()
+        return getActualMilestone(projectId).stream()
                 .max(Comparator.comparing(ProjectMilestoneVO::getStage))
                 .map(m -> ProjectStageEnum.getByCode(m.getStage()).getStatus().getCode())
                 .orElse(ProjectStatusEnum.WAITING.getCode());
     }
 
     /**
-     * 获取存在有效行动的里程碑
+     * 获取存在项目实际开始时间的里程碑
      *
      * @param projectId 项目id
      * @return {@link List}<{@link ProjectMilestoneVO}>
      */
-    public List<ProjectMilestoneVO> getValidActionMilestones(Long projectId) {
+    private List<ProjectMilestoneVO> getActualMilestone(Long projectId) {
         List<ProjectMilestoneVO> milestones = projectMilestoneComponent.listByProjectId(projectId);
-
-        List<ProjectMilestoneVO> validMilestones = new ArrayList<>();
-        for (ProjectMilestoneVO milestone : milestones) {
-            Collection<ProjectMilestoneActionVO> actions = milestone.getActions();
-            if (CollUtil.isEmpty(actions)) {
-                continue;
-            }
-
-            List<ProjectMilestoneActionVO> validActions = actions.stream()
-                    .filter(m -> Objects.nonNull(m.getActualStartDate()))
-                    .filter(m -> {
-                        if (Objects.equals(m.getType(), MilestoneTypeEnum.TASK.getCode())) {
-                            return !Objects.equals(m.getStatus(), TaskStatusEnum.INVALID.getCode());
-                        }
-                        if (Objects.equals(m.getType(), MilestoneTypeEnum.PROJECT.getCode())) {
-                            return !Objects.equals(m.getStatus(), ProjectStatusEnum.INVALID.getCode());
-                        }
-                        return false;
-                    })
-                    .collect(Collectors.toList());
-
-            if (CollUtil.isNotEmpty(validActions)) {
-                milestone.setActions(validActions);
-                validMilestones.add(milestone);
-            }
-        }
-        return validMilestones;
+        return milestones.stream().filter(e -> Objects.nonNull(e.getActualStartDate())).collect(Collectors.toList());
     }
 
 }

@@ -1483,7 +1483,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public BaseResult<Boolean> innerComplete(ProjectInnerCompleteReq req) {
-        Long projectId = req.getProjectId();
+        final Long projectId = req.getProjectId();
         ProjectDO projectDO = projectMapper.get(projectId);
         AssertUtil.notNull(projectDO, "项目不存在");
         AssertUtil.checkState(Objects.equals(projectDO.getCategory(), ProjectCategoryEnum.INNER_PROJECT.getCode()),
@@ -1492,8 +1492,8 @@ public class ProjectServiceImpl implements ProjectService {
                         && !Objects.equals(projectDO.getStatus(), ProjectStatusEnum.INVALID.getCode()),
                 "项目暂停或作废时，不能进行此操作");
 
-        // 获取存在有效行动的里程碑
-        List<ProjectMilestoneVO> validMilestones = innerProjectStatusUpdateComponent.getValidActionMilestones(projectId);
+        // 获取里程碑
+        List<ProjectMilestoneVO> validMilestones = projectMilestoneComponent.listByProjectId(projectId);
 
         // 最后一个阶段存在里程碑
         List<Integer> validStages = projectDO.getValidStageList();
@@ -1502,15 +1502,15 @@ public class ProjectServiceImpl implements ProjectService {
                 .collect(Collectors.toSet());
         AssertUtil.checkState(milestoneStages.contains(completeStage),
                 ProjectStageEnum.getByCode(completeStage).getText() + "无里程碑，无法完成项目");
+        // 里程碑是否全部完成
+        AssertUtil.checkState(validMilestones.stream().noneMatch(e -> Objects.isNull(e.getActualEndDate())),
+                "存在未完成的里程碑，无法关闭项目");
+
         Date projectActualEndDate = validMilestones.stream()
                 .filter(m -> Objects.equals(m.getStage(), completeStage))
                 .map(ProjectMilestoneVO::getActualEndDate)
                 .max(Date::compareTo)
                 .orElse(new Date());
-        // 里程碑是否全部完成
-        AssertUtil.checkState(validMilestones.stream().noneMatch(e -> Objects.isNull(e.getActualEndDate())),
-                "存在未完成的里程碑，无法关闭项目");
-
         // 修改项目状态
         projectMapper.updateStatus(projectId, ProjectStatusEnum.COMPLETE.getCode());
         projectMapper.updateStatusAndEndDate(projectId, ProjectStatusEnum.COMPLETE.getCode(), projectActualEndDate);
