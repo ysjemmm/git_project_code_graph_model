@@ -83,10 +83,11 @@ public class ProjectRiskComponent {
      * @param milestoneId 里程碑id
      */
     public void solveRisk(Long milestoneId) {
-        ProjectMilestoneVO milestone = milestoneComponent.getMilestone(milestoneId);
-        if (milestone == null) {
+        Optional<ProjectMilestoneVO> milestoneOpt = milestoneComponent.getMilestone(milestoneId);
+        if (!milestoneOpt.isPresent()) {
             return;
         }
+        ProjectMilestoneVO milestone = milestoneOpt.get();
 
         // 处理未录入风险
         projectRiskComponent.solveNoEntry(milestone.getProjectId());

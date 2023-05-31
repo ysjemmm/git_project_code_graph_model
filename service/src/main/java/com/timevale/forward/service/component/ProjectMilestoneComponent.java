@@ -1,14 +1,17 @@
 package com.timevale.forward.service.component;
 
 import cn.hutool.core.collection.CollUtil;
-import com.google.common.collect.Maps;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
+import com.timevale.forward.dal.dao.ProjectMilestoneActionMapper;
+import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
+import com.timevale.forward.dal.entity.BizChangeLogDO;
+import com.timevale.forward.dal.entity.ProjectMilestone;
+import com.timevale.forward.dal.entity.ProjectMilestoneActionDO;
+import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneActionVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.constant.CommonConstant;
-import com.timevale.forward.service.copy.MilestoneActionCopier;
 import com.timevale.forward.service.copy.ProjectMilestoneCopier;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
@@ -29,12 +32,6 @@ import java.util.stream.Collectors;
 @Component
 public class ProjectMilestoneComponent {
     @Resource
-    private TaskMapper taskMapper;
-    @Resource
-    private ProjectMapper projectMapper;
-    @Resource
-    private PersonComponent personComponent;
-    @Resource
     private BizChangeLogMapper bizChangeLogMapper;
     @Resource
     private ProjectMilestoneMapper milestoneMapper;
@@ -49,94 +46,12 @@ public class ProjectMilestoneComponent {
             return Collections.emptyList();
         }
 
-        // 获取行动
-        List<Long> milestoneIds = milestones.stream().map(ProjectMilestone::getId).collect(Collectors.toList());
-        List<ProjectMilestoneActionDO> milestoneActions = milestoneActionMapper.getByMains(milestoneIds);
-        Map<Long, List<ProjectMilestoneActionDO>> actionGroup =
-                milestoneActions.stream().collect(Collectors.groupingBy(ProjectMilestoneActionDO::getMilestoneId));
-
-        Map<Long, TaskDO> taskMap = new HashMap<>();
-        List<Long> taskIds = milestoneActions.stream()
-                .filter(e -> MilestoneTypeEnum.TASK.getCode().equals(e.getType()))
-                .map(ProjectMilestoneActionDO::getRelationId)
+        return milestones.parallelStream()
+                .map(ProjectMilestone::getId)
+                .map(this::getMilestone)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .collect(Collectors.toList());
-        if (CollUtil.isNotEmpty(taskIds)) {
-            List<TaskDO> tasks = taskMapper.getByIdList(taskIds);
-            taskMap = Maps.uniqueIndex(tasks, BaseDO::getId);
-        }
-
-        Map<Long, ProjectDO> projectMap = new HashMap<>();
-        List<Long> projectIds = milestoneActions.stream()
-                .filter(e -> MilestoneTypeEnum.PROJECT.getCode().equals(e.getType()))
-                .map(ProjectMilestoneActionDO::getRelationId)
-                .collect(Collectors.toList());
-        if (CollUtil.isNotEmpty(projectIds)) {
-            List<ProjectDO> projects = projectMapper.getByIds(projectIds);
-            projectMap = Maps.uniqueIndex(projects, BaseDO::getId);
-        }
-
-        List<ProjectMilestoneVO> milestoneVOs = ProjectMilestoneCopier.INSTANCE.convert(milestones);
-        for (ProjectMilestoneVO milestoneVO : milestoneVOs) {
-            List<ProjectMilestoneActionDO> actions = actionGroup.get(milestoneVO.getId());
-            if (CollUtil.isEmpty(actions)) {
-                continue;
-            }
-
-            List<TaskDO> tasks = actions.stream()
-                    .filter(e -> MilestoneTypeEnum.TASK.getCode().equals(e.getType()))
-                    .map(ProjectMilestoneActionDO::getRelationId)
-                    .map(taskMap::get)
-                    .collect(Collectors.toList());
-            List<ProjectDO> projects = actions.stream()
-                    .filter(e -> MilestoneTypeEnum.PROJECT.getCode().equals(e.getType()))
-                    .map(ProjectMilestoneActionDO::getRelationId)
-                    .map(projectMap::get)
-                    .collect(Collectors.toList());
-
-            // 项目行动直接转换
-            List<ProjectMilestoneActionVO> projectActions = MilestoneActionCopier.INSTANCE.project2vo(projects);
-            // 任务行动由于执行人一对多需要特殊处理
-            List<ProjectMilestoneActionVO> taskActions = MilestoneActionCopier.INSTANCE.task2vo(tasks);
-            for (ProjectMilestoneActionVO taskAction : taskActions) {
-                List<PersonDO> executors = personComponent.select(taskAction.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
-                taskAction.setPrincipal(executors.stream().map(PersonDO::getUserName).collect(Collectors.joining(",")));
-                taskAction.setPrincipalId(executors.stream().map(PersonDO::getUserId).collect(Collectors.joining(",")));
-            }
-
-            // 填充数据
-            Collection<ProjectMilestoneActionVO> allActions = CollUtil.addAll(projectActions, taskActions);
-            milestoneVO.setActions(allActions);
-
-            // 里程碑获取实际时间要过滤掉作废的行动
-            List<ProjectMilestoneActionVO> validActions = allActions.stream()
-                    .filter(e -> {
-                        if (MilestoneTypeEnum.TASK.getCode().equals(e.getType())) {
-                            return !TaskStatusEnum.INVALID.getCode().equals(e.getStatus());
-                        } else {
-                            return !ProjectStatusEnum.INVALID.getCode().equals(e.getStatus());
-                        }
-                    })
-                    .collect(Collectors.toList());
-            // 里程碑实际开始时间，取非作废的行动里最小的实际开始时间
-            validActions.stream()
-                    .map(ProjectMilestoneActionVO::getActualStartDate)
-                    .filter(Objects::nonNull)
-                    .min(Date::compareTo)
-                    .ifPresent(milestoneVO::setActualStartDate);
-            // 里程碑实际结束时间，当非作废行动都存在实际结束时间时取最大
-            boolean noneNull = validActions.stream()
-                    .map(ProjectMilestoneActionVO::getActualEndDate)
-                    .noneMatch(Objects::isNull);
-            if (noneNull) {
-                validActions.stream()
-                        .map(ProjectMilestoneActionVO::getActualEndDate)
-                        .filter(Objects::nonNull)
-                        .max(Date::compareTo)
-                        .ifPresent(milestoneVO::setActualEndDate);
-            }
-        }
-
-        return milestoneVOs;
     }
 
     public void addMilestoneCreateLog(ProjectMilestone entity) {
@@ -160,24 +75,50 @@ public class ProjectMilestoneComponent {
         bizChangeLogMapper.insert(log);
     }
 
-    public ProjectMilestoneVO getMilestone(Long milestoneId) {
+    public Optional<ProjectMilestoneVO> getMilestone(Long milestoneId) {
         ProjectMilestone milestone = milestoneMapper.selectById(milestoneId);
+        if (milestone == null) {
+            return Optional.empty();
+        }
+
         List<ProjectMilestoneActionVO> actions = milestoneActionComponent.getActions(milestoneId);
+        if (CollUtil.isEmpty(actions)) {
+            return Optional.empty();
+        }
 
         ProjectMilestoneVO milestoneVO = ProjectMilestoneCopier.INSTANCE.convert(milestone);
-        actions.stream()
+        milestoneVO.setActions(actions);
+
+        // 里程碑获取实际时间要过滤掉作废的行动
+        List<ProjectMilestoneActionVO> validActions = actions.stream()
+                .filter(e -> {
+                    if (MilestoneTypeEnum.TASK.getCode().equals(e.getType())) {
+                        return !TaskStatusEnum.INVALID.getCode().equals(e.getStatus());
+                    } else {
+                        return !ProjectStatusEnum.INVALID.getCode().equals(e.getStatus());
+                    }
+                })
+                .collect(Collectors.toList());
+
+        // 里程碑实际开始时间，取非作废的行动里最小的实际开始时间
+        validActions.stream()
                 .map(ProjectMilestoneActionVO::getActualStartDate)
                 .filter(Objects::nonNull)
                 .min(Date::compareTo)
                 .ifPresent(milestoneVO::setActualStartDate);
-        actions.stream()
+        // 里程碑实际结束时间，当非作废行动都存在实际结束时间时取最大
+        boolean noneNull = validActions.stream()
                 .map(ProjectMilestoneActionVO::getActualEndDate)
-                .filter(Objects::nonNull)
-                .max(Date::compareTo)
-                .ifPresent(milestoneVO::setActualEndDate);
-        milestoneVO.setActions(actions);
+                .noneMatch(Objects::isNull);
+        if (noneNull) {
+            validActions.stream()
+                    .map(ProjectMilestoneActionVO::getActualEndDate)
+                    .filter(Objects::nonNull)
+                    .max(Date::compareTo)
+                    .ifPresent(milestoneVO::setActualEndDate);
+        }
 
-        return milestoneVO;
+        return Optional.of(milestoneVO);
     }
 
     /**

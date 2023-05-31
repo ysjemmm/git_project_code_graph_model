@@ -20,10 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -125,6 +122,9 @@ public class MilestoneActionComponent {
 
     public List<ProjectMilestoneActionVO> getActions(Long milestoneId) {
         List<ProjectMilestoneActionDO> actions = milestoneActionMapper.getByMain(milestoneId);
+        if (CollUtil.isEmpty(actions)) {
+            return Collections.emptyList();
+        }
 
         // 获取行动实体id
         List<Long> taskIds = actions.stream()
