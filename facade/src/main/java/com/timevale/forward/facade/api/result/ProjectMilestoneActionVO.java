@@ -47,4 +47,7 @@ public class ProjectMilestoneActionVO extends ToString {
     @ApiModelProperty("实际结束时间")
     private Date actualEndDate;
 
+    @ApiModelProperty("项目类型：0产研项目，1内部项目")
+    private Integer category;
+
 }
