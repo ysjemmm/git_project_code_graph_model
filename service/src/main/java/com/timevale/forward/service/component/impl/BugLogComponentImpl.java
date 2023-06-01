@@ -138,7 +138,7 @@ public class BugLogComponentImpl implements BugLogComponent {
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
         bugLogDO.setOldValue(oldValue);
         bugLogDO.setNewValue(newValue);
-        bugLogDO.setField(BugLogFieldEnum.CUSTOM_DEV_PROJECT.getText());
+        bugLogDO.setField(BugLogFieldEnum.OPERATOR.getText());
         bugLogMapper.insert(bugLogDO);
     }
 }
