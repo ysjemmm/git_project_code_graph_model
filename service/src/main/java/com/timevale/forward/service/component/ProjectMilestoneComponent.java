@@ -78,7 +78,7 @@ public class ProjectMilestoneComponent {
         ProjectMilestoneVO milestoneVO = ProjectMilestoneCopier.INSTANCE.convert(milestone);
 
         List<ProjectMilestoneActionVO> actions = milestoneActionComponent.getActions(milestoneId);
-        milestoneVO.setActions(Collections.emptyList());
+        milestoneVO.setActions(actions);
 
         if (CollUtil.isEmpty(actions)) {
             return Optional.of(milestoneVO);
