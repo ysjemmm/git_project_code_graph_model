@@ -36,7 +36,6 @@ public class DrcTaskHandler {
 
     public void handle(DrcMsgBody body) {
         threadPoolTaskExecutor.execute(()-> riskHandle(body));
-        threadPoolTaskExecutor.execute(()-> beActionHandle(body));
     }
 
     private void riskHandle(DrcMsgBody body) {
