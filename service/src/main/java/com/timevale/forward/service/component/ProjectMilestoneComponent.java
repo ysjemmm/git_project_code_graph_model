@@ -75,14 +75,14 @@ public class ProjectMilestoneComponent {
         if (milestone == null) {
             return Optional.empty();
         }
+        ProjectMilestoneVO milestoneVO = ProjectMilestoneCopier.INSTANCE.convert(milestone);
 
         List<ProjectMilestoneActionVO> actions = milestoneActionComponent.getActions(milestoneId);
-        if (CollUtil.isEmpty(actions)) {
-            return Optional.empty();
-        }
+        milestoneVO.setActions(Collections.emptyList());
 
-        ProjectMilestoneVO milestoneVO = ProjectMilestoneCopier.INSTANCE.convert(milestone);
-        milestoneVO.setActions(actions);
+        if (CollUtil.isEmpty(actions)) {
+            return Optional.of(milestoneVO);
+        }
 
         // 里程碑获取实际时间要过滤掉作废的行动
         List<ProjectMilestoneActionVO> validActions = actions.stream()
