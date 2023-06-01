@@ -108,7 +108,6 @@ public class ProjectMilestoneComponent {
         if (noneNull) {
             validActions.stream()
                     .map(ProjectMilestoneActionVO::getActualEndDate)
-                    .filter(Objects::nonNull)
                     .max(Date::compareTo)
                     .ifPresent(milestoneVO::setActualEndDate);
         }

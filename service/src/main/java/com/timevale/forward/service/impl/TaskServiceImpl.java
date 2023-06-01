@@ -105,8 +105,6 @@ public class TaskServiceImpl implements TaskService {
     @Resource
     private UserComponent userComponent;
     @Resource
-    private InnerProjectStatusUpdateComponent innerProjectStatusUpdateComponent;
-    @Resource
     private ProjectEvaluateComponent evaluateComponent;
 
     @Value("${excludeBizDomain:[1,13,32]}")
@@ -254,7 +252,6 @@ public class TaskServiceImpl implements TaskService {
                 personLevel);
 
         sendDingMsg(taskDO, executorIds);
-        innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
 
         return BaseResult.success(true);
     }
@@ -336,7 +333,6 @@ public class TaskServiceImpl implements TaskService {
         taskDO.setStatus(type);
         taskMapper.update(taskDO);
 
-        innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
         return BaseResult.success(true);
     }
 
@@ -380,7 +376,6 @@ public class TaskServiceImpl implements TaskService {
 
         //耗时表入库
         insertTaskTime(taskDO);
-        innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
         return BaseResult.success(true);
     }
 
@@ -410,7 +405,6 @@ public class TaskServiceImpl implements TaskService {
             taskComponent.updateTodoTask(taskDO, existExecutorIds);
         }
         sendDingMsg(taskDO, existExecutorIds);
-        innerProjectStatusUpdateComponent.updateProjectDateAndStatus(taskDO.getProjectId());
         return BaseResult.success(true);
     }
 
