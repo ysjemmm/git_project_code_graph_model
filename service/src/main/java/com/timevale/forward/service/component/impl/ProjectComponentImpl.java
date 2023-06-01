@@ -125,7 +125,7 @@ public class ProjectComponentImpl implements ProjectComponent {
 
         // 内部项目pbu
         if (CollUtil.isNotEmpty(condition.getPbuIds())) {
-            projectIds = projectPbuMapper.in(projectIds, condition.getBizDomainIds());
+            projectIds = projectPbuMapper.in(projectIds, condition.getPbuIds());
             if (CollUtil.isEmpty(projectIds)) {
                 return ResultUtil.queryResultEmpty();
             }
