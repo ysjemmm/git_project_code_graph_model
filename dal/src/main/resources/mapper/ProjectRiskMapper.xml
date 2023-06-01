@@ -85,7 +85,7 @@
         <where>
             AND type = #{type}
             AND `name` = #{name},
-            AND main_id = #{main_id},
+            AND main_id = #{mainId},
             AND project_id = #{projectId},
         </where>
     </update>
@@ -95,7 +95,7 @@
         SET is_deleted = true
         <where>
             AND project_id = #{projectId}
-            AND main_id = #{main}
+            AND main_id = #{mainId}
             AND is_deleted = false
             AND type IN
             <foreach collection="types" item="type" separator="," open="(" close=")">
