@@ -42,4 +42,14 @@ public interface BugLogComponent {
      * @param newSourceId 新源id
      */
     void customDevProject(Long bugOnlineId, String oldSourceId, String newSourceId);
+
+    /**
+     * 操作符
+     * 经办人
+     *
+     * @param bugOnlineId 线上bug id
+     * @param oldValue    旧值
+     * @param newValue    新值
+     */
+    void operator(Long bugOnlineId, String oldValue, String newValue);
 }

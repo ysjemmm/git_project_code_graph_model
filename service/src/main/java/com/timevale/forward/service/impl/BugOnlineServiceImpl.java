@@ -1662,12 +1662,23 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public BaseResult<Void> startResponse(Long id) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
         BugOnlineDO bugOnlineDO = bugOnlineMapper.get(id);
         AssertUtil.notNull(bugOnlineDO, "线上bug不存在");
 
-        bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(id), BugOnlineStatusEnum.START_RESPONSE.getCode());
+        // 经办人日志
+        bugLogComponent.operator(id, bugOnlineDO.getOperator(), userInfo.getFullAlias());
 
+        bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(id), BugOnlineStatusEnum.START_RESPONSE.getCode());
+        bugOnlineDO.setStatus(BugOnlineStatusEnum.START_RESPONSE.getCode());
+        bugOnlineDO.setOperatorId(userInfo.getId());
+        bugOnlineDO.setOperator(userInfo.getFullAlias());
+        bugOnlineMapper.update(bugOnlineDO);
+
+        //往bug日志表中插入一条线上bug状态变更数据
         BugLogDO bugLogDO = new BugLogDO();
         bugLogDO.setAction(ButtonActionEnum.START_RESPONSE.getText());
         bugLogDO.setOldValue(BugOnlineStatusEnum.getTextByCode(bugOnlineDO.getStatus()));
@@ -1675,7 +1686,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugLogDO.setMainId(id);
         bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
         bugLogDO.setField(BugLogFieldEnum.STATUS.getText());
-        //往bug日志表中插入一条线上bug状态变更数据
         bugLogMapper.insert(bugLogDO);
 
         //bug状态处理人员表插入数据

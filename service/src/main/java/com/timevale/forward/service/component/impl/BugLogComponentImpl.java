@@ -127,4 +127,18 @@ public class BugLogComponentImpl implements BugLogComponent {
         bugLogDO.setField(BugLogFieldEnum.CUSTOM_DEV_PROJECT.getText());
         bugLogMapper.insert(bugLogDO);
     }
+
+    @Override
+    public void operator(Long bugOnlineId, String oldValue, String newValue) {
+        if (bugOnlineId == null || Objects.equals(oldValue, newValue)) {
+            return;
+        }
+        BugLogDO bugLogDO = new BugLogDO();
+        bugLogDO.setMainId(bugOnlineId);
+        bugLogDO.setType(BugLogTypeEnum.ONLINE.getCode());
+        bugLogDO.setOldValue(oldValue);
+        bugLogDO.setNewValue(newValue);
+        bugLogDO.setField(BugLogFieldEnum.CUSTOM_DEV_PROJECT.getText());
+        bugLogMapper.insert(bugLogDO);
+    }
 }

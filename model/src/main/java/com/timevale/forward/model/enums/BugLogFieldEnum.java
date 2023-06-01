@@ -53,7 +53,12 @@ public enum BugLogFieldEnum {
     /**
      * 关联交付项目
      */
-    CUSTOM_DEV_PROJECT("关联交付项目")
+    CUSTOM_DEV_PROJECT("关联交付项目"),
+
+    /**
+     * 经办人
+     */
+    OPERATOR("经办人"),
     ;
 
 
