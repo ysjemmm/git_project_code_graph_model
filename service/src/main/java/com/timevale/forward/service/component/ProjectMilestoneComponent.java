@@ -41,7 +41,7 @@ public class ProjectMilestoneComponent {
             return Collections.emptyList();
         }
 
-        return milestones.parallelStream()
+        return milestones.stream()
                 .map(ProjectMilestone::getId)
                 .map(this::getMilestone)
                 .filter(Optional::isPresent)

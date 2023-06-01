@@ -12,6 +12,7 @@ import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.model.enums.ProjectCategoryEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
  * created on 2023/2/13
  */
 @Slf4j
+@LogPoint
 @Component
 public class InnerProjectStatusUpdateComponent {
     @Resource
