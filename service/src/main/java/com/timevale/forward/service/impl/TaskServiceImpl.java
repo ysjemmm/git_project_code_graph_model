@@ -1,7 +1,6 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.BooleanUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -107,8 +106,6 @@ public class TaskServiceImpl implements TaskService {
     private UserComponent userComponent;
     @Resource
     private InnerProjectStatusUpdateComponent innerProjectStatusUpdateComponent;
-    @Resource
-    private ProjectMilestoneComponent projectMilestoneComponent;
     @Resource
     private ProjectEvaluateComponent evaluateComponent;
 
@@ -573,11 +570,6 @@ public class TaskServiceImpl implements TaskService {
                 taskMapper.insert(taskDO);
                 //执行人
                 personComponent.add(a.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
-
-                // 判断是否为里程碑
-                if (BooleanUtil.isTrue(a.getMilestoneFlag())) {
-                    projectMilestoneComponent.addMilestone(taskDO);
-                }
             });
         });
 

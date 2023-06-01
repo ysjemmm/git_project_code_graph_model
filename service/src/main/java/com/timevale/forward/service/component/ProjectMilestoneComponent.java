@@ -2,12 +2,9 @@ package com.timevale.forward.service.component;
 
 import cn.hutool.core.collection.CollUtil;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
-import com.timevale.forward.dal.dao.ProjectMilestoneActionMapper;
 import com.timevale.forward.dal.dao.ProjectMilestoneMapper;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.ProjectMilestone;
-import com.timevale.forward.dal.entity.ProjectMilestoneActionDO;
-import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneActionVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.*;
@@ -37,8 +34,6 @@ public class ProjectMilestoneComponent {
     private ProjectMilestoneMapper milestoneMapper;
     @Resource
     private MilestoneActionComponent milestoneActionComponent;
-    @Resource
-    private ProjectMilestoneActionMapper milestoneActionMapper;
 
     public List<ProjectMilestoneVO> listByProjectId(Long projectId) {
         List<ProjectMilestone> milestones = milestoneMapper.selectByProjectId(projectId);
@@ -119,28 +114,5 @@ public class ProjectMilestoneComponent {
         }
 
         return Optional.of(milestoneVO);
-    }
-
-    /**
-     * 添加里程碑
-     *
-     * @param taskDO 任务DO
-     */
-    public void addMilestone(TaskDO taskDO) {
-        if (taskDO == null) {
-            return;
-        }
-
-        // 添加里程碑
-        ProjectMilestone milestone = ProjectMilestoneCopier.INSTANCE.task2do(taskDO);
-        milestoneMapper.insert(milestone);
-        addMilestoneCreateLog(milestone);
-
-        // 添加里程碑行动
-        ProjectMilestoneActionDO action = new ProjectMilestoneActionDO();
-        action.setRelationId(taskDO.getId());
-        action.setMilestoneId(milestone.getId());
-        action.setType(MilestoneTypeEnum.TASK.getCode());
-        milestoneActionMapper.add(action);
     }
 }
