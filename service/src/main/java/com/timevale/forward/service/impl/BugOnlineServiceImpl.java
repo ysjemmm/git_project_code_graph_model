@@ -731,6 +731,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setProblemReason(startRepairReq.getProblemReason());
         bugOnlineDO.setExpectLaunchDate(startRepairReq.getExpectLaunchDate());
         bugOnlineDO.setStatus(BugOnlineStatusEnum.QUESTION_REPAIR.getCode());
+        bugOnlineDO.setTemporarySolution(startRepairReq.getTemporarySolution());
         bugOnlineMapper.update(bugOnlineDO);
 
         // 状态log
@@ -1070,6 +1071,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setOperator(bugOnlineDO.getProposer());
         bugOnlineDO.setDismissCause(noRepairReq.getDismissCause());
         bugOnlineDO.setDismissCauseStage(noRepairReq.getDismissCauseStage());
+        bugOnlineDO.setTemporarySolution(noRepairReq.getTemporarySolution());
 
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);

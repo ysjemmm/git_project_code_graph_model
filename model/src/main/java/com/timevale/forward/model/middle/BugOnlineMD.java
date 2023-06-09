@@ -84,9 +84,9 @@ public class BugOnlineMD extends BaseMD{
     private String problemReason;
 
     /**
-     * 解决方案
+     * bug修复方案
      */
-    @FieldCompare(fieldName = "解决方案")
+    @FieldCompare(fieldName = "bug修复方案")
     private String solveScheme;
 
     /**
@@ -143,4 +143,9 @@ public class BugOnlineMD extends BaseMD{
     @FieldCompare(fieldName = "客户等级")
     private String customerGrade;
 
+    /**
+     * 用户临时解决方案
+     */
+    @FieldCompare(fieldName = "用户临时解决方案")
+    private String temporarySolution;
 }

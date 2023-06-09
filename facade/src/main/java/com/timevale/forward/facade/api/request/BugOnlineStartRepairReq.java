@@ -32,8 +32,8 @@ public class BugOnlineStartRepairReq extends BaseReq {
     @NotNull(message = "问题原因不能为空")
     private String problemReason;
 
-    @ApiModelProperty("解决方案")
-    @NotNull(message = "解决方案不能为空")
+    @ApiModelProperty("bug修复方案")
+    @NotNull(message = "bug修复方案不能为空")
     private String solveScheme;
 
     @ApiModelProperty("预计上线日期")
@@ -42,4 +42,7 @@ public class BugOnlineStartRepairReq extends BaseReq {
 
     @ApiModelProperty("线下bugId")
     private Long bugOfflineId;
+
+    @ApiModelProperty("用户临时解决方案")
+    private String temporarySolution;
 }

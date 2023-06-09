@@ -30,4 +30,7 @@ public class BugOnlineNoRepairReq extends BaseReq {
 
     @ApiModelProperty("关联的线上bug id")
     private Long linkBugId;
+
+    @ApiModelProperty("临时解决方案")
+    private String temporarySolution;
 }

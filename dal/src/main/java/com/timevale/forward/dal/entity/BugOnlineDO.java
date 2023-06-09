@@ -125,7 +125,7 @@ public class BugOnlineDO extends BaseDO {
     private String problemReason;
 
     /**
-     * 解决方案
+     * bug修复方案
      */
     private String solveScheme;
 
@@ -238,4 +238,9 @@ public class BugOnlineDO extends BaseDO {
      * 转业务需求申请人 id
      */
     private String convertBizApplyManId;
+
+    /**
+     * 临时解决方案
+     */
+    private String temporarySolution;
 }

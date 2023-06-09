@@ -28,7 +28,7 @@ public class BugOnlineModifyReq extends ToString {
     @ApiModelProperty("问题原因")
     private String problemReason;
 
-    @ApiModelProperty("解决方案")
+    @ApiModelProperty("bug修复方案")
     private String solveScheme;
 
     @ApiModelProperty("修复失败原因")
@@ -157,6 +157,9 @@ public class BugOnlineModifyReq extends ToString {
 
     @ApiModelProperty("客户等级")
     private String customerGrade;
+
+    @ApiModelProperty("用户临时解决方案")
+    private String temporarySolution;
 }
 
 

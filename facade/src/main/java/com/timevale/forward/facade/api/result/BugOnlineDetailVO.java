@@ -135,7 +135,7 @@ public class BugOnlineDetailVO extends ToString {
     @ApiModelProperty("问题原因")
     private String problemReason;
 
-    @ApiModelProperty("解决方案")
+    @ApiModelProperty("bug修复方案")
     private String solveScheme;
 
     @ApiModelProperty("修复失败原因")
@@ -206,4 +206,7 @@ public class BugOnlineDetailVO extends ToString {
 
     @ApiModelProperty("请求转业务需求状态: 0无，1申请中，2同意，3拒绝")
     private Integer convertBizStatus;
+
+    @ApiModelProperty("用户临时解决方案")
+    private String temporarySolution;
 }
