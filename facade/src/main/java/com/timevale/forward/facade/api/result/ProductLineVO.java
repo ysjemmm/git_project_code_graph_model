@@ -58,6 +58,12 @@ public class ProductLineVO extends ToString {
     @ApiModelProperty("sr专家id")
     private String srExpertId;
 
+    @ApiModelProperty("产品线等级：1-核心产品线; 2-即将退市产品线; 3-一般产品线")
+    private Integer productLineLevel;
+
+    @ApiModelProperty("产品线等级-描述")
+    private String productLineLevelName;
+
     @ApiModelProperty("是否废弃")
     private Boolean isDeleted;
 

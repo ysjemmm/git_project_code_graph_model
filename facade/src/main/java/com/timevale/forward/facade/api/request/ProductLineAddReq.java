@@ -47,4 +47,7 @@ public class ProductLineAddReq extends BaseReq {
     @ApiModelProperty("sr专家id")
     private String srExpertId;
 
+    @ApiModelProperty("产品线等级：0-无;1-核心产品线; 2-即将退市产品线; 3-一般产品线")
+    private Integer productLineLevel;
+
 }

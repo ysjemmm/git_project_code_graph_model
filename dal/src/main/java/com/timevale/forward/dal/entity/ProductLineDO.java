@@ -50,4 +50,9 @@ public class ProductLineDO extends BaseDO {
      * sr专家id
      */
     private String srExpertId;
+
+    /**
+     * 产品线等级
+     */
+    private Integer productLineLevel;
 }

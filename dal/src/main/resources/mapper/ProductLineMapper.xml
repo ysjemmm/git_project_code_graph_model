@@ -79,6 +79,7 @@
             <if test="bugOnlineOwner!=null">bug_online_owner,</if>
             <if test="srExpert!=null">sr_expert,</if>
             <if test="srExpertId!=null">sr_expert_id,</if>
+            <if test="productLineLevel!=null">product_line_level,</if>
             <if test="createMan!=null">create_man,</if>
             <if test="createManId!=null">create_man_id,</if>
         </trim>
@@ -92,6 +93,7 @@
             <if test="bugOnlineOwner!=null">#{bugOnlineOwner},</if>
             <if test="srExpert!=null">#{srExpert},</if>
             <if test="srExpertId!=null">#{srExpertId},</if>
+            <if test="productLineLevel!=null">#{productLineLevel},</if>
             <if test="createMan!=null">#{createMan},</if>
             <if test="createManId!=null">#{createManId},</if>
         </trim>
@@ -108,6 +110,7 @@
             <if test="bugOnlineOwner != null">bug_online_owner = #{bugOnlineOwner},</if>
             <if test="srExpert!=null">sr_expert = #{srExpert},</if>
             <if test="srExpertId!=null">sr_expert_id = #{srExpertId},</if>
+            <if test="productLineLevel!=null">#{productLineLevel},</if>
             <if test="modifyMan!=null">modify_man=#{modifyMan},</if>
             <if test="modifyManId!=null">modify_man_id=#{modifyManId},</if>
         </set>

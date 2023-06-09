@@ -7,6 +7,7 @@ import com.timevale.forward.facade.api.request.ProductLineAddReq;
 import com.timevale.forward.facade.api.request.ProductLineModifyReq;
 import com.timevale.forward.facade.api.result.ProductLineModelVO;
 import com.timevale.forward.facade.api.result.ProductLineVO;
+import com.timevale.forward.model.enums.ProduceLineLevelEnum;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -17,7 +18,9 @@ import java.util.List;
  * @author by YangXu
  * @date 2021/12/15 10:30
  */
-@Mapper
+@Mapper(imports = {
+        ProduceLineLevelEnum.class
+})
 public interface ProductLineCopier {
 
     ProductLineCopier INSTANCE = Mappers.getMapper(ProductLineCopier.class);
@@ -30,6 +33,7 @@ public interface ProductLineCopier {
      */
     @Mapping(source = "owner", target = "productLineOwner")
     @Mapping(source = "ownerId", target = "productLineOwnerId")
+    @Mapping(target = "productLineLevelName", expression = "java(ProduceLineLevelEnum.getTextByCode(productLineDO.getProductLineLevel()))")
     ProductLineVO convert(ProductLineDO productLineDO);
 
     /**
