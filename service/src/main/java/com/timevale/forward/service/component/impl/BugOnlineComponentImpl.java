@@ -225,11 +225,6 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
                 .map(CustomerCountEnum::getScore)
                 .orElse(0);
 
-        totalScore += Optional.ofNullable(req.getProductLineLevel())
-                .map(ProduceLineLevelEnum::getByCode)
-                .map(ProduceLineLevelEnum::getScore)
-                .orElse(0);
-
         totalScore += Optional.ofNullable(req.getCategory())
                 .map(BugOnlineCategoryEnum::getByCode)
                 .map(BugOnlineCategoryEnum::getScore)
@@ -254,6 +249,18 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
                 .map(ProblemOccurredTimeEnum::getByCode)
                 .map(ProblemOccurredTimeEnum::getScore)
                 .orElse(0);
+
+        Collection<Long> productLineIds = req.getProductLineIds();
+        if (CollUtil.isNotEmpty(productLineIds)) {
+            List<ProductLineDO> productLineDOs = productLineMapper.getByIds(productLineIds);
+            totalScore += productLineDOs.stream()
+                    .map(e -> Optional.ofNullable(e.getProductLineLevel())
+                            .map(ProduceLineLevelEnum::getByCode)
+                            .map(ProduceLineLevelEnum::getScore)
+                            .orElse(0))
+                    .max(Integer::compareTo)
+                    .orElse(0);
+        }
 
         return BugOnlinePriorityEnum.getByScore(totalScore).getCode();
     }

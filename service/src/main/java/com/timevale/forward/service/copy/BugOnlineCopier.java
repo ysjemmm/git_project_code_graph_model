@@ -6,6 +6,7 @@ import com.timevale.forward.dal.entity.BugOnlineListDO;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.BugOnlineAddReq;
 import com.timevale.forward.facade.api.request.BugOnlineModifyReq;
+import com.timevale.forward.facade.api.request.BugOnlinePriorityGetReq;
 import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
 import com.timevale.forward.facade.api.result.BugOnlineSimpleVO;
 import com.timevale.forward.facade.api.result.BugOnlineVO;
@@ -16,6 +17,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -145,4 +147,6 @@ public interface BugOnlineCopier {
     List<BugOnlineVO> convert(List<BugOnlineListDO> bugOnlineListDOList);
 
     BugOnlineSimpleVO do2svo(BugOnlineDO bugOnlineDO);
+
+    BugOnlinePriorityGetReq do2req(BugOnlineDO bugOnlineDO, Collection<Long> productLineIds);
 }

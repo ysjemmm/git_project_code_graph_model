@@ -49,7 +49,7 @@ public interface BugOnlineComponent {
      * 计算优先级
      *
      * @param req 请求
-     * @return {@link Integer}
+     * @return 按照评分规则给出优先级code，以优先级“低”为兜底返回
      */
     Integer calculatePriority(BugOnlinePriorityGetReq req);
 }

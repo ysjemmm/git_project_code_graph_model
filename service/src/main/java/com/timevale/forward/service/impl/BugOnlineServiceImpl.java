@@ -365,6 +365,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         if (StrUtil.isNotEmpty(bugOnlineDO.getCustomerName()) && StrUtil.isEmpty(bugOnlineDO.getCustomerGrade())) {
             String postGrade = crmClient.getPostGrade(bugOnlineDO.getCustomerName());
             bugOnlineDO.setCustomerGrade(postGrade);
+
+            // 计算优先级
+            BugOnlinePriorityGetReq priorityGetReq = BugOnlineCopier.INSTANCE.do2req(bugOnlineDO, addReq.getProductLineIdList());
+            Integer priority = bugOnlineComponent.calculatePriority(priorityGetReq);
+            bugOnlineDO.setPriority(priority);
         }
 
         // 线上bug落库
