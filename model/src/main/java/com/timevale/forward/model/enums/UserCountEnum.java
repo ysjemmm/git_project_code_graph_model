@@ -3,6 +3,8 @@ package com.timevale.forward.model.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.Optional;
+
 /**
  * @author by YangXu
  * @date 2023/06/09 17:40
@@ -25,5 +27,11 @@ public enum UserCountEnum {
             }
         }
         return null;
+    }
+
+    public static String getTextByCode(Integer code) {
+        return Optional.ofNullable(getByCode(code))
+                .map(UserCountEnum::getText)
+                .orElse("");
     }
 }

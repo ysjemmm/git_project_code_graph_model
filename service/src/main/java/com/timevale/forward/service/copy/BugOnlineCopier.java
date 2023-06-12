@@ -33,7 +33,10 @@ import java.util.List;
                 BugOnlineReasonEnum.class,
                 BugOnlineRecurrentEnum.class,
                 BugOnlineReasonStageEnum.class,
-                BugOnlineCategoryEnum.class
+                BugOnlineCategoryEnum.class,
+                CustomerCountEnum.class,
+                UserCountEnum.class,
+                ProblemOccurredTimeEnum.class
         }
 )
 public interface BugOnlineCopier {
@@ -56,6 +59,9 @@ public interface BugOnlineCopier {
     @Mapping(target = "reasonStageName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(bugDO.getReasonStage()))")
     @Mapping(target = "dismissCauseName", expression = "java(BugOnlineReasonEnum.getTextByCode(bugDO.getDismissCause()))")
     @Mapping(target = "dismissCauseStageName", expression = "java(BugOnlineReasonStageEnum.getTextByCode(bugDO.getDismissCauseStage()))")
+    @Mapping(target = "customerCountName", expression = "java(CustomerCountEnum.getByTextCode(bugDO.getCustomerCount()))")
+    @Mapping(target = "userCountName", expression = "java(UserCountEnum.getTextByCode(bugDO.getUserCount()))")
+    @Mapping(target = "problemOccurredTimeName", expression = "java(ProblemOccurredTimeEnum.getTextByCode(bugDO.getProblemOccurredTime()))")
     BugOnlineDetailVO convert(BugOnlineDO bugDO);
 
     /**

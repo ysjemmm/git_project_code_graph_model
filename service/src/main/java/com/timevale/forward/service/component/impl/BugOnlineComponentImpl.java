@@ -216,7 +216,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         int totalScore = 0;
 
         totalScore += Optional.ofNullable(req.getCustomerGrade())
-                .map(CustomerGradeEnum::getByCode)
+                .map(CustomerGradeEnum::getByText)
                 .map(CustomerGradeEnum::getScore)
                 .orElse(0);
 
@@ -250,7 +250,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
                 .map(UserCountEnum::getScore)
                 .orElse(0);
 
-        totalScore += Optional.ofNullable(req.getOccurredTime())
+        totalScore += Optional.ofNullable(req.getProblemOccurredTime())
                 .map(ProblemOccurredTimeEnum::getByCode)
                 .map(ProblemOccurredTimeEnum::getScore)
                 .orElse(0);

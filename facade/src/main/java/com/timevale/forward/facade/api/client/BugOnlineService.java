@@ -222,4 +222,11 @@ public interface BugOnlineService {
      */
     BaseResult<Void> acceptance(BugOnlineAcceptanceReq acceptanceReq);
 
+    /**
+     * 得到优先级
+     *
+     * @param getPriorityReq 得到优先级请求
+     * @return {@link BaseResult}<{@link Integer}>
+     */
+    BaseResult<Integer> getPriority(BugOnlinePriorityGetReq getPriorityReq);
 }

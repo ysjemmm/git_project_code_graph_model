@@ -160,6 +160,15 @@ public class BugOnlineModifyReq extends ToString {
 
     @ApiModelProperty("用户临时解决方案")
     private String temporarySolution;
+
+    @ApiModelProperty("客户数: 1-单客户; 2-2家或2家以上客户")
+    private Integer customerCount;
+
+    @ApiModelProperty("用户数: 1-1~2个; 2-3个或3个以上")
+    private Integer userCount;
+
+    @ApiModelProperty("问题发生时长: 1-24小时以内、; 2-24~72小时; 3-72小时以上")
+    private Integer problemOccurredTime;
 }
 
 

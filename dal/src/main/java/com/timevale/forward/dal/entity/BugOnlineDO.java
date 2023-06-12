@@ -243,4 +243,19 @@ public class BugOnlineDO extends BaseDO {
      * 临时解决方案
      */
     private String temporarySolution;
+
+    /**
+     * 客户数
+     */
+    private Integer customerCount;
+
+    /**
+     * 用户数
+     */
+    private Integer userCount;
+
+    /**
+     * 问题发生时长
+     */
+    private Integer problemOccurredTime;
 }

@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @ApiModel("线上bug获取优先级请求")
 public class BugOnlinePriorityGetReq extends BaseReq {
     @ApiModelProperty("客户等级: 10-S;20-A;30-B;40-C")
-    private Integer customerGrade;
+    private String customerGrade;
 
     @ApiModelProperty("客户数: 1- 单客户; 2- 2家或2家以上客户")
     private Integer customerCount;
@@ -35,5 +35,5 @@ public class BugOnlinePriorityGetReq extends BaseReq {
     private Integer userCount;
 
     @ApiModelProperty("问题发生时长: 1-24小时以内; 2-24~72小时; 3-72小时以上")
-    private Integer occurredTime;
+    private Integer problemOccurredTime;
 }

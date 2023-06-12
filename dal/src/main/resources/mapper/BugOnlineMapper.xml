@@ -204,6 +204,9 @@
                 <if test="bugOfflineId!=null">bug_offline_id,</if>
                 <if test="reasonStage!=null">reason_stage,</if>
                 <if test="dismissCauseStage!=null">dismiss_cause_stage,</if>
+                <if test="customerCount !=null">customer_count,</if>
+                <if test="userCount !=null">user_count,</if>
+                <if test="problemOccurredTime !=null">problem_occurred_time,</if>
                 <if test="createMan != null"> create_man,</if>
                 <if test="createManId != null"> create_man_id,</if>
             </trim>
@@ -238,6 +241,9 @@
                 <if test="bugOfflineId!=null">#{bugOfflineId},</if>
                 <if test="reasonStage!=null">#{reasonStage},</if>
                 <if test="dismissCauseStage!=null">#{dismissCauseStage},</if>
+                <if test="customerCount !=null">#{customerCount},</if>
+                <if test="userCount !=null">#{userCount},</if>
+                <if test="problemOccurredTime !=null">#{problemOccurredTime},</if>
                 <if test="createMan != null"> #{createMan},</if>
                 <if test="createManId != null"> #{createManId},</if>
             </trim>
@@ -337,6 +343,9 @@
             <if test="convertBizApplyMan !=null">convert_biz_apply_man=#{convertBizApplyMan},</if>
             <if test="convertBizApplyManId !=null">convert_biz_apply_man_id=#{convertBizApplyManId},</if>
             <if test="temporarySolution != null">temporary_solution=#{temporarySolution},</if>
+            <if test="customerCount !=null">customer_count=#{customerCount},</if>
+            <if test="userCount !=null">user_count=#{userCount},</if>
+            <if test="problemOccurredTime !=null">problem_occurred_time=#{problemOccurredTime},</if>
             <if test="modifyManId != null">
                 modify_man_id = #{modifyManId},
             </if>

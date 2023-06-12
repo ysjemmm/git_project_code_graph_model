@@ -1770,6 +1770,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         return BaseResult.success();
     }
 
+    @Override
+    public BaseResult<Integer> getPriority(BugOnlinePriorityGetReq getPriorityReq) {
+        return BaseResult.success(bugOnlineComponent.calculatePriority(getPriorityReq));
+    }
+
     /**
      * 判断当前操作人是否为personId或者personId的上级
      */
