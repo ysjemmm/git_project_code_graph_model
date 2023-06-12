@@ -11,9 +11,19 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum UserCountEnum {
 
-    LEQ_TWO(1,"1~2个"),
-    GEQ_THI(2,"3个或3个以上");
+    LEQ_TWO(1, "1~2个", 0),
+    GEQ_THI(2, "3个或3个以上", 10);
 
     private final Integer code;
     private final String text;
+    private final Integer score;
+
+    public static UserCountEnum getByCode(Integer code) {
+        for (UserCountEnum value : UserCountEnum.values()) {
+            if (value.code.equals(code)) {
+                return value;
+            }
+        }
+        return null;
+    }
 }

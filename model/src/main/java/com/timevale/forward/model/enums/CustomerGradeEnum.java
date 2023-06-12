@@ -5,21 +5,23 @@ import lombok.Getter;
 
 /**
  * @author by YangXu
- * @date 2023/06/09 17:38
+ * @date 2023/06/12 11:19
  */
 @Getter
 @AllArgsConstructor
-public enum CustomerCountEnum {
-    NONE(0, "无", 0),
-    ONE(1, "单客户", 5),
-    GEQ_TWO(2, "2家或2家以上客户", 10);
+public enum CustomerGradeEnum {
+    S(10,"S", 30),
+    A(20,"A", 20),
+    B(30,"B", 15),
+    C(40,"C", 10),
+    OTHER(50,"其它", 5);
 
     private final Integer code;
     private final String text;
     private final Integer score;
 
-    public static CustomerCountEnum getByCode(Integer code) {
-        for (CustomerCountEnum value : CustomerCountEnum.values()) {
+    public static CustomerGradeEnum getByCode(Integer code) {
+        for (CustomerGradeEnum value : CustomerGradeEnum.values()) {
             if (value.code.equals(code)) {
                 return value;
             }

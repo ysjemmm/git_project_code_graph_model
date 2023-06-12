@@ -3,6 +3,7 @@ package com.timevale.forward.service.component.impl;
 import cn.hutool.core.collection.CollUtil;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.facade.api.request.BugOnlinePriorityGetReq;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.BugLogComponent;
 import com.timevale.forward.service.component.BugOnlineComponent;
@@ -208,6 +209,53 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         }
 
         return bizDomainMapper.getByIds(bdIds);
+    }
+
+    @Override
+    public Integer calculatePriority(BugOnlinePriorityGetReq req) {
+        int totalScore = 0;
+
+        totalScore += Optional.ofNullable(req.getCustomerGrade())
+                .map(CustomerGradeEnum::getByCode)
+                .map(CustomerGradeEnum::getScore)
+                .orElse(0);
+
+        totalScore += Optional.ofNullable(req.getCustomerCount())
+                .map(CustomerCountEnum::getByCode)
+                .map(CustomerCountEnum::getScore)
+                .orElse(0);
+
+        totalScore += Optional.ofNullable(req.getProductLineLevel())
+                .map(ProduceLineLevelEnum::getByCode)
+                .map(ProduceLineLevelEnum::getScore)
+                .orElse(0);
+
+        totalScore += Optional.ofNullable(req.getCategory())
+                .map(BugOnlineCategoryEnum::getByCode)
+                .map(BugOnlineCategoryEnum::getScore)
+                .orElse(0);
+
+        totalScore += Optional.ofNullable(req.getEnv())
+                .map(BugOnlineCategoryEnum::getByCode)
+                .map(BugOnlineCategoryEnum::getScore)
+                .orElse(0);
+
+        totalScore += Optional.ofNullable(req.getRecurrent())
+                .map(BugOnlineRecurrentEnum::getByCode)
+                .map(BugOnlineRecurrentEnum::getScore)
+                .orElse(0);
+
+        totalScore += Optional.ofNullable(req.getUserCount())
+                .map(UserCountEnum::getByCode)
+                .map(UserCountEnum::getScore)
+                .orElse(0);
+
+        totalScore += Optional.ofNullable(req.getOccurredTime())
+                .map(ProblemOccurredTimeEnum::getByCode)
+                .map(ProblemOccurredTimeEnum::getScore)
+                .orElse(0);
+
+        return BugOnlinePriorityEnum.getByScore(totalScore).getCode();
     }
 
     private void addBizDemandAttachLogs(BugOnlineDO bugOnlineDO, Collection<Long> bizDemandIds) {

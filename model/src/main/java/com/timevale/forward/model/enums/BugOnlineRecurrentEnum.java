@@ -13,15 +13,16 @@ public enum BugOnlineRecurrentEnum {
     /**
      * 是
      */
-    IS(0, "是"),
+    IS(0, "是", 20),
 
     /**
      * 否
      */
-    NOT(1, "否");
+    NOT(1, "否", 5);
 
     private final Integer code;
     private final String text;
+    private final Integer score;
 
     public static String getTextByCode(Integer code) {
         for (BugOnlineRecurrentEnum e : BugOnlineRecurrentEnum.values()) {
@@ -29,6 +30,15 @@ public enum BugOnlineRecurrentEnum {
                 return e.text;
             }
         }
-        return "error code";
+        return "";
+    }
+
+    public static BugOnlineRecurrentEnum getByCode(Integer code) {
+        for (BugOnlineRecurrentEnum value : BugOnlineRecurrentEnum.values()) {
+            if (value.code.equals(code)) {
+                return value;
+            }
+        }
+        return null;
     }
 }

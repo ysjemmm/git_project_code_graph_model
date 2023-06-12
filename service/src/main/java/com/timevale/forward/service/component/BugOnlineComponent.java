@@ -3,6 +3,7 @@ package com.timevale.forward.service.component;
 import com.timevale.forward.dal.entity.BizDomainDO;
 import com.timevale.forward.dal.entity.BugLogDO;
 import com.timevale.forward.dal.entity.BugOnlineDO;
+import com.timevale.forward.facade.api.request.BugOnlinePriorityGetReq;
 import com.timevale.forward.model.enums.ButtonActionEnum;
 
 import java.util.Collection;
@@ -43,4 +44,12 @@ public interface BugOnlineComponent {
      * @return {@link List}<{@link BizDomainDO}>
      */
     List<BizDomainDO> getBizDomain(Long bugOnlineId);
+
+    /**
+     * 计算优先级
+     *
+     * @param req 请求
+     * @return {@link Integer}
+     */
+    Integer calculatePriority(BugOnlinePriorityGetReq req);
 }

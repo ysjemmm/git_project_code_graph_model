@@ -13,15 +13,16 @@ public enum BugOnlineEnvEnum {
     /**
      * 生产环境
      */
-    PRODUCE_ENV(0, "生产环境"),
+    PRODUCE_ENV(0, "生产环境", 20),
 
     /**
      * 模拟环境
      */
-    IMITATE_ENV(1, "模拟环境");
+    IMITATE_ENV(1, "模拟环境", 5);
 
     private final Integer code;
     private final String text;
+    private final Integer score;
 
     public static String getTextByCode(Integer code) {
         for (BugOnlineEnvEnum e : BugOnlineEnvEnum.values()) {
@@ -29,6 +30,6 @@ public enum BugOnlineEnvEnum {
                 return e.text;
             }
         }
-        return "error code";
+        return "";
     }
 }

@@ -3,9 +3,11 @@ package com.timevale.forward.model.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.Arrays;
+
 /**
- * @Date 2022/3/18 15:23
- * @Author 望轩
+ * @author by YangXu
+ * @date 2023/06/12 11:15
  */
 @Getter
 @AllArgsConstructor
@@ -13,25 +15,26 @@ public enum BugOnlinePriorityEnum {
     /**
      * 低
      */
-    LOW(0, "低"),
+    LOW(0, "低",0),
 
     /**
      * 中
      */
-    MIDDLE(1, "中"),
+    MIDDLE(1, "中", 76),
 
     /**
      * 高
      */
-    HIGH(2, "高"),
+    HIGH(2, "高",91),
 
     /**
      * 紧急
      */
-    URGENT(3, "紧急");
+    URGENT(3, "紧急",100);
 
     private final Integer code;
     private final String text;
+    private final Integer floorScore;
 
     public static String getTextByCode(Integer code) {
         for (BugOnlinePriorityEnum e : BugOnlinePriorityEnum.values()) {
@@ -39,6 +42,17 @@ public enum BugOnlinePriorityEnum {
                 return e.text;
             }
         }
-        return "error code";
+        return "";
+    }
+
+    public static BugOnlinePriorityEnum getByScore(Integer score) {
+        BugOnlinePriorityEnum[] priorities = BugOnlinePriorityEnum.values();
+        Arrays.sort(priorities, (a,b)-> b.floorScore.compareTo(a.floorScore));
+        for (BugOnlinePriorityEnum priority : priorities) {
+            if (priority.floorScore.compareTo(score) <= 0) {
+                return priority;
+            }
+        }
+        return LOW;
     }
 }
