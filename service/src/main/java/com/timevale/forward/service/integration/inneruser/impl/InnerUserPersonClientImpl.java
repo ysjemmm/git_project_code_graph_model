@@ -324,6 +324,7 @@ public class InnerUserPersonClientImpl implements InnerUserPersonClient {
 
     @Override
     public List<String> getDefaultSuperior(Collection<String> accounts, Boolean isLeave) {
+        CollUtil.removeEmpty(accounts);
         List<BaseInfoResponse> baseInfoResponses = batchGetStaffInfos(accounts, isLeave);
         return Optional.ofNullable(baseInfoResponses)
                 .map(e->e.stream().map(BaseInfoResponse::getDefaultGroup).filter(Objects::nonNull).collect(Collectors.toList()))
