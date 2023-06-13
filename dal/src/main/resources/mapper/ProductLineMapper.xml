@@ -110,7 +110,7 @@
             <if test="bugOnlineOwner != null">bug_online_owner = #{bugOnlineOwner},</if>
             <if test="srExpert!=null">sr_expert = #{srExpert},</if>
             <if test="srExpertId!=null">sr_expert_id = #{srExpertId},</if>
-            <if test="productLineLevel!=null">#{productLineLevel},</if>
+            <if test="productLineLevel!=null">product_line_level = #{productLineLevel},</if>
             <if test="modifyMan!=null">modify_man=#{modifyMan},</if>
             <if test="modifyManId!=null">modify_man_id=#{modifyManId},</if>
         </set>
