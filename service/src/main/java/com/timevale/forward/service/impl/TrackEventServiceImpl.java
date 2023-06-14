@@ -30,11 +30,11 @@ import com.timevale.forward.service.copy.TrackEventCopier;
 import com.timevale.forward.service.copy.TrackPropCopier;
 import com.timevale.forward.service.excel.track.sensor.SensorTrackOutputStrategy;
 import com.timevale.forward.service.excel.track.sensor.SensorTrackRow;
-import com.timevale.forward.service.integration.epeius.EpeiusClient;
 import com.timevale.forward.service.utils.EnvUtils;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -197,7 +197,7 @@ public class TrackEventServiceImpl implements TrackEventService {
     public BaseResult<Boolean> delete(TrackEventDeleteReq trackEventDeleteReq) {
         log.info("埋点事件删除,参数:{}", trackEventDeleteReq);
         TrackEventDO oldTrackEventDO = trackEventMapper.get(trackEventDeleteReq.getId(), null);
-
+        AssertUtil.notNull(oldTrackEventDO, "埋点事件不存在");
         if (ForwardFlowStatusEnum.AUDITING.getCode().equals(oldTrackEventDO.getStatus())) {
             throw new BaseBizRuntimeException("状态为审核中不能删除");
         }
