@@ -7,6 +7,7 @@ import com.timevale.forward.model.enums.ProjectRiskTypeEnum;
 import com.timevale.forward.model.enums.YesOrNoEnum;
 import com.timevale.forward.service.component.ProjectRiskComponent;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
+import com.timevale.forward.service.mq.handler.DrcHandler;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.util.AssertUtil;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +23,12 @@ import java.util.Objects;
 @LogPoint
 @Component
 @RequiredArgsConstructor
-public class DrcProjectMilestoneHandler {
+public class DrcProjectMilestoneHandler implements DrcHandler {
     private final ProjectRiskMapper projectRiskMapper;
     private final ProjectRiskComponent projectRiskComponent;
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
+    @Override
     public void handle(DrcMsgBody body) {
         threadPoolTaskExecutor.execute(()-> milestoneHandle(body));
     }

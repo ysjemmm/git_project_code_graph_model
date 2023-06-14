@@ -24,22 +24,25 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DrcRiskListener implements Listener {
+public class DrcListener implements Listener {
     private final DrcTaskHandler drcTaskHandler;
     private final DrcProjectHandler drcProjectHandler;
     private final DrcBizDemandHandler drcBizDemandHandler;
+    private final DrcBugOnlineHandler drcBugOnlineHandler;
     private final DrcMilestoneActionHandler drcMilestoneActionHandler;
     private final DrcProjectMilestoneHandler drcProjectMilestoneHandler;
 
-    public static Map<String, DrcHandler> HANDLES = new HashMap<>();
+
+    public static Map<DrcTableEnum, DrcHandler> HANDLES = new HashMap<>();
 
     @PostConstruct
     public void init() {
-        HANDLES.put(DrcTableEnum.TASK.getText(), drcTaskHandler::handle);
-        HANDLES.put(DrcTableEnum.PROJECT.getText(), drcProjectHandler::handle);
-        HANDLES.put(DrcTableEnum.BIZ_DEMAND.getText(), drcBizDemandHandler::handle);
-        HANDLES.put(DrcTableEnum.PROJECT_MILESTONE.getText(), drcProjectMilestoneHandler::handle);
-        HANDLES.put(DrcTableEnum.PROJECT_MILESTONE_ACTION.getText(), drcMilestoneActionHandler::handle);
+        HANDLES.put(DrcTableEnum.TASK, drcTaskHandler);
+        HANDLES.put(DrcTableEnum.PROJECT, drcProjectHandler);
+        HANDLES.put(DrcTableEnum.BIZ_DEMAND, drcBizDemandHandler);
+        HANDLES.put(DrcTableEnum.BUG_ONLINE, drcBugOnlineHandler);
+        HANDLES.put(DrcTableEnum.PROJECT_MILESTONE, drcProjectMilestoneHandler);
+        HANDLES.put(DrcTableEnum.PROJECT_MILESTONE_ACTION, drcMilestoneActionHandler);
     }
 
     @Override
@@ -47,20 +50,20 @@ public class DrcRiskListener implements Listener {
         for (Msg msg : msgs) {
             String msgId = msg.getMsgId();
             String message = new String(msg.getBody());
-            log.info("[DrcRiskListener]收到消息, msgId={}, message={}", msgId, message);
+            log.info("[DrcListener]收到消息, msgId={}, message={}", msgId, message);
 
             DrcMsgBody body = JSON.parseObject(message, DrcMsgBody.class);
             try {
-                log.info("[DrcRiskListener]body: {}", JSON.toJSONString(body));
-                DrcHandler handler = HANDLES.get(body.getTableName());
+                log.info("[DrcListener]body: {}", JSON.toJSONString(body));
+                DrcHandler handler = HANDLES.get(DrcTableEnum.getByText(body.getTableName()));
                 if (handler == null) {
-                    log.error("[DrcRiskListener]找不到处理方法， body: {}", JSON.toJSONString(body));
+                    log.error("[DrcListener]找不到处理方法， body: {}", JSON.toJSONString(body));
                 } else {
                     handler.handle(body);
                 }
-                log.info("[DrcRiskListener]消费完成,{}", body.getGtId());
+                log.info("[DrcListener]消费完成,{}", body.getGtId());
             } catch (Exception e) {
-                log.error("[DrcRiskListener]消费失败, topic:{}, msgId:{},e:{}",msg.getTopic(),msgId, e.getMessage());
+                log.error("[DrcListener]消费失败, topic:{}, msgId:{},e:{}",msg.getTopic(),msgId, e.getMessage());
             }
         }
         return ReceiveResult.success();

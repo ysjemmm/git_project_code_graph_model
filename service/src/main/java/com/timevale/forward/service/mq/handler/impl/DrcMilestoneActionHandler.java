@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.entity.ProjectMilestoneActionDO;
 import com.timevale.forward.service.component.ProjectRiskComponent;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
+import com.timevale.forward.service.mq.handler.DrcHandler;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,10 +21,11 @@ import java.util.Optional;
 @LogPoint
 @Component
 @RequiredArgsConstructor
-public class DrcMilestoneActionHandler {
+public class DrcMilestoneActionHandler  implements DrcHandler {
     private final ProjectRiskComponent projectRiskComponent;
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
+    @Override
     public void handle(DrcMsgBody body) {
         threadPoolTaskExecutor.execute(()-> riskHandle(body));
     }

@@ -37,7 +37,7 @@ public class ProjectRiskComponent {
     private ProjectMilestoneComponent milestoneComponent;
 
     public void solveNoEntry(Long projectId) {
-        log.info("[DrcRiskListener.solveNoEntry]处理可能的未录入风险：projectId:{}", projectId);
+        log.info("[DrcListener.solveNoEntry]处理可能的未录入风险：projectId:{}", projectId);
 
         // 查询当前项目的里程碑
         List<ProjectMilestoneVO> milestones = milestoneComponent.listByProjectId(projectId);
@@ -163,7 +163,7 @@ public class ProjectRiskComponent {
             return BigDecimal.ZERO;
         }
 
-        log.info("[DrcRiskListener.getOverdueDay]planDate:{}, actualDate:{}", planDate, actualDate);
+        log.info("[DrcListener.getOverdueDay]planDate:{}, actualDate:{}", planDate, actualDate);
 
         // 计算实际工作日
         Long elapsedTimeStamp = elapsedTimeClient.getElapsedTime(planDate, actualDate);

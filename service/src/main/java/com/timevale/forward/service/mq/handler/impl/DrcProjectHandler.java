@@ -12,6 +12,7 @@ import com.timevale.forward.model.enums.ProjectKindEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.ProjectRiskComponent;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
+import com.timevale.forward.service.mq.handler.DrcHandler;
 import com.timevale.forward.service.observer.event.OtherProjectPublishMsgEvent;
 import com.timevale.forward.service.observer.event.OtnProjectPublishMsgEvent;
 import com.timevale.forward.service.observer.event.SrEvalEndMsgEvent;
@@ -32,12 +33,12 @@ import java.util.Optional;
 @LogPoint
 @Component
 @RequiredArgsConstructor
-public class DrcProjectHandler {
+public class DrcProjectHandler implements DrcHandler {
     private final ProjectRiskComponent projectRiskComponent;
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
     private final ProjectMilestoneActionMapper milestoneActionMapper;
 
-
+    @Override
     public void handle(DrcMsgBody body) {
         threadPoolTaskExecutor.execute(() -> msgHandle(body));
         threadPoolTaskExecutor.execute(() -> riskHandle(body));

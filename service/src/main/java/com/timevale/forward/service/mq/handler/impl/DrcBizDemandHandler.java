@@ -10,6 +10,7 @@ import com.timevale.forward.facade.api.result.BizStatusOperatorVO;
 import com.timevale.forward.model.enums.BizChangeLogTypeEnum;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
+import com.timevale.forward.service.mq.handler.DrcHandler;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,10 +30,11 @@ import java.util.Objects;
 @LogPoint
 @Component
 @RequiredArgsConstructor
-public class DrcBizDemandHandler {
+public class DrcBizDemandHandler implements DrcHandler {
     private final BizRecordMapper bizRecordMapper;
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
+    @Override
     public void handle(DrcMsgBody body) {
         threadPoolTaskExecutor.execute(()-> recordStatusOperator(body));
     }

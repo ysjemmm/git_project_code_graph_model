@@ -49,6 +49,7 @@ public enum MessageTitleEnum {
     BUG_ONLINE_TO_BIZ_REJECT("线上bug转业务需求拒绝通知"),
     BUG_ONLINE_ACCEPTANCE("线上bug验收通知"),
     BUG_ONLINE_ACCEPTANCE_FAIL("验收不通过通知"),
+    BUG_ONLINE_TEMPORARY_SOLUTION("线上bug用户临时解决方案调整通知"),
 
     // 人天通知标题
     MAN_DAY_AUDIT("人天审核通知"),
