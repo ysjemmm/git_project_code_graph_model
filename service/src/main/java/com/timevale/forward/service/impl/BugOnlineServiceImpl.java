@@ -361,10 +361,12 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         // req 转换为 do
         BugOnlineDO bugOnlineDO = BugOnlineCopier.INSTANCE.req2do(addReq);
 
-        // 客户等级若为空，获取填入客户等级
-        if (StrUtil.isNotEmpty(bugOnlineDO.getCustomerName()) && StrUtil.isEmpty(bugOnlineDO.getCustomerGrade())) {
-            String postGrade = crmClient.getPostGrade(bugOnlineDO.getCustomerName());
-            bugOnlineDO.setCustomerGrade(postGrade);
+        if (StrUtil.isNotEmpty(bugOnlineDO.getCustomerName())) {
+            // 客户等级若为空，获取填入客户等级
+            if (StrUtil.isEmpty(bugOnlineDO.getCustomerGrade())) {
+                Optional.ofNullable(crmClient.getPostGrade(bugOnlineDO.getCustomerName()))
+                        .ifPresent(bugOnlineDO::setCustomerGrade);
+            }
 
             // 计算优先级
             BugOnlinePriorityGetReq priorityGetReq = BugOnlineCopier.INSTANCE.do2req(bugOnlineDO, addReq.getProductLineIdList());
