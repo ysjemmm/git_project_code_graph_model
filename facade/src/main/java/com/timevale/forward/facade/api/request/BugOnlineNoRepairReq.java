@@ -20,8 +20,8 @@ public class BugOnlineNoRepairReq extends BaseReq {
     @NotNull(message = "线上bug id不能为空")
     private Long id;
 
-    @ApiModelProperty("驳回原因")
-    @NotNull(message = "驳回原因不能为空")
+    @ApiModelProperty("不用修复原因")
+    @NotNull(message = "不用修复原因不能为空")
     private Integer dismissCause;
 
     @ApiModelProperty("归因阶段")

@@ -23,7 +23,7 @@ public enum BugFieldEnum {
 
     REPAIR_FAIL_REASON("修复失败原因"),
 
-    DISMISS_CAUSE("驳回原因"),
+    DISMISS_CAUSE("不用修复原因"),
 
     REASON("bug原因"),
 

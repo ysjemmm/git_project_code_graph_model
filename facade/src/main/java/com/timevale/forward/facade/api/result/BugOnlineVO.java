@@ -53,7 +53,7 @@ public class BugOnlineVO extends ToString {
     @ApiModelProperty("bug原因-描述")
     private String reasonName;
 
-    @ApiModelProperty("驳回原因-描述")
+    @ApiModelProperty("不用修复原因-描述")
     private String dismissCauseName;
 
     @ApiModelProperty("来源数据id")
@@ -95,7 +95,7 @@ public class BugOnlineVO extends ToString {
     @ApiModelProperty("原因阶段-描述")
     private String reasonStageName;
 
-    @ApiModelProperty("驳回原因阶段-描述")
+    @ApiModelProperty("不用修复原因阶段-描述")
     private String dismissCauseStageName;
 
     @ApiModelProperty("客户等级")

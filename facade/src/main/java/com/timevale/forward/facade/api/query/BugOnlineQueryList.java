@@ -45,7 +45,7 @@ public class BugOnlineQueryList extends QueryBase {
     @ApiModelProperty("bug原因")
     private List<Integer> reasons;
 
-    @ApiModelProperty("驳回原因")
+    @ApiModelProperty("不用修复原因")
     private List<Integer> dismissCauseList;
 
     @ApiModelProperty("bug所属端")
@@ -109,7 +109,7 @@ public class BugOnlineQueryList extends QueryBase {
     @ApiModelProperty("bug原因归因列表")
     private List<Integer> reasonStageList;
 
-    @ApiModelProperty("驳回原因归因列表")
+    @ApiModelProperty("不用修复原因归因列表")
     private List<Integer> dismissCauseStageList;
 
     @ApiModelProperty("客户等级")

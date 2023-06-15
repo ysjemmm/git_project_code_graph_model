@@ -54,7 +54,7 @@ public class BugOnlineListDO extends BaseDO {
     private Integer reason;
 
     /**
-     * 驳回原因
+     * 不用修复原因
      */
     private Integer dismissCause;
 
@@ -114,7 +114,7 @@ public class BugOnlineListDO extends BaseDO {
     private Integer reasonStage;
 
     /**
-     * 驳回原因阶段
+     * 不用修复原因阶段
      */
     private Integer dismissCauseStage;
 

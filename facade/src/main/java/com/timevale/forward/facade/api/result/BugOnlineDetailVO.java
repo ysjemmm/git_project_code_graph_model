@@ -123,10 +123,10 @@ public class BugOnlineDetailVO extends ToString {
     @ApiModelProperty("bug状态")
     private String statusName;
 
-    @ApiModelProperty("驳回原因")
+    @ApiModelProperty("不用修复原因")
     private Integer dismissCause;
 
-    @ApiModelProperty("驳回原因")
+    @ApiModelProperty("不用修复原因")
     private String dismissCauseName;
 
     @ApiModelProperty("重新打开原因")
@@ -195,10 +195,10 @@ public class BugOnlineDetailVO extends ToString {
     @ApiModelProperty("归因阶段描述")
     private String reasonStageName;
 
-    @ApiModelProperty("驳回原因归因阶段")
+    @ApiModelProperty("不用修复原因归因阶段")
     private Integer dismissCauseStage;
 
-    @ApiModelProperty("驳回原因归因阶段描述")
+    @ApiModelProperty("不用修复原因归因阶段描述")
     private String dismissCauseStageName;
 
     @ApiModelProperty("打开次数")

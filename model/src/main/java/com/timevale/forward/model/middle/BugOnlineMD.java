@@ -2,7 +2,8 @@ package com.timevale.forward.model.middle;
 
 import com.timevale.forward.dal.annotation.FieldCompare;
 import com.timevale.forward.model.enums.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Date;
 
@@ -10,7 +11,8 @@ import java.util.Date;
  * @Date 2022/3/22 11:08
  * @Author 望轩
  */
-@Data
+@Getter
+@Setter
 public class BugOnlineMD extends BaseMD{
     /**
      * bug标题
@@ -132,9 +134,9 @@ public class BugOnlineMD extends BaseMD{
     private String reasonName;
 
     /**
-     * 驳回原因
+     * 不用修复原因
      */
-    @FieldCompare(fieldName = "驳回原因")
+    @FieldCompare(fieldName = "不用修复原因")
     private String dismissCauseName;
 
     /**
