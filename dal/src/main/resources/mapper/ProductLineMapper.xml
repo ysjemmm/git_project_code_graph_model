@@ -186,7 +186,7 @@
 
     <update id="updateProductLineLevel">
         UPDATE info_forward.product_line
-        SET produce_line_level = #{productLineLevel},
+        SET product_line_level = #{productLineLevel},
             modify_man = #{modifyMan},
             modify_man_id=#{modifyManId}
         WHERE id = #{id}
