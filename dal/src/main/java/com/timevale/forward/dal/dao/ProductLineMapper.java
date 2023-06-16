@@ -108,4 +108,12 @@ public interface ProductLineMapper {
      */
     @Select("select * from product_line where `name` = #{name} and is_deleted = false")
     ProductLineDO selectByName(@Param("name") String name);
+
+    /**
+     * 更新产品线等级
+     *
+     * @param id               id
+     * @param productLineLevel 产品线级
+     */
+    void updateProductLineLevel(@Param("id")Long id, @Param("productLineLevel")Integer productLineLevel);
 }

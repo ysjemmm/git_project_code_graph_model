@@ -130,6 +130,10 @@ public class ProductLineServiceImpl implements ProductLineService {
         }
         ProductLineDO productLineDO = ProductLineCopier.INSTANCE.convert(productLineModifyReq);
         productLineMapper.update(productLineDO);
+        if (productLineDO.getProductLineLevel() == null) {
+            productLineMapper.updateProductLineLevel(productLineDO.getId(), null);
+        }
+
         return BaseResult.success(true);
     }
 
