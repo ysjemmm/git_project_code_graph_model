@@ -1,6 +1,7 @@
 package com.timevale.forward.service.mq.handler.impl;
 
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.timevale.forward.dal.entity.BugOnlineDO;
 import com.timevale.forward.service.mq.dto.DrcMsgBody;
@@ -25,14 +26,15 @@ public class DrcBugOnlineHandler implements DrcHandler {
 
     @Override
     public void handle(DrcMsgBody body) {
-        threadPoolTaskExecutor.execute(()-> msgHandle(body));
+        threadPoolTaskExecutor.execute(() -> msgHandle(body));
     }
 
     private void msgHandle(DrcMsgBody drcMsgBody) {
         BugOnlineDO beforeBug = JSON.parseObject(drcMsgBody.getBefore(), BugOnlineDO.class);
         BugOnlineDO afterBug = JSON.parseObject(drcMsgBody.getAfter(), BugOnlineDO.class);
 
-        if (ObjectUtil.notEqual(beforeBug.getTemporarySolution(), afterBug.getTemporarySolution())) {
+        if (ObjectUtil.notEqual(beforeBug.getTemporarySolution(), afterBug.getTemporarySolution())
+                && StrUtil.isNotEmpty(afterBug.getTemporarySolution())) {
             new BugOnlineTemporarySolutionMsg(
                     this,
                     afterBug.getName(),
