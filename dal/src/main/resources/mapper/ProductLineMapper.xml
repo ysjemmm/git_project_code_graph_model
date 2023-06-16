@@ -161,6 +161,12 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="productLineLevels != null and productLineLevels.size() > 0">
+                AND a.product_line_level IN
+                <foreach collection="productLineLevels" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
         </where>
     </select>
 

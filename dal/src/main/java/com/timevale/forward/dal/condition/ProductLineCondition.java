@@ -35,4 +35,9 @@ public class ProductLineCondition {
      */
     private List<Long> bizDomainIds;
 
+    /**
+     * 产品线等级
+     */
+    private List<Integer> productLineLevels;
+
 }

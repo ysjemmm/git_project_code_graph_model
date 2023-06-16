@@ -218,7 +218,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
         totalScore += Optional.ofNullable(req.getCustomerGrade())
                 .map(CustomerGradeEnum::getByText)
                 .map(CustomerGradeEnum::getScore)
-                .orElse(0);
+                .orElse(5);
 
         totalScore += Optional.ofNullable(req.getCustomerCount())
                 .map(CustomerCountEnum::getByCode)
