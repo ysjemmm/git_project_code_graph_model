@@ -231,8 +231,8 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
                 .orElse(0);
 
         totalScore += Optional.ofNullable(req.getEnv())
-                .map(BugOnlineCategoryEnum::getByCode)
-                .map(BugOnlineCategoryEnum::getScore)
+                .map(BugOnlineEnvEnum::getByCode)
+                .map(BugOnlineEnvEnum::getScore)
                 .orElse(0);
 
         totalScore += Optional.ofNullable(req.getRecurrent())

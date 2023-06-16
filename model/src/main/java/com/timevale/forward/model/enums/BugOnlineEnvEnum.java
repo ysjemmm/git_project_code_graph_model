@@ -32,4 +32,13 @@ public enum BugOnlineEnvEnum {
         }
         return "";
     }
+
+    public static BugOnlineEnvEnum getByCode(Integer code) {
+        for (BugOnlineEnvEnum e : BugOnlineEnvEnum.values()) {
+            if (e.code.equals(code)) {
+                return e;
+            }
+        }
+        return null;
+    }
 }
