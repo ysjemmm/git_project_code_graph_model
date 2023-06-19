@@ -1,5 +1,6 @@
 package com.timevale.forward.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandUpdateCondition;
 import com.timevale.forward.dal.dao.BizChangeLogMapper;
@@ -11,11 +12,14 @@ import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.facade.api.client.ProjectBizDemandService;
 import com.timevale.forward.facade.api.request.BizDemandLinkProjectReq;
+import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
 import com.timevale.forward.model.enums.LinkOrUnLinkEnum;
+import com.timevale.forward.model.enums.PersonTypeEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.service.component.BizDemandComponent;
 import com.timevale.forward.service.component.BizDemandLogComponent;
+import com.timevale.forward.service.component.PersonComponent;
 import com.timevale.forward.service.utils.date.DateStyle;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.base.util.AssertUtil;
@@ -46,6 +50,7 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
     private final BizDemandLogComponent bizDemandLogComponent;
     private final ProjectBizDemandMapper projectBizDemandMapper;
     private final BizChangeLogMapper bizChangeLogMapper;
+    private final PersonComponent personComponent;
 
     @Override
     public BaseResult<Void> linkOrUnlinkBizDemandProject(BizDemandLinkProjectReq bizDemandLinkProjectReq) {
@@ -125,6 +130,13 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
         if (!logs.isEmpty()) {
             bizChangeLogMapper.batchInsert(logs);
         }
+
+        // 把sr添加到项目成员中
+        Set<PersonAddReq> srs = bizDemands.stream()
+                .filter(e -> StrUtil.isNotEmpty(e.getSrExpert()))
+                .map(e -> new PersonAddReq(e.getSrExpert(), e.getSrExpertId()))
+                .collect(Collectors.toSet());
+        personComponent.addIfNotExisted(srs, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         return BaseResult.success();
     }

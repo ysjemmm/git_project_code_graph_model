@@ -352,8 +352,6 @@ public class ProjectServiceImpl implements ProjectService {
     public BaseResult<Long> add(ProjectAddReq projectAddReq) {
         log.info("项目新增接收参数:{}", projectAddReq);
 
-        // 名称校验
-        AssertUtil.checkState(!StrUtil.contains(projectAddReq.getName(), CommonConstant.BLANK), "项目名称中请勿包含空格");
         // 是否产研系统RPC调用产生的项目
         List<Long> bizDemandIds = projectAddReq.getBizDemandIds();
         boolean customerDevSourceAdd = StringUtils.isNotBlank(projectAddReq.getSourceId()) &&
