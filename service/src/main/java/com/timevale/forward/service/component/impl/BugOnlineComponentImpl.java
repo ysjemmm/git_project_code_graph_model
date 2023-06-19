@@ -11,6 +11,7 @@ import com.timevale.forward.service.component.BugOnlineStatusOperatorComponent;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.observer.event.BugOnlineConfirmMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
+import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
  **/
 @Component
 @Slf4j
+@LogPoint
 public class BugOnlineComponentImpl implements BugOnlineComponent {
     @Resource
     private BugLogMapper bugLogMapper;
