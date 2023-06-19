@@ -263,7 +263,7 @@ public class BugOnlineComponentImpl implements BugOnlineComponent {
                     .max(Integer::compareTo)
                     .orElse(0);
         }
-        log.info("[BugOnlineComponentImpl.calculatePriority] totalScore: {}", totalScore);
+
         return BugOnlinePriorityEnum.getByScore(totalScore).getCode();
     }
 
