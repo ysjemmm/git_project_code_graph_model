@@ -15,7 +15,7 @@ public enum BugOnlineCategoryEnum {
     PERFORMANCE(2, "性能问题", 10),
     CAPABILITY(3, "兼容性问题", 10),
     UE(4, "用户体验问题", 5),
-    SECURITY(5, "安全问题", 15),
+    SECURITY(5, "安全问题", 5),
     ;
 
     private final Integer code;

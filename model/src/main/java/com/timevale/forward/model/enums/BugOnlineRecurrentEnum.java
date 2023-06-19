@@ -13,7 +13,7 @@ public enum BugOnlineRecurrentEnum {
     /**
      * 是
      */
-    IS(0, "是", 20),
+    IS(0, "是", 10),
 
     /**
      * 否
