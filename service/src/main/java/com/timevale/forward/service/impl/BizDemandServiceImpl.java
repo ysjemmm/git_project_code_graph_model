@@ -372,16 +372,16 @@ public class BizDemandServiceImpl implements BizDemandService {
                 bizDemandDO.getName()
         ));
 
-        // // 如果是客开业务需求，还要通知SR
-        // if (bizDemandAddReq.getCustomerDevDemand() && StrUtil.isNotEmpty(bizDemandAddReq.getSrExpertId())) {
-        //     messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
-        //             this,
-        //             bizDemandDO.getId(),
-        //             bizDemandDO.getSubmitMan(),
-        //             bizDemandDO.getSrExpertId(),
-        //             bizDemandDO.getName()
-        //     ));
-        // }
+        // 如果是客开业务需求，还要通知SR
+        if (bizDemandAddReq.getCustomerDevDemand() && StrUtil.isNotEmpty(bizDemandAddReq.getSrExpertId())) {
+            messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
+                    this,
+                    bizDemandDO.getId(),
+                    bizDemandDO.getSubmitMan(),
+                    bizDemandDO.getSrExpertId(),
+                    bizDemandDO.getName()
+            ));
+        }
 
         // 日志, 状态改为待评估
         bizDemandLogComponent.addLogWhenModifyData(

@@ -130,13 +130,13 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
         if (!logs.isEmpty()) {
             bizChangeLogMapper.batchInsert(logs);
         }
-        //
-        // // 把sr添加到项目成员中
-        // Set<PersonAddReq> srs = bizDemands.stream()
-        //         .filter(e -> StrUtil.isNotEmpty(e.getSrExpert()))
-        //         .map(e -> new PersonAddReq(e.getSrExpert(), e.getSrExpertId()))
-        //         .collect(Collectors.toSet());
-        // personComponent.addIfNotExisted(srs, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
+
+        // 把sr添加到项目成员中
+        Set<PersonAddReq> srs = bizDemands.stream()
+                .filter(e -> StrUtil.isNotEmpty(e.getSrExpert()))
+                .map(e -> new PersonAddReq(e.getSrExpert(), e.getSrExpertId()))
+                .collect(Collectors.toSet());
+        personComponent.addIfNotExisted(srs, projectId, PersonTypeEnum.PROJECT_MEMBER.getCode());
 
         return BaseResult.success();
     }
