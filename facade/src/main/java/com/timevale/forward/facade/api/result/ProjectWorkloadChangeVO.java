@@ -62,4 +62,8 @@ public class ProjectWorkloadChangeVO extends ToString {
 
     @ApiModelProperty("计入积分成员工作量增加")
     private BigDecimal pointWorkloadAddSum;
+
+    @ApiModelProperty("项目成员积分变更明细")
+    private List<MemberEvaluateChangeVO> memberEvaluateChanges;
+
 }

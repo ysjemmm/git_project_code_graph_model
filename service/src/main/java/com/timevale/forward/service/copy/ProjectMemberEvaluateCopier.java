@@ -8,10 +8,8 @@ import com.timevale.forward.facade.api.request.PersonAddReq;
 import com.timevale.forward.facade.api.result.ConclusionMemberItemVO;
 import com.timevale.forward.facade.api.result.MemberEvaluateVO;
 import com.timevale.forward.facade.api.result.ProjectWorkloadChangeVO;
-import com.timevale.forward.model.enums.GradeEnum;
-import com.timevale.forward.model.enums.ProjectKindEnum;
-import com.timevale.forward.model.enums.ProjectLevelEnum;
-import com.timevale.forward.model.enums.ProjectTypeEnum;
+import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.integration.epeius.model.MemberEvaluateVar;
 import com.timevale.forward.service.integration.epeius.model.ProjectMemberEvaluateVar;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -28,6 +26,7 @@ import java.util.List;
 @Mapper(
         imports = {
                 GradeEnum.class,
+                YesOrNoEnum.class,
                 ProjectKindEnum.class,
                 ProjectTypeEnum.class,
                 ProjectLevelEnum.class,
@@ -64,6 +63,10 @@ public interface ProjectMemberEvaluateCopier {
     ProjectMemberEvaluateVar do2var(ProjectMemberEvaluateDO memberEvaluateDO);
 
     List<ProjectMemberEvaluateVar> do2var(List<ProjectMemberEvaluateDO> memberEvaluateDOs);
+
+    MemberEvaluateVar vo2var(MemberEvaluateVO memberEvaluateVO);
+
+    List<MemberEvaluateVar> do2var(Collection<MemberEvaluateVO> memberEvaluateVOs);
 }
 
 

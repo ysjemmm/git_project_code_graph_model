@@ -11,6 +11,7 @@ import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.request.MemberWorkloadFillReq;
 import com.timevale.forward.facade.api.request.MemberWorkloadModifyReq;
 import com.timevale.forward.facade.api.request.PersonAddReq;
+import com.timevale.forward.facade.api.result.MemberEvaluateChangeVO;
 import com.timevale.forward.facade.api.result.ProjectWorkloadChangeVO;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
@@ -186,6 +187,16 @@ public class ProjectEvaluateComponent {
             return new ProjectWorkloadChangeVO().setDirectChangeEnable(true);
         }
 
+        // 积分成员数据变化明细
+        Map<String, BigDecimal> afterWorkLoadMap = memberWorkloadList.stream()
+                .collect(Collectors.toMap(MemberWorkloadModifyReq::getUserId, MemberWorkloadModifyReq::getPlanWorkload, (a, b) -> a));
+        List<MemberEvaluateChangeVO> memberEvaluateChanges = memberEvaluateDOList.stream().map(e -> new MemberEvaluateChangeVO()
+                        .setUserName(e.getUserName())
+                        .setPlanWorkloadBefore(e.getPlanWorkload())
+                        .setPlanWorkloadAfter(afterWorkLoadMap.get(e.getUserId()))
+                        .setIncludeStatName(YesOrNoEnum.getTextByCode(e.getIncludeStat())))
+                .collect(Collectors.toList());
+
         // 填装表单数据
         ProjectWorkloadChangeVO result = ProjectMemberEvaluateCopier.INSTANCE.do2vo(projectDO);
         return result.setDirectChangeEnable(false)
@@ -195,7 +206,8 @@ public class ProjectEvaluateComponent {
                 .setPointWorkloadAfter(pointsWorkloadSumAfter)
                 .setPlanWorkloadAddSum(planWorkloadAddSum)
                 .setPointWorkloadAddSum(pointsWorkloadAddSum)
-                .setChangeTypeList(changeTypeList);
+                .setChangeTypeList(changeTypeList)
+                .setMemberEvaluateChanges(memberEvaluateChanges);
     }
 
     /**

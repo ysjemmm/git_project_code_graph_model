@@ -1,8 +1,10 @@
 package com.timevale.forward.service.integration.epeius.model;
 
+import com.timevale.forward.facade.api.result.MemberEvaluateChangeVO;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Collection;
 import java.util.List;
 
 @Getter
@@ -88,4 +90,9 @@ public class WorkloadChangeVar {
      * pmoid列表
      */
     private List<String> PMOIdList;
+
+    /**
+     * 项目成员积分变更明细
+     */
+    private Collection<MemberEvaluateChangeVO> memberEvaluateChanges;
 }
