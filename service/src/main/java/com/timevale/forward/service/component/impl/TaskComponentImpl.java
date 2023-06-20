@@ -247,7 +247,7 @@ public class TaskComponentImpl implements TaskComponent {
                 .distinct()
                 .collect(Collectors.toList());
 
-        AssertUtil.checkState(CollUtil.containsAll(productLineIdsInProject, productLineIdsInTask),"该产品线已关联任务已关联任务，无法修改");
+        AssertUtil.checkState(CollUtil.containsAll(productLineIdsInProject, productLineIdsInTask),"该产品线已关联任务，无法修改");
     }
 
     @Override
