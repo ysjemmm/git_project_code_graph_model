@@ -509,24 +509,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
     @Override
     public BaseResult<PageQueryResult<BizDemandVO>> matchBizDemandList(ProductDemandLinkBizDemandQueryList query) {
         log.info("产品需求-业务需求匹配接收参数:{}", query);
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         BizDemandListCondition condition = BizDemandCopier.INSTANCE.convert(query);
-
-        if (query.getLimitReceiveMan()) {
-            List<String> receiveManIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
-            log.info("我和我的下属:receiveManIdList={}", receiveManIdList);
-
-            if (CollUtil.isNotEmpty(condition.getReceiveManIdList())) {
-                receiveManIdList.retainAll(condition.getReceiveManIdList());
-                log.info("我和我的下属,过滤后,receiveManIdList={}", receiveManIdList);
-            }
-            if (CollUtil.isEmpty(receiveManIdList)) {
-                //所选人员不在我和我的下属中
-                return BaseResult.success(ResultUtil.pageEmpty());
-            }
-            condition.setReceiveManIdList(receiveManIdList);
-        }
 
         List<Integer> status = query.getStatusList();
         if (CollUtil.isEmpty(status)) {

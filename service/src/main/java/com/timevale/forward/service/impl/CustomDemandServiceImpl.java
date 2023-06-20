@@ -8,7 +8,10 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.CustomDemandListCondition;
 import com.timevale.forward.dal.condition.ProductCustomDemandCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
-import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.dao.BizChangeLogMapper;
+import com.timevale.forward.dal.dao.CustomDemandMapper;
+import com.timevale.forward.dal.dao.ProductCustomDemandMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import com.timevale.forward.dal.entity.CustomDemandDO;
 import com.timevale.forward.dal.entity.ProductCustomDemandDO;
@@ -27,7 +30,6 @@ import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.CustomDemandCopier;
 import com.timevale.forward.service.copy.ProductDemandCopier;
-import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.observer.event.CustomDemandToReceiveMsgEvent;
 import com.timevale.forward.service.observer.publisher.MessageEventPublisher;
 import com.timevale.forward.service.utils.ResultUtil;
@@ -66,19 +68,10 @@ public class CustomDemandServiceImpl implements CustomDemandService {
     private CustomDemandMapper customDemandMapper;
 
     @Resource
-    private PersonComponent personComponent;
-
-    @Resource
     private FileComponent fileComponent;
 
     @Resource
     private MessageEventPublisher messageEventPublisher;
-
-    @Resource
-    private BizDemandComponent bizDemandComponent;
-
-    @Resource
-    private BugOnlineMapper bugOnlineMapper;
 
     @Resource
     private CustomDemandLogComponent customDemandLogComponent;
@@ -91,9 +84,6 @@ public class CustomDemandServiceImpl implements CustomDemandService {
 
     @Resource
     private SqlOrderComponent sqlOrderComponent;
-
-    @Resource
-    private InnerUserPersonClient innerUserPersonClient;
 
     @Resource
     private ProductDemandMapper productDemandMapper;
@@ -372,7 +362,6 @@ public class CustomDemandServiceImpl implements CustomDemandService {
     @Override
     public BaseResult<PageQueryResult<ProductDemandVO>> matchProductDemandList(CustomLinkProductDemandQueryList customDemandQueryList) {
         log.info("客户需求-产品需求匹配,参数:{}", customDemandQueryList);
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
         ProductDemandListCondition condition = ProductDemandCopier.INSTANCE.convert(customDemandQueryList);
 
@@ -382,17 +371,6 @@ public class CustomDemandServiceImpl implements CustomDemandService {
             List<Long> productDemandIds = productBizDemand.stream().map(ProductCustomDemandDO::getProductDemandId).collect(Collectors.toList());
             condition.setFilterProductDemandIds(productDemandIds);
         }
-        List<String> ownerIdList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
-        log.info("我和我的下属:receiveManIdList={}", ownerIdList);
-        if (!CollectionUtils.isEmpty(condition.getOwnerIds())) {
-            ownerIdList.retainAll(condition.getOwnerIds());
-            log.info("我和我的下属,过滤后,receiveManIdList={}", ownerIdList);
-        }
-        if (CollectionUtils.isEmpty(ownerIdList)) {
-            //所选人员不在我和我的下属中
-            return BaseResult.success(ResultUtil.pageEmpty());
-        }
-        condition.setOwnerIds(ownerIdList);
         if(CollectionUtils.isEmpty(condition.getStatus())){
             condition.setStatus(Lists.newArrayList(ProductDemandStatusEnum.WAITING.getCode()
                     , ProductDemandStatusEnum.INCLUDED.getCode()
