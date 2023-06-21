@@ -18,4 +18,13 @@
             <if test="createManId!=null">#{createManId},</if>
         </trim>
     </insert>
+
+    <insert id="batchInsert">
+        INSERT INTO biz_record (main_id, main_type, record, create_date)
+        VALUES
+        <foreach collection="records" item="item" separator=",">
+            (#{item.mainId}, #{item.mainType},#{item.record}, #{item.createDate})
+        </foreach>
+    </insert>
+
 </mapper>

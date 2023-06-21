@@ -28,14 +28,14 @@ import java.util.stream.Collectors;
 @LogPoint
 @RestService
 @RequiredArgsConstructor
-public class BizChangeLogServiceImpl implements BizChangeLogService {
+public class BizChangeLogServiceImpl implements BizChangeLogService{
     private final BizRecordMapper bizRecordMapper;
     private final BizChangeLogMapper bizChangeLogMapper;
 
     @Override
     public BaseResult<PageQueryResult<BizChangeLogVO>> list(BizChangeLogQueryList bizChangeLogQueryList) {
         // 开始分页
-        PageHelper.startPage(bizChangeLogQueryList.pageNum, bizChangeLogQueryList.pageSize, CommonConstant.CREATE_ORDER_BY);
+        PageHelper.startPage(bizChangeLogQueryList.pageNum, bizChangeLogQueryList.pageSize, CommonConstant.CREATE_DESC_ORDER_BY);
 
         // 查询转换
         List<BizChangeLogDO> bizChangeLogDOList = bizChangeLogMapper.list(bizChangeLogQueryList.getMainId(), bizChangeLogQueryList.getType());
@@ -53,7 +53,7 @@ public class BizChangeLogServiceImpl implements BizChangeLogService {
     @Override
     public BaseResult<PageQueryResult<BizRecordVO>> statusOperator(BizChangeLogQueryList query) {
         // 分页查询
-        PageHelper.startPage(query.pageNum, query.pageSize, CommonConstant.CREATE_ORDER_BY);
+        PageHelper.startPage(query.pageNum, query.pageSize, CommonConstant.CREATE_DESC_ORDER_BY);
         List<BizRecordDO> recordDOList = bizRecordMapper.get(query.getMainId(), query.getType());
 
         // 转换

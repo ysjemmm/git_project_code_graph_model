@@ -2,6 +2,7 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.entity.BizChangeLogDO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.Collection;
 import java.util.List;
@@ -30,4 +31,7 @@ public interface BizChangeLogMapper {
                                           @Param("actions") Collection<String> actions);
 
     BizChangeLogDO getProjectPublishDate(@Param("mainId") Long mainId, @Param("type") Integer type, @Param("field") String field);
+
+    @Select("SELECT * FROM biz_change_log WHERE type = #{type}")
+    List<BizChangeLogDO> getByType(@Param("type")Integer type);
 }

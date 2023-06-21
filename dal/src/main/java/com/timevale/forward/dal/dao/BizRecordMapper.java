@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -12,12 +13,10 @@ import java.util.List;
  * @date 2023/05/15 15:43
  */
 public interface BizRecordMapper {
-    /**
-     * 新增
-     *
-     * @param bizRecordDO 业务记录DO
-     */
+
     void insert(BizRecordDO bizRecordDO);
+
+    void batchInsert(@Param("records") Collection<BizRecordDO> records);
 
     @Select("SELECT * FROM biz_record WHERE main_id=#{mainId} AND main_type=#{mainType} AND is_deleted=false")
     List<BizRecordDO> get(@Param("mainId")Long mainId, @Param("mainType")Integer mainType);

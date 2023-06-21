@@ -1,16 +1,19 @@
 package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.alibaba.fastjson.JSON;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
 import com.timevale.forward.facade.api.client.DataCorrectService;
 import com.timevale.forward.facade.api.request.ProjectNodeModifyReq;
-import com.timevale.forward.model.enums.BugLogTypeEnum;
-import com.timevale.forward.model.enums.BugOnlineStatusEnum;
-import com.timevale.forward.model.enums.MilestoneTypeEnum;
-import com.timevale.forward.model.enums.ProjectNodeStatusEnum;
-import com.timevale.forward.service.component.*;
+import com.timevale.forward.facade.api.result.BizRecordVO;
+import com.timevale.forward.facade.api.result.BizStatusOperatorVO;
+import com.timevale.forward.model.enums.*;
+import com.timevale.forward.service.component.BizDemandComponent;
+import com.timevale.forward.service.component.BugOnlineStatusOperatorComponent;
+import com.timevale.forward.service.component.ProjectEvaluateComponent;
+import com.timevale.forward.service.component.ProjectNodeComponent;
 import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.mandarin.common.annotation.RestService;
@@ -20,9 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -35,7 +36,9 @@ import java.util.stream.Collectors;
 @RestService
 public class DataCorrectServiceImpl implements DataCorrectService {
     @Resource
-    private ProjectComponent projectComponent;
+    private BizChangeLogMapper bizChangeLogMapper;
+    @Resource
+    private BizRecordMapper bizRecordMapper;
     @Resource
     private ProjectMapper projectMapper;
     @Resource
@@ -273,5 +276,74 @@ public class DataCorrectServiceImpl implements DataCorrectService {
         milestoneActionMapper.batchAdd(actions);
 
         return BaseResult.success();
+    }
+
+    private final String fieldStatus = "需求解决状态";
+    private final String fieldOperator = "需求接收人";
+
+    @Override
+    public BaseResult<Void> bizRecord(Long mainId) {
+        List<BizChangeLogDO> logs = bizChangeLogMapper.list(mainId, 4);
+
+        Map<Long, List<BizChangeLogDO>> logGroups = logs.stream()
+                .filter(e -> Objects.equals(mainId, e.getMainId()))
+                .filter(e -> e.getCreateDate().compareTo(DateUtil.parseToDate("2023-01-01")) >= 0)
+                .filter(e -> fieldStatus.equals(e.getField()) || fieldOperator.equals(e.getField()))
+                .sorted(Comparator.comparing(BaseDO::getCreateDate))
+                .collect(Collectors.groupingBy(BizChangeLogDO::getMainId));
+        logGroups.forEach(this::solve);
+
+        return BaseResult.success();
+    }
+
+    private void solve(Long mainId, List<BizChangeLogDO> logs) {
+        BizDemandDO bizDemand = bizDemandMapper.get(mainId);
+
+        // 初始数据状态
+        Date date = bizDemand.getCreateDate();
+        String status = BizDemandStatusEnum.EVALUATE.getText();
+        String operator = logs.stream()
+                .filter(e -> fieldOperator.equals(e.getField()))
+                .sorted(Comparator.comparing(BaseDO::getCreateDate))
+                .map(BizChangeLogDO::getOldValue)
+                .findFirst()
+                .orElseGet(bizDemand::getReceiveMan);
+
+        List<BizRecordDO> records = new ArrayList<>();
+        List<BizStatusOperatorVO> operators = CollUtil.newArrayList(new BizStatusOperatorVO(operator, date));
+
+        for (BizChangeLogDO log : logs) {
+            if (fieldOperator.equals(log.getField())) {
+                operators.add(new BizStatusOperatorVO(log.getNewValue(), log.getCreateDate()));
+            } else {
+                if (!Objects.equals(status, log.getNewValue())) {
+                    records.add(createRecord(mainId, status, date, operators));
+                }
+
+                date = log.getCreateDate();
+                status = log.getNewValue();
+                operators = CollUtil.newArrayList(CollUtil.getFirst(operators));
+            }
+        }
+        records.add(createRecord(mainId, status, date, operators));
+
+        bizRecordMapper.batchInsert(records);
+    }
+
+    private BizRecordDO createRecord(Long mainId, String status, Date date, List<BizStatusOperatorVO> operators) {
+        operators.sort(Comparator.comparing(BizStatusOperatorVO::getOperatorDate).reversed());
+
+        BizRecordVO recordVO = new BizRecordVO();
+        recordVO.setStatus(status);
+        recordVO.setCreateDate(date);
+        recordVO.setStatusOperatorVOList(operators);
+
+        BizRecordDO record = new BizRecordDO();
+        record.setMainId(mainId);
+        record.setCreateDate(date);
+        record.setRecord(JSON.toJSONString(recordVO));
+        record.setMainType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
+
+        return record;
     }
 }
