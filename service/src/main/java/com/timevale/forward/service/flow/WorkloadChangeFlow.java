@@ -115,6 +115,7 @@ public class WorkloadChangeFlow {
         changeVar.setPrincipalIdList(principalIdList);
         changeVar.setPbuPrincipal(pbuPrincipal.getUserName());
         changeVar.setPbuPrincipalId(pbuPrincipal.getUserId());
+        changeVar.setContainDetail(YesOrNoEnum.YES.getText());
 
         // 转换为Map
         Map<String, Object> variables = BeanUtil.beanToMap(changeVar);

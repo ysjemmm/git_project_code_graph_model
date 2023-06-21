@@ -95,4 +95,8 @@ public class WorkloadChangeVar {
      * 项目成员积分变更明细
      */
     private Collection<MemberEvaluateChangeVO> memberEvaluateChanges;
+    /**
+     * 包含详细
+     */
+    private String containDetail;
 }
