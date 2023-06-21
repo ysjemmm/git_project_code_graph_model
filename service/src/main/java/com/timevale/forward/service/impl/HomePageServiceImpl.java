@@ -459,42 +459,23 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Override
     public BaseResult<List<HomePageSingleWorkTimeVO>> getTaskWorkTimeBoard(HomePageTaskBoardReq req) {
-        log.info("首页任务看板,参数:{}", req);
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        Date startDate = DateUtil.getStartOfDay(req.getStartDate());
-        Date endDate = DateUtil.getEndOfDay(req.getEndDate());
-        Set<String> deptIds = req.getDeptIds();
-        Set<String> teamMembers = req.getTeamMembers();
 
-        // 个人 或者 我和我的所有下属信息
-        List<BaseInfoResponse> responses;
-        if (HomePageTabEnum.INDIVIDUAL.getCode().equals(req.getTabType())) {
-            responses = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(userInfo.getId()));
-        } else {
-            responses = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
-        }
-        // 我和我的下属的所有名字
-        Set<String> allMyStaffNameWithSelf = responses.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toSet());
-        Map<String, String> personMap = responses.stream()
-                .collect(Collectors.toMap(BaseInfoResponse::getAccount, a -> a.getAlias() + "-" + a.getName(), (v1, v2) -> v2));
+        Set<String> accounts = CollUtil.emptyIfNull(req.getTeamMembers());
+        CollUtil.emptyIfNull(req.getDeptIds())
+                .forEach(e -> accounts.addAll(innerUserPersonClient.getByGroupIdNew(e)));
 
-        // 部门id、员工id非空取交集
-        if (CollUtil.isNotEmpty(deptIds)) {
-            Set<String> deptAllMyStaff = Sets.newHashSet();
-            for (String deptId : deptIds) {
-                deptAllMyStaff.addAll(innerUserPersonClient.getByGroupIdNew(deptId));
-            }
-            allMyStaffNameWithSelf.retainAll(deptAllMyStaff);
-        }
-        if (CollUtil.isNotEmpty(teamMembers)) {
-            allMyStaffNameWithSelf.retainAll(teamMembers);
-        }
         // 如果查询条件为空直接返回空数据
-        if (CollUtil.isEmpty(allMyStaffNameWithSelf)) {
+        if (CollUtil.isEmpty(accounts)) {
             return BaseResult.success(Lists.emptyList());
         }
 
-        List<TaskBoardDTO> filter = listTasksSuitDateRange(startDate, endDate, allMyStaffNameWithSelf);
+        List<BaseInfoResponse> baseInfos = innerUserPersonClient.batchGetStaffInfos(accounts, false);
+        Map<String, String> aliasMap = baseInfos.stream()
+                .collect(Collectors.toMap(BaseInfoResponse::getAccount, e -> e.getAlias() + "-" + e.getName(), (a, b) -> a));
+
+        List<TaskBoardDTO> filter = listTasksSuitDateRange(DateUtil.getStartOfDay(req.getStartDate()),
+                                                           DateUtil.getEndOfDay(req.getEndDate()),
+                                                           accounts);
 
         if (CollUtil.isNotEmpty(filter)) {
             List<HomePageSingleWorkTimeVO> result = new ArrayList<>();
@@ -502,8 +483,8 @@ public class HomePageServiceImpl implements HomePageService {
             List<Long> filterIds = filter.stream().map(TaskBoardDTO::getId).collect(Collectors.toList());
             Map<Long, TaskBoardDTO> taskMap = filter.stream().collect(Collectors.toMap(TaskBoardDTO::getId, k -> k, (v1, v2) -> v2));
             Map<Long, Date> projectDateMap = filter.stream().collect(Collectors.toMap(TaskBoardDTO::getProjectId, TaskBoardDTO::getProjectPlanEndDate, (v1, v2) -> v2));
-            log.info("首页任务看板,任务id:{},执行人{}", filterIds, allMyStaffNameWithSelf);
-            List<PersonDO> personDOList = personMapper.getPersons(Lists.newArrayList(allMyStaffNameWithSelf), filterIds, PersonTypeEnum.TASK_EXECUTOR.getCode());
+            log.info("首页任务看板,任务id:{},执行人{}", filterIds, accounts);
+            List<PersonDO> personDOList = personMapper.getPersons(Lists.newArrayList(accounts), filterIds, PersonTypeEnum.TASK_EXECUTOR.getCode());
 
             Map<String, List<HomePageSingleTaskWorkTimeVO>> taskWorkTimeOnePersonMap = new HashMap<>();
             Map<String, List<HomePageSingleTaskWorkTimeVO>> taskWorkTimePersonProjectMap = new HashMap<>();
@@ -553,16 +534,16 @@ public class HomePageServiceImpl implements HomePageService {
                 workTimeVO.setTotalPlanUseTime(planUseTime);
                 workTimeVO.setTaskCount(count);
                 workTimeVO.setProjectWorkTimeVos(projectWorkTimeVOList);
-                workTimeVO.setExecutor(personMap.get(k));
+                workTimeVO.setExecutor(aliasMap.get(k));
                 workTimeVO.setExecutorId(k);
                 result.add(workTimeVO);
             });
             // 团队中无任务的人
-            List<HomePageSingleWorkTimeVO> noneTaskList = allMyStaffNameWithSelf.stream()
+            List<HomePageSingleWorkTimeVO> noneTaskList = accounts.stream()
                     .filter(a -> !taskWorkTimeOnePersonMap.containsKey(a))
                     .map(a -> {
                         HomePageSingleWorkTimeVO o = new HomePageSingleWorkTimeVO();
-                        o.setExecutor(personMap.get(a));
+                        o.setExecutor(aliasMap.get(a));
                         o.setExecutorId(a);
                         o.setTotalPlanUseTime(BigDecimal.ZERO);
                         o.setTaskCount(0);
@@ -576,9 +557,9 @@ public class HomePageServiceImpl implements HomePageService {
             return BaseResult.success(Lists.emptyList());
         }
         //没有任务,团队返回人员信息
-        List<HomePageSingleWorkTimeVO> result = allMyStaffNameWithSelf.stream().map(a -> {
+        List<HomePageSingleWorkTimeVO> result = accounts.stream().map(a -> {
             HomePageSingleWorkTimeVO o = new HomePageSingleWorkTimeVO();
-            o.setExecutor(personMap.get(a));
+            o.setExecutor(aliasMap.get(a));
             o.setExecutorId(a);
             o.setTotalPlanUseTime(BigDecimal.ZERO);
             o.setTaskCount(0);
@@ -591,28 +572,17 @@ public class HomePageServiceImpl implements HomePageService {
     @Override
     public BaseResult<List<HomePageGroupWorkTimeVO>> getGroupTaskWorkTimeBoard(HomePageTaskBoardReq req) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        List<BaseInfoResponse> users = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
-        if (CollectionUtils.isEmpty(users)) {
-            log.warn("getGroupTaskWorkTimeBoard users are empty, userInfo: {}", userInfo);
-            return BaseResult.success(Collections.emptyList());
-        }
-        Set<String> userIds = users.stream().map(BaseInfoResponse::getAccount).collect(Collectors.toSet());
-        // 部门id、员工id非空取交集
-        if (CollectionUtils.isNotEmpty(req.getDeptIds())) {
-            Set<String> deptAllMyStaff = Sets.newHashSet();
-            for (String deptId : req.getDeptIds()) {
-                deptAllMyStaff.addAll(innerUserPersonClient.getByGroupIdNew(deptId));
-            }
-            userIds.retainAll(deptAllMyStaff);
-        }
-        if (CollectionUtils.isNotEmpty(req.getTeamMembers())) {
-            userIds.retainAll(req.getTeamMembers());
-        }
+
+        Set<String> userIds = CollUtil.emptyIfNull(req.getTeamMembers());
+        CollUtil.emptyIfNull(req.getDeptIds())
+                .forEach(e -> userIds.addAll(innerUserPersonClient.getByGroupIdNew(e)));
+
         if (userIds.isEmpty()) {
             log.warn("getGroupTaskWorkTimeBoard filtered users are empty, userInfo: {}", userInfo);
             return BaseResult.success(Collections.emptyList());
         }
-        users.removeIf(u -> !userIds.contains(u.getAccount()));
+
+        List<BaseInfoResponse> users = innerUserPersonClient.batchGetStaffInfos(userIds, false);
         List<HomePageGroupWorkTimeVO> res = users.stream().map(u ->
                 new HomePageGroupWorkTimeVO(u.getAccount(),
                         u.getAlias() + CommonConstant.JOIN_LINE + u.getName(),
