@@ -5,9 +5,9 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author xingyun
@@ -19,10 +19,10 @@ import java.util.List;
 public class HomePageProjectBoardReq extends HomePageBaseReq {
 
     @ApiModelProperty("部门id")
-    private List<Long> deptIds;
+    private List<String> deptIds;
 
     @ApiModelProperty("团队成员:花名id")
-    private List<String> teamMembers;
+    private Set<String> teamMembers;
 
     @ApiModelProperty("开始时间")
     private Date startDate;

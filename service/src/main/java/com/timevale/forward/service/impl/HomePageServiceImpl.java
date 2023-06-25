@@ -348,53 +348,31 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Override
     public BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardReq homePageProjectBoardReq) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         // 取出查询参数
         Date startDate = DateUtil.getStartOfDay(homePageProjectBoardReq.getStartDate());
         Date endDate = DateUtil.getEndOfDay(homePageProjectBoardReq.getEndDate());
-        List<Long> deptIds = homePageProjectBoardReq.getDeptIds();
-        List<String> teamMembers = homePageProjectBoardReq.getTeamMembers();
 
-        // 个人 或者 我和我的所有下属信息
-        List<BaseInfoResponse> allMyStaffInfoWithSelfInfo;
-        if (HomePageTabEnum.INDIVIDUAL.getCode().equals(homePageProjectBoardReq.getTabType())) {
-            allMyStaffInfoWithSelfInfo = innerUserPersonClient.getPersonByAccountNew(Lists.newArrayList(userInfo.getId()));
-        } else {
-            allMyStaffInfoWithSelfInfo = innerUserPersonClient.getAllMyStaffWithSelfInfo(userInfo.getId(), false);
+        Set<String> accounts = CollUtil.emptyIfNull(homePageProjectBoardReq.getTeamMembers());
+        CollUtil.emptyIfNull(homePageProjectBoardReq.getDeptIds())
+                .forEach(e -> accounts.addAll(innerUserPersonClient.getByGroupIdNew(e)));
+
+        // 如果查询条件为空直接返回空数据
+        if (CollUtil.isEmpty(accounts)) {
+            return BaseResult.success(Lists.emptyList());
         }
+
+        List<BaseInfoResponse> accountInfos = innerUserPersonClient.batchGetStaffInfos(accounts, false);
+
         //我和我所有下属的职能类型 Map(userid,jobFunction)
-        Map<String, String> allMyStaffInfoWithSelfJobFunction = allMyStaffInfoWithSelfInfo
+        Map<String, String> allMyStaffInfoWithSelfJobFunction = accountInfos
                 .stream()
                 .collect(Collectors.toMap(BaseInfoResponse::getAccount,
                         e -> e.getJobFunction() == null ? "" : e.getJobFunction(),
                         (old, curr) -> curr));
-        // 我和我的下属的所有名字
-        Set<String> allMyStaffNameWithSelf = allMyStaffInfoWithSelfInfo
-                .stream()
-                .map(BaseInfoResponse::getAccount)
-                .collect(Collectors.toSet());
-
-        // 部门id、员工id非空取交集
-        if (!CollectionUtils.isEmpty(deptIds)) {
-            Set<String> deptAllMyStaff = Sets.newHashSet();
-            for (Long deptId : deptIds) {
-                deptAllMyStaff.addAll(innerUserPersonClient.getByGroupIdNew(String.valueOf(deptId)));
-            }
-            allMyStaffNameWithSelf.retainAll(deptAllMyStaff);
-        }
-        if (!CollectionUtils.isEmpty(teamMembers)) {
-            allMyStaffNameWithSelf.retainAll(teamMembers);
-        }
-
-        // 如果查询条件为空直接返回空数据
-        if (CollectionUtils.isEmpty(allMyStaffNameWithSelf)) {
-            return BaseResult.success(Lists.emptyList());
-        }
 
         // 查询数据
         List<HomePageProjectBoardDTO> homePageProjectBoardDTOList =
-                homePageProjectBoardComponent.getProjectBoard(Lists.newArrayList(allMyStaffNameWithSelf));
+                homePageProjectBoardComponent.getProjectBoard(Lists.newArrayList(accounts));
 
         // 数据分组后转换
         List<HomePageProjectBoardVO> result = Lists.newArrayList();
@@ -424,26 +402,24 @@ public class HomePageServiceImpl implements HomePageService {
             }
         });
 
-        if (HomePageTabEnum.TEAM.getCode().equals(homePageProjectBoardReq.getTabType())) {
-            // 团队面板,团队成员无项目信息时,也需要展示人员信息
-            Map<String, BaseInfoResponse> baseInfoResponseMap = allMyStaffInfoWithSelfInfo
-                    .stream().collect(Collectors.toMap(BaseInfoResponse::getAccount, Function.identity()));
-            List<String> containProjectInfo = result.stream().map(HomePageProjectBoardVO::getUserId).collect(Collectors.toList());
+        // 团队成员无项目信息时,也需要展示人员信息
+        Map<String, BaseInfoResponse> baseInfoResponseMap = accountInfos
+                .stream().collect(Collectors.toMap(BaseInfoResponse::getAccount, Function.identity()));
+        List<String> containProjectInfo = result.stream().map(HomePageProjectBoardVO::getUserId).collect(Collectors.toList());
 
-            containProjectInfo.forEach(allMyStaffNameWithSelf::remove);
+        containProjectInfo.forEach(accounts::remove);
 
-            for (String userId : allMyStaffNameWithSelf) {
-                BaseInfoResponse baseInfo = baseInfoResponseMap.get(userId);
+        for (String userId : accounts) {
+            BaseInfoResponse baseInfo = baseInfoResponseMap.get(userId);
 
-                UserTypeEnum userType = JobFunctionEnum.getType(baseInfo.getJobFunction());
+            UserTypeEnum userType = JobFunctionEnum.getType(baseInfo.getJobFunction());
 
-                HomePageProjectBoardVO homePageProjectBoardVO = new HomePageProjectBoardVO();
-                homePageProjectBoardVO.setUserId(baseInfo.getAccount());
-                homePageProjectBoardVO.setUserName(baseInfo.getAlias() + CommonConstant.JOIN_LINE + baseInfo.getName());
-                homePageProjectBoardVO.setUserType(userType.toString());
-                homePageProjectBoardVO.setHomePageProjectDateVOList(Lists.emptyList());
-                result.add(homePageProjectBoardVO);
-            }
+            HomePageProjectBoardVO homePageProjectBoardVO = new HomePageProjectBoardVO();
+            homePageProjectBoardVO.setUserId(baseInfo.getAccount());
+            homePageProjectBoardVO.setUserName(baseInfo.getAlias() + CommonConstant.JOIN_LINE + baseInfo.getName());
+            homePageProjectBoardVO.setUserType(userType.toString());
+            homePageProjectBoardVO.setHomePageProjectDateVOList(Lists.emptyList());
+            result.add(homePageProjectBoardVO);
         }
 
         return BaseResult.success(result);
@@ -552,11 +528,9 @@ public class HomePageServiceImpl implements HomePageService {
                     }).collect(Collectors.toList());
             result.addAll(noneTaskList);
             return BaseResult.success(result);
-        } else if (HomePageTabEnum.INDIVIDUAL.getCode().equals(req.getTabType())) {
-            //没有任务,个人直接返回
-            return BaseResult.success(Lists.emptyList());
         }
-        //没有任务,团队返回人员信息
+
+        //返回人员信息
         List<HomePageSingleWorkTimeVO> result = accounts.stream().map(a -> {
             HomePageSingleWorkTimeVO o = new HomePageSingleWorkTimeVO();
             o.setExecutor(aliasMap.get(a));
