@@ -502,6 +502,19 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             }
         }
 
+        if (StrUtil.isNotEmpty(bugOnlineDO.getCustomerName())) {
+            // 客户等级若为空，获取填入客户等级
+            if (StrUtil.isEmpty(bugOnlineDO.getCustomerGrade())) {
+                Optional.ofNullable(crmClient.getPostGrade(bugOnlineDO.getCustomerName()))
+                        .ifPresent(bugOnlineDO::setCustomerGrade);
+            }
+
+            // 计算优先级
+            BugOnlinePriorityGetReq priorityGetReq = BugOnlineCopier.INSTANCE.do2req(bugOnlineDO, modifyReq.getProductLineIdList());
+            Integer priority = bugOnlineComponent.calculatePriority(priorityGetReq);
+            bugOnlineDO.setPriority(priority);
+        }
+
         //老的线上bug比较对象、产品线、模块
         BugOnlineMD oldBugOnlineMD = BugOnlineCopier.INSTANCE.do2md(bugOnlineDO);
         List<Long> oldProductLineIdList = bugOnlineProductLineMapper.selectProductLineIds(modifyReq.getId(), BizProductLineTypeEnum.BUG_ONLINE.getCode());

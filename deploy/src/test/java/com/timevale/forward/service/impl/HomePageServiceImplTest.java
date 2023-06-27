@@ -25,6 +25,7 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -211,14 +212,14 @@ public class HomePageServiceImplTest extends AbstractTestNGSpringContextTests {
         single.setStartDate(new Date());
         single.setEndDate(new Date());
         single.setDeptIds(new ArrayList<>());
-        single.setTeamMembers(new ArrayList<>());
+        single.setTeamMembers(new HashSet<>());
 
         HomePageProjectBoardReq leader = new HomePageProjectBoardReq();
         leader.setTabType(HomePageTabEnum.TEAM.getCode());
         leader.setStartDate(new Date());
         leader.setEndDate(new Date());
         leader.setDeptIds(new ArrayList<>());
-        leader.setTeamMembers(new ArrayList<>());
+        leader.setTeamMembers(new HashSet<>());
 
         BaseInfoResponse PDInfo = new BaseInfoResponse();
         BaseInfoResponse RDInfo = new BaseInfoResponse();
