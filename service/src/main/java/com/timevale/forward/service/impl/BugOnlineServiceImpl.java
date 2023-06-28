@@ -502,10 +502,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             }
         }
 
-        if (StrUtil.isNotEmpty(bugOnlineDO.getCustomerName())) {
+        if (StrUtil.isNotEmpty(modifyReq.getCustomerName())) {
             // 客户等级若为空，获取填入客户等级
-            if (StrUtil.isEmpty(bugOnlineDO.getCustomerGrade())) {
-                Optional.ofNullable(crmClient.getPostGrade(bugOnlineDO.getCustomerName()))
+            if (StrUtil.isEmpty(modifyReq.getCustomerGrade())) {
+                Optional.ofNullable(crmClient.getPostGrade(modifyReq.getCustomerName()))
                         .ifPresent(modifyReq::setCustomerGrade);
             }
         }
