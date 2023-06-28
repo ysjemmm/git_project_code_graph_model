@@ -24,12 +24,14 @@ import com.timevale.forward.service.copy.ProjectMemberEvaluateCopier;
 import com.timevale.forward.service.flow.ForwardFlow;
 import com.timevale.forward.service.integration.encourage.EncourageClient;
 import com.timevale.forward.service.integration.epeius.EpeiusClient;
+import com.timevale.forward.service.integration.inneruser.InnerUserPermissionClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
+import com.timevale.security.facade.response.RoleResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,6 +59,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
     private final InnerUserPersonClient innerUserPersonClient;
     private final ProjectMemberEvaluateMapper memberEvaluateMapper;
     private final ProjectEvaluateComponent projectEvaluateComponent;
+    private final InnerUserPermissionClient innerUserPermissionClient;
 
     @Override
     public BaseResult<ProjectMemberEvaluateVO> memberList(Long projectId) {
@@ -349,13 +352,19 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         permissionIds.addAll(allPMOIds);
         permissionIds.addAll(superiorIds);
 
-        List<String> configAccounts = StrUtil.split(commonConfig.getAllowVisitAllDataAccount(), ',');
-        permissionIds.addAll(configAccounts);
-
+        permissionIds.addAll(StrUtil.split(commonConfig.getAllowVisitAllDataAccount(), ','));
         CollUtil.removeEmpty(permissionIds);
 
         // 判断当前用户是否为以上的权限用户
         String userId = LocalSessionUtils.getUserInfo().getId();
-        return permissionIds.contains(userId);
+        if (permissionIds.contains(userId)) {
+            return true;
+        } else {
+            List<RoleResponse> myRoles = innerUserPermissionClient.getFunctionRoleInfo(userId);
+            List<String> evaluateRoles = StrUtil.split(commonConfig.getEvaluateManagerRoleId(), ',');
+            return myRoles.stream()
+                    .map(RoleResponse::getId)
+                    .anyMatch(evaluateRoles::contains);
+        }
     }
 }

@@ -68,4 +68,6 @@ public class CommonConfig {
     @Value(("${allowVisitAllDataAccount:yangxu}"))
     private String allowVisitAllDataAccount;
 
+    @Value(("${evaluateManagerRole:5746}"))
+    private String evaluateManagerRoleId;
 }
