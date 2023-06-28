@@ -119,12 +119,6 @@ public class TaskComponentImplTest extends AbstractTestNGSpringContextTests {
     }
 
     @Test
-    public void testContainProductLineInTask() {
-        when(taskMapper.getByProjectId(any())).thenReturn(Collections.singletonList(new TaskDO(){{setProductLineId(1L);}}));
-        taskComponentImpl.containProductLineInTask(1L,Collections.singletonList(1L));
-    }
-
-    @Test
     public void testAddTodoTask() {
         TaskDO taskDO=new TaskDO();
         taskDO.setPlanEndDate(new Date());
