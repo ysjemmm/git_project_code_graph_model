@@ -335,7 +335,7 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         Set<String> pdIds = pds.stream().map(PersonDO::getUserId).collect(Collectors.toSet());
         subordinateIds.addAll(pdIds);
 
-        List<String> superiorIds = innerUserPersonClient.getDefaultSuperior(subordinateIds, false);
+        List<String> superiorIds = innerUserPersonClient.getDefaultSuperior(subordinateIds, true);
 
         // PMO
         List<String> allPMOIds = userComponent.getAllPmo(commonConfig.getEvalPmoGroup());
