@@ -40,8 +40,6 @@ import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateStyle;
 import com.timevale.forward.service.utils.date.DateUtil;
-import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
-import com.timevale.forward.service.utils.envoy.UserInfo;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.base.util.CollectionUtils;
@@ -269,8 +267,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
 
     @Override
     public BaseResult<PageQueryResult<BizDemandLinkProductDemandVO>> matchProductDemandList(BizDemandLinkProductDemandQueryList bizDemandSubProductDemandQueryList) {
-        UserInfo userInfo = LocalSessionUtils.getUserInfo();
-
         // 转换查询条件
         BizDemandLinkProductDemandListCondition condition = BizDemandCopier.INSTANCE.convert(bizDemandSubProductDemandQueryList);
 
@@ -284,17 +280,6 @@ public class BizDemandProductDemandServiceImpl implements BizDemandProductDemand
                 .isDeleted(false)
                 .build());
         condition.setLinkedIdList(productBizDemandDOList.stream().map(ProductBizDemandDO::getProductDemandId).collect(Collectors.toList()));
-
-        // 仅展示自己及其下属负责的产品需求
-        List<String> allMyStaffWithSelfList = innerUserPersonClient.getAllMyStaffWithSelf(userInfo.getId(), true);
-        Set<String> ownerIdSet = new HashSet<>(condition.getOwnerIdList());
-        if(!CollectionUtils.isEmpty(ownerIdSet)){
-            allMyStaffWithSelfList = allMyStaffWithSelfList.stream().filter(ownerIdSet::contains).collect(Collectors.toList());
-            if(allMyStaffWithSelfList.isEmpty()){
-                return BaseResult.success(ResultUtil.pageEmpty());
-            }
-        }
-        condition.setOwnerIdList(allMyStaffWithSelfList);
 
         List<Integer> statusList = new ArrayList<>();
         Integer status = bizDemandSubProductDemandQueryList.getStatus();
