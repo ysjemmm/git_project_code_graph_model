@@ -36,13 +36,6 @@ public interface TaskComponent {
 
     /**
      *
-     * @param projectId 项目id
-     * @param productLineIdsInProject 产品线id
-     */
-    void containProductLineInTask(Long projectId,List<Long> productLineIdsInProject);
-
-    /**
-     *
      * @param taskDO taskDO
      * @param executorIds executorIds
      * @param account account

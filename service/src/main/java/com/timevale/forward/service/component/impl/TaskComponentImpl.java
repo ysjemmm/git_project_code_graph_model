@@ -1,6 +1,5 @@
 package com.timevale.forward.service.component.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -24,7 +23,6 @@ import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
-import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -237,17 +235,6 @@ public class TaskComponentImpl implements TaskComponent {
         Long result = elapsedTimeClient.getElapsedTime(startTime, endTime);
         BigDecimal elapsedTime = new BigDecimal(result.toString());
         return elapsedTime.divide(new BigDecimal(SECONDS_PER_HOUR), 2, RoundingMode.HALF_UP);
-    }
-
-    @Override
-    public void containProductLineInTask(Long projectId, List<Long> productLineIdsInProject) {
-        List<Long> productLineIdsInTask = taskMapper.getByProjectId(projectId)
-                .stream()
-                .map(TaskDO::getProductLineId)
-                .distinct()
-                .collect(Collectors.toList());
-
-        AssertUtil.checkState(CollUtil.containsAll(productLineIdsInProject, productLineIdsInTask),"该产品线已关联任务，无法修改");
     }
 
     @Override

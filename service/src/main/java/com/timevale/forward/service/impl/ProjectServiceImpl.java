@@ -602,10 +602,6 @@ public class ProjectServiceImpl implements ProjectService {
         // 在这里面把项目数据更新了
         fillInfoWhenModify(projectNodeDOList, newProject);
 
-        // 判断产品线是否已关联任务、线下bug
-        // taskComponent.containProductLineInTask(newProject.getId(), newProject.getProductLineIds());
-        bugOfflineComponent.containProductLineInBugOffline(newProject.getId(), newProject.getProductLineIds());
-
         // 新团队成员, 过滤后更新
         List<PersonAddReq> newMembers = projectModifyReq.getTeamMembers();
         newMembers.add(projectModifyReq.getPm());
