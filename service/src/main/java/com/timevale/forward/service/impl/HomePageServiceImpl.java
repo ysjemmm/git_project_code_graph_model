@@ -347,14 +347,22 @@ public class HomePageServiceImpl implements HomePageService {
     }
 
     @Override
-    public BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardReq homePageProjectBoardReq) {
+    public BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardReq req) {
         // 取出查询参数
-        Date startDate = DateUtil.getStartOfDay(homePageProjectBoardReq.getStartDate());
-        Date endDate = DateUtil.getEndOfDay(homePageProjectBoardReq.getEndDate());
+        Date startDate = DateUtil.getStartOfDay(req.getStartDate());
+        Date endDate = DateUtil.getEndOfDay(req.getEndDate());
 
-        Set<String> accounts = CollUtil.emptyIfNull(homePageProjectBoardReq.getTeamMembers());
-        CollUtil.emptyIfNull(homePageProjectBoardReq.getDeptIds())
-                .forEach(e -> accounts.addAll(innerUserPersonClient.getByGroupIdNew(e)));
+        Set<String> accounts = CollUtil.emptyIfNull(req.getTeamMembers());
+        if (CollUtil.isEmpty(accounts) && CollUtil.isEmpty(req.getDeptIds())) {
+            if (HomePageTabEnum.INDIVIDUAL.getCode().equals(req.getTabType())) {
+                accounts.add(LocalSessionUtils.getUserInfo().getId());
+            } else {
+                accounts.addAll(innerUserPersonClient.getAllMyStaffWithSelf(LocalSessionUtils.getUserInfo().getId(), false));
+            }
+        } else {
+            CollUtil.emptyIfNull(req.getDeptIds())
+                    .forEach(e -> accounts.addAll(innerUserPersonClient.getByGroupIdNew(e)));
+        }
 
         // 如果查询条件为空直接返回空数据
         if (CollUtil.isEmpty(accounts)) {
@@ -435,10 +443,17 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Override
     public BaseResult<List<HomePageSingleWorkTimeVO>> getTaskWorkTimeBoard(HomePageTaskBoardReq req) {
-
         Set<String> accounts = CollUtil.emptyIfNull(req.getTeamMembers());
-        CollUtil.emptyIfNull(req.getDeptIds())
-                .forEach(e -> accounts.addAll(innerUserPersonClient.getByGroupIdNew(e)));
+        if (CollUtil.isEmpty(accounts) && CollUtil.isEmpty(req.getDeptIds())) {
+            if (HomePageTabEnum.INDIVIDUAL.getCode().equals(req.getTabType())) {
+                accounts.add(LocalSessionUtils.getUserInfo().getId());
+            } else {
+                accounts.addAll(innerUserPersonClient.getAllMyStaffWithSelf(LocalSessionUtils.getUserInfo().getId(), false));
+            }
+        } else {
+            CollUtil.emptyIfNull(req.getDeptIds())
+                    .forEach(e -> accounts.addAll(innerUserPersonClient.getByGroupIdNew(e)));
+        }
 
         // 如果查询条件为空直接返回空数据
         if (CollUtil.isEmpty(accounts)) {
@@ -547,29 +562,37 @@ public class HomePageServiceImpl implements HomePageService {
     public BaseResult<List<HomePageGroupWorkTimeVO>> getGroupTaskWorkTimeBoard(HomePageTaskBoardReq req) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
-        Set<String> userIds = CollUtil.emptyIfNull(req.getTeamMembers());
-        CollUtil.emptyIfNull(req.getDeptIds())
-                .forEach(e -> userIds.addAll(innerUserPersonClient.getByGroupIdNew(e)));
+        Set<String> accounts = CollUtil.emptyIfNull(req.getTeamMembers());
+        if (CollUtil.isEmpty(accounts) && CollUtil.isEmpty(req.getDeptIds())) {
+            if (HomePageTabEnum.INDIVIDUAL.getCode().equals(req.getTabType())) {
+                accounts.add(LocalSessionUtils.getUserInfo().getId());
+            } else {
+                accounts.addAll(innerUserPersonClient.getAllMyStaffWithSelf(LocalSessionUtils.getUserInfo().getId(), false));
+            }
+        } else {
+            CollUtil.emptyIfNull(req.getDeptIds())
+                    .forEach(e -> accounts.addAll(innerUserPersonClient.getByGroupIdNew(e)));
+        }
 
-        if (userIds.isEmpty()) {
+        if (accounts.isEmpty()) {
             log.warn("getGroupTaskWorkTimeBoard filtered users are empty, userInfo: {}", userInfo);
             return BaseResult.success(Collections.emptyList());
         }
 
-        List<BaseInfoResponse> users = innerUserPersonClient.batchGetStaffInfos(userIds, false);
+        List<BaseInfoResponse> users = innerUserPersonClient.batchGetStaffInfos(accounts, false);
         List<HomePageGroupWorkTimeVO> res = users.stream().map(u ->
                 new HomePageGroupWorkTimeVO(u.getAccount(),
                         u.getAlias() + CommonConstant.JOIN_LINE + u.getName(),
                         new ArrayList<>())
         ).collect(Collectors.toList());
-        List<TaskBoardDTO> tasks = listTasksSuitDateRange(req.getStartDate(), req.getEndDate(), userIds);
+        List<TaskBoardDTO> tasks = listTasksSuitDateRange(req.getStartDate(), req.getEndDate(), accounts);
         if (tasks.isEmpty()) {
             return BaseResult.success(res);
         }
         List<Long> taskIds = tasks.stream().map(TaskBoardDTO::getId).collect(Collectors.toList());
         List<ProjectDO> projects = projectMapper.getByIds(tasks.stream().map(TaskBoardDTO::getProjectId).collect(Collectors.toSet()));
         Map<Long, ProjectDO> projectById = Maps.uniqueIndex(projects, ProjectDO::getId);
-        List<PersonDO> persons = personMapper.getPersons(userIds, taskIds, PersonTypeEnum.TASK_EXECUTOR.getCode());
+        List<PersonDO> persons = personMapper.getPersons(accounts, taskIds, PersonTypeEnum.TASK_EXECUTOR.getCode());
         ListMultimap<Long, PersonDO> personsByMainId = Multimaps.index(persons, PersonDO::getMainId);
         Map<String, HomePageGroupWorkTimeVO> resByExecutorId = Maps.uniqueIndex(res, HomePageGroupWorkTimeVO::getExecutorId);
         for (Date iterDate = req.getStartDate();

@@ -57,10 +57,10 @@ public interface HomePageService {
     /**
      * 项目工时看板查询
      *
-     * @param homePageProjectBoardReq 查询条件
+     * @param req 查询条件
      * @return 列表
      */
-    BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardReq homePageProjectBoardReq);
+    BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardReq req);
 
     /**
      * 获取更新时间
