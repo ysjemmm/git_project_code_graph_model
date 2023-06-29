@@ -2,6 +2,7 @@ package com.timevale.forward.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.base.Objects;
 import com.timevale.footstone.base.model.response.BaseResult;
@@ -373,14 +374,16 @@ public class BizDemandServiceImpl implements BizDemandService {
         ));
 
         // 如果是客开业务需求，还要通知SR
-        if (bizDemandAddReq.getCustomerDevDemand() && StrUtil.isNotEmpty(bizDemandAddReq.getSrExpertId())) {
-            messageEventPublisher.publish(new BizDemandToReceiveMsgEvent(
+        if (bizDemandAddReq.getCustomerDevDemand()
+                && StrUtil.isNotEmpty(bizDemandAddReq.getSrExpertId())
+                && ObjectUtil.notEqual(bizDemandAddReq.getReceiveManId(), bizDemandAddReq.getSrExpertId())) {
+            new BizDemandToReceiveMsgEvent(
                     this,
                     bizDemandDO.getId(),
                     bizDemandDO.getSubmitMan(),
                     bizDemandDO.getSrExpertId(),
                     bizDemandDO.getName()
-            ));
+            ).send();
         }
 
         // 日志, 状态改为待评估
