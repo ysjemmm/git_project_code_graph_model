@@ -188,8 +188,9 @@ public class ProjectEvaluateComponent {
         }
 
         // 积分成员数据变化明细
-        Map<String, BigDecimal> afterWorkLoadMap = memberWorkloadList.stream()
-                .collect(Collectors.toMap(MemberWorkloadModifyReq::getUserId, MemberWorkloadModifyReq::getPlanWorkload, (a, b) -> a));
+        Map<String, BigDecimal> afterWorkLoadMap = new HashMap<>();
+        memberWorkloadList.forEach(e -> afterWorkLoadMap.put(e.getUserId(), e.getPlanWorkload()));
+
         List<MemberEvaluateChangeVO> memberEvaluateChanges = memberEvaluateDOList.stream().map(e -> new MemberEvaluateChangeVO()
                         .setUserName(e.getUserName())
                         .setPlanWorkloadBefore(e.getPlanWorkload())
