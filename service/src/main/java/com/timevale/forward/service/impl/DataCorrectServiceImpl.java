@@ -282,11 +282,10 @@ public class DataCorrectServiceImpl implements DataCorrectService {
     private final String fieldOperator = "需求接收人";
 
     @Override
-    public BaseResult<Void> bizRecord(Long mainId) {
-        List<BizChangeLogDO> logs = bizChangeLogMapper.list(mainId, 4);
+    public BaseResult<Void> bizRecord() {
+        List<BizChangeLogDO> logs = bizChangeLogMapper.getByType(4);
 
         Map<Long, List<BizChangeLogDO>> logGroups = logs.stream()
-                .filter(e -> Objects.equals(mainId, e.getMainId()))
                 .filter(e -> e.getCreateDate().compareTo(DateUtil.parseToDate("2023-01-01")) >= 0)
                 .filter(e -> fieldStatus.equals(e.getField()) || fieldOperator.equals(e.getField()))
                 .sorted(Comparator.comparing(BaseDO::getCreateDate))

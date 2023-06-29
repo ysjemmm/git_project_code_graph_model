@@ -57,8 +57,7 @@ public interface DataCorrectService {
     /**
      * 业务需求状态人员变更记录
      *
-     * @param mainId 业务需求id
      * @return {@link BaseResult}<{@link Void}>
      */
-    BaseResult<Void> bizRecord(Long mainId);
+    BaseResult<Void> bizRecord();
 }

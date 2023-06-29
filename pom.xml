@@ -52,7 +52,7 @@
         <filesystem.version>2.0.4-RELEASE</filesystem.version>
         <erp.message-facade.version>1.2.6-SNAPSHOT</erp.message-facade.version>
         <custom-provider-facade.version>2.4.1-SNAPSHOT</custom-provider-facade.version>
-        <inuser.security.facade.version>1.1.11-SNAPSHOT</inuser.security.facade.version>
+        <inuser.security.facade.version>1.1.18-SNAPSHOT</inuser.security.facade.version>
         <encourage-facade.version>1.0.0-SNAPSHOT</encourage-facade.version>
     </properties>
 
