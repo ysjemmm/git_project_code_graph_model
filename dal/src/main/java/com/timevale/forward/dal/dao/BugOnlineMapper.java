@@ -129,4 +129,9 @@ public interface BugOnlineMapper {
     List<BugOnlineDO> getByCustomerIds(@Param("customerIds") Collection<Long> customerIds);
 
     void updateConvertBizStatus(@Param("id")Long id, @Param("convertBizStatus")Integer convertBizStatus);
+
+    /**
+     * 打开次数加一
+     */
+    void updateIncOpenCount(@Param("id") Long id);
 }

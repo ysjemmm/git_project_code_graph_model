@@ -1294,6 +1294,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setOperator(lastOperator);
         bugOnlineDO.setDismissCause(null);
         bugOnlineDO.setDismissCauseStage(null);
+        bugOnlineDO.setOpenCount(bugOnlineDO.getOpenCount() + 1);
         //线上bug表更新
         bugOnlineMapper.update(bugOnlineDO);
 
@@ -1767,6 +1768,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
             //线上bug表更新
             bugOnlineMapper.updateStatusByIds(CollUtil.newArrayList(acceptanceReq.getId()),BugOnlineStatusEnum.QUESTION_CONFIRM.getCode());
+
+            // 打开次数+1
+            bugOnlineMapper.updateIncOpenCount(acceptanceReq.getId());
 
             BugLogDO bugLogDO = new BugLogDO();
             bugLogDO.setAction(ButtonActionEnum.ACCEPTANCE_FAILT.getText());

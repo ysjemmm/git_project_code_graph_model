@@ -522,6 +522,12 @@
             modify_man_id = #{modifyManId}
         WHERE id = #{id}
     </update>
+
+    <update id="updateIncOpenCount">
+        update info_forward.bug_online
+        set open_count = open_count + 1
+        where id = #{id}
+    </update>
 </mapper>
 
 
