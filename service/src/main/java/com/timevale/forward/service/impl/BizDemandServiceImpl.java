@@ -268,7 +268,7 @@ public class BizDemandServiceImpl implements BizDemandService {
         if (!pbdList.isEmpty()) {
             projectBizDemandService.linkOrUnlinkBizDemandProject(new BizDemandLinkProjectReq()
                     .setProjectId(pbdList.get(0).getProjectId())
-                    .setBizDemandIds(Collections.singletonList(bizDemandDO.getId()))
+                    .setBizDemandIds(CollUtil.newArrayList(bizDemandDO.getId()))
                     .setType(LinkOrUnLinkEnum.UN_LINK.getCode()));
         }
         bizDemandLogComponent.addLogWhenBizDemandInvalid(bizDemandId);
