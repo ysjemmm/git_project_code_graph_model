@@ -726,7 +726,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BusinessResult<Boolean> startRepair(BugOnlineStartRepairReq startRepairReq) {
+    public BusinessResult<String> startRepair(BugOnlineStartRepairReq startRepairReq) {
         //查询线上bug
         BugOnlineDO bugOnlineDO = bugOnlineMapper.get(startRepairReq.getId());
         AssertUtil.notNull(bugOnlineDO, "线上bug不存在");
@@ -776,8 +776,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         //bug状态处理人员表插入数据
         bugLogComponent.insertToBugStatusOperator(bugOnlineDO.getId(), bugOnlineDO.getOperatorId(), bugOnlineDO.getOperator());
 
-        BusinessResult<Boolean> businessResult = new BusinessResult<>();
-        businessResult.setData(true);
+        String tips = updateLinkBug(startRepairReq.getId(), startRepairReq.getLinkBugId());
+
+        BusinessResult<String> businessResult = new BusinessResult<>();
+        businessResult.setData(tips);
         return businessResult;
     }
 
@@ -1681,6 +1683,8 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         }
 
         bugOnlineMapper.updateConvertBizStatus(toBizApplyReq.getId(), operateEnum.getCode());
+
+        deleteLinkBug(bugOnlineDO.getId(), bugOnlineDO.getLinkBugId(), false);
 
         return BaseResult.success();
     }

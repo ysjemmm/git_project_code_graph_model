@@ -82,7 +82,7 @@ public interface BugOnlineService {
      * @param startRepairReq 参数
      * @return 返回值
      */
-    BusinessResult<Boolean> startRepair(BugOnlineStartRepairReq startRepairReq);
+    BusinessResult<String> startRepair(BugOnlineStartRepairReq startRepairReq);
 
     /**
      * 修复完毕

@@ -45,4 +45,7 @@ public class BugOnlineStartRepairReq extends BaseReq {
 
     @ApiModelProperty("用户临时解决方案")
     private String temporarySolution;
+
+    @ApiModelProperty("关联的线上bug id")
+    private Long linkBugId;
 }
