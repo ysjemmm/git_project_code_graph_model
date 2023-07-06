@@ -1,5 +1,6 @@
 package com.timevale.forward.facade.api.result;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.timevale.mandarin.common.result.ToString;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -14,6 +15,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @ApiModel("业务需求-产品线-信息")
 public class ProductLineAnalyseVO extends ToString {
+
+    @JsonIgnore
+    private String bizDomainId;
 
     @ApiModelProperty("产品线id")
     private Long productLineId;

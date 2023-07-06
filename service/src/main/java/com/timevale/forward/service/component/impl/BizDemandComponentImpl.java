@@ -246,6 +246,7 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             ProductLineAnalyseVO bizDemandProductLineVO = new ProductLineAnalyseVO();
             Optional<BizDemandListDO> any = v.stream().findAny();
             any.ifPresent(e -> {
+                bizDemandProductLineVO.setBizDomainId(e.getBizDomainId());
                 bizDemandProductLineVO.setCount(v.size());
                 bizDemandProductLineVO.setProductLineId(e.getProductLineId());
                 bizDemandProductLineVO.setProductLineName(e.getProductLineName());

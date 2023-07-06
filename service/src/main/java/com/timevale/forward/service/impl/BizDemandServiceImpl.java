@@ -159,6 +159,10 @@ public class BizDemandServiceImpl implements BizDemandService {
         }
 
         QueryResultVO<BizDemandVO> res = bizDemandComponent.page(condition);
+        // 如果tabs为全部，则根据业务域排序
+        if (AscriptionEnum.ALL.toString().equals(ascription)) {
+            res.getAnalyseVOList().sort(Comparator.comparing(ProductLineAnalyseVO::getBizDomainId));
+        }
         if (bizDemandQueryList.getQuerySource() == 1) {
             // 交付项目来源查询需要特殊排序
             List<BizDemandVO> resultList = res.getPageQueryResult().getResultList();
