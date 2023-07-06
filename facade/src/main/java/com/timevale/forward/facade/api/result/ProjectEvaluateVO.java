@@ -28,6 +28,12 @@ public class ProjectEvaluateVO extends ToString {
     @ApiModelProperty("SR建议评价等级")
     private String srEvaluateGradeName;
 
+    @ApiModelProperty("项目评价等级")
+    private Integer projectEvaluateGrade;
+
+    @ApiModelProperty("项目评价等级")
+    private String projectEvaluateGradeName;
+
     @ApiModelProperty("项目实得积分")
     private BigDecimal projectPoint;
 

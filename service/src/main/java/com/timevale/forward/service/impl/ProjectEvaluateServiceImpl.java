@@ -242,6 +242,10 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         Integer srEvaluateGrade = projectDO.getSrEvaluateGrade();
         String srEvaluateGradeName = GradeEnum.getTextByCode(srEvaluateGrade);
 
+        // 获取项目评价等级
+        Integer projectEvaluateGrade = projectDO.getProjectEvaluateGrade();
+        String projectEvaluateGradeName = GradeEnum.getTextByCode(projectEvaluateGrade);
+
         // 查询对应的项目评价，旧数据判空处理
         List<ProjectEvaluateDO> evaluateDOList = evaluateMapper.getByProjectId(projectId);
         if (CollUtil.isEmpty(evaluateDOList)) {
@@ -279,6 +283,8 @@ public class ProjectEvaluateServiceImpl implements ProjectEvaluateService {
         result.setScoresSum(scoresSum);
         result.setSrEvaluateGrade(srEvaluateGrade);
         result.setSrEvaluateGradeName(srEvaluateGradeName);
+        result.setProjectEvaluateGrade(projectEvaluateGrade);
+        result.setProjectEvaluateGradeName(projectEvaluateGradeName);
         result.setEvaluateItemVOList(evaluateItemVOList);
         projectPointOpt.map(GetProjectPointResponse::getProjectPoint).ifPresent(result::setProjectPoint);
 

@@ -219,6 +219,11 @@ public class ProjectDO extends BaseDO {
     private Integer srEvaluateGrade;
 
     /**
+     * 项目评价等级
+     */
+    private Integer projectEvaluateGrade;
+
+    /**
      * 来源交付项目id
      */
     private String sourceId;
