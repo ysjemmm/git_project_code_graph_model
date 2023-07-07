@@ -65,6 +65,11 @@ public enum JobFunctionEnum {
      */
     Manager("经营管理",UserTypeEnum.MANAGER),
 
+    /**
+     * 职能管理
+     */
+    FUNCTION("职能管理", UserTypeEnum.MANAGER),
+
 
     /**
      * 技术专家
