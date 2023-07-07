@@ -149,7 +149,7 @@ public class ProjectBizDemandServiceImpl implements ProjectBizDemandService {
         List<ProjectBizDemandDO> pbRelations = projectBizDemandMapper.selectByProjectId(projectId);
         Set<Long> relBizDemandIds = pbRelations.stream().map(ProjectBizDemandDO::getBizDemandId)
                 .collect(Collectors.toSet());
-        bizDemandIds.removeIf(id -> !relBizDemandIds.contains(id));
+        bizDemandIds =  bizDemandIds.stream().filter(relBizDemandIds::contains).collect(Collectors.toList());
         if (bizDemandIds.isEmpty()) {
             return BaseResult.success();
         }
