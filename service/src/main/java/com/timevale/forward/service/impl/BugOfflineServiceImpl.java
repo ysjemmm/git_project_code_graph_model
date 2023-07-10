@@ -1196,11 +1196,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                         .filter(e -> BugFieldEnum.LINK_BUG_ONLINE.getText().equals(e.getField()))
                         .filter(e -> bugMap.containsKey(Long.valueOf(e.getNewValue())))
                         .forEach(e -> {
-                            Long oldId = bugOnlineDO.getId();
-                            String oldName = bugOnlineDO.getName();
+                            Long oldId = Long.valueOf(e.getOldValue());
+                            String oldName = bugMap.get(oldId) != null ? bugMap.get(oldId).getName() : "";
                             Long newId = Long.valueOf(e.getNewValue());
-                            String newName = bugMap.get(newId).getName();
-
+                            String newName = bugMap.get(newId) != null ? bugMap.get(newId).getName() : "";
                             e.setLinkBug(new BugSimpleVO(oldId, oldName));
                             e.setLinkedBug(new BugSimpleVO(newId, newName));
                         });
@@ -1214,10 +1213,10 @@ public class BugOfflineServiceImpl implements BugOfflineService {
                         .filter(e -> BugFieldEnum.LINK_BUG_OFFLINE.getText().equals(e.getField()))
                         .filter(e -> bugMap.containsKey(Long.valueOf(e.getNewValue())))
                         .forEach(e -> {
-                            Long oldId = bugOnlineDO.getId();
-                            String oldName = bugOnlineDO.getName();
+                            Long oldId = Long.valueOf(e.getOldValue());
+                            String oldName = bugMap.get(oldId) != null ? bugMap.get(oldId).getName() : "";
                             Long newId = Long.valueOf(e.getNewValue());
-                            String newName = bugMap.get(newId).getName();
+                            String newName = bugMap.get(newId) != null ? bugMap.get(newId).getName() : "";
 
                             e.setLinkBug(new BugSimpleVO(oldId, oldName));
                             e.setLinkedBug(new BugSimpleVO(newId, newName));
