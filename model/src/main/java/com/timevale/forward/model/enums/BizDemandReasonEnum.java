@@ -22,7 +22,8 @@ public enum BizDemandReasonEnum {
     UNREASONABLE(6,"需求不合理"),
     UNABLE(7,"无法实现"),
     NO_RESPONSE_ON_DEMAND_SIDE(8, "需求方无响应"),
-    NEEDS_TO_BE_CONFIRMED(9,"需求待确认");
+    NEEDS_TO_BE_CONFIRMED(9,"需求待确认"),
+    BELONG_OTN_DEMAND(10,"归属1-N需求");
 
     private final Integer code;
     private final String text;
