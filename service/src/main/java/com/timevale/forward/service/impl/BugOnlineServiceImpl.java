@@ -1684,8 +1684,6 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         bugOnlineMapper.updateConvertBizStatus(toBizApplyReq.getId(), operateEnum.getCode());
 
-        deleteLinkBug(bugOnlineDO.getId(), bugOnlineDO.getLinkBugId(), false);
-
         return BaseResult.success();
     }
 
