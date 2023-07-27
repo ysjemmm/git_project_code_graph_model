@@ -85,4 +85,29 @@ public class ProjectMilestone {
      */
     private Date planEndDate;
 
+    /**
+     * 负责人id
+     */
+    private String chargeManId;
+
+    /**
+     * 负责人
+     */
+    private String chargeMan;
+
+    /**
+     * 关键行动
+     */
+    private String keyAction;
+
+    /**
+     * 实际开始日期
+     */
+    private Date actualStartDate;
+
+    /**
+     * 实际结束日期
+     */
+    private Date actualEndDate;
+
 }

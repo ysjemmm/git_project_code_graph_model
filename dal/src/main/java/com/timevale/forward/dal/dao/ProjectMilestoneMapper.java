@@ -26,9 +26,6 @@ public interface ProjectMilestoneMapper {
     @Select("select * from project_milestone where id = #{id} and is_deleted = false")
     ProjectMilestone selectById(@Param("id") Long id);
 
-    @Select("select * from project_milestone where relation_id = #{relationId} and type = #{type} and is_deleted = false limit 1")
-    ProjectMilestone selectByRelation(@Param("relationId") Long relationId, @Param("type") Integer type);
-
     List<ProjectMilestone> selectByIds(@Param("list") List<Long> list);
 
     @Update("update project_milestone set is_deleted = true where id = #{id} and is_deleted = false")

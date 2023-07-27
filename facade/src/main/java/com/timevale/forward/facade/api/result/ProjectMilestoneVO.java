@@ -45,6 +45,15 @@ public class ProjectMilestoneVO extends ToString {
     @ApiModelProperty("实际结束时间")
     private Date actualEndDate;
 
+    @ApiModelProperty("负责人id")
+    private String chargeManId;
+
+    @ApiModelProperty("负责人")
+    private String chargeMan;
+
+    @ApiModelProperty("关键行动")
+    private String keyAction;
+
     @ApiModelProperty("行动")
     private Collection<ProjectMilestoneActionVO> actions;
 

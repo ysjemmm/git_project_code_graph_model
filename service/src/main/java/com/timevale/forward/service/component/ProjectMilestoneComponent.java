@@ -96,16 +96,18 @@ public class ProjectMilestoneComponent {
                 .collect(Collectors.toList());
 
         // 里程碑实际开始时间，取非作废的行动里最小的实际开始时间
-        validActions.stream()
-                .map(ProjectMilestoneActionVO::getActualStartDate)
-                .filter(Objects::nonNull)
-                .min(Date::compareTo)
-                .ifPresent(milestoneVO::setActualStartDate);
+        if (milestoneVO.getActualStartDate() == null) {
+            validActions.stream()
+                    .map(ProjectMilestoneActionVO::getActualStartDate)
+                    .filter(Objects::nonNull)
+                    .min(Date::compareTo)
+                    .ifPresent(milestoneVO::setActualStartDate);
+        }
         // 里程碑实际结束时间，当非作废行动都存在实际结束时间时取最大
         boolean noneNull = validActions.stream()
                 .map(ProjectMilestoneActionVO::getActualEndDate)
                 .noneMatch(Objects::isNull);
-        if (noneNull) {
+        if (noneNull && milestoneVO.getActualEndDate() == null) {
             validActions.stream()
                     .map(ProjectMilestoneActionVO::getActualEndDate)
                     .max(Date::compareTo)
