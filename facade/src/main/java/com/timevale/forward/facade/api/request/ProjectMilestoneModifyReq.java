@@ -11,6 +11,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author jingchun
@@ -38,11 +39,8 @@ public class ProjectMilestoneModifyReq extends ToString {
     @JsonFormat(timezone="GMT+8", pattern="yyyy-MM-dd")
     private Date actualEndDate;
 
-    @ApiModelProperty("负责人id")
-    private String chargeManId;
-
-    @ApiModelProperty("负责人")
-    private String chargeMan;
+    @ApiModelProperty("负责人列表")
+    private List<PersonAddReq> chargeMan;
 
     @ApiModelProperty("关键行动")
     private String keyAction;

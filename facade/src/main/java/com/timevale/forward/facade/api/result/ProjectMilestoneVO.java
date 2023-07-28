@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author jingchun
@@ -46,10 +47,7 @@ public class ProjectMilestoneVO extends ToString {
     private Date actualEndDate;
 
     @ApiModelProperty("负责人id")
-    private String chargeManId;
-
-    @ApiModelProperty("负责人")
-    private String chargeMan;
+    private List<PersonVO> chargeMan;
 
     @ApiModelProperty("关键行动")
     private String keyAction;

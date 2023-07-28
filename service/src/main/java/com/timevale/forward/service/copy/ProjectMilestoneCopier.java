@@ -8,11 +8,14 @@ import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
 import com.timevale.forward.model.enums.ProjectStatusEnum;
 import com.timevale.forward.model.enums.TaskStatusEnum;
+import com.timevale.mandarin.base.util.JsonUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -20,11 +23,14 @@ import java.util.stream.Collectors;
  * created on 2023/2/7
  */
 @Mapper(imports = {
+        StringUtils.class,
         ProjectStageEnum.class,
         ProjectStatusEnum.class,
         TaskStatusEnum.class,
         Collectors.class,
-        MilestoneTypeEnum.class
+        MilestoneTypeEnum.class,
+        JsonUtils.class,
+        Optional.class
 })
 public interface ProjectMilestoneCopier {
 
@@ -40,14 +46,17 @@ public interface ProjectMilestoneCopier {
     @Mapping(target = "modifyManId", ignore = true)
     @Mapping(target = "createManId", ignore = true)
     @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "chargeMan", expression = "java(Optional.ofNullable(req.getChargeMan()).map(JsonUtils::obj2json).orElse(null))")
     ProjectMilestone convert(ProjectMilestoneAddReq req);
 
 
     @Mapping(target = "actions", ignore = true)
     @Mapping(target = "projectName", ignore = true)
     @Mapping(target = "stageName", expression = "java(ProjectStageEnum.getTextByCode(milestone.getStage()))")
+    @Mapping(target = "chargeMan", expression = "java(Optional.ofNullable(milestone.getChargeMan()).filter(StringUtils::isNotEmpty).map(cm -> JsonUtils.json2list(cm, PersonVO.class)))")
     ProjectMilestoneVO convert(ProjectMilestone milestone);
 
+    @Mapping(target = "chargeMan", expression = "java(Optional.ofNullable(req.getChargeMan()).map(JsonUtils::obj2json).orElse(null))")
     ProjectMilestone req2do(ProjectMilestoneModifyReq req);
 
     List<ProjectMilestoneVO> convert(List<ProjectMilestone> milestones);

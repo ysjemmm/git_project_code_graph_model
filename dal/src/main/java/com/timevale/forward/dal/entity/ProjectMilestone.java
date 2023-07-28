@@ -81,19 +81,14 @@ public class ProjectMilestone {
     private Date planStartDate;
 
     /**
+     * 负责人信息json
+     */
+    private String chargeMan;
+
+    /**
      * 计划结束日期
      */
     private Date planEndDate;
-
-    /**
-     * 负责人id
-     */
-    private String chargeManId;
-
-    /**
-     * 负责人
-     */
-    private String chargeMan;
 
     /**
      * 关键行动

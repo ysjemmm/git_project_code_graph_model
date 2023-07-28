@@ -40,7 +40,6 @@
             <if test="createManId != null">create_man_id,</if>
             <if test="type != null">type,</if>
             <if test="relationId != null">relation_id,</if>
-            <if test="chargeManId != null and chargeManId != ''">charge_man_id,</if>
             <if test="chargeMan != null and chargeMan != ''">charge_man,</if>
             <if test="keyAction != null and keyAction  != ''">key_action,</if>
             <if test="actualStartDate != null">actual_start_date,</if>
@@ -57,7 +56,6 @@
             <if test="createManId != null">#{createManId},</if>
             <if test="type != null">#{type},</if>
             <if test="relationId != null">#{relationId},</if>
-            <if test="chargeManId != null and chargeManId != ''">#{chargeManId},</if>
             <if test="chargeMan != null and chargeMan != ''">#{chargeMan},</if>
             <if test="keyAction != null and keyAction  != ''">#{keyAction},</if>
             <if test="actualStartDate != null">#{actualStartDate},</if>
@@ -86,10 +84,7 @@
             <if test="actualEndDate != null">
                 actual_end_date = #{actualEndDate},
             </if>
-            <if test="chargeManId != null">
-                charge_man_id = #{chargeManId},
-            </if>
-            <if test="chargeMan != null">
+            <if test="chargeMan != null and chargeMan != ''">
                 charge_man = #{chargeMan},
             </if>
             <if test="keyAction != null">
