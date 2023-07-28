@@ -3,6 +3,7 @@ package com.timevale.forward.service.copy;
 import com.timevale.forward.dal.entity.ProjectMilestone;
 import com.timevale.forward.facade.api.request.ProjectMilestoneAddReq;
 import com.timevale.forward.facade.api.request.ProjectMilestoneModifyReq;
+import com.timevale.forward.facade.api.result.PersonVO;
 import com.timevale.forward.facade.api.result.ProjectMilestoneVO;
 import com.timevale.forward.model.enums.MilestoneTypeEnum;
 import com.timevale.forward.model.enums.ProjectStageEnum;
@@ -14,6 +15,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,7 +32,9 @@ import java.util.stream.Collectors;
         Collectors.class,
         MilestoneTypeEnum.class,
         JsonUtils.class,
-        Optional.class
+        Optional.class,
+        PersonVO.class,
+        Collections.class
 })
 public interface ProjectMilestoneCopier {
 
@@ -53,7 +57,7 @@ public interface ProjectMilestoneCopier {
     @Mapping(target = "actions", ignore = true)
     @Mapping(target = "projectName", ignore = true)
     @Mapping(target = "stageName", expression = "java(ProjectStageEnum.getTextByCode(milestone.getStage()))")
-    @Mapping(target = "chargeMan", expression = "java(Optional.ofNullable(milestone.getChargeMan()).filter(StringUtils::isNotEmpty).map(cm -> JsonUtils.json2list(cm, PersonVO.class)))")
+    @Mapping(target = "chargeMan", expression = "java(Optional.ofNullable(milestone.getChargeMan()).filter(StringUtils::isNotEmpty).map(cm -> JsonUtils.json2list(cm, PersonVO.class)).orElse(Collections.emptyList()))")
     ProjectMilestoneVO convert(ProjectMilestone milestone);
 
     @Mapping(target = "chargeMan", expression = "java(Optional.ofNullable(req.getChargeMan()).map(JsonUtils::obj2json).orElse(null))")
