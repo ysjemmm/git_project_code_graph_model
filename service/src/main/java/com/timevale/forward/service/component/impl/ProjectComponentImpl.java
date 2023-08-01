@@ -5,22 +5,29 @@ import cn.hutool.core.util.BooleanUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Maps;
+import com.timevale.forward.dal.condition.ProjectAcceptanceListCondition;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.condition.ProjectNodeCondition;
 import com.timevale.forward.dal.dao.*;
 import com.timevale.forward.dal.entity.*;
-import com.timevale.forward.facade.api.client.ProjectMilestoneService;
+import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.result.BizLabelSimpleVO;
 import com.timevale.forward.facade.api.result.ProductLineAnalyseVO;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
+import com.timevale.forward.facade.api.result.enums.ModifyCheckTypeEnum;
+import com.timevale.forward.model.dto.ModifyProjectCheckDTO;
+import com.timevale.forward.model.dto.ModifyProjectProcessedBundle;
 import com.timevale.forward.model.enums.*;
 import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.config.CommonConfig;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ProjectCopier;
+import com.timevale.forward.service.copy.ProjectNodeCopier;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.forward.service.utils.date.DateFormatConst;
 import com.timevale.forward.service.utils.date.DateUtil;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.query.QueryBase;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.GroupResponse;
@@ -31,7 +38,9 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author xingyun
@@ -68,10 +77,6 @@ public class ProjectComponentImpl implements ProjectComponent {
     @Resource
     private BizLabelComponent bizLabelComponent;
     @Resource
-    private ProjectMilestoneMapper projectMilestoneMapper;
-    @Resource
-    private ProjectMilestoneService milestoneService;
-    @Resource
     private ProjectLogComponent projectLogComponent;
     @Resource
     private CommonConfig config;
@@ -87,6 +92,24 @@ public class ProjectComponentImpl implements ProjectComponent {
     private BizDomainMapper bizDomainMapper;
     @Resource
     private ProjectMilestoneActionMapper milestoneActionMapper;
+    @Resource
+    private ProjectGoalMapper projectGoalMapper;
+    @Resource
+    private TaskMapper taskMapper;
+    @Resource
+    private ProjectNodeFlowMapper projectNodeFlowMapper;
+    @Resource
+    private ProjectAcceptanceMapper projectAcceptanceMapper;
+    @Resource
+    private ProjectPublishPlanComponent projectPublishPlanComponent;
+    @Resource
+    private BugOfflineMapper bugOfflineMapper;
+    @Resource
+    private BugLogMapper bugLogMapper;
+    @Resource
+    private ProjectDocumentComponent projectDocumentComponent;
+    @Resource
+    private ManDayMapper manDayMapper;
 
     @Override
     public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -616,7 +639,7 @@ public class ProjectComponentImpl implements ProjectComponent {
 
     @Override
     public String getUrl(Long projectId) {
-        return String.format(config.getCommonViewUrl(),TabEnum.PROJECT_MANAGEMENT.getText(), projectId);
+        return String.format(config.getCommonViewUrl(), TabEnum.PROJECT_MANAGEMENT.getText(), projectId);
     }
 
     private List<ProductLineAnalyseVO> analyse(ProjectListCondition condition) {
@@ -702,4 +725,238 @@ public class ProjectComponentImpl implements ProjectComponent {
             projectBizDomainMapper.batchDel(projectId, delBdIds);
         }
     }
+
+    @Override
+    public ModifyProjectProcessedBundle checkProjectModify(ProjectModifyReq projectModifyReq, boolean additionalInfo,
+                                                           Consumer<ModifyProjectCheckDTO> dataHandler) {
+        final Long projectId = projectModifyReq.getId();
+        ProjectDO oldProject = projectMapper.get(projectId);
+        // 没法继续校验的地方直接 assert 抛出异常
+        AssertUtil.notNull(oldProject, "修改的项目不存在");
+        AssertUtil.checkState(!ProjectStatusEnum.terminated(oldProject.getStatus()),
+                "项目处于发布或中止中，不可编辑，请刷新后重试");
+
+        ProjectDO newProject = ProjectCopier.INSTANCE.convert(projectModifyReq);
+        List<ProjectNodeDO> nodes = ProjectNodeCopier.INSTANCE.convert(projectModifyReq.getProjectNodes());
+        List<Runnable> delayTasks = new ArrayList<>();
+
+        //有流程,计划时间不能变
+        if (!DelayTypeEnum.NONE.getCode().equals(projectModifyReq.getDelayType())) {
+            newProject.setPlanStartDate(oldProject.getPlanStartDate());
+            newProject.setPlanEndDate(oldProject.getPlanEndDate());
+        }
+
+        // 校验项目名称重复
+        if (!Objects.equals(oldProject.getName(), projectModifyReq.getName()) &&
+                projectMapper.getByName(projectModifyReq.getName()) != null) {
+            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+                    "该项目名称已存在，请修改后重试"));
+        }
+
+        // 校验项目目标
+        if (YesOrNoEnum.YES.getCode().equals(projectModifyReq.getIsWithGoal()) &&
+                projectGoalMapper.getByProjectId(projectId).isEmpty()) {
+            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+                    "项目含有项目目标，请至少添加一条项目目标数据"));
+        }
+
+        Map<String, ProjectNodeDO> nodeMap = nodes.stream()
+                .collect(Collectors.toMap(ProjectNodeDO::getName, p -> p, (v1, v2) -> v2));
+        // 检查任务
+        Set<String> nodeKeys = nodeMap.keySet();
+        if (Stream.of(ProjectNodeEnum.START_PLAN.getText(),
+                ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText(),
+                ProjectNodeEnum.DEMAND_CONSTRUE.getText(),
+                ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText(),
+                ProjectNodeEnum.UED_AUDIT.getText()).anyMatch(nodeKeys::contains)) {
+            //删除需求规划阶段时需要校验是否有关联任务,若有关联待执行&进行中&已完成&已暂停的任务,不能删除
+            if (taskMapper.getByProjectId(projectId).stream()
+                    .anyMatch(a -> ProjectStageEnum.DEMAND.getCode().equals(a.getStage())
+                            && !TaskStatusEnum.INVALID.getCode().equals(a.getStatus()))) {
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+                        "需求规划阶段已关联任务，不可删除"));
+            }
+        }
+        // 计算项目状态
+        ProjectNodeDO node = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText());
+        if (node != null && node.getActualDate() != null) {
+            if (ProjectStatusEnum.SUSPEND.getCode().equals(oldProject.getStatus())) {
+                // 编辑项目
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+                        "项目状态为暂停时，不能填写发布正式的实际时间"));
+            }
+            if (nodes.stream().map(ProjectNodeDO::getActualDate).anyMatch(Objects::isNull)) {
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+                        "请填写完其他节点的实际时间后，再填写发布正式的实际时间"));
+            }
+        }
+
+        if (!Objects.equals(oldProject.getPjEstablishPublishDate(), newProject.getPjEstablishPublishDate()) &&
+                projectNodeFlowMapper.getByProjectId(projectId).stream()
+                        .anyMatch(a -> ForwardFlowStatusEnum.AUDITING.getCode().equals(a.getStatus()))) {
+            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+                    "发布正式节点流程处于审核中，不能修改立项预期上线时间"));
+        }
+
+
+        if (YesOrNoEnum.NO.getCode().equals(newProject.getIsAcceptance()) &&
+                CollectionUtils.isNotEmpty(projectAcceptanceMapper.list(ProjectAcceptanceListCondition.builder()
+                        .status(Lists.newArrayList(ForwardFlowStatusEnum.AUDITING.getCode(),
+                                ForwardFlowStatusEnum.COMPLETE.getCode(),
+                                ForwardFlowStatusEnum.REJECT.getCode()))
+                        .projectId(projectId).build()))) {
+            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ACCEPTANCE,
+                    "存在验收流程，不能将项目验收改为否"));
+        }
+
+        boolean released = nodes.stream().anyMatch(a ->
+                ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(a.getName()) && a.getActualDate() != null);
+        if (released && YesOrNoEnum.YES.getCode().equals(newProject.getIsAcceptance())) {
+            ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().projectId(newProject.getId()).build();
+            List<ProjectAcceptanceDO> list = projectAcceptanceMapper.list(c);
+            boolean allWithdraw = list.stream().allMatch(a -> ForwardFlowStatusEnum.WITHDRAW.getCode().equals(a.getStatus()));
+            if (CollectionUtils.isEmpty(list) || allWithdraw) {
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ACCEPTANCE,
+                        "您还没有发起项目验收,请验收通过后再发布"));
+            }
+            list = list.stream().filter(a -> !ForwardFlowStatusEnum.WITHDRAW.getCode().equals(a.getStatus()))
+                    .collect(Collectors.toList());
+            Map<String, List<ProjectAcceptanceDO>> groupMap = list.stream()
+                    .collect(Collectors.groupingBy(ProjectAcceptanceDO::getAcceptorId));
+            groupMap.forEach((k, v) -> {
+                List<ProjectAcceptanceDO> order = v.stream().sorted(
+                                Comparator.comparing(ProjectAcceptanceDO::getCreateDate).reversed())
+                        .collect(Collectors.toList());
+                ProjectAcceptanceDO last = order.get(0);
+                //去除已撤回的验收,最新一条不是已通过 不能发布
+                if (ForwardFlowStatusEnum.AUDITING.getCode().equals(last.getStatus()) ||
+                        ForwardFlowStatusEnum.REJECT.getCode().equals(last.getStatus())) {
+                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ACCEPTANCE,
+                            "请确保所有验收人员验收通过后再发布"));
+                }
+            });
+        }
+        if (released && Objects.equals(newProject.getIsPlatformPublish(), 1)) {
+            if (!projectPublishPlanComponent.linkPublishPlan(newProject.getId())) {
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PUBLISH,
+                        "请关联发布计划"));
+            }
+            if (projectPublishPlanComponent.anyMatchNotFinished(newProject.getId())) {
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PUBLISH,
+                        "您的发布计划还未结束，请前往发布平台处理"));
+            }
+        }
+        List<ProjectNodeDO> oldNodes = projectNodeMapper.get(projectId);
+        Map<String, ProjectNodeDO> oldNodeMap = oldNodes.stream()
+                .collect(Collectors.toMap(ProjectNodeDO::getName, a -> a, (v1, v2) -> v1));
+        //找出可以发起审批的节点
+        List<ProjectNodeDO> startFlowNodes = nodes.stream().filter(a -> ProjectNodeEnum.canStartFlow(a.getName()))
+                .collect(Collectors.toList());
+        List<ProjectFlowDO> projectFlowDOList = projectFlowMapper.getByProjectId(projectId);
+        List<Integer> flowTypes = projectFlowDOList.stream().filter(a ->
+                        !ForwardFlowStatusEnum.PRE_EDIT.getCode().equals(a.getStatus()))
+                .map(ProjectFlowDO::getFlowType).collect(Collectors.toList());
+        startFlowNodes.forEach(a -> {
+            //有流程,实际时间不能修改
+            if (flowTypes.contains(ProjectNodeEnum.getCodeByName(a.getName())) && oldNodeMap.containsKey(a.getName())
+                    && !Objects.equals(oldNodeMap.get(a.getName()).getActualDate(), a.getActualDate())) {
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+                        String.format("%s节点存在审批流程，不能修改实际时间", a.getName())));
+            }
+        });
+
+        // 项目发布时需要校验未关闭bug
+        ProjectNodeDO publishNodeDO = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText());
+        if (publishNodeDO != null && publishNodeDO.getActualDate() == null
+                // 注意 checkProductRelease 方法里包含更新线下 bug 的逻辑（延迟执行）
+                && !checkProductRelease(projectModifyReq.getId(), delayTasks)) {
+            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.BUG_OFFLINE,
+                    "该项目还有bug未关闭，请关闭后再发布"));
+        }
+
+        ProjectNodeDO submitTest = nodeMap.get(ProjectNodeEnum.SUBMIT_TEST.getText());
+        if (submitTest != null) {
+            ProjectNodeDO oldSubmitTest = projectNodeMapper.getByName(projectId, ProjectNodeEnum.SUBMIT_TEST.getText());
+            TestBillDO oldTestBillDO = testBillMapper.selectByProjectId(projectId);
+            if (submitTest.getActualDate() == null && oldSubmitTest != null &&
+                    oldSubmitTest.getActualDate() != null && oldTestBillDO != null) {
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+                        "提测后，不能修改提测节点的实际时间"));
+            }
+
+            if (oldTestBillDO != null && TestBillStatusEnum.TEST_SUCCESS.getCode().equals(oldTestBillDO.getStatus())
+                    && oldSubmitTest != null && !Objects.equals(submitTest.getPlanDate(), oldSubmitTest.getPlanDate())) {
+                // 提测已经通过,修改计划时间,重算逾期时长
+                TestBillDO testBillDO = new TestBillDO();
+                if (submitTest.getActualDate().after(submitTest.getPlanDate())) {
+                    String planDate = DateUtil.parseToString(submitTest.getPlanDate(), DateFormatConst.DATE_FORMAT);
+                    String actualDate = DateUtil.parseToString(submitTest.getActualDate(), DateFormatConst.DATE_FORMAT);
+                    testBillDO.setDelayDay(DateUtil.getIntervalDays(planDate, actualDate));
+                } else {
+                    testBillDO.setDelayDay(0);
+                }
+                testBillDO.setProjectId(projectId);
+                // 校验结束后再执行
+                delayTasks.add(() -> testBillMapper.updateDelayDay(testBillDO, false));
+            }
+        }
+
+        if (additionalInfo) {
+            List<String> result = projectDocumentComponent.docNeedFillIn(projectId,
+                    nodes, newProject.getType());
+            if (!result.isEmpty()) {
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.DOCUMENT,
+                        String.join("，", result) +
+                        "未维护，请在项目文档中按要求维护。若无文档，请维护原因说明。"));
+            }
+            List<ManDayDO> manDayDOList = manDayMapper.getByProjectId(projectId);
+            if (manDayDOList.isEmpty()) {
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.MAN_DAY,
+                        "项目成员的人天明细数据未维护，请在项目人天中维护。"));
+            }
+        }
+
+        return new ModifyProjectProcessedBundle(oldProject, newProject, nodes, delayTasks);
+    }
+
+
+    private boolean checkProductRelease(Long projectId, List<Runnable> delayTasks) {
+        List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.selectByProjectId(projectId);
+
+        List<BugOfflineDO> releaseList = bugOfflineDOList.stream()
+                .filter(e -> BugStatusEnum.canRelease(e.getStatus()))
+                .collect(Collectors.toList());
+        // 如果不仅为完成、关闭、延期修复，返回报错
+        if (releaseList.size() != bugOfflineDOList.size()) {
+            return false;
+        }
+
+        List<BugOfflineDO> postponeList = releaseList.stream()
+                .filter(e -> BugStatusEnum.POSTPONE_REPAIR.getCode().equals(e.getStatus()))
+                .collect(Collectors.toList());
+
+        // 断开关联关系，并且记录bug日志
+        if (!CollectionUtils.isEmpty(postponeList)) {
+            ProjectDO projectDO = projectMapper.get(projectId);
+
+            List<BugLogDO> bugLogDOList = Lists.newArrayList();
+            postponeList.forEach(e -> {
+                BugLogDO bugLogDO = new BugLogDO();
+                bugLogDO.setField(BugFieldEnum.PROJECTS.getText());
+                bugLogDO.setOldValue(projectDO.getName());
+                bugLogDO.setNewValue(CommonConstant.NULL);
+                bugLogDO.setMainId(e.getId());
+                bugLogDO.setType(BugLogTypeEnum.OFFLINE.getCode());
+                bugLogDOList.add(bugLogDO);
+            });
+
+            delayTasks.add(() -> {
+                bugLogMapper.batchInsert(bugLogDOList);
+                bugOfflineMapper.unlinkBugOffline(postponeList);
+            });
+        }
+
+        return true;
+    }
+
 }

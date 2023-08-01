@@ -28,7 +28,7 @@
 
     <properties>
         <!-- Third Party -->
-        <guava.version>31.1-jre</guava.version>
+        <guava.version>32.1.1-jre</guava.version>
         <hutool.version>5.7.13</hutool.version>
         <testng.version>6.14.3</testng.version>
         <aspectj.version>1.9.4</aspectj.version>

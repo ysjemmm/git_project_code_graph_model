@@ -3,12 +3,16 @@ package com.timevale.forward.service.component;
 import com.timevale.forward.dal.condition.ProjectListCondition;
 import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
+import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.result.ProjectVO;
 import com.timevale.forward.facade.api.result.QueryResultVO;
+import com.timevale.forward.model.dto.ModifyProjectCheckDTO;
+import com.timevale.forward.model.dto.ModifyProjectProcessedBundle;
 import com.timevale.mandarin.common.query.QueryBase;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
 public interface ProjectComponent {
     /**
@@ -86,4 +90,12 @@ public interface ProjectComponent {
      * @param bizDomainIds 业务域id
      */
     void updateBizDomain(Long projectId, Collection<Long>bizDomainIds);
+
+    /**
+     * 检查项目更新参数
+     *
+     * @return 参数更新影响范围和校验结果
+     */
+    ModifyProjectProcessedBundle checkProjectModify(ProjectModifyReq projectModifyReq, boolean additionalInfo,
+                                                    Consumer<ModifyProjectCheckDTO> dataHandler);
 }

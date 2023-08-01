@@ -68,7 +68,8 @@ public class ProjectPublishPlanComponentImpl implements ProjectPublishPlanCompon
 
     @Override
     public boolean anyMatchNotFinished(Long projectId) {
-        List<Long> publishPlanIds = projectPublishPlanMapper.get(projectId).stream().map(ProjectPublishPlanDO::getPublishPlanId).collect(Collectors.toList());
+        List<Long> publishPlanIds = projectPublishPlanMapper.get(projectId).stream()
+                .map(ProjectPublishPlanDO::getPublishPlanId).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(publishPlanIds)) {
             return false;
         }
@@ -80,7 +81,8 @@ public class ProjectPublishPlanComponentImpl implements ProjectPublishPlanCompon
 
     @Override
     public boolean linkPublishPlan(Long projectId) {
-        List<Long> publishPlanIds = projectPublishPlanMapper.get(projectId).stream().map(ProjectPublishPlanDO::getPublishPlanId).collect(Collectors.toList());
+        List<Long> publishPlanIds = projectPublishPlanMapper.get(projectId).stream()
+                .map(ProjectPublishPlanDO::getPublishPlanId).collect(Collectors.toList());
         return !CollectionUtils.isEmpty(publishPlanIds);
     }
 

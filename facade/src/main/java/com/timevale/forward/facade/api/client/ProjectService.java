@@ -221,4 +221,7 @@ public interface ProjectService {
     BaseResult<ConclusionFormVO> conclusionForm(ProjectConclusionReq req);
 
     BaseResult<PageQueryResult<ProjectSimpleVO>> pageAll(ProjectPageQuery query);
+
+    BaseResult<List<ModifyProjectCheckVO>> checkForFinishProject(ProjectModifyReq projectModifyReq);
+
 }
