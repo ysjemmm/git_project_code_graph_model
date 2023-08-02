@@ -10,24 +10,22 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ModifyCheckTypeEnum {
-    // 0. 无处理页面的情况，提示信息
-    ANY(false),
-    // 1. 无处理页面且必须处理的情况
-    ANY_CRITICAL(true),
+    // 0. 未知
+    NULL,
+    // 1. 无处理页面的情况
+    ANY,
     // 2. 验收单校验
-    ACCEPTANCE(true),
+    ACCEPTANCE,
     // 3. 发布计划校验
-    PUBLISH(false),
+    PUBLISH,
     // 4. 文档未维护
-    DOCUMENT(false),
+    DOCUMENT,
     // 5. 人天未维护
-    MAN_DAY(false),
+    MAN_DAY,
     // 6. 存在BUG未关闭
-    BUG_OFFLINE(true);
-
-    /**
-     * 是否强制校验
-     */
-    private final boolean critical;
+    BUG_OFFLINE,
+    // 7. 项目积分
+    PROJECT_POINT,
+    ;
 
 }

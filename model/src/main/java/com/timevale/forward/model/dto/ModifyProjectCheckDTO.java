@@ -18,6 +18,16 @@ public class ModifyProjectCheckDTO {
 
     private ModifyCheckTypeEnum type;
 
+    private boolean critical;
+
     private String msg;
+
+    /**
+     * 默认非critical
+     */
+    public ModifyProjectCheckDTO(ModifyCheckTypeEnum type, String msg) {
+        this.type = type;
+        this.msg = msg;
+    }
 
 }

@@ -37,6 +37,7 @@ import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -110,6 +111,10 @@ public class ProjectComponentImpl implements ProjectComponent {
     private ProjectDocumentComponent projectDocumentComponent;
     @Resource
     private ManDayMapper manDayMapper;
+    @Resource
+    private ProjectNodeRecordMapper projectNodeRecordMapper;
+    @Resource
+    private ProjectMemberEvaluateMapper memberEvaluateMapper;
 
     @Override
     public QueryResultVO<ProjectVO> page(ProjectListCondition condition, List<Long> projectIds) {
@@ -741,7 +746,8 @@ public class ProjectComponentImpl implements ProjectComponent {
         List<Runnable> delayTasks = new ArrayList<>();
 
         //有流程,计划时间不能变
-        if (!DelayTypeEnum.NONE.getCode().equals(projectModifyReq.getDelayType())) {
+        Integer delayType = projectModifyReq.getDelayType();
+        if (!DelayTypeEnum.NONE.getCode().equals(delayType)) {
             newProject.setPlanStartDate(oldProject.getPlanStartDate());
             newProject.setPlanEndDate(oldProject.getPlanEndDate());
         }
@@ -749,14 +755,14 @@ public class ProjectComponentImpl implements ProjectComponent {
         // 校验项目名称重复
         if (!Objects.equals(oldProject.getName(), projectModifyReq.getName()) &&
                 projectMapper.getByName(projectModifyReq.getName()) != null) {
-            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
                     "该项目名称已存在，请修改后重试"));
         }
 
         // 校验项目目标
         if (YesOrNoEnum.YES.getCode().equals(projectModifyReq.getIsWithGoal()) &&
                 projectGoalMapper.getByProjectId(projectId).isEmpty()) {
-            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
                     "项目含有项目目标，请至少添加一条项目目标数据"));
         }
 
@@ -773,7 +779,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             if (taskMapper.getByProjectId(projectId).stream()
                     .anyMatch(a -> ProjectStageEnum.DEMAND.getCode().equals(a.getStage())
                             && !TaskStatusEnum.INVALID.getCode().equals(a.getStatus()))) {
-                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
                         "需求规划阶段已关联任务，不可删除"));
             }
         }
@@ -782,11 +788,11 @@ public class ProjectComponentImpl implements ProjectComponent {
         if (node != null && node.getActualDate() != null) {
             if (ProjectStatusEnum.SUSPEND.getCode().equals(oldProject.getStatus())) {
                 // 编辑项目
-                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
                         "项目状态为暂停时，不能填写发布正式的实际时间"));
             }
             if (nodes.stream().map(ProjectNodeDO::getActualDate).anyMatch(Objects::isNull)) {
-                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
                         "请填写完其他节点的实际时间后，再填写发布正式的实际时间"));
             }
         }
@@ -794,7 +800,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         if (!Objects.equals(oldProject.getPjEstablishPublishDate(), newProject.getPjEstablishPublishDate()) &&
                 projectNodeFlowMapper.getByProjectId(projectId).stream()
                         .anyMatch(a -> ForwardFlowStatusEnum.AUDITING.getCode().equals(a.getStatus()))) {
-            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
                     "发布正式节点流程处于审核中，不能修改立项预期上线时间"));
         }
 
@@ -805,7 +811,7 @@ public class ProjectComponentImpl implements ProjectComponent {
                                 ForwardFlowStatusEnum.COMPLETE.getCode(),
                                 ForwardFlowStatusEnum.REJECT.getCode()))
                         .projectId(projectId).build()))) {
-            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ACCEPTANCE,
+            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ACCEPTANCE, true,
                     "存在验收流程，不能将项目验收改为否"));
         }
 
@@ -816,7 +822,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             List<ProjectAcceptanceDO> list = projectAcceptanceMapper.list(c);
             boolean allWithdraw = list.stream().allMatch(a -> ForwardFlowStatusEnum.WITHDRAW.getCode().equals(a.getStatus()));
             if (CollectionUtils.isEmpty(list) || allWithdraw) {
-                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ACCEPTANCE,
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ACCEPTANCE, true,
                         "您还没有发起项目验收,请验收通过后再发布"));
             }
             list = list.stream().filter(a -> !ForwardFlowStatusEnum.WITHDRAW.getCode().equals(a.getStatus()))
@@ -831,18 +837,18 @@ public class ProjectComponentImpl implements ProjectComponent {
                 //去除已撤回的验收,最新一条不是已通过 不能发布
                 if (ForwardFlowStatusEnum.AUDITING.getCode().equals(last.getStatus()) ||
                         ForwardFlowStatusEnum.REJECT.getCode().equals(last.getStatus())) {
-                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ACCEPTANCE,
+                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ACCEPTANCE, true,
                             "请确保所有验收人员验收通过后再发布"));
                 }
             });
         }
         if (released && Objects.equals(newProject.getIsPlatformPublish(), 1)) {
             if (!projectPublishPlanComponent.linkPublishPlan(newProject.getId())) {
-                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PUBLISH,
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PUBLISH, true,
                         "请关联发布计划"));
             }
             if (projectPublishPlanComponent.anyMatchNotFinished(newProject.getId())) {
-                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PUBLISH,
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PUBLISH, true,
                         "您的发布计划还未结束，请前往发布平台处理"));
             }
         }
@@ -860,7 +866,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             //有流程,实际时间不能修改
             if (flowTypes.contains(ProjectNodeEnum.getCodeByName(a.getName())) && oldNodeMap.containsKey(a.getName())
                     && !Objects.equals(oldNodeMap.get(a.getName()).getActualDate(), a.getActualDate())) {
-                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
                         String.format("%s节点存在审批流程，不能修改实际时间", a.getName())));
             }
         });
@@ -870,7 +876,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         if (publishNodeDO != null && publishNodeDO.getActualDate() == null
                 // 注意 checkProductRelease 方法里包含更新线下 bug 的逻辑（延迟执行）
                 && !checkProductRelease(projectModifyReq.getId(), delayTasks)) {
-            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.BUG_OFFLINE,
+            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.BUG_OFFLINE, true,
                     "该项目还有bug未关闭，请关闭后再发布"));
         }
 
@@ -880,7 +886,7 @@ public class ProjectComponentImpl implements ProjectComponent {
             TestBillDO oldTestBillDO = testBillMapper.selectByProjectId(projectId);
             if (submitTest.getActualDate() == null && oldSubmitTest != null &&
                     oldSubmitTest.getActualDate() != null && oldTestBillDO != null) {
-                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY_CRITICAL,
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
                         "提测后，不能修改提测节点的实际时间"));
             }
 
@@ -914,6 +920,47 @@ public class ProjectComponentImpl implements ProjectComponent {
                 dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.MAN_DAY,
                         "项目成员的人天明细数据未维护，请在项目人天中维护。"));
             }
+            boolean containsBase = projectNodeRecordMapper.contain(projectId);
+            if (containsBase) {
+                // 有基线版本校验
+                if (nodes.stream().anyMatch(n -> n.getPlanDate() == null)) {
+                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
+                            "需要维护好所有项目节点的计划时间"));
+                } else {
+                    if (DelayTypeEnum.SUBMIT_TEST_DELAY.getCode().equals(delayType)) {
+                        dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY,
+                                "提测计划时间发生了延迟，会生成新的版本。"));
+                    } else if (DelayTypeEnum.PUBLISH_DELAY.getCode().equals(delayType)) {
+                        if (publishNodeDO != null && publishNodeDO.getActualDate() != null) {
+                            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY,
+                                    "当前项目发布计划时间发生变更，需要变更流程通过才可以维护发布实际时间。"));
+                        }
+                    }
+                }
+            } else {
+                // 无基线版本校验
+                ProjectNodeDO developStartNode = nodeMap.get(ProjectNodeEnum.DEVELOP_START.getText());
+                if (developStartNode != null && developStartNode.getActualDate() != null) {
+                    if (nodes.stream().anyMatch(n -> n.getPlanDate() == null)) {
+                        dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
+                                "需要维护好所有项目节点的计划时间"));
+                    }
+                } else {
+                    List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
+                    if (memberEvaluateDOList.stream().filter(ProjectMemberEvaluateDO::getIncludeStat)
+                            .anyMatch(m -> m.getPlanWorkload() == null ||
+                                    m.getPlanWorkload().compareTo(BigDecimal.ZERO) == 0)) {
+                        // 未填写工作量
+                        dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PROJECT_POINT, true,
+                                "存在纳入积分考核的成员计划工作量未录入的情况，请将计划工作量数据维护完整后，才可以保存开发开始实际时间"));
+                    } else {
+                        // 已经填写工作量
+                        dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PROJECT_POINT,
+                                "开发开始实际时间维护完成后，计划工作量生成基线版本，生成项目原始积分，确认继续保存吗？"));
+                    }
+                }
+            }
+
         }
 
         return new ModifyProjectProcessedBundle(oldProject, newProject, nodes, delayTasks);

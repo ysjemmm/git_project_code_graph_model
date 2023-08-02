@@ -560,7 +560,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         ModifyProjectProcessedBundle bundle = projectComponent
                 .checkProjectModify(projectModifyReq, false, check -> {
-                    if (check.getType().isCritical()) {
+                    if (check.isCritical()) {
                         throw new BaseBizRuntimeException(check.getMsg());
                     }
                 });
@@ -1504,7 +1504,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<ModifyProjectCheckVO> result = new ArrayList<>();
         projectComponent.checkProjectModify(projectModifyReq, true, check ->
                 result.add(new ModifyProjectCheckVO(check.getType().ordinal(),
-                        check.getType().isCritical(), check.getMsg())));
+                        check.isCritical(), check.getMsg())));
         return BaseResult.success(result);
     }
 
