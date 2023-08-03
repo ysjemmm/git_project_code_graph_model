@@ -429,19 +429,21 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     }
 
     @Override
-    public Integer getBizDemandStatus(Integer pdStauts) {
-        log.info("产品需求状态 :{}", pdStauts);
-        if (Objects.equals(ProductDemandStatusEnum.WAITING.getCode(), pdStauts)
-                || Objects.equals(ProductDemandStatusEnum.SUSPEND.getCode(), pdStauts)) {
+    public Integer getBizDemandStatus(Integer pdStatus) {
+        log.info("产品需求状态 :{}", pdStatus);
+        if (Objects.equals(ProductDemandStatusEnum.WAITING.getCode(), pdStatus)) {
             return BizDemandStatusEnum.PD_LINKED.getCode();
         }
-        if (Objects.equals(ProductDemandStatusEnum.INCLUDED.getCode(), pdStauts)) {
+        if (Objects.equals(ProductDemandStatusEnum.SUSPEND.getCode(), pdStatus)) {
+            return BizDemandStatusEnum.PD_SUSPEND.getCode();
+        }
+        if (Objects.equals(ProductDemandStatusEnum.INCLUDED.getCode(), pdStatus)) {
             return BizDemandStatusEnum.INCLUDE_PROJECT.getCode();
         }
-        if (Objects.equals(ProductDemandStatusEnum.PROGRESS.getCode(), pdStauts)) {
+        if (Objects.equals(ProductDemandStatusEnum.PROGRESS.getCode(), pdStatus)) {
             return BizDemandStatusEnum.PROJECTING.getCode();
         }
-        if (Objects.equals(ProductDemandStatusEnum.ONLINE.getCode(), pdStauts)) {
+        if (Objects.equals(ProductDemandStatusEnum.ONLINE.getCode(), pdStatus)) {
             return BizDemandStatusEnum.AVAILABLE.getCode();
         }
 

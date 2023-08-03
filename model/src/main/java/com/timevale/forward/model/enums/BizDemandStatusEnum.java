@@ -3,19 +3,19 @@ package com.timevale.forward.model.enums;
 import lombok.Getter;
 
 /**
+ * 业务需求状态枚举
+ *
  * @author by YangXu
  * @date 2021/12/15 17:13
  */
 @Getter
 public enum BizDemandStatusEnum {
-    /**
-     * 业务需求状态
-     */
     EVALUATE(0, "待评估"),
     RECEIVED(10, "已接收"),
     TO_CONFIRM(13, "待确认"),
     COMPLETED(15, "已完成无需开发"),
     PD_LINKED(17, "已关联产品需求"),
+    PD_SUSPEND(18, "项目已暂停"),
     INCLUDE_PROJECT(20, "已列入项目"),
     PROJECTING(30, "项目进行中"),
     AVAILABLE(40, "已完成上线"),

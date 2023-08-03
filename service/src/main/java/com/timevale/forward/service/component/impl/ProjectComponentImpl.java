@@ -732,7 +732,7 @@ public class ProjectComponentImpl implements ProjectComponent {
     }
 
     @Override
-    public ModifyProjectProcessedBundle checkProjectModify(ProjectModifyReq projectModifyReq, boolean additionalInfo,
+    public ModifyProjectProcessedBundle checkProjectModify(ProjectModifyReq projectModifyReq,
                                                            Consumer<ModifyProjectCheckDTO> dataHandler) {
         final Long projectId = projectModifyReq.getId();
         ProjectDO oldProject = projectMapper.get(projectId);
@@ -784,8 +784,9 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         }
         // 计算项目状态
-        ProjectNodeDO node = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText());
-        if (node != null && node.getActualDate() != null) {
+        ProjectNodeDO publishNode = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText());
+        boolean released = publishNode != null && publishNode.getActualDate() != null;
+        if (released) {
             if (ProjectStatusEnum.SUSPEND.getCode().equals(oldProject.getStatus())) {
                 // 编辑项目
                 dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
@@ -794,6 +795,9 @@ public class ProjectComponentImpl implements ProjectComponent {
             if (nodes.stream().map(ProjectNodeDO::getActualDate).anyMatch(Objects::isNull)) {
                 dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
                         "请填写完其他节点的实际时间后，再填写发布正式的实际时间"));
+            } else {
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY,
+                        "项目节点的实际时间已全部填入，状态将变为已发布，已发布的项目不可再编辑。"));
             }
         }
 
@@ -815,8 +819,6 @@ public class ProjectComponentImpl implements ProjectComponent {
                     "存在验收流程，不能将项目验收改为否"));
         }
 
-        boolean released = nodes.stream().anyMatch(a ->
-                ProjectNodeEnum.PUBLISH_OFFICIAL.getText().equals(a.getName()) && a.getActualDate() != null);
         if (released && YesOrNoEnum.YES.getCode().equals(newProject.getIsAcceptance())) {
             ProjectAcceptanceListCondition c = ProjectAcceptanceListCondition.builder().projectId(newProject.getId()).build();
             List<ProjectAcceptanceDO> list = projectAcceptanceMapper.list(c);
@@ -872,8 +874,7 @@ public class ProjectComponentImpl implements ProjectComponent {
         });
 
         // 项目发布时需要校验未关闭bug
-        ProjectNodeDO publishNodeDO = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText());
-        if (publishNodeDO != null && publishNodeDO.getActualDate() == null
+        if (released
                 // 注意 checkProductRelease 方法里包含更新线下 bug 的逻辑（延迟执行）
                 && !checkProductRelease(projectModifyReq.getId(), delayTasks)) {
             dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.BUG_OFFLINE, true,
@@ -907,61 +908,65 @@ public class ProjectComponentImpl implements ProjectComponent {
             }
         }
 
-        if (additionalInfo) {
+        if (released) {
+            // 仅发布节点需要校验
             List<String> result = projectDocumentComponent.docNeedFillIn(projectId,
                     nodes, newProject.getType());
             if (!result.isEmpty()) {
                 dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.DOCUMENT,
                         String.join("，", result) +
-                        "未维护，请在项目文档中按要求维护。若无文档，请维护原因说明。"));
+                                "未维护，请在项目文档中按要求维护。若无文档，请维护原因说明。"));
             }
             List<ManDayDO> manDayDOList = manDayMapper.getByProjectId(projectId);
             if (manDayDOList.isEmpty()) {
                 dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.MAN_DAY,
                         "项目成员的人天明细数据未维护，请在项目人天中维护。"));
             }
-            boolean containsBase = projectNodeRecordMapper.contain(projectId);
-            if (containsBase) {
-                // 有基线版本校验
-                if (nodes.stream().anyMatch(n -> n.getPlanDate() == null)) {
-                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
-                            "需要维护好所有项目节点的计划时间"));
-                } else {
-                    if (DelayTypeEnum.SUBMIT_TEST_DELAY.getCode().equals(delayType)) {
-                        dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY,
-                                "提测计划时间发生了延迟，会生成新的版本。"));
-                    } else if (DelayTypeEnum.PUBLISH_DELAY.getCode().equals(delayType)) {
-                        if (publishNodeDO != null && publishNodeDO.getActualDate() != null) {
-                            dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY,
-                                    "当前项目发布计划时间发生变更，需要变更流程通过才可以维护发布实际时间。"));
-                        }
-                    }
-                }
+        }
+        boolean containsBase = projectNodeRecordMapper.contain(projectId);
+        if (containsBase) {
+            // 有基线版本校验
+            if (nodes.stream().anyMatch(n -> n.getPlanDate() == null)) {
+                dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
+                        "需要维护好所有项目节点的计划时间"));
             } else {
-                // 无基线版本校验
-                ProjectNodeDO developStartNode = nodeMap.get(ProjectNodeEnum.DEVELOP_START.getText());
-                if (developStartNode != null && developStartNode.getActualDate() != null) {
-                    if (nodes.stream().anyMatch(n -> n.getPlanDate() == null)) {
-                        dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
-                                "需要维护好所有项目节点的计划时间"));
-                    }
-                } else {
-                    List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
-                    if (memberEvaluateDOList.stream().filter(ProjectMemberEvaluateDO::getIncludeStat)
-                            .anyMatch(m -> m.getPlanWorkload() == null ||
-                                    m.getPlanWorkload().compareTo(BigDecimal.ZERO) == 0)) {
-                        // 未填写工作量
-                        dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PROJECT_POINT, true,
-                                "存在纳入积分考核的成员计划工作量未录入的情况，请将计划工作量数据维护完整后，才可以保存开发开始实际时间"));
-                    } else {
-                        // 已经填写工作量
-                        dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PROJECT_POINT,
-                                "开发开始实际时间维护完成后，计划工作量生成基线版本，生成项目原始积分，确认继续保存吗？"));
+                if (DelayTypeEnum.SUBMIT_TEST_DELAY.getCode().equals(delayType)) {
+                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY,
+                            "提测计划时间发生了延迟，会生成新的版本。"));
+                } else if (DelayTypeEnum.PUBLISH_DELAY.getCode().equals(delayType)) {
+                    if (released) {
+                        dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY,
+                                "当前项目发布计划时间发生变更，需要变更流程通过才可以维护发布实际时间。"));
                     }
                 }
             }
-
+        } else {
+            // 无基线版本校验
+            ProjectNodeDO developStartNode = nodeMap.get(ProjectNodeEnum.DEVELOP_START.getText());
+            if (developStartNode != null && developStartNode.getActualDate() != null) {
+                if (nodes.stream().anyMatch(n -> n.getPlanDate() == null)) {
+                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
+                            "已开始开发的项目需要维护好所有项目节点的计划时间"));
+                } else {
+                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY,
+                            "开发开始实际时间维护完成后，计划工作量生成基线版本，生成项目原始积分。"));
+                }
+            } else {
+                List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
+                if (memberEvaluateDOList.stream().filter(ProjectMemberEvaluateDO::getIncludeStat)
+                        .anyMatch(m -> m.getPlanWorkload() == null ||
+                                m.getPlanWorkload().compareTo(BigDecimal.ZERO) == 0)) {
+                    // 未填写工作量
+                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PROJECT_POINT, true,
+                            "存在纳入积分考核的成员计划工作量未录入的情况，请将计划工作量数据维护完整后，才可以保存开发开始实际时间"));
+                } else {
+                    // 已经填写工作量
+                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PROJECT_POINT,
+                            "开发开始实际时间维护完成后，计划工作量生成基线版本，生成项目原始积分，确认继续保存吗？"));
+                }
+            }
         }
+
 
         return new ModifyProjectProcessedBundle(oldProject, newProject, nodes, delayTasks);
     }

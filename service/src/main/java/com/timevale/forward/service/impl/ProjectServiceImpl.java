@@ -559,7 +559,7 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("项目修改接收参数:{}", projectModifyReq);
 
         ModifyProjectProcessedBundle bundle = projectComponent
-                .checkProjectModify(projectModifyReq, false, check -> {
+                .checkProjectModify(projectModifyReq, check -> {
                     if (check.isCritical()) {
                         throw new BaseBizRuntimeException(check.getMsg());
                     }
@@ -1502,7 +1502,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public BaseResult<List<ModifyProjectCheckVO>> checkForFinishProject(ProjectModifyReq projectModifyReq) {
         List<ModifyProjectCheckVO> result = new ArrayList<>();
-        projectComponent.checkProjectModify(projectModifyReq, true, check ->
+        projectComponent.checkProjectModify(projectModifyReq, check ->
                 result.add(new ModifyProjectCheckVO(check.getType().ordinal(),
                         check.isCritical(), check.getMsg())));
         return BaseResult.success(result);

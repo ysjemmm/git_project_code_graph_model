@@ -91,11 +91,14 @@ public interface ProjectComponent {
      */
     void updateBizDomain(Long projectId, Collection<Long>bizDomainIds);
 
+    
     /**
-     * 检查项目更新参数
-     *
-     * @return 参数更新影响范围和校验结果
+     * 检查项目修改
+     * @param projectModifyReq 项目修改请求
+     * @param dataHandler 数据处理器
+     * @return {@link ModifyProjectProcessedBundle}
      */
-    ModifyProjectProcessedBundle checkProjectModify(ProjectModifyReq projectModifyReq, boolean additionalInfo,
+    ModifyProjectProcessedBundle checkProjectModify(ProjectModifyReq projectModifyReq,
                                                     Consumer<ModifyProjectCheckDTO> dataHandler);
+
 }
