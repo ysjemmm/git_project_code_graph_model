@@ -9,9 +9,11 @@ import lombok.Getter;
 @Getter
 public enum ProductDemandStatusEnum {
     /**
-     * 0待排期,10已列入项目,20项目进行中,30已完成上线,-10已暂停,-20已作废
+     * 0待排期,5项目已暂停,10已列入项目,20项目进行中,30已完成上线,-10已暂停,-20已作废
      */
     WAITING(0, "待排期"),
+
+    PJ_SUSPEND(5, "项目已暂停"),
 
     INCLUDED(10, "已列入项目"),
 
@@ -44,6 +46,7 @@ public enum ProductDemandStatusEnum {
     public static boolean unfinished(Integer code) {
         return WAITING.code.equals(code) ||
                 INCLUDED.code.equals(code) ||
+                PJ_SUSPEND.code.equals(code) ||
                 PROGRESS.code.equals(code) ||
                 SUSPEND.code.equals(code);
     }

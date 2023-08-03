@@ -147,8 +147,11 @@ public class ProductDemandComponentImpl implements ProductDemandComponent {
 
         // 更新项目状态
         Integer pdStatus = ProductDemandStatusEnum.WAITING.getCode();
-        if (ProjectStatusEnum.WAITING.getCode().equals(status) || ProjectStatusEnum.SUSPEND.getCode().equals(status)) {
+        if (ProjectStatusEnum.WAITING.getCode().equals(status)) {
             pdStatus = ProductDemandStatusEnum.INCLUDED.getCode();
+            productDemandMapper.updateByIds(existProductDemandIds, pdStatus, false);
+        } else if (ProjectStatusEnum.SUSPEND.getCode().equals(status)) {
+            pdStatus = ProductDemandStatusEnum.PJ_SUSPEND.getCode();
             productDemandMapper.updateByIds(existProductDemandIds, pdStatus, false);
         } else if (ProjectStatusEnum.PLANING.getCode().equals(status)
                 || ProjectStatusEnum.DEVING.getCode().equals(status)

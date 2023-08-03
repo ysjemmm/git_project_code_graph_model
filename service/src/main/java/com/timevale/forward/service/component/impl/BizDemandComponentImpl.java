@@ -431,14 +431,15 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     @Override
     public Integer getBizDemandStatus(Integer pdStatus) {
         log.info("产品需求状态 :{}", pdStatus);
-        if (Objects.equals(ProductDemandStatusEnum.WAITING.getCode(), pdStatus)) {
+        if (Objects.equals(ProductDemandStatusEnum.WAITING.getCode(), pdStatus) ||
+                Objects.equals(ProductDemandStatusEnum.SUSPEND.getCode(), pdStatus)) {
             return BizDemandStatusEnum.PD_LINKED.getCode();
-        }
-        if (Objects.equals(ProductDemandStatusEnum.SUSPEND.getCode(), pdStatus)) {
-            return BizDemandStatusEnum.PD_SUSPEND.getCode();
         }
         if (Objects.equals(ProductDemandStatusEnum.INCLUDED.getCode(), pdStatus)) {
             return BizDemandStatusEnum.INCLUDE_PROJECT.getCode();
+        }
+        if (Objects.equals(ProductDemandStatusEnum.PJ_SUSPEND.getCode(), pdStatus)) {
+            return BizDemandStatusEnum.PJ_SUSPEND.getCode();
         }
         if (Objects.equals(ProductDemandStatusEnum.PROGRESS.getCode(), pdStatus)) {
             return BizDemandStatusEnum.PROJECTING.getCode();
@@ -487,6 +488,8 @@ public class BizDemandComponentImpl implements BizDemandComponent {
             bdStatus = BizDemandStatusEnum.INCLUDE_PROJECT.getCode();
         } else if (ProductDemandStatusEnum.PROGRESS.getCode().equals(minPdStatus)) {
             bdStatus = BizDemandStatusEnum.PROJECTING.getCode();
+        } else if (ProductDemandStatusEnum.PJ_SUSPEND.getCode().equals(minPdStatus)) {
+            bdStatus = BizDemandStatusEnum.PJ_SUSPEND.getCode();
         } else if (ProductDemandStatusEnum.ONLINE.getCode().equals(minPdStatus)) {
             bdStatus = BizDemandStatusEnum.AVAILABLE.getCode();
         } else if (ProductDemandStatusEnum.WAITING.getCode().equals(minPdStatus)
@@ -501,8 +504,11 @@ public class BizDemandComponentImpl implements BizDemandComponent {
     @Override
     public BizDemandStatusEnum getBizDemandStatusByProjectStatus(Integer projectStatus) {
         ProjectStatusEnum status = ProjectStatusEnum.getByCode(projectStatus);
-        if (status == ProjectStatusEnum.WAITING || status == ProjectStatusEnum.SUSPEND) {
+        if (status == ProjectStatusEnum.WAITING) {
             return BizDemandStatusEnum.INCLUDE_PROJECT;
+        }
+        if (status == ProjectStatusEnum.SUSPEND) {
+            return BizDemandStatusEnum.PJ_SUSPEND;
         }
         if (status == ProjectStatusEnum.CONCLUSION ||
                 status == ProjectStatusEnum.RELEASED) {

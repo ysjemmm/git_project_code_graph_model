@@ -15,7 +15,7 @@ public enum BizDemandStatusEnum {
     TO_CONFIRM(13, "待确认"),
     COMPLETED(15, "已完成无需开发"),
     PD_LINKED(17, "已关联产品需求"),
-    PD_SUSPEND(18, "项目已暂停"),
+    PJ_SUSPEND(19, "项目已暂停"),
     INCLUDE_PROJECT(20, "已列入项目"),
     PROJECTING(30, "项目进行中"),
     AVAILABLE(40, "已完成上线"),
@@ -25,26 +25,30 @@ public enum BizDemandStatusEnum {
     private final Integer code;
     private final String text;
 
-    BizDemandStatusEnum(Integer code, String text){
+    BizDemandStatusEnum(Integer code, String text) {
         this.code = code;
         this.text = text;
     }
 
-    public static String getTextByCode(Integer code){
-        for (BizDemandStatusEnum e : BizDemandStatusEnum.values()){
-            if(e.getCode().equals(code)){
+    public static String getTextByCode(Integer code) {
+        for (BizDemandStatusEnum e : BizDemandStatusEnum.values()) {
+            if (e.getCode().equals(code)) {
                 return e.text;
             }
         }
         return "";
     }
 
-    public static Boolean statusNeedNotice(Integer code){
-        return code.equals(INCLUDE_PROJECT.getCode()) || code.equals(PROJECTING.getCode()) || code.equals(AVAILABLE.getCode());
+    public static Boolean statusNeedNotice(Integer code) {
+        return INCLUDE_PROJECT.getCode().equals(code) ||
+                PJ_SUSPEND.getCode().equals(code) ||
+                PROJECTING.getCode().equals(code) ||
+                AVAILABLE.getCode().equals(code);
     }
 
-    public static Boolean statusNoNeedTodo(Integer code){
-        return code.equals(REJECT.getCode()) || code.equals(INVALID.getCode());
+    public static Boolean statusNoNeedTodo(Integer code) {
+        return REJECT.getCode().equals(code) ||
+                INVALID.getCode().equals(code);
     }
 
     public static Boolean unfinished(Integer code) {
@@ -53,6 +57,7 @@ public enum BizDemandStatusEnum {
                 TO_CONFIRM.getCode().equals(code) ||
                 PD_LINKED.getCode().equals(code) ||
                 INCLUDE_PROJECT.getCode().equals(code) ||
+                PJ_SUSPEND.getCode().equals(code) ||
                 PROJECTING.getCode().equals(code);
     }
 

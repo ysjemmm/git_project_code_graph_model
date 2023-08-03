@@ -1118,6 +1118,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .stream().map(ProjectProductDemandDO::getProductDemandId).collect(Collectors.toList());
         condition.setFilterProductDemandIds(productDemandIds);
         condition.setStatus(Lists.newArrayList(ProductDemandStatusEnum.WAITING.getCode()
+                , ProductDemandStatusEnum.PJ_SUSPEND.getCode()
                 , ProductDemandStatusEnum.INCLUDED.getCode()
                 , ProductDemandStatusEnum.PROGRESS.getCode()
                 , ProductDemandStatusEnum.ONLINE.getCode()));

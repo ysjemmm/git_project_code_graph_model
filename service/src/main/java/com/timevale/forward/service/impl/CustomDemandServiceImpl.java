@@ -373,6 +373,7 @@ public class CustomDemandServiceImpl implements CustomDemandService {
         }
         if(CollectionUtils.isEmpty(condition.getStatus())){
             condition.setStatus(Lists.newArrayList(ProductDemandStatusEnum.WAITING.getCode()
+                    , ProductDemandStatusEnum.PJ_SUSPEND.getCode()
                     , ProductDemandStatusEnum.INCLUDED.getCode()
                     , ProductDemandStatusEnum.PROGRESS.getCode()
                     , ProductDemandStatusEnum.ONLINE.getCode()
@@ -496,7 +497,6 @@ public class CustomDemandServiceImpl implements CustomDemandService {
                 }
             } catch (IllegalAccessException e) {
                 log.error("字段比较异常", e);
-                e.printStackTrace();
             }
         }
         log.info("重复数据,newObj:{},id:{}", newObj,oldObj.getId());

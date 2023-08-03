@@ -515,6 +515,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (CollUtil.isEmpty(status)) {
             condition.setStatusList(Lists.newArrayList(
                     BizDemandStatusEnum.RECEIVED.getCode()
+                    , BizDemandStatusEnum.PJ_SUSPEND.getCode()
                     , BizDemandStatusEnum.INCLUDE_PROJECT.getCode()
                     , BizDemandStatusEnum.PROJECTING.getCode()
                     , BizDemandStatusEnum.PD_LINKED.getCode()
@@ -702,6 +703,7 @@ public class ProductDemandServiceImpl implements ProductDemandService {
         if (CollectionUtils.isEmpty(status)) {
             condition.setStatus(Lists.newArrayList(
                     BizDemandStatusEnum.RECEIVED.getCode()
+                    , BizDemandStatusEnum.PJ_SUSPEND.getCode()
                     , BizDemandStatusEnum.INCLUDE_PROJECT.getCode()
                     , BizDemandStatusEnum.PROJECTING.getCode()
                     , BizDemandStatusEnum.PD_LINKED.getCode()

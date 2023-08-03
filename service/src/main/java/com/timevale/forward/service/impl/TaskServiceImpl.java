@@ -432,6 +432,7 @@ public class TaskServiceImpl implements TaskService {
             condition.setId(null);
         }
         condition.setStatus(Lists.newArrayList(ProductDemandStatusEnum.INCLUDED.getCode()
+                , ProductDemandStatusEnum.PJ_SUSPEND.getCode()
                 , ProductDemandStatusEnum.PROGRESS.getCode()
                 , ProductDemandStatusEnum.ONLINE.getCode()));
         PageHelper.startPage(taskLinkProductDemandQueryList.getPageNum(), taskLinkProductDemandQueryList.getPageSize(), CommonConstant.DEFAULT_ORDER_BY);
@@ -552,25 +553,23 @@ public class TaskServiceImpl implements TaskService {
 
         checkPlanDate(taskDos.get(0));
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
-        taskSimples.forEach(a -> {
-            threadPoolTaskExecutor.execute(() -> {
-                TaskDO taskDO = TaskCopier.INSTANCE.convert(a);
-                taskDO.setDesc(StringUtils.EMPTY);
-                taskDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
-                taskDO.setCreateManId(userInfo.getId());
+        taskSimples.forEach(a -> threadPoolTaskExecutor.execute(() -> {
+            TaskDO taskDO = TaskCopier.INSTANCE.convert(a);
+            taskDO.setDesc(StringUtils.EMPTY);
+            taskDO.setCreateMan(userInfo.getAlias() + CommonConstant.JOIN_LINE + userInfo.getName());
+            taskDO.setCreateManId(userInfo.getId());
 
-                //填充状态
-                fillStatus(taskDO);
+            //填充状态
+            fillStatus(taskDO);
 
-                List<String> executorIds = a.getExecutors().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
+            List<String> executorIds = a.getExecutors().stream().map(PersonAddReq::getUserId).collect(Collectors.toList());
 
-                sendDingTodo(taskDO, executorIds, userInfo.getId());
+            sendDingTodo(taskDO, executorIds, userInfo.getId());
 
-                taskMapper.insert(taskDO);
-                //执行人
-                personComponent.add(a.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
-            });
-        });
+            taskMapper.insert(taskDO);
+            //执行人
+            personComponent.add(a.getExecutors(), taskDO.getId(), PersonTypeEnum.TASK_EXECUTOR.getCode());
+        }));
 
         // 执行人
         List<PersonAddReq> executorList = taskSimples.stream()
@@ -855,7 +854,7 @@ public class TaskServiceImpl implements TaskService {
                 } else {
                     List<String> tmpExecutorIds = new ArrayList<>(executorIds);
                     tmpExecutorIds.removeAll(existExecutorIds);
-                    if (tmpExecutorIds.size() != 0) {
+                    if (!tmpExecutorIds.isEmpty()) {
                         //执行人数量不变,改变了人员
                         executorChanged = true;
                     }

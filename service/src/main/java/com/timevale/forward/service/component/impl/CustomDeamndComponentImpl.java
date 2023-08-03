@@ -4,8 +4,14 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.CustomDemandListCondition;
-import com.timevale.forward.dal.dao.*;
-import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.dal.dao.CustomDemandMapper;
+import com.timevale.forward.dal.dao.ProductCustomDemandMapper;
+import com.timevale.forward.dal.dao.ProductDemandMapper;
+import com.timevale.forward.dal.dao.ProjectMapper;
+import com.timevale.forward.dal.entity.CustomDemandDO;
+import com.timevale.forward.dal.entity.ProductCustomDemandDO;
+import com.timevale.forward.dal.entity.ProductDemandDO;
+import com.timevale.forward.dal.entity.ProjectDO;
 import com.timevale.forward.facade.api.result.CustomDemandVO;
 import com.timevale.forward.model.bo.ProductEndBO;
 import com.timevale.forward.model.enums.BizDemandStatusEnum;
@@ -46,9 +52,6 @@ public class CustomDeamndComponentImpl implements CustomDemandComponent {
 
     @Resource
     private ProductDemandMapper productDemandMapper;
-
-    @Resource
-    private ProjectProductDemandMapper projectProductDemandMapper;
 
     @Value("${custom.demand.receiver}")
     private String receiver;
@@ -104,6 +107,8 @@ public class CustomDeamndComponentImpl implements CustomDemandComponent {
         int newStatus;
         if (ProductDemandStatusEnum.INCLUDED.getCode().equals(status)) {
             newStatus = BizDemandStatusEnum.INCLUDE_PROJECT.getCode();
+        } else if (ProductDemandStatusEnum.PJ_SUSPEND.getCode().equals(status)) {
+            newStatus = BizDemandStatusEnum.PJ_SUSPEND.getCode();
         } else if (ProductDemandStatusEnum.PROGRESS.getCode().equals(status)) {
             newStatus = BizDemandStatusEnum.PROJECTING.getCode();
         } else if (ProductDemandStatusEnum.ONLINE.getCode().equals(status)) {
