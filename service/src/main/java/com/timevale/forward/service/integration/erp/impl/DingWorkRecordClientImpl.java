@@ -1,31 +1,21 @@
 package com.timevale.forward.service.integration.erp.impl;
 
-import com.google.common.collect.Maps;
 import com.timevale.erp.message.service.api.DingWorkRecordService;
-import com.timevale.erp.message.service.model.DingCreateTodoTaskInput;
-import com.timevale.erp.message.service.model.DingDeleteTodoTaskInput;
-import com.timevale.erp.message.service.model.DingGetTodoTaskInput;
-import com.timevale.erp.message.service.model.DingUpdateTodoTaskInput;
+import com.timevale.erp.message.service.model.*;
 import com.timevale.erp.message.service.result.DingTodoTaskResponseBody;
 import com.timevale.forward.service.integration.erp.DingWorkRecordClient;
-import com.timevale.forward.service.integration.erp.model.CreateTodoTaskMsg;
-import com.timevale.forward.service.integration.erp.model.DeleteTodoTaskMsg;
-import com.timevale.forward.service.integration.erp.model.GetTodoTaskMsg;
-import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
-import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.forward.service.integration.erp.model.*;
+import com.timevale.mandarin.common.result.BaseResult;
 import com.timevale.mandarin.common.result.QueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * 钉钉待办消息
@@ -41,6 +31,61 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
     private DingWorkRecordService dingWorkRecordService;
 
     @Override
+    public String addTask(AddDingTodoReq req) {
+
+        String title = req.title();
+        String receiveId = req.receiveId();
+        String url = req.url();
+
+        if (StringUtils.isEmpty(title)
+                || StringUtils.isEmpty(receiveId)
+                || StringUtils.isEmpty(url)
+                || StringUtils.isEmpty(req.content())) {
+            log.warn("[ErpMsgCaller.createDingWorkRecord] 参数有误: title={}, receiveId={}, url={}", title, receiveId, url);
+            return null;
+        }
+
+        DingWorkRecordContent content = new DingWorkRecordContent();
+        content.setTitle(req.title());
+        content.setContent(req.content());
+
+        DingWorkRecordAddInput input = new DingWorkRecordAddInput();
+
+        input.setTitle(title);
+        input.setReceive(receiveId);
+        input.setUrl(url);
+        input.setContents(Collections.singletonList(content));
+        input.setPcOpenType(2);
+
+        try {
+            log.info("[ErpMsgCaller.createDingWorkRecord] request req: {}", input);
+            QueryResult<String> result = dingWorkRecordService.add(input);
+            log.info("[ErpMsgCaller.createDingWorkRecord] result: {}", result);
+            if (result != null && result.isSuccess()) {
+                return result.getResultObject();
+            }
+        } catch (Throwable e) {
+            log.error("[ErpMsgCaller.createDingWorkRecord] 创建钉钉待办异常: title=" + title, e);
+        }
+
+        return null;
+    }
+
+    @Override
+    public void finishTask(String recordId, String userId) {
+        DingWorkRecordUpdateInput input = new DingWorkRecordUpdateInput();
+        input.setRecordId(recordId);
+        input.setUserId(userId);
+        try {
+            log.info("[ErpMsgCaller.finishDingWorkRecord] request param: {}", input);
+            BaseResult result = dingWorkRecordService.finishWorkRecord(input);
+            log.info("[ErpMsgCaller.finishDingWorkRecord] result: {}", result);
+        } catch (Throwable e) {
+            log.error("[ErpMsgCaller.finishDingWorkRecord] 更新钉钉待办异常: recordId={}", recordId, e);
+        }
+    }
+
+    @Override
     public String addTask(CreateTodoTaskMsg createTodoTaskMsg) {
         final DingCreateTodoTaskInput input = new DingCreateTodoTaskInput();
         input.setTitle(createTodoTaskMsg.getTitle());
@@ -49,7 +94,7 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
         input.setDueTime(createTodoTaskMsg.getDueTime());
         try {
             return dingWorkRecordService.addTask(input).getResultObject();
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("[erpMessage]创建待办失败  error: " + e.getMessage() + " 发送通知信息：" + createTodoTaskMsg);
         }
         return StringUtils.EMPTY;
@@ -67,7 +112,7 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
         input.setDueTime(updateTodoTaskMsg.getDueTime());
         try {
             dingWorkRecordService.updateTask(input);
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("[erpMessage]更新待办失败  error: " + e.getMessage() + " 发送通知信息：" + updateTodoTaskMsg);
         }
     }
@@ -79,7 +124,7 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
         input.setUnionId(deleteTodoTaskMsg.getUnionId());
         try {
             dingWorkRecordService.deleteTask(input);
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("[erpMessage]删除待办失败  error: " + e.getMessage() + " 发送通知信息：" + deleteTodoTaskMsg);
         }
     }
@@ -91,10 +136,10 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
         input.setUnionId(getTodoTaskMsg.getUnionId());
         try {
             QueryResult<DingTodoTaskResponseBody> task = dingWorkRecordService.getTask(input);
-            if(task.isSuccess()){
+            if (task.isSuccess()) {
                 return dingWorkRecordService.getTask(input).getResultObject();
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("[erpMessage]获取待办失败  error: " + e.getMessage() + " 发送通知信息：" + getTodoTaskMsg);
         }
         return null;
@@ -106,7 +151,7 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
         getTodoTaskMsgList.parallelStream()
                 .forEach(e -> {
                     DingTodoTaskResponseBody task = getTask(e);
-                    if(task != null){
+                    if (task != null) {
                         result.put(task.getId(), task);
                     }
                 });

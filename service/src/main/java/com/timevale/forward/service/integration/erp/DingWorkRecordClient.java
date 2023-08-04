@@ -1,10 +1,7 @@
 package com.timevale.forward.service.integration.erp;
 
 import com.timevale.erp.message.service.result.DingTodoTaskResponseBody;
-import com.timevale.forward.service.integration.erp.model.CreateTodoTaskMsg;
-import com.timevale.forward.service.integration.erp.model.DeleteTodoTaskMsg;
-import com.timevale.forward.service.integration.erp.model.GetTodoTaskMsg;
-import com.timevale.forward.service.integration.erp.model.UpdateTodoTaskMsg;
+import com.timevale.forward.service.integration.erp.model.*;
 
 import java.util.List;
 import java.util.Map;
@@ -16,6 +13,21 @@ import java.util.Map;
  * @date 2022/01/25 10:51
  */
 public interface DingWorkRecordClient {
+
+    /**
+     * 新版本新增待办
+     * @param req 新增待办参数
+     * @return 新增待办id
+     */
+    String addTask(AddDingTodoReq req);
+
+    /**
+     * 完成钉钉待办
+     * @param recordId 待办id
+     * @param userId 完成人id
+     */
+    void finishTask(String recordId, String userId);
+
     /**
      * 新增待办
      * @param createTodoTaskMsg 待办请求类型
