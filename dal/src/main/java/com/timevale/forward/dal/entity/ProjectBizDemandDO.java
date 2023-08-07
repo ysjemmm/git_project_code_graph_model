@@ -1,4 +1,4 @@
-package generator.domain;
+package com.timevale.forward.dal.entity;
 
 import lombok.Getter;
 import lombok.Setter;

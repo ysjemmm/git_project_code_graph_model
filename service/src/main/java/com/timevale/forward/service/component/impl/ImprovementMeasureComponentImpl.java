@@ -176,7 +176,7 @@ public class ImprovementMeasureComponentImpl implements ImprovementMeasureCompon
                 .executorIds(Lists.newArrayList(executorUnionId))
                 .dueTime(improvementMeasureDO.getImplementationTime().getTime())
                 .build();
-        String todoId = dingWorkRecordClient.addTask(todoTaskMsg);
+        String todoId = dingWorkRecordClient.addTodoTask(todoTaskMsg);
 
         // 保存待办id
         if (StringUtils.isEmpty(todoId)) {

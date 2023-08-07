@@ -220,8 +220,19 @@ public interface ProjectService {
      */
     BaseResult<ConclusionFormVO> conclusionForm(ProjectConclusionReq req);
 
+     /**
+     * 项目列表
+     *
+     * @param query 查询条件
+     * @return {@link BaseResult}<{@link PageQueryResult<ProjectSimpleVO>}>
+     */
     BaseResult<PageQueryResult<ProjectSimpleVO>> pageAll(ProjectPageQuery query);
 
+    /**
+     * 对完成项目做检查
+     * @param projectModifyReq 项目更新亲贵
+     * @return 项目检查结果集合
+     */
     BaseResult<List<ModifyProjectCheckVO>> checkForFinishProject(ProjectModifyReq projectModifyReq);
 
 }

@@ -19,21 +19,21 @@ public interface DingWorkRecordClient {
      * @param req 新增待办参数
      * @return 新增待办id
      */
-    String addTask(AddDingTodoReq req);
+    String addTodoTask(AddDingTodoReq req);
 
     /**
      * 完成钉钉待办
      * @param recordId 待办id
      * @param userId 完成人id
      */
-    void finishTask(String recordId, String userId);
+    void finishTodoTask(String recordId, String userId);
 
     /**
      * 新增待办
      * @param createTodoTaskMsg 待办请求类型
      * @return 待办id
      */
-    String addTask(CreateTodoTaskMsg createTodoTaskMsg);
+    String addTodoTask(CreateTodoTaskMsg createTodoTaskMsg);
 
     /**
      * 更新待办

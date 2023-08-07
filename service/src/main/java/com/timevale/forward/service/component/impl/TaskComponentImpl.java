@@ -261,7 +261,7 @@ public class TaskComponentImpl implements TaskComponent {
                 .unionId(unionId)
                 .executorIds(Lists.newArrayList(map.values()))
                 .dueTime(taskDO.getPlanEndDate().getTime()).build();
-        String todoId = dingWorkRecordClient.addTask(createTodoTaskMsg);
+        String todoId = dingWorkRecordClient.addTodoTask(createTodoTaskMsg);
         taskDO.setTodoId(todoId);
         if (StringUtils.isEmpty(todoId)) {
             log.info("新增待办异常,createTodoTaskMsg :{}", createTodoTaskMsg);

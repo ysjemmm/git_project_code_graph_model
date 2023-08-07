@@ -34,4 +34,9 @@ public class AddDingTodoReq {
      */
     private String content;
 
+    /**
+     * 截止时间
+     */
+    private Long dueTime;
+
 }

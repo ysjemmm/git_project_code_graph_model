@@ -18,7 +18,7 @@
         </foreach>
     </update>
 
-    <select id="selectByBizDemandIds" resultType="generator.domain.ProjectBizDemandDO">
+    <select id="selectByBizDemandIds" resultType="com.timevale.forward.dal.entity.ProjectBizDemandDO">
         select * from project_biz_demand
         <where>
             biz_demand_id in

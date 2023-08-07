@@ -1,5 +1,6 @@
 package com.timevale.forward.service.integration.erp.impl;
 
+import com.timevale.erp.message.service.api.DingTodoTaskService;
 import com.timevale.erp.message.service.api.DingWorkRecordService;
 import com.timevale.erp.message.service.model.*;
 import com.timevale.erp.message.service.result.DingTodoTaskResponseBody;
@@ -29,9 +30,11 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
 
     @Resource
     private DingWorkRecordService dingWorkRecordService;
+    @Resource
+    private DingTodoTaskService dingTodoTaskService;
 
     @Override
-    public String addTask(AddDingTodoReq req) {
+    public String addTodoTask(AddDingTodoReq req) {
 
         String title = req.title();
         String receiveId = req.receiveId();
@@ -45,22 +48,22 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
             return null;
         }
 
-        DingWorkRecordContent content = new DingWorkRecordContent();
-        content.setTitle(req.title());
-        content.setContent(req.content());
-
-        DingWorkRecordAddInput input = new DingWorkRecordAddInput();
+        DingTodoTaskCreateInput input = new DingTodoTaskCreateInput();
 
         input.setTitle(title);
-        input.setReceive(receiveId);
-        input.setUrl(url);
-        input.setContents(Collections.singletonList(content));
-        input.setPcOpenType(2);
+        input.setExecutors(Collections.singleton(receiveId));
+        input.setParticipants(Collections.singleton(receiveId));
+        DingTodoTaskUrlInput urlInput = new DingTodoTaskUrlInput();
+        urlInput.setPcUrl(url);
+        urlInput.setAppUrl(url);
+        input.setDetailUrl(urlInput);
+        input.setDescription(req.content());
+        input.setDueTime(req.dueTime());
 
         try {
-            log.info("[ErpMsgCaller.createDingWorkRecord] request req: {}", input);
-            QueryResult<String> result = dingWorkRecordService.add(input);
-            log.info("[ErpMsgCaller.createDingWorkRecord] result: {}", result);
+            log.info("[ErpMsgCaller.addTodoTask] request req: {}", input);
+            QueryResult<String> result = dingTodoTaskService.add(input);
+            log.info("[ErpMsgCaller.addTodoTask] result: {}", result);
             if (result != null && result.isSuccess()) {
                 return result.getResultObject();
             }
@@ -72,13 +75,14 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
     }
 
     @Override
-    public void finishTask(String recordId, String userId) {
-        DingWorkRecordUpdateInput input = new DingWorkRecordUpdateInput();
-        input.setRecordId(recordId);
-        input.setUserId(userId);
+    public void finishTodoTask(String recordId, String userId) {
+        DingTodoTaskUpdateInput input = new DingTodoTaskUpdateInput();
+        input.setTaskId(recordId);
+        input.setOperator(userId);
+        input.setDone(true);
         try {
             log.info("[ErpMsgCaller.finishDingWorkRecord] request param: {}", input);
-            BaseResult result = dingWorkRecordService.finishWorkRecord(input);
+            BaseResult result = dingTodoTaskService.update(input);
             log.info("[ErpMsgCaller.finishDingWorkRecord] result: {}", result);
         } catch (Throwable e) {
             log.error("[ErpMsgCaller.finishDingWorkRecord] 更新钉钉待办异常: recordId={}", recordId, e);
@@ -86,7 +90,7 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
     }
 
     @Override
-    public String addTask(CreateTodoTaskMsg createTodoTaskMsg) {
+    public String addTodoTask(CreateTodoTaskMsg createTodoTaskMsg) {
         final DingCreateTodoTaskInput input = new DingCreateTodoTaskInput();
         input.setTitle(createTodoTaskMsg.getTitle());
         input.setUnionId(createTodoTaskMsg.getUnionId());
