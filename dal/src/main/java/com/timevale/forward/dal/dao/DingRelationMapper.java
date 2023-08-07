@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.entity.DingRelationDO;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -16,7 +17,9 @@ public interface DingRelationMapper {
     void insert(DingRelationDO entity);
 
     @Select("select * from ding_relation where relation_type = #{relationType} and relation_id = #{relationId} and ding_type = #{dingType}")
-    List<DingRelationDO> getByRelation(Integer relationType, Long relationId, Integer dingType);
+    List<DingRelationDO> getByRelation(@Param("relationType") Integer relationType,
+                                       @Param("relationId") Long relationId,
+                                       @Param("dingType") Integer dingType);
 
 }
 
