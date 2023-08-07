@@ -947,11 +947,7 @@ public class ProjectComponentImpl implements ProjectComponent {
                 if (nodes.stream().anyMatch(n -> n.getPlanDate() == null)) {
                     dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
                             "已开始开发的项目需要维护好所有项目节点的计划时间"));
-                } else {
-                    dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY,
-                            "开发开始实际时间维护完成后，计划工作量生成基线版本，生成项目原始积分。"));
                 }
-            } else {
                 List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
                 if (memberEvaluateDOList.stream().filter(ProjectMemberEvaluateDO::getIncludeStat)
                         .anyMatch(m -> m.getPlanWorkload() == null ||
