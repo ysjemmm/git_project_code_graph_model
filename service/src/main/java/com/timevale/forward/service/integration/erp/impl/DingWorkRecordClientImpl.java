@@ -66,6 +66,7 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
             QueryResult<String> result = dingTodoTaskService.add(input);
             log.info("[ErpMsgCaller.addTodoTask] result: {}", result);
             if (result != null && result.isSuccess()) {
+                log.info("[ErpMsgCaller.addTodoTask] success, resultObject: {}", result.getResultObject());
                 return result.getResultObject();
             }
         } catch (Throwable e) {
