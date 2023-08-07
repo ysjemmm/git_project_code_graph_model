@@ -20,6 +20,11 @@ public class AddDingTodoReq {
     private String title;
 
     /**
+     * 创建人ID
+     */
+    private String creatorId;
+
+    /**
      * 接收人ID
      */
     private String receiveId;

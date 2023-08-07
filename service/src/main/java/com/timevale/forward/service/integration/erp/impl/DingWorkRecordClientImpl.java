@@ -51,6 +51,7 @@ public class DingWorkRecordClientImpl implements DingWorkRecordClient {
         DingTodoTaskCreateInput input = new DingTodoTaskCreateInput();
 
         input.setTitle(title);
+        input.setCreator(req.creatorId());
         input.setExecutors(Collections.singleton(receiveId));
         input.setParticipants(Collections.singleton(receiveId));
         DingTodoTaskUrlInput urlInput = new DingTodoTaskUrlInput();

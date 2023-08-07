@@ -82,6 +82,7 @@ public class DrcBugOnlineHandler implements DrcHandler {
         String dingTaskId = dingWorkRecordClient.addTodoTask(new AddDingTodoReq()
                 .title("产研系统线上bug待验收")
                 .url(String.format(bugOnlineUrl, bugOnlineDO.getId()))
+                .creatorId(bugOnlineDO.getProposerId())
                 .receiveId(bugOnlineDO.getProposerId())
                 .content(bugOnlineDO.getName() + "需要尽快完成验收并反馈客户，请确认")
                 .dueTime(LocalDateTime.now().plusHours(1L).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()));
