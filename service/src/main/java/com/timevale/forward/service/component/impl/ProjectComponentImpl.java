@@ -785,7 +785,8 @@ public class ProjectComponentImpl implements ProjectComponent {
         }
         // 计算项目状态
         ProjectNodeDO publishNode = nodeMap.get(ProjectNodeEnum.PUBLISH_OFFICIAL.getText());
-        ProjectNodeDO startNode = nodeMap.get(ProjectNodeEnum.START_PLAN.getText());
+        ProjectNodeDO firstNode = nodes.stream().min(Comparator.comparingInt(pn ->
+                ProjectNodeEnum.getCodeByName(pn.getName()))).orElse(new ProjectNodeDO());
         boolean released = publishNode != null && publishNode.getActualDate() != null;
         if (released) {
             if (ProjectStatusEnum.SUSPEND.getCode().equals(oldProject.getStatus())) {
@@ -800,7 +801,8 @@ public class ProjectComponentImpl implements ProjectComponent {
                 dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY,
                         "项目节点的实际时间已全部填入，状态将变为已发布，已发布的项目不可再编辑。"));
             }
-            if (publishNode.getActualDate().compareTo(startNode.getActualDate()) < 0) {
+            if (firstNode.getActualDate() != null &&
+                    publishNode.getActualDate().compareTo(firstNode.getActualDate()) < 0) {
                 dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.ANY, true,
                         "项目实际发布时间不能早于实际开始时间"));
             }
