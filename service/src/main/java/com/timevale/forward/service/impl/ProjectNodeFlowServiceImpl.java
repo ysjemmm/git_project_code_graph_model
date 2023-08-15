@@ -6,6 +6,7 @@ import com.timevale.epeius.service.model.request.TerminateRequest;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.dao.ProjectNodeFlowMapper;
 import com.timevale.forward.dal.dao.ProjectNodeMapper;
+import com.timevale.forward.dal.dao.ProjectNodeRecordMapper;
 import com.timevale.forward.dal.entity.ProjectNodeDO;
 import com.timevale.forward.dal.entity.ProjectNodeFlowDO;
 import com.timevale.forward.facade.api.client.ProjectNodeFlowService;
@@ -41,6 +42,7 @@ import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -66,6 +68,9 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
     @Resource
     private ElapsedTimeClient elapsedTimeClient;
 
+    @Resource
+    private ProjectNodeRecordMapper projectNodeRecordMapper;
+
     @Override
     public BaseResult<ProjectNodeFlowDetailVO> getFlow(Long projectId) {
         log.info("节点审批流程详情,参数:{}", projectId);
@@ -84,7 +89,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
             projectFlowDetailVO.setReviewFails(JSONObject.parseArray(lastFlowDo.getReviewFail(), String.class));
             projectFlowDetailVO.setReviewFailReason(lastFlowDo.getReviewFailReason());
             projectFlowDetailVO.setPoReviewFailReason(currentFlowDo.getReviewFailReason());
-            flowId=lastFlowDo.getFlowId();
+            flowId = lastFlowDo.getFlowId();
         } else if (FlowStageEnum.SECOND.getCode().equals(currentFlowDo.getStage())) {
             //pd和biz为空,只有po审批
             projectFlowDetailVO.setReviewFails(Lists.emptyList());
@@ -94,7 +99,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
 
         ProcessResponse processInfo = epeiusClient.getProcessInfo(flowId);
         Map<String, Object> flowData = processInfo.getFlowData();
-        String pjEstablishPublishDate=flowData.get("pjEstablishPublishDate")==null ?null:flowData.get("pjEstablishPublishDate").toString();
+        String pjEstablishPublishDate = flowData.get("pjEstablishPublishDate") == null ? null : flowData.get("pjEstablishPublishDate").toString();
         projectFlowDetailVO.setPjEstablishPublishDate(DateUtil.parseToDate(pjEstablishPublishDate, DateFormatConst.DATE_FORMAT));
 
         long changeCount = projectFlowDos.stream().filter(a -> ForwardFlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())).count();
@@ -152,7 +157,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
         if (pjEstablishPublishDate != null && !CollUtil.isEmpty(publishNodes)) {
             Date pjEstablishPublishDateEnd = DateUtil.getEndOfDay(pjEstablishPublishDate);
             Date planDate = DateUtil.getEndOfDay(publishNodes.get(0).getPlanDate());
-            if(pjEstablishPublishDateEnd.before(planDate)){
+            if (pjEstablishPublishDateEnd.before(planDate)) {
                 List<ProjectNodeFlowDO> projectFlowDos = projectNodeFlowMapper.getByProjectId(projectNodeFlowCheckReq.getProjectId());
 
                 boolean match = projectFlowDos.stream().anyMatch(a -> ForwardFlowStatusEnum.COMPLETE.getCode().equals(a.getStatus())
@@ -168,7 +173,9 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
                 }
             }
         }
-        if (!CollectionUtils.isEmpty(oldPublishNodes) && !CollectionUtils.isEmpty(publishNodes)) {
+        boolean containsBase = Objects.nonNull(projectNodeFlowCheckReq.getProjectId()) &&
+                projectNodeRecordMapper.contain(projectNodeFlowCheckReq.getProjectId());
+        if (containsBase && !CollectionUtils.isEmpty(oldPublishNodes) && !CollectionUtils.isEmpty(publishNodes)) {
             Date oldPlanDate = DateUtil.getEndOfDay(oldPublishNodes.get(0).getPlanDate());
             Date planDate = DateUtil.getEndOfDay(publishNodes.get(0).getPlanDate());
             if (oldPlanDate.before(planDate)) {
