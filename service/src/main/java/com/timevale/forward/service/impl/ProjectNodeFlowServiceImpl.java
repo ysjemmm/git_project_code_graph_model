@@ -14,6 +14,7 @@ import com.timevale.forward.facade.api.request.ProjectModifyReq;
 import com.timevale.forward.facade.api.request.ProjectNodeFlowCheckReq;
 import com.timevale.forward.facade.api.result.ProjectNodeDelayVO;
 import com.timevale.forward.facade.api.result.ProjectNodeFlowDetailVO;
+import com.timevale.forward.model.enums.DelayTypeEnum;
 import com.timevale.forward.model.enums.FlowStageEnum;
 import com.timevale.forward.model.enums.ForwardFlowStatusEnum;
 import com.timevale.forward.model.enums.ProjectNodeEnum;
@@ -151,6 +152,13 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
         List<ProjectNodeDO> testNodes = projectNodes.stream()
                 .filter(a -> ProjectNodeEnum.SUBMIT_TEST.getText().equals(a.getName()) && a.getPlanDate() != null).collect(Collectors.toList());
 
+        boolean containsBase = Objects.nonNull(projectNodeFlowCheckReq.getProjectId()) &&
+                projectNodeRecordMapper.contain(projectNodeFlowCheckReq.getProjectId());
+        if (!containsBase) {
+            delayVO.setDelayDay(BigDecimal.ZERO);
+            delayVO.setDelayType(DelayTypeEnum.NONE.getCode());
+            return BaseResult.success(delayVO);
+        }
         // 立项预期上线时间
         Date pjEstablishPublishDate = projectNodeFlowCheckReq.getPjEstablishPublishDate();
 
@@ -173,9 +181,7 @@ public class ProjectNodeFlowServiceImpl implements ProjectNodeFlowService {
                 }
             }
         }
-        boolean containsBase = Objects.nonNull(projectNodeFlowCheckReq.getProjectId()) &&
-                projectNodeRecordMapper.contain(projectNodeFlowCheckReq.getProjectId());
-        if (containsBase && !CollectionUtils.isEmpty(oldPublishNodes) && !CollectionUtils.isEmpty(publishNodes)) {
+        if (!CollectionUtils.isEmpty(oldPublishNodes) && !CollectionUtils.isEmpty(publishNodes)) {
             Date oldPlanDate = DateUtil.getEndOfDay(oldPublishNodes.get(0).getPlanDate());
             Date planDate = DateUtil.getEndOfDay(publishNodes.get(0).getPlanDate());
             if (oldPlanDate.before(planDate)) {
