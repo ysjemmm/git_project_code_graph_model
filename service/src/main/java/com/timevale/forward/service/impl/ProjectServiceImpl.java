@@ -1650,7 +1650,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     private void fieldUpdate(ProjectDO newProject, List<ProjectNodeDO> projectNodes, ProjectDO oldProject) {
         newProject.setNodeStatus(oldProject.getNodeStatus());
-        newProject.setUnWriteReason(oldProject.getUnWriteReason());
+        if (StringUtils.isBlank(newProject.getUnWriteReason())) {
+            newProject.setUnWriteReason(oldProject.getUnWriteReason());
+        }
         if (ProjectStatusEnum.SUSPEND.getCode().equals(oldProject.getStatus())) {
             // 编辑项目时，当状态是暂停,不修改项目状态
             newProject.setStatus(oldProject.getStatus());
