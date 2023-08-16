@@ -774,8 +774,8 @@ public class ProjectComponentImpl implements ProjectComponent {
                 ProjectNodeEnum.DEMAND_INTERNAL_AUDIT.getText(),
                 ProjectNodeEnum.DEMAND_CONSTRUE.getText(),
                 ProjectNodeEnum.DEMAND_CONSTRUE_REVERSE.getText(),
-                ProjectNodeEnum.UED_AUDIT.getText()).anyMatch(nodeKeys::contains)) {
-            //删除需求规划阶段时需要校验是否有关联任务,若有关联待执行&进行中&已完成&已暂停的任务,不能删除
+                ProjectNodeEnum.UED_AUDIT.getText()).noneMatch(nodeKeys::contains)) {
+            // 删除需求规划阶段时需要校验是否有关联任务,若有关联待执行&进行中&已完成&已暂停的任务,不能删除
             if (taskMapper.getByProjectId(projectId).stream()
                     .anyMatch(a -> ProjectStageEnum.DEMAND.getCode().equals(a.getStage())
                             && !TaskStatusEnum.INVALID.getCode().equals(a.getStatus()))) {
