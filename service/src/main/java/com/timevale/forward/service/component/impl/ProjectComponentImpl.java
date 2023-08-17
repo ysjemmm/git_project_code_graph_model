@@ -37,7 +37,6 @@ import org.assertj.core.util.Lists;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -957,8 +956,7 @@ public class ProjectComponentImpl implements ProjectComponent {
                 }
                 List<ProjectMemberEvaluateDO> memberEvaluateDOList = memberEvaluateMapper.getByProjectId(projectId);
                 if (memberEvaluateDOList.stream().filter(ProjectMemberEvaluateDO::getIncludeStat)
-                        .anyMatch(m -> m.getPlanWorkload() == null ||
-                                m.getPlanWorkload().compareTo(BigDecimal.ZERO) == 0)) {
+                        .anyMatch(m -> m.getPlanWorkload() == null)) {
                     // 未填写工作量
                     dataHandler.accept(new ModifyProjectCheckDTO(ModifyCheckTypeEnum.PROJECT_POINT, true,
                             "存在纳入积分考核的成员计划工作量未录入的情况，请将计划工作量数据维护完整后，才可以保存开发开始实际时间。"));
