@@ -943,6 +943,9 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         bugOnlineDO.setReasonStage(onlineReq.getReasonStage());
         bugOnlineDO.setBugOfflineId(onlineReq.getBugOfflineId());
         bugOnlineDO.setStatus(BugOnlineStatusEnum.ACCEPTANCE.getCode());
+        //bug状态为待验收时经办人自动转为提交人
+        bugOnlineDO.setOperatorId(bugOnlineDO.getProposerId());
+        bugOnlineDO.setOperator(bugOnlineDO.getProposerId());
         bugOnlineMapper.update(bugOnlineDO);
 
         BugLogDO bugLogDO = new BugLogDO();
