@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.CollectionUtils;
 import com.timevale.security.facade.api.RpcGroupService;
 import com.timevale.security.facade.request.GroupRequest;
 import com.timevale.security.facade.response.GroupResponse;
@@ -30,7 +31,7 @@ public class InnerGroupClientImpl implements InnerGroupClient {
     RpcGroupService rpcGroupService;
 
     @Override
-    public List<SimpleGroupResponse>batchGetSimpleGroupList(List<String> deptIdList) {
+    public List<SimpleGroupResponse> batchGetSimpleGroupList(List<String> deptIdList) {
         try{
             List<String> deptIdStringList = deptIdList.stream().distinct().collect(Collectors.toList());
             BaseResult<List<SimpleGroupResponse>> listBaseResult = rpcGroupService.batchGetSimpleGroupList(deptIdStringList);
@@ -55,7 +56,11 @@ public class InnerGroupClientImpl implements InnerGroupClient {
 
     @Override
     public SimpleGroupResponse getSimpleGroup(Long deptId) {
-        return batchGetSimpleGroupList(Lists.newArrayList(String.valueOf(deptId))).get(0);
+        List<SimpleGroupResponse> list = batchGetSimpleGroupList(Lists.newArrayList(String.valueOf(deptId)));
+        if (CollectionUtils.isEmpty(list)) {
+            return null;
+        }
+        return list.get(0);
     }
 
     @Override

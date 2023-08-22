@@ -363,8 +363,10 @@ public class HomePageServiceImpl implements HomePageService {
         // 保存部门&成员搜索条件 (用于快捷搜索)
         if (!"SYSTEM".equals(userInfo.getId())) {
             if (fastSearchConditionMapper.isExist(userInfo.getId())) {
-                fastSearchConditionMapper.updateSearchConditionContent(
-                        userInfo.getId(), getSearchConditionContent(userInfo.getId(), req.getDeptIds(), req.getTeamMembers()));
+                if (CollectionUtils.isNotEmpty(req.getDeptIds()) || CollectionUtils.isNotEmpty( req.getTeamMembers())) {
+                    fastSearchConditionMapper.updateSearchConditionContent(
+                            userInfo.getId(), getSearchConditionContent(userInfo.getId(), req.getDeptIds(), req.getTeamMembers()));
+                }
             } else {
                 FastSearchConditionDO fastSearchCondition = new FastSearchConditionDO();
                 fastSearchCondition.setSearchConditionContent(getSearchConditionContent(
@@ -591,8 +593,10 @@ public class HomePageServiceImpl implements HomePageService {
         // 保存部门&成员搜索条件 (用于快捷搜索)
         if (!"SYSTEM".equals(userInfo.getId())) {
             if (fastSearchConditionMapper.isExist(userInfo.getId())) {
-                fastSearchConditionMapper.updateSearchConditionContent(
-                        userInfo.getId(), getSearchConditionContent(userInfo.getId(), req.getDeptIds(), req.getTeamMembers()));
+                if (CollectionUtils.isNotEmpty(req.getDeptIds()) || CollectionUtils.isNotEmpty( req.getTeamMembers())) {
+                    fastSearchConditionMapper.updateSearchConditionContent(
+                            userInfo.getId(), getSearchConditionContent(userInfo.getId(), req.getDeptIds(), req.getTeamMembers()));
+                }
             } else {
                 FastSearchConditionDO fastSearchCondition = new FastSearchConditionDO();
                 fastSearchCondition.setSearchConditionContent(getSearchConditionContent(
@@ -839,7 +843,34 @@ public class HomePageServiceImpl implements HomePageService {
         if (StringUtils.isBlank(searchConditionContent) || "[]".equals(searchConditionContent)) {
             return BaseResult.success(Collections.emptyList());
         }
-        return BaseResult.success(JacksonUtil.parseList(searchConditionContent, FastSearchConditionVO.class));
+
+        List<FastSearchConditionVO> oldList = JacksonUtil.parseList(searchConditionContent, FastSearchConditionVO.class);
+
+        List<String> groupIds = oldList.stream().filter(e -> Integer.valueOf(1).equals(e.getType()))
+                .map(FastSearchConditionVO::getId).collect(Collectors.toList());
+        List<String> userIds = oldList.stream().filter(e -> Integer.valueOf(2).equals(e.getType()))
+                .map(FastSearchConditionVO::getId).collect(Collectors.toList());
+
+        List<SimpleGroupResponse> newGroupList = innerGroupClient.batchGetSimpleGroupList(groupIds);
+
+        List<String> newGroupIds = newGroupList.stream().map(SimpleGroupResponse::getGroupId).collect(Collectors.toList());
+        List<String> newUserIds = innerUserPersonClient.batchGetStaffs(userIds, false);
+
+        List<FastSearchConditionVO> newList = new ArrayList<>();
+        for (FastSearchConditionVO vo : oldList) {
+            Integer type = vo.getType();
+            if (Integer.valueOf(1).equals(type)) {
+                if (newGroupIds.contains(vo.getId())) {
+                    newList.add(vo);
+                }
+            } else if (Integer.valueOf(2).equals(type)) {
+                if (newUserIds.contains(vo.getId())) {
+                    newList.add(vo);
+                }
+            }
+        }
+
+        return BaseResult.success(newList);
     }
 
 }
