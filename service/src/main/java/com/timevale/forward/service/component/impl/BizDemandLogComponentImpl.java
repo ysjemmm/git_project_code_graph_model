@@ -40,8 +40,6 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
     private ProductLineMapper productLineMapper;
     @Resource
     private BizDemandMapper bizDemandMapper;
-    @Resource
-    private BizRecordMapper bizRecordMapper;
 
     @Override
     public void addLogWhenModifyData(BizDemandDO oldObj, BizDemandDO newObj) {
@@ -263,7 +261,7 @@ public class BizDemandLogComponentImpl implements BizDemandLogComponent {
         }
         List<BizChangeLogDO> logs = ids.stream().map(id -> {
             BizChangeLogDO logDO = new BizChangeLogDO();
-            logDO.setType(BizTypeEnum.BIZ_DEMAND.getCode());
+            logDO.setType(BizChangeLogTypeEnum.BIZ_DEMAND.getCode());
             logDO.setMainId(id);
             logDO.setField(BizChangeLogFieldEnum.BIZ_DEMAND_STATUS.getText());
             logDO.setOldValue(BizDemandStatusEnum.getTextByCode(oldStatus));
