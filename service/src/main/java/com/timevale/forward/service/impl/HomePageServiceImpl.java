@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
+import com.timevale.crm.sdk.common.utils.JacksonUtil;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.BizDemandListCondition;
 import com.timevale.forward.dal.condition.BugOnlineListCondition;
@@ -23,15 +24,18 @@ import com.timevale.forward.service.component.*;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.*;
 import com.timevale.forward.service.integration.http.ElapsedTimeClient;
+import com.timevale.forward.service.integration.inneruser.InnerGroupClient;
 import com.timevale.forward.service.integration.inneruser.InnerUserPersonClient;
 import com.timevale.forward.service.integration.superset.model.base.PageResult;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.forward.service.utils.date.DateUtil;
 import com.timevale.forward.service.utils.envoy.LocalSessionUtils;
 import com.timevale.forward.service.utils.envoy.UserInfo;
+import com.timevale.mandarin.base.util.StringUtils;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import com.timevale.security.facade.response.BaseInfoResponse;
+import com.timevale.security.facade.response.SimpleGroupResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.assertj.core.util.Lists;
@@ -96,6 +100,12 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Resource
     private ElapsedTimeClient elapsedTimeClient;
+
+    @Resource
+    private FastSearchConditionMapper fastSearchConditionMapper;
+
+    @Resource
+    private InnerGroupClient innerGroupClient;
 
     @Override
     public BaseResult<HomePageDataIndicatorVO> getDataIndicator(HomePageBaseReq homePageBaseReq) {
@@ -348,6 +358,22 @@ public class HomePageServiceImpl implements HomePageService {
 
     @Override
     public BaseResult<List<HomePageProjectBoardVO>> getProjectBoard(HomePageProjectBoardReq req) {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+
+        // 保存部门&成员搜索条件 (用于快捷搜索)
+        if (!"SYSTEM".equals(userInfo.getId())) {
+            if (fastSearchConditionMapper.isExist(userInfo.getId())) {
+                fastSearchConditionMapper.updateSearchConditionContent(
+                        userInfo.getId(), getSearchConditionContent(userInfo.getId(), req.getDeptIds(), req.getTeamMembers()));
+            } else {
+                FastSearchConditionDO fastSearchCondition = new FastSearchConditionDO();
+                fastSearchCondition.setSearchConditionContent(getSearchConditionContent(
+                        userInfo.getId(), req.getDeptIds(), req.getTeamMembers()));
+                fastSearchCondition.setSearchUserId(userInfo.getId());
+                fastSearchConditionMapper.insert(fastSearchCondition);
+            }
+        }
+
         // 取出查询参数
         Date startDate = DateUtil.getStartOfDay(req.getStartDate());
         Date endDate = DateUtil.getEndOfDay(req.getEndDate());
@@ -562,6 +588,20 @@ public class HomePageServiceImpl implements HomePageService {
     public BaseResult<List<HomePageGroupWorkTimeVO>> getGroupTaskWorkTimeBoard(HomePageTaskBoardReq req) {
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
+        // 保存部门&成员搜索条件 (用于快捷搜索)
+        if (!"SYSTEM".equals(userInfo.getId())) {
+            if (fastSearchConditionMapper.isExist(userInfo.getId())) {
+                fastSearchConditionMapper.updateSearchConditionContent(
+                        userInfo.getId(), getSearchConditionContent(userInfo.getId(), req.getDeptIds(), req.getTeamMembers()));
+            } else {
+                FastSearchConditionDO fastSearchCondition = new FastSearchConditionDO();
+                fastSearchCondition.setSearchConditionContent(getSearchConditionContent(
+                        userInfo.getId(), req.getDeptIds(), req.getTeamMembers()));
+                fastSearchCondition.setSearchUserId(userInfo.getId());
+                fastSearchConditionMapper.insert(fastSearchCondition);
+            }
+        }
+
         Set<String> accounts = CollUtil.emptyIfNull(req.getTeamMembers());
         if (CollUtil.isEmpty(accounts) && CollUtil.isEmpty(req.getDeptIds())) {
             if (HomePageTabEnum.INDIVIDUAL.getCode().equals(req.getTabType())) {
@@ -638,6 +678,90 @@ public class HomePageServiceImpl implements HomePageService {
         return BaseResult.success(res);
     }
 
+    /**
+     * 获取搜索条件内容
+     * @return
+     */
+    private String getSearchConditionContent(
+            String searchUserId, Collection<String> deptIds, Collection<String> teamMemberIds) {
+        if (CollectionUtils.isEmpty(deptIds) && CollectionUtils.isEmpty(teamMemberIds)) {
+            return "[]";
+        }
+
+        List<FastSearchConditionVO> oldList = new ArrayList<>();
+
+        List<String> oldGroupIdList = new ArrayList<>();
+        List<String> oldUserIdList = new ArrayList<>();
+
+        String searchConditionContent = fastSearchConditionMapper.selectSearchConditionContent(searchUserId);
+        if (StringUtils.isNotBlank(searchConditionContent) && !"[]".equals(searchConditionContent)) {
+            oldList = JacksonUtil.parseList(searchConditionContent, FastSearchConditionVO.class);
+
+            oldGroupIdList = oldList.stream().filter(e -> Integer.valueOf(1).equals(e.getType()))
+                    .map(FastSearchConditionVO::getId).collect(Collectors.toList());
+            oldUserIdList = oldList.stream().filter(e -> Integer.valueOf(2).equals(e.getType()))
+                    .map(FastSearchConditionVO::getId).collect(Collectors.toList());
+        }
+
+        List<FastSearchConditionVO> newList = new ArrayList<>();
+
+        List<String> newGroupIdList = new ArrayList<>();
+        List<String> newUserIdList = new ArrayList<>();
+
+        if (CollectionUtils.isNotEmpty(deptIds)) {
+            List<SimpleGroupResponse> groups = innerGroupClient.batchGetSimpleGroupList(new ArrayList<>(deptIds));
+            if (CollectionUtils.isNotEmpty(groups)) {
+                for (SimpleGroupResponse group : groups) {
+                    if (oldGroupIdList.contains(group.getGroupId())) {
+                        newGroupIdList.add(group.getGroupId());
+                    }
+
+                    FastSearchConditionVO vo = new FastSearchConditionVO();
+
+                    vo.setType(1);
+                    vo.setId(group.getGroupId());
+                    vo.setShowName(group.getGroupName());
+
+                    newList.add(vo);
+                }
+            }
+        }
+
+        if (CollectionUtils.isNotEmpty(teamMemberIds)) {
+            List<BaseInfoResponse> users = innerUserPersonClient.batchGetStaffInfos(teamMemberIds, false);
+            if (CollectionUtils.isNotEmpty(users)) {
+                for (BaseInfoResponse user : users) {
+                    if (oldUserIdList.contains(user.getAccount())) {
+                        newUserIdList.add(user.getAccount());
+                    }
+
+                    FastSearchConditionVO vo = new FastSearchConditionVO();
+
+                    vo.setType(2);
+                    vo.setId(user.getAccount());
+                    vo.setShowName(user.getAlias() + CommonConstant.JOIN_LINE + user.getName());
+
+                    newList.add(vo);
+                }
+            }
+        }
+
+        oldList.forEach(e -> {
+            Integer type = e.getType();
+            if (Integer.valueOf(1).equals(type)) {
+                if (!newGroupIdList.contains(e.getId())) {
+                    newList.add(e);
+                }
+            } else if (Integer.valueOf(2).equals(type)) {
+                if (!newUserIdList.contains(e.getId())) {
+                    newList.add(e);
+                }
+            }
+        });
+
+        return JacksonUtil.toJsonString(newList);
+    }
+
     @Override
     public BaseResult<List<String>> getHolidays(HomePageHolidayReq homePageHolidayReq) {
         Date startDate = homePageHolidayReq.getStartDate();
@@ -706,6 +830,16 @@ public class HomePageServiceImpl implements HomePageService {
                 .filter(a -> a.getPlanStartDate() != null && a.getPlanEndDate() != null
                         && DateUtil.haveOverlap(a.getStartDate(), a.getEndDate(), startDate, endDate))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public BaseResult<List<FastSearchConditionVO>> getFastSearchConditions() {
+        UserInfo userInfo = LocalSessionUtils.getUserInfo();
+        String searchConditionContent = fastSearchConditionMapper.selectSearchConditionContent(userInfo.getId());
+        if (StringUtils.isBlank(searchConditionContent) || "[]".equals(searchConditionContent)) {
+            return BaseResult.success(Collections.emptyList());
+        }
+        return BaseResult.success(JacksonUtil.parseList(searchConditionContent, FastSearchConditionVO.class));
     }
 
 }

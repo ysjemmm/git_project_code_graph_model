@@ -84,9 +84,16 @@ public interface HomePageService {
     BaseResult<List<HomePageGroupWorkTimeVO>> getGroupTaskWorkTimeBoard(HomePageTaskBoardReq req);
 
     /**
-     *
      * @param homePageHolidayReq  homePageHolidayReq
      * @return 节假日期
      */
     BaseResult<List<String>> getHolidays(HomePageHolidayReq homePageHolidayReq);
+
+    /**
+     * 获取快捷搜索条件
+     *
+     * @return 快捷搜索条件列表
+     */
+    BaseResult<List<FastSearchConditionVO>> getFastSearchConditions();
+
 }

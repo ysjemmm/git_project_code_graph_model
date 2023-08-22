@@ -227,8 +227,10 @@ public class ProjectServiceImpl implements ProjectService {
             throw new BaseBizRuntimeException("找不到该项目");
         }
         Integer oldStatus = projectDO.getStatus();
-        if (ProjectStatusEnum.INVALID.getCode().equals(oldStatus) || ProjectStatusEnum.RELEASED.getCode().equals(oldStatus)) {
-            throw new BaseBizRuntimeException("项目状态为已中止或已发布时,不能修改状态");
+        if (ProjectStatusEnum.INVALID.getCode().equals(oldStatus)
+                || ProjectStatusEnum.RELEASED.getCode().equals(oldStatus)
+                || ProjectStatusEnum.CONCLUSION.getCode().equals(oldStatus)) {
+            throw new BaseBizRuntimeException("项目状态为已中止、已发布或已结项时,不能修改状态");
         }
 
         // 更新项目状态

@@ -125,5 +125,6 @@
         <mapper resource="mapper/ProjectBizDomainMapper.xml" />
         <mapper resource="mapper/ProjectMilestoneActionMapper.xml" />
         <mapper resource="mapper/DingRelationMapper.xml" />
+        <mapper resource="mapper/FastSearchConditionMapper.xml" />
     </mappers>
 </configuration>
