@@ -109,6 +109,9 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="listingStatus != null">
+                AND listing_status=#{listingStatus}
+            </if>
         </where>
     </select>
 

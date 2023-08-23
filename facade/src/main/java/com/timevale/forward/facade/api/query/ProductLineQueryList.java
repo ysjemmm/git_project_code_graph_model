@@ -35,4 +35,7 @@ public class ProductLineQueryList extends QueryBase {
     @ApiModelProperty("产品线等级列表 1-核心产品线; 2-即将退市产品线; 3-一般产品线")
     private List<Integer> productLineLevels;
 
+    @ApiModelProperty("上架状态：0-未上架，1-已上架")
+    private Integer listingStatus;
+
 }

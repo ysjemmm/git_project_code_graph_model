@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.condition;
 
 import com.timevale.forward.dal.annotation.WildcardEscape;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -39,5 +40,10 @@ public class ProductLineCondition {
      * 产品线等级
      */
     private List<Integer> productLineLevels;
+
+    /**
+     * 上架状态：0-未上架，1-已上架
+     */
+    private Integer listingStatus;
 
 }

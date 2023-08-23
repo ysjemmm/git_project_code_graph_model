@@ -100,7 +100,7 @@ public interface ProductLineMapper {
      * @param condition condition
      * @return {@link ProductLineDO }
      */
-    List<ProductLineDO> selectByCondition( ProductLineCondition condition);
+    List<ProductLineDO> selectByCondition(ProductLineCondition condition);
 
     /**
      * 根据名称获取产品线

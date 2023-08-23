@@ -65,4 +65,5 @@ public interface BizDomainMapper {
      * @return {@link BizDomainDO }
      */
     List<BizDomainDO> selectByCondition(BizDomainCondition condition);
+
 }

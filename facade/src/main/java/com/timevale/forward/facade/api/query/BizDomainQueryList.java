@@ -23,4 +23,7 @@ public class BizDomainQueryList extends QueryBase {
     @ApiModelProperty("业务域负责人")
     private List<String> ownerIds;
 
+    @ApiModelProperty("上架状态：0-未上架，1-已上架")
+    private Integer listingStatus;
+
 }
