@@ -1,6 +1,7 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.BugOnlineLinkCondition;
+import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.BugOnlineProductLineDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -53,4 +54,14 @@ public interface BugOnlineProductLineMapper {
      * @return {@link List}<{@link Long}>
      */
     List<Long> selectByCondition(BugOnlineLinkCondition condition);
+
+    /**
+     * 通过产品线ID获取线上BUG与产品线关系
+     *
+     * @param productLineId 产品线ID
+     * @return
+     */
+    @Select("select * from bug_online_product_line where product_line_id=#{productLineId} AND is_deleted=false")
+    List<BugOnlineProductLineDO> getByProductLineId(@Param("productLineId") Long productLineId);
+
 }

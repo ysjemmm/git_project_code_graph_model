@@ -51,7 +51,6 @@ public interface BizDomainMapper {
      */
     int insert(BizDomainDO bizDomainDO);
 
-
     /**
      *
      * @param bizDomainDO bizDomainDO

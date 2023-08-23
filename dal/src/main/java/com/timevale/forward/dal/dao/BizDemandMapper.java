@@ -185,4 +185,14 @@ public interface BizDemandMapper {
 
     @Select("SELECT * FROM biz_demand WHERE receive_man_id=#{receiveManId} AND is_deleted =false")
     List<BizDemandDO> getByReceiveManId(@Param("receiveManId")String receiveManId);
+
+    /**
+     * 通过产品线ID获取业务需求
+     *
+     * @param productLineId 产品线ID
+     * @return
+     */
+    @Select("select * from biz_demand where product_line_id=#{productLineId} AND is_deleted=false")
+    List<BizDemandDO> getByProductLineId(@Param("productLineId") Long productLineId);
+
 }

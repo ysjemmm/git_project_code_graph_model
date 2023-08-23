@@ -55,4 +55,10 @@ public class ProductLineDO extends BaseDO {
      * 产品线等级
      */
     private Integer productLineLevel;
+
+    /**
+     * 上架状态：0-未上架，1-已上架
+     */
+    private Integer listingStatus;
+
 }

@@ -5,6 +5,7 @@ import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BizDomainQueryList;
 import com.timevale.forward.facade.api.request.BizDomainAddReq;
 import com.timevale.forward.facade.api.request.BizDomainModifyReq;
+import com.timevale.forward.facade.api.request.UpdateBizDomainListingStatusReq;
 import com.timevale.forward.facade.api.result.BizDomainVO;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -54,5 +55,21 @@ public interface BizDomainService {
      * @param bizDomainId 业务域删除请求
      * @return Boolean
      */
+    @Deprecated
     BaseResult<Boolean> delOrUnDelete(Long bizDomainId);
+
+    /**
+     * 修改业务域上架状态
+     *
+     * @param req 请求对象
+     */
+    BaseResult<Boolean> updateBizDomainListingStatus(UpdateBizDomainListingStatusReq req);
+
+    /**
+     * 删除业务域
+     *
+     * @param bizDomainId 业务域ID
+     */
+    BaseResult<Boolean> deleteBizDomain(Long bizDomainId);
+
 }

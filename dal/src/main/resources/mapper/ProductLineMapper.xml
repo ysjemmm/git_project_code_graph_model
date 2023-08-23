@@ -113,6 +113,8 @@
             <if test="productLineLevel!=null">product_line_level = #{productLineLevel},</if>
             <if test="modifyMan!=null">modify_man=#{modifyMan},</if>
             <if test="modifyManId!=null">modify_man_id=#{modifyManId},</if>
+            <if test="isDeleted != null">is_deleted=#{isDeleted},</if>
+            <if test="listingStatus != null">listing_status=#{listingStatus},</if>
         </set>
         <where>
             id = #{id}
@@ -167,6 +169,7 @@
                     #{item}
                 </foreach>
             </if>
+            AND is_deleted = false
         </where>
     </select>
 

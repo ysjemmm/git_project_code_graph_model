@@ -56,4 +56,9 @@ public class BizDomainDO extends BaseDO {
      */
     private Boolean directConvertBiz;
 
+    /**
+     * 上架状态：0-未上架，1-已上架
+     */
+    private Integer listingStatus;
+
 }

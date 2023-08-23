@@ -6,7 +6,9 @@ import com.timevale.forward.dal.dto.BugOfflineCountDTO;
 import com.timevale.forward.dal.dto.BugOfflineReasonDistributionDTO;
 import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.dal.entity.BugOfflineListDO;
+import com.timevale.forward.dal.entity.BugOnlineProductLineDO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.Collection;
 import java.util.List;
@@ -110,4 +112,14 @@ public interface BugOfflineMapper {
      * @return 返回值
      */
     BugOfflineDO selectByBizDemandId(@Param("bizDemandId") Long bizDemandId);
+
+    /**
+     * 通过产品线ID获取线下BUG
+     *
+     * @param productLineId 产品线ID
+     * @return
+     */
+    @Select("select * from bug_offline where product_line_id=#{productLineId} AND is_deleted=false")
+    List<BugOfflineDO> getByProductLineId(@Param("productLineId") Long productLineId);
+
 }

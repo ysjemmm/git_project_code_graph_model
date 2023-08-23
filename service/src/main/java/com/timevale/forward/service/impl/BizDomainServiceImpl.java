@@ -12,12 +12,14 @@ import com.timevale.forward.facade.api.client.BizDomainService;
 import com.timevale.forward.facade.api.query.BizDomainQueryList;
 import com.timevale.forward.facade.api.request.BizDomainAddReq;
 import com.timevale.forward.facade.api.request.BizDomainModifyReq;
+import com.timevale.forward.facade.api.request.UpdateBizDomainListingStatusReq;
 import com.timevale.forward.facade.api.result.BizDomainVO;
 import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.BizDomainCopier;
 import com.timevale.forward.service.utils.ResultUtil;
 import com.timevale.forward.service.utils.aop.LogPoint;
 import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
+import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
@@ -93,4 +95,55 @@ public class BizDomainServiceImpl implements BizDomainService {
         bizDomainMapper.update(bizDomainDO);
         return BaseResult.success(true);
     }
+
+    @Override
+    public BaseResult<Boolean> updateBizDomainListingStatus(UpdateBizDomainListingStatusReq req) {
+        Long bizDomainId = req.getBizDomainId();
+        Integer listingStatus = req.getListingStatus();
+        AssertUtil.notNull(bizDomainId, "业务域ID不能为空");
+        AssertUtil.notNull(listingStatus, "上架状态不能为空");
+        AssertUtil.checkState(listingStatus == 0 || listingStatus == 1, "上架状态有误");
+
+        BizDomainDO bizDomainDO = bizDomainMapper.selectById(bizDomainId);
+        AssertUtil.notNull(bizDomainDO, "业务域ID有误");
+
+        Integer currentListingStatus = bizDomainDO.getListingStatus();
+        if (listingStatus.equals(currentListingStatus)) {
+            return BaseResult.success(true);
+        }
+
+        BizDomainDO updateBizDomainDO = new BizDomainDO();
+
+        updateBizDomainDO.setId(bizDomainId);
+        updateBizDomainDO.setListingStatus(listingStatus);
+
+        bizDomainMapper.update(updateBizDomainDO);
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> deleteBizDomain(Long bizDomainId) {
+        BizDomainDO bizDomainDO = bizDomainMapper.selectById(bizDomainId);
+        AssertUtil.notNull(bizDomainDO, "业务域ID有误");
+        if (bizDomainDO.getIsDeleted()) {
+            BaseResult.success(true);
+        }
+
+        List<ProductLineDO> productLineDOList = productLineMapper.getBizDomainId(bizDomainId);
+        if (CollectionUtils.isNotEmpty(productLineDOList)) {
+            List<String> names = productLineDOList.stream().map(ProductLineDO::getName).collect(Collectors.toList());
+            throw new BaseBizRuntimeException("该业务域下存在产品线" + names + "不能删除");
+        }
+
+        BizDomainDO updateBizDomainDO = new BizDomainDO();
+
+        updateBizDomainDO.setId(bizDomainId);
+        updateBizDomainDO.setIsDeleted(true);
+
+        bizDomainMapper.update(updateBizDomainDO);
+
+        return BaseResult.success(true);
+    }
+
 }

@@ -2,9 +2,11 @@ package com.timevale.forward.facade.api.client;
 
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
+import com.timevale.forward.facade.api.UpdateProductLineListingStatusReq;
 import com.timevale.forward.facade.api.query.ProductLineQueryList;
 import com.timevale.forward.facade.api.request.ProductLineAddReq;
 import com.timevale.forward.facade.api.request.ProductLineModifyReq;
+import com.timevale.forward.facade.api.request.UpdateBizDomainListingStatusReq;
 import com.timevale.forward.facade.api.result.BugOfflineVO;
 import com.timevale.forward.facade.api.result.ProductLineModelVO;
 import com.timevale.forward.facade.api.result.ProductLineVO;
@@ -34,8 +36,6 @@ public interface ProductLineService {
      */
     BaseResult<PageQueryResult<ProductLineVO>> productLineList(ProductLineQueryList productLineQueryList);
 
-
-
     /**
      * 列表
      *
@@ -59,11 +59,25 @@ public interface ProductLineService {
     BaseResult<Boolean> add(ProductLineAddReq productLineAddReq);
 
     /**
-     * 新增
+     * 修改
      *
      * @param productLineModifyReq 产品线新增请求
      * @return 数量
      */
     BaseResult<Boolean> update(ProductLineModifyReq productLineModifyReq);
+
+    /**
+     * 修改产品线上架状态
+     *
+     * @param req 请求对象
+     */
+    BaseResult<Boolean> updateProductLineListingStatus(UpdateProductLineListingStatusReq req);
+
+    /**
+     * 删除产品线
+     *
+     * @param productLineId 产品线ID
+     */
+    BaseResult<Boolean> deleteProductLine(Long productLineId);
 
 }

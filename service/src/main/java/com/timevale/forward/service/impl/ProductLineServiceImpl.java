@@ -4,12 +4,9 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.dal.condition.ProductLineCondition;
-import com.timevale.forward.dal.dao.BizDomainMapper;
-import com.timevale.forward.dal.dao.ModelMapper;
-import com.timevale.forward.dal.dao.ProductLineMapper;
-import com.timevale.forward.dal.entity.BizDomainDO;
-import com.timevale.forward.dal.entity.ModelDO;
-import com.timevale.forward.dal.entity.ProductLineDO;
+import com.timevale.forward.dal.dao.*;
+import com.timevale.forward.dal.entity.*;
+import com.timevale.forward.facade.api.UpdateProductLineListingStatusReq;
 import com.timevale.forward.facade.api.client.ProductLineService;
 import com.timevale.forward.facade.api.query.ProductLineQueryList;
 import com.timevale.forward.facade.api.request.ProductLineAddReq;
@@ -21,10 +18,12 @@ import com.timevale.forward.service.constant.CommonConstant;
 import com.timevale.forward.service.copy.ModelCopier;
 import com.timevale.forward.service.copy.ProductLineCopier;
 import com.timevale.forward.service.utils.ResultUtil;
+import com.timevale.mandarin.base.exception.BaseBizRuntimeException;
 import com.timevale.mandarin.base.util.AssertUtil;
 import com.timevale.mandarin.common.annotation.RestService;
 import com.timevale.mandarin.common.result.PageQueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -50,9 +49,29 @@ public class ProductLineServiceImpl implements ProductLineService {
     @Resource
     private ModelMapper modelMapper;
 
+    @Resource
+    private BizDemandMapper bizDemandMapper;
+
+    @Resource
+    private ProductDemandMapper productDemandMapper;
+
+    @Resource
+    private ProjectProductLineMapper projectProductLineMapper;
+
+    @Resource
+    private BugOnlineProductLineMapper bugOnlineProductLineMapper;
+
+    @Resource
+    private BugOfflineMapper bugOfflineMapper;
+
+    @Resource
+    private TaskMapper taskMapper;
+
+    @Resource
+    private TroubleTicketMapper troubleTicketMapper;
+
     @Override
     public BaseResult<List<ProductLineVO>> productLineList() {
-
         List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectAllBizDomain();
 
         List<ProductLineDO> productLineDOList = productLineMapper.selectAllProductLine();
@@ -62,7 +81,6 @@ public class ProductLineServiceImpl implements ProductLineService {
 
     @Override
     public BaseResult<PageQueryResult<ProductLineVO>> productLineList(ProductLineQueryList productLineQueryList) {
-
         ProductLineCondition condition = ProductLineCopier.INSTANCE.convert(productLineQueryList);
         List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectAllBizDomain();
 
@@ -86,11 +104,9 @@ public class ProductLineServiceImpl implements ProductLineService {
 
     @Override
     public BaseResult<List<ProductLineModelVO>> listProductLineModes() {
-
         List<ProductLineDO> productLineDOList = productLineMapper.selectAllProductLine();
 
         List<BizDomainDO> bizDomainDOList = bizDomainMapper.selectAllBizDomain();
-
 
         List<ProductLineModelVO> productLineVOList = ProductLineCopier.INSTANCE.change(productLineDOList);
 
@@ -153,4 +169,89 @@ public class ProductLineServiceImpl implements ProductLineService {
         });
         return productLineVOList;
     }
+
+    @Override
+    public BaseResult<Boolean> updateProductLineListingStatus(UpdateProductLineListingStatusReq req) {
+        Long productLineId = req.getProductLineId();
+        Integer listingStatus = req.getListingStatus();
+        AssertUtil.notNull(productLineId, "产品线ID不能为空");
+        AssertUtil.notNull(listingStatus, "上架状态不能为空");
+        AssertUtil.checkState(listingStatus == 0 || listingStatus == 1, "上架状态有误");
+
+        ProductLineDO productLineDO = productLineMapper.selectById(productLineId);
+        AssertUtil.notNull(productLineDO, "产品线ID有误");
+
+        Integer currentListingStatus = productLineDO.getListingStatus();
+        if (listingStatus.equals(currentListingStatus)) {
+            return BaseResult.success(true);
+        }
+
+        ProductLineDO updateProductLineDO = new ProductLineDO();
+
+        updateProductLineDO.setId(productLineId);
+        updateProductLineDO.setListingStatus(listingStatus);
+
+        productLineMapper.update(updateProductLineDO);
+
+        return BaseResult.success(true);
+    }
+
+    @Override
+    public BaseResult<Boolean> deleteProductLine(Long productLineId) {
+        AssertUtil.notNull(productLineId, "产品线ID不能为空");
+        ProductLineDO productLineDO = productLineMapper.selectById(productLineId);
+        AssertUtil.notNull(productLineDO, "产品线ID有误");
+
+        // 业务需求判断
+        List<BizDemandDO> bizDemandDOList = bizDemandMapper.getByProductLineId(productLineId);
+        if(CollectionUtils.isNotEmpty(bizDemandDOList)) {
+            throw new BaseBizRuntimeException("该产品线已被使用，不能删除");
+        }
+
+        // 产品需求判断
+        List<ProductDemandDO> productDemandDOList = productDemandMapper.getByProductLineId(productLineId);
+        if(CollectionUtils.isNotEmpty(productDemandDOList)) {
+            throw new BaseBizRuntimeException("该产品线已被使用，不能删除");
+        }
+
+        // 产研项目判断
+        List<ProjectProductLineDO> projectProductLineDOList = projectProductLineMapper.getByProductLineId(productLineId);
+        if(CollectionUtils.isNotEmpty(projectProductLineDOList)) {
+            throw new BaseBizRuntimeException("该产品线已被使用，不能删除");
+        }
+
+        // 线上bug判断
+        List<BugOnlineProductLineDO> bugOnlineProductLineDOList = bugOnlineProductLineMapper.getByProductLineId(productLineId);
+        if(CollectionUtils.isNotEmpty(bugOnlineProductLineDOList)) {
+            throw new BaseBizRuntimeException("该产品线已被使用，不能删除");
+        }
+
+        // 线下bug判断
+        List<BugOfflineDO> bugOfflineDOList = bugOfflineMapper.getByProductLineId(productLineId);
+        if(CollectionUtils.isNotEmpty(bugOfflineDOList)) {
+            throw new BaseBizRuntimeException("该产品线已被使用，不能删除");
+        }
+
+        // 任务判断
+        List<TaskDO> taskDOList = taskMapper.getByProductLineId(productLineId);
+        if(CollectionUtils.isNotEmpty(taskDOList)) {
+            throw new BaseBizRuntimeException("该产品线已被使用，不能删除");
+        }
+
+        // 故障单判断
+        List<TroubleTicketDO> troubleTicketDOList = troubleTicketMapper.getByProductLineId(productLineId);
+        if(CollectionUtils.isNotEmpty(troubleTicketDOList)) {
+            throw new BaseBizRuntimeException("该产品线已被使用，不能删除");
+        }
+
+        ProductLineDO updateProductLineDO = new ProductLineDO();
+
+        updateProductLineDO.setId(productLineId);
+        updateProductLineDO.setIsDeleted(true);
+
+        productLineMapper.update(updateProductLineDO);
+
+        return BaseResult.success(true);
+    }
+
 }

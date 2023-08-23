@@ -2,10 +2,12 @@ package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.BizDemandLinkProductDemandListCondition;
 import com.timevale.forward.dal.condition.ProductDemandListCondition;
+import com.timevale.forward.dal.entity.BizDemandDO;
 import com.timevale.forward.dal.entity.BizDemandLinkProductDemandListDO;
 import com.timevale.forward.dal.entity.ProductDemandDO;
 import com.timevale.forward.dal.entity.ProductDemandListDO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.Collection;
 import java.util.List;
@@ -33,7 +35,6 @@ public interface ProductDemandMapper {
      * @return 产品需求列表
      */
     List<ProductDemandDO> selectByProjectId(Long projectId);
-
 
     /**
      * 批量查询产品需求
@@ -129,4 +130,14 @@ public interface ProductDemandMapper {
      * @return list
      */
     List<ProductDemandDO> getByOwnerId(@Param("ownerId") String ownerId);
+
+    /**
+     * 通过产品线ID获取产品需求
+     *
+     * @param productLineId 产品线ID
+     * @return
+     */
+    @Select("select * from product_demand where product_line_id=#{productLineId} AND is_deleted=false")
+    List<ProductDemandDO> getByProductLineId(@Param("productLineId") Long productLineId);
+
 }

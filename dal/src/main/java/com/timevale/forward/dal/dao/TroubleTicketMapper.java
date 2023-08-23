@@ -1,9 +1,11 @@
 package com.timevale.forward.dal.dao;
 
 import com.timevale.forward.dal.condition.TroubleTicketCondition;
+import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.dal.entity.TroubleTicketDO;
 import com.timevale.forward.dal.entity.TroubleTicketListDO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -76,4 +78,14 @@ public interface TroubleTicketMapper {
      * @return 故障工单DO
      */
     List<TroubleTicketDO> selectByIds(@Param("ids") List<Long> ids);
+
+    /**
+     * 通过产品线ID获取故障工单
+     *
+     * @param productLineId 产品线ID
+     * @return
+     */
+    @Select("select * from trouble_ticket where product_line_id=#{productLineId} AND is_deleted=false")
+    List<TroubleTicketDO> getByProductLineId(@Param("productLineId") Long productLineId);
+
 }

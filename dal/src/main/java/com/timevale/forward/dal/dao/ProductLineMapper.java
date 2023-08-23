@@ -22,7 +22,6 @@ public interface ProductLineMapper {
      */
     List<ProductLineDO> selectAllProductLine();
 
-
     /**
      * 获取产品线
      *

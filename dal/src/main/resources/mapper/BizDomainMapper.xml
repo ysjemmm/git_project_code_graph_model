@@ -5,6 +5,7 @@
     <select id="selectAllBizDomain" resultType="com.timevale.forward.dal.entity.BizDomainDO">
         select *
         from biz_domain
+        where is_deleted = false
     </select>
 
     <select id="selectById" resultType="com.timevale.forward.dal.entity.BizDomainDO">
@@ -17,6 +18,7 @@
         select *
         from biz_domain
         <where>
+            is_deleted = false
             <if test="ids != null and ids.size() > 0">
                 AND id IN
                 <foreach collection="ids" item="item" separator="," open="(" close=")">
@@ -86,6 +88,7 @@
             <if test="modifyMan != null">modify_man = #{modifyMan},</if>
             <if test="modifyManId != null">modify_man_id = #{modifyManId},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            <if test="listingStatus != null">listing_status = #{listingStatus},</if>
         </set>
         <where>
             id = #{id}
@@ -96,6 +99,7 @@
         select *
         from biz_domain
         <where>
+            is_deleted = false
             <if test="name != null and name!=''">
                 AND `name` like concat('%',#{name},'%')
             </if>

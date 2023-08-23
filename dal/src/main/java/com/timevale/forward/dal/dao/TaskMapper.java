@@ -4,9 +4,11 @@ import com.timevale.forward.dal.condition.TaskCondition;
 import com.timevale.forward.dal.condition.TaskListCondition;
 import com.timevale.forward.dal.dto.TaskBoardDTO;
 import com.timevale.forward.dal.dto.TaskOverdueDTO;
+import com.timevale.forward.dal.entity.BugOfflineDO;
 import com.timevale.forward.dal.entity.TaskDO;
 import com.timevale.forward.dal.entity.TaskStatusUpdateDO;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.Collection;
 import java.util.Date;
@@ -17,7 +19,6 @@ import java.util.List;
  * @date 2021/12/15 11:40
  */
 public interface TaskMapper {
-
 
     /**
      * 选择通过产品需求id列表
@@ -141,4 +142,14 @@ public interface TaskMapper {
     void deleteById(@Param("id") Long id);
 
     void updateStage(@Param("ids") Collection<Long> ids, @Param("stage")Integer stage);
+
+    /**
+     * 通过产品线ID获取任务
+     *
+     * @param productLineId 产品线ID
+     * @return
+     */
+    @Select("select * from task where product_line_id=#{productLineId} AND is_deleted=false")
+    List<TaskDO> getByProductLineId(@Param("productLineId") Long productLineId);
+
 }
