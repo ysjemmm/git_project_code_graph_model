@@ -169,7 +169,7 @@
                     #{item}
                 </foreach>
             </if>
-            AND is_deleted = false
+            AND a.is_deleted = false
         </where>
     </select>
 

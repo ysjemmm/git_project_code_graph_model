@@ -20,6 +20,7 @@ public class BizDomainQueryList extends QueryBase {
     @ApiModelProperty("名称")
     private String name;
 
+    @ApiModelProperty("业务域负责人")
     private List<String> ownerIds;
 
 }
