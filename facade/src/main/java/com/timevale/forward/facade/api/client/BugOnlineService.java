@@ -4,10 +4,7 @@ import com.timevale.footstone.base.model.response.BaseResult;
 import com.timevale.forward.facade.api.MagicValue;
 import com.timevale.forward.facade.api.query.BugOnlineQueryList;
 import com.timevale.forward.facade.api.request.*;
-import com.timevale.forward.facade.api.result.BugOnlineDetailVO;
-import com.timevale.forward.facade.api.result.BugOnlineSimpleVO;
-import com.timevale.forward.facade.api.result.BugOnlineVO;
-import com.timevale.forward.facade.api.result.ProductLineToFieldVO;
+import com.timevale.forward.facade.api.result.*;
 import com.timevale.mandarin.common.annotation.RestClient;
 import com.timevale.mandarin.common.result.BusinessResult;
 import com.timevale.mandarin.common.result.PageQueryResult;
@@ -34,7 +31,7 @@ public interface BugOnlineService {
      * @param bugOnlineQueryList 查询参数
      * @return 返回值
      */
-    BaseResult<PageQueryResult<BugOnlineVO>> list(BugOnlineQueryList bugOnlineQueryList);
+    BaseResult<BugOnlineQueryResultVO<BugOnlineVO>> list(BugOnlineQueryList bugOnlineQueryList);
 
     /**
      * 新增线上bug

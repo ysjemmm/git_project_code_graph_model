@@ -143,7 +143,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
     }
 
     @Override
-    public BaseResult<PageQueryResult<BugOnlineVO>> list(BugOnlineQueryList bugOnlineQueryList) {
+    public BaseResult<BugOnlineQueryResultVO<BugOnlineVO>> list(BugOnlineQueryList bugOnlineQueryList) {
         // 用户信息
         UserInfo userInfo = LocalSessionUtils.getUserInfo();
 
@@ -179,7 +179,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             }
         }
         if (resultIsEmpty) {
-            return BaseResult.success(ResultUtil.pageEmpty());
+            BugOnlineQueryResultVO<BugOnlineVO> bugOnlineQueryResultVO = new BugOnlineQueryResultVO<>();
+            bugOnlineQueryResultVO.setPriorityStatisticsVOList(getPriorityStatisticsVOList(new HashMap<>()));
+            bugOnlineQueryResultVO.setPageQueryResult(ResultUtil.pageEmpty());
+            return BaseResult.success(bugOnlineQueryResultVO);
         }
 
         // 归因和具体原因处理, 如果当前选中阶段，但是没有选择当前阶段的具体原因，就填充当前阶段的全部原因
@@ -217,7 +220,10 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             Boolean containLabel = bugOnlineQueryList.getContainLabel();
             List<Long> newLabelIds = labelComponent.getLabelIds(bugOnlineQueryList.getLabelIds(), bugOnlineQueryList.getLabelCategoryIds());
             if (CollectionUtils.isEmpty(newLabelIds) && containLabel) {
-                return BaseResult.success(ResultUtil.pageEmpty());
+                BugOnlineQueryResultVO<BugOnlineVO> bugOnlineQueryResultVO = new BugOnlineQueryResultVO<>();
+                bugOnlineQueryResultVO.setPriorityStatisticsVOList(getPriorityStatisticsVOList(new HashMap<>()));
+                bugOnlineQueryResultVO.setPageQueryResult(ResultUtil.pageEmpty());
+                return BaseResult.success(bugOnlineQueryResultVO);
             }
 
             List<BizLabelDO> bizLabelDOList = bizLabelMapper.getByLabelIdInType(newLabelIds, BizTypeEnum.BUG_ONLINE.getCode());
@@ -225,13 +231,23 @@ public class BugOnlineServiceImpl implements BugOnlineService {
             // 设置包含和不包含
             if (containLabel) {
                 if (CollectionUtils.isEmpty(bizIds)) {
-                    return BaseResult.success(ResultUtil.pageEmpty());
+                    BugOnlineQueryResultVO<BugOnlineVO> bugOnlineQueryResultVO = new BugOnlineQueryResultVO<>();
+                    bugOnlineQueryResultVO.setPriorityStatisticsVOList(getPriorityStatisticsVOList(new HashMap<>()));
+                    bugOnlineQueryResultVO.setPageQueryResult(ResultUtil.pageEmpty());
+
+                    return BaseResult.success(bugOnlineQueryResultVO);
                 }
                 condition.setContainIds(bizIds);
             } else {
                 condition.setExclusiveIds(bizIds);
             }
         }
+
+        List<BugOnlineListDO> allBugOnlineDOList = bugOnlineMapper.selectListByCondition(condition);
+        Map<Integer, List<BugOnlineListDO>> bugOnlineListDOMap = allBugOnlineDOList.stream().collect(Collectors.groupingBy(BugOnlineListDO::getPriority));
+        log.info("线上BUG优先级统计：{}", bugOnlineListDOMap);
+
+        List<PriorityStatisticsVO> priorityStatisticsVOList = getPriorityStatisticsVOList(bugOnlineListDOMap);
 
         // 开始分页
         String collation = sqlOrderComponent.build(bugOnlineQueryList.getOrderFiled(), bugOnlineQueryList.getOrderCollation());
@@ -242,7 +258,11 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<BugOnlineVO> bugOnlineVOList = bugOnlineDOList.stream().map(BugOnlineCopier.INSTANCE::convert).collect(Collectors.toList());
 
         if (CollectionUtils.isEmpty(bugOnlineVOList)) {
-            return BaseResult.success(ResultUtil.pageEmpty());
+            BugOnlineQueryResultVO<BugOnlineVO> bugOnlineQueryResultVO = new BugOnlineQueryResultVO<>();
+            bugOnlineQueryResultVO.setPriorityStatisticsVOList(priorityStatisticsVOList);
+            bugOnlineQueryResultVO.setPageQueryResult(ResultUtil.pageEmpty());
+
+            return BaseResult.success(bugOnlineQueryResultVO);
         }
 
         //标签
@@ -335,7 +355,59 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         pageQueryResult.setResultList(bugOnlineVOList);
         ResultUtil.fillPageInfo(pageQueryResult, pageInfo);
 
-        return BaseResult.success(pageQueryResult);
+        BugOnlineQueryResultVO<BugOnlineVO> bugOnlineQueryResultVO = new BugOnlineQueryResultVO<>();
+        bugOnlineQueryResultVO.setPriorityStatisticsVOList(priorityStatisticsVOList);
+        bugOnlineQueryResultVO.setPageQueryResult(pageQueryResult);
+
+        return BaseResult.success(bugOnlineQueryResultVO);
+    }
+
+    private List<PriorityStatisticsVO> getPriorityStatisticsVOList(Map<Integer, List<BugOnlineListDO>> bugOnlineListDOMap) {
+        List<PriorityStatisticsVO> priorityStatisticsVOList = new ArrayList<>();
+
+        PriorityStatisticsVO low = new PriorityStatisticsVO();
+        low.setPriority(1);
+        List<BugOnlineListDO> lowList = bugOnlineListDOMap.get(0);
+        if (CollectionUtils.isNotEmpty(lowList)) {
+            low.setCount(lowList.size());
+        } else {
+            low.setCount(0);
+        }
+
+        PriorityStatisticsVO middle = new PriorityStatisticsVO();
+        middle.setPriority(1);
+        List<BugOnlineListDO> middleList = bugOnlineListDOMap.get(1);
+        if (CollectionUtils.isNotEmpty(middleList)) {
+            middle.setCount(middleList.size());
+        } else {
+            middle.setCount(0);
+        }
+
+        PriorityStatisticsVO high = new PriorityStatisticsVO();
+        high.setPriority(2);
+        List<BugOnlineListDO> highList = bugOnlineListDOMap.get(2);
+        if (CollectionUtils.isNotEmpty(highList)) {
+            high.setCount(highList.size());
+        } else {
+            high.setCount(0);
+        }
+
+        PriorityStatisticsVO emergent = new PriorityStatisticsVO();
+        emergent.setPriority(3);
+        List<BugOnlineListDO> emergentList = bugOnlineListDOMap.get(3);
+        if (CollectionUtils.isNotEmpty(emergentList)) {
+            emergent.setCount(emergentList.size());
+        } else {
+            emergent.setCount(0);
+        }
+
+
+        priorityStatisticsVOList.add(emergent);
+        priorityStatisticsVOList.add(high);
+        priorityStatisticsVOList.add(middle);
+        priorityStatisticsVOList.add(low);
+
+        return priorityStatisticsVOList;
     }
 
     @Override
