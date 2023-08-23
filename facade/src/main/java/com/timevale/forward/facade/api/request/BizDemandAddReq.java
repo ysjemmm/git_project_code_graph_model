@@ -116,6 +116,9 @@ public class BizDemandAddReq extends BaseReq {
     @ApiModelProperty("总资源评估（人天）")
     private BigDecimal totalTime;
 
+    @ApiModelProperty("功能迁移评估（人天）")
+    private BigDecimal transferTime;
+
     @ApiModelProperty("期望上线日期")
     private Date hopeReleaseDay;
 

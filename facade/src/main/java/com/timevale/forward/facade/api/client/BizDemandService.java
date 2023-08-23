@@ -140,7 +140,6 @@ public interface BizDemandService {
      */
     BaseResult<List<BizDemandSimpleVO>> getSimpleBizDemands(BizDemandGetReq bizDemandGetReq);
 
-
     /**
      * 根据客户id查询业务数据
      */

@@ -32,6 +32,7 @@
             <if test="frontTime != null">front_time,</if>
             <if test="backTime != null">back_time,</if>
             <if test="qaTime != null">qa_time,</if>
+            <if test="transferTime != null">transfer_time,</if>
             <if test="totalTime != null">total_time,</if>
             <if test="srExpert != null">sr_expert,</if>
             <if test="srExpertId != null">sr_expert_id,</if>
@@ -65,6 +66,7 @@
             <if test="frontTime != null">#{frontTime},</if>
             <if test="backTime != null">#{backTime},</if>
             <if test="qaTime != null">#{qaTime},</if>
+            <if test="transferTime != null">#{transferTime},</if>
             <if test="totalTime != null">#{totalTime},</if>
             <if test="srExpert != null">#{srExpert},</if>
             <if test="srExpertId != null">#{srExpertId},</if>
@@ -193,6 +195,7 @@
             back_time = #{backTime},
             front_time = #{frontTime},
             qa_time = #{qaTime},
+            transfer_time = #{transferTime},
             total_time = #{totalTime},
             modify_man_id = #{modifyManId},
             modify_man = #{modifyMan},
@@ -485,7 +488,7 @@
         select id, name, product_line_id, data_indicators, target_customer, create_customer, dept_id, `desc`, status,
         priority, receive_man, receive_man_id, submit_man, submit_man_id, plan_release_date, reason, is_deleted,
         create_man_id, create_man, create_date, modify_man_id, modify_man, modify_date, source_id, ued_time,
-        back_time, front_time, qa_time, total_time
+        back_time, front_time, qa_time, transfer_time, total_time
         from biz_demand
         <where>
             <if test="ids!=null and ids.size()>0">

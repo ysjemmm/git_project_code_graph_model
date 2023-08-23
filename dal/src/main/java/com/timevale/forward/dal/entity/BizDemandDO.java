@@ -1,5 +1,6 @@
 package com.timevale.forward.dal.entity;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -158,6 +159,11 @@ public class BizDemandDO extends BaseDO {
      * 测试资源评估（人天）
      */
     private BigDecimal qaTime;
+
+    /**
+     * 功能迁移评估（人天）
+     */
+    private BigDecimal transferTime;
 
     /**
      * 总资源评估（人天）

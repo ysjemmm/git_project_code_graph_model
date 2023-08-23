@@ -163,6 +163,9 @@ public class BizDemandDetailVO extends ToString {
     @ApiModelProperty("测试资源评估（人天）")
     private BigDecimal qaTime;
 
+    @ApiModelProperty("功能迁移评估（人天）")
+    private BigDecimal transferTime;
+
     @ApiModelProperty("总资源评估（人天）")
     private BigDecimal totalTime;
 

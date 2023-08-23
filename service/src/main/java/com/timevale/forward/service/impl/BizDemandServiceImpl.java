@@ -504,7 +504,6 @@ public class BizDemandServiceImpl implements BizDemandService {
         // 客户信息
         bizDemandCustomComponent.update(bizDemandModifyReq.getCustomList(), bizDemandModifyReq.getId());
 
-
         // 添加附件
         List<FileAddReq> fileIdList = bizDemandModifyReq.getFileList();
         fileComponent.update(fileIdList, bizDemandModifyReq.getId(), FileTypeEnum.BIZ_DEMAND.getCode());
