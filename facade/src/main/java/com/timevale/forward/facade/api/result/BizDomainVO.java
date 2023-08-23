@@ -50,8 +50,8 @@ public class BizDomainVO extends ToString {
     @ApiModelProperty("线上bug是否可以直接转产品需求")
     private Boolean directConvertBiz;
 
-    @ApiModelProperty("是否废弃")
-    private Boolean isDeleted;
+    @ApiModelProperty("上架状态：0-未上架，1-已上架")
+    private Integer listingStatus;
 
     @ApiModelProperty("创建时间")
     private Date createDate;

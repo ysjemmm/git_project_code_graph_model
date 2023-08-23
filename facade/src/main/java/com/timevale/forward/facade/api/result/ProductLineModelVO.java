@@ -43,9 +43,8 @@ public class ProductLineModelVO extends ToString {
     @ApiModelProperty("模块信息")
     private List<ModelVO> models;
 
-    @ApiModelProperty("是否废弃")
-    private Boolean isDeleted;
-
+    @ApiModelProperty("上架状态：0-未上架，1-已上架")
+    private Integer listingStatus;
 
     @ApiModelProperty("业务域id")
     @JsonSerialize(using = ToStringSerializer.class)
