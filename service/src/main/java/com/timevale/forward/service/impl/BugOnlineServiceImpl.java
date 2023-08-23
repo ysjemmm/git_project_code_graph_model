@@ -366,7 +366,7 @@ public class BugOnlineServiceImpl implements BugOnlineService {
         List<PriorityStatisticsVO> priorityStatisticsVOList = new ArrayList<>();
 
         PriorityStatisticsVO low = new PriorityStatisticsVO();
-        low.setPriority(1);
+        low.setPriority(0);
         List<BugOnlineListDO> lowList = bugOnlineListDOMap.get(0);
         if (CollectionUtils.isNotEmpty(lowList)) {
             low.setCount(lowList.size());
