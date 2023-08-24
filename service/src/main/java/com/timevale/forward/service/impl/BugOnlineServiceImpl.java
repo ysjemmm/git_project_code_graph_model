@@ -249,7 +249,22 @@ public class BugOnlineServiceImpl implements BugOnlineService {
 
         List<PriorityStatisticsVO> priorityStatisticsVOList = getPriorityStatisticsVOList(bugOnlineListDOMap);
 
-        // 开始分页
+        // 优先级查询
+        List<Integer> conditionSubPriorities = condition.getSubPriorities();
+        if (CollUtil.isNotEmpty(conditionSubPriorities)) {
+            Set<Integer> resultPrioritySet = priorityStatisticsVOList.stream().map(PriorityStatisticsVO::getPriority).collect(Collectors.toSet());
+            List<Integer> queryPriorityList = conditionSubPriorities.stream().filter(resultPrioritySet::contains).collect(Collectors.toList());
+            if (CollUtil.isEmpty(queryPriorityList)) {
+                BugOnlineQueryResultVO<BugOnlineVO> bugOnlineQueryResultVO = new BugOnlineQueryResultVO<>();
+                bugOnlineQueryResultVO.setPriorityStatisticsVOList(priorityStatisticsVOList);
+                bugOnlineQueryResultVO.setPageQueryResult(ResultUtil.pageEmpty());
+                return BaseResult.success(bugOnlineQueryResultVO);
+            } else {
+                condition.setPriorities(queryPriorityList);
+            }
+        }
+
+        // 开始分页fff
         String collation = sqlOrderComponent.build(bugOnlineQueryList.getOrderFiled(), bugOnlineQueryList.getOrderCollation());
         PageHelper.startPage(bugOnlineQueryList.pageNum, bugOnlineQueryList.pageSize, collation);
 

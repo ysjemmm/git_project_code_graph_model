@@ -36,8 +36,11 @@ public class BugOnlineQueryList extends QueryBase {
     @ApiModelProperty("所属产品线")
     private List<Long> productLineIdList;
 
-    @ApiModelProperty("bug优先级")
+    @ApiModelProperty("bug优先级列表")
     private List<Integer> priorities;
+
+    @ApiModelProperty("子bug优先级列表")
+    private List<Integer> subPriorities;
 
     @ApiModelProperty("bug环境")
     private List<Integer> envs;

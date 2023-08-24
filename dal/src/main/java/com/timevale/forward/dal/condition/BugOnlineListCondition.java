@@ -46,9 +46,14 @@ public class BugOnlineListCondition {
     private List<Long> bizDomainIdList;
 
     /**
-     * 优先级
+     * 优先级列表
      */
     private List<Integer> priorities;
+
+    /**
+     * 子优先级列表
+     */
+    private List<Integer> subPriorities;
 
     /**
      * bug环境
